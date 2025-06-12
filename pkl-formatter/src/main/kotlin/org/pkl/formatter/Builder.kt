@@ -83,7 +83,8 @@ class Builder(sourceText: String) {
       NodeType.CLASS_BODY_ELEMENTS -> formatClassBodyElements(node)
       NodeType.CLASS_PROPERTY -> formatClassProperty(node)
       NodeType.CLASS_PROPERTY_HEADER -> formatClassPropertyHeader(node)
-      NodeType.CLASS_METHOD -> formatClassMethod(node)
+      NodeType.CLASS_METHOD,
+      NodeType.OBJECT_METHOD -> formatClassMethod(node)
       NodeType.CLASS_METHOD_HEADER -> formatClassMethodHeader(node)
       NodeType.CLASS_METHOD_BODY -> formatClassMethodBody(node)
       NodeType.OBJECT_BODY -> formatObjectBody(node)
@@ -98,9 +99,11 @@ class Builder(sourceText: String) {
       NodeType.WHEN_GENERATOR -> formatWhenGenerator(node)
       NodeType.WHEN_GENERATOR_HEADER -> formatParameterList(node)
       NodeType.OBJECT_SPREAD -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.MEMBER_PREDICATE -> formatMemberPredicate(node)
       NodeType.QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node)
       NodeType.ARGUMENT_LIST -> formatParameterList(node)
       NodeType.ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
+      NodeType.OBJECT_PARAMETER_LIST -> formatObjectParameterList(node)
       NodeType.IF_EXPR -> formatIf(node)
       NodeType.IF_HEADER -> formatIfHeader(node)
       NodeType.IF_CONDITION -> formatParameterList(node)
@@ -310,6 +313,10 @@ class Builder(sourceText: String) {
     return Group(id, nodes)
   }
 
+  private fun formatObjectParameterList(node: GenNode): FormatNode {
+    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+  }
+
   private fun formatObjectBody(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
@@ -362,6 +369,16 @@ class Builder(sourceText: String) {
     val nodes =
       formatGeneric(node.children) { prev, next ->
         if (prev.type == NodeType.WHEN_GENERATOR_HEADER) Space else SpaceOrLine
+      }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatMemberPredicate(node: GenNode): FormatNode {
+    val nodes =
+      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+        if (next == null && node.type != NodeType.OBJECT_BODY) {
+          indent(format(node))
+        } else format(node)
       }
     return Group(newId(), nodes)
   }
@@ -560,6 +577,8 @@ class Builder(sourceText: String) {
     separatorFn: (GenNode, GenNode) -> FormatNode?,
     generatorFn: ((GenNode, GenNode?) -> FormatNode)?,
   ): List<FormatNode> {
+    // skip semicolons
+    val children = children.filter { !it.isSemicolon() }
     // short circuit
     if (children.isEmpty()) return listOf(SpaceOrLine)
     if (children.size == 1) return listOf(format(children[0]))
@@ -567,9 +586,6 @@ class Builder(sourceText: String) {
     val nodes = mutableListOf<FormatNode>()
     var prev = children[0]
     for (child in children.drop(1)) {
-      // skip semicolons
-      if (child.type.isAffix && child.text() == ";") continue
-
       nodes +=
         if (generatorFn != null) {
           generatorFn(prev, child)
@@ -588,6 +604,8 @@ class Builder(sourceText: String) {
       }
     return nodes
   }
+
+  private fun GenNode.isSemicolon(): Boolean = type.isAffix && text() == ";"
 
   private fun groupNonPrefixes(
     node: GenNode,
@@ -637,7 +655,7 @@ class Builder(sourceText: String) {
       prev.type == NodeType.BLOCK_COMMENT ->
         if (prev.linesBetween(next) > 0) ForceLine else SpaceOrLine
       next.type in EMPTY_SUFFIXES ||
-        prev.isTerminal("[", "!", "@") ||
+        prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
       next.isTerminal("=", "{") ||
         next.type == NodeType.OBJECT_BODY ||

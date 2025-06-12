@@ -514,11 +514,16 @@ public class GenericParser {
   }
 
   private GenNode parseObjectMethod(List<GenNode> preChildren) {
-    var children = new ArrayList<>(preChildren);
-    var function = expect(Token.FUNCTION, "unexpectedToken", "function");
-    children.add(makeTerminal(function));
-    ff(children);
-    children.add(parseIdentifier());
+    var headerParts = getHeaderParts(preChildren);
+    var children = new ArrayList<>(headerParts.preffixes);
+    var headers = new ArrayList<GenNode>();
+    if (headerParts.modifierList != null) {
+      headers.add(headerParts.modifierList);
+    }
+    expect(Token.FUNCTION, headers, "unexpectedToken", "function");
+    ff(headers);
+    headers.add(parseIdentifier());
+    children.add(new GenNode(NodeType.CLASS_METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
       children.add(parseTypeParameterList());
@@ -532,7 +537,7 @@ public class GenericParser {
     }
     expect(Token.ASSIGN, children, "unexpectedToken", "=");
     ff(children);
-    children.add(parseExpr());
+    children.add(new GenNode(NodeType.CLASS_METHOD_BODY, List.of(parseExpr())));
     return new GenNode(NodeType.OBJECT_METHOD, children);
   }
 
