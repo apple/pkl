@@ -182,10 +182,10 @@ public class GenericParser {
       ff(children);
     }
     var modifiers = new ArrayList<GenNode>();
-    while (lookahead().isModifier()) {
-      ff(children);
+    while (lookahead.isModifier()) {
       modifiers.add(make(NodeType.MODIFIER, next().span));
       hasModifier = true;
+      ff(children);
     }
     if (!modifiers.isEmpty()) children.add(new GenNode(NodeType.MODIFIER_LIST, modifiers));
     return new HeaderResult(hasDocComment, hasAnnotation, hasModifier);
@@ -530,8 +530,7 @@ public class GenericParser {
       children.add(parseTypeAnnotation());
       ff(children);
     }
-    var assign = expect(Token.ASSIGN, "unexpectedToken", "=");
-    children.add(makeTerminal(assign));
+    expect(Token.ASSIGN, children, "unexpectedToken", "=");
     ff(children);
     children.add(parseExpr());
     return new GenNode(NodeType.OBJECT_METHOD, children);
@@ -1156,13 +1155,11 @@ public class GenericParser {
                 totalTypes++;
                 ff(children);
               }
-              var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")");
-              children.add(makeTerminal(end));
+              expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
             }
             if (totalTypes > 1 || lookahead() == Token.ARROW) {
               ff(children);
-              var arr = expect(Token.ARROW, "unexpectedToken", "->");
-              children.add(makeTerminal(arr));
+              expect(Token.ARROW, children, "unexpectedToken", "->");
               ff(children);
               children.add(parseType(expectation));
               yield new GenNode(NodeType.FUNCTION_TYPE, children);
@@ -1327,8 +1324,7 @@ public class GenericParser {
 
   private GenNode parseTypeAnnotation() {
     var children = new ArrayList<GenNode>();
-    var start = expect(Token.COLON, "unexpectedToken", ":");
-    children.add(makeTerminal(start));
+    expect(Token.COLON, children, "unexpectedToken", ":");
     ff(children);
     children.add(parseType());
     return new GenNode(NodeType.TYPE_ANNOTATION, children);

@@ -30,8 +30,8 @@ import java.nio.file.Path
 import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
-import org.pkl.commons.cli.CliException
 import org.pkl.formatter.Formatter
+import org.pkl.parser.ParserError
 
 class FormatterCommand : NoOpCliktCommand(name = "format") {
   override fun help(context: Context) = "Run commands related to formatting"
@@ -45,6 +45,16 @@ class FormatterCommand : NoOpCliktCommand(name = "format") {
 
 abstract class FormatSubcommand(name: String) : CliktCommand(name = name) {
   protected val writer = System.out.writer()
+  protected val errWriter = System.err.writer()
+
+  protected fun format(file: Path, contents: String): Pair<String, Int> {
+    try {
+      return Formatter().format(contents) to 0
+    } catch (pe: ParserError) {
+      errWriter.appendLine("Could not format `$file`: ${pe.message}")
+      return "" to 1
+    }
+  }
 }
 
 class CheckCommand : FormatSubcommand(name = "check") {
@@ -67,7 +77,8 @@ class CheckCommand : FormatSubcommand(name = "check") {
     var status = 0
     for (path in paths) {
       val contents = path.readText()
-      val formatted = Formatter().format(contents)
+      val (formatted, stat) = format(path, contents)
+      status = stat
       if (contents != formatted) {
         writer.appendLine(path.toAbsolutePath().toString())
         status = 1
@@ -80,7 +91,7 @@ class CheckCommand : FormatSubcommand(name = "check") {
 
 class ApplyCommand : FormatSubcommand(name = "apply") {
   override fun help(context: Context) =
-    "Overwrite all the files in place with the formatted version."
+    "Overwrite all the files in place with the formatted version. Returns non-zero in case of failure."
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
@@ -102,9 +113,11 @@ class ApplyCommand : FormatSubcommand(name = "apply") {
       .flag()
 
   override fun run() {
+    var status = 0
     for (path in paths) {
       val contents = path.readText()
-      val formatted = Formatter().format(contents)
+      val (formatted, stat) = format(path, contents)
+      status = stat
       if (!silent && contents != formatted) {
         writer.appendLine(path.toAbsolutePath().toString())
       }
@@ -112,8 +125,10 @@ class ApplyCommand : FormatSubcommand(name = "apply") {
       try {
         path.writeText(formatted, Charsets.UTF_8)
       } catch (e: IOException) {
-        throw CliException("Could not overwrite `$path`: ${e.message}")
+        errWriter.appendLine("Could not overwrite `$path`: ${e.message}")
+        status = 1
       }
     }
+    exitProcess(status)
   }
 }
