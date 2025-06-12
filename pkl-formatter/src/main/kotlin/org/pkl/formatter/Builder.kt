@@ -45,7 +45,9 @@ class Builder(sourceText: String) {
       NodeType.MODIFIER,
       NodeType.IDENTIFIER,
       NodeType.STRING_CONSTANT,
+      // TODO: properly format strings
       NodeType.SINGLE_LINE_STRING_LITERAL_EXPR,
+      NodeType.MULTI_LINE_STRING_LITERAL_EXPR,
       NodeType.INT_LITERAL_EXPR,
       NodeType.FLOAT_LITERAL_EXPR,
       NodeType.BOOL_LITERAL_EXPR,
@@ -53,6 +55,9 @@ class Builder(sourceText: String) {
       NodeType.OUTER_EXPR,
       NodeType.MODULE_EXPR,
       NodeType.NULL_EXPR,
+      NodeType.MODULE_TYPE,
+      NodeType.UNKNOWN_TYPE,
+      NodeType.NOTHING_TYPE,
       NodeType.OPERATOR -> Text(node.text())
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
       NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
@@ -92,6 +97,7 @@ class Builder(sourceText: String) {
       NodeType.FOR_GENERATOR_HEADER -> formatParameterList(node)
       NodeType.WHEN_GENERATOR -> formatWhenGenerator(node)
       NodeType.WHEN_GENERATOR_HEADER -> formatParameterList(node)
+      NodeType.OBJECT_SPREAD -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node)
       NodeType.ARGUMENT_LIST -> formatParameterList(node)
       NodeType.ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
@@ -104,16 +110,22 @@ class Builder(sourceText: String) {
       NodeType.NEW_HEADER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.BINARY_OP_EXPR -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
-      NodeType.LOGICAL_NOT_EXPR -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
       NodeType.SUBSCRIPT_EXPR -> Nodes(formatGeneric(node.children, SpaceOrLine))
       NodeType.TRACE_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.THROW_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.READ_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.NON_NULL_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.QUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.PARENTHESIZED_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.IMPORT_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.LET_EXPR -> formatLetExpr(node)
       NodeType.LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node)
       NodeType.LET_PARAMETER -> formatLetParameter(node)
+      NodeType.AMENDS_EXPR -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.UNARY_MINUS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.LOGICAL_NOT_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.TYPE_ANNOTATION -> formatTypeAnnotation(node)
       NodeType.TYPE_ARGUMENT_LIST -> formatTypeParameterList(node)
       NodeType.TYPE_ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
@@ -123,6 +135,7 @@ class Builder(sourceText: String) {
       NodeType.CONSTRAINED_TYPE_ELEMENTS -> formatParameterListElements(node)
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.UNION_TYPE -> formatUnionType(node)
+      NodeType.FUNCTION_TYPE -> formatFunctionType(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
       NodeType.PARENTHESIZED_TYPE -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       else -> throw RuntimeException("Unknown node type: ${node.type}")
@@ -436,6 +449,14 @@ class Builder(sourceText: String) {
   private fun formatUnionType(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else EMPTY_NODE }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatFunctionType(node: GenNode): FormatNode {
+    val nodes =
+      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+        if (next == null) indent(format(node)) else format(node)
+      }
     return Group(newId(), nodes)
   }
 
