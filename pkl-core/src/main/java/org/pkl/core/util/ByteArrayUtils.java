@@ -55,7 +55,6 @@ public final class ByteArrayUtils {
    * this and do not need a Truffle boundary.
    */
   public static String toHex(byte[] hash) {
-    //    return new BigInteger(hash).toString(16);
     var hexDigitTable =
         new char[] {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
 
