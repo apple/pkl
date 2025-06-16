@@ -16,7 +16,6 @@
 package org.pkl.parser;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.parser.syntax.Operator;
@@ -31,23 +30,18 @@ public class GenericParser {
 
   private Lexer lexer;
   private Token lookahead;
-  private Span spanLookahead;
+  private FullSpan spanLookahead;
   private FullToken _lookahead;
   private int cursor = 0;
   private final List<FullToken> tokens = new ArrayList<>();
-  private int[] newlines;
 
   private void init(String source) {
     this.lexer = new Lexer(source);
     cursor = 0;
     while (true) {
-      var ft = new FullToken(lexer.next(), lexer.span(), lexer.newLinesBetween);
+      var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.newLinesBetween);
       tokens.add(ft);
       if (ft.token == Token.EOF) break;
-    }
-    newlines = new int[lexer.newlines.size()];
-    for (var i = 0; i < newlines.length; i++) {
-      newlines[i] = lexer.newlines.get(i);
     }
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -81,7 +75,7 @@ public class GenericParser {
       var lastImport = parseImportDecl();
       imports.add(lastImport);
       // keep trailling affixes as part of the import
-      while (lookahead.isAffix() && lastImport.span.sameLine(fromSpan(spanLookahead))) {
+      while (lookahead.isAffix() && lastImport.span.sameLine(spanLookahead)) {
         imports.add(makeAffix(next()));
       }
       if (!isImport()) break;
@@ -144,7 +138,7 @@ public class GenericParser {
     children.add(parseIdentifier());
     while (lookahead() == Token.DOT) {
       ff(children);
-      children.add(new GenNode(NodeType.TERMINAL, fromSpan(next().span)));
+      children.add(new GenNode(NodeType.TERMINAL, next().span));
       ff(children);
       children.add(parseIdentifier());
     }
@@ -171,7 +165,7 @@ public class GenericParser {
     var hasDocComment = false;
     var hasAnnotation = false;
     var hasModifier = false;
-    if (lookahead == Token.DOC_COMMENT) {
+    while (lookahead == Token.DOC_COMMENT) {
       children.add(parseDocComment());
       hasDocComment = true;
       ff(children);
@@ -192,25 +186,7 @@ public class GenericParser {
   }
 
   private GenNode parseDocComment() {
-    var children = new ArrayList<GenNode>();
-    // first is always doc comment
-    var first = next();
-    children.add(new GenNode(NodeType.DOC_COMMENT_LINE, fromSpan(first.span)));
-    while (lookahead == Token.DOC_COMMENT
-        || lookahead == Token.LINE_COMMENT
-        || lookahead == Token.BLOCK_COMMENT
-        || lookahead == Token.SEMICOLON) {
-      var next = next();
-      // newlines are not allowed in doc comments
-      if (next.newLinesBetween > 1) {
-        if (next.token == Token.DOC_COMMENT) {
-          backtrack();
-        }
-        break;
-      }
-      children.add(new GenNode(nodeTypeForAffix(next.token), fromSpan(next.span)));
-    }
-    return new GenNode(NodeType.DOC_COMMENT, children);
+    return new GenNode(NodeType.DOC_COMMENT, next().span);
   }
 
   private GenNode parseModuleMember(List<GenNode> preChildren) {
@@ -250,8 +226,10 @@ public class GenericParser {
     }
     expect(Token.ASSIGN, headers, "unexpectedToken", "=");
     children.add(new GenNode(NodeType.TYPEALIAS_HEADER, headers));
-    ff(children);
-    children.add(new GenNode(NodeType.TYPEALIAS_BODY, List.of(parseType())));
+    var body = new ArrayList<GenNode>();
+    ff(body);
+    body.add(parseType());
+    children.add(new GenNode(NodeType.TYPEALIAS_BODY, body));
     return new GenNode(NodeType.TYPEALIAS, children);
   }
 
@@ -301,7 +279,7 @@ public class GenericParser {
     }
     if (lookahead == Token.EOF) {
       throw parserError(
-          ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
+          ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
     }
     if (!elements.isEmpty()) {
       children.add(new GenNode(NodeType.CLASS_BODY_ELEMENTS, elements));
@@ -369,8 +347,10 @@ public class GenericParser {
     if (lookahead() == Token.ASSIGN) {
       ff(children);
       children.add(makeTerminal(next()));
-      ff(children);
-      children.add(new GenNode(NodeType.CLASS_METHOD_BODY, List.of(parseExpr())));
+      var body = new ArrayList<GenNode>();
+      ff(body);
+      body.add(parseExpr());
+      children.add(new GenNode(NodeType.CLASS_METHOD_BODY, body));
     }
     return new GenNode(NodeType.CLASS_METHOD, children);
   }
@@ -394,7 +374,7 @@ public class GenericParser {
     while (lookahead != Token.RBRACE) {
       if (lookahead == Token.EOF) {
         throw parserError(
-            ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
+            ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
       }
       members.add(parseObjectMember());
       ff(members);
@@ -452,7 +432,7 @@ public class GenericParser {
       case FOR -> parseForGenerator();
       case TYPE_ALIAS, CLASS ->
           throw parserError(
-              ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan().move(1));
+              ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
       default -> {
         var preChildren = new ArrayList<GenNode>();
         while (lookahead.isModifier()) {
@@ -536,8 +516,10 @@ public class GenericParser {
       ff(children);
     }
     expect(Token.ASSIGN, children, "unexpectedToken", "=");
-    ff(children);
-    children.add(new GenNode(NodeType.CLASS_METHOD_BODY, List.of(parseExpr())));
+    var body = new ArrayList<GenNode>();
+    ff(body);
+    body.add(parseExpr());
+    children.add(new GenNode(NodeType.CLASS_METHOD_BODY, body));
     return new GenNode(NodeType.OBJECT_METHOD, children);
   }
 
@@ -661,7 +643,7 @@ public class GenericParser {
       if (operator.getPrec() < minPrecedence) break;
       // `-` must be in the same line as the left operand and have no semicolons inbetween
       if (operator == Operator.MINUS
-          && (fullOpToken.hasSemicolon || !expr.span.sameLine(fromSpan(fullOpToken.tk.span))))
+          && (fullOpToken.hasSemicolon || !expr.span.sameLine(fullOpToken.tk.span)))
         break;
       var midChildren = new ArrayList<GenNode>();
       ff(midChildren);
@@ -717,10 +699,10 @@ public class GenericParser {
   private GenNode parseExprAtom(@Nullable String expectation) {
     var expr =
         switch (lookahead) {
-          case THIS -> new GenNode(NodeType.THIS_EXPR, fromSpan(next().span));
-          case OUTER -> new GenNode(NodeType.OUTER_EXPR, fromSpan(next().span));
-          case MODULE -> new GenNode(NodeType.MODULE_EXPR, fromSpan(next().span));
-          case NULL -> new GenNode(NodeType.NULL_EXPR, fromSpan(next().span));
+          case THIS -> new GenNode(NodeType.THIS_EXPR, next().span);
+          case OUTER -> new GenNode(NodeType.OUTER_EXPR, next().span);
+          case MODULE -> new GenNode(NodeType.MODULE_EXPR, next().span);
+          case NULL -> new GenNode(NodeType.NULL_EXPR, next().span);
           case THROW -> {
             var children = new ArrayList<GenNode>();
             children.add(makeTerminal(next()));
@@ -902,9 +884,9 @@ public class GenericParser {
             children.add(parseExpr(expectation));
             yield new GenNode(NodeType.LET_EXPR, children);
           }
-          case TRUE, FALSE -> new GenNode(NodeType.BOOL_LITERAL_EXPR, fromSpan(next().span));
-          case INT, HEX, BIN, OCT -> new GenNode(NodeType.INT_LITERAL_EXPR, fromSpan(next().span));
-          case FLOAT -> new GenNode(NodeType.FLOAT_LITERAL_EXPR, fromSpan(next().span));
+          case TRUE, FALSE -> new GenNode(NodeType.BOOL_LITERAL_EXPR, next().span);
+          case INT, HEX, BIN, OCT -> new GenNode(NodeType.INT_LITERAL_EXPR, next().span);
+          case FLOAT -> new GenNode(NodeType.FLOAT_LITERAL_EXPR, next().span);
           case STRING_START -> parseSingleLineStringLiteralExpr();
           case STRING_MULTI_START -> parseMultiLineStringLiteralExpr();
           case IDENTIFIER -> {
@@ -919,7 +901,7 @@ public class GenericParser {
           }
           case EOF ->
               throw parserError(
-                  ErrorMessages.create("unexpectedEndOfFile"), prev().span.stopSpan().move(1));
+                  ErrorMessages.create("unexpectedEndOfFile"), prev().span.stopSpan());
           default -> {
             var text = _lookahead.text(lexer);
             if (expectation != null) {
@@ -1100,7 +1082,7 @@ public class GenericParser {
   private GenNode parseType(@Nullable String expectation) {
     var children = new ArrayList<GenNode>();
     var hasDefault = false;
-    Span start = null;
+    FullSpan start = null;
     if (lookahead == Token.STAR) {
       var tk = next();
       start = tk.span;
@@ -1109,16 +1091,16 @@ public class GenericParser {
       hasDefault = true;
     }
     var first = parseTypeAtom(expectation);
-    ff(children);
+    children.add(first);
 
     if (lookahead != Token.UNION) {
       if (hasDefault) {
-        throw parserError(ErrorMessages.create("notAUnion"), start.endWith(first.span.toSpan()));
+        throw parserError(ErrorMessages.create("notAUnion"), start.endWith(first.span));
       }
       return first;
     }
 
-    children.add(first);
+    ff(children);
     while (lookahead == Token.UNION) {
       children.add(makeTerminal(next()));
       ff(children);
@@ -1341,7 +1323,7 @@ public class GenericParser {
       }
       throw parserError("unexpectedToken", _lookahead.text(lexer), "identifier");
     }
-    return new GenNode(NodeType.IDENTIFIER, fromSpan(next().span));
+    return new GenNode(NodeType.IDENTIFIER, next().span);
   }
 
   private GenNode parseStringConstant() {
@@ -1376,7 +1358,7 @@ public class GenericParser {
       var span = spanLookahead;
       if (lookahead == Token.EOF || _lookahead.newLinesBetween > 0) {
         // don't point at the EOF or the next line, but at the end of the last token
-        span = prev().span.stopSpan().move(1);
+        span = prev().span.stopSpan();
       }
       var args = messageArgs;
       if (errorKey.startsWith("unexpectedToken")) {
@@ -1407,11 +1389,11 @@ public class GenericParser {
   }
 
   private GenericParserError parserError(String messageKey, Object... args) {
-    return new GenericParserError(ErrorMessages.create(messageKey, args), fromSpan(spanLookahead));
+    return new GenericParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }
 
-  private GenericParserError parserError(String message, Span span) {
-    return new GenericParserError(message, fromSpan(span));
+  private GenericParserError parserError(String message, FullSpan span) {
+    return new GenericParserError(message, span);
   }
 
   private boolean isModuleDecl() {
@@ -1500,16 +1482,16 @@ public class GenericParser {
     return new HeaderParts(nodes, null);
   }
 
-  private GenNode make(NodeType type, Span span) {
-    return new GenNode(type, fromSpan(span));
+  private GenNode make(NodeType type, FullSpan span) {
+    return new GenNode(type, span);
   }
 
   private GenNode makeAffix(FullToken tk) {
-    return new GenNode(nodeTypeForAffix(tk.token), fromSpan(tk.span));
+    return new GenNode(nodeTypeForAffix(tk.token), tk.span);
   }
 
   private GenNode makeTerminal(FullToken tk) {
-    return new GenNode(NodeType.TERMINAL, fromSpan(tk.span), tk.text(lexer));
+    return new GenNode(NodeType.TERMINAL, tk.span, tk.text(lexer));
   }
 
   // fast-forward over affix tokens
@@ -1542,44 +1524,15 @@ public class GenericParser {
       case BLOCK_COMMENT -> NodeType.BLOCK_COMMENT;
       case SHEBANG -> NodeType.SHEBANG;
       case SEMICOLON -> NodeType.SEMICOLON;
-      case DOC_COMMENT -> NodeType.DOC_COMMENT_LINE;
       default -> throw new RuntimeException("Unreacheable code");
     };
   }
 
-  private FullSpan fromSpan(Span span) {
-    var begin = lineCol(newlines, span.charIndex());
-    var end = lineCol(newlines, span.charIndex() + span.length());
-    return new FullSpan(span.charIndex(), span.length(), begin.line, begin.col, end.line, end.col);
-  }
-
-  private LineCol lineCol(int[] newlines, int charIndex) {
-    var len = newlines.length;
-    // short circuit
-    if (len == 0) return new LineCol(1, charIndex);
-
-    var index = Arrays.binarySearch(newlines, charIndex);
-    if (index < 0) {
-      var insertIndex = (index * -1) - 1;
-      int col;
-      if (insertIndex < len) {
-        col = newlines[insertIndex] - charIndex;
-      } else {
-        col = charIndex - newlines[len - 1];
-      }
-      return new LineCol(insertIndex + 1, col);
-    } else {
-      return new LineCol(index + 2, 1);
-    }
-  }
-
-  private record FullToken(Token token, Span span, int newLinesBetween) {
+  private record FullToken(Token token, FullSpan span, int newLinesBetween) {
     String text(Lexer lexer) {
       return lexer.textFor(span.charIndex(), span.length());
     }
   }
-
-  private record LineCol(int line, int col) {}
 
   private record HeaderResult(
       boolean hasDocComment, boolean hasAnnotations, boolean hasModifiers) {}

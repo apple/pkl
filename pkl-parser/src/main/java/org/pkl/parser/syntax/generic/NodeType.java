@@ -25,7 +25,6 @@ public enum NodeType {
 
   MODULE,
   DOC_COMMENT,
-  DOC_COMMENT_LINE,
   MODIFIER,
   MODIFIER_LIST,
   AMENDS_CLAUSE,
