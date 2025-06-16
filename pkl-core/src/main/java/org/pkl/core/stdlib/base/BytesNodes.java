@@ -109,7 +109,7 @@ public final class BytesNodes {
   public abstract static class decodeToString extends ExternalMethod1Node {
     @TruffleBoundary
     private String doDecode(VmBytes self, String charset) throws CharacterCodingException {
-    var byteBuffer = ByteBuffer.wrap(self.getBytes());
+      var byteBuffer = ByteBuffer.wrap(self.getBytes());
       var decoder = Charset.forName(charset).newDecoder();
       return decoder.decode(byteBuffer).toString();
     }
