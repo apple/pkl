@@ -278,8 +278,7 @@ public class GenericParser {
       ff(elements);
     }
     if (lookahead == Token.EOF) {
-      throw parserError(
-          ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
+      throw parserError(ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
     }
     if (!elements.isEmpty()) {
       children.add(new GenNode(NodeType.CLASS_BODY_ELEMENTS, elements));
@@ -373,8 +372,7 @@ public class GenericParser {
     var members = new ArrayList<GenNode>();
     while (lookahead != Token.RBRACE) {
       if (lookahead == Token.EOF) {
-        throw parserError(
-            ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
+        throw parserError(ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
       }
       members.add(parseObjectMember());
       ff(members);
@@ -431,8 +429,7 @@ public class GenericParser {
       case WHEN -> parseWhenGenerator();
       case FOR -> parseForGenerator();
       case TYPE_ALIAS, CLASS ->
-          throw parserError(
-              ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
+          throw parserError(ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
       default -> {
         var preChildren = new ArrayList<GenNode>();
         while (lookahead.isModifier()) {
@@ -582,8 +579,8 @@ public class GenericParser {
   private GenNode parseWhenGenerator() {
     var children = new ArrayList<GenNode>();
     var header = new ArrayList<GenNode>();
-    header.add(makeTerminal(next()));
-    ff(header);
+    children.add(makeTerminal(next()));
+    ff(children);
     expect(Token.LPAREN, header, "unexpectedToken", "(");
     ff(header);
     header.add(parseExpr());
@@ -643,12 +640,11 @@ public class GenericParser {
       if (operator.getPrec() < minPrecedence) break;
       // `-` must be in the same line as the left operand and have no semicolons inbetween
       if (operator == Operator.MINUS
-          && (fullOpToken.hasSemicolon || !expr.span.sameLine(fullOpToken.tk.span)))
-        break;
+          && (fullOpToken.hasSemicolon || !expr.span.sameLine(fullOpToken.tk.span))) break;
       var midChildren = new ArrayList<GenNode>();
       ff(midChildren);
       var op = next();
-      midChildren.add(make(NodeType.OPERATOR, op.span));
+      midChildren.add(make(NodeType.OPERATOR, op.span, op.text(lexer)));
       ff(midChildren);
       var nextMinPrec = operator.isLeftAssoc() ? operator.getPrec() + 1 : operator.getPrec();
       GenNode rhs;
@@ -1484,6 +1480,10 @@ public class GenericParser {
 
   private GenNode make(NodeType type, FullSpan span) {
     return new GenNode(type, span);
+  }
+
+  private GenNode make(NodeType type, FullSpan span, String text) {
+    return new GenNode(type, span, text);
   }
 
   private GenNode makeAffix(FullToken tk) {

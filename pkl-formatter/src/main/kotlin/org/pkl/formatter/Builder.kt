@@ -96,7 +96,7 @@ class Builder(sourceText: String) {
       NodeType.FOR_GENERATOR -> formatForGenerator(node)
       NodeType.FOR_GENERATOR_HEADER -> formatParameterList(node)
       NodeType.WHEN_GENERATOR -> formatWhenGenerator(node)
-      NodeType.WHEN_GENERATOR_HEADER -> formatParameterList(node)
+      NodeType.WHEN_GENERATOR_HEADER -> formatWhenGeneratorHeader(node)
       NodeType.OBJECT_SPREAD -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.MEMBER_PREDICATE -> formatMemberPredicate(node)
       NodeType.QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node)
@@ -111,7 +111,7 @@ class Builder(sourceText: String) {
       NodeType.NEW_EXPR -> formatNewExpr(node)
       NodeType.NEW_HEADER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
-      NodeType.BINARY_OP_EXPR -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
       NodeType.SUBSCRIPT_EXPR,
       NodeType.SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node)
@@ -292,6 +292,9 @@ class Builder(sourceText: String) {
   }
 
   private fun formatParameterList(node: GenNode): FormatNode {
+    if (node.children.size == 2) {
+      return Group(newId(), listOf(format(node.children[0]), format(node.children[1])))
+    }
     val id = newId()
     val nodes = formatGeneric(node.children, SpaceOrLine)
     return Group(id, nodes)
@@ -376,6 +379,16 @@ class Builder(sourceText: String) {
     return Group(newId(), nodes)
   }
 
+  private fun formatWhenGeneratorHeader(node: GenNode): FormatNode {
+    val nodes =
+      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+        if (!node.type.isAffix && node.type != NodeType.TERMINAL) {
+          indent(format(node))
+        } else format(node)
+      }
+    return Group(newId(), nodes)
+  }
+
   private fun formatMemberPredicate(node: GenNode): FormatNode {
     val nodes =
       formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
@@ -442,6 +455,15 @@ class Builder(sourceText: String) {
           Nodes(group.nodes)
         } else format(node)
       }
+    return Group(newId(), nodes)
+  }
+  
+  private fun formatBinaryOpExpr(node: GenNode): FormatNode {
+    val nodes = formatGeneric(node.children) { prev, next ->
+      if (next.type == NodeType.OPERATOR && next.text() == "-") {
+        Space
+      } else SpaceOrLine
+    }
     return Group(newId(), nodes)
   }
 
@@ -512,6 +534,7 @@ class Builder(sourceText: String) {
     val children = node.children.groupBy { it.type.isAffix }
     if (children[true] != null) {
       nodes += formatGeneric(children[true]!!, SpaceOrLine)
+      nodes += ForceLine
     }
     val imports =
       children[false]!!.groupBy { imp ->
