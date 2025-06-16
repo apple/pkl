@@ -80,7 +80,8 @@ public class EvaluatorImpl implements Evaluator {
       @Nullable Duration timeout,
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
-      @Nullable String outputFormat) {
+      @Nullable String outputFormat,
+      boolean prettyTraces) {
 
     securityManager = manager;
     frameTransformer = transformer;
@@ -108,7 +109,8 @@ public class EvaluatorImpl implements Evaluator {
                       projectDependencies == null
                           ? null
                           : new ProjectDependenciesManager(
-                              projectDependencies, moduleResolver, securityManager)));
+                              projectDependencies, moduleResolver, securityManager),
+                      prettyTraces));
             });
     this.timeout = timeout;
     // NOTE: would probably make sense to share executor between evaluators

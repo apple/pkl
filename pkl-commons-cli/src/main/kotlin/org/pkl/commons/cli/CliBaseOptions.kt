@@ -148,6 +148,9 @@ data class CliBaseOptions(
 
   /** External resource reader process specs */
   val externalResourceReaders: Map<String, ExternalReader> = mapOf(),
+
+  /** Whether to render calls to trace() as an indented, multi-line string. */
+  val prettyTraces: Boolean = false,
 ) {
 
   companion object {

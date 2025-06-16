@@ -50,7 +50,8 @@ public record PklEvaluatorSettings(
     @Nullable Path rootDir,
     @Nullable Http http,
     @Nullable Map<String, ExternalReader> externalModuleReaders,
-    @Nullable Map<String, ExternalReader> externalResourceReaders) {
+    @Nullable Map<String, ExternalReader> externalResourceReaders,
+    @Nullable Boolean prettyTraces) {
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -120,7 +121,8 @@ public record PklEvaluatorSettings(
         rootDir,
         Http.parse((Value) pSettings.get("http")),
         externalModuleReaders,
-        externalResourceReaders);
+        externalResourceReaders,
+        (Boolean) pSettings.get("prettyTraces"));
   }
 
   public record Http(@Nullable Proxy proxy, @Nullable Map<URI, URI> rewrites) {
@@ -231,7 +233,8 @@ public record PklEvaluatorSettings(
         && Objects.equals(moduleCacheDir, that.moduleCacheDir)
         && Objects.equals(timeout, that.timeout)
         && Objects.equals(rootDir, that.rootDir)
-        && Objects.equals(http, that.http);
+        && Objects.equals(http, that.http)
+        && Objects.equals(prettyTraces, that.prettyTraces);
   }
 
   private int hashPatterns(@Nullable List<Pattern> patterns) {
@@ -249,7 +252,15 @@ public record PklEvaluatorSettings(
   public int hashCode() {
     var result =
         Objects.hash(
-            externalProperties, env, color, noCache, moduleCacheDir, timeout, rootDir, http);
+            externalProperties,
+            env,
+            color,
+            noCache,
+            moduleCacheDir,
+            timeout,
+            rootDir,
+            http,
+            prettyTraces);
     result = 31 * result + hashPatterns(allowedModules);
     result = 31 * result + hashPatterns(allowedResources);
     return result;

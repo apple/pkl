@@ -82,7 +82,8 @@ public class ReplServer implements AutoCloseable {
       @Nullable String outputFormat,
       Path workingDir,
       StackFrameTransformer frameTransformer,
-      boolean color) {
+      boolean color,
+      boolean prettyTraces) {
 
     this.workingDir = workingDir;
     this.securityManager = securityManager;
@@ -114,7 +115,8 @@ public class ReplServer implements AutoCloseable {
                       moduleCacheDir,
                       outputFormat,
                       packageResolver,
-                      projectDependenciesManager));
+                      projectDependenciesManager,
+                      prettyTraces));
             });
     language = languageRef.get();
   }

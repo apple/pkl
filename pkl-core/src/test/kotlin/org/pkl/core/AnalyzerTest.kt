@@ -37,6 +37,7 @@ class AnalyzerTest {
       null,
       null,
       HttpClient.dummyClient(),
+      false,
     )
 
   @Test
@@ -115,6 +116,7 @@ class AnalyzerTest {
         tempDir.resolve("packages"),
         null,
         HttpClient.dummyClient(),
+        false,
       )
     PackageServer.populateCacheDir(tempDir.resolve("packages"))
     val file1 =
@@ -190,6 +192,7 @@ class AnalyzerTest {
         tempDir.resolve("packages"),
         project.dependencies,
         HttpClient.dummyClient(),
+        false,
       )
     val file1 =
       tempDir
@@ -302,6 +305,7 @@ class AnalyzerTest {
         tempDir.resolve("packages"),
         project.dependencies,
         HttpClient.dummyClient(),
+        false,
       )
     val result = analyzer.importGraph(mainPkl.toUri())
     val birdUri = URI("projectpackage://localhost:0/birds@1.0.0#/bird.pkl")

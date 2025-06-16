@@ -166,6 +166,10 @@ class Http {
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
 }
 
+/// Whether to pretty print calls to trace(), producing indented output across multiple lines.
+@Since { version = "0.28.3" }
+prettyTraces: Boolean?
+
 /// Settings that control how Pkl talks to HTTP proxies.
 class Proxy {
   /// The proxy to use for HTTP(S) connections.

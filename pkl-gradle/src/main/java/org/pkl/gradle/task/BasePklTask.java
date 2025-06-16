@@ -201,7 +201,8 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpNoProxy().getOrElse(List.of()),
               getHttpRewrites().getOrNull(),
               Map.of(),
-              Map.of());
+              Map.of(),
+              false);
     }
     return cachedOptions;
   }

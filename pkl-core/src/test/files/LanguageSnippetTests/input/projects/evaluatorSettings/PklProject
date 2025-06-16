@@ -16,4 +16,5 @@ evaluatorSettings {
     "prop:"
     "env:"
   }
+  prettyTraces = true
 }
