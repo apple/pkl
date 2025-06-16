@@ -44,14 +44,11 @@ class FormatterCommand : NoOpCliktCommand(name = "format") {
 }
 
 abstract class FormatSubcommand(name: String) : CliktCommand(name = name) {
-  protected val writer = System.out.writer()
-  protected val errWriter = System.err.writer()
-
   protected fun format(file: Path, contents: String): Pair<String, Int> {
     try {
       return Formatter().format(contents) to 0
     } catch (pe: GenericParserError) {
-      errWriter.appendLine("Could not format `$file`: $pe")
+      println("Could not format `$file`: $pe")
       return "" to 1
     }
   }
@@ -80,10 +77,9 @@ class CheckCommand : FormatSubcommand(name = "check") {
       val (formatted, stat) = format(path, contents)
       status = stat
       if (contents != formatted) {
-        writer.appendLine(path.toAbsolutePath().toString())
+        println(path.toAbsolutePath().toString())
         status = 1
       }
-      writer.flush()
     }
     exitProcess(status)
   }
@@ -118,14 +114,14 @@ class ApplyCommand : FormatSubcommand(name = "apply") {
       val contents = path.readText()
       val (formatted, stat) = format(path, contents)
       status = stat
+      if (stat != 0) continue
       if (!silent && contents != formatted) {
-        writer.appendLine(path.toAbsolutePath().toString())
+        println(path.toAbsolutePath().toString())
       }
-      writer.flush()
       try {
         path.writeText(formatted, Charsets.UTF_8)
       } catch (e: IOException) {
-        errWriter.appendLine("Could not overwrite `$path`: ${e.message}")
+        println("Could not overwrite `$path`: ${e.message}")
         status = 1
       }
     }

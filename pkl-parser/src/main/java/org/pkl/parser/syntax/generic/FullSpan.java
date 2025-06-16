@@ -38,6 +38,10 @@ public record FullSpan(
     return lineEnd == other.lineBegin;
   }
 
+  public FullSpan stopSpan() {
+    return new FullSpan(charIndex + length - 1, 1, lineEnd, colEnd, lineEnd, colEnd);
+  }
+
   @Override
   public String toString() {
     return "(%d:%d - %d:%d)".formatted(lineBegin, colBegin, lineEnd, colEnd);

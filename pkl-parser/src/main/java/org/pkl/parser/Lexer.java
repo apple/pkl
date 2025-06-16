@@ -16,9 +16,8 @@
 package org.pkl.parser;
 
 import java.util.ArrayDeque;
-import java.util.ArrayList;
 import java.util.Deque;
-import java.util.List;
+import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.util.ErrorMessages;
 
 public class Lexer {
@@ -27,6 +26,10 @@ public class Lexer {
   private final int size;
   protected int cursor = 0;
   protected int sCursor = 0;
+  private int line = 1;
+  private int sLine = 1;
+  private int col = 1;
+  private int sCol = 1;
   private char lookahead;
   private State state = State.DEFAULT;
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
@@ -34,7 +37,6 @@ public class Lexer {
   private boolean isEscape = false;
   // how many newlines exist between two subsequent tokens
   protected int newLinesBetween = 0;
-  protected List<Integer> newlines = new ArrayList<>();
 
   private static final char EOF = Short.MAX_VALUE;
 
@@ -53,6 +55,11 @@ public class Lexer {
     return new Span(sCursor, cursor - sCursor);
   }
 
+  // The full span of the last lexed token
+  public FullSpan fullSpan() {
+    return new FullSpan(sCursor, cursor - sCursor, sLine, sCol, line, col);
+  }
+  
   // The text of the last lexed token
   public String text() {
     return new String(source, sCursor, cursor - sCursor);
@@ -68,6 +75,8 @@ public class Lexer {
 
   public Token next() {
     sCursor = cursor;
+    sLine = line;
+    sCol = col;
     newLinesBetween = 0;
     return switch (state) {
       case DEFAULT -> nextDefault();
@@ -82,8 +91,9 @@ public class Lexer {
       sCursor = cursor;
       if (ch == '\n') {
         newLinesBetween++;
-        newlines.add(cursor);
+        sLine = line;
       }
+      sCol = col;
       ch = nextChar();
     }
     return switch (ch) {
@@ -269,12 +279,10 @@ public class Lexer {
         if (lookahead == '\n') {
           nextChar();
         }
-        newlines.add(cursor);
         return Token.STRING_NEWLINE;
       }
       if (lookahead == '\n') {
         nextChar();
-        newlines.add(cursor);
         return Token.STRING_NEWLINE;
       }
       lexMultiString(scope.pounds);
@@ -683,6 +691,12 @@ public class Lexer {
       lookahead = EOF;
     } else {
       lookahead = source[cursor];
+    }
+    if (tmp == '\n') {
+      line++;
+      col = 1;
+    } else {
+      col++;
     }
     return tmp;
   }

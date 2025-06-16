@@ -37,8 +37,7 @@ class Builder(sourceText: String) {
   fun format(node: GenNode): FormatNode =
     when (node.type) {
       NodeType.MODULE -> formatModule(node)
-      NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, ForceLine))
-      NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
+      NodeType.DOC_COMMENT -> formatDocComment(node)
       NodeType.LINE_COMMENT,
       NodeType.BLOCK_COMMENT,
       NodeType.TERMINAL,
@@ -122,7 +121,7 @@ class Builder(sourceText: String) {
       NodeType.NON_NULL_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.QUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
-      NodeType.PARENTHESIZED_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
+      NodeType.PARENTHESIZED_EXPR -> Group(newId(), formatGeneric(node.children, EMPTY_NODE))
       NodeType.IMPORT_EXPR -> Nodes(formatGeneric(node.children, EMPTY_NODE))
       NodeType.LET_EXPR -> formatLetExpr(node)
       NodeType.LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node)
@@ -283,8 +282,8 @@ class Builder(sourceText: String) {
 
   private fun formatClassMethodBody(node: GenNode): FormatNode {
     val id = newId()
-    val node = format(node.children[0])
-    return Group(id, listOf(SpaceOrLine, IfWrap(id, indent(node), node)))
+    val nodes = formatGeneric(node.children, EMPTY_NODE)
+    return Group(id, listOf(SpaceOrLine, IfWrap(id, Indent(nodes), Nodes(nodes))))
   }
 
   private fun formatParameter(node: GenNode): FormatNode {
@@ -368,7 +367,11 @@ class Builder(sourceText: String) {
   private fun formatWhenGenerator(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.type == NodeType.WHEN_GENERATOR_HEADER) Space else SpaceOrLine
+        if (prev.type == NodeType.WHEN_GENERATOR_HEADER || prev.isTerminal("when", "else")) {
+          Space
+        } else {
+          SpaceOrLine
+        }
       }
     return Group(newId(), nodes)
   }
@@ -643,17 +646,16 @@ class Builder(sourceText: String) {
     separatorFn: (GenNode, GenNode) -> FormatNode?,
   ): FormatNode? {
     return when {
-      hasTraillingAffix(prev, next) -> SpaceOrLine
+      hasTraillingAffix(prev, next) -> Space
       prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
-      prev.type in FORCE_LINE_AFFIXES -> {
+      prev.type in FORCE_LINE_AFFIXES || next.type.isAffix -> {
         if (prev.linesBetween(next) > 1) {
           nodes(ForceLine, ForceLine)
         } else {
           ForceLine
         }
       }
-      prev.type == NodeType.BLOCK_COMMENT ->
-        if (prev.linesBetween(next) > 0) ForceLine else SpaceOrLine
+      prev.type == NodeType.BLOCK_COMMENT -> if (prev.linesBetween(next) > 0) ForceLine else Space
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
@@ -661,6 +663,7 @@ class Builder(sourceText: String) {
         next.type == NodeType.OBJECT_BODY ||
         next.type == NodeType.NEW_EXPR -> Space
       prev.isTerminal("(") || next.isTerminal(")") -> Line
+      next.type == NodeType.DOC_COMMENT -> nodes(ForceLine, ForceLine)
       else -> separatorFn(prev, next)
     }
   }
@@ -724,12 +727,7 @@ class Builder(sourceText: String) {
     private val EMPTY_NODE = Nodes(listOf())
 
     private val FORCE_LINE_AFFIXES =
-      EnumSet.of(
-        NodeType.LINE_COMMENT,
-        NodeType.SEMICOLON,
-        NodeType.SHEBANG,
-        NodeType.DOC_COMMENT_LINE,
-      )
+      EnumSet.of(NodeType.LINE_COMMENT, NodeType.SEMICOLON, NodeType.SHEBANG)
 
     private val EMPTY_SUFFIXES =
       EnumSet.of(
