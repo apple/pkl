@@ -35,10 +35,10 @@ class Formatter {
     val parser = GenericParser()
     val builder = Builder(text)
     val gen = Generator()
-    val mod = parser.parseModule(text)
-    val ast = builder.format(mod)
+    val ast = parser.parseModule(text)
+    val formatAst = builder.format(ast)
     // force a line at the end of the file
-    gen.generate(Nodes(listOf(ast, ForceLine)))
+    gen.generate(Nodes(listOf(formatAst, ForceLine)))
     return gen.toString()
   }
 }
