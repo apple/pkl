@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -197,7 +197,8 @@ public final class Project {
             builder.getModuleKeyFactories(),
             builder.getModuleCacheDir(),
             builder.getProjectDependencies(),
-            builder.getHttpClient());
+            builder.getHttpClient(),
+            builder.getPrettyTraces());
     var importGraph = analyzer.importGraph(moduleSource.getUri());
     var ret = ImportGraphUtils.findImportCycles(importGraph);
     // we only care about cycles in the same scheme as `moduleSource`
@@ -511,7 +512,8 @@ public final class Project {
         @Nullable Path moduleCacheDir,
         @Nullable List<Path> modulePath,
         @Nullable Duration timeout,
-        @Nullable Path rootDir) {
+        @Nullable Path rootDir,
+        @Nullable Boolean prettyTraces) {
       this.delegate =
           new PklEvaluatorSettings(
               externalProperties,
@@ -526,7 +528,8 @@ public final class Project {
               rootDir,
               null,
               null,
-              null);
+              null,
+              prettyTraces);
     }
 
     @Deprecated(forRemoval = true)
@@ -610,6 +613,8 @@ public final class Project {
           + delegate.timeout()
           + ", rootDir="
           + delegate.rootDir()
+          + ", prettyTraces="
+          + delegate.prettyTraces()
           + '}';
     }
   }

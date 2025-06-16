@@ -45,6 +45,7 @@ class BinaryEvaluatorTest {
       null,
       null,
       null,
+      false,
     )
 
   private fun evaluate(text: String, expression: String?) =

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,6 +145,9 @@ data class CliBaseOptions(
 
   /** External resource reader process specs */
   val externalResourceReaders: Map<String, ExternalReader> = mapOf(),
+
+  /** Whether to render calls to trace() as an indented, multi-line string. */
+  val prettyTraces: Boolean = false,
 ) {
 
   companion object {

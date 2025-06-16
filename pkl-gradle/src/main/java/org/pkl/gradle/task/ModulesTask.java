@@ -164,7 +164,8 @@ public abstract class ModulesTask extends BasePklTask {
               null,
               List.of(),
               Map.of(),
-              Map.of());
+              Map.of(),
+              false);
     }
     return cachedOptions;
   }

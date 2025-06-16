@@ -46,6 +46,7 @@ public class Analyzer {
   private final @Nullable DeclaredDependencies projectDependencies;
   private final ModuleResolver moduleResolver;
   private final HttpClient httpClient;
+  private final boolean prettyTraces;
 
   public Analyzer(
       StackFrameTransformer transformer,
@@ -54,7 +55,8 @@ public class Analyzer {
       Collection<ModuleKeyFactory> moduleKeyFactories,
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
-      HttpClient httpClient) {
+      HttpClient httpClient,
+      boolean prettyTraces) {
     this.transformer = transformer;
     this.color = color;
     this.securityManager = securityManager;
@@ -62,6 +64,7 @@ public class Analyzer {
     this.projectDependencies = projectDependencies;
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
     this.httpClient = httpClient;
+    this.prettyTraces = prettyTraces;
   }
 
   /**
@@ -115,7 +118,8 @@ public class Analyzer {
                   projectDependencies == null
                       ? null
                       : new ProjectDependenciesManager(
-                          projectDependencies, moduleResolver, securityManager)));
+                          projectDependencies, moduleResolver, securityManager),
+                  prettyTraces));
         });
   }
 }

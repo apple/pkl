@@ -74,6 +74,7 @@ class ProjectTest {
         null,
         null,
         null,
+        null,
       )
     val expectedAnnotations =
       listOf(

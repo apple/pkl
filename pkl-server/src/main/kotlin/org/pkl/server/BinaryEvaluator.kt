@@ -39,6 +39,7 @@ internal class BinaryEvaluator(
   moduleCacheDir: Path?,
   declaredDependencies: DeclaredDependencies?,
   outputFormat: String?,
+  prettyTraces: Boolean?,
 ) :
   EvaluatorImpl(
     transformer,
@@ -54,6 +55,7 @@ internal class BinaryEvaluator(
     moduleCacheDir,
     declaredDependencies,
     outputFormat,
+    prettyTraces == true,
   ) {
   fun evaluate(moduleSource: ModuleSource, expression: String?): ByteArray {
     return doEvaluate(moduleSource) { module ->

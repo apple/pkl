@@ -67,6 +67,8 @@ public final class EvaluatorBuilder {
 
   private @Nullable DeclaredDependencies dependencies;
 
+  private boolean prettyTraces = false;
+
   private EvaluatorBuilder() {}
 
   /**
@@ -454,6 +456,17 @@ public final class EvaluatorBuilder {
     return this.dependencies;
   }
 
+  /** Sets whether calls to trace() produce indented, multi-line output. */
+  public EvaluatorBuilder setPrettyTraces(boolean prettyTraces) {
+    this.prettyTraces = prettyTraces;
+    return this;
+  }
+
+  /** Returns whether calls to trace() produce indented, multi-line output. */
+  public boolean getPrettyTraces() {
+    return this.prettyTraces;
+  }
+
   /**
    * Given a project, sets its dependencies, and also applies any evaluator settings if set.
    *
@@ -517,6 +530,7 @@ public final class EvaluatorBuilder {
                 procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
+    this.prettyTraces = Boolean.TRUE.equals(settings.prettyTraces());
     return this;
   }
 
@@ -543,6 +557,7 @@ public final class EvaluatorBuilder {
         timeout,
         moduleCacheDir,
         dependencies,
-        outputFormat);
+        outputFormat,
+        prettyTraces);
   }
 }
