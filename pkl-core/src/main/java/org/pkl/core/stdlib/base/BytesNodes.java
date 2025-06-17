@@ -16,6 +16,7 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.nio.ByteBuffer;
 import java.nio.charset.CharacterCodingException;
@@ -106,12 +107,17 @@ public final class BytesNodes {
   }
 
   public abstract static class decodeToString extends ExternalMethod1Node {
+    @TruffleBoundary
+    private String doDecode(VmBytes self, String charset) throws CharacterCodingException {
+      var byteBuffer = ByteBuffer.wrap(self.getBytes());
+      var decoder = Charset.forName(charset).newDecoder();
+      return decoder.decode(byteBuffer).toString();
+    }
+
     @Specialization
     protected String eval(VmBytes self, String charset) {
       try {
-        var byteBuffer = ByteBuffer.wrap(self.getBytes());
-        var decoder = Charset.forName(charset).newDecoder();
-        return decoder.decode(byteBuffer).toString();
+        return doDecode(self, charset);
       } catch (CharacterCodingException e) {
         CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder().evalError("characterCodingException", charset).build();

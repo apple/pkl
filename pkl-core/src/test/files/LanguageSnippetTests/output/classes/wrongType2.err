@@ -13,3 +13,7 @@ at wrongType2#pigeon.age (file:///$snippetsDir/input/classes/wrongType2.pkl)
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
+
+xxx | bytes = text.encodeToBytes("UTF-8")
+              ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

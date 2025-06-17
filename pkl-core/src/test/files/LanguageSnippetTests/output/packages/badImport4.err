@@ -12,3 +12,7 @@ The fragment of this URI is interpreted as a path, and it must be absolute (it s
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
+
+xxx | bytes = text.encodeToBytes("UTF-8")
+              ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

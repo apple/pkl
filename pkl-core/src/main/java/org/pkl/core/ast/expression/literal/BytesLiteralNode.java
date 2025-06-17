@@ -58,6 +58,7 @@ public final class BytesLiteralNode extends ExpressionNode {
         var result = (Long) typeNode.execute(frame, elem.executeGeneric(frame));
         bytes[i] = result.byteValue();
       } catch (VmTypeMismatchException err) {
+        CompilerDirectives.transferToInterpreter();
         // optimization: don't create a new stack frame to check the type, but pretend that one
         // exists.
         err.putInsertedStackFrame(
