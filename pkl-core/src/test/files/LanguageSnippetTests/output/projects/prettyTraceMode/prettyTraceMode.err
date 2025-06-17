@@ -1,0 +1,39 @@
+examples {
+  ["traceMode = 'pretty' results in indented, multi-line output"] {
+    new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings {
+          kicked = true
+          ["fjordConfig"] {
+            isPining = true
+          }
+        }
+      }
+    }
+  }
+}
+pkl: TRACE: new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    } = new Dynamic {
+  ["Parrot"] {
+    name = "Parrot"
+    age = 1234
+    bucketSettings {
+      kicked = true
+      ["fjordConfig"] {
+        isPining = true
+      }
+    }
+  }
+} (file:///$snippetsDir/input/projects/prettyTraceMode/prettyTraceMode.pkl)

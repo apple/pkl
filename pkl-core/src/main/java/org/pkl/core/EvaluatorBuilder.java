@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
@@ -67,7 +68,7 @@ public final class EvaluatorBuilder {
 
   private @Nullable DeclaredDependencies dependencies;
 
-  private boolean prettyTraces = false;
+  private @Nullable TraceMode traceMode;
 
   private EvaluatorBuilder() {}
 
@@ -457,14 +458,14 @@ public final class EvaluatorBuilder {
   }
 
   /** Sets whether calls to trace() produce indented, multi-line output. */
-  public EvaluatorBuilder setPrettyTraces(boolean prettyTraces) {
-    this.prettyTraces = prettyTraces;
+  public EvaluatorBuilder setTraceMode(TraceMode traceMode) {
+    this.traceMode = traceMode;
     return this;
   }
 
   /** Returns whether calls to trace() produce indented, multi-line output. */
-  public boolean getPrettyTraces() {
-    return this.prettyTraces;
+  public TraceMode getTraceMode() {
+    return this.traceMode;
   }
 
   /**
@@ -546,7 +547,9 @@ public final class EvaluatorBuilder {
       setHttpClient(httpClientBuilder.buildLazily());
     }
 
-    this.prettyTraces = Boolean.TRUE.equals(settings.prettyTraces());
+    if (settings.traceMode() != null) {
+      setTraceMode(settings.traceMode());
+    }
 
     return this;
   }
@@ -575,6 +578,6 @@ public final class EvaluatorBuilder {
         moduleCacheDir,
         dependencies,
         outputFormat,
-        prettyTraces);
+        traceMode);
   }
 }

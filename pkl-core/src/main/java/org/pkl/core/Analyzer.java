@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.graalvm.polyglot.Context;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.module.ModuleKeyFactory;
@@ -46,7 +47,7 @@ public class Analyzer {
   private final @Nullable DeclaredDependencies projectDependencies;
   private final ModuleResolver moduleResolver;
   private final HttpClient httpClient;
-  private final boolean prettyTraces;
+  private final TraceMode traceMode;
 
   public Analyzer(
       StackFrameTransformer transformer,
@@ -56,7 +57,7 @@ public class Analyzer {
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       HttpClient httpClient,
-      boolean prettyTraces) {
+      @Nullable TraceMode traceMode) {
     this.transformer = transformer;
     this.color = color;
     this.securityManager = securityManager;
@@ -64,7 +65,7 @@ public class Analyzer {
     this.projectDependencies = projectDependencies;
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
     this.httpClient = httpClient;
-    this.prettyTraces = prettyTraces;
+    this.traceMode = traceMode;
   }
 
   /**
@@ -119,7 +120,7 @@ public class Analyzer {
                       ? null
                       : new ProjectDependenciesManager(
                           projectDependencies, moduleResolver, securityManager),
-                  prettyTraces));
+                  traceMode));
         });
   }
 }

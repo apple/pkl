@@ -22,6 +22,7 @@ import java.time.Duration
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.messaging.BaseMessagePackDecoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
@@ -50,6 +51,13 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           map.unpackHttp(),
           unpackStringMapOrNull(map, "externalModuleReaders", ::unpackExternalReader),
           unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader),
+          unpackStringOrNull(
+            map,
+            "traceMode",
+            fun(traceMode: String): TraceMode {
+              return TraceMode.valueOf(traceMode.uppercase())
+            },
+          ),
         )
       Message.Type.CREATE_EVALUATOR_RESPONSE ->
         CreateEvaluatorResponse(

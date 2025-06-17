@@ -1025,6 +1025,7 @@ abstract class AbstractServerTest {
         http,
         null,
         null,
+        null,
       )
 
     send(message)

@@ -1,0 +1,18 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["traceMode = 'hidden' results in no trace output"] {
+    trace(new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })
+  }
+}

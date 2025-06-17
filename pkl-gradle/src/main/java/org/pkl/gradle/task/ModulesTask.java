@@ -166,7 +166,7 @@ public abstract class ModulesTask extends BasePklTask {
               getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of(),
-              false);
+              null);
     }
     return cachedOptions;
   }

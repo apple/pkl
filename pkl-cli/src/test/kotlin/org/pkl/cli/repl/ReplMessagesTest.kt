@@ -43,7 +43,7 @@ class ReplMessagesTest {
       "/".toPath(),
       StackFrameTransformers.defaultTransformer,
       false,
-      false,
+      null,
     )
 
   @Test

@@ -202,7 +202,7 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of(),
-              false);
+              null);
     }
     return cachedOptions;
   }

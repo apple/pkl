@@ -43,6 +43,7 @@ import org.pkl.core.StackFrameTransformers;
 import org.pkl.core.Value;
 import org.pkl.core.Version;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency.RemoteDependency;
@@ -198,7 +199,7 @@ public final class Project {
             builder.getModuleCacheDir(),
             builder.getProjectDependencies(),
             builder.getHttpClient(),
-            builder.getPrettyTraces());
+            builder.getTraceMode());
     var importGraph = analyzer.importGraph(moduleSource.getUri());
     var ret = ImportGraphUtils.findImportCycles(importGraph);
     // we only care about cycles in the same scheme as `moduleSource`
@@ -513,7 +514,7 @@ public final class Project {
         @Nullable List<Path> modulePath,
         @Nullable Duration timeout,
         @Nullable Path rootDir,
-        @Nullable Boolean prettyTraces) {
+        @Nullable TraceMode traceMode) {
       this.delegate =
           new PklEvaluatorSettings(
               externalProperties,
@@ -529,7 +530,7 @@ public final class Project {
               null,
               null,
               null,
-              prettyTraces);
+              traceMode);
     }
 
     @Deprecated(forRemoval = true)
@@ -613,8 +614,8 @@ public final class Project {
           + delegate.timeout()
           + ", rootDir="
           + delegate.rootDir()
-          + ", prettyTraces="
-          + delegate.prettyTraces()
+          + ", traceMode="
+          + delegate.traceMode()
           + '}';
     }
   }
