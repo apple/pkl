@@ -23,6 +23,7 @@ import java.util.Map;
 import org.pkl.core.Logger;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.packages.PackageResolver;
@@ -50,7 +51,7 @@ public final class VmContext {
     private final ModuleCache moduleCache;
     private final @Nullable PackageResolver packageResolver;
     private final @Nullable ProjectDependenciesManager projectDependenciesManager;
-    private final boolean prettyTraces;
+    private final TraceMode traceMode;
 
     public Holder(
         StackFrameTransformer frameTransformer,
@@ -65,7 +66,7 @@ public final class VmContext {
         @Nullable String outputFormat,
         @Nullable PackageResolver packageResolver,
         @Nullable ProjectDependenciesManager projectDependenciesManager,
-        boolean prettyTraces) {
+        @Nullable TraceMode traceMode) {
 
       this.frameTransformer = frameTransformer;
       this.securityManager = securityManager;
@@ -86,7 +87,7 @@ public final class VmContext {
       moduleCache = new ModuleCache();
       this.packageResolver = packageResolver;
       this.projectDependenciesManager = projectDependenciesManager;
-      this.prettyTraces = prettyTraces;
+      this.traceMode = traceMode;
     }
   }
 
@@ -147,7 +148,7 @@ public final class VmContext {
     return holder.projectDependenciesManager;
   }
 
-  public boolean getPrettyTraces() {
-    return holder.prettyTraces;
+  public @Nullable TraceMode getTraceMode() {
+    return holder.traceMode;
   }
 }

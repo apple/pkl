@@ -49,7 +49,7 @@ public record PklEvaluatorSettings(
     @Nullable Http http,
     @Nullable Map<String, ExternalReader> externalModuleReaders,
     @Nullable Map<String, ExternalReader> externalResourceReaders,
-    @Nullable Boolean prettyTraces) {
+    @Nullable TraceMode traceMode) {
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -105,6 +105,7 @@ public record PklEvaluatorSettings(
                         Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
 
     var color = (String) pSettings.get("color");
+    var traceMode = (String) pSettings.get("traceMode");
 
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),
@@ -120,7 +121,7 @@ public record PklEvaluatorSettings(
         Http.parse((Value) pSettings.get("http")),
         externalModuleReaders,
         externalResourceReaders,
-        (Boolean) pSettings.get("prettyTraces"));
+        traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase()));
   }
 
   public record Http(@Nullable Proxy proxy) {
@@ -216,7 +217,7 @@ public record PklEvaluatorSettings(
         && Objects.equals(timeout, that.timeout)
         && Objects.equals(rootDir, that.rootDir)
         && Objects.equals(http, that.http)
-        && Objects.equals(prettyTraces, that.prettyTraces);
+        && Objects.equals(traceMode, that.traceMode);
   }
 
   private int hashPatterns(@Nullable List<Pattern> patterns) {
@@ -242,7 +243,7 @@ public record PklEvaluatorSettings(
             timeout,
             rootDir,
             http,
-            prettyTraces);
+            traceMode);
     result = 31 * result + hashPatterns(allowedModules);
     result = 31 * result + hashPatterns(allowedResources);
     return result;

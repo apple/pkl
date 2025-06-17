@@ -225,7 +225,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
       cacheDir,
       dependencies,
       message.outputFormat,
-      false,
+      message.traceMode,
     )
   }
 

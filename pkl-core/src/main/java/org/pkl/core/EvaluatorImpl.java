@@ -30,6 +30,7 @@ import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
@@ -81,7 +82,7 @@ public class EvaluatorImpl implements Evaluator {
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       @Nullable String outputFormat,
-      boolean prettyTraces) {
+      @Nullable TraceMode traceMode) {
 
     securityManager = manager;
     frameTransformer = transformer;
@@ -110,7 +111,7 @@ public class EvaluatorImpl implements Evaluator {
                           ? null
                           : new ProjectDependenciesManager(
                               projectDependencies, moduleResolver, securityManager),
-                      prettyTraces));
+                      traceMode));
             });
     this.timeout = timeout;
     // NOTE: would probably make sense to share executor between evaluators

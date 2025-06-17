@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.runtime.*;
 
 public final class TraceNode extends ExpressionNode {
@@ -44,6 +45,10 @@ public final class TraceNode extends ExpressionNode {
 
   @TruffleBoundary
   private void doTrace(Object value, VmContext context) {
+    // If traces are disabled, returns early.
+    if (context.getTraceMode() == TraceMode.HIDDEN) {
+      return;
+    }
     if (value instanceof VmObjectLike objectLike) {
       try {
         objectLike.force(true, true);
@@ -53,7 +58,7 @@ public final class TraceNode extends ExpressionNode {
 
     var sourceSection = valueNode.getSourceSection();
     String renderedValue;
-    if (context.getPrettyTraces()) {
+    if (context.getTraceMode() == TraceMode.PRETTY) {
       renderedValue = multiLineRenderer.render(value);
     } else {
       renderedValue = singleLineRenderer.render(value);

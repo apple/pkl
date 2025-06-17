@@ -50,7 +50,7 @@ public abstract class StdLibModule {
                       null,
                       null,
                       null,
-                      false));
+                      null));
               var language = VmLanguage.get(null);
               var moduleKey = ModuleKeys.standardLibrary(uri);
               var source = VmUtils.loadSource((ResolvedModuleKey) moduleKey);
