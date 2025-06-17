@@ -165,10 +165,14 @@ public class GenericParser {
     var hasDocComment = false;
     var hasAnnotation = false;
     var hasModifier = false;
-    while (lookahead == Token.DOC_COMMENT) {
-      children.add(parseDocComment());
-      hasDocComment = true;
+    var docs = new ArrayList<GenNode>();
+    while (lookahead() == Token.DOC_COMMENT) {
       ff(children);
+      docs.add(new GenNode(NodeType.DOC_COMMENT_LINE, next().span));
+      hasDocComment = true;
+    }
+    if (hasDocComment) {
+      children.add(new GenNode(NodeType.DOC_COMMENT, docs));
     }
     while (lookahead == Token.AT) {
       children.add(parseAnnotation());
@@ -181,12 +185,8 @@ public class GenericParser {
       hasModifier = true;
       ff(children);
     }
-    if (!modifiers.isEmpty()) children.add(new GenNode(NodeType.MODIFIER_LIST, modifiers));
+    if (hasModifier) children.add(new GenNode(NodeType.MODIFIER_LIST, modifiers));
     return new HeaderResult(hasDocComment, hasAnnotation, hasModifier);
-  }
-
-  private GenNode parseDocComment() {
-    return new GenNode(NodeType.DOC_COMMENT, next().span);
   }
 
   private GenNode parseModuleMember(List<GenNode> preChildren) {
