@@ -52,7 +52,7 @@ public class ListSort {
           IoUtils.getCurrentWorkingDir(),
           StackFrameTransformers.defaultTransformer,
           false,
-          false);
+          null);
   private static final List<Object> list = new ArrayList<>(100000);
 
   static {
