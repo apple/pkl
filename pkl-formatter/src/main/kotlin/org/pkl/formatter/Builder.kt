@@ -37,16 +37,16 @@ class Builder(sourceText: String) {
   fun format(node: GenNode): FormatNode =
     when (node.type) {
       NodeType.MODULE -> formatModule(node)
-      NodeType.DOC_COMMENT -> formatDocComment(node)
+      NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, null))
+      NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
       NodeType.LINE_COMMENT,
       NodeType.BLOCK_COMMENT,
       NodeType.TERMINAL,
       NodeType.MODIFIER,
       NodeType.IDENTIFIER,
       NodeType.STRING_CONSTANT,
-      // TODO: properly format strings
+      NodeType.STRING_ESCAPE,
       NodeType.SINGLE_LINE_STRING_LITERAL_EXPR,
-      NodeType.MULTI_LINE_STRING_LITERAL_EXPR,
       NodeType.INT_LITERAL_EXPR,
       NodeType.FLOAT_LITERAL_EXPR,
       NodeType.BOOL_LITERAL_EXPR,
@@ -60,6 +60,7 @@ class Builder(sourceText: String) {
       NodeType.OPERATOR -> Text(node.text())
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
       NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
+      NodeType.MULTI_LINE_STRING_LITERAL_EXPR -> formatMultilineString(node)
       NodeType.ANNOTATION -> formatAnnotation(node)
       NodeType.TYPEALIAS -> formatTypealias(node)
       NodeType.TYPEALIAS_HEADER -> formatTypealiasHeader(node)
@@ -254,7 +255,10 @@ class Builder(sourceText: String) {
     val nodes =
       groupNonPrefixes(node) { children ->
         val nodes =
-          formatGenericWithGen(children, SpaceOrLine) { node, next ->
+          formatGenericWithGen(
+            children,
+            { prev, next -> if (next.type == NodeType.NEW_EXPR) Space else SpaceOrLine },
+          ) { node, next ->
             if (next == null && shouldIndent) indent((format(node))) else format(node)
           }
         groupOnSpace(nodes)
@@ -270,7 +274,11 @@ class Builder(sourceText: String) {
   private fun formatClassMethod(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (next.type == NodeType.CLASS_METHOD_BODY) null else SpaceOrLine
+        when (next.type) {
+          NodeType.CLASS_METHOD_BODY -> null
+          NodeType.NEW_EXPR -> Space
+          else -> SpaceOrLine
+        }
       }
     return Group(newId(), nodes)
   }
@@ -296,7 +304,10 @@ class Builder(sourceText: String) {
       return Group(newId(), listOf(format(node.children[0]), format(node.children[1])))
     }
     val id = newId()
-    val nodes = formatGeneric(node.children, SpaceOrLine)
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+      }
     return Group(id, nodes)
   }
 
@@ -352,7 +363,11 @@ class Builder(sourceText: String) {
   }
 
   private fun formatObjectProperty(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (next.type == NodeType.NEW_EXPR) Space else SpaceOrLine
+      }
+    return Group(newId(), nodes)
   }
 
   private fun formatObjectPropertyHeader(node: GenNode): FormatNode {
@@ -381,7 +396,10 @@ class Builder(sourceText: String) {
 
   private fun formatWhenGeneratorHeader(node: GenNode): FormatNode {
     val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+      ) { node, next ->
         if (!node.type.isAffix && node.type != NodeType.TERMINAL) {
           indent(format(node))
         } else format(node)
@@ -395,6 +413,16 @@ class Builder(sourceText: String) {
         if (next == null && node.type != NodeType.OBJECT_BODY) {
           indent(format(node))
         } else format(node)
+      }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatMultilineString(node: GenNode): FormatNode {
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("\"\"\"") || next.isTerminal("\"\"\"")) {
+          ForceLine
+        } else null
       }
     return Group(newId(), nodes)
   }
@@ -457,18 +485,22 @@ class Builder(sourceText: String) {
       }
     return Group(newId(), nodes)
   }
-  
+
   private fun formatBinaryOpExpr(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children) { prev, next ->
-      if (next.type == NodeType.OPERATOR && next.text() == "-") {
-        Space
-      } else SpaceOrLine
-    }
+    val nodes =
+      formatGeneric(flattenBinaryOperatorExprs(node)) { prev, next ->
+        if ((prev.type == NodeType.OPERATOR && prev.text() != "-") || next.isOperator("-")) {
+          Space
+        } else SpaceOrLine
+      }
     return Group(newId(), nodes)
   }
 
   private fun formatLetParameterDefinition(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+      }
     return Group(newId(), nodes)
   }
 
@@ -682,10 +714,7 @@ class Builder(sourceText: String) {
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
-      next.isTerminal("=", "{") ||
-        next.type == NodeType.OBJECT_BODY ||
-        next.type == NodeType.NEW_EXPR -> Space
-      prev.isTerminal("(") || next.isTerminal(")") -> Line
+      next.isTerminal("=", "{") || next.type == NodeType.OBJECT_BODY -> Space
       next.type == NodeType.DOC_COMMENT -> nodes(ForceLine, ForceLine)
       else -> separatorFn(prev, next)
     }
@@ -727,12 +756,27 @@ class Builder(sourceText: String) {
     return Group(newId(), res)
   }
 
+  private fun flattenBinaryOperatorExprs(node: GenNode): List<GenNode> {
+    val res = mutableListOf<GenNode>()
+    for (child in node.children) {
+      if (child.type == NodeType.BINARY_OP_EXPR) {
+        res += flattenBinaryOperatorExprs(child)
+      } else {
+        res += child
+      }
+    }
+    return res
+  }
+
   private fun GenNode.linesBetween(next: GenNode): Int = next.span.lineBegin - span.lineEnd
 
   private fun GenNode.text() = text(source)
 
   private fun GenNode.isTerminal(vararg texts: String): Boolean =
     type == NodeType.TERMINAL && text(source) in texts
+
+  private fun GenNode.isOperator(name: String): Boolean =
+    type == NodeType.OPERATOR && text(source) == name
 
   private fun newId(): Int {
     return id++
@@ -750,7 +794,12 @@ class Builder(sourceText: String) {
     private val EMPTY_NODE = Nodes(listOf())
 
     private val FORCE_LINE_AFFIXES =
-      EnumSet.of(NodeType.LINE_COMMENT, NodeType.SEMICOLON, NodeType.SHEBANG)
+      EnumSet.of(
+        NodeType.DOC_COMMENT_LINE,
+        NodeType.LINE_COMMENT,
+        NodeType.SEMICOLON,
+        NodeType.SHEBANG,
+      )
 
     private val EMPTY_SUFFIXES =
       EnumSet.of(

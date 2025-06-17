@@ -59,7 +59,7 @@ public class Lexer {
   public FullSpan fullSpan() {
     return new FullSpan(sCursor, cursor - sCursor, sLine, sCol, line, col);
   }
-  
+
   // The text of the last lexed token
   public String text() {
     return new String(source, sCursor, cursor - sCursor);
