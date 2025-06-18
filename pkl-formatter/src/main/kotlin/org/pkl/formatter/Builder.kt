@@ -46,6 +46,7 @@ class Builder(sourceText: String) {
       NodeType.IDENTIFIER,
       NodeType.STRING_CONSTANT,
       NodeType.STRING_ESCAPE,
+      NodeType.STRING_NEWLINE,
       NodeType.SINGLE_LINE_STRING_LITERAL_EXPR,
       NodeType.INT_LITERAL_EXPR,
       NodeType.FLOAT_LITERAL_EXPR,
@@ -418,13 +419,27 @@ class Builder(sourceText: String) {
   }
 
   private fun formatMultilineString(node: GenNode): FormatNode {
+    val endWithNewline = endWithNewline(node.children)
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("\"\"\"") || next.isTerminal("\"\"\"")) {
+        if (
+          (prev.isTerminal("\"\"\"") && next.type != NodeType.STRING_NEWLINE) ||
+            (next.isTerminal("\"\"\"") && !endWithNewline)
+        ) {
           ForceLine
         } else null
       }
     return Group(newId(), nodes)
+  }
+
+  private fun endWithNewline(nodes: List<GenNode>): Boolean {
+    val rev = nodes.reversed().drop(1)
+    for (child in rev) {
+      if (child.type == NodeType.STRING_NEWLINE) return true
+      if (child.type != NodeType.STRING_CONSTANT) return false
+      if (!child.text().isBlank()) return false
+    }
+    return false
   }
 
   private fun formatIf(node: GenNode): FormatNode {
@@ -493,7 +508,7 @@ class Builder(sourceText: String) {
           Space
         } else SpaceOrLine
       }
-    return Group(newId(), nodes)
+    return Group(newId(), indentAfterFirstNewline(nodes))
   }
 
   private fun formatLetParameterDefinition(node: GenNode): FormatNode {
@@ -714,7 +729,7 @@ class Builder(sourceText: String) {
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
-      next.isTerminal("=", "{") || next.type == NodeType.OBJECT_BODY -> Space
+      next.isTerminal("=", "{", "->") || next.type == NodeType.OBJECT_BODY -> Space
       next.type == NodeType.DOC_COMMENT -> nodes(ForceLine, ForceLine)
       else -> separatorFn(prev, next)
     }
@@ -741,6 +756,12 @@ class Builder(sourceText: String) {
   private fun splitPrefixes(nodes: List<GenNode>): Pair<List<GenNode>, List<GenNode>> {
     val splitPoint = nodes.indexOfFirst { !it.type.isAffix && it.type != NodeType.DOC_COMMENT }
     return nodes.subList(0, splitPoint) to nodes.subList(splitPoint, nodes.size)
+  }
+
+  private fun indentAfterFirstNewline(nodes: List<FormatNode>): List<FormatNode> {
+    val index = nodes.indexOfFirst { it is SpaceOrLine || it is ForceLine || it is Line }
+    if (index <= 0) return nodes
+    return nodes.subList(0, index) + listOf(Indent(nodes.subList(index, nodes.size)))
   }
 
   private fun groupOnSpace(fnodes: List<FormatNode>): FormatNode {
