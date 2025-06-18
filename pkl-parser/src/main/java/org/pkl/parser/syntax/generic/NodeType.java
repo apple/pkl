@@ -66,6 +66,7 @@ public enum NodeType {
   TYPE_PARAMETER,
   STRING_CONSTANT,
   OPERATOR,
+  STRING_NEWLINE,
   STRING_ESCAPE,
 
   // members
