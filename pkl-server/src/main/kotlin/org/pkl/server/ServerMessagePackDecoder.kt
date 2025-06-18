@@ -51,13 +51,7 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           map.unpackHttp(),
           unpackStringMapOrNull(map, "externalModuleReaders", ::unpackExternalReader),
           unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader),
-          unpackStringOrNull(
-            map,
-            "traceMode",
-            fun(traceMode: String): TraceMode {
-              return TraceMode.valueOf(traceMode.uppercase())
-            },
-          ),
+          unpackStringOrNull(map, "traceMode") { TraceMode.valueOf(it.uppercase()) },
         )
       Message.Type.CREATE_EVALUATOR_RESPONSE ->
         CreateEvaluatorResponse(
