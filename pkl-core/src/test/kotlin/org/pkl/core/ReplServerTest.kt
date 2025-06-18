@@ -45,6 +45,7 @@ class ReplServerTest {
       "/".toPath(),
       StackFrameTransformers.defaultTransformer,
       false,
+      null,
     )
 
   @Test
