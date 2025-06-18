@@ -1030,8 +1030,8 @@ public class GenericParser {
             children.add(make(NodeType.STRING_CONSTANT, tk.span));
           }
         }
-        case STRING_NEWLINE,
-            STRING_ESCAPE_NEWLINE,
+        case STRING_NEWLINE -> children.add(make(NodeType.STRING_NEWLINE, next().span));
+        case STRING_ESCAPE_NEWLINE,
             STRING_ESCAPE_TAB,
             STRING_ESCAPE_QUOTE,
             STRING_ESCAPE_BACKSLASH,

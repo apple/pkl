@@ -190,6 +190,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.SEMICOLON,
         NodeType.TERMINAL,
         NodeType.OPERATOR,
+        NodeType.STRING_NEWLINE,
       )
 
     private val UNPACK_CHILDREN =
