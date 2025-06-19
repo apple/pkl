@@ -34,11 +34,19 @@ class GenericSexpRenderer(code: String) {
       renderUnionType(node)
       return
     }
+    if (node.type == NodeType.BINARY_OP_EXPR && binopName(node).endsWith("ualifiedAccessExpr")) {
+      renderQualifiedAccess(node)
+      return
+    }
+    doRender(name(node), collectChildren(node))
+  }
+
+  private fun doRender(name: String, children: List<GenNode>) {
     buf.append(tab)
     buf.append("(")
-    buf.append(name(node))
+    buf.append(name)
     val oldTab = increaseTab()
-    for (child in collectChildren(node)) {
+    for (child in children) {
       buf.append('\n')
       innerRender(child)
     }
@@ -65,6 +73,19 @@ class GenericSexpRenderer(code: String) {
     }
     tab = oldTab
     buf.append(')')
+  }
+
+  private fun renderQualifiedAccess(node: GenNode) {
+    var children = node.children
+    if (children.last().type == NodeType.UNQUALIFIED_ACCESS_EXPR) {
+      children = children.dropLast(1) + collectChildren(children.last())
+    }
+    val toRender = mutableListOf<GenNode>()
+    for (child in children) {
+      if (child.type in IGNORED_CHILDREN || child.type == NodeType.OPERATOR) continue
+      toRender += child
+    }
+    doRender(name(node), toRender)
   }
 
   private fun renderDefaultUnionType(node: GenNode) {
@@ -122,10 +143,6 @@ class GenericSexpRenderer(code: String) {
       NodeType.AMENDS_CLAUSE -> "extendsOrAmendsClause"
       NodeType.TYPEALIAS -> "typeAlias"
       NodeType.STRING_ESCAPE -> "stringConstant"
-      NodeType.QUALIFIED_ACCESS_EXPR -> {
-        val operator = node.children[1].text(source)
-        if (operator == ".") "qualifiedAccessExpr" else "nullableQualifiedAccessExpr"
-      }
       NodeType.READ_EXPR -> {
         val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
         when (terminal) {
@@ -171,6 +188,8 @@ class GenericSexpRenderer(code: String) {
       "||" -> "logicalOrExpr"
       "|>" -> "pipeExpr"
       "??" -> "nullCoalesceExpr"
+      "." -> "qualifiedAccessExpr"
+      "?." -> "nullableQualifiedAccessExpr"
       else -> throw RuntimeException("Unknown operator: $op")
     }
   }
