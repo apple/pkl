@@ -20,6 +20,7 @@ import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
+import org.pkl.formatter.ast.IndentFreeLine
 import org.pkl.formatter.ast.Line
 import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.SemicolonOrLine
@@ -75,6 +76,7 @@ class Generator {
         }
       }
       is Space -> text(" ")
+      is IndentFreeLine -> text("\n")
       is Indent -> {
         if (wrap.isEnabled() && node.nodes.isNotEmpty()) {
           size += INDENT.length
