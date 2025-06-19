@@ -23,7 +23,6 @@ import org.pkl.formatter.ast.Indent
 import org.pkl.formatter.ast.IndentFreeLine
 import org.pkl.formatter.ast.Line
 import org.pkl.formatter.ast.Nodes
-import org.pkl.formatter.ast.SemicolonOrLine
 import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
@@ -86,13 +85,6 @@ class Generator {
           indent--
         } else {
           node.nodes.forEach { node(it, wrap) }
-        }
-      }
-      is SemicolonOrLine -> {
-        if (wrap.isEnabled()) {
-          newline()
-        } else {
-          text("; ")
         }
       }
     }
