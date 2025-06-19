@@ -174,6 +174,7 @@ public class GenericParser {
     if (hasDocComment) {
       children.add(new GenNode(NodeType.DOC_COMMENT, docs));
     }
+    ff(children);
     while (lookahead == Token.AT) {
       children.add(parseAnnotation());
       hasAnnotation = true;
@@ -357,19 +358,21 @@ public class GenericParser {
   private GenNode parseObjectBody() {
     var children = new ArrayList<GenNode>();
     expect(Token.LBRACE, children, "unexpectedToken", "{");
-    ff(children);
-    if (lookahead == Token.RBRACE) {
+    if (lookahead() == Token.RBRACE) {
+      ff(children);
       children.add(makeTerminal(next()));
       return new GenNode(NodeType.OBJECT_BODY, children);
     }
     if (isParameter()) {
       var params = new ArrayList<GenNode>();
+      ff(params);
       parseListOf(Token.COMMA, params, this::parseParameter);
       expect(Token.ARROW, params, "unexpectedToken2", ",", "->");
       children.add(new GenNode(NodeType.OBJECT_PARAMETER_LIST, params));
       ff(children);
     }
     var members = new ArrayList<GenNode>();
+    ff(members);
     while (lookahead != Token.RBRACE) {
       if (lookahead == Token.EOF) {
         throw parserError(ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
@@ -476,9 +479,9 @@ public class GenericParser {
       hasTypeAnnotation = true;
     }
     if (hasTypeAnnotation || lookahead() == Token.ASSIGN) {
-      ff(header);
-      expect(Token.ASSIGN, header, "unexpectedToken", "=");
       children.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER, header));
+      ff(children);
+      expect(Token.ASSIGN, children, "unexpectedToken", "=");
       ff(children);
       children.add(parseExpr("}"));
       return new GenNode(NodeType.OBJECT_PROPERTY, children);
@@ -638,27 +641,30 @@ public class GenericParser {
     var operator = getOperator(fullOpToken.tk);
     while (operator != null) {
       if (operator.getPrec() < minPrecedence) break;
-      // `-` must be in the same line as the left operand and have no semicolons inbetween
-      if (operator == Operator.MINUS
+      // `-` and `[]` must be in the same line as the left operand and have no semicolons inbetween
+      if ((operator == Operator.MINUS || operator == Operator.SUBSCRIPT)
           && (fullOpToken.hasSemicolon || !expr.span.sameLine(fullOpToken.tk.span))) break;
-      var midChildren = new ArrayList<GenNode>();
-      ff(midChildren);
-      var op = next();
-      midChildren.add(make(NodeType.OPERATOR, op.span, op.text(lexer)));
-      ff(midChildren);
-      var nextMinPrec = operator.isLeftAssoc() ? operator.getPrec() + 1 : operator.getPrec();
-      GenNode rhs;
-      if (op.token == Token.IS || op.token == Token.AS) {
-        rhs = parseType();
-      } else {
-        rhs = parseExpr(expectation, nextMinPrec);
-      }
-
       var children = new ArrayList<GenNode>();
       children.add(expr);
-      children.addAll(midChildren);
-      children.add(rhs);
-      expr = new GenNode(NodeType.BINARY_OP_EXPR, children);
+      ff(children);
+      var op = next();
+      children.add(make(NodeType.OPERATOR, op.span, op.text(lexer)));
+      ff(children);
+      var nodeType = NodeType.BINARY_OP_EXPR;
+      var nextMinPrec = operator.isLeftAssoc() ? operator.getPrec() + 1 : operator.getPrec();
+      switch (op.token) {
+        case IS, AS -> children.add(parseType());
+        case LBRACK -> {
+          nodeType = NodeType.SUBSCRIPT_EXPR;
+          children.add(parseExpr("]"));
+          ff(children);
+          expect(Token.RBRACK, children, "unexpectedToken", "]");
+        }
+        case NON_NULL -> nodeType = NodeType.NON_NULL_EXPR;
+        default -> children.add(parseExpr(expectation, nextMinPrec));
+      }
+
+      expr = new GenNode(nodeType, children);
       fullOpToken = fullLookahead();
       operator = getOperator(fullOpToken.tk);
     }
@@ -688,6 +694,8 @@ public class GenericParser {
       case COALESCE -> Operator.NULL_COALESCE;
       case DOT -> Operator.DOT;
       case QDOT -> Operator.QDOT;
+      case LBRACK -> Operator.SUBSCRIPT;
+      case NON_NULL -> Operator.NON_NULL;
       default -> null;
     };
   }
@@ -762,18 +770,16 @@ public class GenericParser {
             var children = new ArrayList<GenNode>();
             children.add(makeTerminal(next()));
             ff(children);
-            // calling `parseExprAtom` here and not `parseExpr` because
-            // unary minus has higher precendence than binary operators
-            children.add(parseExprAtom(expectation));
+            // unary minus has higher precendence than most binary operators
+            children.add(parseExpr(expectation, 12));
             yield new GenNode(NodeType.UNARY_MINUS_EXPR, children);
           }
           case NOT -> {
             var children = new ArrayList<GenNode>();
             children.add(makeTerminal(next()));
             ff(children);
-            // calling `parseExprAtom` here and not `parseExpr` because
-            // unary minus has higher precendence than binary operators
-            children.add(parseExprAtom(expectation));
+            // unary minus has higher precendence than most binary operators
+            children.add(parseExpr(expectation, 11));
             yield new GenNode(NodeType.LOGICAL_NOT_EXPR, children);
           }
           case LPAREN -> {
@@ -847,14 +853,14 @@ public class GenericParser {
             expect(Token.RPAREN, condition, "unexpectedToken", ")");
             header.add(new GenNode(NodeType.IF_CONDITION, condition));
             children.add(new GenNode(NodeType.IF_HEADER, header));
-            ff(children);
             var thenExpr = new ArrayList<GenNode>();
+            ff(thenExpr);
             thenExpr.add(parseExpr("else"));
+            ff(thenExpr);
             children.add(new GenNode(NodeType.IF_THEN_EXPR, thenExpr));
-            ff(children);
             expect(Token.ELSE, children, "unexpectedToken", "else");
-            ff(children);
             var elseExpr = new ArrayList<GenNode>();
+            ff(elseExpr);
             elseExpr.add(parseExpr(expectation));
             children.add(new GenNode(NodeType.IF_ELSE_EXPR, elseExpr));
             yield new GenNode(NodeType.IF_EXPR, children);
@@ -912,15 +918,6 @@ public class GenericParser {
   @SuppressWarnings("DuplicatedCode")
   private GenNode parseExprRest(GenNode expr) {
     var looka = lookahead();
-    // non null
-    if (looka == Token.NON_NULL) {
-      var children = new ArrayList<GenNode>();
-      children.add(expr);
-      ff(children);
-      children.add(makeTerminal(next()));
-      var res = new GenNode(NodeType.NON_NULL_EXPR, children);
-      return parseExprRest(res);
-    }
     // amends
     if (looka == Token.LBRACE) {
       var children = new ArrayList<GenNode>();
@@ -933,32 +930,6 @@ public class GenericParser {
         return parseExprRest(new GenNode(NodeType.AMENDS_EXPR, children));
       }
       throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
-    }
-    // qualified access
-    if (looka == Token.DOT || looka == Token.QDOT) {
-      var children = new ArrayList<GenNode>();
-      children.add(expr);
-      ff(children);
-      children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseIdentifier());
-      if (lookahead == Token.LPAREN
-          && !isPrecededBySemicolon()
-          && _lookahead.newLinesBetween == 0) {
-        children.add(parseArgumentList());
-      }
-      return parseExprRest(new GenNode(NodeType.QUALIFIED_ACCESS_EXPR, children));
-    }
-    // subscript (needs to be in the same line as the expression)
-    if (lookahead == Token.LBRACK && !isPrecededBySemicolon() && _lookahead.newLinesBetween == 0) {
-      var children = new ArrayList<GenNode>();
-      children.add(expr);
-      children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseExpr());
-      ff(children);
-      expect(Token.RBRACK, children, "unexpectedToken", "]");
-      return parseExprRest(new GenNode(NodeType.SUBSCRIPT_EXPR, children));
     }
     return expr;
   }
