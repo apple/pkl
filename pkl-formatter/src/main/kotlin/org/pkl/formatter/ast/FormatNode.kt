@@ -34,7 +34,6 @@ sealed interface FormatNode {
       is Text -> text.length
       is SpaceOrLine,
       is Space -> 1
-      is SemicolonOrLine -> 2
       is ForceLine,
       is IndentFreeLine -> Generator.MAX
       else -> 0
@@ -52,8 +51,6 @@ object IndentFreeLine : FormatNode
 object SpaceOrLine : FormatNode
 
 object Space : FormatNode
-
-object SemicolonOrLine : FormatNode
 
 data class Indent(val nodes: List<FormatNode>) : FormatNode
 
