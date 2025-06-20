@@ -75,7 +75,10 @@ class Generator {
         }
       }
       is Space -> text(" ")
-      is IndentFreeLine -> text("\n")
+      is IndentFreeLine -> {
+        size = 0
+        text("\n")
+      }
       is Indent -> {
         if (wrap.isEnabled() && node.nodes.isNotEmpty()) {
           size += INDENT.length
