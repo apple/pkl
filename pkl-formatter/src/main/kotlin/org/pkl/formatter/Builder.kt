@@ -83,7 +83,8 @@ class Builder(sourceText: String) {
       NodeType.CLASS_BODY -> formatClassBody(node)
       NodeType.CLASS_BODY_ELEMENTS -> formatClassBodyElements(node)
       NodeType.CLASS_PROPERTY,
-      NodeType.OBJECT_PROPERTY -> formatClassProperty(node)
+      NodeType.OBJECT_PROPERTY,
+      NodeType.OBJECT_ENTRY -> formatClassProperty(node)
       NodeType.CLASS_PROPERTY_HEADER,
       NodeType.OBJECT_PROPERTY_HEADER -> formatClassPropertyHeader(node)
       NodeType.CLASS_METHOD,
@@ -92,7 +93,6 @@ class Builder(sourceText: String) {
       NodeType.CLASS_METHOD_BODY -> formatClassMethodBody(node)
       NodeType.OBJECT_BODY -> formatObjectBody(node)
       NodeType.OBJECT_ELEMENT -> format(node.children[0]) // has a single element
-      NodeType.OBJECT_ENTRY -> formatObjectEntry(node)
       NodeType.OBJECT_ENTRY_HEADER -> formatObjectEntryHeader(node)
       NodeType.FOR_GENERATOR -> formatForGenerator(node)
       NodeType.FOR_GENERATOR_HEADER -> formatParameterList(node)
@@ -116,9 +116,9 @@ class Builder(sourceText: String) {
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
       NodeType.SUBSCRIPT_EXPR,
       NodeType.SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node)
-      NodeType.TRACE_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.THROW_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.READ_EXPR -> Nodes(formatGeneric(node.children, null))
+      NodeType.TRACE_EXPR -> formatTraceThrowReadExpr(node)
+      NodeType.THROW_EXPR -> formatTraceThrowReadExpr(node)
+      NodeType.READ_EXPR -> formatTraceThrowReadExpr(node)
       NodeType.NON_NULL_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.PARENTHESIZED_EXPR -> Group(newId(), formatGeneric(node.children, null))
@@ -274,9 +274,12 @@ class Builder(sourceText: String) {
     val expr = node.children.last().children[0]
     val shouldIndent = expr.type != NodeType.NEW_EXPR
     val nodes =
-      formatGenericWithGen(node.children, { prev, next ->
-        if (next.type == NodeType.CLASS_METHOD_BODY && !shouldIndent) Space else SpaceOrLine
-      }) { node, next ->
+      formatGenericWithGen(
+        node.children,
+        { prev, next ->
+          if (next.type == NodeType.CLASS_METHOD_BODY && !shouldIndent) Space else SpaceOrLine
+        },
+      ) { node, next ->
         if (next == null && shouldIndent) indent(format(node)) else format(node)
       }
     return group(groupOnSpace(nodes))
@@ -328,14 +331,17 @@ class Builder(sourceText: String) {
 
   private fun formatObjectBody(node: GenNode): FormatNode {
     if (node.children.size == 2) return Text("{}")
-    val groupId = newId();
+    val groupId = newId()
     val nodes =
-      formatGenericWithGen(node.children, { prev, next ->
-        if (prev.isTerminal("{") || next.isTerminal("}")) {
-          val lines = prev.linesBetween(next)
-          if (lines == 0) SpaceOrLine else ForceLine
-        } else SpaceOrLine
-      }) { node, next ->
+      formatGenericWithGen(
+        node.children,
+        { prev, next ->
+          if (prev.isTerminal("{") || next.isTerminal("}")) {
+            val lines = prev.linesBetween(next)
+            if (lines == 0) SpaceOrLine else ForceLine
+          } else SpaceOrLine
+        },
+      ) { node, next ->
         if (node.type == NodeType.OBJECT_MEMBER_LIST) {
           formatObjectMemberList(node, groupId)
         } else format(node)
@@ -354,10 +360,6 @@ class Builder(sourceText: String) {
         }
       }
     return Indent(nodes)
-  }
-
-  private fun formatObjectEntry(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
   private fun formatObjectEntryHeader(node: GenNode): FormatNode {
@@ -526,6 +528,15 @@ class Builder(sourceText: String) {
   private fun formatSubscriptExpr(node: GenNode): FormatNode {
     return Nodes(formatGeneric(node.children, EMPTY_NODE))
   }
+  
+  private fun formatTraceThrowReadExpr(node: GenNode): FormatNode {
+    val nodes = formatGenericWithGen(node.children, { prev, next ->
+      if (prev.isTerminal("(") || next.isTerminal(")")) Line else null
+    }) { node, next ->
+      if (node.type.isExpression) indent(format(node)) else format(node)
+    }
+    return Group(newId(), nodes)
+  }
 
   private fun formatDeclaredType(node: GenNode): FormatNode {
     return Nodes(formatGeneric(node.children, SpaceOrLine))
@@ -547,7 +558,10 @@ class Builder(sourceText: String) {
 
   private fun formatFunctionType(node: GenNode): FormatNode {
     val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) null else SpaceOrLine },
+      ) { node, next ->
         if (next == null) indent(format(node)) else format(node)
       }
     return Group(newId(), nodes)

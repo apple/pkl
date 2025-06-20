@@ -1251,15 +1251,16 @@ public class GenericParser {
   private GenNode parseArgumentList() {
     var children = new ArrayList<GenNode>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
-    ff(children);
-    if (lookahead == Token.RPAREN) {
+    if (lookahead() == Token.RPAREN) {
+      ff(children);
       children.add(makeTerminal(next()));
       return new GenNode(NodeType.ARGUMENT_LIST, children);
     }
     var elements = new ArrayList<GenNode>();
+    ff(elements);
     parseListOf(Token.COMMA, elements, this::parseExpr);
+    ff(elements);
     children.add(new GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, elements));
-    ff(children);
     expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
     return new GenNode(NodeType.ARGUMENT_LIST, children);
   }
