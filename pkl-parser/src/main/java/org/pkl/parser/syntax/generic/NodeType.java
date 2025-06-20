@@ -132,13 +132,13 @@ public enum NodeType {
   CONSTRAINED_TYPE(NodeKind.TYPE),
   CONSTRAINED_TYPE_CONSTRAINT(NodeKind.TYPE),
   CONSTRAINED_TYPE_ELEMENTS(NodeKind.TYPE);
-  
+
   private final NodeKind kind;
-  
+
   NodeType() {
     this.kind = NodeKind.NONE;
   }
-  
+
   NodeType(NodeKind kind) {
     this.kind = kind;
   }
@@ -146,16 +146,19 @@ public enum NodeType {
   public boolean isAffix() {
     return kind == NodeKind.AFFIX;
   }
-  
+
   public boolean isExpression() {
     return kind == NodeKind.EXPR;
   }
-  
+
   public boolean isType() {
     return kind == NodeKind.TYPE;
   }
-  
+
   private enum NodeKind {
-    TYPE, EXPR, AFFIX, NONE;
+    TYPE,
+    EXPR,
+    AFFIX,
+    NONE;
   }
 }
