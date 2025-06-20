@@ -19,8 +19,6 @@ import org.gradle.api.provider.Property;
 
 /** Configuration options for Java code generators. Documented in user manual. */
 public interface JavaCodeGenSpec extends CodeGenSpec {
-  Property<Boolean> getGeneratedAnnotation();
-
   Property<Boolean> getGenerateGetters();
 
   Property<Boolean> getGenerateJavadoc();

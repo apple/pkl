@@ -24,9 +24,6 @@ import org.pkl.codegen.java.CliJavaCodeGeneratorOptions;
 
 public abstract class JavaCodeGenTask extends CodeGenTask {
   @Input
-  public abstract Property<Boolean> getGeneratedAnnotation();
-
-  @Input
   public abstract Property<Boolean> getGenerateGetters();
 
   @Input

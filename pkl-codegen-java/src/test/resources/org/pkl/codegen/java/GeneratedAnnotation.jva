@@ -5,10 +5,10 @@ import java.lang.Override;
 import java.lang.String;
 import java.lang.StringBuilder;
 import java.util.Objects;
-import org.pkl.config.java.mapper.Generated;
+import org.pkl.config.java.Generated;
 import org.pkl.config.java.mapper.Named;
 
-@Generated("JavaCodeGenerator")
+@Generated
 public final class Mod {
   private Mod() {
   }
@@ -22,7 +22,7 @@ public final class Mod {
     }
   }
 
-  @Generated("JavaCodeGenerator")
+  @Generated
   public static final class GeneratedAnnotation {
     public final boolean test;
 

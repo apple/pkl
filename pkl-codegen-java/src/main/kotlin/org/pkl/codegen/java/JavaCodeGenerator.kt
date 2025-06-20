@@ -555,9 +555,8 @@ class JavaCodeGenerator(
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
       if (codegenOptions.generatedAnnotation) {
-        val name = ClassName.get("org.pkl.config.java.mapper", "Generated")
-        val generated =
-          AnnotationSpec.builder(name).addMember("value", "\$S", javaClass.simpleName).build()
+        val name = ClassName.get("org.pkl.config.java", "Generated")
+        val generated = AnnotationSpec.builder(name).build()
         builder.addAnnotation(generated)
       }
 
