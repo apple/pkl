@@ -528,13 +528,15 @@ class Builder(sourceText: String) {
   private fun formatSubscriptExpr(node: GenNode): FormatNode {
     return Nodes(formatGeneric(node.children, EMPTY_NODE))
   }
-  
+
   private fun formatTraceThrowReadExpr(node: GenNode): FormatNode {
-    val nodes = formatGenericWithGen(node.children, { prev, next ->
-      if (prev.isTerminal("(") || next.isTerminal(")")) Line else null
-    }) { node, next ->
-      if (node.type.isExpression) indent(format(node)) else format(node)
-    }
+    val nodes =
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else null },
+      ) { node, next ->
+        if (node.type.isExpression) indent(format(node)) else format(node)
+      }
     return Group(newId(), nodes)
   }
 
