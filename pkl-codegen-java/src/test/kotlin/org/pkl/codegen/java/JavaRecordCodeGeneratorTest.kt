@@ -15,8 +15,13 @@
  */
 package org.pkl.codegen.java
 
-import java.io.*
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
+import java.io.ObjectInputStream
+import java.io.ObjectOutputStream
+import java.io.ObjectStreamClass
 import java.nio.file.Path
+import java.util.function.BiPredicate
 import java.util.function.Consumer
 import java.util.regex.Pattern
 import org.assertj.core.api.AbstractAssert
@@ -30,15 +35,27 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.ValueSource
-import org.pkl.core.*
+import org.pkl.core.DataSize
+import org.pkl.core.DataSizeUnit
+import org.pkl.core.Duration
+import org.pkl.core.DurationUnit
+import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource.path
 import org.pkl.core.ModuleSource.text
+import org.pkl.core.Pair
 import org.pkl.core.util.IoUtils
 
-@Tag("generate-classes")
-class JavaCodeGeneratorTest {
+@Tag("generate-records")
+class JavaRecordCodeGeneratorTest {
   companion object {
     private const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"
+
+    private val commonCodeSource: kotlin.Pair<String, String> =
+      "org/pkl/codegen/java/common/code/Wither.java" to generateCommonCode()
+
+    private fun inMemoryCompile(sourceFiles: Map<String, String>): Map<String, Class<*>> {
+      return InMemoryJavaCompiler.compile(sourceFiles + commonCodeSource)
+    }
 
     private val simpleClass: Class<*> by lazy {
       generateJavaCode(
@@ -50,7 +67,8 @@ class JavaCodeGeneratorTest {
           list: List<Int>
         }
       """
-            .trimIndent()
+            .trimIndent(),
+          JavaCodeGeneratorOptions(generateRecords = true),
         )
         .compile()
         .getValue("my.Mod\$Simple")
@@ -89,7 +107,6 @@ class JavaCodeGeneratorTest {
           any: Any
           nonNull: NonNull
           enum: Direction
-          bytes: Bytes
         }
 
         class Other {
@@ -97,7 +114,8 @@ class JavaCodeGeneratorTest {
         }
 
         typealias Direction = "north"|"east"|"south"|"west"
-      """
+      """,
+        JavaCodeGeneratorOptions(generateRecords = true),
       )
     }
 
@@ -105,17 +123,80 @@ class JavaCodeGeneratorTest {
       propertyTypesSources.compile()
     }
 
+    private fun generateCommonCode(options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions()) =
+      JavaRecordCodeGenerator.generateCommonCode(options)
+
     private fun generateJavaCode(
       pklCode: String,
       options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions(),
     ): JavaSourceCode {
       val module = Evaluator.preconfigured().evaluateSchema(text(pklCode))
-      val generator = JavaCodeGenerator(module, options)
-      return JavaSourceCode(generator.javaFile)
+      val generator = JavaRecordCodeGenerator(module, options)
+      return generator
+        .getJavaFiles()
+        .also { check(it.size == 1) { "code generation only for a non-open module" } }
+        .values
+        .first()
+        .let { JavaSourceCode(it) }
+    }
+
+    private fun generateJavaCodeForOpenModule(
+      pklCode: String,
+      options: JavaCodeGeneratorOptions = JavaCodeGeneratorOptions(),
+    ): List<JavaSourceCode> {
+      val module = Evaluator.preconfigured().evaluateSchema(text(pklCode))
+      val generator = JavaRecordCodeGenerator(module, options)
+      return generator.getJavaFiles().map { (_, v) -> JavaSourceCode(v) }
     }
   }
 
   @TempDir lateinit var tempDir: Path
+
+  @Test
+  fun testCommonCode() {
+    val javaCode = generateCommonCode(JavaCodeGeneratorOptions(generateRecords = true))
+    assertThat(javaCode)
+      .containsIgnoringWhitespaces(
+        """
+          package org.pkl.codegen.java.common.code;
+          
+          import java.lang.Record;
+          import java.util.function.Consumer;
+          import org.pkl.config.java.mapper.NonNull;
+          
+          public interface Wither<@NonNull R extends @NonNull Record, @NonNull S> {
+            @NonNull R with(@NonNull Consumer<@NonNull S> setter);
+          }
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun testCommonCodeWithNonNullAnnotation() {
+    val javaCode =
+      generateCommonCode(
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          nonNullAnnotation = "very.custom.HelloNull",
+        )
+      )
+    assertThat(javaCode)
+      .containsIgnoringWhitespaces(
+        """
+          package org.pkl.codegen.java.common.code;
+          
+          import java.lang.Record;
+          import java.util.function.Consumer;
+          import very.custom.HelloNull;
+          
+          public interface Wither<@HelloNull R extends @HelloNull Record, @HelloNull S> {
+            @HelloNull R with(@HelloNull Consumer<@HelloNull S> setter);
+          }
+        """
+          .trimMargin()
+      )
+  }
 
   @Test
   fun testEquals() {
@@ -149,64 +230,40 @@ class JavaCodeGeneratorTest {
     val (_, propertyTypes) = instantiateOtherAndPropertyTypes()
 
     assertThat(propertyTypes.toString())
-      .isEqualTo(
+      .isEqualToIgnoringWhitespace(
         """
-        PropertyTypes {
-          _boolean = true
-          _int = 42
-          _float = 42.3
-          string = string
-          duration = 5.min
-          durationUnit = min
-          dataSize = 3.gb
-          dataSizeUnit = gb
-          nullable = idea
-          nullable2 = null
-          pair = Pair(1, 2)
-          pair2 = Pair(pigeon, Other {
-            name = pigeon
-          })
-          coll = [1, 2, 3]
-          coll2 = [Other {
-            name = pigeon
-          }, Other {
-            name = pigeon
-          }]
-          list = [1, 2, 3]
-          list2 = [Other {
-            name = pigeon
-          }, Other {
-            name = pigeon
-          }]
-          set = [1, 2, 3]
-          set2 = [Other {
-            name = pigeon
-          }]
-          map = {1=one, 2=two}
-          map2 = {one=Other {
-            name = pigeon
-          }, two=Other {
-            name = pigeon
-          }}
-          container = {1=one, 2=two}
-          container2 = {one=Other {
-            name = pigeon
-          }, two=Other {
-            name = pigeon
-          }}
-          other = Other {
-            name = pigeon
-          }
-          regex = (i?)\w*
-          any = Other {
-            name = pigeon
-          }
-          nonNull = Other {
-            name = pigeon
-          }
-          _enum = north
-          bytes = [1, 2, 3, 4]
-        }
+          PropertyTypes[
+            _boolean=true, 
+            _int=42, 
+            _float=42.3, 
+            string=string, 
+            duration=5.min, 
+            durationUnit=min, 
+            dataSize=3.gb, 
+            dataSizeUnit=gb, 
+            nullable=idea, 
+            nullable2=null, 
+            pair=Pair(1, 2), 
+            pair2=Pair(pigeon, Other[name=pigeon]), 
+            coll=[1, 2, 3], 
+            coll2=[Other[name=pigeon], Other[name=pigeon]], 
+            list=[1, 2, 3], 
+            list2=[Other[name=pigeon], 
+            Other[name=pigeon]], 
+            set=[1, 2, 3], 
+            set2=[Other[name=pigeon]], 
+            map={1=one, 2=two}, 
+            map2={one=Other[name=pigeon], 
+            two=Other[name=pigeon]}, 
+            container={1=one, 2=two}, 
+            container2={one=Other[name=pigeon], 
+            two=Other[name=pigeon]}, 
+            other=Other[name=pigeon], 
+            regex=(i?)\w*, 
+            any=Other[name=pigeon], 
+            nonNull=Other[name=pigeon], 
+            _enum=north
+          ]
       """
           .trimIndent()
       )
@@ -223,77 +280,18 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
       )
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |  public static final class ClassWithDeprecatedProperty {
-        |    /**
-        |     * @deprecated property deprecation message
-        |     */
-        |    @Deprecated
-        |    public final long deprecatedProperty;
-      """
-          .trimMargin()
-      )
-      .contains(
+            /**
+             * @deprecated
+             * deprecatedProperty - property deprecation message
+             */
+            public record ClassWithDeprecatedProperty(
+                @Named("deprecatedProperty") @Deprecated long deprecatedProperty)
         """
-        |    /**
-        |     * @deprecated property deprecation message
-        |     */
-        |    @Deprecated
-        |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
-        |      return new ClassWithDeprecatedProperty(deprecatedProperty);
-        |    }
-      """
-          .trimMargin()
-      )
-  }
-
-  @Test
-  fun `deprecated property's getter with message`() {
-    val javaCode =
-      generateJavaCode(
-        """
-      class ClassWithDeprecatedProperty {
-         @Deprecated { message = "property deprecation message" } 
-         deprecatedProperty: Int = 1337
-      }
-    """
-          .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true),
-      )
-    assertThat(javaCode)
-      .contains(
-        """
-        |  public static final class ClassWithDeprecatedProperty {
-        |    private final long deprecatedProperty;
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    /**
-        |     * @deprecated property deprecation message
-        |     */
-        |    @Deprecated
-        |    public long getDeprecatedProperty() {
-        |      return deprecatedProperty;
-        |    }
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    /**
-        |     * @deprecated property deprecation message
-        |     */
-        |    @Deprecated
-        |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
-        |      return new ClassWithDeprecatedProperty(deprecatedProperty);
-        |    }
-      """
           .trimMargin()
       )
   }
@@ -303,23 +301,25 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      @Deprecated { message = "class deprecation message" }
-      class DeprecatedClass {
-        propertyOfDeprecatedClass: Int = 42
-      }
-    """
+        @Deprecated { message = "class deprecation message" }
+        class DeprecatedClass {
+          propertyOfDeprecatedClass: Int = 42
+        }
+      """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
       )
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-      |  /**
-      |   * @deprecated class deprecation message
-      |   */
-      |  @Deprecated
-      |  public static final class DeprecatedClass {
-    """
+            /**
+             * @deprecated
+             * class deprecation message
+             */
+            @Deprecated
+            public record DeprecatedClass(
+                @Named("propertyOfDeprecatedClass") long propertyOfDeprecatedClass)
+        """
           .trimMargin()
       )
   }
@@ -336,30 +336,32 @@ class JavaCodeGeneratorTest {
       propertyInDeprecatedModuleClass : Int = 42
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = generateJavadoc),
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-      |@Deprecated
-      |public final class DeprecatedModule {
-    """
+          @Deprecated
+          public record DeprecatedModule(
+              @Named("propertyInDeprecatedModuleClass") long propertyInDeprecatedModuleClass)
+        """
           .trimMargin()
       )
 
     if (generateJavadoc) {
-      assertThat(javaCode)
-        .contains(
+      assertThat(javaCode.text)
+        .containsIgnoringWhitespaces(
           """
-        |/**
-        | * @deprecated module class deprecation message
-        | */
-      """
+            /**
+             * @deprecated
+             * module class deprecation message
+             */
+          """
             .trimMargin()
         )
     } else {
-      assertThat(javaCode).doesNotContain("* @deprecated")
+      assertThat(javaCode.text).doesNotContain("* @deprecated")
     }
   }
 
@@ -376,68 +378,15 @@ class JavaCodeGeneratorTest {
     """
           .trimIndent(),
         // no message, so no Javadoc, regardless of flag
-        JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = generateJavadoc),
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |  public static final class ClassWithDeprecatedProperty {
-        |    @Deprecated
-        |    public final long deprecatedProperty;
-      """
-          .trimMargin()
-      )
-      .contains(
+          public record ClassWithDeprecatedProperty(
+              @Named("deprecatedProperty") @Deprecated long deprecatedProperty)
         """
-        |    @Deprecated
-        |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
-        |      return new ClassWithDeprecatedProperty(deprecatedProperty);
-        |    }
-      """
-          .trimMargin()
-      )
-      .doesNotContain("* @deprecated")
-  }
-
-  @Test
-  fun `deprecated property's getter`() {
-    val javaCode =
-      generateJavaCode(
-        """
-        class ClassWithDeprecatedProperty {
-           @Deprecated
-           deprecatedProperty: Int = 1337
-        }
-      """
-          .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true),
-      )
-
-    assertThat(javaCode)
-      .contains(
-        """
-        |  public static final class ClassWithDeprecatedProperty {
-        |    private final long deprecatedProperty;
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    @Deprecated
-        |    public long getDeprecatedProperty() {
-        |      return deprecatedProperty;
-        |    }
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    @Deprecated
-        |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
-        |      return new ClassWithDeprecatedProperty(deprecatedProperty);
-        |    }
-      """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -456,12 +405,13 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |  @Deprecated
-        |  public static final class DeprecatedClass {
-      """
+            @Deprecated
+            public record DeprecatedClass(
+                @Named("propertyOfDeprecatedClass") long propertyOfDeprecatedClass)
+        """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -480,12 +430,13 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |@Deprecated
-        |public final class DeprecatedModule {
-      """
+          @Deprecated
+          public record DeprecatedModule(
+              @Named("propertyInDeprecatedModuleClass") long propertyInDeprecatedModuleClass)
+        """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -500,20 +451,175 @@ class JavaCodeGeneratorTest {
       @Deprecated { message = "property is deprecated" }
       deprecatedProperty: Int
     """,
-        JavaCodeGeneratorOptions(generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |  /**
-        |   * Documenting deprecatedProperty
-        |   *
-        |   * @deprecated property is deprecated
-        |   */
-        |  @Deprecated
-        |  public final long deprecatedProperty;
-      """
+          /**
+           * @deprecated
+           * deprecatedProperty - property is deprecated
+           *
+           * @param deprecatedProperty Documenting deprecatedProperty
+           */
+          public record Text(
+              @Named("deprecatedProperty") @Deprecated long deprecatedProperty)
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `deprecation with message and doc comment on the same property, for 2 properties`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      /// Documenting deprecatedProperty 1
+      @Deprecated { message = "property 1 is deprecated" }
+      deprecatedProperty1: Int
+      /// Documenting deprecatedProperty 2
+      @Deprecated { message = "property 2 is deprecated" }
+      deprecatedProperty2: Int
+    """,
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+      )
+
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
+        """
+          /**
+           * @deprecated
+           * deprecatedProperty1 - property 1 is deprecated
+           * <BR>deprecatedProperty2 - property 2 is deprecated
+           *
+           * @param deprecatedProperty1 Documenting deprecatedProperty 1
+           * @param deprecatedProperty2 Documenting deprecatedProperty 2
+           */
+          public record Text(@Named("deprecatedProperty1") @Deprecated long deprecatedProperty1,
+              @Named("deprecatedProperty2") @Deprecated long deprecatedProperty2)
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `deprecation with message and doc comment on the same property, for abstract class`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      abstract class Foo {
+        /// Documenting deprecatedProperty 1
+        @Deprecated { message = "property 1 is deprecated" }
+        deprecatedProperty1: Int
+      }
+    """,
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+      )
+
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
+        """
+          public interface Foo {
+            /**
+             * Documenting deprecatedProperty 1
+             *
+             * @deprecated property 1 is deprecated
+             */
+            @Deprecated
+            long deprecatedProperty1();
+          }
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `deprecation with message and doc comment on an abstract class`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      /// Documenting Foo
+      @Deprecated { message = "Foo is deprecated" }
+      abstract class Foo {
+        /// Documenting deprecatedProperty 1
+        @Deprecated { message = "property 1 is deprecated" }
+        deprecatedProperty1: Int
+      }
+    """,
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+      )
+
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
+        """
+          /**
+           * Documenting Foo
+           *
+           * @deprecated Foo is deprecated
+           */
+          @Deprecated
+          public interface Foo {
+            /**
+             * Documenting deprecatedProperty 1
+             *
+             * @deprecated property 1 is deprecated
+             */
+            @Deprecated
+            long deprecatedProperty1();
+          }
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `deprecation with message and doc comment on an open class`() {
+    val javaCode =
+      generateJavaCode(
+        """
+      /// Documenting Foo
+      @Deprecated { message = "Foo is deprecated" }
+      open class Foo {
+        /// Documenting deprecatedProperty 1
+        @Deprecated { message = "property 1 is deprecated" }
+        deprecatedProperty1: Int
+      }
+    """,
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+      )
+
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
+        """
+          /**
+           * Documenting Foo
+           *
+           * @deprecated Foo is deprecated
+           */
+          @Deprecated
+          public interface IFoo {
+            /**
+             * Documenting deprecatedProperty 1
+             *
+             * @deprecated property 1 is deprecated
+             */
+            @Deprecated
+            long deprecatedProperty1();
+          }
+        
+          /**
+           * Documenting Foo
+           * @deprecated
+           * Foo is deprecated
+           * <BR>deprecatedProperty1 - property 1 is deprecated
+           *
+           * @param deprecatedProperty1 Documenting deprecatedProperty 1
+           */
+          @Deprecated
+          public record Foo(
+              @Named("deprecatedProperty1") @Deprecated long deprecatedProperty1) implements IFoo
+        """
           .trimMargin()
       )
   }
@@ -522,39 +628,37 @@ class JavaCodeGeneratorTest {
   fun properties() {
     val (other, propertyTypes) = instantiateOtherAndPropertyTypes()
 
-    assertThat(readProperty(other, "name")).isEqualTo("pigeon")
-    assertThat(readProperty(propertyTypes, "_boolean")).isEqualTo(true)
-    assertThat(readProperty(propertyTypes, "_int")).isEqualTo(42L)
-    assertThat(readProperty(propertyTypes, "_float")).isEqualTo(42.3)
-    assertThat(readProperty(propertyTypes, "string")).isEqualTo("string")
-    assertThat(readProperty(propertyTypes, "duration"))
-      .isEqualTo(Duration(5.0, DurationUnit.MINUTES))
-    assertThat(readProperty(propertyTypes, "dataSize"))
-      .isEqualTo(DataSize(3.0, DataSizeUnit.GIGABYTES))
-    assertThat(readProperty(propertyTypes, "nullable")).isEqualTo("idea")
-    assertThat(readProperty(propertyTypes, "nullable2")).isEqualTo(null as String?)
-    assertThat(readProperty(propertyTypes, "list")).isEqualTo(listOf(1, 2, 3))
-    assertThat(readProperty(propertyTypes, "list2")).isEqualTo(listOf(other, other))
-    assertThat(readProperty(propertyTypes, "set")).isEqualTo(setOf(1, 2, 3))
-    assertThat(readProperty(propertyTypes, "set2")).isEqualTo(setOf(other))
-    assertThat(readProperty(propertyTypes, "map")).isEqualTo(mapOf(1 to "one", 2 to "two"))
-    assertThat(readProperty(propertyTypes, "map2")).isEqualTo(mapOf("one" to other, "two" to other))
-    assertThat(readProperty(propertyTypes, "container")).isEqualTo(mapOf(1 to "one", 2 to "two"))
-    assertThat(readProperty(propertyTypes, "container2"))
-      .isEqualTo(mapOf("one" to other, "two" to other))
-    assertThat(readProperty(propertyTypes, "other")).isEqualTo(other)
-    assertThat(readProperty(propertyTypes, "regex")).isInstanceOf(Pattern::class.java)
-    assertThat(readProperty(propertyTypes, "any")).isEqualTo(other)
-    assertThat(readProperty(propertyTypes, "nonNull")).isEqualTo(other)
-    assertThat(readProperty(propertyTypes, "bytes")).isEqualTo(byteArrayOf(1, 2, 3, 4))
-  }
+    assertThat(other).extracting("name").isEqualTo("pigeon")
 
-  private fun readProperty(obj: Any, property: String): Any? =
-    obj::class.java.getField(property).get(obj)
+    assertThat(propertyTypes).extracting("_boolean").isEqualTo(true)
+    assertThat(propertyTypes).extracting("_int").isEqualTo(42L)
+    assertThat(propertyTypes).extracting("_float").isEqualTo(42.3)
+    assertThat(propertyTypes).extracting("string").isEqualTo("string")
+    assertThat(propertyTypes).extracting("duration").isEqualTo(Duration(5.0, DurationUnit.MINUTES))
+    assertThat(propertyTypes)
+      .extracting("dataSize")
+      .isEqualTo(DataSize(3.0, DataSizeUnit.GIGABYTES))
+    assertThat(propertyTypes).extracting("nullable").isEqualTo("idea")
+    assertThat(propertyTypes).extracting("nullable2").isEqualTo(null as String?)
+    assertThat(propertyTypes).extracting("list").isEqualTo(listOf(1, 2, 3))
+    assertThat(propertyTypes).extracting("list2").isEqualTo(listOf(other, other))
+    assertThat(propertyTypes).extracting("set").isEqualTo(setOf(1, 2, 3))
+    assertThat(propertyTypes).extracting("set2").isEqualTo(setOf(other))
+    assertThat(propertyTypes).extracting("map").isEqualTo(mapOf(1 to "one", 2 to "two"))
+    assertThat(propertyTypes).extracting("map2").isEqualTo(mapOf("one" to other, "two" to other))
+    assertThat(propertyTypes).extracting("container").isEqualTo(mapOf(1 to "one", 2 to "two"))
+    assertThat(propertyTypes)
+      .extracting("container2")
+      .isEqualTo(mapOf("one" to other, "two" to other))
+    assertThat(propertyTypes).extracting("other").isEqualTo(other)
+    assertThat(propertyTypes).extracting("regex").isInstanceOf(Pattern::class.java)
+    assertThat(propertyTypes).extracting("any").isEqualTo(other)
+    assertThat(propertyTypes).extracting("nonNull").isEqualTo(other)
+  }
 
   @Test
   fun `properties 2`() {
-    assertThat(propertyTypesSources).isEqualToResourceFile("PropertyTypes.jva")
+    assertThat(propertyTypesSources).isEqualToResourceFile("PropertyTypesRecord.jva")
   }
 
   @Test
@@ -674,34 +778,23 @@ class JavaCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |  public static final class Foo {
-        |    public final long other;
-        |
-        |    public final @NonNull Bar bar;
-        |
-        |    public Foo(@Named("other") long other, @Named("bar") @NonNull Bar bar) {
-        |      this.other = other;
-        |      this.bar = bar;
-        |    }
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |  public static final class Bar {
-        |    public final @NonNull Foo foo;
-        |
-        |    public final @NonNull String other;
-        |
-        |    public Bar(@Named("foo") @NonNull Foo foo, @Named("other") @NonNull String other) {
-        |      this.foo = foo;
-        |      this.other = other;
-        |    }
-      """
-          .trimMargin()
-      )
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+            public record Foo(@Named("other") long other,
+                @Named("bar") @NonNull Bar bar)
+          """
+              .trimMargin()
+          )
+          .containsIgnoringWhitespaces(
+            """
+            public record Bar(@Named("foo") @NonNull Foo foo,
+                @Named("other") @NonNull String other)
+          """
+              .trimMargin()
+          )
+      })
   }
 
   @Test
@@ -723,44 +816,51 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true),
+        JavaCodeGeneratorOptions(generateRecords = true),
       )
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |  public abstract static class Foo {
-        |    protected final long one;
-        |
-        |    protected Foo(@Named("one") long one) {
-        |      this.one = one;
-        |    }
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |  public static class None extends Foo {
-        |    public None(@Named("one") long one) {
-        |      super(one);
-        |    }
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |  public static class Bar extends None {
-        |    protected final String two;
-        |
-        |    public Bar(@Named("one") long one, @Named("two") String two) {
-        |      super(one);
-        |      this.two = two;
-        |    }
-      """
-          .trimMargin()
-      )
-      .isEqualToResourceFile("Inheritance.jva")
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+              public record Mod() {
+                public interface Foo {
+                  long one();
+                }
+            """
+              .trimIndent()
+          )
+          .containsIgnoringWhitespaces(
+            """
+                public interface INone extends Foo {
+                }
+
+                public record None(@Named("one") long one) implements Foo, INone
+            """
+              .trimIndent()
+          )
+          .containsIgnoringWhitespaces(
+            """
+                public interface IBar extends INone {
+                  String two();
+                }
+
+                public record Bar(@Named("one") long one,
+                    @Named("two") String two)  implements INone, IBar
+            """
+              .trimIndent()
+          )
+          .containsIgnoringWhitespaces(
+            """
+                public record Baz(@Named("one") long one, @Named("two") String two,
+                    @Named("three") @NonNull Duration three) implements IBar
+            """
+              .trimIndent()
+          )
+      })
+      .isEqualToResourceFile("InheritanceRecord.jva")
   }
 
   @Test
@@ -777,29 +877,24 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |  public static final class Foo {
-        |    public Foo() {
-        |    }
-      """
+            public record Foo()
+        """
           .trimMargin()
       )
-      .contains(
+      .containsIgnoringWhitespaces(
         """
-        |  public abstract static class Bar {
-        |    protected Bar() {
-        |    }
-      """
+            public interface Bar {
+            }
+        """
           .trimMargin()
       )
-      .contains(
+      .containsIgnoringWhitespaces(
         """
-        |  public static final class Baz extends Bar {
-        |    public Baz() {
-        |    }
-      """
+            public record Baz() implements Bar
+        """
           .trimMargin()
       )
   }
@@ -807,37 +902,51 @@ class JavaCodeGeneratorTest {
   @Test
   fun `stateless module classes`() {
     var javaCode = generateJavaCode("module my.mod")
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |public final class Mod {
-        |  private Mod() {
-        |  }
-      """
+          package my;
+          
+          public record Mod() {
+          }
+        """
           .trimMargin()
       )
 
     javaCode = generateJavaCode("abstract module my.mod")
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-      |public abstract class Mod {
-      |  protected Mod() {
-      |  }
-    """
+          package my;
+          
+          public interface Mod {
+          }
+        """
           .trimMargin()
       )
 
-    javaCode = generateJavaCode("open module my.mod")
-    assertThat(javaCode)
-      .contains(
+    val javaCodes = generateJavaCodeForOpenModule("open module my.mod")
+
+    assertThat(javaCodes)
+      .anySatisfy {
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+          public record Mod() implements IMod
         """
-      |public class Mod {
-      |  public Mod() {
-      |  }
-    """
-          .trimMargin()
-      )
+              .trimMargin()
+          )
+      }
+      .anySatisfy {
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+          public interface IMod {
+          }
+        """
+              .trimMargin()
+          )
+      }
   }
 
   @Test
@@ -862,28 +971,6 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
-  fun getters() {
-    val javaCode =
-      generateJavaCode(
-        """
-      module my.mod
-
-      class GenerateGetters {
-        urgent: Boolean = true
-        url: String = "https://apple.com"
-        diskSize: DataSize = 4.mb
-        ETA: Duration = 3.s
-        package: String
-      }
-    """
-          .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true),
-      )
-
-    assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("GenerateGetters.jva")
-  }
-
-  @Test
   fun `'with' methods`() {
     val javaCode =
       generateJavaCode(
@@ -901,23 +988,47 @@ class JavaCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |    public Bar withX(long x) {
-        |      return new Bar(x, y);
-        |    }
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    public Bar withY(@NonNull String y) {
-        |      return new Bar(x, y);
-        |    }
-      """
-          .trimMargin()
-      )
-      .doesNotContain("public Foo withX") // because `Foo` is abstract
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+                public interface Foo {
+                  long x();
+                }
+            """
+              .trimIndent()
+          )
+          .containsIgnoringWhitespaces(
+            """
+              public record Bar(@Named("x") long x,
+                  @Named("y") @NonNull String y) implements Foo, Wither<Bar, Bar.Memento> {
+                @Override
+                public @NonNull Bar with(final @NonNull Consumer<Memento> setter) {
+                  final var memento = new Memento(this);
+                  setter.accept(memento);
+                  return memento.build();
+                }
+            
+                public static final class Memento {
+                  public long x;
+            
+                  public @NonNull String y;
+            
+                  private Memento(final @NonNull Bar r) {
+                    x = r.x;
+                    y = r.y;
+                  }
+            
+                  private @NonNull Bar build() {
+                    return new Bar(x, y);
+                  }
+                }
+              }
+            }
+            """
+              .trimIndent()
+          )
+      })
   }
 
   @Test
@@ -933,14 +1044,12 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-      |public final class Mod {
-      |  public final @NonNull String pigeon;
-      |
-      |  public final @NonNull String parrot;
-    """
+          public record Mod(@Named("pigeon") @NonNull String pigeon,
+              @Named("parrot") @NonNull String parrot)
+        """
           .trimMargin()
       )
   }
@@ -961,11 +1070,11 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .doesNotContain("final String pigeon1")
-      .contains("final @NonNull String parrot1")
-      .doesNotContain("final String pigeon2")
-      .contains("final @NonNull String parrot2")
+    assertThat(javaCode.text)
+      .doesNotContain("String pigeon1")
+      .contains("@NonNull String parrot1")
+      .doesNotContain("String pigeon2")
+      .contains("@NonNull String parrot2")
   }
 
   @Test
@@ -990,10 +1099,10 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
       )
 
-    assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("Javadoc.jva")
+    assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("JavadocRecord.jva")
   }
 
   @Test
@@ -1014,31 +1123,36 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
       )
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |  /**
-        |   * module property comment.
-        |   * can contain /* and *&#47; characters.
-        |   */
-        |  public @NonNull Person getPigeon() {
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    /**
-        |     * class property comment.
-        |     * can contain /* and *&#47; characters.
-        |     */
-        |    public @NonNull String getName() {
-      """
-          .trimMargin()
-      )
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+              /**
+               * @param pigeon module property comment.
+               * can contain /* and *&#47; characters.
+               */
+              public record Mod(
+                  @Named("pigeon") Mod. @NonNull Person pigeon)
+            """
+              .trimIndent()
+          )
+          .containsIgnoringWhitespaces(
+            """
+            /**
+             * @param name class property comment.
+             * can contain /* and *&#47; characters.
+             */
+            public record Person(
+                @Named("name") @NonNull String name)
+          """
+              .trimMargin()
+          )
+      })
   }
 
   @Test
@@ -1082,68 +1196,32 @@ class JavaCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |public final class Mod {
-        |  public final short uint8;
-        |
-        |  public final int uint16;
-        |
-        |  public final long uint32;
-        |
-        |  public final long uint;
-        |
-        |  public final byte int8;
-        |
-        |  public final short int16;
-        |
-        |  public final int int32;
-        |
-        |  public final @NonNull URI uri;
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |  public final @NonNull Pair<@NonNull Short, @NonNull Integer> pair;
-        |
-        |  public final @NonNull List<@NonNull Long> list;
-        |
-        |  public final @NonNull Set<@NonNull Long> set;
-        |
-        |  public final @NonNull Map<@NonNull Byte, @NonNull Short> map;
-        |
-        |  public final @NonNull List<@NonNull Integer> listing;
-        |
-        |  public final @NonNull Map<@NonNull URI, @NonNull Short> mapping;
-        |
-        |  public final Integer nullable;
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |  public static final class Foo {
-        |    public final short uint8;
-        |
-        |    public final int uint16;
-        |
-        |    public final long uint32;
-        |
-        |    public final long uint;
-        |
-        |    public final byte int8;
-        |
-        |    public final short int16;
-        |
-        |    public final int int32;
-        |
-        |    public final @NonNull URI uri;
-        |
-        |    public final @NonNull List<@NonNull Long> list;
-      """
-          .trimMargin()
-      )
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+              public record Mod(@Named("uint8") short uint8, @Named("uint16") int uint16,
+                  @Named("uint32") long uint32, @Named("uint") long uint, @Named("int8") byte int8,
+                  @Named("int16") short int16, @Named("int32") int int32, @Named("uri") @NonNull URI uri,
+                  @Named("pair") @NonNull Pair<@NonNull Short, @NonNull Integer> pair,
+                  @Named("list") @NonNull List<@NonNull Long> list, @Named("set") @NonNull Set<@NonNull Long> set,
+                  @Named("map") @NonNull Map<@NonNull Byte, @NonNull Short> map,
+                  @Named("listing") @NonNull List<@NonNull Integer> listing,
+                  @Named("mapping") @NonNull Map<@NonNull URI, @NonNull Short> mapping,
+                  @Named("nullable") Integer nullable)
+            """
+              .trimMargin()
+          )
+          .containsIgnoringWhitespaces(
+            """
+                public record Foo(@Named("uint8") short uint8, @Named("uint16") int uint16,
+                    @Named("uint32") long uint32, @Named("uint") long uint, @Named("int8") byte int8,
+                    @Named("int16") short int16, @Named("int32") int int32, @Named("uri") @NonNull URI uri,
+                    @Named("list") @NonNull List<@NonNull Long> list)
+            """
+              .trimMargin()
+          )
+      })
   }
 
   @Test
@@ -1156,12 +1234,21 @@ class JavaCodeGeneratorTest {
       foo: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(nonNullAnnotation = "com.example.Annotations\$NonNull"),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          nonNullAnnotation = "com.example.Annotations\$NonNull",
+        ),
       )
 
-    assertThat(javaCode)
-      .contains("import com.example.Annotations;")
-      .contains("public final @Annotations.NonNull String foo;")
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces("import com.example.Annotations;")
+      .containsIgnoringWhitespaces(
+        """
+        public record Mod(
+            @Named("foo") @Annotations.NonNull String foo)
+      """
+          .trimIndent()
+      )
 
     javaCode =
       generateJavaCode(
@@ -1180,26 +1267,14 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-      |public final class Mod {
-      |  public final long foo;
-      |
-      |  public final Long bar;
-      |
-      |  public final Object baz;
-      |
-      |  public final @NonNull String qux;
-      |
-      |  public final List<@NonNull String> foo2;
-      |
-      |  public final @NonNull List<String> bar2;
-      |
-      |  public final @NonNull List<@NonNull String> baz2;
-      |
-      |  public final @NonNull List<@NonNull Long> qux2;
-    """
+          public record Mod(@Named("foo") long foo, @Named("bar") Long bar, @Named("baz") Object baz,
+              @Named("qux") @NonNull String qux, @Named("foo2") List<@NonNull String> foo2,
+              @Named("bar2") @NonNull List<String> bar2, @Named("baz2") @NonNull List<@NonNull String> baz2,
+              @Named("qux2") @NonNull List<@NonNull Long> qux2)
+        """
           .trimMargin()
       )
   }
@@ -1235,36 +1310,29 @@ class JavaCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |public final class Mod {
-        |  public final @NonNull String simple;
-        |
-        |  public final @NonNull String constrained;
-        |
-        |  public final @NonNull List<@NonNull Long> parameterized;
-        |
-        |  public final @NonNull List<@NonNull Long> recursive1;
-        |
-        |  public final @NonNull List<@NonNull String> recursive2;
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |  public static final class Foo {
-        |    public final @NonNull String simple;
-        |
-        |    public final @NonNull String constrained;
-        |
-        |    public final @NonNull List<@NonNull Long> parameterized;
-        |
-        |    public final @NonNull List<@NonNull Long> recursive1;
-        |
-        |    public final @NonNull List<@NonNull String> recursive2;
-      """
-          .trimMargin()
-      )
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+              public record Mod(@Named("simple") @NonNull String simple,
+                  @Named("constrained") @NonNull String constrained,
+                  @Named("parameterized") @NonNull List<@NonNull Long> parameterized,
+                  @Named("recursive1") @NonNull List<@NonNull Long> recursive1,
+                  @Named("recursive2") @NonNull List<@NonNull String> recursive2)
+            """
+              .trimMargin()
+          )
+          .containsIgnoringWhitespaces(
+            """
+              public record Foo(@Named("simple") @NonNull String simple,
+                  @Named("constrained") @NonNull String constrained,
+                  @Named("parameterized") @NonNull List<@NonNull Long> parameterized,
+                  @Named("recursive1") @NonNull List<@NonNull Long> recursive1,
+                  @Named("recursive2") @NonNull List<@NonNull String> recursive2)
+            """
+              .trimMargin()
+          )
+      })
   }
 
   @Test
@@ -1310,52 +1378,44 @@ class JavaCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+          public record Mod(@Named("res1") @NonNull List<@NonNull Long> res1,
+              @Named("res2") @NonNull List<@NonNull List<@NonNull String>> res2,
+              @Named("res3") @NonNull Map<@NonNull Long, @NonNull String> res3,
+              @Named("res4") @NonNull Map<@NonNull String, @NonNull Duration> res4,
+              @Named("res5") @NonNull Map<Mod.Person, Mod.Person> res5,
+              @Named("res6") @NonNull List<@NonNull Object> res6,
+              @Named("res7") @NonNull Map<@NonNull Object, @NonNull Object> res7,
+              @Named("res8") @NonNull Map<@NonNull String, @NonNull Object> res8,
+              @Named("res9") @NonNull Map<@NonNull Object, @NonNull Object> res9)
+          """
+              .trimMargin()
+          )
+          .containsIgnoringWhitespaces(
+            """
+            public record Person(
+                @Named("name") @NonNull String name)
         """
-        |public final class Mod {
-        |  public final @NonNull List<@NonNull Long> res1;
-        |
-        |  public final @NonNull List<@NonNull List<@NonNull String>> res2;
-        |
-        |  public final @NonNull Map<@NonNull Long, @NonNull String> res3;
-        |
-        |  public final @NonNull Map<@NonNull String, @NonNull Duration> res4;
-        |
-        |  public final @NonNull Map<Person, Person> res5;
-        |
-        |  public final @NonNull List<@NonNull Object> res6;
-        |
-        |  public final @NonNull Map<@NonNull Object, @NonNull Object> res7;
-        |
-        |  public final @NonNull Map<@NonNull String, @NonNull Object> res8;
-        |
-        |  public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
-      """
-          .trimMargin()
-      )
-      .contains(
+              .trimMargin()
+          )
+          .containsIgnoringWhitespaces(
+            """
+            public record Foo(@Named("res1") @NonNull List<@NonNull Long> res1,
+                @Named("res2") @NonNull List<@NonNull List<@NonNull String>> res2,
+                @Named("res3") @NonNull Map<@NonNull Long, @NonNull String> res3,
+                @Named("res4") @NonNull Map<@NonNull String, @NonNull Duration> res4,
+                @Named("res5") @NonNull Map<Person, Person> res5,
+                @Named("res6") @NonNull List<@NonNull Object> res6,
+                @Named("res7") @NonNull Map<@NonNull Object, @NonNull Object> res7,
+                @Named("res8") @NonNull Map<@NonNull String, @NonNull Object> res8,
+                @Named("res9") @NonNull Map<@NonNull Object, @NonNull Object> res9)
         """
-        |  public static final class Foo {
-        |    public final @NonNull List<@NonNull Long> res1;
-        |
-        |    public final @NonNull List<@NonNull List<@NonNull String>> res2;
-        |
-        |    public final @NonNull Map<@NonNull Long, @NonNull String> res3;
-        |
-        |    public final @NonNull Map<@NonNull String, @NonNull Duration> res4;
-        |
-        |    public final @NonNull Map<Person, Person> res5;
-        |
-        |    public final @NonNull List<@NonNull Object> res6;
-        |
-        |    public final @NonNull Map<@NonNull Object, @NonNull Object> res7;
-        |
-        |    public final @NonNull Map<@NonNull String, @NonNull Object> res8;
-        |
-        |    public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
-      """
-          .trimMargin()
-      )
+              .trimMargin()
+          )
+      })
   }
 
   @Test
@@ -1370,7 +1430,12 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode).compilesSuccessfully().contains("public final @NonNull String x;")
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces("""public record Mod(@Named("x") @NonNull String x)""")
+      })
   }
 
   @Test
@@ -1408,13 +1473,16 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains("public final @NonNull String v1;")
-      .contains("public final @NonNull String v2;")
-      .contains("public final @NonNull String v3;")
-      .contains("public final @NonNull String v4;")
-      .contains("public final @NonNull String v5;")
-      .contains("public final @NonNull String v6;")
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
+        """
+        public record Mod(@Named("v1") @NonNull String v1, @Named("v2") @NonNull String v2,
+            @Named("v3") @NonNull String v3, @Named("v4") @NonNull String v4,
+            @Named("v5") @NonNull String v5,
+            @Named("v6") @NonNull String v6)
+      """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -1441,13 +1509,16 @@ class JavaCodeGeneratorTest {
           .trimIndent()
       )
 
-    assertThat(javaCode)
-      .contains("public final @NonNull String v1;")
-      .contains("public final @NonNull String v2;")
-      .contains("public final @NonNull String v3;")
-      .contains("public final @NonNull String v4;")
-      .contains("public final @NonNull String v5;")
-      .contains("public final @NonNull String v6;")
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
+        """
+        public record Mod(@Named("v1") @NonNull String v1, @Named("v2") @NonNull String v2,
+            @Named("v3") @NonNull String v3, @Named("v4") @NonNull String v4,
+            @Named("v5") @NonNull String v5,
+            @Named("v6") @NonNull String v6)
+      """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -1460,12 +1531,17 @@ class JavaCodeGeneratorTest {
       name: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(paramsAnnotation = "org.project.MyAnnotation"),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          paramsAnnotation = "org.project.MyAnnotation",
+        ),
       )
 
-    assertThat(javaCode)
-      .contains("import org.project.MyAnnotation;")
-      .contains("public Mod(@MyAnnotation(\"name\") @NonNull String name)")
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces("import org.project.MyAnnotation;")
+      .containsIgnoringWhitespaces(
+        """public record Mod(@MyAnnotation("name") @NonNull String name)"""
+      )
   }
 
   @Test
@@ -1478,10 +1554,11 @@ class JavaCodeGeneratorTest {
       name: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(paramsAnnotation = null),
+        JavaCodeGeneratorOptions(generateRecords = true, paramsAnnotation = null),
       )
 
-    assertThat(javaCode).contains("public Mod(@NonNull String name)")
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces("""public record Mod(@NonNull String name)""")
   }
 
   @Test
@@ -1499,36 +1576,23 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateSpringBootConfig = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateSpringBootConfig = true),
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |@ConfigurationProperties
-        |public final class Mod {
-      """
+          @ConfigurationProperties
+          public record Mod(Mod. @NonNull Server server)
+       """
           .trimMargin()
       )
-      .contains(
+      .containsIgnoringWhitespaces(
         """
-        |  public final @NonNull Server server;
-      """
-          .trimMargin()
-      )
-      .contains(
+          @ConfigurationProperties("server")
+          public record Server(long port,
+              @NonNull List<@NonNull URI> urls)
         """
-        |  @ConfigurationProperties("server")
-        |  public static final class Server {
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-        |    public final long port;
-        |
-        |    public final @NonNull List<@NonNull URI> urls;
-      """
           .trimMargin()
       )
       .doesNotContain("@ConstructorBinding")
@@ -1572,18 +1636,16 @@ class JavaCodeGeneratorTest {
       )
 
     val javaSourceFiles = generateFiles(library, client)
-    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles.mapValues { it.value.text }) }
+    assertDoesNotThrow { inMemoryCompile(javaSourceFiles.mapValues { it.value.text }) }
 
     val javaClientCode =
       javaSourceFiles.entries.find { (fileName, _) -> fileName.endsWith("Client.java") }!!.value
-    assertThat(javaClientCode)
-      .contains(
+    assertThat(javaClientCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |public final class Client {
-        |  public final @NonNull Library lib;
-        |
-        |  public final Library. @NonNull Person parrot;
-      """
+          public record Client(@Named("lib") @NonNull Library lib,
+              @Named("parrot") Library. @NonNull Person parrot)
+        """
           .trimMargin()
       )
   }
@@ -1619,18 +1681,24 @@ class JavaCodeGeneratorTest {
       )
 
     val javaSourceFiles = generateFiles(base, derived)
-    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles.mapValues { it.value.text }) }
+    assertDoesNotThrow { inMemoryCompile(javaSourceFiles.mapValues { it.value.text }) }
 
     val javaDerivedCode =
       javaSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.java") }!!.value
-    assertThat(javaDerivedCode)
-      .contains(
+    assertThat(javaDerivedCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |public final class Derived extends Base {
-        |  public final Base. @NonNull Person person1;
-        |
-        |  public final @NonNull Person2 person2;
-      """
+          public record Derived(@Named("pigeon") Base. @NonNull Person pigeon,
+              @Named("person1") Base. @NonNull Person person1,
+              @Named("person2") Derived. @NonNull Person2 person2) implements IBase
+        """
+          .trimMargin()
+      )
+      .containsIgnoringWhitespaces(
+        """
+          public record Person2(@Named("name") @NonNull String name,
+              @Named("age") long age) implements Base.IPerson
+        """
           .trimMargin()
       )
   }
@@ -1638,7 +1706,7 @@ class JavaCodeGeneratorTest {
   @Test
   fun `empty module`() {
     val javaCode = generateJavaCode("module mod")
-    assertThat(javaCode).contains("public final class Mod {")
+    assertThat(javaCode.text).containsIgnoringWhitespaces("public record Mod() {}")
   }
 
   @Test
@@ -1668,16 +1736,16 @@ class JavaCodeGeneratorTest {
       )
 
     val javaSourceFiles = generateFiles(base, derived)
-    assertDoesNotThrow { InMemoryJavaCompiler.compile(javaSourceFiles.mapValues { it.value.text }) }
+    assertDoesNotThrow { inMemoryCompile(javaSourceFiles.mapValues { it.value.text }) }
 
     val javaDerivedCode =
       javaSourceFiles.entries.find { (filename, _) -> filename.endsWith("Derived.java") }!!.value
-    assertThat(javaDerivedCode)
-      .contains(
+    assertThat(javaDerivedCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |public final class Derived extends Base {
-        |  public final @NonNull String v;
-      """
+          public record Derived(
+              @Named("v") @NonNull String v) implements Base
+        """
           .trimMargin()
       )
   }
@@ -1787,12 +1855,10 @@ class JavaCodeGeneratorTest {
       typealias Direction = "north"|"east"|"south"|"west"
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true),
+        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
       )
 
-    assertThat(javaCode)
-      .contains("implements Serializable")
-      .contains("private static final long serialVersionUID = 0L;")
+    assertThat(javaCode.text).containsIgnoringWhitespaces("implements Serializable")
 
     val classes = javaCode.compile()
 
@@ -1851,7 +1917,14 @@ class JavaCodeGeneratorTest {
         }
         .doesNotThrowAnyException()
 
-      assertThat(restoredInstance!!).isEqualTo(instance)
+      val patternCompare = BiPredicate { p1: Pattern, p2: Pattern ->
+        p1.toString().equals(p2.toString())
+      }
+
+      assertThat(restoredInstance!!)
+        .usingRecursiveComparison()
+        .withEqualsForType(patternCompare, Pattern::class.java)
+        .isEqualTo(instance)
     }
 
     confirmSerDe(enumValue)
@@ -1868,10 +1941,10 @@ class JavaCodeGeneratorTest {
       abstract class Foo { str: String }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true),
+        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
       )
 
-    assertThat(javaCode).doesNotContain("Serializable")
+    assertThat(javaCode.text).doesNotContain("Serializable")
 
     javaCode =
       generateJavaCode(
@@ -1879,10 +1952,10 @@ class JavaCodeGeneratorTest {
       module my.mod
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true),
+        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
       )
 
-    assertThat(javaCode).doesNotContain("Serializable")
+    assertThat(javaCode.text).doesNotContain("Serializable")
   }
 
   @Test
@@ -1896,22 +1969,22 @@ class JavaCodeGeneratorTest {
       class Address { city: String }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(implementSerializable = true),
+        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
       )
 
-    assertThat(javaCode)
-      .contains(
+    assertThat(javaCode.text)
+      .containsIgnoringWhitespaces(
         """
-        |public final class Person implements Serializable {
-        |  private static final long serialVersionUID = 0L;
-      """
+          public record Person(@Named("name") @NonNull String name,
+              @Named("address") Person. @NonNull Address address) implements Serializable
+        """
           .trimMargin()
       )
-      .contains(
+      .containsIgnoringWhitespaces(
         """
-        |  public static final class Address implements Serializable {
-        |    private static final long serialVersionUID = 0L;
-      """
+          public record Address(
+              @Named("city") @NonNull String city) implements Serializable, Wither<Address, Address.Memento> {
+        """
           .trimMargin()
       )
   }
@@ -1942,22 +2015,106 @@ class JavaCodeGeneratorTest {
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |  public static final class TheClass extends OpenClass {
-        |    public final @NonNull TheFoo prop;
-        |
-        |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
-        |      super(prop);
-        |      this.prop = prop;
-        |    }
-        |
-        |    public TheClass withProp(@NonNull TheFoo prop) {
-        |      return new TheClass(prop);
-        |    }
-      """
-          .trimMargin()
-      )
+      .satisfies({
+        assertThat(it.text)
+          .containsIgnoringWhitespaces(
+            """
+              public record Mod() {
+                public interface IFoo {
+                }
+              
+                public record Foo() implements IFoo, Wither<Foo, Foo.Memento> {
+                  @Override
+                  public @NonNull Foo with(final @NonNull Consumer<Memento> setter) {
+                    final var memento = new Memento(this);
+                    setter.accept(memento);
+                    return memento.build();
+                  }
+              
+                  public static final class Memento {
+                    private Memento(final @NonNull Foo r) {
+                    }
+              
+                    private @NonNull Foo build() {
+                      return new Foo();
+                    }
+                  }
+                }
+              
+                public record TheFoo(
+                    @Named("fooProp") @NonNull String fooProp) implements IFoo, Wither<TheFoo, TheFoo.Memento> {
+                  @Override
+                  public @NonNull TheFoo with(final @NonNull Consumer<Memento> setter) {
+                    final var memento = new Memento(this);
+                    setter.accept(memento);
+                    return memento.build();
+                  }
+              
+                  public static final class Memento {
+                    public @NonNull String fooProp;
+              
+                    private Memento(final @NonNull TheFoo r) {
+                      fooProp = r.fooProp;
+                    }
+              
+                    private @NonNull TheFoo build() {
+                      return new TheFoo(fooProp);
+                    }
+                  }
+                }
+              
+                public interface IOpenClass {
+                  @NonNull IFoo prop();
+                }
+              
+                public record OpenClass(
+                    @Named("prop") @NonNull Foo prop) implements IOpenClass, Wither<OpenClass, OpenClass.Memento> {
+                  @Override
+                  public @NonNull OpenClass with(final @NonNull Consumer<Memento> setter) {
+                    final var memento = new Memento(this);
+                    setter.accept(memento);
+                    return memento.build();
+                  }
+              
+                  public static final class Memento {
+                    public @NonNull Foo prop;
+              
+                    private Memento(final @NonNull OpenClass r) {
+                      prop = r.prop;
+                    }
+              
+                    private @NonNull OpenClass build() {
+                      return new OpenClass(prop);
+                    }
+                  }
+                }
+              
+                public record TheClass(
+                    @Named("prop") @NonNull TheFoo prop) implements IOpenClass, Wither<TheClass, TheClass.Memento> {
+                  @Override
+                  public @NonNull TheClass with(final @NonNull Consumer<Memento> setter) {
+                    final var memento = new Memento(this);
+                    setter.accept(memento);
+                    return memento.build();
+                  }
+              
+                  public static final class Memento {
+                    public @NonNull TheFoo prop;
+              
+                    private Memento(final @NonNull TheClass r) {
+                      prop = r.prop;
+                    }
+              
+                    private @NonNull TheClass build() {
+                      return new TheClass(prop);
+                    }
+                  }
+                }
+              }
+            """
+              .trimMargin()
+          )
+      })
   }
 
   @Test
@@ -1982,35 +2139,20 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateGetters = true),
+        JavaCodeGeneratorOptions(generateRecords = true, generateGetters = true),
       )
 
     assertThat(javaCode)
       .compilesSuccessfully()
-      .contains(
-        """
-        |  public static final class TheClass extends OpenClass {
-        |    private final @NonNull TheFoo prop;
-        |
-        |    public TheClass(@Named("prop") @NonNull TheFoo prop) {
-        |      super(prop);
-        |      this.prop = prop;
-        |    }
-        |
-        |    @Override
-        |    public @NonNull TheFoo getProp() {
-        |      return prop;
-        |    }
-      """
-          .trimMargin()
-      )
+      .satisfies({ assertThat(it.text).doesNotContainPattern("""get\w+[(]""") })
   }
 
   @Test
   fun `override names in a standalone module`() {
     val files =
       JavaCodeGeneratorOptions(
-          renames = mapOf("a.b.c." to "x.y.z.", "d.e.f.AnotherModule" to "u.v.w.RenamedModule")
+          generateRecords = true,
+          renames = mapOf("a.b.c." to "x.y.z.", "d.e.f.AnotherModule" to "u.v.w.RenamedModule"),
         )
         .generateFiles(
           "MyModule.pkl" to
@@ -2031,12 +2173,11 @@ class JavaCodeGeneratorTest {
         .toMutableMap()
 
     files.validateContents(
-      "java/x/y/z/MyModule.java" to listOf("package x.y.z;", "public final class MyModule {"),
+      "java/x/y/z/MyModule.java" to listOf("package x.y.z;", "public record MyModule("),
       "$MAPPER_PREFIX/a.b.c.MyModule.properties" to
         listOf("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.MyModule"),
       // ---
-      "java/u/v/w/RenamedModule.java" to
-        listOf("package u.v.w;", "public final class RenamedModule {"),
+      "java/u/v/w/RenamedModule.java" to listOf("package u.v.w;", "public record RenamedModule("),
       "$MAPPER_PREFIX/d.e.f.AnotherModule.properties" to
         listOf("org.pkl.config.java.mapper.d.e.f.AnotherModule\\#ModuleClass=u.v.w.RenamedModule"),
     )
@@ -2046,7 +2187,8 @@ class JavaCodeGeneratorTest {
   fun `override names based on the longest prefix`() {
     val files =
       JavaCodeGeneratorOptions(
-          renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w.")
+          generateRecords = true,
+          renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w."),
         )
         .generateFiles(
           "com/foo/bar/Module1" to
@@ -2073,15 +2215,15 @@ class JavaCodeGeneratorTest {
         )
 
     files.validateContents(
-      "java/x/Module1.java" to listOf("package x;", "public final class Module1 {"),
+      "java/x/Module1.java" to listOf("package x;", "public record Module1("),
       "$MAPPER_PREFIX/com.foo.bar.Module1.properties" to
         listOf("org.pkl.config.java.mapper.com.foo.bar.Module1\\#ModuleClass=x.Module1"),
       // ---
-      "java/z/Module2.java" to listOf("package z;", "public final class Module2 {"),
+      "java/z/Module2.java" to listOf("package z;", "public record Module2("),
       "$MAPPER_PREFIX/com.Module2.properties" to
         listOf("org.pkl.config.java.mapper.com.Module2\\#ModuleClass=z.Module2"),
       // ---
-      "java/w/org/baz/Module3.java" to listOf("package w.org.baz;", "public final class Module3 {"),
+      "java/w/org/baz/Module3.java" to listOf("package w.org.baz;", "public record Module3("),
       "$MAPPER_PREFIX/org.baz.Module3.properties" to
         listOf("org.pkl.config.java.mapper.org.baz.Module3\\#ModuleClass=w.org.baz.Module3"),
     )
@@ -2091,12 +2233,13 @@ class JavaCodeGeneratorTest {
   fun `override names in multiple modules using each other`() {
     val files =
       JavaCodeGeneratorOptions(
+          generateRecords = true,
           renames =
             mapOf(
               "org.foo." to "com.foo.x.",
               "org.bar.Module2" to "org.bar.RenamedModule",
               "org.baz." to "com.baz.a.b.",
-            )
+            ),
         )
         .generateFiles(
           "org/foo/Module1" to
@@ -2134,7 +2277,7 @@ class JavaCodeGeneratorTest {
         )
 
     files.validateContents(
-      "java/com/foo/x/Module1.java" to listOf("package com.foo.x;", "public final class Module1 {"),
+      "java/com/foo/x/Module1.java" to listOf("package com.foo.x;", "public record Module1("),
       "$MAPPER_PREFIX/org.foo.Module1.properties" to
         listOf(
           "org.pkl.config.java.mapper.org.foo.Module1\\#ModuleClass=com.foo.x.Module1",
@@ -2145,8 +2288,8 @@ class JavaCodeGeneratorTest {
         listOf(
           "package org.bar;",
           "import com.foo.x.Module1;",
-          "public final class RenamedModule {",
-          "public final Module1. @NonNull Person owner;",
+          "public record RenamedModule(",
+          """@Named("owner") Module1. @NonNull Person owner""",
         ),
       "$MAPPER_PREFIX/org.bar.Module2.properties" to
         listOf(
@@ -2158,8 +2301,8 @@ class JavaCodeGeneratorTest {
         listOf(
           "package com.baz.a.b;",
           "import org.bar.RenamedModule;",
-          "public final class Module3 {",
-          "public final RenamedModule. @NonNull Group owner;",
+          "public record Module3(",
+          """@Named("owner") RenamedModule. @NonNull Group owner""",
         ),
       "$MAPPER_PREFIX/org.baz.Module3.properties" to
         listOf(
@@ -2173,7 +2316,8 @@ class JavaCodeGeneratorTest {
   fun `do not capitalize names of renamed classes`() {
     val files =
       JavaCodeGeneratorOptions(
-          renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w.")
+          generateRecords = true,
+          renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w."),
         )
         .generateFiles(
           "MyModule.pkl" to
@@ -2193,13 +2337,11 @@ class JavaCodeGeneratorTest {
         )
 
     files.validateContents(
-      "java/x/y/z/renamed_module.java" to
-        listOf("package x.y.z;", "public final class renamed_module {"),
+      "java/x/y/z/renamed_module.java" to listOf("package x.y.z;", "public record renamed_module("),
       "$MAPPER_PREFIX/a.b.c.MyModule.properties" to
         listOf("org.pkl.config.java.mapper.a.b.c.MyModule\\#ModuleClass=x.y.z.renamed_module"),
       // ---
-      "java/u/v/w/Lower_module.java" to
-        listOf("package u.v.w;", "public final class Lower_module {"),
+      "java/u/v/w/Lower_module.java" to listOf("package u.v.w;", "public record Lower_module("),
       "$MAPPER_PREFIX/d.e.f.lower_module.properties" to
         listOf("org.pkl.config.java.mapper.d.e.f.lower_module\\#ModuleClass=u.v.w.Lower_module"),
     )
@@ -2236,15 +2378,7 @@ class JavaCodeGeneratorTest {
       .isNotEqualTo(foo1)
       .hasSameHashCodeAs(bar1)
       .hasSameHashCodeAs(anotherBar1)
-    assertThat(bar1.toString())
-      .isEqualTo(
-        """
-        Bar {
-          name = name1
-        }
-      """
-          .trimIndent()
-      )
+    assertThat(bar1.toString()).isEqualToIgnoringWhitespace("Bar[name=name1]")
   }
 
   private fun Map<String, String>.validateContents(
@@ -2267,7 +2401,7 @@ class JavaCodeGeneratorTest {
     val evaluator = Evaluator.preconfigured()
     return pklFiles.fold(mapOf()) { acc, pklFile ->
       val pklSchema = evaluator.evaluateSchema(path(pklFile))
-      val generator = JavaCodeGenerator(pklSchema, this)
+      val generator = JavaRecordCodeGenerator(pklSchema, this)
       acc + generator.output
     }
   }
@@ -2278,7 +2412,9 @@ class JavaCodeGeneratorTest {
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
   private fun generateFiles(vararg pklModules: PklModule): Map<String, JavaSourceCode> =
-    JavaCodeGeneratorOptions().generateFiles(*pklModules).mapValues { JavaSourceCode(it.value) }
+    JavaCodeGeneratorOptions(generateRecords = true).generateFiles(*pklModules).mapValues {
+      JavaSourceCode(it.value)
+    }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("my.Mod\$Other").constructors.first()
@@ -2318,7 +2454,6 @@ class JavaCodeGeneratorTest {
         other,
         other,
         enumValue,
-        byteArrayOf(1, 2, 3, 4),
       )
 
     return other to propertyTypes
@@ -2328,8 +2463,7 @@ class JavaCodeGeneratorTest {
     JavaSourceCodeAssert(actual)
 
   private data class JavaSourceCode(val text: String) {
-    fun compile(): Map<String, Class<*>> =
-      InMemoryJavaCompiler.compile(mapOf("/org/Mod.java" to text))
+    fun compile(): Map<String, Class<*>> = inMemoryCompile(mapOf("/org/Mod.java" to text))
 
     fun deleteLines(predicate: (String) -> Boolean): JavaSourceCode =
       JavaSourceCode(text.lines().filterNot(predicate).joinToString("\n"))
