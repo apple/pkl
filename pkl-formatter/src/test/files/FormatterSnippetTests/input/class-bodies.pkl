@@ -7,4 +7,4 @@ class Bar
   qux = 1
 }
 
-class Baz { prop = 0 }
+class Baz { prop = 0; prop2 = 1 }

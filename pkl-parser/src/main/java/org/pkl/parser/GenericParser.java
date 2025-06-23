@@ -266,9 +266,11 @@ public class GenericParser {
   private GenNode parseClassBody() {
     var children = new ArrayList<GenNode>();
     children.add(makeTerminal(next()));
-    ff(children);
     var elements = new ArrayList<GenNode>();
+    var hasElements = false;
+    ff(elements);
     while (lookahead != Token.RBRACE && lookahead != Token.EOF) {
+      hasElements = true;
       var preChildren = new ArrayList<GenNode>();
       parseMemberHeader(preChildren);
       if (lookahead == Token.FUNCTION) {
@@ -281,8 +283,11 @@ public class GenericParser {
     if (lookahead == Token.EOF) {
       throw parserError(ErrorMessages.create("missingDelimiter", "}"), prev().span.stopSpan());
     }
-    if (!elements.isEmpty()) {
+    if (hasElements) {
       children.add(new GenNode(NodeType.CLASS_BODY_ELEMENTS, elements));
+    } else if (!elements.isEmpty()) {
+      // add affixes
+      children.addAll(elements);
     }
     expect(Token.RBRACE, children, "missingDelimiter", "}");
     return new GenNode(NodeType.CLASS_BODY, children);
