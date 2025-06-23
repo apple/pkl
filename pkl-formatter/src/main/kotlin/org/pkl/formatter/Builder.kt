@@ -109,8 +109,9 @@ class Builder(sourceText: String) {
       NodeType.IF_CONDITION -> formatParameterList(node)
       NodeType.IF_THEN_EXPR -> formatIfThen(node)
       NodeType.IF_ELSE_EXPR -> formatIfElse(node)
-      NodeType.NEW_EXPR -> formatNewExpr(node)
-      NodeType.NEW_HEADER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.NEW_EXPR,
+      NodeType.AMENDS_EXPR -> formatNewExpr(node)
+      NodeType.NEW_HEADER -> formatNewHeader(node)
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
@@ -121,12 +122,11 @@ class Builder(sourceText: String) {
       NodeType.READ_EXPR -> formatTraceThrowReadExpr(node)
       NodeType.NON_NULL_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.PARENTHESIZED_EXPR -> Group(newId(), formatGeneric(node.children, null))
+      NodeType.PARENTHESIZED_EXPR -> formatParenthesizedExpr(node)
       NodeType.IMPORT_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.LET_EXPR -> formatLetExpr(node)
       NodeType.LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node)
       NodeType.LET_PARAMETER -> formatLetParameter(node)
-      NodeType.AMENDS_EXPR -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.UNARY_MINUS_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.LOGICAL_NOT_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.TYPE_ANNOTATION -> formatTypeAnnotation(node)
@@ -248,17 +248,15 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassProperty(node: GenNode): FormatNode {
-    val shouldIndent =
-      node.children.last().type !in
-        EnumSet.of(NodeType.OBJECT_BODY, NodeType.NEW_EXPR, NodeType.CLASS_PROPERTY_HEADER)
+    val sameLine =
+      node.children.lastOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
     val nodes =
       groupNonPrefixes(node) { children ->
         val nodes =
-          formatGenericWithGen(
-            children,
-            { prev, next -> if (next.type == NodeType.NEW_EXPR) Space else SpaceOrLine },
-          ) { node, next ->
-            if (next == null && shouldIndent) indent(format(node)) else format(node)
+          formatGenericWithGen(children, { prev, next -> if (sameLine) Space else SpaceOrLine }) {
+            node,
+            next ->
+            if (node.type.isExpression && !sameLine) indent(format(node)) else format(node)
           }
         groupOnSpace(nodes)
       }
@@ -272,7 +270,7 @@ class Builder(sourceText: String) {
 
   private fun formatClassMethod(node: GenNode): FormatNode {
     val expr = node.children.last().children[0]
-    val shouldIndent = expr.type != NodeType.NEW_EXPR
+    val shouldIndent = !isSameLineExpr(expr)
     val nodes =
       formatGenericWithGen(
         node.children,
@@ -280,7 +278,9 @@ class Builder(sourceText: String) {
           if (next.type == NodeType.CLASS_METHOD_BODY && !shouldIndent) Space else SpaceOrLine
         },
       ) { node, next ->
-        if (next == null && shouldIndent) indent(format(node)) else format(node)
+        if (node.type == NodeType.CLASS_METHOD_BODY && shouldIndent) {
+          indent(format(node))
+        } else format(node)
       }
     return group(groupOnSpace(nodes))
   }
@@ -301,12 +301,11 @@ class Builder(sourceText: String) {
 
   private fun formatParameterList(node: GenNode): FormatNode {
     if (node.children.size == 2) return Text("()")
-    val id = newId()
     val nodes =
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
       }
-    return Group(id, nodes)
+    return Group(newId(), nodes)
   }
 
   private fun formatParameterListElements(node: GenNode): FormatNode {
@@ -467,16 +466,35 @@ class Builder(sourceText: String) {
   }
 
   private fun formatNewExpr(node: GenNode): FormatNode {
-    val header =
-      Group(newId(), formatGeneric(node.children.dropLast(1), SpaceOrLine) + listOf(SpaceOrLine))
-    val body = format(node.children.last())
-    return group(header, body)
+    val nodes = formatGeneric(node.children, SpaceOrLine)
+    return Group(newId(), nodes)
+  }
+
+  private fun formatNewHeader(node: GenNode): FormatNode {
+    val nodes = formatGeneric(node.children, SpaceOrLine)
+    return Group(newId(), nodes)
+  }
+
+  private fun formatParenthesizedExpr(node: GenNode): FormatNode {
+    if (node.children.size == 2) return Text("()")
+    val nodes =
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+      ) { node, next ->
+        if (node.type.isExpression) indent(format(node)) else format(node)
+      }
+    return Group(newId(), nodes)
   }
 
   private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
+    val sameLine =
+      node.children.lastOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
     val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-        if (next == null) indent(format(node)) else format(node)
+      formatGenericWithGen(node.children, { prev, next -> if (sameLine) Space else SpaceOrLine }) {
+        node,
+        next ->
+        if (node.type.isExpression && !sameLine) indent(format(node)) else format(node)
       }
     return Group(newId(), nodes)
   }
@@ -518,11 +536,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatLetParameter(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-        if (next == null) indent(format(node)) else format(node)
-      }
-    return indent(Group(newId(), nodes))
+    return indent(formatClassProperty(node))
   }
 
   private fun formatSubscriptExpr(node: GenNode): FormatNode {
@@ -765,6 +779,14 @@ class Builder(sourceText: String) {
     }
   }
 
+  private fun isSameLineExpr(node: GenNode): Boolean {
+    if (node.type in SAME_LINE_EXPRS) return true
+    if (node.type == NodeType.BINARY_OP_EXPR) {
+      return node.children.firstOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
+    }
+    return false
+  }
+
   private fun splitPrefixes(nodes: List<GenNode>): Pair<List<GenNode>, List<GenNode>> {
     val splitPoint = nodes.indexOfFirst { !it.type.isAffix && it.type != NodeType.DOC_COMMENT }
     return nodes.subList(0, splitPoint) to nodes.subList(splitPoint, nodes.size)
@@ -841,5 +863,8 @@ class Builder(sourceText: String) {
         NodeType.TYPE_PARAMETER_LIST,
         NodeType.PARAMETER_LIST,
       )
+
+    private val SAME_LINE_EXPRS =
+      EnumSet.of(NodeType.NEW_EXPR, NodeType.AMENDS_EXPR, NodeType.FUNCTION_LITERAL_EXPR)
   }
 }

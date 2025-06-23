@@ -5,3 +5,18 @@ foo = new {
 class Foo {
   baz: Int
 }
+
+bar = new Listing {
+  1
+  2
+}
+
+baz = (foo) {
+  2
+  3
+}
+
+qux = (x, y) -> new Listing {
+  x
+  y
+}
