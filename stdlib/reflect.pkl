@@ -252,10 +252,18 @@ external class Class extends TypeDeclaration {
   /// Does not include properties declared in superclasses.
   properties: Map<String, Property>
 
+  /// The properties declared in this class and all superclasses.
+  @Since { version = "0.30.0" }
+  allProperties: Map<String, Property>
+
   /// The methods declared in this class.
   ///
   /// Does not include methods declared in superclasses.
   methods: Map<String, Method>
+
+  /// The methods declared in this class and all superclasses.
+  @Since { version = "0.30.0" }
+  allMethods: Map<String, Method>
 
   /// Tells if this class is a subclass of [other].
   ///
@@ -284,6 +292,16 @@ external class Property extends Declaration {
   ///
   /// [null] if this property does not have a default value.
   hidden defaultValue: Any
+
+  /// The modifiers of this property, merged with any from the containing class's superclasses.
+  @Since { version = "0.30.0" }
+  allModifiers: Set<Modifier>
+
+  /// The annotations of this module, appended with any from the containing class's superclasses.
+  /// 
+  /// Annotations are ordered starting with the current class and walking up the class hierarchy.
+  @Since { version = "0.30.0" }
+  allAnnotations: List<Annotation>
 }
 
 /// A method declaration.

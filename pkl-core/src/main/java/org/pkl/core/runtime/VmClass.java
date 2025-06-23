@@ -575,7 +575,16 @@ public final class VmClass extends VmValue {
     var builder = VmMap.builder();
     for (var property : declaredProperties.getValues()) {
       if (property.isLocal()) continue;
-      builder.add(property.getName().toString(), property.getMirror());
+      builder.add(property.getName().toString(), property.getMirror(this));
+    }
+    return builder.build();
+  }
+
+  public VmMap getAllPropertyMirrors() {
+    var builder = VmMap.builder();
+    for (var property : getAllProperties().getValues()) {
+      if (property.isLocal()) continue;
+      builder.add(property.getName().toString(), property.getMirror(this));
     }
     return builder.build();
   }
@@ -583,6 +592,15 @@ public final class VmClass extends VmValue {
   public VmMap getMethodMirrors() {
     var builder = VmMap.builder();
     for (var method : declaredMethods.getValues()) {
+      if (method.isLocal()) continue;
+      builder.add(method.getName().toString(), method.getMirror());
+    }
+    return builder.build();
+  }
+
+  public VmMap getAllMethodMirrors() {
+    var builder = VmMap.builder();
+    for (var method : getAllMethods().getValues()) {
       if (method.isLocal()) continue;
       builder.add(method.getName().toString(), method.getMirror());
     }
