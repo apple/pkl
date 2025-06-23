@@ -1,0 +1,168 @@
+facts {
+  ["A"] {
+    true
+    false
+  }
+}
+examples {
+  ["B"] {
+    new {
+      ["overridden"] {
+        annotations {}
+        modifiers {}
+        type = "Prop2"
+      }
+      ["overriddenHidden"] {
+        annotations {}
+        modifiers {}
+        type = "Prop1"
+      }
+      ["overriddenAnnotated"] {
+        annotations {}
+        modifiers {}
+        type = "Prop1"
+      }
+      ["rewritten"] {
+        annotations {}
+        modifiers {}
+        type = "String"
+      }
+      ["_hidden"] {
+        annotations {}
+        modifiers {}
+        type = "unknown"
+      }
+      ["annotated"] {
+        annotations {}
+        modifiers {}
+        type = "unknown"
+      }
+    }
+    new {
+      ["inherited"] {
+        annotations {}
+        modifiers {}
+        type = "Prop1"
+      }
+      ["overridden"] {
+        annotations {}
+        modifiers {}
+        type = "Prop2"
+      }
+      ["overriddenHidden"] {
+        annotations {}
+        modifiers {}
+        type = "Prop1"
+      }
+      ["overriddenAnnotated"] {
+        annotations {}
+        modifiers {}
+        type = "Prop1"
+      }
+      ["rewritten"] {
+        annotations {}
+        modifiers {}
+        type = "String"
+      }
+      ["_hidden"] {
+        annotations {}
+        modifiers {
+          "hidden"
+        }
+        type = "Prop1"
+      }
+      ["annotated"] {
+        annotations {
+          "new Deprecated { since = null; message = null; replaceWith = null }"
+        }
+        modifiers {}
+        type = "Prop1"
+      }
+    }
+    new {
+      ["overridden"] {
+        annotations {}
+        modifiers {}
+        returnType = "Int?"
+      }
+      ["overriddenAnnotated"] {
+        annotations {}
+        modifiers {}
+        returnType = "String?"
+      }
+    }
+    new {
+      ["getClass"] {
+        annotations {}
+        modifiers {}
+        returnType = "Class"
+      }
+      ["toString"] {
+        annotations {}
+        modifiers {}
+        returnType = "String"
+      }
+      ["ifNonNull"] {
+        annotations {}
+        modifiers {}
+        returnType = "Result?"
+      }
+      ["hasProperty"] {
+        annotations {}
+        modifiers {}
+        returnType = "Boolean"
+      }
+      ["getProperty"] {
+        annotations {}
+        modifiers {}
+        returnType = "unknown"
+      }
+      ["getPropertyOrNull"] {
+        annotations {}
+        modifiers {}
+        returnType = "unknown?"
+      }
+      ["toDynamic"] {
+        annotations {}
+        modifiers {}
+        returnType = "Dynamic"
+      }
+      ["toMap"] {
+        annotations {}
+        modifiers {}
+        returnType = "Map"
+      }
+      ["inherited"] {
+        annotations {}
+        modifiers {}
+        returnType = "String?"
+      }
+      ["overridden"] {
+        annotations {}
+        modifiers {}
+        returnType = "Int?"
+      }
+      ["overriddenAnnotated"] {
+        annotations {}
+        modifiers {}
+        returnType = "String?"
+      }
+    }
+  }
+  ["module"] {
+    new {
+      annotations {}
+      modifiers {}
+      type = "unknown"
+    }
+    new {
+      annotations {}
+      modifiers {
+        "hidden"
+      }
+      type = "ModuleOutput"
+    }
+  }
+}
+
+// hello world
