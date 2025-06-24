@@ -376,7 +376,11 @@ class Builder(sourceText: String) {
   private fun formatWhenGenerator(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.type == NodeType.WHEN_GENERATOR_HEADER || prev.isTerminal("when", "else")) {
+        if (
+          prev.type == NodeType.WHEN_GENERATOR_HEADER ||
+            prev.isTerminal("when", "else") ||
+            next.isTerminal("else")
+        ) {
           Space
         } else {
           SpaceOrLine
@@ -517,12 +521,21 @@ class Builder(sourceText: String) {
   private fun formatBinaryOpExpr(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(flattenBinaryOperatorExprs(node)) { prev, next ->
-        when {
-          prev.isOperator(".", "?.") -> null
-          next.isOperator(".", "?.") -> Line
-          (prev.type == NodeType.OPERATOR && prev.text() != "-") || next.isOperator("-") -> Space
-          else -> SpaceOrLine
-        }
+        if (prev.type == NodeType.OPERATOR) {
+          when (prev.text()) {
+            ".",
+            "?." -> null
+            "|>" -> Space
+            else -> SpaceOrLine
+          }
+        } else if (next.type == NodeType.OPERATOR) {
+          when (next.text()) {
+            ".",
+            "?." -> Line
+            "|>" -> SpaceOrLine
+            else -> Space
+          }
+        } else SpaceOrLine
       }
     return Group(newId(), indentAfterFirstNewline(nodes))
   }
@@ -812,10 +825,17 @@ class Builder(sourceText: String) {
   }
 
   private fun flattenBinaryOperatorExprs(node: GenNode): List<GenNode> {
+    val op = node.children.first { it.type == NodeType.OPERATOR }.text()
+    return flattenBinaryOperatorExprs(node, op)
+  }
+
+  private fun flattenBinaryOperatorExprs(node: GenNode, op: String): List<GenNode> {
+    val actualOp = node.children.first { it.type == NodeType.OPERATOR }.text()
+    if (op != actualOp) return listOf(node)
     val res = mutableListOf<GenNode>()
     for (child in node.children) {
       if (child.type == NodeType.BINARY_OP_EXPR) {
-        res += flattenBinaryOperatorExprs(child)
+        res += flattenBinaryOperatorExprs(child, op)
       } else {
         res += child
       }
@@ -829,9 +849,6 @@ class Builder(sourceText: String) {
 
   private fun GenNode.isTerminal(vararg texts: String): Boolean =
     type == NodeType.TERMINAL && text(source) in texts
-
-  private fun GenNode.isOperator(vararg names: String): Boolean =
-    type == NodeType.OPERATOR && text(source) in names
 
   private fun newId(): Int {
     return id++
