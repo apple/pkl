@@ -1,0 +1,6 @@
+module comment.interleaved
+
+test: Int|String = if (true)
+    1 // It's the same as "100%"
+  else
+    "8%"
