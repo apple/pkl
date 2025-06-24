@@ -1,9 +1,0 @@
-foo =
-  generateRequiredNumber(100, 100 * magicNumber)
-    + 300
-    * 500 -
-    900
-    / 700
-    + someConstant
-    * 400
-    >= 200000

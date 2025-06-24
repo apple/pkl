@@ -1,0 +1,7 @@
+foo {
+  when (true) {
+    bar = 1
+  } else {
+    bar = 2
+  }
+}
