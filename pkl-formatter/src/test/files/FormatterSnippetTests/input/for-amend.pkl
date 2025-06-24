@@ -1,0 +1,14 @@
+module forgenerator.amend
+
+local app = new {
+  some = "a"
+  field = "b"
+}
+
+l = new Listing {
+  for (_item in (app) {
+    some = "c"
+  }) {
+    _item
+  }
+}
