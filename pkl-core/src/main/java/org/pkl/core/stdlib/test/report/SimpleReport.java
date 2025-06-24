@@ -142,14 +142,14 @@ public final class SimpleReport implements TestReport {
     var passed = total - failed;
     var passRate = total > 0 ? 100.0 * passed / total : 0.0;
 
+    if (failed > 0) {
+      // visual bug: 9,999/10,000 appears to round to 100% so nudge it back down
+      passRate = Math.min(passRate, 99.9);
+    }
+    var passRateLine = String.format(Locale.ROOT, "%.1f%% %s pass", passRate, kind);
+
     var color = isFailed ? AnsiCode.RED : AnsiCode.GREEN;
-    sb.append(
-        color,
-        () ->
-            sb.append(String.format(Locale.ROOT, "%.1f%%", passRate))
-                .append(" ")
-                .append(kind)
-                .append(" pass"));
+    sb.append(color, () -> sb.append(passRateLine));
 
     if (isFailed) {
       sb.append(" [").append(failed).append('/').append(total).append(" failed]");
