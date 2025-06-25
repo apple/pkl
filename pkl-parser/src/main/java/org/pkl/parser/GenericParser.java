@@ -166,8 +166,9 @@ public class GenericParser {
     var hasAnnotation = false;
     var hasModifier = false;
     var docs = new ArrayList<GenNode>();
+    ff(children);
     while (lookahead() == Token.DOC_COMMENT) {
-      ff(children);
+      ff(docs);
       docs.add(new GenNode(NodeType.DOC_COMMENT_LINE, next().span));
       hasDocComment = true;
     }
