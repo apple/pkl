@@ -33,9 +33,11 @@ import org.pkl.parser.syntax.generic.NodeType
 class Builder(sourceText: String) {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
+  private var prevNode: GenNode? = null
 
-  fun format(node: GenNode): FormatNode =
-    when (node.type) {
+  fun format(node: GenNode): FormatNode {
+    prevNode = node
+    return when (node.type) {
       NodeType.MODULE -> formatModule(node)
       NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, null))
       NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
@@ -57,7 +59,7 @@ class Builder(sourceText: String) {
       NodeType.MODULE_TYPE,
       NodeType.UNKNOWN_TYPE,
       NodeType.NOTHING_TYPE,
-      NodeType.OPERATOR -> Text(node.text())
+      NodeType.OPERATOR -> Text(node.text(source))
       NodeType.STRING_NEWLINE -> IndentFreeLine
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
       NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
@@ -147,6 +149,7 @@ class Builder(sourceText: String) {
       NodeType.PARENTHESIZED_TYPE -> Group(newId(), formatGeneric(node.children, null))
       else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
+  }
 
   private fun formatModule(node: GenNode): FormatNode {
     return Nodes(formatGeneric(node.children, nodes(ForceLine, ForceLine)))
@@ -790,6 +793,13 @@ class Builder(sourceText: String) {
     separatorFn: (GenNode, GenNode) -> FormatNode?,
   ): FormatNode? {
     return when {
+      prevNode?.type == NodeType.LINE_COMMENT -> {
+        if (prev.linesBetween(next) > 1) {
+          nodes(ForceLine, ForceLine)
+        } else {
+          ForceLine
+        }
+      }
       hasTraillingAffix(prev, next) -> Space
       prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
       prev.type in FORCE_LINE_AFFIXES || next.type.isAffix -> {
