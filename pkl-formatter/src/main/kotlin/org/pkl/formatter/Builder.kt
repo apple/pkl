@@ -242,7 +242,7 @@ class Builder(sourceText: String) {
     val children = node.children
     if (children.size == 2) {
       // no members
-      return Nodes(formatGeneric(children, EMPTY_NODE))
+      return Nodes(formatGeneric(children, null))
     }
     return Group(newId(), formatGeneric(children, ForceLine))
   }
@@ -588,7 +588,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatSubscriptExpr(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, EMPTY_NODE))
+    return Nodes(formatGeneric(node.children, null))
   }
 
   private fun formatTraceThrowReadExpr(node: GenNode): FormatNode {
@@ -616,7 +616,7 @@ class Builder(sourceText: String) {
 
   private fun formatUnionType(node: GenNode): FormatNode {
     val nodes =
-      formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else EMPTY_NODE }
+      formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else null }
     return Group(newId(), nodes)
   }
 
@@ -897,8 +897,6 @@ class Builder(sourceText: String) {
 
   companion object {
     private val ABSOLUTE_URL_REGEX = Regex("""\w+://.*""")
-
-    private val EMPTY_NODE = Text("")
 
     private val FORCE_LINE_AFFIXES =
       EnumSet.of(
