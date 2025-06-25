@@ -6,9 +6,7 @@ extends
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
 
 local reallyLongVariableName = true
-
 local anotherReallyLongName = 1
-
 local evenLongerVariableName = 2
 
 /// this property has a reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly long doc comment
