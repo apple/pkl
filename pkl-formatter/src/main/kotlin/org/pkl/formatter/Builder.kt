@@ -95,7 +95,10 @@ class Builder(sourceText: String) {
       NodeType.OBJECT_ELEMENT -> format(node.children[0]) // has a single element
       NodeType.OBJECT_ENTRY_HEADER -> formatObjectEntryHeader(node)
       NodeType.FOR_GENERATOR -> formatForGenerator(node)
-      NodeType.FOR_GENERATOR_HEADER -> formatParameterList(node)
+      NodeType.FOR_GENERATOR_HEADER -> formatForGeneratorHeader(node)
+      NodeType.FOR_GENERATOR_HEADER_DEFINITION -> formatForGeneratorHeaderDefinition(node)
+      NodeType.FOR_GENERATOR_HEADER_DEFINITION_HEADER ->
+        formatForGeneratorHeaderDefinitionHeader(node)
       NodeType.WHEN_GENERATOR -> formatWhenGenerator(node)
       NodeType.WHEN_GENERATOR_HEADER -> formatWhenGeneratorHeader(node)
       NodeType.OBJECT_SPREAD -> Nodes(formatGeneric(node.children, null))
@@ -115,6 +118,7 @@ class Builder(sourceText: String) {
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
+      NodeType.FUNCTION_LITERAL_BODY -> Nodes(formatGeneric(node.children, null))
       NodeType.SUBSCRIPT_EXPR,
       NodeType.SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node)
       NodeType.TRACE_EXPR -> formatTraceThrowReadExpr(node)
@@ -368,8 +372,37 @@ class Builder(sourceText: String) {
   private fun formatForGenerator(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.type == NodeType.FOR_GENERATOR_HEADER) Space else SpaceOrLine
+        if (
+          prev.type == NodeType.FOR_GENERATOR_HEADER || next.type == NodeType.FOR_GENERATOR_HEADER
+        ) {
+          Space
+        } else SpaceOrLine
       }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatForGeneratorHeader(node: GenNode): FormatNode {
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else null
+      }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatForGeneratorHeaderDefinition(node: GenNode): FormatNode {
+    val nodes =
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (next.type in SAME_LINE_EXPRS) Space else SpaceOrLine },
+      ) { node, next ->
+        if (node.type.isExpression && node.type !in SAME_LINE_EXPRS) indent(format(node))
+        else format(node)
+      }
+    return indent(Group(newId(), nodes))
+  }
+
+  private fun formatForGeneratorHeaderDefinitionHeader(node: GenNode): FormatNode {
+    val nodes = formatGeneric(node.children, SpaceOrLine)
     return Group(newId(), nodes)
   }
 
@@ -493,12 +526,14 @@ class Builder(sourceText: String) {
 
   private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
     val sameLine =
-      node.children.lastOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
+      node.children.last { it.type == NodeType.FUNCTION_LITERAL_BODY }.let { isSameLineExpr(it) }
     val nodes =
       formatGenericWithGen(node.children, { prev, next -> if (sameLine) Space else SpaceOrLine }) {
         node,
         next ->
-        if (node.type.isExpression && !sameLine) indent(format(node)) else format(node)
+        if (node.type == NodeType.FUNCTION_LITERAL_BODY && !sameLine) {
+          indent(format(node))
+        } else format(node)
       }
     return Group(newId(), nodes)
   }
@@ -794,7 +829,7 @@ class Builder(sourceText: String) {
 
   private fun isSameLineExpr(node: GenNode): Boolean {
     if (node.type in SAME_LINE_EXPRS) return true
-    if (node.type == NodeType.BINARY_OP_EXPR) {
+    if (node.type == NodeType.BINARY_OP_EXPR || node.type == NodeType.FUNCTION_LITERAL_BODY) {
       return node.children.firstOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
     }
     return false
@@ -814,7 +849,7 @@ class Builder(sourceText: String) {
   private fun groupOnSpace(fnodes: List<FormatNode>): FormatNode {
     val res = mutableListOf<FormatNode>()
     for ((i, node) in fnodes.withIndex()) {
-      if (i > 0 && node is SpaceOrLine) {
+      if (i > 0 && (node is SpaceOrLine || node is Space)) {
         res += groupOnSpace(fnodes.subList(i, fnodes.size))
         break
       } else {
