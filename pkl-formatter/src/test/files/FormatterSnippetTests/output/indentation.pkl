@@ -20,3 +20,14 @@ qux = (x, y) -> new Listing {
   x
   y
 }
+
+forGen = new Listing {
+  for (
+    someVar in new Listing {
+      1
+      2
+    }
+  ) {
+    [someVar] = someVar
+  }
+}

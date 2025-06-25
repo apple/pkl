@@ -608,23 +608,28 @@ public class GenericParser {
 
   private GenNode parseForGenerator() {
     var children = new ArrayList<GenNode>();
+    children.add(makeTerminal(next()));
+    ff(children);
     var header = new ArrayList<GenNode>();
-    header.add(makeTerminal(next()));
-    ff(header);
     expect(Token.LPAREN, header, "unexpectedToken", "(");
-    ff(header);
-    header.add(parseParameter());
-    ff(header);
+    var headerDefinition = new ArrayList<GenNode>();
+    var headerDefinitionHeader = new ArrayList<GenNode>();
+    ff(headerDefinitionHeader);
+    headerDefinitionHeader.add(parseParameter());
+    ff(headerDefinitionHeader);
     if (lookahead == Token.COMMA) {
-      header.add(makeTerminal(next()));
-      ff(header);
-      header.add(parseParameter());
-      ff(header);
+      headerDefinitionHeader.add(makeTerminal(next()));
+      ff(headerDefinitionHeader);
+      headerDefinitionHeader.add(parseParameter());
+      ff(headerDefinitionHeader);
     }
-    expect(Token.IN, header, "unexpectedToken", "in");
-    ff(header);
-    header.add(parseExpr());
-    ff(header);
+    expect(Token.IN, headerDefinitionHeader, "unexpectedToken", "in");
+    headerDefinition.add(
+        new GenNode(NodeType.FOR_GENERATOR_HEADER_DEFINITION_HEADER, headerDefinitionHeader));
+    ff(headerDefinition);
+    headerDefinition.add(parseExpr());
+    ff(headerDefinition);
+    header.add(new GenNode(NodeType.FOR_GENERATOR_HEADER_DEFINITION, headerDefinition));
     expect(Token.RPAREN, header, "unexpectedToken", ")");
     children.add(new GenNode(NodeType.FOR_GENERATOR_HEADER, header));
     ff(children);
@@ -810,8 +815,10 @@ public class GenericParser {
                 actualChildren.add(new GenNode(NodeType.PARAMETER_LIST, children));
                 ff(actualChildren);
                 expect(Token.ARROW, actualChildren, "unexpectedToken", "->");
-                ff(actualChildren);
-                actualChildren.add(parseExpr());
+                var body = new ArrayList<GenNode>();
+                ff(body);
+                body.add(parseExpr());
+                actualChildren.add(new GenNode(NodeType.FUNCTION_LITERAL_BODY, body));
                 yield new GenNode(NodeType.FUNCTION_LITERAL_EXPR, actualChildren);
               }
               default -> {
@@ -1042,8 +1049,10 @@ public class GenericParser {
     children.add(new GenNode(NodeType.PARAMETER_LIST, paramListChildren));
     ff(children);
     expect(Token.ARROW, children, "unexpectedToken", "->");
-    ff(children);
-    children.add(parseExpr());
+    var body = new ArrayList<GenNode>();
+    ff(body);
+    body.add(parseExpr());
+    children.add(new GenNode(NodeType.FUNCTION_LITERAL_BODY, body));
     return new GenNode(NodeType.FUNCTION_LITERAL_EXPR, children);
   }
 
