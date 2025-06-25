@@ -154,7 +154,11 @@ class Builder(sourceText: String) {
   }
 
   private fun formatModule(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, nodes(ForceLine, ForceLine)))
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.linesBetween(next) > 1) TWO_NEWLINES else ForceLine
+      }
+    return Nodes(nodes)
   }
 
   private fun formatModuleDeclaration(node: GenNode): FormatNode {
@@ -253,7 +257,12 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassBodyElements(node: GenNode): FormatNode {
-    return Indent(formatGeneric(node.children, Nodes(listOf(ForceLine, ForceLine))))
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        val lineDiff = prev.linesBetween(next)
+        if (lineDiff > 1 || lineDiff == 0) TWO_NEWLINES else ForceLine
+      }
+    return Indent(nodes)
   }
 
   private fun formatClassProperty(node: GenNode): FormatNode {
@@ -367,7 +376,7 @@ class Builder(sourceText: String) {
         when (lines) {
           0 -> IfWrap(groupId, Line, Text("; "))
           1 -> ForceLine
-          else -> Nodes(listOf(ForceLine, ForceLine))
+          else -> TWO_NEWLINES
         }
       }
     return Indent(nodes)
@@ -800,7 +809,7 @@ class Builder(sourceText: String) {
     return when {
       prevNode?.type == NodeType.LINE_COMMENT -> {
         if (prev.linesBetween(next) > 1) {
-          nodes(ForceLine, ForceLine)
+          TWO_NEWLINES
         } else {
           ForceLine
         }
@@ -809,7 +818,7 @@ class Builder(sourceText: String) {
       prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
       prev.type in FORCE_LINE_AFFIXES || next.type.isAffix -> {
         if (prev.linesBetween(next) > 1) {
-          nodes(ForceLine, ForceLine)
+          TWO_NEWLINES
         } else {
           ForceLine
         }
@@ -819,7 +828,7 @@ class Builder(sourceText: String) {
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
       next.isTerminal("=", "{", "->") || next.type == NodeType.OBJECT_BODY -> Space
-      next.type == NodeType.DOC_COMMENT -> nodes(ForceLine, ForceLine)
+      next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
       else -> separatorFn(prev, next)
     }
   }
@@ -904,14 +913,14 @@ class Builder(sourceText: String) {
     return id++
   }
 
-  private fun nodes(vararg nodes: FormatNode) = Nodes(nodes.toList())
-
   private fun group(vararg nodes: FormatNode) = Group(newId(), nodes.toList())
 
   private fun indent(vararg nodes: FormatNode) = Indent(nodes.toList())
 
   companion object {
     private val ABSOLUTE_URL_REGEX = Regex("""\w+://.*""")
+
+    private val TWO_NEWLINES = Nodes(listOf(ForceLine, ForceLine))
 
     private val FORCE_LINE_AFFIXES =
       EnumSet.of(
