@@ -298,18 +298,20 @@ public class GenericParser {
     var headerParts = getHeaderParts(preChildren);
     var children = new ArrayList<>(headerParts.preffixes);
     var header = new ArrayList<GenNode>();
+    var headerBegin = new ArrayList<GenNode>();
     if (headerParts.modifierList != null) {
-      header.add(headerParts.modifierList);
+      headerBegin.add(headerParts.modifierList);
     }
-    header.add(parseIdentifier());
+    headerBegin.add(parseIdentifier());
+    header.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER_BEGIN, headerBegin));
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
       ff(header);
       header.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
+    children.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER, header));
     if (lookahead() == Token.ASSIGN) {
-      children.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER, header));
       ff(children);
       children.add(makeTerminal(next()));
       ff(children);
@@ -318,13 +320,10 @@ public class GenericParser {
       if (hasTypeAnnotation) {
         throw parserError("typeAnnotationInAmends");
       }
-      children.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER, header));
       while (lookahead() == Token.LBRACE) {
         ff(children);
         children.add(parseObjectBody());
       }
-    } else {
-      children.add(new GenNode(NodeType.CLASS_PROPERTY_HEADER, header));
     }
     return new GenNode(NodeType.CLASS_PROPERTY, children);
   }
@@ -465,34 +464,34 @@ public class GenericParser {
   private GenNode parseObjectProperty(@Nullable List<GenNode> preChildren) {
     var children = new ArrayList<GenNode>();
     var header = new ArrayList<GenNode>();
+    var headerBegin = new ArrayList<GenNode>();
     if (preChildren != null) {
-      header.addAll(preChildren);
+      headerBegin.addAll(preChildren);
     }
-    ff(header);
+    ff(headerBegin);
     var modifierList = new ArrayList<GenNode>();
     while (lookahead.isModifier()) {
       modifierList.add(make(NodeType.MODIFIER, next().span));
       ff(modifierList);
     }
     if (!modifierList.isEmpty()) {
-      header.add(new GenNode(NodeType.MODIFIER_LIST, modifierList));
+      headerBegin.add(new GenNode(NodeType.MODIFIER_LIST, modifierList));
     }
-    header.add(parseIdentifier());
+    headerBegin.add(parseIdentifier());
+    header.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER_BEGIN, headerBegin));
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
       ff(header);
       header.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
+    children.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER, header));
     if (hasTypeAnnotation || lookahead() == Token.ASSIGN) {
-      children.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER, header));
       ff(children);
       expect(Token.ASSIGN, children, "unexpectedToken", "=");
       ff(children);
       children.add(parseExpr("}"));
       return new GenNode(NodeType.OBJECT_PROPERTY, children);
-    } else {
-      children.add(new GenNode(NodeType.OBJECT_PROPERTY_HEADER, header));
     }
     ff(children);
     children.addAll(parseBodyList());

@@ -89,6 +89,8 @@ class Builder(sourceText: String) {
       NodeType.OBJECT_ENTRY -> formatClassProperty(node)
       NodeType.CLASS_PROPERTY_HEADER,
       NodeType.OBJECT_PROPERTY_HEADER -> formatClassPropertyHeader(node)
+      NodeType.CLASS_PROPERTY_HEADER_BEGIN,
+      NodeType.OBJECT_PROPERTY_HEADER_BEGIN -> formatClassPropertyHeaderBegin(node)
       NodeType.CLASS_METHOD,
       NodeType.OBJECT_METHOD -> formatClassMethod(node)
       NodeType.CLASS_METHOD_HEADER -> formatClassMethodHeader(node)
@@ -271,8 +273,11 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassPropertyHeader(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
-    return Group(newId(), nodes)
+    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+  }
+
+  private fun formatClassPropertyHeaderBegin(node: GenNode): FormatNode {
+    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
   private fun formatClassMethod(node: GenNode): FormatNode {

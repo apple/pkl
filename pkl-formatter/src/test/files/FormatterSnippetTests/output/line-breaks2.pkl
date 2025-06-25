@@ -46,3 +46,9 @@ bar:
     LooooooooooooooooooooooooooooongTypeName,
     AnotherLooooooooooooooooooooooooooooongTypeName
   >(loooooooooooooooooooogConstraint)
+
+hidden foobar:
+  LongType(
+    someVeryyyyyyyloooong,
+    requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger
+  )
