@@ -109,6 +109,7 @@ public enum NodeType {
   IF_EXPR(NodeKind.EXPR),
   IF_HEADER,
   IF_CONDITION,
+  IF_CONDITION_EXPR,
   IF_THEN_EXPR,
   IF_ELSE_EXPR,
   LET_EXPR(NodeKind.EXPR),
