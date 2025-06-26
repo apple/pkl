@@ -113,7 +113,8 @@ class Builder(sourceText: String) {
       NodeType.OBJECT_PARAMETER_LIST -> formatObjectParameterList(node)
       NodeType.IF_EXPR -> formatIf(node)
       NodeType.IF_HEADER -> formatIfHeader(node)
-      NodeType.IF_CONDITION -> formatParameterList(node)
+      NodeType.IF_CONDITION -> formatIfCondition(node)
+      NodeType.IF_CONDITION_EXPR -> Indent(formatGeneric(node.children, null))
       NodeType.IF_THEN_EXPR -> formatIfThen(node)
       NodeType.IF_ELSE_EXPR -> formatIfElse(node)
       NodeType.NEW_EXPR,
@@ -497,7 +498,19 @@ class Builder(sourceText: String) {
   }
 
   private fun formatIfHeader(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (next.type == NodeType.IF_CONDITION) Space else SpaceOrLine
+      }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatIfCondition(node: GenNode): FormatNode {
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+      }
+    return Group(newId(), nodes)
   }
 
   private fun formatIfThen(node: GenNode): FormatNode {
@@ -771,12 +784,16 @@ class Builder(sourceText: String) {
 
   private fun GenNode.isSemicolon(): Boolean = type.isAffix && text() == ";"
 
+  /** Groups all non prefixes (comments, doc comments, annotations) of this node together. */
   private fun groupNonPrefixes(
     node: GenNode,
     groupFn: (List<GenNode>) -> FormatNode,
   ): List<FormatNode> {
     val children = node.children
-    val index = children.indexOfFirst { !it.type.isAffix && it.type != NodeType.DOC_COMMENT }
+    val index =
+      children.indexOfFirst {
+        !it.type.isAffix && it.type != NodeType.DOC_COMMENT && it.type != NodeType.ANNOTATION
+      }
     if (index <= 0) {
       // no prefixes
       return listOf(groupFn(children))

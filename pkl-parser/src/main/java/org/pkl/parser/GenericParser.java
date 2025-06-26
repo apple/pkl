@@ -858,10 +858,12 @@ public class GenericParser {
             header.add(makeTerminal(next()));
             ff(header);
             var condition = new ArrayList<GenNode>();
+            var conditionExpr = new ArrayList<GenNode>();
             expect(Token.LPAREN, condition, "unexpectedToken", "(");
-            ff(condition);
-            condition.add(parseExpr(")"));
-            ff(condition);
+            ff(conditionExpr);
+            conditionExpr.add(parseExpr(")"));
+            ff(conditionExpr);
+            condition.add(new GenNode(NodeType.IF_CONDITION_EXPR, conditionExpr));
             expect(Token.RPAREN, condition, "unexpectedToken", ")");
             header.add(new GenNode(NodeType.IF_CONDITION, condition));
             children.add(new GenNode(NodeType.IF_HEADER, header));
