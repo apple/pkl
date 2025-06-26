@@ -238,6 +238,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.WHEN_GENERATOR_HEADER,
         NodeType.IF_HEADER,
         NodeType.IF_CONDITION,
+        NodeType.IF_CONDITION_EXPR,
         NodeType.IF_THEN_EXPR,
         NodeType.IF_ELSE_EXPR,
         NodeType.FUNCTION_LITERAL_BODY,
