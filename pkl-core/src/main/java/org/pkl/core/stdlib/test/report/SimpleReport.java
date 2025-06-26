@@ -17,6 +17,8 @@ package org.pkl.core.stdlib.test.report;
 
 import java.io.IOException;
 import java.io.Writer;
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
@@ -140,13 +142,15 @@ public final class SimpleReport implements TestReport {
   private void makeStatsLine(
       AnsiStringBuilder sb, String kind, int total, int failed, boolean isFailed) {
     var passed = total - failed;
-    var passRate = total > 0 ? 100.0 * passed / total : 0.0;
-
-    if (failed > 0) {
-      // visual bug: 9,999/10,000 appears to round to 100% so nudge it back down
-      passRate = Math.min(passRate, 99.9);
+    var passRate = "0.0";
+    if (total > 0) {
+      var passedDecimal = new BigDecimal(passed);
+      var hundred = new BigDecimal(100);
+      var totalPrecise = new BigDecimal(total);
+      passRate =
+          hundred.multiply(passedDecimal).divide(totalPrecise, 1, RoundingMode.DOWN).toString();
     }
-    var passRateLine = String.format(Locale.ROOT, "%.1f%% %s pass", passRate, kind);
+    var passRateLine = String.format(Locale.ROOT, "%s%% %s pass", passRate, kind);
 
     var color = isFailed ? AnsiCode.RED : AnsiCode.GREEN;
     sb.append(color, () -> sb.append(passRateLine));
