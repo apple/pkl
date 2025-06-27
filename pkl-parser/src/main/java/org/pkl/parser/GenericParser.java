@@ -314,8 +314,10 @@ public class GenericParser {
     if (lookahead() == Token.ASSIGN) {
       ff(children);
       children.add(makeTerminal(next()));
-      ff(children);
-      children.add(parseExpr());
+      var body = new ArrayList<GenNode>();
+      ff(body);
+      body.add(parseExpr());
+      children.add(new GenNode(NodeType.CLASS_PROPERTY_BODY, body));
     } else if (lookahead() == Token.LBRACE) {
       if (hasTypeAnnotation) {
         throw parserError("typeAnnotationInAmends");
@@ -489,8 +491,10 @@ public class GenericParser {
     if (hasTypeAnnotation || lookahead() == Token.ASSIGN) {
       ff(children);
       expect(Token.ASSIGN, children, "unexpectedToken", "=");
-      ff(children);
-      children.add(parseExpr("}"));
+      var body = new ArrayList<GenNode>();
+      ff(body);
+      body.add(parseExpr("}"));
+      children.add(new GenNode(NodeType.OBJECT_PROPERTY_BODY, body));
       return new GenNode(NodeType.OBJECT_PROPERTY, children);
     }
     ff(children);

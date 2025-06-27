@@ -91,6 +91,8 @@ class Builder(sourceText: String) {
       NodeType.OBJECT_PROPERTY_HEADER -> formatClassPropertyHeader(node)
       NodeType.CLASS_PROPERTY_HEADER_BEGIN,
       NodeType.OBJECT_PROPERTY_HEADER_BEGIN -> formatClassPropertyHeaderBegin(node)
+      NodeType.CLASS_PROPERTY_BODY,
+      NodeType.OBJECT_PROPERTY_BODY -> formatClassPropertyBody(node)
       NodeType.CLASS_METHOD,
       NodeType.OBJECT_METHOD -> formatClassMethod(node)
       NodeType.CLASS_METHOD_HEADER -> formatClassMethodHeader(node)
@@ -268,19 +270,30 @@ class Builder(sourceText: String) {
 
   private fun formatClassProperty(node: GenNode): FormatNode {
     val sameLine =
-      node.children.lastOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
+      node.children
+        .lastOrNull { it.isExpressionOrPropertyBody() }
+        ?.let {
+          if (it.type.isExpression) isSameLineExpr(it) else isSameLineExpr(it.children.last())
+        } ?: false
     val nodes =
       groupNonPrefixes(node) { children ->
         val nodes =
           formatGenericWithGen(children, { prev, next -> if (sameLine) Space else SpaceOrLine }) {
             node,
             next ->
-            if (node.type.isExpression && !sameLine) indent(format(node)) else format(node)
+            if ((node.isExpressionOrPropertyBody()) && !sameLine) {
+              indent(format(node))
+            } else format(node)
           }
         groupOnSpace(nodes)
       }
     return Nodes(nodes)
   }
+
+  private fun GenNode.isExpressionOrPropertyBody(): Boolean =
+    type.isExpression ||
+      type == NodeType.CLASS_PROPERTY_BODY ||
+      type == NodeType.OBJECT_PROPERTY_BODY
 
   private fun formatClassPropertyHeader(node: GenNode): FormatNode {
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
@@ -288,6 +301,10 @@ class Builder(sourceText: String) {
 
   private fun formatClassPropertyHeaderBegin(node: GenNode): FormatNode {
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+  }
+
+  private fun formatClassPropertyBody(node: GenNode): FormatNode {
+    return Nodes(formatGeneric(node.children, null))
   }
 
   private fun formatClassMethod(node: GenNode): FormatNode {
@@ -696,9 +713,9 @@ class Builder(sourceText: String) {
           else -> 2
         }
       }
-    val absolute = imports[0]?.sortedBy { it.findChildByType(NodeType.STRING_CONSTANT)!!.text() }
-    val projects = imports[1]?.sortedBy { it.findChildByType(NodeType.STRING_CONSTANT)!!.text() }
-    val relatives = imports[2]?.sortedBy { it.findChildByType(NodeType.STRING_CONSTANT)!!.text() }
+    val absolute = imports[0]?.sortedWith(ImportComparator(source))
+    val projects = imports[1]?.sortedWith(ImportComparator(source))
+    val relatives = imports[2]?.sortedWith(ImportComparator(source))
     var shouldNewline = false
 
     if (absolute != null) {
@@ -933,6 +950,19 @@ class Builder(sourceText: String) {
   private fun group(vararg nodes: FormatNode) = Group(newId(), nodes.toList())
 
   private fun indent(vararg nodes: FormatNode) = Indent(nodes.toList())
+
+  private class ImportComparator(private val source: CharArray) : Comparator<GenNode> {
+    override fun compare(o1: GenNode, o2: GenNode): Int {
+      val import1 = o1.findChildByType(NodeType.STRING_CONSTANT)?.text(source)
+      val import2 = o2.findChildByType(NodeType.STRING_CONSTANT)?.text(source)
+      if (import1 == null || import2 == null) {
+        // should never happen
+        throw RuntimeException("ImportComparator: not an import")
+      }
+
+      return NaturalOrderComparator(ignoreCase = true).compare(import1, import2)
+    }
+  }
 
   companion object {
     private val ABSOLUTE_URL_REGEX = Regex("""\w+://.*""")
