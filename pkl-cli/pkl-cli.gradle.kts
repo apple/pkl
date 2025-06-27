@@ -61,6 +61,7 @@ dependencies {
   implementation(libs.jlineTerminal)
   implementation(libs.jlineTerminalJansi)
   implementation(projects.pklServer)
+  implementation(projects.pklFormatter)
   implementation(libs.clikt)
 
   testImplementation(projects.pklCommonsTest)

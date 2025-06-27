@@ -1,0 +1,14 @@
+// top level comment
+
+import "https://example.com/baz.pkl"
+import "package://example.com/myPackage@1.0.0#/Qux.pkl"
+
+import "@bar/Bar.pkl"
+import "@foo/Foo.pkl" as foo
+
+import* "**.pkl"
+import "..."
+import "module1.pkl"
+import "module2.pkl"
+import "module11.pkl"
+import "Module12.pkl"
