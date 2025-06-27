@@ -8,3 +8,7 @@ import "@foo/Foo.pkl" as foo
 
 import* "**.pkl"
 import "..."
+import "module1.pkl"
+import "module2.pkl"
+import "module11.pkl"
+import "Module12.pkl"
