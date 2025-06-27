@@ -56,6 +56,7 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
       null,
       null,
       null,
+      null,
     )
 
   private fun String.stripFilePaths() =

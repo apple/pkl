@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,7 @@ import org.pkl.core.StackFrameTransformers;
 import org.pkl.core.Value;
 import org.pkl.core.Version;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.packages.Checksums;
 import org.pkl.core.packages.Dependency.RemoteDependency;
@@ -197,7 +198,8 @@ public final class Project {
             builder.getModuleKeyFactories(),
             builder.getModuleCacheDir(),
             builder.getProjectDependencies(),
-            builder.getHttpClient());
+            builder.getHttpClient(),
+            builder.getTraceMode());
     var importGraph = analyzer.importGraph(moduleSource.getUri());
     var ret = ImportGraphUtils.findImportCycles(importGraph);
     // we only care about cycles in the same scheme as `moduleSource`
@@ -511,7 +513,8 @@ public final class Project {
         @Nullable Path moduleCacheDir,
         @Nullable List<Path> modulePath,
         @Nullable Duration timeout,
-        @Nullable Path rootDir) {
+        @Nullable Path rootDir,
+        @Nullable TraceMode traceMode) {
       this.delegate =
           new PklEvaluatorSettings(
               externalProperties,
@@ -526,7 +529,8 @@ public final class Project {
               rootDir,
               null,
               null,
-              null);
+              null,
+              traceMode);
     }
 
     @Deprecated(forRemoval = true)
@@ -610,6 +614,8 @@ public final class Project {
           + delegate.timeout()
           + ", rootDir="
           + delegate.rootDir()
+          + ", traceMode="
+          + delegate.traceMode()
           + '}';
     }
   }
