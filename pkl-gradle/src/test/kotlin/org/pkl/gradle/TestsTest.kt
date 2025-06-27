@@ -90,7 +90,7 @@ class TestsTest : AbstractTest() {
                  ^^^^^^^^^^^^^^^^^^
              at test#facts["error"][#1] (file:///file, line x)
 
-      50.0% tests pass [1/2 failed], 66.7% asserts pass [1/3 failed]
+      50.0% tests pass [1/2 failed], 66.6% asserts pass [1/3 failed]
       """
           .trimIndent()
       )
@@ -139,7 +139,7 @@ class TestsTest : AbstractTest() {
                    age = 35
                  }
 
-        60.0% tests pass [2/5 failed], 66.7% asserts pass [3/9 failed]
+        60.0% tests pass [2/5 failed], 66.6% asserts pass [3/9 failed]
         """
           .trimIndent()
       )
@@ -212,7 +212,7 @@ class TestsTest : AbstractTest() {
                    age = 35
                  }
 
-        50.0% tests pass [2/4 failed], 66.7% asserts pass [2/6 failed]
+        50.0% tests pass [2/4 failed], 66.6% asserts pass [2/6 failed]
 
         """
           .trimIndent()
