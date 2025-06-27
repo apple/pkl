@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,8 @@ import org.gradle.api.tasks.SourceSet;
 /** Configuration options shared between code generators. Documented in user manual. */
 public interface CodeGenSpec extends ModulesSpec {
   DirectoryProperty getOutputDir();
+
+  Property<Boolean> getAddGeneratedAnnotation();
 
   Property<SourceSet> getSourceSet();
 
