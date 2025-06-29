@@ -1,0 +1,88 @@
+public abstract interface class org/pkl/executor/Executor : java/lang/AutoCloseable {
+	public abstract fun evaluatePath (Ljava/nio/file/Path;Lorg/pkl/executor/ExecutorOptions;)Ljava/lang/String;
+}
+
+public final class org/pkl/executor/ExecutorException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;Ljava/lang/String;)V
+	public fun getMessage ()Ljava/lang/String;
+	public fun getPklVersion ()Ljava/lang/String;
+}
+
+public final class org/pkl/executor/ExecutorOptions {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/nio/file/Path;Ljava/time/Duration;Ljava/lang/String;Ljava/nio/file/Path;Ljava/nio/file/Path;)V
+	public static fun builder ()Lorg/pkl/executor/ExecutorOptions$Builder;
+	public static fun defaultModuleCacheDir ()Ljava/nio/file/Path;
+	public fun equals (Ljava/lang/Object;)Z
+	public fun getAllowedModules ()Ljava/util/List;
+	public fun getAllowedResources ()Ljava/util/List;
+	public fun getCertificateBytes ()Ljava/util/List;
+	public fun getCertificateFiles ()Ljava/util/List;
+	public fun getEnvironmentVariables ()Ljava/util/Map;
+	public fun getExternalProperties ()Ljava/util/Map;
+	public fun getModuleCacheDir ()Ljava/nio/file/Path;
+	public fun getModulePath ()Ljava/util/List;
+	public fun getOutputFormat ()Ljava/lang/String;
+	public fun getProjectDir ()Ljava/nio/file/Path;
+	public fun getRootDir ()Ljava/nio/file/Path;
+	public fun getTimeout ()Ljava/time/Duration;
+	public fun hashCode ()I
+	public fun toString ()Ljava/lang/String;
+}
+
+public final class org/pkl/executor/ExecutorOptions$Builder {
+	public fun allowedModules (Ljava/util/List;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun allowedModules ([Ljava/lang/String;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun allowedResources (Ljava/util/List;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun allowedResources ([Ljava/lang/String;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun build ()Lorg/pkl/executor/ExecutorOptions;
+	public fun certificateBytes (Ljava/util/List;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun certificateBytes ([[B)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun certificateFiles (Ljava/util/List;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun certificateFiles ([Ljava/nio/file/Path;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun environmentVariables (Ljava/util/Map;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun externalProperties (Ljava/util/Map;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun moduleCacheDir (Ljava/nio/file/Path;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun modulePath (Ljava/util/List;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun modulePath ([Ljava/nio/file/Path;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun outputFormat (Ljava/lang/String;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun projectDir (Ljava/nio/file/Path;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun rootDir (Ljava/nio/file/Path;)Lorg/pkl/executor/ExecutorOptions$Builder;
+	public fun timeout (Ljava/time/Duration;)Lorg/pkl/executor/ExecutorOptions$Builder;
+}
+
+public final class org/pkl/executor/Executors {
+	public static fun embedded (Ljava/util/List;)Lorg/pkl/executor/Executor;
+}
+
+public abstract interface class org/pkl/executor/spi/v1/ExecutorSpi {
+	public abstract fun evaluatePath (Ljava/nio/file/Path;Lorg/pkl/executor/spi/v1/ExecutorSpiOptions;)Ljava/lang/String;
+	public abstract fun getPklVersion ()Ljava/lang/String;
+}
+
+public final class org/pkl/executor/spi/v1/ExecutorSpiException : java/lang/RuntimeException {
+	public fun <init> (Ljava/lang/String;Ljava/lang/Throwable;)V
+}
+
+public class org/pkl/executor/spi/v1/ExecutorSpiOptions {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/nio/file/Path;Ljava/time/Duration;Ljava/lang/String;Ljava/nio/file/Path;Ljava/nio/file/Path;)V
+	public fun getAllowedModules ()Ljava/util/List;
+	public fun getAllowedResources ()Ljava/util/List;
+	public fun getEnvironmentVariables ()Ljava/util/Map;
+	public fun getExternalProperties ()Ljava/util/Map;
+	public fun getModuleCacheDir ()Ljava/nio/file/Path;
+	public fun getModulePath ()Ljava/util/List;
+	public fun getOutputFormat ()Ljava/lang/String;
+	public fun getProjectDir ()Ljava/nio/file/Path;
+	public fun getRootDir ()Ljava/nio/file/Path;
+	public fun getTimeout ()Ljava/time/Duration;
+}
+
+public class org/pkl/executor/spi/v1/ExecutorSpiOptions2 : org/pkl/executor/spi/v1/ExecutorSpiOptions {
+	public fun <init> (Ljava/util/List;Ljava/util/List;Ljava/util/Map;Ljava/util/Map;Ljava/util/List;Ljava/nio/file/Path;Ljava/time/Duration;Ljava/lang/String;Ljava/nio/file/Path;Ljava/nio/file/Path;Ljava/util/List;Ljava/util/List;I)V
+	public fun getCertificateBytes ()Ljava/util/List;
+	public fun getCertificateFiles ()Ljava/util/List;
+	public fun getTestPort ()I
+}
+
