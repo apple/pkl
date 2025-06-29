@@ -17,6 +17,7 @@ package org.pkl.core
 
 import java.io.PrintWriter
 import java.io.StringWriter
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
@@ -191,7 +192,10 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
               }
             }
             .build()
-        evaluator.use { true to it.evaluateOutputText(ModuleSource.path(inputFile)) }
+        evaluator.use { ev ->
+          true to
+            ev.evaluateOutputBytes(ModuleSource.path(inputFile)).toString(StandardCharsets.UTF_8)
+        }
       } catch (e: PklBugException) {
         false to e.stackTraceToString()
       } catch (e: PklException) {

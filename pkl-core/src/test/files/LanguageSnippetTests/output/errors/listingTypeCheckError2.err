@@ -13,3 +13,7 @@ at listingTypeCheckError2#res[#1] (file:///$snippetsDir/input/errors/listingType
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
+
+xxx | bytes = text.encodeToBytes("UTF-8")
+              ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

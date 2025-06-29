@@ -8,3 +8,7 @@ at 日本語_error#日本語 (file:///$snippetsDir/input/modules/%E6%97%A5%E6%9C
 xxx | text = renderer.renderDocument(value)
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
+
+xxx | bytes = text.encodeToBytes("UTF-8")
+              ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
