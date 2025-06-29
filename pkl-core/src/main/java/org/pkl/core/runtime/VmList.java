@@ -146,6 +146,15 @@ public final class VmList extends VmCollection {
     return rrbt.isEmpty();
   }
 
+  @TruffleBoundary
+  public byte[] getBytes() {
+    var result = new byte[rrbt.size()];
+    for (var i = 0; i < rrbt.size(); i++) {
+      result[i] = VmUtils.checkByte(rrbt.get(i));
+    }
+    return result;
+  }
+
   @Override
   @TruffleBoundary
   public boolean isLengthOne() {
