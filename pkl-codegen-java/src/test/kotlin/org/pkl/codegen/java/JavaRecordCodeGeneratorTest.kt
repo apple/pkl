@@ -68,7 +68,7 @@ class JavaRecordCodeGeneratorTest {
         }
       """
             .trimIndent(),
-          JavaCodeGeneratorOptions(generateRecords = true),
+          JavaCodeGeneratorOptions(generateRecords = true, useWithers = true),
         )
         .compile()
         .getValue("my.Mod\$Simple")
@@ -115,7 +115,7 @@ class JavaRecordCodeGeneratorTest {
 
         typealias Direction = "north"|"east"|"south"|"west"
       """,
-        JavaCodeGeneratorOptions(generateRecords = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true),
       )
     }
 
@@ -154,7 +154,8 @@ class JavaRecordCodeGeneratorTest {
 
   @Test
   fun testCommonCode() {
-    val javaCode = generateCommonCode(JavaCodeGeneratorOptions(generateRecords = true))
+    val javaCode =
+      generateCommonCode(JavaCodeGeneratorOptions(generateRecords = true, useWithers = true))
     assertThat(javaCode)
       .containsIgnoringWhitespaces(
         """
@@ -178,6 +179,7 @@ class JavaRecordCodeGeneratorTest {
       generateCommonCode(
         JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           nonNullAnnotation = "very.custom.HelloNull",
         )
       )
@@ -280,7 +282,7 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
     assertThat(javaCode.text)
       .containsIgnoringWhitespaces(
@@ -307,7 +309,7 @@ class JavaRecordCodeGeneratorTest {
         }
       """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
     assertThat(javaCode.text)
       .containsIgnoringWhitespaces(
@@ -336,7 +338,11 @@ class JavaRecordCodeGeneratorTest {
       propertyInDeprecatedModuleClass : Int = 42
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = generateJavadoc),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          generateJavadoc = generateJavadoc,
+        ),
       )
 
     assertThat(javaCode.text)
@@ -378,7 +384,11 @@ class JavaRecordCodeGeneratorTest {
     """
           .trimIndent(),
         // no message, so no Javadoc, regardless of flag
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = generateJavadoc),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          generateJavadoc = generateJavadoc,
+        ),
       )
 
     assertThat(javaCode.text)
@@ -451,7 +461,7 @@ class JavaRecordCodeGeneratorTest {
       @Deprecated { message = "property is deprecated" }
       deprecatedProperty: Int
     """,
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode.text)
@@ -482,7 +492,7 @@ class JavaRecordCodeGeneratorTest {
       @Deprecated { message = "property 2 is deprecated" }
       deprecatedProperty2: Int
     """,
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode.text)
@@ -514,7 +524,7 @@ class JavaRecordCodeGeneratorTest {
         deprecatedProperty1: Int
       }
     """,
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode.text)
@@ -547,7 +557,7 @@ class JavaRecordCodeGeneratorTest {
         deprecatedProperty1: Int
       }
     """,
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode.text)
@@ -586,7 +596,7 @@ class JavaRecordCodeGeneratorTest {
         deprecatedProperty1: Int
       }
     """,
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode.text)
@@ -816,7 +826,7 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true),
       )
 
     assertThat(javaCode)
@@ -983,7 +993,8 @@ class JavaRecordCodeGeneratorTest {
       class Bar extends Foo {
         y: String
       }
-    """
+    """,
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true),
       )
 
     assertThat(javaCode)
@@ -1099,7 +1110,7 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("JavadocRecord.jva")
@@ -1123,7 +1134,7 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateJavadoc = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateJavadoc = true),
       )
 
     assertThat(javaCode)
@@ -1236,6 +1247,7 @@ class JavaRecordCodeGeneratorTest {
           .trimIndent(),
         JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           nonNullAnnotation = "com.example.Annotations\$NonNull",
         ),
       )
@@ -1533,6 +1545,7 @@ class JavaRecordCodeGeneratorTest {
           .trimIndent(),
         JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           paramsAnnotation = "org.project.MyAnnotation",
         ),
       )
@@ -1554,7 +1567,7 @@ class JavaRecordCodeGeneratorTest {
       name: String
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, paramsAnnotation = null),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, paramsAnnotation = null),
       )
 
     assertThat(javaCode.text)
@@ -1576,7 +1589,11 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateSpringBootConfig = true),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          generateSpringBootConfig = true,
+        ),
       )
 
     assertThat(javaCode.text)
@@ -1855,7 +1872,11 @@ class JavaRecordCodeGeneratorTest {
       typealias Direction = "north"|"east"|"south"|"west"
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          implementSerializable = true,
+        ),
       )
 
     assertThat(javaCode.text).containsIgnoringWhitespaces("implements Serializable")
@@ -1941,7 +1962,11 @@ class JavaRecordCodeGeneratorTest {
       abstract class Foo { str: String }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          implementSerializable = true,
+        ),
       )
 
     assertThat(javaCode.text).doesNotContain("Serializable")
@@ -1952,7 +1977,11 @@ class JavaRecordCodeGeneratorTest {
       module my.mod
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          implementSerializable = true,
+        ),
       )
 
     assertThat(javaCode.text).doesNotContain("Serializable")
@@ -1969,7 +1998,11 @@ class JavaRecordCodeGeneratorTest {
       class Address { city: String }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, implementSerializable = true),
+        JavaCodeGeneratorOptions(
+          generateRecords = true,
+          useWithers = true,
+          implementSerializable = true,
+        ),
       )
 
     assertThat(javaCode.text)
@@ -2010,7 +2043,8 @@ class JavaRecordCodeGeneratorTest {
         prop: TheFoo
       }
     """
-          .trimIndent()
+          .trimIndent(),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true),
       )
 
     assertThat(javaCode)
@@ -2139,7 +2173,7 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generateRecords = true, generateGetters = true),
+        JavaCodeGeneratorOptions(generateRecords = true, useWithers = true, generateGetters = true),
       )
 
     assertThat(javaCode)
@@ -2152,6 +2186,7 @@ class JavaRecordCodeGeneratorTest {
     val files =
       JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           renames = mapOf("a.b.c." to "x.y.z.", "d.e.f.AnotherModule" to "u.v.w.RenamedModule"),
         )
         .generateFiles(
@@ -2188,6 +2223,7 @@ class JavaRecordCodeGeneratorTest {
     val files =
       JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           renames = mapOf("com.foo.bar." to "x.", "com.foo." to "y.", "com." to "z.", "" to "w."),
         )
         .generateFiles(
@@ -2234,6 +2270,7 @@ class JavaRecordCodeGeneratorTest {
     val files =
       JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           renames =
             mapOf(
               "org.foo." to "com.foo.x.",
@@ -2317,6 +2354,7 @@ class JavaRecordCodeGeneratorTest {
     val files =
       JavaCodeGeneratorOptions(
           generateRecords = true,
+          useWithers = true,
           renames = mapOf("a.b.c.MyModule" to "x.y.z.renamed_module", "d.e.f." to "u.v.w."),
         )
         .generateFiles(
@@ -2412,9 +2450,9 @@ class JavaRecordCodeGeneratorTest {
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 
   private fun generateFiles(vararg pklModules: PklModule): Map<String, JavaSourceCode> =
-    JavaCodeGeneratorOptions(generateRecords = true).generateFiles(*pklModules).mapValues {
-      JavaSourceCode(it.value)
-    }
+    JavaCodeGeneratorOptions(generateRecords = true, useWithers = true)
+      .generateFiles(*pklModules)
+      .mapValues { JavaSourceCode(it.value) }
 
   private fun instantiateOtherAndPropertyTypes(): kotlin.Pair<Any, Any> {
     val otherCtor = propertyTypesClasses.getValue("my.Mod\$Other").constructors.first()

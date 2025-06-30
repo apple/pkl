@@ -193,6 +193,8 @@ public class PklPlugin implements Plugin<Project> {
           spec.getGenerateGetters().convention(false);
           spec.getGenerateJavadoc().convention(false);
           spec.getGenerateRecords().convention(false);
+          spec.getUseWithers().convention(false);
+          spec.getUseLombokBuilders().convention(false);
           // Not using `convention()` so that users can disable generation of
           // constructor parameters annotations by setting this property to `null`.
           spec.getParamsAnnotation()
@@ -210,6 +212,8 @@ public class PklPlugin implements Plugin<Project> {
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
                     task.getGenerateRecords().set(spec.getGenerateRecords());
+                    task.getUseWithers().set(spec.getUseWithers());
+                    task.getUseLombokBuilders().set(spec.getUseLombokBuilders());
                     task.getParamsAnnotation().set(spec.getParamsAnnotation());
                     task.getNonNullAnnotation().set(spec.getNonNullAnnotation());
                   });

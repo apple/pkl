@@ -183,8 +183,24 @@ Flag that indicates to generate private final fields and public getter methods i
 [%collapsible]
 ====
 Default: (flag not set) +
-Flag that indicates to generate Java records, the related interfaces, and JEP 468 like `withers`.
+Flag that indicates to generate Java records and the related interfaces. +
 Overrides Java class generation option `--generate-getters`.
+====
+
+.--use-withers
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates whether to generate JEP 468 like `withers` for Java records. +
+Works in conjunction with Java records class generation option `-generate-records`.
+====
+
+.--use-lombok-builders
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates whether to generate Lombok Builders for Java records. +
+Works in conjunction with Java records class generation option `-generate-records`.
 ====
 
 .--generate-javadoc

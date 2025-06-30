@@ -32,11 +32,17 @@ class CliJavaCodeGenerator(private val options: CliJavaCodeGeneratorOptions) :
     try {
       builder.build().use { evaluator ->
         if (options.generateRecords) {
-          options.outputDir.resolve(JavaRecordCodeGenerator.commonCodePackageFile).apply {
-            createParentDirectories()
-              .writeString(
-                JavaRecordCodeGenerator.generateCommonCode(options.toJavaCodeGeneratorOptions())
-              )
+          if (options.useWithers) {
+            options.outputDir.resolve(JavaRecordCodeGenerator.commonCodePackageFile).apply {
+              createParentDirectories()
+                .writeString(
+                  JavaRecordCodeGenerator.generateCommonCode(options.toJavaCodeGeneratorOptions())
+                )
+            }
+          }
+
+          if (options.useLombokBuilders) {
+            TODO("not implemented in this Pkl version yet")
           }
         }
 

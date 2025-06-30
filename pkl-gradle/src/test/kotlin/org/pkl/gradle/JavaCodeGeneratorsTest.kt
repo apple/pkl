@@ -23,7 +23,7 @@ import org.junit.jupiter.api.Test
 class JavaCodeGeneratorsTest : AbstractTest() {
   @Test
   fun `generate records code`() {
-    writeBuildFile(isGenerateRecords = true)
+    writeBuildFile(isGenerateRecords = true, isUseWithers = true)
     writePklFile()
 
     runTask("configClasses")
@@ -143,7 +143,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
 
   @Test
   fun `compile generated records code`() {
-    writeBuildFile(isGenerateRecords = true)
+    writeBuildFile(isGenerateRecords = true, isUseWithers = true)
     writePklFile()
 
     runTask("compileJava")
@@ -210,7 +210,12 @@ class JavaCodeGeneratorsTest : AbstractTest() {
     assertThat(result.output).contains("No source modules specified.")
   }
 
-  private fun writeBuildFile(isGenerateRecords: Boolean = false, javaVersion: String = "21") {
+  private fun writeBuildFile(
+    isGenerateRecords: Boolean = false,
+    javaVersion: String = "21",
+    isUseWithers: Boolean = false,
+    isUseLombokBuilders: Boolean = false,
+  ) {
     writeFile(
       "build.gradle",
       """
@@ -242,6 +247,8 @@ class JavaCodeGeneratorsTest : AbstractTest() {
             paramsAnnotation = "javax.inject.Named"
             nonNullAnnotation = "org.jspecify.annotations.NonNull"
             generateRecords = $isGenerateRecords
+            useWithers = $isUseWithers
+            useLombokBuilders = $isUseLombokBuilders
             settingsModule = "pkl:settings"
             renames = [
               'org': 'foo.bar'

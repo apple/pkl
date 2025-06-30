@@ -23,6 +23,7 @@ import org.pkl.codegen.java.CliJavaCodeGenerator;
 import org.pkl.codegen.java.CliJavaCodeGeneratorOptions;
 
 public abstract class JavaCodeGenTask extends CodeGenTask {
+
   @Input
   public abstract Property<Boolean> getGenerateGetters();
 
@@ -41,6 +42,14 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
   @Optional
   public abstract Property<Boolean> getGenerateRecords();
 
+  @Input
+  @Optional
+  public abstract Property<Boolean> getUseWithers();
+
+  @Input
+  @Optional
+  public abstract Property<Boolean> getUseLombokBuilders();
+
   @Override
   protected void doRunTask() {
     //noinspection ResultOfMethodCallIgnored
@@ -58,7 +67,9 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
                 getNonNullAnnotation().getOrNull(),
                 getImplementSerializable().get(),
                 getRenames().get(),
-                getGenerateRecords().get()))
+                getGenerateRecords().get(),
+                getUseWithers().get(),
+                getUseLombokBuilders().get()))
         .run();
   }
 }

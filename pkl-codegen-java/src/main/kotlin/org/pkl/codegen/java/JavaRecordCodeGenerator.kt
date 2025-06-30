@@ -23,17 +23,6 @@ import java.util.*
 import java.util.function.Consumer
 import java.util.regex.Pattern
 import javax.lang.model.element.Modifier
-import kotlin.AssertionError
-import kotlin.Boolean
-import kotlin.ReplaceWith
-import kotlin.RuntimeException
-import kotlin.String
-import kotlin.Suppress
-import kotlin.Unit
-import kotlin.apply
-import kotlin.let
-import kotlin.takeIf
-import kotlin.to
 import org.pkl.commons.NameMapper
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
@@ -94,11 +83,17 @@ data class JavaCodeGeneratorOptions(
   val renames: Map<String, String> = emptyMap(),
 
   /**
-   * Whether to generate Java records, the related interfaces, and JEP 468 like withers.
+   * Whether to generate Java records and the related interfaces.
    *
    * This overrides any Java class generation related options!
    */
   val generateRecords: Boolean = false,
+
+  /** Whether to generate JEP 468 like withers for records. */
+  val useWithers: Boolean = false,
+
+  /** Whether to generate Lombok Builders for records. */
+  val useLombokBuilders: Boolean = false,
 )
 
 /** Entrypoint for the Java code generator API. */
@@ -267,7 +262,7 @@ class JavaRecordCodeGenerator(
     for (typeAlias in schema.typeAliases.values) {
       val stringLiterals = mutableSetOf<String>()
       if (CodeGeneratorUtils.isRepresentableAsEnum(typeAlias.aliasedType, stringLiterals)) {
-        moduleClass?.addType(generateEnumTypeSpec(typeAlias, stringLiterals).build())
+        moduleClass.addType(generateEnumTypeSpec(typeAlias, stringLiterals).build())
       }
     }
 
@@ -480,6 +475,10 @@ class JavaRecordCodeGenerator(
       }
     }
 
+    fun generateLombokAnnotations(builder: TypeSpec.Builder) {
+      builder.addAnnotation(ClassName.get("lombok", "Builder"))
+    }
+
     fun generateWither(builder: TypeSpec.Builder, constructorSpec: MethodSpec) {
       builder.addSuperinterface(
         ParameterizedTypeName.get(
@@ -653,7 +652,13 @@ class JavaRecordCodeGenerator(
           builder.addSuperinterface(java.io.Serializable::class.java)
         }
 
-        generateWither(builder, constructorSpec)
+        if (codegenOptions.useWithers) {
+          generateWither(builder, constructorSpec)
+        }
+
+        if (codegenOptions.useLombokBuilders) {
+          generateLombokAnnotations(builder)
+        }
       }
 
       return builder
@@ -663,6 +668,7 @@ class JavaRecordCodeGenerator(
       pClass.isAbstract ->
         if (pClass.isModuleClass) GeneratedType(generateInterface(), null)
         else GeneratedType(null, generateInterface())
+
       pClass.isOpen -> GeneratedType(generateClass(), generateInterface())
       else -> GeneratedType(generateClass(), null)
     }
