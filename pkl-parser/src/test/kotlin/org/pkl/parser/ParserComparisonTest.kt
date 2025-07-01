@@ -91,6 +91,7 @@ class ParserComparisonTest : ParserComparisonTestInterface {
         "errors/underscore.pkl",
         "notAUnionDefault.pkl",
         "multipleDefaults.pkl",
+        "modules/invalidModule1.pkl",
       )
 
     private val regexExceptions =
