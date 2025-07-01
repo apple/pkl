@@ -844,7 +844,7 @@ public final class ListNodes {
       var iter = self.iterator();
       var typeNode = getTypeNode();
       var result = initial;
-      long index = 0;
+      var index = 0L;
       var loop = 0;
 
       while (iter.hasNext()) {
