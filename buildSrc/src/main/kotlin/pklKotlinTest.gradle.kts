@@ -27,6 +27,7 @@ val buildInfo = project.extensions.getByType<BuildInfo>()
 val libs = the<LibrariesForLibs>()
 
 dependencies {
+  testImplementation(platform(libs.junitBom))
   testImplementation(libs.assertj)
   testImplementation(libs.junitApi)
   testImplementation(libs.junitParams)
