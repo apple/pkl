@@ -1,0 +1,89 @@
+amends ".../snippetTest.pkl"
+
+import "pkl:reflect"
+
+local open class Prop1 {
+  name: String
+}
+
+local class Prop2 extends Prop1 {
+  version: Int
+}
+
+local open class A {
+  inherited: Prop1
+  overridden: Prop1
+  hidden overriddenHidden: Prop1
+  @Deprecated
+  overriddenAnnotated: Prop1
+  rewritten: Prop1
+
+  hidden _hidden: Prop1
+  @Deprecated
+  annotated: Prop1
+
+  function inherited(): String? = null
+  function overridden(): String? = null
+  @Deprecated
+  function overriddenAnnotated(): String? = null
+}
+
+local class B extends A {
+  // property definitions "shadow" parents, but amends do not
+  overridden: Prop2 // should shadow parent in allProperties
+  overriddenHidden: Prop1 // should shadow parent in allProperties
+  overriddenAnnotated: Prop1 // should shadow parent in allProperties
+  rewritten: String // should shadow parent in allProperties
+  _hidden { // amending hidden property from parent, should not shadow parent modifiers in allProperties
+    name = "test"
+  }
+  annotated { // amending annotated property from parent, should not shadow parent annotations in allProperties
+    name = "test"
+  }
+
+  // methods always "shadow"
+  function overridden(): Int? = null // should shadow annotated parent in allMethods
+  function overriddenAnnotated(): String? = null // should shadow annotated parent in allMethods
+}
+
+local class DisplayProperty {
+  hidden property: reflect.Property
+  fixed annotations = property.annotations.map((it) -> it.toString()).toListing()
+  fixed modifiers = property.modifiers.toListing()
+  fixed type = property.type.getPropertyOrNull("referent")?.getPropertyOrNull("name") ?? "unknown"
+}
+
+local class DisplayMethod {
+  hidden method: reflect.Method
+  fixed annotations = method.annotations.map((it) -> it.toString()).toListing()
+  fixed modifiers = method.modifiers.toListing()
+  fixed returnType = if (method.returnType is reflect.NullableType)
+    ((method.returnType as reflect.NullableType).member.getPropertyOrNull("referent")?.getPropertyOrNull("name") ?? "unknown") + "?"
+  else method.returnType.getPropertyOrNull("referent")?.getPropertyOrNull("name") ?? "unknown"
+}
+
+facts {
+  ["A"] {
+    reflect.Class(A).properties.mapValues((_, it) -> new DisplayProperty { property = it }).toMapping()
+    == reflect.Class(A).allProperties.mapValues((_, it) -> new DisplayProperty { property = it }).toMapping()
+    reflect.Class(A).methods.mapValues((_, it) -> new DisplayMethod { method = it }).toMapping()
+    == reflect.Class(A).allMethods.mapValues((_, it) -> new DisplayMethod { method = it }).toMapping()
+  }
+}
+
+examples {
+  ["B"] {
+    reflect.Class(B).properties.mapValues((_, it) -> new DisplayProperty { property = it }).toMapping()
+    reflect.Class(B).allProperties.mapValues((_, it) -> new DisplayProperty { property = it }).toMapping()
+    reflect.Class(B).methods.mapValues((_, it) -> new DisplayMethod { method = it }).toMapping()
+    reflect.Class(B).allMethods.mapValues((_, it) -> new DisplayMethod { method = it }).toMapping()
+  }
+  ["module"] {
+    new DisplayProperty { property = reflect.Class(module.getClass()).properties["output"] }
+    new DisplayProperty { property = reflect.Class(module.getClass()).allProperties["output"] }
+  }
+}
+
+output { // override to test example "module"
+  text = super.text + "\n// hello world"
+}

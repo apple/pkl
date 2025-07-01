@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -146,8 +146,10 @@ public final class MirrorFactories {
         .addProperty("superclass", VmClass::getSuperclassMirror)
         .addProperty("supertype", VmClass::getSupertypeMirror)
         .addMapProperty("properties", VmClass::getPropertyMirrors)
+        .addMapProperty("allProperties", VmClass::getAllPropertyMirrors)
         .addTypedProperty("enclosingDeclaration", VmClass::getModuleMirror)
-        .addMapProperty("methods", VmClass::getMethodMirrors);
+        .addMapProperty("methods", VmClass::getMethodMirrors)
+        .addMapProperty("allMethods", VmClass::getAllMethodMirrors);
 
     typeAliasFactory
         .addTypedProperty(
