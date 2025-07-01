@@ -178,6 +178,18 @@ examples {
     Set().foldBack(0, (x, acc) -> x + acc)
   }
 
+  ["iterate()"] {
+    set1.iterate(0, (acc, x) -> Pair(x < 2, x + acc))
+    set1.iterate(0, (acc, x) -> Pair(true, x + acc))
+    module.catch(() -> set1.iterate(0, (acc, x) -> Pair(1, x + acc)))
+  }
+
+  ["iterateIndexed()"] {
+    set1.iterateIndexed(0, (i, acc, x) -> Pair(i < 1, x + acc))
+    set1.iterateIndexed(0, (i, acc, x) -> Pair(true, x + acc))
+    module.catch(() -> set1.iterateIndexed(0, (i, acc, x) -> Pair(i, x + acc)))
+  }
+
   ["reduce()"] {
     set1.reduce((x, y) -> x + y)
     Set(1).reduce((x, y) -> x + y)

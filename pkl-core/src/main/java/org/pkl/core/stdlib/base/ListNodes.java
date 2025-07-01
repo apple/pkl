@@ -25,7 +25,10 @@ import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeNode.BooleanTypeNode;
+import org.pkl.core.ast.type.TypeNode.PairTypeNode;
 import org.pkl.core.ast.type.TypeNode.UInt8TypeAliasTypeNode;
+import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
@@ -781,6 +784,79 @@ public final class ListNodes {
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
+      return result;
+    }
+  }
+
+  public abstract static class iterate extends ExternalMethod2Node {
+    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
+    @Child @LateInit private TypeNode typeNode;
+
+    private TypeNode getTypeNode() {
+      if (typeNode == null) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var section = VmUtils.unavailableSourceSection();
+        var booleanTypeNode = new BooleanTypeNode(section);
+        var unknownTypeNode = new UnknownTypeNode(section);
+        typeNode = new PairTypeNode(section, booleanTypeNode, unknownTypeNode);
+      }
+      return typeNode;
+    }
+
+    @Specialization
+    protected Object eval(VirtualFrame frame, VmList self, Object initial, VmFunction function) {
+      var iter = self.iterator();
+      var typeNode = getTypeNode();
+      var result = initial;
+      var loop = 0;
+
+      while (iter.hasNext()) {
+        var elem = iter.next();
+        var pairUnchecked = applyLambdaNode.execute(function, result, elem);
+        var pair = (VmPair) typeNode.executeEagerly(frame, pairUnchecked);
+        result = pair.getSecond();
+        loop++;
+        if (!(Boolean) pair.getFirst()) break;
+      }
+
+      LoopNode.reportLoopCount(this, loop);
+      return result;
+    }
+  }
+
+  public abstract static class iterateIndexed extends ExternalMethod2Node {
+    @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
+    @Child @LateInit private TypeNode typeNode;
+
+    private TypeNode getTypeNode() {
+      if (typeNode == null) {
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var section = VmUtils.unavailableSourceSection();
+        var booleanTypeNode = new BooleanTypeNode(section);
+        var unknownTypeNode = new UnknownTypeNode(section);
+        typeNode = new PairTypeNode(section, booleanTypeNode, unknownTypeNode);
+      }
+      return typeNode;
+    }
+
+    @Specialization
+    protected Object eval(VirtualFrame frame, VmList self, Object initial, VmFunction function) {
+      var iter = self.iterator();
+      var typeNode = getTypeNode();
+      var result = initial;
+      long index = 0;
+      var loop = 0;
+
+      while (iter.hasNext()) {
+        var elem = iter.next();
+        var pairUnchecked = applyLambdaNode.execute(function, index++, result, elem);
+        var pair = (VmPair) typeNode.executeEagerly(frame, pairUnchecked);
+        result = pair.getSecond();
+        loop++;
+        if (!(Boolean) pair.getFirst()) break;
+      }
+
+      LoopNode.reportLoopCount(this, loop);
       return result;
     }
   }
