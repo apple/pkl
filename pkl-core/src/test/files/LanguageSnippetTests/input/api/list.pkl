@@ -216,6 +216,20 @@ examples {
     List().foldBack(0, (x, acc) -> x + acc)
   }
 
+  ["iterate()"] {
+    list1.iterate(0, (acc, x) -> Pair(x < 2, x + acc))
+    list1.iterate(0, (acc, x) -> Pair(true, x + acc))
+    module.catch(() -> list1.iterate(0, (acc, x) -> x + acc))
+    module.catch(() -> list1.iterate(0, (acc, x) -> Pair(x, x + acc)))
+  }
+
+  ["iterateIndexed()"] {
+    list1.iterateIndexed(0, (i, acc, x) -> Pair(i < 1, x + acc))
+    list1.iterateIndexed(0, (i, acc, x) -> Pair(true, x + acc))
+    module.catch(() -> list1.iterateIndexed(0, (i, acc, x) -> x + acc))
+    module.catch(() -> list1.iterateIndexed(0, (i, acc, x) -> Pair(i, x + acc)))
+  }
+
   ["reduce()"] {
     list1.reduce((x, y) -> x + y)
     List(1).reduce((x, y) -> x + y)
