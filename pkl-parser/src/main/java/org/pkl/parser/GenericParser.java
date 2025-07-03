@@ -798,41 +798,11 @@ public class GenericParser {
           }
           case LPAREN -> {
             // can be function literal or parenthesized expression
-            var children = new ArrayList<GenNode>();
-            children.add(makeTerminal(next()));
-            ff(children);
-            yield switch (lookahead) {
-              case UNDERSCORE -> parseFunctionLiteral(children);
-              case IDENTIFIER -> {
-                if (isFunctionLiteral()) {
-                  yield parseFunctionLiteral(children);
-                } else {
-                  children.add(parseExpr(")"));
-                  ff(children);
-                  expect(Token.RPAREN, children, "unexpectedToken", ")");
-                  yield new GenNode(NodeType.PARENTHESIZED_EXPR, children);
-                }
-              }
-              case RPAREN -> {
-                children.add(makeTerminal(next()));
-                var actualChildren = new ArrayList<GenNode>();
-                actualChildren.add(new GenNode(NodeType.PARAMETER_LIST, children));
-                ff(actualChildren);
-                expect(Token.ARROW, actualChildren, "unexpectedToken", "->");
-                var body = new ArrayList<GenNode>();
-                ff(body);
-                body.add(parseExpr());
-                actualChildren.add(new GenNode(NodeType.FUNCTION_LITERAL_BODY, body));
-                yield new GenNode(NodeType.FUNCTION_LITERAL_EXPR, actualChildren);
-              }
-              default -> {
-                // expression
-                children.add(parseExpr(")"));
-                ff(children);
-                expect(Token.RPAREN, children, "unexpectedToken", ")");
-                yield new GenNode(NodeType.PARENTHESIZED_EXPR, children);
-              }
-            };
+            if (isFunctionLiteral()) {
+              yield parseFunctionLiteral();
+            } else {
+              yield parseParenthesizedExpr();
+            }
           }
           case SUPER -> {
             var children = new ArrayList<GenNode>();
@@ -955,6 +925,8 @@ public class GenericParser {
   private boolean isFunctionLiteral() {
     var originalCursor = cursor;
     try {
+      next(); // open (
+      ff();
       next(); // identifier
       ff();
       if (lookahead == Token.COMMA || lookahead == Token.COLON) {
@@ -1043,11 +1015,24 @@ public class GenericParser {
     children.add(makeTerminal(next())); // string end
     return new GenNode(NodeType.MULTI_LINE_STRING_LITERAL_EXPR, children);
   }
-
-  private GenNode parseFunctionLiteral(List<GenNode> preChildren) {
-    // the open parens is already parsed
-    var paramListChildren = new ArrayList<>(preChildren);
+  
+  private GenNode parseParenthesizedExpr() {
+    var children = new ArrayList<GenNode>();
+    expect(Token.LPAREN, children, "unexpectedToken", "(");
     var elements = new ArrayList<GenNode>();
+    ff(elements);
+    elements.add(parseExpr(")"));
+    ff(elements);
+    children.add(new GenNode(NodeType.PARENTHESIZED_EXPR_ELEMENTS, elements));
+    expect(Token.RPAREN, children, "unexpectedToken", ")");
+    return new GenNode(NodeType.PARENTHESIZED_EXPR, children);
+  }
+
+  private GenNode parseFunctionLiteral() {
+    var paramListChildren = new ArrayList<GenNode>();
+    expect(Token.LPAREN, paramListChildren, "unexpectedToken", "(");
+    var elements = new ArrayList<GenNode>();
+    ff(elements);
     parseListOf(Token.COMMA, elements, this::parseParameter);
     paramListChildren.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.RPAREN, paramListChildren, "unexpectedToken2", ",", ")");
@@ -1114,20 +1099,23 @@ public class GenericParser {
           case LPAREN -> {
             var children = new ArrayList<GenNode>();
             children.add(makeTerminal(next()));
-            ff(children);
             var totalTypes = 0;
-            if (lookahead == Token.RPAREN) {
+            if (lookahead() == Token.RPAREN) {
+              ff(children);
               children.add(makeTerminal(next()));
             } else {
-              children.add(parseType(")"));
-              ff(children);
+              var elements = new ArrayList<GenNode>();
+              ff(elements);
+              elements.add(parseType(")"));
+              ff(elements);
               while (lookahead == Token.COMMA) {
-                children.add(makeTerminal(next()));
-                ff(children);
-                children.add(parseType(")"));
+                elements.add(makeTerminal(next()));
+                ff(elements);
+                elements.add(parseType(")"));
                 totalTypes++;
-                ff(children);
+                ff(elements);
               }
+              children.add(new GenNode(NodeType.PARENTHESIZED_TYPE_ELEMENTS, elements));
               expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
             }
             if (totalTypes > 1 || lookahead() == Token.ARROW) {
@@ -1180,8 +1168,8 @@ public class GenericParser {
       ff(children);
       var constraint = new ArrayList<GenNode>();
       constraint.add(makeTerminal(next()));
-      ff(constraint);
       var elements = new ArrayList<GenNode>();
+      ff(elements);
       parseListOf(Token.COMMA, elements, () -> parseExpr(")"));
       constraint.add(new GenNode(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
       expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
