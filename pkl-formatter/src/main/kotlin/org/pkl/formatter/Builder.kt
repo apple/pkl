@@ -134,6 +134,7 @@ class Builder(sourceText: String) {
       NodeType.NON_NULL_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.PARENTHESIZED_EXPR -> formatParenthesizedExpr(node)
+      NodeType.PARENTHESIZED_EXPR_ELEMENTS -> formatParenthesizedExprElements(node)
       NodeType.IMPORT_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.LET_EXPR -> formatLetExpr(node)
       NodeType.LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node)
@@ -151,7 +152,8 @@ class Builder(sourceText: String) {
       NodeType.UNION_TYPE -> formatUnionType(node)
       NodeType.FUNCTION_TYPE -> formatFunctionType(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
-      NodeType.PARENTHESIZED_TYPE -> Group(newId(), formatGeneric(node.children, null))
+      NodeType.PARENTHESIZED_TYPE -> formatParameterList(node)
+      NodeType.PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node)
       else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
   }
@@ -192,7 +194,7 @@ class Builder(sourceText: String) {
     val index = txt.indexOfFirst { it != '/' }
     if (index <= 0) return Text("///")
     var comment = txt.substring(index)
-    if (!comment.startsWith(" ")) comment = " $comment"
+    if (comment.isNotEmpty() && !comment[0].isWhitespace()) comment = " $comment"
     return Text("///$comment")
   }
 
@@ -570,6 +572,10 @@ class Builder(sourceText: String) {
       }
     return Group(newId(), nodes)
   }
+  
+  private fun formatParenthesizedExprElements(node: GenNode): FormatNode {
+    return indent(Group(newId(), formatGeneric(node.children, null)))
+  }
 
   private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
     val sameLine =
@@ -671,11 +677,15 @@ class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) null else SpaceOrLine },
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
       ) { node, next ->
         if (next == null) indent(format(node)) else format(node)
       }
     return Group(newId(), nodes)
+  }
+
+  private fun formatParenthesizedTypeElements(node: GenNode): FormatNode {
+    return indent(Group(newId(), formatGeneric(node.children, null)))
   }
 
   private fun formatTypeAnnotation(node: GenNode): FormatNode {
