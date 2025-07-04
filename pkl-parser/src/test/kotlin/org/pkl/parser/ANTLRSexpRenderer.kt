@@ -80,10 +80,19 @@ class ANTLRSexpRenderer {
       }
       if (header.moduleExtendsOrAmendsClause() != null) {
         buf.append('\n')
-        buf.append(tab)
-        buf.append("(extendsOrAmendsClause)")
+        renderExtendsOrAmendsClause(header.moduleExtendsOrAmendsClause())
       }
     }
+    tab = oldTab
+    buf.append(')')
+  }
+
+  fun renderExtendsOrAmendsClause(clause: ModuleExtendsOrAmendsClauseContext) {
+    buf.append(tab)
+    buf.append("(extendsOrAmendsClause")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(clause.stringConstant())
     tab = oldTab
     buf.append(')')
   }
@@ -96,6 +105,8 @@ class ANTLRSexpRenderer {
       buf.append("(importClause")
     }
     val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(imp.stringConstant())
     if (imp.Identifier() != null) {
       buf.append('\n')
       buf.append(tab)
@@ -180,6 +191,7 @@ class ANTLRSexpRenderer {
     buf.append("(identifier)")
     val typePars = header.typeParameterList()
     if (typePars != null) {
+      buf.append('\n')
       renderTypeParameterList(typePars)
     }
     buf.append('\n')
@@ -246,6 +258,7 @@ class ANTLRSexpRenderer {
     buf.append(tab)
     buf.append("(identifier)")
     if (header.typeParameterList() != null) {
+      buf.append('\n')
       renderTypeParameterList(header.typeParameterList())
     }
     buf.append('\n')
@@ -291,19 +304,20 @@ class ANTLRSexpRenderer {
 
   fun renderTypeParameterList(typeParameterList: TypeParameterListContext) {
     buf.append(tab)
-    buf.append("(TypeParameterList\n")
+    buf.append("(typeParameterList")
     val oldTab = increaseTab()
     for (tpar in typeParameterList.typeParameter()) {
       buf.append('\n')
       renderTypeParameter(tpar)
     }
+    buf.append(')')
     tab = oldTab
   }
 
   @Suppress("UNUSED_PARAMETER")
   fun renderTypeParameter(tpar: TypeParameterContext?) {
     buf.append(tab)
-    buf.append("(TypeParameter\n")
+    buf.append("(typeParameter\n")
     val oldTab = increaseTab()
     buf.append(tab)
     buf.append("(identifier))")
@@ -334,10 +348,7 @@ class ANTLRSexpRenderer {
         buf.append(tab)
         buf.append("(moduleType)")
       }
-      is StringLiteralTypeContext -> {
-        buf.append(tab)
-        buf.append("(stringConstantType)")
-      }
+      is StringLiteralTypeContext -> renderStringConstantType(type)
       is DeclaredTypeContext -> renderDeclaredType(type)
       is ParenthesizedTypeContext -> renderParenthesizedType(type)
       is NullableTypeContext -> renderNullableType(type)
@@ -346,6 +357,16 @@ class ANTLRSexpRenderer {
       is UnionTypeContext -> renderUnionType(type)
       is FunctionTypeContext -> renderFunctionType(type)
     }
+  }
+
+  fun renderStringConstantType(type: StringLiteralTypeContext) {
+    buf.append(tab)
+    buf.append("(stringConstantType")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(type.stringConstant())
+    buf.append(')')
+    tab = oldTab
   }
 
   fun renderDeclaredType(type: DeclaredTypeContext) {
@@ -377,7 +398,7 @@ class ANTLRSexpRenderer {
 
   fun renderParenthesizedType(type: ParenthesizedTypeContext) {
     buf.append(tab)
-    buf.append("(parenthesisedType")
+    buf.append("(parenthesizedType")
     val oldTab = increaseTab()
     buf.append('\n')
     renderType(type.type())
@@ -549,13 +570,12 @@ class ANTLRSexpRenderer {
     buf.append(tab)
     buf.append("(objectMethod")
     val oldTab = increaseTab()
-    buf.append('\n')
     val header = method.methodHeader()
     for (mod in header.modifier()) {
       buf.append('\n')
       renderModifier(mod)
     }
-    buf.append('\n')
+    buf.append('\n').append(tab)
     buf.append("(identifier)")
     if (header.typeParameterList() != null) {
       renderTypeParameterList(header.typeParameterList())
@@ -702,11 +722,7 @@ class ANTLRSexpRenderer {
       }
       is ThrowExprContext -> renderThrowExpr(expr)
       is TraceExprContext -> renderTraceExpr(expr)
-      is ImportExprContext -> {
-        buf.append(tab)
-        val name = if (expr.t.type == PklLexer.IMPORT_GLOB) "(importGlobExpr)" else "(importExpr)"
-        buf.append(name)
-      }
+      is ImportExprContext -> renderImportExpr(expr)
       is ReadExprContext -> renderReadExpr(expr)
       is UnqualifiedAccessExprContext -> renderUnqualifiedAccessExpr(expr)
       is SingleLineStringLiteralContext -> renderSingleLineStringExpr(expr)
@@ -733,7 +749,7 @@ class ANTLRSexpRenderer {
       is IfExprContext -> renderIfExpr(expr)
       is LetExprContext -> renderLetExpr(expr)
       is FunctionLiteralContext -> renderFunctionLiteralExpr(expr)
-      is ParenthesizedExprContext -> renderParenthesisedExpr(expr)
+      is ParenthesizedExprContext -> renderParenthesizedExpr(expr)
     }
   }
 
@@ -773,6 +789,17 @@ class ANTLRSexpRenderer {
     tab = oldTab
   }
 
+  fun renderImportExpr(expr: ImportExprContext) {
+    buf.append(tab)
+    val name = if (expr.t.type == PklLexer.IMPORT_GLOB) "(importGlobExpr" else "(importExpr"
+    buf.append(name)
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(expr.stringConstant())
+    buf.append(')')
+    tab = oldTab
+  }
+
   fun renderUnqualifiedAccessExpr(expr: UnqualifiedAccessExprContext) {
     buf.append(tab)
     buf.append("(unqualifiedAccessExpr")
@@ -799,7 +826,7 @@ class ANTLRSexpRenderer {
         renderExpr(part.expr())
       } else {
         buf.append('\n').append(tab)
-        buf.append("(stringConstantExpr)")
+        buf.append("(stringConstant)")
       }
     }
     buf.append(')')
@@ -853,6 +880,7 @@ class ANTLRSexpRenderer {
     buf.append("(superAccessExpr")
     val oldTab = increaseTab()
     buf.append('\n')
+    buf.append(tab)
     buf.append("(identifier)")
     val args = expr.argumentList()
     if (args != null) {
@@ -998,7 +1026,7 @@ class ANTLRSexpRenderer {
     tab = oldTab
   }
 
-  fun renderParenthesisedExpr(expr: ParenthesizedExprContext) {
+  fun renderParenthesizedExpr(expr: ParenthesizedExprContext) {
     buf.append(tab)
     buf.append("(parenthesizedExpr")
     val oldTab = increaseTab()
@@ -1006,6 +1034,11 @@ class ANTLRSexpRenderer {
     renderExpr(expr.expr())
     buf.append(')')
     tab = oldTab
+  }
+
+  fun renderStringConstant(str: StringConstantContext) {
+    buf.append(tab)
+    buf.append("(stringConstant)")
   }
 
   @Suppress("UNUSED_PARAMETER")
