@@ -32,3 +32,16 @@ forGen = new Listing {
     [someVar] = someVar
   }
 }
+
+objParams: Listing<Int> =
+  new {
+  default {
+    key -> key + 1
+  }
+}
+
+objParams2: Listing<Int> = new {
+  default { someVeryLongParameter1, someVeryLongParameter2, someVeryLongParameter3, someVeryLongParameter4 ->
+    1
+  }
+}
