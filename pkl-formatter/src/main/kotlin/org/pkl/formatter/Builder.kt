@@ -873,7 +873,9 @@ class Builder(sourceText: String) {
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
-      next.isTerminal("=", "{", "->") || next.type == NodeType.OBJECT_BODY -> Space
+      next.isTerminal("=", "{", "->") ||
+        next.type == NodeType.OBJECT_BODY ||
+        next.type == NodeType.OBJECT_PARAMETER_LIST -> Space
       next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
       else -> separatorFn(prev, next)
     }
