@@ -1,12 +1,17 @@
 package my;
 
-import java.lang.Override;
 import java.lang.String;
-import java.util.function.Consumer;
-import org.pkl.codegen.java.common.code.Wither;
 import org.pkl.config.java.mapper.Named;
 import org.pkl.config.java.mapper.NonNull;
 import org.pkl.core.Duration;
+<1<
+import java.lang.Override;
+import java.util.function.Consumer;
+import org.pkl.codegen.java.common.code.Wither;
+>1>
+<2<
+import lombok.Builder;
+>2>
 
 public record Mod() {
   public interface Foo {
@@ -16,7 +21,9 @@ public record Mod() {
   public interface INone extends Foo {
   }
 
-  public record None(@Named("one") long one) implements Foo, INone, Wither<None, None.Memento> {
+  <2< @Builder >2>
+  public record None(@Named("one") long one) implements Foo, INone <1< , Wither<None, None.Memento> >1> {
+    <1<
     @Override
     public @NonNull None with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
@@ -35,14 +42,17 @@ public record Mod() {
         return new None(one);
       }
     }
+    >1>
   }
 
   public interface IBar extends INone {
     String two();
   }
 
+  <2< @Builder >2>
   public record Bar(@Named("one") long one,
-      @Named("two") String two) implements INone, IBar, Wither<Bar, Bar.Memento> {
+      @Named("two") String two) implements INone, IBar <1< , Wither<Bar, Bar.Memento> >1> {
+    <1<  
     @Override
     public @NonNull Bar with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
@@ -64,10 +74,13 @@ public record Mod() {
         return new Bar(one, two);
       }
     }
+    >1>
   }
 
+  <2< @Builder >2>
   public record Baz(@Named("one") long one, @Named("two") String two,
-      @Named("three") @NonNull Duration three) implements IBar, Wither<Baz, Baz.Memento> {
+      @Named("three") @NonNull Duration three) implements IBar <1< , Wither<Baz, Baz.Memento> >1> {
+    <1<  
     @Override
     public @NonNull Baz with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
@@ -92,5 +105,6 @@ public record Mod() {
         return new Baz(one, two, three);
       }
     }
+    >1>
   }
 }

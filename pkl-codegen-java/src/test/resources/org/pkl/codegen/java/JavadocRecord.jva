@@ -1,11 +1,16 @@
 package my;
 
-import java.lang.Override;
 import java.lang.String;
-import java.util.function.Consumer;
-import org.pkl.codegen.java.common.code.Wither;
 import org.pkl.config.java.mapper.Named;
 import org.pkl.config.java.mapper.NonNull;
+<1<
+import java.lang.Override;
+import java.util.function.Consumer;
+import org.pkl.codegen.java.common.code.Wither;
+>1>
+<2<
+import lombok.Builder;
+>2>
 
 /**
  * module comment.
@@ -15,7 +20,8 @@ import org.pkl.config.java.mapper.NonNull;
  * *emphasized* `code`.
  */
 public record Mod(
-    @Named("pigeon") Mod. @NonNull Person pigeon) implements Wither<Mod, Mod.Memento> {
+    @Named("pigeon") Mod. @NonNull Person pigeon) <1< implements Wither<Mod, Mod.Memento> >1> {
+<1<    
   @Override
   public @NonNull Mod with(final @NonNull Consumer<Memento> setter) {
     final var memento = new Memento(this);
@@ -34,6 +40,7 @@ public record Mod(
       return new Mod(pigeon);
     }
   }
+>1>  
 
   /**
    * class comment.
@@ -42,8 +49,10 @@ public record Mod(
    * @param name class property comment.
    * *emphasized* `code`.
    */
+<2< @Builder >2> 
   public record Person(
-      @Named("name") @NonNull String name) implements Wither<Person, Person.Memento> {
+      @Named("name") @NonNull String name) <1< implements Wither<Person, Person.Memento> >1> {
+<1<      
     @Override
     public @NonNull Person with(final @NonNull Consumer<Memento> setter) {
       final var memento = new Memento(this);
@@ -62,5 +71,6 @@ public record Mod(
         return new Person(name);
       }
     }
+>1>    
   }
 }
