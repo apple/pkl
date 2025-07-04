@@ -927,8 +927,11 @@ public class GenericParser {
     try {
       next(); // open (
       ff();
-      next(); // identifier
+      var idOrParen = next().token; // identifier or `)`
       ff();
+      if (idOrParen == Token.RPAREN) {
+        return lookahead == Token.ARROW;
+      }
       if (lookahead == Token.COMMA || lookahead == Token.COLON) {
         return true;
       }
@@ -1015,10 +1018,15 @@ public class GenericParser {
     children.add(makeTerminal(next())); // string end
     return new GenNode(NodeType.MULTI_LINE_STRING_LITERAL_EXPR, children);
   }
-  
+
   private GenNode parseParenthesizedExpr() {
     var children = new ArrayList<GenNode>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
+    if (lookahead() == Token.RPAREN) {
+      ff(children);
+      children.add(makeTerminal(next()));
+      return new GenNode(NodeType.PARENTHESIZED_EXPR, children);
+    }
     var elements = new ArrayList<GenNode>();
     ff(elements);
     elements.add(parseExpr(")"));
@@ -1031,11 +1039,16 @@ public class GenericParser {
   private GenNode parseFunctionLiteral() {
     var paramListChildren = new ArrayList<GenNode>();
     expect(Token.LPAREN, paramListChildren, "unexpectedToken", "(");
-    var elements = new ArrayList<GenNode>();
-    ff(elements);
-    parseListOf(Token.COMMA, elements, this::parseParameter);
-    paramListChildren.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
-    expect(Token.RPAREN, paramListChildren, "unexpectedToken2", ",", ")");
+    if (lookahead() == Token.RPAREN) {
+      ff(paramListChildren);
+      paramListChildren.add(makeTerminal(next()));
+    } else {
+      var elements = new ArrayList<GenNode>();
+      ff(elements);
+      parseListOf(Token.COMMA, elements, this::parseParameter);
+      paramListChildren.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
+      expect(Token.RPAREN, paramListChildren, "unexpectedToken2", ",", ")");
+    }
     var children = new ArrayList<GenNode>();
     children.add(new GenNode(NodeType.PARAMETER_LIST, paramListChildren));
     ff(children);
