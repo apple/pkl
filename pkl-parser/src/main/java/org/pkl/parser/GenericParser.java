@@ -1078,15 +1078,15 @@ public class GenericParser {
     var first = parseTypeAtom(expectation);
     children.add(first);
 
-    if (lookahead != Token.UNION) {
+    if (lookahead() != Token.UNION) {
       if (hasDefault) {
         throw parserError(ErrorMessages.create("notAUnion"), start.endWith(first.span));
       }
       return first;
     }
 
-    ff(children);
-    while (lookahead == Token.UNION) {
+    while (lookahead() == Token.UNION) {
+      ff(children);
       children.add(makeTerminal(next()));
       ff(children);
       if (lookahead == Token.STAR) {
