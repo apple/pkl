@@ -572,7 +572,7 @@ class Builder(sourceText: String) {
       }
     return Group(newId(), nodes)
   }
-  
+
   private fun formatParenthesizedExprElements(node: GenNode): FormatNode {
     return indent(Group(newId(), formatGeneric(node.children, null)))
   }
@@ -607,8 +607,9 @@ class Builder(sourceText: String) {
   }
 
   private fun formatBinaryOpExpr(node: GenNode): FormatNode {
+    val flat = flattenBinaryOperatorExprs(node)
     val nodes =
-      formatGeneric(flattenBinaryOperatorExprs(node)) { prev, next ->
+      formatGeneric(flat) { prev, next ->
         if (prev.type == NodeType.OPERATOR) {
           when (prev.text()) {
             ".",
@@ -625,7 +626,8 @@ class Builder(sourceText: String) {
           }
         } else SpaceOrLine
       }
-    return Group(newId(), indentAfterFirstNewline(nodes))
+    val shouldGroup = node.children.size == flat.size
+    return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
   }
 
   private fun formatLetParameterDefinition(node: GenNode): FormatNode {
@@ -908,10 +910,20 @@ class Builder(sourceText: String) {
     return nodes.subList(0, splitPoint) to nodes.subList(splitPoint, nodes.size)
   }
 
-  private fun indentAfterFirstNewline(nodes: List<FormatNode>): List<FormatNode> {
+  private fun indentAfterFirstNewline(
+    nodes: List<FormatNode>,
+    group: Boolean = false,
+  ): List<FormatNode> {
     val index = nodes.indexOfFirst { it is SpaceOrLine || it is ForceLine || it is Line }
     if (index <= 0) return nodes
-    return nodes.subList(0, index) + listOf(Indent(nodes.subList(index, nodes.size)))
+    val indented =
+      if (group) {
+        group(Indent(nodes.subList(index, nodes.size)))
+      } else {
+        Indent(nodes.subList(index, nodes.size))
+      }
+
+    return nodes.subList(0, index) + listOf(indented)
   }
 
   private fun groupOnSpace(fnodes: List<FormatNode>): FormatNode {
