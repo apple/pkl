@@ -22,6 +22,7 @@ import java.util.regex.Pattern
 import org.assertj.core.api.AbstractAssert
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
+import org.junit.jupiter.api.Tag
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertAll
 import org.junit.jupiter.api.assertDoesNotThrow
@@ -34,6 +35,7 @@ import org.pkl.core.ModuleSource.path
 import org.pkl.core.ModuleSource.text
 import org.pkl.core.util.IoUtils
 
+@Tag("generate-classes")
 class JavaCodeGeneratorTest {
   companion object {
     private const val MAPPER_PREFIX = "resources/META-INF/org/pkl/config/java/mapper/classes"

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.pkl.codegen.java.CliJavaCodeGenerator;
 import org.pkl.codegen.java.CliJavaCodeGeneratorOptions;
 
 public abstract class JavaCodeGenTask extends CodeGenTask {
+
   @Input
   public abstract Property<Boolean> getGenerateGetters();
 
@@ -36,6 +37,18 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
   @Input
   @Optional
   public abstract Property<String> getNonNullAnnotation();
+
+  @Input
+  @Optional
+  public abstract Property<Boolean> getGenerateRecords();
+
+  @Input
+  @Optional
+  public abstract Property<Boolean> getUseWithers();
+
+  @Input
+  @Optional
+  public abstract Property<Boolean> getUseLombokBuilders();
 
   @Override
   protected void doRunTask() {
@@ -53,7 +66,10 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
                 getParamsAnnotation().getOrNull(),
                 getNonNullAnnotation().getOrNull(),
                 getImplementSerializable().get(),
-                getRenames().get()))
+                getRenames().get(),
+                getGenerateRecords().get(),
+                getUseWithers().get(),
+                getUseLombokBuilders().get()))
         .run();
   }
 }

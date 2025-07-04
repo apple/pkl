@@ -16,7 +16,8 @@ The benefits of code generation are:
 * The entire configuration tree can be code-completed in Java IDEs.
 * Any drift between Java code and Pkl configuration structure is caught at compile time.
 
-The generated classes are immutable and have component-wise implementations of `equals()`, `hashCode()`, and `toString()`.
+The generated classes are immutable and have component-wise implementations of `equals()`, `hashCode()`, and `toString()`,
+or can optionally be produced as Java Records, in case of `generateRecords=true`, delivering the same benefits.  
 
 == Installation
 
@@ -157,7 +158,8 @@ See xref:pkl-gradle:index.adoc#java-code-gen[Java Code Generation] in the Gradle
 === Java Library
 
 The Java library offers two APIs: a high-level API that corresponds to the CLI, and a lower-level API that provides additional features and control.
-The entry points for these APIs are `org.pkl.codegen.java.CliJavaCodeGenerator` and `org.pkl.codegen.java.JavaCodeGenerator`, respectively.
+The entry points for these APIs are `org.pkl.codegen.java.CliJavaCodeGenerator`, and `org.pkl.codegen.java.JavaCodeGenerator` or
+`org.pkl.codegen.java.JavaRecordCodeGenerator`, respectively.
 For more information, refer to the Javadoc documentation.
 
 === CLI
@@ -175,6 +177,30 @@ Relative URIs are resolved against the working directory.
 ====
 Default: (flag not set) +
 Flag that indicates to generate private final fields and public getter methods instead of public final fields.
+====
+
+.--generate-records
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates to generate Java records and the related interfaces. +
+Overrides Java class generation option `--generate-getters`.
+====
+
+.--use-withers
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates whether to generate JEP 468 like `withers` for Java records. +
+Works in conjunction with Java records class generation option `-generate-records`.
+====
+
+.--use-lombok-builders
+[%collapsible]
+====
+Default: (flag not set) +
+Flag that indicates whether to generate Lombok Builders for Java records. +
+Works in conjunction with Java records class generation option `-generate-records`.
 ====
 
 .--generate-javadoc

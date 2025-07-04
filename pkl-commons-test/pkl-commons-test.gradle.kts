@@ -23,6 +23,7 @@ plugins {
 // note: no need to publish this library
 
 dependencies {
+  api(platform(libs.junitBom))
   api(libs.junitApi)
   api(libs.junitEngine)
   api(libs.junitParams)
