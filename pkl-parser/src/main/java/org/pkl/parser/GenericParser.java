@@ -927,10 +927,16 @@ public class GenericParser {
     try {
       next(); // open (
       ff();
-      var idOrParen = next().token; // identifier or `)`
+      var token = next().token;
       ff();
-      if (idOrParen == Token.RPAREN) {
+      if (token == Token.RPAREN) {
         return lookahead == Token.ARROW;
+      }
+      if (token == Token.UNDERSCORE) {
+        return true;
+      }
+      if (token != Token.IDENTIFIER) {
+        return false;
       }
       if (lookahead == Token.COMMA || lookahead == Token.COLON) {
         return true;

@@ -56,7 +56,7 @@ interface ParserComparisonTestInterface {
         .forEach { (path, snippet) ->
           try {
             compareGeneric(snippet, path, softly)
-          } catch (e: ParserError) {
+          } catch (e: GenericParserError) {
             softly.fail("path: $path. Message: ${e.message}", e)
           }
         }
