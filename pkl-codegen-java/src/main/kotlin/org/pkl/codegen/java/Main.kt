@@ -129,7 +129,7 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
         names = arrayOf("--generate-records"),
         help =
           """
-            Whether to generate Java records, the related interfaces, and JEP 468 like withers.
+            Whether to generate Java records and the related interfaces.
             This overrides any Java class generation related options! 
           """
             .trimIndent(),

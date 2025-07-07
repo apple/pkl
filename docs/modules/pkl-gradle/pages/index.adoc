@@ -399,6 +399,24 @@ If set to `true`, overrides Java class generation option `generateGetters`.
 
 ====
 
+.useWithers: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `useWithers = true` +
+Whether to generate JEP 468 like withers for records.
+
+====
+
+.useLombokBuilders: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `useLombokBuilders = true` +
+Whether to generate Lombok Builders for records.
+
+====
+
 .paramsAnnotation: Property<String>
 [%collapsible]
 ====
