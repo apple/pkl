@@ -17,33 +17,13 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklPublishLibrary
-  antlr
   idea
-}
-
-sourceSets { test { java { srcDir(file("testgenerated/antlr")) } } }
-
-idea {
-  module {
-    // mark src/test/antlr as source dir
-    // mark generated/antlr as generated source dir
-    generatedSourceDirs = generatedSourceDirs + files("testgenerated/antlr")
-    testSources.from(files("src/test/antlr", "testgenerated/antlr"))
-  }
-}
-
-// workaround for https://github.com/gradle/gradle/issues/820
-configurations.api.get().let { apiConfig ->
-  apiConfig.setExtendsFrom(apiConfig.extendsFrom.filter { it.name != "antlr" })
 }
 
 dependencies {
   compileOnly(libs.jsr305)
 
-  antlr(libs.antlr)
-
   testImplementation(projects.pklCommonsTest)
-  testImplementation(libs.antlrRuntime)
 }
 
 publishing {
@@ -56,30 +36,3 @@ publishing {
     }
   }
 }
-
-tasks.generateTestGrammarSource {
-  maxHeapSize = "64m"
-
-  // generate only visitor
-  arguments = arguments + listOf("-visitor", "-no-listener")
-
-  // Due to https://github.com/antlr/antlr4/issues/2260,
-  // we can't put .g4 files into src/test/antlr/org/pkl/parser/antlr.
-  // Instead, we put .g4 files into src/test/antlr, adapt output dir below,
-  // and use @header directives in .g4 files (instead of setting `-package` argument here)
-  // and task makeIntelliJAntlrPluginHappy to fix up the IDE story.
-  outputDirectory = file("testgenerated/antlr/org/pkl/parser/antlr")
-}
-
-tasks.generateGrammarSource { enabled = false }
-
-tasks.compileTestKotlin { dependsOn(tasks.generateTestGrammarSource) }
-
-// Satisfy expectations of IntelliJ ANTLR plugin,
-// which can't otherwise cope with our ANTLR setup.
-val makeIntelliJAntlrPluginHappy by
-  tasks.registering(Copy::class) {
-    dependsOn(tasks.generateGrammarSource)
-    into("test/antlr")
-    from("testgenerated/antlr/org/pkl/parser/antlr") { include("PklLexer.tokens") }
-  }

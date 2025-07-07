@@ -20,8 +20,4 @@ testgenerated/
 
 .pkl-lsp/
 
-# :pkl-core:makeIntelliJAntlrPluginHappy
-gen/
-PklLexer.tokens
-
 .kotlin/
