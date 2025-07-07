@@ -44,6 +44,14 @@ Example: `implementSerializable = true` +
 Whether to generate classes that implement `java.io.Serializable`.
 ====
 
+.addGeneratedAnnotation: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `addGeneratedAnnotation = true` +
+Whether to add the `org.pkl.config.java.Generated` annotation to generated types.
+====
+
 .renames: MapProperty<String, String>
 [%collapsible]
 ====

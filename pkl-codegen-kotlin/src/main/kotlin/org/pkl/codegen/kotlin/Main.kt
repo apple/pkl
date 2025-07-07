@@ -79,6 +79,12 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", help
       )
       .flag()
 
+  private val addGeneratedAnnotation: Boolean by
+    option(
+        names = arrayOf("--add-generated-annotation"),
+        help = "Whether to generate classes that implement java.io.Serializable.",
+      )
+      .flag()
   private val renames: Map<String, String> by
     option(
         names = arrayOf("--rename"),
@@ -105,6 +111,7 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", help
         generateKdoc = generateKdoc,
         generateSpringBootConfig = generateSpringboot,
         implementSerializable = implementSerializable,
+        addGeneratedAnnotation = addGeneratedAnnotation,
         renames = renames,
       )
     CliKotlinCodeGenerator(options).run()

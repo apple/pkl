@@ -190,7 +190,6 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(spec);
           configureCodeGenSpec(spec);
 
-          spec.getAddGeneratedAnnotation().convention(false);
           spec.getGenerateGetters().convention(false);
           spec.getGenerateJavadoc().convention(false);
           // Not using `convention()` so that users can disable generation of
@@ -207,7 +206,6 @@ public class PklPlugin implements Plugin<Project> {
               .configure(
                   task -> {
                     configureCodeGenTask(task, spec);
-                    task.getGeneratedAnnotation().set(spec.getAddGeneratedAnnotation());
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
                     task.getParamsAnnotation().set(spec.getParamsAnnotation());
@@ -354,6 +352,8 @@ public class PklPlugin implements Plugin<Project> {
 
     spec.getImplementSerializable().convention(false);
 
+    spec.getAddGeneratedAnnotation().convention(false);
+
     configureCodeGenSpecModulePath(spec);
   }
 
@@ -454,6 +454,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getOutputDir().set(spec.getOutputDir());
     task.getGenerateSpringBootConfig().set(spec.getGenerateSpringBootConfig());
     task.getImplementSerializable().set(spec.getImplementSerializable());
+    task.getAddGeneratedAnnotation().set(spec.getAddGeneratedAnnotation());
     task.getRenames().set(spec.getRenames());
   }
 

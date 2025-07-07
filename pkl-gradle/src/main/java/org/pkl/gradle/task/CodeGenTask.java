@@ -28,7 +28,7 @@ public abstract class CodeGenTask extends ModulesTask {
 
   @Input
   @Optional
-  public abstract Property<Boolean> getGeneratedAnnotation();
+  public abstract Property<Boolean> getAddGeneratedAnnotation();
 
   @Input
   public abstract Property<String> getIndent();

@@ -40,6 +40,9 @@ data class KotlinCodeGeneratorOptions(
   /** Whether to generate classes that implement [java.io.Serializable]. */
   val implementSerializable: Boolean = false,
 
+  /** Whether to add the `@Generated` to generated types. */
+  val addGeneratedAnnotation: Boolean = false,
+
   /**
    * A mapping from Pkl module name prefixes to their replacements.
    *
@@ -455,6 +458,9 @@ class KotlinCodeGenerator(
       if (options.generateSpringBootConfig) {
         generateSpringBootAnnotations(builder)
       }
+      if (options.addGeneratedAnnotation) {
+        builder.addAnnotation(ClassName("org.pkl.config.java", "Generated"))
+      }
 
       builder.primaryConstructor(generateConstructor())
 
@@ -497,6 +503,9 @@ class KotlinCodeGenerator(
 
       if (options.generateSpringBootConfig) {
         generateSpringBootAnnotations(builder)
+      }
+      if (options.addGeneratedAnnotation) {
+        builder.addAnnotation(ClassName("org.pkl.config.java", "Generated"))
       }
 
       builder.primaryConstructor(generateConstructor())

@@ -29,6 +29,13 @@ Default: (not set) +
 Flag that indicates to generate classes that implement `java.io.Serializable`.
 ====
 
+.--add-generated-annotation
+[%collapsible]
+====
+Default: (not set) +
+Flag that indicates to add the `org.pkl.config.java.Generated` annotation to generated types.
+====
+
 .--rename
 [%collapsible]
 ====

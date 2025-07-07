@@ -57,7 +57,7 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
 
   private val generatedAnnotation: Boolean by
     option(
-        names = arrayOf("--generated-annotation"),
+        names = arrayOf("--add-generated-annotation"),
         help = "Whether to add a @Generated annotation to the types to be generated.",
       )
       .flag()
@@ -139,7 +139,7 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
         base = baseOptions.baseOptions(modules, projectOptions),
         outputDir = outputDir,
         indent = indent,
-        generatedAnnotation = generatedAnnotation,
+        addGeneratedAnnotation = generatedAnnotation,
         generateGetters = generateGetters,
         generateJavadoc = generateJavadoc,
         generateSpringBootConfig = generateSpringBoot,
