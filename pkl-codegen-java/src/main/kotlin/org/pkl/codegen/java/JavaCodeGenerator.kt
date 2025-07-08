@@ -504,7 +504,7 @@ class JavaCodeGenerator(
     fun generateClass(): TypeSpec.Builder {
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
-      if (codegenOptions.generatedAnnotation) {
+      if (codegenOptions.addGeneratedAnnotation) {
         val name = ClassName.get("org.pkl.config.java", "Generated")
         val generated = AnnotationSpec.builder(name).build()
         builder.addAnnotation(generated)

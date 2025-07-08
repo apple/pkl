@@ -873,7 +873,7 @@ class JavaCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        JavaCodeGeneratorOptions(generatedAnnotation = true),
+        JavaCodeGeneratorOptions(addGeneratedAnnotation = true),
       )
 
     assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("GeneratedAnnotation.jva")

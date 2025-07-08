@@ -29,8 +29,8 @@ data class CliJavaCodeGeneratorOptions(
   /** The characters to use for indenting generated source code. */
   val indent: String = "  ",
 
-  /** Whether to add a <code>@Generated</code> annotation to the types to be generated. */
-  val generatedAnnotation: Boolean = false,
+  /** Whether to add a `@Generated` annotation to the types to be generated. */
+  val addGeneratedAnnotation: Boolean = false,
 
   /**
    * Whether to generate public getter methods and private/protected fields instead of public
@@ -98,7 +98,7 @@ data class CliJavaCodeGeneratorOptions(
   internal fun toJavaCodeGeneratorOptions() =
     JavaCodeGeneratorOptions(
       indent = indent,
-      generatedAnnotation = generatedAnnotation,
+      addGeneratedAnnotation = addGeneratedAnnotation,
       generateGetters = generateGetters,
       generateJavadoc = generateJavadoc,
       generateSpringBootConfig = generateSpringBootConfig,
