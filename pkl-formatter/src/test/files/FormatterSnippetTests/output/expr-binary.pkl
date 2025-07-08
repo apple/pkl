@@ -26,3 +26,7 @@ qux = (baz) {
   3
   4
 }
+
+minus =
+  superLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongVariable -
+    100000
