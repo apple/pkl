@@ -2,12 +2,14 @@
 
 import "@foo/Foo.pkl" as foo
 import* "**.pkl"
+import "pkl:math"
 
 import "package://example.com/myPackage@1.0.0#/Qux.pkl"
 
 
 import "https://example.com/baz.pkl"
 import "module2.pkl"
+import "pkl:reflect"
 import "..."
 import "@bar/Bar.pkl"
 import "Module12.pkl"
