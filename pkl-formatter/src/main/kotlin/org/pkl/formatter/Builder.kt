@@ -125,7 +125,7 @@ class Builder(sourceText: String) {
       NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
       NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
-      NodeType.FUNCTION_LITERAL_BODY -> Nodes(formatGeneric(node.children, null))
+      NodeType.FUNCTION_LITERAL_BODY -> formatFunctionLiteralBody(node)
       NodeType.SUBSCRIPT_EXPR,
       NodeType.SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node)
       NodeType.TRACE_EXPR -> formatTraceThrowReadExpr(node)
@@ -579,16 +579,18 @@ class Builder(sourceText: String) {
 
   private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
     val sameLine =
-      node.children.last { it.type == NodeType.FUNCTION_LITERAL_BODY }.let { isSameLineExpr(it) }
-    val nodes =
-      formatGenericWithGen(node.children, { prev, next -> if (sameLine) Space else SpaceOrLine }) {
-        node,
-        next ->
-        if (node.type == NodeType.FUNCTION_LITERAL_BODY && !sameLine) {
-          indent(format(node))
-        } else format(node)
+      node.children.last { it.type == NodeType.FUNCTION_LITERAL_BODY }.let { body ->
+        val expr = body.children.find { it.type.isExpression }!!
+        isSameLineExpr(expr)
       }
+    val nodes = formatGeneric(node.children) { prev, next -> if (sameLine) Space else SpaceOrLine }
     return Group(newId(), nodes)
+  }
+
+  private fun formatFunctionLiteralBody(node: GenNode): FormatNode {
+    val expr = node.children.find { it.type.isExpression }!!
+    val nodes = formatGeneric(node.children, null)
+    return if (isSameLineExpr(expr)) Group(newId(), nodes) else Indent(nodes)
   }
 
   private fun formatLetExpr(node: GenNode): FormatNode {
@@ -900,11 +902,7 @@ class Builder(sourceText: String) {
   }
 
   private fun isSameLineExpr(node: GenNode): Boolean {
-    if (node.type in SAME_LINE_EXPRS) return true
-    if (node.type == NodeType.BINARY_OP_EXPR || node.type == NodeType.FUNCTION_LITERAL_BODY) {
-      return node.children.firstOrNull { it.type.isExpression }?.let { isSameLineExpr(it) } ?: false
-    }
-    return false
+    return node.type in SAME_LINE_EXPRS
   }
 
   private fun splitPrefixes(nodes: List<GenNode>): Pair<List<GenNode>, List<GenNode>> {
