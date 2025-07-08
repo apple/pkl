@@ -862,6 +862,24 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun generatedAnnotation() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      class GeneratedAnnotation {
+        test: Boolean = true
+      }
+    """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(generatedAnnotation = true),
+      )
+
+    assertThat(javaCode).compilesSuccessfully().isEqualToResourceFile("GeneratedAnnotation.jva")
+  }
+
+  @Test
   fun getters() {
     val javaCode =
       generateJavaCode(

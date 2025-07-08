@@ -60,6 +60,7 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
                 getCliBaseOptions(),
                 getProject().file(getOutputDir()).toPath(),
                 getIndent().get(),
+                getGeneratedAnnotation().get(),
                 getGenerateGetters().get(),
                 getGenerateJavadoc().get(),
                 getGenerateSpringBootConfig().get(),

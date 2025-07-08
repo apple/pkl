@@ -190,6 +190,7 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(spec);
           configureCodeGenSpec(spec);
 
+          spec.getAddGeneratedAnnotation().convention(false);
           spec.getGenerateGetters().convention(false);
           spec.getGenerateJavadoc().convention(false);
           spec.getGenerateRecords().convention(false);
@@ -209,6 +210,7 @@ public class PklPlugin implements Plugin<Project> {
               .configure(
                   task -> {
                     configureCodeGenTask(task, spec);
+                    task.getGeneratedAnnotation().set(spec.getAddGeneratedAnnotation());
                     task.getGenerateGetters().set(spec.getGenerateGetters());
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
                     task.getGenerateRecords().set(spec.getGenerateRecords());
