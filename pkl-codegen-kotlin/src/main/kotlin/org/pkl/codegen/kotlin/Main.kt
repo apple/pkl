@@ -82,7 +82,7 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", help
   private val addGeneratedAnnotation: Boolean by
     option(
         names = arrayOf("--add-generated-annotation"),
-        help = "Whether to generate classes that implement java.io.Serializable.",
+        help = "Whether to add a @Generated annotation to the types to be generated.",
       )
       .flag()
   private val renames: Map<String, String> by
