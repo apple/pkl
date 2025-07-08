@@ -2,13 +2,7 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 com.google.code.findbugs:jsr305:3.0.2=compileClasspath,compileOnlyDependenciesMetadata
-com.tunnelvisionlabs:antlr4-annotations:4.9.0=antlr
-com.tunnelvisionlabs:antlr4-runtime:4.9.0=antlr,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
-com.tunnelvisionlabs:antlr4:4.9.0=antlr
 net.bytebuddy:byte-buddy:1.15.11=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
-org.abego.treelayout:org.abego.treelayout.core:1.0.1=antlr
-org.antlr:ST4:4.3=antlr
-org.antlr:antlr-runtime:3.5.2=antlr
 org.apiguardian:apiguardian-api:1.1.2=testCompileClasspath,testImplementationDependenciesMetadata
 org.assertj:assertj-core:3.27.3=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 org.jetbrains.intellij.deps:trove4j:1.0.20200330=kotlinBuildToolsApiClasspath,kotlinCompilerClasspath,kotlinKlibCommonizerClasspath

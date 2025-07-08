@@ -82,8 +82,6 @@ based on version information from https://search.maven.org, https://plugins.grad
 
 * Truffle code generation is performed by Truffle's annotation processor, which runs as part of task `:pkl-core:compileJava`
 ** Output dir is `generated/truffle/`
-* ANTLR code generation is performed by task `:pkl-core:generateTestGrammarSource`
-** Output dir is `testgenerated/antlr/`
 
 == Remote JVM Debugging
 

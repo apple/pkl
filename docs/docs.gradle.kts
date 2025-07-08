@@ -39,7 +39,6 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
   testImplementation(projects.pklParser)
   testImplementation(libs.junitEngine)
-  testImplementation(libs.antlrRuntime)
 }
 
 tasks.test {

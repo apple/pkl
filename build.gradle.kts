@@ -19,7 +19,6 @@
 import org.jetbrains.gradle.ext.ActionDelegationConfig
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner.PLATFORM
 import org.jetbrains.gradle.ext.ProjectSettings
-import org.jetbrains.gradle.ext.TaskTriggersConfig
 
 plugins {
   pklAllProjects
@@ -47,9 +46,6 @@ idea {
       configure<ActionDelegationConfig> {
         delegateBuildRunToGradle = true
         testRunner = PLATFORM
-      }
-      configure<TaskTriggersConfig> {
-        afterSync(provider { project(":pkl-parser").tasks.named("makeIntelliJAntlrPluginHappy") })
       }
     }
   }
