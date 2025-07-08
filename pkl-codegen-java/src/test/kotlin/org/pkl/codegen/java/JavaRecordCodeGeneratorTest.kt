@@ -177,6 +177,7 @@ class JavaRecordCodeGeneratorTest {
   private fun javaCodeGeneratorOptions(
     option: JavaRecordGenerationOption = recordGenOption,
     indent: String = "  ",
+    generatedAnnotation: Boolean = false,
     generateGetters: Boolean = false,
     generateJavadoc: Boolean = false,
     generateSpringBootConfig: Boolean = false,
@@ -198,6 +199,7 @@ class JavaRecordCodeGeneratorTest {
       paramsAnnotation = paramsAnnotation,
       nonNullAnnotation = nonNullAnnotation,
       indent = indent,
+      generatedAnnotation = generatedAnnotation,
     )
 
   @TempDir lateinit var tempDir: Path
@@ -1057,6 +1059,26 @@ class JavaRecordCodeGeneratorTest {
         .getValue("my.Mod\$Foo")
 
     assertThat(fooClass.declaredFields).allSatisfy(Consumer { it.name.startsWith("_") })
+  }
+
+  @Test
+  fun generatedAnnotation() {
+    val javaCode =
+      generateJavaCode(
+        """
+      module my.mod
+
+      class GeneratedAnnotation {
+        test: Boolean = true
+      }
+    """
+          .trimIndent(),
+        javaCodeGeneratorOptions(generatedAnnotation = true),
+      )
+
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .isEqualToResourceFile("GeneratedAnnotationRecord.jva")
   }
 
   @Test
