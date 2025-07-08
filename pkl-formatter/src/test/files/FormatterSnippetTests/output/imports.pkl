@@ -2,6 +2,8 @@
 
 import "https://example.com/baz.pkl"
 import "package://example.com/myPackage@1.0.0#/Qux.pkl"
+import "pkl:math"
+import "pkl:reflect"
 
 import "@bar/Bar.pkl"
 import "@foo/Foo.pkl" as foo

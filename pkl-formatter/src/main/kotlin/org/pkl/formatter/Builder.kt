@@ -614,15 +614,15 @@ class Builder(sourceText: String) {
           when (prev.text()) {
             ".",
             "?." -> null
-            "|>" -> Space
-            else -> SpaceOrLine
+            "-" -> SpaceOrLine
+            else -> Space
           }
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
             ".",
             "?." -> Line
-            "|>" -> SpaceOrLine
-            else -> Space
+            "-" -> Space
+            else -> SpaceOrLine
           }
         } else SpaceOrLine
       }
@@ -989,7 +989,7 @@ class Builder(sourceText: String) {
   }
 
   companion object {
-    private val ABSOLUTE_URL_REGEX = Regex("""\w+://.*""")
+    private val ABSOLUTE_URL_REGEX = Regex("""\w+:.*""")
 
     private val TWO_NEWLINES = Nodes(listOf(ForceLine, ForceLine))
 

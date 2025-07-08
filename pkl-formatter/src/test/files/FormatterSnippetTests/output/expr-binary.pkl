@@ -1,15 +1,15 @@
 foo {
-  123123123123 + 123123123123 * 123123123123 - 123123123123 / 123123123123 +
-    123123123123 ** 123123123123
+  123123123123 + 123123123123 * 123123123123 - 123123123123 / 123123123123
+    + 123123123123 ** 123123123123
   2
   3
   4
 }
 
 bar =
-  clazz.superclass == null ||
-    clazz.superclass.reflectee == Module ||
-    clazz.superclass.reflectee == Typed
+  clazz.superclass == null
+    || clazz.superclass.reflectee == Module
+    || clazz.superclass.reflectee == Typed
 
 baz = new Listing {
   1
