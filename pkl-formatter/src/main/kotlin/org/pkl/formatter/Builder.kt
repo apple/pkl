@@ -579,10 +579,12 @@ class Builder(sourceText: String) {
 
   private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
     val sameLine =
-      node.children.last { it.type == NodeType.FUNCTION_LITERAL_BODY }.let { body ->
-        val expr = body.children.find { it.type.isExpression }!!
-        isSameLineExpr(expr)
-      }
+      node.children
+        .last { it.type == NodeType.FUNCTION_LITERAL_BODY }
+        .let { body ->
+          val expr = body.children.find { it.type.isExpression }!!
+          isSameLineExpr(expr)
+        }
     val nodes = formatGeneric(node.children) { prev, next -> if (sameLine) Space else SpaceOrLine }
     return Group(newId(), nodes)
   }
