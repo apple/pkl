@@ -12,3 +12,12 @@ new Listing {
   1
   2
 } |> mixin1 |> mixin2
+
+qux =
+  (baz) {
+    1
+    2
+  } {
+    3
+    4
+  }
