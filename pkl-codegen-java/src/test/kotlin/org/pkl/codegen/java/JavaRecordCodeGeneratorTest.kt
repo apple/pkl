@@ -177,7 +177,7 @@ class JavaRecordCodeGeneratorTest {
   private fun javaCodeGeneratorOptions(
     option: JavaRecordGenerationOption = recordGenOption,
     indent: String = "  ",
-    generatedAnnotation: Boolean = false,
+    addGeneratedAnnotation: Boolean = false,
     generateGetters: Boolean = false,
     generateJavadoc: Boolean = false,
     generateSpringBootConfig: Boolean = false,
@@ -199,7 +199,7 @@ class JavaRecordCodeGeneratorTest {
       paramsAnnotation = paramsAnnotation,
       nonNullAnnotation = nonNullAnnotation,
       indent = indent,
-      generatedAnnotation = generatedAnnotation,
+      addGeneratedAnnotation = addGeneratedAnnotation,
     )
 
   @TempDir lateinit var tempDir: Path
@@ -1073,7 +1073,7 @@ class JavaRecordCodeGeneratorTest {
       }
     """
           .trimIndent(),
-        javaCodeGeneratorOptions(generatedAnnotation = true),
+        javaCodeGeneratorOptions(addGeneratedAnnotation = true),
       )
 
     assertThat(javaCode)
