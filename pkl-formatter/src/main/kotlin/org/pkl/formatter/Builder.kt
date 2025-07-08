@@ -167,7 +167,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatModuleDeclaration(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, ForceLine))
+    return Nodes(formatGeneric(node.children, TWO_NEWLINES))
   }
 
   private fun formatModuleDefinition(node: GenNode): FormatNode {
