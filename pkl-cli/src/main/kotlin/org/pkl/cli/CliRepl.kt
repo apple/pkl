@@ -68,6 +68,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
           options.base.normalizedWorkingDir,
           stackFrameTransformer,
           options.base.color?.hasColor() ?: false,
+          options.base.traceMode,
         )
       Repl(options.base.normalizedWorkingDir, server).run()
     }
