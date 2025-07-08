@@ -1,5 +1,4 @@
 [versions] # ordered alphabetically
-antlr = "4.+"
 assertj = "3.+"
 checksumPlugin = "1.4.0"
 clikt = "5.+"
@@ -50,8 +49,6 @@ spotlessPlugin = "6.25.0"
 wiremock = "3.+"
 
 [libraries] # ordered alphabetically
-antlr = { group = "com.tunnelvisionlabs", name = "antlr4", version.ref = "antlr" }
-antlrRuntime = { group = "com.tunnelvisionlabs", name = "antlr4-runtime", version.ref = "antlr" }
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
 clikt = { group = "com.github.ajalt.clikt", name = "clikt", version.ref = "clikt" }
 cliktMarkdown = { group = "com.github.ajalt.clikt", name = "clikt-markdown", version.ref = "clikt" }
