@@ -2029,6 +2029,30 @@ class KotlinCodeGeneratorTest {
     )
   }
 
+  @Test
+  fun `add generated annotation`() {
+    val files =
+      KotlinCodeGeneratorOptions(addGeneratedAnnotation = true)
+        .generateFiles("com.example.MyModule" to "foo: String")
+    assertThat(files).containsKey("kotlin/com/example/MyModule.kt")
+    assertThat(files["kotlin/com/example/MyModule.kt"])
+      .isEqualTo(
+        """
+      package com.example
+
+      import kotlin.String
+      import org.pkl.config.java.Generated
+
+      @Generated
+      data class MyModule(
+        val foo: String
+      )
+
+    """
+          .trimIndent()
+      )
+  }
+
   private fun Map<String, String>.validateContents(
     vararg assertions: kotlin.Pair<String, List<String>>
   ) {
