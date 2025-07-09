@@ -3,16 +3,16 @@ foo =
     vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
       10
   )
-  1 * 1
+    1 * 1
 
 bar =
   let (
     vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable = 10
   )
-  1 * 1
+    1 * 1
 
 baz =
   let (someVariable = 10000000)
   let (someOtherVariable = 2000000)
   let (someAnotherVariable = 3000000)
-  someVariable + someOtherVariable + someAnotherVariable
+    someVariable + someOtherVariable + someAnotherVariable
