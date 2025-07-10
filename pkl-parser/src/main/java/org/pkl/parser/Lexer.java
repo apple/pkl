@@ -703,10 +703,12 @@ public class Lexer {
 
   private void backup() {
     lookahead = source[--cursor];
+    col--;
   }
 
   private void backup(int amount) {
     cursor -= amount;
+    col -= amount;
     lookahead = source[cursor];
   }
 
