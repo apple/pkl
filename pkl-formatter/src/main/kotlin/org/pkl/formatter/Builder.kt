@@ -21,8 +21,8 @@ import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
-import org.pkl.formatter.ast.IndentFreeLine
 import org.pkl.formatter.ast.Line
+import org.pkl.formatter.ast.MultilineStringGroup
 import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
@@ -60,7 +60,7 @@ class Builder(sourceText: String) {
       NodeType.UNKNOWN_TYPE,
       NodeType.NOTHING_TYPE,
       NodeType.OPERATOR -> Text(node.text(source))
-      NodeType.STRING_NEWLINE -> IndentFreeLine
+      NodeType.STRING_NEWLINE -> ForceLine
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
       NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
       NodeType.MULTI_LINE_STRING_LITERAL_EXPR -> formatMultilineString(node)
@@ -483,27 +483,8 @@ class Builder(sourceText: String) {
   }
 
   private fun formatMultilineString(node: GenNode): FormatNode {
-    val endWithNewline = endWithNewline(node.children)
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (
-          (prev.isTerminal("\"\"\"") && next.type != NodeType.STRING_NEWLINE) ||
-            (next.isTerminal("\"\"\"") && !endWithNewline)
-        ) {
-          ForceLine
-        } else null
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun endWithNewline(nodes: List<GenNode>): Boolean {
-    val rev = nodes.reversed().drop(1)
-    for (child in rev) {
-      if (child.type == NodeType.STRING_NEWLINE) return true
-      if (child.type != NodeType.STRING_CONSTANT) return false
-      if (!child.text().isBlank()) return false
-    }
-    return false
+    val nodes = formatGeneric(node.children, null)
+    return MultilineStringGroup(node.children.last().span.colBegin, nodes)
   }
 
   private fun formatIf(node: GenNode): FormatNode {

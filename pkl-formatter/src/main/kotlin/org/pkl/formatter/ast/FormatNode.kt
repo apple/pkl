@@ -35,7 +35,7 @@ sealed interface FormatNode {
       is SpaceOrLine,
       is Space -> 1
       is ForceLine,
-      is IndentFreeLine -> Generator.MAX
+      is MultilineStringGroup -> Generator.MAX
       else -> 0
     }
 }
@@ -46,8 +46,6 @@ object Line : FormatNode
 
 object ForceLine : FormatNode
 
-object IndentFreeLine : FormatNode
-
 object SpaceOrLine : FormatNode
 
 object Space : FormatNode
@@ -57,5 +55,7 @@ data class Indent(val nodes: List<FormatNode>) : FormatNode
 data class Nodes(val nodes: List<FormatNode>) : FormatNode
 
 data class Group(val id: Int, val nodes: List<FormatNode>) : FormatNode
+
+data class MultilineStringGroup(val endQuoteCol: Int, val nodes: List<FormatNode>) : FormatNode
 
 data class IfWrap(val id: Int, val ifWrap: FormatNode, val ifNotWrap: FormatNode) : FormatNode

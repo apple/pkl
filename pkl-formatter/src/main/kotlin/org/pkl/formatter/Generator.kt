@@ -20,8 +20,8 @@ import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
-import org.pkl.formatter.ast.IndentFreeLine
 import org.pkl.formatter.ast.Line
+import org.pkl.formatter.ast.MultilineStringGroup
 import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
@@ -75,10 +75,6 @@ class Generator {
         }
       }
       is Space -> text(" ")
-      is IndentFreeLine -> {
-        size = 0
-        text("\n")
-      }
       is Indent -> {
         if (wrap.isEnabled() && node.nodes.isNotEmpty()) {
           size += INDENT.length
@@ -88,6 +84,18 @@ class Generator {
           indent--
         } else {
           node.nodes.forEach { node(it, wrap) }
+        }
+      }
+      is MultilineStringGroup -> {
+        val offset = (indent * INDENT.length + 1) - node.endQuoteCol
+        var previousNewline = false
+        for (child in node.nodes) {
+          when {
+            child is ForceLine -> buf.append('\n') // don't indent
+            child is Text && previousNewline && offset != 0 -> text(reposition(child.text, offset))
+            else -> node(child, wrap)
+          }
+          previousNewline = child is ForceLine
         }
       }
     }
@@ -106,6 +114,14 @@ class Generator {
     size = INDENT.length * indent
     buf.append('\n')
     shouldAddIndent = true
+  }
+
+  private fun reposition(text: String, offset: Int): String {
+    return if (offset > 0) {
+      " ".repeat(offset) + text
+    } else {
+      text.drop(-offset)
+    }
   }
 
   override fun toString(): String {

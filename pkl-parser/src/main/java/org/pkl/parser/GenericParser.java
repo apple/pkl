@@ -992,6 +992,9 @@ public class GenericParser {
     var children = new ArrayList<GenNode>();
     var start = next();
     children.add(makeTerminal(start)); // string start
+    if (lookahead != Token.STRING_NEWLINE) {
+      throw parserError(ErrorMessages.create("stringContentMustBeginOnNewLine"), spanLookahead);
+    }
     while (lookahead != Token.STRING_END) {
       switch (lookahead) {
         case STRING_PART -> {
@@ -1022,7 +1025,36 @@ public class GenericParser {
       }
     }
     children.add(makeTerminal(next())); // string end
+    validateStringEndDelimiter(children);
+    validateStringIndentation(children);
     return new GenNode(NodeType.MULTI_LINE_STRING_LITERAL_EXPR, children);
+  }
+
+  private void validateStringEndDelimiter(List<GenNode> nodes) {
+    var beforeLast = nodes.get(nodes.size() - 2);
+    if (beforeLast.type == NodeType.STRING_NEWLINE) return;
+    var text = beforeLast.text(lexer.getSource());
+    if (!text.isBlank()) {
+      throw parserError(
+          ErrorMessages.create("closingStringDelimiterMustBeginOnNewLine"), beforeLast.span);
+    }
+  }
+
+  private void validateStringIndentation(List<GenNode> nodes) {
+    var indentNode = nodes.get(nodes.size() - 2);
+    if (indentNode.type == NodeType.STRING_NEWLINE) return;
+    var indent = indentNode.text(lexer.getSource());
+    var previousNewline = false;
+    for (var i = 1; i < nodes.size() - 2; i++) {
+      var child = nodes.get(i);
+      if (child.type != NodeType.STRING_NEWLINE && previousNewline) {
+        var text = child.text(lexer.getSource());
+        if (!text.startsWith(indent)) {
+          throw parserError(ErrorMessages.create("stringIndentationMustMatchLastLine"), child.span);
+        }
+      }
+      previousNewline = child.type == NodeType.STRING_NEWLINE;
+    }
   }
 
   private GenNode parseParenthesizedExpr() {

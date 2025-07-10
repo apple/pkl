@@ -4,3 +4,18 @@ foo =
     bar = 1
   }) asd
   """
+
+bar =
+  """
+  line 1
+    line 2
+      line3
+  """
+
+baz =
+  """
+  \n
+  \(bar)
+  line
+  \u{123}
+  """
