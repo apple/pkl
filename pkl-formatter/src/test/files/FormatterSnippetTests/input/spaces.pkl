@@ -2,9 +2,11 @@ import"foo.pkl"
 
 bar=new  Listing < Int > ( !isEmpty ){1;2}//a bar
 
+typealias Typealias=(String,Int)->Boolean
+
 ///a baz
 ///returns its parameter
-baz = (x)->x
+baz = (x,y,z)->x+y+z
 
 function fun ( x:Int ? ,b  :Boolean )= if(b)/***return x**/x else x+bar [0 ]
 

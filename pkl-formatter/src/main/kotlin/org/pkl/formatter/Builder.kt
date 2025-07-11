@@ -151,6 +151,7 @@ class Builder(sourceText: String) {
       NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, null))
       NodeType.UNION_TYPE -> formatUnionType(node)
       NodeType.FUNCTION_TYPE -> formatFunctionType(node)
+      NodeType.FUNCTION_TYPE_PARAMETERS -> formatParameterList(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
       NodeType.PARENTHESIZED_TYPE -> formatParameterList(node)
       NodeType.PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node)
@@ -674,7 +675,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatParenthesizedTypeElements(node: GenNode): FormatNode {
-    return indent(Group(newId(), formatGeneric(node.children, null)))
+    return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
   }
 
   private fun formatTypeAnnotation(node: GenNode): FormatNode {

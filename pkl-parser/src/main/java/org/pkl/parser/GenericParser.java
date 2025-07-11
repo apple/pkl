@@ -1170,11 +1170,13 @@ public class GenericParser {
               expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
             }
             if (totalTypes > 1 || lookahead() == Token.ARROW) {
-              ff(children);
-              expect(Token.ARROW, children, "unexpectedToken", "->");
-              ff(children);
-              children.add(parseType(expectation));
-              yield new GenNode(NodeType.FUNCTION_TYPE, children);
+              var actualChildren = new ArrayList<GenNode>();
+              actualChildren.add(new GenNode(NodeType.FUNCTION_TYPE_PARAMETERS, children));
+              ff(actualChildren);
+              expect(Token.ARROW, actualChildren, "unexpectedToken", "->");
+              ff(actualChildren);
+              actualChildren.add(parseType(expectation));
+              yield new GenNode(NodeType.FUNCTION_TYPE, actualChildren);
             } else {
               yield new GenNode(NodeType.PARENTHESIZED_TYPE, children);
             }

@@ -45,3 +45,7 @@ objParams2: Listing<Int> = new {
     1
   }
 }
+
+parenType: (ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType(reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint))
+
+functionType: (ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType,ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2) -> String

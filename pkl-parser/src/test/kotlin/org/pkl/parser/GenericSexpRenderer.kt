@@ -254,6 +254,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.LET_PARAMETER,
         NodeType.PARENTHESIZED_EXPR_ELEMENTS,
         NodeType.PARENTHESIZED_TYPE_ELEMENTS,
+        NodeType.FUNCTION_TYPE_PARAMETERS,
       )
   }
 }
