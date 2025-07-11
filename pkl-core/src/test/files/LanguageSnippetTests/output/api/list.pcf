@@ -172,6 +172,18 @@ examples {
     1
     0
   }
+  ["iterate()"] {
+    3
+    6
+    "Expected value of type `Pair`, but got type `Int`. Value: 1"
+    "Expected value of type `Boolean`, but got type `Int`. Value: 1"
+  }
+  ["iterateIndexed()"] {
+    3
+    6
+    "Expected value of type `Pair`, but got type `Int`. Value: 1"
+    "Expected value of type `Boolean`, but got type `Int`. Value: 0"
+  }
   ["reduce()"] {
     6
     1
