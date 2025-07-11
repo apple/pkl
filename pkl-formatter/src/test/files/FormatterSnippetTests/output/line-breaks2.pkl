@@ -10,26 +10,26 @@ import
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
   as foo
 
-local open
+open local
 class LoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongName {}
 
-local open
+open local
 class
 ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongName {}
 
-const hidden
+hidden const
 loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName = 99
 
-const hidden
+hidden const
 reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName =
   99
 
-const local
+local const
 function
 looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(x: Int, y) =
   x + y
 
-const local
+local const
 function
 reallyLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
   x: Int,

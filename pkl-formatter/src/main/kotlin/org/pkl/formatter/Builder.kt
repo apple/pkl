@@ -876,13 +876,13 @@ class Builder(sourceText: String) {
   private fun modifierPrecedence(modifier: GenNode): Int {
     val text = modifier.text()
     return when (text) {
-      "external" -> 0
-      "fixed",
-      "const" -> 1
+      "abstract",
+      "open" -> 0
+      "external" -> 1
       "local",
       "hidden" -> 2
-      "abstract",
-      "open" -> 3
+      "fixed",
+      "const" -> 3
       else -> throw RuntimeException("Unknown modifier `$text`")
     }
   }

@@ -4,13 +4,13 @@ amends "bar.pkl"
 
 import "@foo/Foo.pkl" as foo
 
-local open class Bar {}
+open local class Bar {}
 
-const local baz = 10
+local const baz = 10
 
 local function fun(x) = x
 
-const local
+local const
 prooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooperty:
   String = "foo"
 
