@@ -31,7 +31,7 @@
 pthread_mutex_t graal_mutex;
 graal_isolatethread_t *isolatethread = NULL;
 
-int pkl_init(PklMessageResponseHandler handler, void *payload) {
+int pkl_init(PklMessageResponseHandler handler, void *userData) {
   if (isolatethread != NULL) {
     perror("pkl_init: isolatethread is already initialised");
     return -1;
@@ -47,7 +47,7 @@ int pkl_init(PklMessageResponseHandler handler, void *payload) {
   }
 
   isolatethread = pkl_internal_init();
-  pkl_internal_register_response_handler(isolatethread, handler, payload);
+  pkl_internal_register_response_handler(isolatethread, handler, userData);
   pkl_internal_server_start(isolatethread);
   pthread_mutex_unlock(&graal_mutex);
 
