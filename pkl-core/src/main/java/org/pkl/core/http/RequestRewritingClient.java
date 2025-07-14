@@ -31,7 +31,6 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import javax.annotation.concurrent.ThreadSafe;
 import org.pkl.core.PklBugException;
 import org.pkl.core.util.HttpUtils;
-import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -69,7 +68,7 @@ final class RequestRewritingClient implements HttpClient {
     this.delegate = delegate;
     this.rewrites =
         rewrites.entrySet().stream()
-            .sorted(Comparator.comparingInt((entry) -> -entry.getKey().toString().length()))
+            .sorted(Comparator.comparingInt((it) -> -it.getKey().toString().length()))
             .toList();
   }
 
@@ -139,7 +138,10 @@ final class RequestRewritingClient implements HttpClient {
       return false;
     }
     if (!Objects.equals(uri.getPath(), rule.getPath())) {
-      if (uri.getPath() != null && rule.getPath() != null && rule.getQuery() == null && rule.getFragment() == null) {
+      if (uri.getPath() != null
+          && rule.getPath() != null
+          && rule.getQuery() == null
+          && rule.getFragment() == null) {
         return uri.getPath().startsWith(rule.getPath());
       }
       return false;
@@ -167,15 +169,15 @@ final class RequestRewritingClient implements HttpClient {
 
   private URI rewriteUri(URI uri) {
     try {
-      uri = new URI(
-        uri.getScheme().toLowerCase(),
-        uri.getUserInfo(),
-        uri.getHost().toLowerCase(),
-        uri.getPort(),
-        uri.getPath(),
-        uri.getQuery(),
-        uri.getFragment()
-      );
+      uri =
+          new URI(
+              uri.getScheme().toLowerCase(),
+              uri.getUserInfo(),
+              uri.getHost().toLowerCase(),
+              uri.getPort(),
+              uri.getPath(),
+              uri.getQuery(),
+              uri.getFragment());
     } catch (URISyntaxException e) {
       // impossible condition, we started from a valid URI to begin with
       throw PklBugException.unreachableCode();
@@ -185,7 +187,7 @@ final class RequestRewritingClient implements HttpClient {
       var fromUri = rewrite.getKey();
       var toUri = rewrite.getValue();
       var relativePath = fromUri.relativize(uri);
-      uri = toUri.resolve(relativePath); 
+      uri = toUri.resolve(relativePath);
     }
     if (testPort != -1 && uri.getPort() == 0) {
       uri = HttpUtils.setPort(uri, testPort);

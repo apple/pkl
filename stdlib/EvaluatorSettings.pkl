@@ -124,6 +124,9 @@ const local hasNonEmptyLowercasedHostname = (it: String) ->
 /// * It starts with either `http://`, or `https://`.
 /// * It ends with `/`.
 /// * It has a non-empty and lowercased hostname.
+///
+/// An rewrite target should also not contain a query string or fragment component
+/// (not schematically enforced).
 typealias HttpRewrite = String(
   startsWith(Regex("https?://")),
   endsWith("/"),

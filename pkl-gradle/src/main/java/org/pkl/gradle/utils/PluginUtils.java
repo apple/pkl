@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.HashMap;
+import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileSystemLocation;
 import org.pkl.core.util.IoUtils;
@@ -124,5 +126,20 @@ public class PluginUtils {
   public static URI parseModuleNotationToUri(Object m) {
     var parsed1 = PluginUtils.parseModuleNotation(m);
     return parsedModuleNotationToUri(parsed1);
+  }
+
+  public static Map<URI, URI> parseRewriteMap(Map<String, String> rewrites) {
+    var ret = new HashMap<URI, URI>(rewrites.size());
+    for (var entry : rewrites.entrySet()) {
+      try {
+        var key = new URI(entry.getKey());
+        var value = new URI(entry.getValue());
+        ret.put(key, value);
+      } catch (URISyntaxException e) {
+        throw new IllegalArgumentException(
+            "Invalid rewrite rule; cannot parse " + e.getInput() + " as a URI.");
+      }
+    }
+    return ret;
   }
 }

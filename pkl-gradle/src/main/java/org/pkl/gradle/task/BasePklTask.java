@@ -199,7 +199,7 @@ public abstract class BasePklTask extends DefaultTask {
               Collections.emptyList(),
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
-              getHttpRewrites().getOrNull(),
+              mapAndGetOrNull(getHttpRewrites(), PluginUtils::parseRewriteMap),
               Map.of(),
               Map.of());
     }

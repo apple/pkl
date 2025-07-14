@@ -111,13 +111,17 @@ final class HttpClientBuilder implements HttpClient.Builder {
 
   private void validateRewrite(URI rewrite) {
     if (!rewrite.getScheme().equals("http") && !rewrite.getScheme().equals("https")) {
-      throw new IllegalArgumentException("Rewrite rule must start with https://, but was '%s'".formatted(rewrite));
+      throw new IllegalArgumentException(
+          "Rewrite rule must start with https://, but was '%s'".formatted(rewrite));
     }
     if (rewrite.getHost().equals(rewrite.getHost().toLowerCase(Locale.ROOT))) {
-      throw new IllegalArgumentException("Rewrite rule must have a lowercased hostname, but was '%s'".formatted(rewrite.getHost()));
+      throw new IllegalArgumentException(
+          "Rewrite rule must have a lowercased hostname, but was '%s'"
+              .formatted(rewrite.getHost()));
     }
     if (!rewrite.getPath().endsWith("/")) {
-      throw new IllegalArgumentException("Rewrite rule must end with `/`, but was '%s'".formatted(rewrite));
+      throw new IllegalArgumentException(
+          "Rewrite rule must end with `/`, but was '%s'".formatted(rewrite));
     }
   }
 
