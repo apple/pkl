@@ -35,4 +35,6 @@ interface LibPklJNA : Library {
   fun pkl_send_message(length: Int, message: ByteArray): Int
 
   fun pkl_close(): Int
+
+  fun pkl_version(): String
 }

@@ -84,3 +84,7 @@ int pkl_close() {
 
   return 0;
 };
+
+char* pkl_version() {
+  return pkl_internal_version(isolatethread);
+}

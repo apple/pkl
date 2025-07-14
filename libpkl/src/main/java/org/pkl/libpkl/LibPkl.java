@@ -22,7 +22,9 @@ import org.graalvm.nativeimage.c.function.CFunction.Transition;
 import org.graalvm.nativeimage.c.function.CFunctionPointer;
 import org.graalvm.nativeimage.c.function.InvokeCFunctionPointer;
 import org.graalvm.nativeimage.c.type.CCharPointer;
+import org.graalvm.nativeimage.c.type.CTypeConversion;
 import org.graalvm.nativeimage.c.type.VoidPointer;
+import org.pkl.core.Release;
 import org.pkl.core.messaging.MessageTransports.Logger;
 import org.pkl.server.Server;
 
@@ -71,6 +73,15 @@ public class LibPkl {
   @CEntryPoint(name = "pkl_internal_server_stop")
   public static void pklInternalServerStop(IsolateThread thread) {
     server.close();
+  }
+
+  @CEntryPoint(name = "pkl_internal_version")
+  public static CCharPointer pklInternalVersion(IsolateThread thread) {
+    var version = Release.current().version();
+
+    try (var versionInfoCCharHolder = CTypeConversion.toCString(version.toString())) {
+      return versionInfoCCharHolder.get();
+    }
   }
 
   public static void handleSendMessageToNative(byte[] bytes) {
