@@ -1,0 +1,18 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["prettyTraces = true results in indented, multi-line trace values"] {
+    trace(new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })
+  }
+}

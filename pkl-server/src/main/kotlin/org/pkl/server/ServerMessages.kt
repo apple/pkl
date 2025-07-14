@@ -19,6 +19,7 @@ import java.net.URI
 import java.nio.file.Path
 import java.time.Duration
 import java.util.*
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.Messages
 import org.pkl.core.packages.Checksums
@@ -40,6 +41,7 @@ data class CreateEvaluatorRequest(
   val http: Http?,
   val externalModuleReaders: Map<String, ExternalReader>?,
   val externalResourceReaders: Map<String, ExternalReader>?,
+  val traceMode: TraceMode?,
 ) : Message.Client.Request {
 
   override fun type(): Message.Type = Message.Type.CREATE_EVALUATOR_REQUEST
