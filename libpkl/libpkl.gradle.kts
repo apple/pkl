@@ -164,7 +164,7 @@ fun Exec.configureCompile(target: Target) {
 
   doLast {
     copy {
-      from(file("src/c/pkl.h"))
+      from(file("src/main/c/pkl.h"))
       into(target.outputDir)
     }
   }
