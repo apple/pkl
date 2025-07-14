@@ -151,4 +151,13 @@ public final class BaseNodes {
       throw exceptionBuilder().bug("Node `BaseNodes.Bytes` should never be executed.").build();
     }
   }
+
+  public abstract static class folded extends ExternalMethod1Node {
+    @Specialization
+    protected void eval(VirtualFrame frame, VmTyped self, Object value) {
+      CompilerDirectives.transferToInterpreter();
+      var foldedException = new FoldedException(value);
+      throw exceptionBuilder().evalError("invalidFoldedCall").withCause(foldedException).build();
+    }
+  }
 }

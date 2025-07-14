@@ -133,27 +133,20 @@ examples {
     List(1, 2, 3)
     1
     0
+    24
   }
   ["foldBack()"] {
     6
     List(3, 2, 1)
     1
     0
-  }
-  ["iterate()"] {
-    3
-    6
-    "Expected value of type `Boolean`, but got type `Int`. Value: 1"
-  }
-  ["iterateIndexed()"] {
-    3
-    6
-    "Expected value of type `Boolean`, but got type `Int`. Value: 0"
+    20
   }
   ["reduce()"] {
     6
     1
     "Expected a non-empty collection. Collection: Set()"
+    24
   }
   ["groupBy()"] {
     Map(1, Set(1), 2, Set(2), 3, Set(3), 4, Set(4), 5, Set(5))
@@ -249,6 +242,7 @@ examples {
     9
     1
     0
+    16
   }
   ["toListing()"] {
     new {

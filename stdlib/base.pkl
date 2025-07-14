@@ -2160,6 +2160,11 @@ external class Pair<out First, out Second> extends Any {
   external value: Second
 }
 
+/// Wraps [value], terminating the fold with [value] as result.
+/// Should only be called from inside a fold function like
+/// `fold`, `foldIndexed`, `reduce`, etc.
+external const function folded<T>(value: T): T
+
 /// Common base class for [List] and [Set].
 ///
 /// The following operators are supported for all collections:
@@ -2560,35 +2565,33 @@ abstract external class Collection<out Element> extends Any {
   abstract function dropLastWhile(predicate: (Element) -> Boolean): Collection<Element>
 
   /// Folds this collection in iteration order using [operator], starting with [initial].
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
 
   /// Folds this collection in reverse iteration order using [operator], starting with [initial].
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   @AlsoKnownAs { names { "foldRight" } }
   abstract function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
 
   /// Folds this collection in iteration order using [operator], starting with [initial].
   ///
   /// The first parameter of [operator] is the zero-based index of the current element.
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
-
-  /// Iterate over elements of this collection in order, accumulating a result.
-  /// The looping function returns a [Pair] where the first value is a [Boolean] indicating if the iteration
-  /// should keep going ([true]) or stop, and the second value is the accumulated result.
-  /// This function is similar to [fold], but it can short-circuit.
-  abstract function iterate<Result>(initial: Result, loopFunction: (Result, Element) -> Pair<Boolean, Result>): Result
-
-  /// Iterate over the indexes and elements of this collection in order, accumulating a result.
-  /// The looping function returns a [Pair] where the first value is a [Boolean] indicating if the iteration
-  /// should keep going ([true]) or stop, and the second value is the accumulated result.
-  /// This function is similar to [foldIndexed], but it can short-circuit.
-  abstract function iterateIndexed<Result>(initial: Result, loopFunction: (Int, Result, Element) -> Pair<Boolean, Result>): Result
 
   /// Folds this collection in iteration order using [operator], starting with the first element.
   ///
   /// Throws if this collection is empty.
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
 
   /// Same as [reduce()] but returns [null] if this collection is empty.
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
 
   /// Groups the elements in this collection according to keys returned by [selector].
@@ -3062,9 +3065,6 @@ external class List<out Element> extends Collection<Element> {
   external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
   external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
 
-  external function iterate<Result>(initial: Result, loopFunction: (Element, Result) -> Pair<Boolean, Result>): Result
-  external function iterateIndexed<Result>(initial: Result, loopFunction: (Int, Result, Element) -> Pair<Boolean, Result>): Result
-
   external function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
   external function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
 
@@ -3205,9 +3205,6 @@ external class Set<out Element> extends Collection<Element> {
   external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
   external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
   external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
-
-  external function iterate<Result>(initial: Result, loopFunction: (Element, Result) -> Pair<Boolean, Result>): Result
-  external function iterateIndexed<Result>(initial: Result, loopFunction: (Int, Result, Element) -> Pair<Boolean, Result>): Result
 
   external function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
   external function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?

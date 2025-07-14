@@ -169,6 +169,7 @@ examples {
     set1.fold(List(), (acc, x) -> acc.add(x))
     Set(1).fold(0, (acc, x) -> acc + x)
     Set().fold(0, (acc, x) -> acc + x)
+    set2.fold(1, (acc, x) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["foldBack()"] {
@@ -176,24 +177,14 @@ examples {
     set1.foldBack(List(), (x, acc) -> acc.add(x))
     Set(1).foldBack(0, (x, acc) -> x + acc)
     Set().foldBack(0, (x, acc) -> x + acc)
-  }
-
-  ["iterate()"] {
-    set1.iterate(0, (acc, x) -> Pair(x < 2, x + acc))
-    set1.iterate(0, (acc, x) -> Pair(true, x + acc))
-    module.catch(() -> set1.iterate(0, (acc, x) -> Pair(1, x + acc)))
-  }
-
-  ["iterateIndexed()"] {
-    set1.iterateIndexed(0, (i, acc, x) -> Pair(i < 1, x + acc))
-    set1.iterateIndexed(0, (i, acc, x) -> Pair(true, x + acc))
-    module.catch(() -> set1.iterateIndexed(0, (i, acc, x) -> Pair(i, x + acc)))
+    set2.foldBack(1, (x, acc) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["reduce()"] {
     set1.reduce((x, y) -> x + y)
     Set(1).reduce((x, y) -> x + y)
     module.catch(() -> Set().reduce((x, y) -> x + y))
+    set2.reduce((acc, x) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["groupBy()"] {
@@ -306,6 +297,7 @@ examples {
     set1.foldIndexed(0, (idx, x, y) -> idx + x + y)
     Set(1).foldIndexed(0, (idx, x, y) -> idx + x + y)
     Set().foldIndexed(0, (idx, x, y) -> idx + x + y)
+    set2.foldIndexed(0, (idx, acc, x) -> if (acc > 10) folded(acc) else idx + acc + x)
   }
 
   ["toListing()"] {

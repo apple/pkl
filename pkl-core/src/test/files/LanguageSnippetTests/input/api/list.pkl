@@ -199,7 +199,7 @@ examples {
     list1.dropLastWhile((x) -> true)
     list1.dropLastWhile((x) -> false)
     list1.dropLastWhile((x) -> x > 1)
-    module.catch(() -> list1.dropLastWhile((x) -> "wrong type"))
+    module.catch(() -> list1.dropLastWhile((_) -> "wrong type"))
   }
 
   ["fold()"] {
@@ -207,6 +207,8 @@ examples {
     list1.fold(List(), (acc, x) -> acc.add(x))
     List(1).fold(0, (acc, x) -> acc + x)
     List().fold(0, (acc, x) -> acc + x)
+    list2.fold(1, (acc, x) -> if (acc > 10) folded(acc) else acc * x)
+    module.catch(() -> folded(10))
   }
 
   ["foldBack()"] {
@@ -214,26 +216,14 @@ examples {
     list1.foldBack(List(), (x, acc) -> acc.add(x))
     List(1).foldBack(0, (x, acc) -> x + acc)
     List().foldBack(0, (x, acc) -> x + acc)
-  }
-
-  ["iterate()"] {
-    list1.iterate(0, (acc, x) -> Pair(x < 2, x + acc))
-    list1.iterate(0, (acc, x) -> Pair(true, x + acc))
-    module.catch(() -> list1.iterate(0, (acc, x) -> x + acc))
-    module.catch(() -> list1.iterate(0, (acc, x) -> Pair(x, x + acc)))
-  }
-
-  ["iterateIndexed()"] {
-    list1.iterateIndexed(0, (i, acc, x) -> Pair(i < 1, x + acc))
-    list1.iterateIndexed(0, (i, acc, x) -> Pair(true, x + acc))
-    module.catch(() -> list1.iterateIndexed(0, (i, acc, x) -> x + acc))
-    module.catch(() -> list1.iterateIndexed(0, (i, acc, x) -> Pair(i, x + acc)))
+    list2.foldBack(1, (x, acc) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["reduce()"] {
     list1.reduce((x, y) -> x + y)
     List(1).reduce((x, y) -> x + y)
     module.catch(() -> List().reduce((x, y) -> x + y))
+    list2.reduce((acc, x) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["groupBy()"] {
@@ -360,6 +350,7 @@ examples {
     list1.foldIndexed(0, (idx, x, y) -> idx + x + y)
     List(1).foldIndexed(0, (idx, x, y) -> idx + x + y)
     List().foldIndexed(0, (idx, x, y) -> idx + x + y)
+    list2.foldIndexed(0, (idx, acc, x) -> if (acc > 10) folded(acc) else idx + acc + x)
   }
 
   ["toListing()"] {

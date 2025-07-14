@@ -18,7 +18,6 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.expression.binary.GreaterThanNode;
 import org.pkl.core.ast.expression.binary.GreaterThanNodeGen;
@@ -27,16 +26,11 @@ import org.pkl.core.ast.expression.binary.LessThanNodeGen;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
 import org.pkl.core.ast.lambda.*;
-import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.ast.type.TypeNode.BooleanTypeNode;
-import org.pkl.core.ast.type.TypeNode.PairTypeNode;
-import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareByNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareWithNode;
-import org.pkl.core.util.LateInit;
 
 // duplication between ListNodes and SetNodes is "intentional"
 // (sharing nodes between VmCollection subtypes results in
@@ -521,14 +515,22 @@ public final class SetNodes {
 
     @Specialization
     protected Object eval(VmSet self, Object initial, VmFunction function) {
-      var iter = self.iterator();
-      var result = initial;
-      while (iter.hasNext()) {
-        var elem = iter.next();
-        result = applyLambdaNode.execute(function, result, elem);
+      try {
+        var iter = self.iterator();
+        var result = initial;
+        while (iter.hasNext()) {
+          var elem = iter.next();
+          result = applyLambdaNode.execute(function, result, elem);
+        }
+        LoopNode.reportLoopCount(this, self.getLength());
+        return result;
+      } catch (VmException vme) {
+        CompilerDirectives.transferToInterpreter();
+        if (vme.getCause() instanceof FoldedException fe) {
+          return fe.value;
+        }
+        throw vme;
       }
-      LoopNode.reportLoopCount(this, self.getLength());
-      return result;
     }
   }
 
@@ -537,14 +539,22 @@ public final class SetNodes {
 
     @Specialization
     protected Object eval(VmSet self, Object initial, VmFunction function) {
-      var iter = self.reverseIterator();
-      var result = initial;
-      while (iter.hasNext()) {
-        var elem = iter.next();
-        result = applyLambdaNode.execute(function, elem, result);
+      try {
+        var iter = self.reverseIterator();
+        var result = initial;
+        while (iter.hasNext()) {
+          var elem = iter.next();
+          result = applyLambdaNode.execute(function, elem, result);
+        }
+        LoopNode.reportLoopCount(this, self.getLength());
+        return result;
+      } catch (VmException vme) {
+        CompilerDirectives.transferToInterpreter();
+        if (vme.getCause() instanceof FoldedException fe) {
+          return fe.value;
+        }
+        throw vme;
       }
-      LoopNode.reportLoopCount(this, self.getLength());
-      return result;
     }
   }
 
@@ -553,90 +563,25 @@ public final class SetNodes {
 
     @Specialization
     protected Object eval(VmSet self, Object initial, VmFunction function) {
-      var iter = self.iterator();
-      var result = initial;
-      long index = 0;
+      try {
+        var iter = self.iterator();
+        var result = initial;
+        long index = 0;
 
-      while (iter.hasNext()) {
-        var elem = iter.next();
-        result = applyLambdaNode.execute(function, index++, result, elem);
+        while (iter.hasNext()) {
+          var elem = iter.next();
+          result = applyLambdaNode.execute(function, index++, result, elem);
+        }
+
+        LoopNode.reportLoopCount(this, self.getLength());
+        return result;
+      } catch (VmException vme) {
+        CompilerDirectives.transferToInterpreter();
+        if (vme.getCause() instanceof FoldedException fe) {
+          return fe.value;
+        }
+        throw vme;
       }
-
-      LoopNode.reportLoopCount(this, self.getLength());
-      return result;
-    }
-  }
-
-  public abstract static class iterate extends ExternalMethod2Node {
-    @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
-    @Child @LateInit private TypeNode typeNode;
-
-    private TypeNode getTypeNode() {
-      if (typeNode == null) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        var section = VmUtils.unavailableSourceSection();
-        var booleanTypeNode = new BooleanTypeNode(section);
-        var unknownTypeNode = new UnknownTypeNode(section);
-        typeNode = new PairTypeNode(section, booleanTypeNode, unknownTypeNode);
-      }
-      return typeNode;
-    }
-
-    @Specialization
-    protected Object eval(VirtualFrame frame, VmSet self, Object initial, VmFunction function) {
-      var iter = self.iterator();
-      var typeNode = getTypeNode();
-      var result = initial;
-      var loop = 0;
-
-      while (iter.hasNext()) {
-        var elem = iter.next();
-        var pairUnchecked = applyLambdaNode.execute(function, result, elem);
-        var pair = (VmPair) typeNode.executeEagerly(frame, pairUnchecked);
-        result = pair.getSecond();
-        loop++;
-        if (!(Boolean) pair.getFirst()) break;
-      }
-
-      LoopNode.reportLoopCount(this, loop);
-      return result;
-    }
-  }
-
-  public abstract static class iterateIndexed extends ExternalMethod2Node {
-    @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
-    @Child @LateInit private TypeNode typeNode;
-
-    private TypeNode getTypeNode() {
-      if (typeNode == null) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        var section = VmUtils.unavailableSourceSection();
-        var booleanTypeNode = new BooleanTypeNode(section);
-        var unknownTypeNode = new UnknownTypeNode(section);
-        typeNode = new PairTypeNode(section, booleanTypeNode, unknownTypeNode);
-      }
-      return typeNode;
-    }
-
-    @Specialization
-    protected Object eval(VirtualFrame frame, VmSet self, Object initial, VmFunction function) {
-      var iter = self.iterator();
-      var typeNode = getTypeNode();
-      var result = initial;
-      var index = 0L;
-      var loop = 0;
-
-      while (iter.hasNext()) {
-        var elem = iter.next();
-        var pairUnchecked = applyLambdaNode.execute(function, index++, result, elem);
-        var pair = (VmPair) typeNode.executeEagerly(frame, pairUnchecked);
-        result = pair.getSecond();
-        loop++;
-        if (!(Boolean) pair.getFirst()) break;
-      }
-
-      LoopNode.reportLoopCount(this, loop);
-      return result;
     }
   }
 
@@ -647,15 +592,23 @@ public final class SetNodes {
     protected Object eval(VmSet self, VmFunction function) {
       self.checkNonEmpty();
 
-      var iterator = self.iterator();
-      var result = iterator.next();
-      while (iterator.hasNext()) {
-        var elem = iterator.next();
-        result = applyLambdaNode.execute(function, result, elem);
-      }
+      try {
+        var iterator = self.iterator();
+        var result = iterator.next();
+        while (iterator.hasNext()) {
+          var elem = iterator.next();
+          result = applyLambdaNode.execute(function, result, elem);
+        }
 
-      LoopNode.reportLoopCount(this, self.getLength());
-      return result;
+        LoopNode.reportLoopCount(this, self.getLength());
+        return result;
+      } catch (VmException vme) {
+        CompilerDirectives.transferToInterpreter();
+        if (vme.getCause() instanceof FoldedException fe) {
+          return fe.value;
+        }
+        throw vme;
+      }
     }
   }
 
@@ -666,15 +619,23 @@ public final class SetNodes {
     protected Object eval(VmSet self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
-      var iterator = self.iterator();
-      var result = iterator.next();
-      while (iterator.hasNext()) {
-        var elem = iterator.next();
-        result = applyLambdaNode.execute(function, result, elem);
-      }
+      try {
+        var iterator = self.iterator();
+        var result = iterator.next();
+        while (iterator.hasNext()) {
+          var elem = iterator.next();
+          result = applyLambdaNode.execute(function, result, elem);
+        }
 
-      LoopNode.reportLoopCount(this, self.getLength());
-      return result;
+        LoopNode.reportLoopCount(this, self.getLength());
+        return result;
+      } catch (VmException vme) {
+        CompilerDirectives.transferToInterpreter();
+        if (vme.getCause() instanceof FoldedException fe) {
+          return fe.value;
+        }
+        throw vme;
+      }
     }
   }
 
