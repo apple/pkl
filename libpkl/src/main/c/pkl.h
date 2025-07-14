@@ -50,3 +50,10 @@ int pkl_send_message(int length, char *message);
  * @return -1 on failure, 0 on success.
  */
 int pkl_close();
+
+/**
+ * Returns the version of Pkl in use.
+ *
+ * @return a string with the version information.
+ */
+char* pkl_version();

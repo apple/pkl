@@ -15,10 +15,13 @@
  */
 package org.pkl.libpkl
 
+import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
+import org.junit.jupiter.api.Test
 import org.pkl.commons.test.server.AbstractServerTest
 import org.pkl.commons.test.server.TestTransport
+import org.pkl.core.Release
 
 /**
  * Tests libpkl bindings by using JNA (see [LibPklJNA] and [LibPklMessageTransport]).
@@ -42,5 +45,10 @@ class LibPklTest : AbstractServerTest() {
   @AfterEach
   fun afterEach() {
     client.close()
+  }
+
+  @Test
+  fun testVersionString() {
+    assertThat(LibPklJNA.INSTANCE.pkl_version()).isEqualTo(Release.current().version.toString())
   }
 }
