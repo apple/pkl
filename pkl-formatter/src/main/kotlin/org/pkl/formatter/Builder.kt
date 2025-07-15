@@ -253,7 +253,7 @@ class Builder(sourceText: String) {
   private fun formatClassHeader(node: GenNode): FormatNode {
     return groupOnSpace(formatGeneric(node.children, SpaceOrLine))
   }
-  
+
   private fun formatClassHeaderExtends(node: GenNode): FormatNode {
     return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
   }
