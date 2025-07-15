@@ -22,8 +22,6 @@ import java.net.URL;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.HashMap;
-import java.util.Map;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileSystemLocation;
 import org.pkl.core.util.IoUtils;
@@ -126,20 +124,5 @@ public class PluginUtils {
   public static URI parseModuleNotationToUri(Object m) {
     var parsed1 = PluginUtils.parseModuleNotation(m);
     return parsedModuleNotationToUri(parsed1);
-  }
-
-  public static Map<URI, URI> parseRewriteMap(Map<String, String> rewrites) {
-    var ret = new HashMap<URI, URI>(rewrites.size());
-    for (var entry : rewrites.entrySet()) {
-      try {
-        var key = new URI(entry.getKey());
-        var value = new URI(entry.getValue());
-        ret.put(key, value);
-      } catch (URISyntaxException e) {
-        throw new InvalidUserDataException(
-            "Invalid rewrite rule; cannot parse " + e.getInput() + " as a URI.", e);
-      }
-    }
-    return ret;
   }
 }

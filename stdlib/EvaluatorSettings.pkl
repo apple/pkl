@@ -118,6 +118,7 @@ const local hasNonEmptyLowercasedHostname = (it: String) ->
       && hostname.toLowerCase() == hostname
 
 /// A key or value in [Http.rewrites].
+@Since { version = "0.29.0" }
 typealias HttpRewrite = String(
   startsWith(Regex("https?://")),
   endsWith("/"),

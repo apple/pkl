@@ -2154,7 +2154,8 @@ Optionally, the SHA-256 checksum of the package can also be specified:
 Packages can be managed as dependencies within a _project_.
 For more details, consult the <<projects,project>> section of the language reference.
 
-Packages can also be downloaded from a mirror. For more details, consult the <<mirroring_packages>> section of the language reference.
+Packages can also be downloaded from a mirror.
+For more details, consult the <<mirroring_packages>> section of the language reference.
 
 ==== Standard Library URI
 

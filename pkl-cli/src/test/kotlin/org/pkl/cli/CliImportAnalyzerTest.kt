@@ -19,26 +19,14 @@ import java.net.URI
 import java.nio.file.Path
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
-import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.CliBaseOptions
-import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.OutputFormat
 import org.pkl.core.util.StringBuilderWriter
 
 class CliImportAnalyzerTest {
-  companion object {
-    private val server = PackageServer()
-
-    @AfterAll
-    @JvmStatic
-    fun afterAll() {
-      server.close()
-    }
-  }
-
   @Test
   fun `write to console writer`(@TempDir tempDir: Path) {
     val file = tempDir.resolve("test.pkl").writeString("import \"bar.pkl\"")
@@ -148,24 +136,6 @@ class CliImportAnalyzerTest {
           –– Pkl Error ––
           Found a syntax error when parsing module `${file.toUri()}`.
         """
-          .trimIndent()
-      )
-  }
-
-  @Test
-  fun `analyze invalid http module`() {
-    val baseOptions =
-      CliBaseOptions(
-        sourceModules = listOf(URI("http://localhost:0/foo.pkl")),
-        testPort = server.port,
-      )
-    val analyzer = CliImportAnalyzer(CliImportAnalyzerOptions(baseOptions))
-    assertThatCode { analyzer.run() }
-      .hasMessageContaining(
-        """
-        –– Pkl Error ––
-        HTTP/1.1 header parser received no bytes
-      """
           .trimIndent()
       )
   }
