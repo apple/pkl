@@ -24,8 +24,15 @@ const local proooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 local function function2(parameter1: Parameter1Type, parameter2: Parameter2Type, parameter3: Parameter3Type, parameter4: Parameter4Type): String = ""
 
+local const function function3(parameter1: String|Int, parameter2: String|Int): Mapping<String|Int, String> =
+  new {}
+
 prop = function2(loooooooooooooooooogParameter1, loooooooooooooooooogParameter2, loooooooooooooooooogParameter3, loooooooooooooooooogParameter4)
 
 prop2: String
   |Int
   |Boolean
+
+open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter> extends AnotherInterestingClassName {
+  foo: Int
+}

@@ -82,6 +82,7 @@ class Builder(sourceText: String) {
       NodeType.IMPORT_ALIAS -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
       NodeType.CLASS -> formatClass(node)
       NodeType.CLASS_HEADER -> formatClassHeader(node)
+      NodeType.CLASS_HEADER_EXTENDS -> formatClassHeaderExtends(node)
       NodeType.CLASS_BODY -> formatClassBody(node)
       NodeType.CLASS_BODY_ELEMENTS -> formatClassBodyElements(node)
       NodeType.CLASS_PROPERTY,
@@ -251,6 +252,10 @@ class Builder(sourceText: String) {
 
   private fun formatClassHeader(node: GenNode): FormatNode {
     return groupOnSpace(formatGeneric(node.children, SpaceOrLine))
+  }
+  
+  private fun formatClassHeaderExtends(node: GenNode): FormatNode {
+    return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
   }
 
   private fun formatClassBody(node: GenNode): FormatNode {
@@ -660,7 +665,7 @@ class Builder(sourceText: String) {
   private fun formatUnionType(node: GenNode): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else null }
-    return Group(newId(), nodes)
+    return Group(newId(), indentAfterFirstNewline(nodes))
   }
 
   private fun formatFunctionType(node: GenNode): FormatNode {
@@ -679,11 +684,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatTypeAnnotation(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-        if (next == null) indent(format(node)) else format(node)
-      }
-    return Group(newId(), nodes)
+    return Group(newId(), formatGeneric(node.children, Space))
   }
 
   private fun formatModifierList(node: GenNode): FormatNode {
@@ -861,9 +862,11 @@ class Builder(sourceText: String) {
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
-      next.isTerminal("=", "{", "->") ||
+      prev.isTerminal("class", "function") ||
+        next.isTerminal("=", "{", "->", "class", "function") ||
         next.type == NodeType.OBJECT_BODY ||
-        next.type == NodeType.OBJECT_PARAMETER_LIST -> Space
+        next.type == NodeType.OBJECT_PARAMETER_LIST ||
+        prev.type == NodeType.MODIFIER_LIST -> Space
       next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
       else -> separatorFn(prev, next)
     }

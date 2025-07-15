@@ -10,46 +10,33 @@ import
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
   as foo
 
-open local
-class LoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongName {}
+open local class LoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongName {}
 
-open local
-class
-ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongName {}
+open local class ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongName {}
 
-hidden const
-loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName = 99
-
-hidden const
-reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName =
+hidden const loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName =
   99
 
-local const
-function
-looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(x: Int, y) =
-  x + y
+hidden const reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName =
+  99
 
-local const
-function
-reallyLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
+local const function looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
   x: Int,
   y
 ) = x + y
 
 typealias Foo =
   LooooooooooooooooooooooooongTypeName
-  |AnotherLooooooooooooooooooooooooongTypeName
-  |OtherLooooooooooooooooooooooooongTypeName
+    |AnotherLooooooooooooooooooooooooongTypeName
+    |OtherLooooooooooooooooooooooooongTypeName
 
-bar:
-  Boolean
+bar: Boolean
   |Mapping<
     LooooooooooooooooooooooooooooongTypeName,
     AnotherLooooooooooooooooooooooooooooongTypeName
   >(loooooooooooooooooooogConstraint)
 
-hidden foobar:
-  LongType(
-    someVeryyyyyyyloooong,
-    requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger
-  )
+hidden foobar: LongType(
+  someVeryyyyyyyloooong,
+  requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger
+)

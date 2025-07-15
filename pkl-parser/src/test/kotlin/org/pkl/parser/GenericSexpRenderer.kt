@@ -225,6 +225,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.CLASS_METHOD_HEADER,
         NodeType.CLASS_METHOD_BODY,
         NodeType.CLASS_HEADER,
+        NodeType.CLASS_HEADER_EXTENDS,
         NodeType.CLASS_BODY_ELEMENTS,
         NodeType.MODIFIER_LIST,
         NodeType.NEW_HEADER,
