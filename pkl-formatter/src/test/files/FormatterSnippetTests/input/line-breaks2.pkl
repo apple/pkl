@@ -13,8 +13,6 @@ const hidden reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 const local function looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(x: Int, y) = x + y
 
-const local function reallyLooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(x: Int, y) = x + y
-
 typealias Foo = LooooooooooooooooooooooooongTypeName|AnotherLooooooooooooooooooooooooongTypeName|OtherLooooooooooooooooooooooooongTypeName
 
 bar: Boolean|Mapping<LooooooooooooooooooooooooooooongTypeName, AnotherLooooooooooooooooooooooooooooongTypeName>(loooooooooooooooooooogConstraint)

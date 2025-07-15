@@ -6,24 +6,22 @@ local test: Int|String =
   else
     "8%"
 
-foo:
-  (
-    // some comment
-    *String(
-      // if dtstart is defined and a datetime, until must also be a datetime if defined
-      true
-    )
+foo: (
+  // some comment
+  *String(
+    // if dtstart is defined and a datetime, until must also be a datetime if defined
+    true
+  )
     |Int
-    // trailing comment
-  )?
+  // trailing comment
+)?
 
-foo2:
-  (
-    // some comment
-    Int, // other comment
-    String
-  ) ->
-    Int
+foo2: (
+  // some comment
+  Int, // other comment
+  String
+) ->
+  Int
 
 bar =
   (

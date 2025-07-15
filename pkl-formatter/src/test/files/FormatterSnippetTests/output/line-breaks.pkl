@@ -10,9 +10,8 @@ local const baz = 10
 
 local function fun(x) = x
 
-local const
-prooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooperty:
-  String = "foo"
+local const prooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooperty: String =
+  "foo"
 
 local function function2(
   parameter1: Parameter1Type,
@@ -20,6 +19,11 @@ local function function2(
   parameter3: Parameter3Type,
   parameter4: Parameter4Type
 ): String = ""
+
+local const function function3(parameter1: String|Int, parameter2: String|Int): Mapping<
+  String|Int,
+  String
+> = new {}
 
 prop =
   function2(
@@ -30,3 +34,8 @@ prop =
   )
 
 prop2: String|Int|Boolean
+
+open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter>
+  extends AnotherInterestingClassName {
+  foo: Int
+}

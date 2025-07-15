@@ -47,16 +47,14 @@ objParams2: Listing<Int> = new {
   }
 }
 
-parenType:
-  (
-    ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType(
-      reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint
-    )
+parenType: (
+  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType(
+    reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint
   )
+)
 
-functionType:
-  (
-    ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType,
-    ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2
-  ) ->
-    String
+functionType: (
+  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType,
+  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2
+) ->
+  String

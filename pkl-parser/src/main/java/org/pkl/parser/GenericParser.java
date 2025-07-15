@@ -251,10 +251,12 @@ public class GenericParser {
       headers.add(parseTypeParameterList());
     }
     if (lookahead() == Token.EXTENDS) {
-      ff(headers);
-      headers.add(makeTerminal(next()));
-      ff(headers);
-      headers.add(parseType());
+      var extend = new ArrayList<GenNode>();
+      ff(extend);
+      extend.add(makeTerminal(next()));
+      ff(extend);
+      extend.add(parseType());
+      headers.add(new GenNode(NodeType.CLASS_HEADER_EXTENDS, extend));
     }
     children.add(new GenNode(NodeType.CLASS_HEADER, headers));
     if (lookahead() == Token.LBRACE) {
