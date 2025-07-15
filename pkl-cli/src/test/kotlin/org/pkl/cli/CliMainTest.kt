@@ -126,7 +126,7 @@ class CliMainTest {
         rootCmd.parse(arrayOf("eval", "--http-rewrite", "foo=bar", "mymodule.pkl"))
       }
     assertThat(ex.message)
-      .contains("Rewrite target must start with 'http://' or 'https://', but got 'foo'")
+      .contains("Rewrite rule must start with 'http://' or 'https://', but was 'foo'")
   }
 
   @Test
@@ -135,7 +135,7 @@ class CliMainTest {
       assertThrows<BadParameterValue> {
         rootCmd.parse(arrayOf("eval", "--http-rewrite", "https://foo bar=baz", "mymodule.pkl"))
       }
-    assertThat(ex.message).contains("Invalid rewrite; URI 'https://foo bar' has invalid syntax")
+    assertThat(ex.message).contains("Rewrite target `https://foo bar` has invalid syntax")
   }
 
   @Test
@@ -147,7 +147,7 @@ class CliMainTest {
         )
       }
     assertThat(ex.message)
-      .contains("Rewrite target should have a lowercased hostname, but got 'www.FOO.com'")
+      .contains("Rewrite rule must have a lowercased hostname, but was 'www.FOO.com'")
   }
 
   @Test
@@ -158,7 +158,7 @@ class CliMainTest {
           arrayOf("eval", "--http-rewrite", "http://foo.com=https://bar.com", "mymodule.pkl")
         )
       }
-    assertThat(ex.message).contains("Rewrite target 'http://foo.com' should end with '/'")
+    assertThat(ex.message).contains("Rewrite rule must end with '/', but was 'http://foo.com'")
   }
 
   private fun makeInput(tempDir: Path, fileName: String = "test.pkl"): String {

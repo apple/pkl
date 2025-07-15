@@ -843,18 +843,22 @@ public final class IoUtils {
   }
 
   public static void validateRewriteRule(URI rewrite) {
-    if (!rewrite.getScheme().equals("http") && !rewrite.getScheme().equals("https")) {
+    if (!Objects.equals(rewrite.getScheme(), "http")
+        && !Objects.equals(rewrite.getScheme(), "https")) {
       throw new IllegalArgumentException(
-          "Rewrite rule must start with https://, but was '%s'".formatted(rewrite));
+          "Rewrite rule must start with 'http://' or 'https://', but was '%s'".formatted(rewrite));
     }
-    if (!rewrite.getHost().equals(rewrite.getHost().toLowerCase(Locale.ROOT))) {
+
+    if (rewrite.getHost() == null
+        || !rewrite.getHost().equals(rewrite.getHost().toLowerCase(Locale.ROOT))) {
       throw new IllegalArgumentException(
           "Rewrite rule must have a lowercased hostname, but was '%s'"
               .formatted(rewrite.getHost()));
     }
-    if (!rewrite.getPath().endsWith("/")) {
+
+    if (!rewrite.toString().endsWith("/")) {
       throw new IllegalArgumentException(
-          "Rewrite rule must end with `/`, but was '%s'".formatted(rewrite));
+          "Rewrite rule must end with '/', but was '%s'".formatted(rewrite));
     }
   }
 }
