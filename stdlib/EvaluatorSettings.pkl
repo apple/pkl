@@ -118,15 +118,6 @@ const local hasNonEmptyLowercasedHostname = (it: String) ->
       && hostname.toLowerCase() == hostname
 
 /// A key or value in [Http.rewrites].
-///
-/// Rewrite targets must satisfy the following:
-///
-/// * It starts with either `http://`, or `https://`.
-/// * It ends with `/`.
-/// * It has a non-empty and lowercased hostname.
-///
-/// An rewrite target should also not contain a query string or fragment component
-/// (not schematically enforced).
 typealias HttpRewrite = String(
   startsWith(Regex("https?://")),
   endsWith("/"),
@@ -156,11 +147,22 @@ class Http {
   ///
   /// This does not affect `3XX` status code redirect following.
   ///
+  /// Example:
+  ///
   /// ```
   /// rewrites {
   ///   ["https://pkg.pkl-lang.org/"] = "https://my.internal.mirror/"
   /// }
   /// ```
+  ///
+  /// Rewrite targets must satisfy the following:
+  ///
+  /// * It starts with either `http://`, or `https://`.
+  /// * It ends with `/`.
+  /// * It has a non-empty and lowercased hostname.
+  ///
+  /// An rewrite target should also not contain a query string or fragment component
+  /// (not schematically enforced).
   @Since { version = "0.29.0" }
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
 }

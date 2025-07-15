@@ -2154,6 +2154,8 @@ Optionally, the SHA-256 checksum of the package can also be specified:
 Packages can be managed as dependencies within a _project_.
 For more details, consult the <<projects,project>> section of the language reference.
 
+Packages can also be downloaded from a mirror. For more details, consult the <<mirroring_packages>> section of the language reference.
+
 ==== Standard Library URI
 
 Example: `+pkl:math+`
@@ -3204,7 +3206,8 @@ This section discusses language features that are generally more relevant to tem
 <<reserved-keywords,Reserved Keywords>> +
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>> +
-<<external-readers,External Readers>>
+<<external-readers,External Readers>> +
+<<mirroring_packages,Mirroring packages>>
 
 [[meaning-of-new]]
 === Meaning of `new`
@@ -5755,3 +5758,22 @@ To support both schemes during evaluation, both would need to be registered expl
 ----
 $ pkl eval <module> --external-resource-reader ldap=pkl-ldap --external-resource-reader ldaps=pkl-ldap
 ----
+
+[[mirroring_packages]]
+=== Mirroring packages
+
+A package is a shareable archive of modules and resources that are published to the internet.
+
+A package's URI tells two things:
+
+1. The name of the package.
+2. Where the package is downloaded from.
+
+For example, given the package name `package://example.com/mypackage@1.0.0`, Pkl will make an HTTPS request to `\https://example.com/mypackage@1.0.0` to fetch package metadata.
+
+In situations where internet access is restricted, a mirror can be set up to allow use of packages that are hosted on the internet.
+
+To direct Pkl to a mirror, the `--http-rewrite` CLI option (and its equivalent options when using Pkl's other evaluator APIs) must be used.
+For example, `--http-rewrite \https://pkg.pkl-lang.org/=\https://my.internal.mirror/` will tell Pkl to download packages from host `my.internal.mirror`.
+
+NOTE: To effectively mirror packages from pkg.pkl-lang.org, there must be two rewrites; one for `\https://pkg.pkl-lang.org/` (where package metadata is downloaded), and one for `\https://github.com/` (where package zip files are downloaded).

@@ -40,6 +40,7 @@ import org.pkl.core.util.Nullable;
  *   <li>overrides the {@code User-Agent} header of {@code HttpRequest}s
  *   <li>sets a request timeout if none is present
  *   <li>ensures that {@link #close()} is idempotent.
+ *   <li>rewrites outbound URI prefixes with another prefix.
  * </ul>
  *
  * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
@@ -68,6 +69,7 @@ final class RequestRewritingClient implements HttpClient {
     this.delegate = delegate;
     this.rewrites =
         rewrites.entrySet().stream()
+            .map((it) -> Map.entry(normalizeRewrite(it.getKey()), normalizeRewrite(it.getValue())))
             .sorted(Comparator.comparingInt((it) -> -it.getKey().toString().length()))
             .toList();
   }
@@ -127,16 +129,28 @@ final class RequestRewritingClient implements HttpClient {
     return builder.build();
   }
 
+  private static boolean notEqualCaseInsensitive(@Nullable String a, @Nullable String b) {
+    if (a == null || b == null) {
+      return !Objects.equals(a, b);
+    }
+    return !a.equalsIgnoreCase(b);
+  }
+
+  // Our docs say to not include query string or fragment in a rewrite rule, but technically they
+  // are supported.
   public static boolean matchesRewriteRule(URI uri, URI rule) {
-    if (!Objects.equals(uri.getScheme(), rule.getScheme())) {
+    if (notEqualCaseInsensitive(uri.getScheme(), rule.getScheme())) {
       return false;
     }
+
     if (!Objects.equals(uri.getUserInfo(), rule.getUserInfo())) {
       return false;
     }
-    if (!Objects.equals(uri.getHost(), rule.getHost())) {
+
+    if (notEqualCaseInsensitive(uri.getHost(), rule.getHost())) {
       return false;
     }
+
     if (!Objects.equals(uri.getPath(), rule.getPath())) {
       if (uri.getPath() != null
           && rule.getPath() != null
@@ -146,15 +160,18 @@ final class RequestRewritingClient implements HttpClient {
       }
       return false;
     }
+
     if (!Objects.equals(uri.getQuery(), rule.getQuery())) {
       if (uri.getQuery() != null && rule.getQuery() != null && rule.getFragment() == null) {
         return uri.getQuery().startsWith(rule.getQuery());
       }
       return false;
     }
+
     if (uri.getFragment() != null && rule.getFragment() != null) {
       return uri.getFragment().startsWith(rule.getFragment());
     }
+
     return Objects.equals(uri.getFragment(), rule.getFragment());
   }
 
@@ -167,32 +184,36 @@ final class RequestRewritingClient implements HttpClient {
     return null;
   }
 
-  private URI rewriteUri(URI uri) {
+  private URI normalizeRewrite(URI uri) {
     try {
-      uri =
-          new URI(
-              uri.getScheme().toLowerCase(),
-              uri.getUserInfo(),
-              uri.getHost().toLowerCase(),
-              uri.getPort(),
-              uri.getPath(),
-              uri.getQuery(),
-              uri.getFragment());
+      return new URI(
+          uri.getScheme().toLowerCase(),
+          uri.getUserInfo(),
+          uri.getHost().toLowerCase(),
+          uri.getPort(),
+          uri.getPath(),
+          uri.getQuery(),
+          uri.getFragment());
     } catch (URISyntaxException e) {
       // impossible condition, we started from a valid URI to begin with
       throw PklBugException.unreachableCode();
     }
+  }
+
+  private URI rewriteUri(URI uri) {
     var rewrite = findRewrite(uri);
+    var ret = uri;
     if (rewrite != null) {
+      var normalized = normalizeRewrite(uri);
       var fromUri = rewrite.getKey();
       var toUri = rewrite.getValue();
-      var relativePath = fromUri.relativize(uri);
-      uri = toUri.resolve(relativePath);
+      var relativePath = fromUri.relativize(normalized);
+      ret = toUri.resolve(relativePath);
     }
-    if (testPort != -1 && uri.getPort() == 0) {
-      uri = HttpUtils.setPort(uri, testPort);
+    if (testPort != -1 && ret.getPort() == 0) {
+      ret = HttpUtils.setPort(ret, testPort);
     }
-    return uri;
+    return ret;
   }
 
   private void checkNotClosed(HttpRequest request) {

@@ -140,57 +140,58 @@ class RequestRewritingClientTest {
 
   @Test
   fun `matches rewrite rule`() {
-    fun matchesRewriteRule(uri: String, rule: String) =
+    fun assertThatRewriteMatches(uri: String, rule: String) =
       assertThat(RequestRewritingClient.matchesRewriteRule(URI(uri), URI(rule)))
         .`as`("$uri matches $rule")
 
-    matchesRewriteRule("https://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
-    matchesRewriteRule("HTTPS://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
-    matchesRewriteRule("HTTPS://WWW.FOO.COM/path/to/qux.html", "https://www.foo.com/").isTrue
+    assertThatRewriteMatches("https://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
+    assertThatRewriteMatches("HTTPS://www.foo.com/path/to/qux.html", "https://www.foo.com/").isTrue
+    assertThatRewriteMatches("HTTPS://WWW.FOO.COM/path/to/qux.html", "https://www.foo.com/").isTrue
 
-    matchesRewriteRule("https://www.foo.com/path/to/qux.html", "https://www.foo.com/path/").isTrue
-    matchesRewriteRule("https://www.foo.com/path/to/qux.html", "https://www.foo.com/PATH/").isFalse
-    matchesRewriteRule("https://www.foo.com", "https://www.foo.com/").isFalse
+    assertThatRewriteMatches("https://www.foo.com/path/to/qux.html", "https://www.foo.com/path/")
+      .isTrue
+    assertThatRewriteMatches("https://www.foo.com/path/to/qux.html", "https://www.foo.com/PATH/")
+      .isFalse
+    assertThatRewriteMatches("https://www.foo.com", "https://www.foo.com/").isFalse
 
-    matchesRewriteRule(
+    assertThatRewriteMatches(
         "https://www.foo.com/path/to/qux.html?foo&bar",
         "https://www.foo.com/path/to/qux.html?foo&bar",
       )
       .isTrue
-    matchesRewriteRule(
+    assertThatRewriteMatches(
         "https://www.foo.com/path/to/qux.html?foo&baz",
         "https://www.foo.com/path/to/qux.html?foo&bar",
       )
       .isFalse
 
-    matchesRewriteRule(
+    assertThatRewriteMatches(
         "https://www.foo.com/path/to/qux.html?foo&bar#qux",
         "https://www.foo.com/path/to/qux.html?foo&bar#q",
       )
       .isTrue
-    matchesRewriteRule(
+    assertThatRewriteMatches(
         "https://www.foo.com/path/to/qux.html?foo&bar#qux",
         "https://www.foo.com/path/to/qux.html?foo&bar#w",
       )
       .isFalse
-    matchesRewriteRule(
+    assertThatRewriteMatches(
         "https://www.foo.com/path/to/qux.html?foo&bar",
         "https://www.foo.com/path/to/qux.html?foo&bar#w",
       )
       .isFalse
 
-    matchesRewriteRule("https:///", "https:///").isTrue
-    matchesRewriteRule("https:///", "http:///").isFalse
+    assertThatRewriteMatches("https:///", "https:///").isTrue
+    assertThatRewriteMatches("https:///", "http:///").isFalse
 
     // userinfo
-    matchesRewriteRule("https://foo@foo.com/", "http://foo.com/").isFalse
-    matchesRewriteRule("https://foo@foo.com/", "http://foo@foo.com/").isFalse
-    matchesRewriteRule("https://foo@foo.com/", "http://FOO@foo.com/").isFalse
+    assertThatRewriteMatches("https://foo@foo.com/", "http://foo.com/").isFalse
+    assertThatRewriteMatches("https://foo@foo.com/", "http://foo@foo.com/").isFalse
+    assertThatRewriteMatches("https://foo@foo.com/", "http://FOO@foo.com/").isFalse
   }
 
   @Test
   fun `rewrites URIs`() {
-
     assertThat(
         rewrittenRequest(
           "https://foo.com/bar/baz",
@@ -210,6 +211,14 @@ class RequestRewritingClientTest {
     assertThat(
         rewrittenRequest(
           "https://foo.com/bar/baz",
+          mapOf(URI("https://FOO.COM/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
           mapOf(URI("https://foo.com/") to URI("https://bar.com/qux/baz/")),
         )
       )
@@ -225,11 +234,19 @@ class RequestRewritingClientTest {
 
     assertThat(
         rewrittenRequest(
-          "https://foo.com/bar/baz?qux=foo",
-          mapOf(URI("https://foo.com/") to URI("https://bar.com/?qux=foo")),
+          "https://foo.com/bar/baz?qux=foo#corge",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
         )
       )
-      .isEqualTo("https://foo.com/bar/baz?qux=foo")
+      .isEqualTo("https://bar.com/bar/baz?qux=foo#corge")
+
+    assertThat(
+        rewrittenRequest(
+          "https://fooey@foo.com/bar/baz",
+          mapOf(URI("https://fooey@foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
   }
 
   @Test

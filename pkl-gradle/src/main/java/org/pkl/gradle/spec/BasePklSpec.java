@@ -58,5 +58,5 @@ public interface BasePklSpec {
 
   ListProperty<String> getHttpNoProxy();
 
-  MapProperty<String, String> getHttpRewrites();
+  MapProperty<URI, URI> getHttpRewrites();
 }

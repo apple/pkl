@@ -136,8 +136,8 @@ public class PluginUtils {
         var value = new URI(entry.getValue());
         ret.put(key, value);
       } catch (URISyntaxException e) {
-        throw new IllegalArgumentException(
-            "Invalid rewrite rule; cannot parse " + e.getInput() + " as a URI.");
+        throw new InvalidUserDataException(
+            "Invalid rewrite rule; cannot parse " + e.getInput() + " as a URI.", e);
       }
     }
     return ret;

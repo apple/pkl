@@ -107,3 +107,14 @@ Example: `noProxy = ["example.com", "169.254.0.0/16"]` +
 Hosts to which all connections should bypass the proxy.
 Hosts can be specified by name, IP address, or IP range using https://en.wikipedia.org/wiki/Classless_Inter-Domain_Routing#CIDR_notation[CIDR notation].
 ====
+
+.httpRewrites: MapProperty<String, String>
+[%collapsible]
+====
+Default: `null` +
+Example: `httpRewrites = [uri("https://pkg.pkl-lang.org/"): uri("https://my.internal.mirror/")]` +
+Replace outbound HTTP(S) requests from one URL with another URL.
+The left-hand side describes the source prefix, and the right-hand describes the target prefix.
+This option is commonly used to enable package mirroring.
+The above example will rewrite URL `\https://pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0` to `\https://my.internal.mirror/pkl-k8s/k8s@1.0.0`.
+====

@@ -144,7 +144,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
-  public abstract MapProperty<String, String> getHttpRewrites();
+  public abstract MapProperty<URI, URI> getHttpRewrites();
 
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
@@ -199,7 +199,7 @@ public abstract class BasePklTask extends DefaultTask {
               Collections.emptyList(),
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
-              mapAndGetOrNull(getHttpRewrites(), PluginUtils::parseRewriteMap),
+              getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of());
     }

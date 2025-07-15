@@ -130,6 +130,15 @@ class CliMainTest {
   }
 
   @Test
+  fun `invalid rewrites -- invalid URI`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(arrayOf("eval", "--http-rewrite", "https://foo bar=baz", "mymodule.pkl"))
+      }
+    assertThat(ex.message).contains("Invalid rewrite; URI 'https://foo bar' has invalid syntax")
+  }
+
+  @Test
   fun `invalid rewrites -- capitalized hostname`() {
     val ex =
       assertThrows<BadParameterValue> {
@@ -145,7 +154,9 @@ class CliMainTest {
   fun `invalid rewrites -- doesn't end with slash`() {
     val ex =
       assertThrows<BadParameterValue> {
-        rootCmd.parse(arrayOf("eval", "--http-rewrite", "http://foo.com", "mymodule.pkl"))
+        rootCmd.parse(
+          arrayOf("eval", "--http-rewrite", "http://foo.com=https://bar.com", "mymodule.pkl")
+        )
       }
     assertThat(ex.message).contains("Rewrite target 'http://foo.com' should end with '/'")
   }

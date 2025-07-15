@@ -246,11 +246,23 @@ class BaseOptions : OptionGroup() {
         require(uris.size == 2) { "Rewrites must be in the form of <from>=<to>" }
         try {
           val (fromSpec, toSpec) = uris
-          val fromUri = URI(fromSpec).also { validateRewrite(it) }
-          val toUri = URI(toSpec).also { validateRewrite(it) }
+          val fromUri = URI(fromSpec).also { IoUtils.validateRewriteRule(it) }
+          val toUri = URI(toSpec).also { IoUtils.validateRewriteRule(it) }
           fromUri to toUri
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
         } catch (e: URISyntaxException) {
-          fail("Invalid URI: $e")
+          val message = buildString {
+            append("Rewrite target `${e.input}` has invalid syntax (${e.reason}).")
+            if (e.index > -1) {
+              append("\n\n")
+              append(e.input)
+              append("\n")
+              append(" ".repeat(e.index))
+              append("^")
+            }
+          }
+          fail(message)
         }
       }
       .multiple()
