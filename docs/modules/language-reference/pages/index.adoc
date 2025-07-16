@@ -5772,9 +5772,12 @@ A package's URI tells two things:
 
 For example, given the package name `package://example.com/mypackage@1.0.0`, Pkl will make an HTTPS request to `\https://example.com/mypackage@1.0.0` to fetch package metadata.
 
-In situations where internet access is restricted, a mirror can be set up to allow use of packages that are hosted on the internet.
+In situations where internet access is restricted, a mirror can be set up to allow use of packages that are published to the internet.
 
 To direct Pkl to a mirror, the `--http-rewrite` CLI option (and its equivalent options when using Pkl's other evaluator APIs) must be used.
 For example, `--http-rewrite \https://pkg.pkl-lang.org/=\https://my.internal.mirror/` will tell Pkl to download packages from host `my.internal.mirror`.
 
 NOTE: To effectively mirror packages from pkg.pkl-lang.org, there must be two rewrites; one for `\https://pkg.pkl-lang.org/` (where package metadata is downloaded), and one for `\https://github.com/` (where package zip files are downloaded).
+
+NOTE: Pkl does not provide any tooling to run a mirror server.
+To fully set up mirroring, an HTTP(s) server will need be running, and which mirrors the same assets byte-for-byte.
