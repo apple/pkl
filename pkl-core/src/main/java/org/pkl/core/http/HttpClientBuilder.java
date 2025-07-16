@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,17 @@
  */
 package org.pkl.core.http;
 
+import static org.pkl.core.util.IoUtils.validateRewriteRule;
+
 import java.net.ProxySelector;
 import java.net.URI;
 import java.nio.ByteBuffer;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.Supplier;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
@@ -34,6 +38,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<ByteBuffer> certificateBytes = new ArrayList<>();
   private int testPort = -1;
   private ProxySelector proxySelector;
+  private Map<URI, URI> rewrites = new HashMap<>();
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -88,6 +93,24 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
+  public Builder setRewrites(Map<URI, URI> rewrites) {
+    for (var entry : rewrites.entrySet()) {
+      validateRewriteRule(entry.getKey());
+      validateRewriteRule(entry.getValue());
+    }
+    this.rewrites = new HashMap<>(rewrites);
+    return this;
+  }
+
+  @Override
+  public Builder addRewrite(URI sourcePrefix, URI targetPrefix) {
+    validateRewriteRule(sourcePrefix);
+    validateRewriteRule(targetPrefix);
+    this.rewrites.put(sourcePrefix, targetPrefix);
+    return this;
+  }
+
+  @Override
   public HttpClient build() {
     return doBuild().get();
   }
@@ -105,7 +128,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
     return () -> {
       var jdkClient =
           new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
-      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient);
+      return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient, rewrites);
     };
   }
 }

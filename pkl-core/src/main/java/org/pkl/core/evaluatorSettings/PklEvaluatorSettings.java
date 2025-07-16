@@ -18,6 +18,8 @@ package org.pkl.core.evaluatorSettings;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -121,15 +123,31 @@ public record PklEvaluatorSettings(
         externalResourceReaders);
   }
 
-  public record Http(@Nullable Proxy proxy) {
-    public static final Http DEFAULT = new Http(null);
+  public record Http(@Nullable Proxy proxy, @Nullable Map<URI, URI> rewrites) {
+    public static final Http DEFAULT = new Http(null, Collections.emptyMap());
 
+    @SuppressWarnings("unchecked")
     public static @Nullable Http parse(@Nullable Value input) {
       if (input == null || input instanceof PNull) {
         return null;
       } else if (input instanceof PObject http) {
         var proxy = Proxy.parse((Value) http.getProperty("proxy"));
-        return proxy == null ? DEFAULT : new Http(proxy);
+        var rewrites = http.getProperty("rewrites");
+        if (rewrites instanceof PNull) {
+          return new Http(proxy, null);
+        } else {
+          var parsedRewrites = new HashMap<URI, URI>();
+          for (var entry : ((Map<String, String>) rewrites).entrySet()) {
+            var key = entry.getKey();
+            var value = entry.getValue();
+            try {
+              parsedRewrites.put(new URI(key), new URI(value));
+            } catch (URISyntaxException e) {
+              throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
+            }
+          }
+          return new Http(proxy, parsedRewrites);
+        }
       } else {
         throw PklBugException.unreachableCode();
       }

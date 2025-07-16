@@ -235,6 +235,39 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
+  val httpRewrites: Map<URI, URI> by
+    option(
+        names = arrayOf("--http-rewrite"),
+        metavar = "from=to",
+        help = "URL prefixes that should be rewritten.",
+      )
+      .convert { it ->
+        val uris = it.split("=", limit = 2)
+        require(uris.size == 2) { "Rewrites must be in the form of <from>=<to>" }
+        try {
+          val (fromSpec, toSpec) = uris
+          val fromUri = URI(fromSpec).also { IoUtils.validateRewriteRule(it) }
+          val toUri = URI(toSpec).also { IoUtils.validateRewriteRule(it) }
+          fromUri to toUri
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
+        } catch (e: URISyntaxException) {
+          val message = buildString {
+            append("Rewrite target `${e.input}` has invalid syntax (${e.reason}).")
+            if (e.index > -1) {
+              append("\n\n")
+              append(e.input)
+              append("\n")
+              append(" ".repeat(e.index))
+              append("^")
+            }
+          }
+          fail(message)
+        }
+      }
+      .multiple()
+      .toMap()
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -289,6 +322,7 @@ class BaseOptions : OptionGroup() {
       caCertificates = caCertificates,
       httpProxy = proxy,
       httpNoProxy = noProxy ?: emptyList(),
+      httpRewrites = httpRewrites.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
     )

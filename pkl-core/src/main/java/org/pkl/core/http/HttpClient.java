@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import javax.net.ssl.SSLContext;
 import org.pkl.core.util.Nullable;
 
@@ -117,6 +118,10 @@ public interface HttpClient extends AutoCloseable {
      * @throws IllegalArgumentException if `proxyAddress` is invalid.
      */
     Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy);
+
+    Builder setRewrites(Map<URI, URI> rewrites);
+
+    Builder addRewrite(URI sourcePrefix, URI targetPrefix);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

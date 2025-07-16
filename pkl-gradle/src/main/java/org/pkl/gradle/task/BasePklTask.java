@@ -142,6 +142,10 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract ListProperty<String> getHttpNoProxy();
 
+  @Input
+  @Optional
+  public abstract MapProperty<URI, URI> getHttpRewrites();
+
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
    * Truffle use an un-optimized runtime.
@@ -195,6 +199,7 @@ public abstract class BasePklTask extends DefaultTask {
               Collections.emptyList(),
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
+              getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of());
     }

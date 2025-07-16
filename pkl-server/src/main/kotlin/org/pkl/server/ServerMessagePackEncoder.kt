@@ -36,13 +36,21 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   private fun MessagePacker.packHttp(http: Http) {
-    packMapHeader(0, http.caCertificates, http.proxy)
+    packMapHeader(0, http.caCertificates, http.proxy, http.rewrites)
     http.caCertificates?.let { packKeyValue("caCertificates", it) }
     http.proxy?.let { proxy ->
       packString("proxy")
       packMapHeader(0, proxy.address, proxy.noProxy)
       packKeyValue("address", proxy.address?.toString())
       packKeyValue("noProxy", proxy.noProxy)
+    }
+    http.rewrites?.let { rewrites ->
+      packString("rewrites")
+      packMapHeader(rewrites.size)
+      for ((key, value) in rewrites) {
+        packString(key)
+        packString(value)
+      }
     }
   }
 
