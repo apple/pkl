@@ -193,7 +193,7 @@ public enum Token {
 
   public boolean isAffix() {
     return switch (this) {
-      case LINE_COMMENT, BLOCK_COMMENT, SHEBANG, SEMICOLON -> true;
+      case LINE_COMMENT, BLOCK_COMMENT, SEMICOLON -> true;
       default -> false;
     };
   }

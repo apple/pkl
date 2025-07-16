@@ -56,6 +56,9 @@ public class GenericParser {
     var children = new ArrayList<GenNode>();
     var nodes = new ArrayList<GenNode>();
     ff(nodes);
+    if (lookahead == Token.SHEBANG) {
+      nodes.add(makeAffix(next()));
+    }
 
     var res = parseMemberHeader(children);
 
