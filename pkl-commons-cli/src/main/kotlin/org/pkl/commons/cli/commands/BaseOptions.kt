@@ -268,17 +268,6 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
-  private fun OptionCallTransformContext.validateRewrite(rewrite: URI) {
-    val uriStr = rewrite.toString()
-    require(uriStr.startsWith("http://") || uriStr.startsWith("https://")) {
-      "Rewrite target must start with 'http://' or 'https://', but got '$rewrite'"
-    }
-    require(rewrite.toString().endsWith("/")) { "Rewrite target '$rewrite' should end with '/'" }
-    require(rewrite.host == rewrite.host.lowercase()) {
-      "Rewrite target should have a lowercased hostname, but got '${rewrite.host}'"
-    }
-  }
-
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),

@@ -139,18 +139,6 @@ class CliMainTest {
   }
 
   @Test
-  fun `invalid rewrites -- capitalized hostname`() {
-    val ex =
-      assertThrows<BadParameterValue> {
-        rootCmd.parse(
-          arrayOf("eval", "--http-rewrite", "https://www.FOO.com/=https://bar.com/", "mymodule.pkl")
-        )
-      }
-    assertThat(ex.message)
-      .contains("Rewrite rule must have a lowercased hostname, but was 'www.FOO.com'")
-  }
-
-  @Test
   fun `invalid rewrites -- doesn't end with slash`() {
     val ex =
       assertThrows<BadParameterValue> {

@@ -849,13 +849,6 @@ public final class IoUtils {
           "Rewrite rule must start with 'http://' or 'https://', but was '%s'".formatted(rewrite));
     }
 
-    if (rewrite.getHost() == null
-        || !rewrite.getHost().equals(rewrite.getHost().toLowerCase(Locale.ROOT))) {
-      throw new IllegalArgumentException(
-          "Rewrite rule must have a lowercased hostname, but was '%s'"
-              .formatted(rewrite.getHost()));
-    }
-
     if (!rewrite.toString().endsWith("/")) {
       throw new IllegalArgumentException(
           "Rewrite rule must end with '/', but was '%s'".formatted(rewrite));

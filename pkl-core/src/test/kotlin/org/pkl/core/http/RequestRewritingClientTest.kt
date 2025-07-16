@@ -263,6 +263,44 @@ class RequestRewritingClientTest {
       .isEqualTo("https://corge.com/bar/baz")
   }
 
+  @Test
+  fun `rewrites URIs - hostname is always lowercased`() {
+    assertThat(
+        rewrittenRequest(
+          "https://foo.com/bar/baz",
+          mapOf(URI("https://FOO.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://FOO.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+  }
+
+  @Test
+  fun `rewrites URIs - scheme is always lowercased`() {
+    assertThat(
+        rewrittenRequest(
+          "HTTPS://foo.com/bar/baz",
+          mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+
+    assertThat(
+        rewrittenRequest(
+          "https://FOO.com/bar/baz",
+          mapOf(URI("HTTPS://foo.com/") to URI("HTTPS://bar.com/")),
+        )
+      )
+      .isEqualTo("https://bar.com/bar/baz")
+  }
+
   private fun rewrittenRequest(uri: String, rules: Map<URI, URI>): String {
     val captured = RequestCapturingClient()
     val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules)

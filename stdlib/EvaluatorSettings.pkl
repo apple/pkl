@@ -111,18 +111,16 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 
 const local hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
-const local hasNonEmptyLowercasedHostname = (it: String) ->
+const local hasNonEmptyHostname = (it: String) ->
   let (hostname = hostnameRegex.findMatchesIn(it).getOrNull(0)?.groups?.getOrNull(1)?.value)
-    hostname != null
-      && hostname.length > 0
-      && hostname.toLowerCase() == hostname
+    hostname != null && hostname.length > 0
 
 /// A key or value in [Http.rewrites].
 @Since { version = "0.29.0" }
 typealias HttpRewrite = String(
   startsWith(Regex("https?://")),
   endsWith("/"),
-  hasNonEmptyLowercasedHostname
+  hasNonEmptyHostname
 )
 
 /// Settings that control how Pkl talks to HTTP(S) servers.
@@ -160,7 +158,7 @@ class Http {
   ///
   /// * It starts with either `http://`, or `https://`.
   /// * It ends with `/`.
-  /// * It has a non-empty and lowercased hostname.
+  /// * It has a non-empty hostname.
   ///
   /// An rewrite target should also not contain a query string or fragment component
   /// (not schematically enforced).

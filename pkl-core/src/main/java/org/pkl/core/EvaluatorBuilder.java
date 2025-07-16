@@ -526,7 +526,9 @@ public final class EvaluatorBuilder {
         }
         httpClientBuilder.setProxy(settings.http().proxy().address(), noProxy);
       }
-      httpClientBuilder.setRewrites(settings.http().rewrites());
+      if (settings.http().rewrites() != null) {
+        httpClientBuilder.setRewrites(settings.http().rewrites());
+      }
       setHttpClient(httpClientBuilder.buildLazily());
     }
     return this;
