@@ -91,9 +91,9 @@ class Generator {
         var previousNewline = false
         for (child in node.nodes) {
           when {
-            child is ForceLine -> buf.append('\n') // don't indent
+            child is ForceLine -> newline(shouldIndent = false) // don't indent
             child is Text && previousNewline && offset != 0 -> text(reposition(child.text, offset))
-            else -> node(child, wrap)
+            else -> node(child, Wrap.DETECT) // always detect wrapping
           }
           previousNewline = child is ForceLine
         }
@@ -110,10 +110,10 @@ class Generator {
     buf.append(value)
   }
 
-  private fun newline() {
+  private fun newline(shouldIndent: Boolean = true) {
     size = INDENT.length * indent
     buf.append('\n')
-    shouldAddIndent = true
+    shouldAddIndent = shouldIndent
   }
 
   private fun reposition(text: String, offset: Int): String {
