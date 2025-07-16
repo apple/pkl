@@ -2160,10 +2160,17 @@ external class Pair<out First, out Second> extends Any {
   external value: Second
 }
 
-/// Wraps [value], terminating the fold with [value] as result.
+/// Wraps [v], terminating the fold with [v] as result.
+///
 /// Should only be called from inside a fold function like
 /// `fold`, `foldIndexed`, `reduce`, etc.
-external const function folded<T>(value: T): T
+const function folded(v: Any): Any = new Folded {
+  value = v
+}
+
+class Folded {
+  value: Any
+}
 
 /// Common base class for [List] and [Set].
 ///

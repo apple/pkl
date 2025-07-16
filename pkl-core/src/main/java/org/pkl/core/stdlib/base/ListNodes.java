@@ -739,22 +739,18 @@ public final class ListNodes {
 
     @Specialization
     protected Object eval(VmList self, Object initial, VmFunction function) {
-      try {
-        var iter = self.iterator();
-        var result = initial;
-        while (iter.hasNext()) {
-          var elem = iter.next();
-          result = applyLambdaNode.execute(function, result, elem);
+      var iter = self.iterator();
+      var result = initial;
+      while (iter.hasNext()) {
+        var elem = iter.next();
+        result = applyLambdaNode.execute(function, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
         }
-        LoopNode.reportLoopCount(this, self.getLength());
-        return result;
-      } catch (VmException vme) {
-        CompilerDirectives.transferToInterpreter();
-        if (vme.getCause() instanceof FoldedException fe) {
-          return fe.value;
-        }
-        throw vme;
       }
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result;
     }
   }
 
@@ -763,22 +759,18 @@ public final class ListNodes {
 
     @Specialization
     protected Object eval(VmList self, Object initial, VmFunction function) {
-      try {
-        var iter = self.reverseIterator();
-        var result = initial;
-        while (iter.hasNext()) {
-          var elem = iter.next();
-          result = applyLambdaNode.execute(function, elem, result);
+      var iter = self.reverseIterator();
+      var result = initial;
+      while (iter.hasNext()) {
+        var elem = iter.next();
+        result = applyLambdaNode.execute(function, elem, result);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
         }
-        LoopNode.reportLoopCount(this, self.getLength());
-        return result;
-      } catch (VmException vme) {
-        CompilerDirectives.transferToInterpreter();
-        if (vme.getCause() instanceof FoldedException fe) {
-          return fe.value;
-        }
-        throw vme;
       }
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result;
     }
   }
 
@@ -787,25 +779,21 @@ public final class ListNodes {
 
     @Specialization
     protected Object eval(VmList self, Object initial, VmFunction function) {
-      try {
-        var iter = self.iterator();
-        var result = initial;
-        long index = 0;
+      var iter = self.iterator();
+      var result = initial;
+      long index = 0;
 
-        while (iter.hasNext()) {
-          var elem = iter.next();
-          result = applyLambdaNode.execute(function, index++, result, elem);
+      while (iter.hasNext()) {
+        var elem = iter.next();
+        result = applyLambdaNode.execute(function, index++, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
         }
-
-        LoopNode.reportLoopCount(this, self.getLength());
-        return result;
-      } catch (VmException vme) {
-        CompilerDirectives.transferToInterpreter();
-        if (vme.getCause() instanceof FoldedException fe) {
-          return fe.value;
-        }
-        throw vme;
       }
+
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result;
     }
   }
 
@@ -816,23 +804,19 @@ public final class ListNodes {
     protected Object eval(VmList self, VmFunction function) {
       self.checkNonEmpty();
 
-      try {
-        var iterator = self.iterator();
-        var result = iterator.next();
-        while (iterator.hasNext()) {
-          var elem = iterator.next();
-          result = applyLambdaNode.execute(function, result, elem);
+      var iterator = self.iterator();
+      var result = iterator.next();
+      while (iterator.hasNext()) {
+        var elem = iterator.next();
+        result = applyLambdaNode.execute(function, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
         }
-
-        LoopNode.reportLoopCount(this, self.getLength());
-        return result;
-      } catch (VmException vme) {
-        CompilerDirectives.transferToInterpreter();
-        if (vme.getCause() instanceof FoldedException fe) {
-          return fe.value;
-        }
-        throw vme;
       }
+
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result;
     }
   }
 
@@ -843,23 +827,19 @@ public final class ListNodes {
     protected Object eval(VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
-      try {
-        var iterator = self.iterator();
-        var result = iterator.next();
-        while (iterator.hasNext()) {
-          var elem = iterator.next();
-          result = applyLambdaNode.execute(function, result, elem);
+      var iterator = self.iterator();
+      var result = iterator.next();
+      while (iterator.hasNext()) {
+        var elem = iterator.next();
+        result = applyLambdaNode.execute(function, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
         }
-
-        LoopNode.reportLoopCount(this, self.getLength());
-        return result;
-      } catch (VmException vme) {
-        CompilerDirectives.transferToInterpreter();
-        if (vme.getCause() instanceof FoldedException fe) {
-          return fe.value;
-        }
-        throw vme;
       }
+
+      LoopNode.reportLoopCount(this, self.getLength());
+      return result;
     }
   }
 

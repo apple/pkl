@@ -166,7 +166,6 @@ examples {
     1
     0
     24
-    "Function `folded` should only be called from inside a fold function."
   }
   ["foldBack()"] {
     6

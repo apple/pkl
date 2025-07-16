@@ -42,11 +42,11 @@ facts {
 
 examples {
   ["every"] {
-    module.catch(() -> set1.every((x) -> "wrong type"))
+    module.catch(() -> set1.every((_) -> "wrong type"))
   }
 
   ["any"] {
-    module.catch(() -> set1.any((x) -> "wrong type"))
+    module.catch(() -> set1.any((_) -> "wrong type"))
   }
 
   ["length"] {
@@ -56,7 +56,7 @@ examples {
   ["filter()"] {
     set1.filter((x) -> x > 1)
     set1. filter((x) -> x > 3)
-    module.catch(() -> set1. filter((x) -> "wrong type"))
+    module.catch(() -> set1. filter((_) -> "wrong type"))
   }
 
   ["map()"] {
@@ -66,7 +66,7 @@ examples {
 
   ["flatMap()"] {
     set1.flatMap((x) -> List(x, x + 1))
-    module.catch(() -> set1.flatMap((x) -> "wrong type"))
+    module.catch(() -> set1.flatMap((_) -> "wrong type"))
   }
 
   ["flatten()"] {
@@ -97,19 +97,19 @@ examples {
     set1.count((x) -> x >= 2)
     set1.count((x) -> true)
     set1.count((x) -> false)
-    module.catch(() -> set1.count((x) -> "wrong type"))
+    module.catch(() -> set1.count((_) -> "wrong type"))
   }
 
   ["find()"] {
     set1.find((x) -> x >= 2)
     set1.find((x) -> true)
-    module.catch(() -> set1.find((x) -> "wrong type"))
+    module.catch(() -> set1.find((_) -> "wrong type"))
   }
 
   ["findLast()"] {
     set1.findLast((x) -> x >= 2)
     set1.findLast((x) -> true)
-    module.catch(() -> set1.findLast((x) -> "wrong type"))
+    module.catch(() -> set1.findLast((_) -> "wrong type"))
   }
 
   ["take()"] {
@@ -122,7 +122,7 @@ examples {
     set1.takeWhile((x) -> true)
     set1.takeWhile((x) -> false)
     set1.takeWhile((x) -> x < 3)
-    module.catch(() -> set1.takeWhile((x) -> "wrong type"))
+    module.catch(() -> set1.takeWhile((_) -> "wrong type"))
   }
 
   ["takeLast()"] {
@@ -135,7 +135,7 @@ examples {
     set1.takeLastWhile((x) -> true)
     set1.takeLastWhile((x) -> false)
     set1.takeLastWhile((x) -> x > 1)
-    module.catch(() -> set1.takeLastWhile((x) -> "wrong type"))
+    module.catch(() -> set1.takeLastWhile((_) -> "wrong type"))
   }
 
   ["drop()"] {
@@ -148,7 +148,7 @@ examples {
     set1.dropWhile((x) -> true)
     set1.dropWhile((x) -> false)
     set1.dropWhile((x) -> x < 3)
-    module.catch(() -> set1.dropWhile((x) -> "wrong type"))
+    module.catch(() -> set1.dropWhile((_) -> "wrong type"))
   }
 
   ["dropLast()"] {
@@ -161,7 +161,7 @@ examples {
     set1.dropLastWhile((x) -> true)
     set1.dropLastWhile((x) -> false)
     set1.dropLastWhile((x) -> x > 1)
-    module.catch(() -> set1.dropLastWhile((x) -> "wrong type"))
+    module.catch(() -> set1.dropLastWhile((_) -> "wrong type"))
   }
 
   ["fold()"] {
