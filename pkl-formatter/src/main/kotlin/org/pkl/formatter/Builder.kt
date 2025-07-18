@@ -196,8 +196,17 @@ class Builder(sourceText: String) {
     if (txt == "///" || txt == "/// ") return Text("///")
 
     var comment = txt.substring(3)
+    if (comment.isStrictBlank()) return Text("///")
+
     if (comment.isNotEmpty() && comment[0] != ' ') comment = " $comment"
     return Text("///$comment")
+  }
+
+  private fun String.isStrictBlank(): Boolean {
+    for (ch in this) {
+      if (ch != ' ' && ch != '\t') return false
+    }
+    return true
   }
 
   private fun formatQualifiedIdentifier(node: GenNode): FormatNode {
