@@ -18,6 +18,7 @@ package org.pkl.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.parser.syntax.Annotation;
@@ -112,6 +113,7 @@ public class Parser {
     if (lookahead == Token.EOF) {
       return new Module(Collections.singletonList(null), new Span(0, 0));
     }
+    if (lookahead == Token.SHEBANG) next();
     var start = spanLookahead;
     Span end = null;
     ModuleDecl moduleDecl;
@@ -1787,15 +1789,15 @@ public class Parser {
   private FullToken forceNext() {
     var tk = lexer.next();
     precededBySemicolon = false;
-    while (tk == Token.LINE_COMMENT
-        || tk == Token.BLOCK_COMMENT
-        || tk == Token.SEMICOLON
-        || tk == Token.SHEBANG) {
+    while (AFFIXES.contains(tk)) {
       precededBySemicolon = precededBySemicolon || tk == Token.SEMICOLON;
       tk = lexer.next();
     }
     return new FullToken(tk, lexer.span(), lexer.newLinesBetween);
   }
+
+  private static final EnumSet<Token> AFFIXES =
+      EnumSet.of(Token.LINE_COMMENT, Token.BLOCK_COMMENT, Token.SEMICOLON);
 
   // Like next, but don't ignore comments
   private FullToken nextComment() {
