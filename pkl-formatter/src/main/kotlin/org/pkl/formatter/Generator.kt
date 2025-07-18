@@ -87,11 +87,17 @@ class Generator {
         }
       }
       is MultilineStringGroup -> {
-        val offset = (indent * INDENT.length + 1) - node.endQuoteCol
+        val indentLength = indent * INDENT.length
+        val offset = (indentLength + 1) - node.endQuoteCol
         var previousNewline = false
-        for (child in node.nodes) {
+        for ((i, child) in node.nodes.withIndex()) {
           when {
             child is ForceLine -> newline(shouldIndent = false) // don't indent
+            child is Text &&
+              previousNewline &&
+              child.text.isBlank() &&
+              child.text.length == indentLength &&
+              node.nodes[i + 1] is ForceLine -> {}
             child is Text && previousNewline && offset != 0 -> text(reposition(child.text, offset))
             else -> node(child, Wrap.DETECT) // always detect wrapping
           }

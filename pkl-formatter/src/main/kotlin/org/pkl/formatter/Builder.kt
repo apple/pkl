@@ -193,10 +193,10 @@ class Builder(sourceText: String) {
 
   private fun formatDocComment(node: GenNode): FormatNode {
     val txt = node.text()
-    val index = txt.indexOfFirst { it != '/' }
-    if (index <= 0) return Text("///")
-    var comment = txt.substring(index)
-    if (comment.isNotEmpty() && !comment[0].isWhitespace()) comment = " $comment"
+    if (txt == "///" || txt == "/// ") return Text("///")
+
+    var comment = txt.substring(3)
+    if (comment.isNotEmpty() && comment[0] != ' ') comment = " $comment"
     return Text("///$comment")
   }
 
@@ -239,7 +239,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatTypealiasHeader(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return Group(newId(), formatGeneric(node.children, Space))
   }
 
   private fun formatTypealiasBody(node: GenNode): FormatNode {
@@ -601,6 +601,8 @@ class Builder(sourceText: String) {
 
   private fun formatBinaryOpExpr(node: GenNode): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
+    val callChainSize = flat.count { it.isOperator(".", "?.") }
+    val hasLambda = callChainSize > 1 && flat.any { hasFunctionLiteral(it, 2) }
     val nodes =
       formatGeneric(flat) { prev, next ->
         if (prev.type == NodeType.OPERATOR) {
@@ -613,7 +615,7 @@ class Builder(sourceText: String) {
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
             ".",
-            "?." -> Line
+            "?." -> if (hasLambda) ForceLine else Line
             "-" -> Space
             else -> SpaceOrLine
           }
@@ -621,6 +623,15 @@ class Builder(sourceText: String) {
       }
     val shouldGroup = node.children.size == flat.size
     return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
+  }
+
+  private fun hasFunctionLiteral(node: GenNode, depth: Int): Boolean {
+    if (node.type == NodeType.FUNCTION_LITERAL_EXPR) return true
+    for (child in node.children) {
+      if (child.type == NodeType.FUNCTION_LITERAL_EXPR) return true
+      if (depth > 0 && hasFunctionLiteral(child, depth - 1)) return true
+    }
+    return false
   }
 
   private fun formatLetParameterDefinition(node: GenNode): FormatNode {
@@ -953,6 +964,9 @@ class Builder(sourceText: String) {
 
   private fun GenNode.isTerminal(vararg texts: String): Boolean =
     type == NodeType.TERMINAL && text(source) in texts
+
+  private fun GenNode.isOperator(vararg texts: String): Boolean =
+    type == NodeType.OPERATOR && text(source) in texts
 
   private fun newId(): Int {
     return id++
