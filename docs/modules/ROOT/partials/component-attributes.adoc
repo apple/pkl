@@ -80,6 +80,7 @@ endif::[]
 :uri-stdlib-implies: {uri-stdlib-baseModule}/Boolean#implies()
 :uri-stdlib-Any: {uri-stdlib-baseModule}/Any
 :uri-stdlib-String: {uri-stdlib-baseModule}/String
+:uri-stdlib-Collection: {uri-stdlib-baseModule}/Collection
 :uri-stdlib-StringToInt: {uri-stdlib-baseModule}/String#toInt()
 :uri-stdlib-Int: {uri-stdlib-baseModule}/Int
 :uri-stdlib-Float: {uri-stdlib-baseModule}/Float
@@ -141,6 +142,7 @@ endif::[]
 :uri-stdlib-Bytes: {uri-stdlib-baseModule}/Bytes
 :uri-stdlib-Resource: {uri-stdlib-baseModule}/Resource
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
+:uri-stdlib-FileOutput: {uri-stdlib-baseModule}/FileOutput
 
 :uri-messagepack: https://msgpack.org/index.html
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md
