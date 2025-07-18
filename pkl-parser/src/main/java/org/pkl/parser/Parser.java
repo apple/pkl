@@ -113,12 +113,7 @@ public class Parser {
     if (lookahead == Token.EOF) {
       return new Module(Collections.singletonList(null), new Span(0, 0));
     }
-    if (lookahead == Token.SHEBANG) {
-      var shebang = next();
-      if (shebang.span.charIndex() > 0) {
-        throw new ParserError(ErrorMessages.create("wrongShebangPosition"), shebang.span);
-      }
-    }
+    if (lookahead == Token.SHEBANG) next();
     var start = spanLookahead;
     Span end = null;
     ModuleDecl moduleDecl;
