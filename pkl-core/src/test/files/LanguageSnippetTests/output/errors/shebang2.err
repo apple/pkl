@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Shebangs are only allowed at the very beginning of a file.
-
-x | #!/usr/bin/env pkl eval
-    ^^^^^^^^^^^^^^^^^^^^^^^
-at shebang2 (file:///$snippetsDir/input/errors/shebang2.pkl)
