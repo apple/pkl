@@ -31,6 +31,21 @@
 pthread_mutex_t graal_mutex;
 graal_isolatethread_t *graal_isolatethread = NULL;
 
+int pkl_attach_thread() {
+  graal_isolate_t *graal_isolate = graal_get_isolate(graal_isolatethread);
+  if (graal_isolate == NULL) {
+    perror("pkl_attach_thread: couldn't get isolate");
+    return -1;
+  }
+
+  if (graal_attach_thread(graal_isolate, &graal_isolatethread) != 0) {
+    perror("pkl_attach_thread: couldn't attach thread");
+    return -1;
+  }
+
+  return 0;
+}
+
 int pkl_init(PklMessageResponseHandler handler, void *userData) {
   if (graal_isolatethread != NULL) {
     perror("pkl_init: graal_isolatethread is already initialised");
@@ -59,6 +74,11 @@ int pkl_send_message(int length, char *message) {
     return -1;
   }
 
+  if (pkl_attach_thread() != 0) {
+    perror("pkl_send_message: couldn't attach thread");
+    return -1;
+  }
+
   pkl_internal_send_message(graal_isolatethread, length, message);
   pthread_mutex_unlock(&graal_mutex);
 
@@ -67,6 +87,11 @@ int pkl_send_message(int length, char *message) {
 
 int pkl_close() {
   if (pthread_mutex_lock(&graal_mutex) != 0) {
+    return -1;
+  }
+
+  if (pkl_attach_thread() != 0) {
+    perror("pkl_send_message: couldn't attach thread");
     return -1;
   }
 
@@ -86,5 +111,10 @@ int pkl_close() {
 };
 
 char* pkl_version() {
+  if (pkl_attach_thread() != 0) {
+    perror("pkl_version: couldn't attach thread");
+    return NULL;
+  }
+
   return pkl_internal_version(graal_isolatethread);
 }
