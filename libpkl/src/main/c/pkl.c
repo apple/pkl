@@ -29,11 +29,11 @@
 #endif
 
 pthread_mutex_t graal_mutex;
-graal_isolatethread_t *isolatethread = NULL;
+graal_isolatethread_t *graal_isolatethread = NULL;
 
 int pkl_init(PklMessageResponseHandler handler, void *userData) {
-  if (isolatethread != NULL) {
-    perror("pkl_init: isolatethread is already initialised");
+  if (graal_isolatethread != NULL) {
+    perror("pkl_init: graal_isolatethread is already initialised");
     return -1;
   }
 
@@ -46,9 +46,9 @@ int pkl_init(PklMessageResponseHandler handler, void *userData) {
     return -1;
   }
 
-  isolatethread = pkl_internal_init();
-  pkl_internal_register_response_handler(isolatethread, handler, userData);
-  pkl_internal_server_start(isolatethread);
+  graal_isolatethread = pkl_internal_init();
+  pkl_internal_register_response_handler(graal_isolatethread, handler, userData);
+  pkl_internal_server_start(graal_isolatethread);
   pthread_mutex_unlock(&graal_mutex);
 
   return 0;
@@ -59,7 +59,7 @@ int pkl_send_message(int length, char *message) {
     return -1;
   }
 
-  pkl_internal_send_message(isolatethread, length, message);
+  pkl_internal_send_message(graal_isolatethread, length, message);
   pthread_mutex_unlock(&graal_mutex);
 
   return 0;
@@ -70,9 +70,9 @@ int pkl_close() {
     return -1;
   }
 
-  pkl_internal_server_stop(isolatethread);
-  pkl_internal_close(isolatethread);
-  isolatethread = NULL;
+  pkl_internal_server_stop(graal_isolatethread);
+  pkl_internal_close(graal_isolatethread);
+  graal_isolatethread = NULL;
 
   if (pthread_mutex_unlock(&graal_mutex) != 0) {
     return -1;
@@ -86,5 +86,5 @@ int pkl_close() {
 };
 
 char* pkl_version() {
-  return pkl_internal_version(isolatethread);
+  return pkl_internal_version(graal_isolatethread);
 }
