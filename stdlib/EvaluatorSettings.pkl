@@ -133,8 +133,8 @@ class Http {
   /// Each key describes the prefix of a request, and each value describes the replacement prefix.
   ///
   /// This can be useful for setting up mirroring of packages, which are fetched over HTTPS.
-  //
-  /// In the case of multiple matches, the longest prefix is is used.
+  ///
+  /// In the case of multiple matches, the longest prefix is used.
   ///
   /// The URL hostname is case-insensitive.
   ///
