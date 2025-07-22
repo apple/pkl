@@ -382,9 +382,10 @@ class Builder(sourceText: String) {
   private fun formatArgumentList(node: GenNode, twoBy2: Boolean = false): FormatNode {
     if (node.children.size == 2) return Text("()")
     val nodes =
-      formatGenericWithGen(node.children, { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
-      }) { node, next ->
+      formatGenericWithGen(
+        node.children,
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+      ) { node, next ->
         if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
           formatArgumentListElements(node, twoBy2)
         } else format(node)
@@ -394,21 +395,22 @@ class Builder(sourceText: String) {
 
   private fun formatArgumentListElements(node: GenNode, twoBy2: Boolean = false): FormatNode {
     val children = node.children
-    val nodes = if (twoBy2) {
-      val pairs = pairArguments(children)
-      formatGenericWithGen(pairs, SpaceOrLine) { node, next ->
-        if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
-          Group(newId(), formatGeneric(node.children, SpaceOrLine))
-        } else {
-          format(node)
+    val nodes =
+      if (twoBy2) {
+        val pairs = pairArguments(children)
+        formatGenericWithGen(pairs, SpaceOrLine) { node, next ->
+          if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
+            Group(newId(), formatGeneric(node.children, SpaceOrLine))
+          } else {
+            format(node)
+          }
         }
+      } else {
+        formatGeneric(node.children, SpaceOrLine)
       }
-    } else {
-      formatGeneric(node.children, SpaceOrLine)
-    }
     return Indent(nodes)
   }
-  
+
   private fun pairArguments(nodes: List<GenNode>): List<GenNode> {
     val res = mutableListOf<GenNode>()
     var tmp = mutableListOf<GenNode>()
