@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.executor;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -22,6 +23,7 @@ import java.util.Map;
 import java.util.Objects;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
 
 /**
  * Options for {@link Executor#evaluatePath}.
@@ -52,6 +54,8 @@ public final class ExecutorOptions {
   private final List<Path> certificateFiles;
 
   private final List<byte[]> certificateBytes;
+
+  private final Map<URI, URI> httpRewrites;
 
   private final int testPort; // -1 means disabled
 
@@ -84,6 +88,7 @@ public final class ExecutorOptions {
     private /* @Nullable */ Path projectDir;
     private List<Path> certificateFiles = List.of();
     private List<byte[]> certificateBytes = List.of();
+    private Map<URI, URI> httpRewrites = Map.of();
     private int testPort = -1; // -1 means disabled
     private int spiOptionsVersion = -1; // -1 means use latest
 
@@ -197,6 +202,18 @@ public final class ExecutorOptions {
       return this;
     }
 
+    /**
+     * API equivalent of the {@code --http-rewrite} CLI option.
+     *
+     * <p>This option is ignored on Pkl 0.28 and older.
+     *
+     * @since 0.29.0
+     */
+    public Builder httpRewrites(Map<URI, URI> httpRewrites) {
+      this.httpRewrites = httpRewrites;
+      return this;
+    }
+
     /** Internal test option. -1 means disabled. */
     Builder testPort(int testPort) {
       this.testPort = testPort;
@@ -223,6 +240,7 @@ public final class ExecutorOptions {
           projectDir,
           certificateFiles,
           certificateBytes,
+          httpRewrites,
           testPort,
           spiOptionsVersion);
     }
@@ -271,6 +289,7 @@ public final class ExecutorOptions {
         projectDir,
         List.of(),
         List.of(),
+        Map.of(),
         -1,
         -1);
   }
@@ -288,6 +307,7 @@ public final class ExecutorOptions {
       /* @Nullable */ Path projectDir,
       List<Path> certificateFiles,
       List<byte[]> certificateBytes,
+      Map<URI, URI> httpRewrites,
       int testPort,
       int spiOptionsVersion) {
 
@@ -303,6 +323,7 @@ public final class ExecutorOptions {
     this.projectDir = projectDir;
     this.certificateFiles = List.copyOf(certificateFiles);
     this.certificateBytes = List.copyOf(certificateBytes);
+    this.httpRewrites = Map.copyOf(httpRewrites);
     this.testPort = testPort;
     this.spiOptionsVersion = spiOptionsVersion;
   }
@@ -374,6 +395,17 @@ public final class ExecutorOptions {
     return certificateBytes;
   }
 
+  /**
+   * API equivalent of the {@code --http-rewrite} CLI option.
+   *
+   * <p>This option is ignored on Pkl 0.28 and older.
+   *
+   * @since 0.29.0
+   */
+  public Map<URI, URI> getHttpRewrites() {
+    return httpRewrites;
+  }
+
   @Override
   public boolean equals(/* @Nullable */ Object obj) {
     if (this == obj) return true;
@@ -392,6 +424,7 @@ public final class ExecutorOptions {
         && Objects.equals(projectDir, other.projectDir)
         && Objects.equals(certificateFiles, other.certificateFiles)
         && Objects.equals(certificateBytes, other.certificateBytes)
+        && Objects.equals(httpRewrites, other.httpRewrites)
         && testPort == other.testPort
         && spiOptionsVersion == other.spiOptionsVersion;
   }
@@ -411,6 +444,7 @@ public final class ExecutorOptions {
         projectDir,
         certificateFiles,
         certificateBytes,
+        httpRewrites,
         testPort,
         spiOptionsVersion);
   }
@@ -442,6 +476,8 @@ public final class ExecutorOptions {
         + certificateFiles
         + ", certificateBytes="
         + certificateBytes
+        + ", httpRewrites="
+        + httpRewrites
         + ", testPort="
         + testPort
         + ", spiOptionsVersion="
@@ -451,7 +487,23 @@ public final class ExecutorOptions {
 
   ExecutorSpiOptions toSpiOptions() {
     return switch (spiOptionsVersion) {
-      case -1, 2 ->
+      case -1, 3 ->
+          new ExecutorSpiOptions3(
+              allowedModules,
+              allowedResources,
+              environmentVariables,
+              externalProperties,
+              modulePath,
+              rootDir,
+              timeout,
+              outputFormat,
+              moduleCacheDir,
+              projectDir,
+              certificateFiles,
+              certificateBytes,
+              testPort,
+              httpRewrites);
+      case 2 ->
           new ExecutorSpiOptions2(
               allowedModules,
               allowedResources,

@@ -16,12 +16,15 @@
 package org.pkl.executor
 
 import java.io.File
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
+import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -64,9 +67,9 @@ class EmbeddedExecutorTest {
         // This context has a pkl-executor version that is lower than the distribution version.
         TestExecutor(executor1_2.value, 1, "SpiOptions1, Executor1, Distribution2"),
         TestExecutor(executor2_1.value, 1, "SpiOptions1, Executor2, Distribution1"),
-        TestExecutor(executor2_1.value, 2, "SpiOptions2, Executor2, Distribution1"),
+        TestExecutor(executor2_1.value, 3, "SpiOptions3, Executor2, Distribution1"),
         TestExecutor(executor2_2.value, 1, "SpiOptions1, Executor2, Distribution2"),
-        TestExecutor(executor2_2.value, 2, "SpiOptions2, Executor2, Distribution2"),
+        TestExecutor(executor2_2.value, 3, "SpiOptions3, Executor2, Distribution2"),
       )
     }
 
@@ -81,19 +84,19 @@ class EmbeddedExecutorTest {
     }
 
     // A pkl-executor library that supports ExecutorSpiOptions up to v1
-    // and a Pkl distribution that supports ExecutorSpiOptions up to v2.
+    // and a Pkl distribution that supports ExecutorSpiOptions up to v3.
     private val executor1_2: Lazy<Executor> = lazy {
       EmbeddedExecutor(listOf(pklDistribution2), pklExecutorClassLoader1)
     }
 
-    // A pkl-executor library that supports ExecutorSpiOptions up to v2
+    // A pkl-executor library that supports ExecutorSpiOptions up to v3
     // and a Pkl distribution that supports ExecutorSpiOptions up to v1.
     private val executor2_1: Lazy<Executor> = lazy {
       EmbeddedExecutor(listOf(pklDistribution1), pklExecutorClassLoader2)
     }
 
-    // A pkl-executor library that supports ExecutorSpiOptions up to v2
-    // and a Pkl distribution that supports ExecutorSpiOptions up to v2.
+    // A pkl-executor library that supports ExecutorSpiOptions up to v3
+    // and a Pkl distribution that supports ExecutorSpiOptions up to v3.
     private val executor2_2: Lazy<Executor> = lazy {
       EmbeddedExecutor(listOf(pklDistribution2), pklExecutorClassLoader2)
     }
@@ -107,7 +110,7 @@ class EmbeddedExecutorTest {
       }
     }
 
-    // a pkl-executor class loader that supports ExecutorSpiOptions up to v2
+    // a pkl-executor class loader that supports ExecutorSpiOptions up to v3
     private val pklExecutorClassLoader2: ClassLoader by lazy {
       EmbeddedExecutor::class.java.classLoader
     }
@@ -127,7 +130,7 @@ class EmbeddedExecutorTest {
         .apply { if (!exists()) missingTestFixture() }
     }
 
-    // a Pkl distribution that supports ExecutorSpiOptions up to v2
+    // a Pkl distribution that supports ExecutorSpiOptions up to v3
     private val pklDistribution2: Path by lazy {
       FileTestUtils.rootProjectDir
         .resolve(
@@ -554,6 +557,28 @@ class EmbeddedExecutorTest {
 
     // verify that cache was populated
     assertThat(cacheDir.toFile().list()).isNotEmpty()
+  }
+
+  @Test
+  fun `http rewrites option`(@TempDir tempDir: Path) {
+    val pklFile = tempDir.resolve("test.pkl")
+    pklFile.writeText(
+      """
+      @ModuleInfo { minPklVersion = "0.29.0" }
+      result = import("https://example.com/foo.pkl")
+    """
+        .trimIndent()
+    )
+    assertThatCode {
+        currentExecutor.evaluatePath(pklFile) {
+          allowedModules("file:", "https:")
+          allowedResources("prop:")
+          httpRewrites(mapOf(URI("https://example.com/") to URI("https://example.example/")))
+        }
+      }
+      .hasMessageContaining(
+        "Error connecting to host `example.example`. (request was rewritten: https://example.com/foo.pkl -> https://example.example/foo.pkl)"
+      )
   }
 
   @ParameterizedTest

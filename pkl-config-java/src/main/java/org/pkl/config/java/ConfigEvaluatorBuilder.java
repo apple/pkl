@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.pkl.config.java.mapper.ValueMapperBuilder;
 import org.pkl.core.EvaluatorBuilder;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
+import org.pkl.core.http.HttpClient;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.project.Project;
 import org.pkl.core.util.Nullable;
@@ -243,6 +244,15 @@ public final class ConfigEvaluatorBuilder {
   }
 
   /**
+   * Returns the currently set evaluation timeout.
+   *
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
+   */
+  public @Nullable Duration getTimeout() {
+    return evaluatorBuilder.getTimeout();
+  }
+
+  /**
    * Sets the set of URI patterns to be allowed when importing modules.
    *
    * <p>This is a convenience method that delegates to the underlying evaluator builder.
@@ -305,12 +315,24 @@ public final class ConfigEvaluatorBuilder {
   }
 
   /**
-   * Returns the currently set evaluation timeout.
+   * Sets the HTTP Client to be used.
    *
-   * <p>This is a convenience method that delegates to the underlying evaluator builder.
+   * <p>Defaults to {@code HttpClient.builder().buildLazily()}.
+   *
+   * @since 0.29.0
    */
-  public @Nullable Duration getTimeout() {
-    return evaluatorBuilder.getTimeout();
+  public ConfigEvaluatorBuilder setHttpClient(HttpClient httpClient) {
+    evaluatorBuilder.setHttpClient(httpClient);
+    return this;
+  }
+
+  /**
+   * Returns the currently set HTTP client.
+   *
+   * @since 0.29.0
+   */
+  public HttpClient getHttpClient() {
+    return evaluatorBuilder.getHttpClient();
   }
 
   /**
