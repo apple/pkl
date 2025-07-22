@@ -1839,7 +1839,7 @@ class Listing<out Element> extends Object {
   ///
   /// Returns [default] applied to [index] if [index] is outside the bounds of this listing.
   /// 
-  /// This is equivalent to `getOrNull([index]) ?? default.apply([index])`.
+  /// This is equivalent to `getOrNull(index) ?? default.apply(index)`.
   @Since { version = "0.29.0" }
   external function getOrDefault(index: Int): Element
 
@@ -2009,7 +2009,7 @@ class Mapping<out Key, out Value> extends Object {
   /// Returns the value associated with [key] or [default] applied to [key] if this mapping does
   /// not contain [key].
   ///
-  /// This is equivalent to `getOrNull([key]) ?? default.apply([key])`.
+  /// This is equivalent to `getOrNull(key) ?? default.apply(key)`.
   @Since { version = "0.29.0" } 
   external function getOrDefault(key: Any): Value
 
