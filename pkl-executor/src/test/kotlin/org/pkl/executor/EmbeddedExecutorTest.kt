@@ -106,7 +106,7 @@ class EmbeddedExecutorTest {
     // a pkl-executor class loader that supports ExecutorSpiOptions up to v1
     private val pklExecutorClassLoader1: ClassLoader by lazy {
       FilteringClassLoader(pklExecutorClassLoader2) { className ->
-        !className.endsWith("ExecutorSpiOptions2")
+        !className.matches(Regex(".*ExecutorSpiOptions\\d+$"))
       }
     }
 
