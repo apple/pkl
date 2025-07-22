@@ -19,7 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.HashSet;
-import org.pkl.core.PklBugException;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
@@ -126,10 +125,9 @@ public final class MappingNodes {
       if (value != null) {
         return value;
       }
-      if (VmUtils.readMember(self, Identifier.DEFAULT) instanceof VmFunction defaultFn) {
-        return applyNode.execute(defaultFn, key);
-      }
-      throw PklBugException.unreachableCode();
+
+      var defaultFunction = (VmFunction) VmUtils.readMember(self, Identifier.DEFAULT, callNode);
+      return applyNode.execute(defaultFunction, key);
     }
   }
 
