@@ -55,10 +55,10 @@ public class GenericParser {
     }
     var children = new ArrayList<GenNode>();
     var nodes = new ArrayList<GenNode>();
-    ff(nodes);
     if (lookahead == Token.SHEBANG) {
       nodes.add(makeAffix(next()));
     }
+    ff(nodes);
 
     var res = parseMemberHeader(children);
 
@@ -910,9 +910,8 @@ public class GenericParser {
 
   @SuppressWarnings("DuplicatedCode")
   private GenNode parseExprRest(GenNode expr) {
-    var looka = lookahead();
     // amends
-    if (looka == Token.LBRACE) {
+    if (lookahead() == Token.LBRACE) {
       var children = new ArrayList<GenNode>();
       children.add(expr);
       ff(children);
@@ -1410,7 +1409,6 @@ public class GenericParser {
     children.add(makeTerminal(tk));
   }
 
-  // this function may be dangerous as it fast-forwards the cursor after the last element
   private void parseListOf(Token separator, List<GenNode> children, Supplier<GenNode> parser) {
     children.add(parser.get());
     ff(children);

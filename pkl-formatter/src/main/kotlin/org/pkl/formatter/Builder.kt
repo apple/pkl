@@ -59,6 +59,7 @@ class Builder(sourceText: String) {
       NodeType.MODULE_TYPE,
       NodeType.UNKNOWN_TYPE,
       NodeType.NOTHING_TYPE,
+      NodeType.SHEBANG,
       NodeType.OPERATOR -> Text(node.text(source))
       NodeType.STRING_NEWLINE -> ForceLine
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
@@ -111,8 +112,8 @@ class Builder(sourceText: String) {
       NodeType.OBJECT_SPREAD -> Nodes(formatGeneric(node.children, null))
       NodeType.MEMBER_PREDICATE -> formatMemberPredicate(node)
       NodeType.QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node)
-      NodeType.ARGUMENT_LIST -> formatParameterList(node)
-      NodeType.ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
+      NodeType.ARGUMENT_LIST -> formatArgumentList(node)
+      NodeType.ARGUMENT_LIST_ELEMENTS -> formatArgumentListElements(node)
       NodeType.OBJECT_PARAMETER_LIST -> formatObjectParameterList(node)
       NodeType.IF_EXPR -> formatIf(node)
       NodeType.IF_HEADER -> formatIfHeader(node)
@@ -123,7 +124,7 @@ class Builder(sourceText: String) {
       NodeType.NEW_EXPR,
       NodeType.AMENDS_EXPR -> formatNewExpr(node)
       NodeType.NEW_HEADER -> formatNewHeader(node)
-      NodeType.UNQUALIFIED_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
+      NodeType.UNQUALIFIED_ACCESS_EXPR -> formatUnqualifiedAccessExpression(node)
       NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
       NodeType.FUNCTION_LITERAL_BODY -> formatFunctionLiteralBody(node)
@@ -219,6 +220,20 @@ class Builder(sourceText: String) {
         if (n1.type == NodeType.TERMINAL) null else Line
       }
     return Group(newId(), first + listOf(Indent(nodes)))
+  }
+
+  private fun formatUnqualifiedAccessExpression(node: GenNode): FormatNode {
+    val children = node.children
+    if (children.size == 1) return format(children[0])
+    val firstNode = children[0]
+    return if (firstNode.text() == "Map") {
+      val nodes = mutableListOf<FormatNode>()
+      nodes += format(firstNode)
+      nodes += formatArgumentList(children[1], twoBy2 = true)
+      Nodes(nodes)
+    } else {
+      Nodes(formatGeneric(children, null))
+    }
   }
 
   private fun formatAmendsExtendsClause(node: GenNode): FormatNode {
@@ -362,6 +377,61 @@ class Builder(sourceText: String) {
         if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
       }
     return Group(newId(), nodes)
+  }
+
+  private fun formatArgumentList(node: GenNode, twoBy2: Boolean = false): FormatNode {
+    if (node.children.size == 2) return Text("()")
+    val nodes =
+      formatGenericWithGen(node.children, { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+      }) { node, next ->
+        if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
+          formatArgumentListElements(node, twoBy2)
+        } else format(node)
+      }
+    return Group(newId(), nodes)
+  }
+
+  private fun formatArgumentListElements(node: GenNode, twoBy2: Boolean = false): FormatNode {
+    val children = node.children
+    val nodes = if (twoBy2) {
+      val pairs = pairArguments(children)
+      formatGenericWithGen(pairs, SpaceOrLine) { node, next ->
+        if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
+          Group(newId(), formatGeneric(node.children, SpaceOrLine))
+        } else {
+          format(node)
+        }
+      }
+    } else {
+      formatGeneric(node.children, SpaceOrLine)
+    }
+    return Indent(nodes)
+  }
+  
+  private fun pairArguments(nodes: List<GenNode>): List<GenNode> {
+    val res = mutableListOf<GenNode>()
+    var tmp = mutableListOf<GenNode>()
+    var commas = 0
+    for (node in nodes) {
+      if (node.isTerminal(",")) {
+        commas++
+        if (commas == 2) {
+          res += GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, tmp)
+          res += node
+          commas = 0
+          tmp = mutableListOf()
+        } else {
+          tmp += node
+        }
+      } else {
+        tmp += node
+      }
+    }
+    if (tmp.isNotEmpty()) {
+      res += GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, tmp)
+    }
+    return res
   }
 
   private fun formatParameterListElements(node: GenNode): FormatNode {
@@ -869,7 +939,7 @@ class Builder(sourceText: String) {
           ForceLine
         }
       }
-      hasTraillingAffix(prev, next) -> Space
+      hasTrailingAffix(prev, next) -> Space
       prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
       prev.type in FORCE_LINE_AFFIXES || next.type.isAffix -> {
         if (prev.linesBetween(next) > 1) {
@@ -882,7 +952,7 @@ class Builder(sourceText: String) {
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
         next.isTerminal("]", "?", ",") -> null
-      prev.isTerminal("class", "function") ||
+      prev.isTerminal("class", "function", "new") ||
         next.isTerminal("=", "{", "->", "class", "function") ||
         next.type == NodeType.OBJECT_BODY ||
         next.type == NodeType.OBJECT_PARAMETER_LIST ||
@@ -892,7 +962,7 @@ class Builder(sourceText: String) {
     }
   }
 
-  private fun hasTraillingAffix(node: GenNode, next: GenNode): Boolean {
+  private fun hasTrailingAffix(node: GenNode, next: GenNode): Boolean {
     return next.type.isAffix && node.span.lineEnd == next.span.lineBegin
   }
 
