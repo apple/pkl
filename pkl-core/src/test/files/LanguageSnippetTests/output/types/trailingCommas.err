@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Only standard library members can have type parameters.
+
+x | Key,
+    ^^^
+at trailingCommas (file:///$snippetsDir/input/types/trailingCommas.pkl)
