@@ -25,7 +25,7 @@ examples {
     -6359199461968751633
     -6359199461968751633
   }
-  ["in-langauge"] {
+  ["in-language"] {
     "9f64a747e1b97f131fabb6b447296c9b6f0201e79fb3c5356e6c77e89b6a806a"
     new {
       uri = "foo:foo"
