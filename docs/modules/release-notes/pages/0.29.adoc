@@ -31,7 +31,7 @@ This is sufficient in simple cases, but still introduces many shortcomings:
 
 1. `pkl eval` can only produce UTF-8 encoded strings.
 2. It is not possible to compute the checksum of binary content (except in the case of `read()`).
-3. It is hard to interop with configuration format that allow binary data.
+3. It is hard to interop with configuration formats that allow binary data.
 4. It is hard to do transformations on binary data.
 
 To address these shortcomings, the `Bytes` class is introduced.
@@ -178,7 +178,7 @@ However, the story for using these as CLIs is much clunkier.
 Users must call Java by including their published `.jar` files, as well as all of their dependencies via the `-classpath` argument.
 
 In 0.29, they are all being published as executables.
-In particular, pkldoc is being published as both a Java executable and a native executbale.
+In particular, pkldoc is being published as both a Java executable and a native executable.
 On the other hand, pkl-codegen-java and pkl-codegen-kotlin are published as Java executables only.
 
 For more information, see their download instructions:
