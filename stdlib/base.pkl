@@ -513,6 +513,9 @@ class PropertiesRenderer extends ValueRenderer {
 /// An external (file, HTTP, etc.) resource.
 ///
 /// Usually, a [Resource] is obtained via a `read()` expression, such as `read("some/file")`.
+///
+/// When created directly, either of [bytes] or [base64] can be set, and the other will be
+/// computed in terms of the set value.
 class Resource {
   /// The URI of this resource.
   uri: Uri
@@ -520,13 +523,12 @@ class Resource {
   /// The text content of this resource.
   text: String
 
+  /// The content of this resource in Base64 encoding.
+  base64: String = bytes.base64
+
   /// The bytes of this resource.
   @Since { version = "0.29.0" }
-  bytes: Bytes
-
-  /// The content of this resource in Base64.
-  @Deprecated { since = "0.29.0"; message = "Use bytes.base64 instead" }
-  hidden base64: String = bytes.base64
+  hidden bytes: Bytes = base64.base64DecodedBytes
 
   /// The [MD5](https://en.wikipedia.org/wiki/MD5)
   /// hash of this resource as hexadecimal string.

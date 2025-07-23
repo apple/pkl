@@ -632,7 +632,7 @@ abstract class AbstractServerTest {
             content
             
             $tripleQuote
-          bytes = Bytes(99, 111, 110, 116, 101, 110, 116, 10)
+          base64 = "Y29udGVudAo="
         }
         res2 {
           uri = "modulepath:/dir1/resource1.txt"
@@ -640,7 +640,7 @@ abstract class AbstractServerTest {
             content
             
             $tripleQuote
-          bytes = Bytes(99, 111, 110, 116, 101, 110, 116, 10)
+          base64 = "Y29udGVudAo="
         }
         res3 {
           ressy = "the module2 output"

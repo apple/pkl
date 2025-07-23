@@ -62,7 +62,7 @@ examples {
           }
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 79, 115, 116, 114, 105, 99, 104, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 123, 10, 32, 32, 110, 97, 109, 101, 32, 61, 32, 34, 79, 114, 97, 110, 103, 101, 34, 10, 125, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["@birds/catalog/Swallow.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -76,7 +76,7 @@ examples {
           favoriteFruit = apple
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 105, 109, 112, 111, 114, 116, 32, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 97, 112, 112, 108, 101, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 83, 119, 97, 108, 108, 111, 119, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 61, 32, 97, 112, 112, 108, 101, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
       }
     }
     new {
@@ -92,7 +92,7 @@ examples {
           favoriteFruit: Fruit
           
           """
-        bytes = Bytes(111, 112, 101, 110, 32, 109, 111, 100, 117, 108, 101, 32, 98, 105, 114, 100, 115, 46, 66, 105, 114, 100, 10, 10, 105, 109, 112, 111, 114, 116, 32, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 70, 114, 117, 105, 116, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 58, 32, 83, 116, 114, 105, 110, 103, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 58, 32, 70, 114, 117, 105, 116, 10)
+        base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
       }
       ["@birds/allFruit.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/allFruit.pkl"
@@ -103,7 +103,7 @@ examples {
           fruitFiles = read*("@fruities/catalog/*.pkl")
           
           """
-        bytes = Bytes(109, 111, 100, 117, 108, 101, 32, 98, 105, 114, 100, 115, 46, 97, 108, 108, 70, 114, 117, 105, 116, 10, 10, 102, 114, 117, 105, 116, 32, 61, 32, 105, 109, 112, 111, 114, 116, 42, 40, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10, 102, 114, 117, 105, 116, 70, 105, 108, 101, 115, 32, 61, 32, 114, 101, 97, 100, 42, 40, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10)
+        base64 = "bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg=="
       }
       ["@birds/catalog.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog.pkl"
@@ -114,7 +114,7 @@ examples {
           catalogFiles = read*("catalog/*.pkl")
           
           """
-        bytes = Bytes(109, 111, 100, 117, 108, 101, 32, 98, 105, 114, 100, 115, 46, 99, 97, 116, 97, 108, 111, 103, 10, 10, 99, 97, 116, 97, 108, 111, 103, 32, 61, 32, 105, 109, 112, 111, 114, 116, 42, 40, 34, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10, 99, 97, 116, 97, 108, 111, 103, 70, 105, 108, 101, 115, 32, 61, 32, 114, 101, 97, 100, 42, 40, 34, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10)
+        base64 = "bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo="
       }
     }
     new {
@@ -130,7 +130,7 @@ examples {
           favoriteFruit: Fruit
           
           """
-        bytes = Bytes(111, 112, 101, 110, 32, 109, 111, 100, 117, 108, 101, 32, 98, 105, 114, 100, 115, 46, 66, 105, 114, 100, 10, 10, 105, 109, 112, 111, 114, 116, 32, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 70, 114, 117, 105, 116, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 58, 32, 83, 116, 114, 105, 110, 103, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 58, 32, 70, 114, 117, 105, 116, 10)
+        base64 = "b3BlbiBtb2R1bGUgYmlyZHMuQmlyZAoKaW1wb3J0ICJAZnJ1aXRpZXMvRnJ1aXQucGtsIgoKbmFtZTogU3RyaW5nCgpmYXZvcml0ZUZydWl0OiBGcnVpdAo="
       }
       ["@birds/allFruit.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/allFruit.pkl"
@@ -141,7 +141,7 @@ examples {
           fruitFiles = read*("@fruities/catalog/*.pkl")
           
           """
-        bytes = Bytes(109, 111, 100, 117, 108, 101, 32, 98, 105, 114, 100, 115, 46, 97, 108, 108, 70, 114, 117, 105, 116, 10, 10, 102, 114, 117, 105, 116, 32, 61, 32, 105, 109, 112, 111, 114, 116, 42, 40, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10, 102, 114, 117, 105, 116, 70, 105, 108, 101, 115, 32, 61, 32, 114, 101, 97, 100, 42, 40, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10)
+        base64 = "bW9kdWxlIGJpcmRzLmFsbEZydWl0CgpmcnVpdCA9IGltcG9ydCooIkBmcnVpdGllcy9jYXRhbG9nLyoucGtsIikKZnJ1aXRGaWxlcyA9IHJlYWQqKCJAZnJ1aXRpZXMvY2F0YWxvZy8qLnBrbCIpCg=="
       }
       ["@birds/catalog.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog.pkl"
@@ -152,7 +152,7 @@ examples {
           catalogFiles = read*("catalog/*.pkl")
           
           """
-        bytes = Bytes(109, 111, 100, 117, 108, 101, 32, 98, 105, 114, 100, 115, 46, 99, 97, 116, 97, 108, 111, 103, 10, 10, 99, 97, 116, 97, 108, 111, 103, 32, 61, 32, 105, 109, 112, 111, 114, 116, 42, 40, 34, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10, 99, 97, 116, 97, 108, 111, 103, 70, 105, 108, 101, 115, 32, 61, 32, 114, 101, 97, 100, 42, 40, 34, 99, 97, 116, 97, 108, 111, 103, 47, 42, 46, 112, 107, 108, 34, 41, 10)
+        base64 = "bW9kdWxlIGJpcmRzLmNhdGFsb2cKCmNhdGFsb2cgPSBpbXBvcnQqKCJjYXRhbG9nLyoucGtsIikKY2F0YWxvZ0ZpbGVzID0gcmVhZCooImNhdGFsb2cvKi5wa2wiKQo="
       }
       ["@birds/catalog/Ostrich.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Ostrich.pkl"
@@ -166,7 +166,7 @@ examples {
           }
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 79, 115, 116, 114, 105, 99, 104, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 123, 10, 32, 32, 110, 97, 109, 101, 32, 61, 32, 34, 79, 114, 97, 110, 103, 101, 34, 10, 125, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["@birds/catalog/Swallow.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -180,7 +180,7 @@ examples {
           favoriteFruit = apple
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 105, 109, 112, 111, 114, 116, 32, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 97, 112, 112, 108, 101, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 83, 119, 97, 108, 108, 111, 119, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 61, 32, 97, 112, 112, 108, 101, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
       }
       ["@birds/some/dir/Bird.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/some/dir/Bird.pkl"
@@ -194,7 +194,7 @@ examples {
           }
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 46, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 66, 105, 114, 100, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 123, 10, 32, 32, 110, 97, 109, 101, 32, 61, 32, 34, 70, 114, 117, 105, 116, 34, 10, 125, 10)
+        base64 = "YW1lbmRzICIuLi4iCgpuYW1lID0gIkJpcmQiCgpmYXZvcml0ZUZydWl0IHsKICBuYW1lID0gIkZydWl0Igp9Cg=="
       }
     }
   }
@@ -212,7 +212,7 @@ examples {
           }
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 79, 115, 116, 114, 105, 99, 104, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 123, 10, 32, 32, 110, 97, 109, 101, 32, 61, 32, 34, 79, 114, 97, 110, 103, 101, 34, 10, 125, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["catalog/Swallow.pkl"] {
         uri = "projectpackage://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -226,7 +226,7 @@ examples {
           favoriteFruit = apple
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 105, 109, 112, 111, 114, 116, 32, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 97, 112, 112, 108, 101, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 83, 119, 97, 108, 108, 111, 119, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 61, 32, 97, 112, 112, 108, 101, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
       }
     }
   }
@@ -244,7 +244,7 @@ examples {
           }
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 79, 115, 116, 114, 105, 99, 104, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 123, 10, 32, 32, 110, 97, 109, 101, 32, 61, 32, 34, 79, 114, 97, 110, 103, 101, 34, 10, 125, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCm5hbWUgPSAiT3N0cmljaCIKCmZhdm9yaXRlRnJ1aXQgewogIG5hbWUgPSAiT3JhbmdlIgp9Cg=="
       }
       ["package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"] {
         uri = "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
@@ -258,7 +258,7 @@ examples {
           favoriteFruit = apple
           
           """
-        bytes = Bytes(97, 109, 101, 110, 100, 115, 32, 34, 46, 46, 47, 66, 105, 114, 100, 46, 112, 107, 108, 34, 10, 10, 105, 109, 112, 111, 114, 116, 32, 34, 64, 102, 114, 117, 105, 116, 105, 101, 115, 47, 99, 97, 116, 97, 108, 111, 103, 47, 97, 112, 112, 108, 101, 46, 112, 107, 108, 34, 10, 10, 110, 97, 109, 101, 32, 61, 32, 34, 83, 119, 97, 108, 108, 111, 119, 34, 10, 10, 102, 97, 118, 111, 114, 105, 116, 101, 70, 114, 117, 105, 116, 32, 61, 32, 97, 112, 112, 108, 101, 10)
+        base64 = "YW1lbmRzICIuLi9CaXJkLnBrbCIKCmltcG9ydCAiQGZydWl0aWVzL2NhdGFsb2cvYXBwbGUucGtsIgoKbmFtZSA9ICJTd2FsbG93IgoKZmF2b3JpdGVGcnVpdCA9IGFwcGxlCg=="
       }
     }
   }
