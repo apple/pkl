@@ -211,52 +211,28 @@ New methods are introduced to the Java API.
 * `org.pkl.config.java.ConfigEvaluatorBuilder.getHttpClient`
 * `org.pkl.config.java.ConfigEvaluatorBuilder.setHttpClient`
 
-=== Standard Library additions
+=== Standard Library changes
 
-New properties, methods, classes and typealiases have been added to the base module (https://github.com/apple/pkl/pull/1019[#1019], https://github.com/apple/pkl/pull/1053[#1053], https://github.com/apple/pkl/pull/1063[#1063]).
+New properties, methods, classes and typealiases have been added to the standard library (https://github.com/apple/pkl/pull/1019[#1019], https://github.com/apple/pkl/pull/1053[#1053], https://github.com/apple/pkl/pull/1063[#1063]).
 
-==== String
+==== Additions to `pkl:base`
 
 * {uri-stdlib-String}#isBase64[`String.isBase64`]
 * {uri-stdlib-String}#base64DecodedBytes[`String.base64DecodedBytes`]
 * {uri-stdlib-String}#encodeToBytes()[`String.encodeToBytes()`]
-
-==== List
-
 * {uri-stdlib-List}#mapNonNullIndexed()[`List.mapNonNullIndexed()`]
 * {uri-stdlib-List}#toBytes()[`List.toBytes()`]
-
-==== Set
-
 * {uri-stdlib-Set}#mapNonNullIndexed()[`Set.mapNonNullIndexed()`]
-
-==== FileOutput
-
 * {uri-stdlib-FileOutput}#bytes[`FileOutput.bytes`]
-
-==== Resource
-
 * {uri-stdlib-Resource}#bytes[`Resource.bytes`]
-
-==== Mapping
-
-* {uri-stdlib-Mapping}#getOrDefault[`Mapping.getOrDefault`]
-
-==== Listing
-
-* {uri-stdlib-Listing}#getOrDefault[`Listing.getOrDefault`]
-
-==== Typealiases
-
+* {uri-stdlib-Mapping}#getOrDefault()[`Mapping.getOrDefault()`]
+* {uri-stdlib-Listing}#getOrDefault()[`Listing.getOrDefault()`]
 * {uri-stdlib-baseModule}#Charset[`Charset`]
-
-==== `Classes`
-
 * {uri-stdlib-Bytes}[`Bytes`]
 
-==== Methods
+==== Additions to `pkl:EvaluatorSettings`
 
-* {uri-stdlib-bytes}[`Bytes()`]
+* {uri-stdlib-evaluatorSettingsHttpClass}#rewrites[`Http.rewrites`]
 
 === `pkl` CLI changes
 
@@ -264,7 +240,7 @@ New features are added to the `pkl` CLI (https://github.com/apple/pkl/pull/1052[
 
 ==== Aggregated JUnit reports
 
-A new set of CLI flags are introduced: `--junit-aggregate-reports`, and `--junit-aggregate-reports`.
+A new set of CLI flags are introduced: `--junit-aggregate-reports`, and `--junit-aggregate-suite-name`.
 Collectively, these flags tell Pkl to combine the JUnit reports into a single file, instead of creating a file per Pkl module.
 
 Thanks to https://github.com/gordonbondon[@gordonbondon] for contributing to this feature!
