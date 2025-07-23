@@ -35,7 +35,7 @@ examples {
     fox.bytes.sha256Int
   }
 
-  ["in-langauge"] {
+  ["in-language"] {
     new Resource {
       base64 = Bytes(1, 2, 3, 4).base64
     }.sha256
