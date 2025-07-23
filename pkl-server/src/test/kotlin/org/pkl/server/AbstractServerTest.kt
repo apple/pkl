@@ -60,6 +60,26 @@ abstract class AbstractServerTest {
 
   abstract val client: TestTransport
 
+  private val blankCreateEvaluatorRequest =
+    CreateEvaluatorRequest(
+      requestId = 1,
+      http = null,
+      allowedModules = null,
+      allowedResources = null,
+      clientModuleReaders = null,
+      clientResourceReaders = null,
+      modulePaths = null,
+      env = null,
+      properties = null,
+      timeout = null,
+      rootDir = null,
+      cacheDir = null,
+      outputFormat = null,
+      project = null,
+      externalModuleReaders = null,
+      externalResourceReaders = null,
+    )
+
   @Test
   fun `create and close evaluator`() {
     val evaluatorId = client.sendCreateEvaluatorRequest(123)
@@ -929,6 +949,50 @@ abstract class AbstractServerTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `http rewrites`() {
+    val evaluatorId =
+      client.sendCreateEvaluatorRequest(
+        http =
+          Http(
+            caCertificates = null,
+            proxy = null,
+            rewrites = mapOf(URI("https://example.com/") to URI("https://example.example/")),
+          )
+      )
+    client.send(
+      EvaluateRequest(
+        1,
+        evaluatorId,
+        URI("repl:text"),
+        "res = import(\"https://example.com/foo.pkl\")",
+        "output.text",
+      )
+    )
+    val response = client.receive<EvaluateResponse>()
+    assertThat(response.error)
+      .contains(
+        "request was rewritten: https://example.com/foo.pkl -> https://example.example/foo.pkl"
+      )
+  }
+
+  @Test
+  fun `http rewrites -- invalid rule`() {
+    client.send(
+      blankCreateEvaluatorRequest.copy(
+        http =
+          Http(
+            caCertificates = null,
+            proxy = null,
+            rewrites = mapOf(URI("https://example.com") to URI("https://example.example/")),
+          )
+      )
+    )
+    val response = client.receive<CreateEvaluatorResponse>()
+    assertThat(response.error)
+      .contains("Rewrite rule must end with '/', but was 'https://example.com'")
   }
 
   private val ByteArray.debugYaml

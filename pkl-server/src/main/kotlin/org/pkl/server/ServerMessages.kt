@@ -57,7 +57,7 @@ data class Http(
   /** Proxy settings */
   val proxy: Proxy?,
   /** HTTP rewrites */
-  val rewrites: Map<String, String>?,
+  val rewrites: Map<URI, URI>?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true

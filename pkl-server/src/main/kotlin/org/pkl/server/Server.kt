@@ -183,49 +183,54 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   }
 
   private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): BinaryEvaluator {
-    val modulePaths = message.modulePaths ?: emptyList()
-    val resolver = ModulePathResolver(modulePaths)
-    val allowedModules = message.allowedModules?.map { Pattern.compile(it) } ?: emptyList()
-    val allowedResources = message.allowedResources?.map { Pattern.compile(it) } ?: emptyList()
-    val rootDir = message.rootDir
-    val env = message.env ?: emptyMap()
-    val properties = message.properties ?: emptyMap()
-    val timeout = message.timeout
-    val cacheDir = message.cacheDir
-    val httpClient =
-      with(HttpClient.builder()) {
-        message.http?.proxy?.let { proxy ->
-          setProxy(proxy.address, proxy.noProxy ?: listOf())
-          proxy.address?.let(IoUtils::setSystemProxy)
-          proxy.noProxy?.let { System.setProperty("http.nonProxyHosts", it.joinToString("|")) }
+    try {
+      val modulePaths = message.modulePaths ?: emptyList()
+      val resolver = ModulePathResolver(modulePaths)
+      val allowedModules = message.allowedModules?.map { Pattern.compile(it) } ?: emptyList()
+      val allowedResources = message.allowedResources?.map { Pattern.compile(it) } ?: emptyList()
+      val rootDir = message.rootDir
+      val env = message.env ?: emptyMap()
+      val properties = message.properties ?: emptyMap()
+      val timeout = message.timeout
+      val cacheDir = message.cacheDir
+      val httpClient =
+        with(HttpClient.builder()) {
+          message.http?.proxy?.let { proxy ->
+            setProxy(proxy.address, proxy.noProxy ?: listOf())
+            proxy.address?.let(IoUtils::setSystemProxy)
+            proxy.noProxy?.let { System.setProperty("http.nonProxyHosts", it.joinToString("|")) }
+          }
+          message.http?.caCertificates?.let(::addCertificates)
+          message.http?.rewrites?.let(::setRewrites)
+          buildLazily()
         }
-        message.http?.caCertificates?.let(::addCertificates)
-        buildLazily()
-      }
-    val dependencies =
-      message.project?.let { proj ->
-        buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
-      }
-    log("Got dependencies: $dependencies")
-    return BinaryEvaluator(
-      StackFrameTransformers.defaultTransformer,
-      SecurityManagers.standard(
-        allowedModules,
-        allowedResources,
-        SecurityManagers.defaultTrustLevels,
-        rootDir,
-      ),
-      httpClient,
-      ClientLogger(evaluatorId, transport),
-      createModuleKeyFactories(message, evaluatorId, resolver),
-      createResourceReaders(message, evaluatorId, resolver),
-      env,
-      properties,
-      timeout,
-      cacheDir,
-      dependencies,
-      message.outputFormat,
-    )
+      val dependencies =
+        message.project?.let { proj ->
+          buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
+        }
+      log("Got dependencies: $dependencies")
+      return BinaryEvaluator(
+        StackFrameTransformers.defaultTransformer,
+        SecurityManagers.standard(
+          allowedModules,
+          allowedResources,
+          SecurityManagers.defaultTrustLevels,
+          rootDir,
+        ),
+        httpClient,
+        ClientLogger(evaluatorId, transport),
+        createModuleKeyFactories(message, evaluatorId, resolver),
+        createResourceReaders(message, evaluatorId, resolver),
+        env,
+        properties,
+        timeout,
+        cacheDir,
+        dependencies,
+        message.outputFormat,
+      )
+    } catch (e: IllegalArgumentException) {
+      throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)
+    }
   }
 
   private fun createResourceReaders(
