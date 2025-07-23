@@ -321,7 +321,7 @@ class BaseOptions : OptionGroup() {
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates,
       httpProxy = proxy,
-      httpNoProxy = noProxy ?: emptyList(),
+      httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
