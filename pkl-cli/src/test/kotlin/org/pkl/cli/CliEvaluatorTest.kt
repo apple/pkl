@@ -1231,6 +1231,92 @@ result = someLib.x
   }
 
   @Test
+  fun `noProxy settings from PklProject file`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      res = read("https://localhost:${packageServer.port}/birds@0.5.0").bytes.sha256
+    """
+          .trimIndent(),
+      )
+    writePklFile(
+      "PklProject",
+      // language=Pkl
+      """
+      amends "pkl:Project"
+      
+      evaluatorSettings {
+        http {
+          proxy {
+          address = "http://example.example"
+          noProxy {
+            "localhost:${packageServer.port}"
+            }
+          }
+        }
+      }
+    """
+        .trimIndent(),
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(moduleUri),
+          workingDir = tempDir,
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+        )
+      )
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
+      .isEqualTo("res = \"b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de\"\n")
+  }
+
+  @Test
+  fun `noProxy settings from settings file`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      res = read("https://localhost:${packageServer.port}/birds@0.5.0").bytes.sha256
+    """
+          .trimIndent(),
+      )
+    val settingsFile =
+      writePklFile(
+        "settings.pkl",
+        // language=Pkl
+        """
+      amends "pkl:settings"
+      
+      http {
+        proxy {
+        address = "http://example.example"
+        noProxy {
+          "localhost:${packageServer.port}"
+          }
+        }
+      }
+    """
+          .trimIndent(),
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(moduleUri),
+          workingDir = tempDir,
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          settings = settingsFile,
+        )
+      )
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
+      .isEqualTo("res = \"b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de\"\n")
+  }
+
+  @Test
   fun `setting noCache will skip writing to the cache dir`() {
     val moduleUri =
       writePklFile(

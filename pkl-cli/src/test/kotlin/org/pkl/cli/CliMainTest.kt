@@ -149,6 +149,14 @@ class CliMainTest {
     assertThat(ex.message).contains("Rewrite rule must end with '/', but was 'http://foo.com'")
   }
 
+  @Test
+  fun `missing --http-no-proxy flag is null`(@TempDir tempDir: Path) {
+    val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
+    val command = EvalCommand()
+    command.parse(arrayOf(inputFile))
+    assertThat(command.baseOptions.noProxy).isNull()
+  }
+
   private fun makeInput(tempDir: Path, fileName: String = "test.pkl"): String {
     val code = "x = 1"
     return tempDir.resolve(fileName).writeString(code).toString()
