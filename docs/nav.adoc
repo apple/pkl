@@ -41,6 +41,7 @@
 * xref:ROOT:evolution-and-roadmap.adoc[Evolution and Roadmap]
 
 * xref:release-notes:index.adoc[Release Notes]
+** xref:release-notes:0.30.adoc[0.30 Release Notes]
 ** xref:release-notes:0.29.adoc[0.29 Release Notes]
 ** xref:release-notes:0.28.adoc[0.28 Release Notes]
 ** xref:release-notes:0.27.adoc[0.27 Release Notes]
