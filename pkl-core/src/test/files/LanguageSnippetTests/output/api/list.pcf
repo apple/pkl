@@ -165,17 +165,20 @@ examples {
     List(1, 2, 3)
     1
     0
+    24
   }
   ["foldBack()"] {
     6
     List(3, 2, 1)
     1
     0
+    20
   }
   ["reduce()"] {
     6
     1
     "Expected a non-empty collection. Collection: List()"
+    24
   }
   ["groupBy()"] {
     Map(1, List(1), 2, List(2), 3, List(3), 4, List(4), 5, List(5))
@@ -286,6 +289,7 @@ examples {
     9
     1
     0
+    16
   }
   ["toListing()"] {
     new {
