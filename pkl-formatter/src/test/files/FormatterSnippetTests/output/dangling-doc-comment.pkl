@@ -1,0 +1,8 @@
+module dangling
+
+/// Doc comment.
+///
+/// for this field
+// sepearted by a stray comment
+/// but continues here.
+some: String

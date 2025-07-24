@@ -709,6 +709,29 @@ pkl shell-completion bash
 pkl shell-completion zsh
 ----
 
+[[command-format-check]]
+=== `pkl format check`
+
+*Synopsis*: `pkl format check <paths>`
+
+This command checks for format violations on the given files and print their names to stdout. +
+It returns a non-zero status code in case violations are found.
+
+[[command-format-apply]]
+=== `pkl format apply`
+
+*Synopsis*: `pkl format apply [<options>] <paths>`
+
+This command formats the given files overwriting them.
+
+==== Options
+
+.-s, --silent
+[%collapsible]
+====
+Do not write the name of wrongly formatted files to stdout.
+====
+
 [[common-options]]
 === Common options
 
