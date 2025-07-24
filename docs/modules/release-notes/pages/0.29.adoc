@@ -381,9 +381,11 @@ Code that references the name from the lexical scope will continue to work as-is
 
 To learn more about name resolution, consult the xref:language-reference:index.adoc#name-resolution[language reference].
 
-=== Native executables are not published to Maven Central
+=== jpkl is not published to Maven Central
 
-Due to a breakage in release pipeline, the `pkl` native executables are no longer published to Maven Central (https://github.com/apple/pkl/pull/1146[#1146]).
+Due to a breakage in release pipeline, the `jpkl` executable is not published to Maven Central (https://github.com/apple/pkl/pull/1147[#1147]).
+
+It is still available to download as a GitHub release asset.
 
 == Miscellaneous [small]#🐸#
 
