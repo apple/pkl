@@ -577,7 +577,6 @@ Directory where to store JUnit reports.
 No JUnit reports will be generated if this option is not present.
 ====
 
-[[junit-aggregate-reports]]
 .--junit-aggregate-reports
 [%collapsible]
 ====
@@ -586,7 +585,6 @@ Aggregate JUnit reports into a single file.
 By default it will be `pkl-tests.xml` but you can override it using `--junit-aggregate-suite-name` flag.
 ====
 
-[[junit-aggregate-suite-name]]
 .--junit-aggregate-suite-name
 [%collapsible]
 ====
