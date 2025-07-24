@@ -362,6 +362,20 @@ obj2 = (obj1) {
 }
 ----
 
+To make this code continue to have the same meaning, an explicit `this` reference is required.
+
+[source,diff]
+----
+ obj1 {
+   Bytes = "my bytes"
+ }
+ 
+ obj2 = (obj1) {
+-  prop = Bytes
++  prop = this.Bytes
+ }
+----
+
 This only affects code that references these names off of implicit this.
 Code that references the name from the lexical scope will continue to work as-is.
 
