@@ -48,8 +48,8 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
       packString("rewrites")
       packMapHeader(rewrites.size)
       for ((key, value) in rewrites) {
-        packString(key)
-        packString(value)
+        packString(key.toString())
+        packString(value.toString())
       }
     }
   }

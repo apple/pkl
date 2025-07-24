@@ -99,8 +99,8 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
       getNullable(httpMap, "rewrites")
         ?.asMapValue()
         ?.map()
-        ?.mapKeys { it.key.asStringValue().asString() }
-        ?.mapValues { it.value.asStringValue().asString() }
+        ?.mapKeys { URI(it.key.asStringValue().asString()) }
+        ?.mapValues { URI(it.value.asStringValue().asString()) }
     return Http(caCertificates, proxy, rewrites)
   }
 
