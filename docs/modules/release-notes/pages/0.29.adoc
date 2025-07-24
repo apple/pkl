@@ -213,7 +213,7 @@ New methods are introduced to the Java API.
 
 === Standard Library changes
 
-New properties, methods, classes and typealiases have been added to the standard library (https://github.com/apple/pkl/pull/1019[#1019], https://github.com/apple/pkl/pull/1053[#1053], https://github.com/apple/pkl/pull/1063[#1063]).
+New properties, methods, classes and typealiases have been added to the standard library (https://github.com/apple/pkl/pull/1019[#1019], https://github.com/apple/pkl/pull/1053[#1053], https://github.com/apple/pkl/pull/1063[#1063], https://github.com/apple/pkl/pull/1144[#1144]).
 
 ==== Additions to `pkl:base`
 
@@ -233,6 +233,10 @@ New properties, methods, classes and typealiases have been added to the standard
 ==== Additions to `pkl:EvaluatorSettings`
 
 * {uri-stdlib-evaluatorSettingsHttpClass}#rewrites[`Http.rewrites`]
+
+==== Additions to `pkl:reflect`
+
+* {uri-stdlib-reflectModule}#bytesType[`bytesType`]
 
 === `pkl` CLI changes
 
