@@ -1,0 +1,58 @@
+local lA1 = (a, b, c,) -> true
+local lA2 = (
+  a, b, c,
+) -> true
+local lA3 = (
+  a,
+  b,
+  c,
+) -> true
+
+local lB1 = (a: Int, b: Int, c: Int,) -> true
+local lB2 = (
+  a: Int, b: Int, c: Int,
+) -> true
+local lB3 = (
+  a: Int,
+  b: Int,
+  c: Int,
+) -> true
+
+local lC1: (Dynamic,) -> Dynamic = new Mixin { a, -> x = true }
+local lC2: (Dynamic,) -> Dynamic = new Mixin { a, ->
+  x = true
+}
+local lC3: (Dynamic,) -> Dynamic = new Mixin {
+  a, -> x = true
+}
+local lC4: (Dynamic,) -> Dynamic = new Mixin {
+  a, ->
+  x = true
+}
+
+local lD1: (Dynamic,) -> Dynamic = new Mixin { a: Dynamic, -> x = true }
+local lD2: (Dynamic,) -> Dynamic = new Mixin { a: Dynamic, ->
+  x = true
+}
+local lD3: (Dynamic,) -> Dynamic = new Mixin {
+  a: Dynamic, -> x = true
+}
+local lD4: (Dynamic,) -> Dynamic = new Mixin {
+  a: Dynamic, ->
+  x = true
+}
+
+lA1Call = lA1.apply(1, 2, 3)
+lA2Call = lA2.apply(1, 2, 3)
+lA3Call = lA3.apply(1, 2, 3)
+lB1Call = lB1.apply(1, 2, 3)
+lB2Call = lB2.apply(1, 2, 3)
+lB3Call = lB3.apply(1, 2, 3)
+lC1Call = new Dynamic {} |> lC1
+lC2Call = new Dynamic {} |> lC2
+lC3Call = new Dynamic {} |> lC3
+lC4Call = new Dynamic {} |> lC4
+lD1Call = new Dynamic {} |> lD1
+lD2Call = new Dynamic {} |> lD2
+lD3Call = new Dynamic {} |> lD3
+lD4Call = new Dynamic {} |> lD4

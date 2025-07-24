@@ -1,0 +1,22 @@
+class Foo<
+  Key,
+  Value,
+> {
+  test: Mapping<
+      Key,
+      Value,
+    >
+
+  function bar<
+      A,
+      B,
+    >(a: A, b: B,): Value? = "\(a):\(b) - \(test)"
+}
+
+res1: Foo<String, String,>(!test.isEmpty) = new Foo<String, String,> {
+  test {
+    ["hello"] = "world"
+  }
+}
+
+res2 = res1.bar(123, "foo")
