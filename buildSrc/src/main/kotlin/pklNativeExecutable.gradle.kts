@@ -20,8 +20,8 @@ plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
-// TODO: re-enable maven publishing
-//  id("pklPublishLibrary")
+  // TODO: re-enable maven publishing
+  //  id("pklPublishLibrary")
   id("com.github.johnrengelman.shadow")
 }
 
@@ -171,7 +171,7 @@ val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineExecutableAmd
 
 val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64) }
 
-//publishing {
+// publishing {
 //  publications {
 //    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
 //    project.afterEvaluate {
@@ -278,9 +278,9 @@ val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64)
 //      }
 //    }
 //  }
-//}
+// }
 //
-//signing {
+// signing {
 //  project.afterEvaluate {
 //    sign(publishing.publications["linuxExecutableAarch64"])
 //    sign(publishing.publications["linuxExecutableAmd64"])
@@ -289,4 +289,4 @@ val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64)
 //    sign(publishing.publications["alpineLinuxExecutableAmd64"])
 //    sign(publishing.publications["windowsExecutableAmd64"])
 //  }
-//}
+// }
