@@ -20,8 +20,7 @@ plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
-  // TODO: re-enable maven publishing
-  //  id("pklPublishLibrary")
+  id("pklPublishLibrary")
   id("com.github.johnrengelman.shadow")
 }
 
@@ -171,122 +170,122 @@ val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineExecutableAmd
 
 val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64) }
 
-// publishing {
-//  publications {
-//    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
-//    project.afterEvaluate {
-//      create<MavenPublication>("macExecutableAmd64") {
-//        artifactId = "${executableSpec.publicationName.get()}-macos-amd64"
-//        artifact(stagedMacAmd64Executable.singleFile) {
-//          classifier = null
-//          extension = "bin"
-//          builtBy(stagedMacAmd64Executable)
-//        }
-//        pom {
-//          name = "${executableSpec.publicationName.get()}-macos-amd64"
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              "Native $name executable for macOS/amd64."
-//            }
-//        }
-//      }
-//
-//      create<MavenPublication>("macExecutableAarch64") {
-//        artifactId = "${executableSpec.publicationName.get()}-macos-aarch64"
-//        artifact(stagedMacAarch64Executable.singleFile) {
-//          classifier = null
-//          extension = "bin"
-//          builtBy(stagedMacAarch64Executable)
-//        }
-//        pom {
-//          name = "${executableSpec.publicationName.get()}-macos-aarch64"
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              "Native $name executable for macOS/aarch64."
-//            }
-//        }
-//      }
-//
-//      create<MavenPublication>("linuxExecutableAmd64") {
-//        artifactId = "${executableSpec.publicationName.get()}-linux-amd64"
-//        artifact(stagedLinuxAmd64Executable.singleFile) {
-//          classifier = null
-//          extension = "bin"
-//          builtBy(stagedLinuxAmd64Executable)
-//        }
-//        pom {
-//          name = "${executableSpec.publicationName.get()}-linux-amd64"
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              "Native $name executable for linux/amd64."
-//            }
-//        }
-//      }
-//
-//      create<MavenPublication>("linuxExecutableAarch64") {
-//        artifactId = "${executableSpec.publicationName.get()}-linux-aarch64"
-//        artifact(stagedLinuxAarch64Executable.singleFile) {
-//          classifier = null
-//          extension = "bin"
-//          builtBy(stagedLinuxAarch64Executable)
-//        }
-//        pom {
-//          name = "${executableSpec.publicationName.get()}-linux-aarch64"
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              "Native $name executable for linux/aarch64."
-//            }
-//        }
-//      }
-//
-//      create<MavenPublication>("alpineLinuxExecutableAmd64") {
-//        artifactId = "${executableSpec.publicationName.get()}-alpine-linux-amd64"
-//        artifact(stagedAlpineLinuxAmd64Executable.singleFile) {
-//          classifier = null
-//          extension = "bin"
-//          builtBy(stagedAlpineLinuxAmd64Executable)
-//        }
-//        pom {
-//          name = "${executableSpec.publicationName.get()}-alpine-linux-amd64"
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              "Native $name executable for linux/amd64 and statically linked to musl."
-//            }
-//        }
-//      }
-//
-//      create<MavenPublication>("windowsExecutableAmd64") {
-//        artifactId = "${executableSpec.publicationName.get()}-windows-amd64"
-//        artifact(stagedWindowsAmd64Executable.singleFile) {
-//          classifier = null
-//          extension = "exe"
-//          builtBy(stagedWindowsAmd64Executable)
-//        }
-//        pom {
-//          name = "${executableSpec.publicationName.get()}-windows-amd64"
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              "Native $name executable for windows/amd64."
-//            }
-//        }
-//      }
-//    }
-//  }
-// }
-//
-// signing {
-//  project.afterEvaluate {
-//    sign(publishing.publications["linuxExecutableAarch64"])
-//    sign(publishing.publications["linuxExecutableAmd64"])
-//    sign(publishing.publications["macExecutableAarch64"])
-//    sign(publishing.publications["macExecutableAmd64"])
-//    sign(publishing.publications["alpineLinuxExecutableAmd64"])
-//    sign(publishing.publications["windowsExecutableAmd64"])
-//  }
-// }
+publishing {
+  publications {
+    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
+    project.afterEvaluate {
+      create<MavenPublication>("macExecutableAmd64") {
+        artifactId = "${executableSpec.publicationName.get()}-macos-amd64"
+        artifact(stagedMacAmd64Executable.singleFile) {
+          classifier = null
+          extension = "bin"
+          builtBy(stagedMacAmd64Executable)
+        }
+        pom {
+          name = "${executableSpec.publicationName.get()}-macos-amd64"
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              "Native $name executable for macOS/amd64."
+            }
+        }
+      }
+
+      create<MavenPublication>("macExecutableAarch64") {
+        artifactId = "${executableSpec.publicationName.get()}-macos-aarch64"
+        artifact(stagedMacAarch64Executable.singleFile) {
+          classifier = null
+          extension = "bin"
+          builtBy(stagedMacAarch64Executable)
+        }
+        pom {
+          name = "${executableSpec.publicationName.get()}-macos-aarch64"
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              "Native $name executable for macOS/aarch64."
+            }
+        }
+      }
+
+      create<MavenPublication>("linuxExecutableAmd64") {
+        artifactId = "${executableSpec.publicationName.get()}-linux-amd64"
+        artifact(stagedLinuxAmd64Executable.singleFile) {
+          classifier = null
+          extension = "bin"
+          builtBy(stagedLinuxAmd64Executable)
+        }
+        pom {
+          name = "${executableSpec.publicationName.get()}-linux-amd64"
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              "Native $name executable for linux/amd64."
+            }
+        }
+      }
+
+      create<MavenPublication>("linuxExecutableAarch64") {
+        artifactId = "${executableSpec.publicationName.get()}-linux-aarch64"
+        artifact(stagedLinuxAarch64Executable.singleFile) {
+          classifier = null
+          extension = "bin"
+          builtBy(stagedLinuxAarch64Executable)
+        }
+        pom {
+          name = "${executableSpec.publicationName.get()}-linux-aarch64"
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              "Native $name executable for linux/aarch64."
+            }
+        }
+      }
+
+      create<MavenPublication>("alpineLinuxExecutableAmd64") {
+        artifactId = "${executableSpec.publicationName.get()}-alpine-linux-amd64"
+        artifact(stagedAlpineLinuxAmd64Executable.singleFile) {
+          classifier = null
+          extension = "bin"
+          builtBy(stagedAlpineLinuxAmd64Executable)
+        }
+        pom {
+          name = "${executableSpec.publicationName.get()}-alpine-linux-amd64"
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              "Native $name executable for linux/amd64 and statically linked to musl."
+            }
+        }
+      }
+
+      create<MavenPublication>("windowsExecutableAmd64") {
+        artifactId = "${executableSpec.publicationName.get()}-windows-amd64"
+        artifact(stagedWindowsAmd64Executable.singleFile) {
+          classifier = null
+          extension = "exe"
+          builtBy(stagedWindowsAmd64Executable)
+        }
+        pom {
+          name = "${executableSpec.publicationName.get()}-windows-amd64"
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              "Native $name executable for windows/amd64."
+            }
+        }
+      }
+    }
+  }
+}
+
+signing {
+  project.afterEvaluate {
+    sign(publishing.publications["linuxExecutableAarch64"])
+    sign(publishing.publications["linuxExecutableAmd64"])
+    sign(publishing.publications["macExecutableAarch64"])
+    sign(publishing.publications["macExecutableAmd64"])
+    sign(publishing.publications["alpineLinuxExecutableAmd64"])
+    sign(publishing.publications["windowsExecutableAmd64"])
+  }
+}
