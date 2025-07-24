@@ -379,6 +379,7 @@ The following bugs have been fixed.
 * Don't show 100% when number of failures is rounded up (https://github.com/apple/pkl/pull/1110[#1110])
 * Quoting the module name crashes pkl (https://github.com/apple/pkl/issues/1111[#1111])
 * Shebang comment parsing is too lenient (https://github.com/apple/pkl/issues/1125[#1125])
+* CLI: noProxy option in settings.pkl and PklProject are ignored (https://github.com/apple/pkl/issues/1142[#1142])
 
 == Contributors [small]#🙏#
 
