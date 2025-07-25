@@ -34,6 +34,8 @@ typedef struct PKL_EXEC_T {
 /**
  * The callback that gets called when a message is received from Pkl.
  *
+ * Messages must be deserialized to Pkl's Message Passing API: https://pkl-lang.org/main/current/bindings-specification/message-passing-api.html
+ *
  * @param length    The length the message bytes
  * @param message   The message itself
  * @param userData  User-defined data passed in from pkl_init.
@@ -52,6 +54,8 @@ pkl_exec_t *pkl_init(PklMessageResponseHandler handler, void *userData);
 
 /**
  * Send a message to Pkl, providing the length and a pointer to the first byte.
+ *
+ * Messages must be serialized to Pkl's Message Passing API: https://pkl-lang.org/main/current/bindings-specification/message-passing-api.html
  *
  * @param pexec     The Pkl executor instance.
  * @param length    The length of the message, in bytes.
