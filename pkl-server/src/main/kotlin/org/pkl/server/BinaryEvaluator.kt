@@ -221,7 +221,7 @@ internal class BinaryEvaluator(
     override fun visitMapping(value: VmMapping) {
       packer.packArrayHeader(2)
       packer.packInt(CODE_MAPPING.toInt())
-      packer.packMapHeader(value.entryCount)
+      packer.packMapHeader(value.length.toInt())
       value.iterateAlreadyForcedMemberValues { key, _, memberValue ->
         visit(key)
         visit(memberValue)

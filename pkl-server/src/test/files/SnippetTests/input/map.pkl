@@ -13,3 +13,9 @@ res4: Mapping = new {
     ["bar"] = 2
   }
 }
+// https://github.com/apple/pkl/issues/1151
+res5: Mapping = new {
+  local self = this
+  ["foo"] = new Dynamic { name = "foo" }
+  ["bar"] = new Dynamic { name = self["foo"].name + "bar" }
+}
