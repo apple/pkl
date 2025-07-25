@@ -13,12 +13,14 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.commons.test.server
 
 import java.net.URI
 import java.nio.file.Path
+import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
 import kotlin.io.path.writeText
@@ -29,16 +31,45 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
+import org.pkl.commons.test.MessagePackDebugRenderer
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.test.msgpackDebugRendering
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
+import org.pkl.server.*
 
+@Suppress("FunctionName")
 abstract class AbstractServerTest {
 
   companion object {
-    /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
-    internal const val USE_DIRECT_TRANSPORT = false
+    /** Set to `true` to bypass messagepack serialization when running JvmServerTest. */
+    const val USE_DIRECT_TRANSPORT = false
     lateinit var executor: ExecutorService
+
+    fun createDirectExecutor(): ExecutorService =
+      object : AbstractExecutorService() {
+        override fun execute(command: Runnable) {
+          command.run()
+        }
+
+        override fun shutdown() {}
+
+        override fun shutdownNow(): MutableList<Runnable> {
+          throw UnsupportedOperationException("shutdownNow")
+        }
+
+        override fun isShutdown(): Boolean {
+          throw UnsupportedOperationException("isShutdown")
+        }
+
+        override fun isTerminated(): Boolean {
+          throw UnsupportedOperationException("isTerminated")
+        }
+
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+          throw UnsupportedOperationException("awaitTermination")
+        }
+      }
 
     @BeforeAll
     @JvmStatic
@@ -541,7 +572,7 @@ abstract class AbstractServerTest {
     )
 
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result?.debugRendering)
+    assertThat(evaluateResponse.result?.msgpackDebugRendering)
       .isEqualTo(
         """
       - 6
@@ -574,7 +605,7 @@ abstract class AbstractServerTest {
     client.send(ListModulesResponse(listModulesMsg.requestId, evaluatorId, null, null))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result?.debugRendering)
+    assertThat(evaluateResponse.result?.msgpackDebugRendering)
       .isEqualTo(
         """
       - 6
@@ -628,7 +659,8 @@ abstract class AbstractServerTest {
   fun `read and evaluate module path from jar`(@TempDir tempDir: Path) {
     val jarFile = tempDir.resolve("resource1.jar")
     jarFile.outputStream().use { outStream ->
-      javaClass.getResourceAsStream("resource1.jar")!!.use { inStream ->
+      javaClass.getResourceAsStream("/org/pkl/commons/test/server/resource1.jar")!!.use { inStream
+        ->
         inStream.copyTo(outStream)
       }
     }
@@ -933,7 +965,7 @@ abstract class AbstractServerTest {
     val resp2 = client.receive<EvaluateResponse>()
     assertThat(resp2.error).isNull()
     assertThat(resp2.result).isNotNull()
-    assertThat(resp2.result?.debugRendering?.trim())
+    assertThat(resp2.result?.msgpackDebugRendering?.trim())
       .isEqualTo(
         """
         |
