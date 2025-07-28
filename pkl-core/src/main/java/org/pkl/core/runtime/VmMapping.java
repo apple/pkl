@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.HashSet;
 import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.UnmodifiableEconomicMap;
@@ -25,10 +26,10 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
+import org.pkl.core.util.MutableLong;
 
 public final class VmMapping extends VmListingOrMapping {
-
-  private int cachedEntryCount = -1;
+  private long cachedLength = -1;
 
   @GuardedBy("this")
   private @LateInit VmSet __allKeys;
@@ -124,7 +125,7 @@ public final class VmMapping extends VmListingOrMapping {
     // could use shallow force, but deep force is cached
     force(false);
     other.force(false);
-    if (getEntryCount() != other.getEntryCount()) return false;
+    if (getLength() != other.getLength()) return false;
 
     var cursor = cachedValues.getEntries();
     while (cursor.advance()) {
@@ -162,16 +163,21 @@ public final class VmMapping extends VmListingOrMapping {
     return result;
   }
 
-  // assumes mapping has been forced
-  public int getEntryCount() {
-    if (cachedEntryCount != -1) return cachedEntryCount;
-
-    var result = 0;
-    for (var key : cachedValues.getKeys()) {
-      if (key instanceof Identifier) continue;
-      result += 1;
-    }
-    cachedEntryCount = result;
-    return result;
+  @TruffleBoundary
+  public long getLength() {
+    if (cachedLength != -1) return cachedLength;
+    var count = new MutableLong(0);
+    var visited = new HashSet<>();
+    iterateMembers(
+        (key, member) -> {
+          var alreadyVisited = !visited.add(key);
+          // important to record hidden member as visited before skipping it
+          // because any overriding member won't carry a `hidden` identifier
+          if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
+          count.getAndIncrement();
+          return true;
+        });
+    cachedLength = count.get();
+    return cachedLength;
   }
 }
