@@ -965,7 +965,13 @@ class Builder(sourceText: String) {
   }
 
   private fun hasTrailingAffix(node: GenNode, next: GenNode): Boolean {
-    return next.type.isAffix && node.span.lineEnd == next.span.lineBegin
+    if (node.span.lineEnd < next.span.lineBegin) return false
+    var n: GenNode? = next
+    while (n != null) {
+      if (n.type.isAffix && node.span.lineEnd == n.span.lineBegin) return true
+      n = n.children.getOrNull(0)
+    }
+    return false
   }
 
   private fun modifierPrecedence(modifier: GenNode): Int {

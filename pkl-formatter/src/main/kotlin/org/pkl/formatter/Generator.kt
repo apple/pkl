@@ -79,7 +79,6 @@ class Generator {
         if (wrap.isEnabled() && node.nodes.isNotEmpty()) {
           size += INDENT.length
           indent++
-          shouldAddIndent = true
           node.nodes.forEach { node(it, wrap) }
           indent--
         } else {
