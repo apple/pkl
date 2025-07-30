@@ -15,6 +15,7 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
@@ -116,6 +117,7 @@ class PackageCommand : BaseCommand(name = "package", helpLink = helpLink) {
         names = arrayOf("--output-path"),
         help = "The directory to write artifacts to",
         metavar = "path",
+        completionCandidates = CompletionCandidates.Path,
       )
       .single()
       .default(".out/%{name}@%{version}")

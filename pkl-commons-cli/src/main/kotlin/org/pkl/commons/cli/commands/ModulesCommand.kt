@@ -19,13 +19,15 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.types.path
 import java.net.URI
 
 abstract class ModulesCommand(name: String, helpLink: String) :
   BaseCommand(name = name, helpLink = helpLink) {
   open val modules: List<URI> by
     argument(name = "modules", help = "Module paths or URIs to evaluate.")
-      .convert { BaseOptions.parseModuleName(it) }
+      .path()
+      .convert { BaseOptions.parseModuleName(it.toString()) }
       .multiple(required = true)
 
   protected val projectOptions: ProjectOptions by ProjectOptions()

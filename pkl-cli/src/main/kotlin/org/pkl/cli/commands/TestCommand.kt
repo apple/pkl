@@ -19,6 +19,7 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.types.path
 import java.net.URI
 import org.pkl.cli.CliTestRunner
 import org.pkl.commons.cli.commands.BaseCommand
@@ -31,7 +32,8 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
 
   val modules: List<URI> by
     argument(name = "modules", help = "Module paths or URIs to evaluate.")
-      .convert { BaseOptions.parseModuleName(it) }
+      .path()
+      .convert { BaseOptions.parseModuleName(it.toString()) }
       .multiple()
 
   private val projectOptions by ProjectOptions()

@@ -17,6 +17,7 @@ package org.pkl.commons.cli.commands
 
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
@@ -166,6 +167,7 @@ class BaseOptions : OptionGroup() {
         names = arrayOf("-f", "--format"),
         help = "Output format to generate. <${output.joinToString()}>",
       )
+      .choice(*output)
       .single()
 
   val envVars: Map<String, String> by
@@ -187,9 +189,10 @@ class BaseOptions : OptionGroup() {
       .splitAll(File.pathSeparator)
 
   val settings: URI? by
-    option(names = arrayOf("--settings"), help = "Pkl settings module to use.").single().convert {
-      parseModuleName(it)
-    }
+    option(names = arrayOf("--settings"), help = "Pkl settings module to use.")
+      .path()
+      .single()
+      .convert { parseModuleName(it.toString()) }
 
   val timeout: Duration? by
     option(
