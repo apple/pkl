@@ -23,9 +23,9 @@ endif::[]
 
 :uri-maven-docsite: https://central.sonatype.com
 
-:uri-sonatype: https://s01.oss.sonatype.org/content/groups/public
+:uri-snapshot-repo: https://central.sonatype.com/repository/maven-snapshots/
 
-:uri-maven-repo: https://s01.oss.sonatype.org/content/groups/public
+:uri-maven-repo: https://central.sonatype.com/repository/maven-snapshots
 ifdef::is-release-version[]
 :uri-maven-repo: https://repo1.maven.org/maven2
 endif::[]
@@ -150,4 +150,5 @@ endif::[]
 
 :uri-pkl-roadmap: https://github.com/orgs/apple/projects/12/views/1
 
+// TODO: figure out what the correct URL should be
 :uri-sonatype-snapshot-download: https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.pkl-lang&v={pkl-artifact-version}

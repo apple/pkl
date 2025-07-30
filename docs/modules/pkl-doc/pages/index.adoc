@@ -94,7 +94,7 @@ The `pkl-doc` library is available {uri-pkl-doc-maven}[from Maven Central].
 It requires Java 17 or higher.
 
 ifndef::is-release-version[]
-NOTE: Snapshots are published to repository `{uri-sonatype}`.
+NOTE: Snapshots are published to repository `{uri-snapshot-repo}`.
 endif::[]
 
 ==== Gradle
