@@ -23,7 +23,7 @@ endif::[]
 
 :uri-maven-docsite: https://central.sonatype.com
 
-:uri-snapshot-repo: https://central.sonatype.com/repository/maven-snapshots/
+:uri-snapshot-repo: https://central.sonatype.com/repository/maven-snapshots
 
 :uri-maven-repo: https://central.sonatype.com/repository/maven-snapshots
 ifdef::is-release-version[]
