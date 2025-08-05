@@ -23,7 +23,8 @@ hidden const reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 local const function looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
   x: Int,
   y
-) = x + y
+) =
+  x + y
 
 typealias Foo =
   LooooooooooooooooooooooooongTypeName

@@ -18,12 +18,13 @@ local function function2(
   parameter2: Parameter2Type,
   parameter3: Parameter3Type,
   parameter4: Parameter4Type
-): String = ""
+): String =
+  ""
 
-local const function function3(parameter1: String|Int, parameter2: String|Int): Mapping<
-  String|Int,
-  String
-> = new {}
+local const function function3(
+  parameter1: String|Int,
+  parameter2: String|Int
+): Mapping<String|Int, String> = new {}
 
 prop =
   function2(

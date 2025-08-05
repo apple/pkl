@@ -17,6 +17,7 @@ package org.pkl.formatter
 
 import java.util.EnumSet
 import org.pkl.formatter.ast.ForceLine
+import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
@@ -340,24 +341,37 @@ class Builder(sourceText: String) {
   }
 
   private fun formatClassMethod(node: GenNode): FormatNode {
+    val prefixes = mutableListOf<FormatNode>()
+    val nodes = if (node.children[0].type == NodeType.CLASS_METHOD_HEADER) node.children else {
+      val idx = node.children.indexOfFirst { it.type == NodeType.CLASS_METHOD_HEADER }
+      val prefixNodes = node.children.subList(0, idx)
+      prefixes += formatGeneric(prefixNodes, null)
+      prefixes += getSeparator(prefixNodes.last(), node.children[idx], ForceLine)
+      node.children.subList(idx, node.children.size)
+    }
     val expr = node.children.last().children[0]
+    val noWrapNodes = formatGeneric(nodes, Space)
     val shouldIndent = !isSameLineExpr(expr)
-    val nodes =
+    val wrapNodes =
       formatGenericWithGen(
-        node.children,
-        { prev, next ->
-          if (next.type == NodeType.CLASS_METHOD_BODY && !shouldIndent) Space else SpaceOrLine
-        },
+        nodes,
+        { prev, next -> if (shouldIndent) SpaceOrLine else Space },
       ) { node, next ->
-        if (node.type == NodeType.CLASS_METHOD_BODY && shouldIndent) {
+        if (node.type == NodeType.PARAMETER_LIST) {
+          formatParameterList(node, force = true)
+        } else if (next == null && shouldIndent) {
           indent(format(node))
-        } else format(node)
+        } else {
+          format(node)
+        }
       }
-    return group(groupOnSpace(nodes))
+    val groupId = newId()
+    val group = Group(groupId, listOf(IfWrap(groupId, Nodes(wrapNodes), Nodes(noWrapNodes))))
+    return if (prefixes.isEmpty()) group else Nodes(prefixes + group)
   }
 
   private fun formatClassMethodHeader(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
+    val nodes = formatGeneric(node.children, Space)
     return Group(newId(), nodes)
   }
 
@@ -370,13 +384,13 @@ class Builder(sourceText: String) {
     return Group(newId(), formatGeneric(node.children, SpaceOrLine))
   }
 
-  private fun formatParameterList(node: GenNode): FormatNode {
+  private fun formatParameterList(node: GenNode, force: Boolean = false): FormatNode {
     if (node.children.size == 2) return Text("()")
     val nodes =
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
       }
-    return Group(newId(), nodes)
+    return if (force) ForceWrap(newId(), nodes) else Group(newId(), nodes)
   }
 
   private fun formatArgumentList(node: GenNode, twoBy2: Boolean = false): FormatNode {
