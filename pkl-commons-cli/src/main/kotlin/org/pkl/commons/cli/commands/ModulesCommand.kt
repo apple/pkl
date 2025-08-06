@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
@@ -24,7 +25,11 @@ import java.net.URI
 abstract class ModulesCommand(name: String, helpLink: String) :
   BaseCommand(name = name, helpLink = helpLink) {
   open val modules: List<URI> by
-    argument(name = "modules", help = "Module paths or URIs to evaluate.")
+    argument(
+        name = "modules",
+        help = "Module paths or URIs to evaluate.",
+        completionCandidates = CompletionCandidates.Path,
+      )
       .convert { BaseOptions.parseModuleName(it) }
       .multiple(required = true)
 
