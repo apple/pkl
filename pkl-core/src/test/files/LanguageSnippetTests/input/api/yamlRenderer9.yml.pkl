@@ -1,0 +1,36 @@
+// test escaping in double quotes
+// every string is prefixed with `\t` s.t. YamlRenderer will emit double-quoted strings.
+
+`null` = "\t\u{00}"
+
+bell = "\t\u{7}"
+
+backspace = "\t\u{8}"
+
+horizontalTab = "\t"
+
+lineFeed = "\t\u{a}"
+
+verticalTab = "\t\u{b}"
+
+formFeed = "\t\u{c}"
+
+carriageReturn = "\t\r"
+
+escape = "\t\u{1b}"
+
+doubleQuote = "\t\""
+
+backslash = "\t\\"
+
+nextLine = "\t\u{5c}"
+
+nbsp = "\t\u{a0}"
+
+lineSep = "\t\u{2028}"
+
+paragraphSep = "\t\u{2029}"
+
+output {
+  renderer = new YamlRenderer {}
+}
