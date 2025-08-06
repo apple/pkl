@@ -23,7 +23,7 @@ doubleQuote = "\t\""
 
 backslash = "\t\\"
 
-nextLine = "\t\u{5c}"
+nextLine = "\t\u{85}"
 
 nbsp = "\t\u{a0}"
 
