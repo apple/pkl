@@ -27,7 +27,10 @@ dependencies {
   api(libs.junitEngine)
   api(libs.junitParams)
   api(projects.pklCommons) // for convenience
+  implementation(projects.pklCore)
+  implementation(projects.pklServer)
   implementation(libs.assertj)
+  implementation(libs.msgpack)
 }
 
 /**
