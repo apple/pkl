@@ -1,0 +1,1 @@
+searchData='[{"name":"deprecated.deprecated","kind":1,"url":"deprecated/index.html"},{"name":"foo","kind":5,"url":"deprecated/index.html#foo","sig":": Int","parId":0,"deprecated":true},{"name":"bar","kind":5,"url":"deprecated/index.html#bar","sig":": Int","parId":0}]';
