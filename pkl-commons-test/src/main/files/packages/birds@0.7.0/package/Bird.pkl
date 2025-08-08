@@ -1,0 +1,7 @@
+open module birds.Bird
+
+import "@fruities/Fruit.pkl"
+
+name: String
+
+favoriteFruit: Fruit
