@@ -47,6 +47,9 @@ constructor(
    * however, will create a full copy instead.
    */
   val noSymlinks: Boolean = false,
+
+  /** Migrate existing pkldoc */
+  val migrate: Boolean = false,
 ) {
   /** [outputDir] after undergoing normalization. */
   val normalizedOutputDir: Path = base.normalizedWorkingDir.resolveSafely(outputDir)

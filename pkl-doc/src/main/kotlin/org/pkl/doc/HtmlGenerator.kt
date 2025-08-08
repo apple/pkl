@@ -30,7 +30,7 @@ internal class HtmlGenerator(
     SiteScope(docPackages, docsiteInfo.overviewImports, importResolver, outputDir)
 
   fun generate(docPackage: DocPackage) {
-    val packageScope = siteScope.getPackage(docPackage.name)
+    val packageScope = siteScope.getPackage(docPackage.docPackageInfo)
 
     PackagePageGenerator(docsiteInfo, docPackage, packageScope).run()
 
@@ -57,8 +57,8 @@ internal class HtmlGenerator(
     }
   }
 
-  fun generateSite(packagesData: List<PackageData>) {
-    MainPageGenerator(docsiteInfo, packagesData, siteScope).run()
+  fun generateSite(packages: List<PackageData>) {
+    MainPageGenerator(docsiteInfo, packages, siteScope).run()
 
     generateStaticResources()
   }

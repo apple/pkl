@@ -17,6 +17,7 @@ package org.pkl.doc
 
 import java.io.IOException
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
 import org.pkl.commons.copyRecursively
@@ -39,11 +40,11 @@ class DocGenerator(
    */
   private val docsiteInfo: DocsiteInfo,
 
-  /** The modules to generate documentation for, grouped by package. */
-  modules: Map<DocPackageInfo, Collection<ModuleSchema>>,
+  /** The packages to generate documentation for. */
+  packages: Map<DocPackageInfo, Collection<ModuleSchema>>,
 
   /**
-   * A function to resolve imports in [modules] and [docsiteInfo].
+   * A function to resolve imports in [packages] and [docsiteInfo].
    *
    * Module `pkl.base` is resolved with this function even if not explicitly imported.
    */
@@ -73,16 +74,23 @@ class DocGenerator(
    * however, will create a full copy instead.
    */
   private val noSymlinks: Boolean = false,
+
+  /**
+   * The doc migrator that is used to determine the latest docsite version, as well as update the
+   * version file.
+   */
+  private val docMigrator: DocMigrator = DocMigrator(outputDir, System.out, versionComparator),
 ) {
   companion object {
     const val CURRENT_DIRECTORY_NAME = "current"
 
-    internal fun List<PackageData>.current(
-      versionComparator: Comparator<String>
+    internal fun determineCurrentPackages(
+      packages: List<PackageData>,
+      descendingVersionComparator: Comparator<String>,
     ): List<PackageData> {
       val comparator =
-        compareBy<PackageData> { it.ref.pkg }.thenBy(versionComparator) { it.ref.version }
-      return asSequence()
+        compareBy<PackageData> { it.ref.pkg }.thenBy(descendingVersionComparator) { it.ref.version }
+      return packages
         // If matching a semver pattern, remove any version that has a prerelease
         // version (e.g. SNAPSHOT in 1.2.3-SNAPSHOT)
         .filter { Version.parseOrNull(it.ref.version)?.preRelease == null }
@@ -94,11 +102,40 @@ class DocGenerator(
 
   private val descendingVersionComparator: Comparator<String> = versionComparator.reversed()
 
-  private val docPackages: List<DocPackage> = modules.map { DocPackage(it.key, it.value.toList()) }
+  private val docPackages: List<DocPackage> =
+    packages.map { DocPackage(it.key, it.value.toList()) }.filter { !it.isUnlisted }
+
+  private fun getCurrentPackages(siteSearchIndex: List<SearchIndexGenerator.PackageIndexEntry>) =
+    buildList {
+      for (entry in siteSearchIndex) {
+        var packageDataFile =
+          outputDir.resolve(entry.packageEntry.url).resolveSibling("package-data.json")
+        if (!Files.exists(packageDataFile)) {
+          // search-index.js in Pkl 0.29 and below did not encode path.
+          // If we get a file does not exist, try again by encoding the path.
+          packageDataFile =
+            outputDir
+              .resolve(entry.packageEntry.url.pathEncoded)
+              .resolveSibling("package-data.json")
+          if (!Files.exists((packageDataFile))) {
+            println(
+              "[Warn] likely corrupted search index; missing $packageDataFile. This entry will be removed in the newly generated index."
+            )
+            continue
+          }
+        }
+        add(PackageData.read(packageDataFile))
+      }
+    }
 
   /** Runs this documentation generator. */
   fun run() {
     try {
+      if (!docMigrator.isUpToDate) {
+        throw DocGeneratorException(
+          "Docsite is not up to date. Expected: ${DocMigrator.CURRENT_VERSION}. Found: ${docMigrator.docsiteVersion}. Use DocMigrator to migrate the site."
+        )
+      }
       val htmlGenerator =
         HtmlGenerator(docsiteInfo, docPackages, importResolver, outputDir, isTestMode)
       val searchIndexGenerator = SearchIndexGenerator(outputDir)
@@ -106,25 +143,28 @@ class DocGenerator(
       val runtimeDataGenerator = RuntimeDataGenerator(descendingVersionComparator, outputDir)
 
       for (docPackage in docPackages) {
-        if (docPackage.isUnlisted) continue
-
         docPackage.deletePackageDir()
         htmlGenerator.generate(docPackage)
         searchIndexGenerator.generate(docPackage)
         packageDataGenerator.generate(docPackage)
       }
 
-      val packagesData = packageDataGenerator.readAll()
-      val currentPackagesData = packagesData.current(descendingVersionComparator)
+      val newlyGeneratedPackages = docPackages.map(::PackageData).sortedBy { it.ref.pkg }
+      val currentSearchIndex = searchIndexGenerator.getCurrentSearchIndex()
+      val existingCurrentPackages = getCurrentPackages(currentSearchIndex)
+      val currentPackages =
+        determineCurrentPackages(
+          newlyGeneratedPackages + existingCurrentPackages,
+          descendingVersionComparator,
+        )
 
-      createCurrentDirectories(currentPackagesData)
-
-      htmlGenerator.generateSite(currentPackagesData)
-      searchIndexGenerator.generateSiteIndex(currentPackagesData)
-      runtimeDataGenerator.deleteDataDir()
-      runtimeDataGenerator.generate(packagesData)
+      createCurrentDirectories(currentPackages, existingCurrentPackages)
+      searchIndexGenerator.generateSiteIndex(currentPackages)
+      htmlGenerator.generateSite(currentPackages)
+      runtimeDataGenerator.generate(newlyGeneratedPackages)
+      docMigrator.updateDocsiteVersion()
     } catch (e: IOException) {
-      throw DocGeneratorException("I/O error generating documentation.", e)
+      throw DocGeneratorException("I/O error generating documentation: ${e.message}", e)
     }
   }
 
@@ -132,8 +172,12 @@ class DocGenerator(
     outputDir.resolve(IoUtils.encodePath("$name/$version")).deleteRecursively()
   }
 
-  private fun createCurrentDirectories(currentPackagesData: List<PackageData>) {
-    for (packageData in currentPackagesData) {
+  private fun createCurrentDirectories(
+    currentPackages: List<PackageData>,
+    existingCurrentPackages: List<PackageData>,
+  ) {
+    val packagesToCreate = currentPackages - existingCurrentPackages
+    for (packageData in packagesToCreate) {
       val basePath = outputDir.resolve(packageData.ref.pkg.pathEncoded)
       val src = basePath.resolve(packageData.ref.version)
       val dst = basePath.resolve(CURRENT_DIRECTORY_NAME)
@@ -218,7 +262,7 @@ internal class DocModule(
     get() = schema.moduleName
 
   val path: String by lazy {
-    name.substring(parent.docPackageInfo.moduleNamePrefix.length).replace('.', '/')
+    name.pathEncoded.substring(parent.docPackageInfo.moduleNamePrefix.length).replace('.', '/')
   }
 
   val overview: String?
