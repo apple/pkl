@@ -15,11 +15,13 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
 import kotlin.Pair
 import org.pkl.commons.cli.CliBaseOptions.Companion.getProjectFile
+import org.pkl.commons.cli.CliBugException
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.toPath
@@ -33,7 +35,11 @@ import org.pkl.core.packages.*
  *
  * For the low-level Pkldoc API, see [DocGenerator].
  */
-class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(options.base) {
+class CliDocGenerator(
+  private val options: CliDocGeneratorOptions,
+  private val consoleOut: OutputStream = System.out,
+) : CliCommand(options.base) {
+  constructor(options: CliDocGeneratorOptions) : this(options, System.out)
 
   private val packageResolver =
     PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir)
@@ -59,6 +65,17 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
               .getPackagePage("pkl", Release.current().version().toString())
           ),
     )
+
+  private val versions = mutableMapOf<String, Version>()
+
+  private val versionComparator =
+    Comparator<String> { v1, v2 ->
+      versions
+        .getOrPut(v1) { Version.parse(v1) }
+        .compareTo(versions.getOrPut(v2) { Version.parse(v2) })
+    }
+
+  private val docMigrator = DocMigrator(options.outputDir, System.out, versionComparator)
 
   private fun DependencyMetadata.getPackageDependencies(): List<DocPackageInfo.PackageDependency> {
     return buildList {
@@ -87,14 +104,12 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
   }
 
   private fun PackageUri.toDocPackageInfo(): DocPackageInfo {
-    val metadataAndChecksum =
+    val (metadata, checksum) =
       try {
         packageResolver.getDependencyMetadataAndComputeChecksum(this)
       } catch (e: PackageLoadError) {
         throw CliException("Failed to package metadata for $this: ${e.message}")
       }
-    val metadata = metadataAndChecksum.first
-    val checksum = metadataAndChecksum.second
     return DocPackageInfo(
       name = "${uri.authority}${uri.path.substringBeforeLast('@')}",
       moduleNamePrefix = "${metadata.name}.",
@@ -130,6 +145,15 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
   }
 
   override fun doRun() {
+    if (options.migrate) {
+      docMigrator.run()
+      return
+    }
+    if (!docMigrator.isUpToDate) {
+      throw CliException(
+        "pkldoc website model is too old (found: ${docMigrator.docsiteVersion}, required: ${DocMigrator.CURRENT_VERSION}). Run `pkldoc --migrate` to migrate the website."
+      )
+    }
     val docsiteInfoModuleUris = mutableListOf<URI>()
     val packageInfoModuleUris = mutableListOf<URI>()
     val regularModuleUris = mutableListOf<URI>()
@@ -271,8 +295,12 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
           options.normalizedOutputDir,
           options.isTestMode,
           options.noSymlinks,
+          consoleOut,
+          docMigrator,
         )
         .run()
+    } catch (e: DocGeneratorBugException) {
+      throw CliBugException(e)
     } catch (e: DocGeneratorException) {
       throw CliException(e.message!!)
     }

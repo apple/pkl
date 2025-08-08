@@ -15,10 +15,13 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createParentDirectories
+import kotlin.io.path.exists
 import kotlinx.html.*
 import kotlinx.html.stream.appendHTML
+import kotlinx.serialization.json.Json
 import org.commonmark.ext.gfm.tables.TablesExtension
 import org.commonmark.parser.Parser
 import org.commonmark.renderer.html.HtmlRenderer
@@ -29,7 +32,12 @@ import org.pkl.core.util.IoUtils
 internal abstract class PageGenerator<out S>(
   protected val docsiteInfo: DocsiteInfo,
   protected val pageScope: S,
-) where S : PageScope {
+  consoleOut: OutputStream,
+) : AbstractGenerator(consoleOut) where S : PageScope {
+  companion object {
+    private val json = Json {}
+  }
+
   private val markdownInlineParserFactory = MarkdownParserFactory(pageScope)
 
   private val markdownParser =
@@ -47,32 +55,61 @@ internal abstract class PageGenerator<out S>(
   fun run() {
     val path = pageScope.url.toPath()
     path.createParentDirectories()
-    path.bufferedWriter().use {
-      it.appendLine("<!DOCTYPE html>")
-      it.appendHTML().html(null, html)
+    path.bufferedWriter().use { writer ->
+      writer.appendLine("<!DOCTYPE html>")
+      writer.appendHTML().html(null, html)
     }
+    writeOutput("Wrote file ${pageScope.url}\r")
   }
 
   protected abstract val html: HTML.() -> Unit
 
   protected abstract fun HTMLTag.renderPageTitle()
 
+  private fun DocScope?.getVersion(): String? {
+    return when (this) {
+      null -> null
+      is SiteScope -> null
+      is PackageScope -> version
+      else -> parent?.getVersion()
+    }
+  }
+
   protected fun HTML.renderHtmlHead() {
+    lang = "en-US"
+
     head {
+      meta { charset = "UTF-8" }
       title { renderPageTitle() }
       script {
         src = pageScope.relativeSiteUrl.resolve("scripts/pkldoc.js").toString()
         defer = true
       }
+      pageScope.getVersion()?.let { version ->
+        script {
+          type = "module"
+          unsafe {
+            val packageVersionUrl =
+              IoUtils.relativize(pageScope.perPackageDataUrl, pageScope.url).toString()
+            val perPackageVersionUrl =
+              IoUtils.relativize(pageScope.perPackageVersionDataUrl, pageScope.url).toString()
+
+            raw(
+              """
+      import perPackageData from "$packageVersionUrl" with { type: "json" }
+      import perPackageVersionData from "$perPackageVersionUrl" with { type: "json" }
+
+      runtimeData.knownVersions(perPackageData.knownVersions, ${json.encodeToString(version)});
+      runtimeData.knownUsagesOrSubtypes("known-subtypes", perPackageVersionData.knownSubtypes);
+      runtimeData.knownUsagesOrSubtypes("known-usages", perPackageVersionData.knownUsages);
+            """
+            )
+          }
+        }
+      }
       script {
         src = pageScope.relativeSiteUrl.resolve("scripts/scroll-into-view.min.js").toString()
         defer = true
-      }
-      if (pageScope !is SiteScope) {
-        script {
-          src = IoUtils.relativize(pageScope.dataUrl, pageScope.url).toString()
-          defer = true
-        }
       }
       link {
         href = pageScope.relativeSiteUrl.resolve("styles/pkldoc.css").toString()
@@ -102,7 +139,6 @@ internal abstract class PageGenerator<out S>(
         sizes = "16x16"
         href = pageScope.relativeSiteUrl.resolve("images/favicon-16x16.png").toString()
       }
-      meta { charset = "UTF-8" }
     }
   }
 
@@ -127,10 +163,13 @@ internal abstract class PageGenerator<out S>(
       div {
         id = "search"
 
-        i {
-          id = "search-icon"
-          classes = setOf("material-icons")
-          +"search"
+        label {
+          htmlFor = "search-input"
+          i {
+            id = "search-icon"
+            classes = setOf("material-icons")
+            +"search"
+          }
         }
 
         input {
@@ -562,7 +601,25 @@ internal abstract class PageGenerator<out S>(
     return siteScope.packageScopes.values
       .find { it.name == dep.qualifiedName }
       ?.urlForVersionRelativeTo(pageScope, dep.version)
-      ?.toString()
+      ?.toString() ?: findAlreadyExistingPackageScope(siteScope, dep.qualifiedName, dep.version)
+  }
+
+  private fun findAlreadyExistingPackageScope(
+    siteScope: SiteScope,
+    name: String,
+    version: String,
+  ): String? {
+    // hack: determine if we know about this dependency just by checking to see if the directory
+    // exists.
+    // we don't need to know if the specific _version_ exists (we assume that the version must be
+    // published by the docsite and tolerate possibly broken links).
+    val pkgPath = siteScope.outputDir.resolve(name.pathEncoded)
+    if (pkgPath.exists()) {
+      val targetPath = pkgPath.resolve("$version/index.html")
+      val myUrl = pageScope.url
+      return IoUtils.relativize(targetPath.toUri(), myUrl).toString()
+    }
+    return null
   }
 
   protected class MemberInfoKey(val name: String, val classes: Set<String> = setOf())

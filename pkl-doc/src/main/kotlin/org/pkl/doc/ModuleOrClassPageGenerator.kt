@@ -15,6 +15,7 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import java.io.StringWriter
 import kotlinx.html.*
 import org.pkl.core.Member
@@ -31,7 +32,8 @@ internal abstract class ModuleOrClassPageGenerator<S>(
   protected val clazz: PClass,
   scope: S,
   private val isTestMode: Boolean,
-) : PageGenerator<S>(docsiteInfo, scope) where S : PageScope {
+  consoleOut: OutputStream,
+) : PageGenerator<S>(docsiteInfo, scope, consoleOut) where S : PageScope {
   protected fun HtmlBlockTag.renderProperties() {
     if (!clazz.hasListedProperty) return
 

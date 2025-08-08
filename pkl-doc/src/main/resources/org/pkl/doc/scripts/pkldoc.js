@@ -689,30 +689,49 @@ function clearSearch() {
   updateSearchResults(null);
 }
 
+const updateRuntimeDataWith = (buildAnchor) => (fragmentId, entries) => {
+  if (!entries) return;
+  const fragment = document.createDocumentFragment();
+  let first = true;
+  for (const entry of entries) {
+    const a = document.createElement("a");
+    buildAnchor(entry, a);
+    if (first) {
+      first = false;
+    } else {
+      fragment.append(", ");
+    }
+    fragment.append(a);
+  }
+
+  const element = document.getElementById(fragmentId);
+  element.append(fragment);
+  element.classList.remove("hidden"); // dd
+  element.previousElementSibling.classList.remove("hidden"); // dt
+}
+
 // Functions called by JS data scripts.
 // noinspection JSUnusedGlobalSymbols
 const runtimeData = {
-  links: (id, linksJson) => {
-    const links = JSON.parse(linksJson);
-    const fragment = document.createDocumentFragment();
-    let first = true;
-    for (const link of links) {
-      const {text, href, classes} = link
-      const a = document.createElement("a");
-      a.textContent = text;
-      if (href) a.href = href;
-      if (classes) a.className = classes;
-      if (first) {
-        first = false;
-      } else {
-        fragment.append(", ");
+  knownVersions: (versions, myVersion) => {
+    updateRuntimeDataWith((entry, anchor) => {
+      const { text, href } = entry;
+      anchor.textContent = text;
+      // noinspection JSUnresolvedReference
+      if (text === myVersion) {
+        anchor.className = "current-version";
+      } else if (href) {
+        anchor.href = href;
       }
-      fragment.append(a);
+    })("known-versions", versions);
+  },
+  knownUsagesOrSubtypes: updateRuntimeDataWith((entry, anchor) => {
+    const { text, href } = entry;
+    anchor.textContent = text;
+    // noinspection JSUnresolvedReference
+    anchor.textContent = text;
+    if (href) {
+      anchor.href = href;
     }
-
-    const element = document.getElementById(id);
-    element.append(fragment);
-    element.classList.remove("hidden"); // dd
-    element.previousElementSibling.classList.remove("hidden"); // dt
-  }
+  }),
 }
