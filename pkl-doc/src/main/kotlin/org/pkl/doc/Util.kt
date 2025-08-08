@@ -16,22 +16,20 @@
 package org.pkl.doc
 
 import java.io.InputStream
+import java.io.OutputStream
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.bufferedWriter
+import java.nio.file.StandardCopyOption
 import kotlin.io.path.createParentDirectories
-import kotlin.io.path.outputStream
 import org.pkl.core.*
 import org.pkl.core.util.IoUtils
-import org.pkl.core.util.json.JsonWriter
 import org.pkl.parser.Lexer
 
 // overwrites any existing file
 internal fun copyResource(resourceName: String, targetDir: Path) {
   val targetFile = targetDir.resolve(resourceName).apply { createParentDirectories() }
-  getResourceAsStream(resourceName).use { sourceStream ->
-    targetFile.outputStream().use { targetStream -> sourceStream.copyTo(targetStream) }
-  }
+  Files.copy(getResourceAsStream(resourceName), targetFile, StandardCopyOption.REPLACE_EXISTING)
 }
 
 internal fun getResourceAsStreamOrNull(resourceName: String): InputStream? =
@@ -92,23 +90,6 @@ internal fun getDocCommentOverflow(docComment: String?): String? {
   }
 }
 
-internal fun Path.jsonWriter(): JsonWriter {
-  createParentDirectories()
-  return JsonWriter(bufferedWriter()).apply { serializeNulls = false }
-}
-
-internal inline fun JsonWriter.obj(body: JsonWriter.() -> Unit) {
-  beginObject()
-  body()
-  endObject()
-}
-
-internal inline fun JsonWriter.array(body: JsonWriter.() -> Unit) {
-  beginArray()
-  body()
-  endArray()
-}
-
 internal fun String.replaceSourceCodePlaceholders(
   path: String,
   sourceLocation: Member.SourceLocation,
@@ -150,3 +131,11 @@ internal val String.asIdentifier: String
 
 internal val String.pathEncoded
   get(): String = IoUtils.encodePath(this)
+
+fun OutputStream.write(str: String) = write(str.toByteArray(Charsets.UTF_8))
+
+fun OutputStream.writeLine(str: String) = write((str + "\n").toByteArray(Charsets.UTF_8))
+
+operator fun <A, B> org.pkl.core.util.Pair<A, B>.component1(): A = first
+
+operator fun <A, B> org.pkl.core.util.Pair<A, B>.component2(): B = second

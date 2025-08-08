@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,8 +15,14 @@
  */
 package org.pkl.doc
 
-open class DocGeneratorException(message: String, cause: Throwable? = null) :
-  RuntimeException(message, cause)
+import java.io.OutputStream
 
-class DocGeneratorBugException(message: String, cause: Throwable? = null) :
-  DocGeneratorException(message, cause)
+abstract class AbstractGenerator(protected val consoleOut: OutputStream) {
+  protected fun writeOutputLine(message: String) {
+    consoleOut.writeLine(message)
+  }
+
+  protected fun writeOutput(message: String) {
+    consoleOut.write(message)
+  }
+}
