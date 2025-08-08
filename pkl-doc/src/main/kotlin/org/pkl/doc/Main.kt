@@ -69,6 +69,14 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
       .single()
       .flag(default = false)
 
+  private val migrate: Boolean by
+    option(
+        names = arrayOf("--migrate"),
+        help = "Migrate a pkl-doc site from version 0 to version 1.",
+      )
+      .single()
+      .flag(default = false)
+
   private val projectOptions by ProjectOptions()
 
   override val helpString: String = "Generate HTML documentation from Pkl modules and packages."
@@ -80,6 +88,7 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
         outputDir,
         true,
         noSymlinks,
+        migrate,
       )
     CliDocGenerator(options).run()
   }

@@ -16,6 +16,7 @@
 package org.pkl.doc
 
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
 import org.pkl.core.ModuleSchema
 
@@ -30,7 +31,7 @@ internal class HtmlGenerator(
     SiteScope(docPackages, docsiteInfo.overviewImports, importResolver, outputDir)
 
   fun generate(docPackage: DocPackage) {
-    val packageScope = siteScope.getPackage(docPackage.name)
+    val packageScope = siteScope.getPackage(docPackage.docPackageInfo)
 
     PackagePageGenerator(docsiteInfo, docPackage, packageScope).run()
 
@@ -57,8 +58,44 @@ internal class HtmlGenerator(
     }
   }
 
-  fun generateSite(packagesData: List<PackageData>) {
-    MainPageGenerator(docsiteInfo, packagesData, siteScope).run()
+  private fun buildSiteSearchData(
+    newlyGeneratedPackages: List<PackageData>,
+    siteSearchIndex: List<SearchIndexGenerator.PackageIndexEntry>,
+  ): List<PackageData> {
+    return buildList {
+      for (entry in siteSearchIndex) {
+        val existingPackageData =
+          newlyGeneratedPackages.find { it.ref.pkg == entry.packageEntry.name }
+        if (existingPackageData != null) {
+          add(existingPackageData)
+          continue
+        }
+        var packageDataFile =
+          outputDir.resolve(entry.packageEntry.url).resolveSibling("package-data.json")
+        if (!Files.exists(packageDataFile)) {
+          // search-index.js in Pkl 0.29 and below did not encode path.
+          // If we get a file does not exist, try again by encoding the path.
+          packageDataFile =
+            outputDir
+              .resolve(entry.packageEntry.url.pathEncoded)
+              .resolveSibling("package-data.json")
+          if (!Files.exists((packageDataFile))) {
+            println("[Warn] likely corrupted search index; missing $packageDataFile")
+            continue
+          }
+        }
+        add(PackageData.read(packageDataFile))
+      }
+    }
+  }
+
+  fun generateSite(
+    newlyGeneratedPackages: List<PackageData>,
+    siteSearchIndex: List<SearchIndexGenerator.PackageIndexEntry>,
+  ) {
+    val allPackagesData: List<PackageData> =
+      buildSiteSearchData(newlyGeneratedPackages, siteSearchIndex)
+    MainPageGenerator(docsiteInfo, allPackagesData, siteScope).run()
 
     generateStaticResources()
   }

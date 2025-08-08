@@ -1,0 +1,680 @@
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Lato Regular'), local('Lato-Regular'),
+  url('../fonts/lato-v14-latin_latin-ext-regular.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Lato';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Lato Bold'), local('Lato-Bold'),
+  url('../fonts/lato-v14-latin_latin-ext-700.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Open Sans Regular'), local('OpenSans-Regular'),
+  url('../fonts/open-sans-v15-latin_latin-ext-regular.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 400;
+  src: local('Open Sans Italic'), local('OpenSans-Italic'),
+  url('../fonts/open-sans-v15-latin_latin-ext-italic.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Open Sans Bold'), local('OpenSans-Bold'),
+  url('../fonts/open-sans-v15-latin_latin-ext-700.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Open Sans';
+  font-style: italic;
+  font-weight: 700;
+  src: local('Open Sans Bold Italic'), local('OpenSans-BoldItalic'),
+  url('../fonts/open-sans-v15-latin_latin-ext-700italic.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Source Code Pro';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Source Code Pro'), local('SourceCodePro-Regular'),
+  url('../fonts/source-code-pro-v7-latin_latin-ext-regular.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Source Code Pro';
+  font-style: normal;
+  font-weight: 700;
+  src: local('Source Code Pro Bold'), local('SourceCodePro-Bold'),
+  url('../fonts/source-code-pro-v7-latin_latin-ext-700.woff2') format('woff2')
+}
+
+@font-face {
+  font-family: 'Material Icons';
+  font-style: normal;
+  font-weight: 400;
+  src: local('Material Icons'),
+  local('MaterialIcons-Regular'),
+  url(../fonts/MaterialIcons-Regular.woff2) format('woff2');
+}
+
+.material-icons {
+  /*noinspection CssNoGenericFontName*/
+  font-family: 'Material Icons';
+  font-weight: normal;
+  font-style: normal;
+  font-size: 24px;
+  display: inline-block;
+  width: 1em;
+  height: 1em;
+  line-height: 1;
+  text-transform: none;
+  letter-spacing: normal;
+  word-wrap: normal;
+  white-space: nowrap;
+  direction: ltr;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  -moz-osx-font-smoothing: grayscale;
+  font-feature-settings: 'liga';
+}
+
+input[type=search] {
+  -webkit-appearance: textfield;
+}
+
+input[type=search]::-webkit-search-decoration {
+  -webkit-appearance: none;
+}
+
+input::-moz-placeholder {
+  opacity: 1;
+}
+
+h1, h2, h3, h4, h5, h6, p, blockquote, pre,
+a, abbr, acronym, address, big, cite, code,
+del, dfn, em, font, ins, kbd, q, s, samp,
+small, strike, strong, sub, sup, tt, var,
+dl, dt, dd, ol, ul, li,
+fieldset, form, label, legend,
+table, caption, tbody, tfoot, thead, tr, th, td {
+  border: 0;
+  font-family: inherit;
+  font-size: 100%;
+  font-style: inherit;
+  font-weight: inherit;
+  margin: 0;
+  outline: 0;
+  padding: 0;
+  vertical-align: baseline;
+}
+
+body {
+  margin: 0;
+  font-family: Lato, Arial, sans-serif;
+  background-color: #f0f3f6;
+  scroll-behavior: smooth;
+}
+
+a, a:visited, a:hover, a:active {
+  color: inherit;
+}
+
+a:hover {
+  text-decoration: none;
+  transition: 0s;
+}
+
+code, .member-modifiers, .member-signature, .doc-comment pre, #search-results li.result, .result-name, .heading-name, .aka-name {
+  font-family: "Source Code Pro", monospace;
+  letter-spacing: -0.03em;
+}
+
+header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw; /* vw to make sure that positioning is the same whether or not vertical scrollbar is displayed */
+  height: 32px;
+  z-index: 1;
+  background-color: #364550;
+  padding: 7px 0 7px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.18), 0 4px 8px rgba(0, 0, 0, 0.28);
+}
+
+#doc-title {
+  position: absolute;
+  margin-top: 8px;
+  margin-left: 15px;
+}
+
+#doc-title a {
+  color: #fff;
+  text-decoration: none;
+}
+
+#search {
+  position: relative;
+  width: 50vw;
+  margin: 0 auto;
+}
+
+#search-icon {
+  position: absolute;
+  left: 0;
+  top: 2px;
+  padding: 4px;
+  font-size: 21px;
+  color: #a5a9a9;
+}
+
+#search-input {
+  margin-top: 2px;
+  width: 100%;
+  height: 28px;
+  text-indent: 28px;
+  font-size: 0.85em;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: none;
+  border-radius: 3px;
+  color: #fff;
+}
+
+#search-input:focus {
+  background-color: #6D7880;
+  outline: none;
+}
+
+#search-input::placeholder {
+  text-align: center;
+  color: #A5A9A9;
+}
+
+#search-input:focus::placeholder {
+  color: transparent;
+}
+
+#search-results {
+  position: fixed;
+  box-sizing: border-box;
+  top: 38px;
+  left: 25vw;
+  right: 25vw;
+  width: 50vw;
+  max-height: 80%;
+  color: #103a51;
+  background: white;
+  border: solid 1px #6D7880;
+  border-radius: 3px;
+  box-shadow: 0 0 4px rgba(0, 0, 0, 0.18), 0 4px 8px rgba(0, 0, 0, 0.28);
+  white-space: nowrap;
+
+  overflow: auto; /* in safari, this slows down painting, blocking the ui */
+  /*noinspection CssUnknownProperty*/
+  overscroll-behavior: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+#search-results a {
+  text-decoration: none;
+}
+
+#search-results a:hover {
+  text-decoration: underline;
+}
+
+#search-results ul {
+  list-style: none;
+  font-size: 0.9em;
+}
+
+#search-results li {
+  padding: 0.2ch 3ch;
+  height: 17px; /* used same height regardless of which fonts are used in content */
+}
+
+#search-results li.heading {
+  background-color: #f0f3f6;
+  padding: 0.4ch 1ch;
+}
+
+#search-results li.result {
+  font-size: 0.9em;
+}
+
+#search-results .keyword {
+  color: #000082;
+}
+
+#search-results .highlight {
+  font-weight: bold;
+}
+
+#search-results .context {
+  color: gray;
+}
+
+#search-results .selected, #search-results .selected .keyword, #search-results .selected .aka, #search-results .selected .context {
+  background: darkblue;
+  color: white;
+}
+
+#search-results .deprecated {
+  text-decoration: line-through;
+}
+
+/* make sure that line-through of highlighted region of selected search result has the right color */
+#search-results .deprecated.selected .highlight {
+  text-decoration: line-through;
+}
+
+main {
+  width: 70%;
+  margin: 60px auto 20px;
+}
+
+.declaration-parent-link {
+  margin: 0 0 1rem;
+}
+
+#declaration-title {
+  font-size: 2em;
+  font-weight: bold;
+  color: #103a51;
+  margin: 0.5rem 0;
+}
+
+#declaration-version {
+  color: #A5A9A9;
+  font-size: 0.9em;
+  vertical-align: bottom;
+  padding-left: 0.25em;
+}
+
+.member-group-links {
+  margin: 0.75em 0 1em 0;
+}
+
+.member-group-links li {
+  display: inline-block;
+  margin-right: 1em;
+}
+
+.member-info {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  line-height: 1.5;
+  margin-top: 0.5em;
+  font-size: 0.9em;
+}
+
+.member-info dt {
+  grid-column: 1;
+  text-align: right;
+}
+
+.member-info dd {
+  grid-column: 2;
+  margin-left: 0.5em;
+}
+
+.copy-uri-button {
+  cursor: pointer;
+  font-size: inherit;
+  margin-left: 0.5em;
+}
+
+.member-group {
+  /* for absolutely positioned anchors */
+  position: relative;
+}
+
+.member-group-title {
+  margin: 1rem;
+  font-weight: bold;
+  color: #103a51;
+}
+
+.toggle-inherited-members {
+  font-size: 0.9em;
+  font-weight: normal;
+  margin-left: 0.5em;
+}
+
+.button-link {
+  text-decoration: underline;
+}
+
+.button-link:hover, .button-link:active {
+  text-decoration: none;
+  cursor: pointer;
+}
+
+.member-group ul {
+  list-style: none;
+}
+
+.member-group li {
+  /* for absolutely positioned anchors */
+  position: relative;
+}
+
+.anchor,
+.anchor-param1,
+.anchor-param2,
+.anchor-param3,
+.anchor-param4,
+.anchor-param5,
+.anchor-param6,
+.anchor-param7,
+.anchor-param8,
+.anchor-param9 {
+  position: absolute;
+  top: -60px;
+  left: 0;
+}
+
+.anchor:target ~ .member,
+.anchor-param1:target ~ .member,
+.anchor-param2:target ~ .member,
+.anchor-param3:target ~ .member,
+.anchor-param4:target ~ .member,
+.anchor-param5:target ~ .member,
+.anchor-param6:target ~ .member,
+.anchor-param7:target ~ .member,
+.anchor-param8:target ~ .member,
+.anchor-param9:target ~ .member {
+  border-left: 3px solid #222832;
+}
+
+.anchor:target ~ .member .name-decl,
+.anchor-param1:target ~ .member .param1,
+.anchor-param2:target ~ .member .param2,
+.anchor-param3:target ~ .member .param3,
+.anchor-param4:target ~ .member .param4,
+.anchor-param5:target ~ .member .param5,
+.anchor-param6:target ~ .member .param6,
+.anchor-param7:target ~ .member .param7,
+.anchor-param8:target ~ .member .param8,
+.anchor-param9:target ~ .member .param9 {
+  font-weight: bold;
+}
+
+.member {
+  border-left: 3px solid transparent;
+  margin: 0 auto 0.5rem;
+  background-color: #fff;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  font-size: 0.9em;
+  padding: 10px;
+  color: #222832;
+}
+
+.member:hover {
+  background-color: #f2f2f2;
+}
+
+.member-left {
+  width: 25%;
+  display: inline;
+  float: left;
+  padding-right: 6px;
+  min-height: 1px;
+  text-align: right;
+}
+
+.member-modifiers {
+  color: #000082;
+}
+
+.member-main {
+  display: block;
+  overflow: hidden;
+}
+
+.member-deprecated {
+  text-decoration: line-through;
+}
+
+.member-selflink {
+  visibility: hidden;
+  display: inline;
+  float: left;
+  padding-right: 20px;
+  color: #222832;
+  text-decoration: none;
+}
+
+.member-source-link {
+  visibility: hidden;
+  color: #fff;
+  background-color: #868e96;
+  display: inline-block;
+  margin-left: 1em;
+  padding: .25em .4em;
+  font-size: 75%;
+  font-weight: 700;
+  line-height: 1;
+  text-align: center;
+  vertical-align: bottom;
+  border-radius: .25rem
+}
+
+.member-source-link:visited, .member-source-link:hover, .member-source-link:active {
+  color: #fff;
+}
+
+.member:hover .member-source-link, .member:hover .member-selflink {
+  visibility: visible;
+}
+
+.member.inherited, .member.hidden-member {
+  opacity: 0.75;
+}
+
+.member.inherited .context {
+  color: gray;
+}
+
+.member.with-page-link, .member.with-expandable-docs {
+  cursor: pointer;
+}
+
+.member .expandable-docs-icon {
+  float: right;
+}
+
+/*
+Don't style a.name-decl as link
+because the entire .member.with-page-link is effectively a link (via JS).
+*/
+.member.with-page-link a.name-decl {
+  text-decoration: none;
+}
+
+.expandable {
+  transform: scaleY(1);
+  transition: transform 0.25s;
+}
+
+.expandable.collapsed {
+  transform: scaleY(0);
+}
+
+.expandable.hidden {
+  display: none;
+}
+
+#_declaration .expandable {
+  transform: none;
+  transition: none;
+}
+
+#_declaration .expandable.collapsed {
+  mask: linear-gradient(rgb(0 0 0), transparent) content-box;
+  height: 100px;
+}
+
+#_declaration .expandable.hidden {
+  display: block;
+}
+
+/* show an otherwise hidden inherited member if it's a link target */
+.anchor:target + .expandable.collapsed.hidden {
+  display: inherit;
+  transform: scaleY(1);
+}
+
+.doc-comment {
+  color: #103a51;
+  margin-top: 0.5rem;
+  font-family: "Open Sans", sans-serif;
+  font-size: 0.9em;
+}
+
+.doc-comment p {
+  margin: 0.7em 0;
+}
+
+.doc-comment p:first-child {
+  margin-top: 0;
+}
+
+.doc-comment p:last-child {
+  margin-bottom: 0;
+}
+
+.doc-comment h1,
+.doc-comment h2,
+.doc-comment h3,
+.doc-comment h4,
+.doc-comment h5,
+.doc-comment h6 {
+  margin-bottom: 0.7em;
+  margin-top: 1.4em;
+  display: block;
+  text-align: left;
+  font-weight: bold;
+}
+
+.doc-comment pre {
+  padding: 0.5em;
+  border: 0 solid #ddd;
+  background-color: #364550;
+  color: #ddd;
+  margin: 5px 0;
+  display: block;
+  border-radius: 0.2em;
+  overflow-x: auto;
+}
+
+.doc-comment ul {
+  display: block;
+  list-style: circle;
+  padding-left: 20px;
+}
+
+.doc-comment ol {
+  display: block;
+  padding-left:20px;
+}
+
+.doc-comment ol.decimal {
+  list-style: decimal;
+}
+
+.doc-comment ol.lowerAlpha {
+  list-style: lower-alpha;
+}
+
+.doc-comment ol.upperAlpha {
+  list-style: upper-alpha;
+}
+
+.doc-comment ol.lowerRoman {
+  list-style: lower-roman;
+}
+
+.doc-comment ol.upperRoman {
+  list-style: upper-roman;
+}
+
+.doc-comment li {
+  display: list-item;
+}
+
+.doc-comment code {
+  font-weight: normal;
+}
+
+.doc-comment em, .doc-comment i {
+  font-style: italic;
+}
+
+.doc-comment strong, .doc-comment b {
+  font-weight: bold;
+}
+
+.runtime-data.hidden {
+  display: none;
+}
+
+.runtime-data .current-version {
+  font-weight: bold;
+}
+
+/*
+Styling for Markdown tables in doc comments.
+From: https://gist.github.com/andyferra/2554919
+*/
+
+table {
+  padding: 0;
+}
+
+table tr {
+  border-top: 1px solid #cccccc;
+  background-color: white;
+  margin: 0;
+  padding: 0;
+}
+
+table tr:nth-child(2n) {
+  background-color: #f8f8f8;
+}
+
+table tr th {
+  font-weight: bold;
+  border: 1px solid #cccccc;
+  text-align: left;
+  margin: 0;
+  padding: 6px 13px;
+}
+
+table tr td {
+  border: 1px solid #cccccc;
+  text-align: left;
+  margin: 0;
+  padding: 6px 13px;
+}
+
+table tr th :first-child, table tr td :first-child {
+  margin-top: 0;
+}
+
+table tr th :last-child, table tr td :last-child {
+  margin-bottom: 0;
+}
