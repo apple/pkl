@@ -13,17 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:OptIn(ExperimentalPathApi::class)
+
 package org.pkl.doc
 
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
+import java.io.OutputStream
 import java.net.URI
 import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
+import org.assertj.core.api.AbstractPathAssert
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
@@ -31,15 +36,14 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
-import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
-import org.pkl.commons.toPath
 import org.pkl.commons.walk
 import org.pkl.core.Version
 import org.pkl.core.util.IoUtils
-import org.pkl.doc.DocGenerator.Companion.current
+import org.pkl.doc.DocGenerator.Companion.determineCurrentPackages
+import org.pkl.doc.DocTestUtils.testExpectedFile
 
 class CliDocGeneratorTest {
   companion object {
@@ -89,9 +93,14 @@ class CliDocGeneratorTest {
 
     private val expectedOutputFiles: List<Path> by lazy { expectedOutputDir.listFilesRecursively() }
 
-    private val actualOutputDir: Path by lazy { tempFileSystem.getPath("/work/DocGeneratorTest") }
+    private val baseActualOutputDir: Path by lazy {
+      tempFileSystem.getPath("/work/DocGeneratorTest")
+    }
+    private val actualOutputDir: Path by lazy { baseActualOutputDir.resolve("run-1") }
+    private val actualOutputDir2: Path by lazy { baseActualOutputDir.resolve("run-2") }
+    private val actualOutputDir3: Path by lazy { baseActualOutputDir.resolve("run-3") }
 
-    private val actualOutputFiles: List<Path> by lazy { actualOutputDir.listFilesRecursively() }
+    private val actualOutputFiles: List<Path> by lazy { baseActualOutputDir.listFilesRecursively() }
 
     private val expectedRelativeOutputFiles: List<String> by lazy {
       expectedOutputFiles.map { path ->
@@ -104,40 +113,59 @@ class CliDocGeneratorTest {
     }
 
     private val actualRelativeOutputFiles: List<String> by lazy {
-      actualOutputFiles.map { IoUtils.toNormalizedPathString(actualOutputDir.relativize(it)) }
+      actualOutputFiles.map { IoUtils.toNormalizedPathString(baseActualOutputDir.relativize(it)) }
     }
 
-    private val binaryFileExtensions = setOf("woff2", "png", "svg")
-
-    private fun runDocGenerator(outputDir: Path, cacheDir: Path?, noSymlinks: Boolean = false) {
+    private fun runDocGenerator(
+      outputDir: Path,
+      cacheDir: Path?,
+      sourceModules: List<URI>,
+      noSymlinks: Boolean = false,
+    ) {
       CliDocGenerator(
           CliDocGeneratorOptions(
             CliBaseOptions(
-              sourceModules =
-                listOf(
-                  docsiteModule,
-                  package1PackageModule,
-                  package2PackageModule,
-                  URI("package://localhost:0/birds@0.5.0"),
-                  URI("package://localhost:0/fruit@1.1.0"),
-                  URI("package://localhost:0/unlisted@1.0.0"),
-                  URI("package://localhost:0/deprecated@1.0.0"),
-                ) + package1InputModules + package2InputModules,
+              sourceModules = sourceModules + docsiteModule,
               moduleCacheDir = cacheDir,
             ),
             outputDir = outputDir,
             isTestMode = true,
             noSymlinks = noSymlinks,
-          )
+          ),
+          OutputStream.nullOutputStream(),
         )
         .run()
     }
 
+    // Run the doc generator twice; second time adds new versions for the `birds` package
     @JvmStatic
     private fun generateDocs(): List<String> {
       val cacheDir = Files.createTempDirectory("cli-doc-generator-test-cache")
       PackageServer.populateCacheDir(cacheDir)
-      runDocGenerator(actualOutputDir, cacheDir)
+      runDocGenerator(
+        actualOutputDir,
+        cacheDir,
+        listOf(
+          package1PackageModule,
+          package2PackageModule,
+          URI("package://localhost:0/birds@0.5.0"),
+          URI("package://localhost:0/fruit@1.1.0"),
+          URI("package://localhost:0/unlisted@1.0.0"),
+          URI("package://localhost:0/deprecated@1.0.0"),
+        ) + package1InputModules + package2InputModules,
+      )
+
+      // simulate running the doc generator again with new packages.
+      actualOutputDir.copyToRecursively(actualOutputDir2, followLinks = false)
+      runDocGenerator(
+        actualOutputDir2,
+        cacheDir,
+        listOf(URI("package://localhost:0/birds@0.6.0"), URI("package://localhost:0/birds@0.7.0")),
+      )
+
+      // simulate running the doc generator again with old packages.
+      actualOutputDir2.copyToRecursively(actualOutputDir3, followLinks = false)
+      runDocGenerator(actualOutputDir3, cacheDir, listOf(URI("package://localhost:0/birds@0.5.0")))
 
       val missingFiles = expectedRelativeOutputFiles - actualRelativeOutputFiles.toSet()
       if (missingFiles.isNotEmpty()) {
@@ -170,7 +198,8 @@ class CliDocGeneratorTest {
           CliBaseOptions(sourceModules = listOf(descriptor1.toUri(), descriptor2.toUri())),
           outputDir = tmpOutputDir,
           isTestMode = true,
-        )
+        ),
+        OutputStream.nullOutputStream(),
       )
 
     val e = assertThrows<CliException> { generator.run() }
@@ -190,7 +219,8 @@ class CliDocGeneratorTest {
           CliBaseOptions(sourceModules = listOf(module1.toUri())),
           outputDir = tmpOutputDir,
           isTestMode = true,
-        )
+        ),
+        OutputStream.nullOutputStream(),
       )
 
     val e = assertThrows<CliException> { generator.run() }
@@ -210,7 +240,8 @@ class CliDocGeneratorTest {
           CliBaseOptions(sourceModules = listOf(descriptor1.toUri())),
           outputDir = tmpOutputDir,
           isTestMode = true,
-        )
+        ),
+        OutputStream.nullOutputStream(),
       )
 
     val e = assertThrows<CliException> { generator.run() }
@@ -220,53 +251,47 @@ class CliDocGeneratorTest {
   @ParameterizedTest
   @MethodSource("generateDocs")
   fun test(relativeFilePath: String) {
-    val actualFile = actualOutputDir.resolve(relativeFilePath)
-    assertThat(actualFile)
-      .withFailMessage("Test bug: $actualFile should exist but does not.")
-      .exists()
-
-    // symlinks on Git and Windows is rather finnicky; they create shortcuts by default unless
-    // a core Git option is set. Also, by default, symlinks require administrator privileges to run.
-    // We'll just test that the symlink got created but skip verifying that it points to the right
-    // place.
-    if (actualFile.isSymbolicLink() && IoUtils.isWindows()) return
-    val expectedFile = expectedOutputDir.resolve(relativeFilePath)
-    if (expectedFile.exists()) {
-      when {
-        expectedFile.isSymbolicLink() -> {
-          assertThat(actualFile).isSymbolicLink
-          assertThat(expectedFile.readSymbolicLink().toString().toPath())
-            .isEqualTo(actualFile.readSymbolicLink().toString().toPath())
-        }
-        expectedFile.extension in binaryFileExtensions ->
-          assertThat(actualFile.readBytes()).isEqualTo(expectedFile.readBytes())
-        else -> assertThat(actualFile.readString()).isEqualTo(expectedFile.readString())
-      }
-    } else {
-      expectedFile.createParentDirectories()
-      if (actualFile.isSymbolicLink()) {
-        // needs special handling because `copyTo` can't copy symlinks between file systems
-        val linkTarget = actualFile.readSymbolicLink()
-        assertThat(linkTarget).isRelative
-        Files.createSymbolicLink(expectedFile, linkTarget.toString().toPath())
-      } else {
-        actualFile.copyTo(expectedFile)
-      }
-      Assertions.fail("Created missing expected file `$relativeFilePath`.")
-    }
+    testExpectedFile(expectedOutputDir, baseActualOutputDir, relativeFilePath)
   }
 
   @Test
   fun `creates a symlink called current by default`(@TempDir tempDir: Path) {
     PackageServer.populateCacheDir(tempDir)
-    runDocGenerator(actualOutputDir, tempDir)
+    runDocGenerator(actualOutputDir, tempDir, package1InputModules + package1PackageModule)
 
     val expectedSymlink = actualOutputDir.resolve("com.package1/current")
     val expectedDestination = actualOutputDir.resolve("com.package1/1.2.3")
 
-    assertThat(expectedSymlink).isSymbolicLink().matches {
-      Files.isSameFile(it, expectedDestination)
+    assertThat(expectedSymlink).isSymlinkPointingTo(expectedDestination)
+  }
+
+  @Test
+  fun `does not overwrite the current version if generating an older version`(
+    @TempDir tempDir: Path
+  ) {
+    PackageServer.populateCacheDir(tempDir)
+    val outputDir = tempFileSystem.getPath("/doesNotOverwrite")
+    runDocGenerator(outputDir, tempDir, listOf(URI("package://localhost:0/birds@0.6.0")))
+    runDocGenerator(outputDir, tempDir, listOf(URI("package://localhost:0/birds@0.5.0")))
+
+    val expectedSymlink = outputDir.resolve("localhost(3a)0/birds/current")
+    val expectedDestination = outputDir.resolve("localhost(3a)0/birds/0.6.0")
+
+    assertThat(expectedSymlink).isSymlinkPointingTo(expectedDestination)
+  }
+
+  private fun AbstractPathAssert<*>.isSymlinkPointingTo(
+    expectedDestination: Path
+  ): AbstractPathAssert<*> {
+    if (!actual().isSymbolicLink()) {
+      Assertions.fail<Unit>("Expected ${actual()} to be a symlink, but was not")
     }
+    if (!Files.isSameFile(actual(), expectedDestination)) {
+      Assertions.fail<Unit>(
+        "Expected symbolic link ${actual()} should point to $expectedDestination, but points to ${actual().toRealPath()}"
+      )
+    }
+    return this
   }
 
   @Test
@@ -274,7 +299,12 @@ class CliDocGeneratorTest {
     @TempDir tempDir: Path
   ) {
     PackageServer.populateCacheDir(tempDir)
-    runDocGenerator(actualOutputDir, tempDir, noSymlinks = true)
+    runDocGenerator(
+      actualOutputDir,
+      tempDir,
+      noSymlinks = true,
+      sourceModules = package1InputModules + package1PackageModule,
+    )
 
     val currentDirectory = actualOutputDir.resolve("com.package1/current")
     val sourceDirectory = actualOutputDir.resolve("com.package1/1.2.3")
@@ -314,6 +344,20 @@ class CliDocGeneratorTest {
     val comparator =
       Comparator<String> { v1, v2 -> Version.parse(v1).compareTo(Version.parse(v2)) }.reversed()
 
-    assertThat(packages.current(comparator).map { it.ref.version }).isEqualTo(listOf("1.2.3"))
+    val newCurrentPackages = determineCurrentPackages(packages, comparator)
+
+    assertThat(newCurrentPackages.map { it.ref.version }).isEqualTo(listOf("1.2.3"))
+  }
+
+  @Test
+  fun `running generator on legacy docsite throws an error`(@TempDir tempDir: Path) {
+    val outputDir =
+      tempFileSystem.getPath("/work/runningGeneratorOnLegacyDocsite").apply { createDirectories() }
+    val legacySiteDir = projectDir.resolve("src/test/files/DocMigratorTest/input/version-1")
+    legacySiteDir.copyToRecursively(outputDir, followLinks = true)
+    assertThatCode {
+        runDocGenerator(outputDir, tempDir, package1InputModules + package1PackageModule)
+      }
+      .hasMessageContaining("pkldoc website model is too old")
   }
 }
