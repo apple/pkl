@@ -34,7 +34,6 @@ import org.pkl.core.packages.*
  * For the low-level Pkldoc API, see [DocGenerator].
  */
 class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(options.base) {
-
   private val packageResolver =
     PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir)
 
@@ -59,6 +58,17 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
               .getPackagePage("pkl", Release.current().version().toString())
           ),
     )
+
+  private val versions = mutableMapOf<String, Version>()
+
+  private val versionComparator =
+    Comparator<String> { v1, v2 ->
+      versions
+        .getOrPut(v1) { Version.parse(v1) }
+        .compareTo(versions.getOrPut(v2) { Version.parse(v2) })
+    }
+
+  private val docMigrator = DocMigrator(options.outputDir, System.out, versionComparator)
 
   private fun DependencyMetadata.getPackageDependencies(): List<DocPackageInfo.PackageDependency> {
     return buildList {
@@ -130,6 +140,15 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
   }
 
   override fun doRun() {
+    if (options.migrate) {
+      docMigrator.run()
+      return
+    }
+    if (!docMigrator.isUpToDate) {
+      throw CliException(
+        "pkldoc website model is too old (found: ${docMigrator.docsiteVersion}, required: ${DocMigrator.CURRENT_VERSION}). Run `pkldoc --migrate` to migrate the website."
+      )
+    }
     val docsiteInfoModuleUris = mutableListOf<URI>()
     val packageInfoModuleUris = mutableListOf<URI>()
     val regularModuleUris = mutableListOf<URI>()
@@ -271,10 +290,11 @@ class CliDocGenerator(private val options: CliDocGeneratorOptions) : CliCommand(
           options.normalizedOutputDir,
           options.isTestMode,
           options.noSymlinks,
+          docMigrator,
         )
         .run()
     } catch (e: DocGeneratorException) {
-      throw CliException(e.message!!)
+      throw CliException(e.message!!, e)
     }
   }
 }

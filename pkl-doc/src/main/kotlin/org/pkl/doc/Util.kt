@@ -16,6 +16,7 @@
 package org.pkl.doc
 
 import java.io.InputStream
+import java.io.OutputStream
 import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.bufferedWriter
@@ -150,3 +151,7 @@ internal val String.asIdentifier: String
 
 internal val String.pathEncoded
   get(): String = IoUtils.encodePath(this)
+
+fun OutputStream.write(str: String) = write(str.toByteArray(Charsets.UTF_8))
+
+fun OutputStream.writeLine(str: String) = write((str + "\n").toByteArray(Charsets.UTF_8))
