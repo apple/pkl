@@ -179,6 +179,10 @@ public final class BaseModule extends StdLibModule {
     return Function5Class.instance;
   }
 
+  public static VmClass getFoldedClass() {
+    return FoldedClass.instance;
+  }
+
   public static VmClass getPairClass() {
     return PairClass.instance;
   }
@@ -377,6 +381,10 @@ public final class BaseModule extends StdLibModule {
 
   private static final class Function5Class {
     static final VmClass instance = loadClass("Function5");
+  }
+
+  private static final class FoldedClass {
+    static final VmClass instance = loadClass("Folded");
   }
 
   private static final class NonNullTypeAlias {
