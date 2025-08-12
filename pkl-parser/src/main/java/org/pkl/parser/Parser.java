@@ -534,7 +534,7 @@ public class Parser {
       return new ObjectBody(List.of(), 0, start.endWith(next().span));
     } else if (lookahead == Token.UNDERSCORE) {
       // it's a parameter
-      nodes.addAll(parseListOfParameter(Token.COMMA));
+      nodes.addAll(parseListOfParameter(Token.COMMA, Token.ARROW));
       expect(Token.ARROW, "unexpectedToken2", ",", "->");
     } else if (lookahead == Token.IDENTIFIER) {
       // not sure what it is yet
@@ -546,7 +546,7 @@ public class Parser {
       } else if (lookahead == Token.COMMA) {
         // it's a parameter
         backtrack();
-        nodes.addAll(parseListOfParameter(Token.COMMA));
+        nodes.addAll(parseListOfParameter(Token.COMMA, Token.ARROW));
         expect(Token.ARROW, "unexpectedToken2", ",", "->");
       } else if (lookahead == Token.COLON) {
         // still not sure
@@ -559,7 +559,7 @@ public class Parser {
           nodes.add(
               new TypedIdentifier(
                   identifier, typeAnnotation, identifier.span().endWith(type.span())));
-          nodes.addAll(parseListOfParameter(Token.COMMA));
+          nodes.addAll(parseListOfParameter(Token.COMMA, Token.ARROW));
           expect(Token.ARROW, "unexpectedToken2", ",", "->");
         } else if (lookahead == Token.ARROW) {
           // it's a parameter
@@ -1270,7 +1270,7 @@ public class Parser {
         next();
         var params = new ArrayList<Parameter>();
         params.add(new TypedIdentifier(identifier, null, identifier.span()));
-        params.addAll(parseListOfParameter(Token.COMMA));
+        params.addAll(parseListOfParameter(Token.COMMA, Token.RPAREN));
         var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         var paramList = new ParameterList(params, start.endWith(endParen));
         expect(Token.ARROW, "unexpectedToken", "->");
@@ -1285,7 +1285,7 @@ public class Parser {
                 identifier, typeAnnotation, identifier.span().endWith(typeAnnotation.span())));
         if (lookahead == Token.COMMA) {
           next();
-          params.addAll(parseListOfParameter(Token.COMMA));
+          params.addAll(parseListOfParameter(Token.COMMA, Token.RPAREN));
         }
         var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         var paramList = new ParameterList(params, start.endWith(endParen));
@@ -1320,7 +1320,7 @@ public class Parser {
 
   private FunctionLiteralExpr parseFunctionLiteral(Span start) {
     // the open parens is already parsed
-    var params = parseListOfParameter(Token.COMMA);
+    var params = parseListOfParameter(Token.COMMA, Token.RPAREN);
     var endParen = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     var paramList = new ParameterList(params, start.endWith(endParen));
     expect(Token.ARROW, "unexpectedToken", "->");
@@ -1385,7 +1385,7 @@ public class Parser {
         if (lookahead == Token.RPAREN) {
           end = next().span;
         } else {
-          children.addAll(parseListOf(Token.COMMA, () -> parseType(")")));
+          children.addAll(parseListOf(Token.COMMA, Token.RPAREN, () -> parseType(")")));
           end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
         }
         if (lookahead == Token.ARROW || children.size() > 1) {
@@ -1436,7 +1436,7 @@ public class Parser {
     // constrained types: have to start in the same line as the type
     if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
       next();
-      var constraints = parseListOf(Token.COMMA, () -> parseExpr(")"));
+      var constraints = parseListOf(Token.COMMA, Token.RPAREN, () -> parseExpr(")"));
       var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
       var children = new ArrayList<Node>(constraints.size() + 1);
       children.add(type);
@@ -1498,7 +1498,7 @@ public class Parser {
     if (lookahead == Token.RPAREN) {
       end = next().span;
     } else {
-      args = parseListOfParameter(Token.COMMA);
+      args = parseListOfParameter(Token.COMMA, Token.RPAREN);
       end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     }
     return new ParameterList(args, start.endWith(end));
@@ -1517,14 +1517,14 @@ public class Parser {
 
   private TypeParameterList parseTypeParameterList() {
     var start = expect(Token.LT, "unexpectedToken", "<").span;
-    var pars = parseListOf(Token.COMMA, this::parseTypeParameter);
+    var pars = parseListOf(Token.COMMA, Token.GT, this::parseTypeParameter);
     var end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
     return new TypeParameterList(pars, start.endWith(end));
   }
 
   private TypeArgumentList parseTypeArgumentList() {
     var start = expect(Token.LT, "unexpectedToken", "<").span;
-    var pars = parseListOf(Token.COMMA, this::parseType);
+    var pars = parseListOf(Token.COMMA, Token.GT, this::parseType);
     var end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
     return new TypeArgumentList(pars, start.endWith(end));
   }
@@ -1534,7 +1534,7 @@ public class Parser {
     if (lookahead == Token.RPAREN) {
       return new ArgumentList(new ArrayList<>(), start.endWith(next().span));
     }
-    var exprs = parseListOf(Token.COMMA, this::parseExpr);
+    var exprs = parseListOf(Token.COMMA, Token.RPAREN, this::parseExpr);
     var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
     return new ArgumentList(exprs, start.endWith(end));
   }
@@ -1725,11 +1725,31 @@ public class Parser {
     return res;
   }
 
-  private List<Parameter> parseListOfParameter(Token separator) {
+  private <T> List<T> parseListOf(Token separator, Token terminator, Supplier<T> parser) {
+    var res = new ArrayList<T>();
+    res.add(parser.get());
+    while (lookahead == separator) {
+      next();
+      if (lookahead == terminator) {
+        break;
+      }
+      res.add(parser.get());
+    }
+    return res;
+  }
+
+  private List<Parameter> parseListOfParameter(Token separator, Token terminator) {
     var res = new ArrayList<Parameter>();
+    if (lookahead == terminator) {
+      return res;
+    }
+
     res.add(parseParameter());
     while (lookahead == separator) {
       next();
+      if (lookahead == terminator) {
+        break;
+      }
       res.add(parseParameter());
     }
     return res;

@@ -1,0 +1,43 @@
+local lA1 = (a, b, c,) -> true
+local lA2 = (
+  a, b, c,
+) -> true
+local lA3 = (
+  a,
+  b,
+  c,
+) -> true
+
+local lB1 = (a: Int, b: Int, c: Int,) -> true
+local lB2 = (
+  a: Int, b: Int, c: Int,
+) -> true
+local lB3 = (
+  a: Int,
+  b: Int,
+  c: Int,
+) -> true
+
+local lC1: (Dynamic,) -> Dynamic = new Mixin { a, -> x = true }
+local lC2: (Dynamic,) -> Dynamic = new Mixin { a, ->
+  x = true
+}
+local lC3: (Dynamic,) -> Dynamic = new Mixin {
+  a, -> x = true
+}
+local lC4: (Dynamic,) -> Dynamic = new Mixin {
+  a, ->
+  x = true
+}
+
+local lD1: (Dynamic,) -> Dynamic = new Mixin { a: Dynamic, -> x = true }
+local lD2: (Dynamic,) -> Dynamic = new Mixin { a: Dynamic, ->
+  x = true
+}
+local lD3: (Dynamic,) -> Dynamic = new Mixin {
+  a: Dynamic, -> x = true
+}
+local lD4: (Dynamic,) -> Dynamic = new Mixin {
+  a: Dynamic, ->
+  x = true
+}
