@@ -24,4 +24,10 @@ facts {
   ["hidden members of superclass aren't included in hash code - Typed"] {
     true
   }
+  ["can compute hash code of cyclical objects - Dynamic"] {
+    true
+  }
+  ["can compute hash code of cyclical objects - Typed"] {
+    true
+  }
 }
