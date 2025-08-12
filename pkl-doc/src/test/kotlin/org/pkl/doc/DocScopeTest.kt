@@ -82,16 +82,20 @@ class DocScopeTest {
 
     private val classMethod: PClass.Method by lazy { clazz.methods["call"]!! }
 
+    private val docPackage = DocPackage(docPackageInfo, mutableListOf(module))
+
     private val siteScope: SiteScope by lazy {
       SiteScope(
-        listOf(DocPackage(docPackageInfo, mutableListOf(module))),
+        listOf(docPackage),
         mapOf(),
         { evaluator.evaluateSchema(uri(it)) },
         "/output/dir".toPath(),
       )
     }
 
-    private val packageScope: PackageScope by lazy { siteScope.getPackage("mypackage") }
+    private val packageScope: PackageScope by lazy {
+      siteScope.getPackage(docPackage.docPackageInfo)
+    }
 
     private val moduleScope: ModuleScope by lazy { packageScope.getModule("mypackage.mymodule") }
 
