@@ -21,11 +21,12 @@ import java.nio.file.Path
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.Nodes
 import org.pkl.parser.GenericParser
+import org.pkl.parser.Parser
 
 class Formatter {
   fun format(path: Path): String {
     try {
-      return format(Files.readString(path))
+      return formatNonGen(Files.readString(path))
     } catch (e: IOException) {
       throw RuntimeException("Could not format $path:", e)
     }
@@ -37,6 +38,17 @@ class Formatter {
     val gen = Generator()
     val ast = parser.parseModule(text)
     val formatAst = builder.format(ast)
+    // force a line at the end of the file
+    gen.generate(Nodes(listOf(formatAst, ForceLine)))
+    return gen.toString()
+  }
+  
+  fun formatNonGen(text: String): String {
+    val parser = Parser(true)
+    val builder = BuilderNonGeneric(text)
+    val gen = Generator()
+    val ast = parser.parseModule(text)
+    val formatAst = builder.visitModule(ast)
     // force a line at the end of the file
     gen.generate(Nodes(listOf(formatAst, ForceLine)))
     return gen.toString()

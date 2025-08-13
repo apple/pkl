@@ -27,3 +27,11 @@ qux = """
     
   \(foo)
   """
+
+// proper wrap detection
+str = """
+  fooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
+  bar
+  baz
+  \(foo + bar)
+  """

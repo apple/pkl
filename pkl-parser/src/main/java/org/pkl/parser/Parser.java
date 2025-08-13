@@ -18,14 +18,19 @@ package org.pkl.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
+import org.pkl.parser.syntax.AffixDistributor;
+import org.pkl.parser.syntax.AffixType;
 import org.pkl.parser.syntax.Annotation;
 import org.pkl.parser.syntax.ArgumentList;
 import org.pkl.parser.syntax.Class;
 import org.pkl.parser.syntax.ClassBody;
 import org.pkl.parser.syntax.ClassMethod;
 import org.pkl.parser.syntax.ClassProperty;
+import org.pkl.parser.syntax.Comment;
+import org.pkl.parser.syntax.CommentType;
 import org.pkl.parser.syntax.DocComment;
 import org.pkl.parser.syntax.Expr;
 import org.pkl.parser.syntax.Expr.AmendsExpr;
@@ -97,8 +102,16 @@ public class Parser {
   private FullToken prev;
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
+  private final boolean keepAffixes;
+  private final LinkedList<Comment> affixes = new LinkedList<>();
 
-  public Parser() {}
+  public Parser() {
+    keepAffixes = false;
+  }
+
+  public Parser(boolean keepAffixes) {
+    this.keepAffixes = keepAffixes;
+  }
 
   private void init(String source) {
     this.lexer = new Lexer(source);
@@ -110,7 +123,7 @@ public class Parser {
   public Module parseModule(String source) {
     init(source);
     if (lookahead == Token.EOF) {
-      return new Module(Collections.singletonList(null), new Span(0, 0));
+      return new Module(Collections.singletonList(null), new Span(0, 0, 1, 1, 1, 1));
     }
     if (lookahead == Token.SHEBANG) next();
     var start = spanLookahead;
@@ -145,7 +158,9 @@ public class Parser {
         header = parseMemberHeader();
         end = parseModuleMember(header, nodes);
       }
-      return new Module(nodes, start.endWith(spanLookahead));
+      var module = new Module(nodes, start.endWith(spanLookahead));
+      if (keepAffixes) AffixDistributor.distributeComments(module, affixes);
+      return module;
     } catch (ParserError pe) {
       var spanEnd = end != null ? end : start;
       pe.setPartialParseResult(new Module(nodes, start.endWith(spanEnd)));
@@ -157,6 +172,7 @@ public class Parser {
     init(source);
     var expr = parseExpr();
     expect(Token.EOF, "unexpectedToken", "end of file");
+    if (keepAffixes) AffixDistributor.distributeComments(expr, affixes);
     return expr;
   }
 
@@ -196,7 +212,7 @@ public class Parser {
     }
     Span span;
     if (nodes.isEmpty()) {
-      span = new Span(0, 0);
+      span = new Span(0, 0, 1, 1, 1, 1);
     } else {
       span = nodes.get(0).span().endWith(nodes.get(nodes.size() - 1).span());
     }
@@ -1790,6 +1806,16 @@ public class Parser {
     precededBySemicolon = false;
     while (tk.isAffix()) {
       precededBySemicolon = precededBySemicolon || tk == Token.SEMICOLON;
+      if (keepAffixes) {
+        switch (tk) {
+          case LINE_COMMENT ->
+              affixes.add(
+                  new Comment(CommentType.LINE, AffixType.PREFIX, lexer.text(), lexer.span()));
+          case BLOCK_COMMENT ->
+              affixes.add(
+                  new Comment(CommentType.BLOCK, AffixType.PREFIX, lexer.text(), lexer.span()));
+        }
+      }
       tk = lexer.next();
     }
     return new FullToken(tk, lexer.span(), lexer.newLinesBetween);

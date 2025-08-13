@@ -15,7 +15,7 @@ foo: ( // some comment
   // trailing comment
   )?
 
-foo2: (// some comment
+foo2: /* some comment */ (
   Int, // other comment
     String
   ) ->Int
@@ -25,7 +25,7 @@ bar = ( // some comment
   // another comment
   )
 
-bar2 = ( // some comment
+bar2 = (
     foo, bar
     // another comment
   ) -> foo + bar

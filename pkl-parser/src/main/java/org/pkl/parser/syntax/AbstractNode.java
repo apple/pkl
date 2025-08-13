@@ -15,6 +15,7 @@
  */
 package org.pkl.parser.syntax;
 
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
@@ -25,6 +26,7 @@ public abstract class AbstractNode implements Node {
   protected final Span span;
   protected final @Nullable List<? extends @Nullable Node> children;
   protected @Nullable Node parent;
+  protected @Nullable List<Comment> affixes;
 
   public AbstractNode(Span span, @Nullable List<? extends @Nullable Node> children) {
     this.span = span;
@@ -61,6 +63,17 @@ public abstract class AbstractNode implements Node {
   @Override
   public @Nullable List<? extends @Nullable Node> children() {
     return children;
+  }
+
+  @Override
+  public @Nullable List<Comment> affixes() {
+    return affixes;
+  }
+
+  @Override
+  public void addAffix(Comment prefix) {
+    if (affixes == null) affixes = new ArrayList<>();
+    affixes.add(prefix);
   }
 
   @Override

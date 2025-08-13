@@ -15,30 +15,7 @@
  */
 package org.pkl.parser.syntax;
 
-import java.util.List;
-import org.pkl.parser.ParserVisitor;
-import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
-
-public interface Node {
-  Span span();
-
-  @Nullable
-  Node parent();
-
-  void setParent(Node parent);
-
-  @Nullable
-  List<? extends @Nullable Node> children();
-
-  @Nullable
-  List<Comment> affixes();
-
-  void addAffix(Comment prefix);
-
-  <T> T accept(ParserVisitor<? extends T> visitor);
-
-  default String text(char[] source) {
-    return new String(source, span().charIndex(), span().length());
-  }
+public enum AffixType {
+  PREFIX,
+  SUFFIX
 }

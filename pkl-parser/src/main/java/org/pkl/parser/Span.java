@@ -15,11 +15,18 @@
  */
 package org.pkl.parser;
 
-public record Span(int charIndex, int length) {
+public record Span(
+    int charIndex, int length, int lineBegin, int colBegin, int lineEnd, int colEnd) {
 
   /** Returns a span that starts with this span and ends with {@code end}. */
   public Span endWith(Span end) {
-    return new Span(charIndex, end.charIndex - charIndex + end.length);
+    return new Span(
+        charIndex,
+        end.charIndex - charIndex + end.length,
+        lineBegin,
+        colBegin,
+        end.lineEnd,
+        end.colEnd);
   }
 
   /** Checks wheter {@code other} starts directly after this span ends */
@@ -27,19 +34,47 @@ public record Span(int charIndex, int length) {
     return charIndex + length == other.charIndex;
   }
 
+  /** Returns true if this span comes before `other`. */
+  public boolean before(Span other) {
+    return charIndex < other.charIndex;
+  }
+  
+  public boolean after(Span other) {
+    return other.charIndex + other.length < charIndex;
+  }
+
+  /** Returns true if this span trails `other``: comes after it in the same line. */
+  public boolean trails(Span other) {
+    return other.lineEnd == lineBegin && other.colEnd <= colBegin;
+  }
+
+  /** Returns true if this span in inside `other`. */
+  public boolean inside(Span other) {
+    var thisEnd = charIndex + length;
+    var otherEnd = other.charIndex + other.length;
+    return charIndex > other.charIndex && thisEnd < otherEnd;
+  }
+
   public int stopIndex() {
     return charIndex + length - 1;
   }
+  
+  public int linesBetween(Span next) {
+    return next.lineBegin - lineEnd;
+  }
+
+  // the functions below should only be used for error reporting, as they don't
+  // recalculate lines and columns
 
   public Span stopSpan() {
-    return new Span(charIndex + length - 1, 1);
+    return new Span(charIndex + length - 1, 1, lineEnd, colEnd, lineEnd, colEnd);
   }
 
   public Span move(int amount) {
-    return new Span(charIndex + amount, length);
+    return new Span(charIndex + amount, length, lineEnd, colEnd, lineEnd, colEnd);
   }
 
   public Span grow(int amount) {
-    return new Span(charIndex, length + amount);
+    return new Span(charIndex, length + amount, lineEnd, colEnd, lineEnd, colEnd);
   }
 }

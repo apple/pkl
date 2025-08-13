@@ -31,7 +31,7 @@ public record FullSpan(
   }
 
   public Span toSpan() {
-    return new Span(charIndex, length);
+    return new Span(charIndex, length, lineBegin, colBegin, lineEnd, colEnd);
   }
 
   public boolean sameLine(FullSpan other) {

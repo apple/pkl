@@ -15,6 +15,8 @@
  */
 package org.pkl.formatter
 
+import org.pkl.formatter.ast.CommentLine
+import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
@@ -35,6 +37,7 @@ class Generator {
   private var size: Int = 0
   private val wrapped: MutableSet<Int> = mutableSetOf()
   private var shouldAddIndent = false
+  private var commentLine = false
 
   fun generate(node: FormatNode) {
     node(node, Wrap.DETECT)
@@ -42,6 +45,7 @@ class Generator {
 
   private fun node(node: FormatNode, wrap: Wrap) {
     when (node) {
+      is Empty -> {}
       is Nodes -> node.nodes.forEach { node(it, wrap) }
       is Group -> {
         val width = node.nodes.sumOf { it.width(wrapped) }
@@ -66,21 +70,32 @@ class Generator {
           node(node.ifNotWrap, wrap)
         }
       }
-      is Text -> text(node.text)
+      is Text -> {
+        commentLine = false
+        text(node.text)
+      }
       is Line -> {
-        if (wrap.isEnabled()) {
+        if (commentLine) commentLine = false
+        else if (wrap.isEnabled()) {
           newline()
         }
       }
-      is ForceLine -> newline()
+      is ForceLine -> {
+        if (commentLine) commentLine = false else newline()
+      }
+      is CommentLine -> {
+        newline()
+        commentLine = true
+      }
       is SpaceOrLine -> {
-        if (wrap.isEnabled()) {
+        if (commentLine) commentLine = false
+        else if (wrap.isEnabled()) {
           newline()
         } else {
           text(" ")
         }
       }
-      is Space -> text(" ")
+      is Space -> if (commentLine) commentLine = false else text(" ")
       is Indent -> {
         if (wrap.isEnabled() && node.nodes.isNotEmpty()) {
           size += INDENT.length
@@ -94,20 +109,14 @@ class Generator {
       is MultilineStringGroup -> {
         val indentLength = indent * INDENT.length
         val offset = (indentLength + 1) - node.endQuoteCol
-        var previousNewline = false
-        for ((i, child) in node.nodes.withIndex()) {
-          when {
-            child is ForceLine -> newline(shouldIndent = false) // don't indent
-            child is Text &&
-              previousNewline &&
-              child.text.isBlank() &&
-              child.text.length == indentLength &&
-              node.nodes[i + 1] is ForceLine -> {}
-            child is Text && previousNewline && offset != 0 -> text(reposition(child.text, offset))
-            else -> node(child, Wrap.DETECT) // always detect wrapping
-          }
-          previousNewline = child is ForceLine
+        val nodes = processMultilineText(node.nodes, indentLength, offset)
+        text("\"\"\"")
+        newline(shouldIndent = false)
+        for (child in nodes) {
+          node(child, Wrap.DETECT)
         }
+        newline()
+        text("\"\"\"")
       }
     }
   }
@@ -117,7 +126,8 @@ class Generator {
       repeat(times = indent) { buf.append(INDENT) }
       shouldAddIndent = false
     }
-    size += value.length
+    val len = value.substringAfterLast('\n').length
+    size += len
     buf.append(value)
   }
 
@@ -127,12 +137,38 @@ class Generator {
     shouldAddIndent = shouldIndent
   }
 
-  private fun reposition(text: String, offset: Int): String {
-    return if (offset > 0) {
-      " ".repeat(offset) + text
-    } else {
-      text.drop(-offset)
+  private fun processMultilineText(
+    nodes: List<FormatNode>,
+    indentLength: Int,
+    offset: Int,
+  ): List<FormatNode> {
+    val res = mutableListOf<FormatNode>()
+    var prev: FormatNode? = null
+    for (node in nodes) {
+      res +=
+        if (node is Text) {
+          Text(processIndent(node.text, offset, indentLength, prev is Nodes))
+        } else node
+      prev = node
     }
+    return res
+  }
+
+  fun processIndent(original: String, offset: Int, indentLength: Int, ignoreStart: Boolean): String {
+    val toRemove = "\n${" ".repeat(indentLength)}\n"
+    return original
+      .split('\n')
+      .mapIndexed { index, line ->
+        if (ignoreStart && index == 0 || offset == 0) line
+        else {
+          val leadingSpaces = line.takeWhile { it == ' ' }.length
+          val newIndentation = maxOf(0, leadingSpaces + offset)
+          " ".repeat(newIndentation) + line.drop(leadingSpaces)
+        }
+      }
+      .joinToString("\n")
+      // remove useless indentation
+      .replace(toRemove, "\n\n")
   }
 
   override fun toString(): String {

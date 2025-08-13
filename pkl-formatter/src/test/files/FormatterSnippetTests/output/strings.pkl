@@ -1,0 +1,5 @@
+// string constant
+import "foo\n\t\u{345}.pkl"
+
+// single line string
+foo = read("foo\n\t\u{456}\(56).txt")

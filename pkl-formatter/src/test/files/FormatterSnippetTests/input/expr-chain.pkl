@@ -1,4 +1,4 @@
-res = myList.map((it) -> it.partition).filter((it) -> someList.contains(it))
+res = myList.bar.map((it) -> it.partition).filter((it) -> someList.contains(it))
 
 res2 = myList.map(lambda1).filter(lambda2)
 

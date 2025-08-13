@@ -1,5 +1,4 @@
 // top level comment
-
 import "https://example.com/baz.pkl"
 import "package://example.com/myPackage@1.0.0#/Qux.pkl"
 import "pkl:math"

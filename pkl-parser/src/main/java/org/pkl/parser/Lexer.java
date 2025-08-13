@@ -52,7 +52,7 @@ public class Lexer {
 
   // The span of the last lexed token
   public Span span() {
-    return new Span(sCursor, cursor - sCursor);
+    return new Span(sCursor, cursor - sCursor, sLine, sCol, line, col);
   }
 
   // The full span of the last lexed token
@@ -715,11 +715,11 @@ public class Lexer {
   private ParserError lexError(String msg, Object... args) {
     var length = lookahead == EOF ? 0 : 1;
     var index = lookahead == EOF ? cursor - 1 : cursor;
-    return new ParserError(ErrorMessages.create(msg, args), new Span(index, length));
+    return new ParserError(ErrorMessages.create(msg, args), new Span(index, length, sLine, sCol, line, col));
   }
 
   private ParserError lexError(String msg, int charIndex, int length) {
-    return new ParserError(msg, new Span(charIndex, length));
+    return new ParserError(msg, new Span(charIndex, length, sLine, sCol, line, col));
   }
 
   private ParserError lexError(String msg, Span span) {

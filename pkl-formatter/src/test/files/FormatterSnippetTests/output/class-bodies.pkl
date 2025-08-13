@@ -6,6 +6,5 @@ class Bar {
 
 class Baz {
   prop = 0
-
   prop2 = 1
 }

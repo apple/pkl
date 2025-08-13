@@ -7,8 +7,7 @@ foo {
 }
 
 bar =
-  clazz.superclass == null
-    || clazz.superclass.reflectee == Module
+  clazz.superclass == null || clazz.superclass.reflectee == Module
     || clazz.superclass.reflectee == Typed
 
 baz =

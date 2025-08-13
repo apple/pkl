@@ -500,7 +500,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Span newSpan() {
-      return new Span(span.charIndex(), 3);
+      return new Span(span.charIndex(), 3, span.lineBegin(), span.colBegin(), span.lineBegin(), span.colBegin() + 3);
     }
   }
 

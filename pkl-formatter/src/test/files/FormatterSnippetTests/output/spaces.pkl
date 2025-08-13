@@ -20,4 +20,4 @@ prop2 {
   }
 }
 
-choices: "foo"|*"bar"|String
+choices: "foo" | *"bar" | String

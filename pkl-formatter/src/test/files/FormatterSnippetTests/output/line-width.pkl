@@ -2,7 +2,6 @@ module
   reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly
     .loooooooooooooooooooooooooooooooog
     .naaaaaaaaaaaaaaaaaaaaaaaaaaaaame
-
 extends
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
 

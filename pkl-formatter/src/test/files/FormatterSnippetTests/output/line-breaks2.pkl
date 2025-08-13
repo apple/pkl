@@ -2,12 +2,10 @@ module
   reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly
     .loooooooooooooooooooooooooooooooog
     .naaaaaaaaaaaaaaaaaaaaaaaaaame
-
 extends
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
 
-import
-  "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
+import "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
   as foo
 
 open local class LoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongName {}
@@ -28,11 +26,11 @@ local const function loooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 typealias Foo =
   LooooooooooooooooooooooooongTypeName
-    |AnotherLooooooooooooooooooooooooongTypeName
-    |OtherLooooooooooooooooooooooooongTypeName
+    | AnotherLooooooooooooooooooooooooongTypeName
+    | OtherLooooooooooooooooooooooooongTypeName
 
 bar: Boolean
-  |Mapping<
+  | Mapping<
     LooooooooooooooooooooooooooooongTypeName,
     AnotherLooooooooooooooooooooooooooooongTypeName
   >(loooooooooooooooooooogConstraint)
