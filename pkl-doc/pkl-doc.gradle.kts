@@ -66,6 +66,31 @@ publishing {
   }
 }
 
+val testNativeExecutable by
+  tasks.registering(Test::class) {
+    inputs.dir("src/test/files/DocGeneratorTest/input")
+    outputs.dir("src/test/files/DocGeneratorTest/output")
+    systemProperty("org.pkl.doc.NativeExecutableTest", "true")
+    include(listOf("**/NativeExecutableTest.class"))
+  }
+
+val testJavaExecutable by
+  tasks.registering(Test::class) {
+    dependsOn(tasks.javaExecutable)
+    inputs.dir("src/test/files/DocGeneratorTest/input")
+    outputs.dir("src/test/files/DocGeneratorTest/output")
+    systemProperty("org.pkl.doc.JavaExecutableTest", "true")
+    include(listOf("**/JavaExecutableTest.class"))
+  }
+
+tasks.check { dependsOn(testJavaExecutable) }
+
+tasks.testNative { dependsOn(testNativeExecutable) }
+
+tasks.withType<NativeImageBuild> { extraNativeImageArgs.add("-H:IncludeResources=org/pkl/doc/.*") }
+
 tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.doc.Main") } }
 
 htmlValidator { sources = files("src/test/files/DocGeneratorTest/output") }
+
+tasks.validateHtml { mustRunAfter(testJavaExecutable) }
