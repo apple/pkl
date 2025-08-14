@@ -27,10 +27,6 @@ public class Lexer {
   private final int size;
   protected int cursor = 0;
   protected int sCursor = 0;
-  private int line = 1;
-  private int sLine = 1;
-  private int col = 1;
-  private int sCol = 1;
   private char lookahead;
   private State state = State.DEFAULT;
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
@@ -72,8 +68,6 @@ public class Lexer {
 
   public Token next() {
     sCursor = cursor;
-    sLine = line;
-    sCol = col;
     newLinesBetween = 0;
     return switch (state) {
       case DEFAULT -> nextDefault();
@@ -88,9 +82,7 @@ public class Lexer {
       sCursor = cursor;
       if (ch == '\n') {
         newLinesBetween++;
-        sLine = line;
       }
-      sCol = col;
       ch = nextChar();
     }
     return switch (ch) {
@@ -691,22 +683,16 @@ public class Lexer {
     }
     if (tmp == '\n') {
       newlines.add(cursor - 1);
-      line++;
-      col = 1;
-    } else {
-      col++;
     }
     return tmp;
   }
 
   private void backup() {
     lookahead = source[--cursor];
-    col--;
   }
 
   private void backup(int amount) {
     cursor -= amount;
-    col -= amount;
     lookahead = source[cursor];
   }
 
