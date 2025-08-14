@@ -13,9 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.parser.syntax;
+package org.pkl.parser.syntax.generic;
 
-public enum AffixType {
-  PREFIX,
-  SUFFIX
+import org.pkl.parser.Span;
+
+public record Comment(CommentType type, AffixType affixType, String text, Span span) {
+  public Comment withAffixType(AffixType atype) {
+    return new Comment(type, atype, text, span);
+  }
 }

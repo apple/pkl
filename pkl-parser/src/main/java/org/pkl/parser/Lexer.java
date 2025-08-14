@@ -16,8 +16,9 @@
 package org.pkl.parser;
 
 import java.util.ArrayDeque;
+import java.util.ArrayList;
 import java.util.Deque;
-import org.pkl.parser.syntax.generic.FullSpan;
+import java.util.List;
 import org.pkl.parser.util.ErrorMessages;
 
 public class Lexer {
@@ -37,6 +38,7 @@ public class Lexer {
   private boolean isEscape = false;
   // how many newlines exist between two subsequent tokens
   protected int newLinesBetween = 0;
+  protected List<Integer> newlines = new ArrayList<>();
 
   private static final char EOF = Short.MAX_VALUE;
 
@@ -52,12 +54,7 @@ public class Lexer {
 
   // The span of the last lexed token
   public Span span() {
-    return new Span(sCursor, cursor - sCursor, sLine, sCol, line, col);
-  }
-
-  // The full span of the last lexed token
-  public FullSpan fullSpan() {
-    return new FullSpan(sCursor, cursor - sCursor, sLine, sCol, line, col);
+    return new Span(sCursor, cursor - sCursor);
   }
 
   // The text of the last lexed token
@@ -693,6 +690,7 @@ public class Lexer {
       lookahead = source[cursor];
     }
     if (tmp == '\n') {
+      newlines.add(cursor - 1);
       line++;
       col = 1;
     } else {
@@ -715,11 +713,11 @@ public class Lexer {
   private ParserError lexError(String msg, Object... args) {
     var length = lookahead == EOF ? 0 : 1;
     var index = lookahead == EOF ? cursor - 1 : cursor;
-    return new ParserError(ErrorMessages.create(msg, args), new Span(index, length, sLine, sCol, line, col));
+    return new ParserError(ErrorMessages.create(msg, args), new Span(index, length));
   }
 
   private ParserError lexError(String msg, int charIndex, int length) {
-    return new ParserError(msg, new Span(charIndex, length, sLine, sCol, line, col));
+    return new ParserError(msg, new Span(charIndex, length));
   }
 
   private ParserError lexError(String msg, Span span) {

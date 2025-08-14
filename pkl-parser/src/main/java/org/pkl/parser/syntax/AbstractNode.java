@@ -19,6 +19,8 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import org.pkl.parser.Span;
+import org.pkl.parser.syntax.generic.Comment;
+import org.pkl.parser.syntax.generic.NodeEnhancements;
 import org.pkl.parser.util.Nullable;
 
 public abstract class AbstractNode implements Node {
@@ -66,11 +68,6 @@ public abstract class AbstractNode implements Node {
   @Override
   public @Nullable List<Comment> affixes() {
     return NodeEnhancements.affixes(this);
-  }
-
-  @Override
-  public void addAffix(Comment affix) {
-    NodeEnhancements.addAffix(this, affix);
   }
 
   @Override

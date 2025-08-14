@@ -18,19 +18,14 @@ package org.pkl.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.function.Supplier;
-import org.pkl.parser.syntax.AffixDistributor;
-import org.pkl.parser.syntax.AffixType;
 import org.pkl.parser.syntax.Annotation;
 import org.pkl.parser.syntax.ArgumentList;
 import org.pkl.parser.syntax.Class;
 import org.pkl.parser.syntax.ClassBody;
 import org.pkl.parser.syntax.ClassMethod;
 import org.pkl.parser.syntax.ClassProperty;
-import org.pkl.parser.syntax.Comment;
-import org.pkl.parser.syntax.CommentType;
 import org.pkl.parser.syntax.DocComment;
 import org.pkl.parser.syntax.Expr;
 import org.pkl.parser.syntax.Expr.AmendsExpr;
@@ -89,6 +84,10 @@ import org.pkl.parser.syntax.TypeAnnotation;
 import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameter;
 import org.pkl.parser.syntax.TypeParameterList;
+import org.pkl.parser.syntax.generic.AffixDistributor;
+import org.pkl.parser.syntax.generic.AffixType;
+import org.pkl.parser.syntax.generic.Comment;
+import org.pkl.parser.syntax.generic.CommentType;
 import org.pkl.parser.util.ErrorMessages;
 import org.pkl.parser.util.Nullable;
 
@@ -103,7 +102,7 @@ public class Parser {
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
   private final boolean keepAffixes;
-  private final LinkedList<Comment> affixes = new LinkedList<>();
+  private final List<Comment> affixes = new ArrayList<>();
 
   public Parser() {
     keepAffixes = false;
@@ -120,10 +119,14 @@ public class Parser {
     spanLookahead = _lookahead.span;
   }
 
+  public int[] newlines() {
+    return lexer.newlines.stream().mapToInt(Integer::intValue).toArray();
+  }
+
   public Module parseModule(String source) {
     init(source);
     if (lookahead == Token.EOF) {
-      return new Module(Collections.singletonList(null), new Span(0, 0, 1, 1, 1, 1));
+      return new Module(Collections.singletonList(null), new Span(0, 0));
     }
     if (lookahead == Token.SHEBANG) next();
     var start = spanLookahead;
@@ -159,7 +162,9 @@ public class Parser {
         end = parseModuleMember(header, nodes);
       }
       var module = new Module(nodes, start.endWith(spanLookahead));
-      if (keepAffixes) AffixDistributor.distributeComments(module, affixes);
+      if (keepAffixes) {
+        AffixDistributor.distributeComments(module, affixes);
+      }
       return module;
     } catch (ParserError pe) {
       var spanEnd = end != null ? end : start;
@@ -172,7 +177,9 @@ public class Parser {
     init(source);
     var expr = parseExpr();
     expect(Token.EOF, "unexpectedToken", "end of file");
-    if (keepAffixes) AffixDistributor.distributeComments(expr, affixes);
+    if (keepAffixes) {
+      AffixDistributor.distributeComments(expr, affixes);
+    }
     return expr;
   }
 
@@ -212,7 +219,7 @@ public class Parser {
     }
     Span span;
     if (nodes.isEmpty()) {
-      span = new Span(0, 0, 1, 1, 1, 1);
+      span = new Span(0, 0);
     } else {
       span = nodes.get(0).span().endWith(nodes.get(nodes.size() - 1).span());
     }

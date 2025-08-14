@@ -13,10 +13,11 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.parser.syntax;
+package org.pkl.parser.syntax.generic;
 
 import java.util.List;
 import org.pkl.parser.Span;
+import org.pkl.parser.syntax.Node;
 
 public class AffixDistributor {
 
@@ -24,7 +25,7 @@ public class AffixDistributor {
     for (var comment : comments) {
       var targetNode = findNearestNode(root, comment);
       var affixType = affixType(targetNode, comment);
-      targetNode.addAffix(comment.withAffixType(affixType));
+      NodeEnhancements.addAffix(targetNode, comment.withAffixType(affixType));
     }
   }
 

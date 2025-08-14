@@ -13,24 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.parser;
+package org.pkl.parser.syntax.generic;
 
-import org.pkl.parser.syntax.generic.FullSpan;
-
-public class GenericParserError extends RuntimeException {
-  private final FullSpan span;
-
-  public GenericParserError(String msg, FullSpan span) {
-    super(msg);
-    this.span = span;
-  }
-
-  public FullSpan getSpan() {
-    return span;
-  }
-
-  @Override
-  public String toString() {
-    return getMessage() + " at " + span;
-  }
+public enum AffixType {
+  PREFIX,
+  SUFFIX
 }

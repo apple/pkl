@@ -15,9 +15,9 @@
  */
 package org.pkl.formatter
 
-import java.util.EnumSet
+import org.pkl.formatter.ast.CommentLine
+import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
-import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
@@ -28,791 +28,603 @@ import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
-import org.pkl.parser.syntax.generic.GenNode
-import org.pkl.parser.syntax.generic.NodeType
+import org.pkl.formatter.ast.group
+import org.pkl.formatter.ast.indent
+import org.pkl.formatter.ast.nodes
+import org.pkl.formatter.ast.twoNewlines
+import org.pkl.parser.ParserVisitor
+import org.pkl.parser.Span
+import org.pkl.parser.syntax.Annotation
+import org.pkl.parser.syntax.ArgumentList
+import org.pkl.parser.syntax.Class
+import org.pkl.parser.syntax.ClassBody
+import org.pkl.parser.syntax.ClassMethod
+import org.pkl.parser.syntax.ClassProperty
+import org.pkl.parser.syntax.DocComment
+import org.pkl.parser.syntax.Expr
+import org.pkl.parser.syntax.ExtendsOrAmendsClause
+import org.pkl.parser.syntax.Identifier
+import org.pkl.parser.syntax.ImportClause
+import org.pkl.parser.syntax.Keyword
+import org.pkl.parser.syntax.Modifier
+import org.pkl.parser.syntax.Module
+import org.pkl.parser.syntax.ModuleDecl
+import org.pkl.parser.syntax.Node
+import org.pkl.parser.syntax.ObjectBody
+import org.pkl.parser.syntax.ObjectMember
+import org.pkl.parser.syntax.Parameter
+import org.pkl.parser.syntax.ParameterList
+import org.pkl.parser.syntax.QualifiedIdentifier
+import org.pkl.parser.syntax.ReplInput
+import org.pkl.parser.syntax.StringConstant
+import org.pkl.parser.syntax.StringPart
+import org.pkl.parser.syntax.Type
+import org.pkl.parser.syntax.TypeAlias
+import org.pkl.parser.syntax.TypeAnnotation
+import org.pkl.parser.syntax.TypeArgumentList
+import org.pkl.parser.syntax.TypeParameter
+import org.pkl.parser.syntax.TypeParameterList
+import org.pkl.parser.syntax.generic.AffixType
+import org.pkl.parser.syntax.generic.CommentType
 
-class Builder(sourceText: String) {
+@Suppress("DuplicatedCode")
+class Builder(sourceText: String, private val newlines: IntArray) : ParserVisitor<FormatNode> {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
-  private var prevNode: GenNode? = null
 
-  fun format(node: GenNode): FormatNode {
-    prevNode = node
-    return when (node.type) {
-      NodeType.MODULE -> formatModule(node)
-      NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, null))
-      NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
-      NodeType.LINE_COMMENT,
-      NodeType.BLOCK_COMMENT,
-      NodeType.TERMINAL,
-      NodeType.MODIFIER,
-      NodeType.IDENTIFIER,
-      NodeType.STRING_CONSTANT,
-      NodeType.STRING_ESCAPE,
-      NodeType.SINGLE_LINE_STRING_LITERAL_EXPR,
-      NodeType.INT_LITERAL_EXPR,
-      NodeType.FLOAT_LITERAL_EXPR,
-      NodeType.BOOL_LITERAL_EXPR,
-      NodeType.THIS_EXPR,
-      NodeType.OUTER_EXPR,
-      NodeType.MODULE_EXPR,
-      NodeType.NULL_EXPR,
-      NodeType.MODULE_TYPE,
-      NodeType.UNKNOWN_TYPE,
-      NodeType.NOTHING_TYPE,
-      NodeType.SHEBANG,
-      NodeType.OPERATOR -> Text(node.text(source))
-      NodeType.STRING_NEWLINE -> ForceLine
-      NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
-      NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
-      NodeType.MULTI_LINE_STRING_LITERAL_EXPR -> formatMultilineString(node)
-      NodeType.ANNOTATION -> formatAnnotation(node)
-      NodeType.TYPEALIAS -> formatTypealias(node)
-      NodeType.TYPEALIAS_HEADER -> formatTypealiasHeader(node)
-      NodeType.TYPEALIAS_BODY -> formatTypealiasBody(node)
-      NodeType.MODIFIER_LIST -> formatModifierList(node)
-      NodeType.PARAMETER_LIST -> formatParameterList(node)
-      NodeType.PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node)
-      NodeType.TYPE_PARAMETER_LIST -> formatTypeParameterList(node)
-      NodeType.TYPE_PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node)
-      NodeType.TYPE_PARAMETER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
-      NodeType.PARAMETER -> formatParameter(node)
-      NodeType.EXTENDS_CLAUSE,
-      NodeType.AMENDS_CLAUSE -> formatAmendsExtendsClause(node)
-      NodeType.IMPORT_LIST -> formatImportList(node)
-      NodeType.IMPORT -> formatImport(node)
-      NodeType.IMPORT_ALIAS -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
-      NodeType.CLASS -> formatClass(node)
-      NodeType.CLASS_HEADER -> formatClassHeader(node)
-      NodeType.CLASS_HEADER_EXTENDS -> formatClassHeaderExtends(node)
-      NodeType.CLASS_BODY -> formatClassBody(node)
-      NodeType.CLASS_BODY_ELEMENTS -> formatClassBodyElements(node)
-      NodeType.CLASS_PROPERTY,
-      NodeType.OBJECT_PROPERTY,
-      NodeType.OBJECT_ENTRY -> formatClassProperty(node)
-      NodeType.CLASS_PROPERTY_HEADER,
-      NodeType.OBJECT_PROPERTY_HEADER -> formatClassPropertyHeader(node)
-      NodeType.CLASS_PROPERTY_HEADER_BEGIN,
-      NodeType.OBJECT_PROPERTY_HEADER_BEGIN -> formatClassPropertyHeaderBegin(node)
-      NodeType.CLASS_PROPERTY_BODY,
-      NodeType.OBJECT_PROPERTY_BODY -> formatClassPropertyBody(node)
-      NodeType.CLASS_METHOD,
-      NodeType.OBJECT_METHOD -> formatClassMethod(node)
-      NodeType.CLASS_METHOD_HEADER -> formatClassMethodHeader(node)
-      NodeType.CLASS_METHOD_BODY -> formatClassMethodBody(node)
-      NodeType.OBJECT_BODY -> formatObjectBody(node)
-      NodeType.OBJECT_ELEMENT -> format(node.children[0]) // has a single element
-      NodeType.OBJECT_ENTRY_HEADER -> formatObjectEntryHeader(node)
-      NodeType.FOR_GENERATOR -> formatForGenerator(node)
-      NodeType.FOR_GENERATOR_HEADER -> formatForGeneratorHeader(node)
-      NodeType.FOR_GENERATOR_HEADER_DEFINITION -> formatForGeneratorHeaderDefinition(node)
-      NodeType.FOR_GENERATOR_HEADER_DEFINITION_HEADER ->
-        formatForGeneratorHeaderDefinitionHeader(node)
-      NodeType.WHEN_GENERATOR -> formatWhenGenerator(node)
-      NodeType.WHEN_GENERATOR_HEADER -> formatWhenGeneratorHeader(node)
-      NodeType.OBJECT_SPREAD -> Nodes(formatGeneric(node.children, null))
-      NodeType.MEMBER_PREDICATE -> formatMemberPredicate(node)
-      NodeType.QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node)
-      NodeType.ARGUMENT_LIST -> formatArgumentList(node)
-      NodeType.ARGUMENT_LIST_ELEMENTS -> formatArgumentListElements(node)
-      NodeType.OBJECT_PARAMETER_LIST -> formatObjectParameterList(node)
-      NodeType.IF_EXPR -> formatIf(node)
-      NodeType.IF_HEADER -> formatIfHeader(node)
-      NodeType.IF_CONDITION -> formatIfCondition(node)
-      NodeType.IF_CONDITION_EXPR -> Indent(formatGeneric(node.children, null))
-      NodeType.IF_THEN_EXPR -> formatIfThen(node)
-      NodeType.IF_ELSE_EXPR -> formatIfElse(node)
-      NodeType.NEW_EXPR,
-      NodeType.AMENDS_EXPR -> formatNewExpr(node)
-      NodeType.NEW_HEADER -> formatNewHeader(node)
-      NodeType.UNQUALIFIED_ACCESS_EXPR -> formatUnqualifiedAccessExpression(node)
-      NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
-      NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
-      NodeType.FUNCTION_LITERAL_BODY -> formatFunctionLiteralBody(node)
-      NodeType.SUBSCRIPT_EXPR,
-      NodeType.SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node)
-      NodeType.TRACE_EXPR -> formatTraceThrowReadExpr(node)
-      NodeType.THROW_EXPR -> formatTraceThrowReadExpr(node)
-      NodeType.READ_EXPR -> formatTraceThrowReadExpr(node)
-      NodeType.NON_NULL_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.SUPER_ACCESS_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.PARENTHESIZED_EXPR -> formatParenthesizedExpr(node)
-      NodeType.PARENTHESIZED_EXPR_ELEMENTS -> formatParenthesizedExprElements(node)
-      NodeType.IMPORT_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.LET_EXPR -> formatLetExpr(node)
-      NodeType.LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node)
-      NodeType.LET_PARAMETER -> formatLetParameter(node)
-      NodeType.UNARY_MINUS_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.LOGICAL_NOT_EXPR -> Nodes(formatGeneric(node.children, null))
-      NodeType.TYPE_ANNOTATION -> formatTypeAnnotation(node)
-      NodeType.TYPE_ARGUMENT_LIST -> formatTypeParameterList(node)
-      NodeType.TYPE_ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node)
-      NodeType.DECLARED_TYPE -> formatDeclaredType(node)
-      NodeType.CONSTRAINED_TYPE -> formatConstrainedType(node)
-      NodeType.CONSTRAINED_TYPE_CONSTRAINT -> formatParameterList(node)
-      NodeType.CONSTRAINED_TYPE_ELEMENTS -> formatParameterListElements(node)
-      NodeType.NULLABLE_TYPE -> Nodes(formatGeneric(node.children, null))
-      NodeType.UNION_TYPE -> formatUnionType(node)
-      NodeType.FUNCTION_TYPE -> formatFunctionType(node)
-      NodeType.FUNCTION_TYPE_PARAMETERS -> formatParameterList(node)
-      NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
-      NodeType.PARENTHESIZED_TYPE -> formatParameterList(node)
-      NodeType.PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node)
-      else -> throw RuntimeException("Unknown node type: ${node.type}")
-    }
+  override fun visitUnknownType(type: Type.UnknownType): FormatNode {
+    return withPrefixesAndSuffixes(type) { Text(type.text(source)) }
   }
 
-  private fun formatModule(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.linesBetween(next) > 1) TWO_NEWLINES else ForceLine
-      }
-    return Nodes(nodes)
+  override fun visitNothingType(type: Type.NothingType): FormatNode {
+    return withPrefixesAndSuffixes(type) { Text(type.text(source)) }
   }
 
-  private fun formatModuleDeclaration(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, TWO_NEWLINES))
+  override fun visitModuleType(type: Type.ModuleType): FormatNode {
+    return withPrefixesAndSuffixes(type) { Text(type.text(source)) }
   }
 
-  private fun formatModuleDefinition(node: GenNode): FormatNode {
-    val (prefixes, nodes) = splitPrefixes(node.children)
-    val fnodes =
-      formatGenericWithGen(nodes, SpaceOrLine) { node, next ->
-        if (next == null) {
-          indent(format(node))
-        } else {
-          format(node)
-        }
-      }
-    val res = Group(newId(), fnodes)
-    return if (prefixes.isEmpty()) {
-      res
-    } else {
-      val sep = getSeparator(prefixes.last(), nodes.first())
-      Nodes(formatGeneric(prefixes, SpaceOrLine) + listOf(sep, res))
-    }
+  override fun visitStringConstantType(type: Type.StringConstantType): FormatNode {
+    return withPrefixesAndSuffixes(type) { Text(type.text(source)) }
   }
 
-  private fun formatDocComment(node: GenNode): FormatNode {
-    val txt = node.text()
-    if (txt == "///" || txt == "/// ") return Text("///")
-
-    var comment = txt.substring(3)
-    if (comment.isStrictBlank()) return Text("///")
-
-    if (comment.isNotEmpty() && comment[0] != ' ') comment = " $comment"
-    return Text("///$comment")
-  }
-
-  private fun String.isStrictBlank(): Boolean {
-    for (ch in this) {
-      if (ch != ' ' && ch != '\t') return false
-    }
-    return true
-  }
-
-  private fun formatQualifiedIdentifier(node: GenNode): FormatNode {
-    // short circuit
-    if (node.children.size == 1) return format(node.children[0])
-
-    val first = listOf(format(node.children[0]), Line)
-    val nodes =
-      formatGeneric(node.children.drop(1)) { n1, n2 ->
-        if (n1.type == NodeType.TERMINAL) null else Line
-      }
-    return Group(newId(), first + listOf(Indent(nodes)))
-  }
-
-  private fun formatUnqualifiedAccessExpression(node: GenNode): FormatNode {
-    val children = node.children
-    if (children.size == 1) return format(children[0])
-    val firstNode = children[0]
-    return if (firstNode.text() == "Map") {
-      val nodes = mutableListOf<FormatNode>()
-      nodes += format(firstNode)
-      nodes += formatArgumentList(children[1], twoBy2 = true)
-      Nodes(nodes)
-    } else {
-      Nodes(formatGeneric(children, null))
-    }
-  }
-
-  private fun formatAmendsExtendsClause(node: GenNode): FormatNode {
-    val prefix = formatGeneric(node.children.dropLast(1), SpaceOrLine)
-    // string constant
-    val suffix = Indent(listOf(format(node.children.last())))
-    return Group(newId(), prefix + listOf(SpaceOrLine) + suffix)
-  }
-
-  private fun formatImport(node: GenNode): FormatNode {
-    return Group(
-      newId(),
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-        if (node.isTerminal("import")) format(node) else indent(format(node))
-      },
-    )
-  }
-
-  private fun formatAnnotation(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatTypealias(node: GenNode): FormatNode {
-    val nodes =
-      groupNonPrefixes(node) { children -> Group(newId(), formatGeneric(children, SpaceOrLine)) }
-    return Nodes(nodes)
-  }
-
-  private fun formatTypealiasHeader(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, Space))
-  }
-
-  private fun formatTypealiasBody(node: GenNode): FormatNode {
-    return Indent(formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatClass(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatClassHeader(node: GenNode): FormatNode {
-    return groupOnSpace(formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatClassHeaderExtends(node: GenNode): FormatNode {
-    return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
-  }
-
-  private fun formatClassBody(node: GenNode): FormatNode {
-    val children = node.children
-    if (children.size == 2) {
-      // no members
-      return Nodes(formatGeneric(children, null))
-    }
-    return Group(newId(), formatGeneric(children, ForceLine))
-  }
-
-  private fun formatClassBodyElements(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        val lineDiff = prev.linesBetween(next)
-        if (lineDiff > 1 || lineDiff == 0) TWO_NEWLINES else ForceLine
-      }
-    return Indent(nodes)
-  }
-
-  private fun formatClassProperty(node: GenNode): FormatNode {
-    val sameLine =
-      node.children
-        .lastOrNull { it.isExpressionOrPropertyBody() }
-        ?.let {
-          if (it.type.isExpression) isSameLineExpr(it) else isSameLineExpr(it.children.last())
-        } ?: false
-    val nodes =
-      groupNonPrefixes(node) { children ->
-        val nodes =
-          formatGenericWithGen(children, { prev, next -> if (sameLine) Space else SpaceOrLine }) {
-            node,
-            next ->
-            if ((node.isExpressionOrPropertyBody()) && !sameLine) {
-              indent(format(node))
-            } else format(node)
-          }
-        groupOnSpace(nodes)
-      }
-    return Nodes(nodes)
-  }
-
-  private fun GenNode.isExpressionOrPropertyBody(): Boolean =
-    type.isExpression ||
-      type == NodeType.CLASS_PROPERTY_BODY ||
-      type == NodeType.OBJECT_PROPERTY_BODY
-
-  private fun formatClassPropertyHeader(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatClassPropertyHeaderBegin(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatClassPropertyBody(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, null))
-  }
-
-  private fun formatClassMethod(node: GenNode): FormatNode {
-    val prefixes = mutableListOf<FormatNode>()
-    val nodes = if (node.children[0].type == NodeType.CLASS_METHOD_HEADER) node.children else {
-      val idx = node.children.indexOfFirst { it.type == NodeType.CLASS_METHOD_HEADER }
-      val prefixNodes = node.children.subList(0, idx)
-      prefixes += formatGeneric(prefixNodes, null)
-      prefixes += getSeparator(prefixNodes.last(), node.children[idx], ForceLine)
-      node.children.subList(idx, node.children.size)
-    }
-    val expr = node.children.last().children[0]
-    val noWrapNodes = formatGeneric(nodes, Space)
-    val shouldIndent = !isSameLineExpr(expr)
-    val wrapNodes =
-      formatGenericWithGen(
-        nodes,
-        { prev, next -> if (shouldIndent) SpaceOrLine else Space },
-      ) { node, next ->
-        if (node.type == NodeType.PARAMETER_LIST) {
-          formatParameterList(node, force = true)
-        } else if (next == null && shouldIndent) {
-          indent(format(node))
-        } else {
-          format(node)
-        }
-      }
-    val groupId = newId()
-    val group = Group(groupId, listOf(IfWrap(groupId, Nodes(wrapNodes), Nodes(noWrapNodes))))
-    return if (prefixes.isEmpty()) group else Nodes(prefixes + group)
-  }
-
-  private fun formatClassMethodHeader(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, Space)
-    return Group(newId(), nodes)
-  }
-
-  private fun formatClassMethodBody(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, null))
-  }
-
-  private fun formatParameter(node: GenNode): FormatNode {
-    if (node.children.size == 1) return format(node.children[0]) // underscore
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatParameterList(node: GenNode, force: Boolean = false): FormatNode {
-    if (node.children.size == 2) return Text("()")
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
-      }
-    return if (force) ForceWrap(newId(), nodes) else Group(newId(), nodes)
-  }
-
-  private fun formatArgumentList(node: GenNode, twoBy2: Boolean = false): FormatNode {
-    if (node.children.size == 2) return Text("()")
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
-      ) { node, next ->
-        if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
-          formatArgumentListElements(node, twoBy2)
-        } else format(node)
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatArgumentListElements(node: GenNode, twoBy2: Boolean = false): FormatNode {
-    val children = node.children
-    val nodes =
-      if (twoBy2) {
-        val pairs = pairArguments(children)
-        formatGenericWithGen(pairs, SpaceOrLine) { node, next ->
-          if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
-            Group(newId(), formatGeneric(node.children, SpaceOrLine))
-          } else {
-            format(node)
-          }
-        }
+  override fun visitDeclaredType(type: Type.DeclaredType): FormatNode {
+    return withPrefixesAndSuffixes(type) {
+      val args = type.args
+      if (args != null) {
+        group(newId(), visitQualifiedIdentifier(type.name), visitTypeArgumentList(args))
       } else {
-        formatGeneric(node.children, SpaceOrLine)
+        group(newId(), visitQualifiedIdentifier(type.name))
       }
-    return Indent(nodes)
+    }
   }
 
-  private fun pairArguments(nodes: List<GenNode>): List<GenNode> {
-    val res = mutableListOf<GenNode>()
-    var tmp = mutableListOf<GenNode>()
-    var commas = 0
-    for (node in nodes) {
-      if (node.isTerminal(",")) {
-        commas++
-        if (commas == 2) {
-          res += GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, tmp)
-          res += node
-          commas = 0
-          tmp = mutableListOf()
+  override fun visitParenthesizedType(type: Type.ParenthesizedType): FormatNode {
+    return withPrefixesAndSuffixes(type) {
+      grouping(Text("("), Line, indent(type.type.visit()), Line, Text(")"))
+    }
+  }
+
+  override fun visitNullableType(type: Type.NullableType): FormatNode {
+    return withPrefixesAndSuffixes(type) { nodes(type.type.visit(), Text("?")) }
+  }
+
+  override fun visitConstrainedType(type: Type.ConstrainedType): FormatNode {
+    return withPrefixesAndSuffixes(type) {
+      nodes(
+        type.type.visit(),
+        grouping(Text("("), indent(Line, commaSeparated(type.exprs)), Line, Text(")")),
+      )
+    }
+  }
+
+  override fun visitUnionType(type: Type.UnionType): FormatNode {
+    return withPrefixesAndSuffixes(type) {
+      val res = mutableListOf<FormatNode>()
+      val afterFirst = mutableListOf<FormatNode>()
+      val default = type.defaultIndex
+      for ((i, type) in type.types.withIndex()) {
+        if (i > 0) {
+          afterFirst += SpaceOrLine
+          afterFirst += Text("|")
+          afterFirst += Space
+          if (i == default) afterFirst += Text("*")
+          afterFirst += type.visit()
         } else {
-          tmp += node
+          if (i == default) res += Text("*")
+          res += type.visit()
         }
+      }
+      res += Indent(afterFirst)
+      group(newId(), res)
+    }
+  }
+
+  override fun visitFunctionType(type: Type.FunctionType): FormatNode {
+    return withPrefixesAndSuffixes(type) {
+      grouping(
+        grouping(Text("("), indent(Line, commaSeparated(type.args)), Line, Text(")")),
+        Space,
+        Text("->"),
+        indent(SpaceOrLine, type.ret.visit()),
+      )
+    }
+  }
+
+  override fun visitThisExpr(expr: Expr.ThisExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitOuterExpr(expr: Expr.OuterExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitModuleExpr(expr: Expr.ModuleExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitNullLiteralExpr(expr: Expr.NullLiteralExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitBoolLiteralExpr(expr: Expr.BoolLiteralExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitIntLiteralExpr(expr: Expr.IntLiteralExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitFloatLiteralExpr(expr: Expr.FloatLiteralExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitThrowExpr(expr: Expr.ThrowExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      grouping(Text("throw("), Line, indent(expr.expr.visit()), Line, Text(")"))
+    }
+  }
+
+  override fun visitTraceExpr(expr: Expr.TraceExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      grouping(Text("trace("), Line, indent(expr.expr.visit()), Line, Text(")"))
+    }
+  }
+
+  override fun visitImportExpr(expr: Expr.ImportExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      grouping(
+        Text(if (expr.isGlob) "import*(" else "import("),
+        Line,
+        indent(visitStringConstant(expr.importStr)),
+        Line,
+        Text(")"),
+      )
+    }
+  }
+
+  override fun visitReadExpr(expr: Expr.ReadExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val name =
+        when (expr.readType) {
+          Expr.ReadType.READ -> "read("
+          Expr.ReadType.NULL -> "read?("
+          Expr.ReadType.GLOB -> "read*("
+        }
+      grouping(Text(name), Line, indent(expr.expr.visit()), Line, Text(")"))
+    }
+  }
+
+  override fun visitUnqualifiedAccessExpr(expr: Expr.UnqualifiedAccessExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val args = expr.argumentList
+      if (args == null) {
+        visitIdentifier(expr.identifier)
       } else {
-        tmp += node
+        val func = expr.identifier.text(source)
+        nodes(visitIdentifier(expr.identifier), visitArgumentList(args, twoByTwo = func == "Map"))
       }
     }
-    if (tmp.isNotEmpty()) {
-      res += GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, tmp)
+  }
+
+  override fun visitStringConstant(expr: StringConstant): FormatNode {
+    return withPrefixesAndSuffixes(expr) { Text(expr.text(source)) }
+  }
+
+  override fun visitSingleLineStringLiteralExpr(
+    expr: Expr.SingleLineStringLiteralExpr
+  ): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      nodes(Text("\""), Nodes(expr.parts.map { it.visit() }), Text("\""))
     }
-    return res
   }
 
-  private fun formatParameterListElements(node: GenNode): FormatNode {
-    return Indent(formatGeneric(node.children, SpaceOrLine))
+  override fun visitMultiLineStringLiteralExpr(expr: Expr.MultiLineStringLiteralExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      MultilineStringGroup(expr.endDelimiterSpan.columnBegin(), expr.parts.map(::visitStringPart))
+    }
   }
 
-  private fun formatTypeParameterList(node: GenNode): FormatNode {
-    if (node.children.size == 2) return Text("<>")
-    val id = newId()
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("<") || next.isTerminal(">")) {
-          Line
-        } else SpaceOrLine
+  override fun visitNewExpr(expr: Expr.NewExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val res = mutableListOf<FormatNode>()
+      res += Text("new")
+      res += Space
+      val type = expr.type
+      if (type != null) {
+        res += type.visit()
+        res += Space
       }
-    return Group(id, nodes)
+      res += visitObjectBody(expr.body)
+      group(newId(), res)
+    }
   }
 
-  private fun formatObjectParameterList(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+  override fun visitAmendsExpr(expr: Expr.AmendsExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      nodes(expr.expr.visit(), Space, visitObjectBody(expr.body))
+    }
   }
 
-  private fun formatObjectBody(node: GenNode): FormatNode {
-    if (node.children.size == 2) return Text("{}")
-    val groupId = newId()
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next ->
-          if (prev.isTerminal("{") || next.isTerminal("}")) {
-            val lines = prev.linesBetween(next)
-            if (lines == 0) SpaceOrLine else ForceLine
-          } else SpaceOrLine
+  override fun visitSuperAccessExpr(expr: Expr.SuperAccessExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val res = mutableListOf<FormatNode>()
+      res += Line
+      res += Text(".")
+      res += visitIdentifier(expr.identifier)
+      val args = expr.argumentList
+      if (args != null) {
+        res += visitArgumentList(args)
+      }
+      group(newId(), Text("super"), Indent(res))
+    }
+  }
+
+  override fun visitSuperSubscriptExpr(expr: Expr.SuperSubscriptExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      grouping(Text("super["), Line, indent(expr.arg.visit()), Line, Text("]"))
+    }
+  }
+
+  override fun visitQualifiedAccessExpr(expr: Expr.QualifiedAccessExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val args = expr.argumentList
+      val hasLambda =
+        expr.expr is Expr.QualifiedAccessExpr && args != null && hasFunctionLiteral(args, depth = 2)
+      val res = mutableListOf<FormatNode>()
+      res += expr.expr.visit()
+      res += if (hasLambda) ForceLine else Line
+      res +=
+        indent(
+          Text("."),
+          visitIdentifier(expr.identifier),
+          if (args != null) grouping(visitArgumentList(args)) else Empty,
+        )
+      group(newId(), res)
+    }
+  }
+
+  override fun visitSubscriptExpr(expr: Expr.SubscriptExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      grouping(expr.expr.visit(), Text("["), Line, indent(expr.arg.visit()), Line, Text("]"))
+    }
+  }
+
+  override fun visitNonNullExpr(expr: Expr.NonNullExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { nodes(expr.expr.visit(), Text("!!")) }
+  }
+
+  override fun visitUnaryMinusExpr(expr: Expr.UnaryMinusExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { nodes(Text("-"), expr.expr.visit()) }
+  }
+
+  override fun visitLogicalNotExpr(expr: Expr.LogicalNotExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) { nodes(Text("!"), expr.expr.visit()) }
+  }
+
+  override fun visitBinaryOperatorExpr(expr: Expr.BinaryOperatorExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val op = expr.op.toString()
+      val res = mutableListOf<FormatNode>()
+      res += expr.left.visit()
+      if (op == "-") {
+        res += Space
+        res += Text(op)
+        res += indent(SpaceOrLine, expr.right.visit())
+      } else {
+        res += indent(SpaceOrLine, Text(op), Space, expr.right.visit())
+      }
+      group(newId(), res)
+    }
+  }
+
+  override fun visitTypeCheckExpr(expr: Expr.TypeCheckExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      group(newId(), expr.expr.visit(), SpaceOrLine, Text("is"), Space, expr.type.visit())
+    }
+  }
+
+  override fun visitTypeCastExpr(expr: Expr.TypeCastExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      group(newId(), expr.expr.visit(), SpaceOrLine, Text("as"), Space, expr.type.visit())
+    }
+  }
+
+  override fun visitIfExpr(expr: Expr.IfExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val res = mutableListOf<FormatNode>()
+      res += Text("if ")
+      res += group(newId(), Text("("), Line, expr.cond.visit(), Line, Text(")"))
+      res += SpaceOrLine
+      res += indent(expr.then.visit())
+      res += SpaceOrLine
+      res += Text("else")
+      val els = expr.els
+      // flatten the ifs
+      val fnode = els.visit()
+      res +=
+        if (els is Expr.IfExpr && fnode is Group) {
+          res += Space
+          nodes(fnode.nodes)
+        } else {
+          res += SpaceOrLine
+          indent(fnode)
+        }
+      group(newId(), res)
+    }
+  }
+
+  override fun visitLetExpr(expr: Expr.LetExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val res = mutableListOf<FormatNode>()
+      res += Text("let ")
+      res +=
+        group(
+          newId(),
+          Text("("),
+          indent(
+            Line,
+            grouping(
+              visitParameter(expr.parameter),
+              Space,
+              Text("="),
+              indent(SpaceOrLine, expr.bindingExpr.visit()),
+            ),
+          ),
+          Text(")"),
+        )
+      val exp = expr.expr
+      // flatten the lets
+      val fnode = exp.visit()
+      res += SpaceOrLine
+      res +=
+        if (exp is Expr.LetExpr && fnode is Group) {
+          nodes(fnode.nodes)
+        } else {
+          indent(fnode)
+        }
+      group(newId(), res)
+    }
+  }
+
+  override fun visitFunctionLiteralExpr(expr: Expr.FunctionLiteralExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      val res = mutableListOf<FormatNode>()
+      res += grouping(visitParameterList(expr.parameterList))
+      res += Space
+      res += Text("->")
+      res += processSameLineExpr(expr.expr)
+      group(newId(), res)
+    }
+  }
+
+  override fun visitParenthesizedExpr(expr: Expr.ParenthesizedExpr): FormatNode {
+    return withPrefixesAndSuffixes(expr) {
+      grouping(Text("("), indent(Line, expr.expr.visit()), Line, Text(")"))
+    }
+  }
+
+  override fun visitObjectProperty(member: ObjectMember.ObjectProperty): FormatNode {
+    return withPrefixesAndSuffixes(member) {
+      val res = mutableListOf<FormatNode>()
+      if (member.modifiers.isNotEmpty()) {
+        res += visitModifierList(member.modifiers)
+      }
+      res += visitIdentifier(member.identifier)
+      if (member.typeAnnotation != null) {
+        res += visitTypeAnnotation(member.typeAnnotation!!)
+      }
+      val expr = member.expr
+      if (expr != null) {
+        res += Space
+        res += Text("=")
+        res += processSameLineExpr(expr)
+      } else {
+        for (body in member.bodyList) {
+          res += Space
+          res += visitObjectBody(body)
+        }
+      }
+
+      group(newId(), res)
+    }
+  }
+
+  override fun visitObjectMethod(method: ObjectMember.ObjectMethod): FormatNode {
+    return withPrefixesAndSuffixes(method) {
+      val res = mutableListOf<FormatNode>()
+      if (method.modifiers.isNotEmpty()) {
+        res += visitModifierList(method.modifiers)
+      }
+      res += Text("function ")
+      res += visitIdentifier(method.identifier)
+      if (method.typeParameterList != null) {
+        res += visitTypeParameterList(method.typeParameterList!!)
+      }
+      res += visitParameterList(method.paramList)
+      if (method.typeAnnotation != null) {
+        res += visitTypeAnnotation(method.typeAnnotation!!)
+      }
+      if (method.typeAnnotation != null) {
+        res += visitTypeAnnotation(method.typeAnnotation!!)
+      }
+      val expr = method.expr
+      res += Space
+      res += Text("=")
+      res += processSameLineExpr(expr)
+
+      group(newId(), res)
+    }
+  }
+
+  override fun visitMemberPredicate(pred: ObjectMember.MemberPredicate): FormatNode {
+    return withPrefixesAndSuffixes(pred) {
+      val res = mutableListOf<FormatNode>()
+      res += grouping(Text("[["), Line, indent(pred.pred.visit()), Line, Text("]]"))
+      val expr = pred.expr
+      if (expr != null) {
+        res += Space
+        res += Text("=")
+        res += processSameLineExpr(expr)
+      } else {
+        for (body in pred.bodyList) {
+          res += Space
+          res += visitObjectBody(body)
+        }
+      }
+      group(newId(), res)
+    }
+  }
+
+  override fun visitObjectElement(member: ObjectMember.ObjectElement): FormatNode {
+    return withPrefixesAndSuffixes(member) { member.expr.visit() }
+  }
+
+  override fun visitObjectEntry(member: ObjectMember.ObjectEntry): FormatNode {
+    return withPrefixesAndSuffixes(member) {
+      val res = mutableListOf<FormatNode>()
+      res += grouping(Text("["), Line, indent(member.key.visit()), Line, Text("]"))
+      val expr = member.value
+      if (expr != null) {
+        res += Space
+        res += Text("=")
+        res += processSameLineExpr(expr)
+      } else {
+        for (body in member.bodyList) {
+          res += Space
+          res += visitObjectBody(body)
+        }
+      }
+      group(newId(), res)
+    }
+  }
+
+  override fun visitObjectSpread(member: ObjectMember.ObjectSpread): FormatNode {
+    return withPrefixesAndSuffixes(member) {
+      nodes(Text(if (member.isNullable) "...?" else "..."), member.expr.visit())
+    }
+  }
+
+  override fun visitWhenGenerator(member: ObjectMember.WhenGenerator): FormatNode {
+    return withPrefixesAndSuffixes(member) {
+      val els = member.elseClause
+      grouping(
+        Text("when "),
+        grouping(Text("("), indent(Line, member.predicate.visit()), Text(")")),
+        Space,
+        visitObjectBody(member.thenClause),
+        if (els == null) {
+          Empty
+        } else {
+          nodes(Space, Text("else"), Space, visitObjectBody(els))
         },
-      ) { node, next ->
-        if (node.type == NodeType.OBJECT_MEMBER_LIST) {
-          formatObjectMemberList(node, groupId)
-        } else format(node)
-      }
-    return Group(groupId, nodes)
-  }
-
-  private fun formatObjectMemberList(node: GenNode, groupId: Int): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        val lines = prev.linesBetween(next)
-        when (lines) {
-          0 -> IfWrap(groupId, Line, Text("; "))
-          1 -> ForceLine
-          else -> TWO_NEWLINES
-        }
-      }
-    return Indent(nodes)
-  }
-
-  private fun formatObjectEntryHeader(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatForGenerator(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (
-          prev.type == NodeType.FOR_GENERATOR_HEADER || next.type == NodeType.FOR_GENERATOR_HEADER
-        ) {
-          Space
-        } else SpaceOrLine
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatForGeneratorHeader(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else null
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatForGeneratorHeaderDefinition(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (next.type in SAME_LINE_EXPRS) Space else SpaceOrLine },
-      ) { node, next ->
-        if (node.type.isExpression && node.type !in SAME_LINE_EXPRS) indent(format(node))
-        else format(node)
-      }
-    return indent(Group(newId(), nodes))
-  }
-
-  private fun formatForGeneratorHeaderDefinitionHeader(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
-    return Group(newId(), nodes)
-  }
-
-  private fun formatWhenGenerator(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (
-          prev.type == NodeType.WHEN_GENERATOR_HEADER ||
-            prev.isTerminal("when", "else") ||
-            next.isTerminal("else")
-        ) {
-          Space
-        } else {
-          SpaceOrLine
-        }
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatWhenGeneratorHeader(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
-      ) { node, next ->
-        if (!node.type.isAffix && node.type != NodeType.TERMINAL) {
-          indent(format(node))
-        } else format(node)
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatMemberPredicate(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
-        if (next == null && node.type != NodeType.OBJECT_BODY) {
-          indent(format(node))
-        } else format(node)
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatMultilineString(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, null)
-    return MultilineStringGroup(node.children.last().span.colBegin, nodes)
-  }
-
-  private fun formatIf(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) {
-          Space
-        } else SpaceOrLine
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatIfHeader(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (next.type == NodeType.IF_CONDITION) Space else SpaceOrLine
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatIfCondition(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatIfThen(node: GenNode): FormatNode {
-    return Indent(formatGeneric(node.children, null))
-  }
-
-  private fun formatIfElse(node: GenNode): FormatNode {
-    val children = node.children
-    if (children.size == 1) {
-      val expr = children[0]
-      return if (expr.type == NodeType.IF_EXPR) {
-        // unpack the group
-        val group = formatIf(expr) as Group
-        Nodes(group.nodes)
-      } else {
-        indent(format(expr))
-      }
+      )
     }
-    return Indent(formatGeneric(node.children, null))
   }
 
-  private fun formatNewExpr(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
-    return Group(newId(), nodes)
+  override fun visitForGenerator(member: ObjectMember.ForGenerator): FormatNode {
+    return withPrefixesAndSuffixes(member) {
+      val predicate =
+        indent(
+          Line,
+          visitParameter(member.p1),
+          if (member.p2 == null) Empty else nodes(Text(", "), visitParameter(member.p2!!)),
+          Text(" in"),
+          processSameLineExpr(member.expr),
+        )
+      grouping(
+        Text("for "),
+        grouping(Text("("), predicate, Text(")")),
+        Space,
+        visitObjectBody(member.body),
+      )
+    }
   }
 
-  private fun formatNewHeader(node: GenNode): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
-    return Group(newId(), nodes)
-  }
-
-  private fun formatParenthesizedExpr(node: GenNode): FormatNode {
-    if (node.children.size == 2) return Text("()")
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
-      ) { node, next ->
-        if (node.type.isExpression) indent(format(node)) else format(node)
+  override fun visitModule(module: Module): FormatNode {
+    return withPrefixesAndSuffixes(module) {
+      val res = mutableListOf<FormatNode>()
+      if (module.decl != null) {
+        res += visitModuleDecl(module.decl!!)
       }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatParenthesizedExprElements(node: GenNode): FormatNode {
-    return indent(Group(newId(), formatGeneric(node.children, null)))
-  }
-
-  private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
-    val sameLine =
-      node.children
-        .last { it.type == NodeType.FUNCTION_LITERAL_BODY }
-        .let { body ->
-          val expr = body.children.find { it.type.isExpression }!!
-          isSameLineExpr(expr)
-        }
-    val nodes = formatGeneric(node.children) { prev, next -> if (sameLine) Space else SpaceOrLine }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatFunctionLiteralBody(node: GenNode): FormatNode {
-    val expr = node.children.find { it.type.isExpression }!!
-    val nodes = formatGeneric(node.children, null)
-    return if (isSameLineExpr(expr)) Group(newId(), nodes) else Indent(nodes)
-  }
-
-  private fun formatLetExpr(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else SpaceOrLine },
-      ) { node, next ->
-        if (next == null) {
-          if (node.type == NodeType.LET_EXPR) {
-            // unpack the lets
-            val group = formatLetExpr(node) as Group
-            Nodes(group.nodes)
-          } else indent(format(node))
-        } else format(node)
+      val imports = visitImportList(module.imports)
+      if (imports != null) {
+        if (res.isNotEmpty()) res += twoNewlines
+        res += imports
       }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatBinaryOpExpr(node: GenNode): FormatNode {
-    val flat = flattenBinaryOperatorExprs(node)
-    val callChainSize = flat.count { it.isOperator(".", "?.") }
-    val hasLambda = callChainSize > 1 && flat.any { hasFunctionLiteral(it, 2) }
-    val nodes =
-      formatGeneric(flat) { prev, next ->
-        if (prev.type == NodeType.OPERATOR) {
-          when (prev.text()) {
-            ".",
-            "?." -> null
-            "-" -> SpaceOrLine
-            else -> Space
+      val members = module.moduleMembers
+      if (members.isNotEmpty()) {
+        if (res.isNotEmpty()) res += twoNewlines
+        res +=
+          withSeparator(module.moduleMembers) { prev, next ->
+            if (prev.span().linesBetween(next.span()) > 1) twoNewlines else ForceLine
           }
-        } else if (next.type == NodeType.OPERATOR) {
-          when (next.text()) {
-            ".",
-            "?." -> if (hasLambda) ForceLine else Line
-            "-" -> Space
-            else -> SpaceOrLine
-          }
-        } else SpaceOrLine
       }
-    val shouldGroup = node.children.size == flat.size
-    return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
-  }
-
-  private fun hasFunctionLiteral(node: GenNode, depth: Int): Boolean {
-    if (node.type == NodeType.FUNCTION_LITERAL_EXPR) return true
-    for (child in node.children) {
-      if (child.type == NodeType.FUNCTION_LITERAL_EXPR) return true
-      if (depth > 0 && hasFunctionLiteral(child, depth - 1)) return true
+      Nodes(res)
     }
-    return false
   }
 
-  private fun formatLetParameterDefinition(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+  override fun visitModuleDecl(decl: ModuleDecl): FormatNode {
+    return withPrefixesAndSuffixes(decl) {
+      val res = mutableListOf<FormatNode>()
+      val preamble = formatPreamble(decl.docComment, decl.annotations)
+      var shouldNewline = preamble !is Empty
+      if (decl.modifiers.isNotEmpty()) {
+        if (shouldNewline) res += ForceLine
+        res += visitModifierList(decl.modifiers)
+        shouldNewline = true
       }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatLetParameter(node: GenNode): FormatNode {
-    return indent(formatClassProperty(node))
-  }
-
-  private fun formatSubscriptExpr(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, null))
-  }
-
-  private fun formatTraceThrowReadExpr(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else null },
-      ) { node, next ->
-        if (node.type.isExpression) indent(format(node)) else format(node)
+      if (decl.moduleKeyword != null) {
+        res +=
+          grouping(
+            visitKeyword(decl.moduleKeyword!!),
+            SpaceOrLine,
+            indent(visitQualifiedIdentifier(decl.name!!)), // cannot be null
+          )
+        shouldNewline = true
       }
-    return Group(newId(), nodes)
-  }
 
-  private fun formatDeclaredType(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, SpaceOrLine))
-  }
-
-  private fun formatConstrainedType(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next ->
-        if (next.type == NodeType.CONSTRAINED_TYPE_CONSTRAINT) null else SpaceOrLine
+      val extendsAmends = decl.extendsOrAmendsDecl
+      if (extendsAmends != null) {
+        if (shouldNewline) res += ForceLine
+        res += visitExtendsOrAmendsClause(extendsAmends)
       }
-    return Group(newId(), nodes)
+      nodes(preamble, *res.toTypedArray())
+    }
   }
 
-  private fun formatUnionType(node: GenNode): FormatNode {
-    val nodes =
-      formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else null }
-    return Group(newId(), indentAfterFirstNewline(nodes))
+  override fun visitExtendsOrAmendsClause(decl: ExtendsOrAmendsClause): FormatNode {
+    return withPrefixesAndSuffixes(decl) {
+      val type = if (decl.type == ExtendsOrAmendsClause.Type.AMENDS) "amends" else "extends"
+      grouping(Text(type), indent(SpaceOrLine, visitStringConstant(decl.url)))
+    }
   }
 
-  private fun formatFunctionType(node: GenNode): FormatNode {
-    val nodes =
-      formatGenericWithGen(
-        node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
-      ) { node, next ->
-        if (next == null) indent(format(node)) else format(node)
-      }
-    return Group(newId(), nodes)
-  }
-
-  private fun formatParenthesizedTypeElements(node: GenNode): FormatNode {
-    return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
-  }
-
-  private fun formatTypeAnnotation(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, Space))
-  }
-
-  private fun formatModifierList(node: GenNode): FormatNode {
+  private fun visitImportList(imps: List<ImportClause>): FormatNode? {
+    if (imps.isEmpty()) return null
     val nodes = mutableListOf<FormatNode>()
-    val children = node.children.groupBy { it.type.isAffix }
-    if (children[true] != null) {
-      nodes += formatGeneric(children[true]!!, SpaceOrLine)
-    }
-    val modifiers = children[false]!!.sortedBy(::modifierPrecedence)
-    nodes += formatGeneric(modifiers, Space)
-    return Nodes(nodes)
-  }
-
-  private fun formatImportList(node: GenNode): FormatNode {
-    val nodes = mutableListOf<FormatNode>()
-    val children = node.children.groupBy { it.type.isAffix }
-    if (children[true] != null) {
-      nodes += formatGeneric(children[true]!!, SpaceOrLine)
-      nodes += ForceLine
-    }
     val imports =
-      children[false]!!.groupBy { imp ->
+      imps.groupBy { imp ->
         val url = getImportUrl(imp)
         when {
           ABSOLUTE_URL_REGEX.matches(url) -> 0
@@ -828,168 +640,455 @@ class Builder(sourceText: String) {
     if (absolute != null) {
       for ((i, imp) in absolute.withIndex()) {
         if (i > 0) nodes += ForceLine
-        nodes += format(imp)
+        nodes += visitImportClause(imp)
       }
-      if (projects != null || relatives != null) nodes += ForceLine
       shouldNewline = true
     }
 
     if (projects != null) {
-      if (shouldNewline) nodes += ForceLine
+      if (shouldNewline) nodes += twoNewlines
       for ((i, imp) in projects.withIndex()) {
         if (i > 0) nodes += ForceLine
-        nodes += format(imp)
+        nodes += visitImportClause(imp)
       }
-      if (relatives != null) nodes += ForceLine
       shouldNewline = true
     }
 
     if (relatives != null) {
-      if (shouldNewline) nodes += ForceLine
+      if (shouldNewline) nodes += twoNewlines
       for ((i, imp) in relatives.withIndex()) {
         if (i > 0) nodes += ForceLine
-        nodes += format(imp)
+        nodes += visitImportClause(imp)
       }
     }
     return Nodes(nodes)
   }
 
-  private fun formatGeneric(children: List<GenNode>, separator: FormatNode?): List<FormatNode> {
-    return formatGeneric(children) { n1, n2 -> separator }
-  }
-
-  private fun formatGeneric(
-    children: List<GenNode>,
-    separatorFn: (GenNode, GenNode) -> FormatNode?,
-  ): List<FormatNode> {
-    return formatGenericWithGen(children, separatorFn, null)
-  }
-
-  private fun formatGenericWithGen(
-    children: List<GenNode>,
-    separator: FormatNode?,
-    generatorFn: ((GenNode, GenNode?) -> FormatNode)?,
-  ): List<FormatNode> {
-    return formatGenericWithGen(children, { n1, n2 -> separator }, generatorFn)
-  }
-
-  private fun formatGenericWithGen(
-    children: List<GenNode>,
-    separatorFn: (GenNode, GenNode) -> FormatNode?,
-    generatorFn: ((GenNode, GenNode?) -> FormatNode)?,
-  ): List<FormatNode> {
-    // skip semicolons
-    val children = children.filter { !it.isSemicolon() }
-    // short circuit
-    if (children.isEmpty()) return listOf(SpaceOrLine)
-    if (children.size == 1) return listOf(format(children[0]))
-
-    val nodes = mutableListOf<FormatNode>()
-    var prev = children[0]
-    for (child in children.drop(1)) {
-      nodes +=
-        if (generatorFn != null) {
-          generatorFn(prev, child)
-        } else {
-          format(prev)
-        }
-      val separator = getSeparator(prev, child, separatorFn)
-      if (separator != null) nodes += separator
-      prev = child
+  override fun visitImportClause(imp: ImportClause): FormatNode {
+    return withPrefixesAndSuffixes(imp) {
+      grouping(
+        Text(if (imp.isGlob) "import* " else "import "),
+        visitStringConstant(imp.importStr),
+        if (imp.alias != null) {
+          indent(SpaceOrLine, Text("as "), visitIdentifier(imp.alias!!))
+        } else Empty,
+      )
     }
-    nodes +=
-      if (generatorFn != null) {
-        generatorFn(children.last(), null)
+  }
+
+  override fun visitClass(clazz: Class): FormatNode {
+    return withPrefixesAndSuffixes(clazz) {
+      val res = mutableListOf<FormatNode>()
+      val preamble = formatPreamble(clazz.docComment, clazz.annotations)
+      res += preamble
+      val shouldNewline = preamble !is Empty
+      if (clazz.modifiers.isNotEmpty()) {
+        if (shouldNewline) res += ForceLine
+        res += visitModifierList(clazz.modifiers)
+      }
+      res += visitKeyword(clazz.classKeyword)
+      res += Space
+      res += visitIdentifier(clazz.name)
+      if (clazz.typeParameterList != null) {
+        res += grouping(visitTypeParameterList(clazz.typeParameterList!!))
+      }
+      if (clazz.superClass != null) {
+        res += grouping(indent(SpaceOrLine, Text("extends "), clazz.superClass!!.visit()))
+      }
+      if (clazz.body != null) {
+        res += Space
+        res += visitClassBody(clazz.body!!)
+      }
+      nodes(res)
+    }
+  }
+
+  private fun visitModifierList(modifiers: List<Modifier>): FormatNode {
+    val sorted = modifiers.sortedBy(::modifierPrecedence)
+    val nodes = sorted.map { visitModifier(it) }
+    return Nodes(nodes)
+  }
+
+  override fun visitModifier(modifier: Modifier): FormatNode {
+    return withPrefixesAndSuffixes(modifier) { Text(modifier.text(source) + " ") }
+  }
+
+  override fun visitClassProperty(prop: ClassProperty): FormatNode {
+    return withPrefixesAndSuffixes(prop) {
+      val res = mutableListOf<FormatNode>()
+      val preamble = formatPreamble(prop.docComment, prop.annotations)
+      val shouldNewline = preamble !is Empty
+      if (prop.modifiers.isNotEmpty()) {
+        if (shouldNewline) res += ForceLine
+        res += visitModifierList(prop.modifiers)
+      }
+      res += visitIdentifier(prop.name)
+      if (prop.typeAnnotation != null) {
+        res += visitTypeAnnotation(prop.typeAnnotation!!)
+      }
+      val expr = prop.expr
+      if (expr != null) {
+        res += Space
+        res += Text("=")
+        res += processSameLineExpr(expr)
+      } else if (prop.bodyList.isNotEmpty()) {
+        res += Space
+        res += withSeparator(prop.bodyList, Space)
+      }
+
+      if (preamble !is Empty) {
+        nodes(preamble, group(newId(), res))
       } else {
-        format(children.last())
+        group(newId(), res)
       }
-    return nodes
+    }
   }
 
-  private fun GenNode.isSemicolon(): Boolean = type.isAffix && text() == ";"
-
-  /** Groups all non prefixes (comments, doc comments, annotations) of this node together. */
-  private fun groupNonPrefixes(
-    node: GenNode,
-    groupFn: (List<GenNode>) -> FormatNode,
-  ): List<FormatNode> {
-    val children = node.children
-    val index =
-      children.indexOfFirst {
-        !it.type.isAffix && it.type != NodeType.DOC_COMMENT && it.type != NodeType.ANNOTATION
+  override fun visitClassMethod(method: ClassMethod): FormatNode {
+    return withPrefixesAndSuffixes(method) {
+      val res = mutableListOf<FormatNode>()
+      val preamble = formatPreamble(method.docComment, method.annotations)
+      val shouldNewline = preamble !is Empty
+      if (method.modifiers.isNotEmpty()) {
+        if (shouldNewline) res += ForceLine
+        res += visitModifierList(method.modifiers)
       }
-    if (index <= 0) {
-      // no prefixes
-      return listOf(groupFn(children))
+      res += Text("function ")
+      res += visitIdentifier(method.name)
+      if (method.typeParameterList != null) {
+        res += visitTypeParameterList(method.typeParameterList!!)
+      }
+      res += visitParameterList(method.parameterList)
+      if (method.typeAnnotation != null) {
+        res += visitTypeAnnotation(method.typeAnnotation!!)
+      }
+      val expr = method.expr
+      if (expr != null) {
+        res += Space
+        res += Text("=")
+        res += processSameLineExpr(expr)
+      }
+
+      if (preamble !is Empty) {
+        nodes(preamble, group(newId(), res))
+      } else {
+        group(newId(), res)
+      }
     }
-    val prefixes = children.subList(0, index)
-    val nodes = children.subList(index, children.size)
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  override fun visitClassBody(classBody: ClassBody): FormatNode {
+    return withPrefixesAndSuffixes(classBody) {
+      val children = classBody.children()!!
+      if (children.isEmpty()) {
+        Text("{}")
+      } else {
+        val elements = mutableListOf<FormatNode>()
+        elements += ForceLine
+        elements +=
+          withSeparator(children as List<Node>) { prev, next ->
+            if (prev.span().linesBetween(next.span()) > 1) twoNewlines else ForceLine
+          }
+        elements += ForceLine
+        grouping(Text("{"), Indent(elements), Text("}"))
+      }
+    }
+  }
+
+  override fun visitTypeAlias(typeAlias: TypeAlias): FormatNode {
+    return withPrefixesAndSuffixes(typeAlias) {
+      val res = mutableListOf<FormatNode>()
+      val preamble = formatPreamble(typeAlias.docComment, typeAlias.annotations)
+      val shouldNewline = preamble !is Empty
+      if (typeAlias.modifiers.isNotEmpty()) {
+        if (shouldNewline) res += ForceLine
+        res += visitModifierList(typeAlias.modifiers)
+      }
+      res += visitKeyword(typeAlias.typealiasKeyword)
+      res += Space
+      res += visitIdentifier(typeAlias.name)
+      if (typeAlias.typeParameterList != null) {
+        visitTypeParameterList(typeAlias.typeParameterList!!)
+      }
+      res += Space
+      res += Text("=")
+      res += indent(SpaceOrLine, typeAlias.type.visit())
+      if (preamble !is Empty) {
+        nodes(preamble, group(newId(), res))
+      } else group(newId(), res)
+    }
+  }
+
+  override fun visitAnnotation(annotation: Annotation): FormatNode {
+    return withPrefixesAndSuffixes(annotation) {
+      nodes(
+        Text("@"),
+        annotation.type.visit(),
+        Space,
+        if (annotation.body != null) visitObjectBody(annotation.body!!) else Empty,
+      )
+    }
+  }
+
+  override fun visitParameter(param: Parameter): FormatNode {
+    return withPrefixesAndSuffixes(param) {
+      when (param) {
+        is Parameter.Underscore -> Text("_")
+        is Parameter.TypedIdentifier -> {
+          val typeAnnotation = param.typeAnnotation
+          if (typeAnnotation == null) {
+            nodes(visitIdentifier(param.identifier))
+          } else {
+            nodes(visitIdentifier(param.identifier), visitTypeAnnotation(typeAnnotation))
+          }
+        }
+      }
+    }
+  }
+
+  override fun visitParameterList(paramList: ParameterList): FormatNode {
+    return visitParameterList(paramList, false)
+  }
+
+  fun visitParameterList(paramList: ParameterList, shouldGroup: Boolean): FormatNode {
+    return withPrefixesAndSuffixes(paramList) {
+      val params = paramList.parameters
+      if (params.isEmpty()) {
+        Text("()")
+      } else {
+        val indented = indent(Line, commaSeparated(params), Line)
+        if (shouldGroup) {
+          grouping(Text("("), indented, Text(")"))
+        } else {
+          nodes(Text("("), indented, Text(")"))
+        }
+      }
+    }
+  }
+
+  override fun visitTypeParameter(typeParameter: TypeParameter): FormatNode {
+    return withPrefixesAndSuffixes(typeParameter) {
+      val variance =
+        when (typeParameter.variance) {
+          TypeParameter.Variance.IN -> Text("in ")
+          TypeParameter.Variance.OUT -> Text("out ")
+          else -> Empty
+        }
+      nodes(variance, visitIdentifier(typeParameter.identifier))
+    }
+  }
+
+  override fun visitTypeParameterList(typeParameterList: TypeParameterList): FormatNode {
+    return withPrefixesAndSuffixes(typeParameterList) {
+      val params = typeParameterList.parameters
+      if (params.isEmpty()) {
+        Text("<>")
+      } else {
+        nodes(Text("<"), indent(Line, commaSeparated(params), Line), Text(">"))
+      }
+    }
+  }
+
+  override fun visitTypeAnnotation(typeAnnotation: TypeAnnotation): FormatNode {
+    return withPrefixesAndSuffixes(typeAnnotation) {
+      nodes(Text(":"), Space, typeAnnotation.type.visit())
+    }
+  }
+
+  override fun visitArgumentList(argumentList: ArgumentList): FormatNode {
+    return visitArgumentList(argumentList, false)
+  }
+
+  private fun visitArgumentList(argumentList: ArgumentList, twoByTwo: Boolean): FormatNode {
+    return withPrefixesAndSuffixes(argumentList) {
+      val args = argumentList.arguments
+      when {
+        args.isEmpty() -> Text("()")
+        !twoByTwo -> nodes(Text("("), indent(Line, commaSeparated(args), Line), Text(")"))
+        else -> {
+          val fargs = mutableListOf<FormatNode>()
+          for (i in args.indices) {
+            val arg = args[i]
+            if (i > 0) {
+              fargs += Text(",")
+              fargs += if (i % 2 == 0) SpaceOrLine else Space
+            }
+            fargs += arg.visit()
+          }
+          nodes(Text("("), indent(Line, Nodes(fargs), Line), Text(")"))
+        }
+      }
+    }
+  }
+
+  override fun visitStringPart(part: StringPart): FormatNode {
+    // string parts cannot have affixes
+    return when (part) {
+      is StringPart.StringChars -> Text(part.text(source))
+      is StringPart.StringInterpolation -> {
+        nodes(Text("\\("), part.expr.visit(), Text(")"))
+      }
+    }
+  }
+
+  override fun visitDocComment(docComment: DocComment): FormatNode {
+    return withPrefixesAndSuffixes(docComment) {
+      val txts = docComment.text(source)
+      val lines = txts.trimEnd().lines().map(::processDocComment)
+      nodes(*lines.interleave(CommentLine).toTypedArray(), CommentLine)
+    }
+  }
+
+  private fun processDocComment(txt: String): FormatNode {
+    if (txt == "///" || txt == "/// ") return Text("///")
+
+    var comment = txt.substring(3)
+    if (comment.isStrictBlank()) return Text("///")
+
+    if (comment.isNotEmpty() && comment[0] != ' ') comment = " $comment"
+    return Text("///$comment")
+  }
+
+  override fun visitIdentifier(identifier: Identifier): FormatNode {
+    return withPrefixesAndSuffixes(identifier) { Text(identifier.text(source)) }
+  }
+
+  override fun visitQualifiedIdentifier(qualifiedIdentifier: QualifiedIdentifier): FormatNode {
+    return withPrefixesAndSuffixes(qualifiedIdentifier) {
+      val idents = qualifiedIdentifier.identifiers
+      when (idents.size) {
+        0 -> Empty
+        1 -> visitIdentifier(idents[0])
+        else -> {
+          grouping(
+            visitIdentifier(idents[0]),
+            Indent(idents.drop(1).map { nodes(Line, Text("."), visitIdentifier(it)) }),
+          )
+        }
+      }
+    }
+  }
+
+  override fun visitObjectBody(body: ObjectBody): FormatNode {
+    return withPrefixesAndSuffixes(body) {
+      val paramNodes = body.parameters
+      val members = body.members
+      if (paramNodes.isEmpty() && members.isEmpty()) {
+        Text("{}")
+      } else {
+        val pars =
+          when (paramNodes.size) {
+            0 -> Empty
+            1 -> nodes(Space, visitParameter(paramNodes[0]), Space, Text("->"))
+            else -> {
+              val rest = withSeparator(paramNodes.drop(1), nodes(Text(","), SpaceOrLine))
+              grouping(
+                Space,
+                visitParameter(paramNodes[0]),
+                Text(","),
+                // double indent
+                indent(indent(SpaceOrLine, rest, Space, Text("->"))),
+              )
+            }
+          }
+
+        val groupId = newId()
+        val res =
+          withSeparator(members) { prev, next ->
+            when (prev.span().linesBetween(next.span())) {
+              0 -> IfWrap(groupId, Line, Text("; "))
+              1 -> ForceLine
+              else -> twoNewlines
+            }
+          }
+        val separator = if (body.span().linesBetween() > 0) ForceLine else SpaceOrLine
+        group(groupId, Text("{"), pars, indent(separator, res), separator, Text("}"))
+      }
+    }
+  }
+
+  override fun visitReplInput(replInput: ReplInput): FormatNode {
+    throw RuntimeException("Formatter should not be called on a repl input")
+  }
+
+  override fun visitKeyword(keyword: Keyword): FormatNode {
+    return withPrefixesAndSuffixes(keyword) { Text(keyword.text(source)) }
+  }
+
+  override fun visitTypeArgumentList(typeArgumentList: TypeArgumentList): FormatNode {
+    return withPrefixesAndSuffixes(typeArgumentList) {
+      val types = typeArgumentList.types
+      if (types.isEmpty()) {
+        Text("<>")
+      } else {
+        nodes(Text("<"), indent(Line, commaSeparated(types), Line), Text(">"))
+      }
+    }
+  }
+
+  private fun formatPreamble(doc: DocComment?, annotations: List<Annotation>): FormatNode {
     val res = mutableListOf<FormatNode>()
-    res += formatGeneric(prefixes, SpaceOrLine)
-    res += getSeparator(prefixes.last(), nodes.first())
-    res += groupFn(nodes)
+    var shouldNewline = false
+    if (doc != null) {
+      res += visitDocComment(doc)
+    }
+    for (ann in annotations) {
+      if (shouldNewline) res += ForceLine
+      res += visitAnnotation(ann)
+      res += ForceLine
+      shouldNewline = true
+    }
+    return nodes(res)
+  }
+
+  private fun formatPrefixes(node: Node): List<FormatNode> {
+    val affixes = node.affixes()?.filter { it.affixType == AffixType.PREFIX }
+    if (affixes == null || affixes.isEmpty()) return emptyList()
+    val res = mutableListOf<FormatNode>()
+    for (affix in affixes) {
+      if (affix.type == CommentType.LINE) {
+        res += Text(affix.text)
+        res += ForceLine
+      } else {
+        res += Text(affix.text)
+        res += if (node.span().trails(affix.span())) Space else ForceLine
+      }
+    }
     return res
   }
 
-  private fun getImportUrl(node: GenNode): String =
-    node.findChildByType(NodeType.STRING_CONSTANT)!!.text().drop(1).dropLast(1)
-
-  private fun getSeparator(
-    prev: GenNode,
-    next: GenNode,
-    separator: FormatNode = SpaceOrLine,
-  ): FormatNode {
-    return getSeparator(prev, next) { x, y -> separator }!!
+  private fun formatSuffixes(node: Node): List<FormatNode> {
+    val affixes = node.affixes()?.filter { it.affixType == AffixType.SUFFIX }
+    if (affixes == null || affixes.isEmpty()) return emptyList()
+    val res = mutableListOf<FormatNode>()
+    for ((i, affix) in affixes.withIndex()) {
+      if (i == 0) {
+        res += if (affix.span().trails(node.span())) Space else ForceLine
+      }
+      if (affix.type == CommentType.LINE) {
+        res += Text(affix.text)
+        res += CommentLine
+      } else {
+        res += Text(affix.text)
+        if (!affix.span().trails(node.span())) CommentLine
+      }
+    }
+    return res
   }
 
-  private fun getSeparator(
-    prev: GenNode,
-    next: GenNode,
-    separatorFn: (GenNode, GenNode) -> FormatNode?,
-  ): FormatNode? {
-    return when {
-      prevNode?.type == NodeType.LINE_COMMENT -> {
-        if (prev.linesBetween(next) > 1) {
-          TWO_NEWLINES
-        } else {
-          ForceLine
-        }
-      }
-      hasTrailingAffix(prev, next) -> Space
-      prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
-      prev.type in FORCE_LINE_AFFIXES || next.type.isAffix -> {
-        if (prev.linesBetween(next) > 1) {
-          TWO_NEWLINES
-        } else {
-          ForceLine
-        }
-      }
-      prev.type == NodeType.BLOCK_COMMENT -> if (prev.linesBetween(next) > 0) ForceLine else Space
-      next.type in EMPTY_SUFFIXES ||
-        prev.isTerminal("[", "!", "@", "[[") ||
-        next.isTerminal("]", "?", ",") -> null
-      prev.isTerminal("class", "function", "new") ||
-        next.isTerminal("=", "{", "->", "class", "function") ||
-        next.type == NodeType.OBJECT_BODY ||
-        next.type == NodeType.OBJECT_PARAMETER_LIST ||
-        prev.type == NodeType.MODIFIER_LIST -> Space
-      next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
-      else -> separatorFn(prev, next)
+  private inline fun withPrefixesAndSuffixes(node: Node, fn: () -> FormatNode): FormatNode {
+    return if (node.affixes()?.isEmpty() ?: true) {
+      fn()
+    } else {
+      val prefixes = formatPrefixes(node)
+      val suffixes = formatSuffixes(node)
+      Nodes(prefixes + fn() + suffixes)
     }
   }
 
-  private fun hasTrailingAffix(node: GenNode, next: GenNode): Boolean {
-    if (node.span.lineEnd < next.span.lineBegin) return false
-    var n: GenNode? = next
-    while (n != null) {
-      if (n.type.isAffix && node.span.lineEnd == n.span.lineBegin) return true
-      n = n.children.getOrNull(0)
-    }
-    return false
-  }
-
-  private fun modifierPrecedence(modifier: GenNode): Int {
-    val text = modifier.text()
+  private fun modifierPrecedence(modifier: Modifier): Int {
+    val text = modifier.text(source)
     return when (text) {
       "abstract",
       "open" -> 0
@@ -1002,116 +1101,152 @@ class Builder(sourceText: String) {
     }
   }
 
-  private fun isSameLineExpr(node: GenNode): Boolean {
-    return node.type in SAME_LINE_EXPRS
+  private fun commaSeparated(nodes: List<Node>): FormatNode {
+    return withSeparator(nodes) { _, _ -> nodes(Text(","), SpaceOrLine) }
   }
 
-  private fun splitPrefixes(nodes: List<GenNode>): Pair<List<GenNode>, List<GenNode>> {
-    val splitPoint = nodes.indexOfFirst { !it.type.isAffix && it.type != NodeType.DOC_COMMENT }
-    return nodes.subList(0, splitPoint) to nodes.subList(splitPoint, nodes.size)
+  private fun withSeparator(nodes: List<Node>, separator: FormatNode): FormatNode {
+    return withSeparator(nodes) { _, _ -> separator }
   }
 
-  private fun indentAfterFirstNewline(
-    nodes: List<FormatNode>,
-    group: Boolean = false,
-  ): List<FormatNode> {
-    val index = nodes.indexOfFirst { it is SpaceOrLine || it is ForceLine || it is Line }
-    if (index <= 0) return nodes
-    val indented =
-      if (group) {
-        group(Indent(nodes.subList(index, nodes.size)))
-      } else {
-        Indent(nodes.subList(index, nodes.size))
-      }
-
-    return nodes.subList(0, index) + listOf(indented)
-  }
-
-  private fun groupOnSpace(fnodes: List<FormatNode>): FormatNode {
+  private inline fun withSeparator(
+    nodes: List<Node>,
+    separator: (Node, Node) -> FormatNode,
+  ): FormatNode {
     val res = mutableListOf<FormatNode>()
-    for ((i, node) in fnodes.withIndex()) {
-      if (i > 0 && (node is SpaceOrLine || node is Space)) {
-        res += groupOnSpace(fnodes.subList(i, fnodes.size))
-        break
-      } else {
-        res += node
+    var prev: Node? = null
+    for (node in nodes) {
+      if (prev != null) {
+        res += separator(prev, node)
       }
+      res += node.visit()
+      prev = node
     }
-    return Group(newId(), res)
+    return Nodes(res)
   }
 
-  private fun flattenBinaryOperatorExprs(node: GenNode): List<GenNode> {
-    val op = node.children.first { it.type == NodeType.OPERATOR }.text()
-    return flattenBinaryOperatorExprs(node, op)
-  }
-
-  private fun flattenBinaryOperatorExprs(node: GenNode, op: String): List<GenNode> {
-    val actualOp = node.children.first { it.type == NodeType.OPERATOR }.text()
-    if (op != actualOp) return listOf(node)
-    val res = mutableListOf<GenNode>()
-    for (child in node.children) {
-      if (child.type == NodeType.BINARY_OP_EXPR) {
-        res += flattenBinaryOperatorExprs(child, op)
-      } else {
-        res += child
-      }
+  private fun processSameLineExpr(expr: Expr): FormatNode {
+    return if (isSameLineExpr(expr)) {
+      nodes(Space, expr.visit())
+    } else {
+      indent(SpaceOrLine, expr.visit())
     }
-    return res
   }
 
-  private fun GenNode.linesBetween(next: GenNode): Int = next.span.lineBegin - span.lineEnd
-
-  private fun GenNode.text() = text(source)
-
-  private fun GenNode.isTerminal(vararg texts: String): Boolean =
-    type == NodeType.TERMINAL && text(source) in texts
-
-  private fun GenNode.isOperator(vararg texts: String): Boolean =
-    type == NodeType.OPERATOR && text(source) in texts
-
-  private fun newId(): Int {
-    return id++
+  private fun getImportUrl(imp: ImportClause): String {
+    val text = imp.importStr.text(source)
+    return text.substring(1, text.length - 1)
   }
 
-  private fun group(vararg nodes: FormatNode) = Group(newId(), nodes.toList())
+  private fun newId() = id++
 
-  private fun indent(vararg nodes: FormatNode) = Indent(nodes.toList())
-
-  private class ImportComparator(private val source: CharArray) : Comparator<GenNode> {
-    override fun compare(o1: GenNode, o2: GenNode): Int {
-      val import1 = o1.findChildByType(NodeType.STRING_CONSTANT)?.text(source)
-      val import2 = o2.findChildByType(NodeType.STRING_CONSTANT)?.text(source)
-      if (import1 == null || import2 == null) {
-        // should never happen
-        throw RuntimeException("ImportComparator: not an import")
-      }
+  private class ImportComparator(private val source: CharArray) : Comparator<ImportClause> {
+    override fun compare(o1: ImportClause, o2: ImportClause): Int {
+      val import1 = o1.importStr.text(source)
+      val import2 = o2.importStr.text(source)
 
       return NaturalOrderComparator(ignoreCase = true).compare(import1, import2)
     }
   }
 
+  private fun hasFunctionLiteral(node: Node, depth: Int): Boolean {
+    if (node is Expr.FunctionLiteralExpr) return true
+    val children = node.children() ?: emptyList()
+    for (child in children) {
+      if (child == null) continue
+      if (child is Expr.FunctionLiteralExpr) return true
+      if (depth > 0 && hasFunctionLiteral(child, depth - 1)) return true
+    }
+    return false
+  }
+
+  private fun Node.visit(): FormatNode = accept(this@Builder)
+
+  fun <T> List<T>.interleave(separator: T): List<T> = buildList {
+    this@interleave.forEachIndexed { index, item ->
+      if (index > 0) add(separator)
+      add(item)
+    }
+  }
+
+  private fun grouping(vararg nodes: FormatNode) = Group(newId(), nodes.toList())
+
+  private fun isSameLineExpr(expr: Expr): Boolean =
+    expr is Expr.NewExpr || expr is Expr.AmendsExpr || expr is Expr.FunctionLiteralExpr
+
+  private fun Span.trails(other: Span): Boolean {
+    val otherEnd = other.charIndex + other.length - 1
+    val thisStart = this.charIndex
+
+    if (thisStart < otherEnd) return false
+
+    for (newlinePos in newlines) {
+      return when {
+        newlinePos < otherEnd -> continue // Before other ends, keep looking
+        newlinePos >= thisStart -> true // Past this start, no newlines between
+        else -> false // Found a newline between otherEnd and thisStart
+      }
+    }
+    return true
+  }
+
+  private fun Span.linesBetween(other: Span): Int {
+    val start = minOf(this.charIndex + this.length - 1, other.charIndex + other.length - 1)
+    val end = maxOf(this.charIndex, other.charIndex)
+
+    // If spans overlap or are adjacent, there are no lines between them
+    if (start >= end) return 0
+
+    var total = 0
+    for (pos in newlines) {
+      if (pos > end) break
+      if (pos >= start) total++
+    }
+    return total
+  }
+
+  private fun Span.linesBetween(): Int {
+    val start = charIndex
+    val end = charIndex + length - 1
+
+    var total = 0
+    for (pos in newlines) {
+      if (pos > end) break
+      if (pos >= start) total++
+    }
+    return total
+  }
+
+  private fun Span.columnBegin(): Int {
+    if (newlines.isEmpty() || charIndex < newlines[0]) {
+      return charIndex
+    }
+
+    var left = 0
+    var right = newlines.lastIndex
+    var lastNewlineIndex = -1
+
+    while (left <= right) {
+      val mid = left + (right - left) / 2
+      if (newlines[mid] <= charIndex) {
+        lastNewlineIndex = newlines[mid]
+        left = mid + 1
+      } else {
+        right = mid - 1
+      }
+    }
+
+    return charIndex - lastNewlineIndex
+  }
+
   companion object {
     private val ABSOLUTE_URL_REGEX = Regex("""\w+:.*""")
 
-    private val TWO_NEWLINES = Nodes(listOf(ForceLine, ForceLine))
-
-    private val FORCE_LINE_AFFIXES =
-      EnumSet.of(
-        NodeType.DOC_COMMENT_LINE,
-        NodeType.LINE_COMMENT,
-        NodeType.SEMICOLON,
-        NodeType.SHEBANG,
-      )
-
-    private val EMPTY_SUFFIXES =
-      EnumSet.of(
-        NodeType.TYPE_ARGUMENT_LIST,
-        NodeType.TYPE_ANNOTATION,
-        NodeType.TYPE_PARAMETER_LIST,
-        NodeType.PARAMETER_LIST,
-      )
-
-    private val SAME_LINE_EXPRS =
-      EnumSet.of(NodeType.NEW_EXPR, NodeType.AMENDS_EXPR, NodeType.FUNCTION_LITERAL_EXPR)
+    fun String.isStrictBlank(): Boolean {
+      for (ch in this) {
+        if (ch != ' ' && ch != '\t') return false
+      }
+      return true
+    }
   }
 }
