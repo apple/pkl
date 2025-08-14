@@ -31,7 +31,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 import org.pkl.formatter.Formatter
-import org.pkl.parser.GenericParserError
+import org.pkl.parser.ParserError
 
 class FormatterCommand : NoOpCliktCommand(name = "format") {
   override fun help(context: Context) = "Run commands related to formatting"
@@ -47,7 +47,7 @@ abstract class FormatSubcommand(name: String) : CliktCommand(name = name) {
   protected fun format(file: Path, contents: String): Pair<String, Int> {
     try {
       return Formatter().format(contents) to 0
-    } catch (pe: GenericParserError) {
+    } catch (pe: ParserError) {
       println("Could not format `$file`: $pe")
       return "" to 1
     }

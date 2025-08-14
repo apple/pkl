@@ -16,6 +16,17 @@
 package org.pkl.parser.syntax.generic;
 
 public enum AffixType {
-  PREFIX,
-  SUFFIX
+  LINE_COMMENT,
+  BLOCK_COMMENT,
+  COMMA(true);
+
+  public final boolean alwaysSuffix;
+
+  AffixType() {
+    alwaysSuffix = false;
+  }
+
+  AffixType(boolean alwaysSuffix) {
+    this.alwaysSuffix = alwaysSuffix;
+  }
 }

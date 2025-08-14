@@ -15,10 +15,7 @@
  */
 package org.pkl.parser.syntax.generic;
 
-import org.pkl.parser.Span;
-
-public record Comment(CommentType type, AffixType affixType, String text, Span span) {
-  public Comment withAffixType(AffixType atype) {
-    return new Comment(type, atype, text, span);
-  }
+public enum AffixFixity {
+  PREFIX,
+  SUFFIX
 }

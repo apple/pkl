@@ -21,18 +21,18 @@ import org.pkl.parser.syntax.Node;
 
 public class AffixDistributor {
 
-  public static void distributeComments(Node root, List<Comment> comments) {
-    for (var comment : comments) {
-      var targetNode = findNearestNode(root, comment);
-      var affixType = affixType(targetNode, comment);
-      NodeEnhancements.addAffix(targetNode, comment.withAffixType(affixType));
+  public static void distributeAffixes(Node root, List<Affix> affixes) {
+    for (var affix : affixes) {
+      var targetNode = findNearestNode(root, affix);
+      var affixType = fixity(targetNode, affix);
+      NodeEnhancements.addAffix(targetNode, affix.withAffixType(affixType));
     }
   }
 
-  private static Node findNearestNode(Node root, Comment comment) {
+  private static Node findNearestNode(Node root, Affix affix) {
     // If the comment appears to be within this node's span,
     // check children to find which one it's actually adjacent to
-    if (within(root.span(), comment.span())) {
+    if (within(root.span(), affix.span())) {
       Node nearestChild = null;
       var minDistance = Integer.MAX_VALUE;
 
@@ -40,8 +40,8 @@ public class AffixDistributor {
       if (children != null) {
         for (var child : children) {
           if (child == null) continue;
-          var candidateNode = findNearestNode(child, comment);
-          var distance = calculateDistance(candidateNode.span(), comment.span());
+          var candidateNode = findNearestNode(child, affix);
+          var distance = calculateDistance(candidateNode.span(), affix);
           if (distance < minDistance) {
             minDistance = distance;
             nearestChild = candidateNode;
@@ -58,22 +58,24 @@ public class AffixDistributor {
     return root;
   }
 
-  private static boolean within(Span nodeSpan, Span commentSpan) {
+  private static boolean within(Span nodeSpan, Span affixSpan) {
     var nodeStart = nodeSpan.charIndex();
     var nodeEnd = nodeSpan.charIndex() + nodeSpan.length();
-    var commentStart = commentSpan.charIndex();
-    var commentEnd = commentSpan.charIndex() + commentSpan.length();
+    var commentStart = affixSpan.charIndex();
+    var commentEnd = affixSpan.charIndex() + affixSpan.length();
 
     return nodeStart <= commentStart && commentEnd <= nodeEnd;
   }
 
-  private static int calculateDistance(Span nodeSpan, Span commentSpan) {
+  private static int calculateDistance(Span nodeSpan, Affix affix) {
     var nodeStart = nodeSpan.charIndex();
     var nodeEnd = nodeSpan.charIndex() + nodeSpan.length();
-    var commentStart = commentSpan.charIndex();
-    var commentEnd = commentSpan.charIndex() + commentSpan.length();
+    var affixSpan = affix.span();
+    var commentStart = affixSpan.charIndex();
+    var commentEnd = affixSpan.charIndex() + affixSpan.length();
 
     if (commentEnd <= nodeStart) {
+      if (affix.type().alwaysSuffix) return Integer.MAX_VALUE;
       return nodeStart - commentEnd;
     }
     if (commentStart >= nodeEnd) {
@@ -82,11 +84,11 @@ public class AffixDistributor {
     return 0;
   }
 
-  private static AffixType affixType(Node node, Comment comment) {
-    if (comment.span().charIndex() < node.span().charIndex()) {
-      return AffixType.PREFIX;
+  private static AffixFixity fixity(Node node, Affix affix) {
+    if (affix.span().charIndex() < node.span().charIndex()) {
+      return AffixFixity.PREFIX;
     } else {
-      return AffixType.SUFFIX;
+      return AffixFixity.SUFFIX;
     }
   }
 }

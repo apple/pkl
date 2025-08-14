@@ -24,16 +24,16 @@ import org.pkl.parser.util.Nullable;
 public class NodeEnhancements {
   private static final WeakHashMap<Node, Enhancement> enhancements = new WeakHashMap<>();
 
-  public static void addAffix(Node node, Comment affix) {
+  public static void addAffix(Node node, Affix affix) {
     var enh = enhancements.computeIfAbsent(node, (k) -> new Enhancement(new ArrayList<>()));
     enh.affixes.add(affix);
   }
 
-  public static @Nullable List<Comment> affixes(Node node) {
+  public static @Nullable List<Affix> affixes(Node node) {
     var enh = enhancements.get(node);
     if (enh == null) return null;
     return enh.affixes;
   }
 
-  record Enhancement(List<Comment> affixes) {}
+  record Enhancement(List<Affix> affixes) {}
 }

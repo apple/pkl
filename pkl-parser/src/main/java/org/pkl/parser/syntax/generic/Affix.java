@@ -15,7 +15,10 @@
  */
 package org.pkl.parser.syntax.generic;
 
-public enum CommentType {
-  LINE,
-  BLOCK
+import org.pkl.parser.Span;
+
+public record Affix(AffixType type, AffixFixity fixity, Span span) {
+  public Affix withAffixType(AffixFixity fixity) {
+    return new Affix(type, fixity, span);
+  }
 }

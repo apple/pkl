@@ -84,10 +84,10 @@ import org.pkl.parser.syntax.TypeAnnotation;
 import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameter;
 import org.pkl.parser.syntax.TypeParameterList;
+import org.pkl.parser.syntax.generic.Affix;
 import org.pkl.parser.syntax.generic.AffixDistributor;
+import org.pkl.parser.syntax.generic.AffixFixity;
 import org.pkl.parser.syntax.generic.AffixType;
-import org.pkl.parser.syntax.generic.Comment;
-import org.pkl.parser.syntax.generic.CommentType;
 import org.pkl.parser.util.ErrorMessages;
 import org.pkl.parser.util.Nullable;
 
@@ -102,7 +102,7 @@ public class Parser {
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
   private final boolean keepAffixes;
-  private final List<Comment> affixes = new ArrayList<>();
+  private final List<Affix> affixes = new ArrayList<>();
 
   public Parser() {
     keepAffixes = false;
@@ -163,7 +163,7 @@ public class Parser {
       }
       var module = new Module(nodes, start.endWith(spanLookahead));
       if (keepAffixes) {
-        AffixDistributor.distributeComments(module, affixes);
+        AffixDistributor.distributeAffixes(module, affixes);
       }
       return module;
     } catch (ParserError pe) {
@@ -178,7 +178,7 @@ public class Parser {
     var expr = parseExpr();
     expect(Token.EOF, "unexpectedToken", "end of file");
     if (keepAffixes) {
-      AffixDistributor.distributeComments(expr, affixes);
+      AffixDistributor.distributeAffixes(expr, affixes);
     }
     return expr;
   }
@@ -1816,14 +1816,15 @@ public class Parser {
       if (keepAffixes) {
         switch (tk) {
           case LINE_COMMENT ->
-              affixes.add(
-                  new Comment(CommentType.LINE, AffixType.PREFIX, lexer.text(), lexer.span()));
+              affixes.add(new Affix(AffixType.LINE_COMMENT, AffixFixity.PREFIX, lexer.span()));
           case BLOCK_COMMENT ->
-              affixes.add(
-                  new Comment(CommentType.BLOCK, AffixType.PREFIX, lexer.text(), lexer.span()));
+              affixes.add(new Affix(AffixType.BLOCK_COMMENT, AffixFixity.PREFIX, lexer.span()));
         }
       }
       tk = lexer.next();
+    }
+    if (keepAffixes && tk == Token.COMMA) {
+      affixes.add(new Affix(AffixType.COMMA, AffixFixity.PREFIX, lexer.span()));
     }
     return new FullToken(tk, lexer.span(), lexer.newLinesBetween);
   }

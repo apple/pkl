@@ -3,6 +3,6 @@ module dangling
 /// Doc comment.
 ///
 /// for this field
-// sepearted by a stray comment
+// separated by a stray comment
 /// but continues here.
 some: String

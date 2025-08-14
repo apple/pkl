@@ -64,8 +64,8 @@ import org.pkl.parser.syntax.TypeAnnotation
 import org.pkl.parser.syntax.TypeArgumentList
 import org.pkl.parser.syntax.TypeParameter
 import org.pkl.parser.syntax.TypeParameterList
+import org.pkl.parser.syntax.generic.AffixFixity
 import org.pkl.parser.syntax.generic.AffixType
-import org.pkl.parser.syntax.generic.CommentType
 
 @Suppress("DuplicatedCode")
 class Builder(sourceText: String, private val newlines: IntArray) : ParserVisitor<FormatNode> {
@@ -113,7 +113,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     return withPrefixesAndSuffixes(type) {
       nodes(
         type.type.visit(),
-        grouping(Text("("), indent(Line, commaSeparated(type.exprs)), Line, Text(")")),
+        grouping(Text("("), indent(Line, withSeparator(type.exprs, SpaceOrLine)), Line, Text(")")),
       )
     }
   }
@@ -143,7 +143,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
   override fun visitFunctionType(type: Type.FunctionType): FormatNode {
     return withPrefixesAndSuffixes(type) {
       grouping(
-        grouping(Text("("), indent(Line, commaSeparated(type.args)), Line, Text(")")),
+        grouping(Text("("), indent(Line, withSeparator(type.args, SpaceOrLine)), Line, Text(")")),
         Space,
         Text("->"),
         indent(SpaceOrLine, type.ret.visit()),
@@ -857,7 +857,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       if (params.isEmpty()) {
         Text("()")
       } else {
-        val indented = indent(Line, commaSeparated(params), Line)
+        val indented = indent(Line, withSeparator(params, SpaceOrLine), Line)
         if (shouldGroup) {
           grouping(Text("("), indented, Text(")"))
         } else {
@@ -885,7 +885,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       if (params.isEmpty()) {
         Text("<>")
       } else {
-        nodes(Text("<"), indent(Line, commaSeparated(params), Line), Text(">"))
+        nodes(Text("<"), indent(Line, withSeparator(params, SpaceOrLine), Line), Text(">"))
       }
     }
   }
@@ -905,13 +905,13 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       val args = argumentList.arguments
       when {
         args.isEmpty() -> Text("()")
-        !twoByTwo -> nodes(Text("("), indent(Line, commaSeparated(args), Line), Text(")"))
+        !twoByTwo ->
+          nodes(Text("("), indent(Line, withSeparator(args, SpaceOrLine), Line), Text(")"))
         else -> {
           val fargs = mutableListOf<FormatNode>()
           for (i in args.indices) {
             val arg = args[i]
             if (i > 0) {
-              fargs += Text(",")
               fargs += if (i % 2 == 0) SpaceOrLine else Space
             }
             fargs += arg.visit()
@@ -934,8 +934,11 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
 
   override fun visitDocComment(docComment: DocComment): FormatNode {
     return withPrefixesAndSuffixes(docComment) {
-      val txts = docComment.text(source)
-      val lines = txts.trimEnd().lines().map(::processDocComment)
+      val txts = docComment.span().text()
+      val lines =
+        txts.trimEnd().lines().map { line ->
+          if (line.startsWith("///")) processDocComment(line) else Text(line)
+        }
       nodes(*lines.interleave(CommentLine).toTypedArray(), CommentLine)
     }
   }
@@ -982,11 +985,10 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
             0 -> Empty
             1 -> nodes(Space, visitParameter(paramNodes[0]), Space, Text("->"))
             else -> {
-              val rest = withSeparator(paramNodes.drop(1), nodes(Text(","), SpaceOrLine))
+              val rest = withSeparator(paramNodes.drop(1), SpaceOrLine)
               grouping(
                 Space,
                 visitParameter(paramNodes[0]),
-                Text(","),
                 // double indent
                 indent(indent(SpaceOrLine, rest, Space, Text("->"))),
               )
@@ -1022,7 +1024,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       if (types.isEmpty()) {
         Text("<>")
       } else {
-        nodes(Text("<"), indent(Line, commaSeparated(types), Line), Text(">"))
+        nodes(Text("<"), indent(Line, withSeparator(types, SpaceOrLine), Line), Text(">"))
       }
     }
   }
@@ -1043,35 +1045,40 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
   }
 
   private fun formatPrefixes(node: Node): List<FormatNode> {
-    val affixes = node.affixes()?.filter { it.affixType == AffixType.PREFIX }
+    val affixes = node.affixes()?.filter { it.fixity() == AffixFixity.PREFIX }
     if (affixes == null || affixes.isEmpty()) return emptyList()
     val res = mutableListOf<FormatNode>()
     for (affix in affixes) {
-      if (affix.type == CommentType.LINE) {
-        res += Text(affix.text)
-        res += ForceLine
-      } else {
-        res += Text(affix.text)
-        res += if (node.span().trails(affix.span())) Space else ForceLine
-      }
+      res += Text(affix.span.text())
+      res +=
+        when (affix.type) {
+          AffixType.LINE_COMMENT -> ForceLine
+          AffixType.BLOCK_COMMENT -> if (node.span().trails(affix.span())) Space else ForceLine
+          AffixType.COMMA -> throw RuntimeException("cannot have comma as prefix")
+        }
     }
     return res
   }
 
   private fun formatSuffixes(node: Node): List<FormatNode> {
-    val affixes = node.affixes()?.filter { it.affixType == AffixType.SUFFIX }
+    val affixes = node.affixes()?.filter { it.fixity() == AffixFixity.SUFFIX }
     if (affixes == null || affixes.isEmpty()) return emptyList()
     val res = mutableListOf<FormatNode>()
     for ((i, affix) in affixes.withIndex()) {
       if (i == 0) {
-        res += if (affix.span().trails(node.span())) Space else ForceLine
+        res +=
+          if (affix.span().trails(node.span())) {
+            if (affix.type == AffixType.COMMA) Empty else Space
+          } else ForceLine
       }
-      if (affix.type == CommentType.LINE) {
-        res += Text(affix.text)
-        res += CommentLine
-      } else {
-        res += Text(affix.text)
-        if (!affix.span().trails(node.span())) CommentLine
+      res += Text(affix.span.text())
+      when (affix.type) {
+        AffixType.LINE_COMMENT -> res += CommentLine
+        AffixType.BLOCK_COMMENT -> {
+          if (!affix.span().trails(node.span())) res += CommentLine
+          else if (i < affixes.lastIndex) res += Space
+        }
+        AffixType.COMMA -> if (i < affixes.lastIndex) res += Space
       }
     }
     return res
@@ -1099,10 +1106,6 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       "const" -> 3
       else -> throw RuntimeException("Unknown modifier `$text`")
     }
-  }
-
-  private fun commaSeparated(nodes: List<Node>): FormatNode {
-    return withSeparator(nodes) { _, _ -> nodes(Text(","), SpaceOrLine) }
   }
 
   private fun withSeparator(nodes: List<Node>, separator: FormatNode): FormatNode {
@@ -1173,6 +1176,8 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
 
   private fun isSameLineExpr(expr: Expr): Boolean =
     expr is Expr.NewExpr || expr is Expr.AmendsExpr || expr is Expr.FunctionLiteralExpr
+
+  private fun Span.text(): String = String(source, charIndex, length)
 
   private fun Span.trails(other: Span): Boolean {
     val otherEnd = other.charIndex + other.length - 1
