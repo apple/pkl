@@ -17,7 +17,7 @@ package org.pkl.server
 
 import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.BeforeEach
-import org.pkl.commons.test.PklExecutablePaths
+import org.pkl.commons.test.Executables
 import org.pkl.core.messaging.MessageTransports
 
 class NativeServerTest : AbstractServerTest() {
@@ -26,7 +26,7 @@ class NativeServerTest : AbstractServerTest() {
 
   @BeforeEach
   fun beforeEach() {
-    val executable = PklExecutablePaths.firstExisting.toString()
+    val executable = Executables.pkl.firstExistingNative.toString()
     server = ProcessBuilder(executable, "server").start()
     client =
       TestTransport(

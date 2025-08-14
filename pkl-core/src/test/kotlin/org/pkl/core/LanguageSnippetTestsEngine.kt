@@ -27,10 +27,10 @@ import org.junit.platform.engine.EngineDiscoveryRequest
 import org.junit.platform.engine.TestDescriptor
 import org.junit.platform.engine.UniqueId
 import org.junit.platform.engine.support.descriptor.EngineDescriptor
+import org.pkl.commons.test.Executables
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.commons.test.PackageServer
-import org.pkl.commons.test.PklExecutablePaths
 import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
 import org.pkl.core.util.IoUtils
@@ -298,27 +298,27 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
 }
 
 class MacAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = PklExecutablePaths.macAmd64
+  override val pklExecutablePath: Path = Executables.pkl.macAmd64
   override val testClass: KClass<*> = MacLanguageSnippetTests::class
 }
 
 class MacAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = PklExecutablePaths.macAarch64
+  override val pklExecutablePath: Path = Executables.pkl.macAarch64
   override val testClass: KClass<*> = MacLanguageSnippetTests::class
 }
 
 class LinuxAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = PklExecutablePaths.linuxAmd64
+  override val pklExecutablePath: Path = Executables.pkl.linuxAmd64
   override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
 }
 
 class LinuxAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = PklExecutablePaths.linuxAarch64
+  override val pklExecutablePath: Path = Executables.pkl.linuxAarch64
   override val testClass: KClass<*> = LinuxLanguageSnippetTests::class
 }
 
 class AlpineLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = PklExecutablePaths.alpineAmd64
+  override val pklExecutablePath: Path = Executables.pkl.alpineAmd64
   override val testClass: KClass<*> = AlpineLanguageSnippetTests::class
 }
 
@@ -340,7 +340,7 @@ private val windowsNativeExcludedTests
     )
 
 class WindowsLanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = PklExecutablePaths.windowsAmd64
+  override val pklExecutablePath: Path = Executables.pkl.windowsAmd64
   override val testClass: KClass<*> = WindowsLanguageSnippetTests::class
   override val excludedTests: List<Regex>
     get() = super.excludedTests + windowsNativeExcludedTests + windowsExcludedTests

@@ -26,17 +26,17 @@ import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.readString
-import org.pkl.doc.CliDocGeneratorTest.Companion.package1InputModules
-import org.pkl.doc.CliDocGeneratorTest.Companion.package1PackageModule
 
 class SearchTest {
   companion object {
     private val tempFileSystem = lazy { Jimfs.newFileSystem(Configuration.unix()) }
 
+    private val helper = DocGeneratorTestHelper()
+
     private val jsContext = lazy {
       // reuse CliDocGeneratorTest's input files (src/test/files/DocGeneratorTest/input)
-      val packageModule: URI = package1PackageModule
-      val inputModules: List<URI> = package1InputModules
+      val packageModule: URI = helper.package1PackageModule
+      val inputModules: List<URI> = helper.package1InputModules
 
       val pkldocDir = tempFileSystem.value.rootDirectories.first()
 

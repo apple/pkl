@@ -18,11 +18,9 @@ package org.pkl.doc
 import com.google.common.jimfs.Configuration
 import com.google.common.jimfs.Jimfs
 import java.net.URI
-import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
-import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -31,83 +29,20 @@ import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
-import org.pkl.commons.readString
-import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
-import org.pkl.commons.test.listFilesRecursively
-import org.pkl.commons.toPath
 import org.pkl.commons.walk
 import org.pkl.core.Version
-import org.pkl.core.util.IoUtils
 import org.pkl.doc.DocGenerator.Companion.current
 
 class CliDocGeneratorTest {
   companion object {
-    private val tempFileSystem: FileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
+    private val tempFileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
 
-    private val tmpOutputDir by lazy {
+    private val tmpOutputDir: Path by lazy {
       tempFileSystem.getPath("/work/output").apply { createDirectories() }
     }
 
-    private val projectDir = FileTestUtils.rootProjectDir.resolve("pkl-doc")
-
-    private val inputDir: Path by lazy {
-      projectDir.resolve("src/test/files/DocGeneratorTest/input").apply { assert(exists()) }
-    }
-
-    private val docsiteModule: URI by lazy {
-      inputDir.resolve("docsite-info.pkl").apply { assert(exists()) }.toUri()
-    }
-
-    internal val package1PackageModule: URI by lazy {
-      inputDir.resolve("com.package1/doc-package-info.pkl").apply { assert(exists()) }.toUri()
-    }
-
-    private val package2PackageModule: URI by lazy {
-      inputDir.resolve("com.package2/doc-package-info.pkl").apply { assert(exists()) }.toUri()
-    }
-
-    internal val package1InputModules: List<URI> by lazy {
-      inputDir
-        .resolve("com.package1")
-        .listFilesRecursively()
-        .filter { it.fileName.toString() != "doc-package-info.pkl" }
-        .map { it.toUri() }
-    }
-
-    private val package2InputModules: List<URI> by lazy {
-      inputDir
-        .resolve("com.package2")
-        .listFilesRecursively()
-        .filter { it.fileName.toString() != "doc-package-info.pkl" }
-        .map { it.toUri() }
-    }
-
-    private val expectedOutputDir: Path by lazy {
-      projectDir.resolve("src/test/files/DocGeneratorTest/output").createDirectories()
-    }
-
-    private val expectedOutputFiles: List<Path> by lazy { expectedOutputDir.listFilesRecursively() }
-
-    private val actualOutputDir: Path by lazy { tempFileSystem.getPath("/work/DocGeneratorTest") }
-
-    private val actualOutputFiles: List<Path> by lazy { actualOutputDir.listFilesRecursively() }
-
-    private val expectedRelativeOutputFiles: List<String> by lazy {
-      expectedOutputFiles.map { path ->
-        IoUtils.toNormalizedPathString(expectedOutputDir.relativize(path)).let { str ->
-          // Git will by default clone symlinks as shortcuts on Windows, and shortcuts have a
-          // `.lnk` extension.
-          if (IoUtils.isWindows() && str.endsWith(".lnk")) str.dropLast(4) else str
-        }
-      }
-    }
-
-    private val actualRelativeOutputFiles: List<String> by lazy {
-      actualOutputFiles.map { IoUtils.toNormalizedPathString(actualOutputDir.relativize(it)) }
-    }
-
-    private val binaryFileExtensions = setOf("woff2", "png", "svg")
+    private val helper = DocGeneratorTestHelper()
 
     private fun runDocGenerator(outputDir: Path, cacheDir: Path?, noSymlinks: Boolean = false) {
       CliDocGenerator(
@@ -115,14 +50,14 @@ class CliDocGeneratorTest {
             CliBaseOptions(
               sourceModules =
                 listOf(
-                  docsiteModule,
-                  package1PackageModule,
-                  package2PackageModule,
+                  helper.docsiteModule,
+                  helper.package1PackageModule,
+                  helper.package2PackageModule,
                   URI("package://localhost:0/birds@0.5.0"),
                   URI("package://localhost:0/fruit@1.1.0"),
                   URI("package://localhost:0/unlisted@1.0.0"),
                   URI("package://localhost:0/deprecated@1.0.0"),
-                ) + package1InputModules + package2InputModules,
+                ) + helper.package1InputModules + helper.package2InputModules,
               moduleCacheDir = cacheDir,
             ),
             outputDir = outputDir,
@@ -135,19 +70,7 @@ class CliDocGeneratorTest {
 
     @JvmStatic
     private fun generateDocs(): List<String> {
-      val cacheDir = Files.createTempDirectory("cli-doc-generator-test-cache")
-      PackageServer.populateCacheDir(cacheDir)
-      runDocGenerator(actualOutputDir, cacheDir)
-
-      val missingFiles = expectedRelativeOutputFiles - actualRelativeOutputFiles.toSet()
-      if (missingFiles.isNotEmpty()) {
-        Assertions.fail<Unit>(
-          "The following expected files were not actually generated:\n" +
-            missingFiles.joinToString("\n")
-        )
-      }
-
-      return actualRelativeOutputFiles
+      return helper.generateDocs()
     }
   }
 
@@ -158,6 +81,7 @@ class CliDocGeneratorTest {
         createParentDirectories()
         createFile()
       }
+
     val descriptor2 =
       tempFileSystem.getPath("/work/dir2/docsite-info.pkl").apply {
         createParentDirectories()
@@ -220,49 +144,20 @@ class CliDocGeneratorTest {
   @ParameterizedTest
   @MethodSource("generateDocs")
   fun test(relativeFilePath: String) {
-    val actualFile = actualOutputDir.resolve(relativeFilePath)
-    assertThat(actualFile)
-      .withFailMessage("Test bug: $actualFile should exist but does not.")
-      .exists()
-
-    // symlinks on Git and Windows is rather finnicky; they create shortcuts by default unless
-    // a core Git option is set. Also, by default, symlinks require administrator privileges to run.
-    // We'll just test that the symlink got created but skip verifying that it points to the right
-    // place.
-    if (actualFile.isSymbolicLink() && IoUtils.isWindows()) return
-    val expectedFile = expectedOutputDir.resolve(relativeFilePath)
-    if (expectedFile.exists()) {
-      when {
-        expectedFile.isSymbolicLink() -> {
-          assertThat(actualFile).isSymbolicLink
-          assertThat(expectedFile.readSymbolicLink().toString().toPath())
-            .isEqualTo(actualFile.readSymbolicLink().toString().toPath())
-        }
-        expectedFile.extension in binaryFileExtensions ->
-          assertThat(actualFile.readBytes()).isEqualTo(expectedFile.readBytes())
-        else -> assertThat(actualFile.readString()).isEqualTo(expectedFile.readString())
-      }
-    } else {
-      expectedFile.createParentDirectories()
-      if (actualFile.isSymbolicLink()) {
-        // needs special handling because `copyTo` can't copy symlinks between file systems
-        val linkTarget = actualFile.readSymbolicLink()
-        assertThat(linkTarget).isRelative
-        Files.createSymbolicLink(expectedFile, linkTarget.toString().toPath())
-      } else {
-        actualFile.copyTo(expectedFile)
-      }
-      Assertions.fail("Created missing expected file `$relativeFilePath`.")
-    }
+    DocTestUtils.testExpectedFile(
+      helper.expectedOutputDir,
+      helper.actualOutputDir,
+      relativeFilePath,
+    )
   }
 
   @Test
   fun `creates a symlink called current by default`(@TempDir tempDir: Path) {
     PackageServer.populateCacheDir(tempDir)
-    runDocGenerator(actualOutputDir, tempDir)
+    runDocGenerator(helper.actualOutputDir, tempDir)
 
-    val expectedSymlink = actualOutputDir.resolve("com.package1/current")
-    val expectedDestination = actualOutputDir.resolve("com.package1/1.2.3")
+    val expectedSymlink = helper.actualOutputDir.resolve("com.package1/current")
+    val expectedDestination = helper.actualOutputDir.resolve("com.package1/1.2.3")
 
     assertThat(expectedSymlink).isSymbolicLink().matches {
       Files.isSameFile(it, expectedDestination)
@@ -274,10 +169,10 @@ class CliDocGeneratorTest {
     @TempDir tempDir: Path
   ) {
     PackageServer.populateCacheDir(tempDir)
-    runDocGenerator(actualOutputDir, tempDir, noSymlinks = true)
+    runDocGenerator(helper.actualOutputDir, tempDir, noSymlinks = true)
 
-    val currentDirectory = actualOutputDir.resolve("com.package1/current")
-    val sourceDirectory = actualOutputDir.resolve("com.package1/1.2.3")
+    val currentDirectory = helper.actualOutputDir.resolve("com.package1/current")
+    val sourceDirectory = helper.actualOutputDir.resolve("com.package1/1.2.3")
 
     assertThat(currentDirectory).isDirectory()
     assertThat(currentDirectory.isSymbolicLink()).isFalse()
