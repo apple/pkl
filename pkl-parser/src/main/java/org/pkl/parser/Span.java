@@ -27,6 +27,22 @@ public record Span(int charIndex, int length) {
     return charIndex + length == other.charIndex;
   }
 
+  /** Returns true if this span comes before `other`. */
+  public boolean before(Span other) {
+    return charIndex < other.charIndex;
+  }
+
+  public boolean after(Span other) {
+    return other.charIndex + other.length < charIndex;
+  }
+
+  /** Returns true if this span in inside `other`. */
+  public boolean inside(Span other) {
+    var thisEnd = charIndex + length;
+    var otherEnd = other.charIndex + other.length;
+    return charIndex > other.charIndex && thisEnd < otherEnd;
+  }
+
   public int stopIndex() {
     return charIndex + length - 1;
   }

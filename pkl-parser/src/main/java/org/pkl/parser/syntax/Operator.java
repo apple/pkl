@@ -35,8 +35,10 @@ public enum Operator {
   INT_DIV(9, true),
   MOD(9, true),
   POW(10, false),
-  DOT(11, true),
-  QDOT(11, true);
+  NON_NULL(16, true),
+  SUBSCRIPT(18, true),
+  DOT(20, true),
+  QDOT(20, true);
 
   private final int prec;
   private final boolean isLeftAssoc;
@@ -52,5 +54,34 @@ public enum Operator {
 
   public boolean isLeftAssoc() {
     return isLeftAssoc;
+  }
+
+  @Override
+  public String toString() {
+    return switch (this) {
+      case NULL_COALESCE -> "??";
+      case PIPE -> "|>";
+      case OR -> "||";
+      case AND -> "&&";
+      case EQ_EQ -> "==";
+      case NOT_EQ -> "!=";
+      case IS -> "is";
+      case AS -> "as";
+      case LT -> "<";
+      case GT -> ">";
+      case LTE -> "<=";
+      case GTE -> ">=";
+      case PLUS -> "+";
+      case MINUS -> "-";
+      case MULT -> "*";
+      case DIV -> "/";
+      case INT_DIV -> "~/";
+      case MOD -> "%";
+      case POW -> "**";
+      case NON_NULL -> "!!";
+      case SUBSCRIPT -> "[";
+      case DOT -> ".";
+      case QDOT -> "?.";
+    };
   }
 }

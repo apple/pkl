@@ -18,6 +18,7 @@ package org.pkl.parser.syntax;
 import java.util.List;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
+import org.pkl.parser.syntax.generic.Affix;
 import org.pkl.parser.util.Nullable;
 
 public interface Node {
@@ -30,6 +31,9 @@ public interface Node {
 
   @Nullable
   List<? extends @Nullable Node> children();
+
+  @Nullable
+  List<Affix> affixes();
 
   <T> T accept(ParserVisitor<? extends T> visitor);
 

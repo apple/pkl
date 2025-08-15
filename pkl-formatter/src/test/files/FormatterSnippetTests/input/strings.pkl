@@ -1,0 +1,13 @@
+
+// string constant
+import
+  "foo\n\t\u{345}.pkl"
+
+// single line string
+foo =
+  read("foo\n\t\u{456}\(56).txt")
+
+// hashes
+bar = ##"\n\##(foo)\t"##
+
+baz = "paaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaading \(new Listing { 1; 2; 3; 4; 5; 6; })"

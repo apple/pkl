@@ -1,0 +1,3 @@
+hidden const foo = 1
+
+open local class Foo {}

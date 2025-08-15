@@ -18,7 +18,6 @@ package org.pkl.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.parser.syntax.Annotation;
@@ -85,6 +84,10 @@ import org.pkl.parser.syntax.TypeAnnotation;
 import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameter;
 import org.pkl.parser.syntax.TypeParameterList;
+import org.pkl.parser.syntax.generic.Affix;
+import org.pkl.parser.syntax.generic.AffixDistributor;
+import org.pkl.parser.syntax.generic.AffixFixity;
+import org.pkl.parser.syntax.generic.AffixType;
 import org.pkl.parser.util.ErrorMessages;
 import org.pkl.parser.util.Nullable;
 
@@ -98,14 +101,26 @@ public class Parser {
   private FullToken prev;
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
+  private final boolean keepAffixes;
+  private final List<Affix> affixes = new ArrayList<>();
 
-  public Parser() {}
+  public Parser() {
+    keepAffixes = false;
+  }
+
+  public Parser(boolean keepAffixes) {
+    this.keepAffixes = keepAffixes;
+  }
 
   private void init(String source) {
     this.lexer = new Lexer(source);
     _lookahead = forceNext();
     lookahead = _lookahead.token;
     spanLookahead = _lookahead.span;
+  }
+
+  public int[] newlines() {
+    return lexer.newlines.stream().mapToInt(Integer::intValue).toArray();
   }
 
   public Module parseModule(String source) {
@@ -146,7 +161,11 @@ public class Parser {
         header = parseMemberHeader();
         end = parseModuleMember(header, nodes);
       }
-      return new Module(nodes, start.endWith(spanLookahead));
+      var module = new Module(nodes, start.endWith(spanLookahead));
+      if (keepAffixes) {
+        AffixDistributor.distributeAffixes(module, affixes);
+      }
+      return module;
     } catch (ParserError pe) {
       var spanEnd = end != null ? end : start;
       pe.setPartialParseResult(new Module(nodes, start.endWith(spanEnd)));
@@ -158,6 +177,9 @@ public class Parser {
     init(source);
     var expr = parseExpr();
     expect(Token.EOF, "unexpectedToken", "end of file");
+    if (keepAffixes) {
+      AffixDistributor.distributeAffixes(expr, affixes);
+    }
     return expr;
   }
 
@@ -1214,8 +1236,8 @@ public class Parser {
         if (!builder.isEmpty()) {
           parts.add(new StringChars(builder.toString(), start.endWith(end)));
           builder = new StringBuilder();
-          start = null;
         }
+        start = null;
         parts.add(node.node);
       } else {
         var token = node.token;
@@ -1789,15 +1811,23 @@ public class Parser {
   private FullToken forceNext() {
     var tk = lexer.next();
     precededBySemicolon = false;
-    while (AFFIXES.contains(tk)) {
+    while (tk.isAffix()) {
       precededBySemicolon = precededBySemicolon || tk == Token.SEMICOLON;
+      if (keepAffixes) {
+        switch (tk) {
+          case LINE_COMMENT ->
+              affixes.add(new Affix(AffixType.LINE_COMMENT, AffixFixity.PREFIX, lexer.span()));
+          case BLOCK_COMMENT ->
+              affixes.add(new Affix(AffixType.BLOCK_COMMENT, AffixFixity.PREFIX, lexer.span()));
+        }
+      }
       tk = lexer.next();
+    }
+    if (keepAffixes && tk == Token.COMMA) {
+      affixes.add(new Affix(AffixType.COMMA, AffixFixity.PREFIX, lexer.span()));
     }
     return new FullToken(tk, lexer.span(), lexer.newLinesBetween);
   }
-
-  private static final EnumSet<Token> AFFIXES =
-      EnumSet.of(Token.LINE_COMMENT, Token.BLOCK_COMMENT, Token.SEMICOLON);
 
   // Like next, but don't ignore comments
   private FullToken nextComment() {

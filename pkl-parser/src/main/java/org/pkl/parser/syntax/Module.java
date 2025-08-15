@@ -96,4 +96,16 @@ public final class Module extends AbstractNode {
     }
     return res;
   }
+
+  /** Get the module members in the sequence they were defined. */
+  public List<Node> getModuleMembers() {
+    var res = new ArrayList<Node>();
+    assert children != null;
+    for (int i = 1; i < children.size(); i++) {
+      var child = children.get(i);
+      if (child instanceof ImportClause) continue;
+      res.add(child);
+    }
+    return res;
+  }
 }
