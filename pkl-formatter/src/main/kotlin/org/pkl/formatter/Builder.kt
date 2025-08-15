@@ -30,6 +30,7 @@ import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
 import org.pkl.formatter.ast.group
 import org.pkl.formatter.ast.indent
+import org.pkl.formatter.ast.noWrap
 import org.pkl.formatter.ast.nodes
 import org.pkl.formatter.ast.twoNewlines
 import org.pkl.parser.ParserVisitor
@@ -235,13 +236,26 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     expr: Expr.SingleLineStringLiteralExpr
   ): FormatNode {
     return withPrefixesAndSuffixes(expr) {
-      nodes(Text("\""), Nodes(expr.parts.map { it.visit() }), Text("\""))
+      val startDelimiter = expr.startDelimiterSpan.text()
+      val hashes = startDelimiter.takeWhile { it == '#' }
+      nodes(
+        Text(startDelimiter),
+        Nodes(expr.parts.map { noWrap(visitStringPart(it, hashes)) }),
+        Text(expr.endDelimiterSpan.text()),
+      )
     }
   }
 
   override fun visitMultiLineStringLiteralExpr(expr: Expr.MultiLineStringLiteralExpr): FormatNode {
     return withPrefixesAndSuffixes(expr) {
-      MultilineStringGroup(expr.endDelimiterSpan.columnBegin(), expr.parts.map(::visitStringPart))
+      val startDelimiter = expr.startDelimiterSpan.text()
+      val hashes = startDelimiter.takeWhile { it == '#' }
+      MultilineStringGroup(
+        expr.endDelimiterSpan.columnBegin() - 1,
+        startDelimiter,
+        expr.endDelimiterSpan.text(),
+        expr.parts.map { visitStringPart(it, hashes) },
+      )
     }
   }
 
@@ -453,21 +467,20 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
   override fun visitObjectMethod(method: ObjectMember.ObjectMethod): FormatNode {
     return withPrefixesAndSuffixes(method) {
       val res = mutableListOf<FormatNode>()
+      val header = mutableListOf<FormatNode>()
       if (method.modifiers.isNotEmpty()) {
-        res += visitModifierList(method.modifiers)
+        header += visitModifierList(method.modifiers)
       }
-      res += Text("function ")
-      res += visitIdentifier(method.identifier)
+      header += Text("function ")
+      header += visitIdentifier(method.identifier)
       if (method.typeParameterList != null) {
-        res += visitTypeParameterList(method.typeParameterList!!)
+        header += visitTypeParameterList(method.typeParameterList!!)
       }
-      res += visitParameterList(method.paramList)
+      header += visitParameterList(method.paramList)
       if (method.typeAnnotation != null) {
-        res += visitTypeAnnotation(method.typeAnnotation!!)
+        header += visitTypeAnnotation(method.typeAnnotation!!)
       }
-      if (method.typeAnnotation != null) {
-        res += visitTypeAnnotation(method.typeAnnotation!!)
-      }
+      res += Group(newId(), header)
       val expr = method.expr
       res += Space
       res += Text("=")
@@ -497,7 +510,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
   }
 
   override fun visitObjectElement(member: ObjectMember.ObjectElement): FormatNode {
-    return withPrefixesAndSuffixes(member) { member.expr.visit() }
+    return withPrefixesAndSuffixes(member) { grouping(member.expr.visit()) }
   }
 
   override fun visitObjectEntry(member: ObjectMember.ObjectEntry): FormatNode {
@@ -521,7 +534,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
 
   override fun visitObjectSpread(member: ObjectMember.ObjectSpread): FormatNode {
     return withPrefixesAndSuffixes(member) {
-      nodes(Text(if (member.isNullable) "...?" else "..."), member.expr.visit())
+      grouping(Text(if (member.isNullable) "...?" else "..."), member.expr.visit())
     }
   }
 
@@ -548,7 +561,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
         indent(
           Line,
           visitParameter(member.p1),
-          if (member.p2 == null) Empty else nodes(Text(", "), visitParameter(member.p2!!)),
+          if (member.p2 == null) Empty else visitParameter(member.p2!!),
           Text(" in"),
           processSameLineExpr(member.expr),
         )
@@ -588,11 +601,9 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     return withPrefixesAndSuffixes(decl) {
       val res = mutableListOf<FormatNode>()
       val preamble = formatPreamble(decl.docComment, decl.annotations)
-      var shouldNewline = preamble !is Empty
+      var shouldNewline = false
       if (decl.modifiers.isNotEmpty()) {
-        if (shouldNewline) res += ForceLine
         res += visitModifierList(decl.modifiers)
-        shouldNewline = true
       }
       if (decl.moduleKeyword != null) {
         res +=
@@ -681,9 +692,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       val res = mutableListOf<FormatNode>()
       val preamble = formatPreamble(clazz.docComment, clazz.annotations)
       res += preamble
-      val shouldNewline = preamble !is Empty
       if (clazz.modifiers.isNotEmpty()) {
-        if (shouldNewline) res += ForceLine
         res += visitModifierList(clazz.modifiers)
       }
       res += visitKeyword(clazz.classKeyword)
@@ -717,9 +726,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     return withPrefixesAndSuffixes(prop) {
       val res = mutableListOf<FormatNode>()
       val preamble = formatPreamble(prop.docComment, prop.annotations)
-      val shouldNewline = preamble !is Empty
       if (prop.modifiers.isNotEmpty()) {
-        if (shouldNewline) res += ForceLine
         res += visitModifierList(prop.modifiers)
       }
       res += visitIdentifier(prop.name)
@@ -748,20 +755,20 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     return withPrefixesAndSuffixes(method) {
       val res = mutableListOf<FormatNode>()
       val preamble = formatPreamble(method.docComment, method.annotations)
-      val shouldNewline = preamble !is Empty
+      val header = mutableListOf<FormatNode>()
       if (method.modifiers.isNotEmpty()) {
-        if (shouldNewline) res += ForceLine
-        res += visitModifierList(method.modifiers)
+        header += visitModifierList(method.modifiers)
       }
-      res += Text("function ")
-      res += visitIdentifier(method.name)
+      header += Text("function ")
+      header += visitIdentifier(method.name)
       if (method.typeParameterList != null) {
-        res += visitTypeParameterList(method.typeParameterList!!)
+        header += visitTypeParameterList(method.typeParameterList!!)
       }
-      res += visitParameterList(method.parameterList)
+      header += visitParameterList(method.parameterList)
       if (method.typeAnnotation != null) {
-        res += visitTypeAnnotation(method.typeAnnotation!!)
+        header += visitTypeAnnotation(method.typeAnnotation!!)
       }
+      res += Group(newId(), header)
       val expr = method.expr
       if (expr != null) {
         res += Space
@@ -800,9 +807,7 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     return withPrefixesAndSuffixes(typeAlias) {
       val res = mutableListOf<FormatNode>()
       val preamble = formatPreamble(typeAlias.docComment, typeAlias.annotations)
-      val shouldNewline = preamble !is Empty
       if (typeAlias.modifiers.isNotEmpty()) {
-        if (shouldNewline) res += ForceLine
         res += visitModifierList(typeAlias.modifiers)
       }
       res += visitKeyword(typeAlias.typealiasKeyword)
@@ -825,8 +830,9 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
       nodes(
         Text("@"),
         annotation.type.visit(),
-        Space,
-        if (annotation.body != null) visitObjectBody(annotation.body!!) else Empty,
+        if (annotation.body != null) {
+          nodes(Space, visitObjectBody(annotation.body!!))
+        } else Empty,
       )
     }
   }
@@ -923,11 +929,15 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
   }
 
   override fun visitStringPart(part: StringPart): FormatNode {
+    return visitStringPart(part, "")
+  }
+
+  private fun visitStringPart(part: StringPart, hashes: String): FormatNode {
     // string parts cannot have affixes
     return when (part) {
       is StringPart.StringChars -> Text(part.text(source))
       is StringPart.StringInterpolation -> {
-        nodes(Text("\\("), part.expr.visit(), Text(")"))
+        nodes(Text("\\$hashes("), part.expr.visit(), Text(")"))
       }
     }
   }
@@ -936,7 +946,8 @@ class Builder(sourceText: String, private val newlines: IntArray) : ParserVisito
     return withPrefixesAndSuffixes(docComment) {
       val txts = docComment.span().text()
       val lines =
-        txts.trimEnd().lines().map { line ->
+        txts.lines().map { l ->
+          val line = l.trimStart()
           if (line.startsWith("///")) processDocComment(line) else Text(line)
         }
       nodes(*lines.interleave(CommentLine).toTypedArray(), CommentLine)

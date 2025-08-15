@@ -19,7 +19,8 @@ import org.pkl.formatter.Generator
 
 enum class Wrap {
   ENABLED,
-  DETECT;
+  DETECT,
+  DISABLED;
 
   fun isEnabled(): Boolean = this == ENABLED
 }
@@ -30,7 +31,7 @@ sealed interface FormatNode {
       is Nodes -> nodes.sumOf { it.width(wrapped) }
       is Group -> nodes.sumOf { it.width(wrapped) }
       is Indent -> nodes.sumOf { it.width(wrapped) }
-      is ForceWrap -> nodes.sumOf { it.width(wrapped + id) }
+      is NoWrap -> nodes.sumOf { it.width(wrapped) }
       is IfWrap -> if (id in wrapped) ifWrap.width(wrapped) else ifNotWrap.width(wrapped)
       is Text -> text.length
       is SpaceOrLine,
@@ -62,9 +63,14 @@ data class Nodes(val nodes: List<FormatNode>) : FormatNode
 
 data class Group(val id: Int, val nodes: List<FormatNode>) : FormatNode
 
-data class ForceWrap(val id: Int, val nodes: List<FormatNode>) : FormatNode
+data class NoWrap(val nodes: List<FormatNode>) : FormatNode
 
-data class MultilineStringGroup(val endQuoteCol: Int, val nodes: List<FormatNode>) : FormatNode
+data class MultilineStringGroup(
+  val indentSize: Int,
+  val start: String,
+  val end: String,
+  val nodes: List<FormatNode>,
+) : FormatNode
 
 data class IfWrap(val id: Int, val ifWrap: FormatNode, val ifNotWrap: FormatNode) : FormatNode
 
@@ -99,3 +105,5 @@ fun group(id: Int, nodes: List<FormatNode>): FormatNode =
   }
 
 fun indent(vararg node: FormatNode) = Indent(node.toList())
+
+fun noWrap(vararg nodes: FormatNode) = NoWrap(nodes.toList())

@@ -18,13 +18,13 @@ package org.pkl.formatter
 import org.pkl.formatter.ast.CommentLine
 import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
-import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
 import org.pkl.formatter.ast.Indent
 import org.pkl.formatter.ast.Line
 import org.pkl.formatter.ast.MultilineStringGroup
+import org.pkl.formatter.ast.NoWrap
 import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
@@ -50,21 +50,16 @@ class Generator {
       is Group -> {
         val width = node.nodes.sumOf { it.width(wrapped) }
         val wrap =
-          if (size + width > MAX) {
+          if (wrap == Wrap.DISABLED) Wrap.DISABLED
+          else if (size + width > MAX) {
             wrapped += node.id
             Wrap.ENABLED
-          } else {
-            Wrap.DETECT
-          }
+          } else Wrap.DETECT
         node.nodes.forEach { node(it, wrap) }
       }
-      is ForceWrap -> {
-        wrapped += node.id
-        val wrap = Wrap.ENABLED
-        node.nodes.forEach { node(it, wrap) }
-      }
+      is NoWrap -> node.nodes.forEach { node(it, Wrap.DISABLED) }
       is IfWrap -> {
-        if (wrapped.contains(node.id)) {
+        if (wrapped.contains(node.id) && wrap != Wrap.DISABLED) {
           node(node.ifWrap, Wrap.ENABLED)
         } else {
           node(node.ifNotWrap, wrap)
@@ -108,15 +103,11 @@ class Generator {
       }
       is MultilineStringGroup -> {
         val indentLength = indent * INDENT.length
-        val offset = (indentLength + 1) - node.endQuoteCol
-        val nodes = processMultilineText(node.nodes, indentLength, offset)
-        text("\"\"\"")
-        newline(shouldIndent = false)
-        for (child in nodes) {
-          node(child, Wrap.DETECT)
-        }
+        val offset = indentLength - node.indentSize
+        text(node.start)
+        processMultilineString(node, offset)
         newline()
-        text("\"\"\"")
+        text(node.end)
       }
     }
   }
@@ -137,38 +128,31 @@ class Generator {
     shouldAddIndent = shouldIndent
   }
 
-  private fun processMultilineText(
-    nodes: List<FormatNode>,
-    indentLength: Int,
-    offset: Int,
-  ): List<FormatNode> {
-    val res = mutableListOf<FormatNode>()
-    var prev: FormatNode? = null
-    for (node in nodes) {
-      res +=
-        if (node is Text) {
-          Text(processIndent(node.text, offset, indentLength, prev is Nodes))
-        } else node
-      prev = node
-    }
-    return res
-  }
+  private fun processMultilineString(multilineString: MultilineStringGroup, offset: Int) {
+    val newIndentSize = multilineString.indentSize + offset
+    val indentString = " ".repeat(newIndentSize)
+    val originalIndent = " ".repeat(multilineString.indentSize)
+    val toRemove = "\n$indentString\n"
 
-  fun processIndent(original: String, offset: Int, indentLength: Int, ignoreStart: Boolean): String {
-    val toRemove = "\n${" ".repeat(indentLength)}\n"
-    return original
-      .split('\n')
-      .mapIndexed { index, line ->
-        if (ignoreStart && index == 0 || offset == 0) line
-        else {
-          val leadingSpaces = line.takeWhile { it == ' ' }.length
-          val newIndentation = maxOf(0, leadingSpaces + offset)
-          " ".repeat(newIndentation) + line.drop(leadingSpaces)
+    for ((index, node) in multilineString.nodes.withIndex()) {
+      when (node) {
+        is Text -> {
+          val nodeText = if (index == 0) "\n${node.text}" else node.text
+          val txt =
+            if (offset == 0) {
+              nodeText
+            } else {
+              nodeText.replace("\n$originalIndent", "\n$indentString")
+            }
+          // remove useless indentation
+          text(txt.replace(toRemove, "\n\n"))
+        }
+        else -> {
+          if (index == 0) text("\n$indentString")
+          node(node, Wrap.DETECT)
         }
       }
-      .joinToString("\n")
-      // remove useless indentation
-      .replace(toRemove, "\n\n")
+    }
   }
 
   override fun toString(): String {

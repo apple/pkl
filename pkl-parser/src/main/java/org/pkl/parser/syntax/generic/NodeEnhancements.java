@@ -35,5 +35,9 @@ public class NodeEnhancements {
     return enh.affixes;
   }
 
+  public static void clear() {
+    enhancements.clear();
+  }
+
   record Enhancement(List<Affix> affixes) {}
 }

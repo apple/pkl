@@ -22,6 +22,7 @@ import org.pkl.parser.syntax.Node;
 public class AffixDistributor {
 
   public static void distributeAffixes(Node root, List<Affix> affixes) {
+    NodeEnhancements.clear();
     for (var affix : affixes) {
       var targetNode = findNearestNode(root, affix);
       var affixType = fixity(targetNode, affix);
@@ -71,15 +72,16 @@ public class AffixDistributor {
     var nodeStart = nodeSpan.charIndex();
     var nodeEnd = nodeSpan.charIndex() + nodeSpan.length();
     var affixSpan = affix.span();
-    var commentStart = affixSpan.charIndex();
-    var commentEnd = affixSpan.charIndex() + affixSpan.length();
+    var affixStart = affixSpan.charIndex();
+    var affixEnd = affixSpan.charIndex() + affixSpan.length();
 
-    if (commentEnd <= nodeStart) {
+    if (affixEnd <= nodeStart) {
       if (affix.type().alwaysSuffix) return Integer.MAX_VALUE;
-      return nodeStart - commentEnd;
+      return nodeStart - affixEnd;
     }
-    if (commentStart >= nodeEnd) {
-      return commentStart - nodeEnd;
+    if (affixStart >= nodeEnd) {
+      //if (affix.isComment()) {}
+      return affixStart - nodeEnd;
     }
     return 0;
   }

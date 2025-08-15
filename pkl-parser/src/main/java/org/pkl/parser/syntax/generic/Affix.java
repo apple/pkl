@@ -21,4 +21,8 @@ public record Affix(AffixType type, AffixFixity fixity, Span span) {
   public Affix withAffixType(AffixFixity fixity) {
     return new Affix(type, fixity, span);
   }
+
+  public boolean isComment() {
+    return type == AffixType.LINE_COMMENT || type == AffixType.BLOCK_COMMENT;
+  }
 }

@@ -1236,8 +1236,8 @@ public class Parser {
         if (!builder.isEmpty()) {
           parts.add(new StringChars(builder.toString(), start.endWith(end)));
           builder = new StringBuilder();
-          start = null;
         }
+        start = null;
         parts.add(node.node);
       } else {
         var token = node.token;

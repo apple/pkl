@@ -22,15 +22,15 @@ baz =
 
 // remove unneeded spaces
 qux =
-  """
+  ##"""
   foo
 
   bar
 
   baz
     
-  \(foo)
-  """
+  \##(foo)
+  """##
 
 // proper wrap detection
 str =

@@ -18,15 +18,15 @@ line
 """
 
 // remove unneeded spaces
-qux = """
+qux = ##"""
   foo
   
   bar
   
   baz
     
-  \(foo)
-  """
+  \##(foo)
+  """##
 
 // proper wrap detection
 str = """
