@@ -15,13 +15,15 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import kotlinx.html.*
 
 internal abstract class MainOrPackagePageGenerator<S>(
   docsiteInfo: DocsiteInfo,
   pageScope: S,
   private val siteScope: SiteScope,
-) : PageGenerator<S>(docsiteInfo, pageScope) where S : PageScope {
+  consoleOut: OutputStream,
+) : PageGenerator<S>(docsiteInfo, pageScope, consoleOut) where S : PageScope {
   protected fun UL.renderModuleOrPackage(
     name: String,
     moduleOrPackageScope: DocScope,

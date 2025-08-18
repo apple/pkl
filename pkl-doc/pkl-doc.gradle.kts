@@ -46,6 +46,7 @@ dependencies {
     // aren't)
     exclude(group = "org.jetbrains.kotlin")
   }
+  implementation(libs.kotlinxCoroutinesCore) { exclude(group = "org.jetbrains.kotlin") }
 
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.jimfs)

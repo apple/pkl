@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "name": "birds",
+  "packageUri": "package://localhost:0/birds@0.6.0",
+  "packageZipUrl": "https://localhost:0/birds@0.6.0/birds@0.6.0.zip",
+  "dependencies": {
+    "fruities": {
+      "uri": "package://localhost:0/fruit@1.1.0",
+      "checksums": {
+        "sha256": "8d982761d182f2185e4180c82190791d9a60c721cb3393bb2e946fab90131e8c"
+      }
+    }
+  },
+  "version": "0.6.0",
+  "packageZipChecksums": {
+    "sha256": "$computedChecksum"
+  },
+  "sourceCodeUrlScheme": "https://example.com/birds/v0.6.0/blob%{path}#L%{line}-L%{endLine}",
+  "sourceCode": "https://example.com/birds",
+  "documentation": "https://example.com/bird-docs",
+  "license": "UNLICENSED",
+  "authors": [
+    "petey-bird@example.com",
+    "polly-bird@example.com"
+  ],
+  "issueTracker": "https://example.com/birds/issues"
+}
