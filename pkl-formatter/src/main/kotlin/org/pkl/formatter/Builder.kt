@@ -342,29 +342,33 @@ class Builder(sourceText: String) {
 
   private fun formatClassMethod(node: GenNode): FormatNode {
     val prefixes = mutableListOf<FormatNode>()
-    val nodes = if (node.children[0].type == NodeType.CLASS_METHOD_HEADER) node.children else {
-      val idx = node.children.indexOfFirst { it.type == NodeType.CLASS_METHOD_HEADER }
-      val prefixNodes = node.children.subList(0, idx)
-      prefixes += formatGeneric(prefixNodes, null)
-      prefixes += getSeparator(prefixNodes.last(), node.children[idx], ForceLine)
-      node.children.subList(idx, node.children.size)
-    }
+    val nodes =
+      if (node.children[0].type == NodeType.CLASS_METHOD_HEADER) node.children
+      else {
+        val idx = node.children.indexOfFirst { it.type == NodeType.CLASS_METHOD_HEADER }
+        val prefixNodes = node.children.subList(0, idx)
+        prefixes += formatGeneric(prefixNodes, null)
+        prefixes += getSeparator(prefixNodes.last(), node.children[idx], ForceLine)
+        node.children.subList(idx, node.children.size)
+      }
     val expr = node.children.last().children[0]
     val noWrapNodes = formatGeneric(nodes, Space)
     val shouldIndent = !isSameLineExpr(expr)
     val wrapNodes =
       formatGenericWithGen(
-        nodes,
-        { prev, next -> if (shouldIndent) SpaceOrLine else Space },
-      ) { node, next ->
-        if (node.type == NodeType.PARAMETER_LIST) {
-          formatParameterList(node, force = true)
-        } else if (next == null && shouldIndent) {
-          indent(format(node))
-        } else {
-          format(node)
-        }
-      }
+          nodes,
+          { prev, next -> if (shouldIndent) SpaceOrLine else Space },
+          { node, next ->
+            if (node.type == NodeType.PARAMETER_LIST) {
+              formatParameterList(node, force = true)
+            } else if (next == null && shouldIndent) {
+              indent(format(node))
+            } else {
+              format(node)
+            }
+          },
+        )
+        .groupAfter { it is Text && it.text == "=" }
     val groupId = newId()
     val group = Group(groupId, listOf(IfWrap(groupId, Nodes(wrapNodes), Nodes(noWrapNodes))))
     return if (prefixes.isEmpty()) group else Nodes(prefixes + group)
@@ -1056,6 +1060,18 @@ class Builder(sourceText: String) {
         res += child
       }
     }
+    return res
+  }
+
+  private fun List<FormatNode>.groupAfter(pred: (FormatNode) -> Boolean): List<FormatNode> {
+    val res = mutableListOf<FormatNode>()
+    val grouped = mutableListOf<FormatNode>()
+    var group = false
+    for (node in this) {
+      if (pred(node)) group = true
+      if (group) grouped += node else res += node
+    }
+    if (grouped.isNotEmpty()) res += Group(newId(), grouped)
     return res
   }
 

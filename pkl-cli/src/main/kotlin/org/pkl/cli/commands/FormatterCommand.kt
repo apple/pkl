@@ -20,14 +20,17 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
-import com.github.ajalt.clikt.parameters.arguments.multiple
-import com.github.ajalt.clikt.parameters.arguments.validate
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.path
 import java.io.IOException
+import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.readText
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.extension
+import kotlin.io.path.isDirectory
+import kotlin.io.path.name
+import kotlin.io.path.walk
 import kotlin.io.path.writeText
 import kotlin.system.exitProcess
 import org.pkl.formatter.Formatter
@@ -60,22 +63,22 @@ class CheckCommand : FormatSubcommand(name = "check") {
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
-  val paths: List<Path> by
-    argument(name = "paths", help = "File paths to check.")
-      .path(mustExist = true, canBeDir = false)
-      .multiple()
-      .validate { files ->
-        if (files.isEmpty()) {
-          fail("No files provided.")
-        }
-      }
+  val path: Path by
+    argument(name = "path", help = "File or directory to check.")
+      .path(mustExist = true, canBeDir = true)
 
+  @OptIn(ExperimentalPathApi::class)
   override fun run() {
     var status = 0
+    val paths =
+      if (path.isDirectory()) {
+        path.walk().filter { it.extension == "pkl" || it.name == "PklProject" }
+      } else sequenceOf(path)
+
     for (path in paths) {
-      val contents = path.readText()
+      val contents = Files.readString(path)
       val (formatted, stat) = format(path, contents)
-      status = stat
+      status = maxOf(stat, status)
       if (contents != formatted) {
         println(path.toAbsolutePath().toString())
         status = 1
@@ -91,15 +94,9 @@ class ApplyCommand : FormatSubcommand(name = "apply") {
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
-  val paths: List<Path> by
-    argument(name = "paths", help = "File paths to format.")
-      .path(mustExist = true, canBeDir = false)
-      .multiple()
-      .validate { files ->
-        if (files.isEmpty()) {
-          fail("No files provided.")
-        }
-      }
+  val path: Path by
+    argument(name = "path", help = "File or directory to format.")
+      .path(mustExist = true, canBeDir = true)
 
   val silent: Boolean by
     option(
@@ -108,12 +105,18 @@ class ApplyCommand : FormatSubcommand(name = "apply") {
       )
       .flag()
 
+  @OptIn(ExperimentalPathApi::class)
   override fun run() {
     var status = 0
+    val paths =
+      if (path.isDirectory()) {
+        path.walk().filter { it.extension == "pkl" || it.name == "PklProject" }
+      } else sequenceOf(path)
+
     for (path in paths) {
-      val contents = path.readText()
+      val contents = Files.readString(path)
       val (formatted, stat) = format(path, contents)
-      status = stat
+      status = maxOf(stat, status)
       if (stat != 0) continue
       if (!silent && contents != formatted) {
         println(path.toAbsolutePath().toString())
