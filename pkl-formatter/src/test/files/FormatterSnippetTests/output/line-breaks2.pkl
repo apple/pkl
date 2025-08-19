@@ -27,11 +27,11 @@ local const function loooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 typealias Foo =
   LooooooooooooooooooooooooongTypeName
-    |AnotherLooooooooooooooooooooooooongTypeName
-    |OtherLooooooooooooooooooooooooongTypeName
+    | AnotherLooooooooooooooooooooooooongTypeName
+    | OtherLooooooooooooooooooooooooongTypeName
 
 bar: Boolean
-  |Mapping<
+  | Mapping<
     LooooooooooooooooooooooooooooongTypeName,
     AnotherLooooooooooooooooooooooooooooongTypeName
   >(loooooooooooooooooooogConstraint)

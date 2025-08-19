@@ -21,9 +21,9 @@ local function function2(
 ): String = ""
 
 local const function function3(
-  parameter1: String|Int,
-  parameter2: String|Int
-): Mapping<String|Int, String> = new {}
+  parameter1: String | Int,
+  parameter2: String | Int
+): Mapping<String | Int, String> = new {}
 
 prop =
   function2(
@@ -33,7 +33,7 @@ prop =
     loooooooooooooooooogParameter4
   )
 
-prop2: String|Int|Boolean
+prop2: String | Int | Boolean
 
 open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter>
   extends AnotherInterestingClassName {

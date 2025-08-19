@@ -774,7 +774,13 @@ class Builder(sourceText: String) {
 
   private fun formatUnionType(node: GenNode): FormatNode {
     val nodes =
-      formatGeneric(node.children) { prev, next -> if (next.isTerminal("|")) Line else null }
+      formatGeneric(node.children) { prev, next ->
+        when {
+          next.isTerminal("|") -> SpaceOrLine
+          prev.isTerminal("|") -> Space
+          else -> null
+        }
+      }
     return Group(newId(), indentAfterFirstNewline(nodes))
   }
 

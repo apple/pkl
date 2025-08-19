@@ -1,6 +1,6 @@
 module comment.interleaved
 
-local test: Int|String =
+local test: Int | String =
   if (true)
     1 // It's the same as "100%"
   else
@@ -11,7 +11,7 @@ foo: ( // some comment
     // if dtstart is defined and a datetime, until must also be a datetime if defined
     true
   )
-    |Int
+    | Int
   // trailing comment
 )?
 
