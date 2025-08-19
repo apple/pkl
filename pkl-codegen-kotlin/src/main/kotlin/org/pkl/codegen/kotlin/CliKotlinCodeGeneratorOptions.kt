@@ -38,6 +38,9 @@ data class CliKotlinCodeGeneratorOptions(
   /** Whether generated classes should implement [java.io.Serializable]. */
   val implementSerializable: Boolean = false,
 
+  /** Whether to add the `@Generated` annotation to types */
+  val addGeneratedAnnotation: Boolean = false,
+
   /**
    * A rename mapping for class names.
    *
@@ -57,6 +60,7 @@ data class CliKotlinCodeGeneratorOptions(
       generateKdoc,
       generateSpringBootConfig,
       implementSerializable,
+      addGeneratedAnnotation,
       renames,
     )
 }

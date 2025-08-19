@@ -118,13 +118,13 @@ examples {
   }
   ["glob import while specifying checksum"] {
     new {
-      ["package://localhost:0/birds@0.5.0::sha256:6f18af649b47986530cd6dc39abe17888db2701bc5381c385fb86a32fda2685e#/catalog/Ostrich.pkl"] {
+      ["package://localhost:0/birds@0.5.0::sha256:b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de#/catalog/Ostrich.pkl"] {
         name = "Ostrich"
         favoriteFruit {
           name = "Orange"
         }
       }
-      ["package://localhost:0/birds@0.5.0::sha256:6f18af649b47986530cd6dc39abe17888db2701bc5381c385fb86a32fda2685e#/catalog/Swallow.pkl"] {
+      ["package://localhost:0/birds@0.5.0::sha256:b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de#/catalog/Swallow.pkl"] {
         name = "Swallow"
         favoriteFruit {
           name = "Apple"

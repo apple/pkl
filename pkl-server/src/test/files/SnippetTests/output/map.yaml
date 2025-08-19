@@ -42,3 +42,27 @@
           - 3
           - 
             bar: 2
+  - 
+    - 16
+    - res5
+    - 
+      - 3
+      - 
+        foo: 
+          - 1
+          - Dynamic
+          - pkl:base
+          - 
+            - 
+              - 16
+              - name
+              - foo
+        bar: 
+          - 1
+          - Dynamic
+          - pkl:base
+          - 
+            - 
+              - 16
+              - name
+              - foobar

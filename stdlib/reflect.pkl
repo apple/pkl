@@ -26,7 +26,7 @@
 /// - Documentation generators (such as *Pkldoc*)
 /// - Code generators (such as *pkl-codegen-java* and *pkl-codegen-kotlin*)
 /// - Domain-specific schema validators
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.30.0" }
 module pkl.reflect
 
 import "pkl:base"
@@ -99,6 +99,10 @@ const listingType: DeclaredType = DeclaredType(Class(Listing))
 
 /// A mirror for the `Mapping<unknown, unknown>` type.
 const mappingType: DeclaredType = DeclaredType(Class(Mapping))
+
+/// A mirror for the `Bytes` type.
+@Since { version = "0.29.0" }
+const bytesType: DeclaredType = DeclaredType(Class(Bytes))
 
 /// A mirror for the `module` type.
 external const moduleType: ModuleType

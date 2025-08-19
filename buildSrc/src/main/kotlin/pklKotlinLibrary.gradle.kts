@@ -42,5 +42,8 @@ tasks.compileKotlin {
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
-  compilerOptions { jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString()) }
+  compilerOptions {
+    jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
+    freeCompilerArgs.addAll("-Xjdk-release=${buildInfo.jvmTarget}")
+  }
 }

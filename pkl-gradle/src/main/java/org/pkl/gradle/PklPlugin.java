@@ -352,6 +352,8 @@ public class PklPlugin implements Plugin<Project> {
 
     spec.getImplementSerializable().convention(false);
 
+    spec.getAddGeneratedAnnotation().convention(false);
+
     configureCodeGenSpecModulePath(spec);
   }
 
@@ -452,6 +454,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getOutputDir().set(spec.getOutputDir());
     task.getGenerateSpringBootConfig().set(spec.getGenerateSpringBootConfig());
     task.getImplementSerializable().set(spec.getImplementSerializable());
+    task.getAddGeneratedAnnotation().set(spec.getAddGeneratedAnnotation());
     task.getRenames().set(spec.getRenames());
   }
 
@@ -470,6 +473,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getTestPort().set(spec.getTestPort());
     task.getHttpProxy().set(spec.getHttpProxy());
     task.getHttpNoProxy().set(spec.getHttpNoProxy());
+    task.getHttpRewrites().set(spec.getHttpRewrites());
   }
 
   private List<File> getTransitiveModules(AnalyzeImportsTask analyzeTask) {

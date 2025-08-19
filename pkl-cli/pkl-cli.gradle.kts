@@ -99,12 +99,7 @@ val testJavaExecutable by
   }
 
 // Setup `testJavaExecutable` tasks for multi-JDK testing.
-val testJavaExecutableOnOtherJdks =
-  if (buildInfo.multiJdkTesting) {
-    buildInfo.multiJdkTestingWith(testJavaExecutable)
-  } else {
-    emptyList()
-  }
+val testJavaExecutableOnOtherJdks = buildInfo.multiJdkTestingWith(testJavaExecutable)
 
 // Prepare a run of the fat JAR, optionally with a specific Java launcher.
 private fun setupJavaExecutableRun(

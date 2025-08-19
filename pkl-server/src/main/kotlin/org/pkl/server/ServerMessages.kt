@@ -56,6 +56,8 @@ data class Http(
   val caCertificates: ByteArray?,
   /** Proxy settings */
   val proxy: Proxy?,
+  /** HTTP rewrites */
+  val rewrites: Map<URI, URI>?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -65,12 +67,13 @@ data class Http(
       if (other.caCertificates == null) return false
       if (!caCertificates.contentEquals(other.caCertificates)) return false
     } else if (other.caCertificates != null) return false
-    return Objects.equals(proxy, other.proxy)
+    return Objects.equals(rewrites, other.rewrites) && Objects.equals(proxy, other.proxy)
   }
 
   override fun hashCode(): Int {
     var result = caCertificates?.contentHashCode() ?: 0
     result = 31 * result + (proxy?.hashCode() ?: 0)
+    result = 31 * result + (rewrites?.hashCode() ?: 0)
     return result
   }
 }

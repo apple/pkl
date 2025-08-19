@@ -120,6 +120,7 @@ class KotlinCodeGeneratorTest {
           any: Any
           nonNull: NonNull
           enum: Direction
+          bytes: Bytes
         }
 
         open class Other {
@@ -193,7 +194,6 @@ class KotlinCodeGeneratorTest {
   @Test
   fun testToString() {
     val (_, propertyTypes) = instantiateOtherAndPropertyTypes()
-
     assertThat(propertyTypes.toString())
       .isEqualTo(
         """PropertyTypes(boolean=true, int=42, float=42.3, string=string, duration=5.min, """ +
@@ -204,7 +204,8 @@ class KotlinCodeGeneratorTest {
           """set2=[Other(name=pigeon)], map={1=one, 2=two}, map2={one=Other(name=pigeon), """ +
           """two=Other(name=pigeon)}, container={1=one, 2=two}, container2={one=Other(name=pigeon), """ +
           """two=Other(name=pigeon)}, other=Other(name=pigeon), regex=(i?)\w*, any=Other(name=pigeon), """ +
-          """nonNull=Other(name=pigeon), enum=north)"""
+          """nonNull=Other(name=pigeon), enum=north, """ +
+          """bytes=[1, 2, 3, 4])"""
       )
   }
 
@@ -412,6 +413,7 @@ class KotlinCodeGeneratorTest {
     assertThat(readProperty(propertyTypes, "regex")).isInstanceOf(Regex::class.java)
     assertThat(readProperty(propertyTypes, "any")).isEqualTo(other)
     assertThat(readProperty(propertyTypes, "nonNull")).isEqualTo(other)
+    assertThat(readProperty(propertyTypes, "bytes")).isEqualTo(byteArrayOf(1, 2, 3, 4))
   }
 
   private fun readProperty(receiver: Any, name: String): Any? {
@@ -569,6 +571,25 @@ class KotlinCodeGeneratorTest {
     assertThat(kotlinCode)
       .contains("if (this.name.pattern != other.name.pattern) return false")
       .contains("result = 31 * result + Objects.hashCode(this.name.pattern)")
+  }
+
+  @Test
+  fun `data class with ByteArray property has custom equals and hashCode methods`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+      module my.mod
+
+      class Foo {
+        bytes: Bytes
+      }
+    """
+          .trimIndent()
+      )
+
+    assertThat(kotlinCode)
+      .contains("if (!this.bytes.contentEquals(other.bytes)) return false")
+      .contains("result = 31 * result + this.bytes.contentHashCode()")
   }
 
   @Test
@@ -2008,6 +2029,30 @@ class KotlinCodeGeneratorTest {
     )
   }
 
+  @Test
+  fun `add generated annotation`() {
+    val files =
+      KotlinCodeGeneratorOptions(addGeneratedAnnotation = true)
+        .generateFiles("com.example.MyModule" to "foo: String")
+    assertThat(files).containsKey("kotlin/com/example/MyModule.kt")
+    assertThat(files["kotlin/com/example/MyModule.kt"])
+      .isEqualTo(
+        """
+      package com.example
+
+      import kotlin.String
+      import org.pkl.config.java.Generated
+
+      @Generated
+      data class MyModule(
+        val foo: String
+      )
+
+    """
+          .trimIndent()
+      )
+  }
+
   private fun Map<String, String>.validateContents(
     vararg assertions: kotlin.Pair<String, List<String>>
   ) {
@@ -2078,6 +2123,7 @@ class KotlinCodeGeneratorTest {
         other,
         other,
         enumValue,
+        byteArrayOf(1, 2, 3, 4),
       )
 
     return other to propertyTypes

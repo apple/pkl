@@ -116,9 +116,6 @@ tasks.shadowJar {
   JavaVersionRange.startingAt(JavaLanguageVersion.of(minimumJvmTarget.majorVersion.toInt() + 1))
     .forEach { exclude("META-INF/versions/${it.asInt()}/**") }
 
-  // org.antlr.v4.runtime.misc.RuleDependencyProcessor
-  exclude("META-INF/services/javax.annotation.processing.Processor")
-
   exclude("module-info.*")
 
   for ((from, to) in relocations) {

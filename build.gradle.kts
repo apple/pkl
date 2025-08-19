@@ -19,7 +19,6 @@
 import org.jetbrains.gradle.ext.ActionDelegationConfig
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner.PLATFORM
 import org.jetbrains.gradle.ext.ProjectSettings
-import org.jetbrains.gradle.ext.TaskTriggersConfig
 
 plugins {
   pklAllProjects
@@ -33,8 +32,8 @@ plugins {
 nexusPublishing {
   repositories {
     sonatype {
-      nexusUrl.set(uri("https://s01.oss.sonatype.org/service/local/"))
-      snapshotRepositoryUrl.set(uri("https://s01.oss.sonatype.org/content/repositories/snapshots/"))
+      nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
+      snapshotRepositoryUrl.set(uri("https://central.sonatype.com/repository/maven-snapshots/"))
     }
   }
 }
@@ -47,9 +46,6 @@ idea {
       configure<ActionDelegationConfig> {
         delegateBuildRunToGradle = true
         testRunner = PLATFORM
-      }
-      configure<TaskTriggersConfig> {
-        afterSync(provider { project(":pkl-parser").tasks.named("makeIntelliJAntlrPluginHappy") })
       }
     }
   }

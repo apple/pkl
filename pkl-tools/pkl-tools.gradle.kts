@@ -120,6 +120,7 @@ for (jdkTarget in buildInfo.jdkTestRange) {
   } else {
     val task =
       tasks.register("testStartFatJarJdk${jdkTarget.asInt()}", Exec::class) {
+        enabled = buildInfo.isVersionEnabled(jdkTarget)
         val launcher = project.javaToolchains.launcherFor { languageVersion = jdkTarget }
         configureTestStartFatJar(launcher)
       }

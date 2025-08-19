@@ -119,6 +119,44 @@ class CliMainTest {
     assertThat(ex.message).contains("URI `file:my file.txt` has invalid syntax")
   }
 
+  @Test
+  fun `invalid rewrites -- non-HTTP URI`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(arrayOf("eval", "--http-rewrite", "foo=bar", "mymodule.pkl"))
+      }
+    assertThat(ex.message)
+      .contains("Rewrite rule must start with 'http://' or 'https://', but was 'foo'")
+  }
+
+  @Test
+  fun `invalid rewrites -- invalid URI`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(arrayOf("eval", "--http-rewrite", "https://foo bar=baz", "mymodule.pkl"))
+      }
+    assertThat(ex.message).contains("Rewrite target `https://foo bar` has invalid syntax")
+  }
+
+  @Test
+  fun `invalid rewrites -- doesn't end with slash`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(
+          arrayOf("eval", "--http-rewrite", "http://foo.com=https://bar.com", "mymodule.pkl")
+        )
+      }
+    assertThat(ex.message).contains("Rewrite rule must end with '/', but was 'http://foo.com'")
+  }
+
+  @Test
+  fun `missing --http-no-proxy flag is null`(@TempDir tempDir: Path) {
+    val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
+    val command = EvalCommand()
+    command.parse(arrayOf(inputFile))
+    assertThat(command.baseOptions.noProxy).isNull()
+  }
+
   private fun makeInput(tempDir: Path, fileName: String = "test.pkl"): String {
     val code = "x = 1"
     return tempDir.resolve(fileName).writeString(code).toString()

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -291,7 +291,8 @@ public final class Conversions {
           Conversion.of(PClassInfo.Class, Object.class, Converter.identity()),
           Conversion.of(PClassInfo.Regex, Pattern.class, Converter.identity()),
           Conversion.of(PClassInfo.Regex, Object.class, Converter.identity()),
-          Conversion.of(PClassInfo.Null, PNull.class, Converter.identity())
+          Conversion.of(PClassInfo.Null, PNull.class, Converter.identity()),
+          Conversion.of(PClassInfo.Bytes, byte[].class, Converter.identity())
           // PClassInfo.Null -> Object.class is covered by PNullToAny (returns null rather than
           // PNull.getInstance())
           );

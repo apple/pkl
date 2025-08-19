@@ -2154,6 +2154,9 @@ Optionally, the SHA-256 checksum of the package can also be specified:
 Packages can be managed as dependencies within a _project_.
 For more details, consult the <<projects,project>> section of the language reference.
 
+Packages can also be downloaded from a mirror.
+For more details, consult the <<mirroring_packages>> section of the language reference.
+
 ==== Standard Library URI
 
 Example: `+pkl:math+`
@@ -3204,7 +3207,8 @@ This section discusses language features that are generally more relevant to tem
 <<reserved-keywords,Reserved Keywords>> +
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>> +
-<<external-readers,External Readers>>
+<<external-readers,External Readers>> +
+<<mirroring_packages,Mirroring packages>>
 
 [[meaning-of-new]]
 === Meaning of `new`
@@ -3683,6 +3687,41 @@ res5 = map.getOrNull("Falcon") // <5>
 <3> result: `false`
 <4> result: `2`
 <5> result: `null`
+
+[[bytes]]
+=== Bytes
+
+A value of type `Bytes` is a sequence of `UInt8` elements.
+
+`Bytes` can be constructed by passing byte values into the constructor.
+
+[source,pkl]
+----
+bytes1 = Bytes(0xff, 0x00, 0x3f) // <1>
+bytes2 = Bytes() // <2>
+----
+<1> Result: a `Bytes` with 3 elements
+<2> Result: an empty `Bytes`
+
+`Bytes` can also be constructed from a base64-encoded string, via `base64DecodedBytes`:
+
+[source,pkl]
+----
+bytes3 = "cGFycm90".base64DecodedBytes // <1>
+----
+<1> Result: `Bytes(112, 97, 114, 114, 111, 116)`
+
+==== `Bytes` vs `List<UInt8>`
+
+`Bytes` is similar to `List<UInt8>` in that they are both sequences of `UInt8` elements.
+However, they are semantically distinct.
+`Bytes` represent binary data, and is typically rendered differently.
+For example, they are rendered as `<data>` tags when using `PListRenderer`.
+
+`Bytes` also have different performance characteristics; a value of type `Bytes` tends to be managed as a contiguous memory block.
+Thus, they are more compact and consume less memory.
+However, they are not optimized for transformations.
+For example, given two values of size `M` and `N`, concatenating two `Bytes` values allocates O(M + N) space, whereas concatenating two `List` values allocates O(1) space.
 
 [[regular-expressions]]
 === Regular Expressions
@@ -4671,6 +4710,10 @@ The following types are iterable:
 |entry key (`Key`)
 |entry value (`Value`)
 
+|`Bytes`
+|element index (`Int`)
+|element value (`UInt8`)
+
 |`Listing<Element>`
 |element index (`Int`)
 |element value (`Element`)
@@ -4750,6 +4793,9 @@ The following table describes how different iterables turn into object members:
 | Element
 
 | `IntSeq`
+| Element
+
+| `Bytes`
 | Element
 |===
 
@@ -5713,3 +5759,25 @@ To support both schemes during evaluation, both would need to be registered expl
 ----
 $ pkl eval <module> --external-resource-reader ldap=pkl-ldap --external-resource-reader ldaps=pkl-ldap
 ----
+
+[[mirroring_packages]]
+=== Mirroring packages
+
+A package is a shareable archive of modules and resources that are published to the internet.
+
+A package's URI tells two things:
+
+1. The name of the package.
+2. Where the package is downloaded from.
+
+For example, given the package name `package://example.com/mypackage@1.0.0`, Pkl will make an HTTPS request to `\https://example.com/mypackage@1.0.0` to fetch package metadata.
+
+In situations where internet access is restricted, a mirror can be set up to allow use of packages that are published to the internet.
+
+To direct Pkl to a mirror, the `--http-rewrite` CLI option (and its equivalent options when using Pkl's other evaluator APIs) must be used.
+For example, `--http-rewrite \https://pkg.pkl-lang.org/=\https://my.internal.mirror/` will tell Pkl to download packages from host `my.internal.mirror`.
+
+NOTE: To effectively mirror packages from pkg.pkl-lang.org, there must be two rewrites; one for `\https://pkg.pkl-lang.org/` (where package metadata is downloaded), and one for `\https://github.com/` (where package zip files are downloaded).
+
+NOTE: Pkl does not provide any tooling to run a mirror server.
+To fully set up mirroring, an HTTP(s) server will need be running, and which mirrors the same assets byte-for-byte.

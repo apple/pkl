@@ -255,6 +255,12 @@ public final class ResourceReaders {
     static final ResourceReader INSTANCE = new FileResource();
 
     @Override
+    public Optional<Object> read(URI uri) throws IOException, URISyntaxException {
+      IoUtils.validateFileUri(uri);
+      return super.read(uri);
+    }
+
+    @Override
     public String getUriScheme() {
       return "file";
     }
@@ -324,7 +330,7 @@ public final class ResourceReaders {
 
   private abstract static class UrlResource implements ResourceReader {
     @Override
-    public Optional<Object> read(URI uri) throws IOException {
+    public Optional<Object> read(URI uri) throws IOException, URISyntaxException {
       if (HttpUtils.isHttpUrl(uri)) {
         var httpClient = VmContext.get(null).getHttpClient();
         var request = HttpRequest.newBuilder(uri).build();

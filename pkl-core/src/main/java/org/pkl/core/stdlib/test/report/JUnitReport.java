@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package org.pkl.core.stdlib.test.report;
 import java.io.IOException;
 import java.io.Writer;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.function.Consumer;
+import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Error;
@@ -38,9 +40,43 @@ import org.pkl.core.util.EconomicMaps;
 
 public final class JUnitReport implements TestReport {
 
+  private final String aggregateSuiteName;
+
+  public JUnitReport(String aggregateSuiteName) {
+    this.aggregateSuiteName = aggregateSuiteName;
+  }
+
+  public JUnitReport() {
+    this("");
+  }
+
   @Override
   public void report(TestResults results, Writer writer) throws IOException {
     writer.append(renderXML("    ", "1.0", buildSuite(results)));
+  }
+
+  @Override
+  public void summarize(List<TestResults> allTestResults, Writer writer) throws IOException {
+    var totalTests = allTestResults.stream().collect(Collectors.summingLong(r -> r.totalTests()));
+    var totalFailures =
+        allTestResults.stream().collect(Collectors.summingLong(r -> r.totalFailures()));
+
+    assert aggregateSuiteName != null;
+
+    var attrs =
+        buildAttributes(
+            "name", aggregateSuiteName,
+            "tests", totalTests,
+            "failures", totalFailures);
+
+    var tests =
+        allTestResults.stream()
+            .map(r -> buildSuite(r))
+            .collect(Collectors.toCollection(ArrayList::new));
+
+    var suite = buildXmlElement("testsuites", attrs, tests.toArray(new VmDynamic[0]));
+
+    writer.append(renderXML("    ", "1.0", suite));
   }
 
   private VmDynamic buildSuite(TestResults results) {

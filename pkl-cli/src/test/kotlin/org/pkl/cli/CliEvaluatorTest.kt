@@ -18,10 +18,11 @@ package org.pkl.cli
 import com.github.tomakehurst.wiremock.client.WireMock.*
 import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
-import java.io.StringReader
-import java.io.StringWriter
+import java.io.ByteArrayInputStream
+import java.io.ByteArrayOutputStream
 import java.net.ServerSocket
 import java.net.URI
+import java.nio.charset.StandardCharsets
 import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
@@ -29,22 +30,20 @@ import java.util.regex.Pattern
 import kotlin.io.path.*
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
-import org.junit.jupiter.api.AfterAll
-import org.junit.jupiter.api.AfterEach
-import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.*
 import org.junit.jupiter.api.condition.DisabledOnOs
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.EnumSource
-import org.pkl.commons.*
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.toPath
+import org.pkl.commons.writeString
 import org.pkl.core.OutputFormat
 import org.pkl.core.SecurityManagers
 import org.pkl.core.util.IoUtils
@@ -157,7 +156,6 @@ person:
       )
 
     assertThat(outputFiles).hasSize(1)
-    @Suppress("HttpUrlsUsage")
     checkOutputFile(
       outputFiles[0],
       "test.plist",
@@ -469,8 +467,8 @@ result = someLib.x
 
   @Test
   fun `take input from stdin`() {
-    val stdin = StringReader(defaultContents)
-    val stdout = StringWriter()
+    val stdin = ByteArrayInputStream(defaultContents.toByteArray(StandardCharsets.UTF_8))
+    val stdout = ByteArrayOutputStream()
     val evaluator =
       CliEvaluator(
         CliEvaluatorOptions(
@@ -481,7 +479,8 @@ result = someLib.x
         stdout,
       )
     evaluator.run()
-    assertThat(stdout.toString().trim()).isEqualTo(defaultContents.replace("20 + 10", "30").trim())
+    assertThat(stdout.toString(StandardCharsets.UTF_8).trim())
+      .isEqualTo(defaultContents.replace("20 + 10", "30").trim())
   }
 
   @Test
@@ -1101,9 +1100,9 @@ result = someLib.x
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
         expression = "foo",
       )
-    val buffer = StringWriter()
-    CliEvaluator(options, consoleWriter = buffer).run()
-    assertThat(buffer.toString())
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
       .isEqualTo(
         """
       new Dynamic { bar = 1 }
@@ -1132,9 +1131,9 @@ result = someLib.x
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
         expression = "person",
       )
-    val buffer = StringWriter()
-    CliEvaluator(options, consoleWriter = buffer).run()
-    assertThat(buffer.toString()).isEqualTo("Person(Frodo)")
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8)).isEqualTo("Person(Frodo)")
   }
 
   @Test
@@ -1154,9 +1153,10 @@ result = someLib.x
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
         expression = "person",
       )
-    val buffer = StringWriter()
-    CliEvaluator(options, consoleWriter = buffer).run()
-    assertThat(buffer.toString()).isEqualTo("new Dynamic { friend { name = \"Bilbo\" } }")
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
+      .isEqualTo("new Dynamic { friend { name = \"Bilbo\" } }")
   }
 
   @Test
@@ -1182,9 +1182,9 @@ result = someLib.x
       CliEvaluatorOptions(
         CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir, noProject = true)
       )
-    val buffer = StringWriter()
-    CliEvaluator(options, consoleWriter = buffer).run()
-    assertThat(buffer.toString()).isEqualTo("res = 1\n")
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8)).isEqualTo("res = 1\n")
   }
 
   @Test
@@ -1215,9 +1215,9 @@ result = someLib.x
     )
     val options =
       CliEvaluatorOptions(CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir))
-    val buffer = StringWriter()
-    CliEvaluator(options, consoleWriter = buffer).run()
-    assertThat(buffer.toString())
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
       .isEqualTo(
         """
       res {
@@ -1228,6 +1228,92 @@ result = someLib.x
     """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `noProxy settings from PklProject file`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      res = read("https://localhost:${packageServer.port}/birds@0.5.0").bytes.sha256
+    """
+          .trimIndent(),
+      )
+    writePklFile(
+      "PklProject",
+      // language=Pkl
+      """
+      amends "pkl:Project"
+      
+      evaluatorSettings {
+        http {
+          proxy {
+          address = "http://example.example"
+          noProxy {
+            "localhost:${packageServer.port}"
+            }
+          }
+        }
+      }
+    """
+        .trimIndent(),
+    )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(moduleUri),
+          workingDir = tempDir,
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+        )
+      )
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
+      .isEqualTo("res = \"b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de\"\n")
+  }
+
+  @Test
+  fun `noProxy settings from settings file`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      res = read("https://localhost:${packageServer.port}/birds@0.5.0").bytes.sha256
+    """
+          .trimIndent(),
+      )
+    val settingsFile =
+      writePklFile(
+        "settings.pkl",
+        // language=Pkl
+        """
+      amends "pkl:settings"
+      
+      http {
+        proxy {
+        address = "http://example.example"
+        noProxy {
+          "localhost:${packageServer.port}"
+          }
+        }
+      }
+    """
+          .trimIndent(),
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(moduleUri),
+          workingDir = tempDir,
+          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          settings = settingsFile,
+        )
+      )
+    val buffer = ByteArrayOutputStream()
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
+      .isEqualTo("res = \"b27206b80f4f227752b6f02143887f3ea41e554542cec38f7b572b987566c4de\"\n")
   }
 
   @Test
@@ -1242,7 +1328,7 @@ result = someLib.x
     """
           .trimIndent(),
       )
-    val buffer = StringWriter()
+    val buffer = ByteArrayOutputStream()
     val options =
       CliEvaluatorOptions(
         CliBaseOptions(
@@ -1254,8 +1340,8 @@ result = someLib.x
           testPort = packageServer.port,
         )
       )
-    CliEvaluator(options, consoleWriter = buffer).run()
-    assertThat(buffer.toString())
+    CliEvaluator(options, outputStream = buffer).run()
+    assertThat(buffer.toString(StandardCharsets.UTF_8))
       .isEqualTo(
         """
       res {
@@ -1590,10 +1676,10 @@ result = someLib.x
   }
 
   private fun evalToConsole(options: CliEvaluatorOptions): String {
-    val reader = StringReader("")
-    val writer = StringWriter()
+    val reader = ByteArrayInputStream(byteArrayOf())
+    val writer = ByteArrayOutputStream()
     CliEvaluator(options, reader, writer).run()
-    return writer.toString()
+    return writer.toString(StandardCharsets.UTF_8)
   }
 
   private fun checkOutputFile(file: Path, name: String, contents: String) {

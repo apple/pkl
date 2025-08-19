@@ -35,7 +35,7 @@ internal sealed class DocScope {
 
   abstract val parent: DocScope?
 
-  private val siteScope: SiteScope? by lazy {
+  val siteScope: SiteScope? by lazy {
     var scope = this
     while (scope !is SiteScope) {
       scope = scope.parent ?: return@lazy null
@@ -122,7 +122,7 @@ internal abstract class PageScope : DocScope() {
 
 // equality is identity
 internal class SiteScope(
-  docPackages: List<DocPackage>,
+  val docPackages: List<DocPackage>,
   private val overviewImports: Map<String, URI>,
   private val importResolver: (URI) -> ModuleSchema,
   outputDir: Path,
@@ -258,6 +258,11 @@ internal class PackageScope(
   }
 
   override val url: URI by lazy { parent.url.resolve("./${name.pathEncoded}/$version/index.html") }
+
+  fun urlForVersionRelativeTo(scope: DocScope, version: String): URI {
+    val myVersion = parent.url.resolve("./${name.pathEncoded}/$version/index.html")
+    return IoUtils.relativize(myVersion, scope.url)
+  }
 
   override val dataUrl: URI by lazy {
     parent.url.resolve("./data/${name.pathEncoded}/$version/index.js")

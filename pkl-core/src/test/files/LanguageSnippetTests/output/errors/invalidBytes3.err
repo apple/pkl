@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Type constraint `isBetween(0, 255)` violated.
+Value: 65535
+
+xxx | typealias UInt8 = Int(isBetween(0, 255))
+                            ^^^^^^^^^^^^^^^^^
+at invalidBytes3#bytes (pkl:base)
+
+x | bytes = Bytes(0, 1, 2, 3, 0xffff)
+                              ^^^^^^
+at invalidBytes3#bytes (file:///$snippetsDir/input/errors/invalidBytes3.pkl)
+
+xxx | text = renderer.renderDocument(value)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | bytes = text.encodeToBytes("UTF-8")
+              ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

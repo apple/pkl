@@ -33,7 +33,8 @@ public final class Module extends AbstractNode {
 
   public @Nullable ModuleDecl getDecl() {
     assert children != null;
-    return (ModuleDecl) children.get(0);
+    // children can be empty when there was a parse error
+    return children.isEmpty() ? null : (ModuleDecl) children.get(0);
   }
 
   public List<ImportClause> getImports() {

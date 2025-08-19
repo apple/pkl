@@ -1,8 +1,11 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.30.0]]
+== 0.30.0 (TBD)
+
 [[release-0.29.0]]
-== 0.29.0 (TBD)
+== 0.29.0 (2025-07-24)
 
 xref:0.29.adoc[Release notes]
 

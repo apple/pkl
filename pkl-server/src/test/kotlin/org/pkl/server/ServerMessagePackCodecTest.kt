@@ -96,6 +96,7 @@ class ServerMessagePackCodecTest {
           Http(
             proxy = Proxy(URI("http://foo.com:1234"), listOf("bar", "baz")),
             caCertificates = byteArrayOf(1, 2, 3, 4),
+            rewrites = mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),

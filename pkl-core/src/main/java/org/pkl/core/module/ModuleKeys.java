@@ -25,8 +25,10 @@ import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.charset.StandardCharsets;
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalModuleResolver;
@@ -90,8 +92,18 @@ public final class ModuleKeys {
   }
 
   /** Creates a module key for a {@code file:} module. */
-  public static ModuleKey file(URI uri) {
+  public static ModuleKey file(URI uri) throws URISyntaxException {
     return new File(uri);
+  }
+
+  /** Creates a module key for a {@code file:} module. */
+  public static ModuleKey file(Path path) {
+    try {
+      return new File(path.toAbsolutePath().toUri());
+    } catch (URISyntaxException e) {
+      // impossible, we started with a path to begin with.
+      throw PklBugException.unreachableCode();
+    }
   }
 
   /**
@@ -299,7 +311,8 @@ public final class ModuleKeys {
   private static class File implements ModuleKey {
     final URI uri;
 
-    File(URI uri) {
+    File(URI uri) throws URISyntaxException {
+      IoUtils.validateFileUri(uri);
       this.uri = uri;
     }
 

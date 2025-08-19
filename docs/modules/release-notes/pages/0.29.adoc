@@ -1,51 +1,419 @@
 = Pkl 0.29 Release Notes
 :version: 0.29
 :version-minor: 0.29.0
-:release-date: TBD
+:release-date: July 24th, 2025
 
 include::ROOT:partial$component-attributes.adoc[]
 
 Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
-The next release (0.XX) is scheduled for ???..
+This release brings support for working with binary data, and also a new setting to control HTTP rewriting.
+
+The next release (0.30) is scheduled for October 2025.
 To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
 
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
 [small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 == Highlights [small]#💖#
 
-News you don't want to miss.
+[[bytes-standard-library-class]]
+=== `Bytes` standard library class
 
-=== XXX
+A new standard library class is introduced, called `Bytes` (https://github.com/apple/pkl/pull/1019[#1019]).
+
+Currently, Pkl does not have a built-in way to describe binary data.
+In situations where binary data is needed, the common pattern is to use a Base64 string.
+This is sufficient in simple cases, but still introduces many shortcomings:
+
+1. `pkl eval` can only produce UTF-8 encoded strings.
+2. It is not possible to compute the checksum of binary content (except in the case of `read()`).
+3. It is hard to interop with configuration formats that allow binary data.
+4. It is hard to do transformations on binary data.
+
+To address these shortcomings, the `Bytes` class is introduced.
+This is a data type representing a sequence of bytes.
+
+[source,pkl]
+----
+myBytes = Bytes(0x48, 0x65, 0x6c, 0x6c, 0x6f, 0x2c, 0x20, 0x57, 0x6f, 0x72, 0x6c, 0x64, 0x21) // <1>
+----
+<1> ASCII bytes for the string "Hello, World!"
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0013-bytes-standard-library.adoc[SPICE-0013].
+
+==== Emitting binary output
+
+A new property called `bytes` is added to `FileOutput`.
+The CLI has been changed to evaluate this property, and write its contents to the designated output location.
+
+This change means that Pkl modules can now output binary content.
+For example, here is a simple module that outputs bytes:
+
+[source,pkl]
+----
+output {
+  bytes = Bytes(1, 2, 3, 4) // <1>
+}
+----
+<1> Write bytes 1, 2, 3, 4
+
+The same change applies when evaluating in multiple-file output mode.
+
+[source,pkl]
+----
+output {
+  files {
+    ["foo.bin"] {
+      bytes = Bytes(1, 2, 3, 4) // <1>
+    }
+  }
+}
+----
+<1> Write bytes 1, 2, 3, 4 to a file called `foo.bin`.
+
+==== Rendering `Bytes`
+
+Out of the box, only the `plist` and `pcf` formats are able to render `Bytes`.
+For other formats, a renderer needs to be defined.
+
+[source,pkl]
+----
+output {
+  renderer = new JsonRenderer {
+    [Bytes] = (it) -> it.base64 // <1>
+  }
+}
+----
+<1> Render bytes as a base64 string in JSON.
+
+==== Using `Bytes` from language bindings
+
+Users of Pkl's language bindings also benefit from the new type.
+When using code generation, the `Bytes` data type will turn into the following types:
+
+|===
+|Language |Type
+
+|Java
+|`byte[]`
+
+|Kotlin
+|`ByteArray`
+
+|Go
+|`[]byte`
+
+|Swift
+|`[UInt8]`
+|===
+
+Maintainers of other language bindings are encouraged to map `Bytes` into the corresponding binary type in their language.
+
+==== `Bytes` versus `List<UInt8>`
+
+Conceptually, `Bytes` is very similar to `List<UInt8>`, because both are data types that describe sequences of `UInt8` values.
+However, they have different performance characteristics.
+A `List` is a https://en.wikipedia.org/wiki/Persistent_data_structure[persistent data structure].
+This means that creating modified copies of lists is very cheap.
+
+However, lists have more overhead per element.
+A `List<UInt8>` with 1000 elements takes up about 5.4 kilobytes of heap space, whereas the same data in `Bytes` takes roughly 1 kilobyte.
+
+=== HTTP Rewrites and Package Mirroring
+
+A new evaluator setting is introduced, which rewrites URLs before making outbound HTTP calls (https://github.com/apple/pkl/pull/1062[#1062], https://github.com/apple/pkl/pull/1127[#1127], https://github.com/apple/pkl/pull/1133[#1133]).
+
+This setting can be configured via CLI flag `--http-rewrite`, and also in other ways:
+
+* A builder option in `org.pkl.core.EvaluatorBuilder`
+* A builder option in `org.pkl.executor.ExecutorOptions`
+* A new property in `CreateEvaluatorRequest` in the Message Passing API
+* A new property in the Gradle plugin
+* A new property in `pkl.EvaluatorSettings#Http`
+
+The main use-case for this setting is to enable package mirroring.
+For example, let's assume that the following mirrors exist:
+
+|===
+|Original |Mirror
+
+|\https://pkg.pkl-lang.org
+|\https://my.internal.mirror/pkg-pkl-lang
+
+|\https://github.com
+|\https://my.internal.mirror/github
+|===
+
+A user of the CLI can use these mirrors with the following settings.
+
+.~/.pkl/settings.pkl
+[source,pkl]
+----
+amends "pkl:settings"
+
+http {
+  rewrites {
+    ["https://pkg.pkl-lang.org/"] = "https://my.internal.mirror/pkg-pkl-lang/"
+    ["https://github.com/"] = "https://my.internal.mirror/github/"
+  }
+}
+----
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0016-http-rewrites.adoc[SPICE-0016].
 
 == Noteworthy [small]#🎶#
 
 Ready when you need them.
 
-=== XXX
+=== pkldoc, pkl-codegen-java, pkl-codegen-kotlin executables
+
+The pkldoc, pkl-config-java and pkl-config-kotlin CLIs are published as their own executables (https://github.com/apple/pkl/pull/1023[#1023]).
+
+Currently, these tools have excellent support when called from within the pkl-gradle plugin.
+However, the story for using these as CLIs is much clunkier.
+Users must call Java by including their published `.jar` files, as well as all of their dependencies via the `-classpath` argument.
+
+In 0.29, they are all being published as executables.
+In particular, pkldoc is being published as both a Java executable and a native executable.
+On the other hand, pkl-codegen-java and pkl-codegen-kotlin are published as Java executables only.
+
+For more information, see their download instructions:
+
+* xref:pkl-doc:index.adoc#install-cli[pkldoc]
+* xref:java-binding:codegen.adoc#install-cli[pkl-codegen-java]
+* xref:kotlin-binding:codegen.adoc#install-cli[pkl-codegen-kotlin]
+
+=== Java API changes
+
+==== Resource Readers SPI added to preconfigured evaluators
+
+A change was made to the preconfigured evaluators (https://github.com/apple/pkl/pull/1094[#1094]).
+
+Currently, they add module key factories from service providers, but not resource readers.
+
+This means that users of pkl-spring, for example, cannot add custom resource readers.
+This is also inconsistent (in the preconfigured evaluator, import can use custom schemes, but not read).
+
+In Pkl 0.29, any resource reader registered via the Service Provider Interface will be added to the preconfigured evalutors.
+
+==== New methods
+
+New methods are introduced to the Java API.
+
+* `org.pkl.core.Evaluator.evaluateOutputBytes`
+* `org.pkl.core.http.HttpClient.Builder.setRewrites`
+* `org.pkl.core.http.HttpClient.Builder.addRewrite`
+* `org.pkl.executor.ExecutorOptions.httpRewrites`
+* `org.pkl.config.java.ConfigEvaluatorBuilder.getHttpClient`
+* `org.pkl.config.java.ConfigEvaluatorBuilder.setHttpClient`
+
+=== Standard Library changes
+
+New properties, methods, classes and typealiases have been added to the standard library (https://github.com/apple/pkl/pull/1019[#1019], https://github.com/apple/pkl/pull/1053[#1053], https://github.com/apple/pkl/pull/1063[#1063], https://github.com/apple/pkl/pull/1144[#1144]).
+
+==== Additions to `pkl:base`
+
+* {uri-stdlib-String}#isBase64[`String.isBase64`]
+* {uri-stdlib-String}#base64DecodedBytes[`String.base64DecodedBytes`]
+* {uri-stdlib-String}#encodeToBytes()[`String.encodeToBytes()`]
+* {uri-stdlib-List}#mapNonNullIndexed()[`List.mapNonNullIndexed()`]
+* {uri-stdlib-List}#toBytes()[`List.toBytes()`]
+* {uri-stdlib-Set}#mapNonNullIndexed()[`Set.mapNonNullIndexed()`]
+* {uri-stdlib-FileOutput}#bytes[`FileOutput.bytes`]
+* {uri-stdlib-Resource}#bytes[`Resource.bytes`]
+* {uri-stdlib-Mapping}#getOrDefault()[`Mapping.getOrDefault()`]
+* {uri-stdlib-Listing}#getOrDefault()[`Listing.getOrDefault()`]
+* {uri-stdlib-baseModule}#Charset[`Charset`]
+* {uri-stdlib-Bytes}[`Bytes`]
+
+==== Additions to `pkl:EvaluatorSettings`
+
+* {uri-stdlib-evaluatorSettingsHttpClass}#rewrites[`Http.rewrites`]
+
+==== Additions to `pkl:reflect`
+
+* {uri-stdlib-reflectModule}#bytesType[`bytesType`]
+
+=== `pkl` CLI changes
+
+New features are added to the `pkl` CLI (https://github.com/apple/pkl/pull/1052[#1052], https://github.com/apple/pkl/pull/1056[#1056]).
+
+==== Aggregated JUnit reports
+
+A new set of CLI flags are introduced: `--junit-aggregate-reports`, and `--junit-aggregate-suite-name`.
+Collectively, these flags tell Pkl to combine the JUnit reports into a single file, instead of creating a file per Pkl module.
+
+Thanks to https://github.com/gordonbondon[@gordonbondon] for contributing to this feature!
+
+==== shell-completion subcommand
+
+A new subcommand called `shell-completion` has been added to the Pkl CLI.
+
+This command produces autocompletion scripts for a given shell.
+
+The following example installs shell completions for https://fishshell.com[fish shell]:
+
+[source,shellscript]
+----
+pkl shell-completion fish > "~/.config/fish/completions/pkl.fish"
+----
+
+Thanks to https://github.com/gordonbondon[@gordonbondon] for contributing to this feature!
+
+=== `@Generated` annotation for Java/Kotlin codegen
+
+Classes generated by the Java and Kotlin code generator can optionally recieve new annotation called `Generated` (https://github.com/apple/pkl/pull/1075[#1075], https://github.com/apple/pkl/pull/1115[#1115]).
+
+This behavior is toggled with the `--generated-annotation` CLI flag, or the similarly named Gradle property.
+
+When enabled, classes are annotated with `org.pkl.config.java.Generated`.
+
+This allows users of JaCoCo to exclude Pkl-generated classes from coverage reports.
+
+Thanks to https://github.com/arouel[@arouel] for their contributions here!
 
 == Breaking Changes [small]#💔#
 
 Things to watch out for when upgrading.
 
-=== XXX
+=== Standard library deprecations
+
+The following methods have been deprecated in the standard library:
+
+|===
+|Method name |Details
+
+|`Resource.md5`
+|Replaced with `Resource.bytes.md5`
+
+|`Resource.sha1`
+|Replaced with `Resource.bytes.sha1`
+
+|`Resource.sha256`
+|Replaced with `Resource.bytes.sha256`
+
+|`Resource.sha256Int`
+|Replaced with `Resource.bytes.sha256Int`
+|===
+
+=== Grammar changes
+
+New rules have been introduced to the parser (https://github.com/apple/pkl/pull/1022[#1022], https://github.com/apple/pkl/pull/1126[#1126]).
+
+==== Block comment nesting is removed
+
+Currently, block comments can be nested.
+For example, the comment `/* /* my comment */ */` is two block comments; one outer comment and one inner comment.
+
+However, this has some drawbacks.
+
+1. Block comments can be possibly be closed incorrectly, like `/* /* my comment */`. However, this is a valid block comment in most languages.
+2. Pkl's syntax highlighters do not support block comment nesting, leading to highlighting that is inconsistent with Pkl's parser.
+
+To improve user experience, block comment nesting is removed.
+As a result, block comments are always terminated upon the first `*/`.
+
+==== Shebang line can only appear at the start of a file
+
+The grammar around shebang comments has been made stricter. 
+
+Pkl files allow for a https://en.wikipedia.org/wiki/Shebang_(Unix)[shebang comment].
+Currently, this comment can appear anywhere in a file.
+In 0.29, this comment must appear at the start of a file.
+
+=== Opaque `file:` URIs are invalid
+
+A new rule is introduced to treat opaque `file:` URIs as errors (https://github.com/apple/pkl/pull/1087[#1087]).
+
+Opaque file URIs are URIs whose scheme-specific part does not start with `/`.
+For example, `file:foo/bar.txt` is an opaque URI.
+
+Currently, this has the unintentional behavior of: look for file `foo/bar.txt` from the process working directory.
+These are effectively dynamics imports; from a single import, we can't statically determine what file is actually being imported.
+
+According to https://datatracker.ietf.org/doc/html/rfc8089#section-2[RFC-8089], `file` URIs must have paths that start with /.
+So, these are actually not valid URIs.
+
+In Pkl 0.29, it is an error to load a module or resource with an opaque `file:` URI.
+
+NOTE: To import or read a relative path, omit `file:` from the import string. For example, `import("foo/bar.txt")` instead of `import("file:foo/bar.txt")`.
+
+=== New base module names: `Bytes` and `Charset`
+
+Two new names are introduced to the base module: `Bytes` and `Charset`.
+That means that any code that currently references these names on implicit `this` will break (https://github.com/apple/pkl/pull/1019[#1019]).
+
+The following snippet demonstrates this breaking behavior.
+In 0.28 and below, `obj2.prop` resolves to string "my bytes".
+In 0.29, it resolves to class `Bytes` in the base module.
+
+[source,pkl]
+----
+obj1 {
+  Bytes = "my bytes"
+}
+
+obj2 = (obj1) {
+  prop = Bytes
+}
+----
+
+To make this code continue to have the same meaning, an explicit `this` reference is required.
+
+[source,diff]
+----
+ obj1 {
+   Bytes = "my bytes"
+ }
+ 
+ obj2 = (obj1) {
+-  prop = Bytes
++  prop = this.Bytes
+ }
+----
+
+This only affects code that references these names off of implicit this.
+Code that references the name from the lexical scope will continue to work as-is.
+
+To learn more about name resolution, consult the xref:language-reference:index.adoc#name-resolution[language reference].
+
+=== jpkl is not published to Maven Central
+
+Due to a breakage in release pipeline, the `jpkl` executable is not published to Maven Central (https://github.com/apple/pkl/pull/1147[#1147]).
+
+It is still available to download as a GitHub release asset.
 
 == Miscellaneous [small]#🐸#
 
-* XXX
+* Documentation improvements (https://github.com/apple/pkl/pull/1065[#1065], https://github.com/apple/pkl/pull/1127[#1127]).
+* Dependency updates (https://github.com/apple/pkl/pull/1088[#1088], https://github.com/apple/pkl/pull/1128[#1128], https://github.com/apple/pkl/pull/1139[#1139]).
+* Use `javac -release` and `kotlinc -Xjdk-release` compiler flags for improved bytecode compatibilty (https://github.com/apple/pkl/pull/1080[#1080]).
+* Parser improvements (https://github.com/apple/pkl/pull/1066[#1066]).
 
 == Bugs fixed [small]#🐜#
 
 The following bugs have been fixed.
 
-* XXX (https://github.com/apple/pkl/issues/XXX[XXX])
+* New parser fails on nested multi line comments (https://github.com/apple/pkl/issues/1014[#1014])
+* Fix package dependency links when generating pkldoc (https://github.com/apple/pkl/pull/1078[#1078])
+* Don't show 100% when number of failures is rounded up (https://github.com/apple/pkl/pull/1110[#1110])
+* Quoting the module name crashes pkl (https://github.com/apple/pkl/issues/1111[#1111])
+* Shebang comment parsing is too lenient (https://github.com/apple/pkl/issues/1125[#1125])
+* CLI: noProxy option in settings.pkl and PklProject are ignored (https://github.com/apple/pkl/issues/1142[#1142])
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/arouel[@arouel]
+* https://github.com/gordonbondon[@gordonbondon]
+* https://github.com/HT154[@HT154]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/madrob[@madrob]
+* https://github.com/MikeSchulze[@MikeSchulze]
+* https://github.com/sitaktif[@sitaktif]
+* https://github.com/vlsi[@vlsi]

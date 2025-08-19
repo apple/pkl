@@ -47,6 +47,9 @@ data class JavaCodeGeneratorOptions(
   /** The characters to use for indenting generated Java code. */
   val indent: String = "  ",
 
+  /** Adds the `org.pkl.config.java.Generated` annotation to the classes to be generated. */
+  val addGeneratedAnnotation: Boolean = false,
+
   /**
    * Whether to generate public getter methods and protected final fields instead of public final
    * fields.
@@ -342,13 +345,22 @@ class JavaCodeGenerator(
 
       var builderSize = 50
       val appendBuilder = CodeBlock.builder()
-      for (propertyName in allProperties.keys) {
+      for ((propertyName, property) in allProperties) {
         builderSize += 50
-        appendBuilder.addStatement(
-          "appendProperty(builder, \$S, this.\$N)",
-          propertyName,
-          propertyName,
-        )
+        if (property.type.isBytesClass) {
+          appendBuilder.addStatement(
+            "appendProperty(builder, \$S, \$T.toString(this.\$N))",
+            propertyName,
+            Arrays::class.java,
+            propertyName,
+          )
+        } else {
+          appendBuilder.addStatement(
+            "appendProperty(builder, \$S, this.\$N)",
+            propertyName,
+            propertyName,
+          )
+        }
       }
 
       builder
@@ -551,6 +563,11 @@ class JavaCodeGenerator(
     fun generateClass(): TypeSpec.Builder {
       val builder =
         TypeSpec.classBuilder(javaPoetClassName.simpleName()).addModifiers(Modifier.PUBLIC)
+      if (codegenOptions.addGeneratedAnnotation) {
+        val name = ClassName.get("org.pkl.config.java", "Generated")
+        val generated = AnnotationSpec.builder(name).build()
+        builder.addAnnotation(generated)
+      }
 
       // stateless final module classes are non-instantiable by choice
       val isInstantiable =
@@ -725,6 +742,9 @@ class JavaCodeGenerator(
     }
   }
 
+  private val PType.isBytesClass: Boolean
+    get() = this is PType.Class && this.pClass.info == PClassInfo.Bytes
+
   private fun PType.toJavaPoetName(nullable: Boolean = false, boxed: Boolean = false): TypeName =
     when (this) {
       PType.UNKNOWN -> OBJECT.nullableIf(nullable)
@@ -744,6 +764,7 @@ class JavaCodeGenerator(
           PClassInfo.Float -> TypeName.DOUBLE.boxIf(boxed).nullableIf(nullable)
           PClassInfo.Duration -> DURATION.nullableIf(nullable)
           PClassInfo.DataSize -> DATA_SIZE.nullableIf(nullable)
+          PClassInfo.Bytes -> ArrayTypeName.of(TypeName.BYTE)
           PClassInfo.Pair ->
             ParameterizedTypeName.get(
                 PAIR,
