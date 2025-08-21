@@ -69,6 +69,9 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
       .single()
       .flag(default = false)
 
+  private val isTestMode by
+    option(names = arrayOf("--test-mode"), help = "Internal test mode", hidden = true).flag()
+
   private val projectOptions by ProjectOptions()
 
   override val helpString: String = "Generate HTML documentation from Pkl modules and packages."
@@ -78,7 +81,7 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
       CliDocGeneratorOptions(
         baseOptions.baseOptions(modules, projectOptions),
         outputDir,
-        true,
+        isTestMode,
         noSymlinks,
       )
     CliDocGenerator(options).run()
