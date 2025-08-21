@@ -171,7 +171,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatModuleDeclaration(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, TWO_NEWLINES))
+    return Nodes(formatGeneric(node.children, ForceLine))
   }
 
   private fun formatModuleDefinition(node: GenNode): FormatNode {
@@ -399,19 +399,25 @@ class Builder(sourceText: String) {
 
   private fun formatArgumentList(node: GenNode, twoBy2: Boolean = false): FormatNode {
     if (node.children.size == 2) return Text("()")
+    val arg0 = node.children.find { it.type == NodeType.ARGUMENT_LIST_ELEMENTS }?.nonAffixes()
+    val isSingleFunctionArg = arg0 != null && arg0.size == 1 && arg0[0].type == NodeType.FUNCTION_LITERAL_EXPR
     val nodes =
       formatGenericWithGen(
         node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+        { prev, next ->
+          if (prev.isTerminal("(") || next.isTerminal(")")) {
+            if (isSingleFunctionArg) null else Line
+          } else SpaceOrLine
+        },
       ) { node, next ->
         if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
-          formatArgumentListElements(node, twoBy2)
+          formatArgumentListElements(node, shouldIndent = !isSingleFunctionArg, twoBy2 = twoBy2)
         } else format(node)
       }
     return Group(newId(), nodes)
   }
 
-  private fun formatArgumentListElements(node: GenNode, twoBy2: Boolean = false): FormatNode {
+  private fun formatArgumentListElements(node: GenNode, shouldIndent: Boolean = true, twoBy2: Boolean = false): FormatNode {
     val children = node.children
     val nodes =
       if (twoBy2) {
@@ -426,7 +432,7 @@ class Builder(sourceText: String) {
       } else {
         formatGeneric(node.children, SpaceOrLine)
       }
-    return Indent(nodes)
+    return if (shouldIndent) Indent(nodes) else Nodes(nodes)
   }
 
   private fun pairArguments(nodes: List<GenNode>): List<GenNode> {
@@ -1111,6 +1117,8 @@ class Builder(sourceText: String) {
       return NaturalOrderComparator(ignoreCase = true).compare(import1, import2)
     }
   }
+
+  private fun GenNode.nonAffixes(): List<GenNode> = children.filter { !it.type.isAffix }
 
   companion object {
     private val ABSOLUTE_URL_REGEX = Regex("""\w+:.*""")

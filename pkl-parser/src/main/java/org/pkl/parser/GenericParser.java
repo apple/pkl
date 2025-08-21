@@ -667,7 +667,7 @@ public class GenericParser {
       children.add(expr);
       ff(children);
       var op = next();
-      children.add(make(NodeType.OPERATOR, op.span, op.text(lexer)));
+      children.add(make(NodeType.OPERATOR, op.span));
       ff(children);
       var nodeType = NodeType.BINARY_OP_EXPR;
       var nextMinPrec = operator.isLeftAssoc() ? operator.getPrec() + 1 : operator.getPrec();
@@ -1518,16 +1518,12 @@ public class GenericParser {
     return new GenNode(type, span);
   }
 
-  private GenNode make(NodeType type, FullSpan span, String text) {
-    return new GenNode(type, span, text);
-  }
-
   private GenNode makeAffix(FullToken tk) {
     return new GenNode(nodeTypeForAffix(tk.token), tk.span);
   }
 
   private GenNode makeTerminal(FullToken tk) {
-    return new GenNode(NodeType.TERMINAL, tk.span, tk.text(lexer));
+    return new GenNode(NodeType.TERMINAL, tk.span);
   }
 
   // fast-forward over affix tokens

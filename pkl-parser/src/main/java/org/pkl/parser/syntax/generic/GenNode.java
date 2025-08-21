@@ -24,25 +24,16 @@ public class GenNode {
   public final List<GenNode> children;
   public final FullSpan span;
   public final NodeType type;
-  public @Nullable GenNode parent;
   private @Nullable String text;
 
   public GenNode(NodeType type, FullSpan span) {
     this(type, span, Collections.emptyList());
   }
 
-  public GenNode(NodeType type, FullSpan span, String text) {
-    this(type, span, Collections.emptyList());
-    this.text = text;
-  }
-
   public GenNode(NodeType type, FullSpan span, List<GenNode> children) {
     this.type = type;
     this.span = span;
     this.children = Collections.unmodifiableList(children);
-    for (var child : this.children) {
-      child.parent = this;
-    }
   }
 
   public GenNode(NodeType type, List<GenNode> children) {
@@ -51,14 +42,13 @@ public class GenNode {
     var end = children.get(children.size() - 1).span;
     this.span = children.get(0).span.endWith(end);
     this.children = Collections.unmodifiableList(children);
-    for (var child : this.children) {
-      child.parent = this;
-    }
   }
 
   public String text(char[] source) {
-    if (text != null) return text;
-    return new String(source, span.charIndex(), span.length());
+    if (text == null) {
+      text = new String(source, span.charIndex(), span.length());
+    }
+    return text;
   }
 
   public @Nullable GenNode findChildByType(NodeType type) {

@@ -33,6 +33,12 @@ prop2: String
   |Int
   |Boolean
 
+funcParam = fun(
+  (x, y) -> new Listing {
+  x
+  y
+})
+
 open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter> extends AnotherInterestingClassName {
   foo: Int
 }
