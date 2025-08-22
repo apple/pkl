@@ -288,10 +288,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     isMethodReturnTypeChecked = !isStdLibModule || IoUtils.isTestMode();
   }
 
-  public ModuleInfo getModuleInfo() {
-    return moduleInfo;
-  }
-
   public static AstBuilder create(
       Source source,
       VmLanguage language,
