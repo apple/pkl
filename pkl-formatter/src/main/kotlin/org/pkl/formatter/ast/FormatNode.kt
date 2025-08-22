@@ -43,6 +43,8 @@ sealed interface FormatNode {
 
 data class Text(val text: String) : FormatNode
 
+object Empty : FormatNode
+
 object Line : FormatNode
 
 object ForceLine : FormatNode

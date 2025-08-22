@@ -16,6 +16,7 @@
 package org.pkl.formatter
 
 import java.util.EnumSet
+import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
@@ -28,6 +29,7 @@ import org.pkl.formatter.ast.Nodes
 import org.pkl.formatter.ast.Space
 import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
+import org.pkl.parser.syntax.Operator
 import org.pkl.parser.syntax.generic.GenNode
 import org.pkl.parser.syntax.generic.NodeType
 
@@ -171,7 +173,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatModuleDeclaration(node: GenNode): FormatNode {
-    return Nodes(formatGeneric(node.children, ForceLine))
+    return Nodes(formatGeneric(node.children, TWO_NEWLINES))
   }
 
   private fun formatModuleDefinition(node: GenNode): FormatNode {
@@ -390,23 +392,33 @@ class Builder(sourceText: String) {
 
   private fun formatParameterList(node: GenNode, force: Boolean = false): FormatNode {
     if (node.children.size == 2) return Text("()")
+    val groupId = newId()
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+        if (prev.isTerminal("(") || next.isTerminal(")")) {
+          if (next.isTerminal(")")) {
+            IfWrap(groupId, nodes(Text(","), Line), Line)
+          } else Line
+        } else SpaceOrLine
       }
-    return if (force) ForceWrap(newId(), nodes) else Group(newId(), nodes)
+    return if (force) ForceWrap(groupId, nodes) else Group(groupId, nodes)
   }
 
   private fun formatArgumentList(node: GenNode, twoBy2: Boolean = false): FormatNode {
     if (node.children.size == 2) return Text("()")
-    val arg0 = node.children.find { it.type == NodeType.ARGUMENT_LIST_ELEMENTS }?.nonAffixes()
-    val isSingleFunctionArg = arg0 != null && arg0.size == 1 && arg0[0].type == NodeType.FUNCTION_LITERAL_EXPR
+    val arg0 = node.children.find { it.type == NodeType.ARGUMENT_LIST_ELEMENTS }?.properChildren()
+    val isSingleFunctionArg =
+      arg0 != null && arg0.size == 1 && arg0[0].type == NodeType.FUNCTION_LITERAL_EXPR
+    val groupId = newId()
     val nodes =
       formatGenericWithGen(
         node.children,
         { prev, next ->
           if (prev.isTerminal("(") || next.isTerminal(")")) {
-            if (isSingleFunctionArg) null else Line
+            val node = if (isSingleFunctionArg) Empty else Line
+            if (next.isTerminal(")") && !isSingleFunctionArg) {
+              IfWrap(groupId, nodes(Text(","), node), node)
+            } else node
           } else SpaceOrLine
         },
       ) { node, next ->
@@ -414,10 +426,14 @@ class Builder(sourceText: String) {
           formatArgumentListElements(node, shouldIndent = !isSingleFunctionArg, twoBy2 = twoBy2)
         } else format(node)
       }
-    return Group(newId(), nodes)
+    return Group(groupId, nodes)
   }
 
-  private fun formatArgumentListElements(node: GenNode, shouldIndent: Boolean = true, twoBy2: Boolean = false): FormatNode {
+  private fun formatArgumentListElements(
+    node: GenNode,
+    shouldIndent: Boolean = true,
+    twoBy2: Boolean = false,
+  ): FormatNode {
     val children = node.children
     val nodes =
       if (twoBy2) {
@@ -477,7 +493,12 @@ class Builder(sourceText: String) {
   }
 
   private fun formatObjectParameterList(node: GenNode): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    // object param lists don't have trailing commas, as they have a trailing ->
+    val groupId = newId()
+    val nonWrappingNodes = Nodes(formatGeneric(node.children, SpaceOrLine))
+    // double indent the params if they wrap
+    val wrappingNodes = indent(Indent(listOf(Line) + nonWrappingNodes))
+    return Group(groupId, listOf(IfWrap(groupId, wrappingNodes, nodes(Space, nonWrappingNodes))))
   }
 
   private fun formatObjectBody(node: GenNode): FormatNode {
@@ -487,7 +508,8 @@ class Builder(sourceText: String) {
       formatGenericWithGen(
         node.children,
         { prev, next ->
-          if (prev.isTerminal("{") || next.isTerminal("}")) {
+          if (next.type == NodeType.OBJECT_PARAMETER_LIST) Empty
+          else if (prev.isTerminal("{") || next.isTerminal("}")) {
             val lines = prev.linesBetween(next)
             if (lines == 0) SpaceOrLine else ForceLine
           } else SpaceOrLine
@@ -670,6 +692,7 @@ class Builder(sourceText: String) {
   }
 
   private fun formatFunctionLiteralExpr(node: GenNode): FormatNode {
+    val (params, rest) = node.children.splitOn { it.isTerminal("->") }
     val sameLine =
       node.children
         .last { it.type == NodeType.FUNCTION_LITERAL_BODY }
@@ -677,8 +700,12 @@ class Builder(sourceText: String) {
           val expr = body.children.find { it.type.isExpression }!!
           isSameLineExpr(expr)
         }
-    val nodes = formatGeneric(node.children) { prev, next -> if (sameLine) Space else SpaceOrLine }
-    return Group(newId(), nodes)
+    val sep = if (sameLine) Space else SpaceOrLine
+    val bodySep = getSeparator(params.last(), rest.first(), sep)
+    
+    val nodes = formatGeneric(params, sep)
+    val restNodes = listOf(bodySep) + formatGeneric(rest, sep)
+    return Group(newId(), nodes + listOf(Group(newId(), restNodes)))
   }
 
   private fun formatFunctionLiteralBody(node: GenNode): FormatNode {
@@ -987,7 +1014,6 @@ class Builder(sourceText: String) {
       prev.isTerminal("class", "function", "new") ||
         next.isTerminal("=", "{", "->", "class", "function") ||
         next.type == NodeType.OBJECT_BODY ||
-        next.type == NodeType.OBJECT_PARAMETER_LIST ||
         prev.type == NodeType.MODIFIER_LIST -> Space
       next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
       else -> separatorFn(prev, next)
@@ -1056,18 +1082,19 @@ class Builder(sourceText: String) {
     return Group(newId(), res)
   }
 
+  /** Flatten binary operators by precedence */
   private fun flattenBinaryOperatorExprs(node: GenNode): List<GenNode> {
     val op = node.children.first { it.type == NodeType.OPERATOR }.text()
-    return flattenBinaryOperatorExprs(node, op)
+    return flattenBinaryOperatorExprs(node, Operator.byName(op).prec)
   }
 
-  private fun flattenBinaryOperatorExprs(node: GenNode, op: String): List<GenNode> {
+  private fun flattenBinaryOperatorExprs(node: GenNode, prec: Int): List<GenNode> {
     val actualOp = node.children.first { it.type == NodeType.OPERATOR }.text()
-    if (op != actualOp) return listOf(node)
+    if (prec != Operator.byName(actualOp).prec) return listOf(node)
     val res = mutableListOf<GenNode>()
     for (child in node.children) {
       if (child.type == NodeType.BINARY_OP_EXPR) {
-        res += flattenBinaryOperatorExprs(child, op)
+        res += flattenBinaryOperatorExprs(child, prec)
       } else {
         res += child
       }
@@ -1101,6 +1128,8 @@ class Builder(sourceText: String) {
     return id++
   }
 
+  private fun nodes(vararg nodes: FormatNode) = Nodes(nodes.toList())
+
   private fun group(vararg nodes: FormatNode) = Group(newId(), nodes.toList())
 
   private fun indent(vararg nodes: FormatNode) = Indent(nodes.toList())
@@ -1118,7 +1147,18 @@ class Builder(sourceText: String) {
     }
   }
 
-  private fun GenNode.nonAffixes(): List<GenNode> = children.filter { !it.type.isAffix }
+  // returns children that are not comments or punctuation
+  private fun GenNode.properChildren(): List<GenNode> =
+    children.filter { !it.type.isAffix && it.type != NodeType.TERMINAL }
+
+  private fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
+    val index = indexOfFirst { pred(it) }
+    return if (index == -1) {
+      Pair(this, emptyList())
+    } else {
+      Pair(take(index), drop(index))
+    }
+  }
 
   companion object {
     private val ABSOLUTE_URL_REGEX = Regex("""\w+:.*""")

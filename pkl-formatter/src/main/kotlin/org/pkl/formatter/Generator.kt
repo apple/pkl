@@ -15,6 +15,7 @@
  */
 package org.pkl.formatter
 
+import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
@@ -42,6 +43,7 @@ class Generator {
 
   private fun node(node: FormatNode, wrap: Wrap) {
     when (node) {
+      is Empty -> {}
       is Nodes -> node.nodes.forEach { node(it, wrap) }
       is Group -> {
         val width = node.nodes.sumOf { it.width(wrapped) }

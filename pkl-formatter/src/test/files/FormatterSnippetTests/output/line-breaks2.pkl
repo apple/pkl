@@ -2,6 +2,7 @@ module
   reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly
     .loooooooooooooooooooooooooooooooog
     .naaaaaaaaaaaaaaaaaaaaaaaaaame
+
 extends
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
 
@@ -21,7 +22,7 @@ hidden const reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 local const function looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
   x: Int,
-  y
+  y,
 ) = x + y
 
 typealias Foo =
@@ -37,5 +38,5 @@ bar: Boolean
 
 hidden foobar: LongType(
   someVeryyyyyyyloooong,
-  requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger
+  requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger,
 )

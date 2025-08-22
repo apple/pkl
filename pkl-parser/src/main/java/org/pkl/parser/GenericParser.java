@@ -378,7 +378,7 @@ public class GenericParser {
     if (isParameter()) {
       var params = new ArrayList<GenNode>();
       ff(params);
-      parseListOf(Token.COMMA, params, this::parseParameter);
+      parseListOf(Token.ARROW, params, this::parseParameter);
       expect(Token.ARROW, params, "unexpectedToken2", ",", "->");
       children.add(new GenNode(NodeType.OBJECT_PARAMETER_LIST, params));
       ff(children);
@@ -888,7 +888,7 @@ public class GenericParser {
             var children = new ArrayList<GenNode>();
             children.add(parseIdentifier());
             if (lookahead == Token.LPAREN
-                && !isPrecededBySemicolon()
+                && noSemicolonInbetween()
                 && _lookahead.newLinesBetween == 0) {
               children.add(parseArgumentList());
             }
@@ -1087,7 +1087,7 @@ public class GenericParser {
     } else {
       var elements = new ArrayList<GenNode>();
       ff(elements);
-      parseListOf(Token.COMMA, elements, this::parseParameter);
+      parseListOf(Token.RPAREN, elements, this::parseParameter);
       paramListChildren.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
       expect(Token.RPAREN, paramListChildren, "unexpectedToken2", ",", ")");
     }
@@ -1221,13 +1221,13 @@ public class GenericParser {
     }
     // constrained types: have to start in the same line as the type
     var fla = fullLookahead();
-    if (fla.tk.token == Token.LPAREN && !isPrecededBySemicolon() && fla.tk.newLinesBetween == 0) {
+    if (fla.tk.token == Token.LPAREN && noSemicolonInbetween() && fla.tk.newLinesBetween == 0) {
       ff(children);
       var constraint = new ArrayList<GenNode>();
       constraint.add(makeTerminal(next()));
       var elements = new ArrayList<GenNode>();
       ff(elements);
-      parseListOf(Token.COMMA, elements, () -> parseExpr(")"));
+      parseListOf(Token.RPAREN, elements, () -> parseExpr(")"));
       constraint.add(new GenNode(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
       expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
       children.add(new GenNode(NodeType.CONSTRAINED_TYPE_CONSTRAINT, constraint));
@@ -1273,7 +1273,7 @@ public class GenericParser {
       children.add(makeTerminal(next()));
     } else {
       var elements = new ArrayList<GenNode>();
-      parseListOf(Token.COMMA, elements, this::parseParameter);
+      parseListOf(Token.RPAREN, elements, this::parseParameter);
       children.add(new GenNode(NodeType.PARAMETER_LIST_ELEMENTS, elements));
       expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
     }
@@ -1296,7 +1296,7 @@ public class GenericParser {
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     var elements = new ArrayList<GenNode>();
-    parseListOf(Token.COMMA, elements, this::parseTypeParameter);
+    parseListOf(Token.GT, elements, this::parseTypeParameter);
     children.add(new GenNode(NodeType.TYPE_PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new GenNode(NodeType.TYPE_PARAMETER_LIST, children);
@@ -1307,7 +1307,7 @@ public class GenericParser {
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     var elements = new ArrayList<GenNode>();
-    parseListOf(Token.COMMA, elements, this::parseType);
+    parseListOf(Token.GT, elements, () -> parseType(">"));
     children.add(new GenNode(NodeType.TYPE_ARGUMENT_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new GenNode(NodeType.TYPE_ARGUMENT_LIST, children);
@@ -1323,7 +1323,7 @@ public class GenericParser {
     }
     var elements = new ArrayList<GenNode>();
     ff(elements);
-    parseListOf(Token.COMMA, elements, this::parseExpr);
+    parseListOf(Token.RPAREN, elements, () -> parseExpr(")"));
     ff(elements);
     children.add(new GenNode(NodeType.ARGUMENT_LIST_ELEMENTS, elements));
     expect(Token.RPAREN, children, "unexpectedToken2", ",", ")");
@@ -1409,11 +1409,14 @@ public class GenericParser {
     children.add(makeTerminal(tk));
   }
 
-  private void parseListOf(Token separator, List<GenNode> children, Supplier<GenNode> parser) {
+  private void parseListOf(Token terminator, List<GenNode> children, Supplier<GenNode> parser) {
     children.add(parser.get());
     ff(children);
-    while (lookahead == separator) {
-      children.add(makeTerminal(next()));
+    while (lookahead == Token.COMMA) {
+      // don't store the last comma
+      var comma = makeTerminal(next());
+      if (lookahead() == terminator) break;
+      children.add(comma);
       ff(children);
       children.add(parser.get());
       ff(children);
@@ -1456,8 +1459,8 @@ public class GenericParser {
     return tmp;
   }
 
-  private boolean isPrecededBySemicolon() {
-    return tokens.get(cursor - 1).token == Token.SEMICOLON;
+  private boolean noSemicolonInbetween() {
+    return tokens.get(cursor - 1).token != Token.SEMICOLON;
   }
 
   private void backtrack() {

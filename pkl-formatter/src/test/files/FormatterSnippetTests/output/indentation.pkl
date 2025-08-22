@@ -39,22 +39,23 @@ objParams: Listing<Int> = new {
 }
 
 objParams2: Listing<Int> = new {
-  default { someVeryLongParameter1,
-  someVeryLongParameter2,
-  someVeryLongParameter3,
-  someVeryLongParameter4 ->
+  default {
+      someVeryLongParameter1,
+      someVeryLongParameter2,
+      someVeryLongParameter3,
+      someVeryLongParameter4 ->
     1
   }
 }
 
 parenType: (
   ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType(
-    reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint
-  )
+    reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint,
+  ),
 )
 
 functionType: (
   ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType,
-  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2
+  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2,
 ) ->
   String

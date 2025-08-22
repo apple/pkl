@@ -55,4 +55,33 @@ public enum Operator {
   public boolean isLeftAssoc() {
     return isLeftAssoc;
   }
+
+  public static Operator byName(String name) {
+    return switch (name) {
+      case "??" -> NULL_COALESCE;
+      case "|>" -> PIPE;
+      case "||" -> OR;
+      case "&&" -> AND;
+      case "==" -> EQ_EQ;
+      case "!=" -> NOT_EQ;
+      case "is" -> IS;
+      case "as" -> AS;
+      case "<" -> LT;
+      case "<=" -> LTE;
+      case ">" -> GT;
+      case ">=" -> GTE;
+      case "+" -> PLUS;
+      case "-" -> MINUS;
+      case "*" -> MULT;
+      case "/" -> DIV;
+      case "~/" -> INT_DIV;
+      case "%" -> MOD;
+      case "**" -> POW;
+      case "!!" -> NON_NULL;
+      case "[" -> SUBSCRIPT;
+      case "." -> DOT;
+      case "?." -> QDOT;
+      default -> throw new RuntimeException("Unknown operator: " + name);
+    };
+  }
 }
