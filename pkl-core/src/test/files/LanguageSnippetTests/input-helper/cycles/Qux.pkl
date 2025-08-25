@@ -1,0 +1,3 @@
+import "amendsFoo.pkl"
+
+res: amendsFoo.Bar
