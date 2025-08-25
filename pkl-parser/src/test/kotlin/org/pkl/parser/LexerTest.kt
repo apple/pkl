@@ -17,6 +17,7 @@ package org.pkl.parser
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 
 class LexerTest {
 
@@ -45,5 +46,11 @@ class LexerTest {
 
     assertThat(Lexer.maybeQuoteIdentifier("this")).isEqualTo("`this`")
     assertThat(Lexer.maybeQuoteIdentifier("😀")).isEqualTo("`😀`")
+  }
+
+  @Test
+  fun lexSingleBacktick() {
+    val thrown = assertThrows<ParserError> { Lexer("`").next() }
+    assertThat(thrown).hasMessageContaining("Unexpected character `EOF`")
   }
 }

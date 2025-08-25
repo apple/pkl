@@ -489,7 +489,7 @@ public class Lexer {
   }
 
   private void lexQuotedIdentifier() {
-    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r') {
+    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r' && lookahead != EOF) {
       nextChar();
     }
     if (lookahead == '`') {
@@ -705,6 +705,13 @@ public class Lexer {
   }
 
   private ParserError unexpectedChar(char got, String didYouMean) {
+    if (got == EOF) {
+      return unexpectedChar("EOF", didYouMean);
+    }
+    return lexError("unexpectedCharacter", got, didYouMean);
+  }
+
+  private ParserError unexpectedChar(String got, String didYouMean) {
     return lexError("unexpectedCharacter", got, didYouMean);
   }
 
