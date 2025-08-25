@@ -108,10 +108,10 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
     var builder =
         AstBuilder.create(
             source, this, moduleContext, moduleKey, resolvedModuleKey, moduleResolver);
-    
+
     // set ModuleInfo early to handle cyclic dependencies
     emptyModule.setExtraStorage(builder.getModuleInfo());
-    
+
     var moduleNode = builder.visitModule(moduleContext);
     moduleNode.getCallTarget().call(emptyModule, emptyModule);
     MinPklVersionChecker.check(emptyModule, importNode);
