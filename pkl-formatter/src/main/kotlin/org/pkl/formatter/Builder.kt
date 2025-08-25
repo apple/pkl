@@ -397,6 +397,7 @@ class Builder(sourceText: String) {
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("(") || next.isTerminal(")")) {
           if (next.isTerminal(")")) {
+            // trailing comma
             IfWrap(groupId, nodes(Text(","), Line), Line)
           } else Line
         } else SpaceOrLine
@@ -417,6 +418,7 @@ class Builder(sourceText: String) {
           if (prev.isTerminal("(") || next.isTerminal(")")) {
             val node = if (isSingleFunctionArg) Empty else Line
             if (next.isTerminal(")") && !isSingleFunctionArg) {
+              // trailing comma
               IfWrap(groupId, nodes(Text(","), node), node)
             } else node
           } else SpaceOrLine
@@ -486,7 +488,10 @@ class Builder(sourceText: String) {
     val nodes =
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("<") || next.isTerminal(">")) {
-          Line
+          if (next.isTerminal(">")) {
+            // trailing comma
+            IfWrap(id, nodes(Text(","), Line), Line)
+          } else Line
         } else SpaceOrLine
       }
     return Group(id, nodes)
@@ -702,7 +707,7 @@ class Builder(sourceText: String) {
         }
     val sep = if (sameLine) Space else SpaceOrLine
     val bodySep = getSeparator(params.last(), rest.first(), sep)
-    
+
     val nodes = formatGeneric(params, sep)
     val restNodes = listOf(bodySep) + formatGeneric(rest, sep)
     return Group(newId(), nodes + listOf(Group(newId(), restNodes)))

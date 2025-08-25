@@ -22,3 +22,14 @@ trailingCommaInLambdas = (
   baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaar,
   baaaaaaaaaaaaaaaaaaaaaz,
 ) -> 1
+
+trailingCommaInConstraints: String(
+  isSomethingSomethingSomething,
+  isSomethingElse,
+  isSomethingSomethingSomethingElse,
+)
+
+trailingCommaInTypeParameters: Mapping<
+  SomethingSomethingSomethingSomething,
+  SomethingSomethingSomethingSomething,
+>

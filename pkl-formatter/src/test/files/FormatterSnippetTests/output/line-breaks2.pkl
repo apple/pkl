@@ -33,7 +33,7 @@ typealias Foo =
 bar: Boolean
   | Mapping<
     LooooooooooooooooooooooooooooongTypeName,
-    AnotherLooooooooooooooooooooooooooooongTypeName
+    AnotherLooooooooooooooooooooooooooooongTypeName,
   >(loooooooooooooooooooogConstraint)
 
 hidden foobar: LongType(
