@@ -37,6 +37,7 @@ public final class ModuleInfo {
   private final ModuleKey moduleKey;
   private final ResolvedModuleKey resolvedModuleKey;
   private final boolean isAmend;
+  private final @Nullable ModuleKey amendedModuleKey;
 
   @LateInit private List<VmTyped> annotations;
 
@@ -54,6 +55,26 @@ public final class ModuleInfo {
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
       boolean isAmend) {
+    this(
+        sourceSection,
+        headerSection,
+        docComment,
+        moduleName,
+        moduleKey,
+        resolvedModuleKey,
+        isAmend,
+        null);
+  }
+
+  public ModuleInfo(
+      SourceSection sourceSection,
+      SourceSection headerSection,
+      SourceSection @Nullable [] docComment,
+      String moduleName,
+      ModuleKey moduleKey,
+      ResolvedModuleKey resolvedModuleKey,
+      boolean isAmend,
+      @Nullable ModuleKey amendedModuleKey) {
 
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
@@ -62,6 +83,7 @@ public final class ModuleInfo {
     this.moduleKey = moduleKey;
     this.resolvedModuleKey = resolvedModuleKey;
     this.isAmend = isAmend;
+    this.amendedModuleKey = amendedModuleKey;
   }
 
   public void initAnnotations(List<VmTyped> annotations) {
@@ -178,5 +200,12 @@ public final class ModuleInfo {
   /** Tells whether this module amends another module. */
   public boolean isAmend() {
     return isAmend;
+  }
+
+  /**
+   * Returns the ModuleKey of the module being amended, or null if this is not an amending module.
+   */
+  public @Nullable ModuleKey getAmendedModuleKey() {
+    return amendedModuleKey;
   }
 }

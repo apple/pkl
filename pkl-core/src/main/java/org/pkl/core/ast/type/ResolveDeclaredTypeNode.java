@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.util.Nullable;
@@ -73,9 +74,34 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     var result = module.getCachedValue(importName);
     if (result == null) {
       result = callNode.call(member.getCallTarget(), module, module, importName);
+
+      var importedModule = (VmTyped) result;
+      if (importedModule.isNotInitialized()
+          && importedModule.isModuleObject()
+          && importedModule.getModuleInfo().isAmend()) {
+        // this is an amending module. Try to find the prototype
+        var prototypeModule = findPrototypeModule(importedModule);
+        if (prototypeModule != null) {
+          result = prototypeModule;
+        }
+      }
+
       module.setCachedValue(importName, result);
     }
     return (VmTyped) result;
+  }
+
+  private @Nullable VmTyped findPrototypeModule(VmTyped amendingModule) {
+    try {
+      var moduleInfo = amendingModule.getModuleInfo();
+      var amendedModuleKey = moduleInfo.getAmendedModuleKey();
+
+      if (amendedModuleKey != null) {
+        return VmLanguage.get(null).loadModule(amendedModuleKey);
+      }
+    } catch (Exception ignored) {
+    }
+    return null;
   }
 
   protected @Nullable Object getType(

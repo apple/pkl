@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Module `Foo` cannot be extended or used as type because it amends another module.
+
+x | prop: amendsFoo
+          ^^^^^^^^^
+at cyclicalAmendsType (file:///$snippetsDir/input/errors/cyclicalAmendsType.pkl)

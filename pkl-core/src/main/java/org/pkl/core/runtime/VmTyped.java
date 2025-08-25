@@ -59,6 +59,10 @@ public final class VmTyped extends VmObject {
     assert clazz != null : "VmTyped.clazz was not initialized.";
     return clazz;
   }
+  
+  public boolean isNotInitialized() {
+    return clazz == null;
+  }
 
   public @Nullable VmTyped getParent() {
     return (VmTyped) parent;
