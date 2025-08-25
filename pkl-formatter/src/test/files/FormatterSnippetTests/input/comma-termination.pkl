@@ -13,4 +13,4 @@ trailingCommaInLambdas = (fooooooooooooooooooooooooooooooooo, baaaaaaaaaaaaaaaaa
 
 trailingCommaInConstraints: String(isSomethingSomethingSomething, isSomethingElse, isSomethingSomethingSomethingElse)
 
-trailingCommaInTypeParameters: Mapping<SomethingSomethingSomethingSomething, SomethingSomethingSomethingSomething>
+trailingCommaInTypeParameters: Mapping<SomethingSomethingSomethingSomething, SomethingSomething | SomethingElse>

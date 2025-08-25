@@ -158,7 +158,7 @@ class Builder(sourceText: String) {
       NodeType.FUNCTION_TYPE -> formatFunctionType(node)
       NodeType.FUNCTION_TYPE_PARAMETERS -> formatParameterList(node)
       NodeType.STRING_CONSTANT_TYPE -> format(node.children[0])
-      NodeType.PARENTHESIZED_TYPE -> formatParameterList(node)
+      NodeType.PARENTHESIZED_TYPE -> formatParenthesizedType(node)
       NodeType.PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node)
       else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
@@ -831,6 +831,16 @@ class Builder(sourceText: String) {
         if (next == null) indent(format(node)) else format(node)
       }
     return Group(newId(), nodes)
+  }
+
+  private fun formatParenthesizedType(node: GenNode): FormatNode {
+    if (node.children.size == 2) return Text("()")
+    val groupId = newId()
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+      }
+    return Group(groupId, nodes)
   }
 
   private fun formatParenthesizedTypeElements(node: GenNode): FormatNode {

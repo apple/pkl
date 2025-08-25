@@ -31,5 +31,5 @@ trailingCommaInConstraints: String(
 
 trailingCommaInTypeParameters: Mapping<
   SomethingSomethingSomethingSomething,
-  SomethingSomethingSomethingSomething,
+  SomethingSomething | SomethingElse,
 >

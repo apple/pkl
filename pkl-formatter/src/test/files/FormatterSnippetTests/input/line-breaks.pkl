@@ -42,3 +42,4 @@ funcParam = fun(
 open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter> extends AnotherInterestingClassName {
   foo: Int
 }
+
