@@ -191,6 +191,13 @@ public enum Token {
     };
   }
 
+  public boolean isAffix() {
+    return switch (this) {
+      case LINE_COMMENT, BLOCK_COMMENT, SEMICOLON -> true;
+      default -> false;
+    };
+  }
+
   public String text() {
     if (this == UNDERSCORE) {
       return "_";

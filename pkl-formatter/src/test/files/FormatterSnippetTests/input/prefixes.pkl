@@ -1,0 +1,12 @@
+
+/// Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong doc comment
+@Annotation { looooooooooooooooooooooooooooooooooooooooooooooooooongVariableName = 10 }
+typealias Foo = String
+
+/// Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong doc comment
+@Annotation { looooooooooooooooooooooooooooooooooooooooooooooooooongVariableName = 10 }
+foo = "should fit in a single line"
+
+/// Looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooong doc comment
+@Annotation { looooooooooooooooooooooooooooooooooooooooooooooooooongVariableName = 10 }
+function bar(x): String = "result: \(x)"

@@ -1,0 +1,5 @@
+res = myList.map((it) -> it.partition).filter((it) -> someList.contains(it))
+
+res2 = myList.map(lambda1).filter(lambda2)
+
+res3 = myList.map((it) -> it.partition)

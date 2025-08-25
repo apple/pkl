@@ -1,0 +1,14 @@
+
+//// line 1
+///// line 2
+foo = 1
+
+/// line 1
+///      
+/// 
+/// line 2
+bar = 1
+
+///line 1
+///line 2
+baz = 1

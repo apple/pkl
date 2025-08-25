@@ -1,0 +1,34 @@
+foo {
+  123123123123
+    + 123123123123 * 123123123123 -
+    123123123123 / 123123123123
+    + 123123123123 ** 123123123123
+  2
+  3
+  4
+}
+
+bar =
+  clazz.superclass == null
+    || clazz.superclass.reflectee == Module
+    || clazz.superclass.reflectee == Typed
+
+baz =
+  new Listing {
+    1
+    2
+  }
+    |> mixin1
+    |> mixin2
+
+qux = (baz) {
+  1
+  2
+} {
+  3
+  4
+}
+
+minus =
+  superLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongVariable -
+    100000
