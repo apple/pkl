@@ -15,6 +15,7 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -33,6 +34,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
         names = arrayOf("-o", "--output-path"),
         metavar = "path",
         help = "File path where the output file is placed.",
+        completionCandidates = CompletionCandidates.Path,
       )
       .single()
 
@@ -59,6 +61,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
         names = arrayOf("-m", "--multiple-file-output-path"),
         metavar = "path",
         help = "Directory where a module's multiple file output is placed.",
+        completionCandidates = CompletionCandidates.Path,
       )
       .single()
       .validate {
