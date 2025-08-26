@@ -18,7 +18,6 @@ package org.pkl.commons.cli.commands
 import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
-import com.github.ajalt.clikt.parameters.types.choice
 import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
@@ -169,7 +168,6 @@ class BaseOptions : OptionGroup() {
         help = "Output format to generate. <${output.joinToString()}>",
         completionCandidates = CompletionCandidates.Fixed(output.toSet()),
       )
-      .choice(*output)
       .single()
 
   val envVars: Map<String, String> by
