@@ -15,6 +15,7 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
@@ -30,7 +31,11 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
   override val helpString = "Run tests within the given module(s)"
 
   val modules: List<URI> by
-    argument(name = "modules", help = "Module paths or URIs to evaluate.")
+    argument(
+        name = "modules",
+        help = "Module paths or URIs to evaluate.",
+        completionCandidates = CompletionCandidates.Path,
+      )
       .convert { BaseOptions.parseModuleName(it) }
       .multiple()
 
