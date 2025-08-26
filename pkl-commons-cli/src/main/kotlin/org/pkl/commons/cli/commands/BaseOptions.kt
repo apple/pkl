@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.choice
@@ -166,6 +167,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("-f", "--format"),
         help = "Output format to generate. <${output.joinToString()}>",
+        completionCandidates = CompletionCandidates.Fixed(output.toSet()),
       )
       .choice(*output)
       .single()
@@ -189,10 +191,13 @@ class BaseOptions : OptionGroup() {
       .splitAll(File.pathSeparator)
 
   val settings: URI? by
-    option(names = arrayOf("--settings"), help = "Pkl settings module to use.")
-      .path()
+    option(
+        names = arrayOf("--settings"),
+        help = "Pkl settings module to use.",
+        completionCandidates = CompletionCandidates.Path,
+      )
       .single()
-      .convert { parseModuleName(it.toString()) }
+      .convert { parseModuleName(it) }
 
   val timeout: Duration? by
     option(
