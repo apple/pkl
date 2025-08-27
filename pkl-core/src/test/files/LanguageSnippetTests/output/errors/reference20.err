@@ -1,0 +1,22 @@
+–– Pkl Error ––
+not supported
+
+x | function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^
+at reference20#D.referenceToString (file:///$snippetsDir/input/errors/reference20.pkl)
+
+xxx | function toString(): String = getDomain().referenceToString(getData(), getPath())
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.ref#Reference.toString (pkl:ref)
+
+xx | testInterpolation = "test:\(test)"
+                               ^^^^^^^
+at reference20#testInterpolation (file:///$snippetsDir/input/errors/reference20.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

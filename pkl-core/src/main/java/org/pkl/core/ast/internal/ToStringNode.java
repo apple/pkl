@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNode;
@@ -62,8 +63,24 @@ public abstract class ToStringNode extends UnaryExpressionNode {
       VmTyped value,
       @Cached(value = "createInvokeNode()", neverDefault = true)
           InvokeMethodVirtualNode invokeNode) {
-
     return (String) invokeNode.executeWith(frame, value, value.getVmClass());
+  }
+
+  @Specialization
+  protected String evalReference(VirtualFrame frame, VmReference value) {
+    var invokeNode =
+        InvokeMethodVirtualNodeGen.create(
+            sourceSection,
+            Identifier.REFERENCE_TO_STRING,
+            new ExpressionNode[] {
+              new ConstantValueNode(value.getData()),
+              new ConstantValueNode(VmList.create(value.getPath()))
+            },
+            MemberLookupMode.EXPLICIT_RECEIVER,
+            null,
+            null);
+    return (String)
+        invokeNode.executeWith(frame, value.getDomain(), value.getDomain().getVmClass());
   }
 
   @Fallback
@@ -74,7 +91,6 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   }
 
   protected InvokeMethodVirtualNode createInvokeNode() {
-    //noinspection ConstantConditions
     return InvokeMethodVirtualNodeGen.create(
         sourceSection,
         Identifier.TO_STRING,

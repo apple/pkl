@@ -445,6 +445,11 @@ public final class VmClass extends VmValue {
     return isClass(BaseModule.getVarArgsClass(), "pkl.base#VarArgs");
   }
 
+  @Idempotent
+  public boolean isReferenceClass() {
+    return isClass(RefModule.getReferenceClass(), "pkl.ref#Reference");
+  }
+
   private boolean isClass(@Nullable VmClass clazz, String qualifiedClassName) {
     // may be null during evaluation of base module
     return clazz != null ? this == clazz : getQualifiedName().equals(qualifiedClassName);
@@ -621,49 +626,63 @@ public final class VmClass extends VmValue {
   public PClass export() {
     synchronized (pClassLock) {
       //noinspection ConstantValue
-      if (__pClass == null) {
-        var exportedAnnotations = new ArrayList<PObject>();
-        var properties =
-            CollectionUtils.<String, PClass.Property>newLinkedHashMap(
-                EconomicMaps.size(declaredProperties));
-        var methods =
-            CollectionUtils.<String, PClass.Method>newLinkedHashMap(
-                EconomicMaps.size(declaredMethods));
+      if (__pClass != null) {
+        return __pClass;
+      }
 
-        // set pClass before exporting class members to prevent
-        // infinite recursion in case of cyclic references
-        __pClass =
-            new PClass(
-                VmUtils.exportDocComment(docComment),
-                new SourceLocation(headerSection.getStartLine(), sourceSection.getEndLine()),
-                VmModifier.export(modifiers, true),
-                exportedAnnotations,
-                classInfo,
-                typeParameters,
-                properties,
-                methods);
+      // if this is not a module class, export this class's module's class first to break the cycle
+      PClass moduleClass = null;
+      if (!classInfo.isModuleClass()) {
+        moduleClass = getModule().getVmClass().export();
+      }
+      // then if the cached value is still null, initialize it
+      if (__pClass != null) {
+        return __pClass;
+      }
 
-        for (var parameter : typeParameters) {
-          parameter.initOwner(__pClass);
+      var exportedAnnotations = new ArrayList<PObject>();
+      var properties =
+        CollectionUtils.<String, PClass.Property>newLinkedHashMap(
+          EconomicMaps.size(declaredProperties));
+      var methods =
+        CollectionUtils.<String, PClass.Method>newLinkedHashMap(
+          EconomicMaps.size(declaredMethods));
+
+      // set pClass before exporting class members to prevent
+      // infinite recursion in case of cyclic references
+      __pClass =
+        new PClass(
+          VmUtils.exportDocComment(docComment),
+          new SourceLocation(headerSection.getStartLine(), sourceSection.getEndLine()),
+          VmModifier.export(modifiers, true),
+          exportedAnnotations,
+          classInfo,
+          typeParameters,
+          properties,
+          methods,
+          moduleClass);
+
+      for (var parameter : typeParameters) {
+        parameter.initOwner(__pClass);
+      }
+
+      if (supertypeNode != null) {
+        assert superclass != null;
+        __pClass.initSupertype(TypeNode.export(supertypeNode), superclass.export());
+      }
+
+      VmUtils.exportAnnotations(annotations, exportedAnnotations);
+
+      for (var property : EconomicMaps.getValues(declaredProperties)) {
+        if (isClassPropertyDefinition(property)) {
+          properties.put(property.getName().toString(), property.export(__pClass));
         }
+      }
 
-        if (supertypeNode != null) {
-          assert superclass != null;
-          __pClass.initSupertype(TypeNode.export(supertypeNode), superclass.export());
-        }
-
-        VmUtils.exportAnnotations(annotations, exportedAnnotations);
-
-        for (var property : EconomicMaps.getValues(declaredProperties)) {
-          if (isClassPropertyDefinition(property)) {
-            properties.put(property.getName().toString(), property.export(__pClass));
-          }
-        }
-
-        for (var method : EconomicMaps.getValues(declaredMethods)) {
-          if (method.isLocal()) continue;
-          methods.put(method.getName().toString(), method.export(__pClass));
-        }
+      for (var method : EconomicMaps.getValues(declaredMethods)) {
+        if (method.isLocal())
+          continue;
+        methods.put(method.getName().toString(), method.export(__pClass));
       }
 
       return __pClass;

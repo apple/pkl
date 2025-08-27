@@ -228,7 +228,8 @@ public final class VmTypeAlias extends VmValue {
                 simpleName,
                 getModuleName(),
                 qualifiedName,
-                typeParameters);
+                typeParameters,
+                module.getVmClass().export());
 
         for (var parameter : typeParameters) {
           parameter.initOwner(__pTypeAlias);

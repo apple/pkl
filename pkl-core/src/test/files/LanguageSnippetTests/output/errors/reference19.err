@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `pkl.ref#Reference<reference19#D, Int | Boolean>`, but got type `pkl.ref#Reference<reference19#D, Boolean | Int | String>`.
+Value: Reference(new D {}, Boolean | Int | String, "").foo
+
+xx | test = ref.Reference(d, A, "").foo as ref.Reference<D, Int | Boolean>
+                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference19#test (file:///$snippetsDir/input/errors/reference19.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

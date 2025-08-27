@@ -101,6 +101,20 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
   }
 
   @Specialization
+  protected VmReference eval(VmReference reference, Object key) {
+    var result = reference.withSubscriptAccess(key);
+    if (result != null) return result;
+
+    CompilerDirectives.transferToInterpreter();
+    throw exceptionBuilder()
+        .evalError(
+            "operatorNotDefined2", getShortName(), reference.exportType(), VmUtils.getClass(key))
+        .withProgramValue("Left operand", reference)
+        .withProgramValue("Right operand", key)
+        .build();
+  }
+
+  @Specialization
   protected long eval(VmBytes receiver, long index) {
     if (index < 0 || index >= receiver.getLength()) {
       CompilerDirectives.transferToInterpreter();

@@ -19,6 +19,7 @@ import static org.pkl.core.PClassInfo.pklBaseUri;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import java.util.Set;
 
 public final class BaseModule extends StdLibModule {
   static final VmTyped instance = VmUtils.createEmptyModule();
@@ -241,6 +242,17 @@ public final class BaseModule extends StdLibModule {
 
   public static VmTypeAlias getUInt32TypeAlias() {
     return UInt32TypeAlias.instance;
+  }
+
+  public static Set<VmTypeAlias> getIntTypeAliases() {
+    return Set.of(
+        getInt8TypeAlias(),
+        getInt16TypeAlias(),
+        getInt32TypeAlias(),
+        getUInt8TypeAlias(),
+        getUInt16TypeAlias(),
+        getUInt32TypeAlias(),
+        getUIntTypeAlias());
   }
 
   public static VmTypeAlias getCharTypeAlias() {
