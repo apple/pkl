@@ -18,7 +18,6 @@ package org.pkl.parser;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
-import java.util.EnumSet;
 import java.util.List;
 import java.util.function.Supplier;
 import org.pkl.parser.syntax.Annotation;
@@ -1809,15 +1808,12 @@ public class Parser {
   private FullToken forceNext() {
     var tk = lexer.next();
     precededBySemicolon = false;
-    while (AFFIXES.contains(tk)) {
+    while (tk.isAffix()) {
       precededBySemicolon = precededBySemicolon || tk == Token.SEMICOLON;
       tk = lexer.next();
     }
     return new FullToken(tk, lexer.span(), lexer.newLinesBetween);
   }
-
-  private static final EnumSet<Token> AFFIXES =
-      EnumSet.of(Token.LINE_COMMENT, Token.BLOCK_COMMENT, Token.SEMICOLON);
 
   // Like next, but don't ignore comments
   private FullToken nextComment() {

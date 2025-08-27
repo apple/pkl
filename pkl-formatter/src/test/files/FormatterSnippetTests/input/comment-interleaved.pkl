@@ -1,0 +1,31 @@
+module comment.interleaved
+
+local test: Int|String =
+  if (true)
+    1 // It's the same as "100%"
+  else
+    "8%"
+
+foo: ( // some comment
+  * String(
+      // if dtstart is defined and a datetime, until must also be a datetime if defined
+      true
+    )
+  |Int
+  // trailing comment
+  )?
+
+foo2: (// some comment
+  Int, // other comment
+    String
+  ) ->Int
+
+bar = ( // some comment
+  10 + 10
+  // another comment
+  )
+
+bar2 = ( // some comment
+    foo, bar
+    // another comment
+  ) -> foo + bar

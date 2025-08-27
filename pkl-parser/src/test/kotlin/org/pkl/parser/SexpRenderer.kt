@@ -82,9 +82,18 @@ class SexpRenderer {
     }
     if (decl.extendsOrAmendsDecl !== null) {
       buf.append('\n')
-      buf.append(tab)
-      buf.append("(extendsOrAmendsClause)")
+      renderExtendsOrAmendsClause(decl.extendsOrAmendsDecl!!)
     }
+    tab = oldTab
+    buf.append(')')
+  }
+
+  fun renderExtendsOrAmendsClause(clause: ExtendsOrAmendsClause) {
+    buf.append(tab)
+    buf.append("(extendsOrAmendsClause")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(clause.url)
     tab = oldTab
     buf.append(')')
   }
@@ -97,6 +106,8 @@ class SexpRenderer {
       buf.append("(importClause")
     }
     val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(imp.importStr)
     if (imp.alias !== null) {
       buf.append('\n')
       buf.append(tab)
@@ -178,6 +189,7 @@ class SexpRenderer {
     buf.append("(identifier)")
     val tparList = `typealias`.typeParameterList
     if (tparList !== null) {
+      buf.append('\n')
       renderTypeParameterList(tparList)
     }
     buf.append('\n')
@@ -244,6 +256,7 @@ class SexpRenderer {
     buf.append("(identifier)")
     val tparList = classMethod.typeParameterList
     if (tparList !== null) {
+      buf.append('\n')
       renderTypeParameterList(tparList)
     }
     buf.append('\n')
@@ -385,11 +398,7 @@ class SexpRenderer {
       is MultiLineStringLiteralExpr -> renderMultiLineStringLiteral(expr)
       is ThrowExpr -> renderThrowExpr(expr)
       is TraceExpr -> renderTraceExpr(expr)
-      is ImportExpr -> {
-        buf.append(tab)
-        val name = if (expr.isGlob) "(importGlobExpr)" else "(importExpr)"
-        buf.append(name)
-      }
+      is ImportExpr -> renderImportExpr(expr)
       is ReadExpr -> renderReadExpr(expr)
       is UnqualifiedAccessExpr -> renderUnqualifiedAccessExpr(expr)
       is QualifiedAccessExpr -> renderQualifiedAccessExpr(expr)
@@ -399,7 +408,7 @@ class SexpRenderer {
       is IfExpr -> renderIfExpr(expr)
       is LetExpr -> renderLetExpr(expr)
       is FunctionLiteralExpr -> renderFunctionLiteralExpr(expr)
-      is ParenthesizedExpr -> renderParenthesisedExpr(expr)
+      is ParenthesizedExpr -> renderParenthesizedExpr(expr)
       is NewExpr -> renderNewExpr(expr)
       is AmendsExpr -> renderAmendsExpr(expr)
       is NonNullExpr -> renderNonNullExpr(expr)
@@ -421,7 +430,7 @@ class SexpRenderer {
         renderExpr(part.expr)
       } else {
         buf.append('\n').append(tab)
-        buf.append("(stringConstantExpr)")
+        buf.append("(stringConstant)")
       }
     }
     buf.append(')')
@@ -480,6 +489,17 @@ class SexpRenderer {
     tab = oldTab
   }
 
+  fun renderImportExpr(expr: ImportExpr) {
+    buf.append(tab)
+    val name = if (expr.isGlob) "(importGlobExpr" else "(importExpr"
+    buf.append(name)
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(expr.importStr)
+    buf.append(')')
+    tab = oldTab
+  }
+
   fun renderUnqualifiedAccessExpr(expr: UnqualifiedAccessExpr) {
     buf.append(tab)
     buf.append("(unqualifiedAccessExpr")
@@ -517,6 +537,7 @@ class SexpRenderer {
     buf.append("(superAccessExpr")
     val oldTab = increaseTab()
     buf.append('\n')
+    buf.append(tab)
     buf.append("(identifier)")
     if (expr.argumentList !== null) {
       buf.append('\n')
@@ -588,7 +609,7 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderParenthesisedExpr(expr: ParenthesizedExpr) {
+  fun renderParenthesizedExpr(expr: ParenthesizedExpr) {
     buf.append(tab)
     buf.append("(parenthesizedExpr")
     val oldTab = increaseTab()
@@ -713,6 +734,11 @@ class SexpRenderer {
     tab = oldTab
   }
 
+  fun renderStringConstant(str: StringConstant) {
+    buf.append(tab)
+    buf.append("(stringConstant)")
+  }
+
   fun renderTypeAnnotation(typeAnnotation: TypeAnnotation) {
     buf.append(tab)
     buf.append("(typeAnnotation")
@@ -737,10 +763,7 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(moduleType)")
       }
-      is StringConstantType -> {
-        buf.append(tab)
-        buf.append("(stringConstantType)")
-      }
+      is StringConstantType -> renderStringConstantType(type)
       is DeclaredType -> renderDeclaredType(type)
       is ParenthesizedType -> renderParenthesizedType(type)
       is NullableType -> renderNullableType(type)
@@ -748,6 +771,16 @@ class SexpRenderer {
       is UnionType -> renderUnionType(type)
       is FunctionType -> renderFunctionType(type)
     }
+  }
+
+  fun renderStringConstantType(type: StringConstantType) {
+    buf.append(tab)
+    buf.append("(stringConstantType")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderStringConstant(type.str)
+    buf.append(')')
+    tab = oldTab
   }
 
   fun renderDeclaredType(type: DeclaredType) {
@@ -778,7 +811,7 @@ class SexpRenderer {
 
   fun renderParenthesizedType(type: ParenthesizedType) {
     buf.append(tab)
-    buf.append("(parenthesisedType")
+    buf.append("(parenthesizedType")
     val oldTab = increaseTab()
     buf.append('\n')
     renderType(type.type)
@@ -903,12 +936,11 @@ class SexpRenderer {
     buf.append(tab)
     buf.append("(objectMethod")
     val oldTab = increaseTab()
-    buf.append('\n')
     for (mod in method.modifiers) {
       buf.append('\n')
       renderModifier(mod)
     }
-    buf.append('\n')
+    buf.append('\n').append(tab)
     buf.append("(identifier)")
     val tparList = method.typeParameterList
     if (tparList !== null) {
@@ -1012,19 +1044,20 @@ class SexpRenderer {
 
   fun renderTypeParameterList(typeParameterList: TypeParameterList) {
     buf.append(tab)
-    buf.append("(TypeParameterList\n")
+    buf.append("(typeParameterList")
     val oldTab = increaseTab()
     for (tpar in typeParameterList.parameters) {
       buf.append('\n')
       renderTypeParameter(tpar)
     }
+    buf.append(')')
     tab = oldTab
   }
 
   @Suppress("UNUSED_PARAMETER")
   fun renderTypeParameter(ignored: TypeParameter?) {
     buf.append(tab)
-    buf.append("(TypeParameter\n")
+    buf.append("(typeParameter\n")
     val oldTab = increaseTab()
     buf.append(tab)
     buf.append("(identifier))")
