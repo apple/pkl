@@ -19,6 +19,7 @@ import static org.pkl.core.PClassInfo.pklBaseUri;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import java.util.Set;
 
 public final class BaseModule extends StdLibModule {
   static final VmTyped instance = VmUtils.createEmptyModule();
@@ -207,6 +208,14 @@ public final class BaseModule extends StdLibModule {
     return ResourceClass.instance;
   }
 
+  public static VmClass getReferenceClass() {
+    return ReferenceClass.instance;
+  }
+
+  public static VmClass getReferenceAccessClass() {
+    return ReferenceAccessClass.instance;
+  }
+
   public static VmTypeAlias getNonNullTypeAlias() {
     return NonNullTypeAlias.instance;
   }
@@ -241,6 +250,17 @@ public final class BaseModule extends StdLibModule {
 
   public static VmTypeAlias getUInt32TypeAlias() {
     return UInt32TypeAlias.instance;
+  }
+
+  public static Set<VmTypeAlias> getIntTypeAliases() {
+    return Set.of(
+        getInt8TypeAlias(),
+        getInt16TypeAlias(),
+        getInt32TypeAlias(),
+        getUInt8TypeAlias(),
+        getUInt16TypeAlias(),
+        getUInt32TypeAlias(),
+        getUIntTypeAlias());
   }
 
   public static VmTypeAlias getCharTypeAlias() {
@@ -373,6 +393,14 @@ public final class BaseModule extends StdLibModule {
 
   private static final class ResourceClass {
     static final VmClass instance = loadClass("Resource");
+  }
+
+  private static final class ReferenceClass {
+    static final VmClass instance = loadClass("Reference");
+  }
+
+  private static final class ReferenceAccessClass {
+    static final VmClass instance = loadClass("ReferenceAccess");
   }
 
   private static final class FunctionClass {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
+import java.util.stream.Collectors;
 
 /** A Pkl type as used in type annotations. */
 public abstract class PType implements Serializable {
@@ -27,18 +28,33 @@ public abstract class PType implements Serializable {
   public static final PType UNKNOWN =
       new PType() {
         @Serial private static final long serialVersionUID = 0L;
+
+        @Override
+        public String toString() {
+          return "unknown";
+        }
       };
 
   /** The bottom type. */
   public static final PType NOTHING =
       new PType() {
         @Serial private static final long serialVersionUID = 0L;
+
+        @Override
+        public String toString() {
+          return "nothing";
+        }
       };
 
   /** The type of the enclosing module. */
   public static final PType MODULE =
       new PType() {
         @Serial private static final long serialVersionUID = 0L;
+
+        @Override
+        public String toString() {
+          return "module";
+        }
       };
 
   private PType() {}
@@ -58,6 +74,10 @@ public abstract class PType implements Serializable {
 
     public String getLiteral() {
       return literal;
+    }
+
+    public String toString() {
+      return ValueFormatter.basic().formatStringValue(literal, "");
     }
   }
 
@@ -92,6 +112,18 @@ public abstract class PType implements Serializable {
     public List<PType> getTypeArguments() {
       return typeArguments;
     }
+
+    @Override
+    public String toString() {
+      var result = pClass.getDisplayName();
+      if (!typeArguments.isEmpty()) {
+        result +=
+            "<"
+                + typeArguments.stream().map(Object::toString).collect(Collectors.joining(", "))
+                + ">";
+      }
+      return result;
+    }
   }
 
   public static final class Nullable extends PType {
@@ -105,6 +137,13 @@ public abstract class PType implements Serializable {
 
     public PType getBaseType() {
       return baseType;
+    }
+
+    @Override
+    public String toString() {
+      return baseType instanceof Function || baseType instanceof Union
+          ? "(" + baseType + ")?"
+          : baseType + "?";
     }
   }
 
@@ -125,6 +164,16 @@ public abstract class PType implements Serializable {
 
     public List<String> getConstraints() {
       return constraints;
+    }
+
+    @Override
+    public String toString() {
+      return (baseType instanceof Function || baseType instanceof Union
+              ? "(" + baseType + ")"
+              : baseType)
+          + "("
+          + String.join(", ", constraints)
+          + ")";
     }
   }
 
@@ -161,6 +210,18 @@ public abstract class PType implements Serializable {
     public PType getAliasedType() {
       return aliasedType;
     }
+
+    @Override
+    public String toString() {
+      var result = typeAlias.getDisplayName();
+      if (!typeArguments.isEmpty()) {
+        result +=
+            "<"
+                + typeArguments.stream().map(Object::toString).collect(Collectors.joining(", "))
+                + ">";
+      }
+      return result;
+    }
   }
 
   public static final class Function extends PType {
@@ -181,6 +242,14 @@ public abstract class PType implements Serializable {
     public PType getReturnType() {
       return returnType;
     }
+
+    @Override
+    public String toString() {
+      return "("
+          + parameterTypes.stream().map(Object::toString).collect(Collectors.joining(", "))
+          + ") -> "
+          + returnType;
+    }
   }
 
   public static final class Union extends PType {
@@ -194,6 +263,11 @@ public abstract class PType implements Serializable {
 
     public List<PType> getElementTypes() {
       return elementTypes;
+    }
+
+    @Override
+    public String toString() {
+      return elementTypes.stream().map(Object::toString).collect(Collectors.joining(" | "));
     }
   }
 
@@ -212,6 +286,11 @@ public abstract class PType implements Serializable {
 
     public TypeParameter getTypeParameter() {
       return typeParameter;
+    }
+
+    @Override
+    public String toString() {
+      return typeParameter.getName();
     }
   }
 }
