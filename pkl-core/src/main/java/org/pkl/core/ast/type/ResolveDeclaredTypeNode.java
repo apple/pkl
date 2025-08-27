@@ -16,6 +16,7 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
@@ -78,7 +79,14 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
       var importedModule = (VmTyped) result;
       if (importedModule.isNotInitialized() && importedModule.getModuleInfo().isAmend()) {
         // this is an amending module. Try to find the prototype
-        return findPrototypeModule(importedModule, importName, importNameSection);
+        var proto = findPrototypeModule(this, importedModule);
+        if (proto == null) {
+          throw exceptionBuilder()
+              .evalError("cannotFindModuleImport", importName)
+              .withSourceSection(importNameSection)
+              .build();
+        }
+        return proto;
       }
 
       module.setCachedValue(importName, result);
@@ -86,22 +94,15 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     return (VmTyped) result;
   }
 
-  private VmTyped findPrototypeModule(
-      VmTyped notInitializedModule, Identifier importName, SourceSection importNameSection) {
+  public static @Nullable VmTyped findPrototypeModule(Node node, VmTyped notInitializedModule) {
     VmTyped amendingModule = null;
     var moduleInfo = notInitializedModule.getModuleInfo();
     var amendedModuleKey = moduleInfo.getAmendedModuleKey();
 
     while (amendedModuleKey != null) {
-      amendingModule = VmLanguage.get(this).loadModule(amendedModuleKey, this);
+      amendingModule = VmLanguage.get(node).loadModule(amendedModuleKey, node);
       moduleInfo = amendingModule.getModuleInfo();
       amendedModuleKey = moduleInfo.getAmendedModuleKey();
-    }
-    if (amendingModule == null) {
-      throw exceptionBuilder()
-          .evalError("cannotFindModuleImport", importName)
-          .withSourceSection(importNameSection)
-          .build();
     }
     return amendingModule;
   }

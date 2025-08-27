@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.ast.type.ResolveDeclaredTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmLanguage;
@@ -63,10 +64,15 @@ public abstract class AmendModuleNode extends SpecializedObjectLiteralNode {
           .build();
     }
 
-    checkIsValidTypedAmendment(supermodule);
+    var _supermodule = supermodule;
+    if (_supermodule.isNotInitialized()) {
+      _supermodule = ResolveDeclaredTypeNode.findPrototypeModule(this, _supermodule);
+      assert _supermodule != null;
+    }
+    checkIsValidTypedAmendment(_supermodule);
 
-    module.lateInitVmClass(supermodule.getVmClass());
-    module.lateInitParent(supermodule);
+    module.lateInitVmClass(_supermodule.getVmClass());
+    module.lateInitParent(_supermodule);
     module.addProperties(members);
 
     module.setExtraStorage(moduleInfo);
