@@ -3770,3 +3770,47 @@ external class Bytes extends Any {
   /// Converts these bytes into a [List].
   external function toList(): List<UInt8>
 }
+
+/// Creates a reference to the given value.
+@Since { version = "0.31.0" }
+external const function Reference<T>(rootValue: T): Reference<T>
+
+/// A reference to a value that may not exist at evaluation time.
+///
+/// Reference provides a type-checked way to produce references to data that is not known at time of
+/// evaluation. Different configuration systems may ascribe different meanings to references and
+/// require that textuat rendering is formatted in specific ways.
+///
+/// Limitations:
+/// * Most type constraints are ignored (erased) when referenced.
+/// * Properties marked `external` may not be referenced.
+@Since { version = "0.31.0" }
+external class Reference<out T> extends Object {
+  // these are methods instead of properties to avoid collisions with referenced properties
+
+  /// The value from which the Reference is rooted. 
+  external function getRootValue(): Any
+
+  /// The path of access from [rootValue] to the referent.
+  external function getPath(): List<ReferenceAccess>
+}
+
+/// Represents a property or subscript access as part of a [Reference].
+@Since { version = "0.31.0" }
+external class ReferenceAccess {
+  /// If the access is access to a property.
+  external isProperty: Boolean
+
+  /// The property that was accessed.
+  ///
+  /// If non-null, this is a property access. If `null` this is a subscript access.
+  external property: String(key == null)?
+
+  /// If the access is access via subscript.
+  external isSubscript: Boolean
+
+  /// The subscript key that was accessed.
+  ///
+  /// May be null even when [property] is null, which represents a subscript access with key `null`.
+  external key: Any
+}
