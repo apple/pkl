@@ -1,0 +1,3 @@
+import "../../input-helper/cycles/amendsFooLv2.pkl"
+
+foo: amendsFooLv2.Bar = "bar"

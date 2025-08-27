@@ -76,14 +76,9 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
       result = callNode.call(member.getCallTarget(), module, module, importName);
 
       var importedModule = (VmTyped) result;
-      if (importedModule.isNotInitialized()
-          && importedModule.isModuleObject()
-          && importedModule.getModuleInfo().isAmend()) {
+      if (importedModule.isNotInitialized() && importedModule.getModuleInfo().isAmend()) {
         // this is an amending module. Try to find the prototype
-        var prototypeModule = findPrototypeModule(importedModule);
-        if (prototypeModule != null) {
-          result = prototypeModule;
-        }
+        return findPrototypeModule(importedModule, importName, importNameSection);
       }
 
       module.setCachedValue(importName, result);
@@ -91,17 +86,24 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     return (VmTyped) result;
   }
 
-  private @Nullable VmTyped findPrototypeModule(VmTyped amendingModule) {
-    try {
-      var moduleInfo = amendingModule.getModuleInfo();
-      var amendedModuleKey = moduleInfo.getAmendedModuleKey();
+  private VmTyped findPrototypeModule(
+      VmTyped notInitializedModule, Identifier importName, SourceSection importNameSection) {
+    VmTyped amendingModule = null;
+    var moduleInfo = notInitializedModule.getModuleInfo();
+    var amendedModuleKey = moduleInfo.getAmendedModuleKey();
 
-      if (amendedModuleKey != null) {
-        return VmLanguage.get(null).loadModule(amendedModuleKey);
-      }
-    } catch (Exception ignored) {
+    while (amendedModuleKey != null) {
+      amendingModule = VmLanguage.get(this).loadModule(amendedModuleKey, this);
+      moduleInfo = amendingModule.getModuleInfo();
+      amendedModuleKey = moduleInfo.getAmendedModuleKey();
     }
-    return null;
+    if (amendingModule == null) {
+      throw exceptionBuilder()
+          .evalError("cannotFindModuleImport", importName)
+          .withSourceSection(importNameSection)
+          .build();
+    }
+    return amendingModule;
   }
 
   protected @Nullable Object getType(

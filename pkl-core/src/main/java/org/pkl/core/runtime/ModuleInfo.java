@@ -203,7 +203,8 @@ public final class ModuleInfo {
   }
 
   /**
-   * Returns the ModuleKey of the module being amended, or null if this is not an amending module.
+   * Returns the {@link ModuleKey} of the module being amended, or null if this is not an amending
+   * module.
    */
   public @Nullable ModuleKey getAmendedModuleKey() {
     return amendedModuleKey;
