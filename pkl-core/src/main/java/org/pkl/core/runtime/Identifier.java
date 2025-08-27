@@ -163,6 +163,9 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier GLOB = get("glob");
   public static final Identifier COMPLETION_CANDIDATES = get("completionCandidates");
 
+  // members of pkl.ref
+  public static final Identifier REFERENCE_TO_STRING = get("referenceToString");
+
   // common in lambdas etc
   public static final Identifier IT = get("it");
 

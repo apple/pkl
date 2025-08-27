@@ -1,0 +1,71 @@
+/*
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+package org.pkl.core.stdlib.ref;
+
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import org.pkl.core.ast.ConstantValueNode;
+import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
+import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmReference;
+import org.pkl.core.stdlib.ExternalMethod0Node;
+
+public class ReferenceNodes {
+  private ReferenceNodes() {}
+
+  public abstract static class getDomain extends ExternalMethod0Node {
+    @Specialization
+    protected Object eval(VmReference self) {
+      return self.getDomain();
+    }
+  }
+
+  public abstract static class getData extends ExternalMethod0Node {
+    @Specialization
+    protected Object eval(VmReference self) {
+      return self.getData();
+    }
+  }
+
+  public abstract static class getPath extends ExternalMethod0Node {
+    @Specialization
+    protected VmList eval(VmReference self) {
+      return VmList.create(self.getPath());
+    }
+  }
+
+  public abstract static class toString extends ExternalMethod0Node {
+    @Specialization
+    protected String evalString(VirtualFrame frame, VmReference self) {
+      var invokeNode =
+          InvokeMethodVirtualNodeGen.create(
+              sourceSection,
+              Identifier.REFERENCE_TO_STRING,
+              new ExpressionNode[] {
+                new ConstantValueNode(self.getData()),
+                new ConstantValueNode(VmList.create(self.getPath()))
+              },
+              MemberLookupMode.EXPLICIT_RECEIVER,
+              null,
+              null);
+      return (String)
+          invokeNode.executeWith(frame, self.getDomain(), self.getDomain().getVmClass());
+    }
+  }
+}

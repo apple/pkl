@@ -1,0 +1,34 @@
+// test reference errors
+
+import "pkl:test"
+import "pkl:ref"
+
+hidden a: A
+
+class D extends ref.Domain
+local d: D = new {}
+class D2 extends ref.Domain
+local d2: D2 = new {}
+typealias Ref<T> = ref.Reference<D, T>
+
+class A {
+  b: String
+}
+
+// type mismatch
+foo = test.catch(() -> ref.Reference(d, A, a).b as Ref<Int>)
+bar = test.catch(() -> ref.Reference(d, A, a).b as Ref<Boolean | Int>)
+baz = test.catch(() -> ref.Reference(d, A, a).b as Ref<Listing<String>>)
+qux = test.catch(() -> ref.Reference(d, A, a).b as Ref<Alias1?>)
+
+// wrong domain
+quux = test.catch(() -> ref.Reference(d2, A, a).b as Ref<A>)
+
+typealias Alias1 = Int | Alias2?
+typealias Alias2 = Boolean
+
+// property not found
+corge = test.catch(() -> ref.Reference(d, String, a).c)
+
+// incorrect subscript type
+grault = test.catch(() -> ref.Reference(d, List, List())["hi"] as Ref<String>)

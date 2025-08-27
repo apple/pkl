@@ -33,6 +33,7 @@ import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
@@ -395,6 +396,16 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     visitElement(index, convertedValue, isFirst);
     currPath.pop();
     currSourceSection = prevSourceSection;
+  }
+
+  @Override
+  public void visitReference(VmReference value) {
+    cannotRenderTypeAddConverter(value);
+  }
+
+  @Override
+  public void visitReferenceAccess(VmReference.Access value) {
+    cannotRenderTypeAddConverter(value);
   }
 
   protected void cannotRenderTypeAddConverter(VmValue value) {

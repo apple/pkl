@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -2116,6 +2117,105 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    @Override
+    protected boolean isParametric() {
+      return true;
+    }
+  }
+
+  @ImportStatic(RefModule.class)
+  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
+    private TypeNode domainTypeNode;
+    @Child private TypeNode referentTypeNode;
+    @Child private ExpressionNode getModuleNode;
+
+    public ReferenceTypeNode(
+        SourceSection sourceSection, TypeNode domainTypeNode, TypeNode referentTypeNode) {
+      super(sourceSection);
+      this.domainTypeNode = domainTypeNode;
+      this.referentTypeNode = referentTypeNode;
+      this.getModuleNode = new GetModuleNode(sourceSection);
+    }
+
+    @SuppressWarnings("unused")
+    @Specialization(guards = "value.getVmClass() == getReferenceClass()")
+    protected Object eval(VirtualFrame frame, VmReference value) {
+      // constraints may not be used in Reference type annotation referents
+      // walk the type and throw if any part of the referent is constrained
+      // perform this check at eval-time instead of init-time
+      // because type aliases can replace nodes between init and eval
+      referentTypeNode.acceptTypeNode(
+          true,
+          (typeNode) -> {
+            if (typeNode instanceof ConstrainedTypeNode) {
+              throw exceptionBuilder()
+                  .evalError("invalidReferenceTypeAnnotationWithConstraint")
+                  .withLocation(this)
+                  .build();
+            }
+            return true;
+          });
+
+      if (referentTypeNode.isNoopTypeCheck()) {
+        return value;
+      }
+
+      var domainType = TypeNode.export(domainTypeNode);
+      var referentType = TypeNode.export(referentTypeNode);
+
+      try {
+        domainTypeNode.execute(frame, value.getDomain());
+      } catch (VmTypeMismatchException e) {
+        throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+      }
+
+      var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      if (value.checkType(referentType, module.getVmClass().export())) {
+        return value;
+      }
+
+      throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+    }
+
+    @Fallback
+    protected Object fallback(Object value) {
+      throw typeMismatch(value, RefModule.getReferenceClass());
+    }
+
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) return consumer.accept(this) && consumer.accept(referentTypeNode);
+      return consumer.accept(this);
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return RefModule.getReferenceClass();
+    }
+
+    @Override
+    public VmList getTypeArgumentMirrors() {
+      return VmList.of(referentTypeNode.getMirror());
+    }
+
+    @Override
+    protected boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof ReferenceTypeNode referenceTypeNode)) {
+        return false;
+      }
+      return referentTypeNode.isEquivalentTo(referenceTypeNode.referentTypeNode);
+    }
+
+    @Override
+    public boolean isNoopTypeCheck() {
+      return referentTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected PType doExport() {
+      return new PType.Class(RefModule.getReferenceClass().export(), referentTypeNode.doExport());
     }
 
     @Override

@@ -1,0 +1,80 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Type-safe deferred references to values not known at evaluation time.
+///
+/// References are an advanced API design tool that allow library authors to express domain-specific
+/// references to values that may not be known during evaluation. They are particularly suited for
+/// configuring execution systems where tasks have well-typed inputs and output
+@ModuleInfo { minPklVersion = "0.32.0" }
+module pkl.ref
+
+/// Creates a reference to the given value.
+external const function Reference<D, T>(
+  domain: D(this is Domain),
+  clazz: Class<T>,
+  data: Any,
+): Reference<D, T>
+
+/// A reference to a value that may not exist at evaluation time.
+///
+/// Reference provides a type-checked way to produce references to data that is not known at time of
+/// evaluation. Different configuration domains may ascribe different meanings to references and
+/// require that textual rendering is formatted in specific ways.
+///
+/// Limitations:
+/// * Type constraints are ignored (erased) when referenced.
+/// * Properties marked `external` may not be referenced.
+external class Reference<out D, out T> {
+  // these are methods instead of properties to avoid collisions with referenced properties
+
+  /// The value from which the Reference is rooted. 
+  external function getDomain(): D
+
+  /// The value from which the Reference is rooted. 
+  external function getData(): Any
+
+  /// The path of access from [rootValue] to the referent.
+  external function getPath(): List<Access>
+
+  external function toString(): String
+}
+
+abstract class Domain {
+  function referenceToString(data: Any, path: List<Access>): String =
+    throw(
+      "Reference domain \(getClass()) must override referenceToString to enable Reference.toString()"
+    )
+}
+
+/// Represents a property or subscript access as part of a [Reference].
+external class Access {
+  /// If the access is access to a property.
+  external isProperty: Boolean
+
+  /// The property that was accessed.
+  ///
+  /// If non-null, this is a property access. If `null` this is a subscript access.
+  external property: String(key == null)?
+
+  /// If the access is access via subscript.
+  external isSubscript: Boolean
+
+  /// The subscript key that was accessed.
+  ///
+  /// May be null even when [property] is null, which represents a subscript access with key `null`.
+  external key: Any
+}

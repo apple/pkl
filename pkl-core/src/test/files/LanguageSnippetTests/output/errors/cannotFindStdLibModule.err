@@ -20,6 +20,7 @@ pkl:pklbinary
 pkl:platform
 pkl:Project
 pkl:protobuf
+pkl:ref
 pkl:reflect
 pkl:release
 pkl:semver

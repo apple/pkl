@@ -104,6 +104,8 @@ public final class ModuleCache {
           return PlatformModule.getModule();
         case "project":
           return ProjectModule.getModule();
+        case "ref":
+          return RefModule.getModule();
         case "reflect":
           return ReflectModule.getModule();
         case "release":
