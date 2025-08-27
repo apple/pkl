@@ -1,0 +1,43 @@
+a {
+  name = "a"
+  id = "some-a-value"
+}
+b {
+  name = "b"
+  id = "some-b-value"
+}
+aRef = "${a}"
+bRef = "${b}"
+unknownRef = "${a}"
+unknownRef2 = "${a}"
+unknownRef3 = "${a}"
+k {
+  aId = "${a.id}"
+  bId = "${b.id}"
+  aProperties = "${a.outputs}"
+  bProperties = "${b.outputs}"
+  aValues {
+    "${a.outputs.foo}"
+    "${a.outputs.someMapping[key]}"
+    "${a.outputs.someMap[123]}"
+    "${a.outputs.someListing[0]}"
+    "${a.outputs.someList[9223372036854775807]}"
+    "${b.outputs.nonString}"
+  }
+  bValues {
+    "${b.outputs.foo}"
+    "${b.outputs.someMapping[key]}"
+    "${b.outputs.someMap[123]}"
+    "${b.outputs.someListing[0]}"
+    "${b.outputs.someList[9223372036854775807]}"
+    "${a.outputs.nonInt}"
+  }
+}
+j {
+  aId = null
+  bId = null
+  aProperties = "${a.outputs}"
+  bProperties = null
+  aValues = null
+  bValues = null
+}

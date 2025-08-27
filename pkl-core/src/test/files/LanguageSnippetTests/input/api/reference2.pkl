@@ -1,0 +1,12 @@
+// test scenarios that put type constraints in Reference type nodes (annotations/casts)
+
+import "pkl:test"
+
+hidden a: String
+foo = test.catch(() -> Reference(a) as Reference<String(true)>)
+bar = test.catch(() -> Reference(a) as Reference<String(true) | Int>)
+baz = test.catch(() -> Reference(a) as Reference<Listing<String(true)>>)
+qux = test.catch(() -> Reference(a) as Reference<Alias1?>)
+
+typealias Alias1 = Int | Alias2?
+typealias Alias2 = String(length < 5)
