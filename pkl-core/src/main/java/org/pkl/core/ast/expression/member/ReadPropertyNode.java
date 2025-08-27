@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,19 @@ public abstract class ReadPropertyNode extends ExpressionNode {
 
   protected ReadPropertyNode(SourceSection sourceSection, Identifier propertyName) {
     this(sourceSection, propertyName, MemberLookupMode.EXPLICIT_RECEIVER, false);
+  }
+
+  @Specialization
+  protected VmReference evalReference(VmReference receiver) {
+    assert lookupMode == MemberLookupMode.EXPLICIT_RECEIVER;
+    var result = receiver.withPropertyAccess(propertyName);
+    if (result != null) return result;
+
+    CompilerDirectives.transferToInterpreter();
+    // TODO
+    throw exceptionBuilder()
+        .adhocEvalError("Cannot find property `{0}` on Reference<FooBarBaz>", propertyName)
+        .build();
   }
 
   // This method effectively covers `VmObject receiver` but is implemented in a more

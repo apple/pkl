@@ -287,6 +287,10 @@ public abstract class UnresolvedTypeNode extends PklNode {
           return new VarArgsTypeNode(sourceSection, typeArgumentNodes[0].execute(frame));
         }
 
+        if (clazz.isReferenceClass()) {
+          return ReferenceTypeNodeGen.create(sourceSection, typeArgumentNodes[0].execute(frame));
+        }
+
         throw exceptionBuilder()
             .evalError("notAParameterizableClass", clazz.getDisplayName())
             .withSourceSection(typeArgumentNodes[0].sourceSection)

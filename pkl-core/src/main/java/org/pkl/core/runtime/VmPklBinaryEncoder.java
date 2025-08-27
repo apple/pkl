@@ -19,6 +19,7 @@ import java.io.IOException;
 import java.util.Deque;
 import org.msgpack.core.MessageBufferPacker;
 import org.pkl.core.PklBugException;
+import org.pkl.core.runtime.VmReference.Access;
 import org.pkl.core.stdlib.AbstractRenderer;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.pklbinary.PklBinaryCode;
@@ -319,6 +320,38 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
     try {
       packer.packArrayHeader(1);
       packCode(PklBinaryCode.FUNCTION);
+    } catch (IOException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  @Override
+  public void visitReference(VmReference value) {
+    try {
+      packer.packArrayHeader(3);
+      packCode(PklBinaryCode.REFERENCE);
+      visit(value.getRootValue());
+      packer.packArrayHeader(value.getPath().size());
+      for (var access : value.getPath()) {
+        visit(access);
+      }
+    } catch (IOException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  @Override
+  public void visitReferenceAccess(Access value) {
+    try {
+      packer.packArrayHeader(3);
+      packCode(PklBinaryCode.REFERENCE_ACCESS);
+      if (value.isProperty()) {
+        packer.packString(value.getProperty());
+        packer.packNil();
+      } else {
+        packer.packNil();
+        visit(value.getKey());
+      }
     } catch (IOException e) {
       throw PklBugException.unreachableCode();
     }
