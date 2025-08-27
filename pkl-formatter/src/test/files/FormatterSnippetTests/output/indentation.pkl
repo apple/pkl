@@ -50,12 +50,12 @@ objParams2: Listing<Int> = new {
 
 parenType: (
   ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType(
-    reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint,
+    reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalylongConstraint
   )
 )
 
 functionType: (
   ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType,
-  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2,
+  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2
 ) ->
   String

@@ -9,7 +9,7 @@ local test: Int | String =
 foo: ( // some comment
   *String(
     // if dtstart is defined and a datetime, until must also be a datetime if defined
-    true,
+    true
   )
     | Int
   // trailing comment
@@ -17,7 +17,7 @@ foo: ( // some comment
 
 foo2: ( // some comment
   Int, // other comment
-  String,
+  String
 ) ->
   Int
 

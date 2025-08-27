@@ -17,12 +17,12 @@ local function function2(
   parameter1: Parameter1Type,
   parameter2: Parameter2Type,
   parameter3: Parameter3Type,
-  parameter4: Parameter4Type,
+  parameter4: Parameter4Type
 ): String = ""
 
 local const function function3(
   parameter1: String | Int,
-  parameter2: String | Int,
+  parameter2: String | Int
 ): Mapping<String | Int, String> = new {}
 
 prop =
@@ -30,7 +30,7 @@ prop =
     loooooooooooooooooogParameter1,
     loooooooooooooooooogParameter2,
     loooooooooooooooooogParameter3,
-    loooooooooooooooooogParameter4,
+    loooooooooooooooooogParameter4
   )
 
 prop2: String | Int | Boolean
@@ -45,3 +45,18 @@ open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutP
   extends AnotherInterestingClassName {
   foo: Int
 }
+
+local function resourceMapping(type): Mapping<String, unknown> = new Mapping {
+  default = (key) -> (type) { metadata { name = key } }
+}
+
+local const function biiiiiiiiiiiiiiiiiiiiiiiiigFunction(
+  param1: String,
+  param2: String(!isBlank)
+): Boolean
+
+local const function someFunction(param1: String, param2: String(!isBlank)): Boolean
+
+local function render(currentIndent: String) =
+  "\(currentIndent)@\(identifier.render(currentIndent))"
+    + if (body == null) "" else " " + body.render(currentIndent)

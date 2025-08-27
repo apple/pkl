@@ -2,5 +2,5 @@ foo =
   Map(
     1000, "some random string",
     20000, "another random string",
-    30000, "yet another random string",
+    30000, "yet another random string"
   )
