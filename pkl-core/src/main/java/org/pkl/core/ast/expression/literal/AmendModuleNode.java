@@ -67,7 +67,9 @@ public abstract class AmendModuleNode extends SpecializedObjectLiteralNode {
     var _supermodule = supermodule;
     if (_supermodule.isNotInitialized()) {
       _supermodule = ResolveDeclaredTypeNode.findPrototypeModule(this, _supermodule);
-      assert _supermodule != null;
+      if (_supermodule == null) {
+        throw exceptionBuilder().evalError("cyclicalModuleLoading").build();
+      }
     }
     checkIsValidTypedAmendment(_supermodule);
 
