@@ -52,6 +52,7 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
 
   private var continuation = false
   private var quit = false
+  private var maybeQuit = false
   private var nextRequestId = 0
 
   fun run() {
@@ -74,11 +75,23 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
               reader.readLine("pkl$nextRequestId> ")
             }
           } catch (e: UserInterruptException) {
-            ":quit"
+            if (!continuation && reader.buffer.length() == 0) {
+              if (maybeQuit) quit()
+              else {
+                maybeQuit = true
+                println("(To exit, press ^C again or ^D or type :quit)")
+              }
+            } else {
+              maybeQuit = false
+            }
+            inputBuffer = ""
+            continuation = false
+            continue
           } catch (e: EndOfFileException) {
             ":quit"
           }
 
+        maybeQuit = false
         val input = line.trim()
         if (input.isEmpty()) continue
 
