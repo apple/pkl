@@ -146,6 +146,10 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract MapProperty<URI, URI> getHttpRewrites();
 
+  @Input
+  @Optional
+  public abstract MapProperty<String, String> getHttpHeaders();
+
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
    * Truffle use an un-optimized runtime.
@@ -200,6 +204,7 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
               getHttpRewrites().getOrNull(),
+              getHttpHeaders().getOrNull(),
               Map.of(),
               Map.of(),
               null);
