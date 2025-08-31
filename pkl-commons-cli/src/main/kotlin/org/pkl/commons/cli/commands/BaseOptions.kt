@@ -275,6 +275,14 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
+  val httpHeaders: Map<String, String> by
+    option(
+        names = arrayOf("--http-headers"),
+        metavar = "key=value",
+        help = "HTTP header to add to the request.",
+      )
+      .associate()
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -340,6 +348,7 @@ class BaseOptions : OptionGroup() {
       httpProxy = proxy,
       httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
+      httpHeaders = httpHeaders.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
       traceMode = traceMode,

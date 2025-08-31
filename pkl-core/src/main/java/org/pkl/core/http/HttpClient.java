@@ -151,6 +151,14 @@ public interface HttpClient extends AutoCloseable {
     Builder addRewrite(URI sourcePrefix, URI targetPrefix);
 
     /**
+     * Sets the HTTP headers for the request, replacing any previously configured headers.
+     *
+     * <p>This method clears all existing headers and replaces them with the contents of the
+     * provided map.
+     */
+    Builder setHeaders(Map<String, String> headers);
+
+    /**
      * Creates a new {@code HttpClient} from the current state of this builder.
      *
      * @throws HttpClientInitException if an error occurs while initializing the client

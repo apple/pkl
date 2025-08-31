@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,6 +41,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
@@ -54,6 +55,7 @@ import org.pkl.core.util.Exceptions;
 final class JdkHttpClient implements HttpClient {
   // non-private for testing
   final java.net.http.HttpClient underlying;
+  final Map<String, String> headers;
 
   // call java.net.http.HttpClient.close() if available (JDK 21+)
   private static final MethodHandle closeMethod;
@@ -77,7 +79,8 @@ final class JdkHttpClient implements HttpClient {
       List<Path> certificateFiles,
       List<ByteBuffer> certificateBytes,
       Duration connectTimeout,
-      java.net.ProxySelector proxySelector) {
+      java.net.ProxySelector proxySelector,
+      Map<String, String> headers) {
     underlying =
         java.net.http.HttpClient.newBuilder()
             .sslContext(createSslContext(certificateFiles, certificateBytes))
@@ -85,13 +88,16 @@ final class JdkHttpClient implements HttpClient {
             .proxy(proxySelector)
             .followRedirects(Redirect.NORMAL)
             .build();
+    this.headers = headers;
   }
 
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
       throws IOException {
     try {
-      return underlying.send(request, responseBodyHandler);
+      var wrappedRequestBuilder = HttpRequest.newBuilder(request, (name, value) -> true);
+      this.headers.forEach(wrappedRequestBuilder::header);
+      return underlying.send(wrappedRequestBuilder.build(), responseBodyHandler);
     } catch (ConnectException e) {
       // original exception has no message
       throw new ConnectException(

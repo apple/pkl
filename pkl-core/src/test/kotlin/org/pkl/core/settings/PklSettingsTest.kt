@@ -64,6 +64,9 @@ class PklSettingsTest {
         rewrites {
           ["https://foo.com/"] = "https://bar.com/"
         }
+        headers {
+          ["X-Foo"] = "bar"
+        }
       }
       """
         .trimIndent()
@@ -77,6 +80,7 @@ class PklSettingsTest {
           listOf("example.com", "pkg.pkl-lang.org"),
         ),
         mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
+        mapOf("X-Foo" to "bar"),
       )
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
   }
@@ -101,6 +105,7 @@ class PklSettingsTest {
     val expectedHttp =
       PklEvaluatorSettings.Http(
         PklEvaluatorSettings.Proxy(URI("http://localhost:8080"), listOf()),
+        null,
         null,
       )
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
