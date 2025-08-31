@@ -148,6 +148,10 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
+  public abstract MapProperty<String, String> getHttpHeaders();
+
+  @Input
+  @Optional
   public abstract Property<Boolean> getPowerAssertions();
 
   /**
@@ -204,6 +208,7 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
               getHttpRewrites().getOrNull(),
+              getHttpHeaders().getOrNull(),
               Map.of(),
               Map.of(),
               null,
