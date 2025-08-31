@@ -39,6 +39,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private int testPort = -1;
   private ProxySelector proxySelector;
   private Map<URI, URI> rewrites = new HashMap<>();
+  private Map<String, String> headers = new HashMap<>();
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -111,6 +112,12 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
+  public Builder setHeaders(Map<String, String> headers) {
+    this.headers = new HashMap<>(headers);
+    return this;
+  }
+
+  @Override
   public HttpClient build() {
     return doBuild().get();
   }
@@ -127,7 +134,8 @@ final class HttpClientBuilder implements HttpClient.Builder {
         this.proxySelector != null ? this.proxySelector : java.net.ProxySelector.getDefault();
     return () -> {
       var jdkClient =
-          new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
+          new JdkHttpClient(
+              certificateFiles, certificateBytes, connectTimeout, proxySelector, headers);
       return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient, rewrites);
     };
   }
