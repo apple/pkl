@@ -29,12 +29,14 @@ import "pkl:protobuf"
 /// Every type is a subtype of [Any].
 ///
 /// The following operators are supported for all values:
+///
 /// ```
 /// value1 == value2 // equality
 /// value1 != value2 // inequality
 /// value.member     // member access
 /// value?.member    // conditional member access; returns `value.member` if `value` is non-null and `null` otherwise
 /// value ?? default // null coalescing; returns `value` if `value` is non-null and `default` otherwise
+/// value!!          // non-null assertion; throws if `value` is `null`, and returns `value` otherwise
 /// value is String  // type test
 /// value as String  // type cast; throws an error unless `value is String`
 /// ```
