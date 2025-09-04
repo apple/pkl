@@ -218,8 +218,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     }
     if (!certsAdded) {
       val defaultCerts =
-        javaClass.classLoader.getResourceAsStream("org/pkl/commons/cli/PklCARoots.pem")
-          ?: throw CliException("Could not find bundled certificates")
+        this@CliCommand.javaClass.classLoader.getResourceAsStream(
+          "org/pkl/commons/cli/PklCARoots.pem"
+        ) ?: throw CliException("Could not find bundled certificates")
       addCertificates(defaultCerts.readAllBytes())
     }
   }
