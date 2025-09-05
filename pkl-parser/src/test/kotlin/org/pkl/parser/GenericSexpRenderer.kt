@@ -16,7 +16,7 @@
 package org.pkl.parser
 
 import java.util.EnumSet
-import org.pkl.parser.syntax.generic.GenNode
+import org.pkl.parser.syntax.generic.Node
 import org.pkl.parser.syntax.generic.NodeType
 
 class GenericSexpRenderer(code: String) {
@@ -24,12 +24,12 @@ class GenericSexpRenderer(code: String) {
   private var buf = StringBuilder()
   private val source = code.toCharArray()
 
-  fun render(node: GenNode): String {
+  fun render(node: Node): String {
     innerRender(node)
     return buf.toString()
   }
 
-  private fun innerRender(node: GenNode) {
+  private fun innerRender(node: Node) {
     if (node.type == NodeType.UNION_TYPE) {
       renderUnionType(node)
       return
@@ -41,7 +41,7 @@ class GenericSexpRenderer(code: String) {
     doRender(name(node), collectChildren(node))
   }
 
-  private fun doRender(name: String, children: List<GenNode>) {
+  private fun doRender(name: String, children: List<Node>) {
     buf.append(tab)
     buf.append("(")
     buf.append(name)
@@ -54,12 +54,12 @@ class GenericSexpRenderer(code: String) {
     buf.append(')')
   }
 
-  private fun renderUnionType(node: GenNode) {
+  private fun renderUnionType(node: Node) {
     buf.append(tab)
     buf.append("(")
     buf.append(name(node))
     val oldTab = increaseTab()
-    var previousTerminal: GenNode? = null
+    var previousTerminal: Node? = null
     for (child in node.children) {
       if (child.type == NodeType.TERMINAL) previousTerminal = child
       if (child.type in IGNORED_CHILDREN) continue
@@ -75,12 +75,12 @@ class GenericSexpRenderer(code: String) {
     buf.append(')')
   }
 
-  private fun renderQualifiedAccess(node: GenNode) {
+  private fun renderQualifiedAccess(node: Node) {
     var children = node.children
     if (children.last().type == NodeType.UNQUALIFIED_ACCESS_EXPR) {
       children = children.dropLast(1) + collectChildren(children.last())
     }
-    val toRender = mutableListOf<GenNode>()
+    val toRender = mutableListOf<Node>()
     for (child in children) {
       if (child.type in IGNORED_CHILDREN || child.type == NodeType.OPERATOR) continue
       toRender += child
@@ -88,7 +88,7 @@ class GenericSexpRenderer(code: String) {
     doRender(name(node), toRender)
   }
 
-  private fun renderDefaultUnionType(node: GenNode) {
+  private fun renderDefaultUnionType(node: Node) {
     buf.append(tab)
     buf.append("(defaultUnionType\n")
     val oldTab = increaseTab()
@@ -97,14 +97,14 @@ class GenericSexpRenderer(code: String) {
     buf.append(')')
   }
 
-  private fun collectChildren(node: GenNode): List<GenNode> =
+  private fun collectChildren(node: Node): List<Node> =
     when (node.type) {
       NodeType.MULTI_LINE_STRING_LITERAL_EXPR ->
         node.children.filter { it.type !in IGNORED_CHILDREN && !it.type.isStringData() }
       NodeType.SINGLE_LINE_STRING_LITERAL_EXPR -> {
         val children = node.children.filter { it.type !in IGNORED_CHILDREN }
-        val res = mutableListOf<GenNode>()
-        var prev: GenNode? = null
+        val res = mutableListOf<Node>()
+        var prev: Node? = null
         for (child in children) {
           val inARow = child.type.isStringData() && (prev != null && prev.type.isStringData())
           if (!inARow) {
@@ -116,7 +116,7 @@ class GenericSexpRenderer(code: String) {
       }
       NodeType.DOC_COMMENT -> listOf()
       else -> {
-        val nodes = mutableListOf<GenNode>()
+        val nodes = mutableListOf<Node>()
         for (child in node.children) {
           if (child.type in IGNORED_CHILDREN) continue
           if (child.type in UNPACK_CHILDREN) {
@@ -132,7 +132,7 @@ class GenericSexpRenderer(code: String) {
   private fun NodeType.isStringData(): Boolean =
     this == NodeType.STRING_CONSTANT || this == NodeType.STRING_ESCAPE
 
-  private fun name(node: GenNode): String =
+  private fun name(node: Node): String =
     when (node.type) {
       NodeType.MODULE_DECLARATION -> "moduleHeader"
       NodeType.IMPORT -> importName(node, isExpr = false)
@@ -160,13 +160,13 @@ class GenericSexpRenderer(code: String) {
       }
     }
 
-  private fun importName(node: GenNode, isExpr: Boolean): String {
+  private fun importName(node: Node, isExpr: Boolean): String {
     val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
     val suffix = if (isExpr) "Expr" else "Clause"
     return if (terminal == "import*") "importGlob$suffix" else "import$suffix"
   }
 
-  private fun binopName(node: GenNode): String {
+  private fun binopName(node: Node): String {
     val op = node.children.find { it.type == NodeType.OPERATOR }!!.text(source)
     return when (op) {
       "**" -> "exponentiationExpr"

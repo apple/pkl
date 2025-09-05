@@ -30,7 +30,7 @@ import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
 import org.pkl.formatter.ast.Wrap
 
-class Generator {
+internal class Generator {
   private val buf: StringBuilder = StringBuilder()
   private var indent: Int = 0
   private var size: Int = 0

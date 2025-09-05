@@ -15,22 +15,31 @@
  */
 package org.pkl.formatter
 
-import java.io.IOException
 import java.nio.file.Files
 import java.nio.file.Path
 import org.pkl.formatter.ast.ForceLine
 import org.pkl.formatter.ast.Nodes
 import org.pkl.parser.GenericParser
 
+/** A formatter for Pkl files that applies canonical formatting rules. */
 class Formatter {
+  /**
+   * Formats a Pkl file from the given file path.
+   *
+   * @param path the path to the Pkl file to format
+   * @return the formatted Pkl source code as a string
+   * @throws java.io.IOException if the file cannot be read
+   */
   fun format(path: Path): String {
-    try {
-      return format(Files.readString(path))
-    } catch (e: IOException) {
-      throw RuntimeException("Could not format $path:", e)
-    }
+    return format(Files.readString(path))
   }
 
+  /**
+   * Formats the given Pkl source code text.
+   *
+   * @param text the Pkl source code to format
+   * @return the formatted Pkl source code as a string
+   */
   fun format(text: String): String {
     val parser = GenericParser()
     val builder = Builder(text)

@@ -5,12 +5,14 @@ import* "**.pkl"
 import "pkl:math"
 
 import "package://example.com/myPackage@1.0.0#/Qux.pkl"
+import* "file:///tmp/*.pkl"
 
 
 import "https://example.com/baz.pkl"
 import "module2.pkl"
 import "pkl:reflect"
 import "..."
+import* "@foo/**.pkl"
 import "@bar/Bar.pkl"
 import "Module12.pkl"
 import "module11.pkl"

@@ -17,10 +17,10 @@ package org.pkl.parser.syntax.generic;
 
 public enum NodeType {
   TERMINAL,
-  // affixes
+  SHEBANG,
+  // affixes,
   LINE_COMMENT(NodeKind.AFFIX),
   BLOCK_COMMENT(NodeKind.AFFIX),
-  SHEBANG(NodeKind.AFFIX),
   SEMICOLON(NodeKind.AFFIX),
 
   MODULE,

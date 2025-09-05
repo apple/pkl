@@ -15,7 +15,8 @@
  */
 package org.pkl.formatter
 
-class NaturalOrderComparator(private val ignoreCase: Boolean = false) : Comparator<String> {
+internal class NaturalOrderComparator(private val ignoreCase: Boolean = false) :
+  Comparator<String> {
 
   override fun compare(s1: String, s2: String): Int {
     var i = 0
@@ -48,7 +49,7 @@ class NaturalOrderComparator(private val ignoreCase: Boolean = false) : Comparat
     return s1.length.compareTo(s2.length)
   }
 
-  private fun getNumber(s: String, startIndex: Int): Pair<Long, Int> {
+  private fun getNumber(s: String, startIndex: Int): LongAndInt {
     var i = startIndex
     val start = i
 
@@ -57,6 +58,9 @@ class NaturalOrderComparator(private val ignoreCase: Boolean = false) : Comparat
     }
     val numStr = s.substring(start, i)
     val number = numStr.toLongOrNull() ?: 0L
-    return Pair(number, i)
+    return LongAndInt(number, i)
   }
+
+  // use this instead of Pair to avoid boxing
+  private data class LongAndInt(val l: Long, var i: Int)
 }

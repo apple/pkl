@@ -20,23 +20,23 @@ import java.util.List;
 import java.util.Objects;
 import org.pkl.parser.util.Nullable;
 
-public class GenNode {
-  public final List<GenNode> children;
+public class Node {
+  public final List<Node> children;
   public final FullSpan span;
   public final NodeType type;
   private @Nullable String text;
 
-  public GenNode(NodeType type, FullSpan span) {
+  public Node(NodeType type, FullSpan span) {
     this(type, span, Collections.emptyList());
   }
 
-  public GenNode(NodeType type, FullSpan span, List<GenNode> children) {
+  public Node(NodeType type, FullSpan span, List<Node> children) {
     this.type = type;
     this.span = span;
     this.children = Collections.unmodifiableList(children);
   }
 
-  public GenNode(NodeType type, List<GenNode> children) {
+  public Node(NodeType type, List<Node> children) {
     this.type = type;
     if (children.isEmpty()) throw new RuntimeException("No children or span given for node");
     var end = children.get(children.size() - 1).span;
@@ -51,7 +51,8 @@ public class GenNode {
     return text;
   }
 
-  public @Nullable GenNode findChildByType(NodeType type) {
+  /** Returns the first child of type {@code type} or {@code null}. */
+  public @Nullable Node findChildByType(NodeType type) {
     for (var child : children) {
       if (child.type == type) return child;
     }
@@ -66,10 +67,10 @@ public class GenNode {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }
-    GenNode genNode = (GenNode) o;
-    return Objects.equals(children, genNode.children)
-        && Objects.equals(span, genNode.span)
-        && Objects.equals(type, genNode.type);
+    Node node = (Node) o;
+    return Objects.equals(children, node.children)
+        && Objects.equals(span, node.span)
+        && Objects.equals(type, node.type);
   }
 
   @Override

@@ -26,8 +26,14 @@ dependencies {
 }
 
 tasks.test {
-  configureTest()
-  useJUnitPlatform()
+  inputs
+    .dir("src/test/files/FormatterSnippetTests/input")
+    .withPropertyName("formatterSnippetTestsInput")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
+  inputs
+    .dir("src/test/files/FormatterSnippetTests/output")
+    .withPropertyName("formatterSnippetTestsOutput")
+    .withPathSensitivity(PathSensitivity.RELATIVE)
 }
 
 publishing {
@@ -39,15 +45,4 @@ publishing {
       }
     }
   }
-}
-
-private fun Test.configureTest() {
-  inputs
-    .dir("src/test/files/FormatterSnippetTests/input")
-    .withPropertyName("formatterSnippetTestsInput")
-    .withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs
-    .dir("src/test/files/FormatterSnippetTests/output")
-    .withPropertyName("formatterSnippetTestsOutput")
-    .withPathSensitivity(PathSensitivity.RELATIVE)
 }
