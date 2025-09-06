@@ -26,6 +26,7 @@ import org.pkl.commons.writeString
 import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource
 import org.pkl.core.PObject
+import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.settings.PklSettings.Editor
 
@@ -65,7 +66,9 @@ class PklSettingsTest {
           ["https://foo.com/"] = "https://bar.com/"
         }
         headers {
-          ["X-Foo"] = "bar"
+          ["https://foo.com/"] {
+            Pair("X-Foo", "bar")
+          }
         }
       }
       """
@@ -80,8 +83,9 @@ class PklSettingsTest {
           listOf("example.com", "pkg.pkl-lang.org"),
         ),
         mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
-        mapOf("X-Foo" to "bar"),
+        mapOf(URI("https://foo.com/") to listOf(PPair("X-Foo", "bar"))),
       )
+
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
   }
 

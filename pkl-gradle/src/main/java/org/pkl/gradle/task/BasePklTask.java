@@ -48,6 +48,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.jspecify.annotations.Nullable;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.Pair;
 import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.gradle.utils.PluginUtils;
 
@@ -163,7 +164,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
-  public abstract MapProperty<String, String> getHttpHeaders();
+  public abstract MapProperty<URI, List<Pair<String, String>>> getHttpHeaders();
 
   @Input
   @Optional
