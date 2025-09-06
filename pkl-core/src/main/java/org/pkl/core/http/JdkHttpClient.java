@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.ConnectException;
+import java.net.URI;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -47,6 +48,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
+import org.pkl.core.Pair;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
@@ -55,7 +57,7 @@ import org.pkl.core.util.Exceptions;
 final class JdkHttpClient implements HttpClient {
   // non-private for testing
   final java.net.http.HttpClient underlying;
-  final Map<String, String> headers;
+  final Map<URI, List<Pair<String, String>>> headers;
 
   // call java.net.http.HttpClient.close() if available (JDK 21+)
   private static final MethodHandle closeMethod;
@@ -80,7 +82,7 @@ final class JdkHttpClient implements HttpClient {
       List<ByteBuffer> certificateBytes,
       Duration connectTimeout,
       java.net.ProxySelector proxySelector,
-      Map<String, String> headers) {
+      Map<URI, List<Pair<String, String>>> headers) {
     underlying =
         java.net.http.HttpClient.newBuilder()
             .sslContext(createSslContext(certificateFiles, certificateBytes))
@@ -96,7 +98,13 @@ final class JdkHttpClient implements HttpClient {
       throws IOException {
     try {
       var wrappedRequestBuilder = HttpRequest.newBuilder(request, (name, value) -> true);
-      this.headers.forEach(wrappedRequestBuilder::header);
+      for (var entry : headers.entrySet()) {
+        if (RequestRewritingClient.matchesRewriteRule(request.uri(), entry.getKey())) {
+          for (var value : entry.getValue()) {
+            wrappedRequestBuilder.header(value.getFirst(), value.getSecond());
+          }
+        }
+      }
       return underlying.send(wrappedRequestBuilder.build(), responseBodyHandler);
     } catch (ConnectException e) {
       // original exception has no message
