@@ -170,8 +170,8 @@ class Http {
   @Since { version = "0.29.0" }
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
   
-  /// HTTP headers to add to every request.
-  headers: Mapping<String, String>?
+  /// HTTP headers to add to outbound requests targeting specified URLs.
+  headers: Mapping<HttpRewrite, Listing<Pair<String, String>>>?
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.

@@ -31,6 +31,7 @@ import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
+import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
@@ -275,13 +276,49 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
-  val httpHeaders: Map<String, String> by
+  val httpHeaders: Map<URI, List<PPair<String, String>>> by
     option(
         names = arrayOf("--http-headers"),
-        metavar = "key=value",
+        metavar = "<uri>=<header name>:<header value>[,<header name>:<header value>...]",
         help = "HTTP header to add to the request.",
       )
-      .associate()
+      .convert { it ->
+        val (uriStr, headers) =
+          it.split("=", limit = 2).let { parts ->
+            require(parts.size == 2) {
+              "Headers must be in the form of <prefix>=<header name>:<header value>"
+            }
+            parts[0] to parts[1]
+          }
+
+        try {
+          val uri = URI(uriStr.trim())
+
+          val headerPairs =
+            headers.split(',').map { header ->
+              val headerParts = header.split(":", limit = 2)
+              require(headerParts.size == 2) { "Header '$header' is not in 'name:value' format. " }
+              PPair(headerParts[0], headerParts[1])
+            }
+          uri to headerPairs
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
+        } catch (e: URISyntaxException) {
+          val message = buildString {
+            append("HTTP headers target `${e.input}` has invalid syntax (${e.reason}).")
+            if (e.index > -1) {
+              append("\n\n")
+              append(e.input)
+              append("\n")
+              append(" ".repeat(e.index))
+              append("^")
+            }
+          }
+          fail(message)
+        }
+      }
+      .multiple()
+      .toMap()
 
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
