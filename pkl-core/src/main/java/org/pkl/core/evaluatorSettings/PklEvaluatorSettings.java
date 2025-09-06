@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
+import org.pkl.core.Pair;
 import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.Value;
@@ -129,7 +130,7 @@ public record PklEvaluatorSettings(
   public record Http(
       @Nullable Proxy proxy,
       @Nullable Map<URI, URI> rewrites,
-      @Nullable Map<String, String> headers) {
+      @Nullable Map<URI, List<Pair<String, String>>> headers) {
     public static final Http DEFAULT = new Http(null, Collections.emptyMap(), null);
 
     @SuppressWarnings("unchecked")
@@ -141,7 +142,7 @@ public record PklEvaluatorSettings(
         var rewrites = http.getProperty("rewrites");
         HashMap<URI, URI> parsedRewrites = null;
         if (!(rewrites instanceof PNull)) {
-          parsedRewrites = new HashMap<URI, URI>();
+          parsedRewrites = new HashMap<>();
           for (var entry : ((Map<String, String>) rewrites).entrySet()) {
             var key = entry.getKey();
             var value = entry.getValue();
@@ -153,10 +154,21 @@ public record PklEvaluatorSettings(
           }
         }
         var headers = http.getProperty("headers");
-        return new Http(
-            proxy,
-            parsedRewrites,
-            headers instanceof PNull ? null : ((Map<String, String>) headers));
+        HashMap<URI, List<org.pkl.core.Pair<String, String>>> parsedHeaders = null;
+        if (!(headers instanceof PNull)) {
+          parsedHeaders = new HashMap<>();
+          var headersMap = (Map<String, List<Pair<String, String>>>) headers;
+          for (var entry : headersMap.entrySet()) {
+            var key = entry.getKey();
+            var value = entry.getValue();
+            try {
+              parsedHeaders.put(new URI(key), value);
+            } catch (URISyntaxException e) {
+              throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
+            }
+          }
+        }
+        return new Http(proxy, parsedRewrites, parsedHeaders);
       } else {
         throw PklBugException.unreachableCode();
       }
