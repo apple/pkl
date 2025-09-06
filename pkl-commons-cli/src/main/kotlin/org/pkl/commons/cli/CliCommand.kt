@@ -186,7 +186,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       ?: settings.http?.rewrites()
   }
 
-  private val httpHeaders: Map<String, String>? by lazy {
+  private val httpHeaders: Map<URI, List<Pair<String, String>>>? by lazy {
     cliOptions.httpHeaders ?: project?.evaluatorSettings?.http?.headers ?: settings.http?.headers
   }
 
