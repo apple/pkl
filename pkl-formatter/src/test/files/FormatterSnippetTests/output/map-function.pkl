@@ -4,3 +4,11 @@ foo =
     20000, "another random string",
     30000, "yet another random string"
   )
+
+incorrect =
+  Map(
+    "This has", 1000000,
+    "an incorrect number", 2000000,
+    "of parameters", 30000000,
+    "passed to Map"
+  )

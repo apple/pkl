@@ -797,7 +797,7 @@ public class GenericParser {
             var children = new ArrayList<Node>();
             children.add(makeTerminal(next()));
             ff(children);
-            // unary minus has higher precendence than most binary operators
+            // logical not has higher precendence than most binary operators
             children.add(parseExpr(expectation, 11));
             yield new Node(NodeType.LOGICAL_NOT_EXPR, children);
           }
