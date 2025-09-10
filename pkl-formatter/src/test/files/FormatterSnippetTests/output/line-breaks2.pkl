@@ -22,7 +22,7 @@ hidden const reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooo
 
 local const function looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
   x: Int,
-  y
+  y,
 ) = x + y
 
 typealias Foo =
@@ -33,10 +33,10 @@ typealias Foo =
 bar: Boolean
   | Mapping<
     LooooooooooooooooooooooooooooongTypeName,
-    AnotherLooooooooooooooooooooooooooooongTypeName
+    AnotherLooooooooooooooooooooooooooooongTypeName,
   >(loooooooooooooooooooogConstraint)
 
 hidden foobar: LongType(
   someVeryyyyyyyloooong,
-  requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger
+  requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger,
 )

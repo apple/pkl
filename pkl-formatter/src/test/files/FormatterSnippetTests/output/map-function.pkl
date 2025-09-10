@@ -2,7 +2,7 @@ foo =
   Map(
     1000, "some random string",
     20000, "another random string",
-    30000, "yet another random string"
+    30000, "yet another random string",
   )
 
 incorrect =
@@ -10,5 +10,5 @@ incorrect =
     "This has", 1000000,
     "an incorrect number", 2000000,
     "of parameters", 30000000,
-    "passed to Map"
+    "passed to Map",
   )

@@ -419,9 +419,8 @@ internal class Builder(sourceText: String) {
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("(") || next.isTerminal(")")) {
           if (next.isTerminal(")")) {
-            // trailing comma (commented for now)
-            // IfWrap(groupId, nodes(Text(","), Line), Line)
-            Line
+            // trailing comma
+            IfWrap(groupId, nodes(Text(","), Line), Line)
           } else Line
         } else SpaceOrLine
       }
@@ -439,9 +438,8 @@ internal class Builder(sourceText: String) {
           if (prev.isTerminal("(") || next.isTerminal(")")) {
             val node = if (hasTrailingLambda) Empty else Line
             if (next.isTerminal(")") && !hasTrailingLambda) {
-              // trailing comma (commented for now)
-              // IfWrap(groupId, nodes(Text(","), node), node)
-              node
+              // trailing comma
+              IfWrap(groupId, nodes(Text(","), node), node)
             } else node
           } else SpaceOrLine
         },
@@ -543,9 +541,8 @@ internal class Builder(sourceText: String) {
       formatGeneric(node.children) { prev, next ->
         if (prev.isTerminal("<") || next.isTerminal(">")) {
           if (next.isTerminal(">")) {
-            // trailing comma (commented for now)
-            // IfWrap(id, nodes(Text(","), Line), Line)
-            Line
+            // trailing comma
+            IfWrap(id, nodes(Text(","), Line), Line)
           } else Line
         } else SpaceOrLine
       }

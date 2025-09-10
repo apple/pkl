@@ -7,7 +7,7 @@ trailingCommas =
     "loooooooooooooooooooongString",
     "loooooooooooooooongString",
     "looooooooooooooooongString",
-    "notTooLong"
+    "notTooLong",
   )
 
 noTrailingCommaObjParams {
@@ -20,16 +20,16 @@ noTrailingCommaObjParams {
 trailingCommaInLambdas = (
   fooooooooooooooooooooooooooooooooo,
   baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaar,
-  baaaaaaaaaaaaaaaaaaaaaz
+  baaaaaaaaaaaaaaaaaaaaaz,
 ) -> 1
 
 trailingCommaInConstraints: String(
   isSomethingSomethingSomething,
   isSomethingElse,
-  isSomethingSomethingSomethingElse
+  isSomethingSomethingSomethingElse,
 )
 
 trailingCommaInTypeParameters: Mapping<
   SomethingSomethingSomethingSomething,
-  SomethingSomething | SomethingElse
+  SomethingSomething | SomethingElse,
 >
