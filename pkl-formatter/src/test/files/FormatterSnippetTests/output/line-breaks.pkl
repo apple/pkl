@@ -41,6 +41,19 @@ funcParam =
     y
   })
 
+funcParam2 =
+  aFun(foo, 10 * 10, anotherVariable, if (true) 100000 else 200000, (param1, param2) ->
+    param1 * param2
+  )
+
+funcParam3 = aFun(foo, 10 * 10, anotherVariable, 200000, (param1, param2) -> param1 * param2)
+
+funcParam4 =
+  aFun(foo, 10 * 10, anotherVariable, if (true) 100000 else 200000, new Listing {
+    1
+    2
+  })
+
 open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter>
   extends AnotherInterestingClassName {
   foo: Int
