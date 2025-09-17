@@ -18,7 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.*;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.json.JsonEscaper;
@@ -57,7 +57,7 @@ public final class JsonRendererNodes {
     return new JsonRenderer(builder, indent, converter, omitNullProperties);
   }
 
-  private static final class JsonRenderer extends AbstractRenderer {
+  private static final class JsonRenderer extends AbstractStringRenderer {
     private final String separator;
 
     private final JsonEscaper escaper = new JsonEscaper(false);
@@ -212,7 +212,7 @@ public final class JsonRendererNodes {
         return;
       }
 
-      if (VmUtils.isRenderDirective(key)) {
+      if (isRenderDirective(key)) {
         visitRenderDirective((VmTyped) key);
         builder.append(separator);
         return;

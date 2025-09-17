@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.concurrent.GuardedBy;
@@ -138,6 +139,10 @@ public final class VmTypeAlias extends VmValue {
 
   public String getModuleName() {
     return module.getVmClass().getModuleName();
+  }
+
+  public URI getModuleUri() {
+    return module.getVmClass().getPClassInfo().getModuleUri();
   }
 
   public VmTyped getModuleMirror() {
