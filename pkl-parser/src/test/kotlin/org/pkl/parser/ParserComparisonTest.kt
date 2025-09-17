@@ -41,6 +41,8 @@ class ParserComparisonTest {
             compare(snippet, path, softly)
           } catch (e: GenericParserError) {
             softly.fail("path: $path. Message: ${e.message}", e)
+          } catch (e: ParserError) {
+            softly.fail("path: $path. Message: ${e.message}", e)
           }
         }
     }
@@ -106,6 +108,7 @@ class ParserComparisonTest {
         "notAUnionDefault.pkl",
         "multipleDefaults.pkl",
         "modules/invalidModule1.pkl",
+        "singleBacktick.pkl",
       )
 
     private val regexExceptions =
