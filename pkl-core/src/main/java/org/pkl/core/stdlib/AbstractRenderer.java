@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,6 @@ import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUndefinedValueException;
-import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
 import org.pkl.core.runtime.VmValueConverter;
 import org.pkl.core.runtime.VmValueVisitor;
@@ -43,17 +42,10 @@ import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.Nullable;
 
-/** Base class for renderers that are part of the standard library. */
 public abstract class AbstractRenderer implements VmValueVisitor {
-  protected static final char LINE_BREAK = '\n';
 
   /** The name of this renderer. */
   protected final String name;
-
-  protected final StringBuilder builder;
-
-  /** The indent to be used. */
-  protected final String indent;
 
   protected final PklConverter converter;
 
@@ -65,31 +57,36 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   @LateInit protected Deque<Object> currPath;
 
-  /** The value directly enclosing the currently visited value, if any. */
-  protected @Nullable VmValue enclosingValue;
-
   /** The value passed to either {@link #renderDocument(Object)} or {@link #renderValue(Object)}. */
   @LateInit private Object topLevelValue;
 
-  /** The current indent. Modified by {@link #increaseIndent()} and {@link #decreaseIndent()}. */
-  protected final StringBuilder currIndent = new StringBuilder();
+  /** The value directly enclosing the currently visited value, if any. */
+  protected @Nullable VmValue enclosingValue;
 
   /** The (closest) {@link SourceSection} of the value being visited, for better error messages. */
   protected @Nullable SourceSection currSourceSection = null;
 
-  public AbstractRenderer(
+  private final VmClass renderDirectiveClass;
+
+  protected AbstractRenderer(
       String name,
-      StringBuilder builder,
-      String indent,
       PklConverter converter,
+      VmClass renderDirectiveClass,
       boolean skipNullProperties,
       boolean skipNullEntries) {
     this.name = name;
-    this.builder = builder;
-    this.indent = indent;
     this.converter = converter;
+    this.renderDirectiveClass = renderDirectiveClass;
     this.skipNullProperties = skipNullProperties;
     this.skipNullEntries = skipNullEntries;
+  }
+
+  protected boolean isRenderDirective(VmValue value) {
+    return value.getVmClass() == renderDirectiveClass;
+  }
+
+  protected boolean isRenderDirective(Object value) {
+    return value instanceof VmTyped typed && isRenderDirective(typed);
   }
 
   public final void renderDocument(Object value) {
@@ -185,71 +182,22 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   protected abstract void endMap(VmMap value);
 
-  private void doVisitProperty(
-      Identifier name, Object value, SourceSection sourceSection, MutableBoolean isFirst) {
-    var prevSourceSection = currSourceSection;
-    currSourceSection = sourceSection;
-    currPath.push(name);
-    var convertedValue = converter.convert(value, currPath);
-    if (!(skipNullProperties && convertedValue instanceof VmNull)) {
-      visitProperty(name, convertedValue, isFirst.getAndSetFalse());
-    }
-    currPath.pop();
-    currSourceSection = prevSourceSection;
-  }
-
-  private void doVisitEntry(
-      Object key, Object value, @Nullable SourceSection sourceSection, MutableBoolean isFirst) {
-    var prevSourceSection = currSourceSection;
-    if (sourceSection != null) {
-      currSourceSection = sourceSection;
-    }
-    var valuePath = currPath;
-    try {
-      var convertedKey = converter.convert(key, List.of());
-      valuePath.push(convertedKey);
-      var convertedValue = converter.convert(value, valuePath);
-      if (skipNullEntries && (convertedValue instanceof VmNull)) {
-        return;
-      }
-
-      currPath = new ArrayDeque<>();
-      visitEntryKey(convertedKey, isFirst.getAndSetFalse());
-      currPath = valuePath;
-      visitEntryValue(convertedValue);
-    } finally {
-      valuePath.pop();
-      currSourceSection = prevSourceSection;
-    }
-  }
-
-  private void doVisitElement(
-      long index, Object value, @Nullable SourceSection sourceSection, boolean isFirst) {
-    var prevSourceSection = currSourceSection;
-    if (sourceSection != null) {
-      currSourceSection = sourceSection;
-    }
-    currPath.push(index);
-    var convertedValue = converter.convert(value, currPath);
-    visitElement(index, convertedValue, isFirst);
-    currPath.pop();
-    currSourceSection = prevSourceSection;
-  }
-
   @Override
   public void visitTyped(VmTyped value) {
     // value.getParent().getMember(value);
-    if (VmUtils.isRenderDirective(value)) {
+    if (isRenderDirective(value)) {
       visitRenderDirective(value);
       return;
     }
 
+    value.force(false, false);
     startTyped(value);
+
     var prevEnclosingValue = enclosingValue;
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.forceAndIterateMemberValues(
+    value.iterateAlreadyForcedMemberValues(
         (memberKey, member, memberValue) -> {
           if (member.isClass() || member.isTypeAlias()) return true;
           assert member.isProp();
@@ -263,6 +211,7 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   @Override
   public final void visitDynamic(VmDynamic value) {
+    value.force(false, false);
     startDynamic(value);
 
     var prevEnclosingValue = enclosingValue;
@@ -270,7 +219,7 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     var isFirst = new MutableBoolean(true);
     var canRenderPropertyOrEntry = canRenderPropertyOrEntryOf(value);
 
-    value.forceAndIterateMemberValues(
+    value.iterateAlreadyForcedMemberValues(
         (memberKey, member, memberValue) -> {
           var sourceSection = member.getSourceSection();
           if (member.isProp()) {
@@ -302,12 +251,14 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   @Override
   public final void visitListing(VmListing value) {
+    value.force(false, false);
     startListing(value);
+
     var prevEnclosingValue = enclosingValue;
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.forceAndIterateMemberValues(
+    value.iterateAlreadyForcedMemberValues(
         (memberKey, member, memberValue) -> {
           assert member.isElement();
           doVisitElement(
@@ -321,12 +272,14 @@ public abstract class AbstractRenderer implements VmValueVisitor {
 
   @Override
   public final void visitMapping(VmMapping value) {
+    value.force(false, false);
     startMapping(value);
+
     var prevEnclosingValue = enclosingValue;
     enclosingValue = value;
     var isFirst = new MutableBoolean(true);
 
-    value.forceAndIterateMemberValues(
+    value.iterateAlreadyForcedMemberValues(
         (memberKey, member, memberValue) -> {
           assert member.isEntry();
           doVisitEntry(memberKey, memberValue, member.getSourceSection(), isFirst);
@@ -379,19 +332,60 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     endMap(value);
   }
 
-  @Override
-  public final void visitTypeAlias(VmTypeAlias value) {
-    cannotRenderTypeAddConverter(value);
+  private void doVisitProperty(
+      Identifier name, Object value, SourceSection sourceSection, MutableBoolean isFirst) {
+    var prevSourceSection = currSourceSection;
+    currSourceSection = sourceSection;
+    currPath.push(name);
+    var convertedValue = converter.convert(value, currPath);
+    if (!(skipNullProperties && convertedValue instanceof VmNull)) {
+      visitProperty(name, convertedValue, isFirst.getAndSetFalse());
+    }
+    currPath.pop();
+    currSourceSection = prevSourceSection;
   }
 
-  @Override
-  public final void visitClass(VmClass value) {
-    cannotRenderTypeAddConverter(value);
+  private void doVisitEntry(
+      Object key, Object value, @Nullable SourceSection sourceSection, MutableBoolean isFirst) {
+    var prevSourceSection = currSourceSection;
+    if (sourceSection != null) {
+      currSourceSection = sourceSection;
+    }
+    var valuePath = currPath;
+    try {
+      var convertedKey = converter.convert(key, List.of());
+      valuePath.push(convertedKey);
+      var convertedValue = converter.convert(value, valuePath);
+      if (skipNullEntries && (convertedValue instanceof VmNull)) {
+        return;
+      }
+
+      visitEntryKeyValue(convertedKey, isFirst.getAndSetFalse(), valuePath, convertedValue);
+    } finally {
+      valuePath.pop();
+      currSourceSection = prevSourceSection;
+    }
   }
 
-  @Override
-  public final void visitFunction(VmFunction value) {
-    cannotRenderTypeAddConverter(value);
+  protected void visitEntryKeyValue(
+      Object key, boolean isFirst, Deque<Object> valuePath, Object value) {
+    currPath = new ArrayDeque<>();
+    visitEntryKey(key, isFirst);
+    currPath = valuePath;
+    visitEntryValue(value);
+  }
+
+  private void doVisitElement(
+      long index, Object value, @Nullable SourceSection sourceSection, boolean isFirst) {
+    var prevSourceSection = currSourceSection;
+    if (sourceSection != null) {
+      currSourceSection = sourceSection;
+    }
+    currPath.push(index);
+    var convertedValue = converter.convert(value, currPath);
+    visitElement(index, convertedValue, isFirst);
+    currPath.pop();
+    currSourceSection = prevSourceSection;
   }
 
   protected void cannotRenderTypeAddConverter(VmValue value) {
@@ -403,6 +397,21 @@ public abstract class AbstractRenderer implements VmValueVisitor {
       builder.withSourceSection(currSourceSection);
     }
     throw builder.build();
+  }
+
+  @Override
+  public void visitTypeAlias(VmTypeAlias value) {
+    cannotRenderTypeAddConverter(value);
+  }
+
+  @Override
+  public void visitClass(VmClass value) {
+    cannotRenderTypeAddConverter(value);
+  }
+
+  @Override
+  public void visitFunction(VmFunction value) {
+    cannotRenderTypeAddConverter(value);
   }
 
   protected void cannotRenderNonStringKey(Object key) {
@@ -423,13 +432,5 @@ public abstract class AbstractRenderer implements VmValueVisitor {
         .withProgramValue(isMap ? "Map" : "Object", enclosingValue)
         .withProgramValue("Key", key)
         .build();
-  }
-
-  protected void increaseIndent() {
-    currIndent.append(indent);
-  }
-
-  protected void decreaseIndent() {
-    currIndent.setLength(currIndent.length() - indent.length());
   }
 }

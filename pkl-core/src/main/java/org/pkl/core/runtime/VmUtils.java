@@ -406,14 +406,6 @@ public final class VmUtils {
     return isCustomThisScope ? new CustomThisNode(sourceSection) : new ThisNode(sourceSection);
   }
 
-  public static boolean isRenderDirective(VmValue value) {
-    return value.getVmClass() == BaseModule.getRenderDirectiveClass();
-  }
-
-  public static boolean isRenderDirective(Object value) {
-    return value instanceof VmTyped typed && isRenderDirective(typed);
-  }
-
   public static boolean isPcfRenderDirective(Object value) {
     return value instanceof VmTyped typed
         && typed.getVmClass().getPClassInfo() == PClassInfo.PcfRenderDirective;
