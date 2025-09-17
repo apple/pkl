@@ -63,7 +63,7 @@ import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
@@ -140,7 +140,7 @@ public final class RendererNodes {
     return new ProtobufRenderer(builder, indent, new PklConverter(converters));
   }
 
-  private static final class ProtobufRenderer extends AbstractRenderer {
+  private static final class ProtobufRenderer extends AbstractStringRenderer {
     private final Deque<Identifier> propertyPath = new ArrayDeque<>();
     private final Deque<Boolean> wrapperRequirement = new ArrayDeque<>();
     private final JsonEscaper jsonEscaper = new JsonEscaper(false);
@@ -306,7 +306,7 @@ public final class RendererNodes {
 
     @Override
     protected void visitEntryKey(Object key, boolean isFirst) {
-      var isDirective = VmUtils.isRenderDirective(key);
+      var isDirective = isRenderDirective(key);
       var isValidKey =
           isDirective || key instanceof Long || key instanceof Boolean || key instanceof String;
       if (!isValidKey) {

@@ -18,7 +18,7 @@ package org.pkl.core.stdlib.xml;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.*;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
@@ -60,7 +60,7 @@ public final class RendererNodes {
     }
   }
 
-  public static final class Renderer extends AbstractRenderer {
+  public static final class Renderer extends AbstractStringRenderer {
     // it's safe (though not required) to escape all the following characters in text nodes and
     // attribute values
     private static final ArrayCharEscaper stringEscaper =
@@ -266,7 +266,7 @@ public final class RendererNodes {
           renderXmlInline((VmTyped) value);
         } else if (isContent(value)) {
           visit(value);
-        } else if (VmUtils.isRenderDirective(value)) {
+        } else if (isRenderDirective(value)) {
           builder.append(VmUtils.readTextProperty(value));
         } else {
           writeXmlElement(VmUtils.getClass(value).getSimpleName(), null, value, true, true);
@@ -293,7 +293,7 @@ public final class RendererNodes {
       } else {
         assert deferredKey != null;
         assert enclosingValue != null;
-        if (VmUtils.isRenderDirective(deferredKey)) {
+        if (isRenderDirective(deferredKey)) {
           writeXmlElement(VmUtils.readTextProperty(deferredKey), null, value, true, false);
         } else if (deferredKey instanceof String string) {
           writeXmlElement(string, null, value, true, true);

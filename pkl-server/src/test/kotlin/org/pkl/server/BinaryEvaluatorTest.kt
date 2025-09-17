@@ -59,12 +59,12 @@ class BinaryEvaluatorTest {
       .isEqualTo(
         """
       - 1
-      - text
-      - repl:text
+      - 'text'
+      - 'repl:text'
       - 
         - 
           - 16
-          - foo
+          - 'foo'
           - 1
     """
           .trimIndent()

@@ -68,6 +68,3 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
     return true to bytes.debugRendering.stripFilePaths()
   }
 }
-
-val ByteArray.debugRendering: String
-  get() = MessagePackDebugRenderer(this).output

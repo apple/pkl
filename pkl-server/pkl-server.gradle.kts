@@ -28,17 +28,7 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
 }
 
-tasks.test {
-  inputs
-    .dir("src/test/files/SnippetTests/input")
-    .withPropertyName("snippetTestsInput")
-    .withPathSensitivity(PathSensitivity.RELATIVE)
-  inputs
-    .dir("src/test/files/SnippetTests/output")
-    .withPropertyName("snippetTestsOutput")
-    .withPathSensitivity(PathSensitivity.RELATIVE)
-  exclude("**/NativeServerTest.*")
-}
+tasks.test { exclude("**/NativeServerTest.*") }
 
 private fun Test.configureNativeTest() {
   testClassesDirs = files(tasks.test.get().testClassesDirs)
