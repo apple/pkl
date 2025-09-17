@@ -1,0 +1,9 @@
+foo =
+  if (someCondition)
+    10000
+  else if (someOtherCondition)
+    20000
+  else if (someAnotherCondition)
+    30000
+  else
+    4

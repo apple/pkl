@@ -1,0 +1,18 @@
+foo =
+  let (vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
+      10
+  )
+    1 * 1
+
+bar =
+  let (someVariable = new Listing {
+      1
+    }
+  )
+    1 * 1
+
+baz =
+  let (someVariable = 10000000)
+  let (someOtherVariable = 2000000)
+  let (someAnotherVariable = 3000000)
+    someVariable + someOtherVariable + someAnotherVariable

@@ -733,6 +733,33 @@ pkl shell-completion bash
 pkl shell-completion zsh
 ----
 
+[[command-format-check]]
+=== `pkl format check`
+
+*Synopsis*: `pkl format check <file-or-dir-path>`
+
+This command checks for format violations on the given file or directory and print their names to stdout. +
+It returns a non-zero status code in case violations are found.
+
+If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
+
+[[command-format-apply]]
+=== `pkl format apply`
+
+*Synopsis*: `pkl format apply [<options>] <file-or-dir-path>`
+
+This command formats the given files overwriting them.
+
+If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
+
+==== Options
+
+.-s, --silent
+[%collapsible]
+====
+Do not write the name of wrongly formatted files to stdout.
+====
+
 [[common-options]]
 === Common options
 

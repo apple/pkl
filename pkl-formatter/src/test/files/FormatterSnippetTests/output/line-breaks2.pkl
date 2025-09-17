@@ -1,0 +1,42 @@
+module
+  reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly
+    .loooooooooooooooooooooooooooooooog
+    .naaaaaaaaaaaaaaaaaaaaaaaaaame
+
+extends
+  "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
+
+import
+  "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
+  as foo
+
+open local class LoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongName {}
+
+open local class ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongName {}
+
+hidden const loooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName =
+  99
+
+hidden const reallyLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName =
+  99
+
+local const function looooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooogName(
+  x: Int,
+  y,
+) = x + y
+
+typealias Foo =
+  LooooooooooooooooooooooooongTypeName
+    | AnotherLooooooooooooooooooooooooongTypeName
+    | OtherLooooooooooooooooooooooooongTypeName
+
+bar: Boolean
+  | Mapping<
+    LooooooooooooooooooooooooooooongTypeName,
+    AnotherLooooooooooooooooooooooooooooongTypeName,
+  >(loooooooooooooooooooogConstraint)
+
+hidden foobar: LongType(
+  someVeryyyyyyyloooong,
+  requirements.might.be.even_loooooooooooooooooooooooooooooooooooooooooooooooooooooooooonger,
+)
