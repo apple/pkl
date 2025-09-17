@@ -80,6 +80,6 @@ public class Node {
 
   @Override
   public String toString() {
-    return "GenNode{type='" + type + "', span=" + span + ", children=" + children + '}';
+    return "Node{type='" + type + "', span=" + span + ", children=" + children + '}';
   }
 }
