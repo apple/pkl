@@ -21,6 +21,7 @@
 module pkl.base
 
 import "pkl:jsonnet"
+import "pkl:pklbinary"
 import "pkl:protobuf"
 import "pkl:xml"
 
@@ -112,12 +113,19 @@ abstract external class Module {
           new xml.Renderer {}
         else if (format == "yaml")
           new YamlRenderer {}
+        else if (format == "pkl-binary")
+          new pklbinary.Renderer {}
         else
           throw(
-            "Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`."
+            "Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`, `pkl-binary`."
           )
-    text = renderer.renderDocument(value)
-    bytes = text.encodeToBytes("UTF-8")
+    text =
+      if (renderer is ValueRenderer)
+        renderer.renderDocument(value)
+      else
+        throw("Unable to render text when renderer is a BytesRenderer")
+    bytes =
+      if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
   }
 }
 
@@ -240,16 +248,21 @@ open class FileOutput {
   value: Any?
 
   /// The renderer for [value].
-  renderer: ValueRenderer = new PcfRenderer {}
+  renderer: BaseValueRenderer = new PcfRenderer {}
 
   /// The textual rendered output.
-  text: String = renderer.renderDocument(value)
+  text: String =
+    if (renderer is ValueRenderer)
+      renderer.renderDocument(value)
+    else
+      throw("unabled to render text when renderer is a BytesRenderer")
 
   /// The underlying byte output.
   ///
   /// If unset, defaults to the UTF-8 encoding of [text].
   @Since { version = "0.29.0" }
-  bytes: Bytes = text.encodeToBytes("UTF-8")
+  bytes: Bytes =
+    if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
 }
 
 /// The contents and appearance of a module's output.
@@ -284,9 +297,8 @@ class ModuleOutput extends FileOutput {
 }
 
 /// Base class for rendering Pkl values in some output format.
-///
-/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
-abstract class ValueRenderer {
+@Since { version = "0.30.0" }
+abstract class BaseValueRenderer {
   /// Value converters to apply before values are rendered.
   ///
   /// A value converter is a function that converts a value to another value
@@ -334,7 +346,12 @@ abstract class ValueRenderer {
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
   extension: String?
+}
 
+/// Base class for rendering Pkl values in some textual output format.
+///
+/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
+abstract class ValueRenderer extends BaseValueRenderer {
   /// Renders [value] as a complete document.
   ///
   /// Some renderers impose restrictions on which types of values can be rendered as document.
@@ -345,6 +362,23 @@ abstract class ValueRenderer {
 
   /// Renders [value].
   abstract function renderValue(value: Any): String
+}
+
+/// Base class for rendering Pkl values in some binary output format.
+///
+/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
+@Since { version = "0.30.0" }
+abstract class BytesRenderer extends BaseValueRenderer {
+  /// Renders [value] as a complete document.
+  ///
+  /// Some renderers impose restrictions on which types of values can be rendered as document.
+  ///
+  /// A typical implementation of this method renders a document header/footer
+  /// and otherwise delegates to [renderValue()].
+  abstract function renderDocument(value: Any): Bytes
+
+  /// Renders [value].
+  abstract function renderValue(value: Any): Bytes
 }
 
 /// Renders values as Pcf, a static subset of Pkl.
@@ -401,6 +435,12 @@ class PcfRenderer extends ValueRenderer {
 class RenderDirective {
   /// The text to output as-is (without escaping or quoting).
   text: String
+
+  /// The bytes to output as-is (without escaping or quoting).
+  /// 
+  /// Only used by [BytesRenderer], ignored by [ValueRenderer].
+  @Since { version = "0.30.0" }
+  bytes: Bytes = text.encodeToBytes("UTF-8")
 }
 
 /// Directs [PcfRenderer] to output additional text [before] and/or [after] rendering a [value].

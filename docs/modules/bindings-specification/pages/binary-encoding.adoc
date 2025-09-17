@@ -36,7 +36,9 @@ For example, value `8` gets encoded as MessagePack `int8` format.
 == Non-primitives
 
 All non-primitive values are encoded as MessagePack arrays.
-The first slot of the array designates the value's type. The remaining slots have fixed meanings depending on the type.
+The first slot of the array designates the value's type.
+The remaining slots have fixed meanings depending on the type.
+Additional slots may be added to types in future Pkl releases. Decoders *must* be designed to defensively discard values beyond the number of known slots for a type or provide meaningful error messages.
 
 The array's length is the number of slots that are filled. For example, xref:{uri-stdlib-List}[List] is encoded as an MessagePack array with two elements.
 
@@ -46,16 +48,16 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 ||code |type |description |type |description |type |description
 
 |link:{uri-stdlib-Typed}[Typed], link:{uri-stdlib-Dynamic}[Dynamic]
-|`0x1`
+|`0x01`
 |link:{uri-messagepack-str}[str]
-|Fully qualified class name
+|<<type-name-encoding,Class name>>
 |link:{uri-messagepack-str}[str]
 |Enclosing module URI
 |link:{uri-messagepack-array}[array]
 |Array of <<object-members,object members>>
 
 |link:{uri-stdlib-Map}[Map]
-|`0x2`
+|`0x02`
 |link:{uri-messagepack-map}[map]
 |Map of `<value>` to `<value>`
 |
@@ -64,7 +66,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Mapping}[Mapping]
-|`0x3`
+|`0x03`
 |link:{uri-messagepack-map}[map]
 |Map of `<value>` to `<value>`
 |
@@ -73,7 +75,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-List}[List]
-|`0x4`
+|`0x04`
 |link:{uri-messagepack-array}[array]
 |Array of `<value>`
 |
@@ -82,7 +84,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Listing}[Listing]
-|`0x5`
+|`0x05`
 |link:{uri-messagepack-array}[array]
 |Array of `<value>`
 |
@@ -91,7 +93,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Set}[Set]
-|`0x6`
+|`0x06`
 |link:{uri-messagepack-array}[array]
 |Array of `<value>`
 |
@@ -100,7 +102,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Duration}[Duration]
-|`0x7`
+|`0x07`
 |{uri-messagepack-float}[float64]
 |Duration value
 |link:{uri-messagepack-str}[str]
@@ -109,7 +111,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-DataSize}[DataSize]
-|`0x8`
+|`0x08`
 |link:{uri-messagepack-float}[float64]
 |Value (float64)
 |link:{uri-messagepack-str}[str]
@@ -118,7 +120,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Pair}[Pair]
-|`0x9`
+|`0x09`
 |`<value>`
 |First value
 |`<value>`
@@ -127,7 +129,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-IntSeq}[IntSeq]
-|`0xA`
+|`0x0A`
 |link:{uri-messagepack-int}[int]
 |Start
 |link:{uri-messagepack-int}[int]
@@ -136,7 +138,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Step
 
 |link:{uri-stdlib-Regex}[Regex]
-|`0xB`
+|`0x0B`
 |link:{uri-messagepack-str}[str]
 |Regex string representation
 |
@@ -145,25 +147,25 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Class}[Class]
-|`0xC`
-|
-|
-|
-|
+|`0x0C`
+|link:{uri-messagepack-str}[str]
+|<<type-name-encoding,Class name>>
+|link:{uri-messagepack-str}[str]
+|Module URI
 |
 |
 
 |link:{uri-stdlib-TypeAlias}[TypeAlias]
-|`0xD`
-|
-|
-|
-|
+|`0x0D`
+|link:{uri-messagepack-str}[str]
+|<<type-name-encoding,TypeAlias name>>
+|link:{uri-messagepack-str}[str]
+|Module URI
 |
 |
 
 |link:{uri-stdlib-Function}[Function]
-|`0xE`
+|`0x0E`
 |
 |
 |
@@ -172,7 +174,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 
 |link:{uri-stdlib-Bytes}[Bytes]
-|`0xF`
+|`0x0F`
 |link:{uri-messagepack-bin}[bin]
 |Binary contents
 |
@@ -180,6 +182,19 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |===
+
+[[type-name-encoding]]
+[NOTE]
+====
+Type names have specific encoding rules:
+
+* When the module URI is `pkl:base`:
+** If the type name is `ModuleClass`, this type represents the module class of `pkl:base`.
+** Otherwise, the type name corresponds to a type in `pkl:base`.
+* For all other module URIs:
+** When the type name contains `\#`, the string after the `#` character corresponds to a type in that module. The string before the `#` is the name of the module.
+** Otherwise, the type name is the name of the module and represents the class of the module.
+====
 
 [[object-members]]
 == Object Members
@@ -212,4 +227,3 @@ Like non-primitive values, object members are encoded as MessagePack arrays, whe
 |`<value>`
 |element value
 |===
-

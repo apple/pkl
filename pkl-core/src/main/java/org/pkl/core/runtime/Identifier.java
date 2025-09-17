@@ -143,6 +143,9 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
 
+  // members of pkl.encoding
+  public static final Identifier IMPORTS = get("imports");
+
   // common in lambdas etc
   public static final Identifier IT = get("it");
 

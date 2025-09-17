@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,14 @@
  */
 package org.pkl.config.java;
 
+import java.io.InputStream;
 import java.lang.reflect.Type;
+import java.util.Map;
 import org.pkl.config.java.mapper.ConversionException;
+import org.pkl.config.java.mapper.ValueMapper;
+import org.pkl.core.Composite;
 import org.pkl.core.Evaluator;
+import org.pkl.core.PklBinaryDecoder;
 
 /**
  * A root, intermediate, or leaf node in a configuration tree. Child nodes can be obtained by name
@@ -67,4 +72,51 @@ public interface Config {
    * @throws ConversionException if the value cannot be converted to the given type
    */
   <T> T as(JavaType<T> type);
+
+  /**
+   * Decode a config from the supplied byte array.
+   *
+   * @return the encoded config
+   */
+  static Config from(byte[] bytes, ValueMapper mapper) {
+    return makeConfig(PklBinaryDecoder.decode(bytes), mapper);
+  }
+
+  /**
+   * Decode a config from the supplied byte array using a preconfigured {@link ValueMapper}.
+   *
+   * @return the encoded config
+   */
+  static Config from(byte[] bytes) {
+    return from(bytes, ValueMapper.preconfigured());
+  }
+
+  /**
+   * Decode a config from the supplied {@link InputStream} using a preconfigured {@link
+   * ValueMapper}.
+   *
+   * @return the encoded config
+   */
+  static Config from(InputStream inputStream, ValueMapper mapper) {
+    return makeConfig(PklBinaryDecoder.decode(inputStream), mapper);
+  }
+
+  /**
+   * Decode a config from the supplied {@link InputStream}.
+   *
+   * @return the encoded config
+   */
+  static Config from(InputStream inputStream) {
+    return from(inputStream, ValueMapper.preconfigured());
+  }
+
+  private static Config makeConfig(Object decoded, ValueMapper mapper) {
+    if (decoded instanceof Composite composite) {
+      return new CompositeConfig("", mapper, composite);
+    }
+    if (decoded instanceof Map<?, ?> map) {
+      return new MapConfig("", mapper, map);
+    }
+    return new LeafConfig("", mapper, decoded);
+  }
 }

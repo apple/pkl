@@ -1,0 +1,53 @@
+- 1
+- 'duration.msgpack.yaml'
+- 'file:///$snippetsDir/input/pklbinary/duration.msgpack.yaml.pkl'
+- 
+  - 
+    - 16
+    - 'res1'
+    - 
+      - 7
+      - 1.0
+      - 'ns'
+  - 
+    - 16
+    - 'res2'
+    - 
+      - 7
+      - 2.0
+      - 'us'
+  - 
+    - 16
+    - 'res3'
+    - 
+      - 7
+      - 3.0
+      - 'ms'
+  - 
+    - 16
+    - 'res4'
+    - 
+      - 7
+      - 4.0
+      - 's'
+  - 
+    - 16
+    - 'res5'
+    - 
+      - 7
+      - 5.0
+      - 'min'
+  - 
+    - 16
+    - 'res6'
+    - 
+      - 7
+      - 6.0
+      - 'h'
+  - 
+    - 16
+    - 'res7'
+    - 
+      - 7
+      - 7.0
+      - 'd'

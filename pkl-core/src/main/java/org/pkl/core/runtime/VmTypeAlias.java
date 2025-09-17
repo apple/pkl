@@ -19,10 +19,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.Member.SourceLocation;
+import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.TypeParameter;
@@ -140,6 +142,10 @@ public final class VmTypeAlias extends VmValue {
     return module.getVmClass().getModuleName();
   }
 
+  public URI getModuleUri() {
+    return module.getVmClass().getPClassInfo().getModuleUri();
+  }
+
   public VmTyped getModuleMirror() {
     return module.getModuleInfo().getMirror(module);
   }
@@ -150,6 +156,12 @@ public final class VmTypeAlias extends VmValue {
 
   public String getQualifiedName() {
     return qualifiedName;
+  }
+
+  public String getDisplayName() {
+    // display `UInt` rather than `pkl.base#UInt`, etc.
+    // based on PClassInfo.getDisplayName
+    return getModuleUri().equals(PClassInfo.pklBaseUri) ? simpleName : qualifiedName;
   }
 
   public int getTypeParameterCount() {
