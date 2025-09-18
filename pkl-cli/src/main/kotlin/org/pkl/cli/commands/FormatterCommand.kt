@@ -19,6 +19,7 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.path
@@ -41,12 +42,13 @@ class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
   override val helpString: String =
     "Check if the given files are properly formatted, printing the file name to stdout in case they are not. Returns non-zero in case of failure."
 
-  val path: Path by
-    argument(name = "path", help = "File or directory to check.")
+  val paths: List<Path> by
+    argument(name = "paths", help = "Files or directory to check.")
       .path(mustExist = true, canBeDir = true)
+      .multiple()
 
   override fun run() {
-    CliFormatterCheck(baseOptions.baseOptions(emptyList()), path).run()
+    CliFormatterCheck(baseOptions.baseOptions(emptyList()), paths).run()
   }
 }
 
@@ -54,9 +56,10 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
   override val helpString: String =
     "Overwrite all the files in place with the formatted version. Returns non-zero in case of failure."
 
-  val path: Path by
-    argument(name = "path", help = "File or directory to format.")
+  val paths: List<Path> by
+    argument(name = "paths", help = "Files or directory to format.")
       .path(mustExist = true, canBeDir = true)
+      .multiple()
 
   val silent: Boolean by
     option(
@@ -66,6 +69,6 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
       .flag()
 
   override fun run() {
-    CliFormatterApply(baseOptions.baseOptions(emptyList()), path, silent).run()
+    CliFormatterApply(baseOptions.baseOptions(emptyList()), paths, silent).run()
   }
 }
