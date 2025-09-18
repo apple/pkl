@@ -35,7 +35,8 @@ class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val 
       if (stat != 0) continue
       if (!silent && contents != formatted) {
         consoleWriter.write(path.toAbsolutePath().toString())
-        consoleWriter.flush()
+        consoleWriter.write("\n")
+        consoleWriter.flush();
       }
       try {
         path.writeText(formatted, Charsets.UTF_8)
