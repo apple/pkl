@@ -19,13 +19,17 @@ import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
+import com.github.ajalt.clikt.parameters.options.convert
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.cli.CliFormatterApply
 import org.pkl.cli.CliFormatterCheck
+import org.pkl.commons.cli.CliException
 import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.formatter.Compat
 
 class FormatterCommand : NoOpCliktCommand(name = "format") {
   override fun help(context: Context) = "Run commands related to formatting"
@@ -41,18 +45,36 @@ class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
   override val helpString: String =
     "Check if the given files are properly formatted, printing the file name to stdout in case they are not. Returns non-zero in case of failure."
 
+  val compat: Compat by
+    option(
+        names = arrayOf("--compat", "-c"),
+        help = "Run compatibility mode for older versions. Default: latest",
+        metavar = "version",
+      )
+      .convert { compatFromString(it) }
+      .default(Compat.LATEST)
+
   val path: Path by
     argument(name = "path", help = "File or directory to check.")
       .path(mustExist = true, canBeDir = true)
 
   override fun run() {
-    CliFormatterCheck(baseOptions.baseOptions(emptyList()), path).run()
+    CliFormatterCheck(baseOptions.baseOptions(emptyList()), path, compat).run()
   }
 }
 
 class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
   override val helpString: String =
     "Overwrite all the files in place with the formatted version. Returns non-zero in case of failure."
+
+  val compat: Compat by
+    option(
+        names = arrayOf("--compat", "-c"),
+        help = "Run compatibility mode for older versions. Default: latest",
+        metavar = "version",
+      )
+      .convert { compatFromString(it) }
+      .default(Compat.LATEST)
 
   val path: Path by
     argument(name = "path", help = "File or directory to format.")
@@ -66,6 +88,22 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
       .flag()
 
   override fun run() {
-    CliFormatterApply(baseOptions.baseOptions(emptyList()), path, silent)
+    CliFormatterApply(baseOptions.baseOptions(emptyList()), path, compat, silent).run()
+  }
+}
+
+internal fun compatFromString(version: String): Compat {
+  val compat = Compat.entries.find { it.version == version }
+  return if (compat != null) {
+    compat
+  } else {
+    val options = Compat.entries.joinToString(", ") { it.version }
+    throw CliException(
+      """
+            $version.
+            Valid ones are: $options
+          """
+        .trimIndent()
+    )
   }
 }

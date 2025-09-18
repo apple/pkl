@@ -19,9 +19,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.formatter.Compat
 
-class CliFormatterCheck(cliBaseOptions: CliBaseOptions, path: Path) :
-  CliFormatterCommand(cliBaseOptions, path) {
+class CliFormatterCheck(cliBaseOptions: CliBaseOptions, path: Path, compat: Compat) :
+  CliFormatterCommand(cliBaseOptions, path, compat) {
 
   override fun doRun() {
     var status = 0
@@ -32,6 +33,7 @@ class CliFormatterCheck(cliBaseOptions: CliBaseOptions, path: Path) :
       status = if (status == 0) stat else status
       if (contents != formatted) {
         consoleWriter.write(path.toAbsolutePath().toString())
+        consoleWriter.appendLine()
         consoleWriter.flush()
         status = 1
       }

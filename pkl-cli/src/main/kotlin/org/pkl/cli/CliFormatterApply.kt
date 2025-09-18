@@ -21,9 +21,14 @@ import java.nio.file.Path
 import kotlin.io.path.writeText
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.formatter.Compat
 
-class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val silent: Boolean) :
-  CliFormatterCommand(cliBaseOptions, path) {
+class CliFormatterApply(
+  cliBaseOptions: CliBaseOptions,
+  path: Path,
+  compat: Compat,
+  private val silent: Boolean,
+) : CliFormatterCommand(cliBaseOptions, path, compat) {
 
   override fun doRun() {
     var status = 0
@@ -35,12 +40,14 @@ class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val 
       if (stat != 0) continue
       if (!silent && contents != formatted) {
         consoleWriter.write(path.toAbsolutePath().toString())
+        consoleWriter.appendLine()
         consoleWriter.flush()
       }
       try {
         path.writeText(formatted, Charsets.UTF_8)
       } catch (e: IOException) {
         consoleWriter.write("Could not overwrite `$path`: ${e.message}")
+        consoleWriter.appendLine()
         consoleWriter.flush()
         status = 1
       }
