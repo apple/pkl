@@ -66,6 +66,6 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
       .flag()
 
   override fun run() {
-    CliFormatterApply(baseOptions.baseOptions(emptyList()), path, silent)
+    CliFormatterApply(baseOptions.baseOptions(emptyList()), path, silent).run()
   }
 }
