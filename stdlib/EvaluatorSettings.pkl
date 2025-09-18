@@ -171,6 +171,7 @@ class Http {
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
   
   /// HTTP headers to add to outbound requests targeting specified URLs.
+  @Since { version = "0.30.0" }
   headers: Mapping<HttpRewrite, Listing<Pair<String, String>>>?
 }
 
