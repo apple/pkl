@@ -32,8 +32,8 @@ class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val 
       val contents = Files.readString(path)
       val (formatted, stat) = format(path, contents)
       status = if (status == 0) stat else status
-      if (stat != 0) continue
-      if (!silent && contents != formatted) {
+      if (stat != 0 || contents == formatted) continue
+      if (!silent) {
         consoleWriter.write(path.toAbsolutePath().toString())
         consoleWriter.appendLine()
         consoleWriter.flush()
