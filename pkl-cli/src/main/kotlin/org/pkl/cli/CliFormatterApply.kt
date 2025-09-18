@@ -22,8 +22,8 @@ import kotlin.io.path.writeText
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 
-class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val silent: Boolean) :
-  CliFormatterCommand(cliBaseOptions, path) {
+class CliFormatterApply(cliBaseOptions: CliBaseOptions, paths: List<Path>, private val silent: Boolean) :
+  CliFormatterCommand(cliBaseOptions, paths) {
 
   override fun doRun() {
     var status = 0

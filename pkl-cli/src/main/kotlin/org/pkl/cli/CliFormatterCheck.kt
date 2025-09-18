@@ -20,8 +20,8 @@ import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 
-class CliFormatterCheck(cliBaseOptions: CliBaseOptions, path: Path) :
-  CliFormatterCommand(cliBaseOptions, path) {
+class CliFormatterCheck(cliBaseOptions: CliBaseOptions, paths: List<Path>) :
+  CliFormatterCommand(cliBaseOptions, paths) {
 
   override fun doRun() {
     var status = 0

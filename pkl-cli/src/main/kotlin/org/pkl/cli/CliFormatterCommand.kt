@@ -31,7 +31,7 @@ abstract class CliFormatterCommand
 @JvmOverloads
 constructor(
   options: CliBaseOptions,
-  protected val path: Path,
+  protected val paths: List<Path>,
   protected val consoleWriter: Writer = System.out.writer(),
 ) : CliCommand(options) {
   protected fun format(file: Path, contents: String): Pair<String, Int> {
@@ -46,9 +46,17 @@ constructor(
   }
 
   @OptIn(ExperimentalPathApi::class)
-  protected fun paths(): Sequence<Path> {
-    return if (path.isDirectory()) {
-      path.walk().filter { it.extension == "pkl" || it.name == "PklProject" }
-    } else sequenceOf(path)
+  protected fun paths(): Set<Path> {
+    val allPaths = mutableSetOf<Path>()
+    for (path in paths) {
+      if (path.isDirectory()) {
+        allPaths.addAll(
+          path.walk().filter { it.extension == "pkl" || it.name == "PklProject" }
+        )
+      } else {
+        allPaths.add(path)
+      }
+    }
+    return allPaths
   }
 }
