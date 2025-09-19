@@ -1,0 +1,243 @@
+examples {
+  ["C"] {
+    new {
+      ["inheritedFromA"] {
+        name = "inheritedFromA"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["overriddenInBFromA"] {
+        name = "overriddenInBFromA"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "Int"
+      }
+      ["overriddenInCFromA"] {
+        name = "overriddenInCFromA"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "Int"
+      }
+      ["overriddenInBCFromA"] {
+        name = "overriddenInBCFromA"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "Boolean"
+      }
+      ["modA"] {
+        name = "modA"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "fixed"
+        }
+        allModifiers {
+          "fixed"
+        }
+        type = "String"
+      }
+      ["modAOverrideB"] {
+        name = "modAOverrideB"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "hidden"
+          "fixed"
+        }
+        allModifiers {
+          "hidden"
+          "fixed"
+        }
+        type = "Int"
+      }
+      ["modAOverrideC"] {
+        name = "modAOverrideC"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "hidden"
+          "fixed"
+        }
+        allModifiers {
+          "hidden"
+          "fixed"
+        }
+        type = "Int"
+      }
+      ["modAOverrideBC"] {
+        name = "modAOverrideBC"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "fixed"
+        }
+        allModifiers {
+          "hidden"
+          "fixed"
+        }
+        type = "Boolean"
+      }
+      ["modAOverrideCB"] {
+        name = "modAOverrideCB"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "hidden"
+          "fixed"
+        }
+        allModifiers {
+          "hidden"
+          "fixed"
+        }
+        type = "Boolean"
+      }
+      ["annA"] {
+        name = "annA"
+        annotations {
+          "new Unlisted {}"
+        }
+        allAnnotations {
+          "new Unlisted {}"
+        }
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["annAOverrideB"] {
+        name = "annAOverrideB"
+        annotations {
+          "new MyAnn {}"
+        }
+        allAnnotations {
+          "new MyAnn {}"
+          "new Unlisted {}"
+        }
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["annAOverrideC"] {
+        name = "annAOverrideC"
+        annotations {
+          "new MyAnn {}"
+        }
+        allAnnotations {
+          "new MyAnn {}"
+          "new Unlisted {}"
+        }
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["annAOverrideBC"] {
+        name = "annAOverrideBC"
+        annotations {
+          "new AlsoKnownAs { names { \"mergedAnnotations\" } }"
+        }
+        allAnnotations {
+          "new AlsoKnownAs { names { \"mergedAnnotations\" } }"
+          "new MyAnn {}"
+          "new Unlisted {}"
+        }
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["inheritedFromB"] {
+        name = "inheritedFromB"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["overriddenInCFromB"] {
+        name = "overriddenInCFromB"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "Int"
+      }
+      ["modB"] {
+        name = "modB"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "fixed"
+        }
+        allModifiers {
+          "fixed"
+        }
+        type = "String"
+      }
+      ["annB"] {
+        name = "annB"
+        annotations {
+          "new Unlisted {}"
+        }
+        allAnnotations {
+          "new Unlisted {}"
+        }
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["fromC"] {
+        name = "fromC"
+        annotations {}
+        allAnnotations {}
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+      ["modC"] {
+        name = "modC"
+        annotations {}
+        allAnnotations {}
+        modifiers {
+          "fixed"
+        }
+        allModifiers {
+          "fixed"
+        }
+        type = "String"
+      }
+      ["annC"] {
+        name = "annC"
+        annotations {
+          "new Unlisted {}"
+        }
+        allAnnotations {
+          "new Unlisted {}"
+        }
+        modifiers {}
+        allModifiers {}
+        type = "String"
+      }
+    }
+  }
+  ["module"] {
+    new {
+      name = "output"
+      annotations {}
+      allAnnotations {}
+      modifiers {}
+      allModifiers {
+        "hidden"
+      }
+      type = "unknown"
+    }
+  }
+}
+
+// hello world

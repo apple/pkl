@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,7 +37,7 @@ public final class MirrorFactories {
   public static final VmObjectFactory<VmTypeAlias> typeAliasFactory =
       new VmObjectFactory<>(ReflectModule::getTypeAliasClass);
 
-  public static final VmObjectFactory<ClassProperty> propertyFactory =
+  public static final VmObjectFactory<ClassProperty.Mirror> propertyFactory =
       new VmObjectFactory<>(ReflectModule::getPropertyClass);
 
   public static final VmObjectFactory<ClassMethod> methodFactory =
@@ -146,8 +146,10 @@ public final class MirrorFactories {
         .addProperty("superclass", VmClass::getSuperclassMirror)
         .addProperty("supertype", VmClass::getSupertypeMirror)
         .addMapProperty("properties", VmClass::getPropertyMirrors)
+        .addMapProperty("allProperties", VmClass::getAllPropertyMirrors)
         .addTypedProperty("enclosingDeclaration", VmClass::getModuleMirror)
-        .addMapProperty("methods", VmClass::getMethodMirrors);
+        .addMapProperty("methods", VmClass::getMethodMirrors)
+        .addMapProperty("allMethods", VmClass::getAllMethodMirrors);
 
     typeAliasFactory
         .addTypedProperty(
@@ -164,24 +166,30 @@ public final class MirrorFactories {
 
     propertyFactory
         .addTypedProperty(
-            "location", property -> sourceLocationFactory.create(property.getHeaderSection()))
+            "location",
+            property -> sourceLocationFactory.create(property.getProperty().getHeaderSection()))
         .addProperty(
             "docComment",
-            property -> VmNull.lift(VmUtils.exportDocComment(property.getDocComment())))
-        .addListProperty("annotations", property -> VmList.create(property.getAnnotations()))
-        .addSetProperty("modifiers", ClassProperty::getModifierMirrors)
-        .addStringProperty("name", property -> property.getName().toString())
-        .addTypedProperty("type", ClassProperty::getTypeMirror)
+            property ->
+                VmNull.lift(VmUtils.exportDocComment(property.getProperty().getDocComment())))
+        .addListProperty(
+            "annotations", property -> VmList.create(property.getProperty().getAnnotations()))
+        .addListProperty("allAnnotations", property -> VmList.create(property.getAllAnnotations()))
+        .addSetProperty("modifiers", property -> property.getProperty().getModifierMirrors())
+        .addSetProperty("allModifiers", ClassProperty.Mirror::getAllModifierMirrors)
+        .addStringProperty("name", property -> property.getProperty().getName().toString())
+        .addTypedProperty("type", property -> property.getProperty().getTypeMirror())
         .addProperty(
             "defaultValue",
             property ->
-                property.isAbstract()
-                        || property.isExternal()
-                        || property.getInitializer().isUndefined()
+                property.getProperty().isAbstract()
+                        || property.getProperty().isExternal()
+                        || property.getProperty().getInitializer().isUndefined()
                     ? VmNull.withoutDefault()
                     :
                     // get default from prototype because it's cached there
-                    VmUtils.readMember(property.getOwner(), property.getName()));
+                    VmUtils.readMember(
+                        property.getProperty().getOwner(), property.getProperty().getName()));
 
     methodFactory
         .addTypedProperty(

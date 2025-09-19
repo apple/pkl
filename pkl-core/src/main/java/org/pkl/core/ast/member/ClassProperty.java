@@ -16,6 +16,7 @@
 package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.ArrayList;
 import java.util.List;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
@@ -67,8 +68,44 @@ public final class ClassProperty extends ClassMember {
     return name.toString();
   }
 
-  public VmTyped getMirror() {
-    return MirrorFactories.propertyFactory.create(this);
+  public static final class Mirror {
+    private final ClassProperty prop;
+    private final VmClass clazz;
+
+    Mirror(ClassProperty prop, VmClass clazz) {
+      this.prop = prop;
+      this.clazz = clazz;
+    }
+
+    public ClassProperty getProperty() {
+      return prop;
+    }
+
+    public List<VmTyped> getAllAnnotations() {
+      var annotations = new ArrayList<VmTyped>();
+      for (var klazz = clazz; klazz != null; klazz = klazz.getSuperclass()) {
+        var p = klazz.getDeclaredProperty(prop.getName());
+        if (p != null) {
+          annotations.addAll(p.getAnnotations());
+        }
+      }
+      return annotations;
+    }
+
+    public VmSet getAllModifierMirrors() {
+      var mods = 0;
+      for (var klazz = clazz; klazz != null; klazz = klazz.getSuperclass()) {
+        var parent = klazz.getDeclaredProperty(prop.getName());
+        if (parent != null) {
+          mods |= parent.getModifiers();
+        }
+      }
+      return VmModifier.getMirrors(mods, false);
+    }
+  }
+
+  public VmTyped getMirror(VmClass clazz) {
+    return MirrorFactories.propertyFactory.create(new Mirror(this, clazz));
   }
 
   public VmSet getModifierMirrors() {
