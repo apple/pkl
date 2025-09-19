@@ -34,12 +34,12 @@ import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.LateInit;
 import org.pkl.parser.Lexer;
 
-public final class PcfRenderer extends AbstractRenderer {
+public final class PcfRenderer extends AbstractStringRenderer {
   private final ValueFormatter valueFormatter;
 
   private boolean isDocument;
@@ -227,7 +227,7 @@ public final class PcfRenderer extends AbstractRenderer {
   }
 
   private void visitStandaloneValue(Object value) {
-    if (value instanceof VmObjectLike && !VmUtils.isRenderDirective(value)) {
+    if (value instanceof VmObjectLike && !isRenderDirective(value)) {
       builder.append("new ");
     }
     visit(value);

@@ -1,0 +1,58 @@
+classInstance {
+  dynamic {
+    hello = "world"
+    ["hello"] = "world"
+    "hello world"
+  }
+  string = "foo"
+  map = Map("foo", "bar")
+  mapping {
+    ["foo"] = "bar"
+  }
+  list = List("foo", "bar")
+  listing {
+    "foo"
+    0
+  }
+  set = Set("foo", "bar")
+  duration = 123.h
+  dataSize = 123.gib
+  pair = Pair("foo", "bar")
+  intSeq = IntSeq(123, 456)
+  regex = Regex("foo.*")
+  func = null
+  bytes = Bytes(1, 2, 3)
+  moduleClass = null
+  classClass = null
+  typealiasInstance = null
+}
+decoded {
+  dynamic {
+    hello = "world"
+    ["hello"] = "world"
+    "hello world"
+  }
+  string = "foo"
+  map = Map("foo", "bar")
+  mapping {
+    ["foo"] = "bar"
+  }
+  list = List("foo", "bar")
+  listing {
+    "foo"
+    0
+  }
+  set = Set("foo", "bar")
+  duration = 123.h
+  dataSize = 123.gib
+  pair = Pair("foo", "bar")
+  intSeq = IntSeq(123, 456)
+  regex = Regex("foo.*")
+  func = null
+  bytes = Bytes(1, 2, 3)
+  moduleClass = null
+  classClass = null
+  typealiasInstance = null
+}
+decodedClass = "encoding1#Foo"
+didRoundTrip = true

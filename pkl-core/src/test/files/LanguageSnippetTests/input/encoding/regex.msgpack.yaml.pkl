@@ -1,0 +1,5 @@
+extends ".../encodingTest.pkl"
+
+res1 = Regex("abc")
+res2 = Regex("")
+res3 = Regex("(?m)^abc$")
