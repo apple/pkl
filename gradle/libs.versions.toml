@@ -34,6 +34,7 @@ kotlin = "2.0.21"
 kotlinPoet = "1.6.+"
 kotlinxHtml = "0.11.0"
 kotlinxSerialization = "1.8.0"
+kotlinxCoroutines = "1.+"
 ktfmt = "0.53"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
@@ -79,6 +80,7 @@ kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr
 kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }

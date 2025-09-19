@@ -15,6 +15,7 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import kotlinx.html.*
 
 internal class ModulePageGenerator(
@@ -23,6 +24,7 @@ internal class ModulePageGenerator(
   docModule: DocModule,
   pageScope: ModuleScope,
   isTestMode: Boolean,
+  consoleOut: OutputStream,
 ) :
   ModuleOrClassPageGenerator<ModuleScope>(
     docsiteInfo,
@@ -30,6 +32,7 @@ internal class ModulePageGenerator(
     docModule.schema.moduleClass,
     pageScope,
     isTestMode,
+    consoleOut,
   ) {
   private val module = docModule.schema
 
