@@ -32,6 +32,7 @@ class CliFormatterCheck(cliBaseOptions: CliBaseOptions, path: Path) :
       status = if (status == 0) stat else status
       if (contents != formatted) {
         consoleWriter.write(path.toAbsolutePath().toString())
+        consoleWriter.appendLine()
         consoleWriter.flush()
         status = 1
       }

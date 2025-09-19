@@ -39,6 +39,7 @@ constructor(
       return Formatter().format(contents) to 0
     } catch (pe: GenericParserError) {
       consoleWriter.write("Could not format `$file`: $pe")
+      consoleWriter.appendLine()
       consoleWriter.flush()
       return "" to 1
     }

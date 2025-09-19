@@ -35,12 +35,14 @@ class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val 
       if (stat != 0) continue
       if (!silent && contents != formatted) {
         consoleWriter.write(path.toAbsolutePath().toString())
+        consoleWriter.appendLine()
         consoleWriter.flush()
       }
       try {
         path.writeText(formatted, Charsets.UTF_8)
       } catch (e: IOException) {
         consoleWriter.write("Could not overwrite `$path`: ${e.message}")
+        consoleWriter.appendLine()
         consoleWriter.flush()
         status = 1
       }
