@@ -27,24 +27,22 @@ class Formatter {
    * Formats a Pkl file from the given file path.
    *
    * @param path the path to the Pkl file to format
-   * @param compat compatibility mode to format older versions of Pkl
    * @return the formatted Pkl source code as a string
    * @throws java.io.IOException if the file cannot be read
    */
-  fun format(path: Path, compat: Compat = Compat.LATEST): String {
-    return format(Files.readString(path), compat)
+  fun format(path: Path): String {
+    return format(Files.readString(path))
   }
 
   /**
    * Formats the given Pkl source code text.
    *
    * @param text the Pkl source code to format
-   * @param compat compatibility mode to format older versions of Pkl
    * @return the formatted Pkl source code as a string
    */
-  fun format(text: String, compat: Compat = Compat.LATEST): String {
+  fun format(text: String): String {
     val parser = GenericParser()
-    val builder = Builder(text, compat)
+    val builder = Builder(text)
     val gen = Generator()
     val ast = parser.parseModule(text)
     val formatAst = builder.format(ast)
@@ -52,17 +50,4 @@ class Formatter {
     gen.generate(Nodes(listOf(formatAst, ForceLine)))
     return gen.toString()
   }
-}
-
-enum class Compat {
-  V0_29,
-  LATEST;
-
-  val version: String
-    get() =
-      if (this == LATEST) {
-        "latest"
-      } else {
-        name.drop(1).replace('_', '.')
-      }
 }

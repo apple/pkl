@@ -33,7 +33,7 @@ import org.pkl.parser.syntax.Operator
 import org.pkl.parser.syntax.generic.Node
 import org.pkl.parser.syntax.generic.NodeType
 
-internal class Builder(sourceText: String, private val compat: Compat) {
+internal class Builder(sourceText: String) {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
   private var prevNode: Node? = null
@@ -420,7 +420,7 @@ internal class Builder(sourceText: String, private val compat: Compat) {
         if (prev.isTerminal("(") || next.isTerminal(")")) {
           if (next.isTerminal(")")) {
             // trailing comma
-            if (compat == Compat.V0_29) Line else IfWrap(groupId, nodes(Text(","), Line), Line)
+            IfWrap(groupId, nodes(Text(","), Line), Line)
           } else Line
         } else SpaceOrLine
       }
@@ -439,7 +439,7 @@ internal class Builder(sourceText: String, private val compat: Compat) {
             val node = if (hasTrailingLambda) Empty else Line
             if (next.isTerminal(")") && !hasTrailingLambda) {
               // trailing comma
-              if (compat == Compat.V0_29) node else IfWrap(groupId, nodes(Text(","), node), node)
+              IfWrap(groupId, nodes(Text(","), node), node)
             } else node
           } else SpaceOrLine
         },
@@ -542,7 +542,7 @@ internal class Builder(sourceText: String, private val compat: Compat) {
         if (prev.isTerminal("<") || next.isTerminal(">")) {
           if (next.isTerminal(">")) {
             // trailing comma
-            if (compat == Compat.V0_29) Line else IfWrap(id, nodes(Text(","), Line), Line)
+            IfWrap(id, nodes(Text(","), Line), Line)
           } else Line
         } else SpaceOrLine
       }

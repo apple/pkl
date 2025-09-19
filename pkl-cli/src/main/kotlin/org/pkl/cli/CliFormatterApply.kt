@@ -21,14 +21,9 @@ import java.nio.file.Path
 import kotlin.io.path.writeText
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
-import org.pkl.formatter.Compat
 
-class CliFormatterApply(
-  cliBaseOptions: CliBaseOptions,
-  path: Path,
-  compat: Compat,
-  private val silent: Boolean,
-) : CliFormatterCommand(cliBaseOptions, path, compat) {
+class CliFormatterApply(cliBaseOptions: CliBaseOptions, path: Path, private val silent: Boolean) :
+  CliFormatterCommand(cliBaseOptions, path) {
 
   override fun doRun() {
     var status = 0
