@@ -54,6 +54,10 @@ public record PklEvaluatorSettings(
     @Nullable Map<String, ExternalReader> externalResourceReaders,
     @Nullable TraceMode traceMode) {
 
+  public static final Pattern HEADER_NAME_REGEX = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$");
+  public static final Pattern HEADER_VALUE_REGEX =
+      Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$");
+
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
   public static PklEvaluatorSettings parse(
@@ -159,10 +163,20 @@ public record PklEvaluatorSettings(
           parsedHeaders = new HashMap<>();
           var headersMap = (Map<String, List<Pair<String, String>>>) headers;
           for (var entry : headersMap.entrySet()) {
-            var key = entry.getKey();
-            var value = entry.getValue();
+            var uri = entry.getKey();
+            var pairs = entry.getValue();
+            for (var pair : pairs) {
+              if (!HEADER_NAME_REGEX.matcher(pair.getFirst()).matches()) {
+                throw new PklException(
+                  ErrorMessages.create("invalidHeaderName", pair.getFirst()));
+              }
+              if (!HEADER_VALUE_REGEX.matcher(pair.getSecond()).matches()) {
+                throw new PklException(
+                  ErrorMessages.create("invalidHeaderValue", pair.getSecond()));
+              } 
+            }
             try {
-              parsedHeaders.put(new URI(key), value);
+              parsedHeaders.put(new URI(uri), pairs);
             } catch (URISyntaxException e) {
               throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
             }

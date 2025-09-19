@@ -33,6 +33,7 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
 import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.Color
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
@@ -294,11 +295,19 @@ class BaseOptions : OptionGroup() {
         try {
           val uri = URI(uriStr.trim())
 
+          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
           val headerPairs =
             headers.split(',').map { header ->
-              val headerParts = header.split(":", limit = 2)
-              require(headerParts.size == 2) { "Header '$header' is not in 'name:value' format. " }
-              PPair(headerParts[0], headerParts[1])
+              val (headerName, headerValue) =
+                headerRegex.find(header)?.destructured
+                  ?: fail("Header '$header' is not in 'name:value' format.")
+              require(PklEvaluatorSettings.HEADER_NAME_REGEX.matcher(headerName).matches()) {
+                "HTTP header name '$headerName' has invalid syntax."
+              }
+              require(PklEvaluatorSettings.HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
+                "HTTP header value '$headerValue' has invalid syntax"
+              }
+              PPair(headerName, headerValue)
             }
           uri to headerPairs
         } catch (e: IllegalArgumentException) {
