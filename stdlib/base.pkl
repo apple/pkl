@@ -2179,6 +2179,18 @@ external class Pair<out First, out Second> extends Any {
   external value: Second
 }
 
+/// Wraps [v], terminating the fold with [v] as result.
+///
+/// Should only be called from inside a fold function like
+/// `fold`, `foldIndexed`, `reduce`, etc.
+const function folded(v: Any): Any = new Folded {
+  value = v
+}
+
+class Folded {
+  value: Any
+}
+
 /// Common base class for [List] and [Set].
 ///
 /// The following operators are supported for all collections:
@@ -2579,23 +2591,33 @@ abstract external class Collection<out Element> extends Any {
   abstract function dropLastWhile(predicate: (Element) -> Boolean): Collection<Element>
 
   /// Folds this collection in iteration order using [operator], starting with [initial].
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
 
   /// Folds this collection in reverse iteration order using [operator], starting with [initial].
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   @AlsoKnownAs { names { "foldRight" } }
   abstract function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
 
   /// Folds this collection in iteration order using [operator], starting with [initial].
   ///
   /// The first parameter of [operator] is the zero-based index of the current element.
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
 
   /// Folds this collection in iteration order using [operator], starting with the first element.
   ///
   /// Throws if this collection is empty.
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
 
   /// Same as [reduce()] but returns [null] if this collection is empty.
+  /// 
+  /// [folded] can be used to short-circuit the computation.
   abstract function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
 
   /// Groups the elements in this collection according to keys returned by [selector].
