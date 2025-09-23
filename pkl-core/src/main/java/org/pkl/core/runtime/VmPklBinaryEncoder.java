@@ -13,33 +13,12 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core;
+package org.pkl.core.runtime;
 
 import java.io.IOException;
 import java.util.Deque;
 import org.msgpack.core.MessagePacker;
-import org.pkl.core.runtime.BaseModule;
-import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmBytes;
-import org.pkl.core.runtime.VmClass;
-import org.pkl.core.runtime.VmDataSize;
-import org.pkl.core.runtime.VmDuration;
-import org.pkl.core.runtime.VmDynamic;
-import org.pkl.core.runtime.VmExceptionBuilder;
-import org.pkl.core.runtime.VmFunction;
-import org.pkl.core.runtime.VmIntSeq;
-import org.pkl.core.runtime.VmList;
-import org.pkl.core.runtime.VmListing;
-import org.pkl.core.runtime.VmMap;
-import org.pkl.core.runtime.VmMapping;
-import org.pkl.core.runtime.VmNull;
-import org.pkl.core.runtime.VmObjectLike;
-import org.pkl.core.runtime.VmPair;
-import org.pkl.core.runtime.VmRegex;
-import org.pkl.core.runtime.VmSet;
-import org.pkl.core.runtime.VmTypeAlias;
-import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.PklBinaryEncoding;
 import org.pkl.core.stdlib.AbstractRenderer;
 import org.pkl.core.stdlib.PklConverter;
 
@@ -48,36 +27,16 @@ import org.pkl.core.stdlib.PklConverter;
  * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
  * pkl-binary</code></a> encoding.
  */
-public class PklBinaryEncoder extends AbstractRenderer {
-
-  protected static final byte CODE_OBJECT = 0x01;
-  protected static final byte CODE_MAP = 0x02;
-  protected static final byte CODE_MAPPING = 0x03;
-  protected static final byte CODE_LIST = 0x04;
-  protected static final byte CODE_LISTING = 0x05;
-  protected static final byte CODE_SET = 0x06;
-  protected static final byte CODE_DURATION = 0x07;
-  protected static final byte CODE_DATASIZE = 0x08;
-  protected static final byte CODE_PAIR = 0x09;
-  protected static final byte CODE_INTSEQ = 0x0A;
-  protected static final byte CODE_REGEX = 0x0B;
-  protected static final byte CODE_CLASS = 0x0C;
-  protected static final byte CODE_TYPEALIAS = 0x0D;
-  protected static final byte CODE_FUNCTION = 0x0E;
-  protected static final byte CODE_BYTES = 0x0F;
-
-  protected static final byte CODE_PROPERTY = 0x10;
-  protected static final byte CODE_ENTRY = 0x11;
-  protected static final byte CODE_ELEMENT = 0x12;
+public class VmPklBinaryEncoder extends AbstractRenderer {
 
   private final MessagePacker packer;
 
-  public PklBinaryEncoder(MessagePacker packer, PklConverter converter) {
+  public VmPklBinaryEncoder(MessagePacker packer, PklConverter converter) {
     super("pkl-binary", converter, BaseModule.getBytesRenderDirectiveClass(), false, false);
     this.packer = packer;
   }
 
-  public PklBinaryEncoder(MessagePacker packer) {
+  public VmPklBinaryEncoder(MessagePacker packer) {
     this(packer, new PklConverter(VmMapping.empty()));
   }
 
@@ -118,7 +77,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(3);
-          packer.packInt(CODE_DURATION);
+          packer.packInt(PklBinaryEncoding.CODE_DURATION);
           packer.packDouble(value.getValue());
           packer.packString(value.getUnit().toString());
         });
@@ -129,7 +88,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(3);
-          packer.packInt(CODE_DATASIZE);
+          packer.packInt(PklBinaryEncoding.CODE_DATASIZE);
           packer.packDouble(value.getValue());
           packer.packString(value.getUnit().toString());
         });
@@ -140,7 +99,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(2);
-          packer.packInt(CODE_BYTES);
+          packer.packInt(PklBinaryEncoding.CODE_BYTES);
           packer.packBinaryHeader(value.getBytes().length);
           packer.addPayload(value.getBytes());
         });
@@ -151,7 +110,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(4);
-          packer.packInt(CODE_INTSEQ);
+          packer.packInt(PklBinaryEncoding.CODE_INTSEQ);
           packer.packLong(value.start);
           packer.packLong(value.end);
           packer.packLong(value.step);
@@ -187,7 +146,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(4);
-          packer.packInt(CODE_OBJECT);
+          packer.packInt(PklBinaryEncoding.CODE_OBJECT);
           packer.packString(value.getVmClass().getDisplayName());
           packer.packString(
               value.getVmClass().getModule().getModuleInfo().getModuleKey().getUri().toString());
@@ -215,27 +174,27 @@ public class PklBinaryEncoder extends AbstractRenderer {
 
   @Override
   protected void startListing(VmListing value) {
-    startList(CODE_LISTING, value.getLength());
+    startList(PklBinaryEncoding.CODE_LISTING, value.getLength());
   }
 
   @Override
   protected void startMapping(VmMapping value) {
-    startMap(CODE_MAPPING, (int) value.getLength());
+    startMap(PklBinaryEncoding.CODE_MAPPING, (int) value.getLength());
   }
 
   @Override
   protected void startList(VmList value) {
-    startList(CODE_LIST, value.getLength());
+    startList(PklBinaryEncoding.CODE_LIST, value.getLength());
   }
 
   @Override
   protected void startSet(VmSet value) {
-    startList(CODE_SET, value.getLength());
+    startList(PklBinaryEncoding.CODE_SET, value.getLength());
   }
 
   @Override
   protected void startMap(VmMap value) {
-    startMap(CODE_MAP, value.getLength());
+    startMap(PklBinaryEncoding.CODE_MAP, value.getLength());
   }
 
   @Override
@@ -245,7 +204,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
       doEncode(
           () -> {
             packer.packArrayHeader(3);
-            packer.packInt(CODE_ENTRY);
+            packer.packInt(PklBinaryEncoding.CODE_ENTRY);
           });
     }
 
@@ -258,7 +217,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
       doEncode(
           () -> {
             packer.packArrayHeader(3);
-            packer.packInt(CODE_ELEMENT);
+            packer.packInt(PklBinaryEncoding.CODE_ELEMENT);
             packer.packLong(index);
           });
     }
@@ -270,7 +229,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(3);
-          packer.packInt(CODE_PROPERTY);
+          packer.packInt(PklBinaryEncoding.CODE_PROPERTY);
           packer.packString(name.toString());
         });
     visit(value);
@@ -281,7 +240,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(3);
-          packer.packInt(CODE_CLASS);
+          packer.packInt(PklBinaryEncoding.CODE_CLASS);
           packer.packString(value.getModule().getModuleInfo().getModuleKey().getUri().toString());
           packer.packString(value.getDisplayName());
         });
@@ -292,7 +251,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(3);
-          packer.packInt(CODE_TYPEALIAS);
+          packer.packInt(PklBinaryEncoding.CODE_TYPEALIAS);
           packer.packString(value.getModuleUri().toString());
           packer.packString(value.getQualifiedName());
         });
@@ -303,7 +262,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(3);
-          packer.packInt(CODE_PAIR);
+          packer.packInt(PklBinaryEncoding.CODE_PAIR);
         });
     visit(value.getFirst());
     visit(value.getSecond());
@@ -314,7 +273,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(2);
-          packer.packInt(CODE_REGEX);
+          packer.packInt(PklBinaryEncoding.CODE_REGEX);
           packer.packString(value.getPattern().pattern());
         });
   }
@@ -329,7 +288,7 @@ public class PklBinaryEncoder extends AbstractRenderer {
     doEncode(
         () -> {
           packer.packArrayHeader(1);
-          packer.packInt(CODE_FUNCTION);
+          packer.packInt(PklBinaryEncoding.CODE_FUNCTION);
         });
   }
 

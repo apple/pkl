@@ -17,394 +17,141 @@ package org.pkl.core;
 
 import java.io.IOException;
 import java.net.URI;
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.Deque;
-import java.util.Formatter;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
-import org.graalvm.collections.EconomicMap;
-import org.msgpack.core.MessagePackException;
 import org.msgpack.core.MessageUnpacker;
-import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.BaseModule;
-import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmBytes;
-import org.pkl.core.runtime.VmClass;
-import org.pkl.core.runtime.VmDataSize;
-import org.pkl.core.runtime.VmDuration;
-import org.pkl.core.runtime.VmDynamic;
-import org.pkl.core.runtime.VmExceptionBuilder;
-import org.pkl.core.runtime.VmIntSeq;
-import org.pkl.core.runtime.VmList;
-import org.pkl.core.runtime.VmListing;
-import org.pkl.core.runtime.VmMap;
-import org.pkl.core.runtime.VmMapping;
-import org.pkl.core.runtime.VmNull;
-import org.pkl.core.runtime.VmObject;
-import org.pkl.core.runtime.VmObjectBuilder;
-import org.pkl.core.runtime.VmPair;
-import org.pkl.core.runtime.VmRegex;
-import org.pkl.core.runtime.VmSet;
-import org.pkl.core.runtime.VmTypeAlias;
-import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.LateInit;
+import org.pkl.core.util.CollectionUtils;
 
-/**
- * A decoder/parser for the <a
- * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
- * pkl-binary</code></a> encoding.
- */
-public class PklBinaryDecoder {
-  private final MessageUnpacker unpacker;
-  private final Importer importer;
-  @LateInit protected Deque<Object> currPath;
+public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
 
-  /**
-   * This interface provides callbacks for callers to implement to provide the implementation for
-   * importing Pkl types.
-   */
-  public interface Importer {
-    /**
-     * Called by the decoder when a Pkl class should be imported. This happens when decoding {@link
-     * VmClass} or {@link VmTyped} values.
-     *
-     * @param name is the qualified name of the class or module
-     * @param moduleUri is the URI of the module or the class's enclosing module
-     * @return The imported class
-     */
-    VmClass importClass(String name, URI moduleUri);
-
-    /**
-     * Called by the decoder when a Pkl class should be imported. This happens when decoding {@link
-     * VmTypeAlias} values.
-     *
-     * @param name is the qualified name of the typealias
-     * @param moduleUri is the URI of the typealias's enclosing module
-     * @return The import typealias
-     */
-    VmTypeAlias importTypeAlias(String name, URI moduleUri);
+  public PklBinaryDecoder(MessageUnpacker unpacker) {
+    super(unpacker);
   }
 
-  public PklBinaryDecoder(MessageUnpacker unpacker, Importer importer) {
-    this.unpacker = unpacker;
-    this.importer = importer;
+  @Override
+  protected RuntimeException doFail(Exception cause, long offset, List<String> path) {
+    return new RuntimeException(
+        String.format(
+            "Exception while decoding binary data at offset %d, path [%s]",
+            offset, String.join(", ", path)),
+        cause);
   }
 
-  private static class DecodeException extends RuntimeException {
-    DecodeException(String msg, Object... args) {
-      super(new Formatter().format(msg, args).toString());
-    }
+  @Override
+  protected RuntimeException doIOFail(Exception cause) {
+    return new RuntimeException("IO exception during decoding", cause);
   }
 
-  /**
-   * Decode a value from the supplied {@link MessageUnpacker}
-   *
-   * @return the encoded value
-   */
-  public Object decode() {
-    currPath = new ArrayDeque<>();
-    try {
-      return doDecode();
-    } catch (IOException e) {
-      throw new VmExceptionBuilder().evalError("ioErrorDecodingFromBinary").withCause(e).build();
-    } catch (MessagePackException | DecodeException e) {
-      var path = currPath.stream().map(Object::toString).collect(Collectors.toList());
-      Collections.reverse(path);
-      throw new VmExceptionBuilder()
-          .evalError(
-              "errorDecodingFromBinary", unpacker.getTotalReadBytes(), String.join(" ", path))
-          .withCause(e)
-          .build();
-    }
+  @Override
+  protected Object doDecodeNull() {
+    return PNull.getInstance();
   }
 
-  private Object doDecode() throws IOException {
-    if (!unpacker.hasNext()) {
-      throw new DecodeException("Unexpected EOF");
+  @Override
+  protected Object doDecodeDuration(double value, DurationUnit unit) {
+    return new Duration(value, unit);
+  }
+
+  @Override
+  protected Object doDecodeObject(
+      String className, URI moduleUri, DecodeIterator<DecodedObjectMember> iter)
+      throws IOException {
+    var properties = CollectionUtils.<String, Object>newLinkedHashMap(iter.getSize());
+    for (var member = iter.next(); iter.hasNext(); ) {
+      properties.put(member.key().toString(), member.value());
     }
 
-    return switch (unpacker.getNextFormat()) {
-      // primitives
-      case NIL -> {
-        unpacker.unpackNil();
-        yield VmNull.withoutDefault();
-      }
-      case STR8, STR16, STR32, FIXSTR -> unpacker.unpackString();
-      case UINT8, UINT16, UINT32, UINT64, INT8, INT16, INT32, INT64, POSFIXINT, NEGFIXINT ->
-          unpacker.unpackLong();
-      case BOOLEAN -> unpacker.unpackBoolean();
-      case FLOAT32, FLOAT64 -> unpacker.unpackDouble();
-
-      // non-primitive
-      case ARRAY16, ARRAY32, FIXARRAY -> decodeNonPrimitive();
-
-      // things we should never see outside a non-primitive
-      case BIN8, BIN16, BIN32 -> throw new DecodeException("Unexpected msgpack bin value");
-      case MAP16, MAP32, FIXMAP -> throw new DecodeException("Unexpected msgpack map value");
-      case EXT8, EXT16, EXT32, FIXEXT1, FIXEXT2, FIXEXT4, FIXEXT8, FIXEXT16 ->
-          throw new DecodeException("Unexpected msgpack ext value");
-      case NEVER_USED ->
-          throw PklBugException
-              .unreachableCode(); // getNextFormat throws for this but switch needs to be exhaustive
-    };
-  }
-
-  private Object decodeNonPrimitive() throws IOException {
-    var len = unpacker.unpackArrayHeader();
-    if (len < 1) {
-      throw new DecodeException("Unexpected empty object array value");
+    // dynamic
+    if (className.equals(BaseModule.getDynamicClass().getDisplayName())
+        && moduleUri.equals(BaseModule.getModule().getModuleInfo().getModuleKey().getUri())) {
+      return new PObject(PClassInfo.Dynamic, properties);
     }
 
-    var code = unpacker.unpackInt();
-    return switch (code) {
-      case PklBinaryEncoder.CODE_OBJECT -> decodeObject(len);
-      case PklBinaryEncoder.CODE_MAP -> decodeMap(len);
-      case PklBinaryEncoder.CODE_MAPPING -> decodeMapping(len);
-      case PklBinaryEncoder.CODE_LIST -> decodeList(len);
-      case PklBinaryEncoder.CODE_LISTING -> decodeListing(len);
-      case PklBinaryEncoder.CODE_SET -> decodeSet(len);
-      case PklBinaryEncoder.CODE_DURATION -> decodeDuration(len);
-      case PklBinaryEncoder.CODE_DATASIZE -> decodeDataSize(len);
-      case PklBinaryEncoder.CODE_PAIR -> decodePair(len);
-      case PklBinaryEncoder.CODE_INTSEQ -> decodeIntSeq(len);
-      case PklBinaryEncoder.CODE_REGEX -> decodeRegex(len);
-      case PklBinaryEncoder.CODE_CLASS -> decodeClass(len);
-      case PklBinaryEncoder.CODE_TYPEALIAS -> decodeTypeAlias(len);
-      case PklBinaryEncoder.CODE_FUNCTION ->
-          throw new DecodeException("Cannot decode values of type Function");
-      case PklBinaryEncoder.CODE_BYTES -> decodeBytes(len);
-      default -> throw new DecodeException("Unrecognized object code %x", code);
-    };
-  }
-
-  private VmObject decodeObject(int len) throws IOException {
-    assert len > 3;
-    currPath.push("object");
-    var objClassName = unpacker.unpackString();
-    var objModuleUri = URI.create(unpacker.unpackString());
-    var objectLen = unpacker.unpackArrayHeader();
-    EconomicMap<Object, ObjectMember> members = EconomicMap.create();
-    for (var i = 0; i < objectLen; i++) {
-      currPath.push(i);
-      var memberLen = unpacker.unpackArrayHeader();
-      if (memberLen != 3) {
-        throw new DecodeException("Expected 3 fields in object member, found %d", memberLen);
-      }
-      var memberCode = unpacker.unpackInt();
-      switch (memberCode) {
-        case PklBinaryEncoder.CODE_PROPERTY -> {
-          var propertyName = Identifier.get(unpacker.unpackString());
-          currPath.push(propertyName);
-          var propertyValue = doDecode();
-          members.put(
-              propertyName, VmUtils.createSyntheticObjectProperty(propertyName, "", propertyValue));
-        }
-        case PklBinaryEncoder.CODE_ENTRY -> {
-          var entryKey = doDecode();
-          currPath.push(entryKey);
-          var entryValue = doDecode();
-          members.put(entryKey, VmUtils.createSyntheticObjectEntry("", entryValue));
-        }
-        case PklBinaryEncoder.CODE_ELEMENT -> {
-          var elementIndex = unpacker.unpackLong();
-          currPath.push(elementIndex);
-          var elementValue = doDecode();
-          members.put(elementIndex, VmUtils.createSyntheticObjectElement("", elementValue));
-        }
-        default -> throw new DecodeException("Unrecognized member code %x", memberCode);
-      }
-      currPath.pop();
-      currPath.pop();
+    // typed module
+    var hashIndex = className.lastIndexOf("#");
+    if (hashIndex < 0) {
+      return new PModule(
+          moduleUri, className, PClassInfo.get(className, "ModuleClass", moduleUri), properties);
     }
 
-    unpacker.skipValue(len - 4);
-    currPath.pop();
-    if (objClassName.equals(BaseModule.getDynamicClass().getDisplayName())
-        && objModuleUri.equals(BaseModule.getModule().getModuleInfo().getModuleKey().getUri())) {
-      return new VmDynamic(
-          VmUtils.createEmptyMaterializedFrame(), VmDynamic.empty(), members, objectLen);
+    // typed class
+    return new PObject(
+        PClassInfo.get(
+            className.substring(0, hashIndex), className.substring(hashIndex + 1), moduleUri),
+        properties);
+  }
+
+  @Override
+  protected Object doDecodeMap(MapDecodeIterator iter) throws IOException {
+    var map = CollectionUtils.newLinkedHashMap(iter.getSize());
+    for (var entry = iter.next(); iter.hasNext(); ) {
+      map.put(entry.getKey(), entry.getValue());
     }
-
-    var clazz = importer.importClass(objClassName, objModuleUri);
-    return new VmTyped(
-        VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    return map;
   }
 
-  private VmMap decodeMap(int len) throws IOException {
-    assert len > 1;
-    currPath.push("map");
-    var mapLen = unpacker.unpackMapHeader();
-    unpacker.skipValue(len - 2);
-    var map = VmMap.builder();
-    for (var i = 0; i < mapLen; i++) {
-      currPath.push(i);
-      var key = doDecode();
-      currPath.push(key);
-      var val = doDecode();
-      currPath.pop();
-      currPath.pop();
-      map.add(key, val);
+  @Override
+  protected Object doDecodeMapping(MapDecodeIterator iter) throws IOException {
+    return doDecodeMap(iter); // same exported result!
+  }
+
+  @Override
+  protected Object doDecodeList(CollectionDecodeIterator iter) throws IOException {
+    var listing = new ArrayList<>(iter.getSize());
+    for (var elem = iter.next(); iter.hasNext(); ) {
+      listing.add(elem);
     }
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return map.build();
+    return listing;
   }
 
-  private VmMapping decodeMapping(int len) throws IOException {
-    assert len > 1;
-    currPath.push("mapping");
-    var mappingLen = unpacker.unpackMapHeader();
-    var mapping = new VmObjectBuilder(mappingLen);
-    for (int i = 0; i < mappingLen; i++) {
-      currPath.push(i);
-      var key = doDecode();
-      currPath.push(key);
-      var val = doDecode();
-      currPath.pop();
-      currPath.pop();
-      mapping.addEntry(key, val);
+  @Override
+  protected Object doDecodeListing(CollectionDecodeIterator iter) throws IOException {
+    return doDecodeList(iter); // same exported result!
+  }
+
+  @Override
+  protected Object doDecodeSet(CollectionDecodeIterator iter) throws IOException {
+    var set = CollectionUtils.newLinkedHashSet(iter.getSize());
+    for (var elem = iter.next(); iter.hasNext(); ) {
+      set.add(elem);
     }
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return mapping.toMapping();
+    return set;
   }
 
-  private VmList decodeList(int len) throws IOException {
-    assert len > 1;
-    currPath.push("list");
-    var listLen = unpacker.unpackArrayHeader();
-    var list = VmList.EMPTY.builder();
-    for (var i = 0; i < listLen; i++) {
-      currPath.push(i);
-      list.add(doDecode());
-      currPath.pop();
-    }
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return list.build();
+  @Override
+  protected Object doDecodeDataSize(double value, DataSizeUnit unit) {
+    return new DataSize(value, unit);
   }
 
-  private VmListing decodeListing(int len) throws IOException {
-    assert len > 1;
-    currPath.push("listing");
-    var listingLen = unpacker.unpackArrayHeader();
-    var listing = new VmObjectBuilder(listingLen);
-    for (int i = 0; i < listingLen; i++) {
-      currPath.push(i);
-      listing.addElement(doDecode());
-      currPath.pop();
-    }
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return listing.toListing();
+  @Override
+  protected Object doDecodePair(Object first, Object second) {
+    return new Pair<>(first, second);
   }
 
-  private VmSet decodeSet(int len) throws IOException {
-    assert len > 1;
-    currPath.push("set");
-    var setLen = unpacker.unpackArrayHeader();
-    var set = VmSet.EMPTY.builder();
-    for (var i = 0; i < setLen; i++) {
-      currPath.push(i);
-      set.add(doDecode());
-      currPath.pop();
-    }
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return set.build();
+  @Override
+  protected Object doDecodeIntSeq(long start, long end, long step) {
+    throw new DecodeException("Cannot export IntSeq value");
   }
 
-  private VmDuration decodeDuration(int len) throws IOException {
-    assert len > 2;
-    currPath.push("duration");
-    var durationValue = unpacker.unpackDouble();
-    var rawDurationUnit = unpacker.unpackString();
-    var durationUnit = DurationUnit.parse(rawDurationUnit);
-    if (durationUnit == null) {
-      throw new DecodeException("Invalid Duration unit `%s`", rawDurationUnit);
-    }
-    unpacker.skipValue(len - 3);
-    currPath.pop();
-    return new VmDuration(durationValue, durationUnit);
+  @Override
+  protected Object doDecodeRegex(Pattern pattern) {
+    return pattern;
   }
 
-  private VmDataSize decodeDataSize(int len) throws IOException {
-    assert len > 2;
-    currPath.push("datasize");
-    var dataSizeValue = unpacker.unpackDouble();
-    var rawDataSizeUnit = unpacker.unpackString();
-    var dataSizeUnit = DataSizeUnit.parse(rawDataSizeUnit);
-    if (dataSizeUnit == null) {
-      throw new DecodeException("Invalid DataSize unit `%s`", rawDataSizeUnit);
-    }
-    unpacker.skipValue(len - 3);
-    currPath.pop();
-    return new VmDataSize(dataSizeValue, dataSizeUnit);
+  @Override
+  protected Object doDecodeClass(String qualifiedName, URI moduleUri) {
+    throw new DecodeException("Cannot decode Class value");
   }
 
-  private VmPair decodePair(int len) throws IOException {
-    assert len > 2;
-    currPath.push("pair");
-    currPath.push("first");
-    var first = doDecode();
-    currPath.pop();
-    currPath.push("second");
-    var second = doDecode();
-    currPath.pop();
-    unpacker.skipValue(len - 3);
-    currPath.pop();
-    return new VmPair(first, second);
+  @Override
+  protected Object doDecodeTypeAlias(String qualifiedName, URI moduleUri) {
+    throw new DecodeException("Cannot decode TypeAlias value");
   }
 
-  private VmIntSeq decodeIntSeq(int len) throws IOException {
-    assert len > 3;
-    currPath.push("intseq");
-    var start = unpacker.unpackLong();
-    var end = unpacker.unpackLong();
-    var step = unpacker.unpackLong();
-    unpacker.skipValue(len - 4);
-    currPath.pop();
-    return new VmIntSeq(start, end, step);
-  }
-
-  private VmRegex decodeRegex(int len) throws IOException {
-    assert len > 1;
-    currPath.push("regex");
-    var pattern = unpacker.unpackString();
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return new VmRegex(Pattern.compile(pattern));
-  }
-
-  private VmClass decodeClass(int len) throws IOException {
-    assert len > 2;
-    currPath.push("class");
-    var className = unpacker.unpackString();
-    var classModuleUri = URI.create(unpacker.unpackString());
-    unpacker.skipValue(len - 3);
-    currPath.pop();
-    return importer.importClass(className, classModuleUri);
-  }
-
-  private VmTypeAlias decodeTypeAlias(int len) throws IOException {
-    assert len > 2;
-    currPath.push("typealias");
-    var typeAliasName = unpacker.unpackString();
-    var typeAliasModuleUri = URI.create(unpacker.unpackString());
-    unpacker.skipValue(len - 3);
-    currPath.pop();
-    return importer.importTypeAlias(typeAliasName, typeAliasModuleUri);
-  }
-
-  private VmBytes decodeBytes(int len) throws IOException {
-    assert len > 1;
-    currPath.push("bytes");
-    var bytesLen = unpacker.unpackBinaryHeader();
-    var bytes = unpacker.readPayload(bytesLen);
-    unpacker.skipValue(len - 2);
-    currPath.pop();
-    return new VmBytes(bytes);
+  @Override
+  protected Object doDecodeBytes(byte[] bytes) {
+    return bytes;
   }
 }

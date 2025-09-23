@@ -18,12 +18,12 @@ package org.pkl.server
 import java.nio.file.Path
 import java.time.Duration
 import org.pkl.core.*
-import org.pkl.core.PklBinaryEncoder
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.project.DeclaredDependencies
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.runtime.*
+import org.pkl.core.runtime.VmPklBinaryEncoder
 
 internal class BinaryEvaluator(
   transformer: StackFrameTransformer,
@@ -63,7 +63,7 @@ internal class BinaryEvaluator(
         .get()
         .apply {
           clear()
-          PklBinaryEncoder(this).renderDocument(evalResult)
+          VmPklBinaryEncoder(this).renderDocument(evalResult)
         }
         .toByteArray()
     }

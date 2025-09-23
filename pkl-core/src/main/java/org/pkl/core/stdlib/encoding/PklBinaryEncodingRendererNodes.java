@@ -19,10 +19,10 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
-import org.pkl.core.PklBinaryEncoder;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmMapping;
+import org.pkl.core.runtime.VmPklBinaryEncoder;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -49,9 +49,9 @@ public final class PklBinaryEncodingRendererNodes {
     }
   }
 
-  private static PklBinaryEncoder createRenderer(VmTyped self, MessagePacker packer) {
+  private static VmPklBinaryEncoder createRenderer(VmTyped self, MessagePacker packer) {
     var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
     var converter = new PklConverter(converters);
-    return new PklBinaryEncoder(packer, converter);
+    return new VmPklBinaryEncoder(packer, converter);
   }
 }

@@ -21,7 +21,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.net.URI;
 import org.msgpack.core.MessagePack;
-import org.pkl.core.PklBinaryDecoder;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.packages.PackageLoadError;
@@ -30,6 +29,7 @@ import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmPklBinaryDecoder;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -57,12 +57,12 @@ public final class PklBinaryEncodingParserNodes {
     @TruffleBoundary
     private Object doParse(byte[] bytes, VmTyped context) {
       var unpacker = MessagePack.newDefaultUnpacker(bytes);
-      return new PklBinaryDecoder(
+      return new VmPklBinaryDecoder(
               unpacker, new Importer(context.getVmClass().getPClassInfo().getModuleUri()))
           .decode();
     }
 
-    private class Importer implements PklBinaryDecoder.Importer {
+    private class Importer implements VmPklBinaryDecoder.Importer {
 
       private final URI currentModuleUri;
       private final VmContext context;
