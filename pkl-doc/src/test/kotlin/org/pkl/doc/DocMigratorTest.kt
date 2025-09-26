@@ -17,10 +17,7 @@
 
 package org.pkl.doc
 
-import com.google.common.jimfs.Configuration
-import com.google.common.jimfs.Jimfs
 import java.io.OutputStream
-import java.nio.file.FileSystem
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.*
@@ -38,8 +35,6 @@ import org.pkl.core.util.IoUtils
 
 class DocMigratorTest {
   companion object {
-    private val tempFileSystem: FileSystem by lazy { Jimfs.newFileSystem(Configuration.unix()) }
-
     private val projectDir = FileTestUtils.rootProjectDir.resolve("pkl-doc")
 
     private val inputDir: Path by lazy {
@@ -52,9 +47,7 @@ class DocMigratorTest {
       projectDir.resolve("src/test/files/DocMigratorTest/output/").also { it.createDirectories() }
     }
 
-    private val actualOutputDir: Path by lazy {
-      tempFileSystem.getPath("/work/output").createDirectories()
-    }
+    private val actualOutputDir: Path by lazy { Files.createTempDirectory("docMigratorTest") }
 
     private val actualOutputFiles: List<Path> by lazy { actualOutputDir.listFilesRecursively() }
 
