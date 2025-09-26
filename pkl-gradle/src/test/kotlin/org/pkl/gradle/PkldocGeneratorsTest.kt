@@ -94,11 +94,11 @@ class PkldocGeneratorsTest : AbstractTest() {
     assertThat(personFile).exists()
     assertThat(addressFile).exists()
 
-    checkTextContains(mainFile.readText(), "<html>", "test")
-    checkTextContains(packageFile.readText(), "<html>", "test.person")
-    checkTextContains(moduleFile.readText(), "<html>", "Person", "Address", "other")
-    checkTextContains(personFile.readText(), "<html>", "name", "addresses")
-    checkTextContains(addressFile.readText(), "<html>", "street", "zip")
+    checkTextContains(mainFile.readText(), "<html lang=\"en-US\">", "test")
+    checkTextContains(packageFile.readText(), "<html lang=\"en-US\">", "test.person")
+    checkTextContains(moduleFile.readText(), "<html lang=\"en-US\">", "Person", "Address", "other")
+    checkTextContains(personFile.readText(), "<html lang=\"en-US\">", "name", "addresses")
+    checkTextContains(addressFile.readText(), "<html lang=\"en-US\">", "street", "zip")
 
     val birdsPackageFile = baseDir.resolve("localhost(3a)0/birds/0.5.0/index.html")
     assertThat(birdsPackageFile).exists()
