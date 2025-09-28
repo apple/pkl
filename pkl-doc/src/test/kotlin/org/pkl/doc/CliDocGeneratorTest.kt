@@ -30,6 +30,8 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.DisabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
@@ -271,13 +273,22 @@ class CliDocGeneratorTest {
   }
 
   @Test
+  @DisabledOnOs(
+    OS.WINDOWS,
+    disabledReason = "Tests with symlinks does not work correctly on Windows",
+  )
   fun `running generator using an existing package results in no changes`(@TempDir tempDir: Path) {
     val outputDir = tempDir.resolve("src").apply { createDirectories() }
     val cacheDir = tempDir.resolve("cache").apply { createDirectories() }
     val run2OutputDir = helper.projectDir.resolve("src/test/files/DocGeneratorTest/output/run-2/")
-    run2OutputDir.copyToRecursively(outputDir, followLinks = false)
+    run2OutputDir.copyToRecursively(outputDir, followLinks = true)
     PackageServer.populateCacheDir(cacheDir)
-    runDocGenerator(outputDir, cacheDir, listOf(URI("package://localhost:0/birds@0.5.0")))
-    DocTestUtils.assertDirectoriesEqual(outputDir, run2OutputDir)
+    runDocGenerator(
+      outputDir,
+      cacheDir,
+      listOf(URI("package://localhost:0/birds@0.5.0")),
+      noSymlinks = true,
+    )
+    DocTestUtils.assertDirectoriesEqual(run2OutputDir, outputDir)
   }
 }

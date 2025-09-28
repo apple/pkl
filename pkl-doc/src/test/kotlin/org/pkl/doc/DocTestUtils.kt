@@ -23,6 +23,7 @@ import kotlin.io.path.exists
 import kotlin.io.path.extension
 import kotlin.io.path.isSymbolicLink
 import kotlin.io.path.readSymbolicLink
+import kotlin.io.path.readText
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
 import org.pkl.commons.test.listFilesRecursively
@@ -54,7 +55,12 @@ object DocTestUtils {
         }
         expectedFile.extension in binaryFileExtensions ->
           assertThat(actualFile).hasSameBinaryContentAs(expectedFile)
-        else -> assertThat(actualFile).hasSameTextualContentAs(expectedFile)
+        else ->
+          // AssertJ's `hasSameTextualContentsAs` method does not produce helpful diffs when
+          // debugging in IntelliJ.
+          assertThat(actualFile.readText())
+            .withFailMessage("Expected $expectedFile to have same text contents as $actualFile")
+            .isEqualTo(expectedFile.readText())
       }
     } else {
       expectedFile.createParentDirectories()
