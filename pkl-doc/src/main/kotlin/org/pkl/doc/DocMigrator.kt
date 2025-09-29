@@ -145,13 +145,15 @@ class DocMigrator(
         )
         return@runBlocking
       }
-      val packageDatas = Files.walk(outputDir).filter { it.name == "package-data.json" }
+      val packageDatas = Files.walk(outputDir).filter { it.name == "package-data.json" }.toList()
       val count = AtomicInteger(1)
       for (path in packageDatas) {
         val pkgData = PackageData.read(path)
         val isCurrentVersion = path.parent.name == "current"
         migratePackage(pkgData, isCurrentVersion)
-        deleteLegacyRuntimeData(pkgData)
+        if (!isCurrentVersion) {
+          deleteLegacyRuntimeData(pkgData)
+        }
         consoleOut.write(
           "Migrated ${count.incrementAndGet()} packages (${pkgData.ref.pkg}@${pkgData.ref.version})\r"
         )

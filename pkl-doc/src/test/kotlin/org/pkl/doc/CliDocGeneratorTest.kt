@@ -281,7 +281,7 @@ class CliDocGeneratorTest {
     val outputDir = tempDir.resolve("src").apply { createDirectories() }
     val cacheDir = tempDir.resolve("cache").apply { createDirectories() }
     val run2OutputDir = helper.projectDir.resolve("src/test/files/DocGeneratorTest/output/run-2/")
-    run2OutputDir.copyToRecursively(outputDir, followLinks = true)
+    run2OutputDir.copyToRecursively(outputDir, followLinks = false)
     PackageServer.populateCacheDir(cacheDir)
     runDocGenerator(
       outputDir,

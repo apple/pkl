@@ -59,7 +59,7 @@ object DocTestUtils {
           // AssertJ's `hasSameTextualContentsAs` method does not produce helpful diffs when
           // debugging in IntelliJ.
           assertThat(actualFile.readText())
-            .withFailMessage("Expected $expectedFile to have same text contents as $actualFile")
+            .`as`("Expected $expectedFile to have same text contents as $actualFile")
             .isEqualTo(expectedFile.readText())
       }
     } else {

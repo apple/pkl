@@ -27,6 +27,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.junit.jupiter.params.ParameterizedTest
 import org.junit.jupiter.params.provider.MethodSource
+import org.pkl.commons.copyRecursively
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
@@ -67,13 +68,11 @@ class DocMigratorTest {
       }
     }
 
-    // Run the doc generator twice; second time adds new versions for the `birds` package
     @JvmStatic
     private fun migrateDocs(): List<String> {
       val cacheDir = Files.createTempDirectory("cli-doc-generator-test-cache")
       PackageServer.populateCacheDir(cacheDir)
-      inputDir.copyToRecursively(actualOutputDir, followLinks = false)
-
+      inputDir.copyRecursively(actualOutputDir)
       val migrator =
         DocMigrator(actualOutputDir, OutputStream.nullOutputStream()) { v1, v2 ->
           Version.parse(v1).compareTo(Version.parse(v2))
