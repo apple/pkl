@@ -66,12 +66,12 @@ internal class ClassPageGenerator(
             clazz.annotations,
             isDeclaration = true,
             mapOf(
-              MemberInfoKey("Known subtypes", runtimeDataClasses) to
+              MemberInfoKey("Known subtypes in package", runtimeDataClasses) to
                 {
                   id = HtmlConstants.KNOWN_SUBTYPES
                   classes = runtimeDataClasses
                 },
-              MemberInfoKey("Known usages", runtimeDataClasses) to
+              MemberInfoKey("Known usages in package", runtimeDataClasses) to
                 {
                   id = HtmlConstants.KNOWN_USAGES
                   classes = runtimeDataClasses

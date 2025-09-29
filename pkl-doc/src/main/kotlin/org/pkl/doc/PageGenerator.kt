@@ -676,12 +676,12 @@ internal abstract class PageGenerator<out S>(
       }
     }
 
-    result[MemberInfoKey("Known subtypes", runtimeDataClasses)] = {
+    result[MemberInfoKey("Known subtypes in package", runtimeDataClasses)] = {
       id = HtmlConstants.KNOWN_SUBTYPES
       classes = runtimeDataClasses
     }
 
-    result[MemberInfoKey("Known usages", runtimeDataClasses)] = {
+    result[MemberInfoKey("Known usages in package", runtimeDataClasses)] = {
       id = HtmlConstants.KNOWN_USAGES
       classes = runtimeDataClasses
     }
