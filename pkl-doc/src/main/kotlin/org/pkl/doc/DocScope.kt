@@ -117,7 +117,10 @@ internal sealed class DocScope {
 /** A scope that corresponds to an entire Pkldoc page. */
 internal abstract class PageScope : DocScope() {
   /** The location of the runtime data file for this page. */
-  abstract val dataUrl: URI
+  abstract val perPackageDataUrl: URI
+
+  /** The location of the runtime data JSON file that is per-version for this page. */
+  abstract val perPackageVersionDataUrl: URI
 }
 
 // equality is identity
@@ -125,15 +128,15 @@ internal class SiteScope(
   val docPackages: List<DocPackage>,
   private val overviewImports: Map<String, URI>,
   private val importResolver: (URI) -> ModuleSchema,
-  outputDir: Path,
+  val outputDir: Path,
 ) : PageScope() {
   private val pklVersion = Release.current().version().withBuild(null).toString()
 
   private val pklBaseModule: ModuleSchema by lazy { importResolver("pkl:base".toUri()) }
 
-  val packageScopes: Map<String, PackageScope> by lazy {
+  val packageScopes: Map<DocPackageInfo, PackageScope> by lazy {
     docPackages.associate { docPackage ->
-      docPackage.name to
+      docPackage.docPackageInfo to
         PackageScope(
           docPackage.docPackageInfo,
           docPackage.docModules.map { it.schema },
@@ -142,6 +145,11 @@ internal class SiteScope(
           this,
         )
     }
+  }
+
+  val stdlibPackageScope: PackageScope? by lazy {
+    val pklPackage = docPackages.find { it.name == "pkl" }
+    packageScopes[pklPackage?.docPackageInfo]
   }
 
   private val pklBaseScope: ModuleScope by lazy {
@@ -155,7 +163,10 @@ internal class SiteScope(
     IoUtils.ensurePathEndsWithSlash(outputDir.toUri()).resolve("index.html")
   }
 
-  override val dataUrl: URI
+  override val perPackageDataUrl: URI
+    get() = throw UnsupportedOperationException("perVersionDataUrl")
+
+  override val perPackageVersionDataUrl: URI
     get() = throw UnsupportedOperationException("perVersionDataUrl")
 
   fun createEmptyPackageScope(
@@ -187,7 +198,7 @@ internal class SiteScope(
 
   override fun getProperty(name: String): DocScope? = null
 
-  fun getPackage(name: String): PackageScope = packageScopes.getValue(name)
+  fun getPackage(packageInfo: DocPackageInfo): PackageScope = packageScopes.getValue(packageInfo)
 
   fun resolveImport(uri: URI): ModuleSchema = importResolver(uri)
 
@@ -195,7 +206,7 @@ internal class SiteScope(
     when {
       name.startsWith("pkl.") -> {
         val packagePage =
-          packageScopes["pkl"]?.url // link to locally generated stdlib docs if available
+          stdlibPackageScope?.url // link to locally generated stdlib docs if available
           ?: PklInfo.current().packageIndex.getPackagePage("pkl", pklVersion).toUri()
         packagePage.resolve(name.substring(4) + "/")
       }
@@ -264,8 +275,12 @@ internal class PackageScope(
     return IoUtils.relativize(myVersion, scope.url)
   }
 
-  override val dataUrl: URI by lazy {
-    parent.url.resolve("./data/${name.pathEncoded}/$version/index.js")
+  override val perPackageDataUrl: URI by lazy {
+    parent.url.resolve("./data/${name.pathEncoded}/_/index.json")
+  }
+
+  override val perPackageVersionDataUrl: URI by lazy {
+    parent.url.resolve("./data/${name.pathEncoded}/$version/index.json")
   }
 
   fun getModule(name: String): ModuleScope = moduleScopes.getValue(name)
@@ -330,7 +345,13 @@ internal class ModuleScope(
     getModulePath(module.moduleName, parent!!.docPackageInfo.moduleNamePrefix).uriEncoded
   }
 
-  override val dataUrl: URI by lazy { parent!!.dataUrl.resolve("./$path/index.js") }
+  override val perPackageDataUrl: URI by lazy {
+    parent!!.perPackageDataUrl.resolve("./$path/index.json")
+  }
+
+  override val perPackageVersionDataUrl: URI by lazy {
+    parent!!.perPackageVersionDataUrl.resolve("./$path/index.json")
+  }
 
   override fun getMethod(name: String): MethodScope? =
     module.moduleClass.allMethods[name]?.let { MethodScope(it, this) }
@@ -393,8 +414,14 @@ internal class ClassScope(
     else parentUrl.resolve("${clazz.simpleName.pathEncoded.uriEncodedComponent}.html")
   }
 
-  override val dataUrl: URI by lazy {
-    parent!!.dataUrl.resolve("${clazz.simpleName.pathEncoded.uriEncodedComponent}.js")
+  override val perPackageDataUrl: URI by lazy {
+    parent!!.perPackageDataUrl.resolve("${clazz.simpleName.pathEncoded.uriEncodedComponent}.json")
+  }
+
+  override val perPackageVersionDataUrl: URI by lazy {
+    parent!!
+      .perPackageVersionDataUrl
+      .resolve("${clazz.simpleName.pathEncoded.uriEncodedComponent}.json")
   }
 
   override fun getMethod(name: String): MethodScope? =

@@ -15,8 +15,11 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import java.net.URI
 import java.nio.file.Path
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import org.pkl.core.ModuleSchema
 
 internal class HtmlGenerator(
@@ -25,67 +28,70 @@ internal class HtmlGenerator(
   importResolver: (URI) -> ModuleSchema,
   private val outputDir: Path,
   private val isTestMode: Boolean,
-) {
+  consoleOut: OutputStream,
+) : AbstractGenerator(consoleOut) {
   private val siteScope =
     SiteScope(docPackages, docsiteInfo.overviewImports, importResolver, outputDir)
 
-  fun generate(docPackage: DocPackage) {
-    val packageScope = siteScope.getPackage(docPackage.name)
-
-    PackagePageGenerator(docsiteInfo, docPackage, packageScope).run()
+  suspend fun generate(docPackage: DocPackage) = coroutineScope {
+    val packageScope = siteScope.getPackage(docPackage.docPackageInfo)
+    launch { PackagePageGenerator(docsiteInfo, docPackage, packageScope, consoleOut).run() }
 
     for (docModule in docPackage.docModules) {
       if (docModule.isUnlisted) continue
 
       val moduleScope = packageScope.getModule(docModule.name)
-
-      ModulePageGenerator(docsiteInfo, docPackage, docModule, moduleScope, isTestMode).run()
+      launch {
+        ModulePageGenerator(docsiteInfo, docPackage, docModule, moduleScope, isTestMode, consoleOut)
+          .run()
+      }
 
       for ((_, clazz) in docModule.schema.classes) {
         if (clazz.isUnlisted) continue
-
-        ClassPageGenerator(
-            docsiteInfo,
-            docPackage,
-            docModule,
-            clazz,
-            ClassScope(clazz, moduleScope.url, moduleScope),
-            isTestMode,
-          )
-          .run()
+        launch {
+          ClassPageGenerator(
+              docsiteInfo,
+              docPackage,
+              docModule,
+              clazz,
+              ClassScope(clazz, moduleScope.url, moduleScope),
+              isTestMode,
+              consoleOut,
+            )
+            .run()
+        }
       }
     }
   }
 
-  fun generateSite(packagesData: List<PackageData>) {
-    MainPageGenerator(docsiteInfo, packagesData, siteScope).run()
-
-    generateStaticResources()
+  suspend fun generateSite(packages: List<PackageData>) = coroutineScope {
+    launch { MainPageGenerator(docsiteInfo, packages, siteScope, consoleOut).run() }
+    launch { generateStaticResources() }
   }
 
-  private fun generateStaticResources() {
-    copyResource("fonts/lato-v14-latin_latin-ext-regular.woff2", outputDir)
-    copyResource("fonts/lato-v14-latin_latin-ext-700.woff2", outputDir)
-
-    copyResource("fonts/open-sans-v15-latin_latin-ext-regular.woff2", outputDir)
-    copyResource("fonts/open-sans-v15-latin_latin-ext-italic.woff2", outputDir)
-    copyResource("fonts/open-sans-v15-latin_latin-ext-700.woff2", outputDir)
-    copyResource("fonts/open-sans-v15-latin_latin-ext-700italic.woff2", outputDir)
-
-    copyResource("fonts/source-code-pro-v7-latin_latin-ext-regular.woff2", outputDir)
-    copyResource("fonts/source-code-pro-v7-latin_latin-ext-700.woff2", outputDir)
-
-    copyResource("fonts/MaterialIcons-Regular.woff2", outputDir)
-
-    copyResource("scripts/pkldoc.js", outputDir)
-    copyResource("scripts/search-worker.js", outputDir)
-    copyResource("scripts/scroll-into-view.min.js", outputDir)
-
-    copyResource("styles/pkldoc.css", outputDir)
-
-    copyResource("images/apple-touch-icon.png", outputDir)
-    copyResource("images/favicon.svg", outputDir)
-    copyResource("images/favicon-16x16.png", outputDir)
-    copyResource("images/favicon-32x32.png", outputDir)
+  private suspend fun generateStaticResources() = coroutineScope {
+    val resources =
+      listOf(
+        "fonts/lato-v14-latin_latin-ext-regular.woff2",
+        "fonts/lato-v14-latin_latin-ext-700.woff2",
+        "fonts/open-sans-v15-latin_latin-ext-regular.woff2",
+        "fonts/open-sans-v15-latin_latin-ext-italic.woff2",
+        "fonts/open-sans-v15-latin_latin-ext-700.woff2",
+        "fonts/open-sans-v15-latin_latin-ext-700italic.woff2",
+        "fonts/source-code-pro-v7-latin_latin-ext-regular.woff2",
+        "fonts/source-code-pro-v7-latin_latin-ext-700.woff2",
+        "fonts/MaterialIcons-Regular.woff2",
+        "scripts/pkldoc.js",
+        "scripts/search-worker.js",
+        "scripts/scroll-into-view.min.js",
+        "styles/pkldoc.css",
+        "images/apple-touch-icon.png",
+        "images/favicon.svg",
+        "images/favicon-16x16.png",
+        "images/favicon-32x32.png",
+      )
+    for (resource in resources) {
+      launch { copyResource(resource, outputDir) }
+    }
   }
 }

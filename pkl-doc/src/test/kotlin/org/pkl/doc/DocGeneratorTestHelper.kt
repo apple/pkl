@@ -18,6 +18,8 @@ package org.pkl.doc
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.copyToRecursively
 import kotlin.io.path.createDirectories
 import kotlin.io.path.exists
 import org.assertj.core.api.Assertions
@@ -28,6 +30,7 @@ import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.listFilesRecursively
 import org.pkl.core.util.IoUtils
 
+@OptIn(ExperimentalPathApi::class)
 class DocGeneratorTestHelper {
   internal val tempDir by lazy { Files.createTempDirectory("ExecutableCliDocGeneratorTest") }
 
@@ -71,11 +74,14 @@ class DocGeneratorTestHelper {
 
   internal val expectedOutputFiles: List<Path> by lazy { expectedOutputDir.listFilesRecursively() }
 
-  internal val actualOutputDir: Path by lazy {
+  val baseActualOutputDir: Path by lazy {
     tempDir.resolve("work/DocGeneratorTest").createDirectories()
   }
 
-  internal val actualOutputFiles: List<Path> by lazy { actualOutputDir.listFilesRecursively() }
+  val actualOutputDir: Path by lazy { baseActualOutputDir.resolve("run-1") }
+  val actualOutputDir2: Path by lazy { baseActualOutputDir.resolve("run-2") }
+
+  internal val actualOutputFiles: List<Path> by lazy { baseActualOutputDir.listFilesRecursively() }
 
   internal val cacheDir: Path by lazy { tempDir.resolve("cache") }
 
@@ -101,7 +107,7 @@ class DocGeneratorTestHelper {
   }
 
   internal val actualRelativeOutputFiles: List<String> by lazy {
-    actualOutputFiles.map { IoUtils.toNormalizedPathString(actualOutputDir.relativize(it)) }
+    actualOutputFiles.map { IoUtils.toNormalizedPathString(baseActualOutputDir.relativize(it)) }
   }
 
   fun runPklDocCli(executable: Path, options: CliDocGeneratorOptions) {
@@ -111,8 +117,13 @@ class DocGeneratorTestHelper {
       add(options.normalizedOutputDir.toString())
       add("--cache-dir")
       add(options.base.normalizedModuleCacheDir.toString())
-      add("--test-mode")
-      addAll(sourceModules.map { it.toString() })
+      if (options.noSymlinks) {
+        add("--no-symlinks")
+      }
+      if (options.isTestMode) {
+        add("--test-mode")
+      }
+      addAll(options.base.normalizedSourceModules.map { it.toString() })
     }
     val process =
       with(ProcessBuilder(command)) {
@@ -138,20 +149,22 @@ class DocGeneratorTestHelper {
     }
   }
 
+  // Run the docsite generator three times; second time adds more packages for the `birds` package.
   private fun generateDocsWith(doGenerate: (CliDocGeneratorOptions) -> Unit): List<String> {
     PackageServer.populateCacheDir(cacheDir)
+
     val options =
       CliDocGeneratorOptions(
         CliBaseOptions(
           sourceModules =
             listOf(
-              docsiteModule,
               package1PackageModule,
               package2PackageModule,
               URI("package://localhost:0/birds@0.5.0"),
               URI("package://localhost:0/fruit@1.1.0"),
               URI("package://localhost:0/unlisted@1.0.0"),
               URI("package://localhost:0/deprecated@1.0.0"),
+              docsiteModule,
             ) + package1InputModules + package2InputModules,
           moduleCacheDir = cacheDir,
         ),
@@ -160,12 +173,34 @@ class DocGeneratorTestHelper {
         noSymlinks = false,
       )
     doGenerate(options)
-    val missingFiles = expectedRelativeOutputFiles - actualRelativeOutputFiles.toSet()
-    if (missingFiles.isNotEmpty()) {
-      Assertions.fail<Unit>(
-        "The following expected files were not actually generated:\n" +
-          missingFiles.joinToString("\n")
+
+    // simulate running the doc generator again with new packages.
+    actualOutputDir.copyToRecursively(actualOutputDir2, followLinks = false)
+
+    val options2 =
+      CliDocGeneratorOptions(
+        CliBaseOptions(
+          sourceModules =
+            listOf(
+              URI("package://localhost:0/birds@0.6.0"),
+              URI("package://localhost:0/birds@0.7.0"),
+              docsiteModule,
+            ),
+          moduleCacheDir = cacheDir,
+        ),
+        outputDir = actualOutputDir2,
+        isTestMode = true,
+        noSymlinks = false,
       )
+    doGenerate(options2)
+
+    val missingFiles = expectedRelativeOutputFiles - actualRelativeOutputFiles
+    if (missingFiles.isNotEmpty()) {
+      val error = buildString {
+        appendLine("The following expected files were not actually generated:")
+        missingFiles.forEach { appendLine(it) }
+      }
+      Assertions.fail<Unit>(error)
     }
 
     return actualRelativeOutputFiles

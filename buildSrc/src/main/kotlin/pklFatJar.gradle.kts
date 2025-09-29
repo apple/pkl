@@ -60,6 +60,7 @@ val relocations =
     // pkl-doc dependencies
     "org.commonmark." to "org.pkl.thirdparty.commonmark.",
     "org.jetbrains." to "org.pkl.thirdparty.jetbrains.",
+    "_COROUTINE." to "org.pkl.thirdparty.kotlinx._COROUTINE.",
 
     // pkl-config-java dependencies
     "io.leangen.geantyref." to "org.pkl.thirdparty.geantyref.",
@@ -98,6 +99,8 @@ tasks.shadowJar {
 
   exclude("META-INF/maven/**")
   exclude("META-INF/upgrade/**")
+
+  exclude("DebugProbesKt.bin")
 
   val info = project.extensions.getByType<BuildInfo>()
   val minimumJvmTarget = JavaVersion.toVersion(info.jvmTarget)

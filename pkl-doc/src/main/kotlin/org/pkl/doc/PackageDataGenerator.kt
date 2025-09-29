@@ -16,6 +16,7 @@
 package org.pkl.doc
 
 import java.io.IOException
+import java.io.OutputStream
 import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.createParentDirectories
@@ -24,8 +25,8 @@ import kotlinx.serialization.*
 import kotlinx.serialization.json.Json
 import org.pkl.commons.readString
 import org.pkl.commons.toUri
-import org.pkl.commons.walk
 import org.pkl.core.*
+import org.pkl.core.packages.PackageUri
 import org.pkl.core.util.IoUtils
 
 /**
@@ -33,7 +34,8 @@ import org.pkl.core.util.IoUtils
  * previously generated docs in a newly generated doc website. This is useful if there's a problem
  * with fetching or evaluating the latest package version.
  */
-internal class PackageDataGenerator(private val outputDir: Path) {
+internal class PackageDataGenerator(private val outputDir: Path, consoleOut: OutputStream) :
+  AbstractGenerator(consoleOut) {
   fun generate(pkg: DocPackage) {
     val path =
       outputDir
@@ -43,19 +45,10 @@ internal class PackageDataGenerator(private val outputDir: Path) {
         .apply { createParentDirectories() }
     PackageData(pkg).write(path)
   }
-
-  fun readAll(): List<PackageData> {
-    return outputDir.walk().use { paths ->
-      paths
-        .filter { it.fileName?.toString() == "package-data.json" }
-        .map { PackageData.read(it) }
-        .toList()
-    }
-  }
 }
 
 /** Uniquely identifies a specific version of a package, module, class, or type alias. */
-internal sealed class ElementRef {
+internal sealed class ElementRef<T : ElementRef<T>> {
   /** The package name. */
   abstract val pkg: String
 
@@ -66,15 +59,51 @@ internal sealed class ElementRef {
   abstract val version: String
 
   /** The Pkldoc page URL of the element relative to its Pkldoc website root. */
-  abstract val pageUrl: URI
+  val htmlPath: String by lazy { "$basePath/${version.pathEncoded}/$packageRelativeHtmlPath" }
+
+  /** The Pkldoc runtime data JSON path for this ref. */
+  val perPackageRuntimeDataPath: String by lazy { "data/$basePath/_/$packageRelativeDataPath" }
+
+  /** The Pkldoc runtime data JSON path for this ref at a per-version level. */
+  val perPackageVersionRuntimeDataPath: String by lazy {
+    "data/$basePath/${version.pathEncoded}/$packageRelativeDataPath"
+  }
+
+  /** The legacy runtime data path () */
+  val legacyVersionedRuntimeDataPath: String by lazy {
+    "data/$basePath/${version.pathEncoded}/${packageRelativeDataPath.substringBeforeLast(".json") + ".js"}"
+  }
 
   /**
    * The Pkldoc page URL of the element relative to [other]'s page URL. Assumes that both elements
    * have the same Pkldoc website root.
    */
-  fun pageUrlRelativeTo(other: ElementRef): String {
-    return IoUtils.relativize(pageUrl, other.pageUrl).toString()
+  fun pageUrlRelativeTo(other: ElementRef<*>): String {
+    return IoUtils.relativize(htmlPath.toUri(), other.htmlPath.toUri()).toString()
   }
+
+  /** The Pkldoc page URL for my element with a different veresion. */
+  fun pageUrlForVersion(version: String): String {
+    val pathToBasePath = IoUtils.relativize(basePath.toUri(), htmlPath.toUri()).toString()
+    return "${pathToBasePath}${version.pathEncoded}/${withVersion(version).packageRelativeHtmlPath}"
+  }
+
+  abstract fun withVersion(version: String): T
+
+  /** The HTML path within the package folder */
+  abstract val packageRelativeHtmlPath: String
+
+  /** The JSON path within the package folder */
+  abstract val packageRelativeDataPath: String
+
+  fun isInSamePackageAs(other: ElementRef<T>): Boolean =
+    pkg == other.pkg && pkgUri == other.pkgUri && version == other.version
+
+  val basePath: String
+    get() =
+      if (pkgUri?.scheme == "package")
+        "${pkgUri!!.authority}${PackageUri(pkgUri!!).pathWithoutVersion}".pathEncoded
+      else pkg.pathEncoded
 }
 
 /** Uniquely identifies a specific version of a package. */
@@ -88,8 +117,12 @@ internal data class PackageRef(
 
   /** The package version. */
   override val version: String,
-) : ElementRef() {
-  override val pageUrl: URI by lazy { "$pkg/$version/index.html".toUri() }
+) : ElementRef<PackageRef>() {
+  override val packageRelativeHtmlPath: String = "index.html"
+
+  override val packageRelativeDataPath: String = "index.json"
+
+  override fun withVersion(version: String): PackageRef = copy(version = version)
 }
 
 /** Uniquely identifies a specific version of a module. */
@@ -106,12 +139,13 @@ internal data class ModuleRef(
 
   /** The module path. */
   val module: String,
-) : ElementRef() {
-  override val pageUrl: URI by lazy { "$pkg/$version/$module/index.html".toUri() }
+) : ElementRef<ModuleRef>() {
+  override val packageRelativeHtmlPath: String by lazy { "${module.pathEncoded}/index.html" }
 
-  val moduleClassRef: TypeRef by lazy {
-    TypeRef(pkg, pkgUri, version, module, PClassInfo.MODULE_CLASS_NAME)
-  }
+  override val packageRelativeDataPath: String
+    get() = "$module/index.json".pathEncoded
+
+  override fun withVersion(version: String): ModuleRef = copy(version = version)
 
   val id: ModuleId by lazy { ModuleId(pkg, module) }
 
@@ -138,19 +172,31 @@ internal data class TypeRef(
 
   /** Whether this is a type alias rather than a class. */
   val isTypeAlias: Boolean = false,
-) : ElementRef() {
+) : ElementRef<TypeRef>() {
 
   val id: TypeId by lazy { TypeId(pkg, module, type) }
 
   val displayName: String by lazy { if (isModuleClass) module.substringAfterLast('/') else type }
 
-  override val pageUrl: URI by lazy {
+  override val packageRelativeHtmlPath: String by lazy {
     when {
-      isTypeAlias -> "$pkg/$version/$module/index.html#$type".toUri()
-      isModuleClass -> "$pkg/$version/$module/index.html".toUri()
-      else -> "$pkg/$version/$module/$type.html".toUri()
+      isTypeAlias -> "$module/index.html#$type".pathEncoded
+      isModuleClass -> "$module/index.html".pathEncoded
+      else -> "$module/$type.html".pathEncoded
     }
   }
+
+  override val packageRelativeDataPath: String
+    get() {
+      // typealiases don't have their own runtime data.
+      require(!isTypeAlias) { "typealiases don't have runtime data" }
+      return when {
+        isModuleClass -> "$module/index.json".pathEncoded
+        else -> "$module/$type.json".pathEncoded
+      }
+    }
+
+  override fun withVersion(version: String): TypeRef = copy(version = version)
 
   private val isModuleClass: Boolean
     get() = type == PClassInfo.MODULE_CLASS_NAME
@@ -200,13 +246,13 @@ internal class PackageData(
         try {
           path.readString()
         } catch (e: IOException) {
-          throw DocGeneratorException("I/O error reading `$path`.", e)
+          throw DocGeneratorBugException("I/O error reading `${path.toUri()}`.", e)
         }
 
       return try {
         json.decodeFromString(jsonStr)
       } catch (e: SerializationException) {
-        throw DocGeneratorException("Error deserializing `$path`.", e)
+        throw DocGeneratorBugException("Error deserializing `${path.toUri()}`.", e)
       }
     }
   }
@@ -228,14 +274,14 @@ internal class PackageData(
       try {
         json.encodeToString(this)
       } catch (e: SerializationException) {
-        throw DocGeneratorException("Error serializing `$path`.", e)
+        throw DocGeneratorBugException("Error serializing `$path`.", e)
       }
 
     try {
       path.createParentDirectories()
       path.writer().use { it.write(jsonStr) }
     } catch (e: IOException) {
-      throw DocGeneratorException("I/O error writing `$path`.", e)
+      throw DocGeneratorBugException("I/O error writing `$path`.", e)
     }
   }
 }

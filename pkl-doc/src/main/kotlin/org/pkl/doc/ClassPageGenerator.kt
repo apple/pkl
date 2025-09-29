@@ -15,6 +15,7 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import kotlinx.html.*
 import org.pkl.core.PClass
 
@@ -25,7 +26,16 @@ internal class ClassPageGenerator(
   clazz: PClass,
   pageScope: ClassScope,
   isTestMode: Boolean,
-) : ModuleOrClassPageGenerator<ClassScope>(docsiteInfo, docModule, clazz, pageScope, isTestMode) {
+  consoleOut: OutputStream,
+) :
+  ModuleOrClassPageGenerator<ClassScope>(
+    docsiteInfo,
+    docModule,
+    clazz,
+    pageScope,
+    isTestMode,
+    consoleOut,
+  ) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
 
@@ -56,12 +66,12 @@ internal class ClassPageGenerator(
             clazz.annotations,
             isDeclaration = true,
             mapOf(
-              MemberInfoKey("Known subtypes", runtimeDataClasses) to
+              MemberInfoKey("Known subtypes in package", runtimeDataClasses) to
                 {
                   id = HtmlConstants.KNOWN_SUBTYPES
                   classes = runtimeDataClasses
                 },
-              MemberInfoKey("Known usages", runtimeDataClasses) to
+              MemberInfoKey("Known usages in package", runtimeDataClasses) to
                 {
                   id = HtmlConstants.KNOWN_USAGES
                   classes = runtimeDataClasses

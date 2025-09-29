@@ -22,11 +22,11 @@ import kotlin.io.path.createParentDirectories
 import kotlin.io.path.exists
 import kotlin.io.path.extension
 import kotlin.io.path.isSymbolicLink
-import kotlin.io.path.readBytes
 import kotlin.io.path.readSymbolicLink
+import kotlin.io.path.readText
 import org.assertj.core.api.Assertions
 import org.assertj.core.api.Assertions.assertThat
-import org.pkl.commons.readString
+import org.pkl.commons.test.listFilesRecursively
 import org.pkl.commons.toPath
 import org.pkl.core.util.IoUtils
 
@@ -54,8 +54,13 @@ object DocTestUtils {
             .isEqualTo(actualFile.readSymbolicLink().toString().toPath())
         }
         expectedFile.extension in binaryFileExtensions ->
-          assertThat(actualFile.readBytes()).isEqualTo(expectedFile.readBytes())
-        else -> assertThat(actualFile.readString()).isEqualTo(expectedFile.readString())
+          assertThat(actualFile).hasSameBinaryContentAs(expectedFile)
+        else ->
+          // AssertJ's `hasSameTextualContentsAs` method does not produce helpful diffs when
+          // debugging in IntelliJ.
+          assertThat(actualFile.readText())
+            .`as`("Expected $expectedFile to have same text contents as $actualFile")
+            .isEqualTo(expectedFile.readText())
       }
     } else {
       expectedFile.createParentDirectories()
@@ -68,6 +73,38 @@ object DocTestUtils {
         actualFile.copyTo(expectedFile)
       }
       Assertions.fail("Created missing expected file `$relativeFilePath`.")
+    }
+  }
+
+  fun assertDirectoriesEqual(expectedDir: Path, actualDir: Path) {
+    assertThat(actualDir)
+      .withFailMessage("Actual directory $actualDir should exist but does not.")
+      .exists()
+      .isDirectory()
+
+    assertThat(expectedDir)
+      .withFailMessage("Expected directory $expectedDir should exist but does not.")
+      .exists()
+      .isDirectory()
+
+    val expectedFiles =
+      expectedDir
+        .listFilesRecursively()
+        .map { expectedDir.relativize(it) }
+        .map { IoUtils.toNormalizedPathString(it) }
+        .sorted()
+
+    val actualFiles =
+      actualDir
+        .listFilesRecursively()
+        .map { actualDir.relativize(it) }
+        .map { IoUtils.toNormalizedPathString(it) }
+        .sorted()
+
+    assertThat(actualFiles).isEqualTo(expectedFiles)
+
+    expectedFiles.forEach { relativeFilePath ->
+      testExpectedFile(expectedDir, actualDir, relativeFilePath)
     }
   }
 }

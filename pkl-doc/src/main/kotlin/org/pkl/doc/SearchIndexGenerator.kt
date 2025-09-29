@@ -15,50 +15,237 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import java.nio.file.Path
-import kotlin.io.path.bufferedWriter
 import kotlin.io.path.createParentDirectories
+import kotlin.io.path.isRegularFile
+import kotlinx.serialization.ExperimentalSerializationApi
+import kotlinx.serialization.KSerializer
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.descriptors.PrimitiveKind
+import kotlinx.serialization.descriptors.PrimitiveSerialDescriptor
+import kotlinx.serialization.descriptors.SerialDescriptor
+import kotlinx.serialization.encoding.Decoder
+import kotlinx.serialization.encoding.Encoder
+import kotlinx.serialization.json.Json
+import org.pkl.commons.readString
+import org.pkl.commons.writeString
 import org.pkl.core.Member
+import org.pkl.core.PClass
 import org.pkl.core.PClass.Method
 import org.pkl.core.PClass.Property
 import org.pkl.core.PClassInfo
 import org.pkl.core.PType
-import org.pkl.core.util.json.JsonWriter
+import org.pkl.core.TypeAlias
 
-internal class SearchIndexGenerator(private val outputDir: Path) {
-  fun generateSiteIndex(packagesData: List<PackageData>) {
-    val path = outputDir.resolve("search-index.js").createParentDirectories()
-    path.jsonWriter().use { writer ->
-      writer.apply {
-        // provide data as JSON string rather than JS literal (more flexible and secure)
-        rawText("searchData='")
-        array {
-          for (pkg in packagesData) {
-            val pkgPath = "${pkg.ref.pkg}/current"
-            obj {
-              name("name").value(pkg.ref.pkg)
-              name("kind").value(0)
-              name("url").value("$pkgPath/index.html")
-              if (pkg.deprecation != null) {
-                name("deprecated").value(true)
-              }
-            }
+@OptIn(ExperimentalSerializationApi::class)
+internal class SearchIndexGenerator(private val outputDir: Path, consoleOut: OutputStream) :
+  AbstractGenerator(consoleOut) {
+  companion object {
+    private const val PREFIX = "searchData='"
+    private const val POSTFIX = "';\n"
 
-            for (module in pkg.modules) {
-              obj {
-                name("name").value(module.ref.fullName)
-                name("kind").value(1)
-                name("url").value("$pkgPath/${module.ref.module}/index.html")
-                if (module.deprecation != null) {
-                  name("deprecated").value(true)
-                }
-              }
-            }
+    val json = Json {
+      prettyPrint = false
+      explicitNulls = false
+    }
+  }
+
+  private object KindSerializer : KSerializer<Kind> {
+    override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Kind", PrimitiveKind.INT)
+
+    override fun serialize(encoder: Encoder, value: Kind) {
+      encoder.encodeInt(value.value)
+    }
+
+    override fun deserialize(decoder: Decoder): Kind {
+      val intValue = decoder.decodeInt()
+      return Kind.fromInt(intValue)
+    }
+  }
+
+  @Serializable(with = KindSerializer::class)
+  enum class Kind(val value: Int) {
+    PACKAGE(0),
+    MODULE(1),
+    TYPEALIAS(2),
+    CLASS(3),
+    METHOD(4),
+    PROPERTY(5);
+
+    companion object {
+      fun fromInt(value: Int) =
+        entries.firstOrNull { it.value == value }
+          ?: throw IllegalArgumentException("Unknown Kind value: $value")
+    }
+  }
+
+  private val searchIndexFile = outputDir.resolve("search-index.js")
+
+  @Serializable
+  data class SearchIndexEntry(
+    val name: String,
+    val kind: Kind,
+    val url: String,
+    val sig: String? = null,
+    val parId: Int? = null,
+    val deprecated: Boolean? = null,
+    val aka: List<String>? = null,
+  )
+
+  data class PackageIndexEntry(
+    val packageEntry: SearchIndexEntry,
+    val moduleEntries: List<SearchIndexEntry>,
+  )
+
+  private fun List<SearchIndexEntry>.writeTo(path: Path) {
+    val self = this
+    val text = buildString {
+      append(PREFIX)
+      append(json.encodeToString(self))
+      append(POSTFIX)
+    }
+    path.writeString(text)
+    writeOutput("Wrote file ${path.toUri()}\r")
+  }
+
+  private fun PackageData.toEntry(): SearchIndexEntry {
+    val pkgPath = "${ref.pkg.pathEncoded}/current"
+    return SearchIndexEntry(
+      name = ref.pkg,
+      kind = Kind.PACKAGE,
+      url = "$pkgPath/${ref.packageRelativeHtmlPath}",
+      deprecated = deprecation?.let { true },
+    )
+  }
+
+  private fun ModuleData.toEntry(basePath: String): SearchIndexEntry {
+    return SearchIndexEntry(
+      name = ref.fullName,
+      kind = Kind.MODULE,
+      url = "$basePath/${ref.packageRelativeHtmlPath}",
+      deprecated = deprecation?.let { true },
+    )
+  }
+
+  private fun DocModule.toEntry(): SearchIndexEntry {
+    val moduleSchema = schema
+    return SearchIndexEntry(
+        name = moduleSchema.moduleName,
+        kind = Kind.MODULE,
+        url = "$path/index.html",
+      )
+      .withAnnotations(moduleSchema.moduleClass)
+  }
+
+  private fun Property.toEntry(parentId: Int, basePath: String): SearchIndexEntry {
+    return SearchIndexEntry(
+        name = simpleName,
+        kind = Kind.PROPERTY,
+        url = "$basePath#$simpleName",
+        sig = renderSignature(this),
+        parId = parentId,
+      )
+      .withAnnotations(this)
+  }
+
+  private fun Method.toEntry(parentId: Int, basePath: String): SearchIndexEntry {
+    return SearchIndexEntry(
+        name = simpleName,
+        kind = Kind.METHOD,
+        url = "$basePath#${simpleName.pathEncoded}()",
+        sig = renderSignature(this),
+        parId = parentId,
+      )
+      .withAnnotations(this)
+  }
+
+  private fun PClass.toEntry(parentId: Int, basePath: String): SearchIndexEntry {
+    return SearchIndexEntry(
+        name = simpleName,
+        kind = Kind.CLASS,
+        url = "$basePath/${simpleName.pathEncoded}.html",
+        parId = parentId,
+      )
+      .withAnnotations(this)
+  }
+
+  private fun TypeAlias.toEntry(parentId: Int, basePath: String): SearchIndexEntry {
+    return SearchIndexEntry(
+        name = simpleName,
+        kind = Kind.TYPEALIAS,
+        url = "$basePath#${simpleName.pathEncoded}",
+        parId = parentId,
+      )
+      .withAnnotations(this)
+  }
+
+  @Suppress("UNCHECKED_CAST")
+  private fun SearchIndexEntry.withAnnotations(member: Member?): SearchIndexEntry {
+    if (member == null) return this
+    val deprecatedAnnotation = member.annotations.find { it.classInfo == PClassInfo.Deprecated }
+    val alsoKnownAs = member.annotations.find { it.classInfo == PClassInfo.AlsoKnownAs }
+    return copy(
+      deprecated = deprecatedAnnotation?.let { true },
+      aka = alsoKnownAs?.let { it["names"] as List<String> },
+    )
+  }
+
+  internal fun getCurrentSearchIndex(): List<PackageIndexEntry> {
+    if (!searchIndexFile.isRegularFile()) {
+      return emptyList()
+    }
+    val text = searchIndexFile.readString()
+    if (!(text.startsWith(PREFIX) && text.endsWith(POSTFIX))) {
+      writeOutputLine(
+        "[error] Incorrect existing search-index.js; either doesnt start with prefix '$PREFIX', or end with postfix '$POSTFIX'"
+      )
+      return emptyList()
+    }
+    val jsonStr = text.substring(PREFIX.length, text.length - POSTFIX.length)
+    val entries = json.decodeFromString<List<SearchIndexEntry>>(jsonStr)
+    return buildList {
+      var i = 0
+
+      while (i < entries.size) {
+        val packageEntry = entries[i]
+        i++
+        val moduleEntries = buildList {
+          while (i < entries.size && entries[i].kind == Kind.MODULE) {
+            add(entries[i])
+            i++
           }
         }
-        rawText("';\n")
+        add(PackageIndexEntry(packageEntry = packageEntry, moduleEntries = moduleEntries))
       }
     }
+  }
+
+  fun buildSearchIndex(packages: List<PackageData>): List<PackageIndexEntry> = buildList {
+    for (pkg in packages) {
+      val pkgPath = "${pkg.ref.pkg.pathEncoded}/current"
+      add(
+        PackageIndexEntry(
+          packageEntry = pkg.toEntry(),
+          moduleEntries = pkg.modules.map { it.toEntry(basePath = pkgPath) },
+        )
+      )
+    }
+  }
+
+  /** Reads the current site index, and adds the set of newly generated packages to the index. */
+  fun generateSiteIndex(currentPackages: List<PackageData>) {
+    val searchIndex = buildSearchIndex(currentPackages)
+    searchIndexFile.createParentDirectories()
+    val entries = buildList {
+      for (packageIndexEntry in searchIndex) {
+        add(packageIndexEntry.packageEntry)
+        for (module in packageIndexEntry.moduleEntries) {
+          add(module)
+        }
+      }
+    }
+    entries.writeTo(searchIndexFile)
   }
 
   fun generate(docPackage: DocPackage) {
@@ -66,115 +253,60 @@ internal class SearchIndexGenerator(private val outputDir: Path) {
       outputDir
         .resolve("${docPackage.name.pathEncoded}/${docPackage.version}/search-index.js")
         .createParentDirectories()
-    JsonWriter(path.bufferedWriter()).use { writer ->
-      writer.apply {
-        serializeNulls = false
-        // provide data as JSON string rather than JS literal (more flexible and secure)
-        rawText("searchData='")
-        var nextId = 0
-        array {
-          for (docModule in docPackage.docModules) {
-            if (docModule.isUnlisted) continue
+    val entries = buildList {
+      var nextId = 0
+      for (docModule in docPackage.docModules) {
+        if (docModule.isUnlisted) continue
 
-            val module = docModule.schema
-            val moduleId = nextId
+        val module = docModule.schema
+        val moduleId = nextId
+
+        nextId += 1
+        add(docModule.toEntry())
+        val moduleBasePath = docModule.path
+
+        for ((_, property) in module.moduleClass.properties) {
+          if (property.isUnlisted) continue
+          nextId += 1
+          add(property.toEntry(parentId = moduleId, basePath = "${moduleBasePath}/index.html"))
+        }
+        for ((_, method) in module.moduleClass.methods) {
+          if (method.isUnlisted) continue
+
+          nextId += 1
+          add(method.toEntry(parentId = moduleId, basePath = "${moduleBasePath}/index.html"))
+        }
+        for ((_, clazz) in module.classes) {
+          if (clazz.isUnlisted) continue
+
+          val classId = nextId
+
+          nextId += 1
+          add(clazz.toEntry(parentId = moduleId, basePath = moduleBasePath))
+          val classBasePath = "${docModule.path}/${clazz.simpleName}.html"
+
+          for ((_, property) in clazz.properties) {
+            if (property.isUnlisted) continue
 
             nextId += 1
-            obj {
-              name("name").value(module.moduleName)
-              name("kind").value(1)
-              name("url").value("${docModule.path}/index.html")
-              writeAnnotations(module.moduleClass)
-            }
+            add(property.toEntry(parentId = classId, basePath = classBasePath))
+          }
 
-            for ((propertyName, property) in module.moduleClass.properties) {
-              if (property.isUnlisted) continue
+          for ((_, method) in clazz.methods) {
+            if (method.isUnlisted) continue
 
-              nextId += 1
-              obj {
-                name("name").value(propertyName)
-                name("kind").value(5)
-                name("url").value("${docModule.path}/index.html#$propertyName")
-                name("sig").value(renderSignature(property))
-                name("parId").value(moduleId)
-                writeAnnotations(property)
-              }
-            }
-
-            for ((methodName, method) in module.moduleClass.methods) {
-              if (method.isUnlisted) continue
-
-              nextId += 1
-              obj {
-                name("name").value(methodName)
-                name("kind").value(4)
-                name("url").value("${docModule.path}/index.html#$methodName()")
-                name("sig").value(renderSignature(method))
-                name("parId").value(moduleId)
-                writeAnnotations(method)
-              }
-            }
-
-            for ((className, clazz) in module.classes) {
-              if (clazz.isUnlisted) continue
-
-              val classId = nextId
-
-              nextId += 1
-              obj {
-                name("name").value(className)
-                name("kind").value(3)
-                name("url").value("${docModule.path}/$className.html")
-                name("parId").value(moduleId)
-                writeAnnotations(clazz)
-              }
-
-              for ((propertyName, property) in clazz.properties) {
-                if (property.isUnlisted) continue
-
-                nextId += 1
-                obj {
-                  name("name").value(propertyName)
-                  name("kind").value(5)
-                  name("url").value("${docModule.path}/$className.html#$propertyName")
-                  name("sig").value(renderSignature(property))
-                  name("parId").value(classId)
-                  writeAnnotations(property)
-                }
-              }
-
-              for ((methodName, method) in clazz.methods) {
-                if (method.isUnlisted) continue
-
-                nextId += 1
-                obj {
-                  name("name").value(methodName)
-                  name("kind").value(4)
-                  name("url").value("${docModule.path}/$className.html#$methodName()")
-                  name("sig").value(renderSignature(method))
-                  name("parId").value(classId)
-                  writeAnnotations(method)
-                }
-              }
-            }
-
-            for ((typeAliasName, typeAlias) in module.typeAliases) {
-              if (typeAlias.isUnlisted) continue
-
-              nextId += 1
-              obj {
-                name("name").value(typeAliasName)
-                name("kind").value(2)
-                name("url").value("${docModule.path}/index.html#$typeAliasName")
-                name("parId").value(moduleId)
-                writeAnnotations(typeAlias)
-              }
-            }
+            nextId += 1
+            add(method.toEntry(parentId = classId, basePath = classBasePath))
           }
         }
-        rawText("';\n")
+
+        for ((_, typeAlias) in module.typeAliases) {
+          nextId += 1
+          add(typeAlias.toEntry(parentId = moduleId, basePath = "${moduleBasePath}/index.html"))
+        }
       }
     }
+    entries.writeTo(path)
   }
 
   private fun renderSignature(method: Method): String =
@@ -266,25 +398,5 @@ internal class SearchIndexGenerator(private val outputDir: Path) {
       is PType.TypeVariable -> append(type.typeParameter.name)
       else -> throw AssertionError("Unknown PType: $type")
     }
-  }
-
-  private fun JsonWriter.writeAnnotations(member: Member?): JsonWriter {
-    if (member == null) return this
-
-    if (member.annotations.any { it.classInfo == PClassInfo.Deprecated }) {
-      name("deprecated")
-      value(true)
-    }
-
-    member.annotations
-      .find { it.classInfo == PClassInfo.AlsoKnownAs }
-      ?.let { alsoKnownAs ->
-        name("aka")
-        array {
-          @Suppress("UNCHECKED_CAST") for (name in alsoKnownAs["names"] as List<String>) value(name)
-        }
-      }
-
-    return this
   }
 }
