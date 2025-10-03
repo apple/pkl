@@ -15,19 +15,53 @@
  */
 package org.pkl.core;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.util.CollectionUtils;
 
+/**
+ * Base class for implementing a decoder/parser for the <a
+ * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
+ * pkl-binary</code></a> encoding.
+ */
 public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
 
-  public PklBinaryDecoder(MessageUnpacker unpacker) {
+  private PklBinaryDecoder(MessageUnpacker unpacker) {
     super(unpacker);
+  }
+
+  /**
+   * Decode a value from the supplied byte array.
+   *
+   * @return the encoded value
+   */
+  public static Object decode(byte[] bytes) {
+    return decode(MessagePack.newDefaultUnpacker(bytes));
+  }
+
+  /**
+   * Decode a value from the supplied {@link ByteArrayInputStream}.
+   *
+   * @return the encoded value
+   */
+  public static Object decode(ByteArrayInputStream inputStream) {
+    return decode(MessagePack.newDefaultUnpacker(inputStream));
+  }
+
+  /**
+   * Decode a value from the supplied {@link MessageUnpacker}.
+   *
+   * @return the encoded value
+   */
+  public static Object decode(MessageUnpacker unpacker) {
+    return new PklBinaryDecoder(unpacker).decode();
   }
 
   @Override
@@ -59,7 +93,8 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
       String className, URI moduleUri, DecodeIterator<DecodedObjectMember> iter)
       throws IOException {
     var properties = CollectionUtils.<String, Object>newLinkedHashMap(iter.getSize());
-    for (var member = iter.next(); iter.hasNext(); ) {
+    while (iter.hasNext()) {
+      var member = iter.next();
       properties.put(member.key().toString(), member.value());
     }
 
@@ -86,7 +121,8 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeMap(MapDecodeIterator iter) throws IOException {
     var map = CollectionUtils.newLinkedHashMap(iter.getSize());
-    for (var entry = iter.next(); iter.hasNext(); ) {
+    while (iter.hasNext()) {
+      var entry = iter.next();
       map.put(entry.getKey(), entry.getValue());
     }
     return map;
@@ -100,8 +136,8 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeList(CollectionDecodeIterator iter) throws IOException {
     var listing = new ArrayList<>(iter.getSize());
-    for (var elem = iter.next(); iter.hasNext(); ) {
-      listing.add(elem);
+    while (iter.hasNext()) {
+      listing.add(iter.next());
     }
     return listing;
   }
@@ -114,8 +150,8 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeSet(CollectionDecodeIterator iter) throws IOException {
     var set = CollectionUtils.newLinkedHashSet(iter.getSize());
-    for (var elem = iter.next(); iter.hasNext(); ) {
-      set.add(elem);
+    while (iter.hasNext()) {
+      set.add(iter.next());
     }
     return set;
   }

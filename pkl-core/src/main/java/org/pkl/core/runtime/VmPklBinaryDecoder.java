@@ -15,11 +15,13 @@
  */
 package org.pkl.core.runtime;
 
+import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.util.List;
 import java.util.regex.Pattern;
 import org.graalvm.collections.EconomicMap;
+import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.AbstractPklBinaryDecoder;
 import org.pkl.core.DataSizeUnit;
@@ -31,6 +33,7 @@ import org.pkl.core.ast.member.ObjectMember;
  * A decoder/parser for the <a
  * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
  * pkl-binary</code></a> encoding.
+ * Returns "Vm" objects that can be used by the Pkl runtime.
  */
 public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   private final Importer importer;
@@ -61,9 +64,36 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
     VmTypeAlias importTypeAlias(String name, URI moduleUri);
   }
 
-  public VmPklBinaryDecoder(MessageUnpacker unpacker, Importer importer) {
+  private VmPklBinaryDecoder(MessageUnpacker unpacker, Importer importer) {
     super(unpacker);
     this.importer = importer;
+  }
+  
+  /**
+   * Decode a value from the supplied byte array.
+   *
+   * @return the encoded value
+   */
+  public static Object decode(byte[] bytes, Importer importer) {
+    return decode(MessagePack.newDefaultUnpacker(bytes), importer);
+  }
+
+  /**
+   * Decode a value from the supplied {@link ByteArrayInputStream}.
+   *
+   * @return the encoded value
+   */
+  public static Object decode(ByteArrayInputStream inputStream, Importer importer) {
+    return decode(MessagePack.newDefaultUnpacker(inputStream), importer);
+  }
+
+  /**
+   * Decode a value from the supplied {@link MessageUnpacker}.
+   *
+   * @return the encoded value
+   */
+  public static Object decode(MessageUnpacker unpacker, Importer importer) {
+    return new VmPklBinaryDecoder(unpacker, importer).decode();
   }
 
   @Override
@@ -89,7 +119,8 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
       String className, URI moduleUri, DecodeIterator<DecodedObjectMember> iter)
       throws IOException {
     EconomicMap<Object, ObjectMember> members = EconomicMap.create(iter.getSize());
-    for (var member = iter.next(); iter.hasNext(); ) {
+    while (iter.hasNext()) {
+      var member = iter.next();
       switch (member.type()) {
         case PklBinaryEncoding.CODE_PROPERTY -> {
           var name = Identifier.get((String) member.key());
@@ -119,7 +150,8 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeMap(MapDecodeIterator iter) throws IOException {
     var map = VmMap.builder();
-    for (var entry = iter.next(); iter.hasNext(); ) {
+    while (iter.hasNext()) {
+      var entry = iter.next();
       map.add(entry.getKey(), entry.getValue());
     }
     return map.build();
@@ -128,7 +160,8 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeMapping(MapDecodeIterator iter) throws IOException {
     var mapping = new VmObjectBuilder(iter.getSize());
-    for (var entry = iter.next(); iter.hasNext(); ) {
+    while (iter.hasNext()) {
+      var entry = iter.next();
       mapping.addEntry(entry.getKey(), entry.getValue());
     }
     return mapping.toMapping();
@@ -137,8 +170,8 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeList(CollectionDecodeIterator iter) throws IOException {
     var list = VmList.EMPTY.builder();
-    for (var elem = iter.next(); iter.hasNext(); ) {
-      list.add(elem);
+    while (iter.hasNext()) {
+      list.add(iter.next());
     }
     return list.build();
   }
@@ -146,8 +179,8 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeListing(CollectionDecodeIterator iter) throws IOException {
     var listing = new VmObjectBuilder(iter.getSize());
-    for (var elem = iter.next(); iter.hasNext(); ) {
-      listing.addElement(elem);
+    while (iter.hasNext()) {
+      listing.addElement(iter.next());
     }
     return listing.toListing();
   }
@@ -155,8 +188,8 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeSet(CollectionDecodeIterator iter) throws IOException {
     var set = VmSet.EMPTY.builder();
-    for (var elem = iter.next(); iter.hasNext(); ) {
-      set.add(elem);
+    while (iter.hasNext()) {
+      set.add(iter.next());
     }
     return set.build();
   }

@@ -21,9 +21,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.net.URI;
 import org.msgpack.core.MessagePack;
+import org.pkl.core.PClassInfo;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
 import org.pkl.core.packages.PackageLoadError;
+import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
@@ -56,10 +58,7 @@ public final class PklBinaryEncodingParserNodes {
 
     @TruffleBoundary
     private Object doParse(byte[] bytes, VmTyped context) {
-      var unpacker = MessagePack.newDefaultUnpacker(bytes);
-      return new VmPklBinaryDecoder(
-              unpacker, new Importer(context.getVmClass().getPClassInfo().getModuleUri()))
-          .decode();
+      return VmPklBinaryDecoder.decode(bytes, new Importer(context.getVmClass().getPClassInfo().getModuleUri()));
     }
 
     private class Importer implements VmPklBinaryDecoder.Importer {
@@ -77,7 +76,7 @@ public final class PklBinaryEncodingParserNodes {
       @Override
       public VmClass importClass(String name, URI moduleUri) {
         var module = importModule(moduleUri);
-        var identifier = getIdentifier(name);
+        var identifier = getIdentifier(name, moduleUri);
         if (identifier == null) { // if module class
           return module.getVmClass();
         }
@@ -96,7 +95,7 @@ public final class PklBinaryEncodingParserNodes {
       @Override
       public VmTypeAlias importTypeAlias(String name, URI moduleUri) {
         var module = importModule(moduleUri);
-        var identifier = getIdentifier(name);
+        var identifier = getIdentifier(name, moduleUri);
         assert identifier != null;
         var alias = module.getTypeAlias(identifier);
         if (alias == null) {
@@ -109,9 +108,20 @@ public final class PklBinaryEncodingParserNodes {
         return alias;
       }
 
-      private @Nullable Identifier getIdentifier(String name) {
+      private @Nullable Identifier getIdentifier(String name, URI moduleUri) {
         // if name is in the format module#identifier, strip to just identifier
         // if no hash, this is a reference to a module class; return null
+        
+        // except when the module uri is pkl:base (see PClassInfo.getDisplayName)
+        // the display name is used instead of the qualified name 
+        if (moduleUri.equals(PClassInfo.pklBaseUri)) {
+          // except when the class name is ModuleClass, use the class of `pkl:base` itself
+          if (name.equals(BaseModule.getModule().getVmClass().getDisplayName())) {
+            return null;
+          }
+          return Identifier.get(name);
+        }
+        
         var hashIndex = name.lastIndexOf("#");
         if (hashIndex < 0) {
           return null;

@@ -12,15 +12,15 @@ output = new {
   value = (module) {
     classInstance {
       func = null
-      moduleClass = null
-      classClass = null
-      typealiasInstance = null
     }
     decoded {
       func = null
-      moduleClass = null
-      classClass = null
-      typealiasInstance = null
+    }
+  }
+  renderer {
+    converters {
+      [Class] = (it) -> it.toString()
+      [TypeAlias] = (it) -> it.toString()
     }
   }
 }

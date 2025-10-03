@@ -24,6 +24,7 @@ import java.util.ArrayList;
 import java.util.List;
 import javax.annotation.concurrent.GuardedBy;
 import org.pkl.core.Member.SourceLocation;
+import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.TypeParameter;
@@ -155,6 +156,12 @@ public final class VmTypeAlias extends VmValue {
 
   public String getQualifiedName() {
     return qualifiedName;
+  }
+  
+  public String getDisplayName() {
+    // display `UInt` rather than `pkl.base#UInt`, etc.
+    // based on PClassInfo.getDisplayName
+    return getModuleUri().equals(PClassInfo.pklBaseUri) ? simpleName : qualifiedName;
   }
 
   public int getTypeParameterCount() {

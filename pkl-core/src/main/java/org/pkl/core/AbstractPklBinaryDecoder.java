@@ -30,7 +30,7 @@ import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.util.LateInit;
 
 /**
- * A decoder/parser for the <a
+ * Base class for implementing a decoder/parser for the <a
  * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
  * pkl-binary</code></a> encoding.
  */
@@ -38,7 +38,7 @@ public abstract class AbstractPklBinaryDecoder {
   private final MessageUnpacker unpacker;
   @LateInit protected Deque<Object> currPath;
 
-  public AbstractPklBinaryDecoder(MessageUnpacker unpacker) {
+  protected AbstractPklBinaryDecoder(MessageUnpacker unpacker) {
     this.unpacker = unpacker;
   }
 
@@ -48,12 +48,7 @@ public abstract class AbstractPklBinaryDecoder {
     }
   }
 
-  /**
-   * Decode a value from the supplied {@link MessageUnpacker}
-   *
-   * @return the encoded value
-   */
-  public final Object decode() {
+  protected final Object decode() {
     currPath = new ArrayDeque<>();
     try {
       return doDecode();
@@ -164,49 +159,19 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeObject(int len) throws IOException {
     assert len > 3;
-    currPath.push("object");
-    var objClassName = unpacker.unpackString();
-    var objModuleUri = URI.create(unpacker.unpackString());
-    var objectLen = unpacker.unpackArrayHeader();
+    currPath.push("'object");
+    
+    var className = unpacker.unpackString();
+    if (className.isBlank()) {
+      throw new DecodeException("Unexpected blank object class name");
+    }
+    var classModuleUriString = unpacker.unpackString();
+    if (classModuleUriString.isBlank()) {
+      throw new DecodeException("Unexpected blank object module URI");
+    }
+    var classModuleUri = URI.create(classModuleUriString);
 
-    var iter =
-        new DecodeIterator<DecodedObjectMember>(objectLen) {
-          @Override
-          DecodedObjectMember getNext() throws IOException {
-            var memberLen = unpacker.unpackArrayHeader();
-            if (memberLen != 3) {
-              throw new DecodeException("Expected 3 fields in object member, found %d", memberLen);
-            }
-            var memberCode = unpacker.unpackInt();
-            DecodedObjectMember member;
-            switch (memberCode) {
-              case PklBinaryEncoding.CODE_PROPERTY -> {
-                var propertyName = unpacker.unpackString();
-                currPath.push(propertyName);
-                member =
-                    new DecodedObjectMember(
-                        PklBinaryEncoding.CODE_PROPERTY, propertyName, doDecode());
-              }
-              case PklBinaryEncoding.CODE_ENTRY -> {
-                var entryKey = doDecode();
-                currPath.push(entryKey);
-                member =
-                    new DecodedObjectMember(PklBinaryEncoding.CODE_ENTRY, entryKey, doDecode());
-              }
-              case PklBinaryEncoding.CODE_ELEMENT -> {
-                var elementIndex = unpacker.unpackLong();
-                currPath.push(elementIndex);
-                member =
-                    new DecodedObjectMember(PklBinaryEncoding.CODE_ENTRY, elementIndex, doDecode());
-              }
-              default -> throw new DecodeException("Unrecognized member code %x", memberCode);
-            }
-            currPath.pop();
-            return member;
-          }
-        };
-
-    var obj = doDecodeObject(objClassName, objModuleUri, iter);
+    var obj = doDecodeObject(className, classModuleUri, new ObjectDecodeIterator(unpacker.unpackArrayHeader()));
     unpacker.skipValue(len - 4);
     currPath.pop();
     return obj;
@@ -214,7 +179,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeMap(int len) throws IOException {
     assert len > 1;
-    currPath.push("map");
+    currPath.push("'map");
     var map = doDecodeMap(new MapDecodeIterator(unpacker.unpackMapHeader()));
     unpacker.skipValue(len - 2);
     currPath.pop();
@@ -223,7 +188,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeMapping(int len) throws IOException {
     assert len > 1;
-    currPath.push("mapping");
+    currPath.push("'mapping");
     var mapping = doDecodeMapping(new MapDecodeIterator(unpacker.unpackMapHeader()));
     unpacker.skipValue(len - 2);
     currPath.pop();
@@ -232,7 +197,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeList(int len) throws IOException {
     assert len > 1;
-    currPath.push("list");
+    currPath.push("'list");
     var list = doDecodeList(new CollectionDecodeIterator(unpacker.unpackArrayHeader()));
     unpacker.skipValue(len - 2);
     currPath.pop();
@@ -241,7 +206,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeListing(int len) throws IOException {
     assert len > 1;
-    currPath.push("listing");
+    currPath.push("'listing");
     var listing = doDecodeListing(new CollectionDecodeIterator(unpacker.unpackArrayHeader()));
     unpacker.skipValue(len - 2);
     currPath.pop();
@@ -250,7 +215,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeSet(int len) throws IOException {
     assert len > 1;
-    currPath.push("set");
+    currPath.push("'set");
     var set = doDecodeSet(new CollectionDecodeIterator(unpacker.unpackArrayHeader()));
     currPath.pop();
     unpacker.skipValue(len - 2);
@@ -259,7 +224,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeDuration(int len) throws IOException {
     assert len > 2;
-    currPath.push("duration");
+    currPath.push("'duration");
     var durationValue = unpacker.unpackDouble();
     var rawDurationUnit = unpacker.unpackString();
     var durationUnit = DurationUnit.parse(rawDurationUnit);
@@ -273,7 +238,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeDataSize(int len) throws IOException {
     assert len > 2;
-    currPath.push("datasize");
+    currPath.push("'datasize");
     var dataSizeValue = unpacker.unpackDouble();
     var rawDataSizeUnit = unpacker.unpackString();
     var dataSizeUnit = DataSizeUnit.parse(rawDataSizeUnit);
@@ -287,11 +252,11 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodePair(int len) throws IOException {
     assert len > 2;
-    currPath.push("pair");
-    currPath.push("first");
+    currPath.push("'pair");
+    currPath.push("'first");
     var first = doDecode();
     currPath.pop();
-    currPath.push("second");
+    currPath.push("'second");
     var second = doDecode();
     currPath.pop();
     unpacker.skipValue(len - 3);
@@ -301,7 +266,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeIntSeq(int len) throws IOException {
     assert len > 3;
-    currPath.push("intseq");
+    currPath.push("'intseq");
     var start = unpacker.unpackLong();
     var end = unpacker.unpackLong();
     var step = unpacker.unpackLong();
@@ -312,7 +277,7 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeRegex(int len) throws IOException {
     assert len > 1;
-    currPath.push("regex");
+    currPath.push("'regex");
     var pattern = unpacker.unpackString();
     unpacker.skipValue(len - 2);
     currPath.pop();
@@ -321,27 +286,45 @@ public abstract class AbstractPklBinaryDecoder {
 
   private Object decodeClass(int len) throws IOException {
     assert len > 2;
-    currPath.push("class");
-    var className = unpacker.unpackString();
-    var classModuleUri = URI.create(unpacker.unpackString());
+    currPath.push("'class");
+    
+    var name = unpacker.unpackString();
+    if (name.isBlank()) {
+      throw new DecodeException("Unexpected blank class name");
+    }
+    var moduleUriString = unpacker.unpackString();
+    if (moduleUriString.isBlank()) {
+      throw new DecodeException("Unexpected blank class module URI");
+    }
+    var moduleUri = URI.create(unpacker.unpackString());
+    
     unpacker.skipValue(len - 3);
     currPath.pop();
-    return doDecodeClass(className, classModuleUri);
+    return doDecodeClass(name, moduleUri);
   }
 
   private Object decodeTypeAlias(int len) throws IOException {
     assert len > 2;
-    currPath.push("typealias");
-    var typeAliasName = unpacker.unpackString();
-    var typeAliasModuleUri = URI.create(unpacker.unpackString());
+    currPath.push("'typealias");
+    
+    var name = unpacker.unpackString();
+    if (name.isBlank()) {
+      throw new DecodeException("Unexpected blank typealias name");
+    }
+    var moduleUriString = unpacker.unpackString();
+    if (moduleUriString.isBlank()) {
+      throw new DecodeException("Unexpected blank typealias module URI");
+    }
+    var moduleUri = URI.create(unpacker.unpackString());
+    
     unpacker.skipValue(len - 3);
     currPath.pop();
-    return doDecodeTypeAlias(typeAliasName, typeAliasModuleUri);
+    return doDecodeTypeAlias(name, moduleUri);
   }
 
   private Object decodeBytes(int len) throws IOException {
     assert len > 1;
-    currPath.push("bytes");
+    currPath.push("'bytes");
     var bytesLen = unpacker.unpackBinaryHeader();
     var bytes = unpacker.readPayload(bytesLen);
     unpacker.skipValue(len - 2);
@@ -376,6 +359,46 @@ public abstract class AbstractPklBinaryDecoder {
     }
 
     abstract T getNext() throws IOException;
+  }
+  
+  protected class ObjectDecodeIterator extends DecodeIterator<DecodedObjectMember> {
+    ObjectDecodeIterator(int size) {
+      super(size);
+    }
+
+    @Override
+    DecodedObjectMember getNext() throws IOException {
+      var memberLen = unpacker.unpackArrayHeader();
+      if (memberLen != 3) {
+        throw new DecodeException("Expected 3 fields in object member, found %d", memberLen);
+      }
+      var memberCode = unpacker.unpackInt();
+      DecodedObjectMember member;
+      switch (memberCode) {
+        case PklBinaryEncoding.CODE_PROPERTY -> {
+          var propertyName = unpacker.unpackString();
+          currPath.push(propertyName);
+          member =
+            new DecodedObjectMember(
+              PklBinaryEncoding.CODE_PROPERTY, propertyName, doDecode());
+        }
+        case PklBinaryEncoding.CODE_ENTRY -> {
+          var entryKey = doDecode();
+          currPath.push(entryKey);
+          member =
+            new DecodedObjectMember(PklBinaryEncoding.CODE_ENTRY, entryKey, doDecode());
+        }
+        case PklBinaryEncoding.CODE_ELEMENT -> {
+          var elementIndex = unpacker.unpackLong();
+          currPath.push(elementIndex);
+          member =
+            new DecodedObjectMember(PklBinaryEncoding.CODE_ELEMENT, elementIndex, doDecode());
+        }
+        default -> throw new DecodeException("Unrecognized member code %x", memberCode);
+      }
+      currPath.pop();
+      return member;
+    }
   }
 
   protected class CollectionDecodeIterator extends DecodeIterator<Object> {

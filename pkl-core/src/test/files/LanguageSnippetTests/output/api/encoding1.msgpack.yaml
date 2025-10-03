@@ -118,15 +118,73 @@
       - 'encoding1'
   - 
     - 16
-    - 'classClass'
+    - 'baseModuleClass'
+    - 
+      - 12
+      - 'pkl:base'
+      - 'ModuleClass'
+  - 
+    - 16
+    - 'encodingModuleClass'
+    - 
+      - 12
+      - 'pkl:encoding'
+      - 'pkl.encoding'
+  - 
+    - 16
+    - 'stdlibClass'
+    - 
+      - 12
+      - 'pkl:base'
+      - 'PcfRenderer'
+  - 
+    - 16
+    - 'someClass'
     - 
       - 12
       - 'file:///$snippetsDir/input/api/encoding1.msgpack.yaml.pkl'
       - 'encoding1#Foo'
   - 
     - 16
-    - 'typealiasInstance'
+    - 'stdlibTypealias'
+    - 
+      - 13
+      - 'pkl:base'
+      - 'UInt'
+  - 
+    - 16
+    - 'someTypealias'
     - 
       - 13
       - 'file:///$snippetsDir/input/api/encoding1.msgpack.yaml.pkl'
       - 'encoding1#Bar'
+  - 
+    - 16
+    - 'something'
+    - 
+      - 1
+      - 'PcfRenderer'
+      - 'pkl:base'
+      - 
+        - 
+          - 16
+          - 'converters'
+          - 
+            - 3
+            - {}
+        - 
+          - 16
+          - 'extension'
+          - 'pcf'
+        - 
+          - 16
+          - 'indent'
+          - '  '
+        - 
+          - 16
+          - 'omitNullProperties'
+          - false
+        - 
+          - 16
+          - 'useCustomStringDelimiters'
+          - false

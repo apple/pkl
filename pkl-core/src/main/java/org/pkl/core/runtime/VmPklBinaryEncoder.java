@@ -253,7 +253,7 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
           packer.packArrayHeader(3);
           packer.packInt(PklBinaryEncoding.CODE_TYPEALIAS);
           packer.packString(value.getModuleUri().toString());
-          packer.packString(value.getQualifiedName());
+          packer.packString(value.getDisplayName());
         });
   }
 

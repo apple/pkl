@@ -1,0 +1,18 @@
+–– Pkl Error ––
+Error decoding Pkl binary format.
+MessageTypeException: Expected String, but got Array (93)
+
+x | decoded: Foo = new encoding.PklBinaryEncodingParser {}.parse(encoded, module) as Foo
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at encoding2#decoded (file:///$snippetsDir/input/api/encoding2.pkl)
+
+Byte offset: 556
+Decoding path: ['object 14 moduleClass 'class]
+
+xxx | if (renderer is ValueRenderer) renderer.renderDocument(value)
+                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#FileOutput.text (pkl:base)
+
+xxx | else text.encodeToBytes("UTF-8")
+           ^^^^
+at pkl.base#FileOutput.bytes (pkl:base)

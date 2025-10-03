@@ -50,7 +50,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |link:{uri-stdlib-Typed}[Typed], link:{uri-stdlib-Dynamic}[Dynamic]
 |`0x01`
 |link:{uri-messagepack-str}[str]
-|Fully qualified class name
+|<<type-name-encoding,Class name>>
 |link:{uri-messagepack-str}[str]
 |Enclosing module URI
 |link:{uri-messagepack-array}[array]
@@ -151,7 +151,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |link:{uri-messagepack-str}[str]
 |Module URI
 |link:{uri-messagepack-str}[str]
-|Qualified name
+|<<type-name-encoding,Class name>>
 |
 |
 
@@ -160,7 +160,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |link:{uri-messagepack-str}[str]
 |Module URI
 |link:{uri-messagepack-str}[str]
-|Qualified name
+|<<type-name-encoding,TypeAlias name>>
 |
 |
 
@@ -182,6 +182,19 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |===
+
+[[type-name-encoding]]
+[NOTE]
+====
+Type names have specific encoding rules:
+
+* When the module URI is `pkl:base`:
+** If the type name is `ModuleClass`, this type represents the module class of `pkl:base`.
+** Otherwise, the type name corresponds to a type in `pkl:base`.
+* For all other module URIs:
+** When the type name contains `\#`, the string after the `#` character corresponds to a type in that module. The string before the `#` is the name of the module.
+** Otherwise, the type name is the name of the module and represents the class of the module.
+====
 
 [[object-members]]
 == Object Members

@@ -1,7 +1,7 @@
 open module encoding1
 
 import "pkl:encoding"
-import "pkl:reflect"
+import "pkl:base"
 
 class Foo {
   dynamic: Dynamic = new {
@@ -23,9 +23,14 @@ class Foo {
   func: ((String, Int) -> Boolean)? =
     (a, b) -> a.sha256Int + b % 2 == 0
   bytes = Bytes(0x01, 0x02, 0x03)
-  moduleClass: Class?
-  classClass: Class? = Foo
-  typealiasInstance: TypeAlias? = Bar
+  moduleClass: Class
+  baseModuleClass: Class = base.getClass()
+  encodingModuleClass: Class = encoding.getClass()
+  stdlibClass: Class = PcfRenderer
+  someClass: Class = Foo
+  stdlibTypealias: TypeAlias = UInt 
+  someTypealias: TypeAlias = Bar
+  something: Any = new PcfRenderer {} // a non-external class from pkl:base
 }
 
 typealias Bar = Mapping<String, String>
