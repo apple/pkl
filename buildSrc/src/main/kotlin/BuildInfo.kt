@@ -204,9 +204,24 @@ open class BuildInfo(private val project: Project) {
     }
   }
 
+  private val isArmWindows: Boolean
+    get() {
+      if (!os.isWindows) {
+        return false
+      }
+      // System.getProperty("os.arch") returns the architecture of the JVM, not the host OS.
+      val procArch = System.getenv("PROCESSOR_ARCHITECTURE")
+      return "ARM64".equals(procArch, ignoreCase = true)
+    }
+
   // Assembles a collection of JDK versions which tests can be run against, considering ancillary
   // parameters like `testAllJdks` and `testExperimentalJdks`.
   val jdkTestRange: Collection<JavaLanguageVersion> by lazy {
+    if (isArmWindows) {
+      // Java toolchains does not work on ARM windows: https://github.com/gradle/gradle/issues/29807
+      // prevent creating tasks to test different JDKs if developing on a Windows ARM machine.
+      return@lazy listOf()
+    }
     JavaVersionRange.inclusive(jdkTestFloor, jdkTestCeiling).toList()
   }
 
