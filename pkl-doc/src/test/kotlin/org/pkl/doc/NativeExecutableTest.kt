@@ -37,6 +37,10 @@ class NativeExecutableTest {
   @ParameterizedTest()
   @MethodSource("generateDocs")
   fun test(relativePath: String) {
-    DocTestUtils.testExpectedFile(helper.expectedOutputDir, helper.actualOutputDir, relativePath)
+    DocTestUtils.testExpectedFile(
+      helper.expectedOutputDir,
+      helper.baseActualOutputDir,
+      relativePath,
+    )
   }
 }
