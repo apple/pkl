@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.function.Predicate;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
@@ -130,6 +131,13 @@ public final class VmTyped extends VmObject {
     return builder.build();
   }
 
+  public @Nullable VmClass getClass(Identifier name) {
+    assert isModuleObject();
+    if (getModuleInfo().isAmend()) return null;
+    return (VmClass)
+        getMember(it -> it.isClass() && it.getName() == name); // Note: includes local classes
+  }
+
   public VmMap getTypeAliasMirrors() {
     assert isModuleObject();
 
@@ -146,6 +154,25 @@ public final class VmTyped extends VmObject {
       }
     }
     return builder.build();
+  }
+
+  public @Nullable VmTypeAlias getTypeAlias(Identifier name) {
+    assert isModuleObject();
+    if (getModuleInfo().isAmend()) return null;
+    return (VmTypeAlias)
+        getMember(
+            it -> it.isTypeAlias() && it.getName() == name); // Note: includes local typealiases
+  }
+
+  private @Nullable Object getMember(Predicate<ObjectMember> predicate) {
+    for (var member : members.getValues()) {
+      if (predicate.test(member)) {
+        var value = getCachedValue(member.getName());
+        if (value != null) return value;
+        return VmUtils.doReadMember(this, this, member.getName(), member);
+      }
+    }
+    return null;
   }
 
   @Override

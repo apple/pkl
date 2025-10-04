@@ -1,0 +1,43 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// APIs for handling Pkl's [binary encoding format](https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html).
+@ModuleInfo { minPklVersion = "0.30.0" }
+module pkl.encoding
+
+/// Render values as the [`pkl-binary` encoding format](https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html).
+@Since { version = "0.30.0" }
+class PklBinaryEncodingRenderer extends BytesRenderer {
+  /// Render a Pkl value as `pkl-binary`.
+  external function renderValue(value: Any): Bytes
+
+  /// Render a Pkl document as `pkl-binary`.
+  external function renderDocument(value: Any): Bytes
+}
+
+/// Parse the [`pkl-binary` encoding format](https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html).
+@Since { version = "0.30.0" }
+class PklBinaryEncodingParser {
+  /// Parse `pkl-binary` data and return the original value.
+  ///
+  /// This operation will attempt to import any modules, classes or typealiases present in the data.
+  /// The `context` parameter is a module that is used to evaluate
+  /// [import security checks](https://pkl-lang.org/main/current/language-reference/index.html#security-checks).
+  /// Imports are subject to the evaluator's configured allowed modules.
+  ///
+  /// Cannot decode [Function] values.
+  external function parse(source: Resource|Bytes, context: Module): Any
+}

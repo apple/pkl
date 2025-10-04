@@ -23,6 +23,7 @@ module pkl.base
 import "pkl:jsonnet"
 import "pkl:xml"
 import "pkl:protobuf"
+import "pkl:encoding"
 
 /// The top type of the type hierarchy.
 ///
@@ -104,9 +105,14 @@ abstract external class Module {
         else if (format == "textproto") new protobuf.Renderer {}
         else if (format == "xml") new xml.Renderer {}
         else if (format == "yaml") new YamlRenderer {}
-        else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`.")
-    text = renderer.renderDocument(value)
-    bytes = text.encodeToBytes("UTF-8")
+        else if (format == "pkl-binary") new encoding.PklBinaryEncodingRenderer {}
+        else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`, `pkl-binary`.")
+    text =
+      if (renderer is ValueRenderer) renderer.renderDocument(value)
+      else throw("Unable to render text when renderer is a BytesRenderer")
+    bytes =
+      if (renderer is BytesRenderer) renderer.renderDocument(value)
+      else text.encodeToBytes("UTF-8")
   }
 }
 
@@ -218,16 +224,20 @@ open class FileOutput {
   value: Any?
 
   /// The renderer for [value].
-  renderer: ValueRenderer = new PcfRenderer {}
+  renderer: BaseValueRenderer = new PcfRenderer {}
 
   /// The textual rendered output.
-  text: String = renderer.renderDocument(value)
+  text: String =
+    if (renderer is ValueRenderer) renderer.renderDocument(value)
+    else throw("unabled to render text when renderer is a BytesRenderer")
 
   /// The underlying byte output.
   ///
   /// If unset, defaults to the UTF-8 encoding of [text].
   @Since { version = "0.29.0" }
-  bytes: Bytes = text.encodeToBytes("UTF-8")
+  bytes: Bytes =
+    if (renderer is BytesRenderer) renderer.renderDocument(value)
+    else text.encodeToBytes("UTF-8")
 }
 
 /// The contents and appearance of a module's output.
@@ -262,9 +272,8 @@ class ModuleOutput extends FileOutput {
 }
 
 /// Base class for rendering Pkl values in some output format.
-///
-/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
-abstract class ValueRenderer {
+@Since { version = "0.30.0" }
+abstract class BaseValueRenderer {
   /// Value converters to apply before values are rendered.
   ///
   /// A value converter is a function that converts a value to another value
@@ -312,6 +321,12 @@ abstract class ValueRenderer {
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
   extension: String?
+}
+
+/// Base class for rendering Pkl values in some textual output format.
+///
+/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
+abstract class ValueRenderer extends BaseValueRenderer {
 
   /// Renders [value] as a complete document.
   ///
@@ -323,6 +338,23 @@ abstract class ValueRenderer {
 
   /// Renders [value].
   abstract function renderValue(value: Any): String
+}
+
+/// Base class for rendering Pkl values in some binary output format.
+///
+/// A renderer's output is guaranteed to be well-formed unless [BytesRenderDirective] is part of the input.
+@Since { version = "0.30.0" }
+abstract class BytesRenderer extends BaseValueRenderer {
+  /// Renders [value] as a complete document.
+  ///
+  /// Some renderers impose restrictions on which types of values can be rendered as document.
+  ///
+  /// A typical implementation of this method renders a document header/footer
+  /// and otherwise delegates to [renderValue()].
+  abstract function renderDocument(value: Any): Bytes
+
+  /// Renders [value].
+  abstract function renderValue(value: Any): Bytes
 }
 
 /// Renders values as Pcf, a static subset of Pkl.
@@ -379,6 +411,33 @@ class PcfRenderer extends ValueRenderer {
 class RenderDirective {
   /// The text to output as-is (without escaping or quoting).
   text: String
+}
+
+/// Directs a [BytesRenderer] to output [bytes] as-is in place of this directive.
+///
+/// [BytesRenderDirective] is an escape hatch for exceptional cases.
+/// It gives full control over how a value is rendered
+/// without having to manipulate `output.bytes` as a whole.
+/// It is the user's responsibility to ensure that the resulting output is well-formed.
+///
+/// Example:
+/// ```
+/// name = "Pigeon"
+/// hobby = "singing"
+///
+/// output {
+///   renderer = new MsgpackRenderer {
+///     converters {
+///       // render String values without quotes (not valid msgpack)
+///       [String] = (str) -> new BytesRenderDirective { bytes = Bytes(0x1, 0x2, 0x3) }
+///     }
+///   }
+/// }
+/// ```
+@Since { version = "0.30.0" }
+class BytesRenderDirective {
+  /// The bytes to output as-is (without escaping or quoting).
+  bytes: Bytes
 }
 
 /// Directs [PcfRenderer] to output additional text [before] and/or [after] rendering a [value].
@@ -1418,7 +1477,7 @@ external class String extends Any {
   /// "a.b.c".splitLimit(".", 50) == List("a", "b", "c")
   /// "a.b:c".splitLimit(Regex("[.:]"), 3) == List("a", "b", "c")
   /// ```
-  @Since { version = "0.27.0" } 
+  @Since { version = "0.27.0" }
   external function splitLimit(pattern: String|Regex, limit: Int(this > 0)): List<String>
 
   /// Converts the first character of this string to title case.
@@ -2052,9 +2111,9 @@ class Mapping<out Key, out Value> extends Object {
 
   /// Tells if this mapping contains [key].
   external function containsKey(key: Any): Boolean
-  
+
   /// Tells if this mapping contains an entry with the given [value].
-  @Since { version = "0.27.0" } 
+  @Since { version = "0.27.0" }
   external function containsValue(value: Any): Boolean
 
   /// Returns the value associated with [key] or [null] if this mapping does not contain [key].
@@ -2066,18 +2125,18 @@ class Mapping<out Key, out Value> extends Object {
   /// not contain [key].
   ///
   /// This is equivalent to `getOrNull(key) ?? default.apply(key)`.
-  @Since { version = "0.29.0" } 
+  @Since { version = "0.29.0" }
   external function getOrDefault(key: Any): Value
 
   /// Folds the entries of this mapping in iteration order using [operator], starting with [initial].
   external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
-  
+
   /// Tells if [predicate] holds for every entry of this mapping.
   /// 
   /// Returns [true] for an empty mapping.
   @Since { version = "0.27.0" }
   external function every(predicate: (Key, Value) -> Boolean): Boolean
-  
+
   /// Tells if [predicate] holds for at least one entry of this mapping.
   /// 
   /// Returns [false] for an empty mapping.
@@ -2384,11 +2443,11 @@ abstract external class Collection<out Element> extends Any {
   /// List(4, 6, 8).findIndex((n) -> n.isEven) == 0
   /// import("pkl:test").catch(() -> List(5, 7, 9).findLast((n) -> n.isEven))
   /// ```
-  @AlsoKnownAs { names { "indexWhere" }}
+  @AlsoKnownAs { names { "indexWhere" } }
   abstract function findIndex(predicate: (Element) -> Boolean): Int
 
   /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
-  @AlsoKnownAs { names { "indexWhere" }}
+  @AlsoKnownAs { names { "indexWhere" } }
   abstract function findIndexOrNull(predicate: (Element) -> Boolean): Int?
 
   /// The index of the last element for which [predicate] returns [true].
@@ -2401,11 +2460,11 @@ abstract external class Collection<out Element> extends Any {
   /// List(4, 6, 8).findLastIndex((n) -> n.isEven) == 2
   /// import("pkl:test").catch(() -> List(5, 7, 9).findLastIndex((n) -> n.isEven))
   /// ```
-  @AlsoKnownAs { names { "lastIndexWhere" }}
+  @AlsoKnownAs { names { "lastIndexWhere" } }
   abstract function findLastIndex(predicate: (Element) -> Boolean): Int
 
   /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
-  @AlsoKnownAs { names { "lastIndexWhere" }}
+  @AlsoKnownAs { names { "lastIndexWhere" } }
   abstract function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
 
   /// The number of elements for which [predicate] returns [true].
@@ -3257,7 +3316,7 @@ external class Set<out Element> extends Collection<Element> {
 
   /// The intersection of this set and [other].
   external function intersect(other: Set): Set<Element>
-  
+
   /// The difference of this set and [other].
   external function difference(other: Set): Set<Element>
 }

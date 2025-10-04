@@ -111,6 +111,10 @@ public final class BaseModule extends StdLibModule {
     return RenderDirectiveClass.instance;
   }
 
+  public static VmClass getBytesRenderDirectiveClass() {
+    return BytesRenderDirectiveClass.instance;
+  }
+
   /**
    * Returns class pkl.base#Module. For the module class of pkl.base use {@code
    * getModule().getVmClass()}.
@@ -325,6 +329,10 @@ public final class BaseModule extends StdLibModule {
 
   private static final class RenderDirectiveClass {
     static final VmClass instance = loadClass("RenderDirective");
+  }
+
+  private static final class BytesRenderDirectiveClass {
+    static final VmClass instance = loadClass("BytesRenderDirective");
   }
 
   private static final class PairClass {
