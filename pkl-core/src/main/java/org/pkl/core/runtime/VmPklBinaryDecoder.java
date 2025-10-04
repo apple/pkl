@@ -26,14 +26,14 @@ import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.AbstractPklBinaryDecoder;
 import org.pkl.core.DataSizeUnit;
 import org.pkl.core.DurationUnit;
+import org.pkl.core.PClassInfo;
 import org.pkl.core.PklBinaryEncoding;
 import org.pkl.core.ast.member.ObjectMember;
 
 /**
  * A decoder/parser for the <a
  * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
- * pkl-binary</code></a> encoding.
- * Returns "Vm" objects that can be used by the Pkl runtime.
+ * pkl-binary</code></a> encoding. Returns "Vm" objects that can be used by the Pkl runtime.
  */
 public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
   private final Importer importer;
@@ -68,7 +68,7 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
     super(unpacker);
     this.importer = importer;
   }
-  
+
   /**
    * Decode a value from the supplied byte array.
    *
@@ -136,7 +136,7 @@ public class VmPklBinaryDecoder extends AbstractPklBinaryDecoder {
 
     // dynamic
     if (className.equals(BaseModule.getDynamicClass().getDisplayName())
-        && moduleUri.equals(BaseModule.getModule().getModuleInfo().getModuleKey().getUri())) {
+        && moduleUri.equals(PClassInfo.pklBaseUri)) {
       return new VmDynamic(
           VmUtils.createEmptyMaterializedFrame(), VmDynamic.empty(), members, iter.getSize());
     }

@@ -157,7 +157,7 @@ public final class VmTypeAlias extends VmValue {
   public String getQualifiedName() {
     return qualifiedName;
   }
-  
+
   public String getDisplayName() {
     // display `UInt` rather than `pkl.base#UInt`, etc.
     // based on PClassInfo.getDisplayName

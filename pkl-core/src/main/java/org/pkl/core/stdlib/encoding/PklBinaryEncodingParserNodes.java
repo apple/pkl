@@ -20,7 +20,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.net.URI;
-import org.msgpack.core.MessagePack;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClientInitException;
@@ -58,7 +57,8 @@ public final class PklBinaryEncodingParserNodes {
 
     @TruffleBoundary
     private Object doParse(byte[] bytes, VmTyped context) {
-      return VmPklBinaryDecoder.decode(bytes, new Importer(context.getVmClass().getPClassInfo().getModuleUri()));
+      return VmPklBinaryDecoder.decode(
+          bytes, new Importer(context.getVmClass().getPClassInfo().getModuleUri()));
     }
 
     private class Importer implements VmPklBinaryDecoder.Importer {
@@ -111,9 +111,9 @@ public final class PklBinaryEncodingParserNodes {
       private @Nullable Identifier getIdentifier(String name, URI moduleUri) {
         // if name is in the format module#identifier, strip to just identifier
         // if no hash, this is a reference to a module class; return null
-        
+
         // except when the module uri is pkl:base (see PClassInfo.getDisplayName)
-        // the display name is used instead of the qualified name 
+        // the display name is used instead of the qualified name
         if (moduleUri.equals(PClassInfo.pklBaseUri)) {
           // except when the class name is ModuleClass, use the class of `pkl:base` itself
           if (name.equals(BaseModule.getModule().getVmClass().getDisplayName())) {
@@ -121,7 +121,7 @@ public final class PklBinaryEncodingParserNodes {
           }
           return Identifier.get(name);
         }
-        
+
         var hashIndex = name.lastIndexOf("#");
         if (hashIndex < 0) {
           return null;

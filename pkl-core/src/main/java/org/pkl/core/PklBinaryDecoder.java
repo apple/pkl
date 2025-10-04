@@ -27,9 +27,10 @@ import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.util.CollectionUtils;
 
 /**
- * Base class for implementing a decoder/parser for the <a
+ * A decoder/parser for the <a
  * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
- * pkl-binary</code></a> encoding.
+ * pkl-binary</code></a> encoding. Returns "exported" value types like PObject, Map, List, and
+ * primitives.
  */
 public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
 
@@ -98,20 +99,30 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
       properties.put(member.key().toString(), member.value());
     }
 
-    // dynamic
-    if (className.equals(BaseModule.getDynamicClass().getDisplayName())
-        && moduleUri.equals(BaseModule.getModule().getModuleInfo().getModuleKey().getUri())) {
-      return new PObject(PClassInfo.Dynamic, properties);
+    if (moduleUri.equals(PClassInfo.pklBaseUri)) {
+      // dynamic
+      if (className.equals(BaseModule.getDynamicClass().getDisplayName())) {
+        return new PObject(PClassInfo.Dynamic, properties);
+      }
+
+      // pkl:base typed
+      if (!className.equals(BaseModule.getModule().getVmClass().getDisplayName())) {
+        return new PObject(PClassInfo.get("pkl.base", className, moduleUri), properties);
+        //        return new PModule(
+        //          moduleUri, className, PClassInfo.get(className, "ModuleClass", moduleUri),
+        // properties);
+      }
+      // fall through to module case
     }
 
-    // typed module
+    // module
     var hashIndex = className.lastIndexOf("#");
     if (hashIndex < 0) {
       return new PModule(
           moduleUri, className, PClassInfo.get(className, "ModuleClass", moduleUri), properties);
     }
 
-    // typed class
+    // non-pkl:base class
     return new PObject(
         PClassInfo.get(
             className.substring(0, hashIndex), className.substring(hashIndex + 1), moduleUri),
