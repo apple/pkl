@@ -15,7 +15,6 @@
  */
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.component.AdhocComponentWithVariants
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
@@ -24,7 +23,7 @@ import org.gradle.kotlin.dsl.*
 plugins {
   `java-library`
   `maven-publish`
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 // make fat Jar available to other subprojects
@@ -94,6 +93,8 @@ tasks.shadowJar {
 
   configurations = listOf(project.configurations.runtimeClasspath.get())
 
+  addMultiReleaseAttribute = true
+
   // not required at runtime / fat JARs can't be used in native-image builds anyway
   exclude("org/pkl/cli/svm/**")
 
@@ -129,10 +130,7 @@ tasks.shadowJar {
   mergeServiceFiles()
 }
 
-// workaround for https://github.com/johnrengelman/shadow/issues/651
-components.withType(AdhocComponentWithVariants::class.java).forEach { c ->
-  c.withVariantsFromConfiguration(project.configurations.shadowRuntimeElements.get()) { skip() }
-}
+shadow { addShadowVariantIntoJavaComponent = false }
 
 val testFatJar by
   tasks.registering(Test::class) {
@@ -210,7 +208,7 @@ artifacts { add("fatJar", tasks.shadowJar) }
 publishing {
   publications {
     named<MavenPublication>("fatJar") {
-      project.shadow.component(this)
+      from(components["shadow"])
 
       // sources Jar is fat
       artifact(fatSourcesJar.flatMap { it.outputJar.asFile }) { classifier = "sources" }

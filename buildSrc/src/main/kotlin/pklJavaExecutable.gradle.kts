@@ -20,7 +20,7 @@ import org.gradle.kotlin.dsl.support.serviceOf
 plugins {
   id("pklJavaLibrary")
   //  id("pklPublishLibrary")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)

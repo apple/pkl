@@ -84,12 +84,13 @@ open class BuildInfo(private val project: Project) {
       }
     }
 
-    val baseName: String by lazy { "graalvm-jdk-${graalVmJdkVersion}_${osName}-${arch}_bin" }
+    val baseName: String by lazy {
+      "graalvm-community-jdk-${graalVmJdkVersion}_${osName}-${arch}_bin"
+    }
 
     val downloadUrl: String by lazy {
-      val jdkMajor = graalVmJdkVersion.takeWhile { it != '.' }
       val extension = if (os.isWindows) "zip" else "tar.gz"
-      "https://download.oracle.com/graalvm/$jdkMajor/archive/$baseName.$extension"
+      "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${graalVmJdkVersion}/$baseName.$extension"
     }
 
     val downloadFile: File by lazy {

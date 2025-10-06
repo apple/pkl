@@ -21,7 +21,7 @@ plugins {
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
   id("pklPublishLibrary")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 // assumes that `pklJavaExecutable` is also applied
@@ -60,12 +60,23 @@ private fun NativeImageBuild.aarch64() {
   dependsOn(":installGraalVmAarch64")
 }
 
+val nativeImageClasspath by
+  configurations.creating {
+    extendsFrom(configurations.runtimeClasspath.get())
+    // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
+    // (comes from artifact `mordant-jvm-graal-ffi`).
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
+  }
+
 private fun NativeImageBuild.setClasspath() {
   classpath.from(sourceSets.main.map { it.output })
   classpath.from(
     project(":pkl-commons-cli").extensions.getByType(SourceSetContainer::class)["svm"].output
   )
-  classpath.from(configurations.runtimeClasspath)
+  classpath.from(nativeImageClasspath)
 }
 
 val macExecutableAmd64 by
