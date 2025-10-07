@@ -70,7 +70,7 @@ open class MergeSourcesJars : DefaultTask() {
         val details = this
         if (details.isDirectory) return@visit
 
-        var path = details.relativePath.parent.pathString
+        var path = details.relativePath.parent!!.pathString
         val relocatedPath = relocatedPaths.keys.find { path.startsWith(it) }
         if (relocatedPath != null) {
           path = path.replace(relocatedPath, relocatedPaths.getValue(relocatedPath))
@@ -101,7 +101,7 @@ open class MergeSourcesJars : DefaultTask() {
       project.zipTree(jar).visit {
         val details = this
         if (details.isDirectory) return@visit // avoid adding empty dirs
-        result.add(details.relativePath.parent.pathString)
+        result.add(details.relativePath.parent!!.pathString)
       }
     }
     return result
