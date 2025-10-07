@@ -66,7 +66,7 @@ public final class VmContext {
         @Nullable String outputFormat,
         @Nullable PackageResolver packageResolver,
         @Nullable ProjectDependenciesManager projectDependenciesManager,
-        @Nullable TraceMode traceMode) {
+        TraceMode traceMode) {
 
       this.frameTransformer = frameTransformer;
       this.securityManager = securityManager;
@@ -148,7 +148,7 @@ public final class VmContext {
     return holder.projectDependenciesManager;
   }
 
-  public @Nullable TraceMode getTraceMode() {
+  public TraceMode getTraceMode() {
     return holder.traceMode;
   }
 }

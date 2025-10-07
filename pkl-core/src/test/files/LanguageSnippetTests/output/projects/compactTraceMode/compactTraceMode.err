@@ -25,4 +25,4 @@ pkl: TRACE: new {
           }
         }
       }
-    } = new Dynamic { ["Parrot"] { name = "Parrot"; age = 1234; bucketSettings { kicked = true; ["fjordConfig"] { isPining = true } } } } (file:///$snippetsDir/input/projects/defaultTraceMode/defaultTraceMode.pkl)
+    } = new Dynamic { ["Parrot"] { name = "Parrot"; age = 1234; bucketSettings { kicked = true; ["fjordConfig"] { isPining = true } } } } (file:///$snippetsDir/input/projects/compactTraceMode/compactTraceMode.pkl)

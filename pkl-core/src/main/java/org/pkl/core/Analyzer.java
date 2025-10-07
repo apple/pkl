@@ -57,7 +57,7 @@ public class Analyzer {
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       HttpClient httpClient,
-      @Nullable TraceMode traceMode) {
+      TraceMode traceMode) {
     this.transformer = transformer;
     this.color = color;
     this.securityManager = securityManager;

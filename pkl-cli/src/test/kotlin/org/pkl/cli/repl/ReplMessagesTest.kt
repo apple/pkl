@@ -21,6 +21,7 @@ import org.pkl.commons.toPath
 import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
@@ -43,7 +44,7 @@ class ReplMessagesTest {
       "/".toPath(),
       StackFrameTransformers.defaultTransformer,
       false,
-      null,
+      TraceMode.COMPACT,
     )
 
   @Test

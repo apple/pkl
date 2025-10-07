@@ -25,6 +25,7 @@ import java.util.regex.Pattern
 import kotlin.random.Random
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.externalreader.ExternalResourceResolver
 import org.pkl.core.externalreader.ModuleReaderSpec
@@ -227,7 +228,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         cacheDir,
         dependencies,
         message.outputFormat,
-        message.traceMode,
+        message.traceMode ?: TraceMode.COMPACT,
       )
     } catch (e: IllegalArgumentException) {
       throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)

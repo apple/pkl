@@ -19,6 +19,7 @@ import org.pkl.cli.repl.Repl
 import org.pkl.commons.cli.CliCommand
 import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.repl.ReplServer
@@ -68,7 +69,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
           options.base.normalizedWorkingDir,
           stackFrameTransformer,
           options.base.color?.hasColor() ?: false,
-          options.base.traceMode,
+          options.base.traceMode ?: TraceMode.COMPACT,
         )
       Repl(options.base.normalizedWorkingDir, server).run()
     }

@@ -68,7 +68,7 @@ public final class EvaluatorBuilder {
 
   private @Nullable DeclaredDependencies dependencies;
 
-  private @Nullable TraceMode traceMode;
+  private TraceMode traceMode = TraceMode.COMPACT;
 
   private EvaluatorBuilder() {}
 

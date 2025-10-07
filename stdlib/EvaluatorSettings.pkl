@@ -113,11 +113,10 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 ///
 /// Possible values:
 ///
-/// - `"hidden"`: All trace() calls will not be emitted to stderr.
-/// - `"default"`: All structures passed to trace() will be emitted on a single line.
+/// - `"compact"`: All structures passed to trace() will be emitted on a single line.
 /// - `"pretty"`: All structures passed to trace() will be indented and emitted across multiple lines.
 @Since { version = "0.30.0" }
-traceMode: ("hidden"|"default"|"pretty")?
+traceMode: ("compact"|"pretty")?
 
 const local hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 

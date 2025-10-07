@@ -21,6 +21,7 @@ import kotlin.reflect.KClass
 import org.junit.platform.commons.annotation.Testable
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 
@@ -56,7 +57,7 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
       null,
       null,
       null,
-      null,
+      TraceMode.COMPACT,
     )
 
   private fun String.stripFilePaths() =
