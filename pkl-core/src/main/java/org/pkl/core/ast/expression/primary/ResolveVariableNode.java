@@ -117,7 +117,7 @@ public final class ResolveVariableNode extends ExpressionNode {
           return new ConstantValueNode(sourceSection, value);
         }
 
-        return new ReadLocalPropertyNode(sourceSection, localMember, levelsUp);
+        return new ReadLocalPropertyNode(sourceSection, localPropertyName, levelsUp);
       }
 
       var member = currOwner.getMember(variableName);
@@ -213,7 +213,7 @@ public final class ResolveVariableNode extends ExpressionNode {
     }
   }
 
-  private static int findFrameSlot(VirtualFrame frame, Object identifier1, Object identifier2) {
+  public static int findFrameSlot(VirtualFrame frame, Object identifier1, Object identifier2) {
     var descriptor = frame.getFrameDescriptor();
     // Search backwards. The for-generator implementation exploits this
     // to shadow a slot by appending a slot with the same name.

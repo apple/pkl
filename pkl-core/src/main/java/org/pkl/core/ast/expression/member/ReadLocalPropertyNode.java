@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,33 +16,33 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.util.Nullable;
 
 /** Reads a local non-constant property that is known to exist in the lexical scope of this node. */
 public final class ReadLocalPropertyNode extends ExpressionNode {
-  private final ObjectMember property;
+  private final Identifier name;
   private final int levelsUp;
+  private ObjectMember property;
   @Child private DirectCallNode callNode;
 
-  public ReadLocalPropertyNode(SourceSection sourceSection, ObjectMember property, int levelsUp) {
+  public ReadLocalPropertyNode(SourceSection sourceSection, Identifier name, int levelsUp) {
 
     super(sourceSection);
     CompilerAsserts.neverPartOfCompilation();
 
-    this.property = property;
+    this.name = name;
     this.levelsUp = levelsUp;
-
-    assert property.getNameOrNull() != null;
-    assert property.getConstantValue() == null : "Use a ConstantNode instead.";
-
-    callNode = DirectCallNode.create(property.getCallTarget());
   }
 
   @Override
@@ -61,6 +61,18 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
 
       receiver = owner.getEnclosingReceiver();
       owner = owner.getEnclosingOwner();
+      assert owner != null;
+    }
+    var constantValue = getProperty(frame);
+    if (constantValue != null) {
+      return constantValue;
+    }
+
+    var property = owner.getMember(name);
+    if (property == null) {
+      // should never happen
+      CompilerDirectives.transferToInterpreter();
+      throw new PklBugException("Couldn't find local variable `" + name + "`.");
     }
 
     assert receiver instanceof VmObjectLike
@@ -75,5 +87,32 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
     }
 
     return result;
+  }
+
+  private @Nullable Object getProperty(VirtualFrame frame) {
+    if (property != null) return property.getConstantValue();
+
+    var currFrame = frame;
+    var currOwner = VmUtils.getOwner(currFrame);
+
+    do {
+      var localMember = currOwner.getMember(name);
+      if (localMember != null) {
+        assert localMember.isLocal();
+
+        var value = localMember.getConstantValue();
+        if (value != null) {
+          return value;
+        }
+
+        property = localMember;
+        callNode = DirectCallNode.create(property.getCallTarget());
+        break;
+      }
+
+      currFrame = currOwner.getEnclosingFrame();
+      currOwner = VmUtils.getOwnerOrNull(currFrame);
+    } while (currOwner != null);
+    return null;
   }
 }
