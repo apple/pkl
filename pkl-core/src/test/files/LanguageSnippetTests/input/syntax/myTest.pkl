@@ -1,0 +1,13 @@
+// local f1 = () -> new Dynamic { f1Args = List() }
+// local f3 = (arg1, arg2) -> (f1) { f3Args = List(arg1, arg2) }
+// 
+// result1 = f3.apply("f3Arg1", "f3Arg2").apply()
+
+withinLetExpr =
+  let (m = Map("a", 1, "b", 2))
+    new Mapping {
+      // noinspection ReplaceForGeneratorWithSpread
+      for (k, v in m) {
+        [k] = v
+      }
+    }
