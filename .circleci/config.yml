@@ -347,7 +347,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-amd64-release:
@@ -455,7 +455,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-aarch64-release:
@@ -973,7 +973,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-amd64-snapshot:
@@ -1081,7 +1081,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-aarch64-snapshot:
@@ -1417,6 +1417,42 @@ workflows:
     - gradle-check-windows:
         requires:
         - hold
+    - pkl-cli-macOS-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-macOS-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-cli-windows-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-macOS-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-linux-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-macOS-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-linux-aarch64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-linux-alpine-amd64-snapshot:
+        requires:
+        - hold
+    - pkl-doc-windows-amd64-snapshot:
+        requires:
+        - hold
     when:
       matches:
         value: << pipeline.git.branch >>
@@ -1425,8 +1461,6 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
-    - bench
-    - gradle-compatibility
     - pkl-cli-macOS-amd64-snapshot
     - pkl-cli-linux-amd64-snapshot
     - pkl-cli-macOS-aarch64-snapshot
@@ -1439,12 +1473,12 @@ workflows:
     - pkl-doc-linux-aarch64-snapshot
     - pkl-doc-linux-alpine-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
+    - bench
+    - gradle-compatibility
     - deploy-snapshot:
         requires:
         - gradle-check
         - gradle-check-windows
-        - bench
-        - gradle-compatibility
         - pkl-cli-macOS-amd64-snapshot
         - pkl-cli-linux-amd64-snapshot
         - pkl-cli-macOS-aarch64-snapshot
@@ -1457,6 +1491,8 @@ workflows:
         - pkl-doc-linux-aarch64-snapshot
         - pkl-doc-linux-alpine-amd64-snapshot
         - pkl-doc-windows-amd64-snapshot
+        - bench
+        - gradle-compatibility
         context: pkl-maven-release
     - trigger-docsite-build:
         requires:
@@ -1476,6 +1512,78 @@ workflows:
           tags:
             only: /^v?\d+\.\d+\.\d+$/
     - gradle-check-windows:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macOS-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-macOS-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-linux-alpine-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-cli-windows-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-macOS-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-macOS-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-aarch64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-linux-alpine-amd64-snapshot:
+        filters:
+          branches:
+            ignore: /.*/
+          tags:
+            only: /^v?\d+\.\d+\.\d+$/
+    - pkl-doc-windows-amd64-snapshot:
         filters:
           branches:
             ignore: /.*/
@@ -1569,6 +1677,18 @@ workflows:
         requires:
         - gradle-check
         - gradle-check-windows
+        - pkl-cli-macOS-amd64-snapshot
+        - pkl-cli-linux-amd64-snapshot
+        - pkl-cli-macOS-aarch64-snapshot
+        - pkl-cli-linux-aarch64-snapshot
+        - pkl-cli-linux-alpine-amd64-snapshot
+        - pkl-cli-windows-amd64-snapshot
+        - pkl-doc-macOS-amd64-snapshot
+        - pkl-doc-linux-amd64-snapshot
+        - pkl-doc-macOS-aarch64-snapshot
+        - pkl-doc-linux-aarch64-snapshot
+        - pkl-doc-linux-alpine-amd64-snapshot
+        - pkl-doc-windows-amd64-snapshot
         - bench
         - gradle-compatibility
         - pkl-cli-macOS-amd64-release
@@ -1612,6 +1732,18 @@ workflows:
     jobs:
     - gradle-check
     - gradle-check-windows
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-linux-alpine-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
     - bench
     - gradle-compatibility
     - pkl-cli-macOS-amd64-release
