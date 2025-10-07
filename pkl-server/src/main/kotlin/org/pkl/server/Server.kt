@@ -227,6 +227,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         cacheDir,
         dependencies,
         message.outputFormat,
+        message.traceMode,
       )
     } catch (e: IllegalArgumentException) {
       throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)

@@ -110,6 +110,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
           msg.http,
           msg.externalModuleReaders,
           msg.externalResourceReaders,
+          msg.traceMode,
         )
         packKeyValue("requestId", msg.requestId())
         packKeyValue("allowedModules", msg.allowedModules)
@@ -158,6 +159,9 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
             packer.packString(scheme)
             packExternalReader(spec)
           }
+        }
+        if (msg.traceMode != null) {
+          packKeyValue("traceMode", msg.traceMode.toString())
         }
         return
       }

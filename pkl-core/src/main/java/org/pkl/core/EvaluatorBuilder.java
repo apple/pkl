@@ -21,6 +21,7 @@ import java.util.*;
 import java.util.regex.Pattern;
 import org.pkl.core.SecurityManagers.StandardBuilder;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
@@ -66,6 +67,8 @@ public final class EvaluatorBuilder {
   private @Nullable StackFrameTransformer stackFrameTransformer;
 
   private @Nullable DeclaredDependencies dependencies;
+
+  private @Nullable TraceMode traceMode;
 
   private EvaluatorBuilder() {}
 
@@ -454,6 +457,17 @@ public final class EvaluatorBuilder {
     return this.dependencies;
   }
 
+  /** Sets whether calls to trace() produce indented, multi-line output. */
+  public EvaluatorBuilder setTraceMode(TraceMode traceMode) {
+    this.traceMode = traceMode;
+    return this;
+  }
+
+  /** Returns whether calls to trace() produce indented, multi-line output. */
+  public TraceMode getTraceMode() {
+    return this.traceMode;
+  }
+
   /**
    * Given a project, sets its dependencies, and also applies any evaluator settings if set.
    *
@@ -517,6 +531,7 @@ public final class EvaluatorBuilder {
                 procs.computeIfAbsent(entry.getValue(), ExternalReaderProcess::of)));
       }
     }
+
     if (settings.http() != null) {
       var httpClientBuilder = HttpClient.builder();
       if (settings.http().proxy() != null) {
@@ -531,6 +546,11 @@ public final class EvaluatorBuilder {
       }
       setHttpClient(httpClientBuilder.buildLazily());
     }
+
+    if (settings.traceMode() != null) {
+      setTraceMode(settings.traceMode());
+    }
+
     return this;
   }
 
@@ -557,6 +577,7 @@ public final class EvaluatorBuilder {
         timeout,
         moduleCacheDir,
         dependencies,
-        outputFormat);
+        outputFormat,
+        traceMode);
   }
 }

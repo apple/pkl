@@ -79,7 +79,8 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
       @Nullable Object valueC,
       @Nullable Object valueD,
       @Nullable Object valueE,
-      @Nullable Object valueF)
+      @Nullable Object valueF,
+      @Nullable Object valueG)
       throws IOException {
     packer.packMapHeader(
         size
@@ -97,7 +98,8 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
             + (valueC != null ? 1 : 0)
             + (valueD != null ? 1 : 0)
             + (valueE != null ? 1 : 0)
-            + (valueF != null ? 1 : 0));
+            + (valueF != null ? 1 : 0)
+            + (valueG != null ? 1 : 0));
   }
 
   protected void packKeyValue(String name, @Nullable Integer value) throws IOException {

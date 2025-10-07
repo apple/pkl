@@ -23,6 +23,7 @@ import java.time.Duration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.msgpack.core.MessagePack
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.messaging.Message
 import org.pkl.core.messaging.MessageDecoder
 import org.pkl.core.messaging.MessageEncoder
@@ -100,6 +101,7 @@ class ServerMessagePackCodecTest {
           ),
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),
+        traceMode = TraceMode.PRETTY,
       )
     )
   }

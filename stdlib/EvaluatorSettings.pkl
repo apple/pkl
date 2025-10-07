@@ -109,6 +109,16 @@ externalModuleReaders: Mapping<String, ExternalReader>?
 @Since { version = "0.27.0" }
 externalResourceReaders: Mapping<String, ExternalReader>?
 
+/// Defines options for the formatting of calls to the trace() method.
+///
+/// Possible values:
+///
+/// - `"hidden"`: All trace() calls will not be emitted to stderr.
+/// - `"default"`: All structures passed to trace() will be emitted on a single line.
+/// - `"pretty"`: All structures passed to trace() will be indented and emitted across multiple lines.
+@Since { version = "0.30.0" }
+traceMode: ("hidden"|"default"|"pretty")?
+
 const local hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
 const local hasNonEmptyHostname = (it: String) ->

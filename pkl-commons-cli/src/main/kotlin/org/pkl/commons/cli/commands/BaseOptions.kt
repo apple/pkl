@@ -33,6 +33,7 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
@@ -294,6 +295,17 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
+  val traceMode: TraceMode by
+    option(
+        names = arrayOf("--trace-mode"),
+        metavar = "when",
+        help =
+          "Specifies how calls to trace() are formatted. Possible values of <when> are 'default', 'pretty' and 'hidden'.",
+      )
+      .enum<TraceMode> { it.name.lowercase() }
+      .single()
+      .default(TraceMode.DEFAULT)
+
   // hidden option used by native tests
   private val testPort: Int by
     option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
@@ -331,6 +343,7 @@ class BaseOptions : OptionGroup() {
       httpRewrites = httpRewrites.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
+      traceMode = traceMode,
     )
   }
 }

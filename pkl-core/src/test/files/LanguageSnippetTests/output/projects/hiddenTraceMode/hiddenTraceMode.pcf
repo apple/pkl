@@ -1,0 +1,16 @@
+examples {
+  ["traceMode = 'hidden' results in no trace output"] {
+    new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings {
+          kicked = true
+          ["fjordConfig"] {
+            isPining = true
+          }
+        }
+      }
+    }
+  }
+}

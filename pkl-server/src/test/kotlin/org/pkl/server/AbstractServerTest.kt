@@ -78,6 +78,7 @@ abstract class AbstractServerTest {
       project = null,
       externalModuleReaders = null,
       externalResourceReaders = null,
+      traceMode = null,
     )
 
   @Test
@@ -1023,6 +1024,7 @@ abstract class AbstractServerTest {
         null,
         project,
         http,
+        null,
         null,
         null,
       )

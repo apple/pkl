@@ -22,6 +22,7 @@ import java.time.Duration
 import java.util.regex.Pattern
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.util.IoUtils
 
@@ -148,6 +149,9 @@ data class CliBaseOptions(
 
   /** External resource reader process specs */
   val externalResourceReaders: Map<String, ExternalReader> = mapOf(),
+
+  /** Defines options for the formatting of calls to the trace() method. */
+  val traceMode: TraceMode? = null,
 ) {
 
   companion object {

@@ -20,6 +20,7 @@ import java.time.Duration
 import org.msgpack.core.MessagePacker
 import org.pkl.core.*
 import org.pkl.core.ast.member.ObjectMember
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.project.DeclaredDependencies
@@ -39,6 +40,7 @@ internal class BinaryEvaluator(
   moduleCacheDir: Path?,
   declaredDependencies: DeclaredDependencies?,
   outputFormat: String?,
+  traceMode: TraceMode?,
 ) :
   EvaluatorImpl(
     transformer,
@@ -54,6 +56,7 @@ internal class BinaryEvaluator(
     moduleCacheDir,
     declaredDependencies,
     outputFormat,
+    traceMode,
   ) {
   fun evaluate(moduleSource: ModuleSource, expression: String?): ByteArray {
     return doEvaluate(moduleSource) { module ->

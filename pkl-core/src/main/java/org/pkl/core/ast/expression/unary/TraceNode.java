@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,17 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.runtime.*;
 
 public final class TraceNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
 
-  private final VmValueRenderer renderer = VmValueRenderer.singleLine(1000000);
+  private static final int MAX_RENDERER_LENGTH = 1000000;
+
+  private final VmValueRenderer singleLineRenderer =
+      VmValueRenderer.singleLine(MAX_RENDERER_LENGTH);
+  private final VmValueRenderer multiLineRenderer = VmValueRenderer.multiLine(MAX_RENDERER_LENGTH);
 
   public TraceNode(SourceSection sourceSection, ExpressionNode valueNode) {
     super(sourceSection);
@@ -40,6 +45,10 @@ public final class TraceNode extends ExpressionNode {
 
   @TruffleBoundary
   private void doTrace(Object value, VmContext context) {
+    // If traces are disabled, returns early.
+    if (context.getTraceMode() == TraceMode.HIDDEN) {
+      return;
+    }
     if (value instanceof VmObjectLike objectLike) {
       try {
         objectLike.force(true, true);
@@ -48,7 +57,12 @@ public final class TraceNode extends ExpressionNode {
     }
 
     var sourceSection = valueNode.getSourceSection();
-    var renderedValue = renderer.render(value);
+    String renderedValue;
+    if (context.getTraceMode() == TraceMode.PRETTY) {
+      renderedValue = multiLineRenderer.render(value);
+    } else {
+      renderedValue = singleLineRenderer.render(value);
+    }
     var message =
         (sourceSection.isAvailable() ? sourceSection.getCharacters() : "<value")
             + " = "
