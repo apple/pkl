@@ -1,0 +1,4 @@
+qux = "outer"
+foo {
+  prop = "then branch"
+}

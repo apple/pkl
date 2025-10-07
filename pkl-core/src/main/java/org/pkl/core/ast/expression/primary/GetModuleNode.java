@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import org.pkl.core.runtime.VmUtils;
 
 @NodeInfo(shortName = "module")
 public final class GetModuleNode extends ExpressionNode {
+
   public GetModuleNode(SourceSection sourceSection) {
     super(sourceSection);
   }
@@ -35,7 +36,9 @@ public final class GetModuleNode extends ExpressionNode {
     for (var current = VmUtils.getOwner(frame).getEnclosingOwner();
         current != null;
         current = current.getEnclosingOwner()) {
-      levelsUp += 1;
+      if (!current.isParseTimeInvisibleScope()) {
+        levelsUp += 1;
+      }
     }
 
     return replace(levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp))

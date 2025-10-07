@@ -83,6 +83,41 @@ public abstract class VmObjectLike extends VmValue {
   public abstract UnmodifiableEconomicMap<Object, ObjectMember> getMembers();
 
   /**
+   * Tells if it's impossible to determine if this is object describes a scope during parse time.
+   *
+   * <p>An amended lambda hides a new lexical scope if there are also no params.
+   *
+   * <p>Assuming {@code foo} is a lambda, this snippet:
+   *
+   * <pre>{@code
+   * qux = 3
+   *
+   * foo {
+   *   bar = qux
+   * }
+   * }</pre>
+   *
+   * Desugars to:
+   *
+   * <pre>{@code
+   * qux = 3
+   *
+   * foo = () -> (super.foo.apply()) {
+   *   bar = qux
+   * }
+   *
+   * }</pre>
+   *
+   * So, {@code qux} is <i>two</i> levels higher, not one. However, it's not possible to figure this
+   * out at parse time alone.
+   *
+   * <p>This method tells if we need to skip this object when traversing up lexical scopes.
+   */
+  public boolean isParseTimeInvisibleScope() {
+    return false;
+  }
+
+  /**
    * Reads from the properties cache for this object. The cache contains the values of all members
    * defined in this object or an ancestor thereof which have been requested with this object as the
    * receiver.

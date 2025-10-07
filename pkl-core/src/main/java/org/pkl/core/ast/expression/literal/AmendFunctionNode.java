@@ -27,7 +27,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.SimpleRootNode;
-import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
+import org.pkl.core.ast.frame.ReadExactFrameSlotNodeGen;
 import org.pkl.core.ast.member.FunctionNode;
 import org.pkl.core.ast.member.Lambda;
 import org.pkl.core.ast.type.TypeNode;
@@ -37,11 +37,13 @@ public final class AmendFunctionNode extends PklNode {
   private final boolean isCustomThisScope;
   private final PklRootNode initialFunctionRootNode;
   @CompilationFinal private int customThisSlot = -1;
+  private final boolean hasObjectParams;
 
   public AmendFunctionNode(ObjectLiteralNode hostNode, TypeNode[] parameterTypeNodes) {
     super(hostNode.getSourceSection());
 
     isCustomThisScope = hostNode.isCustomThisScope;
+    hasObjectParams = parameterTypeNodes.length > 0;
 
     var builder = FrameDescriptor.newBuilder();
     var hostDescriptor = hostNode.parametersDescriptor;
@@ -68,7 +70,7 @@ public final class AmendFunctionNode extends PklNode {
             new AmendFunctionBodyNode(
                 sourceSection,
                 hostNode.copy(
-                    ReadFrameSlotNodeGen.create(
+                    ReadExactFrameSlotNodeGen.create(
                         hostNode.getParentNode().getSourceSection(), objectToAmendSlot)),
                 parameterSlots,
                 objectToAmendSlot,
@@ -88,7 +90,7 @@ public final class AmendFunctionNode extends PklNode {
               new AmendFunctionBodyNode(
                   sourceSection,
                   hostNode.copy(
-                      ReadFrameSlotNodeGen.create(
+                      ReadExactFrameSlotNodeGen.create(
                           hostNode.getParentNode().getSourceSection(), objectToAmendSlot)),
                   parameterSlots,
                   objectToAmendSlot,
@@ -108,7 +110,9 @@ public final class AmendFunctionNode extends PklNode {
         isCustomThisScope ? frame.getAuxiliarySlot(customThisSlot) : VmUtils.getReceiver(frame),
         functionToAmend.getParameterCount(),
         initialFunctionRootNode,
-        new Context(functionToAmend, null));
+        new Context(functionToAmend, null),
+        true,
+        hasObjectParams);
   }
 
   private static class AmendFunctionBodyNode extends ExpressionNode {

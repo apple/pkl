@@ -1,0 +1,18 @@
+foo {
+  bar {
+    "elem"
+    new {
+      res {
+        "elem"
+      }
+    }
+    new {
+      name = "res1Name"
+      value = "res1Value"
+    }
+    new {
+      name = "res2Name"
+      value = "res2Value"
+    }
+  }
+}

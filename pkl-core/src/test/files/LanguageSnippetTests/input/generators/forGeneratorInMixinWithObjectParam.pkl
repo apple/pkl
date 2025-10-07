@@ -1,0 +1,18 @@
+foo {
+  bar = new Listing { "elem" } |> mapEnvWithObjectParam(new Dynamic {
+      res1Name = "res1Value"
+      res2Name = "res2Value"
+    })
+}
+
+function mapEnvWithObjectParam(_env: Dynamic) = new Mixin { it ->
+  new {
+    res = it
+  }
+  for (k, v in _env) {
+    new {
+      name = k
+      value = v
+    }
+  }
+}

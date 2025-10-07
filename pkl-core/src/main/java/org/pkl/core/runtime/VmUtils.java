@@ -143,6 +143,10 @@ public final class VmUtils {
     return (VmObjectLike) getReceiver(frame);
   }
 
+  public static VmObjectLike getObjectReceiver(VirtualFrame frame, int levelsUp) {
+    return (VmObjectLike) getReceiver(frame, levelsUp);
+  }
+
   public static VmTyped getTypedObjectReceiver(Frame frame) {
     return (VmTyped) getReceiver(frame);
   }
@@ -157,6 +161,39 @@ public final class VmUtils {
     var result = getOwnerOrNull(frame);
     assert result != null;
     return result;
+  }
+
+  public static VmObjectLike getOwner(VirtualFrame frame, int levelsUp) {
+    return getOwner(getFrame(frame, levelsUp));
+  }
+
+  public static Object getReceiver(VirtualFrame frame, int levelsUp) {
+    return getReceiver(getFrame(frame, levelsUp));
+  }
+
+  public static VirtualFrame getFrame(VirtualFrame frame, int levelsUp) {
+    frame = skipInvisibleScopes(frame);
+    if (levelsUp == 0) {
+      return frame;
+    }
+    var owner = getOwner(frame);
+    for (var i = 0; i < levelsUp; i++) {
+      frame = owner.getEnclosingFrame();
+      owner = getOwner(frame);
+      if (owner.isParseTimeInvisibleScope()) {
+        i--;
+      }
+    }
+    return frame;
+  }
+
+  private static VirtualFrame skipInvisibleScopes(VirtualFrame frame) {
+    var owner = getOwner(frame);
+    while (owner.isParseTimeInvisibleScope()) {
+      frame = owner.getEnclosingFrame();
+      owner = getOwner(frame);
+    }
+    return frame;
   }
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */
@@ -375,6 +412,7 @@ public final class VmUtils {
       int numberOfLocalsToCopy) {
     var sourceDescriptor = sourceFrame.getFrameDescriptor();
     var targetDescriptor = targetFrame.getFrameDescriptor();
+    assert sourceDescriptor.getNumberOfSlots() <= targetDescriptor.getNumberOfSlots();
     // Alternatively, locals could be copied with `numberOfLocalsToCopy`
     // `ReadFrameSlotNode/WriteFrameSlotNode`'s.
     for (int i = 0; i < numberOfLocalsToCopy; i++) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,64 +16,81 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerAsserts;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
 /** Reads a local non-constant property that is known to exist in the lexical scope of this node. */
 public final class ReadLocalPropertyNode extends ExpressionNode {
-  private final ObjectMember property;
+  private final Identifier name;
   private final int levelsUp;
+  private final boolean needsConst;
   @Child private DirectCallNode callNode;
+  @CompilationFinal private ObjectMember property;
 
-  public ReadLocalPropertyNode(SourceSection sourceSection, ObjectMember property, int levelsUp) {
+  public ReadLocalPropertyNode(
+      SourceSection sourceSection, Identifier name, int levelsUp, boolean needsConst) {
 
     super(sourceSection);
     CompilerAsserts.neverPartOfCompilation();
 
-    this.property = property;
+    this.name = name;
     this.levelsUp = levelsUp;
-
-    assert property.getNameOrNull() != null;
-    assert property.getConstantValue() == null : "Use a ConstantNode instead.";
-
-    callNode = DirectCallNode.create(property.getCallTarget());
+    this.needsConst = needsConst;
   }
 
   @Override
   @ExplodeLoop
   public Object executeGeneric(VirtualFrame frame) {
-    var owner = VmUtils.getOwner(frame);
-    Object receiver;
-
-    if (levelsUp == 0) {
-      receiver = VmUtils.getReceiver(frame);
-    } else {
-      for (int i = 1; i < levelsUp; i++) {
-        owner = owner.getEnclosingOwner();
-        assert owner != null;
-      }
-
-      receiver = owner.getEnclosingReceiver();
-      owner = owner.getEnclosingOwner();
+    var owner = VmUtils.getOwner(frame, levelsUp);
+    var property = getProperty(owner);
+    var constantValue = property.getConstantValue();
+    if (constantValue != null) {
+      return constantValue;
     }
 
-    assert receiver instanceof VmObjectLike
-        : "Assumption: This node isn't used in Truffle ASTs of `external` pkl.base classes whose values aren't VmObject's.";
-
-    var objReceiver = (VmObjectLike) receiver;
-    var result = objReceiver.getCachedValue(property);
+    var receiver = (VmObjectLike) VmUtils.getReceiver(frame, levelsUp);
+    var result = receiver.getCachedValue(property);
 
     if (result == null) {
-      result = callNode.call(objReceiver, owner, property.getName());
-      objReceiver.setCachedValue(property, result);
+      result = getCallNode(property).call(receiver, owner, property.getName());
+      receiver.setCachedValue(property, result);
     }
 
     return result;
+  }
+
+  private ObjectMember getProperty(VmObjectLike owner) {
+    if (property == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      property = owner.getMember(name);
+      if (property == null) {
+        // should never happen
+        CompilerDirectives.transferToInterpreter();
+        throw new PklBugException("Couldn't find local variable `" + name + "`.");
+      }
+      if (needsConst && !property.isConst()) {
+        throw exceptionBuilder().evalError("propertyMustBeConst", name.toString()).build();
+      }
+    }
+    return property;
+  }
+
+  public DirectCallNode getCallNode(ObjectMember property) {
+    if (callNode == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      callNode = DirectCallNode.create(property.getCallTarget());
+      insert(callNode);
+    }
+    return callNode;
   }
 }
