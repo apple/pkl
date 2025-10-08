@@ -22,6 +22,7 @@ import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
@@ -205,6 +206,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     }
   }
 
+  private val traceMode: TraceMode by lazy {
+    cliOptions.traceMode ?: project?.evaluatorSettings?.traceMode ?: TraceMode.COMPACT
+  }
+
   private fun HttpClient.Builder.addDefaultCliCertificates() {
     val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
     var certsAdded = false
@@ -302,5 +307,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setLogger(Loggers.stdErr())
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)
+      .setTraceMode(traceMode)
   }
 }
