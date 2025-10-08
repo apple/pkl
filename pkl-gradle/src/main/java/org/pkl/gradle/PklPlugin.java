@@ -16,7 +16,6 @@
 package org.pkl.gradle;
 
 import java.io.File;
-import java.lang.reflect.InvocationTargetException;
 import java.nio.file.Files;
 import java.util.Collections;
 import java.util.LinkedHashSet;
@@ -30,7 +29,6 @@ import org.gradle.api.Plugin;
 import org.gradle.api.Project;
 import org.gradle.api.Transformer;
 import org.gradle.api.file.SourceDirectorySet;
-import org.gradle.api.plugins.Convention;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.SourceSet;
 import org.gradle.api.tasks.SourceSetContainer;
@@ -591,69 +589,10 @@ public class PklPlugin implements Plugin<Project> {
   }
 
   private Optional<SourceDirectorySet> getKotlinSourceDirectorySet(SourceSet sourceSet) {
-    // First, try loading it as an extension - 1.8+ version of Kotlin plugin does this.
     var kotlinExtension = sourceSet.getExtensions().findByName("kotlin");
     if (kotlinExtension instanceof SourceDirectorySet sourceDirSet) {
       return Optional.of(sourceDirSet);
     }
-
-    // Otherwise, try to load it as a convention. First, we attempt to get the convention
-    // object of the source set via the HasConvention.getConvention() method.
-    // We don't use the HasConvention interface directly as it is deprecated.
-    // Then, we extract the `kotlin` plugin from the convention, which "provides"
-    // the additional properties for the source set. This plugin has a method named
-    // `getKotlin` whose return type is a source directory set, so we use reflection
-    // to call it too.
-    // Basically, this is equivalent to calling `sourceSet.kotlin`, where `kotlin` is a property
-    // contributed by a plugin also named `kotlin`.
-    // This part of logic can be removed once we stop supporting Kotlin plugin with version
-    // less than 1.8.x.
-    try {
-      var getConventionMethod = sourceSet.getClass().getMethod("getConvention");
-      var convention = getConventionMethod.invoke(sourceSet);
-      //noinspection deprecation
-      if (convention instanceof Convention c) {
-        //noinspection deprecation
-        var kotlinSourceSet = c.getPlugins().get("kotlin");
-        if (kotlinSourceSet == null) {
-          project
-              .getLogger()
-              .debug(
-                  "Cannot obtain Kotlin source directory set of source set [{}], "
-                      + "it does not have the `kotlin` convention plugin",
-                  sourceSet.getName());
-          return Optional.empty();
-        }
-
-        var getKotlinMethod = kotlinSourceSet.getClass().getMethod("getKotlin");
-        var kotlinSourceDirectorySet = getKotlinMethod.invoke(kotlinSourceSet);
-        if (kotlinSourceDirectorySet instanceof SourceDirectorySet sourceDirSet) {
-          return Optional.of(sourceDirSet);
-        }
-
-        project
-            .getLogger()
-            .debug(
-                "Cannot obtain Kotlin source directory set, sourceSets.{}.kotlin is of wrong type",
-                sourceSet.getName());
-      } else {
-        project
-            .getLogger()
-            .debug(
-                "Cannot obtain Kotlin source directory set, sourceSets.{}.convention "
-                    + "returned unexpected type",
-                sourceSet.getName());
-      }
-
-    } catch (NoSuchMethodException | IllegalAccessException | InvocationTargetException e) {
-      project
-          .getLogger()
-          .debug(
-              "Cannot obtain Kotlin source directory set of source set [{}] via a convention",
-              sourceSet.getName(),
-              e);
-    }
-
     return Optional.empty();
   }
 }

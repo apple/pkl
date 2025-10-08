@@ -81,7 +81,7 @@ plugins.withType(MavenPublishPlugin::class).configureEach {
     repositories {
       maven {
         name = "projectLocal" // affects task names
-        url = uri("file:///$rootDir/build/m2")
+        url = rootDir.resolve("build/m2").toURI()
       }
     }
     // use resolved/locked (e.g., `1.15`)
