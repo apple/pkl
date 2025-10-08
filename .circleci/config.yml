@@ -347,7 +347,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-amd64-release:
@@ -455,7 +455,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-aarch64-release:
@@ -973,7 +973,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-amd64-snapshot:
@@ -1081,7 +1081,7 @@ jobs:
     environment:
       LANG: en_US.UTF-8
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
-    resource_class: macos.m1.large.gen1
+    resource_class: m2pro.large
     macos:
       xcode: 15.3.0
   pkl-doc-linux-aarch64-snapshot:
