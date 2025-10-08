@@ -22,6 +22,7 @@ import java.util.Map;
 import org.pkl.core.Loggers;
 import org.pkl.core.SecurityManagers;
 import org.pkl.core.StackFrameTransformers;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeys;
@@ -50,7 +51,7 @@ public abstract class StdLibModule {
                       null,
                       null,
                       null,
-                      null));
+                      TraceMode.COMPACT));
               var language = VmLanguage.get(null);
               var moduleKey = ModuleKeys.standardLibrary(uri);
               var source = VmUtils.loadSource((ResolvedModuleKey) moduleKey);

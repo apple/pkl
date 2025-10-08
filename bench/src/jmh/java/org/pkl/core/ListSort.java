@@ -23,6 +23,7 @@ import java.util.concurrent.TimeUnit;
 import org.openjdk.jmh.annotations.*;
 import org.openjdk.jmh.util.TempFile;
 import org.openjdk.jmh.util.TempFileManager;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.repl.ReplRequest;
@@ -52,7 +53,7 @@ public class ListSort {
           IoUtils.getCurrentWorkingDir(),
           StackFrameTransformers.defaultTransformer,
           false,
-          null);
+          TraceMode.COMPACT);
   private static final List<Object> list = new ArrayList<>(100000);
 
   static {

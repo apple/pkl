@@ -82,7 +82,7 @@ public class EvaluatorImpl implements Evaluator {
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       @Nullable String outputFormat,
-      @Nullable TraceMode traceMode) {
+      TraceMode traceMode) {
 
     securityManager = manager;
     frameTransformer = transformer;

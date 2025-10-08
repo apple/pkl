@@ -40,7 +40,7 @@ internal class BinaryEvaluator(
   moduleCacheDir: Path?,
   declaredDependencies: DeclaredDependencies?,
   outputFormat: String?,
-  traceMode: TraceMode?,
+  traceMode: TraceMode,
 ) :
   EvaluatorImpl(
     transformer,

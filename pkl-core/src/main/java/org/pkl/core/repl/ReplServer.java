@@ -84,7 +84,7 @@ public class ReplServer implements AutoCloseable {
       Path workingDir,
       StackFrameTransformer frameTransformer,
       boolean color,
-      @Nullable TraceMode traceMode) {
+      TraceMode traceMode) {
 
     this.workingDir = workingDir;
     this.securityManager = securityManager;

@@ -17,10 +17,8 @@ package org.pkl.core.evaluatorSettings;
 
 /** Dictates the rendering of calls to the trace() method within Pkl. */
 public enum TraceMode {
-  /** All trace() calls will not be emitted to stderr. */
-  HIDDEN,
   /** All structures passed to trace() will be emitted on a single line. */
-  DEFAULT,
+  COMPACT,
   /** All structures passed to trace() will be indented and emitted across multiple lines. */
   PRETTY
 }

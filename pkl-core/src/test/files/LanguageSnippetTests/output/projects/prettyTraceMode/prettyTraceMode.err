@@ -1,5 +1,25 @@
 examples {
-  ["traceMode = 'pretty' results in indented, multi-line output"] {
+  ["single-line lhs, single-line rhs"] {
+    "Parrot"
+  }
+  ["single-line lhs, multi-line rhs"] {
+    new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings {
+          kicked = true
+          ["fjordConfig"] {
+            isPining = true
+          }
+        }
+      }
+    }
+  }
+  ["multi-line lhs, single-line rhs"] {
+    "Parrot"
+  }
+  ["multi-line lhs, multi-line rhs"] {
     new {
       ["Parrot"] {
         name = "Parrot"
@@ -14,26 +34,61 @@ examples {
     }
   }
 }
-pkl: TRACE: new {
-      ["Parrot"] {
-        name = "Parrot"
-        age = 1234
-        bucketSettings = new {
-          kicked = true
-          ["fjordConfig"] = new {
-            isPining = true
-          }
+pkl: TRACE: val["Parrot"].name = "Parrot"
+(file:///$snippetsDir/input/projects/prettyTraceMode/prettyTraceMode.pkl)
+pkl: TRACE: val =
+  new Dynamic {
+    ["Parrot"] {
+      name = "Parrot"
+      age = 1234
+      bucketSettings {
+        kicked = true
+        ["fjordConfig"] {
+          isPining = true
         }
-      }
-    } = new Dynamic {
-  ["Parrot"] {
-    name = "Parrot"
-    age = 1234
-    bucketSettings {
-      kicked = true
-      ["fjordConfig"] {
-        isPining = true
       }
     }
   }
-} (file:///$snippetsDir/input/projects/prettyTraceMode/prettyTraceMode.pkl)
+(file:///$snippetsDir/input/projects/prettyTraceMode/prettyTraceMode.pkl)
+pkl: TRACE: 
+  (new Dynamic {
+        ["Parrot"] {
+          name = "Parrot"
+          age = 1234
+          bucketSettings = new {
+            kicked = true
+            ["fjordConfig"] = new {
+              isPining = true
+            }
+          }
+        }
+      })["Parrot"].name
+= "Parrot"
+(file:///$snippetsDir/input/projects/prettyTraceMode/prettyTraceMode.pkl)
+pkl: TRACE: 
+  new {
+        ["Parrot"] {
+          name = "Parrot"
+          age = 1234
+          bucketSettings = new {
+            kicked = true
+            ["fjordConfig"] = new {
+              isPining = true
+            }
+          }
+        }
+      }
+=
+  new Dynamic {
+    ["Parrot"] {
+      name = "Parrot"
+      age = 1234
+      bucketSettings {
+        kicked = true
+        ["fjordConfig"] {
+          isPining = true
+        }
+      }
+    }
+  }
+(file:///$snippetsDir/input/projects/prettyTraceMode/prettyTraceMode.pkl)

@@ -295,16 +295,15 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
-  val traceMode: TraceMode by
+  val traceMode: TraceMode? by
     option(
         names = arrayOf("--trace-mode"),
-        metavar = "when",
+        metavar = "style",
         help =
-          "Specifies how calls to trace() are formatted. Possible values of <when> are 'default', 'pretty' and 'hidden'.",
+          "Specifies how calls to trace() are formatted. Possible values of <style> are 'compact' and 'pretty'.",
       )
       .enum<TraceMode> { it.name.lowercase() }
       .single()
-      .default(TraceMode.DEFAULT)
 
   // hidden option used by native tests
   private val testPort: Int by

@@ -21,6 +21,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.core.*
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.resource.ResourceReaders
@@ -45,7 +46,7 @@ class BinaryEvaluatorTest {
       null,
       null,
       null,
-      null,
+      TraceMode.COMPACT,
     )
 
   private fun evaluate(text: String, expression: String?) =
