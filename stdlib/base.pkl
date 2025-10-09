@@ -21,8 +21,8 @@
 module pkl.base
 
 import "pkl:jsonnet"
-import "pkl:xml"
 import "pkl:protobuf"
+import "pkl:xml"
 
 /// The top type of the type hierarchy.
 ///
@@ -96,15 +96,26 @@ abstract external class Module {
     value = outer
     renderer =
       let (format = read?("prop:pkl.outputFormat") ?? "pcf")
-        if (format == "json") new JsonRenderer {}
-        else if (format == "jsonnet") new jsonnet.Renderer {}
-        else if (format == "pcf") new PcfRenderer {}
-        else if (format == "plist") new PListRenderer {}
-        else if (format == "properties") new PropertiesRenderer {}
-        else if (format == "textproto") new protobuf.Renderer {}
-        else if (format == "xml") new xml.Renderer {}
-        else if (format == "yaml") new YamlRenderer {}
-        else throw("Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`.")
+        if (format == "json")
+          new JsonRenderer {}
+        else if (format == "jsonnet")
+          new jsonnet.Renderer {}
+        else if (format == "pcf")
+          new PcfRenderer {}
+        else if (format == "plist")
+          new PListRenderer {}
+        else if (format == "properties")
+          new PropertiesRenderer {}
+        else if (format == "textproto")
+          new protobuf.Renderer {}
+        else if (format == "xml")
+          new xml.Renderer {}
+        else if (format == "yaml")
+          new YamlRenderer {}
+        else
+          throw(
+            "Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`."
+          )
     text = renderer.renderDocument(value)
     bytes = text.encodeToBytes("UTF-8")
   }
@@ -179,7 +190,18 @@ class SourceCode extends Annotation {
   /// - `"x = 42"` is valid source code for language `"Pkl"`.
   /// - `"42"` is valid source code for language `"PklExpr"`.
   /// - `"42"` is valid source code for language `"Pkl"` with [prefix] `"x = "`.
-  language: "Go"|"HTML"|"Java"|"JavaScript"|"Markdown"|"Pkl"|"PklExpr"|"Python"|"Ruby"|"SQL"|"Swift"|String
+  language: "Go"
+    | "HTML"
+    | "Java"
+    | "JavaScript"
+    | "Markdown"
+    | "Pkl"
+    | "PklExpr"
+    | "Python"
+    | "Ruby"
+    | "SQL"
+    | "Swift"
+    | String
 
   /// A source code prefix to help tools understand the source code.
   ///
@@ -307,7 +329,7 @@ abstract class ValueRenderer {
   /// Paths are matched against path specs component-wise in reverse order.
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
-  converters: Mapping<Class|String, (unknown) -> Any>
+  converters: Mapping<Class | String, (unknown) -> Any>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
@@ -426,7 +448,7 @@ class YamlRenderer extends ValueRenderer {
   /// At present, the mode only affects which String values are quoted in YAML.
   /// For example, `x = "yes"` is rendered as `x: 'yes'` in modes `"compat"` and `"1.1"`,
   /// and as `x: yes` in mode `"1.2"`.
-  mode: "compat"|"1.1"|"1.2" = "compat"
+  mode: "compat" | "1.1" | "1.2" = "compat"
 
   /// The number of spaces to use for indenting output.
   indentWidth: Int(this > 1) = 2
@@ -965,7 +987,7 @@ typealias UInt32 = Int(isBetween(0, 4294967295))
 typealias UInt = Int(isPositive)
 
 /// A value that can be compared to another value of the same type with `<`, `>`, `<=`, and `>=`.
-typealias Comparable = String|Number|Duration|DataSize
+typealias Comparable = String | Number | Duration | DataSize
 
 /// A 64-bit floating-point number conforming to the IEEE 754 binary64 format.
 ///
@@ -1266,37 +1288,37 @@ external class String extends Any {
   external function repeat(count: UInt): String
 
   /// Tells whether this string contains [pattern].
-  external function contains(pattern: String|Regex): Boolean
+  external function contains(pattern: String | Regex): Boolean
 
   /// Tells whether this string matches [regex] in its entirety.
   @AlsoKnownAs { names { "test" } }
   external function matches(regex: Regex): Boolean
 
   /// Tells whether this string starts with [pattern].
-  external function startsWith(pattern: String|Regex): Boolean
+  external function startsWith(pattern: String | Regex): Boolean
 
   /// Tells whether this string ends with [pattern].
-  external function endsWith(pattern: String|Regex): Boolean
+  external function endsWith(pattern: String | Regex): Boolean
 
   /// Returns the zero-based index of the first occurrence of [pattern]
   /// in this string.
   ///
   /// Throws if [pattern] does not occur in this string.
-  external function indexOf(pattern: String|Regex): Int
+  external function indexOf(pattern: String | Regex): Int
 
   /// Returns the zero-based index of the first occurrence of [pattern]
   /// in this string, or [null] if [pattern] does not occur in this string.
-  external function indexOfOrNull(pattern: String|Regex): Int?
+  external function indexOfOrNull(pattern: String | Regex): Int?
 
   /// Returns the zero-based index of the last occurrence of [pattern]
   /// in this string.
   ///
   /// Throws if [pattern] does not occur in this string.
-  external function lastIndexOf(pattern: String|Regex): Int
+  external function lastIndexOf(pattern: String | Regex): Int
 
   /// Returns the zero-based index of the last occurrence of [pattern]
   /// in this string, or [null] if [pattern] does not occur in this string.
-  external function lastIndexOfOrNull(pattern: String|Regex): Int?
+  external function lastIndexOfOrNull(pattern: String | Regex): Int?
 
   /// Returns the first [n] characters of this string.
   ///
@@ -1338,32 +1360,41 @@ external class String extends Any {
   /// Replaces the first occurrence of [pattern] in this string with [replacement].
   ///
   /// Returns this string unchanged if [pattern] does not occur in this string.
-  external function replaceFirst(pattern: String|Regex, replacement: String): String
+  external function replaceFirst(pattern: String | Regex, replacement: String): String
 
   /// Replaces the last occurrence of [pattern] in this string with [replacement].
   ///
   /// Returns this string unchanged if [pattern] does not occur in this string.
-  external function replaceLast(pattern: String|Regex, replacement: String): String
+  external function replaceLast(pattern: String | Regex, replacement: String): String
 
   /// Replaces all occurrences of [pattern] in this string with [replacement].
   ///
   /// Returns this string unchanged if [pattern] does not occur in this string.
-  external function replaceAll(pattern: String|Regex, replacement: String): String
+  external function replaceAll(pattern: String | Regex, replacement: String): String
 
   /// Replaces the first occurrence of [pattern] in this string with the return value of [mapper].
   ///
   /// Returns this string unchanged if [pattern] does not occur in this string.
-  external function replaceFirstMapped(pattern: String|Regex, mapper: (RegexMatch) -> String): String
+  external function replaceFirstMapped(
+    pattern: String | Regex,
+    mapper: (RegexMatch) -> String,
+  ): String
 
   /// Replaces the last occurrence of [pattern] in this string with the return value of [mapper].
   ///
   /// Returns this string unchanged if [pattern] does not occur in this string.
-  external function replaceLastMapped(pattern: String|Regex, mapper: (RegexMatch) -> String): String
+  external function replaceLastMapped(
+    pattern: String | Regex,
+    mapper: (RegexMatch) -> String,
+  ): String
 
   /// Replaces all occurrences of [pattern] in this string with the return value of [mapper].
   ///
   /// Returns this string unchanged if [pattern] does not occur in this string.
-  external function replaceAllMapped(pattern: String|Regex, mapper: (RegexMatch) -> String): String
+  external function replaceAllMapped(
+    pattern: String | Regex,
+    mapper: (RegexMatch) -> String,
+  ): String
 
   /// Replaces the characters between [start] and [exclusiveEnd] with [replacement].
   ///
@@ -1404,10 +1435,10 @@ external class String extends Any {
   external function padEnd(width: Int, char: Char)
 
   /// Splits this string around matches of [pattern].
-  external function split(pattern: String|Regex): List<String>
+  external function split(pattern: String | Regex): List<String>
 
   /// Splits this string matches of [pattern], up to [limit] substrings.
-  /// 
+  ///
   /// Returns a [List] with at most [limit] elements.
   /// If the limit has been reached, the last entry will contain the un-split remainder of this string.
   ///
@@ -1418,8 +1449,8 @@ external class String extends Any {
   /// "a.b.c".splitLimit(".", 50) == List("a", "b", "c")
   /// "a.b:c".splitLimit(Regex("[.:]"), 3) == List("a", "b", "c")
   /// ```
-  @Since { version = "0.27.0" } 
-  external function splitLimit(pattern: String|Regex, limit: Int(this > 0)): List<String>
+  @Since { version = "0.27.0" }
+  external function splitLimit(pattern: String | Regex, limit: Int(this > 0)): List<String>
 
   /// Converts the first character of this string to title case.
   ///
@@ -1489,7 +1520,7 @@ external class String extends Any {
 /// * `"UTF-16"`: <https://en.wikipedia.org/wiki/UTF-16>
 /// * `"ISO-8859-1"` (also known as latin1): <https://en.wikipedia.org/wiki/ISO/IEC_8859-1> 
 @Since { version = "0.29.0" }
-typealias Charset = "UTF-8"|"UTF-16"|"ISO-8859-1"
+typealias Charset = "UTF-8" | "UTF-16" | "ISO-8859-1"
 
 /// A string representing a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier).
 typealias Uri = String
@@ -1556,7 +1587,7 @@ class RegexMatch {
 }
 
 /// The unit of a [Duration].
-typealias DurationUnit = "ns"|"us"|"ms"|"s"|"min"|"h"|"d"
+typealias DurationUnit = "ns" | "us" | "ms" | "s" | "min" | "h" | "d"
 
 /// A quantity of elapsed time, represented as a [value] (e.g. `30.5`) and [unit] (e.g. `min`).
 external class Duration extends Any {
@@ -1630,7 +1661,8 @@ external class Duration extends Any {
 }
 
 /// The unit of a [DataSize].
-typealias DataSizeUnit = "b"|"kb"|"kib"|"mb"|"mib"|"gb"|"gib"|"tb"|"tib"|"pb"|"pib"
+typealias DataSizeUnit =
+  "b" | "kb" | "kib" | "mb" | "mib" | "gb" | "gib" | "tb" | "tib" | "pb" | "pib"
 
 /// A quantity of binary data, represented as a [value] (e.g. `30.5`) and [unit] (e.g. `mb`).
 external class DataSize extends Any {
@@ -1894,7 +1926,7 @@ class Listing<out Element> extends Object {
   /// Returns the element at [index].
   ///
   /// Returns [default] applied to [index] if [index] is outside the bounds of this listing.
-  /// 
+  ///
   /// This is equivalent to `getOrNull(index) ?? default.apply(index)`.
   @Since { version = "0.29.0" }
   external function getOrDefault(index: Int): Element
@@ -1989,13 +2021,13 @@ class Listing<out Element> extends Object {
   external function distinctBy(selector: (Element) -> Any): Listing<Element>
 
   /// Tells if [predicate] holds for every element of this listing.
-  /// 
+  ///
   /// Returns [true] for an empty listing.
   @Since { version = "0.27.0" }
   external function every(predicate: (Element) -> Boolean): Boolean
 
   /// Tells if [predicate] holds for at least one element of this listing.
-  /// 
+  ///
   /// Returns [false] for an empty listing.
   @Since { version = "0.27.0" }
   external function any(predicate: (Element) -> Boolean): Boolean
@@ -2018,7 +2050,10 @@ class Listing<out Element> extends Object {
   /// Folds this listing in iteration order using [operator], starting with [initial].
   ///
   /// The first parameter of [operator] is the zero-based index of the current element.
-  external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+  external function foldIndexed<Result>(
+    initial: Result,
+    operator: (Int, Result, Element) -> Result,
+  ): Result
 
   /// Converts the elements of this listing to strings and concatenates them inserting [separator] between elements.
   external function join(separator: String): String
@@ -2052,9 +2087,9 @@ class Mapping<out Key, out Value> extends Object {
 
   /// Tells if this mapping contains [key].
   external function containsKey(key: Any): Boolean
-  
+
   /// Tells if this mapping contains an entry with the given [value].
-  @Since { version = "0.27.0" } 
+  @Since { version = "0.27.0" }
   external function containsValue(value: Any): Boolean
 
   /// Returns the value associated with [key] or [null] if this mapping does not contain [key].
@@ -2066,20 +2101,20 @@ class Mapping<out Key, out Value> extends Object {
   /// not contain [key].
   ///
   /// This is equivalent to `getOrNull(key) ?? default.apply(key)`.
-  @Since { version = "0.29.0" } 
+  @Since { version = "0.29.0" }
   external function getOrDefault(key: Any): Value
 
   /// Folds the entries of this mapping in iteration order using [operator], starting with [initial].
   external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
-  
+
   /// Tells if [predicate] holds for every entry of this mapping.
-  /// 
+  ///
   /// Returns [true] for an empty mapping.
   @Since { version = "0.27.0" }
   external function every(predicate: (Key, Value) -> Boolean): Boolean
-  
+
   /// Tells if [predicate] holds for at least one entry of this mapping.
-  /// 
+  ///
   /// Returns [false] for an empty mapping.
   @Since { version = "0.27.0" }
   external function any(predicate: (Key, Value) -> Boolean): Boolean
@@ -2119,13 +2154,15 @@ external class Function3<in Param1, in Param2, in Param3, out Result> extends Fu
 }
 
 /// A function literal with four parameters.
-external class Function4<in Param1, in Param2, in Param3, in Param4, out Result> extends Function<Result> {
+external class Function4<in Param1, in Param2, in Param3, in Param4, out Result>
+  extends Function<Result> {
   @AlsoKnownAs { names { "call"; "invoke" } }
   external function apply(p1: Param1, p2: Param2, p3: Param3, p4: Param4): Result
 }
 
 /// A function literal with five parameters.
-external class Function5<in Param1, in Param2, in Param3, in Param4, in Param5, out Result> extends Function<Result> {
+external class Function5<in Param1, in Param2, in Param3, in Param4, in Param5, out Result>
+  extends Function<Result> {
   @AlsoKnownAs { names { "call"; "invoke" } }
   external function apply(p1: Param1, p2: Param2, p3: Param3, p4: Param4, p5: Param5): Result
 }
@@ -2157,7 +2194,7 @@ external const function Undefined(): nothing
 const function TODO(): nothing = throw("TODO")
 
 /// Creates a null value that turns into [defaultValue] when amended.
-external const function Null(defaultValue: Object|Function<Object>): Null
+external const function Null(defaultValue: Object | Function<Object>): Null
 
 /// Constructs a [Pair].
 external const function Pair<First, Second>(first: First, second: Second): Pair<First, Second>
@@ -2312,7 +2349,9 @@ abstract external class Collection<out Element> extends Any {
   /// Same as [split()] but returns [null] if [index] is outside range `0`..[length].
   abstract function splitOrNull(index: Int): Pair<Collection<Element>, Collection<Element>>?
 
-  abstract function partition(predicate: (Element) -> Boolean): Pair<Collection<Element>, Collection<Element>>
+  abstract function partition(
+    predicate: (Element) -> Boolean,
+  ): Pair<Collection<Element>, Collection<Element>>
 
   /// The zero-based index of the first occurrence of [element] in this collection.
   ///
@@ -2384,11 +2423,11 @@ abstract external class Collection<out Element> extends Any {
   /// List(4, 6, 8).findIndex((n) -> n.isEven) == 0
   /// import("pkl:test").catch(() -> List(5, 7, 9).findLast((n) -> n.isEven))
   /// ```
-  @AlsoKnownAs { names { "indexWhere" }}
+  @AlsoKnownAs { names { "indexWhere" } }
   abstract function findIndex(predicate: (Element) -> Boolean): Int
 
   /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
-  @AlsoKnownAs { names { "indexWhere" }}
+  @AlsoKnownAs { names { "indexWhere" } }
   abstract function findIndexOrNull(predicate: (Element) -> Boolean): Int?
 
   /// The index of the last element for which [predicate] returns [true].
@@ -2401,11 +2440,11 @@ abstract external class Collection<out Element> extends Any {
   /// List(4, 6, 8).findLastIndex((n) -> n.isEven) == 2
   /// import("pkl:test").catch(() -> List(5, 7, 9).findLastIndex((n) -> n.isEven))
   /// ```
-  @AlsoKnownAs { names { "lastIndexWhere" }}
+  @AlsoKnownAs { names { "lastIndexWhere" } }
   abstract function findLastIndex(predicate: (Element) -> Boolean): Int
 
   /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
-  @AlsoKnownAs { names { "lastIndexWhere" }}
+  @AlsoKnownAs { names { "lastIndexWhere" } }
   abstract function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
 
   /// The number of elements for which [predicate] returns [true].
@@ -2510,7 +2549,9 @@ abstract external class Collection<out Element> extends Any {
   /// List(1, 2, 3).mapNonNull((n) -> if (n.isOdd) null else n + 2) == List(4)
   /// ```
   @AlsoKnownAs { names { "filterMap" } }
-  abstract function mapNonNull<Result>(transform: (Element) -> Result): Collection<Result(this != null)>
+  abstract function mapNonNull<Result>(
+    transform: (Element) -> Result,
+  ): Collection<Result(this != null)>
 
   /// Transforms this collection by applying [transform] to each element and removing resulting [null] elements.
   ///
@@ -2522,7 +2563,9 @@ abstract external class Collection<out Element> extends Any {
   /// List(1, 2, 3, 4, null).mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i) == List(2, 12)
   /// ```
   @Since { version = "0.29.0" }
-  abstract function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): Collection<Result(this != null)>
+  abstract function mapNonNullIndexed<Result>(
+    transform: (Int, Element) -> Result,
+  ): Collection<Result(this != null)>
 
   /// Applies a collection-generating [transform] to each element in this collection
   /// and concatenates the resulting collections.
@@ -2536,7 +2579,9 @@ abstract external class Collection<out Element> extends Any {
   /// [transform] takes two arguments: the index of the element, and the element itself.
   ///
   /// Throws if [transform] produces a non-collection value.
-  abstract function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): Collection<Result>
+  abstract function flatMapIndexed<Result>(
+    transform: (Int, Element) -> Collection<Result>,
+  ): Collection<Result>
 
   /// Concatenates the elements in this collection, each of which must itself be a collection.
   ///
@@ -2547,7 +2592,7 @@ abstract external class Collection<out Element> extends Any {
   /// Adds [element] to this collection.
   ///
   /// For [List], [element] is appended.
-  abstract function add<Other>(element: Other): Collection<Element|Other>
+  abstract function add<Other>(element: Other): Collection<Element | Other>
 
   /// Returns the first [n] elements in this collection.
   @AlsoKnownAs { names { "limit" } }
@@ -2588,15 +2633,18 @@ abstract external class Collection<out Element> extends Any {
   /// Folds this collection in iteration order using [operator], starting with [initial].
   ///
   /// The first parameter of [operator] is the zero-based index of the current element.
-  abstract function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+  abstract function foldIndexed<Result>(
+    initial: Result,
+    operator: (Int, Result, Element) -> Result,
+  ): Result
 
   /// Folds this collection in iteration order using [operator], starting with the first element.
   ///
   /// Throws if this collection is empty.
-  abstract function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
+  abstract function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
 
   /// Same as [reduce()] but returns [null] if this collection is empty.
-  abstract function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
+  abstract function reduceOrNull<Result>(operator: (Element | Result, Element) -> Result): Result?
 
   /// Groups the elements in this collection according to keys returned by [selector].
   abstract function groupBy<Key>(selector: (Element) -> Key): Map<Key, Collection<Element>>
@@ -2659,10 +2707,12 @@ abstract external class Collection<out Element> extends Any {
   /// [comparator] should return [true] if its first argument is less than its second argument, and [false] otherwise.
   ///
   /// Throws if this collection is empty.
-  abstract function maxWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element
+  abstract function maxWith(comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int): Element
 
   /// Same as [maxWith()] but returns [null] if this collection is empty.
-  abstract function maxWithOrNull(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element?
+  abstract function maxWithOrNull(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): Element?
 
   /// Sorts this collection of [Comparable] elements in ascending order.
   ///
@@ -2687,7 +2737,9 @@ abstract external class Collection<out Element> extends Any {
   /// ```
   /// List(1, 2, 3).sortWith((a, b) -> a > b)) == List(3, 2, 1)
   /// ```
-  abstract function sortWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Collection<Element>
+  abstract function sortWith(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): Collection<Element>
 
   /// Reverses the order of elements in this collection.
   abstract function reverse(): Collection<Element>
@@ -2725,7 +2777,10 @@ abstract external class Collection<out Element> extends Any {
   abstract function toSet(): Set<Element>
 
   /// Converts this collection to a map by extracting a key and value from each element using the given functions.
-  abstract function toMap<Key, Value>(keyExtractor: (Element) -> Key, valueExtractor: (Element) -> Value): Map<Key, Value>
+  abstract function toMap<Key, Value>(
+    keyExtractor: (Element) -> Key,
+    valueExtractor: (Element) -> Value,
+  ): Map<Key, Value>
 
   /// Converts this collection to a [Listing].
   abstract function toListing(): Listing<Element>
@@ -2959,8 +3014,12 @@ external class List<out Element> extends Collection<Element> {
   external function mapIndexed<Result>(transform: (Int, Element) -> Result): List<Result>
 
   @Since { version = "0.29.0" }
-  external function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): List<Result(this != null)>
-  external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): List<Result>
+  external function mapNonNullIndexed<Result>(
+    transform: (Int, Element) -> Result,
+  ): List<Result(this != null)>
+  external function flatMapIndexed<Result>(
+    transform: (Int, Element) -> Collection<Result>,
+  ): List<Result>
 
   external function filterIsInstance<Type>(clazz: Class<Type>): List<Type>
 
@@ -3013,27 +3072,35 @@ external class List<out Element> extends Collection<Element> {
   external function every(predicate: (Element) -> Boolean): Boolean
   external function any(predicate: (Element) -> Boolean): Boolean
 
-  external function add<Other>(element: Other): List<Element|Other>
+  external function add<Other>(element: Other): List<Element | Other>
 
   /// Replaces the element at [index] with [replacement].
   ///
   /// Throws if [index] is outside the bounds of this list.
-  external function replace<Other>(index: Int, replacement: Other): List<Element|Other>
+  external function replace<Other>(index: Int, replacement: Other): List<Element | Other>
 
   /// Replaces the element at [index] with [replacement].
   ///
   /// Returns [null] if [index] is outside the bounds of this list.
-  external function replaceOrNull<Other>(index: Int, replacement: Other): List<Element|Other>?
+  external function replaceOrNull<Other>(index: Int, replacement: Other): List<Element | Other>?
 
   /// Replaces the elements between indices [range] and [exclusiveEnd] with [replacement].
   ///
   /// Throws if [range] or [exclusiveEnd] is outside the bounds of this list.
-  external function replaceRange<Other>(start: Int, exclusiveEnd: Int, replacement: Collection<Other>): List<Element|Other>
+  external function replaceRange<Other>(
+    start: Int,
+    exclusiveEnd: Int,
+    replacement: Collection<Other>,
+  ): List<Element | Other>
 
   /// Replaces the elements between indices [range] and [exclusiveEnd] with [replacement].
   ///
   /// Returns [null] if [range] or [exclusiveEnd] is outside the bounds of this list.
-  external function replaceRangeOrNull<Other>(start: Int, exclusiveEnd: Int, replacement: Collection<Other>): List<Element|Other>?
+  external function replaceRangeOrNull<Other>(
+    start: Int,
+    exclusiveEnd: Int,
+    replacement: Collection<Other>,
+  ): List<Element | Other>?
 
   external function find(predicate: (Element) -> Boolean): Element
   external function findOrNull(predicate: (Element) -> Boolean): Element?
@@ -3067,10 +3134,13 @@ external class List<out Element> extends Collection<Element> {
 
   external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
   external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
-  external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+  external function foldIndexed<Result>(
+    initial: Result,
+    operator: (Int, Result, Element) -> Result,
+  ): Result
 
-  external function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
-  external function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
+  external function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
+  external function reduceOrNull<Result>(operator: (Element | Result, Element) -> Result): Result?
 
   external function groupBy<Key>(selector: (Element) -> Key): Map<Key, List<Element>>
 
@@ -3108,7 +3178,10 @@ external class List<out Element> extends Collection<Element> {
 
   external function toSet(): Set<Element>
 
-  external function toMap<Key, Value>(keyExtractor: (Element) -> Key, valueExtractor: (Element) -> Value): Map<Key, Value>
+  external function toMap<Key, Value>(
+    keyExtractor: (Element) -> Key,
+    valueExtractor: (Element) -> Value,
+  ): Map<Key, Value>
 
   external function toListing(): Listing<Element>
 
@@ -3176,8 +3249,12 @@ external class Set<out Element> extends Collection<Element> {
   external function mapIndexed<Result>(transform: (Int, Element) -> Result): Set<Result>
 
   @Since { version = "0.29.0" }
-  external function mapNonNullIndexed<Result>(transform: (Int, Element) -> Result): Set<Result(this != null)>
-  external function flatMapIndexed<Result>(transform: (Int, Element) -> Collection<Result>): Set<Result>
+  external function mapNonNullIndexed<Result>(
+    transform: (Int, Element) -> Result,
+  ): Set<Result(this != null)>
+  external function flatMapIndexed<Result>(
+    transform: (Int, Element) -> Collection<Result>,
+  ): Set<Result>
 
   external function filterIsInstance<Type>(clazz: Class<Type>): Set<Type>
 
@@ -3186,7 +3263,7 @@ external class Set<out Element> extends Collection<Element> {
   external function every(predicate: (Element) -> Boolean): Boolean
   external function any(predicate: (Element) -> Boolean): Boolean
 
-  external function add<Other>(element: Other): Set<Element|Other>
+  external function add<Other>(element: Other): Set<Element | Other>
 
   external function find(predicate: (Element) -> Boolean): Element
   external function findOrNull(predicate: (Element) -> Boolean): Element?
@@ -3208,10 +3285,13 @@ external class Set<out Element> extends Collection<Element> {
 
   external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
   external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
-  external function foldIndexed<Result>(initial: Result, operator: (Int, Result, Element) -> Result): Result
+  external function foldIndexed<Result>(
+    initial: Result,
+    operator: (Int, Result, Element) -> Result,
+  ): Result
 
-  external function reduce<Result>(operator: (Element|Result, Element) -> Result): Result
-  external function reduceOrNull<Result>(operator: (Element|Result, Element) -> Result): Result?
+  external function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
+  external function reduceOrNull<Result>(operator: (Element | Result, Element) -> Result): Result?
 
   external function groupBy<Key>(selector: (Element) -> Key): Map<Key, Set<Element>>
 
@@ -3223,8 +3303,10 @@ external class Set<out Element> extends Collection<Element> {
   external function minBy(selector: (Element) -> Int): Element
   external function minByOrNull(selector: (Element) -> Int): Element?
 
-  external function minWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element
-  external function minWithOrNull(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element?
+  external function minWith(comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int): Element
+  external function minWithOrNull(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): Element?
 
   external max: Element
   external maxOrNull: Element?
@@ -3232,12 +3314,16 @@ external class Set<out Element> extends Collection<Element> {
   external function maxBy(selector: (Element) -> Int): Element
   external function maxByOrNull(selector: (Element) -> Int): Element?
 
-  external function maxWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element
-  external function maxWithOrNull(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): Element?
+  external function maxWith(comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int): Element
+  external function maxWithOrNull(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): Element?
 
   external function sort(): List<Element>
   external function sortBy(selector: (Element) -> Comparable): List<Element>
-  external function sortWith(comparator: (Element, Element) -> Boolean|/*Deprecated*/Int): List<Element>
+  external function sortWith(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): List<Element>
 
   external function reverse(): List<Element>
 
@@ -3249,7 +3335,10 @@ external class Set<out Element> extends Collection<Element> {
 
   external function toSet(): Set<Element>
 
-  external function toMap<Key, Value>(keyExtractor: (Element) -> Key, valueExtractor: (Element) -> Value): Map<Key, Value>
+  external function toMap<Key, Value>(
+    keyExtractor: (Element) -> Key,
+    valueExtractor: (Element) -> Value,
+  ): Map<Key, Value>
 
   external function toListing(): Listing<Element>
 
@@ -3257,7 +3346,7 @@ external class Set<out Element> extends Collection<Element> {
 
   /// The intersection of this set and [other].
   external function intersect(other: Set): Set<Element>
-  
+
   /// The difference of this set and [other].
   external function difference(other: Set): Set<Element>
 }
@@ -3271,7 +3360,7 @@ external class Set<out Element> extends Collection<Element> {
 /// Map("name", "Pigeon", "age", 42).keys == Set("name", "age")
 /// Map("name", "Pigeon", "age", 42).values == Set("Pigeon", 42)
 /// ```
-external const function Map<Key, Value>(keysAndValues: VarArgs<Key|Value>): Map<Key, Value>
+external const function Map<Key, Value>(keysAndValues: VarArgs<Key | Value>): Map<Key, Value>
 
 /// A mapping from keys to values.
 ///
@@ -3313,7 +3402,10 @@ external class Map<out Key, out Value> extends Any {
   external function containsValue(value: Any): Boolean
 
   /// Adds or updates [key] to [value].
-  external function put<NewKey, NewValue>(key: NewKey, value: NewValue): Map<NewKey|Key, NewValue|Value>
+  external function put<NewKey, NewValue>(
+    key: NewKey,
+    value: NewValue,
+  ): Map<NewKey | Key, NewValue | Value>
 
   /// Removes the map entry with the given key.
   ///
@@ -3327,7 +3419,9 @@ external class Map<out Key, out Value> extends Any {
   external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
 
   /// Transforms the entries of this map using [transform].
-  external function map<NewKey, NewValue>(transform: (Key, Value) -> Pair<NewKey, NewValue>): Map<NewKey, NewValue>
+  external function map<NewKey, NewValue>(
+    transform: (Key, Value) -> Pair<NewKey, NewValue>,
+  ): Map<NewKey, NewValue>
 
   /// Transforms the keys of this map using [transform].
   external function mapKeys<NewKey>(transform: (Key, Value) -> NewKey): Map<NewKey, Value>
@@ -3336,7 +3430,9 @@ external class Map<out Key, out Value> extends Any {
   external function mapValues<NewValue>(transform: (Key, Value) -> NewValue): Map<Key, NewValue>
 
   /// Applies a map-generating [transform] to each map entry and concatenates the resulting maps.
-  external function flatMap<NewKey, NewValue>(transform: (Key, Value) -> Map<NewKey, NewValue>): Map<NewKey, NewValue>
+  external function flatMap<NewKey, NewValue>(
+    transform: (Key, Value) -> Map<NewKey, NewValue>,
+  ): Map<NewKey, NewValue>
 
   /// Tells if [predicate] holds for every entry of this map.
   ///

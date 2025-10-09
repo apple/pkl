@@ -17,8 +17,8 @@
 amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.circleci@1.2.0#/PklCI.pkl"
 
 import "jobs/BuildNativeJob.pkl"
-import "jobs/GradleCheckJob.pkl"
 import "jobs/DeployJob.pkl"
+import "jobs/GradleCheckJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
 local prbJobs: Listing<String> = gradleCheckJobs.keys.toListing()
@@ -130,18 +130,21 @@ jobs {
     [jobName] = job.job
   }
   ["bench"] = new SimpleGradleJob { command = "bench:jmh" }.job
-  ["gradle-compatibility"] = new SimpleGradleJob {
-    name = "gradle compatibility"
-    command = #"""
-      :pkl-gradle:build \
-        :pkl-gradle:compatibilityTestReleases
-      """#
-  }.job
+  ["gradle-compatibility"] =
+    new SimpleGradleJob {
+      name = "gradle compatibility"
+      command =
+        #"""
+        :pkl-gradle:build \
+          :pkl-gradle:compatibilityTestReleases
+        """#
+    }.job
   ["deploy-snapshot"] = new DeployJob { command = "publishToSonatype" }.job
-  ["deploy-release"] = new DeployJob {
-    isRelease = true
-    command = "publishToSonatype closeAndReleaseSonatypeStagingRepository"
-  }.job
+  ["deploy-release"] =
+    new DeployJob {
+      isRelease = true
+      command = "publishToSonatype closeAndReleaseSonatypeStagingRepository"
+    }.job
   ["github-release"] {
     docker {
       new { image = "maniator/gh:v2.40.1" }
@@ -150,7 +153,8 @@ jobs {
       new AttachWorkspaceStep { at = "." }
       new RunStep {
         name = "Publish release on GitHub"
-        command = #"""
+        command =
+          #"""
           # exclude build_artifacts.txt from publish
           rm -f */build/executable/*.build_artifacts.txt
           find */build/executable/* -type d | xargs rm -rf 

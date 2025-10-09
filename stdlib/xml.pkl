@@ -39,13 +39,13 @@ class Renderer extends ValueRenderer {
   indent: String = "  "
 
   /// The XML version to use.
-  xmlVersion: *"1.0"|"1.1"
+  xmlVersion: *"1.0" | "1.1"
 
   /// The name of the XML document's root element.
   rootElementName: String(!isEmpty) = "root"
 
   /// The attributes of the XML document's root element.
-  rootElementAttributes: Mapping<String(!isEmpty), String|Boolean|Int|Float>
+  rootElementAttributes: Mapping<String(!isEmpty), String | Boolean | Int | Float>
 
   external function renderDocument(value: Any): String
 
@@ -83,12 +83,12 @@ function Element(_name: String(!isEmpty)): Dynamic = new {
 }
 
 /// Creates an [Inline] directive for [_value].
-function Inline(_value: Object|Collection|Map): Inline = new { value = _value }
+function Inline(_value: Object | Collection | Map): Inline = new { value = _value }
 
 /// Inlines the members of [value] into the enclosing XML element,
 /// without rendering an XML element for [value] itself.
 class Inline {
-  value: Object|Collection|Map
+  value: Object | Collection | Map
 }
 
 /// Creates an XML [Comment] with the given [_text].

@@ -47,7 +47,8 @@ function Version(version: String): Version =
 /// ```
 function parseOrNull(version: String): Version? =
   let (groups = versionRegex.matchEntire(version)?.groups)
-    if (groups == null) null
+    if (groups == null)
+      null
     else
       new Version {
         major = groups[1].value.toInt()
@@ -99,9 +100,15 @@ class Version {
   /// - `"1.0.0-0.3.7"`
   /// - `"1.0.0-x.7.z.92"`
   /// - `"1.0.0-x-y-z.–"`
-  preRelease: String(matches(Regex(#"(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*"#)))?
+  preRelease: String(
+    matches(
+      Regex(
+        #"(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*"#,
+      ),
+    ),
+  )?
 
-  hidden fixed preReleaseIdentifiers: List<Int|String> =
+  hidden fixed preReleaseIdentifiers: List<Int | String> =
     if (preRelease == null) List() else preRelease.split(".").map((it) -> it.toIntOrNull() ?? it)
 
   /// Build metadata MAY be denoted by appending a plus sign and a series of dot separated identifiers immediately following the patch or pre-release version.
@@ -119,8 +126,7 @@ class Version {
   /// Note: Unlike `==`, [equals()] and comparison methods such as [isLessThan()] ignore [build].
   build: String(matches(Regex(#"[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*"#)))?
 
-  hidden fixed buildIdentifiers: List<String> =
-    if (build == null) List() else build.split(".")
+  hidden fixed buildIdentifiers: List<String> = if (build == null) List() else build.split(".")
 
   /// Tells whether this version is equal to [other] according to semantic versioning rules.
   ///
@@ -160,23 +166,19 @@ class Version {
     major < other.major
       || major == other.major && minor < other.minor
       || major == other.major && minor == other.minor && patch < other.patch
-      ||
-        major == other.major
-          && minor == other.minor
-          && patch == other.patch
-          && isPreReleaseLessThan(other)
+      || major == other.major
+        && minor == other.minor
+        && patch == other.patch
+        && isPreReleaseLessThan(other)
 
   /// Tells whether this version is less than or equal to [other] according to semantic versioning rules.
-  function isLessThanOrEquals(other: Version): Boolean =
-    isLessThan(other) || equals(other)
+  function isLessThanOrEquals(other: Version): Boolean = isLessThan(other) || equals(other)
 
   /// Tells whether this version is greater than [other] according to semantic versioning rules.
-  function isGreaterThan(other: Version): Boolean =
-    other.isLessThan(this)
+  function isGreaterThan(other: Version): Boolean = other.isLessThan(this)
 
   /// Tells whether this version is greater than or equal to [other] according to semantic versioning rules.
-  function isGreaterThanOrEquals(other: Version): Boolean =
-    other.isLessThanOrEquals(this)
+  function isGreaterThanOrEquals(other: Version): Boolean = other.isLessThanOrEquals(this)
 
   /// A normal version number MUST take the form X.Y.Z where X, Y, and Z are non-negative integers, and MUST NOT contain leading zeroes.
   function isNormal(): Boolean = preRelease == null && build == null
@@ -187,24 +189,39 @@ class Version {
   /// Strips [preRelease] and [build] from this version.
   function toNormal(): Version = (this) { preRelease = null; build = null }
 
-  function toString() = "\(major).\(minor).\(patch)\(if (preRelease != null) "-\(preRelease)" else "")\(if (build != null) "+\(build)" else "")"
+  function toString() =
+    "\(major).\(minor).\(patch)\(if (preRelease != null) "-\(preRelease)" else "")\(if (build != null) "+\(build)" else "")"
 
   local function isPreReleaseLessThan(other: Version): Boolean =
-    if (preRelease == null) false
-    else if (other.preRelease == null) true
-    else if (preRelease == other.preRelease) false
+    if (preRelease == null)
+      false
+    else if (other.preRelease == null)
+      true
+    else if (preRelease == other.preRelease)
+      false
     else
-      let (result = preReleaseIdentifiers
-        .zip(other.preReleaseIdentifiers)
-        .fold(null, (result, next) ->
-          if (result != null) result
-          else
-            if (next.first == next.second) null
-            else if (next.first.getClass() == next.second.getClass()) next.first < next.second
-            else next.first is Int
-        )
-      ) if (result != null) result else preReleaseIdentifiers.length < other.preReleaseIdentifiers.length
+      let (result =
+          preReleaseIdentifiers
+            .zip(other.preReleaseIdentifiers)
+            .fold(null, (result, next) ->
+              if (result != null)
+                result
+              else if (next.first == next.second)
+                null
+              else if (next.first.getClass() == next.second.getClass())
+                next.first < next.second
+              else
+                next.first is Int
+            )
+      )
+        if (result != null)
+          result
+        else
+          preReleaseIdentifiers.length < other.preReleaseIdentifiers.length
 }
 
 // https://semver.org/#is-there-a-suggested-regular-expression-regex-to-check-a-semver-string
-local versionRegex = Regex(#"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#)
+local versionRegex =
+  Regex(
+    #"(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-((?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*))?(?:\+([0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*))?"#,
+  )

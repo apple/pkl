@@ -78,7 +78,7 @@ class Renderer extends ValueRenderer {
   /// If non-empty, renders object fields and array elements on separate lines,
   /// and strings containing newlines as `|||` multiline text blocks,
   /// with the given leading line [indent].
-  indent: String|/*Deprecated*/Null = "  "
+  indent: String | /*Deprecated*/ Null = "  "
 
   /// Whether to omit Jsonnet object fields whose value is `null`.
   omitNullProperties: Boolean = true
