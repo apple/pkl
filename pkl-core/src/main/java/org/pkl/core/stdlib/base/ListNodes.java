@@ -744,6 +744,10 @@ public final class ListNodes {
       while (iter.hasNext()) {
         var elem = iter.next();
         result = applyLambdaNode.execute(function, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
+        }
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return result;
@@ -760,6 +764,10 @@ public final class ListNodes {
       while (iter.hasNext()) {
         var elem = iter.next();
         result = applyLambdaNode.execute(function, elem, result);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
+        }
       }
       LoopNode.reportLoopCount(this, self.getLength());
       return result;
@@ -778,6 +786,10 @@ public final class ListNodes {
       while (iter.hasNext()) {
         var elem = iter.next();
         result = applyLambdaNode.execute(function, index++, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
+        }
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -797,6 +809,10 @@ public final class ListNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         result = applyLambdaNode.execute(function, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
+        }
       }
 
       LoopNode.reportLoopCount(this, self.getLength());
@@ -816,6 +832,10 @@ public final class ListNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         result = applyLambdaNode.execute(function, result, elem);
+        if (result instanceof VmTyped vmTyped
+            && vmTyped.getVmClass() == BaseModule.getFoldedClass()) {
+          return VmUtils.readMember(vmTyped, Identifier.VALUE);
+        }
       }
 
       LoopNode.reportLoopCount(this, self.getLength());

@@ -58,11 +58,11 @@ facts {
 
 examples {
   ["every"] {
-    module.catch(() -> list1.every((x) -> "wrong type"))
+    module.catch(() -> list1.every((_) -> "wrong type"))
   }
 
   ["any"] {
-    module.catch(() -> list1.any((x) -> "wrong type"))
+    module.catch(() -> list1.any((_) -> "wrong type"))
   }
 
   ["length"] {
@@ -72,7 +72,7 @@ examples {
   ["filter()"] {
     list1.filter((x) -> x > 1)
     list1.filter((x) -> x > 3)
-    module.catch(() -> list1. filter((x) -> "wrong type"))
+    module.catch(() -> list1. filter((_) -> "wrong type"))
   }
 
   ["map()"] {
@@ -82,7 +82,7 @@ examples {
 
   ["flatMap()"] {
     list1.flatMap((x) -> List(x, x + 1))
-    module.catch(() -> list1.flatMap((x) -> "wrong type"))
+    module.catch(() -> list1.flatMap((_) -> "wrong type"))
   }
 
   ["flatten()"] {
@@ -113,19 +113,19 @@ examples {
     list1.count((x) -> x >= 2)
     list1.count((x) -> true)
     list1.count((x) -> false)
-    module.catch(() -> list1.count((x) -> "wrong type"))
+    module.catch(() -> list1.count((_) -> "wrong type"))
   }
 
   ["find()"] {
     list1.find((x) -> x >= 2)
     list1.find((x) -> true)
-    module.catch(() -> list1.find((x) -> "wrong type"))
+    module.catch(() -> list1.find((_) -> "wrong type"))
   }
 
   ["findLast()"] {
     list1.findLast((x) -> x >= 2)
     list1.findLast((x) -> true)
-    module.catch(() -> list1.findLast((x) -> "wrong type"))
+    module.catch(() -> list1.findLast((_) -> "wrong type"))
   }
 
   ["indexOf()"] {
@@ -141,13 +141,13 @@ examples {
   ["findIndex()"] {
     list1.findIndex((x) -> x >= 2)
     List(1,2,3,2,1).findIndex((x) -> x >= 2)
-    module.catch(() -> list1.findIndex((x) -> "wrong type"))
+    module.catch(() -> list1.findIndex((_) -> "wrong type"))
   }
 
   ["findLastIndex()"] {
     list1.findLastIndex((x) -> x >= 2)
     List(1,2,3,2,1).findLastIndex((x) -> x >= 2)
-    module.catch(() -> list1.findLastIndex((x) -> "wrong type"))
+    module.catch(() -> list1.findLastIndex((_) -> "wrong type"))
   }
 
   ["take()"] {
@@ -160,7 +160,7 @@ examples {
     list1.takeWhile((x) -> true)
     list1.takeWhile((x) -> false)
     list1.takeWhile((x) -> x < 3)
-    module.catch(() -> list1.takeWhile((x) -> "wrong type"))
+    module.catch(() -> list1.takeWhile((_) -> "wrong type"))
   }
 
   ["takeLast()"] {
@@ -173,7 +173,7 @@ examples {
     list1.takeLastWhile((x) -> true)
     list1.takeLastWhile((x) -> false)
     list1.takeLastWhile((x) -> x > 1)
-    module.catch(() -> list1.takeLastWhile((x) -> "wrong type"))
+    module.catch(() -> list1.takeLastWhile((_) -> "wrong type"))
   }
 
   ["drop()"] {
@@ -186,7 +186,7 @@ examples {
     list1.dropWhile((x) -> true)
     list1.dropWhile((x) -> false)
     list1.dropWhile((x) -> x < 3)
-    module.catch(() -> list1.dropWhile((x) -> "wrong type"))
+    module.catch(() -> list1.dropWhile((_) -> "wrong type"))
   }
 
   ["dropLast()"] {
@@ -199,7 +199,7 @@ examples {
     list1.dropLastWhile((x) -> true)
     list1.dropLastWhile((x) -> false)
     list1.dropLastWhile((x) -> x > 1)
-    module.catch(() -> list1.dropLastWhile((x) -> "wrong type"))
+    module.catch(() -> list1.dropLastWhile((_) -> "wrong type"))
   }
 
   ["fold()"] {
@@ -207,6 +207,7 @@ examples {
     list1.fold(List(), (acc, x) -> acc.add(x))
     List(1).fold(0, (acc, x) -> acc + x)
     List().fold(0, (acc, x) -> acc + x)
+    list2.fold(1, (acc, x) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["foldBack()"] {
@@ -214,12 +215,14 @@ examples {
     list1.foldBack(List(), (x, acc) -> acc.add(x))
     List(1).foldBack(0, (x, acc) -> x + acc)
     List().foldBack(0, (x, acc) -> x + acc)
+    list2.foldBack(1, (x, acc) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["reduce()"] {
     list1.reduce((x, y) -> x + y)
     List(1).reduce((x, y) -> x + y)
     module.catch(() -> List().reduce((x, y) -> x + y))
+    list2.reduce((acc, x) -> if (acc > 10) folded(acc) else acc * x)
   }
 
   ["groupBy()"] {
@@ -346,6 +349,7 @@ examples {
     list1.foldIndexed(0, (idx, x, y) -> idx + x + y)
     List(1).foldIndexed(0, (idx, x, y) -> idx + x + y)
     List().foldIndexed(0, (idx, x, y) -> idx + x + y)
+    list2.foldIndexed(0, (idx, acc, x) -> if (acc > 10) folded(acc) else idx + acc + x)
   }
 
   ["toListing()"] {
