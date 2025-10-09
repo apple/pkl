@@ -803,7 +803,7 @@ internal class Builder(sourceText: String) {
   private fun formatBinaryOpExpr(node: Node): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
     val callChainSize = flat.count { it.isOperator(".", "?.") }
-    val hasLambda = callChainSize > 1 && flat.any { hasFunctionLiteral(it, 2) }
+    val hasMultipleLambdas = callChainSize > 1 && flat.hasMoreThan(1) { hasFunctionLiteral(it, 2) }
     val nodes =
       formatGeneric(flat) { prev, next ->
         if (prev.type == NodeType.OPERATOR) {
@@ -816,7 +816,7 @@ internal class Builder(sourceText: String) {
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
             ".",
-            "?." -> if (hasLambda) ForceLine else Line
+            "?." -> if (hasMultipleLambdas) ForceLine else Line
             "-" -> Space
             else -> SpaceOrLine
           }
@@ -1229,6 +1229,18 @@ internal class Builder(sourceText: String) {
     } else {
       Pair(take(index), drop(index))
     }
+  }
+
+  private inline fun <T> Iterable<T>.hasMoreThan(num: Int, predicate: (T) -> Boolean): Boolean {
+    if (this is Collection && isEmpty()) return false
+    var count = 0
+    for (element in this) {
+      if (predicate(element)) count++
+      if (count > num) {
+        return true
+      }
+    }
+    return false
   }
 
   companion object {
