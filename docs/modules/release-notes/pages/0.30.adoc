@@ -32,7 +32,9 @@ Ready when you need them.
 
 Things to watch out for when upgrading.
 
-=== XXX
+=== Minimum Kotlin version bump
+
+For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.1 (https://github.com/apple/pkl/pull/900[#900]).
 
 == Miscellaneous [small]#🐸#
 

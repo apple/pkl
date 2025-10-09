@@ -29,7 +29,7 @@ jmhPlugin = "0.7.2"
 jsr305 = "3.+"
 junit = "5.+"
 junitPlatform = "1.+"
-kotlin = "2.0.21"
+kotlin = "2.2.20"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
 kotlinxHtml = "0.11.0"
