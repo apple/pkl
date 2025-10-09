@@ -803,7 +803,7 @@ internal class Builder(sourceText: String) {
   private fun formatBinaryOpExpr(node: Node): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
     val callChainSize = flat.count { it.isOperator(".", "?.") }
-    val hasLambda = callChainSize > 1 && flat.any { hasFunctionLiteral(it, 2) }
+    val hasMultipleLambdas = callChainSize > 1 && flat.count { hasFunctionLiteral(it, 2) } > 1
     val nodes =
       formatGeneric(flat) { prev, next ->
         if (prev.type == NodeType.OPERATOR) {
@@ -816,7 +816,7 @@ internal class Builder(sourceText: String) {
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
             ".",
-            "?." -> if (hasLambda) ForceLine else Line
+            "?." -> if (hasMultipleLambdas) ForceLine else Line
             "-" -> Space
             else -> SpaceOrLine
           }

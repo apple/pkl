@@ -6,3 +6,5 @@ res =
 res2 = myList.map(lambda1).filter(lambda2)
 
 res3 = myList.map((it) -> it.partition)
+
+res4 = myList.foo.map((it) -> it.partition)
