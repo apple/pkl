@@ -145,17 +145,17 @@ public final class SecurityManagers {
 
     @Override
     public void checkResolveModule(URI uri) throws SecurityManagerException {
-      checkRead(uri, allowedModules, "moduleNotInAllowList");
+      checkRead(uri, allowedModules, false);
     }
 
     @Override
     public void checkResolveResource(URI resource) throws SecurityManagerException {
-      checkRead(resource, allowedResources, "resourceNotInAllowList");
+      checkRead(resource, allowedResources, true);
     }
 
     @Override
     public void checkReadResource(URI uri) throws SecurityManagerException {
-      checkRead(uri, allowedResources, "resourceNotInAllowList");
+      checkRead(uri, allowedResources, true);
     }
 
     @Override
@@ -185,21 +185,21 @@ public final class SecurityManagers {
       }
     }
 
-    private void checkRead(URI uri, List<Pattern> allowedPatterns, String errorMessageKey)
+    private void checkRead(URI uri, List<Pattern> allowedPatterns, boolean isResource)
         throws SecurityManagerException {
       for (var pattern : allowedPatterns) {
         if (pattern.matcher(uri.toString()).lookingAt()) {
-          checkIsUnderRootDir(uri, errorMessageKey);
+          checkIsUnderRootDir(uri, isResource);
           return;
         }
       }
 
-      var message = ErrorMessages.create(errorMessageKey, uri);
+      var messageKey = isResource ? "resourceNotInAllowList" : "moduleNotInAllowList";
+      var message = ErrorMessages.create(messageKey, uri);
       throw new SecurityManagerException(message);
     }
 
-    private void checkIsUnderRootDir(URI uri, String errorMessageKey)
-        throws SecurityManagerException {
+    private void checkIsUnderRootDir(URI uri, boolean isResource) throws SecurityManagerException {
       if (!uri.isAbsolute()) {
         throw new AssertionError("Expected absolute URI but got: " + uri);
       }
@@ -220,7 +220,8 @@ public final class SecurityManagers {
       }
 
       if (!path.startsWith(rootDir)) {
-        var message = ErrorMessages.create(errorMessageKey, uri);
+        var errorMessageKey = isResource ? "resourcePastRootDir" : "modulePastRootDir";
+        var message = ErrorMessages.create(errorMessageKey, uri, rootDir);
         throw new SecurityManagerException(message);
       }
     }

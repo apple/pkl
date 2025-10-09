@@ -306,9 +306,7 @@ class EvaluatorsTest : AbstractTest() {
     val result = runTask("evalTest", expectFailure = true)
     assertThat(result.output).contains("Refusing to load module")
     assertThat(result.output)
-      .contains(
-        "because it does not match any entry in the module allowlist (`--allowed-modules`)."
-      )
+      .contains("because it is not within the root directory (`--root-dir`).")
   }
 
   @Test
