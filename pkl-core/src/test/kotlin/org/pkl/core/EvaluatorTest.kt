@@ -269,27 +269,35 @@ class EvaluatorTest {
   @Test
   fun `cannot import module located outside root dir`(@TempDir tempDir: Path) {
     val evaluator =
-      EvaluatorBuilder.preconfigured()
-        .setSecurityManager(
-          SecurityManagers.standard(
-            SecurityManagers.defaultAllowedModules,
-            SecurityManagers.defaultAllowedResources,
-            SecurityManagers.defaultTrustLevels,
-            tempDir,
-          )
-        )
-        .build()
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = tempDir
+        build()
+      }
 
-    val module = tempDir.resolve("test.pkl")
-    module.writeString(
-      """
-      amends "/non/existing.pkl"
-    """
-        .trimIndent()
-    )
+    val module = tempDir.resolve("test.pkl").writeString("amends \"/non/existing.pkl\"")
 
     val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
-    assertThat(e.message).contains("Refusing to load module `file:///non/existing.pkl`")
+    assertThat(e.message)
+      .contains(
+        "Refusing to load module `file:///non/existing.pkl` because it is not within the root directory (`--root-dir`)."
+      )
+  }
+
+  @Test
+  fun `cannot read resource located outside root dir`(@TempDir tempDir: Path) {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = tempDir
+        build()
+      }
+
+    val module = tempDir.resolve("test.pkl").writeString("res = read(\"/bar.txt\")")
+
+    val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+    assertThat(e)
+      .hasMessageContaining(
+        "Refusing to read resource `file:///bar.txt` because it is not within the root directory (`--root-dir`)."
+      )
   }
 
   @Test
