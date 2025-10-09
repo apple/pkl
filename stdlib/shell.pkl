@@ -28,10 +28,7 @@ function escapeWithSingleQuotes(str: String): String =
       else if (acc.last.last != "'" && ch != "'")
         acc.replace(acc.lastIndex, acc.last.add(ch))
       else
-        acc.add(List(ch)))
-    let (grouped = str.chars.fold(List(), processChar))
-      grouped
-        .map((chSeq) ->
-            if (chSeq == List("'")) #"\'"#
-            else "'\(chSeq.join(""))'")
-        .join("")
+        acc.add(List(ch))
+  )
+  let (grouped = str.chars.fold(List(), processChar))
+    grouped.map((chSeq) -> if (chSeq == List("'")) #"\'"# else "'\(chSeq.join(""))'").join("")

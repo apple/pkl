@@ -75,7 +75,7 @@ allowedResources: Listing<String(isRegex)>?
 /// - `"auto"`: Format if the process' stdin, stdout, or stderr are connected to a console.
 /// - `"always"`: Always format
 @Since { version = "0.27.0" }
-color: ("never"|"auto"|"always")?
+color: ("never" | "auto" | "always")?
 
 /// Disables the file system cache for `package:` modules.
 ///
@@ -116,21 +116,17 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 /// - `"compact"`: All structures passed to trace() will be emitted on a single line.
 /// - `"pretty"`: All structures passed to trace() will be indented and emitted across multiple lines.
 @Since { version = "0.30.0" }
-traceMode: ("compact"|"pretty")?
+traceMode: ("compact" | "pretty")?
 
-const local hostnameRegex = Regex(#"https?://([^/?#]*)"#)
+local const hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
-const local hasNonEmptyHostname = (it: String) ->
+local const hasNonEmptyHostname = (it: String) ->
   let (hostname = hostnameRegex.findMatchesIn(it).getOrNull(0)?.groups?.getOrNull(1)?.value)
     hostname != null && hostname.length > 0
 
 /// A key or value in [Http.rewrites].
 @Since { version = "0.29.0" }
-typealias HttpRewrite = String(
-  startsWith(Regex("https?://")),
-  endsWith("/"),
-  hasNonEmptyHostname
-)
+typealias HttpRewrite = String(startsWith(Regex("https?://")), endsWith("/"), hasNonEmptyHostname)
 
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
@@ -226,7 +222,7 @@ class Proxy {
 @Since { version = "0.27.0" }
 class ExternalReader {
   /// The external reader executable.
-  /// 
+  ///
   /// Will be spawned with the same environment variables and working directory as the Pkl process.
   /// Executable is resolved according to the operating system's process spawning rules.
   /// On macOS, Linux, and Windows platforms, this may be:

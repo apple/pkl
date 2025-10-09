@@ -28,7 +28,8 @@ javaVersion = "21.0"
 steps {
   new Config.RunStep {
     name = module.name
-    command = """
+    command =
+      """
       ./gradlew \(module.gradleArgs) \(module.command)
       """
   }
