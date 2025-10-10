@@ -8,10 +8,10 @@ at invalidFileUri1#res (file:///$snippetsDir/input/errors/invalidFileUri1.pkl)
 File URIs must have a path that starts with `/` (e.g. file:/path/to/my_module.pkl).
 To resolve relative paths, remove the scheme prefix (remove "file:").
 
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
 
-xxx | bytes = text.encodeToBytes("UTF-8")
-              ^^^^
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
 at pkl.base#Module.output.bytes (pkl:base)
