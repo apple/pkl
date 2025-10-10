@@ -46,6 +46,16 @@ public interface Evaluator extends AutoCloseable {
   PModule evaluate(ModuleSource moduleSource);
 
   /**
+   * Evaluates the module, returning a byte array of the <a
+   * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
+   * pkl-binary</code></a>-encoded representation of the module object.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  byte[] evaluatePklBinary(ModuleSource moduleSource);
+
+  /**
    * Evaluates a module's {@code output.text} property.
    *
    * @throws PklException if an error occurs during evaluation
@@ -69,6 +79,16 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   Object evaluateOutputValue(ModuleSource moduleSource);
+
+  /**
+   * Evaluates a module's {@code output.value} property, returning a byte array of the <a
+   * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
+   * pkl-binary</code></a>-encoded representation of the result.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  byte[] evaluateOutputValuePklBinary(ModuleSource moduleSource);
 
   /**
    * Evaluates a module's {@code output.files} property.
@@ -171,6 +191,16 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   Object evaluateExpression(ModuleSource moduleSource, String expression);
+
+  /**
+   * Evaluates the Pkl expression represented as {@code expression}, returning a byte array of the
+   * <a href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
+   * pkl-binary</code></a>-encoded representation of the result.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  byte[] evaluateExpressionPklBinary(ModuleSource moduleSource, String expression);
 
   /**
    * Evaluates the Pkl expression, returning the stringified result.

@@ -44,8 +44,9 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
   }
 
   private val evaluator =
-    BinaryEvaluator(
+    EvaluatorImpl(
       StackFrameTransformers.empty,
+      false,
       SecurityManagers.defaultManager,
       HttpClient.dummyClient(),
       Loggers.stdErr(),
@@ -64,10 +65,7 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
     replace(snippetsDir.toUri().toString(), "file:///\$snippetsDir/")
 
   override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
-    val bytes = evaluator.evaluate(ModuleSource.path(inputFile), null)
+    val bytes = evaluator.evaluatePklBinary(ModuleSource.path(inputFile))
     return true to bytes.debugRendering.stripFilePaths()
   }
 }
-
-val ByteArray.debugRendering: String
-  get() = MessagePackDebugRenderer(this).output

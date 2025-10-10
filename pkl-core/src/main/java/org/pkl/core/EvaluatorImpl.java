@@ -28,6 +28,8 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
+import org.msgpack.core.MessageBufferPacker;
+import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.evaluatorSettings.TraceMode;
@@ -48,6 +50,7 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmPklBinaryEncoder;
 import org.pkl.core.runtime.VmStackOverflowException;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -67,6 +70,8 @@ public class EvaluatorImpl implements Evaluator {
   protected final BufferedLogger logger;
   protected final PackageResolver packageResolver;
   private final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(1000);
+  private static ThreadLocal<MessageBufferPacker> threadLocalBufferPacker =
+      ThreadLocal.withInitial(MessagePack::newDefaultBufferPacker);
 
   public EvaluatorImpl(
       StackFrameTransformer transformer,
@@ -137,6 +142,23 @@ public class EvaluatorImpl implements Evaluator {
         });
   }
 
+  private byte[] renderBinary(Object value) {
+    var buffer = threadLocalBufferPacker.get();
+    buffer.clear();
+    new VmPklBinaryEncoder(buffer).renderDocument(value);
+    return buffer.toByteArray();
+  }
+
+  @Override
+  public byte[] evaluatePklBinary(ModuleSource moduleSource) {
+    return doEvaluate(
+        moduleSource,
+        (module) -> {
+          module.force(false);
+          return renderBinary(module);
+        });
+  }
+
   @Override
   public String evaluateOutputText(ModuleSource moduleSource) {
     return doEvaluate(
@@ -169,6 +191,18 @@ public class EvaluatorImpl implements Evaluator {
             return vmValue.export();
           }
           return value;
+        });
+  }
+
+  @Override
+  public byte[] evaluateOutputValuePklBinary(ModuleSource moduleSource) {
+    return doEvaluate(
+        moduleSource,
+        (module) -> {
+          var output = readModuleOutput(module);
+          var value = VmUtils.readMember(output, Identifier.VALUE);
+          VmValue.force(value, false);
+          return renderBinary(module);
         });
   }
 
@@ -215,6 +249,25 @@ public class EvaluatorImpl implements Evaluator {
                 return expressionResult;
               });
     };
+  }
+
+  @Override
+  public byte[] evaluateExpressionPklBinary(ModuleSource moduleSource, String expression) {
+    return doEvaluate(
+        moduleSource,
+        (module) -> {
+          var expressionResult =
+              switch (expression) {
+                case "output.text" -> VmUtils.readTextProperty(readModuleOutput(module));
+                case "output.value" ->
+                    VmUtils.readMember(readModuleOutput(module), Identifier.VALUE);
+                case "output.bytes" -> VmUtils.readBytesProperty(readModuleOutput(module));
+                default ->
+                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
+              };
+          VmValue.force(expressionResult, false);
+          return renderBinary(expressionResult);
+        });
   }
 
   @Override

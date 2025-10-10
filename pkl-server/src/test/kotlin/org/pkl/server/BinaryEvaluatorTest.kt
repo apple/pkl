@@ -28,8 +28,9 @@ import org.pkl.core.resource.ResourceReaders
 
 class BinaryEvaluatorTest {
   private val evaluator =
-    BinaryEvaluator(
+    EvaluatorImpl(
       StackFrameTransformers.defaultTransformer,
+      false,
       SecurityManagers.standard(
         listOf(Pattern.compile(".*")),
         listOf(Pattern.compile(".*")),
@@ -49,8 +50,11 @@ class BinaryEvaluatorTest {
       TraceMode.COMPACT,
     )
 
-  private fun evaluate(text: String, expression: String?) =
-    evaluator.evaluate(ModuleSource.text(text), expression)
+  private fun evaluate(text: String, expression: String?): ByteArray {
+    val src = ModuleSource.text(text)
+    return expression?.let { evaluator.evaluateExpressionPklBinary(src, it) }
+      ?: evaluator.evaluateOutputValuePklBinary(src)
+  }
 
   @Test
   fun `evaluate whole module`() {
@@ -59,12 +63,12 @@ class BinaryEvaluatorTest {
       .isEqualTo(
         """
       - 1
-      - text
-      - repl:text
+      - 'text'
+      - 'repl:text'
       - 
         - 
           - 16
-          - foo
+          - 'foo'
           - 1
     """
           .trimIndent()
