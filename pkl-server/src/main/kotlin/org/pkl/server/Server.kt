@@ -44,7 +44,7 @@ import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
 
 class Server(private val transport: MessageTransport) : AutoCloseable {
-  private val evaluators: MutableMap<Long, BinaryEvaluator> = ConcurrentHashMap()
+  private val evaluators: MutableMap<Long, Evaluator> = ConcurrentHashMap()
 
   // https://github.com/jano7/executor would be the perfect executor here
   private val executor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -126,7 +126,10 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
     executor.execute {
       try {
-        val resp = evaluator.evaluate(ModuleSource.create(msg.moduleUri, msg.moduleText), msg.expr)
+        val src = ModuleSource.create(msg.moduleUri, msg.moduleText)
+        val resp =
+          msg.expr?.let { evaluator.evaluateExpressionPklBinary(src, it) }
+            ?: evaluator.evaluatePklBinary(src)
         transport.send(baseResponse.copy(result = resp))
       } catch (e: PklBugException) {
         transport.send(baseResponse.copy(error = e.toString()))
@@ -183,7 +186,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     )
   }
 
-  private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): BinaryEvaluator {
+  private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): Evaluator {
     try {
       val modulePaths = message.modulePaths ?: emptyList()
       val resolver = ModulePathResolver(modulePaths)
@@ -210,8 +213,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
           buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
         }
       log("Got dependencies: $dependencies")
-      return BinaryEvaluator(
+      return EvaluatorImpl(
         StackFrameTransformers.defaultTransformer,
+        false,
         SecurityManagers.standard(
           allowedModules,
           allowedResources,
