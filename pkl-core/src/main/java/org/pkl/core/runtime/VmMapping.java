@@ -142,11 +142,13 @@ public final class VmMapping extends VmListingOrMapping {
   }
 
   @Override
-  @TruffleBoundary
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
 
     force(false);
+    // Seed the cache s.t. we short-circuit when coming back to hash the same value.
+    // The cached hash will be updated again with the final hash code value.
+    cachedHash = -1;
     var result = 0;
     var cursor = cachedValues.getEntries();
 
