@@ -16,18 +16,13 @@
 plugins {
   pklAllProjects
   pklScalaLibrary
-  pklFatJar
   pklPublishLibrary
-  signing
 }
 
 dependencies {
   implementation(projects.pklConfigJava)
   api(libs.scalaReflect)
-  firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
 }
-
-tasks.shadowJar { archiveBaseName.set("pkl-config-scala-all") }
 
 publishing {
   publications {
@@ -37,17 +32,5 @@ publishing {
         description.set("Scala config library based on the Pkl config language.")
       }
     }
-
-    named<MavenPublication>("fatJar") {
-      artifactId = "pkl-config-scala-all"
-      pom {
-        url.set("https://github.com/apple/pkl/tree/main/pkl-config-scala")
-        description.set(
-          "Shaded fat Jar for pkl-config-scala, a Scala config library based on the Pkl config language."
-        )
-      }
-    }
   }
 }
-
-signing { sign(publishing.publications["fatJar"]) }
