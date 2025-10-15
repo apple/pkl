@@ -27,6 +27,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
+import org.pkl.core.Pair;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
 
@@ -39,6 +40,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private int testPort = -1;
   private ProxySelector proxySelector;
   private Map<URI, URI> rewrites = new HashMap<>();
+  private Map<URI, List<Pair<String, String>>> headers = new HashMap<>();
 
   HttpClientBuilder() {
     var release = Release.current();
@@ -111,6 +113,12 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
+  public Builder setHeaders(Map<URI, List<Pair<String, String>>> headers) {
+    this.headers = headers;
+    return this;
+  }
+
+  @Override
   public HttpClient build() {
     return doBuild().get();
   }
@@ -127,7 +135,8 @@ final class HttpClientBuilder implements HttpClient.Builder {
         this.proxySelector != null ? this.proxySelector : java.net.ProxySelector.getDefault();
     return () -> {
       var jdkClient =
-          new JdkHttpClient(certificateFiles, certificateBytes, connectTimeout, proxySelector);
+          new JdkHttpClient(
+              certificateFiles, certificateBytes, connectTimeout, proxySelector, headers);
       return new RequestRewritingClient(userAgent, requestTimeout, testPort, jdkClient, rewrites);
     };
   }
