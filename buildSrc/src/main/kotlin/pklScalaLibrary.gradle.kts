@@ -38,8 +38,10 @@ dependencies {
   testImplementation(libs.diffx)
 }
 
-tasks.withType<KotlinJvmCompile>().configureEach {
-  compilerOptions { jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString()) }
+tasks.withType<ScalaCompile>().configureEach {
+  scalaCompileOptions.apply {
+    additionalParameters = listOf("-Xsource:3")
+  }
 }
 
 tasks.test {
