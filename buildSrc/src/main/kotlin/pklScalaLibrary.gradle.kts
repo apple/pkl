@@ -17,8 +17,6 @@
 
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.gradle.kotlin.dsl.withType
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
   id("pklJavaLibrary")
@@ -39,9 +37,7 @@ dependencies {
 }
 
 tasks.withType<ScalaCompile>().configureEach {
-  scalaCompileOptions.apply {
-    additionalParameters = listOf("-Xsource:3")
-  }
+  scalaCompileOptions.apply { additionalParameters = listOf("-Xsource:3") }
 }
 
 tasks.test {
