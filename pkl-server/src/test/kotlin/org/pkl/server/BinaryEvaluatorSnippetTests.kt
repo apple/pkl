@@ -20,6 +20,7 @@ import kotlin.Pair
 import kotlin.reflect.KClass
 import org.junit.platform.commons.annotation.Testable
 import org.pkl.commons.test.InputOutputTestEngine
+import org.pkl.commons.test.msgpackDebugRendering
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
@@ -65,9 +66,6 @@ class BinaryEvaluatorSnippetTestEngine : InputOutputTestEngine() {
 
   override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
     val bytes = evaluator.evaluate(ModuleSource.path(inputFile), null)
-    return true to bytes.debugRendering.stripFilePaths()
+    return true to bytes.msgpackDebugRendering.stripFilePaths()
   }
 }
-
-val ByteArray.debugRendering: String
-  get() = MessagePackDebugRenderer(this).output
