@@ -10,10 +10,10 @@ x | foo: Listing = new { 1; 2; 3 }
                          ^
 at listingTypeCheckError7#foo[#1] (file:///$snippetsDir/input/errors/listingTypeCheckError7.pkl)
 
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
 
-xxx | bytes = text.encodeToBytes("UTF-8")
-              ^^^^
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
 at pkl.base#Module.output.bytes (pkl:base)

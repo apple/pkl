@@ -7,10 +7,10 @@ at cannotChangeFixed2#Dog (file:///$snippetsDir/input/errors/cannotChangeFixed2.
 
 Property `name` cannot be declared fixed, because it overrides a non-fixed property on parent class `cannotChangeFixed2#Animal`.
 
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
 
-xxx | bytes = text.encodeToBytes("UTF-8")
-              ^^^^
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
 at pkl.base#Module.output.bytes (pkl:base)

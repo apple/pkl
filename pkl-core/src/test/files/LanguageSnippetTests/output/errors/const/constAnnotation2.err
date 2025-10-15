@@ -9,10 +9,10 @@ To fix, do either of:
 1. Add modifier `const` to property `top`
 2. Self-import this module, and reference this property from the import.
 
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
 
-xxx | bytes = text.encodeToBytes("UTF-8")
-              ^^^^
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
 at pkl.base#Module.output.bytes (pkl:base)
