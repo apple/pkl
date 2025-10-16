@@ -1,1 +1,12 @@
-{}
+{
+  "knownSubtypes": [
+    {
+      "text": "MyClass3",
+      "href": "MyClass3.html"
+    },
+    {
+      "text": "MyClass4",
+      "href": "MyClass4.html"
+    }
+  ]
+}

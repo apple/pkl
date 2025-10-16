@@ -1,1 +1,12 @@
-{}
+{
+  "knownUsages": [
+    {
+      "text": "Foo",
+      "href": "../moduleTypes2/Foo.html"
+    },
+    {
+      "text": "moduleTypes2",
+      "href": "../moduleTypes2/index.html"
+    }
+  ]
+}

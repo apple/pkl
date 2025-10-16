@@ -1,1 +1,8 @@
-{}
+{
+  "knownUsages": [
+    {
+      "text": "ternalPackage",
+      "href": "../../../com.package1/1.2.3/ternalPackage/index.html"
+    }
+  ]
+}
