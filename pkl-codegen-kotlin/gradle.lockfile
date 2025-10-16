@@ -25,7 +25,6 @@ com.github.ben-manes.caffeine:caffeine:2.9.3=swiftExportClasspathResolvable
 com.google.errorprone:error_prone_annotations:2.28.0=swiftExportClasspathResolvable
 com.squareup:kotlinpoet:1.6.0=compileClasspath,implementationDependenciesMetadata,runtimeClasspath,testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
 io.github.java-diff-utils:java-diff-utils:4.12=kotlinInternalAbiValidation
-io.leangen.geantyref:geantyref:1.3.16=testRuntimeClasspath
 io.opentelemetry:opentelemetry-api:1.41.0=swiftExportClasspathResolvable
 io.opentelemetry:opentelemetry-context:1.41.0=swiftExportClasspathResolvable
 net.bytebuddy:byte-buddy:1.17.7=testCompileClasspath,testImplementationDependenciesMetadata,testRuntimeClasspath
