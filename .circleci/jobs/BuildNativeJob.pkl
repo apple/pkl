@@ -16,7 +16,7 @@
 /// Builds the native `pkl` CLI
 extends "GradleJob.pkl"
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.5.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.7.0#/Config.pkl"
 
 /// The architecture to use
 arch: "amd64" | "aarch64"
@@ -172,9 +172,9 @@ steps {
 job {
   when (os == "macOS") {
     macos {
-      xcode = "15.3.0"
+      xcode = "26.0.1"
     }
-    resource_class = "m2pro.large"
+    resource_class = "m4pro.large"
     environment {
       ["JAVA_HOME"] = "/Users/distiller/jdk/Contents/Home"
     }
