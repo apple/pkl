@@ -36,7 +36,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-cli-linux-amd64-release:
     steps:
     - checkout
@@ -144,7 +144,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-cli-linux-aarch64-release:
     steps:
     - checkout
@@ -349,7 +349,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-doc-linux-amd64-release:
     steps:
     - checkout
@@ -457,7 +457,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-doc-linux-aarch64-release:
     steps:
     - checkout
@@ -662,7 +662,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-cli-linux-amd64-snapshot:
     steps:
     - checkout
@@ -770,7 +770,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-cli-linux-aarch64-snapshot:
     steps:
     - checkout
@@ -975,7 +975,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-doc-linux-amd64-snapshot:
     steps:
     - checkout
@@ -1083,7 +1083,7 @@ jobs:
       JAVA_HOME: /Users/distiller/jdk/Contents/Home
     resource_class: m4pro.large
     macos:
-      xcode: 26.0.1
+      xcode: 16.4.0
   pkl-doc-linux-aarch64-snapshot:
     steps:
     - checkout

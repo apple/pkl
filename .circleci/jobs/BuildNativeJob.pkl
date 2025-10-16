@@ -172,7 +172,7 @@ steps {
 job {
   when (os == "macOS") {
     macos {
-      xcode = "26.0.1"
+      xcode = "16.4.0"
     }
     resource_class = "m4pro.large"
     environment {
