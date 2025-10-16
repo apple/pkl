@@ -1,1 +1,8 @@
-{}
+{
+  "knownSubtypes": [
+    {
+      "text": "moduleExtend",
+      "href": "../moduleExtend/index.html"
+    }
+  ]
+}

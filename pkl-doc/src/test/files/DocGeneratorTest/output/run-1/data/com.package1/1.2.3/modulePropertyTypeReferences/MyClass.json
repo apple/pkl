@@ -1,1 +1,8 @@
-{}
+{
+  "knownUsages": [
+    {
+      "text": "modulePropertyTypeReferences",
+      "href": "index.html"
+    }
+  ]
+}

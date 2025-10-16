@@ -1,1 +1,8 @@
-{}
+{
+  "knownSubtypes": [
+    {
+      "text": "moduleMethodCommentInheritance",
+      "href": "../moduleMethodCommentInheritance/index.html"
+    }
+  ]
+}
