@@ -128,12 +128,7 @@ internal class RuntimeDataGenerator(
         val usages = packageUsages[ref]
         val existingData = ref.existingPerPackageVersionRuntimeData
         val data =
-          existingData.addKnownUsages(
-            ref,
-            usages,
-            PackageRef::pkg,
-            descendingVersionComparator,
-          )
+          existingData.addKnownUsages(ref, usages, PackageRef::pkg, descendingVersionComparator)
         if (data != existingData) {
           data.doWriteTo(outputDir.resolve(ref.perPackageVersionRuntimeDataPath))
         }
