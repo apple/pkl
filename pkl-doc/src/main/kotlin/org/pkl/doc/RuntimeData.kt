@@ -110,7 +110,7 @@ internal data class RuntimeData(
         RuntimeDataLink(text = text(ref), href = ref.pageUrlRelativeTo(myRef))
       }
     val knownUsages =
-      (this.knownUsages + newLinks).distinctByCommparator(comparator).sortedBy { it.text }.toSet()
+      (this.knownUsages + newLinks).distinctByComparator(comparator).sortedBy { it.text }.toSet()
     if (knownUsages == this.knownUsages) {
       return this
     }
@@ -128,14 +128,14 @@ internal data class RuntimeData(
         RuntimeDataLink(text = ref.displayName, href = ref.pageUrlRelativeTo(myRef))
       }
     val knownSubtypes =
-      (this.knownSubtypes + newLinks).distinctByCommparator(comparator).sortedBy { it.text }.toSet()
+      (this.knownSubtypes + newLinks).distinctByComparator(comparator).sortedBy { it.text }.toSet()
     if (knownSubtypes == this.knownSubtypes) {
       return this
     }
     return copy(knownSubtypes = knownSubtypes)
   }
 
-  fun Collection<RuntimeDataLink>.distinctByCommparator(
+  fun Collection<RuntimeDataLink>.distinctByComparator(
     comparator: Comparator<String>
   ): Collection<RuntimeDataLink> {
     val compareBySegment = segmentComparator(comparator)
