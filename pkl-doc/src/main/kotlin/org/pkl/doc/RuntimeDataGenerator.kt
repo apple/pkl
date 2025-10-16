@@ -126,14 +126,15 @@ internal class RuntimeDataGenerator(
         // we must not have this package in our docsite.
         if (!runtimeDataPath.isRegularFile()) return@launch
         val usages = packageUsages[ref]
-        val (data, hasNewData) =
-          ref.existingPerPackageVersionRuntimeData.addKnownUsages(
+        val existingData = ref.existingPerPackageVersionRuntimeData
+        val data =
+          existingData.addKnownUsages(
             ref,
             usages,
             PackageRef::pkg,
             descendingVersionComparator,
           )
-        if (hasNewData) {
+        if (data != existingData) {
           data.doWriteTo(outputDir.resolve(ref.perPackageVersionRuntimeDataPath))
         }
       }
@@ -172,7 +173,7 @@ internal class RuntimeDataGenerator(
   private fun writePackageFile(packageData: PackageData) {
     val ref = packageData.ref
     val newVersions = packageVersions[packageData.ref.pkg]?.mapTo(mutableSetOf()) { it.version }
-    val (data, _) =
+    val data =
       ref.existingPerPackageRuntimeData.addKnownVersions(
         ref,
         newVersions,
@@ -183,7 +184,7 @@ internal class RuntimeDataGenerator(
 
   private fun writePackageFilePerVersion(packageData: PackageData) {
     val ref = packageData.ref
-    val (data, _) =
+    val data =
       ref.existingPerPackageVersionRuntimeData.addKnownUsages(
         ref,
         packageUsages[ref],
@@ -196,7 +197,7 @@ internal class RuntimeDataGenerator(
   private fun writeClassFile(classData: ClassData) {
     val ref = classData.ref
     val newVersions = classVersions[ref.id]?.mapTo(mutableSetOf()) { it }
-    val (data, _) =
+    val data =
       ref.existingPerPackageRuntimeData.addKnownVersions(
         ref,
         newVersions,
@@ -208,12 +209,11 @@ internal class RuntimeDataGenerator(
   private fun writeClassFilePerVersion(classData: ClassData) {
     val ref = classData.ref
     val newSubtypes = subtypes[ref]
-    val (data, _) =
-      ref.existingPerPackageVersionRuntimeData.addKnownSubtypes(
-        ref,
-        newSubtypes,
-        descendingVersionComparator,
-      )
+    val newUsages = typeUsages[ref]
+    val data =
+      ref.existingPerPackageVersionRuntimeData
+        .addKnownSubtypes(ref, newSubtypes, descendingVersionComparator)
+        .addKnownUsages(ref, newUsages, TypeRef::displayName, descendingVersionComparator)
     data.writePerPackageVersion(ref)
   }
 

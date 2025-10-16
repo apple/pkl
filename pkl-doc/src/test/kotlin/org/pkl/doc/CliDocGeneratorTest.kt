@@ -147,6 +147,8 @@ class CliDocGeneratorTest {
     assertThat(e).hasMessageContaining("at least one", "module")
   }
 
+  // to re-generate output, delete directory pkl-doc/src/test/files/DocGeneratorTest/output and run
+  // again
   @ParameterizedTest
   @MethodSource("generateDocs")
   fun test(relativeFilePath: String) {

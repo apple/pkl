@@ -41,7 +41,7 @@ class RuntimeDataTest {
         ModuleRef(pkg = "foo", pkgUri = null, version = "1.3.0", module = "foo"),
       )
     val result = current.addKnownUsages(ref, usages, { it.fullName }, descendingVersionComparator)
-    assertThat(result.first)
+    assertThat(result)
       .isEqualTo(
         RuntimeData(
           knownUsages = setOf(RuntimeDataLink("foo.foo", "../../../foo/1.3.0/foo/index.html"))
@@ -59,7 +59,7 @@ class RuntimeDataTest {
     val usages = setOf(ModuleRef(pkg = "foo", pkgUri = null, version = "1.2.0", module = "foo"))
 
     val result = current.addKnownUsages(ref, usages, { it.fullName }, descendingVersionComparator)
-    assertThat(result.first)
+    assertThat(result)
       .isEqualTo(
         RuntimeData(
           knownUsages = setOf(RuntimeDataLink("foo.foo", "../../../foo/1.3.0/foo/index.html"))
