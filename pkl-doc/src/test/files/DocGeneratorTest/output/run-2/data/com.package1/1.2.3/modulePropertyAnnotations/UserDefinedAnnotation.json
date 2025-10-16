@@ -1,1 +1,8 @@
-{}
+{
+  "knownUsages": [
+    {
+      "text": "UserDefinedAnnotation1",
+      "href": "UserDefinedAnnotation1.html"
+    }
+  ]
+}

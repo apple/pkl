@@ -84,8 +84,8 @@ internal data class RuntimeData(
     myRef: T,
     versions: Set<String>?,
     comparator: Comparator<String>,
-  ): Pair<RuntimeData, Boolean> {
-    if (versions == null) return this to false
+  ): RuntimeData {
+    if (versions == null) return this
     val newEffectiveVersions = knownVersions.mapTo(mutableSetOf()) { it.text } + versions
     val knownVersions =
       newEffectiveVersions
@@ -93,9 +93,9 @@ internal data class RuntimeData(
         .map { version -> RuntimeDataLink(text = version, href = myRef.pageUrlForVersion(version)) }
         .toSet()
     if (knownVersions == this.knownVersions) {
-      return this to false
+      return this
     }
-    return copy(knownVersions = knownVersions) to true
+    return copy(knownVersions = knownVersions)
   }
 
   fun <T : ElementRef<*>> addKnownUsages(
@@ -103,8 +103,8 @@ internal data class RuntimeData(
     refs: Collection<T>?,
     text: (T) -> String,
     comparator: Comparator<String>,
-  ): Pair<RuntimeData, Boolean> {
-    if (refs == null) return this to false
+  ): RuntimeData {
+    if (refs == null) return this
     val newLinks =
       refs.mapTo(mutableSetOf()) { ref ->
         RuntimeDataLink(text = text(ref), href = ref.pageUrlRelativeTo(myRef))
@@ -112,27 +112,27 @@ internal data class RuntimeData(
     val knownUsages =
       (this.knownUsages + newLinks).distinctByCommparator(comparator).sortedBy { it.text }.toSet()
     if (knownUsages == this.knownUsages) {
-      return this to false
+      return this
     }
-    return copy(knownUsages = knownUsages) to true
+    return copy(knownUsages = knownUsages)
   }
 
   fun addKnownSubtypes(
     myRef: TypeRef,
     subtypes: Collection<TypeRef>?,
     comparator: Comparator<String>,
-  ): Pair<RuntimeData, Boolean> {
-    if (subtypes == null) return this to false
+  ): RuntimeData {
+    if (subtypes == null) return this
     val newLinks =
       subtypes.mapTo(mutableSetOf()) { ref ->
         RuntimeDataLink(text = ref.displayName, href = ref.pageUrlRelativeTo(myRef))
       }
     val knownSubtypes =
-      (this.knownUsages + newLinks).distinctByCommparator(comparator).sortedBy { it.text }.toSet()
+      (this.knownSubtypes + newLinks).distinctByCommparator(comparator).sortedBy { it.text }.toSet()
     if (knownSubtypes == this.knownSubtypes) {
-      return this to false
+      return this
     }
-    return copy(knownSubtypes = knownSubtypes) to true
+    return copy(knownSubtypes = knownSubtypes)
   }
 
   fun Collection<RuntimeDataLink>.distinctByCommparator(
@@ -156,5 +156,5 @@ internal data class RuntimeData(
 
   fun perPackage(): RuntimeData = copy(knownUsages = setOf(), knownSubtypes = setOf())
 
-  fun perPackageVersion(): RuntimeData = RuntimeData(knownVersions = setOf())
+  fun perPackageVersion(): RuntimeData = copy(knownVersions = setOf())
 }
