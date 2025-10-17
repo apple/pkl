@@ -1,0 +1,190 @@
+- 1
+- 'encoding1#Foo'
+- 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+- 
+  - 
+    - 16
+    - 'dynamic'
+    - 
+      - 1
+      - 'Dynamic'
+      - 'pkl:base'
+      - 
+        - 
+          - 16
+          - 'hello'
+          - 'world'
+        - 
+          - 17
+          - 'hello'
+          - 'world'
+        - 
+          - 18
+          - 0
+          - 'hello world'
+  - 
+    - 16
+    - 'string'
+    - 'foo'
+  - 
+    - 16
+    - 'map'
+    - 
+      - 2
+      - 
+        'foo': 'bar'
+  - 
+    - 16
+    - 'mapping'
+    - 
+      - 3
+      - 
+        'foo': 'bar'
+  - 
+    - 16
+    - 'list'
+    - 
+      - 4
+      - 
+        - 'foo'
+        - 'bar'
+  - 
+    - 16
+    - 'listing'
+    - 
+      - 5
+      - 
+        - 'foo'
+        - 0
+  - 
+    - 16
+    - 'set'
+    - 
+      - 6
+      - 
+        - 'foo'
+        - 'bar'
+  - 
+    - 16
+    - 'duration'
+    - 
+      - 7
+      - 123.0
+      - 'h'
+  - 
+    - 16
+    - 'dataSize'
+    - 
+      - 8
+      - 123.0
+      - 'gib'
+  - 
+    - 16
+    - 'pair'
+    - 
+      - 9
+      - 'foo'
+      - 'bar'
+  - 
+    - 16
+    - 'intSeq'
+    - 
+      - 10
+      - 123
+      - 456
+      - 1
+  - 
+    - 16
+    - 'regex'
+    - 
+      - 11
+      - 'foo.*'
+  - 
+    - 16
+    - 'func'
+    - null
+  - 
+    - 16
+    - 'bytes'
+    - 
+      - 15
+      - !!binary 'AQID'
+  - 
+    - 16
+    - 'moduleClass'
+    - 
+      - 12
+      - 'encoding1'
+      - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+  - 
+    - 16
+    - 'baseModuleClass'
+    - 
+      - 12
+      - 'ModuleClass'
+      - 'pkl:base'
+  - 
+    - 16
+    - 'pklbinaryModuleClass'
+    - 
+      - 12
+      - 'pkl.pklbinary'
+      - 'pkl:pklbinary'
+  - 
+    - 16
+    - 'stdlibClass'
+    - 
+      - 12
+      - 'PcfRenderer'
+      - 'pkl:base'
+  - 
+    - 16
+    - 'someClass'
+    - 
+      - 12
+      - 'encoding1#Foo'
+      - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+  - 
+    - 16
+    - 'stdlibTypealias'
+    - 
+      - 13
+      - 'UInt'
+      - 'pkl:base'
+  - 
+    - 16
+    - 'someTypealias'
+    - 
+      - 13
+      - 'encoding1#Bar'
+      - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+  - 
+    - 16
+    - 'something'
+    - 
+      - 1
+      - 'PcfRenderer'
+      - 'pkl:base'
+      - 
+        - 
+          - 16
+          - 'converters'
+          - 
+            - 3
+            - {}
+        - 
+          - 16
+          - 'extension'
+          - 'pcf'
+        - 
+          - 16
+          - 'indent'
+          - '  '
+        - 
+          - 16
+          - 'omitNullProperties'
+          - false
+        - 
+          - 16
+          - 'useCustomStringDelimiters'
+          - false

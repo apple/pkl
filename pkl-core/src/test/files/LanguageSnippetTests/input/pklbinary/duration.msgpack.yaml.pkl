@@ -1,0 +1,9 @@
+extends ".../pklbinaryTest.pkl"
+
+res1 = 1.ns
+res2 = 2.us
+res3 = 3.ms
+res4 = 4.s
+res5 = 5.min
+res6 = 6.h
+res7 = 7.d
