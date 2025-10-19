@@ -1,11 +1,13 @@
 foo =
-  let (vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
+  let (
+    vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
       10
   )
     1 * 1
 
 bar =
-  let (someVariable = new Listing {
+  let (
+    someVariable = new Listing {
       1
     }
   )

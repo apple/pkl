@@ -1,0 +1,9 @@
+foo =
+  let (converted =
+    if (bar is Typed | Map | Mapping)
+      if (bar is Map) bar else bar.toMap()
+    else if (bar is List | Listing)
+      if (bar is List) bar else bar.toList()
+    else
+      bar
+  ) converted

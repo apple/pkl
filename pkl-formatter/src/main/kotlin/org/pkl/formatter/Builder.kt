@@ -91,7 +91,7 @@ internal class Builder(sourceText: String) {
       NodeType.CLASS_BODY_ELEMENTS -> formatClassBodyElements(node)
       NodeType.CLASS_PROPERTY,
       NodeType.OBJECT_PROPERTY,
-      NodeType.OBJECT_ENTRY -> formatClassProperty(node)
+      NodeType.OBJECT_ENTRY -> formatPropertyOrEntryOrLetBinding(node)
       NodeType.CLASS_PROPERTY_HEADER,
       NodeType.OBJECT_PROPERTY_HEADER -> formatClassPropertyHeader(node)
       NodeType.CLASS_PROPERTY_HEADER_BEGIN,
@@ -303,7 +303,7 @@ internal class Builder(sourceText: String) {
     return Indent(nodes)
   }
 
-  private fun formatClassProperty(node: Node): FormatNode {
+  private fun formatPropertyOrEntryOrLetBinding(node: Node): FormatNode {
     val sameLine =
       node.children
         .lastOrNull { it.isExpressionOrPropertyBody() }
@@ -791,13 +791,13 @@ internal class Builder(sourceText: String) {
   private fun formatLetParameterDefinition(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(")) null else if (next.isTerminal(")")) Line else SpaceOrLine
+        if (prev.isTerminal("(") || (next.isTerminal(")"))) Line else SpaceOrLine
       }
     return Group(newId(), nodes)
   }
 
   private fun formatLetParameter(node: Node): FormatNode {
-    return indent(formatClassProperty(node))
+    return indent(formatPropertyOrEntryOrLetBinding(node))
   }
 
   private fun formatBinaryOpExpr(node: Node): FormatNode {
