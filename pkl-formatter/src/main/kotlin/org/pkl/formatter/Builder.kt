@@ -791,7 +791,7 @@ internal class Builder(sourceText: String) {
   private fun formatLetParameterDefinition(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(")) null else if (next.isTerminal(")")) Line else SpaceOrLine
+        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
       }
     return Group(newId(), nodes)
   }
