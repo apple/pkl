@@ -30,6 +30,7 @@ val buildInfo = project.extensions.getByType<BuildInfo>()
 dependencies {
   pklCodegenKotlin(projects.pklCodegenKotlin)
   implementation(libs.kotlinReflect)
+  implementation(libs.msgpack)
 
   // Don't declare a runtime dependency to pkl-config-java because Gradle cannot resolve
   // the correct publication (library vs fatJar) when generating the POM.

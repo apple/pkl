@@ -1,0 +1,13 @@
+extends ".../pklbinaryTest.pkl"
+
+res1: DataSize = 1.b
+res2: DataSize = 2.kb
+res3: DataSize = 3.kib
+res4: DataSize = 4.mb
+res5: DataSize = 5.mib
+res6: DataSize = 6.gb
+res7: DataSize = 7.gib
+res8: DataSize = 8.tb
+res9: DataSize = 9.tib
+res10: DataSize = 10.pb
+res11: DataSize = 11.pib

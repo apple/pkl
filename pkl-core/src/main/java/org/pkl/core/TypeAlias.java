@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,7 +53,7 @@ public final class TypeAlias extends Member implements Value {
 
   /**
    * Returns the name of the module that this type alias is declared in. Note that a module name is
-   * not guaranteed to be unique, especially if it not declared but inferred from the module URI.
+   * not guaranteed to be unique, especially if it is not declared but inferred from the module URI.
    */
   public String getModuleName() {
     return moduleName;

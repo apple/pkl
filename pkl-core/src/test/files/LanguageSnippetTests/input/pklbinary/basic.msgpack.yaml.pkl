@@ -1,0 +1,9 @@
+extends ".../pklbinaryTest.pkl"
+
+res1 = "bar"
+res2 = ""
+res3 = 1
+res4 = 2.3
+res5 = true
+res6 = false
+res7 = null 

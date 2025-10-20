@@ -36,7 +36,7 @@ import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
@@ -72,7 +72,7 @@ public final class RendererNodes {
     }
   }
 
-  private static final class Renderer extends AbstractRenderer {
+  private static final class Renderer extends AbstractStringRenderer {
     // Pattern for object fields that we can render without any quotes.
     // From: https://jsonnet.org/ref/spec.html#lexing
     private static final Pattern ID_PATTERN = Pattern.compile("[_a-zA-Z][_a-zA-Z0-9]*");
@@ -288,7 +288,7 @@ public final class RendererNodes {
       builder.append(memberSeparator).append(currIndent);
       if (key instanceof String string) {
         renderAsFieldName(string);
-      } else if (VmUtils.isRenderDirective(key)) {
+      } else if (isRenderDirective(key)) {
         visitRenderDirective((VmTyped) key);
         builder.append(": ");
       } else {

@@ -30,6 +30,7 @@ import org.junit.platform.engine.support.descriptor.EngineDescriptor
 import org.pkl.commons.test.Executables
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.InputOutputTestEngine
+import org.pkl.commons.test.MessagePackDebugRenderer
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
@@ -50,6 +51,7 @@ private fun exclusionsForThisJvm(): List<Regex> =
 abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
   private val hiddenExtensionRegex = Regex(".*[.]([^.]*)[.]pkl")
+  private val msgpackExtensionRegex = Regex(".*[.]msgpack[.]yaml[.]pkl")
 
   private val snippetsDir: Path =
     rootProjectDir.resolve("pkl-core/src/test/files/LanguageSnippetTests")
@@ -106,6 +108,10 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val replacement by lazy {
     if (snippetsDir.root.toString() != "/") "\$snippetsDir" else "/\$snippetsDir"
   }
+
+  protected fun ByteArray.decodeOutput(inputFile: Path): String =
+    if (inputFile.toString().matches(msgpackExtensionRegex)) MessagePackDebugRenderer(this).output
+    else toString(StandardCharsets.UTF_8)
 
   protected fun String.stripFilePaths(): String =
     replace(IoUtils.toNormalizedPathString(snippetsDir), replacement)
@@ -193,8 +199,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
             }
             .build()
         evaluator.use { ev ->
-          true to
-            ev.evaluateOutputBytes(ModuleSource.path(inputFile)).toString(StandardCharsets.UTF_8)
+          true to ev.evaluateOutputBytes(ModuleSource.path(inputFile)).decodeOutput(inputFile)
         }
       } catch (e: PklBugException) {
         false to e.stackTraceToString()
@@ -279,10 +284,9 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
 
     val process = builder.start()
     return try {
-      val (out, err) =
-        listOf(process.inputStream, process.errorStream).map {
-          it.reader().readText().withUnixLineEndings()
-        }
+      val out = process.inputStream.readAllBytes().decodeOutput(inputFile).withUnixLineEndings()
+      val err =
+        process.errorStream.readAllBytes().toString(StandardCharsets.UTF_8).withUnixLineEndings()
       val success = process.waitFor() == 0 && err.isBlank()
       success to
         (out + err)

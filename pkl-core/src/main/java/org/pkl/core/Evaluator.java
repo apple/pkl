@@ -173,6 +173,15 @@ public interface Evaluator extends AutoCloseable {
   Object evaluateExpression(ModuleSource moduleSource, String expression);
 
   /**
+   * Evaluates the Pkl expression represented as {@code expression}, returning a byte array of the
+   * <code>pkl-binary</code>-encoded representation of the result.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  byte[] evaluateExpressionPklBinary(ModuleSource moduleSource, String expression);
+
+  /**
    * Evaluates the Pkl expression, returning the stringified result.
    *
    * <p>This is equivalent to wrapping the expression with {@code .toString()}
