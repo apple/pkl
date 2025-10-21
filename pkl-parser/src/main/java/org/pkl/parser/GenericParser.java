@@ -864,8 +864,8 @@ public class GenericParser {
             ff(children);
             var paramDef = new ArrayList<Node>();
             expect(Token.LPAREN, paramDef, "unexpectedToken", "(");
-            ff(paramDef);
             var param = new ArrayList<Node>();
+            ff(param);
             param.add(parseParameter());
             ff(param);
             expect(Token.ASSIGN, param, "unexpectedToken", "=");

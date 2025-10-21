@@ -1,11 +1,13 @@
 foo =
-  let (vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
+  let (
+    vaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaariable =
       10
   )
     1 * 1
 
 bar =
-  let (someVariable = new Listing {
+  let (
+    someVariable = new Listing {
       1
     }
   )
@@ -16,3 +18,10 @@ baz =
   let (someOtherVariable = 2000000)
   let (someAnotherVariable = 3000000)
     someVariable + someOtherVariable + someAnotherVariable
+
+qux =
+  let ( // some comment
+    // another comment
+    bar = 5
+  )
+    bar

@@ -9,3 +9,9 @@ baz =
   let (someVariable = 10000000)
     let (someOtherVariable = 2000000)
       let (someAnotherVariable = 3000000) someVariable + someOtherVariable + someAnotherVariable
+
+qux = let ( // some comment
+    // another comment
+    bar = 5
+  )
+    bar
