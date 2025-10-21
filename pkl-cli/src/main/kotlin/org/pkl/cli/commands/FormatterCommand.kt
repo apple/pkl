@@ -20,13 +20,16 @@ import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.cli.CliFormatterApply
 import org.pkl.cli.CliFormatterCheck
 import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.formatter.CompatVersion
 
 class FormatterCommand : NoOpCliktCommand(name = "format") {
   override fun help(context: Context) = "Run commands related to formatting"
@@ -47,8 +50,25 @@ class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
       .path(mustExist = true, canBeDir = true)
       .multiple()
 
+  val compatVersion: CompatVersion by
+    option(names = arrayOf("-v", "--version"), help = compatVersionHelp)
+      .enum<CompatVersion>(ignoreCase = true)
+      .default(CompatVersion.latest())
+
   override fun run() {
-    CliFormatterCheck(baseOptions.baseOptions(emptyList()), paths).run()
+    CliFormatterCheck(baseOptions.baseOptions(emptyList()), paths, compatVersion).run()
+  }
+
+  companion object {
+    internal val compatVersionHelp =
+      """
+      The grammar compatibility version to use.$NEWLINE
+      ${CompatVersion.entries.joinToString("$NEWLINE", prefix = "  ") {
+        val default = if (it.latest) " `(default)`" else ""
+        "`${it.name}`: ${it.description}$default"
+      }}
+      """
+        .trimIndent()
   }
 }
 
@@ -68,7 +88,12 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
       )
       .flag()
 
+  val compatVersion: CompatVersion by
+    option(names = arrayOf("-v", "--version"), help = FormatterCheckCommand.compatVersionHelp)
+      .enum<CompatVersion>(ignoreCase = true)
+      .default(CompatVersion.latest())
+
   override fun run() {
-    CliFormatterApply(baseOptions.baseOptions(emptyList()), paths, silent).run()
+    CliFormatterApply(baseOptions.baseOptions(emptyList()), paths, compatVersion, silent).run()
   }
 }
