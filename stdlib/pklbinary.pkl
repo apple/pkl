@@ -14,15 +14,30 @@
 // limitations under the License.
 //===----------------------------------------------------------------------===//
 
-/// APIs for handling Pkl's [binary encoding format](https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html).
+/// APIs for working with `pkl-binary` encoding.
+///
+/// `pkl-binary` is a binary encoding of Pkl data.
+/// It can be used to encode all values, with the exception of [Function] types (lambda
+/// expressions).
+///
+/// `pkl-binary` encoding is useful for separating evaluation and data consumption into two
+/// separate steps.
+/// For example, applications can produce `pkl-binary` at build time, and deserialize this into
+/// code-generated structs at application runtime.
+///
+/// The `pkl-binary` format uses MessagePack encoding.
+/// Its specification is available at
+/// <https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html>.
 @ModuleInfo { minPklVersion = "0.30.0" }
 module pkl.pklbinary
 
-/// Render values as the [`pkl-binary` encoding format](https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html).
+/// Render values as `pkl-binary`.
 class Renderer extends BytesRenderer {
-  /// Render a Pkl value as `pkl-binary`.
+  /// Renders [value] as `pkl-binary`.
   external function renderValue(value: Any): Bytes
 
-  /// Render a Pkl document as `pkl-binary`.
+  /// Renders [value] as `pkl-binary`.
+  ///
+  /// Every Pkl value is a valid `pkl-binary` document.
   external function renderDocument(value: Any): Bytes
 }
