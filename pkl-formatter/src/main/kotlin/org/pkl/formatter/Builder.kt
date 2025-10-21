@@ -33,7 +33,7 @@ import org.pkl.parser.syntax.Operator
 import org.pkl.parser.syntax.generic.Node
 import org.pkl.parser.syntax.generic.NodeType
 
-internal class Builder(sourceText: String) {
+internal class Builder(sourceText: String, private val version: CompatVersion) {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
   private var prevNode: Node? = null
@@ -542,7 +542,11 @@ internal class Builder(sourceText: String) {
         if (prev.isTerminal("(") || next.isTerminal(")")) {
           if (next.isTerminal(")")) {
             // trailing comma
-            ifWrap(groupId, nodes(Text(","), line()), line())
+            if (version == CompatVersion.V1) {
+              line()
+            } else {
+              ifWrap(groupId, nodes(Text(","), line()), line())
+            }
           } else line()
         } else spaceOrLine()
       }
@@ -561,7 +565,11 @@ internal class Builder(sourceText: String) {
             val node = if (hasTrailingLambda) Empty else line()
             if (next.isTerminal(")") && !hasTrailingLambda) {
               // trailing comma
-              ifWrap(groupId, nodes(Text(","), node), node)
+              if (version == CompatVersion.V1) {
+                node
+              } else {
+                ifWrap(groupId, nodes(Text(","), node), node)
+              }
             } else node
           } else spaceOrLine()
         },
@@ -664,7 +672,11 @@ internal class Builder(sourceText: String) {
         if (prev.isTerminal("<") || next.isTerminal(">")) {
           if (next.isTerminal(">")) {
             // trailing comma
-            ifWrap(id, nodes(Text(","), line()), line())
+            if (version == CompatVersion.V1) {
+              Line
+            } else {
+              ifWrap(id, nodes(Text(","), line()), line())
+            }
           } else line()
         } else spaceOrLine()
       }

@@ -33,7 +33,7 @@ import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.TestOptions
 import org.pkl.commons.cli.commands.single
 
-private const val NEWLINE = '\u0085'
+internal const val NEWLINE = '\u0085'
 
 class ProjectCommand : NoOpCliktCommand(name = "project") {
   override fun help(context: Context) = "Run commands related to projects"

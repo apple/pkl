@@ -21,12 +21,14 @@ import java.nio.file.Path
 import kotlin.io.path.writeText
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.formatter.CompatVersion
 
 class CliFormatterApply(
   cliBaseOptions: CliBaseOptions,
   paths: List<Path>,
+  version: CompatVersion,
   private val silent: Boolean,
-) : CliFormatterCommand(cliBaseOptions, paths) {
+) : CliFormatterCommand(cliBaseOptions, paths, version) {
 
   override fun doRun() {
     var status = 0

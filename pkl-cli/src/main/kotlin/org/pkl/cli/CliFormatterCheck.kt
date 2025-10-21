@@ -19,9 +19,10 @@ import java.nio.file.Files
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.formatter.CompatVersion
 
-class CliFormatterCheck(cliBaseOptions: CliBaseOptions, paths: List<Path>) :
-  CliFormatterCommand(cliBaseOptions, paths) {
+class CliFormatterCheck(cliBaseOptions: CliBaseOptions, paths: List<Path>, version: CompatVersion) :
+  CliFormatterCommand(cliBaseOptions, paths, version) {
 
   override fun doRun() {
     var status = 0
