@@ -1346,21 +1346,21 @@ internal class Builder(sourceText: String) {
       hasPeek = true
       return peek!!
     }
+
+    inline fun takeUntilBefore(predicate: (T) -> Boolean): List<T> {
+      return buildList {
+        while (true) {
+          if (!hasNext() || predicate(peek())) {
+            return@buildList
+          }
+          add(next())
+        }
+      }
+    }
   }
 
   private fun <T> Iterator<T>.peekable(): PeekableIterator<T> {
     return PeekableIterator(this)
-  }
-
-  private inline fun <T> PeekableIterator<T>.takeUntilBefore(predicate: (T) -> Boolean): List<T> {
-    return buildList {
-      while (true) {
-        if (!hasNext() || predicate(peek())) {
-          return@buildList
-        }
-        add(next())
-      }
-    }
   }
 
   companion object {
