@@ -430,7 +430,7 @@ class SexpRenderer {
         renderExpr(part.expr)
       } else {
         buf.append('\n').append(tab)
-        buf.append("(stringConstant)")
+        buf.append("(stringChars)")
       }
     }
     buf.append(')')
@@ -736,7 +736,7 @@ class SexpRenderer {
 
   fun renderStringConstant(str: StringConstant) {
     buf.append(tab)
-    buf.append("(stringConstant)")
+    buf.append("(stringChars)")
   }
 
   fun renderTypeAnnotation(typeAnnotation: TypeAnnotation) {

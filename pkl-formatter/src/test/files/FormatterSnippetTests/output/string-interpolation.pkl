@@ -1,0 +1,25 @@
+prop1 =
+  """
+  asd \(new { bar = 1 }) asd
+  """
+
+prop2 =
+  """
+  \(let (bar = 15) bar + new { qux = 15 }.toString())
+  """
+
+prop3 =
+  """
+  \(new {
+    // some comment
+    foo = 1
+
+    // some comment
+    bar = 2
+  })
+  """
+
+prop4 =
+  """
+  \(1 + /* block comment */ 2)
+  """
