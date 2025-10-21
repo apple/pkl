@@ -90,6 +90,17 @@ This will listen on port 5005.
 
 Example: `./gradlew test -Djvmdebug=true`
 
+== Snippet Test Plugin
+
+There is an IntelliJ plugin meant for development on the Pkl project itself.
+This plugin provides a split pane window when viewing snippet tests such as LanguageSnippetTests and FormatterSnippetTests.
+
+To install:
+
+1. Run `./gradlew pkl-internal-intellij-plugin:buildPlugin`.
+2. Within IntelliJ, run the action "Install Plugin From Disk...".
+3. Select the zip file within `pkl-internal-intellij-plugin/build/distributions`.
+
 == Resources
 For automated build setup examples see our https://github.com/apple/pkl/blob/main/.circleci/[CircleCI] jobs like our https://github.com/apple/pkl/blob/main/.circleci/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.
 

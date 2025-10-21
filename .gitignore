@@ -15,6 +15,7 @@ testgenerated/
 !.idea/runConfigurations/
 !.idea/scopes/
 !.idea/vcs.xml
+.intellijPlatform/
 
 .vscode/
 

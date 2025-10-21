@@ -1,0 +1,17 @@
+<idea-plugin>
+  <id>org.pkl.intellij.snippet-test-helper</id>
+  <name>Pkl Snippet Test Helper</name>
+  <vendor>Apple Inc. and the Pkl project authors</vendor>
+
+  <description><![CDATA[
+    Automatically opens snippet test output files when input files are opened.
+
+    This is an internal plugin that is meant for development on the Pkl project itself.
+  ]]></description>
+
+  <depends>com.intellij.modules.platform</depends>
+
+  <extensions defaultExtensionNs="com.intellij">
+    <fileEditorProvider implementation="org.pkl.intellij.SnippetTestEditorProvider"/>
+  </extensions>
+</idea-plugin>
