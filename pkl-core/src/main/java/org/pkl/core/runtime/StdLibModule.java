@@ -66,6 +66,8 @@ public abstract class StdLibModule {
               // (stdlib module objects are statically shared singletons when running on JVM)
               // and ensure compile-time evaluation in AOT mode
               instance.force(false, true);
+              //noinspection ResultOfMethodCallIgnored
+              instance.hashCode();
             })
         .close();
   }
