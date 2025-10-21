@@ -680,31 +680,34 @@ internal class Builder(sourceText: String) {
 
   private fun formatStringParts(nodes: List<Node>): List<FormatNode> {
     return buildList {
-      for (child in nodes) {
-        if (child.type.isExpression) {
+      var isInStringInterpolation = false
+      val cursor = nodes.iterator().peekable()
+      var prev: Node? = null
+      while (cursor.hasNext()) {
+        if (isInStringInterpolation) {
+          val prevNoNewlines = noNewlines
           noNewlines = true
+          val elems = cursor.takeUntilBefore { it.isTerminal(")") }
+          getSeparator(prev!!, elems.first(), { _, _ -> null })?.let { add(it) }
           val formatted =
             try {
-              format(child)
+              formatGeneric(elems, null)
             } catch (_: CannotAvoidNewline) {
-              // Some expressions can't possibly be single-line, for example, if they contain line
-              // comments:
-              //
-              // """
-              // \(new {
-              //   // some line comment
-              //   x = 5
-              // })
-              // """
               noNewlines = false
-              add(format(child))
-              continue
+              formatGeneric(elems, null)
             }
-          add(formatted)
-          noNewlines = false
-        } else {
-          add(format(child))
+          addAll(formatted)
+          getSeparator(elems.last(), cursor.peek(), { _, _ -> null })?.let { add(it) }
+          noNewlines = prevNoNewlines
+          isInStringInterpolation = false
+          continue
         }
+        val elem = cursor.next()
+        if (elem.type == NodeType.TERMINAL && elem.text().endsWith("(")) {
+          isInStringInterpolation = true
+        }
+        add(format(elem))
+        prev = elem
       }
     }
   }
@@ -1312,6 +1315,52 @@ internal class Builder(sourceText: String) {
       }
     }
     return false
+  }
+
+  class PeekableIterator<T>(private val iterator: Iterator<T>) : Iterator<T> {
+    private var peek: T? = null
+
+    private var hasPeek = false
+
+    override fun next(): T {
+      return if (hasPeek) {
+        hasPeek = false
+        peek!!
+      } else {
+        iterator.next()
+      }
+    }
+
+    override fun hasNext(): Boolean {
+      return if (hasPeek) true else iterator.hasNext()
+    }
+
+    fun peek(): T {
+      if (!hasNext()) {
+        throw NoSuchElementException()
+      }
+      if (hasPeek) {
+        return peek!!
+      }
+      peek = iterator.next()
+      hasPeek = true
+      return peek!!
+    }
+  }
+
+  private fun <T> Iterator<T>.peekable(): PeekableIterator<T> {
+    return PeekableIterator(this)
+  }
+
+  private inline fun <T> PeekableIterator<T>.takeUntilBefore(predicate: (T) -> Boolean): List<T> {
+    return buildList {
+      while (true) {
+        if (!hasNext() || predicate(peek())) {
+          return@buildList
+        }
+        add(next())
+      }
+    }
   }
 
   companion object {

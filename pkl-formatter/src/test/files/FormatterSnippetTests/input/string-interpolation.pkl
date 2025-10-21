@@ -23,3 +23,29 @@ prop4 =
   """
   \(1 + /* block comment */ 2)
   """
+
+prop5 =
+  """
+  \("""
+  foo
+  bar
+  baz
+  """)
+  """
+
+prop6 = "\(// some line comment
+  /* some block comment */
+  "\("""
+    one
+    two
+    three
+    """)"
+  // some line comment again
+)"
+
+prop7 = "\(
+5
+// trailing line comment
+)"
+
+prop8 = "\(new { foo = 1 bar = 2 baz = 3 })"
