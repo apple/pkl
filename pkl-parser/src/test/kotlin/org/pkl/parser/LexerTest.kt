@@ -54,7 +54,6 @@ class LexerTest {
     assertThat(thrown).hasMessageContaining("Unexpected character `EOF`")
   }
 
-  
   @Test
   fun rejectsSentinelBetweenTokens() {
     val lexerFFFF = Lexer("// Comment with \uFFFF character\nclass \uFFFF Bar")
@@ -63,7 +62,7 @@ class LexerTest {
     val thrown = assertThrows<ParserError> { lexerFFFF.next() }
     assertThat(thrown).hasMessageContaining("Invalid identifier")
   }
-  
+
   @Test
   fun acceptsAllUnicodeCodepointsInComments() {
     // Test valid Unicode codepoints can appear literally
@@ -84,17 +83,18 @@ class LexerTest {
     assertThat(lexerFFFF.next()).isEqualTo(Token.EOF)
 
     // Test a range of codepoints including edge cases
-    val testCodepoints = listOf(
-      0x0000,  // NULL
-      0x0001,  // Start of heading
-      0x007F,  // DELETE
-      0x0080,  // First non-ASCII
-      0x7FFE,  // One before the old problematic value
-      0x7FFF,  // Old EOF sentinel (Short.MAX_VALUE)
-      0x8000,  // One after the old problematic value
-      0xFFFE,  // One before Character.MAX_VALUE
-      0xFFFF,  // Character.MAX_VALUE (noncharacter)
-    )
+    val testCodepoints =
+      listOf(
+        0x0000, // NULL
+        0x0001, // Start of heading
+        0x007F, // DELETE
+        0x0080, // First non-ASCII
+        0x7FFE, // One before the old problematic value
+        0x7FFF, // Old EOF sentinel (Short.MAX_VALUE)
+        0x8000, // One after the old problematic value
+        0xFFFE, // One before Character.MAX_VALUE
+        0xFFFF, // Character.MAX_VALUE (noncharacter)
+      )
 
     for (codepoint in testCodepoints) {
       val char = codepoint.toChar()
@@ -105,10 +105,16 @@ class LexerTest {
         .withFailMessage("Codepoint U+%04X should be accepted in comment", codepoint)
         .isEqualTo(Token.LINE_COMMENT)
       assertThat(lexer.next())
-        .withFailMessage("Codepoint U+%04X should not terminate input early (expecting MODULE)", codepoint)
+        .withFailMessage(
+          "Codepoint U+%04X should not terminate input early (expecting MODULE)",
+          codepoint,
+        )
         .isEqualTo(Token.MODULE)
       assertThat(lexer.next())
-        .withFailMessage("Codepoint U+%04X should not terminate input early (expecting IDENTIFIER)", codepoint)
+        .withFailMessage(
+          "Codepoint U+%04X should not terminate input early (expecting IDENTIFIER)",
+          codepoint,
+        )
         .isEqualTo(Token.IDENTIFIER)
       assertThat(lexer.next()).isEqualTo(Token.EOF)
     }
