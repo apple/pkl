@@ -131,6 +131,7 @@ internal class Builder(sourceText: String) {
       NodeType.AMENDS_EXPR -> formatNewExpr(node)
       NodeType.NEW_HEADER -> formatNewHeader(node)
       NodeType.UNQUALIFIED_ACCESS_EXPR -> formatUnqualifiedAccessExpression(node)
+      NodeType.QUALIFIED_ACCESS_EXPR -> formatQualifiedAccessExpression(node)
       NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
       NodeType.FUNCTION_LITERAL_BODY -> formatFunctionLiteralBody(node)
@@ -240,6 +241,117 @@ internal class Builder(sourceText: String) {
     } else {
       Nodes(formatGeneric(children, null))
     }
+  }
+
+  /**
+   * Special cases when formatting qualified access:
+   *
+   * Case 1: Dot calls followed by closing method call: wrap after the opening paren.
+   *
+   * ```
+   * foo.bar.baz(new {
+   *   qux = 1
+   * })
+   * ```
+   *
+   * Case 2: Dot calls, then method calls: group the leading access together.
+   *
+   * ```
+   * foo.bar
+   *   .baz(new {
+   *     qux = 1
+   *   })
+   *   .baz()
+   * ```
+   *
+   * Case 3: If there are multiple lambdas present, always force a newline.
+   *
+   * ```
+   * foo
+   *   .map((it) -> it + 1)
+   *   .filter((it) -> it.isEven)
+   * ```
+   */
+  private fun formatQualifiedAccessExpression(node: Node): FormatNode {
+    var lambdaCount = 0
+    var methodCallCount = 0
+    var indexBeforeFirstMethodCall = 0
+    val flat = mutableListOf<Node>()
+
+    fun gatherFacts(current: Node) {
+      for (child in current.children) {
+        if (child.type == NodeType.QUALIFIED_ACCESS_EXPR) {
+          gatherFacts(child)
+        } else {
+          flat.add(child)
+          when {
+            isMethodCall(child) -> {
+              methodCallCount++
+              if (hasFunctionLiteral(child, 2)) {
+                lambdaCount++
+              }
+            }
+            methodCallCount == 0 -> {
+              indexBeforeFirstMethodCall = flat.lastIndex
+            }
+          }
+        }
+      }
+    }
+
+    gatherFacts(node)
+
+    val separator: (Node, Node) -> FormatNode? = { prev, next ->
+      when {
+        prev.type == NodeType.OPERATOR -> null
+        next.type == NodeType.OPERATOR -> if (lambdaCount > 1) ForceLine else Line
+        else -> SpaceOrLine
+      }
+    }
+
+    val nodes =
+      when {
+        methodCallCount == 1 && isMethodCall(flat.lastProperNode()!!) -> {
+          // lift argument list into its own node
+          val (callChain, argsList) = splitFunctionCallNode(flat)
+          val leadingNodes = indentAfterFirstNewline(formatGeneric(callChain, separator), true)
+          val trailingNodes = format(argsList)
+          leadingNodes + trailingNodes
+        }
+        methodCallCount > 0 && indexBeforeFirstMethodCall > 0 -> {
+          val leading = flat.subList(0, indexBeforeFirstMethodCall)
+          val trailing = flat.subList(indexBeforeFirstMethodCall, flat.size)
+          val leadingNodes = indentAfterFirstNewline(formatGeneric(leading, separator), true)
+          val trailingNodes = formatGeneric(trailing, separator)
+          leadingNodes + Line + trailingNodes
+        }
+        else -> formatGeneric(flat, separator)
+      }
+
+    val shouldGroup = node.children.size == flat.size
+    return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
+  }
+
+  /**
+   * Split a function call node to extract its identifier into the leading group. For example,
+   * `foo.bar(5)` becomes: leading gets `foo.bar`, rest gets `(5)`.
+   */
+  private fun splitFunctionCallNode(nodes: List<Node>): Pair<List<Node>, Node> {
+    assert(nodes.isNotEmpty())
+    val lastLeading = nodes.last()
+    val identifier = lastLeading.firstProperChild()!!
+    val argList = lastLeading.children.find { it.type == NodeType.ARGUMENT_LIST }!!
+    return (nodes.subList(0, nodes.lastIndex) + identifier) to argList
+  }
+
+  private fun isMethodCall(node: Node): Boolean {
+    if (node.type != NodeType.UNQUALIFIED_ACCESS_EXPR) return false
+    for (child in node.children) {
+      if (child.type == NodeType.ARGUMENT_LIST) {
+        return true
+      }
+    }
+    return false
   }
 
   private fun formatAmendsExtendsClause(node: Node): FormatNode {
@@ -848,26 +960,21 @@ internal class Builder(sourceText: String) {
 
   private fun formatBinaryOpExpr(node: Node): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
-    val callChainSize = flat.count { it.isOperator(".", "?.") }
-    val hasMultipleLambdas = callChainSize > 1 && flat.hasMoreThan(1) { hasFunctionLiteral(it, 2) }
     val nodes =
       formatGeneric(flat) { prev, next ->
         if (prev.type == NodeType.OPERATOR) {
           when (prev.text()) {
-            ".",
-            "?." -> null
             "-" -> spaceOrLine()
             else -> Space
           }
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
-            ".",
-            "?." -> if (hasMultipleLambdas) forceLine() else line()
             "-" -> Space
             else -> spaceOrLine()
           }
         } else spaceOrLine()
       }
+
     val shouldGroup = node.children.size == flat.size
     return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
   }
@@ -1289,6 +1396,13 @@ internal class Builder(sourceText: String) {
   private fun Node.firstProperChild(): Node? {
     for (child in children) {
       if (child.isProper()) return child
+    }
+    return null
+  }
+
+  private fun List<Node>.lastProperNode(): Node? {
+    for (i in lastIndex downTo 0) {
+      if (this[i].isProper()) return this[i]
     }
     return null
   }
