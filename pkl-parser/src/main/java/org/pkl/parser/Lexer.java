@@ -37,8 +37,9 @@ public class Lexer {
   private boolean isEscape = false;
   // how many newlines exist between two subsequent tokens
   protected int newLinesBetween = 0;
+  private boolean atEOF = false;
 
-  private static final char EOF = Short.MAX_VALUE;
+  private static final char EOF = Character.MAX_VALUE;
 
   public Lexer(String input) {
     source = input.toCharArray();
@@ -47,6 +48,7 @@ public class Lexer {
       lookahead = source[cursor];
     } else {
       lookahead = EOF;
+      atEOF = true;
     }
   }
 
@@ -96,12 +98,12 @@ public class Lexer {
       sCol = col;
       ch = nextChar();
     }
+    if (ch == EOF && atEOF) {
+      // when EOF is reached we overshot the span
+      cursor--;
+      return Token.EOF;
+    }
     return switch (ch) {
-      case EOF -> {
-        // when EOF is reached we overshot the span
-        cursor--;
-        yield Token.EOF;
-      }
       case ';' -> Token.SEMICOLON;
       case '(' -> {
         var scope = interpolationStack.peek();
@@ -262,7 +264,7 @@ public class Lexer {
       state = State.DEFAULT;
       return Token.STRING_END;
     }
-    if (lookahead == EOF) return Token.EOF;
+    if (atEOF) return Token.EOF;
     if (isEscape) {
       isEscape = false;
       // consume the `\#*`
@@ -296,7 +298,7 @@ public class Lexer {
       nextChar();
       pounds++;
     }
-    if (lookahead == EOF) {
+    if (atEOF) {
       throw lexError(ErrorMessages.create("unexpectedEndOfFile"), span());
     }
     if (lookahead != '"') {
@@ -335,7 +337,7 @@ public class Lexer {
     var poundsInARow = 0;
     var foundQuote = false;
     var foundBackslash = false;
-    while (lookahead != EOF) {
+    while (!atEOF) {
       var ch = nextChar();
       switch (ch) {
         case '\n', '\r' ->
@@ -387,7 +389,7 @@ public class Lexer {
     var poundsInARow = 0;
     var quotesInARow = 0;
     var foundBackslash = false;
-    while (lookahead != EOF && lookahead != '\n' && lookahead != '\r') {
+    while (!atEOF && lookahead != '\n' && lookahead != '\r') {
       var ch = nextChar();
       switch (ch) {
         case '"' -> {
@@ -433,7 +435,7 @@ public class Lexer {
   }
 
   private Token lexEscape() {
-    if (lookahead == EOF) throw unexpectedEndOfFile();
+    if (atEOF) throw unexpectedEndOfFile();
     var ch = nextChar();
     return switch (ch) {
       case 'n' -> Token.STRING_ESCAPE_NEWLINE;
@@ -462,7 +464,7 @@ public class Lexer {
     }
     do {
       nextChar();
-    } while (lookahead != '}' && lookahead != EOF && Character.isLetterOrDigit(lookahead));
+    } while (lookahead != '}' && !atEOF && Character.isLetterOrDigit(lookahead));
     if (lookahead == '}') {
       // consume the close bracket
       nextChar();
@@ -503,7 +505,7 @@ public class Lexer {
   }
 
   private void lexQuotedIdentifier() {
-    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r' && lookahead != EOF) {
+    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r' && !atEOF) {
       nextChar();
     }
     if (lookahead == '`') {
@@ -569,7 +571,7 @@ public class Lexer {
         {
           nextChar();
           var token = lookahead == '/' ? Token.DOC_COMMENT : Token.LINE_COMMENT;
-          while (lookahead != '\n' && lookahead != '\r' && lookahead != EOF) {
+          while (lookahead != '\n' && lookahead != '\r' && !atEOF) {
             nextChar();
           }
           return token;
@@ -586,16 +588,16 @@ public class Lexer {
   }
 
   private void lexBlockComment() {
-    if (lookahead == EOF) throw unexpectedEndOfFile();
+    if (atEOF) throw unexpectedEndOfFile();
     var prev = nextChar();
-    while (lookahead != EOF) {
+    while (!atEOF) {
       if (prev == '*' && lookahead == '/') {
         nextChar();
         break;
       }
       prev = nextChar();
     }
-    if (lookahead == EOF) throw unexpectedEndOfFile();
+    if (atEOF) throw unexpectedEndOfFile();
   }
 
   private void lexHexNumber() {
@@ -667,7 +669,7 @@ public class Lexer {
   private Token lexShebang() {
     do {
       nextChar();
-    } while (lookahead != '\n' && lookahead != '\r' && lookahead != EOF);
+    } while (lookahead != '\n' && lookahead != '\r' && !atEOF);
     return Token.SHEBANG;
   }
 
@@ -681,7 +683,7 @@ public class Lexer {
   }
 
   private static boolean isIdentifierPart(char c) {
-    return c != EOF && (c == '$' || Character.isUnicodeIdentifierPart(c));
+    return c == '$' || Character.isUnicodeIdentifierPart(c);
   }
 
   private char nextChar() {
@@ -689,6 +691,7 @@ public class Lexer {
     cursor++;
     if (cursor >= size) {
       lookahead = EOF;
+      atEOF = true;
     } else {
       lookahead = source[cursor];
     }
@@ -704,17 +707,19 @@ public class Lexer {
   private void backup() {
     lookahead = source[--cursor];
     col--;
+    atEOF = false;
   }
 
   private void backup(int amount) {
     cursor -= amount;
     col -= amount;
     lookahead = source[cursor];
+    atEOF = false;
   }
 
   private ParserError lexError(String msg, Object... args) {
-    var length = lookahead == EOF ? 0 : 1;
-    var index = lookahead == EOF ? cursor - 1 : cursor;
+    var length = atEOF ? 0 : 1;
+    var index = atEOF ? cursor - 1 : cursor;
     return new ParserError(ErrorMessages.create(msg, args), new Span(index, length));
   }
 
