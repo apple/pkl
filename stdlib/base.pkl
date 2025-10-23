@@ -437,7 +437,7 @@ class RenderDirective {
   text: String
 
   /// The bytes to output as-is (without escaping or quoting).
-  /// 
+  ///
   /// Only used by [BytesRenderer], ignored by [ValueRenderer].
   @Since { version = "0.30.0" }
   bytes: Bytes = text.encodeToBytes("UTF-8")

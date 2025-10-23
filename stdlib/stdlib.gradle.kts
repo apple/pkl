@@ -17,8 +17,8 @@ plugins {
   pklAllProjects
   base
   `maven-publish`
-  id("com.diffplug.spotless")
   pklPublishLibrary
+  pklSpotlessFormat
   signing
 }
 
@@ -51,13 +51,3 @@ publishing {
 }
 
 signing { sign(publishing.publications["stdlib"]) }
-
-spotless {
-  format("pkl") {
-    target("*.pkl")
-    licenseHeaderFile(
-      rootProject.file("buildSrc/src/main/resources/license-header.line-comment.txt"),
-      "/// ",
-    )
-  }
-}
