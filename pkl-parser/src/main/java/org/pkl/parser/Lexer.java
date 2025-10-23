@@ -39,15 +39,13 @@ public class Lexer {
   protected int newLinesBetween = 0;
   private boolean atEOF = false;
 
-  private static final char EOF = Character.MAX_VALUE;
-
   public Lexer(String input) {
     source = input.toCharArray();
     size = source.length;
     if (size > 0) {
       lookahead = source[cursor];
     } else {
-      lookahead = EOF;
+      lookahead = '\uffff';
       atEOF = true;
     }
   }
@@ -98,8 +96,10 @@ public class Lexer {
       sCol = col;
       ch = nextChar();
     }
-    if (ch == EOF && atEOF) {
+    if (atEOF && ch == '\uffff') {
       // when EOF is reached we overshot the span
+      // If ch is not '\uffff' it means we still have one character to process
+      // and this condition should not catch
       cursor--;
       return Token.EOF;
     }
@@ -690,7 +690,7 @@ public class Lexer {
     var tmp = lookahead;
     cursor++;
     if (cursor >= size) {
-      lookahead = EOF;
+      lookahead = '\uffff';
       atEOF = true;
     } else {
       lookahead = source[cursor];
@@ -732,7 +732,7 @@ public class Lexer {
   }
 
   private ParserError unexpectedChar(char got, String didYouMean) {
-    if (got == EOF) {
+    if (got == '\uffff' && atEOF) {
       return unexpectedChar("EOF", didYouMean);
     }
     return lexError("unexpectedCharacter", got, didYouMean);
