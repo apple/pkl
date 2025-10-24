@@ -28,6 +28,7 @@ import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.cli.CliFormatterApply
 import org.pkl.cli.CliFormatterCheck
+import org.pkl.cli.commands.FormatterCheckCommand.Companion.grammarVersionHelp
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.formatter.GrammarVersion
 
@@ -52,7 +53,7 @@ class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
 
   val grammarVersion: GrammarVersion by
     option(names = arrayOf("--grammar-version"), help = grammarVersionHelp)
-      .enum<GrammarVersion>(ignoreCase = true)
+      .enum<GrammarVersion> { "${it.version}" }
       .default(GrammarVersion.latest())
 
   override fun run() {
@@ -64,8 +65,8 @@ class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
       """
       The grammar compatibility version to use.$NEWLINE
       ${GrammarVersion.entries.joinToString("$NEWLINE", prefix = "  ") {
-        val default = if (it.latest) " `(default)`" else ""
-        "`${it.name}`: ${it.description}$default"
+        val default = if (it == GrammarVersion.latest()) " `(default)`" else ""
+        "`${it.version}`: ${it.versionSpan}$default"
       }}
       """
         .trimIndent()
@@ -89,8 +90,8 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
       .flag()
 
   val grammarVersion: GrammarVersion by
-    option(names = arrayOf("--grammar-version"), help = FormatterCheckCommand.grammarVersionHelp)
-      .enum<GrammarVersion>(ignoreCase = true)
+    option(names = arrayOf("--grammar-version"), help = grammarVersionHelp)
+      .enum<GrammarVersion> { "${it.version}" }
       .default(GrammarVersion.latest())
 
   override fun run() {

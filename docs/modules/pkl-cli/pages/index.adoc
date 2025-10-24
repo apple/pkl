@@ -748,7 +748,7 @@ If the path is a directory, recursively looks for files with a `.pkl` extension,
 .--grammar-version
 [%collapsible]
 ====
-Default: `V2` (latest version) +
+Default: `2` (latest version) +
 Select the grammar compatibility version for the formatter.
 New versions are created for each backward incompatible grammar change.
 ====
@@ -773,7 +773,7 @@ Do not write the name of wrongly formatted files to stdout.
 .--grammar-version
 [%collapsible]
 ====
-Default: `V2` (latest version) +
+Default: `2` (latest version) +
 Select the grammar compatibility version for the formatter.
 New versions are created for each backward incompatible grammar change.
 ====
