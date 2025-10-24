@@ -194,7 +194,7 @@ internal class Builder(sourceText: String) {
     return if (prefixes.isEmpty()) {
       res
     } else {
-      val sep = getSeparator(prefixes.last(), nodes.first())
+      val sep = getSeparator(prefixes.last(), nodes.first(), spaceOrLine())
       Nodes(formatGeneric(prefixes, spaceOrLine()) + listOf(sep, res))
     }
   }
@@ -304,8 +304,8 @@ internal class Builder(sourceText: String) {
     val separator: (Node, Node) -> FormatNode? = { prev, next ->
       when {
         prev.type == NodeType.OPERATOR -> null
-        next.type == NodeType.OPERATOR -> if (lambdaCount > 1) ForceLine else Line
-        else -> SpaceOrLine
+        next.type == NodeType.OPERATOR -> if (lambdaCount > 1) forceLine() else line()
+        else -> spaceOrLine()
       }
     }
 
@@ -315,15 +315,20 @@ internal class Builder(sourceText: String) {
           // lift argument list into its own node
           val (callChain, argsList) = splitFunctionCallNode(flat)
           val leadingNodes = indentAfterFirstNewline(formatGeneric(callChain, separator), true)
-          val trailingNodes = format(argsList)
-          leadingNodes + trailingNodes
+          val trailingNodes = formatGeneric(argsList, separator)
+          val sep = getBaseSeparator(callChain.last(), argsList.first())
+          if (sep != null) {
+            leadingNodes + sep + trailingNodes
+          } else {
+            leadingNodes + trailingNodes
+          }
         }
         methodCallCount > 0 && indexBeforeFirstMethodCall > 0 -> {
           val leading = flat.subList(0, indexBeforeFirstMethodCall)
           val trailing = flat.subList(indexBeforeFirstMethodCall, flat.size)
           val leadingNodes = indentAfterFirstNewline(formatGeneric(leading, separator), true)
           val trailingNodes = formatGeneric(trailing, separator)
-          leadingNodes + Line + trailingNodes
+          leadingNodes + line() + trailingNodes
         }
         else -> formatGeneric(flat, separator)
       }
@@ -336,12 +341,13 @@ internal class Builder(sourceText: String) {
    * Split a function call node to extract its identifier into the leading group. For example,
    * `foo.bar(5)` becomes: leading gets `foo.bar`, rest gets `(5)`.
    */
-  private fun splitFunctionCallNode(nodes: List<Node>): Pair<List<Node>, Node> {
+  private fun splitFunctionCallNode(nodes: List<Node>): Pair<List<Node>, List<Node>> {
     assert(nodes.isNotEmpty())
-    val lastLeading = nodes.last()
-    val identifier = lastLeading.firstProperChild()!!
-    val argList = lastLeading.children.find { it.type == NodeType.ARGUMENT_LIST }!!
-    return (nodes.subList(0, nodes.lastIndex) + identifier) to argList
+    val lastNode = nodes.last()
+    val argListIdx = lastNode.children.indexOfFirst { it.type == NodeType.ARGUMENT_LIST }
+    val leading = nodes.subList(0, nodes.lastIndex) + lastNode.children.subList(0, argListIdx)
+    val trailing = lastNode.children.subList(argListIdx, lastNode.children.size)
+    return leading to trailing
   }
 
   private fun isMethodCall(node: Node): Boolean {
@@ -800,7 +806,7 @@ internal class Builder(sourceText: String) {
           val prevNoNewlines = noNewlines
           noNewlines = true
           val elems = cursor.takeUntilBefore { it.isTerminal(")") }
-          getSeparator(prev!!, elems.first(), { _, _ -> null })?.let { add(it) }
+          getBaseSeparator(prev!!, elems.first())?.let { add(it) }
           val formatted =
             try {
               formatGeneric(elems, null)
@@ -809,7 +815,7 @@ internal class Builder(sourceText: String) {
               formatGeneric(elems, null)
             }
           addAll(formatted)
-          getSeparator(elems.last(), cursor.peek(), { _, _ -> null })?.let { add(it) }
+          getBaseSeparator(elems.last(), cursor.peek())?.let { add(it) }
           noNewlines = prevNoNewlines
           isInStringInterpolation = false
           continue
@@ -1202,7 +1208,7 @@ internal class Builder(sourceText: String) {
     val nodes = children.subList(index, children.size)
     val res = mutableListOf<FormatNode>()
     res += formatGeneric(prefixes, spaceOrLine())
-    res += getSeparator(prefixes.last(), nodes.first())
+    res += getSeparator(prefixes.last(), nodes.first(), spaceOrLine())
     res += groupFn(nodes)
     return res
   }
@@ -1210,12 +1216,8 @@ internal class Builder(sourceText: String) {
   private fun getImportUrl(node: Node): String =
     node.findChildByType(NodeType.STRING_CHARS)!!.text().drop(1).dropLast(1)
 
-  private fun getSeparator(
-    prev: Node,
-    next: Node,
-    separator: FormatNode = spaceOrLine(),
-  ): FormatNode {
-    return getSeparator(prev, next) { _, _ -> separator }!!
+  private fun getSeparator(prev: Node, next: Node, separator: FormatNode): FormatNode {
+    return getBaseSeparator(prev, next) ?: separator
   }
 
   private fun getSeparator(
@@ -1223,6 +1225,10 @@ internal class Builder(sourceText: String) {
     next: Node,
     separatorFn: (Node, Node) -> FormatNode?,
   ): FormatNode? {
+    return getBaseSeparator(prev, next) ?: separatorFn(prev, next)
+  }
+
+  private fun getBaseSeparator(prev: Node, next: Node): FormatNode? {
     return when {
       prevNode?.type == NodeType.LINE_COMMENT -> {
         if (prev.linesBetween(next) > 1) {
@@ -1231,6 +1237,7 @@ internal class Builder(sourceText: String) {
           mustForceLine()
         }
       }
+
       hasTrailingAffix(prev, next) -> Space
       prev.type == NodeType.DOC_COMMENT -> mustForceLine()
       prev.type == NodeType.ANNOTATION -> forceLine()
@@ -1241,17 +1248,21 @@ internal class Builder(sourceText: String) {
           mustForceLine()
         }
       }
+
       prev.type == NodeType.BLOCK_COMMENT ->
         if (prev.linesBetween(next) > 0) forceSpaceyLine() else Space
+
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
-        next.isTerminal("]", "?", ",") -> null
+        next.isTerminal("]", "?", ",") -> Empty
+
       prev.isTerminal("class", "function", "new") ||
         next.isTerminal("=", "{", "->", "class", "function") ||
         next.type == NodeType.OBJECT_BODY ||
         prev.type == NodeType.MODIFIER_LIST -> Space
+
       next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
-      else -> separatorFn(prev, next)
+      else -> null
     }
   }
 
@@ -1367,9 +1378,6 @@ internal class Builder(sourceText: String) {
   private fun Node.isTerminal(vararg texts: String): Boolean =
     type == NodeType.TERMINAL && text(source) in texts
 
-  private fun Node.isOperator(vararg texts: String): Boolean =
-    type == NodeType.OPERATOR && text(source) in texts
-
   private fun newId(): Int {
     return id++
   }
@@ -1417,18 +1425,6 @@ internal class Builder(sourceText: String) {
     } else {
       Pair(take(index), drop(index))
     }
-  }
-
-  private inline fun <T> Iterable<T>.hasMoreThan(num: Int, predicate: (T) -> Boolean): Boolean {
-    if (this is Collection && isEmpty()) return false
-    var count = 0
-    for (element in this) {
-      if (predicate(element)) count++
-      if (count > num) {
-        return true
-      }
-    }
-    return false
   }
 
   class PeekableIterator<T>(private val iterator: Iterator<T>) : Iterator<T> {

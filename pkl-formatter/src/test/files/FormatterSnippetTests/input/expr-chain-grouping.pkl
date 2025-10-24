@@ -24,3 +24,8 @@ res9 = foo.bar(new {
   foo = 1
   bar = 2
 }).qux
+
+res10 = foo.bar /* some comment */ (5)
+
+res11 = foo.bar /* some comment */.baz(new { foooooooooooooooooooooooooo = 1; baaaaaaaaaaaaaaaaaaaaar = 2 }).buz
+
