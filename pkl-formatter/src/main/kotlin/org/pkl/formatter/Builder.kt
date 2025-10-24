@@ -33,7 +33,7 @@ import org.pkl.parser.syntax.Operator
 import org.pkl.parser.syntax.generic.Node
 import org.pkl.parser.syntax.generic.NodeType
 
-internal class Builder(sourceText: String, private val version: CompatVersion) {
+internal class Builder(sourceText: String, private val grammarVersion: GrammarVersion) {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
   private var prevNode: Node? = null
@@ -420,7 +420,7 @@ internal class Builder(sourceText: String, private val version: CompatVersion) {
         if (prev.isTerminal("(") || next.isTerminal(")")) {
           if (next.isTerminal(")")) {
             // trailing comma
-            if (version == CompatVersion.V1) {
+            if (grammarVersion == GrammarVersion.V1) {
               Line
             } else {
               IfWrap(groupId, nodes(Text(","), Line), Line)
@@ -443,7 +443,7 @@ internal class Builder(sourceText: String, private val version: CompatVersion) {
             val node = if (hasTrailingLambda) Empty else Line
             if (next.isTerminal(")") && !hasTrailingLambda) {
               // trailing comma
-              if (version == CompatVersion.V1) {
+              if (grammarVersion == GrammarVersion.V1) {
                 node
               } else {
                 IfWrap(groupId, nodes(Text(","), node), node)
@@ -550,7 +550,7 @@ internal class Builder(sourceText: String, private val version: CompatVersion) {
         if (prev.isTerminal("<") || next.isTerminal(">")) {
           if (next.isTerminal(">")) {
             // trailing comma
-            if (version == CompatVersion.V1) {
+            if (grammarVersion == GrammarVersion.V1) {
               Line
             } else {
               IfWrap(id, nodes(Text(","), Line), Line)
