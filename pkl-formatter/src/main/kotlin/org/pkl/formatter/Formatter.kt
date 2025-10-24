@@ -55,11 +55,11 @@ class Formatter {
 }
 
 /** Grammar compatibility version. */
-enum class GrammarVersion(val description: String, val latest: Boolean = false) {
-  V1("From first version to 0.29 (no trailing commas)"),
-  V2("From 0.30 on", latest = true);
+enum class GrammarVersion(val version: Int, val versionSpan: String) {
+  V1(1, "0.25 - 0.29"),
+  V2(2, "0.30+");
 
   companion object {
-    fun latest(): GrammarVersion = entries.first { it.latest }
+    fun latest(): GrammarVersion = entries.maxBy { it.version }
   }
 }
