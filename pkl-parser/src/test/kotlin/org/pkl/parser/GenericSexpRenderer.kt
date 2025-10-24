@@ -34,10 +34,6 @@ class GenericSexpRenderer(code: String) {
       renderUnionType(node)
       return
     }
-    if (node.type == NodeType.BINARY_OP_EXPR && binopName(node).endsWith("ualifiedAccessExpr")) {
-      renderQualifiedAccess(node)
-      return
-    }
     doRender(name(node), collectChildren(node))
   }
 
@@ -143,6 +139,10 @@ class GenericSexpRenderer(code: String) {
       NodeType.AMENDS_CLAUSE -> "extendsOrAmendsClause"
       NodeType.TYPEALIAS -> "typeAlias"
       NodeType.STRING_ESCAPE -> "stringChars"
+      NodeType.QUALIFIED_ACCESS_EXPR -> {
+        val op = node.findChildByType(NodeType.OPERATOR)!!
+        if (op.text(source) == ".") "qualifiedAccessExpr" else "nullableQualifiedAccessExpr"
+      }
       NodeType.READ_EXPR -> {
         val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
         when (terminal) {

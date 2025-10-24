@@ -679,6 +679,10 @@ public class GenericParser {
           ff(children);
           expect(Token.RBRACK, children, "unexpectedToken", "]");
         }
+        case DOT, QDOT -> {
+          nodeType = NodeType.QUALIFIED_ACCESS_EXPR;
+          children.add(parseUnqualifiedAccessExpr());
+        }
         case NON_NULL -> nodeType = NodeType.NON_NULL_EXPR;
         default -> children.add(parseExpr(expectation, nextMinPrec));
       }
@@ -717,6 +721,16 @@ public class GenericParser {
       case NON_NULL -> Operator.NON_NULL;
       default -> null;
     };
+  }
+
+  private Node parseUnqualifiedAccessExpr() {
+    var children = new ArrayList<Node>();
+    children.add(parseIdentifier());
+    if (lookahead() == Token.LPAREN && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+      ff(children);
+      children.add(parseArgumentList());
+    }
+    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -884,16 +898,7 @@ public class GenericParser {
           case FLOAT -> new Node(NodeType.FLOAT_LITERAL_EXPR, next().span);
           case STRING_START -> parseSingleLineStringLiteralExpr();
           case STRING_MULTI_START -> parseMultiLineStringLiteralExpr();
-          case IDENTIFIER -> {
-            var children = new ArrayList<Node>();
-            children.add(parseIdentifier());
-            if (lookahead == Token.LPAREN
-                && noSemicolonInbetween()
-                && _lookahead.newLinesBetween == 0) {
-              children.add(parseArgumentList());
-            }
-            yield new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
-          }
+          case IDENTIFIER -> parseUnqualifiedAccessExpr();
           case EOF ->
               throw parserError(
                   ErrorMessages.create("unexpectedEndOfFile"), prev().span.stopSpan());
