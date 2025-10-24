@@ -726,7 +726,8 @@ public class GenericParser {
   private Node parseUnqualifiedAccessExpr() {
     var children = new ArrayList<Node>();
     children.add(parseIdentifier());
-    if (lookahead == Token.LPAREN && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+    if (lookahead() == Token.LPAREN && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+      ff(children);
       children.add(parseArgumentList());
     }
     return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
