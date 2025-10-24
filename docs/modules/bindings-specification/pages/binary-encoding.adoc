@@ -1,9 +1,15 @@
-= Pkl Binary Encoding
+= `pkl-binary` Encoding
 include::ROOT:partial$component-attributes.adoc[]
 include::partial$component-attributes.adoc[]
 
-Pkl values can be encoded into a binary format.
-This format is used for Pkl's non-JVM language bindings, for example, for its Go and Swift bindings.
+:uri-pkl-core-Evaluator: {uri-pkl-core-main-sources}/Evaluator.java
+
+Pkl values can be encoded into a binary format called "pkl-binary".
+This format is a lossless serialization of the underlying Pkl values.
+
+Pkl code can be rendered into this format using the {uri-stdlib-pklbinaryModule}[pkl:pklbinary] standard library module.
+
+Alternatively, many language bindings also provide methods to evaluate into `pkl-binary`, such as the `evaluateExpressionPklBinary` method in link:{uri-pkl-core-Evaluator}[org.pkl.core.Evaluator].
 
 The binary format is uses link:{uri-messagepack}[MessagePack] encoding.
 
