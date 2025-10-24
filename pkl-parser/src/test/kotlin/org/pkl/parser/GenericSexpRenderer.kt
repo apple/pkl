@@ -130,7 +130,7 @@ class GenericSexpRenderer(code: String) {
     }
 
   private fun NodeType.isStringData(): Boolean =
-    this == NodeType.STRING_CONSTANT || this == NodeType.STRING_ESCAPE
+    this == NodeType.STRING_CHARS || this == NodeType.STRING_ESCAPE
 
   private fun name(node: Node): String =
     when (node.type) {
@@ -142,7 +142,7 @@ class GenericSexpRenderer(code: String) {
       NodeType.EXTENDS_CLAUSE,
       NodeType.AMENDS_CLAUSE -> "extendsOrAmendsClause"
       NodeType.TYPEALIAS -> "typeAlias"
-      NodeType.STRING_ESCAPE -> "stringConstant"
+      NodeType.STRING_ESCAPE -> "stringChars"
       NodeType.READ_EXPR -> {
         val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
         when (terminal) {

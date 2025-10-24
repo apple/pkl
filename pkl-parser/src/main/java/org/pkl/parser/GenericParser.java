@@ -965,7 +965,7 @@ public class GenericParser {
         case STRING_PART -> {
           var tk = next();
           if (!tk.text(lexer).isEmpty()) {
-            children.add(make(NodeType.STRING_CONSTANT, tk.span));
+            children.add(make(NodeType.STRING_CHARS, tk.span));
           }
         }
         case STRING_ESCAPE_NEWLINE,
@@ -1004,7 +1004,7 @@ public class GenericParser {
         case STRING_PART -> {
           var tk = next();
           if (!tk.text(lexer).isEmpty()) {
-            children.add(make(NodeType.STRING_CONSTANT, tk.span));
+            children.add(make(NodeType.STRING_CHARS, tk.span));
           }
         }
         case STRING_NEWLINE -> children.add(make(NodeType.STRING_NEWLINE, next().span));
@@ -1383,7 +1383,7 @@ public class GenericParser {
       }
     }
     children.add(makeTerminal(next())); // string end
-    return new Node(NodeType.STRING_CONSTANT, children);
+    return new Node(NodeType.STRING_CHARS, children);
   }
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {

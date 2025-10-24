@@ -17,7 +17,6 @@ package org.pkl.formatter
 
 import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
-import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
@@ -54,11 +53,6 @@ internal class Generator {
           } else {
             Wrap.DETECT
           }
-        node.nodes.forEach { node(it, wrap) }
-      }
-      is ForceWrap -> {
-        wrapped += node.id
-        val wrap = Wrap.ENABLED
         node.nodes.forEach { node(it, wrap) }
       }
       is IfWrap -> {
