@@ -38,6 +38,6 @@ class Renderer extends BytesRenderer {
 
   /// Renders [value] as `pkl-binary`.
   ///
-  /// Every Pkl value is a valid `pkl-binary` document.
+  /// Every `pkl-binary` value is also a valid document.
   external function renderDocument(value: Any): Bytes
 }
