@@ -743,6 +743,16 @@ It returns a non-zero status code in case violations are found.
 
 If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
 
+==== Options
+
+.--grammar-version
+[%collapsible]
+====
+Default: `V2` (latest version) +
+Select the grammar compatibility version for the formatter.
+New versions are created for each backward incompatible grammar change.
+====
+
 [[command-format-apply]]
 === `pkl format apply`
 
@@ -758,6 +768,14 @@ If the path is a directory, recursively looks for files with a `.pkl` extension,
 [%collapsible]
 ====
 Do not write the name of wrongly formatted files to stdout.
+====
+
+.--grammar-version
+[%collapsible]
+====
+Default: `V2` (latest version) +
+Select the grammar compatibility version for the formatter.
+New versions are created for each backward incompatible grammar change.
 ====
 
 [[common-options]]

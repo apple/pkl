@@ -29,7 +29,7 @@ import java.nio.file.Path
 import org.pkl.cli.CliFormatterApply
 import org.pkl.cli.CliFormatterCheck
 import org.pkl.commons.cli.commands.BaseCommand
-import org.pkl.formatter.CompatVersion
+import org.pkl.formatter.GrammarVersion
 
 class FormatterCommand : NoOpCliktCommand(name = "format") {
   override fun help(context: Context) = "Run commands related to formatting"
@@ -50,20 +50,20 @@ class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
       .path(mustExist = true, canBeDir = true)
       .multiple()
 
-  val compatVersion: CompatVersion by
-    option(names = arrayOf("-v", "--version"), help = compatVersionHelp)
-      .enum<CompatVersion>(ignoreCase = true)
-      .default(CompatVersion.latest())
+  val grammarVersion: GrammarVersion by
+    option(names = arrayOf("--grammar-version"), help = grammarVersionHelp)
+      .enum<GrammarVersion>(ignoreCase = true)
+      .default(GrammarVersion.latest())
 
   override fun run() {
-    CliFormatterCheck(baseOptions.baseOptions(emptyList()), paths, compatVersion).run()
+    CliFormatterCheck(baseOptions.baseOptions(emptyList()), paths, grammarVersion).run()
   }
 
   companion object {
-    internal val compatVersionHelp =
+    internal val grammarVersionHelp =
       """
       The grammar compatibility version to use.$NEWLINE
-      ${CompatVersion.entries.joinToString("$NEWLINE", prefix = "  ") {
+      ${GrammarVersion.entries.joinToString("$NEWLINE", prefix = "  ") {
         val default = if (it.latest) " `(default)`" else ""
         "`${it.name}`: ${it.description}$default"
       }}
@@ -88,12 +88,12 @@ class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
       )
       .flag()
 
-  val compatVersion: CompatVersion by
-    option(names = arrayOf("-v", "--version"), help = FormatterCheckCommand.compatVersionHelp)
-      .enum<CompatVersion>(ignoreCase = true)
-      .default(CompatVersion.latest())
+  val grammarVersion: GrammarVersion by
+    option(names = arrayOf("--grammar-version"), help = FormatterCheckCommand.grammarVersionHelp)
+      .enum<GrammarVersion>(ignoreCase = true)
+      .default(GrammarVersion.latest())
 
   override fun run() {
-    CliFormatterApply(baseOptions.baseOptions(emptyList()), paths, compatVersion, silent).run()
+    CliFormatterApply(baseOptions.baseOptions(emptyList()), paths, grammarVersion, silent).run()
   }
 }
