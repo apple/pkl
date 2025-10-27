@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Expected value of type `ModuleOutput`, but got `null`.
 
-xx | hidden output: ModuleOutput = new {
-                    ^^^^^^^^^^^^
+xxx | hidden output: ModuleOutput = new {
+                     ^^^^^^^^^^^^
 at pkl.base#Module.output (pkl:base)
 
 x | output = null
