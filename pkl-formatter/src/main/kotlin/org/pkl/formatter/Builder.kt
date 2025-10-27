@@ -977,13 +977,17 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
         node.children,
         { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else separator },
       ) { node, next ->
-        if (next == null) {
-          if (node.type == NodeType.LET_EXPR) {
+        when {
+          node.type == NodeType.LET_EXPR -> {
             // unpack the lets
             val group = formatLetExpr(node) as Group
             Nodes(group.nodes)
-          } else indent(format(node))
-        } else format(node)
+          }
+          node.type == NodeType.LET_PARAMETER_DEFINITION ||
+            node.isTerminal("let") ||
+            next?.type == NodeType.LET_EXPR -> format(node)
+          else -> indent(format(node))
+        }
       }
     return Group(newId(), nodes)
   }

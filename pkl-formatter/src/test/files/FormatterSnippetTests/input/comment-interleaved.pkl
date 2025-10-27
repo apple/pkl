@@ -29,3 +29,31 @@ bar2 = ( // some comment
     foo, bar
     // another comment
   ) -> foo + bar
+
+bar3 =
+  let (bar = new Dynamic {})
+    // some coment
+    (bar) {
+      qux = 4
+    }
+
+bar4 =
+  // some coment
+  let (bar = new Dynamic {})
+    (bar) {
+      qux = 4
+    }
+
+bar5 =
+  let (bar = 4)
+  // some coment
+  let (qux = 5)
+    bar + qux
+
+bar6 =
+  let (bar = 4)
+    /* some comment */ bar + 5
+
+bar7 =
+  let (bar = 4) /* some comment */
+    bar + 5
