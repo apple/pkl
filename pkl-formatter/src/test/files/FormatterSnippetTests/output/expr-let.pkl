@@ -25,3 +25,10 @@ qux =
     bar = 5
   )
     bar
+
+quzzy = let (baz = 1) baz + 1
+
+// respect newlines in lets
+quzzzy =
+  let (baz = 1)
+    baz + 1

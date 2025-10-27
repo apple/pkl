@@ -841,10 +841,15 @@ internal class Builder(sourceText: String) {
 
   private fun formatIf(node: Node): FormatNode {
     val nodes =
-      formatGeneric(node.children) { _, next ->
-        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) {
-          Space
-        } else spaceOrLine()
+      formatGeneric(node.children) { prev, next ->
+        when {
+          next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR -> Space
+          next.type == NodeType.IF_THEN_EXPR ||
+            next.type == NodeType.IF_ELSE_EXPR ||
+            next.isTerminal("else") ->
+            if (prev.linesBetween(next) > 0) forceLine() else spaceOrLine()
+          else -> spaceOrLine()
+        }
       }
     return Group(newId(), nodes)
   }
@@ -939,7 +944,16 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else spaceOrLine() },
+        { prev, next ->
+          when {
+            next.type == NodeType.LET_PARAMETER_DEFINITION -> Space
+            prev.type == NodeType.LET_PARAMETER_DEFINITION -> {
+              val linesBetween = prev.linesBetween(next)
+              if (linesBetween > 0) forceLine() else spaceOrLine()
+            }
+            else -> spaceOrLine()
+          }
+        },
       ) { node, next ->
         if (next == null) {
           if (node.type == NodeType.LET_EXPR) {
