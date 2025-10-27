@@ -1,0 +1,18 @@
+// multiple lambda arguments means argument list wraps
+res1 = foo.toMap(
+  (elem) -> elem.toString(),
+  (elem) -> elem.toString().split("").map((str) -> str + "hello").toSet()
+)
+
+// new object and trailing lambda means argument list wraps
+res2 = foo.doFoo(
+  new Listing { 1; 2; 3 },
+  (elem) -> elem.toString().split("").map((str) -> str + "hello").toSet()
+)
+
+// single trailing lambda is broken on its own
+res4 = foo.foldLeft(
+  "heeeeeeelloooooooooooooooooooooooooooooooooooooooooooooo",
+  (elem) -> elem.foooooooooooooooooooooooooooooooooooooooooooooooooooo
+)
+

@@ -619,12 +619,21 @@ internal class Builder(sourceText: String) {
 
   private fun hasTrailingLambda(argList: Node): Boolean {
     val children = argList.firstProperChild()?.children ?: return false
+    var seenArg = false
+    var ret = false
     for (i in children.lastIndex downTo 0) {
       val child = children[i]
       if (!child.isProper()) continue
-      return child.type in SAME_LINE_EXPRS
+      if (child.type in SAME_LINE_EXPRS) {
+        if (seenArg) {
+          return false
+        } else {
+          seenArg = true
+          ret = true
+        }
+      }
     }
-    return false
+    return ret
   }
 
   private fun pairArguments(nodes: List<Node>): List<Node> {
