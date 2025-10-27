@@ -50,6 +50,8 @@ private fun exclusionsForThisJvm(): List<Regex> =
 
 abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
+  private val locationLineNumberRegex = Regex("#L(\\d+)")
+  private val reflectedDeclarationLineNumberRegex = Regex("line = (\\d+)")
   private val hiddenExtensionRegex = Regex(".*[.]([^.]*)[.]pkl")
   private val msgpackExtensionRegex = Regex(".*[.]msgpack[.]yaml[.]pkl")
 
@@ -118,9 +120,15 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
 
   protected fun String.stripLineNumbers(): String =
     replace(lineNumberRegex) { result ->
-      // replace line number with equivalent number of 'x' characters to keep formatting intact
-      (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
-    }
+        // replace line number with equivalent number of 'x' characters to keep formatting intact
+        (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
+      }
+      .replace(locationLineNumberRegex) { result ->
+        "#L" + "X".repeat(result.groups[1]!!.value.length)
+      }
+      .replace(reflectedDeclarationLineNumberRegex) { result ->
+        "line = " + "X".repeat(result.groups[1]!!.value.length)
+      }
 
   protected fun String.stripWebsite(): String =
     replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
@@ -199,7 +207,11 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
             }
             .build()
         evaluator.use { ev ->
-          true to ev.evaluateOutputBytes(ModuleSource.path(inputFile)).decodeOutput(inputFile)
+          true to
+            ev
+              .evaluateOutputBytes(ModuleSource.path(inputFile))
+              .decodeOutput(inputFile)
+              .stripLineNumbers()
         }
       } catch (e: PklBugException) {
         false to e.stackTraceToString()

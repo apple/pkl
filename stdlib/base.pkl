@@ -52,7 +52,8 @@ abstract external class Any {
 
   /// Returns `this |> transform` if [this] is non-null, and [null] otherwise.
   ///
-  /// This method is the complement of the `??` operator and the equivalent of an `Option` type's `map` and `flatMap` methods.
+  /// This method is the complement of the `??` operator and the equivalent of an `Option` type's
+  /// `map` and `flatMap` methods.
   external function ifNonNull<Result>(transform: (NonNull) -> Result): Result?
 }
 
@@ -79,11 +80,13 @@ abstract external class Module {
   ///
   /// Throws if no such path exists.
   ///
-  /// For example, if module `mod1` has path `/dir1/mod1.pkl`, and module `mod2` has path `/dir1/dir2/dir3/mod2.pkl`,
-  /// then `mod1.relativePathTo(mod2)` will return `List("dir2", "dir3")`.
+  /// For example, if module `mod1` has path `/dir1/mod1.pkl`, and module `mod2` has path
+  /// `/dir1/dir2/dir3/mod2.pkl`, then `mod1.relativePathTo(mod2)` will return
+  /// `List("dir2", "dir3")`.
   ///
-  /// A common use case is to compute the directory path between a template located at the root of a hierarchy
-  /// (say `rootModule.pkl`) and the currently evaluated module (accessible via the `module` keyword):
+  /// A common use case is to compute the directory path between a template located at the root of a
+  /// hierarchy (say `rootModule.pkl`) and the currently evaluated module (accessible via the
+  /// `module` keyword):
   /// ```
   /// import "rootModule.pkl" // self-import
   /// path = rootModule.relativePathTo(module)
@@ -92,7 +95,8 @@ abstract external class Module {
 
   /// The output of this module.
   ///
-  /// Defaults to all module properties rendered as either Pcf or the format specified on the command line.
+  /// Defaults to all module properties rendered as either Pcf or the format specified on the
+  /// command line.
   hidden output: ModuleOutput = new {
     value = outer
     renderer =
@@ -145,14 +149,16 @@ class Deprecated extends Annotation {
 
   /// A message explaining how to deal with the deprecation.
   ///
-  /// The message may contain member links, should end with a period, and should not contain line breaks.
+  /// The message may contain member links, should end with a period, and should not contain line
+  /// breaks.
   ///
   /// Example: `"Use [String.codePoints] instead."`
   message: String?
 
   /// The code fragment to replace usages of the deprecated member with.
   ///
-  /// Setting this property instructs tools to automatically replace usages of the deprecated member.
+  /// Setting this property instructs tools to automatically replace usages of the deprecated
+  /// member.
   /// For human instructions, use [message].
   ///
   /// Examples:
@@ -350,7 +356,8 @@ abstract class BaseValueRenderer {
 
 /// Base class for rendering Pkl values in some textual output format.
 ///
-/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
+/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the
+/// input.
 abstract class ValueRenderer extends BaseValueRenderer {
   /// Renders [value] as a complete document.
   ///
@@ -366,7 +373,8 @@ abstract class ValueRenderer extends BaseValueRenderer {
 
 /// Base class for rendering Pkl values in some binary output format.
 ///
-/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the input.
+/// A renderer's output is guaranteed to be well-formed unless [RenderDirective] is part of the
+/// input.
 @Since { version = "0.30.0" }
 abstract class BytesRenderer extends BaseValueRenderer {
   /// Renders [value] as a complete document.
@@ -509,7 +517,8 @@ class YamlRenderer extends ValueRenderer {
   external function renderValue(value: Any): String
 }
 
-/// Renders values as [XML property lists](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/PropertyLists/UnderstandXMLPlist/UnderstandXMLPlist.html).
+/// Renders values as
+/// [XML property lists](https://developer.apple.com/library/content/documentation/Cocoa/Conceptual/PropertyLists/UnderstandXMLPlist/UnderstandXMLPlist.html).
 ///
 /// XML property lists do not support [null] values.
 /// This renderer handles [null] values as follows:
@@ -526,7 +535,8 @@ class PListRenderer extends ValueRenderer {
   external function renderValue(value: Any): String
 }
 
-/// Renders values as [Java Properties](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html).
+/// Renders values as
+/// [Java Properties](https://docs.oracle.com/javase/8/docs/api/java/util/Properties.html).
 ///
 /// Pkl object properties and keys of type [Boolean], [String], [Int], and [Float]
 /// are flattened into dot-separated Java property keys.
@@ -803,8 +813,8 @@ abstract external class Number extends Any {
   ///
   /// If [this] is an [Int], returns [this].
   /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
-  /// If [this] is less than zero, returns the smallest [Float] that is greater than or equal to [this]
-  /// and is equal to a mathematical integer.
+  /// If [this] is less than zero, returns the smallest [Float] that is greater than or equal to
+  /// [this] and is equal to a mathematical integer.
   /// Otherwise, returns the largest [Float] that is less than or equal to [this]
   /// and is equal to a mathematical integer.
   abstract function truncate(): Number
@@ -827,7 +837,8 @@ abstract external class Number extends Any {
   /// Converts this number to its decimal string representation.
   abstract function toString(): String
 
-  /// Converts this number to a decimal fixed-point representation with [fractionDigits] digits after the decimal point.
+  /// Converts this number to a decimal fixed-point representation with [fractionDigits] digits
+  /// after the decimal point.
   abstract function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
 
   /// Converts this number to a duration with [this] value and the given [unit].
@@ -864,13 +875,15 @@ abstract external class Number extends Any {
   /// Tells if this number is [NaN].
   ///
   /// Always use this method when testing for [NaN].
-  /// Note that `x == NaN` is *not* a correct way to test for [NaN] because `NaN != NaN` as per the IEEE spec.
+  /// Note that `x == NaN` is *not* a correct way to test for [NaN] because `NaN != NaN` as per the
+  /// IEEE spec.
   abstract isNaN: Boolean
 
   /// Tells if this number is not 0.
   abstract isNonZero: Boolean
 
-  /// Tells if this number is greater than or equal to [start] and less than or equal to [inclusiveEnd].
+  /// Tells if this number is greater than or equal to [start] and less than or equal to
+  /// [inclusiveEnd].
   ///
   /// Facts:
   /// ```
@@ -1287,7 +1300,8 @@ external class String extends Any {
 
   /// Returns the substring from [start] until [exclusiveEnd].
   ///
-  /// Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  /// Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range
+  /// [start]..[length].
   ///
   /// Facts:
   /// ```
@@ -1301,7 +1315,8 @@ external class String extends Any {
 
   /// Returns the substring from [start] until [exclusiveEnd].
   ///
-  /// Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  /// Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range
+  /// [start]..[length].
   ///
   /// Facts:
   /// ```
@@ -1450,7 +1465,8 @@ external class String extends Any {
   /// Reverses the order of characters in this string.
   external function reverse(): String
 
-  /// Removes any leading and trailing characters with Unicode property "White_Space" from this string.
+  /// Removes any leading and trailing characters with Unicode property "White_Space" from this
+  /// string.
   @AlsoKnownAs { names { "strip" } }
   external function trim(): String
 
@@ -1480,7 +1496,8 @@ external class String extends Any {
   /// Splits this string matches of [pattern], up to [limit] substrings.
   ///
   /// Returns a [List] with at most [limit] elements.
-  /// If the limit has been reached, the last entry will contain the un-split remainder of this string.
+  /// If the limit has been reached, the last entry will contain the un-split remainder of this
+  /// string.
   ///
   /// Facts:
   /// ```
@@ -1642,7 +1659,8 @@ external class Duration extends Any {
   /// ```
   external value: Number
 
-  /// An [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations) representation of this duration.
+  /// An [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601#Durations) representation of this
+  /// duration.
   ///
   /// The ISO representation has the format `[-]PT{hours}H{minutes}M{seconds}S`, where
   ///
@@ -1679,7 +1697,8 @@ external class Duration extends Any {
   /// ```
   external isPositive: Boolean
 
-  /// Tells if this duration is greater than or equal to [start] and less than or equal to [inclusiveEnd].
+  /// Tells if this duration is greater than or equal to [start] and less than or equal to
+  /// [inclusiveEnd].
   ///
   /// Facts:
   /// ```
@@ -1735,7 +1754,8 @@ external class DataSize extends Any {
   /// ```
   external isPositive: Boolean
 
-  /// Tells if this data size is greater than or equal to [start] and less than or equal to [inclusiveEnd].
+  /// Tells if this data size is greater than or equal to [start] and less than or equal to
+  /// [inclusiveEnd].
   ///
   /// Facts:
   /// ```
@@ -1845,7 +1865,8 @@ abstract external class Object extends Any
 
 /// Base class for objects whose members are described by a class definition.
 ///
-/// User-defined classes (that is, classes without `external` modifier) implicitly extend this class.
+/// User-defined classes (that is, classes without `external` modifier) implicitly extend this
+/// class.
 abstract class Typed extends Object {
   /// Tells if this object has a property with the given [name].
   external function hasProperty(name: String): Boolean
@@ -1878,7 +1899,8 @@ abstract class Typed extends Object {
 /// }
 /// ```
 ///
-/// Unlike a [Typed] object, a dynamic object does not have an associated class describing its shape.
+/// Unlike a [Typed] object, a dynamic object does not have an associated class describing its
+/// shape.
 class Dynamic extends Object {
   /// The function used to compute the default value for an object element or entry given its key.
   hidden default: (unknown) -> Any = (_) -> new Dynamic {}
@@ -1920,7 +1942,8 @@ class Dynamic extends Object {
   /// Notable behavior:
   /// - Elements and entries of [this] are ignored.
   /// - Properties of [this] that have no corresponding property in [clazz] are ignored.
-  /// - [clazz] properties that have no corresponding property in [this] have their defaults preserved.
+  /// - [clazz] properties that have no corresponding property in [this] have their defaults
+  ///   preserved.
   /// - [clazz] properties that have neither a default nor a corresponding property in [this]
   ///   throw an "undefined property" error (only) when accessed.
   ///
@@ -2050,7 +2073,8 @@ class Listing<out Element> extends Object {
   @Since { version = "0.27.0" }
   external singleOrNull: Element?
 
-  /// Removes elements that are duplicates after applying [selector] from this listing, preserving the first occurrence.
+  /// Removes elements that are duplicates after applying [selector] from this listing, preserving
+  /// the first occurrence.
   ///
   /// Facts:
   /// ```
@@ -2095,7 +2119,8 @@ class Listing<out Element> extends Object {
     operator: (Int, Result, Element) -> Result,
   ): Result
 
-  /// Converts the elements of this listing to strings and concatenates them inserting [separator] between elements.
+  /// Converts the elements of this listing to strings and concatenates them inserting [separator]
+  /// between elements.
   external function join(separator: String): String
 
   /// Converts this listing to a [List].
@@ -2144,7 +2169,8 @@ class Mapping<out Key, out Value> extends Object {
   @Since { version = "0.29.0" }
   external function getOrDefault(key: Any): Value
 
-  /// Folds the entries of this mapping in iteration order using [operator], starting with [initial].
+  /// Folds the entries of this mapping in iteration order using [operator], starting with
+  /// [initial].
   external function fold<Result>(initial: Result, operator: (Result, Key, Value) -> Result): Result
 
   /// Tells if [predicate] holds for every entry of this mapping.
@@ -2435,7 +2461,8 @@ abstract external class Collection<out Element> extends Any {
   /// ```
   abstract function find(predicate: (Element) -> Boolean): Element
 
-  /// Same as [find()] but returns [null] if [predicate] does not hold for any element in this collection.
+  /// Same as [find()] but returns [null] if [predicate] does not hold for any element in this
+  /// collection.
   abstract function findOrNull(predicate: (Element) -> Boolean): Element?
 
   /// The last element for which [predicate] returns [true].
@@ -2450,7 +2477,8 @@ abstract external class Collection<out Element> extends Any {
   /// ```
   abstract function findLast(predicate: (Element) -> Boolean): Any
 
-  /// Same as [findLast()] but returns [null] if [predicate] does not hold for any element in this collection.
+  /// Same as [findLast()] but returns [null] if [predicate] does not hold for any element in this
+  /// collection.
   abstract function findLastOrNull(predicate: (Element) -> Boolean): Element?
 
   /// The index of the first element for which [predicate] returns [true].
@@ -2466,7 +2494,8 @@ abstract external class Collection<out Element> extends Any {
   @AlsoKnownAs { names { "indexWhere" } }
   abstract function findIndex(predicate: (Element) -> Boolean): Int
 
-  /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
+  /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this
+  /// collection.
   @AlsoKnownAs { names { "indexWhere" } }
   abstract function findIndexOrNull(predicate: (Element) -> Boolean): Int?
 
@@ -2483,7 +2512,8 @@ abstract external class Collection<out Element> extends Any {
   @AlsoKnownAs { names { "lastIndexWhere" } }
   abstract function findLastIndex(predicate: (Element) -> Boolean): Int
 
-  /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in this collection.
+  /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in
+  /// this collection.
   @AlsoKnownAs { names { "lastIndexWhere" } }
   abstract function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
 
@@ -2580,7 +2610,8 @@ abstract external class Collection<out Element> extends Any {
   /// ```
   abstract function mapIndexed<Result>(transform: (Int, Element) -> Result): Collection<Result>
 
-  /// Transforms this collection by applying [transform] to each element and removing resulting [null] elements.
+  /// Transforms this collection by applying [transform] to each element and removing resulting
+  /// [null] elements.
   ///
   /// Equivalent to `map(transform).filterNonNull()`.
   ///
@@ -2593,7 +2624,8 @@ abstract external class Collection<out Element> extends Any {
     transform: (Element) -> Result,
   ): Collection<Result(this != null)>
 
-  /// Transforms this collection by applying [transform] to each element and removing resulting [null] elements.
+  /// Transforms this collection by applying [transform] to each element and removing resulting
+  /// [null] elements.
   ///
   /// [transform] takes two arguments: the index of the element, and the element itself.
   ///
@@ -2702,7 +2734,8 @@ abstract external class Collection<out Element> extends Any {
   /// Same as [min] but returns [null] if this collection is empty.
   abstract minOrNull: Element?
 
-  /// Returns the first element in this collection that is less than or equal to any other element after applying [selector].
+  /// Returns the first element in this collection that is less than or equal to any other element
+  /// after applying [selector].
   ///
   /// Shorthand for `minWith((a, b) -> selector.apply(a) < selector.apply(b))`.
   ///
@@ -2712,9 +2745,11 @@ abstract external class Collection<out Element> extends Any {
   /// Same as [minBy()] but returns [null] if this collection is empty.
   abstract function minByOrNull(selector: (Element) -> Comparable): Element?
 
-  /// Returns the first element in this collection that is less than or equal to any other element according to [comparator].
+  /// Returns the first element in this collection that is less than or equal to any other element
+  /// according to [comparator].
   ///
-  /// [comparator] should return [true] if its first argument is less than its second argument, and [false] otherwise.
+  /// [comparator] should return [true] if its first argument is less than its second argument, and
+  /// [false] otherwise.
   ///
   /// Throws if this collection is empty.
   abstract function minWith(comparator: (Element, Element) -> Boolean): Element
@@ -2722,7 +2757,8 @@ abstract external class Collection<out Element> extends Any {
   /// Same as [minWith()] but returns [null] if this collection is empty.
   abstract function minWithOrNull(comparator: (Element, Element) -> Boolean): Element?
 
-  /// Returns the first element in this collection that is greater than or equal to any other element.
+  /// Returns the first element in this collection that is greater than or equal to any other
+  /// element.
   ///
   /// Shorthand for `maxWith((a, b) -> a < b)`.
   ///
@@ -2732,19 +2768,23 @@ abstract external class Collection<out Element> extends Any {
   /// Same as [max] but returns [null] if this collection empty.
   abstract maxOrNull: Element
 
-  /// Returns the first element in this collection that is greater than or equal to any other element after applying [selector].
+  /// Returns the first element in this collection that is greater than or equal to any other
+  /// element after applying [selector].
   ///
   /// Shorthand for `maxWith((a, b) -> selector.apply(a) < selector.apply(b))`.
   ///
-  /// Throws if this collection is empty, or if any two elements cannot be compared with `<` after applying [selector].
+  /// Throws if this collection is empty, or if any two elements cannot be compared with `<` after
+  /// applying [selector].
   abstract function maxBy(selector: (Element) -> Comparable): Element
 
   /// Same as [maxBy()] but returns [null] if this collection is empty.
   abstract function maxByOrNull(selector: (Element) -> Comparable): Element?
 
-  /// Returns the first element in this collection that is greater than or equal to any other element according to [comparator].
+  /// Returns the first element in this collection that is greater than or equal to any other
+  /// element according to [comparator].
   ///
-  /// [comparator] should return [true] if its first argument is less than its second argument, and [false] otherwise.
+  /// [comparator] should return [true] if its first argument is less than its second argument, and
+  /// [false] otherwise.
   ///
   /// Throws if this collection is empty.
   abstract function maxWith(comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int): Element
@@ -2765,7 +2805,8 @@ abstract external class Collection<out Element> extends Any {
   ///
   /// Shorthand for `sortWith((a, b) -> selector.apply(a) < selector.apply(b))`.
   ///
-  /// Throws if any two elements in this collection cannot be compared with `<` after applying [selector].
+  /// Throws if any two elements in this collection cannot be compared with `<` after applying
+  /// [selector].
   abstract function sortBy(selector: (Element) -> Comparable): Collection<Element>
 
   /// Sorts this collection according to [comparator].
@@ -2803,7 +2844,8 @@ abstract external class Collection<out Element> extends Any {
   /* Note: Can't specify return type precisely. */
   abstract function transpose(): Collection
 
-  /// Converts the elements of this collection to strings and concatenates them inserting [separator] between elements.
+  /// Converts the elements of this collection to strings and concatenates them inserting
+  /// [separator] between elements.
   abstract function join(separator: String): String
 
   /// Converts this collection to a list.
@@ -2816,7 +2858,8 @@ abstract external class Collection<out Element> extends Any {
   /// Returns this collection if it already is a set.
   abstract function toSet(): Set<Element>
 
-  /// Converts this collection to a map by extracting a key and value from each element using the given functions.
+  /// Converts this collection to a map by extracting a key and value from each element using the
+  /// given functions.
   abstract function toMap<Key, Value>(
     keyExtractor: (Element) -> Key,
     valueExtractor: (Element) -> Value,
@@ -2994,7 +3037,8 @@ external class List<out Element> extends Collection<Element> {
 
   /// Returns the sublist from [start] until [exclusiveEnd].
   ///
-  /// Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  /// Throws if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range
+  /// [start]..[length].
   ///
   /// Facts:
   /// ```
@@ -3010,7 +3054,8 @@ external class List<out Element> extends Collection<Element> {
 
   /// Returns the sublist from [start] until [exclusiveEnd].
   ///
-  /// Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range [start]..[length].
+  /// Returns [null] if [start] is outside range `0`..[length] or [exclusiveEnd] is outside range
+  /// [start]..[length].
   ///
   /// Facts:
   /// ```
@@ -3097,7 +3142,8 @@ external class List<out Element> extends Collection<Element> {
   @AlsoKnownAs { names { "unique" } }
   external distinct: List<Element>
 
-  /// Removes elements that are duplicates after applying [selector] from this list, preserving the first occurrence.
+  /// Removes elements that are duplicates after applying [selector] from this list, preserving the
+  /// first occurrence.
   ///
   /// Facts:
   /// ```
