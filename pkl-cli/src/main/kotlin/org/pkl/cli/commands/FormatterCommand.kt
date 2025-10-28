@@ -44,8 +44,8 @@ class FormatterCommand : CliktCommand(name = "format") {
     # Overwrite all Pkl files inside `my/folder/`, recursively.
     pkl format -w my/folder/
     
-    # checks the formatting of `foo.pkl`
-    # writting to stdout the absolute path of the file if it's not properly formatted
+    # Write the paths of all files which have formatting violations to stdout.
+    # Exit with exit code `11` if formatting violations were found.
     pkl format --names foo.pkl
     ```
   """
