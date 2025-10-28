@@ -60,3 +60,18 @@ bar6 =
 bar7 =
   let (bar = 4) /* some comment */
     bar + 5
+
+bar8 =
+  let (bar = 4)
+  // some comment
+  // another comment
+  let (foo = 5)
+    // some comment
+    // another comment
+    bar + foo
+
+bar9 =
+  let (bar = 4)
+    // some comment
+    // another comment
+    bar
