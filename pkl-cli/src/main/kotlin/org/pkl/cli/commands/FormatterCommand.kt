@@ -84,7 +84,7 @@ class FormatterCommand : CliktCommand(name = "format") {
   val names: Boolean by
     option(
         names = arrayOf("--names"),
-        help = "Write the path of files with formatting violations to stdout",
+        help = "Write the path of files with formatting violations to stdout.",
       )
       .flag(default = false)
 
