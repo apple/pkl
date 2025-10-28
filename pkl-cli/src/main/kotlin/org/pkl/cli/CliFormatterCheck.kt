@@ -19,9 +19,13 @@ import java.nio.file.Files
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
+import org.pkl.formatter.GrammarVersion
 
-class CliFormatterCheck(cliBaseOptions: CliBaseOptions, paths: List<Path>) :
-  CliFormatterCommand(cliBaseOptions, paths) {
+class CliFormatterCheck(
+  cliBaseOptions: CliBaseOptions,
+  paths: List<Path>,
+  grammarVersion: GrammarVersion,
+) : CliFormatterCommand(cliBaseOptions, paths, grammarVersion) {
 
   override fun doRun() {
     var status = 0

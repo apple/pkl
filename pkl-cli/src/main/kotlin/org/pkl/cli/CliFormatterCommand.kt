@@ -25,6 +25,7 @@ import kotlin.io.path.walk
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
 import org.pkl.formatter.Formatter
+import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
 
 abstract class CliFormatterCommand
@@ -32,11 +33,12 @@ abstract class CliFormatterCommand
 constructor(
   options: CliBaseOptions,
   protected val paths: List<Path>,
+  protected val grammarVersion: GrammarVersion,
   protected val consoleWriter: Writer = System.out.writer(),
 ) : CliCommand(options) {
   protected fun format(file: Path, contents: String): Pair<String, Int> {
     try {
-      return Formatter().format(contents) to 0
+      return Formatter().format(contents, grammarVersion) to 0
     } catch (pe: GenericParserError) {
       consoleWriter.write("Could not format `$file`: $pe")
       consoleWriter.appendLine()

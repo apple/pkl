@@ -27,27 +27,39 @@ class Formatter {
    * Formats a Pkl file from the given file path.
    *
    * @param path the path to the Pkl file to format
+   * @param grammarVersion grammar compatibility version
    * @return the formatted Pkl source code as a string
    * @throws java.io.IOException if the file cannot be read
    */
-  fun format(path: Path): String {
-    return format(Files.readString(path))
+  fun format(path: Path, grammarVersion: GrammarVersion = GrammarVersion.latest()): String {
+    return format(Files.readString(path), grammarVersion)
   }
 
   /**
    * Formats the given Pkl source code text.
    *
    * @param text the Pkl source code to format
+   * @param grammarVersion grammar compatibility version
    * @return the formatted Pkl source code as a string
    */
-  fun format(text: String): String {
+  fun format(text: String, grammarVersion: GrammarVersion = GrammarVersion.latest()): String {
     val parser = GenericParser()
-    val builder = Builder(text)
+    val builder = Builder(text, grammarVersion)
     val gen = Generator()
     val ast = parser.parseModule(text)
     val formatAst = builder.format(ast)
     // force a line at the end of the file
     gen.generate(Nodes(listOf(formatAst, ForceLine)))
     return gen.toString()
+  }
+}
+
+/** Grammar compatibility version. */
+enum class GrammarVersion(val version: Int, val versionSpan: String) {
+  V1(1, "0.25 - 0.29"),
+  V2(2, "0.30+");
+
+  companion object {
+    fun latest(): GrammarVersion = entries.maxBy { it.version }
   }
 }
