@@ -28,7 +28,6 @@ import kotlin.io.path.walk
 import kotlin.io.path.writeText
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
-import org.pkl.commons.cli.CliException
 import org.pkl.formatter.Formatter
 import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
