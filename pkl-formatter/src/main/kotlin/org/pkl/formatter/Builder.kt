@@ -617,6 +617,17 @@ internal class Builder(sourceText: String) {
     }
   }
 
+  /**
+   * Only considered trailing lamdba if there is only one lambda/new expr/amends expr in the list.
+   *
+   * E.g. avoid formatting `toMap()` weirdly:
+   * ```
+   * foo.toMap(
+   *   (it) -> makeSomeKey(it),
+   *   (it) -> makeSomeValue(it),
+   * )
+   * ```
+   */
   private fun hasTrailingLambda(argList: Node): Boolean {
     val children = argList.firstProperChild()?.children ?: return false
     var seenArg = false
