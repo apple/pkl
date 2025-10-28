@@ -41,7 +41,7 @@ class FormatterCommand : CliktCommand(name = "format") {
     Examples:
     
     ```
-    # formats all Pkl files inside `my/folder/` recursively, overwriting then
+    # Overwrite all Pkl files inside `my/folder/`, recursively.
     pkl format -w my/folder/
     
     # checks the formatting of `foo.pkl`
