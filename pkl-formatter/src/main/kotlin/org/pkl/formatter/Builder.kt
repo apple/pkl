@@ -872,11 +872,14 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun formatIf(node: Node): FormatNode {
+    val separator = if (node.isMultiline()) forceLine() else spaceOrLine()
     val nodes =
       formatGeneric(node.children) { _, next ->
-        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) {
-          Space
-        } else spaceOrLine()
+        // produce `else if` in the case of nested if.
+        // note: don't need to handle if `next.children[0]` is an affix because that can't be
+        // emitted as `else if` anyway.
+        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) Space
+        else separator
       }
     return Group(newId(), nodes)
   }
@@ -968,10 +971,11 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun formatLetExpr(node: Node): FormatNode {
+    val separator = if (node.isMultiline()) forceLine() else spaceOrLine()
     val nodes =
       formatGenericWithGen(
         node.children,
-        { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else spaceOrLine() },
+        { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else separator },
       ) { node, next ->
         if (next == null) {
           if (node.type == NodeType.LET_EXPR) {
@@ -1323,7 +1327,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun hasTrailingAffix(node: Node, next: Node): Boolean {
-    if (node.span.lineEnd < next.span.lineBegin) return false
+    if (node.isMultiline()) return false
     var n: Node? = next
     while (n != null) {
       if (n.type.isAffix && node.span.lineEnd == n.span.lineBegin) return true
@@ -1449,6 +1453,8 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   // returns true if this node is not an affix or terminal
   private fun Node.isProper(): Boolean = !type.isAffix && type != NodeType.TERMINAL
+
+  private fun Node.isMultiline(): Boolean = span.lineBegin < span.lineEnd
 
   private inline fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
     val index = indexOfFirst { pred(it) }
