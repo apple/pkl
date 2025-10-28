@@ -35,3 +35,9 @@ foo6 =
     1
   else
     2
+
+foo7 =
+  if /* some comment */ (bar)
+    1
+  else
+    2
