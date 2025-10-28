@@ -1,14 +1,14 @@
 = Pkl 0.30 Release Notes
 :version: 0.30
 :version-minor: 0.30.0
-:release-date: TBD
+:release-date: October 30th, 2025
 
-link:ROOT:partial$component-attributes.adoc[role=include]
+include::ROOT:partial$component-attributes.adoc[]
 
 Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
-The next release (0.XX) is scheduled for ???..
+The next release (0.31) is scheduled for January 2026.
 To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
 
 Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
@@ -18,15 +18,134 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 == Highlights [small]#💖#
 
-News you don't want to miss.
+[[formatter]]
+=== Canonical Formatter
 
-=== XXX
+TODO
+
+https://github.com/apple/pkl/pull/1107
+https://github.com/apple/pkl/pull/1208
+https://github.com/apple/pkl/pull/1211
+https://github.com/apple/pkl/pull/1215
+https://github.com/apple/pkl/pull/1217
+https://github.com/apple/pkl/pull/1235
+https://github.com/apple/pkl/pull/1246
+https://github.com/apple/pkl/pull/1247
+https://github.com/apple/pkl/pull/1252
+https://github.com/apple/pkl/pull/1260
+
+[IMPORTANT]
+====
+By default, `pkl format` will add <<trailing-commas,trailing commas>> to formatted code.
+The resulting code will be compatible only with Pkl 0.30 and later.
+When code compatibility with older Pkl releases is required the CLI must be invoked with `--grammar-version 1` to prevent adding trailing commas.
+This is especialy important for semantically versioned package, as increasing the minimum required Pkl version is a breaking change and entails incrementing the package's major version.
+====
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0014-canonical-formatter.adoc[SPICE-0014].
+
+[[binary-renderer-parser]]
+=== `pkl-binary` Renderer and Parser
+
+TODO
+
+https://github.com/apple/pkl/pull/1203
+https://github.com/apple/pkl/pull/1250
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0021-binary-renderer-and-parser.adoc[SPICE-0021].
 
 == Noteworthy [small]#🎶#
 
-Ready when you need them.
+[[trailing-commas]]
+=== Trailing Commas
 
-=== XXX
+Pkl's grammar has been updated to allow including a comma following the final item of comma-separated syntax elements (https://github.com/apple/pkl/pull/1137[#1137]).
+These syntax elements are affected:
+
+[source,pkl]
+----
+function add(bar, baz,) = bar + baz // <1>
+foo = add(1, 2,) // <2>
+bar: Mapping<String, Int,> // <3>
+class MyMapping<Key, Value,> {} // <4>
+baz: Listing(!isEmpty, isDistinct,) // <5>
+quz: (String, Int,) -> Boolean // <6>
+quux: Mixin = new { parent, -> // <7>
+  corge = 5
+}
+----
+<1> Function parameter lists in method definitions.
+<2> Argument lists in method calls.
+<3> Type argument lists in declared type names.
+<4> Type parameter lists in class headers (standard library only).
+<5> Type constraint lists.
+<6> Function type parameter lists in function type annotations.
+<7> Object body parameter lists in syntax-sugared lambdas.
+
+To learn more about this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0019-trailing-commas.adoc[SPICE-0019].
+
+=== Pretty-printed traces
+
+TODO
+
+https://github.com/apple/pkl/pull/1100
+https://github.com/apple/pkl/pull/1227
+https://github.com/apple/pkl/pull/1230
+
+=== pkldoc data model revisions
+
+TODO
+
+https://github.com/apple/pkl/pull/1169
+https://github.com/apple/pkl/pull/1224
+https://github.com/apple/pkl/pull/1241
+https://github.com/apple/pkl/pull/1242
+
+=== Java API changes
+
+==== New classes
+
+New classes are introduced to the Java API.
+
+* `org.pkl.core.PklBinaryDecoder`
+
+==== New methods
+
+New methods are introduced to the Java API.
+
+* `org.pkl.core.Evaluator.evaluateExpressionPklBinary`
+* `org.pkl.core.EvaluatorBuilder.setTraceMode`
+* `org.pkl.core.EvaluatorBuilder.getTraceMode`
+
+=== Standard Library changes
+
+New modules, properties, methods, classes and typealiases have been added to the standard library (https://github.com/apple/pkl/pull/1106[#1106]).
+
+==== Additions to `pkl:base`
+
+* {uri-stdlib-BaseValueRenderer}[`BaseValueRenderer`]
+* {uri-stdlib-ValueRenderer}[`ValueRenderer`] (now a subclass of {uri-stdlib-BaseValueRenderer}[`BaseValueRenderer`])
+* {uri-stdlib-BytesRenderer}[`BytesRenderer`]
+* {uri-stdlib-baseModule}/RenderDirective#bytes[`RenderDirective.bytes`]
+
+==== Additions to `pkl:EvaluatorSettings`
+
+* {uri-stdlib-evaluatorSettingsModule}#traceMode[`traceMode`]
+
+=== Additions to `pkl:reflect`
+
+* {uri-stdlib-reflectModule}/Class#allMethods[`Class.allMethods`]
+* {uri-stdlib-reflectModule}/Class#allProperties[`Class.allProperties`]
+* {uri-stdlib-reflectModule}/Propterty#allAnnotations[`Propterty.allAnnotations`]
+* {uri-stdlib-reflectModule}/Propterty#allModifiers[`Propterty.allModifiers`]
+
+=== `pkl` CLI changes
+
+==== REPL interrupt handling
+
+TODO
+
+https://github.com/apple/pkl/pull/1188
 
 == Breaking Changes [small]#💔#
 
@@ -34,20 +153,33 @@ Things to watch out for when upgrading.
 
 === Minimum Kotlin version bump
 
-For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.1 (https://github.com/apple/pkl/pull/900[#900]).
+For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.1 (https://github.com/apple/pkl/pull/1232[#1232]).
 
 == Miscellaneous [small]#🐸#
 
-* XXX
+* Dependency updates (https://github.com/apple/pkl/pull/1184[#1184], https://github.com/apple/pkl/pull/1225[#1225], https://github.com/apple/pkl/pull/1226[#1226], https://github.com/apple/pkl/pull/1228[#1228]).
+* Enforce Pkl formatting of stdlib (https://github.com/apple/pkl/pull/1236[#1236], https://github.com/apple/pkl/pull/1253[#1253], https://github.com/apple/pkl/pull/1258[#1258]).
+* Add internal IntelliJ plugin that's meant to assist with development of the Pkl codebase itself (https://github.com/apple/pkl/pull/1248[#1248]).
+* Update CircleCI macOS instance type and Xcode version (https://github.com/apple/pkl/pull/1243[#1243], https://github.com/apple/pkl/pull/1244[#1244]).
+* Disable multi-jdk testing when running on Windows ARM (https://github.com/apple/pkl/pull/1223[#1223]).
+* Refine documentation for class `Any` (https://github.com/apple/pkl/pull/1194[#1194]).
 
 == Bugs fixed [small]#🐜#
 
 The following bugs have been fixed.
 
-* XXX (https://github.com/apple/pkl/issues/XXX[XXX])
+* Fix error message when reading a resource/module past root dir (https://github.com/apple/pkl/pull/1234[#1234]).
+* Fix publication of pkl-config-kotlin after Gradle 9.1 upgrade (https://github.com/apple/pkl/pull/1240[#1240]).
+* Fix Lexer EOF sentinel collision with valid Unicode code points (https://github.com/apple/pkl/pull/1251[#1251]).
+* Fix fallback certificates not working in certain classloader setups (https://github.com/apple/pkl/pull/1198[#1198]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/netvl[@netvl]
+* https://github.com/spyoungtech[@spyoungtech]
+* https://github.com/srueg[@srueg]
+* https://github.com/stackoverflow[@stackoverflow]

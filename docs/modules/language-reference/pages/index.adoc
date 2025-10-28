@@ -1423,7 +1423,7 @@ The recipe for transforming a listing is:
 . Transform the list using ``List``'s link:{uri-stdlib-List}[rich API].
 . If necessary, convert the list back to a listing.
 
-TIP: Often, transformations happen in a link:{uri-stdlib-PcfRenderer-converters}[converter] of a link:{uri-stdlib-ValueRenderer}[value renderer].
+TIP: Often, transformations happen in a link:{uri-stdlib-PcfRenderer-converters}[converter] of a link:{uri-stdlib-BaseValueRenderer}[value renderer].
 Because most value renderers treat lists the same as listings, it is often not necessary to convert back to a listing.
 
 Equipped with this knowledge, let's try to accomplish our objective:
@@ -1803,7 +1803,7 @@ The recipe for transforming a mapping is:
 . Transform the map using ``Map``'s link:{uri-stdlib-Map}[rich API].
 . If necessary, convert the map back to a mapping.
 
-TIP: Often, transformations happen in a link:{uri-stdlib-PcfRenderer-converters}[converter] of a link:{uri-stdlib-ValueRenderer}[value renderer].
+TIP: Often, transformations happen in a link:{uri-stdlib-PcfRenderer-converters}[converter] of a link:{uri-stdlib-BaseValueRenderer}[value renderer].
 As most value renderers treat maps the same as mappings, it is often not necessary to convert back to a mapping.
 
 Equipped with this knowledge, let's try to accomplish our objective:
