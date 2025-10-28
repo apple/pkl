@@ -131,7 +131,9 @@ endif::[]
 :uri-stdlib-Class: {uri-stdlib-baseModule}/Class
 :uri-stdlib-TypeAlias: {uri-stdlib-baseModule}/TypeAlias
 :uri-stdlib-Deprecated: {uri-stdlib-baseModule}/Deprecated
+:uri-stdlib-BaseValueRenderer: {uri-stdlib-baseModule}/BaseValueRenderer
 :uri-stdlib-ValueRenderer: {uri-stdlib-baseModule}/ValueRenderer
+:uri-stdlib-BytesRenderer: {uri-stdlib-baseModule}/BytesRenderer
 :uri-stdlib-PcfRenderer-converters: {uri-stdlib-baseModule}/PcfRenderer#converters
 :uri-stdlib-Function: {uri-stdlib-baseModule}/Function
 :uri-stdlib-Function0: {uri-stdlib-baseModule}/Function0
