@@ -83,7 +83,14 @@ class FormatterCommand : CliktCommand(name = "format") {
       )
       .flag(default = false)
 
+  val silent: Boolean by
+    option(
+        names = arrayOf("-s", "--silent"),
+        help = "Don't write to stdout or stderr. Mutually exclusive with `--names`.",
+      )
+      .flag(default = false)
+
   override fun run() {
-    CliFormatterCommand(paths, grammarVersion, overwrite, names).run()
+    CliFormatterCommand(paths, grammarVersion, overwrite, names, silent).run()
   }
 }

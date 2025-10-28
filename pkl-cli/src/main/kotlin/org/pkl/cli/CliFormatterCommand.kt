@@ -39,6 +39,7 @@ constructor(
   private val grammarVersion: GrammarVersion,
   private val overwrite: Boolean,
   private val names: Boolean,
+  private val silent: Boolean,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
 ) : CliCommand(CliBaseOptions()) {
@@ -48,9 +49,17 @@ constructor(
   }
 
   private fun writeErr(error: String) {
+    if (silent) return
     errWriter.write(error)
     errWriter.appendLine()
     errWriter.flush()
+  }
+
+  private fun write(message: String) {
+    if (silent) return
+    consoleWriter.write(message)
+    consoleWriter.appendLine()
+    consoleWriter.flush()
   }
 
   private fun allPaths(): Stream<Path> {
@@ -78,12 +87,10 @@ constructor(
           status.update(FORMATTING_VIOLATION)
           if (names || overwrite) {
             // if `--names` or `-w` is specified, only write file names
-            consoleWriter.write(path.toAbsolutePath().toString())
+            write(path.toAbsolutePath().toString())
           } else {
-            consoleWriter.write(formatted)
+            write(formatted)
           }
-          consoleWriter.appendLine()
-          consoleWriter.flush()
 
           if (overwrite) {
             path.writeText(formatted, Charsets.UTF_8)
@@ -99,8 +106,14 @@ constructor(
     }
 
     when (status.status) {
-      FORMATTING_VIOLATION -> throw CliException("Formatting violations were found.", status.status)
-      ERROR -> throw CliException("An error occurred during formatting.", status.status)
+      FORMATTING_VIOLATION -> {
+        val message = if (silent) "" else "Formatting violations were found."
+        throw CliException(message, status.status)
+      }
+      ERROR -> {
+        val message = if (silent) "" else "An error occurred during formatting."
+        throw CliException(message, status.status)
+      }
     }
   }
 
