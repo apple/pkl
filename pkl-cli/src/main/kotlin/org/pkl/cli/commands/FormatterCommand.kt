@@ -77,7 +77,7 @@ class FormatterCommand : CliktCommand(name = "format") {
   val overwrite: Boolean by
     option(
         names = arrayOf("-w", "--write"),
-        help = "Format files in place, overwriting them. Implies `--names`",
+        help = "Format files in place, overwriting them. Implies `--names`.",
       )
       .flag(default = false)
 
