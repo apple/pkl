@@ -15,19 +15,19 @@
  */
 package org.pkl.cli
 
-import com.github.ajalt.clikt.core.ProgramResult
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
+import java.util.stream.Stream
 import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
-import kotlin.io.path.walk
 import kotlin.io.path.writeText
+import kotlin.math.max
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
+import org.pkl.commons.cli.CliException
 import org.pkl.formatter.Formatter
 import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
@@ -53,28 +53,29 @@ constructor(
     errWriter.flush()
   }
 
-  @OptIn(ExperimentalPathApi::class)
-  private fun paths(): Set<Path> {
-    val allPaths = mutableSetOf<Path>()
-    for (path in paths) {
-      if (path.isDirectory()) {
-        allPaths.addAll(path.walk().filter { it.extension == "pkl" || it.name == "PklProject" })
-      } else {
-        allPaths.add(path)
+  private fun allPaths(): Stream<Path> {
+    return paths
+      .distinct()
+      .stream()
+      .flatMap { path ->
+        if (path.isDirectory()) {
+          Files.walk(path).filter { it.extension == "pkl" || it.name == "PklProject" }
+        } else {
+          Stream.of(path)
+        }
       }
-    }
-    return allPaths
+      .map { it.normalize().toAbsolutePath() }
   }
 
   override fun doRun() {
     val status = Status(SUCCESS)
 
-    for (path in paths()) {
+    for (path in allPaths()) {
       try {
         val contents = Files.readString(path)
         val formatted = format(contents)
         if (contents != formatted) {
-          status.update(VALIDATION_ERROR)
+          status.update(FORMATTING_VIOLATION)
           if (names || overwrite) {
             // if `--names` or `-w` is specified, only write file names
             consoleWriter.write(path.toAbsolutePath().toString())
@@ -97,17 +98,25 @@ constructor(
       }
     }
 
-    throw ProgramResult(status.status)
+    when (status.status) {
+      FORMATTING_VIOLATION -> throw CliException("Formatting violations were found.", status.status)
+      ERROR -> throw CliException("An error occurred during formatting.", status.status)
+    }
   }
 
   companion object {
     private const val SUCCESS = 0
-    private const val VALIDATION_ERROR = 11
+    private const val FORMATTING_VIOLATION = 11
     private const val ERROR = 1
 
     private class Status(var status: Int) {
       fun update(newStatus: Int) {
-        status = if (newStatus == ERROR || newStatus > status) newStatus else status
+        status =
+          when {
+            status == ERROR -> status
+            newStatus == ERROR -> newStatus
+            else -> max(status, newStatus)
+          }
       }
     }
   }

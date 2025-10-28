@@ -33,20 +33,15 @@ class FormatterCommand : CliktCommand(name = "format") {
     """
     Format or check formatting of Pkl files.
     
-    Exit codes:
-      - 0: All files were properly formatted
-      - 1: A non-formatting error ocurred (Ex.: IO error)
-      - 11: One or more files had formatting violations
-    
     Examples:
     
     ```
     # Overwrite all Pkl files inside `my/folder/`, recursively.
-    pkl format -w my/folder/
+    $ pkl format -w my/folder/
     
     # Write the paths of all files which have formatting violations to stdout.
     # Exit with exit code `11` if formatting violations were found.
-    pkl format --names foo.pkl
+    $ pkl format --names foo.pkl
     ```
   """
       .trimIndent()
