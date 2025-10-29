@@ -972,18 +972,22 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun formatLetExpr(node: Node): FormatNode {
     val separator = if (node.isMultiline()) forceLine() else spaceOrLine()
+    val endsWithLet = node.children.last().type == NodeType.LET_EXPR
     val nodes =
       formatGenericWithGen(
         node.children,
         { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else separator },
-      ) { node, next ->
-        if (next == null) {
-          if (node.type == NodeType.LET_EXPR) {
+      ) { node, _ ->
+        when {
+          node.type == NodeType.LET_EXPR -> {
             // unpack the lets
             val group = formatLetExpr(node) as Group
             Nodes(group.nodes)
-          } else indent(format(node))
-        } else format(node)
+          }
+          endsWithLet -> format(node)
+          node.type.isExpression || node.type.isAffix -> indent(format(node))
+          else -> format(node)
+        }
       }
     return Group(newId(), nodes)
   }
