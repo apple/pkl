@@ -42,6 +42,9 @@ class FormatterCommand : CliktCommand(name = "format") {
     # Write the paths of all files which have formatting violations to stdout.
     # Exit with exit code `11` if formatting violations were found.
     $ pkl format --names foo.pkl
+    
+    # Format Pkl code from stdin.
+    $ echo "foo = 1" | pkl format -
     ```
   """
       .trimIndent()
@@ -49,8 +52,8 @@ class FormatterCommand : CliktCommand(name = "format") {
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
   val paths: List<Path> by
-    argument(name = "paths", help = "Files or directory to check.")
-      .path(mustExist = true, canBeDir = true)
+    argument(name = "paths", help = "Files or directory to check. Use `-` to read from stdin.")
+      .path(mustExist = false, canBeDir = true)
       .multiple()
 
   val grammarVersion: GrammarVersion by

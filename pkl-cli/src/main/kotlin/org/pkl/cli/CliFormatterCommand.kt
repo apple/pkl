@@ -27,7 +27,7 @@ import kotlin.io.path.writeText
 import kotlin.math.max
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
-import org.pkl.commons.cli.CliException
+import org.pkl.commons.cli.CliTestException
 import org.pkl.formatter.Formatter
 import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
@@ -79,6 +79,55 @@ constructor(
   override fun doRun() {
     val status = Status(SUCCESS)
 
+    // Handle stdin input when path is "-"
+    if (paths.size == 1 && paths[0].toString() == "-") {
+      handleStdin(status)
+    } else {
+      handleFilePaths(status)
+    }
+
+    when (status.status) {
+      FORMATTING_VIOLATION -> {
+        if (!silent) {
+          writeErr("Formatting violations were found.")
+        }
+        // using CliTestException instead of CliException because we want full control on how to
+        // print errors
+        throw CliTestException("", status.status)
+      }
+      ERROR -> {
+        if (!silent) {
+          writeErr("An error occurred during formatting.")
+        }
+        throw CliTestException("", status.status)
+      }
+    }
+  }
+
+  private fun handleStdin(status: Status) {
+    try {
+      val contents = System.`in`.bufferedReader().use { it.readText() }
+      val formatted = format(contents)
+
+      if (contents != formatted) {
+        status.update(FORMATTING_VIOLATION)
+      }
+
+      // For stdin, always output the formatted result (unless silent)
+      // The --names and -w flags don't make sense for stdin
+      if (!silent) {
+        write(formatted)
+      }
+    } catch (pe: GenericParserError) {
+      writeErr("Could not format stdin: $pe")
+      status.update(ERROR)
+    } catch (e: IOException) {
+      writeErr("IO error while reading stdin: ${e.message}")
+      status.update(ERROR)
+    }
+  }
+
+  private fun handleFilePaths(status: Status) {
     for (path in allPaths()) {
       try {
         val contents = Files.readString(path)
@@ -88,13 +137,15 @@ constructor(
           if (names || overwrite) {
             // if `--names` or `-w` is specified, only write file names
             write(path.toAbsolutePath().toString())
-          } else {
-            write(formatted)
           }
 
           if (overwrite) {
             path.writeText(formatted, Charsets.UTF_8)
           }
+        }
+
+        if (!names && !overwrite) {
+          write(formatted)
         }
       } catch (pe: GenericParserError) {
         writeErr("Could not format `$path`: $pe")
@@ -102,17 +153,6 @@ constructor(
       } catch (e: IOException) {
         writeErr("IO error while reading `$path`: ${e.message}")
         status.update(ERROR)
-      }
-    }
-
-    when (status.status) {
-      FORMATTING_VIOLATION -> {
-        val message = if (silent) "" else "Formatting violations were found."
-        throw CliException(message, status.status)
-      }
-      ERROR -> {
-        val message = if (silent) "" else "An error occurred during formatting."
-        throw CliException(message, status.status)
       }
     }
   }
