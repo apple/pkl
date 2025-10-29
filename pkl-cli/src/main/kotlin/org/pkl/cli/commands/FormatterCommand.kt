@@ -39,9 +39,9 @@ class FormatterCommand : CliktCommand(name = "format") {
     # Overwrite all Pkl files inside `my/folder/`, recursively.
     $ pkl format -w my/folder/
     
-    # Write the paths of all files which have formatting violations to stdout.
+    # Check formatting of all files, printing filenames with formatting violations to stdout.
     # Exit with exit code `11` if formatting violations were found.
-    $ pkl format --names foo.pkl
+    $ pkl format --names my/folder/
     
     # Format Pkl code from stdin.
     $ echo "foo = 1" | pkl format -

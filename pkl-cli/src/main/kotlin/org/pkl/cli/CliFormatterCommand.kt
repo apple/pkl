@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import java.io.File
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
@@ -28,6 +29,9 @@ import kotlin.math.max
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliTestException
+import org.pkl.core.ModuleSource
+import org.pkl.core.runtime.VmUtils
+import org.pkl.core.util.IoUtils
 import org.pkl.formatter.Formatter
 import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
@@ -49,7 +53,6 @@ constructor(
   }
 
   private fun writeErr(error: String) {
-    if (silent) return
     errWriter.write(error)
     errWriter.appendLine()
     errWriter.flush()
@@ -62,29 +65,23 @@ constructor(
     consoleWriter.flush()
   }
 
-  private fun allPaths(): Stream<Path> {
-    return paths
-      .distinct()
-      .stream()
-      .flatMap { path ->
-        if (path.isDirectory()) {
-          Files.walk(path).filter { it.extension == "pkl" || it.name == "PklProject" }
-        } else {
-          Stream.of(path)
-        }
+  private fun allSources(): Stream<ModuleSource> {
+    return paths.distinct().stream().flatMap { path ->
+      when {
+        path.toString() == "-" -> Stream.of(ModuleSource.text(IoUtils.readString(System.`in`)))
+        path.isDirectory() ->
+          Files.walk(path)
+            .filter { it.extension == "pkl" || it.name == "PklProject" }
+            .map(ModuleSource::path)
+        else -> Stream.of(ModuleSource.path(path))
       }
-      .map { it.normalize().toAbsolutePath() }
+    }
   }
 
   override fun doRun() {
     val status = Status(SUCCESS)
 
-    // Handle stdin input when path is "-"
-    if (paths.size == 1 && paths[0].toString() == "-") {
-      handleStdin(status)
-    } else {
-      handleFilePaths(status)
-    }
+    handleSources(status)
 
     when (status.status) {
       FORMATTING_VIOLATION -> {
@@ -104,33 +101,21 @@ constructor(
     }
   }
 
-  private fun handleStdin(status: Status) {
-    try {
-      val contents = System.`in`.bufferedReader().use { it.readText() }
-      val formatted = format(contents)
-
-      if (contents != formatted) {
-        status.update(FORMATTING_VIOLATION)
-      }
-
-      // For stdin, always output the formatted result (unless silent)
-      // The --names and -w flags don't make sense for stdin
-      if (!silent) {
-        write(formatted)
-      }
-    } catch (pe: GenericParserError) {
-      writeErr("Could not format stdin: $pe")
-      status.update(ERROR)
-    } catch (e: IOException) {
-      writeErr("IO error while reading stdin: ${e.message}")
-      status.update(ERROR)
-    }
-  }
-
-  private fun handleFilePaths(status: Status) {
-    for (path in allPaths()) {
+  private fun handleSources(status: Status) {
+    for (source in allSources()) {
+      val path = if (source.uri == VmUtils.REPL_TEXT_URI) Path.of("-") else Path.of(source.uri)
       try {
-        val contents = Files.readString(path)
+        val contents =
+          if (source.contents != null) {
+            if (overwrite) {
+              writeErr("Cannot write formatted output for stdin input.")
+              throw CliTestException("", ERROR)
+            }
+            source.contents!!
+          } else {
+            File(source.uri).readText()
+          }
+
         val formatted = format(contents)
         if (contents != formatted) {
           status.update(FORMATTING_VIOLATION)
