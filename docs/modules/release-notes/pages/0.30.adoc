@@ -13,7 +13,7 @@ This release introduces a code formatter, and an in-language API for producing `
 The next release (0.31) is scheduled for February 2026.
 To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
 
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
 [small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
@@ -23,7 +23,7 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 [[formatter]]
 === Formatter
 
-Pkl now has a formatter (https://github.com/apple/pkl/pull/1107[#1107], https://github.com/apple/pkl/pull/1208[#1208], https://github.com/apple/pkl/pull/1211[#1211], https://github.com/apple/pkl/pull/1215[#1215], https://github.com/apple/pkl/pull/1217[#1217], https://github.com/apple/pkl/pull/1235[#1235], https://github.com/apple/pkl/pull/1246[#1246], https://github.com/apple/pkl/pull/1247[#1247], https://github.com/apple/pkl/pull/1252[#1252], https://github.com/apple/pkl/pull/1260[#1260])!
+Pkl now has a formatter (https://github.com/apple/pkl/pull/1107[#1107], https://github.com/apple/pkl/pull/1208[#1208], https://github.com/apple/pkl/pull/1211[#1211], https://github.com/apple/pkl/pull/1215[#1215], https://github.com/apple/pkl/pull/1217[#1217], https://github.com/apple/pkl/pull/1235[#1235], https://github.com/apple/pkl/pull/1246[#1246], https://github.com/apple/pkl/pull/1247[#1247], https://github.com/apple/pkl/pull/1252[#1252], https://github.com/apple/pkl/pull/1256[#1256], https://github.com/apple/pkl/pull/1259[#1259], https://github.com/apple/pkl/pull/1260[#1260], https://github.com/apple/pkl/pull/1263[#1263], https://github.com/apple/pkl/pull/1265[#1265], https://github.com/apple/pkl/pull/1266[#1266])!
 
 Pkl's formatter is _canonical_, which means that it has a single set of formatting rules, with (almost) no configuration options.
 The goal is to eliminate the possibility of formatting debates, which can lead to churn and bike-shedding.
@@ -102,9 +102,9 @@ A new in-language API has been added to render values into xref:bindings-specifi
 https://github.com/apple/pkl/pull/1250[#1250]).
 
 It's sometimes useful to separate Pkl evaluation from data consumption when used as application or service configuration.
-This is possible with the pkl-binary format, which is a lossless encoding of Pkl data.
+This is possible with the `pkl-binary` format, which is a lossless encoding of Pkl data.
 
-In this approach, Pkl is first rendered into pkl-binary during build time, and then deserialized into classes and structs at startup time.
+In this approach, Pkl is first rendered into `pkl-binary` during build time, and then deserialized into classes and structs at startup time.
 This means that the Pkl evaluator does not need to be shipped with the application, which improves code portability and eliminates runtime overhead.
 
 However, currently, the API for getting this binary format is somewhat cumbersome.
@@ -112,11 +112,12 @@ Only the host languages have access to this API (for example, https://swiftpacka
 This means that one-off logic must be written to render this format in the host language.
 
 In 0.30, this renderer is added as an in-language API, through the {uri-stdlib-pklbinaryModule}[`pkl:pklbinary`] standard library module.
-Additionally, it is available through CLI flag `--format pklbinary`.
+Additionally, it is available through CLI flag `--format pkl-binary`.
 
 For example:
 
-[source%tested,pkl]
+// this is parsed instead of tested because DocSnippetTests only handles textual output (via ReplServer)
+[source%parsed,pkl]
 ----
 import "pkl:pklbinary"
 
@@ -124,6 +125,8 @@ output {
   renderer = new pklbinary.Renderer {}
 }
 ----
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0021-binary-renderer-and-parser.adoc[SPICE-0021].
 
 ==== New renderer type: `BytesRenderer`
 
@@ -135,7 +138,48 @@ Setting a module's output renderer to a `BytesRenderer` will control its resulti
 
 This affects usage scenarios where a module's `output.bytes` is evaluated, for example, when using `pkl eval`.
 
-To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0021-binary-renderer-and-parser.adoc[SPICE-0021].
+==== Using `pkl-binary` data
+
+Users of `pkl-config-java` can decode `pkl-binary` data into a `Config` value for mapping to Java types:
+
+[source,java]
+----
+var encodedData; // some byte[] or InputStream
+var config = Config.from(encodedData);
+var pigeon = config.get("pigeon");
+var age = pigeon.get("age").as(int.class);
+var diet = pigeon.get("diet").as(JavaType.listOf(String.class));
+----
+
+Users of `pkl-config-kotlin` can decode `pkl-binary` data into a `Config` value for mapping to Kotlin types:
+
+[source,kotlin]
+----
+val encodedData // some ByteArray or InputStream
+val config = Config.from(encodedData, ValueMapper.preconfigured().forKotlin())
+val pigeon = config["pigeon"]
+val age = pigeon["age"].to<Int>()
+val hobbies = pigeon["diet"].to<List<String>>()
+----
+
+Users of `pkl-go` can unmarshal `pkl-binary` data directly into structs generated by `pkl-gen-go`:
+
+[source,go]
+----
+var encodedData []byte
+var result MyGeneratedStruct
+if err := pkl.Unmarshal(encodedData, &result); err != nil {
+  // handle error
+} 
+----
+
+Users of `pkl-swift` can unmarshal `pkl-binary` data directly into structs generated by `pkl-gen-swift`:
+
+[source,swift]
+----
+let encodedData: [UInt8]
+let result = try PklDecoder.decode(MyGeneratedStruct.self, from: encodedData)
+----
 
 == Noteworthy [small]#🎶#
 
@@ -158,37 +202,40 @@ foo = add(
   2, // <2>
 )
 
-bar: Mapping<
-  String,
-  Int, // <3>
->
-
-typeealias MyMapping<
+typealias MyMapping<
   Key,
-  Value, // <4>
+  Value, // <3>
 > = Mapping<Key, Value>
 
-baz: Listing(
-  !isEmpty,
-  isDistinct, // <5>
+bar: Mapping<
+  String,
+  Int, // <4>
+>
+
+baz: Mapping(
+  !containsKey("forbidden key"),
+  !containsKey("forbidden value"), // <5>
 )
 
-quz: (
+qux: (
   String,
   Int, // <6>
-) -> Boolean
+) -> Dynamic =
+  (paramA, paramB) -> new Dynamic {
+    quux = "\(paramA): \(paramB)"
+  }
 
-quux: Mixin = new {
+corge = (qux) {
   paramA,
   paramB, // <7>
   ->
-  corge = 5
+  grault = paramA.length * paramB
 }
 ----
 <1> Function parameter lists in method definitions.
 <2> Argument lists in method calls.
-<3> Type argument lists in declared type names.
-<4> Type parameter lists.
+<3> Type parameter lists in generic type definitions.
+<4> Type argument lists in type annotations and casts.
 <5> Type constraint lists.
 <6> Function type parameter lists in function type annotations.
 <7> Object body parameter lists.
@@ -252,6 +299,7 @@ New methods are introduced to the Java API.
 * `org.pkl.core.Evaluator.evaluateExpressionPklBinary`
 * `org.pkl.core.EvaluatorBuilder.setTraceMode`
 * `org.pkl.core.EvaluatorBuilder.getTraceMode`
+* `org.pkl.config.java.Config.from`
 
 === Standard Library changes
 
@@ -338,4 +386,5 @@ We would like to thank the contributors to this release (in alphabetical order):
 * https://github.com/netvl[@netvl]
 * https://github.com/spyoungtech[@spyoungtech]
 * https://github.com/srueg[@srueg]
+* https://github.com/ssalevan[@ssalevan]
 * https://github.com/stackoverflow[@stackoverflow]
