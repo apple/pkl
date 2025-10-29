@@ -85,9 +85,6 @@ constructor(
 
     when (status.status) {
       FORMATTING_VIOLATION -> {
-        if (!silent) {
-          writeErr("Formatting violations were found.")
-        }
         // using CliTestException instead of CliException because we want full control on how to
         // print errors
         throw CliTestException("", status.status)
