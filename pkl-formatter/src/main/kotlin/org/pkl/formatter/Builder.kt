@@ -183,14 +183,14 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   private fun formatModuleDefinition(node: Node): FormatNode {
     val (prefixes, nodes) = splitPrefixes(node.children)
     val fnodes =
-      formatGenericWithGen(nodes, spaceOrLine()) { node, next ->
-        if (next == null) {
-          indent(format(node))
+      formatGenericWithGen(nodes, Space) { node, _ ->
+        if (node.type == NodeType.QUALIFIED_IDENTIFIER) {
+          Nodes(formatGeneric(node.children, null))
         } else {
           format(node)
         }
       }
-    val res = Group(newId(), fnodes)
+    val res = Nodes(fnodes)
     return if (prefixes.isEmpty()) {
       res
     } else {
