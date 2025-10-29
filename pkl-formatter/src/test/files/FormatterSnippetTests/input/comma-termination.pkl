@@ -14,3 +14,5 @@ trailingCommaInLambdas = (fooooooooooooooooooooooooooooooooo, baaaaaaaaaaaaaaaaa
 trailingCommaInConstraints: String(isSomethingSomethingSomething, isSomethingElse, isSomethingSomethingSomethingElse)
 
 trailingCommaInTypeParameters: Mapping<SomethingSomethingSomethingSomething, SomethingSomething | SomethingElse>
+
+functionType: (ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType, ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2,) -> String

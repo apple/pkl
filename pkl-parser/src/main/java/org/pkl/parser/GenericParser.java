@@ -1169,7 +1169,11 @@ public class GenericParser {
               elements.add(parseType(")"));
               ff(elements);
               while (lookahead == Token.COMMA) {
-                elements.add(makeTerminal(next()));
+                var comma = next();
+                if (lookahead == Token.RPAREN) {
+                  break;
+                }
+                elements.add(makeTerminal(comma));
                 ff(elements);
                 elements.add(parseType(")"));
                 totalTypes++;
