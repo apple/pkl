@@ -342,6 +342,7 @@ In Pkl 0.29, it is an error to load a module or resource with an opaque `file:` 
 
 NOTE: To import or read a relative path, omit `file:` from the import string. For example, `import("foo/bar.txt")` instead of `import("file:foo/bar.txt")`.
 
+[[new-base-module-names]]
 === New base module names: `Bytes` and `Charset`
 
 Two new names are introduced to the base module: `Bytes` and `Charset`.

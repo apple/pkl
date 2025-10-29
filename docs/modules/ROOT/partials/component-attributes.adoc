@@ -74,6 +74,7 @@ endif::[]
 :uri-stdlib-mathModule: {uri-pkl-stdlib-docs}/math
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
+:uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
 :uri-stdlib-evaluatorSettingsModule: {uri-pkl-stdlib-docs}/EvaluatorSettings
 :uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
 :uri-stdlib-evaluatorSettingsHttpClass: {uri-stdlib-evaluatorSettingsModule}/Http
