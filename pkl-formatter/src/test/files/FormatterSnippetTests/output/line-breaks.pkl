@@ -73,3 +73,12 @@ local const function someFunction(param1: String, param2: String(!isBlank)): Boo
 local function render(currentIndent: String) =
   "\(currentIndent)@\(identifier.render(currentIndent))"
     + if (body == null) "" else " " + body.render(currentIndent)
+
+// FIXME: output is currently unstable
+// items: List<Item> =
+//   allItems
+//     .filter((item) ->
+//     badItems.containsKey(item) // some line comment 
+//     || item.tags.toList().findOrNull((it) -> it.type == "bookmark") != null // some other line comment
+//   )
+//     .sortBy((item) -> item.name)
