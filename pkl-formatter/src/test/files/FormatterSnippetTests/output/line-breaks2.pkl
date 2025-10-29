@@ -1,7 +1,4 @@
-module
-  reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly
-    .loooooooooooooooooooooooooooooooog
-    .naaaaaaaaaaaaaaaaaaaaaaaaaame
+module reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaly.loooooooooooooooooooooooooooooooog.naaaaaaaaaaaaaaaaaaaaaaaaaame
 
 extends
   "reaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongModule.pkl"
