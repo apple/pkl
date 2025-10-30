@@ -3,6 +3,8 @@
 :version-minor: 0.30.0
 :release-date: November 3rd, 2025
 
+:yaml-binary-scalar: https://yaml.org/type/binary.html
+
 include::ROOT:partial$component-attributes.adoc[]
 
 Pkl {version} was released on {release-date}. +
@@ -268,7 +270,7 @@ Thanks to https://github.com/ssalevan[@ssalevan] for their contribution to this 
 === Better support for `Bytes` when rendering YAML
 
 Previously, attempting to render a `Bytes` value using {uri-stdlib-YamlRenderer}[`YamlRenderer`] required the use of a link:{uri-stdlib-PcfRenderer-converters}[converter].
-Now, Pkl can natively render YAML containing https://yaml.org/type/binary.html[binary scalars] (https://github.com/apple/pkl/pull/1276[#1276]).
+Now, Pkl can natively render YAML containing link:{yaml-binary-scalar}[binary scalars] (https://github.com/apple/pkl/pull/1276[#1276]).
 
 [source,pkl%tested]
 ----
@@ -279,6 +281,22 @@ foo {
 rendered = new YamlRenderer {}.renderValue(foo) // <1>
 ----
 <1> Result: `bar: !!binary AQID`
+
+Similarly, link:{uri-stdlib-YamlParser}[`yaml.Parser`] now parses binary YAML values as Pkl link:{uri-stdlib-Bytes}[`Bytes`] values (https://github.com/apple/pkl/pull/1277[#1277]).
+This is a breaking change; previously these values were parsed as link:{uri-stdlib-String}[`String`] value containing the base64-encoded binary data.
+
+[source,pkl%tested]
+----
+import "pkl:yaml"
+
+yamlData = 
+  """
+  bytes: !!binary AQID
+  """
+
+parsed = new yaml.Parser {}.parse(yamlData).bytes // <1>
+----
+<1> Result: `Bytes(1, 2, 3)`
 
 [[pkldoc-perf-improvements]]
 === `pkldoc` performance improvements
@@ -359,6 +377,11 @@ Instead of exiting immediately, it behaves like other REPLs:
 
 Things to watch out for when upgrading.
 
+=== Binary data handling `yaml.Parser`
+
+link:{yaml-binary-scalar}[YAML binary scalars] are now parsed as link:{uri-stdlib-Bytes}[`Bytes`] values.
+Prior versions of Pkl parsed binary scalars as link:{uri-stdlib-String}[`String`] values containing the base64-encoded binary data.
+
 === Minimum Kotlin version bump
 
 For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.1 (https://github.com/apple/pkl/pull/1232[#1232]).
@@ -379,7 +402,7 @@ See <<pkldoc-migration>> for more details.
 == Miscellaneous [small]#🐸#
 
 * Dependency updates (https://github.com/apple/pkl/pull/1184[#1184], https://github.com/apple/pkl/pull/1225[#1225], https://github.com/apple/pkl/pull/1226[#1226], https://github.com/apple/pkl/pull/1228[#1228]).
-* Enforce Pkl formatting of stdlib (https://github.com/apple/pkl/pull/1236[#1236], https://github.com/apple/pkl/pull/1253[#1253], https://github.com/apple/pkl/pull/1258[#1258], https://github.com/apple/pkl/pull/1278[#1278]).
+* Enforce Pkl formatting of stdlib (https://github.com/apple/pkl/pull/1236[#1236], https://github.com/apple/pkl/pull/1253[#1253], https://github.com/apple/pkl/pull/1258[#1258], https://github.com/apple/pkl/pull/1278[#1278], https://github.com/apple/pkl/pull/1279[#1279]).
 * Add internal IntelliJ plugin that's meant to assist with development of the Pkl codebase itself (https://github.com/apple/pkl/pull/1248[#1248]).
 * Update CircleCI macOS instance type and Xcode version (https://github.com/apple/pkl/pull/1243[#1243], https://github.com/apple/pkl/pull/1244[#1244]).
 * Disable multi-jdk testing when running on Windows ARM (https://github.com/apple/pkl/pull/1223[#1223]).
