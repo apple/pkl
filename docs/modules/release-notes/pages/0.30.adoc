@@ -99,7 +99,7 @@ To ensure compatibility, use the `--grammar-version 1` CLI flag.
 === `pkl-binary` in-language Renderer
 
 A new in-language API has been added to render values into xref:bindings-specification:binary-encoding.adoc[pkl-binary encoding] (https://github.com/apple/pkl/pull/1203[#1203],
-https://github.com/apple/pkl/pull/1250[#1250]).
+https://github.com/apple/pkl/pull/1250[#1250], https://github.com/apple/pkl/pull/1275[#1275]).
 
 It's sometimes useful to separate Pkl evaluation from data consumption when used as application or service configuration.
 This is possible with the `pkl-binary` format, which is a lossless encoding of Pkl data.
@@ -149,7 +149,7 @@ Java::
 [source,java]
 ----
 var encodedData = fetchEncodedData(); // some byte[] or InputStream
-var config = Config.from(encodedData);
+var config = Config.fromPklBinary(encodedData);
 var appConfig = config.as(AppConfig.class);
 ----
 
@@ -158,7 +158,7 @@ Kotlin::
 [source,kotlin]
 ----
 val encodedData = fetchEncodedData() // some ByteArray or InputStream
-val config = Config.from(encodedData, ValueMapper.preconfigured().forKotlin())
+val config = Config.fromPklBinary(encodedData, ValueMapper.preconfigured().forKotlin())
 val appConfig = config.to<AppConfig>()
 ----
 
@@ -168,7 +168,7 @@ Go::
 ----
 encodedData := fetchEncodedData() // some []byte
 var appConfig AppConfig
-if err := pkl.Unmarshal(encodedData, &result); err != nil {
+if err := pkl.Unmarshal(encodedData, &appConfig); err != nil {
   // handle error
 } 
 ----
