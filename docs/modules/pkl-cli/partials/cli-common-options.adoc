@@ -163,3 +163,11 @@ The left-hand side describes the source prefix, and the right-hand describes the
 This option is commonly used to enable package mirroring.
 The above example will rewrite URL `\https://pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0` to `\https://my.internal.mirror/pkl-k8s/k8s@1.0.0`.
 ====
+
+.--trace-mode
+[%collapsible]
+====
+Default: `compact` +
+Specifies how `trace()` output is formatted.
+Possible options are `compact` and `pretty`.
+====

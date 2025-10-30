@@ -2,7 +2,9 @@
 include::ROOT:partial$component-attributes.adoc[]
 
 [[release-0.30.0]]
-== 0.30.0 (TBD)
+== 0.30.0 (2025-10-30)
+
+xref:0.30.adoc[Release notes]
 
 [[release-0.29.1]]
 == 0.29.1 (2025-08-27)

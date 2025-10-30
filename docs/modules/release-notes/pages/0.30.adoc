@@ -1,32 +1,344 @@
 = Pkl 0.30 Release Notes
 :version: 0.30
 :version-minor: 0.30.0
-:release-date: TBD
+:release-date: November 3rd, 2025
 
-link:ROOT:partial$component-attributes.adoc[role=include]
+include::ROOT:partial$component-attributes.adoc[]
 
 Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
 
-The next release (0.XX) is scheduled for ???..
+This release introduces a code formatter, and an in-language API for producing `pkl-binary` output.
+
+The next release (0.31) is scheduled for February 2026.
 To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
 
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[Github]. +
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
 
 [small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
 To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 == Highlights [small]#💖#
 
-News you don't want to miss.
+[[formatter]]
+=== Formatter
 
-=== XXX
+Pkl now has a formatter (https://github.com/apple/pkl/pull/1107[#1107], https://github.com/apple/pkl/pull/1208[#1208], https://github.com/apple/pkl/pull/1211[#1211], https://github.com/apple/pkl/pull/1215[#1215], https://github.com/apple/pkl/pull/1217[#1217], https://github.com/apple/pkl/pull/1235[#1235], https://github.com/apple/pkl/pull/1246[#1246], https://github.com/apple/pkl/pull/1247[#1247], https://github.com/apple/pkl/pull/1252[#1252], https://github.com/apple/pkl/pull/1256[#1256], https://github.com/apple/pkl/pull/1259[#1259], https://github.com/apple/pkl/pull/1260[#1260], https://github.com/apple/pkl/pull/1263[#1263], https://github.com/apple/pkl/pull/1265[#1265], https://github.com/apple/pkl/pull/1266[#1266], https://github.com/apple/pkl/pull/1267[#1267], https://github.com/apple/pkl/pull/1270[#1270], https://github.com/apple/pkl/pull/1271[#1271], https://github.com/apple/pkl/pull/1272[#1272], https://github.com/apple/pkl/pull/1273[#1273], https://github.com/apple/pkl/pull/1274[#1274])!
+
+Pkl's formatter is _canonical_, which means that it has a single set of formatting rules, with (almost) no configuration options.
+The goal is to eliminate the possibility of formatting debates, which can lead to churn and bike-shedding.
+
+The formatter is available both as a CLI subcommand and as a Java API.
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0014-canonical-formatter.adoc[SPICE-0014].
+
+==== Using the CLI
+
+The Pkl formatter is available under the `pkl format` subcommand. By default, the command will concatenate and write all formatted content to standard out.
+
+To simply check for formatting violations, getting formatted output on stdout is likely too verbose.
+The `--silent` flag can be used to omit any output, and the <<formatting-exit-codes,exit code>> can be used to determine
+if there are formatting violations.
+
+[source,shell]
+----
+pkl format --silent . || echo "Formatting violations were found!"
+----
+
+Alternatively, the `--names` flag will print out the names of any files that have formatting violations.
+
+[source,shell]
+----
+pkl format --diff-name-only .
+----
+
+To apply formatting, use the `--overwrite` (`-w`) flag.
+This also implies the `--diff-name-only` flag.
+
+[source,shell]
+----
+pkl format -w .
+----
+
+[[formatting-exit-codes]]
+==== Exit codes
+
+The formatter will exit with the following codes:
+
+|===
+|Code |Description
+
+|0
+|No formatting violations were found.
+
+|1
+|Non-formatting errors occurred.
+
+|11
+|Formatting violations were found.
+|===
+
+==== Grammar version
+
+The formatter can be configured with a _grammar version_, which maps to a Pkl version range.
+
+|===
+|Grammar version |Pkl versions
+
+|1
+|0.25 - 0.29
+
+|2
+|0.30+
+|===
+
+Grammar version 2 uses the newly introduced <<trailing-commas,trailing commas>> feature, and therefore is not compatible with existing versions of Pkl.
+To ensure compatibility, use the `--grammar-version 1` CLI flag.
+
+[[binary-renderer-parser]]
+=== `pkl-binary` in-language Renderer
+
+A new in-language API has been added to render values into xref:bindings-specification:binary-encoding.adoc[pkl-binary encoding] (https://github.com/apple/pkl/pull/1203[#1203],
+https://github.com/apple/pkl/pull/1250[#1250]).
+
+It's sometimes useful to separate Pkl evaluation from data consumption when used as application or service configuration.
+This is possible with the `pkl-binary` format, which is a lossless encoding of Pkl data.
+
+In this approach, Pkl is first rendered into `pkl-binary` during build time, and then deserialized into classes and structs at startup time.
+This means that the Pkl evaluator does not need to be shipped with the application, which improves code portability and eliminates runtime overhead.
+
+However, currently, the API for getting this binary format is somewhat cumbersome.
+Only the host languages have access to this API (for example, https://swiftpackageindex.com/apple/pkl-swift/0.6.0/documentation/pklswift/evaluator/evaluateexpressionraw(source:expression:)[`evaluateExpressionRaw`] in pkl-swift).
+This means that one-off logic must be written to render this format in the host language.
+
+In 0.30, this renderer is added as an in-language API, through the {uri-stdlib-pklbinaryModule}[`pkl:pklbinary`] standard library module.
+Additionally, it is available through CLI flag `--format pkl-binary`.
+
+For example:
+
+// this is parsed instead of tested because DocSnippetTests only handles textual output (via ReplServer)
+[source%parsed,pkl]
+----
+import "pkl:pklbinary"
+
+output {
+  renderer = new pklbinary.Renderer {}
+}
+----
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0021-binary-renderer-and-parser.adoc[SPICE-0021].
+
+==== New renderer type: `BytesRenderer`
+
+To enable the `pkl-binary` renderer feature, Pkl now supports renderers that produce `Bytes` output (https://github.com/apple/pkl/pull/1203[#1203]).
+
+The existing `ValueRenderer` class now extends new class `BaseValueRenderer`, and a new `BytesRenderer` class is introduced.
+
+Setting a module's output renderer to a `BytesRenderer` will control its resulting `output.bytes`.
+
+This affects usage scenarios where a module's `output.bytes` is evaluated, for example, when using `pkl eval`.
+
+==== Using `pkl-binary` data
+
+Users of Pkl's language binding libraries can decode `pkl-binary` data into instances of code-generated types.
+
+[tabs]
+====
+Java::
++
+[source,java]
+----
+var encodedData = fetchEncodedData(); // some byte[] or InputStream
+var config = Config.from(encodedData);
+var appConfig = config.as(AppConfig.class);
+----
+
+Kotlin::
++
+[source,kotlin]
+----
+val encodedData = fetchEncodedData() // some ByteArray or InputStream
+val config = Config.from(encodedData, ValueMapper.preconfigured().forKotlin())
+val appConfig = config.to<AppConfig>()
+----
+
+Go::
++
+[source,go]
+----
+encodedData := fetchEncodedData() // some []byte
+var appConfig AppConfig
+if err := pkl.Unmarshal(encodedData, &result); err != nil {
+  // handle error
+} 
+----
+
+Swift::
++
+[source,swift]
+----
+let encodedData = fetchEncodedData() // some [UInt8]
+let appConfig = try PklDecoder.decode(AppConfig.self, from: encodedData)
+----
+====
 
 == Noteworthy [small]#🎶#
 
-Ready when you need them.
+[[trailing-commas]]
+=== Trailing Commas
 
-=== XXX
+Pkl's grammar has been updated to allow including a comma following the final item of comma-separated syntax elements (https://github.com/apple/pkl/pull/1137[#1137]).
+
+These syntax elements are affected:
+
+[source%tested,pkl]
+----
+function add(
+  bar,
+  baz, // <1>
+) = bar + baz
+
+foo = add(
+  1,
+  2, // <2>
+)
+
+typealias MyMapping<
+  Key,
+  Value, // <3>
+> = Mapping<Key, Value>
+
+bar: Mapping<
+  String,
+  Int, // <4>
+>
+
+baz: Mapping(
+  !containsKey("forbidden key"),
+  !containsKey("forbidden value"), // <5>
+)
+
+qux: (
+  String,
+  Int, // <6>
+) -> Dynamic =
+  (paramA, paramB) -> new Dynamic {
+    quux = "\(paramA): \(paramB)"
+  }
+
+corge = (qux) {
+  paramA,
+  paramB, // <7>
+  ->
+  grault = paramA.length * paramB
+}
+----
+<1> Function parameter lists in method definitions.
+<2> Argument lists in method calls.
+<3> Type parameter lists in generic type definitions.
+<4> Type argument lists in type annotations and casts.
+<5> Type constraint lists.
+<6> Function type parameter lists in function type annotations.
+<7> Object body parameter lists.
+
+To learn more about this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0019-trailing-commas.adoc[SPICE-0019].
+
+=== Pretty-printed traces
+
+A new evaluator option is added to enable pretty-printed traces (https://github.com/apple/pkl/pull/1100[#1100], https://github.com/apple/pkl/pull/1227[#1227], https://github.com/apple/pkl/pull/1230[#1230]).
+
+Currently, the `trace()` operator will render values as a single line, and trims the output after 100 characters.
+This can obscure information when debugging.
+
+In 0.30, a new evaluator option is added to control how traces are emitted.
+Two trace modes are introduced:
+
+* `compact` - the current output mode (default).
+* `pretty` - multiline, with no limit on output size.
+
+For example, users of the CLI can specify `--trace-mode` as a flag.
+
+[source,shell]
+----
+pkl eval --trace-mode pretty myModule.pkl  
+----
+
+Thanks to https://github.com/ssalevan[@ssalevan] for their contribution to this feature!
+
+[[pkldoc-perf-improvements]]
+=== `pkldoc` performance improvements
+
+The `pkldoc` documentation generator has been overhauled (https://github.com/apple/pkl/pull/1169[#1169], https://github.com/apple/pkl/pull/1224[#1224], https://github.com/apple/pkl/pull/1241[#1241], https://github.com/apple/pkl/pull/1242[#1242]).
+
+Currently, the `pkldoc` tool needs to consume much of an existing documentation website whenever generating new documentation.
+This adds significant I/O overhead as a pkldoc documentation website grows.
+
+The generator has been overhauled to minimize the amount of data needed to be read from the current site.
+
+To read more about this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0018-pkldoc-io-improvements.adoc[SPICE-0018].
+
+[[pkldoc-migration]]
+==== Migration
+
+The new pkldoc website introduces breaking changes to the data model.
+Because of this, existing sites must be migrated before using the `0.30` version of pkldoc.
+
+To migrate, run the one-time command `pkldoc --migrate`.
+
+=== Java API changes
+
+==== New classes
+
+New classes are introduced to the Java API.
+
+* `org.pkl.core.PklBinaryDecoder`
+
+==== New methods
+
+New methods are introduced to the Java API.
+
+* `org.pkl.core.Evaluator.evaluateExpressionPklBinary`
+* `org.pkl.core.EvaluatorBuilder.setTraceMode`
+* `org.pkl.core.EvaluatorBuilder.getTraceMode`
+* `org.pkl.config.java.Config.fromPklBinary`
+
+=== Standard Library changes
+
+New modules, properties, methods, classes and typealiases have been added to the standard library (https://github.com/apple/pkl/pull/1106[#1106]).
+
+==== Changes to `pkl:base`
+
+Additions:
+
+* New class: {uri-stdlib-BaseValueRenderer}[`BaseValueRenderer`]
+* {uri-stdlib-ValueRenderer}[`ValueRenderer`] (now a subclass of {uri-stdlib-BaseValueRenderer}[`BaseValueRenderer`])
+* {uri-stdlib-BytesRenderer}[`BytesRenderer`]
+* {uri-stdlib-baseModule}/RenderDirective#bytes[`RenderDirective.bytes`]
+
+==== Additions to `pkl:EvaluatorSettings`
+
+* {uri-stdlib-evaluatorSettingsModule}#traceMode[`traceMode`]
+
+==== Additions to `pkl:reflect`
+
+* {uri-stdlib-reflectModule}/Class#allMethods[`Class.allMethods`]
+* {uri-stdlib-reflectModule}/Class#allProperties[`Class.allProperties`]
+* {uri-stdlib-reflectModule}/Property#allAnnotations[`Propterty.allAnnotations`]
+* {uri-stdlib-reflectModule}/Propterty#allModifiers[`Propterty.allModifiers`]
+
+==== New module: `pkl:pklbinary`
+
+The `pkl:pklbinary` standard library module is added.
+
+=== `pkl repl` improvements
+
+The REPL now handles interrupts (Ctrl-C) in a more user-friendly way (https://github.com/apple/pkl/pull/1188[#1188]).
+
+Instead of exiting immediately, it behaves like other REPLs:
+
+* If the line is non-empty or in a continuation, the buffer is cleared.
+* If the line is empty, print a message with instructions on exiting the REPL.
+** If another interrupt is sent immediately after, exit.
 
 == Breaking Changes [small]#💔#
 
@@ -34,20 +346,46 @@ Things to watch out for when upgrading.
 
 === Minimum Kotlin version bump
 
-For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.1 (https://github.com/apple/pkl/pull/900[#900]).
+For users of Pkl's Kotlin libraries, the minimum Kotlin version has been bumped to 2.1 (https://github.com/apple/pkl/pull/1232[#1232]).
+
+=== New base module names: `BaseValueRenderer`, `BytesRenderer`
+
+Two new names are introduced to the base module: `BaseValueRenderer`, and `BytesRenderer`.
+That means that any code that currently references these names on implicit `this` will break (https://github.com/apple/pkl/pull/1203[#1203]).
+
+To learn more about how this breaks code and how to fix it, see xref:0.29.adoc#new-base-module-names[New base module names] in 0.29's release notes.
+
+=== `pkldoc` sites need to be migrated
+
+Due to breaking changes made in pkldoc's data model, existing pkldoc websites must be migrated.
+
+See <<pkldoc-migration>> for more details.
 
 == Miscellaneous [small]#🐸#
 
-* XXX
+* Dependency updates (https://github.com/apple/pkl/pull/1184[#1184], https://github.com/apple/pkl/pull/1225[#1225], https://github.com/apple/pkl/pull/1226[#1226], https://github.com/apple/pkl/pull/1228[#1228]).
+* Enforce Pkl formatting of stdlib (https://github.com/apple/pkl/pull/1236[#1236], https://github.com/apple/pkl/pull/1253[#1253], https://github.com/apple/pkl/pull/1258[#1258]).
+* Add internal IntelliJ plugin that's meant to assist with development of the Pkl codebase itself (https://github.com/apple/pkl/pull/1248[#1248]).
+* Update CircleCI macOS instance type and Xcode version (https://github.com/apple/pkl/pull/1243[#1243], https://github.com/apple/pkl/pull/1244[#1244]).
+* Disable multi-jdk testing when running on Windows ARM (https://github.com/apple/pkl/pull/1223[#1223]).
+* Refine documentation for class `Any` (https://github.com/apple/pkl/pull/1194[#1194]).
 
 == Bugs fixed [small]#🐜#
 
 The following bugs have been fixed.
 
-* XXX (https://github.com/apple/pkl/issues/XXX[XXX])
+* Incorrect error message when refusing to read past root dir (https://github.com/apple/pkl/pull/1234[#1233]).
+* Unicode U+7FFF character (翿) incorrectly parsed as EOF (https://github.com/apple/pkl/pull/1251[#1251]).
+* Fallback certificates do not work in certain classloader setups (https://github.com/apple/pkl/pull/1198[#1199]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/netvl[@netvl]
+* https://github.com/spyoungtech[@spyoungtech]
+* https://github.com/srueg[@srueg]
+* https://github.com/ssalevan[@ssalevan]
+* https://github.com/stackoverflow[@stackoverflow]
