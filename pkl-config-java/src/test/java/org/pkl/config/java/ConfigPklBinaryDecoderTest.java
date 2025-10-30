@@ -23,7 +23,7 @@ public class ConfigPklBinaryDecoderTest extends AbstractConfigTest {
   @Override
   protected Config getPigeonConfig() {
     // pigeon { age = 30; friends = List("john", "mary"); address { street = "Fuzzy St." } }
-    return Config.from(
+    return Config.fromPklBinary(
         Base64.getDecoder()
             .decode(
                 "lAGkdGVzdNklZmlsZTovLy9Vc2Vycy9qYmFzY2gvc3JjL3BrbC90ZXN0LnBrbJGTEKZwaWdlb26UAadEeW5hbWljqHBrbDpiYXNlk5MQo2FnZR6TEKdmcmllbmRzkgSSpGpvaG6kbWFyeZMQp2FkZHJlc3OUAadEeW5hbWljqHBrbDpiYXNlkZMQpnN0cmVldKlGdXp6eSBTdC4="));
@@ -32,7 +32,7 @@ public class ConfigPklBinaryDecoderTest extends AbstractConfigTest {
   @Override
   protected Config getPigeonModuleConfig() {
     // age = 30; friends = List("john", "mary"); address { street = "Fuzzy St." }
-    return Config.from(
+    return Config.fromPklBinary(
         Base64.getDecoder()
             .decode(
                 "lAGlc3RkaW6xZmlsZTovLy9kZXYvc3RkaW6TkxCjYWdlHpMQp2ZyaWVuZHOSBJKkam9obqRtYXJ5kxCnYWRkcmVzc5QBp0R5bmFtaWOocGtsOmJhc2WRkxCmc3RyZWV0qUZ1enp5IFN0Lg=="));
@@ -41,7 +41,7 @@ public class ConfigPklBinaryDecoderTest extends AbstractConfigTest {
   @Override
   protected Config getPairConfig() {
     // x { first = "file/path"; second = 42 }
-    return Config.from(
+    return Config.fromPklBinary(
         Base64.getDecoder()
             .decode(
                 "lAGlc3RkaW6xZmlsZTovLy9kZXYvc3RkaW6RkxCheJQBp0R5bmFtaWOocGtsOmJhc2WSkxClZmlyc3SpZmlsZS9wYXRokxCmc2Vjb25kKg=="));
@@ -50,7 +50,7 @@ public class ConfigPklBinaryDecoderTest extends AbstractConfigTest {
   @Override
   protected Config getMapConfig() {
     // x = Map("one", 1, "two", 2)
-    return Config.from(
+    return Config.fromPklBinary(
         Base64.getDecoder().decode("lAGlc3RkaW6xZmlsZTovLy9kZXYvc3RkaW6RkxCheJICgqNvbmUBo3R3bwI="));
   }
 }

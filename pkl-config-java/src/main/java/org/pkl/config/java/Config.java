@@ -78,7 +78,7 @@ public interface Config {
    *
    * @return the encoded config
    */
-  static Config from(byte[] bytes, ValueMapper mapper) {
+  static Config fromPklBinary(byte[] bytes, ValueMapper mapper) {
     return makeConfig(PklBinaryDecoder.decode(bytes), mapper);
   }
 
@@ -87,8 +87,8 @@ public interface Config {
    *
    * @return the encoded config
    */
-  static Config from(byte[] bytes) {
-    return from(bytes, ValueMapper.preconfigured());
+  static Config fromPklBinary(byte[] bytes) {
+    return fromPklBinary(bytes, ValueMapper.preconfigured());
   }
 
   /**
@@ -97,7 +97,7 @@ public interface Config {
    *
    * @return the encoded config
    */
-  static Config from(InputStream inputStream, ValueMapper mapper) {
+  static Config fromPklBinary(InputStream inputStream, ValueMapper mapper) {
     return makeConfig(PklBinaryDecoder.decode(inputStream), mapper);
   }
 
@@ -106,8 +106,8 @@ public interface Config {
    *
    * @return the encoded config
    */
-  static Config from(InputStream inputStream) {
-    return from(inputStream, ValueMapper.preconfigured());
+  static Config fromPklBinary(InputStream inputStream) {
+    return fromPklBinary(inputStream, ValueMapper.preconfigured());
   }
 
   private static Config makeConfig(Object decoded, ValueMapper mapper) {
