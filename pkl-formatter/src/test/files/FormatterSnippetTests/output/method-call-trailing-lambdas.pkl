@@ -17,3 +17,11 @@ res4 =
   foo.foldLeft("heeeeeeelloooooooooooooooooooooooooooooooooooooooooooooo", (elem) ->
     elem.foooooooooooooooooooooooooooooooooooooooooooooooooooo
   )
+
+res5 =
+  ifNonNull((it) -> someFunctionCall(it as SomeReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongTypeName))
+
+res6 =
+  ifNonNull((it) ->
+    someFunctionCall(it as SomeReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongTypeNameLonger)
+  )
