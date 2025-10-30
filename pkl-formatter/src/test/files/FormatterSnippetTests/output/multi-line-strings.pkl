@@ -1,6 +1,8 @@
 foo =
   """
-  asd \(new { bar = 1 }) asd
+  asd \(new {
+    bar = 1
+  }) asd
   """
 
 bar =
