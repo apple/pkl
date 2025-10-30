@@ -89,7 +89,6 @@ internal class Generator {
       }
       is MultilineStringGroup -> {
         val indentLength = indent * INDENT.length
-        val offset = (indentLength + 1) - node.endQuoteCol
         var previousNewline = false
         for ((i, child) in node.nodes.withIndex()) {
           when {
@@ -99,7 +98,8 @@ internal class Generator {
               child.text.isBlank() &&
               child.text.length == indentLength &&
               node.nodes[i + 1] is ForceLine -> {}
-            child is Text && previousNewline && offset != 0 -> text(reposition(child.text, offset))
+            child is Text && previousNewline ->
+              text(reposition(child.text, node.endQuoteCol - 1, indentLength))
             else -> node(child, Wrap.DETECT) // always detect wrapping
           }
           previousNewline = child is ForceLine
@@ -123,13 +123,10 @@ internal class Generator {
     shouldAddIndent = shouldIndent
   }
 
-  private fun reposition(text: String, offset: Int): String {
-    return if (offset > 0) {
-      " ".repeat(offset) + text
-    } else {
-      text.drop(-offset)
-    }
-  }
+  // accept text indented by originalOffset characters (tabs or spaces)
+  // and return it indented by newOffset characters (spaces only)
+  private fun reposition(text: String, originalOffset: Int, newOffset: Int): String =
+    " ".repeat(newOffset) + text.drop(originalOffset)
 
   override fun toString(): String {
     return buf.toString()

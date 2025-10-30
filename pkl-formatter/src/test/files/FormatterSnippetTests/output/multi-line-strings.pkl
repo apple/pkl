@@ -29,3 +29,23 @@ qux =
     
   \(foo)
   """
+
+// mixed tabs and spaces
+quux {
+  // space tab
+  """
+  bar
+
+  baz
+  \(1)
+
+  """
+  // tab tab
+  """
+  bar
+
+  baz
+  \(1)
+
+  """
+}
