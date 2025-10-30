@@ -180,7 +180,8 @@ public final class YamlRendererNodes {
 
     @Override
     public void visitBytes(VmBytes value) {
-      cannotRenderTypeAddConverter(value);
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value.getBytes(), currIndent, false);
     }
 
     @Override

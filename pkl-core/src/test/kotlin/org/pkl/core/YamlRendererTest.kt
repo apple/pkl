@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -142,6 +142,38 @@ class YamlRendererTest {
       'yes': 'yes'
       truth: 'true'
       octalNumber: '0777'
+    """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `render byte array values as binary`() {
+    val evaluator = Evaluator.preconfigured()
+    val module =
+      evaluator.evaluate(
+        ModuleSource.text(
+          """
+        res1 = Bytes()
+        res2 = Bytes(1, 2, 3)
+        res3 = IntSeq(0, 127).toList().toBytes()
+        """
+            .trimIndent()
+        )
+      )
+
+    val writer = StringWriter()
+    val renderer = ValueRenderers.yaml(writer, 2, true, false)
+
+    renderer.renderDocument(module)
+    val output = writer.toString()
+
+    assertThat(output.trim())
+      .isEqualTo(
+        """
+      res1: !!binary ''
+      res2: !!binary 'AQID'
+      res3: !!binary 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8='
     """
           .trimIndent()
       )
