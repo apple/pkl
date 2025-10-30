@@ -41,7 +41,7 @@ class FormatterCommand : CliktCommand(name = "format") {
     
     # Check formatting of all files, printing filenames with formatting violations to stdout.
     # Exit with exit code `11` if formatting violations were found.
-    $ pkl format --names my/folder/
+    $ pkl format --diff-name-only my/folder/
     
     # Format Pkl code from stdin.
     $ echo "foo = 1" | pkl format -
@@ -75,13 +75,13 @@ class FormatterCommand : CliktCommand(name = "format") {
   val overwrite: Boolean by
     option(
         names = arrayOf("-w", "--write"),
-        help = "Format files in place, overwriting them. Implies `--names`.",
+        help = "Format files in place, overwriting them. Implies `---diff-name-only`.",
       )
       .flag(default = false)
 
-  val names: Boolean by
+  val diffNameOnly: Boolean by
     option(
-        names = arrayOf("--names"),
+        names = arrayOf("--diff-name-only"),
         help = "Write the path of files with formatting violations to stdout.",
       )
       .flag(default = false)
@@ -89,11 +89,11 @@ class FormatterCommand : CliktCommand(name = "format") {
   val silent: Boolean by
     option(
         names = arrayOf("-s", "--silent"),
-        help = "Don't write to stdout or stderr. Mutually exclusive with `--names`.",
+        help = "Don't write to stdout or stderr. Mutually exclusive with `--diff-name-only`.",
       )
       .flag(default = false)
 
   override fun run() {
-    CliFormatterCommand(paths, grammarVersion, overwrite, names, silent).run()
+    CliFormatterCommand(paths, grammarVersion, overwrite, diffNameOnly, silent).run()
   }
 }

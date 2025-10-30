@@ -42,7 +42,7 @@ constructor(
   private val paths: List<Path>,
   private val grammarVersion: GrammarVersion,
   private val overwrite: Boolean,
-  private val names: Boolean,
+  private val diffNameOnly: Boolean,
   private val silent: Boolean,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
@@ -105,7 +105,7 @@ constructor(
         val contents =
           if (source.contents != null) {
             if (overwrite) {
-              writeErr("Cannot write formatted output for stdin input.")
+              writeErr("Cannot write to stdin.")
               throw CliTestException("", ERROR)
             }
             source.contents!!
@@ -116,8 +116,8 @@ constructor(
         val formatted = format(contents)
         if (contents != formatted) {
           status.update(FORMATTING_VIOLATION)
-          if (names || overwrite) {
-            // if `--names` or `-w` is specified, only write file names
+          if (diffNameOnly || overwrite) {
+            // if `--diff-name-only` or `-w` is specified, only write file names
             write(path.toAbsolutePath().toString())
           }
 
@@ -126,7 +126,7 @@ constructor(
           }
         }
 
-        if (!names && !overwrite) {
+        if (!diffNameOnly && !overwrite) {
           write(formatted)
         }
       } catch (pe: GenericParserError) {

@@ -762,16 +762,16 @@ New versions are created for each backward incompatible grammar change.
 .-s, --silent
 [%collapsible]
 ====
-Skip writing to standard out. Mutually exclusive with `--names`.
+Skip writing to standard out. Mutually exclusive with `--diff-name-only`.
 ====
 
 .-w, --write
 [%collapsible]
 ====
-Format files in place, overwriting them. Implies `--names`.
+Format files in place, overwriting them. Implies `--diff-name-only`.
 ====
 
-.--names
+.--diff-name-only
 [%collapsible]
 ====
 Write the path of files with formatting violations to stdout.
