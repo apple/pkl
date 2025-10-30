@@ -15,6 +15,8 @@
  */
 package org.pkl.core.util.yaml;
 
+import java.util.Base64;
+
 // Useful links:
 // https://yaml-online-parser.appspot.com
 // https://github.com/FasterXML/jackson-dataformats-text/pull/201
@@ -208,6 +210,11 @@ public abstract class YamlEmitter {
 
   public final void emit(boolean value) {
     builder.append(value);
+  }
+
+  public final void emit(byte[] value, StringBuilder currIndent, boolean isKey) {
+    builder.append("!!binary ");
+    emit(Base64.getEncoder().encodeToString(value), currIndent, isKey);
   }
 
   public final void emitNull() {

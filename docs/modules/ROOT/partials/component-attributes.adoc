@@ -76,7 +76,6 @@ endif::[]
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
 :uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
 :uri-stdlib-evaluatorSettingsModule: {uri-pkl-stdlib-docs}/EvaluatorSettings
-:uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
 :uri-stdlib-evaluatorSettingsHttpClass: {uri-stdlib-evaluatorSettingsModule}/Http
 :uri-stdlib-Boolean: {uri-stdlib-baseModule}/Boolean
 :uri-stdlib-xor: {uri-stdlib-baseModule}/Boolean#xor()
@@ -135,6 +134,7 @@ endif::[]
 :uri-stdlib-BaseValueRenderer: {uri-stdlib-baseModule}/BaseValueRenderer
 :uri-stdlib-ValueRenderer: {uri-stdlib-baseModule}/ValueRenderer
 :uri-stdlib-BytesRenderer: {uri-stdlib-baseModule}/BytesRenderer
+:uri-stdlib-YamlRenderer: {uri-stdlib-baseModule}/YamlRenderer
 :uri-stdlib-PcfRenderer-converters: {uri-stdlib-baseModule}/PcfRenderer#converters
 :uri-stdlib-Function: {uri-stdlib-baseModule}/Function
 :uri-stdlib-Function0: {uri-stdlib-baseModule}/Function0
