@@ -60,7 +60,7 @@ class PklFormatterFunc(@Transient private val configuration: Configuration) :
   private val formatterInstance by lazy { formatterClass.getConstructor().newInstance() }
 
   override fun apply(input: String): String {
-    val latestGrammarVersion = grammarVersionLatestMethod(grammarVersionClass)
+    val latestGrammarVersion = grammarVersionLatestMethod(null)
     return formatMethod(formatterInstance, input, latestGrammarVersion) as String
   }
 }
