@@ -36,6 +36,6 @@ trailingCommaInTypeParameters: Mapping<
 
 functionType: (
   ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType,
-  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2,
+  ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2 /* comment */,
 ) ->
   String

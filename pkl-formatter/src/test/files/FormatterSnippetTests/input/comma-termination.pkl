@@ -15,4 +15,4 @@ trailingCommaInConstraints: String(isSomethingSomethingSomething, isSomethingEls
 
 trailingCommaInTypeParameters: Mapping<SomethingSomethingSomethingSomething, SomethingSomething | SomethingElse>
 
-functionType: (ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType, ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2,) -> String
+functionType: (ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType, ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2, /* comment */) -> String
