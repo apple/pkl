@@ -733,15 +733,21 @@ pkl shell-completion bash
 pkl shell-completion zsh
 ----
 
-[[command-format-check]]
-=== `pkl format check`
+[[command-format]]
+=== `pkl format`
 
-*Synopsis*: `pkl format check <file-or-dir-path>`
+*Synopsis*: `pkl format <options> [<paths>]`
 
-This command checks for format violations on the given file or directory and print their names to stdout. +
-It returns a non-zero status code in case violations are found.
+This command formats or checks formatting of Pkl files. +
+Exit codes:
+
+* 0: No violations found.
+* 1: An unexpected error happened (ex.: IO error)
+* 11: Violations were found.
 
 If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
+
+By default, the input files are formatted, and written to standard out.
 
 ==== Options
 
@@ -752,30 +758,23 @@ Default: `2` (latest version) +
 Select the grammar compatibility version for the formatter.
 New versions are created for each backward incompatible grammar change.
 ====
-
-[[command-format-apply]]
-=== `pkl format apply`
-
-*Synopsis*: `pkl format apply [<options>] <file-or-dir-path>`
-
-This command formats the given files overwriting them.
-
-If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
-
-==== Options
 
 .-s, --silent
 [%collapsible]
 ====
-Do not write the name of wrongly formatted files to stdout.
+Skip writing to standard out. Mutually exclusive with `--diff-name-only`.
 ====
 
-.--grammar-version
+.-w, --write
 [%collapsible]
 ====
-Default: `2` (latest version) +
-Select the grammar compatibility version for the formatter.
-New versions are created for each backward incompatible grammar change.
+Format files in place, overwriting them. Implies `--diff-name-only`.
+====
+
+.--diff-name-only
+[%collapsible]
+====
+Write the path of files with formatting violations to stdout.
 ====
 
 [[common-options]]

@@ -15,9 +15,8 @@
  */
 package org.pkl.cli.commands
 
+import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.NoOpCliktCommand
-import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.options.default
@@ -26,75 +25,75 @@ import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
-import org.pkl.cli.CliFormatterApply
-import org.pkl.cli.CliFormatterCheck
-import org.pkl.cli.commands.FormatterCheckCommand.Companion.grammarVersionHelp
-import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.cli.CliFormatterCommand
 import org.pkl.formatter.GrammarVersion
 
-class FormatterCommand : NoOpCliktCommand(name = "format") {
-  override fun help(context: Context) = "Run commands related to formatting"
+class FormatterCommand : CliktCommand(name = "format") {
+  override fun help(context: Context) =
+    """
+    Format or check formatting of Pkl files.
+    
+    Examples:
+    
+    ```
+    # Overwrite all Pkl files inside `my/folder/`, recursively.
+    $ pkl format -w my/folder/
+    
+    # Check formatting of all files, printing filenames with formatting violations to stdout.
+    # Exit with exit code `11` if formatting violations were found.
+    $ pkl format --diff-name-only my/folder/
+    
+    # Format Pkl code from stdin.
+    $ echo "foo = 1" | pkl format -
+    ```
+  """
+      .trimIndent()
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
-  init {
-    subcommands(FormatterCheckCommand(), FormatterApplyCommand())
-  }
-}
-
-class FormatterCheckCommand : BaseCommand(name = "check", helpLink = helpLink) {
-  override val helpString: String =
-    "Check if the given files are properly formatted, printing the file name to stdout in case they are not. Returns non-zero in case of failure."
-
   val paths: List<Path> by
-    argument(name = "paths", help = "Files or directory to check.")
-      .path(mustExist = true, canBeDir = true)
+    argument(name = "paths", help = "Files or directory to check. Use `-` to read from stdin.")
+      .path(mustExist = false, canBeDir = true)
       .multiple()
 
   val grammarVersion: GrammarVersion by
-    option(names = arrayOf("--grammar-version"), help = grammarVersionHelp)
+    option(
+        names = arrayOf("--grammar-version"),
+        help =
+          """
+          The grammar compatibility version to use.$NEWLINE
+          ${GrammarVersion.entries.joinToString("$NEWLINE", prefix = "  ") {
+            val default = if (it == GrammarVersion.latest()) " `(default)`" else ""
+            "`${it.version}`: ${it.versionSpan}$default"
+          }}
+          """
+            .trimIndent(),
+      )
       .enum<GrammarVersion> { "${it.version}" }
       .default(GrammarVersion.latest())
 
-  override fun run() {
-    CliFormatterCheck(baseOptions.baseOptions(emptyList()), paths, grammarVersion).run()
-  }
+  val overwrite: Boolean by
+    option(
+        names = arrayOf("-w", "--write"),
+        help = "Format files in place, overwriting them. Implies `---diff-name-only`.",
+      )
+      .flag(default = false)
 
-  companion object {
-    internal val grammarVersionHelp =
-      """
-      The grammar compatibility version to use.$NEWLINE
-      ${GrammarVersion.entries.joinToString("$NEWLINE", prefix = "  ") {
-        val default = if (it == GrammarVersion.latest()) " `(default)`" else ""
-        "`${it.version}`: ${it.versionSpan}$default"
-      }}
-      """
-        .trimIndent()
-  }
-}
-
-class FormatterApplyCommand : BaseCommand(name = "apply", helpLink = helpLink) {
-  override val helpString: String =
-    "Overwrite all the files in place with the formatted version. Returns non-zero in case of failure."
-
-  val paths: List<Path> by
-    argument(name = "paths", help = "Files or directory to format.")
-      .path(mustExist = true, canBeDir = true)
-      .multiple()
+  val diffNameOnly: Boolean by
+    option(
+        names = arrayOf("--diff-name-only"),
+        help = "Write the path of files with formatting violations to stdout.",
+      )
+      .flag(default = false)
 
   val silent: Boolean by
     option(
         names = arrayOf("-s", "--silent"),
-        help = "Do not write the name of the files that failed formatting to stdout.",
+        help = "Don't write to stdout or stderr. Mutually exclusive with `--diff-name-only`.",
       )
-      .flag()
-
-  val grammarVersion: GrammarVersion by
-    option(names = arrayOf("--grammar-version"), help = grammarVersionHelp)
-      .enum<GrammarVersion> { "${it.version}" }
-      .default(GrammarVersion.latest())
+      .flag(default = false)
 
   override fun run() {
-    CliFormatterApply(baseOptions.baseOptions(emptyList()), paths, grammarVersion, silent).run()
+    CliFormatterCommand(paths, grammarVersion, overwrite, diffNameOnly, silent).run()
   }
 }
