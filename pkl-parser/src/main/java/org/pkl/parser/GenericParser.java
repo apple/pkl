@@ -1170,7 +1170,8 @@ public class GenericParser {
               ff(elements);
               while (lookahead == Token.COMMA) {
                 var comma = next();
-                if (lookahead == Token.RPAREN) {
+                if (lookahead() == Token.RPAREN) {
+                  ff(elements);
                   break;
                 }
                 elements.add(makeTerminal(comma));
