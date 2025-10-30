@@ -606,11 +606,11 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       val trailingNode = if (endsWithClosingBracket(children[splitIndex])) Empty else line()
       val lastNodes = formatGeneric(lastParam, spaceOrLine())
       if (normalParams.isEmpty()) {
-        nodes(Group(newId(), lastNodes), trailingNode)
+        group(Group(newId(), lastNodes), trailingNode)
       } else {
         val separator = getSeparator(normalParams.last(), lastParam[0], Space)
         val paramNodes = formatGeneric(normalParams, spaceOrLine())
-        nodes(Group(newId(), paramNodes), separator, Group(newId(), lastNodes), trailingNode)
+        group(Group(newId(), paramNodes), separator, Group(newId(), lastNodes), trailingNode)
       }
     } else {
       Indent(formatGeneric(children, spaceOrLine()))
