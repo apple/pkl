@@ -32,7 +32,7 @@ module pkl.yaml
 /// | !!seq       | [Listing]                                               |
 /// | !!set       | [Listing]                                               |
 /// | !!map       | [Dynamic] or [Mapping] depending on [Parser.useMapping] |
-/// | !!binary    | [String]                                                |
+/// | !!binary    | [Bytes]                                                 |
 /// | !!timestamp | [String]                                                |
 ///
 /// The element order of YAML sequences, sets, and mappings is maintained.
@@ -88,4 +88,4 @@ class Parser {
 }
 
 /// Pkl representation of a YAML value.
-typealias Value = Null | Boolean | Number | String | Listing | Dynamic | Mapping
+typealias Value = Null | Boolean | Number | String | Bytes | Listing | Dynamic | Mapping

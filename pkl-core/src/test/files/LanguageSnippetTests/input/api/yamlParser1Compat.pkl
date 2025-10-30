@@ -109,9 +109,16 @@ examples {
     parser.parse("!!timestamp 2001-12-15T02:59:43.1Z")
   }
 
-  // parsed as string because Pkl doesn't have a binary type
   ["binary"] {
-    parser.parse("!!binary dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw==")
+    parser.parse("!!binary AQID")
+    parser.parse("!!binary 'AQID'")
+    parser.parse("!!binary \"AQID\"")
+    parser.parse("""
+      !!binary |-
+        AQID
+        AQID
+        AQID
+      """)
   }
 
   ["string"] {
@@ -195,6 +202,7 @@ examples {
             price       : 2392.00
       tax  : 251.42
       total: 4443.52
+      logo: !!binary AQID
       comments: >
           Late afternoon is best.
           Backup contact is Nancy

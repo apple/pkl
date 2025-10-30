@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -322,12 +322,13 @@ public final class ParserNodes {
       }
     }
 
-    // Pkl doesn't have a binary type, so parse as base64 string with whitespace removed
     private static class ConstructBinary implements ConstructNode {
       @Override
-      public String construct(Node node) {
+      public VmBytes construct(Node node) {
         var value = ((ScalarNode) node).getValue();
-        return WHITESPACE.matcher(value).replaceAll("");
+        var encoded = WHITESPACE.matcher(value).replaceAll("");
+        var decoded = Base64.getDecoder().decode(encoded);
+        return decoded.length == 0 ? VmBytes.EMPTY : new VmBytes(decoded);
       }
     }
 
