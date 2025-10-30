@@ -40,17 +40,27 @@ class PklFormatterFunc(@Transient private val configuration: Configuration) :
     @Serial private const val serialVersionUID: Long = 1L
   }
 
-  private val formatterClass by lazy {
+  private val classLoader by lazy {
     val urls = configuration.files.map { it.toURI().toURL() }
-    val classLoader = URLClassLoader(urls.toTypedArray())
-    classLoader.loadClass("org.pkl.formatter.Formatter")
+    URLClassLoader(urls.toTypedArray())
   }
 
-  private val formatMethod by lazy { formatterClass.getMethod("format", String::class.java) }
+  private val formatterClass by lazy { classLoader.loadClass("org.pkl.formatter.Formatter") }
+
+  private val grammarVersionClass by lazy {
+    classLoader.loadClass("org.pkl.formatter.GrammarVersion")
+  }
+
+  private val grammarVersionLatestMethod by lazy { grammarVersionClass.getMethod("latest") }
+
+  private val formatMethod by lazy {
+    formatterClass.getMethod("format", String::class.java, grammarVersionClass)
+  }
 
   private val formatterInstance by lazy { formatterClass.getConstructor().newInstance() }
 
   override fun apply(input: String): String {
-    return formatMethod(formatterInstance, input) as String
+    val latestGrammarVersion = grammarVersionLatestMethod(grammarVersionClass)
+    return formatMethod(formatterInstance, input, latestGrammarVersion) as String
   }
 }
