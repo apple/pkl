@@ -60,6 +60,7 @@ enum class GrammarVersion(val version: Int, val versionSpan: String) {
   V2(2, "0.30+");
 
   companion object {
+    @JvmStatic
     fun latest(): GrammarVersion = entries.maxBy { it.version }
   }
 }
