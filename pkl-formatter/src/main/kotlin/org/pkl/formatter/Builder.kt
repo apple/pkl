@@ -1457,7 +1457,8 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun Node.isMultiline(): Boolean = span.lineBegin < span.lineEnd
 
-  private fun List<Node>.isMultiline(): Boolean = first().span.lineBegin < last().span.lineEnd
+  private fun List<Node>.isMultiline(): Boolean =
+    if (isEmpty()) false else first().span.lineBegin < last().span.lineEnd
 
   private inline fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
     val index = indexOfFirst { pred(it) }
