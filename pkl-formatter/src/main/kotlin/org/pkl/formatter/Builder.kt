@@ -1331,7 +1331,6 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun hasTrailingAffix(node: Node, next: Node): Boolean {
-    if (node.isMultiline()) return false
     var n: Node? = next
     while (n != null) {
       if (n.type.isAffix && node.span.lineEnd == n.span.lineBegin) return true
