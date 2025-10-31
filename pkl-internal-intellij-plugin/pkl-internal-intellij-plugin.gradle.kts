@@ -24,7 +24,14 @@ repositories {
   intellijPlatform { defaultRepositories() }
 }
 
-dependencies { intellijPlatform { create("IC", libs.versions.intellij.get()) } }
+dependencies {
+  intellijPlatform {
+    create("IC", libs.versions.intellij.get())
+    bundledPlugin("com.intellij.java")
+    bundledPlugin("org.jetbrains.plugins.gradle")
+    bundledPlugin("JUnit")
+  }
+}
 
 spotless {
   kotlin {
