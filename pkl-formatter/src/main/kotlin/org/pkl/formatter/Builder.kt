@@ -601,7 +601,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       val splitIndex = children.indexOfLast { it.type in SAME_LINE_EXPRS }
       val normalParams = children.subList(0, splitIndex)
       val lastParam = children.subList(splitIndex, children.size)
-      val trailingNode = if (endsWithClosingBracket(children[splitIndex])) Empty else line()
+      val trailingNode = if (endsWithClosingBracket(lastParam.last())) Empty else line()
       val lastNodes = formatGeneric(lastParam, spaceOrLine())
       if (normalParams.isEmpty()) {
         group(Group(newId(), lastNodes), trailingNode)
@@ -619,7 +619,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     return if (node.children.isNotEmpty()) {
       endsWithClosingBracket(node.children.last())
     } else {
-      node.isTerminal("}")
+      node.isTerminal("}") || node.type.isAffix
     }
   }
 
@@ -1328,7 +1328,6 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun hasTrailingAffix(node: Node, next: Node): Boolean {
-    if (node.isMultiline()) return false
     var n: Node? = next
     while (n != null) {
       if (n.type.isAffix && node.span.lineEnd == n.span.lineBegin) return true
