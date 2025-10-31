@@ -15,15 +15,31 @@
  */
 package org.pkl.internal.intellij
 
+import com.intellij.execution.ExecutionListener
+import com.intellij.execution.ExecutionManager
+import com.intellij.execution.Executor
+import com.intellij.execution.ProgramRunnerUtil
+import com.intellij.execution.RunManager
+import com.intellij.execution.executors.DefaultDebugExecutor
+import com.intellij.execution.executors.DefaultRunExecutor
+import com.intellij.execution.junit.JUnitConfiguration
+import com.intellij.execution.junit.JUnitConfigurationType
+import com.intellij.execution.process.ProcessHandler
+import com.intellij.execution.runners.ExecutionEnvironment
 import com.intellij.icons.AllIcons
 import com.intellij.openapi.actionSystem.*
+import com.intellij.openapi.application.ApplicationManager
 import com.intellij.openapi.fileEditor.FileEditor
 import com.intellij.openapi.fileEditor.FileEditorLocation
 import com.intellij.openapi.fileEditor.FileEditorState
 import com.intellij.openapi.fileEditor.FileEditorStateLevel
 import com.intellij.openapi.fileEditor.TextEditor
+import com.intellij.openapi.fileEditor.impl.text.TextEditorProvider
+import com.intellij.openapi.module.ModuleUtil
+import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
+import com.intellij.openapi.vfs.VirtualFileManager
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
 import java.beans.PropertyChangeListener
@@ -32,25 +48,33 @@ import javax.swing.JSplitPane
 
 class SnippetTestSplitEditor(
   private val inputEditor: TextEditor,
-  private val outputEditor: TextEditor,
+  private var outputEditor: TextEditor?,
 ) : UserDataHolderBase(), FileEditor {
 
-  private var currentViewMode = ViewMode.SPLIT
+  private var currentViewMode = if (outputEditor != null) ViewMode.SPLIT else ViewMode.INPUT_ONLY
 
   private val splitPane: JSplitPane =
-    JSplitPane(JSplitPane.HORIZONTAL_SPLIT, inputEditor.component, outputEditor.component).apply {
+    JSplitPane(JSplitPane.HORIZONTAL_SPLIT, inputEditor.component, outputEditor?.component).apply {
       resizeWeight = 0.5
     }
 
   private val mainPanel =
     JBPanel<JBPanel<*>>(BorderLayout()).apply {
       add(createToolbar(), BorderLayout.NORTH)
-      add(splitPane, BorderLayout.CENTER)
+      when (currentViewMode) {
+        ViewMode.INPUT_ONLY -> add(inputEditor.component, BorderLayout.CENTER)
+        ViewMode.SPLIT -> add(splitPane, BorderLayout.CENTER)
+      }
     }
 
   private fun createToolbar(): JComponent {
     val actionGroup =
       DefaultActionGroup().apply {
+        add(RunTestAction())
+        add(DebugTestAction())
+        add(RunAllTestsAction())
+        add(OverwriteSnippetAction())
+        addSeparator()
         add(ShowInputOnlyAction())
         add(ShowSplitAction())
       }
@@ -62,7 +86,7 @@ class SnippetTestSplitEditor(
   }
 
   private fun setViewMode(mode: ViewMode) {
-    if (currentViewMode == mode) return
+    if (currentViewMode == mode || outputEditor == null) return
     currentViewMode = mode
 
     // Remove the current center component
@@ -76,7 +100,7 @@ class SnippetTestSplitEditor(
       ViewMode.SPLIT -> {
         // Re-add components to splitPane in case they were removed
         splitPane.leftComponent = inputEditor.component
-        splitPane.rightComponent = outputEditor.component
+        splitPane.rightComponent = outputEditor!!.component
         mainPanel.add(splitPane, BorderLayout.CENTER)
       }
     }
@@ -96,33 +120,111 @@ class SnippetTestSplitEditor(
   override fun setState(state: FileEditorState) {
     if (state is SnippetTestSplitEditorState) {
       inputEditor.setState(state.inputState)
-      outputEditor.setState(state.outputState)
+      if (outputEditor != null && state.outputState != null) {
+        outputEditor!!.setState(state.outputState)
+      }
     }
   }
 
   override fun getState(level: FileEditorStateLevel): FileEditorState {
-    return SnippetTestSplitEditorState(inputEditor.getState(level), outputEditor.getState(level))
+    return SnippetTestSplitEditorState(inputEditor.getState(level), outputEditor?.getState(level))
   }
 
-  override fun isModified(): Boolean = inputEditor.isModified || outputEditor.isModified
+  override fun isModified(): Boolean = inputEditor.isModified || outputEditor?.isModified ?: false
 
-  override fun isValid(): Boolean = inputEditor.isValid && outputEditor.isValid
+  override fun isValid(): Boolean = inputEditor.isValid && outputEditor?.isValid ?: true
 
   override fun addPropertyChangeListener(listener: PropertyChangeListener) {
     inputEditor.addPropertyChangeListener(listener)
-    outputEditor.addPropertyChangeListener(listener)
+    outputEditor?.addPropertyChangeListener(listener)
   }
 
   override fun removePropertyChangeListener(listener: PropertyChangeListener) {
     inputEditor.removePropertyChangeListener(listener)
-    outputEditor.removePropertyChangeListener(listener)
+    outputEditor?.removePropertyChangeListener(listener)
   }
 
   override fun getCurrentLocation(): FileEditorLocation? = inputEditor.currentLocation
 
   override fun dispose() {
     inputEditor.dispose()
-    outputEditor.dispose()
+    outputEditor?.dispose()
+  }
+
+  /**
+   * Refreshes the output editor by reloading the output file from disk. This is useful after
+   * running tests, as the output file may have been created or changed (e.g., from .pcf to .err).
+   */
+  private fun refreshOutputEditor(project: Project) {
+    val inputFile = inputEditor.file ?: return
+
+    // Refresh the input file's parent to pick up any new output files
+    ApplicationManager.getApplication().invokeLater {
+      VirtualFileManager.getInstance().asyncRefresh {
+        val currentOutputFile = findOutputFile(inputFile)
+        val editorOutputFile = outputEditor?.file
+        when {
+          currentOutputFile != null && currentOutputFile != editorOutputFile -> {
+            // No output file exists; set split mode.
+            if (editorOutputFile == null) {
+              replaceOutputEditorAndSetSplitMode(project, currentOutputFile)
+            } else {
+              // The output file has changed (e.g., .pcf to .err or vice versa), or got created.
+              // We need to replace the output editor with a new one for the new file
+              replaceOutputEditor(project, currentOutputFile)
+            }
+          }
+          else -> currentOutputFile?.refresh(true, false)
+        }
+      }
+    }
+  }
+
+  /**
+   * Replaces the current output editor with a new one for the specified file. This is necessary
+   * when the output file type changes (e.g., from .pcf to .err).
+   */
+  private fun replaceOutputEditorAndSetSplitMode(project: Project, newOutputFile: VirtualFile) {
+    ApplicationManager.getApplication().invokeLater {
+      val textEditorProvider = TextEditorProvider.getInstance()
+      val newEditor = textEditorProvider.createEditor(project, newOutputFile) as TextEditor
+
+      // Dispose the old editor
+      outputEditor?.dispose()
+
+      // Update the reference to the new editor
+      outputEditor = newEditor
+      setViewMode(ViewMode.SPLIT)
+    }
+  }
+
+  /**
+   * Replaces the current output editor with a new one for the specified file. This is necessary
+   * when the output file type changes (e.g., from .pcf to .err).
+   */
+  private fun replaceOutputEditor(project: Project, newOutputFile: VirtualFile) {
+    ApplicationManager.getApplication().invokeLater {
+      val textEditorProvider = TextEditorProvider.getInstance()
+      val newEditor = textEditorProvider.createEditor(project, newOutputFile) as TextEditor
+
+      // Dispose the old editor
+      outputEditor?.dispose()
+
+      // Update the reference to the new editor
+      outputEditor = newEditor
+
+      // Update the split pane with the new editor
+      when (currentViewMode) {
+        ViewMode.SPLIT -> {
+          splitPane.rightComponent = newEditor.component
+          splitPane.revalidate()
+          splitPane.repaint()
+        }
+        ViewMode.INPUT_ONLY -> {
+          // Nothing to do, output is not visible
+        }
+      }
+    }
   }
 
   private enum class ViewMode {
@@ -151,15 +253,178 @@ class SnippetTestSplitEditor(
       if (state) setViewMode(ViewMode.SPLIT)
     }
   }
+
+  private inner class RunTestAction :
+    AnAction("Run Test", "Run the snippet test", AllIcons.Actions.Execute) {
+    override fun actionPerformed(e: AnActionEvent) {
+      val project = e.project ?: return
+      executeTest(project, DefaultRunExecutor.getRunExecutorInstance())
+    }
+  }
+
+  private inner class RunAllTestsAction :
+    AnAction("Run All Tests", "Run all snippet tests", AllIcons.Actions.RunAll) {
+    override fun actionPerformed(e: AnActionEvent) {
+      val project = e.project ?: return
+      executeAllTests(project, DefaultRunExecutor.getRunExecutorInstance())
+    }
+  }
+
+  private inner class DebugTestAction :
+    AnAction("Debug Test", "Debug the snippet test", AllIcons.Actions.StartDebugger) {
+    override fun actionPerformed(e: AnActionEvent) {
+      val project = e.project ?: return
+      executeTest(project, DefaultDebugExecutor.getDebugExecutorInstance())
+    }
+  }
+
+  private inner class OverwriteSnippetAction :
+    AnAction(
+      "Overwrite Snippet",
+      "Run test and regenerate expected output",
+      AllIcons.Actions.RerunAutomatically,
+    ) {
+    override fun actionPerformed(e: AnActionEvent) {
+      val project = e.project ?: return
+
+      executeTest(
+        project,
+        DefaultRunExecutor.getRunExecutorInstance(),
+        mapOf("OVERWRITE_SNIPPETS" to "1"),
+      )
+    }
+  }
+
+  /**
+   * Builds a JUnit UniqueID selector for the snippet test. E.g.
+   *
+   * ```
+   * [engine:LanguageSnippetTestsEngine]/[inputDirNode:lambdas]/[inputFileNode:lambdaStackTrace2.pkl]
+   * ```
+   */
+  private fun buildUniqueId(file: VirtualFile): String? {
+    val path = file.path
+    // Pattern: .../LanguageSnippetTests/input/lambdas/lambdaStackTrace2.pkl
+    val pattern = Regex(".*/([^/]+)/src/test/files/(\\w+)/input/(.+)$")
+    val match = pattern.find(path) ?: return null
+
+    val testType = match.groupValues[2] // e.g., "LanguageSnippetTests"
+    val relativePath = match.groupValues[3] // e.g., "lambdas/lambdaStackTrace2.pkl"
+
+    // Extract directory and filename
+    val parts = relativePath.split("/")
+    val fileName = parts.last()
+    val engineName = testType + "Engine"
+    val uniqueId = buildString {
+      append("[engine:$engineName]")
+      if (parts.size > 1) {
+        for (dir in parts.dropLast(1)) {
+          append("/[inputDirNode:$dir]")
+        }
+      }
+      append("/[inputFileNode:$fileName]")
+    }
+
+    return uniqueId
+  }
+
+  private fun executeAllTests(
+    project: Project,
+    executor: Executor,
+    envVars: Map<String, String> = emptyMap(),
+  ) {
+    val file = inputEditor.file ?: return
+
+    val path = file.path
+    // Pattern: .../LanguageSnippetTests/input/lambdas/lambdaStackTrace2.pkl
+    val pattern = Regex(".*/([^/]+)/src/test/files/(\\w+)/input/(.+)$")
+    val match = pattern.find(path) ?: return
+
+    val testType = match.groupValues[2] // e.g., "LanguageSnippetTests"
+    val uniqueId = "[engine:${testType}Engine]"
+    executeTest(project, executor, uniqueId, envVars)
+  }
+
+  private fun executeTest(
+    project: Project,
+    executor: Executor,
+    envVars: Map<String, String> = emptyMap(),
+  ) {
+    val file = inputEditor.file ?: return
+    val uniqueId = buildUniqueId(file) ?: return
+    executeTest(project, executor, uniqueId, envVars)
+  }
+
+  private fun executeTest(
+    project: Project,
+    executor: Executor,
+    uniqueId: String,
+    envVars: Map<String, String> = emptyMap(),
+  ) {
+    val file = inputEditor.file ?: return
+    val module = ModuleUtil.findModuleForFile(file, project) ?: return
+
+    val runManager = RunManager.getInstance(project)
+    val configurationType = JUnitConfigurationType.getInstance()
+    val configurationFactory = configurationType.configurationFactories.first()
+
+    val settings =
+      runManager.createConfiguration(
+        "Snippet Test: ${file.nameWithoutExtension}",
+        configurationFactory,
+      )
+
+    val configuration = settings.configuration as? JUnitConfiguration ?: return
+    val data = configuration.persistentData
+
+    data.TEST_OBJECT = JUnitConfiguration.TEST_UNIQUE_ID
+    data.setUniqueIds(uniqueId)
+
+    if (envVars.isNotEmpty()) {
+      data.envs = envVars.toMutableMap()
+      data.PASS_PARENT_ENVS = true
+    }
+
+    configuration.setModule(module)
+
+    // Add listener to refresh output editor after test completes
+    val messageBus = project.messageBus.connect()
+    messageBus.subscribe(
+      ExecutionManager.EXECUTION_TOPIC,
+      object : ExecutionListener {
+        override fun processTerminated(
+          executorId: String,
+          env: ExecutionEnvironment,
+          handler: ProcessHandler,
+          exitCode: Int,
+        ) {
+          // Check if this is our test run
+          if (env.runProfile == configuration) {
+            // Refresh the output editor after the test completes
+            refreshOutputEditor(project)
+            // Disconnect the listener after use
+            messageBus.disconnect()
+          }
+        }
+      },
+    )
+
+    ProgramRunnerUtil.executeConfiguration(settings, executor)
+  }
 }
 
 data class SnippetTestSplitEditorState(
   val inputState: FileEditorState,
-  val outputState: FileEditorState,
+  val outputState: FileEditorState?,
 ) : FileEditorState {
   override fun canBeMergedWith(otherState: FileEditorState, level: FileEditorStateLevel): Boolean {
-    return otherState is SnippetTestSplitEditorState &&
-      inputState.canBeMergedWith(otherState.inputState, level) &&
-      outputState.canBeMergedWith(otherState.outputState, level)
+    val other = otherState as? SnippetTestSplitEditorState ?: return false
+    if (!inputState.canBeMergedWith(other.inputState, level)) return false
+    val otherState = other.outputState
+    return when {
+      outputState == null && otherState == null -> true
+      outputState != null && otherState != null -> outputState.canBeMergedWith(otherState, level)
+      else -> false
+    }
   }
 }

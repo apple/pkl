@@ -10,8 +10,10 @@
   ]]></description>
 
   <depends>com.intellij.modules.platform</depends>
+  <depends>com.intellij.java</depends>
+  <depends>org.jetbrains.plugins.gradle</depends>
 
   <extensions defaultExtensionNs="com.intellij">
-    <fileEditorProvider implementation="org.pkl.intellij.SnippetTestEditorProvider"/>
+    <fileEditorProvider implementation="org.pkl.internal.intellij.SnippetTestEditorProvider"/>
   </extensions>
 </idea-plugin>
