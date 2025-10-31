@@ -39,8 +39,6 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   private var prevNode: Node? = null
   private var noNewlines = false
 
-  private class CannotAvoidNewline : RuntimeException()
-
   fun format(node: Node): FormatNode {
     prevNode = node
     return when (node.type) {
@@ -836,16 +834,10 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       while (cursor.hasNext()) {
         if (isInStringInterpolation) {
           val prevNoNewlines = noNewlines
-          noNewlines = true
           val elems = cursor.takeUntilBefore { it.isTerminal(")") }
+          noNewlines = !elems.isMultiline()
           getBaseSeparator(prev!!, elems.first())?.let { add(it) }
-          val formatted =
-            try {
-              formatGeneric(elems, null)
-            } catch (_: CannotAvoidNewline) {
-              noNewlines = false
-              formatGeneric(elems, null)
-            }
+          val formatted = formatGeneric(elems, null)
           addAll(formatted)
           getBaseSeparator(elems.last(), cursor.peek())?.let { add(it) }
           noNewlines = prevNoNewlines
@@ -872,7 +864,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun formatIf(node: Node): FormatNode {
-    val separator = if (node.isMultiline()) forceLine() else spaceOrLine()
+    val separator = if (node.isMultiline()) forceSpaceyLine() else spaceOrLine()
     val nodes =
       formatGeneric(node.children) { _, next ->
         // produce `else if` in the case of nested if.
@@ -971,7 +963,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun formatLetExpr(node: Node): FormatNode {
-    val separator = if (node.isMultiline()) forceLine() else spaceOrLine()
+    val separator = if (node.isMultiline()) forceSpaceyLine() else spaceOrLine()
     val endsWithLet = node.children.last().type == NodeType.LET_EXPR
     val nodes =
       formatGenericWithGen(
@@ -1315,7 +1307,12 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun mustForceLine(): FormatNode {
-    return if (noNewlines) throw CannotAvoidNewline() else ForceLine
+    if (noNewlines) {
+      // should never happen; we do not set `noNewlines` for interpolation blocks that span multiple
+      // lines
+      throw RuntimeException("Tried to render Pkl code as single line")
+    }
+    return ForceLine
   }
 
   private fun forceLine(): FormatNode {
@@ -1459,6 +1456,9 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   private fun Node.isProper(): Boolean = !type.isAffix && type != NodeType.TERMINAL
 
   private fun Node.isMultiline(): Boolean = span.lineBegin < span.lineEnd
+
+  private fun List<Node>.isMultiline(): Boolean =
+    if (isEmpty()) false else first().span.lineBegin < last().span.lineEnd
 
   private inline fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
     val index = indexOfFirst { pred(it) }
