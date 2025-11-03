@@ -47,3 +47,10 @@ res9 =
   )
 
 res10 = (a) -> hello // some comment
+
+res11 =
+  qux(
+    bar,
+    (a) -> hello
+    // some comment
+  )

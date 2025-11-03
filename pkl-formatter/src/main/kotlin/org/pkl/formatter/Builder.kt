@@ -1289,7 +1289,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun getBaseSeparator(prev: Node, next: Node): FormatNode? {
     return when {
-      prev.lastChild().type == NodeType.LINE_COMMENT -> {
+      prevNode?.type == NodeType.LINE_COMMENT -> {
         if (prev.linesBetween(next) > 1) {
           TWO_NEWLINES
         } else {
@@ -1485,9 +1485,6 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun List<Node>.isMultiline(): Boolean =
     if (isEmpty()) false else first().span.lineBegin < last().span.lineEnd
-
-  private tailrec fun Node.lastChild(): Node =
-    if (children.isEmpty()) this else children.last().lastChild()
 
   private inline fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
     val index = indexOfFirst { pred(it) }
