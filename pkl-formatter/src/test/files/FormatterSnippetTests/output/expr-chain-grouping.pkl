@@ -63,3 +63,8 @@ res11 =
   foo.bar /* some comment */
     .baz(new { foooooooooooooooooooooooooo = 1; baaaaaaaaaaaaaaaaaaaaar = 2 })
     .buz
+
+res12 =
+  foo.biz
+    .bar((it) -> it + 2)
+    .qux((it) -> it + 1)

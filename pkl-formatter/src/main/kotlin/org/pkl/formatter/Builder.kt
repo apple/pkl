@@ -299,7 +299,15 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
     gatherFacts(node)
 
-    val separator: (Node, Node) -> FormatNode? = { prev, next ->
+    val leadingSeparator: (Node, Node) -> FormatNode? = { prev, next ->
+      when {
+        prev.type == NodeType.OPERATOR -> null
+        next.type == NodeType.OPERATOR -> line()
+        else -> spaceOrLine()
+      }
+    }
+
+    val trailingSeparator: (Node, Node) -> FormatNode? = { prev, next ->
       when {
         prev.type == NodeType.OPERATOR -> null
         next.type == NodeType.OPERATOR -> if (lambdaCount > 1) forceLine() else line()
@@ -312,8 +320,9 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
         methodCallCount == 1 && isMethodCall(flat.lastProperNode()!!) -> {
           // lift argument list into its own node
           val (callChain, argsList) = splitFunctionCallNode(flat)
-          val leadingNodes = indentAfterFirstNewline(formatGeneric(callChain, separator), true)
-          val trailingNodes = formatGeneric(argsList, separator)
+          val leadingNodes =
+            indentAfterFirstNewline(formatGeneric(callChain, leadingSeparator), true)
+          val trailingNodes = formatGeneric(argsList, trailingSeparator)
           val sep = getBaseSeparator(callChain.last(), argsList.first())
           if (sep != null) {
             leadingNodes + sep + trailingNodes
@@ -324,11 +333,11 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
         methodCallCount > 0 && indexBeforeFirstMethodCall > 0 -> {
           val leading = flat.subList(0, indexBeforeFirstMethodCall)
           val trailing = flat.subList(indexBeforeFirstMethodCall, flat.size)
-          val leadingNodes = indentAfterFirstNewline(formatGeneric(leading, separator), true)
-          val trailingNodes = formatGeneric(trailing, separator)
+          val leadingNodes = indentAfterFirstNewline(formatGeneric(leading, leadingSeparator), true)
+          val trailingNodes = formatGeneric(trailing, trailingSeparator)
           leadingNodes + line() + trailingNodes
         }
-        else -> formatGeneric(flat, separator)
+        else -> formatGeneric(flat, trailingSeparator)
       }
 
     val shouldGroup = node.children.size == flat.size
@@ -585,10 +594,14 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     twoBy2: Boolean = false,
   ): FormatNode {
     val children = node.children
+    val shouldMultiline = shouldMultlineNodes(node) { it.isTerminal(",") }
+    val sep: (Node, Node) -> FormatNode = { _, _ ->
+      if (shouldMultiline) forceSpaceyLine() else spaceOrLine()
+    }
     return if (twoBy2) {
       val pairs = pairArguments(children)
       val nodes =
-        formatGenericWithGen(pairs, spaceOrLine()) { node, _ ->
+        formatGenericWithGen(pairs, sep) { node, _ ->
           if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
             Group(newId(), formatGeneric(node.children, spaceOrLine()))
           } else {
@@ -597,22 +610,33 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
         }
       Indent(nodes)
     } else if (hasTrailingLambda) {
-      // if the args have a trailing expression (lambda, new, amends) group them differently
+      // if the args have a trailing lambda, group them differently
       val splitIndex = children.indexOfLast { it.type in SAME_LINE_EXPRS }
       val normalParams = children.subList(0, splitIndex)
       val lastParam = children.subList(splitIndex, children.size)
       val trailingNode = if (endsWithClosingBracket(lastParam.last())) Empty else line()
-      val lastNodes = formatGeneric(lastParam, spaceOrLine())
+      val lastNodes = formatGenericWithGen(lastParam, sep, null)
       if (normalParams.isEmpty()) {
         group(Group(newId(), lastNodes), trailingNode)
       } else {
         val separator = getSeparator(normalParams.last(), lastParam[0], Space)
-        val paramNodes = formatGeneric(normalParams, spaceOrLine())
+        val paramNodes = formatGenericWithGen(normalParams, sep, null)
         group(Group(newId(), paramNodes), separator, Group(newId(), lastNodes), trailingNode)
       }
     } else {
-      Indent(formatGeneric(children, spaceOrLine()))
+      Indent(formatGeneric(children, sep))
     }
+  }
+
+  private fun shouldMultlineNodes(node: Node, predicate: (Node) -> Boolean): Boolean {
+    for (idx in 0..<node.children.lastIndex) {
+      val prev = node.children[idx]
+      val next = node.children[idx + 1]
+      if ((predicate(prev) || predicate(next)) && prev.linesBetween(next) > 0) {
+        return true
+      }
+    }
+    return false
   }
 
   private tailrec fun endsWithClosingBracket(node: Node): Boolean {
@@ -998,19 +1022,21 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun formatBinaryOpExpr(node: Node): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
+    val shouldMultiline = shouldMultlineNodes(node) { it.type == NodeType.OPERATOR }
     val nodes =
       formatGeneric(flat) { prev, next ->
+        val sep = if (shouldMultiline) forceSpaceyLine() else spaceOrLine()
         if (prev.type == NodeType.OPERATOR) {
           when (prev.text()) {
-            "-" -> spaceOrLine()
+            "-" -> sep
             else -> Space
           }
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
             "-" -> Space
-            else -> spaceOrLine()
+            else -> sep
           }
-        } else spaceOrLine()
+        } else sep
       }
 
     val shouldGroup = node.children.size == flat.size
@@ -1396,15 +1422,15 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   private fun flattenBinaryOperatorExprs(node: Node, prec: Int): List<Node> {
     val actualOp = node.children.first { it.type == NodeType.OPERATOR }.text()
     if (prec != Operator.byName(actualOp).prec) return listOf(node)
-    val res = mutableListOf<Node>()
-    for (child in node.children) {
-      if (child.type == NodeType.BINARY_OP_EXPR) {
-        res += flattenBinaryOperatorExprs(child, prec)
-      } else {
-        res += child
+    return buildList {
+      for (child in node.children) {
+        if (child.type == NodeType.BINARY_OP_EXPR) {
+          addAll(flattenBinaryOperatorExprs(child, prec))
+        } else {
+          add(child)
+        }
       }
     }
-    return res
   }
 
   private fun Node.linesBetween(next: Node): Int = next.span.lineBegin - span.lineEnd
