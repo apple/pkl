@@ -15,7 +15,6 @@
  */
 package org.pkl.cli
 
-import java.io.File
 import java.io.IOException
 import java.io.Writer
 import java.nio.file.Files
@@ -28,9 +27,8 @@ import kotlin.io.path.writeText
 import kotlin.math.max
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
+import org.pkl.commons.cli.CliException
 import org.pkl.commons.cli.CliTestException
-import org.pkl.core.ModuleSource
-import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 import org.pkl.formatter.Formatter
 import org.pkl.formatter.GrammarVersion
@@ -47,7 +45,6 @@ constructor(
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
 ) : CliCommand(CliBaseOptions()) {
-
   private fun format(contents: String): String {
     return Formatter().format(contents, grammarVersion)
   }
@@ -65,15 +62,15 @@ constructor(
     consoleWriter.flush()
   }
 
-  private fun allSources(): Stream<ModuleSource> {
+  private fun allPaths(): Stream<Path> {
     return paths.distinct().stream().flatMap { path ->
       when {
-        path.toString() == "-" -> Stream.of(ModuleSource.text(IoUtils.readString(System.`in`)))
+        path.toString() == "-" -> Stream.of(path)
         path.isDirectory() ->
           Files.walk(path)
             .filter { it.extension == "pkl" || it.name == "PklProject" }
-            .map { ModuleSource.path(it.toAbsolutePath().normalize()) }
-        else -> Stream.of(ModuleSource.path(path.toAbsolutePath().normalize()))
+            .map { it.normalize() }
+        else -> Stream.of(path.normalize())
       }
     }
   }
@@ -81,7 +78,7 @@ constructor(
   override fun doRun() {
     val status = Status(SUCCESS)
 
-    handleSources(status)
+    handlePaths(status)
 
     when (status.status) {
       FORMATTING_VIOLATION -> {
@@ -98,27 +95,25 @@ constructor(
     }
   }
 
-  private fun handleSources(status: Status) {
-    for (source in allSources()) {
-      val path = if (source.uri == VmUtils.REPL_TEXT_URI) Path.of("-") else Path.of(source.uri)
+  private fun handlePaths(status: Status) {
+    for (path in allPaths()) {
+      val pathStr = path.toString()
       try {
         val contents =
-          if (source.contents != null) {
-            if (overwrite) {
-              writeErr("Cannot write to stdin.")
-              throw CliTestException("", ERROR)
-            }
-            source.contents!!
-          } else {
-            File(source.uri).readText()
+          when {
+            pathStr == "-" -> IoUtils.readString(System.`in`)
+            else -> Files.readString(path)
           }
+        if (pathStr == "-" && overwrite) {
+          throw CliException("Cannot write to stdin", ERROR)
+        }
 
         val formatted = format(contents)
         if (contents != formatted) {
           status.update(FORMATTING_VIOLATION)
           if (diffNameOnly || overwrite) {
             // if `--diff-name-only` or `-w` is specified, only write file names
-            write(path.toAbsolutePath().toString())
+            write(pathStr)
           }
 
           if (overwrite) {
@@ -130,10 +125,10 @@ constructor(
           write(formatted)
         }
       } catch (pe: GenericParserError) {
-        writeErr("Could not format `$path`: $pe")
+        writeErr("Could not format `$pathStr`: $pe")
         status.update(ERROR)
       } catch (e: IOException) {
-        writeErr("IO error while reading `$path`: ${e.message}")
+        writeErr("IO error while reading `$pathStr`: ${e.message}")
         status.update(ERROR)
       }
     }
