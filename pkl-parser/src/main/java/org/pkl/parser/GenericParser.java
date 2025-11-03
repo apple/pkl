@@ -77,8 +77,8 @@ public class GenericParser {
       }
       var lastImport = parseImportDecl();
       imports.add(lastImport);
-      // keep trailling affixes as part of the import
-      while (lookahead.isAffix() && lastImport.span.sameLine(spanLookahead)) {
+      // keep trailing affixes as part of the import
+      while (lookahead.isAffix() && lastImport.span.isSameLine(spanLookahead)) {
         imports.add(makeAffix(next()));
       }
       if (!isImport()) break;
@@ -662,7 +662,7 @@ public class GenericParser {
       if (operator.getPrec() < minPrecedence) break;
       // `-` and `[]` must be in the same line as the left operand and have no semicolons inbetween
       if ((operator == Operator.MINUS || operator == Operator.SUBSCRIPT)
-          && (fullOpToken.hasSemicolon || !expr.span.sameLine(fullOpToken.tk.span))) break;
+          && (fullOpToken.hasSemicolon || !expr.span.isSameLine(fullOpToken.tk.span))) break;
       var children = new ArrayList<Node>();
       children.add(expr);
       ff(children);

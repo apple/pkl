@@ -15,8 +15,6 @@
  */
 package org.pkl.parser.syntax.generic;
 
-import org.pkl.parser.Span;
-
 public record FullSpan(
     int charIndex, int length, int lineBegin, int colBegin, int lineEnd, int colEnd) {
 
@@ -30,11 +28,7 @@ public record FullSpan(
         end.colEnd);
   }
 
-  public Span toSpan() {
-    return new Span(charIndex, length);
-  }
-
-  public boolean sameLine(FullSpan other) {
+  public boolean isSameLine(FullSpan other) {
     return lineEnd == other.lineBegin;
   }
 

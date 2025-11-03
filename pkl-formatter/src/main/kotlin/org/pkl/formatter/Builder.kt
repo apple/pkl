@@ -614,7 +614,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       val splitIndex = children.indexOfLast { it.type in SAME_LINE_EXPRS }
       val normalParams = children.subList(0, splitIndex)
       val lastParam = children.subList(splitIndex, children.size)
-      val trailingNode = if (endsWithClosingBracket(lastParam.last())) Empty else line()
+      val trailingNode = if (endsWithClosingCurlyBrace(lastParam.last())) Empty else line()
       val lastNodes = formatGenericWithGen(lastParam, sep, null)
       if (normalParams.isEmpty()) {
         group(Group(newId(), lastNodes), trailingNode)
@@ -639,42 +639,43 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     return false
   }
 
-  private tailrec fun endsWithClosingBracket(node: Node): Boolean {
+  private tailrec fun endsWithClosingCurlyBrace(node: Node): Boolean {
     return if (node.children.isNotEmpty()) {
-      endsWithClosingBracket(node.children.last())
+      endsWithClosingCurlyBrace(node.children.last())
     } else {
-      node.isTerminal("}") || node.type.isAffix
+      node.isTerminal("}")
     }
   }
 
   /**
-   * Only considered trailing lamdba if there is only one lambda/new expr/amends expr in the list.
+   * Tells if an argument list has a trailing lambda, new expr, or amends expr.
    *
-   * E.g. avoid formatting `toMap()` weirdly:
-   * ```
-   * foo.toMap(
-   *   (it) -> makeSomeKey(it),
-   *   (it) -> makeSomeValue(it),
-   * )
-   * ```
+   * Only considered trailing lamdba if:
+   * 1. There is only one lambda/new expr/amends expr in the list. E.g. avoid formatting `toMap()`
+   *    weirdly: ``` foo.toMap( (it) -> makeSomeKey(it), (it) -> makeSomeValue(it), ) ```
+   * 2. The lambda does not have leading or trailing line comment.
    */
   private fun hasTrailingLambda(argList: Node): Boolean {
     val children = argList.firstProperChild()?.children ?: return false
-    var seenArg = false
-    var ret = false
+    var seenLambda = false
+    if (children.last().type == NodeType.LINE_COMMENT) {
+      return false
+    }
     for (i in children.lastIndex downTo 0) {
       val child = children[i]
       if (!child.isProper()) continue
-      if (child.type in SAME_LINE_EXPRS) {
-        if (seenArg) {
+      if (!seenLambda) {
+        if (child.type !in SAME_LINE_EXPRS) {
           return false
-        } else {
-          seenArg = true
-          ret = true
         }
+        // preceded by line comment
+        if (children.getOrNull(i - 1)?.type == NodeType.LINE_COMMENT) return false
+        seenLambda = true
+      } else if (child.type in SAME_LINE_EXPRS) {
+        return false
       }
     }
-    return ret
+    return true
   }
 
   private fun pairArguments(nodes: List<Node>): List<Node> {

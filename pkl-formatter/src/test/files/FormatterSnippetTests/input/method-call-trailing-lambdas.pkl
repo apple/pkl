@@ -19,3 +19,27 @@ res4 = foo.foldLeft(
 res5 = ifNonNull((it) -> someFunctionCall(it as SomeReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongTypeName))
 
 res6 = ifNonNull((it) -> someFunctionCall(it as SomeReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongTypeNameLonger))
+
+res7 =
+  qux(bar, (a) ->
+    hello // some comment
+  )
+
+res8 = qux(
+  // some comment
+  (a) -> bar
+)
+
+res9 =
+  qux(bar, new {
+    bar = 1
+  } // some comment
+  )
+
+res10 = (a) -> hello // some comment
+
+res11 =
+  qux(bar, (a) ->
+    hello
+    // some comment
+  )

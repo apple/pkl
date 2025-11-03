@@ -76,8 +76,9 @@ local function render(currentIndent: String) =
 
 items: List<Item> =
   allItems
-    .filter((item) ->
-      badItems.containsKey(item) // some line comment 
-        || item.tags.toList().findOrNull((it) -> it.type == "bookmark") != null // some other line comment
+    .filter(
+      (item) ->
+        badItems.containsKey(item) // some line comment 
+          || item.tags.toList().findOrNull((it) -> it.type == "bookmark") != null // some other line comment
     )
     .sortBy((item) -> item.name)
