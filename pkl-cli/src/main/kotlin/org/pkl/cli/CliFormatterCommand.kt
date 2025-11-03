@@ -72,8 +72,8 @@ constructor(
         path.isDirectory() ->
           Files.walk(path)
             .filter { it.extension == "pkl" || it.name == "PklProject" }
-            .map(ModuleSource::path)
-        else -> Stream.of(ModuleSource.path(path))
+            .map { ModuleSource.path(it.toAbsolutePath().normalize()) }
+        else -> Stream.of(ModuleSource.path(path.toAbsolutePath().normalize()))
       }
     }
   }
