@@ -200,7 +200,8 @@ class Version {
     else if (preRelease == other.preRelease)
       false
     else
-      let (result =
+      let (
+        result =
           preReleaseIdentifiers
             .zip(other.preReleaseIdentifiers)
             .fold(null, (result, next) ->
