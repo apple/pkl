@@ -1,0 +1,51 @@
+= Pkl 0.31 Release Notes
+:version: 0.31
+:version-minor: 0.XX.0
+:release-date: TBD
+
+link:ROOT:partial$component-attributes.adoc[role=include]
+
+Pkl {version} was released on {release-date}. +
+[.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
+
+The next release (0.XX) is scheduled for ???..
+To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
+
+Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
+
+[small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
+To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
+
+== Highlights [small]#💖#
+
+News you don't want to miss.
+
+=== XXX
+
+== Noteworthy [small]#🎶#
+
+Ready when you need them.
+
+=== XXX
+
+== Breaking Changes [small]#💔#
+
+Things to watch out for when upgrading.
+
+=== XXX
+
+== Miscellaneous [small]#🐸#
+
+* XXX
+
+== Bugs fixed [small]#🐜#
+
+The following bugs have been fixed.
+
+* XXX (https://github.com/apple/pkl/issues/XXX[XXX])
+
+== Contributors [small]#🙏#
+
+We would like to thank the contributors to this release (in alphabetical order):
+
+* XXX

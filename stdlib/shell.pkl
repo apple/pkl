@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Utilities for generating shell scripts.
-@ModuleInfo { minPklVersion = "0.30.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.shell
 
 /// Escapes [str] by enclosing it in single quotes.

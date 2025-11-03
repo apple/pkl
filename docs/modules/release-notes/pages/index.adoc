@@ -2,6 +2,7 @@
 
 The Pkl team aims to release a new version of Pkl in February, June, and October of each year.
 
+* xref:0.31.adoc[0.31 Release Notes]
 * xref:0.30.adoc[0.30 Release Notes]
 * xref:0.29.adoc[0.29 Release Notes]
 * xref:0.28.adoc[0.28 Release Notes]
