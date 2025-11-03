@@ -617,10 +617,12 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       val trailingNode = if (endsWithClosingCurlyBrace(lastParam.last())) Empty else line()
       val lastNodes = formatGenericWithGen(lastParam, sep, null)
       if (normalParams.isEmpty()) {
+        val lastNodes = formatGenericWithGen(lastParam, sep, null)
         group(Group(newId(), lastNodes), trailingNode)
       } else {
         val separator = getSeparator(normalParams.last(), lastParam[0], Space)
         val paramNodes = formatGenericWithGen(normalParams, sep, null)
+        val lastNodes = formatGenericWithGen(lastParam, sep, null)
         group(Group(newId(), paramNodes), separator, Group(newId(), lastNodes), trailingNode)
       }
     } else {
