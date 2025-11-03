@@ -40,6 +40,9 @@ import com.intellij.openapi.project.Project
 import com.intellij.openapi.util.UserDataHolderBase
 import com.intellij.openapi.vfs.VirtualFile
 import com.intellij.openapi.vfs.VirtualFileManager
+import com.intellij.psi.JavaPsiFacade
+import com.intellij.psi.PsiClass
+import com.intellij.psi.search.GlobalSearchScope
 import com.intellij.ui.components.JBPanel
 import java.awt.BorderLayout
 import java.beans.PropertyChangeListener
@@ -328,11 +331,25 @@ class SnippetTestSplitEditor(
     return uniqueId
   }
 
-  private fun executeAllTests(
-    project: Project,
-    executor: Executor,
-    envVars: Map<String, String> = emptyMap(),
-  ) {
+  private fun getTestClass(project: Project, file: VirtualFile): PsiClass {
+    val path = file.path
+    // Pattern: .../LanguageSnippetTests/input/lambdas/lambdaStackTrace2.pkl
+    val pattern = Regex(".*/([^/]+)/src/test/files/(\\w+)/input/(.+)$")
+    val match = pattern.find(path)!!
+    val folder = match.groupValues[2]
+    val className =
+      when (folder) {
+        "LanguageSnippetTests" -> "org.pkl.core.LanguageSnippetTests"
+        "FormatterSnippetTests" -> "org.pkl.formatter.FormatterSnippetTests"
+        // legacy; doesn't exist on main branch
+        "SnippetTests" -> "org.pkl.server.SnippetTests"
+        else -> throw IllegalStateException("")
+      }
+    return JavaPsiFacade.getInstance(project)
+      .findClass(className, GlobalSearchScope.allScope(project))!!
+  }
+
+  private fun executeAllTests(project: Project, executor: Executor) {
     val file = inputEditor.file ?: return
 
     val path = file.path
@@ -341,8 +358,10 @@ class SnippetTestSplitEditor(
     val match = pattern.find(path) ?: return
 
     val testType = match.groupValues[2] // e.g., "LanguageSnippetTests"
-    val uniqueId = "[engine:${testType}Engine]"
-    executeTest(project, executor, uniqueId, envVars)
+    executeTest(project, executor, testType) { data ->
+      data.TEST_OBJECT = JUnitConfiguration.TEST_CLASS
+      data.setMainClass(getTestClass(project, file))
+    }
   }
 
   private fun executeTest(
@@ -352,14 +371,22 @@ class SnippetTestSplitEditor(
   ) {
     val file = inputEditor.file ?: return
     val uniqueId = buildUniqueId(file) ?: return
-    executeTest(project, executor, uniqueId, envVars)
+    executeTest(project, executor, file.name) { data ->
+      data.TEST_OBJECT = JUnitConfiguration.TEST_UNIQUE_ID
+      data.setUniqueIds(uniqueId)
+
+      if (envVars.isNotEmpty()) {
+        data.envs = envVars.toMutableMap()
+        data.PASS_PARENT_ENVS = true
+      }
+    }
   }
 
   private fun executeTest(
     project: Project,
     executor: Executor,
-    uniqueId: String,
-    envVars: Map<String, String> = emptyMap(),
+    title: String,
+    configure: (JUnitConfiguration.Data) -> Unit,
   ) {
     val file = inputEditor.file ?: return
     val module = ModuleUtil.findModuleForFile(file, project) ?: return
@@ -368,24 +395,16 @@ class SnippetTestSplitEditor(
     val configurationType = JUnitConfigurationType.getInstance()
     val configurationFactory = configurationType.configurationFactories.first()
 
-    val settings =
-      runManager.createConfiguration(
-        "Snippet Test: ${file.nameWithoutExtension}",
-        configurationFactory,
-      )
+    val settings = runManager.createConfiguration(title, configurationFactory)
 
     val configuration = settings.configuration as? JUnitConfiguration ?: return
-    val data = configuration.persistentData
-
-    data.TEST_OBJECT = JUnitConfiguration.TEST_UNIQUE_ID
-    data.setUniqueIds(uniqueId)
-
-    if (envVars.isNotEmpty()) {
-      data.envs = envVars.toMutableMap()
-      data.PASS_PARENT_ENVS = true
-    }
+    configure(configuration.persistentData)
 
     configuration.setModule(module)
+
+    // Add the configuration to the RunManager so it appears in recent configurations
+    runManager.addConfiguration(settings)
+    runManager.selectedConfiguration = settings
 
     // Add listener to refresh output editor after test completes
     val messageBus = project.messageBus.connect()
