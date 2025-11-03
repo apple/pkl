@@ -1265,6 +1265,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: 2xlarge
     docker:
     - image: cimg/openjdk:21.0
   gradle-check-windows:
@@ -1303,6 +1304,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: 2xlarge
     docker:
     - image: cimg/openjdk:21.0
   gradle-compatibility:
@@ -1317,6 +1319,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: 2xlarge
     docker:
     - image: cimg/openjdk:21.0
   deploy-snapshot:
@@ -1337,6 +1340,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: 2xlarge
     docker:
     - image: cimg/openjdk:21.0
   deploy-release:
@@ -1357,6 +1361,7 @@ jobs:
         path: ~/test-results
     environment:
       LANG: en_US.UTF-8
+    resource_class: 2xlarge
     docker:
     - image: cimg/openjdk:21.0
   github-release:

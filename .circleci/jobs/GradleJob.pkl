@@ -72,6 +72,7 @@ job: Config.Job = new {
         image = "cimg/openjdk:\(javaVersion)"
       }
     }
+    resource_class = "2xlarge"
   }
   when (os == "windows") {
     machine {
