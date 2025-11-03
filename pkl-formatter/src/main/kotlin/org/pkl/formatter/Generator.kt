@@ -89,6 +89,7 @@ internal class Generator {
       }
       is MultilineStringGroup -> {
         val indentLength = indent * INDENT.length
+        val oldIndent = indentFor(node)
         var previousNewline = false
         for ((i, child) in node.nodes.withIndex()) {
           when {
@@ -96,7 +97,7 @@ internal class Generator {
             child is Text &&
               previousNewline &&
               child.text.isBlank() &&
-              child.text.length == indentLength &&
+              child.text.length == oldIndent &&
               node.nodes[i + 1] is ForceLine -> {}
             child is Text && previousNewline ->
               text(reposition(child.text, node.endQuoteCol - 1, indentLength))
@@ -127,6 +128,15 @@ internal class Generator {
   // and return it indented by newOffset characters (spaces only)
   private fun reposition(text: String, originalOffset: Int, newOffset: Int): String =
     " ".repeat(newOffset) + text.drop(originalOffset)
+
+  // Returns the indent of this multiline string, which is the size of the last node before the
+  // closing quotes, or 0 if the closing quotes have no indentation
+  private fun indentFor(multi: MultilineStringGroup): Int {
+    val nodes = multi.nodes
+    if (nodes.size < 2) return 0
+    val beforeLast = nodes[nodes.lastIndex - 1]
+    return if (beforeLast is Text) beforeLast.text.length else 0
+  }
 
   override fun toString(): String {
     return buf.toString()
