@@ -36,12 +36,10 @@ import org.pkl.parser.syntax.generic.NodeType
 internal class Builder(sourceText: String, private val grammarVersion: GrammarVersion) {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
-  private var prevNode: Node? = null
   private var noNewlines = false
 
-  fun format(node: Node): FormatNode {
-    prevNode = node
-    return when (node.type) {
+  fun format(node: Node): FormatNode =
+    when (node.type) {
       NodeType.MODULE -> formatModule(node)
       NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, null))
       NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
@@ -164,7 +162,6 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       NodeType.PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node)
       else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
-  }
 
   private fun formatModule(node: Node): FormatNode {
     val nodes =
@@ -617,6 +614,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       val trailingNode = if (endsWithClosingCurlyBrace(lastParam.last())) Empty else line()
       val lastNodes = formatGenericWithGen(lastParam, sep, null)
       if (normalParams.isEmpty()) {
+        val lastNodes = formatGenericWithGen(lastParam, sep, null)
         group(Group(newId(), lastNodes), trailingNode)
       } else {
         val separator = getSeparator(normalParams.last(), lastParam[0], Space)
@@ -1289,7 +1287,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun getBaseSeparator(prev: Node, next: Node): FormatNode? {
     return when {
-      prevNode?.type == NodeType.LINE_COMMENT -> {
+      endsInLineComment(prev) -> {
         if (prev.linesBetween(next) > 1) {
           TWO_NEWLINES
         } else {
@@ -1322,6 +1320,14 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
       next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
       else -> null
+    }
+  }
+
+  private tailrec fun endsInLineComment(node: Node): Boolean {
+    return when {
+      node.type == NodeType.LINE_COMMENT -> true
+      node.children.isEmpty() -> false
+      else -> endsInLineComment(node.children.last())
     }
   }
 
