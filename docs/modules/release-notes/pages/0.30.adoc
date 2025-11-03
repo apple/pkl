@@ -54,7 +54,7 @@ Alternatively, the `--names` flag will print out the names of any files that hav
 pkl format --diff-name-only .
 ----
 
-To apply formatting, use the `--overwrite` (`-w`) flag.
+To apply formatting, use the `--write` (`-w`) flag.
 This also implies the `--diff-name-only` flag.
 
 [source,shell]
