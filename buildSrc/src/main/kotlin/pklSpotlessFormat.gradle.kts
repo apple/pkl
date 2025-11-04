@@ -27,6 +27,9 @@ spotless {
       rootProject.file("buildSrc/src/main/resources/license-header.line-comment.txt"),
       "/// ",
     )
+    // disable ratcheting for Pkl sources
+    // make any change to pkl-formatter reformat the stdlib
+    ratchetFrom = null
   }
 }
 
