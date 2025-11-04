@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,6 +40,12 @@ public interface ConfigEvaluator extends AutoCloseable {
 
   /** Evaluates the given module source into a {@link Config} tree. */
   Config evaluate(ModuleSource moduleSource);
+
+  /** Evaluates the given module's {@code output.value} property into a {@link Config} tree. */
+  Config evaluateOutputValue(ModuleSource moduleSource);
+
+  /** Evaluates the Pkl expression represented as {@code expression} into a {@link Config} tree. */
+  Config evaluateExpression(ModuleSource moduleSource, String expression);
 
   /**
    * Releases all resources held by this evaluator. If an {@code evaluate} method is currently
