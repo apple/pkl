@@ -24,6 +24,20 @@ facts {
     set.add(mapping2).contains(mapping1)
     set.add(mapping1).add(mapping2).length == 101
   }
+  
+  ["can compute hash code of cyclical objects"] {
+    local myself1 = new Mapping { ["res"] = myself1 }
+    local myself2 = new Mapping { ["res"] = Set(myself2) }
+    local myself3 = new Mapping { ["res"] = List(myself3) }
+    local myself4 = new Mapping { ["res"] = Pair(1, myself4) }
+    local myself5 = new Mapping { ["res"] = Map(1, myself5) }
+
+    set.add(myself1).contains(myself1)
+    set.add(myself2).contains(myself2)
+    set.add(myself3).contains(myself3)
+    set.add(myself4).contains(myself4)
+    set.add(myself5).contains(myself5)
+  }
 }
 
 examples {
