@@ -66,3 +66,11 @@ res16 = parser.parse("""
 
 // invalid syntax
 res17 = test.catch(() -> parser.parse("!@#$%"))
+
+res18 = test.catch(() -> parser.parse("""
+  {"default": null}
+  """))
+
+res19 = (parser) { useMapping = true }.parse("""
+  {"default": null}
+  """)
