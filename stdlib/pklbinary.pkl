@@ -1,0 +1,43 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// APIs for working with `pkl-binary` encoding.
+///
+/// `pkl-binary` is a binary encoding of Pkl data.
+/// It can be used to encode all values, with the exception of [Function] types (lambda
+/// expressions).
+///
+/// `pkl-binary` encoding is useful for separating evaluation and data consumption into two
+/// separate steps.
+/// For example, applications can produce `pkl-binary` at build time, and deserialize this into
+/// code-generated structs at application runtime.
+///
+/// The `pkl-binary` format uses MessagePack encoding.
+/// Its specification is available at
+/// <https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html>.
+@ModuleInfo { minPklVersion = "0.31.0" }
+module pkl.pklbinary
+
+/// Render values as `pkl-binary`.
+class Renderer extends BytesRenderer {
+  /// Renders [value] as `pkl-binary`.
+  external function renderValue(value: Any): Bytes
+
+  /// Renders [value] as `pkl-binary`.
+  ///
+  /// Every `pkl-binary` value is also a valid document.
+  external function renderDocument(value: Any): Bytes
+}

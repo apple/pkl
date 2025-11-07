@@ -8,15 +8,17 @@ geantyref = "1.+"
 googleJavaFormat = "1.25.2"
 # must not use `+` because used in download URL
 # 23.1.x requires JDK 20+
-graalVm = "24.1.2"
-graalVmJdkVersion = "21.0.5"
+graalVm = "25.0.0"
+graalVmJdkVersion = "25.0.0"
 # slightly hacky but convenient place so we remember to update the checksum
-graalVmSha256-macos-x64 = "2d9b09e28bc1bb6ff219bf62eacc4626c7740b4f1829ede9ea4450f33e9c0826"
-graalVmSha256-macos-aarch64 = "cb68cb2c796f42f37a56fcd1385d8b86cca12e0b46c5618a5ed3ec7dd2260f6f"
-graalVmSha256-linux-x64 = "c1960d4f9d278458bde1cd15115ac2f0b3240cb427d51cfeceb79dab91a7f5c9"
-graalVmSha256-linux-aarch64 = "3ad68fbb2d13da528dfa0aea9e9345383245ec9c31094dce3905cefba9aac01e"
-graalVmSha256-windows-x64 = "d5784cbdc87f84b5cbd6c9d09c6f1d4611954f139fcfc795005c58dffd7f6b41"
+graalVmSha256-macos-x64 = "04278cf867d040e29dc71dd7727793f0ea67eb72adce8a35d04b87b57906778d"
+graalVmSha256-macos-aarch64 = "c446d5aaeda98660a4c14049d299e9fba72105a007df89f19d27cf3979d37158"
+graalVmSha256-linux-x64 = "1862f2ce97387a303cae4c512cb21baf36fafd2457c3cbbc10d87db94b89d3dd"
+graalVmSha256-linux-aarch64 = "6c3c8b7617006c5d174d9cf7d357ccfb4bae77a4df1294ee28084fcb6eea8921"
+graalVmSha256-windows-x64 = "33ef1d186b5c1e95465fcc97e637bc26e72d5f2250a8615b9c5d667ed5c17fd0"
 ideaExtPlugin = "1.1.9"
+intellijPlugin = "2.10.1"
+intellij = "2025.2.3"
 javaPoet = "0.+"
 javaxInject = "1"
 jansi = "2.+"
@@ -29,11 +31,12 @@ jmhPlugin = "0.7.3"
 jsr305 = "3.+"
 junit = "5.+"
 junitPlatform = "1.+"
-kotlin = "2.0.21"
+kotlin = "2.2.20"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
 kotlinxHtml = "0.11.0"
 kotlinxSerialization = "1.8.0"
+kotlinxCoroutines = "1.+"
 ktfmt = "0.53"
 # replaces nuValidator's log4j dependency
 # something related to log4j-1.2-api is apparently broken in 2.17.2
@@ -42,7 +45,7 @@ msgpack = "0.9.8"
 nexusPublishPlugin = "2.0.0"
 nuValidator = "20.+"
 paguro = "3.+"
-shadowPlugin = "8.1.1"
+shadowPlugin = "9.+"
 slf4j = "1.+"
 snakeYaml = "2.+"
 spotlessPlugin = "6.25.0"
@@ -59,6 +62,7 @@ geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = 
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
 graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
+intellij = { group = "com.jetbrains.intellij.idea", name = "ideaIC", version.ref = "intellij" }
 javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
@@ -82,13 +86,14 @@ kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr
 kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
+kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
-shadowPlugin = { group = "com.github.johnrengelman", name = "shadow", version.ref = "shadowPlugin" }
+shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.gradle.plugin", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 snakeYaml = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = "snakeYaml" }
@@ -106,4 +111,5 @@ ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtP
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
-shadow = { id = "com.github.johnrengelman.shadow", version.ref = "shadowPlugin" }
+shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }
+intellij = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlugin" }

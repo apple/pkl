@@ -1,0 +1,43 @@
+foo =
+  if (someCondition)
+    10000
+  else if (someOtherCondition)
+    20000
+  else if (someAnotherCondition)
+    30000
+  else
+    4
+
+foo2 = if (bar) 1 else 2
+
+// respect newlines in if/else if they exist.
+// if anything of these wrap, everything wraps.
+foo3 =
+  if (bar)
+    1
+  else
+    2
+
+foo4 =
+  if (bar)
+    1
+  else
+    2
+
+foo5 =
+  if (bar)
+    1
+  else
+    2
+
+foo6 =
+  if (bar)
+    1
+  else
+    2
+
+foo7 =
+  if /* some comment */ (bar)
+    1
+  else
+    2

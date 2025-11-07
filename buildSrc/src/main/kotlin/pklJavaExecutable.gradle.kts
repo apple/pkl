@@ -19,8 +19,8 @@ import org.gradle.kotlin.dsl.support.serviceOf
 
 plugins {
   id("pklJavaLibrary")
-  id("pklPublishLibrary")
-  id("com.github.johnrengelman.shadow")
+  //  id("pklPublishLibrary")
+  id("com.gradleup.shadow")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)
@@ -98,34 +98,34 @@ tasks.check {
   dependsOn(testStartJavaExecutableOnOtherJdks)
 }
 
-publishing {
-  publications {
-    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
-    project.afterEvaluate {
-      register<MavenPublication>("javaExecutable") {
-        artifactId = executableSpec.javaPublicationName.get()
+// publishing {
+//  publications {
+//    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
+//    project.afterEvaluate {
+//      register<MavenPublication>("javaExecutable") {
+//        artifactId = executableSpec.javaPublicationName.get()
+//
+//        artifact(javaExecutable.map { it.outputs.files.singleFile }) {
+//          classifier = null
+//          extension = "bin"
+//          builtBy(javaExecutable)
+//        }
+//
+//        pom {
+//          url = executableSpec.website
+//          description =
+//            executableSpec.documentationName.map { name ->
+//              """
+//            $name executable for Java.
+//            Can be executed directly, or with `java -jar <path/to/jpkl>`.
+//            Requires Java 17 or higher.
+//            """
+//                .trimIndent()
+//            }
+//        }
+//      }
+//    }
+//  }
+// }
 
-        artifact(javaExecutable.map { it.outputs.files.singleFile }) {
-          classifier = null
-          extension = "jar"
-          builtBy(javaExecutable)
-        }
-
-        pom {
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              """
-            $name executable for Java.
-            Can be executed directly, or with `java -jar <path/to/jpkl>`.
-            Requires Java 17 or higher.
-            """
-                .trimIndent()
-            }
-        }
-      }
-    }
-  }
-}
-
-signing { project.afterEvaluate { sign(publishing.publications["javaExecutable"]) } }
+// signing { project.afterEvaluate { sign(publishing.publications["javaExecutable"]) } }

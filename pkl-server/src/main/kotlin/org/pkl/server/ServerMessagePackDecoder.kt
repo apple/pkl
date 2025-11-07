@@ -22,6 +22,7 @@ import java.time.Duration
 import org.msgpack.core.MessagePack
 import org.msgpack.core.MessageUnpacker
 import org.msgpack.value.Value
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.messaging.BaseMessagePackDecoder
 import org.pkl.core.messaging.Message
 import org.pkl.core.packages.Checksums
@@ -50,6 +51,7 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
           map.unpackHttp(),
           unpackStringMapOrNull(map, "externalModuleReaders", ::unpackExternalReader),
           unpackStringMapOrNull(map, "externalResourceReaders", ::unpackExternalReader),
+          unpackStringOrNull(map, "traceMode") { TraceMode.valueOf(it.uppercase()) },
         )
       Message.Type.CREATE_EVALUATOR_RESPONSE ->
         CreateEvaluatorResponse(
@@ -95,7 +97,13 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
     val httpMap = getNullable(this, "http")?.asMapValue()?.map() ?: return null
     val proxy = httpMap.unpackProxy()
     val caCertificates = getNullable(httpMap, "caCertificates")?.asBinaryValue()?.asByteArray()
-    return Http(caCertificates, proxy)
+    val rewrites =
+      getNullable(httpMap, "rewrites")
+        ?.asMapValue()
+        ?.map()
+        ?.mapKeys { URI(it.key.asStringValue().asString()) }
+        ?.mapValues { URI(it.value.asStringValue().asString()) }
+    return Http(caCertificates, proxy, rewrites)
   }
 
   private fun Map<Value, Value>.unpackProxy(): Proxy? {

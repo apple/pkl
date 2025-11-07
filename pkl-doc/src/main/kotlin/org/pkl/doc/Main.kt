@@ -50,7 +50,7 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
         help = "Module paths/uris, or package uris to generate documentation for",
       )
       .convert { parseModuleName(it) }
-      .multiple(required = true)
+      .multiple()
 
   private val outputDir: Path by
     option(
@@ -69,6 +69,17 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
       .single()
       .flag(default = false)
 
+  private val isTestMode by
+    option(names = arrayOf("--test-mode"), help = "Internal test mode", hidden = true).flag()
+
+  private val migrate: Boolean by
+    option(
+        names = arrayOf("--migrate"),
+        help = "Migrate a pkl-doc site from version 0 to version 1.",
+      )
+      .single()
+      .flag(default = false)
+
   private val projectOptions by ProjectOptions()
 
   override val helpString: String = "Generate HTML documentation from Pkl modules and packages."
@@ -78,8 +89,9 @@ class DocCommand : BaseCommand(name = "pkldoc", helpLink = helpLink) {
       CliDocGeneratorOptions(
         baseOptions.baseOptions(modules, projectOptions),
         outputDir,
-        true,
+        isTestMode,
         noSymlinks,
+        migrate,
       )
     CliDocGenerator(options).run()
   }

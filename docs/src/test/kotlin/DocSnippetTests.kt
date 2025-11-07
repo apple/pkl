@@ -15,6 +15,7 @@ import org.pkl.commons.test.FileTestUtils.rootProjectDir
 import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
@@ -97,6 +98,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
       IoUtils.getCurrentWorkingDir(),
       StackFrameTransformers.defaultTransformer,
       false,
+      TraceMode.COMPACT,
     )
     return ExecutionContext(replServer)
   }

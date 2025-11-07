@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli.commands
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.enum
@@ -32,6 +33,7 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
@@ -165,6 +167,7 @@ class BaseOptions : OptionGroup() {
     option(
         names = arrayOf("-f", "--format"),
         help = "Output format to generate. <${output.joinToString()}>",
+        completionCandidates = CompletionCandidates.Fixed(output.toSet()),
       )
       .single()
 
@@ -187,9 +190,13 @@ class BaseOptions : OptionGroup() {
       .splitAll(File.pathSeparator)
 
   val settings: URI? by
-    option(names = arrayOf("--settings"), help = "Pkl settings module to use.").single().convert {
-      parseModuleName(it)
-    }
+    option(
+        names = arrayOf("--settings"),
+        help = "Pkl settings module to use.",
+        completionCandidates = CompletionCandidates.Path,
+      )
+      .single()
+      .convert { parseModuleName(it) }
 
   val timeout: Duration? by
     option(
@@ -235,6 +242,39 @@ class BaseOptions : OptionGroup() {
       .single()
       .split(",")
 
+  val httpRewrites: Map<URI, URI> by
+    option(
+        names = arrayOf("--http-rewrite"),
+        metavar = "from=to",
+        help = "URL prefixes that should be rewritten.",
+      )
+      .convert { it ->
+        val uris = it.split("=", limit = 2)
+        require(uris.size == 2) { "Rewrites must be in the form of <from>=<to>" }
+        try {
+          val (fromSpec, toSpec) = uris
+          val fromUri = URI(fromSpec).also { IoUtils.validateRewriteRule(it) }
+          val toUri = URI(toSpec).also { IoUtils.validateRewriteRule(it) }
+          fromUri to toUri
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
+        } catch (e: URISyntaxException) {
+          val message = buildString {
+            append("Rewrite target `${e.input}` has invalid syntax (${e.reason}).")
+            if (e.index > -1) {
+              append("\n\n")
+              append(e.input)
+              append("\n")
+              append(" ".repeat(e.index))
+              append("^")
+            }
+          }
+          fail(message)
+        }
+      }
+      .multiple()
+      .toMap()
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -254,6 +294,16 @@ class BaseOptions : OptionGroup() {
       .parseExternalReader("=")
       .multiple()
       .toMap()
+
+  val traceMode: TraceMode? by
+    option(
+        names = arrayOf("--trace-mode"),
+        metavar = "style",
+        help =
+          "Specifies how calls to trace() are formatted. Possible values of <style> are 'compact' and 'pretty'.",
+      )
+      .enum<TraceMode> { it.name.lowercase() }
+      .single()
 
   // hidden option used by native tests
   private val testPort: Int by
@@ -288,9 +338,11 @@ class BaseOptions : OptionGroup() {
       noProject = projectOptions?.noProject ?: false,
       caCertificates = caCertificates,
       httpProxy = proxy,
-      httpNoProxy = noProxy ?: emptyList(),
+      httpNoProxy = noProxy,
+      httpRewrites = httpRewrites.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
+      traceMode = traceMode,
     )
   }
 }

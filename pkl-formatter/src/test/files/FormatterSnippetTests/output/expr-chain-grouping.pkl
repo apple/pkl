@@ -1,0 +1,70 @@
+res1 =
+  foo.bar(new {
+    foo = 1
+  })
+
+res2 =
+  foo.bar.baz(new {
+    foo = 1
+  })
+
+res3 =
+  foo
+    .bar(3)
+    .baz(new {
+      qux = 3
+    })
+
+res4 =
+  foooooooooooooooooooooooooooooooooooooo
+    .foooooooooooooooooooooooooooooooooooooo
+    .foooooooooooooooooooooooooooooooooooooo
+    .bar(5)
+
+res5 =
+  foooooooooooooo.foooooooooooooo.foooooooooooooo.foooooooooooooo
+    .foooooooooooooo(4)
+    .foooooooooooooo
+    .bar(5)
+
+res6 =
+  foooooooooooooooooooooooooooooooooooooo
+    .foooooooooooooooooooooooooooooooooooooo
+    .foooooooooooooooooooooooooooooooooooooo
+    .foooooooooooooo(4)
+    .foooooooooooooo
+    .bar(5)
+
+res7 =
+  foooooooooooooo.foooooooooooooo.foooooooooooooo.foooooooooooooo /* hello */
+    .foooooooooooooo(4)
+    .foooooooooooooo
+    .bar(5)
+
+res8 =
+  foooooooooooooo.foooooooooooooo
+    .foooooooooooooo()
+    .foooooooooooooo
+    .foooooooooooooo(4)
+    .foooooooooooooo
+    .bar(5)
+
+res9 =
+  foo
+    .bar(new {
+      foo = 1
+      bar = 2
+    })
+    .qux
+
+res10 = foo.bar /* some comment */ (5)
+
+res11 =
+  foo.bar /* some comment */
+    .baz(new { foooooooooooooooooooooooooo = 1; baaaaaaaaaaaaaaaaaaaaar = 2 })
+    .buz
+
+res12 =
+  foo.biz
+    .bar((it) -> it + 2)
+    .qux((it) -> it + 1)

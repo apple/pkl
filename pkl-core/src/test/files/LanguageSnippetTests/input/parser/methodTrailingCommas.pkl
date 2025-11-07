@@ -1,0 +1,157 @@
+function moduleMethodA1(a, b, c, ) = true
+function moduleMethodA2(
+  a, b, c,
+) = true
+function moduleMethodA3(
+  a,
+  b,
+  c,
+) = true
+function moduleMethodB1(a: Int, b: Int, c: Int, ) = true
+function moduleMethodB2(
+  a: Int, b: Int, c: Int,
+) = true
+function moduleMethodB3(
+  a: Int,
+  b: Int,
+  c: Int,
+) = true
+
+class A {
+  function classMethodA1(a, b, c, ) = true
+  function classMethodA2(
+    a, b, c,
+  ) = true
+  function classMethodA3(
+    a,
+    b,
+    c,
+  ) = true
+  function classMethodB1(a: Int, b: Int, c: Int, ) = true
+  function classMethodB2(
+    a: Int, b: Int, c: Int,
+  ) = true
+  function classMethodB3(
+    a: Int,
+    b: Int,
+    c: Int,
+  ) = true
+}
+
+moduleMethodA1Call1 = moduleMethodA1(1, 2, 3, )
+moduleMethodA1Call2 = moduleMethodA1(
+  1, 2, 3,
+)
+moduleMethodA1Call3 = moduleMethodA1(
+  1,
+  2,
+  3,
+)
+moduleMethodA2Call1 = moduleMethodA2(1, 2, 3, )
+moduleMethodA2Call2 = moduleMethodA2(
+  1, 2, 3,
+)
+moduleMethodA2Call3 = moduleMethodA2(
+  1,
+  2,
+  3,
+)
+
+moduleMethodA3Call1 = moduleMethodA3(1, 2, 3, )
+moduleMethodA3Call2 = moduleMethodA3(
+  1, 2, 3,
+)
+moduleMethodA3Call3 = moduleMethodA3(
+  1,
+  2,
+  3,
+)
+
+moduleMethodB1Call1 = moduleMethodB1(1, 2, 3, )
+moduleMethodB1Call2 = moduleMethodB1(
+  1, 2, 3,
+)
+moduleMethodB1Call3 = moduleMethodB1(
+  1,
+  2,
+  3,
+)
+moduleMethodB2Call1 = moduleMethodB2(1, 2, 3, )
+moduleMethodB2Call2 = moduleMethodB2(
+  1, 2, 3,
+)
+moduleMethodB2Call3 = moduleMethodB2(
+  1,
+  2,
+  3,
+)
+
+moduleMethodB3Call1 = moduleMethodB3(1, 2, 3, )
+moduleMethodB3Call2 = moduleMethodB3(
+  1, 2, 3,
+)
+moduleMethodB3Call3 = moduleMethodB3(
+  1,
+  2,
+  3,
+)
+
+local a: A = new {}
+
+classMethodA1Call1 = a.classMethodA1(1, 2, 3, )
+classMethodA1Call2 = a.classMethodA1(
+  1, 2, 3,
+)
+classMethodA1Call3 = a.classMethodA1(
+  1,
+  2,
+  3,
+)
+classMethodA2Call1 = a.classMethodA2(1, 2, 3, )
+classMethodA2Call2 = a.classMethodA2(
+  1, 2, 3,
+)
+classMethodA2Call3 = a.classMethodA2(
+  1,
+  2,
+  3,
+)
+
+classMethodA3Call1 = a.classMethodA3(1, 2, 3, )
+classMethodA3Call2 = a.classMethodA3(
+  1, 2, 3,
+)
+classMethodA3Call3 = a.classMethodA3(
+  1,
+  2,
+  3,
+)
+
+classMethodB1Call1 = a.classMethodB1(1, 2, 3, )
+classMethodB1Call2 = a.classMethodB1(
+  1, 2, 3,
+)
+classMethodB1Call3 = a.classMethodB1(
+  1,
+  2,
+  3,
+)
+classMethodB2Call1 = a.classMethodB2(1, 2, 3, )
+classMethodB2Call2 = a.classMethodB2(
+  1, 2, 3,
+)
+classMethodB2Call3 = a.classMethodB2(
+  1,
+  2,
+  3,
+)
+
+classMethodB3Call1 = a.classMethodB3(1, 2, 3, )
+classMethodB3Call2 = a.classMethodB3(
+  1, 2, 3,
+)
+classMethodB3Call3 = a.classMethodB3(
+  1,
+  2,
+  3,
+)

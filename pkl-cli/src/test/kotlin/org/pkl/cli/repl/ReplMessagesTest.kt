@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import org.pkl.commons.toPath
 import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
@@ -43,6 +44,7 @@ class ReplMessagesTest {
       "/".toPath(),
       StackFrameTransformers.defaultTransformer,
       false,
+      TraceMode.COMPACT,
     )
 
   @Test
@@ -63,5 +65,12 @@ class ReplMessagesTest {
       assertThat(responses).hasOnlyElementsOfType(ReplResponse.EvalSuccess::class.java)
       startIndex = examples.indexOf("```", endIndex + 3)
     }
+  }
+
+  @Test
+  fun `handle single backtick`() {
+    val responses = server.handleRequest(ReplRequest.Eval("1", "`", true, true))
+    assertThat(responses.size).isEqualTo(1)
+    assertThat(responses).hasOnlyElementsOfType(ReplResponse.EvalError::class.java)
   }
 }

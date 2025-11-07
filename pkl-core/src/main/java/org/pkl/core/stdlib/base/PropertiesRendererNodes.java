@@ -36,7 +36,7 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
 import org.pkl.core.runtime.VmValueConverter;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.EconomicMaps;
@@ -74,7 +74,7 @@ public final class PropertiesRendererNodes {
     return new PropertiesRenderer(builder, omitNullProperties, restrictCharset, PklConverter);
   }
 
-  private static final class PropertiesRenderer extends AbstractRenderer {
+  private static final class PropertiesRenderer extends AbstractStringRenderer {
     private final boolean restrictCharset;
 
     private boolean isDocument;
@@ -158,7 +158,7 @@ public final class PropertiesRendererNodes {
             .withProgramValue("Value", value)
             .build();
       }
-      if (!VmUtils.isRenderDirective(value)) {
+      if (!isRenderDirective(value)) {
         isDocument = true;
       }
       visit(value);
@@ -170,7 +170,7 @@ public final class PropertiesRendererNodes {
               || value instanceof VmTyped
               || value instanceof VmMapping
               || value instanceof VmDynamic)
-          && !VmUtils.isRenderDirective(value)) {
+          && !isRenderDirective(value)) {
         cannotRenderTypeAddConverter((VmValue) value);
       }
       isDocument = false;
@@ -303,7 +303,7 @@ public final class PropertiesRendererNodes {
                 if (isFollowing.get()) {
                   builder.append('.');
                 }
-                if (VmUtils.isRenderDirective(path)) {
+                if (isRenderDirective(path)) {
                   builder.append(VmUtils.readTextProperty(path));
                 } else {
                   builder.append(

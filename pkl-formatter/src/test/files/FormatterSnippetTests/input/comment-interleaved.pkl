@@ -1,0 +1,74 @@
+module comment.interleaved
+
+local test: Int|String =
+  if (true)
+    1 // It's the same as "100%"
+  else
+    "8%"
+
+foo: ( // some comment
+  * String(
+      // if dtstart is defined and a datetime, until must also be a datetime if defined
+      true
+    )
+  |Int
+  // trailing comment
+  )?
+
+foo2: (// some comment
+  Int, // other comment
+    String
+  ) ->Int
+
+bar = ( // some comment
+  10 + 10
+  // another comment
+  )
+
+bar2 = ( // some comment
+    foo, bar
+    // another comment
+  ) -> foo + bar
+
+bar3 =
+  let (bar = new Dynamic {})
+    // some coment
+    (bar) {
+      qux = 4
+    }
+
+bar4 =
+  // some coment
+  let (bar = new Dynamic {})
+    (bar) {
+      qux = 4
+    }
+
+bar5 =
+  let (bar = 4)
+  // some coment
+  let (qux = 5)
+    bar + qux
+
+bar6 =
+  let (bar = 4)
+    /* some comment */ bar + 5
+
+bar7 =
+  let (bar = 4) /* some comment */
+    bar + 5
+
+bar8 =
+  let (bar = 4)
+    // some comment
+    // another comment
+  let (foo = 5)
+    // some comment
+    // another comment
+      bar + foo
+
+bar9 =
+  let (bar = 4)
+    // some comment
+    // another comment
+    bar

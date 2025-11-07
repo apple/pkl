@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A YAML 1.2 compliant YAML parser.
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.yaml
 
 /// A YAML parser.
@@ -32,7 +32,7 @@ module pkl.yaml
 /// | !!seq       | [Listing]                                               |
 /// | !!set       | [Listing]                                               |
 /// | !!map       | [Dynamic] or [Mapping] depending on [Parser.useMapping] |
-/// | !!binary    | [String]                                                |
+/// | !!binary    | [Bytes]                                                 |
 /// | !!timestamp | [String]                                                |
 ///
 /// The element order of YAML sequences, sets, and mappings is maintained.
@@ -50,7 +50,7 @@ class Parser {
   /// - `"compat"` - YAML 1.1 _or_ 1.2 (default)
   /// - `"1.1"` - YAML 1.1
   /// - `"1.2"` - YAML 1.2 (Core schema)
-  mode: "compat"|"1.1"|"1.2" = "compat"
+  mode: "compat" | "1.1" | "1.2" = "compat"
 
   /// Determines what the parser produces when parsing YAML `!!map` types.
   ///
@@ -64,7 +64,7 @@ class Parser {
   /// Value converters to apply to parsed values.
   ///
   /// For further information see [PcfRenderer.converters].
-  converters: Mapping<Class|String(!isEmpty), (unknown) -> unknown>
+  converters: Mapping<Class | String(!isEmpty), (unknown) -> unknown>
 
   /// The maximum number of aliases for collection nodes.
   ///
@@ -77,15 +77,15 @@ class Parser {
   /// Throws if an error occurs during parsing, or if [source] contains multiple YAML documents.
   ///
   /// If [source] is a [Resource], the resource URI is included in parse error messages.
-  external function parse(source: Resource|String): Value
+  external function parse(source: Resource | String): Value
 
   /// Parses all YAML documents contained in [source].
   ///
   /// Throws if an error occurs during parsing.
   ///
   /// If [source] is a [Resource], the resource URI is included in parse error messages.
-  external function parseAll(source: Resource|String): List<Value>
+  external function parseAll(source: Resource | String): List<Value>
 }
 
 /// Pkl representation of a YAML value.
-typealias Value = Null|Boolean|Number|String|Listing|Dynamic|Mapping
+typealias Value = Null | Boolean | Number | String | Bytes | Listing | Dynamic | Mapping

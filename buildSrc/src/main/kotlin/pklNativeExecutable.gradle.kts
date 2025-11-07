@@ -15,13 +15,14 @@
  */
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
+import org.gradle.accessors.dm.LibrariesForLibs
 
 plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
   id("pklPublishLibrary")
-  id("com.github.johnrengelman.shadow")
+  id("com.gradleup.shadow")
 }
 
 // assumes that `pklJavaExecutable` is also applied
@@ -35,6 +36,19 @@ val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 val stagedWindowsAmd64Executable: Configuration by configurations.creating
 
+val nativeImageClasspath by
+  configurations.creating {
+    extendsFrom(configurations.runtimeClasspath.get())
+    // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
+    // (comes from artifact `mordant-jvm-graal-ffi`).
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
+  }
+
+val libs = the<LibrariesForLibs>()
+
 dependencies {
   fun executableFile(suffix: String) =
     files(
@@ -42,6 +56,9 @@ dependencies {
         dir.file(executableSpec.name.map { "$it-$suffix" })
       }
     )
+  nativeImageClasspath(libs.truffleRuntime)
+  nativeImageClasspath(libs.graalSdk)
+
   stagedMacAarch64Executable(executableFile("macos-aarch64"))
   stagedMacAmd64Executable(executableFile("macos-amd64"))
   stagedLinuxAmd64Executable(executableFile("linux-amd64"))
@@ -65,7 +82,7 @@ private fun NativeImageBuild.setClasspath() {
   classpath.from(
     project(":pkl-commons-cli").extensions.getByType(SourceSetContainer::class)["svm"].output
   )
-  classpath.from(configurations.runtimeClasspath)
+  classpath.from(nativeImageClasspath)
 }
 
 val macExecutableAmd64 by

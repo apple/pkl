@@ -35,7 +35,7 @@ import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.MutableBoolean;
@@ -75,7 +75,7 @@ public final class YamlRendererNodes {
         builder, " ".repeat(indentWidth), converter, omitNullProperties, mode, isStream);
   }
 
-  private static final class YamlRenderer extends AbstractRenderer {
+  private static final class YamlRenderer extends AbstractStringRenderer {
     private final boolean isStream;
     private final YamlEmitter emitter;
     private final String elementIndent;
@@ -180,7 +180,8 @@ public final class YamlRendererNodes {
 
     @Override
     public void visitBytes(VmBytes value) {
-      cannotRenderTypeAddConverter(value);
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value.getBytes(), currIndent, false);
     }
 
     @Override
@@ -306,7 +307,7 @@ public final class YamlRendererNodes {
         return;
       }
 
-      if (VmUtils.isRenderDirective(key)) {
+      if (isRenderDirective(key)) {
         visitRenderDirective((VmTyped) key);
         builder.append(':');
         return;

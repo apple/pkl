@@ -1,0 +1,23 @@
+import"foo.pkl"
+
+bar=new  Listing < Int > ( !isEmpty ){1;2}//a bar
+
+typealias Typealias=(String,Int)->Boolean
+
+///a baz
+///returns its parameter
+baz = (x,y,z)->x+y+z
+
+function fun ( x:Int ? ,b  :Boolean )= if(b)/***return x**/x else x+bar [0 ]
+
+prop = trace (1) + super . foo + module .foo
+
+prop2 {
+  for(x in List(1)) {
+    when(x == 1){
+      x
+    }
+  }
+}
+
+choices: "foo" | * "bar" | String

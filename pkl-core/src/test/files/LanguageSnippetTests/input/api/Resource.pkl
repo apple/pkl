@@ -16,16 +16,40 @@ examples {
 
   ["sha1"] {
     empty.sha1
+    empty.bytes.sha1
     fox.sha1
+    fox.bytes.sha1
   }
 
   ["sha256"] {
     empty.sha256
+    empty.bytes.sha256
     fox.sha256
+    fox.bytes.sha256
   }
 
   ["sha256Int"] {
     empty.sha256Int
+    empty.bytes.sha256Int
     fox.sha256Int
+    fox.bytes.sha256Int
+  }
+
+  ["in-language"] {
+    new Resource {
+      base64 = Bytes(1, 2, 3, 4).base64
+    }.sha256
+
+    new Resource {
+      uri = "foo:foo"
+      text = "foo bar"
+      base64 = text.base64
+    }
+
+    new Resource { bytes = Bytes(1, 2, 3, 4) }.sha256
+
+    new Resource { bytes = Bytes(1, 2, 3, 4) }.base64
+
+    new Resource { base64 = "AQIDBA==" }.bytes
   }
 }

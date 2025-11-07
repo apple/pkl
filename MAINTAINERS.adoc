@@ -8,4 +8,5 @@ See link:CONTRIBUTING.adoc[] for general contribution guidelines.
 
 * https://github.com/bioball[Daniel Chao]
 * https://github.com/stackoverflow[Islon Scherer]
+* https://github.com/HT154[Jen Basch]
 * https://github.com/holzensp[Philip Hölzenspies]

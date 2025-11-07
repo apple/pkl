@@ -15,13 +15,15 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import kotlinx.html.*
 
 internal class PackagePageGenerator(
   docsiteInfo: DocsiteInfo,
   private val docPackage: DocPackage,
   pageScope: PackageScope,
-) : MainOrPackagePageGenerator<PackageScope>(docsiteInfo, pageScope, pageScope.parent) {
+  consoleOut: OutputStream,
+) : MainOrPackagePageGenerator<PackageScope>(docsiteInfo, pageScope, pageScope.parent, consoleOut) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
 

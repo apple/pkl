@@ -5,7 +5,7 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-codegen-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-codegen-java&e=jar
 
 ifdef::is-release-version[]
-:uri-pkl-cli-codegen-java-download: {github-releases}/pkl-codegen-java
+:uri-pkl-codegen-java-download: {github-releases}/pkl-codegen-java
 endif::[]
 
 The Java source code generator takes Pkl class definitions as an input, and generates corresponding Java classes with equally named properties.
@@ -34,7 +34,7 @@ The `pkl-codegen-java` library is available {uri-pkl-codegen-java-maven-module}[
 It requires Java 17 or higher.
 
 ifndef::is-release-version[]
-NOTE: Snapshots are published to repository `{uri-sonatype}`.
+NOTE: Snapshots are published to repository `{uri-snapshot-repo}`.
 endif::[]
 
 ==== Gradle

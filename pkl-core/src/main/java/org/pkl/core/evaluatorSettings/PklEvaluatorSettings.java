@@ -18,6 +18,8 @@ package org.pkl.core.evaluatorSettings;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -48,7 +50,8 @@ public record PklEvaluatorSettings(
     @Nullable Path rootDir,
     @Nullable Http http,
     @Nullable Map<String, ExternalReader> externalModuleReaders,
-    @Nullable Map<String, ExternalReader> externalResourceReaders) {
+    @Nullable Map<String, ExternalReader> externalResourceReaders,
+    @Nullable TraceMode traceMode) {
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -104,6 +107,7 @@ public record PklEvaluatorSettings(
                         Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
 
     var color = (String) pSettings.get("color");
+    var traceMode = (String) pSettings.get("traceMode");
 
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),
@@ -118,18 +122,35 @@ public record PklEvaluatorSettings(
         rootDir,
         Http.parse((Value) pSettings.get("http")),
         externalModuleReaders,
-        externalResourceReaders);
+        externalResourceReaders,
+        traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase()));
   }
 
-  public record Http(@Nullable Proxy proxy) {
-    public static final Http DEFAULT = new Http(null);
+  public record Http(@Nullable Proxy proxy, @Nullable Map<URI, URI> rewrites) {
+    public static final Http DEFAULT = new Http(null, Collections.emptyMap());
 
+    @SuppressWarnings("unchecked")
     public static @Nullable Http parse(@Nullable Value input) {
       if (input == null || input instanceof PNull) {
         return null;
       } else if (input instanceof PObject http) {
         var proxy = Proxy.parse((Value) http.getProperty("proxy"));
-        return proxy == null ? DEFAULT : new Http(proxy);
+        var rewrites = http.getProperty("rewrites");
+        if (rewrites instanceof PNull) {
+          return new Http(proxy, null);
+        } else {
+          var parsedRewrites = new HashMap<URI, URI>();
+          for (var entry : ((Map<String, String>) rewrites).entrySet()) {
+            var key = entry.getKey();
+            var value = entry.getValue();
+            try {
+              parsedRewrites.put(new URI(key), new URI(value));
+            } catch (URISyntaxException e) {
+              throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
+            }
+          }
+          return new Http(proxy, parsedRewrites);
+        }
       } else {
         throw PklBugException.unreachableCode();
       }
@@ -213,7 +234,8 @@ public record PklEvaluatorSettings(
         && Objects.equals(moduleCacheDir, that.moduleCacheDir)
         && Objects.equals(timeout, that.timeout)
         && Objects.equals(rootDir, that.rootDir)
-        && Objects.equals(http, that.http);
+        && Objects.equals(http, that.http)
+        && Objects.equals(traceMode, that.traceMode);
   }
 
   private int hashPatterns(@Nullable List<Pattern> patterns) {
@@ -231,7 +253,15 @@ public record PklEvaluatorSettings(
   public int hashCode() {
     var result =
         Objects.hash(
-            externalProperties, env, color, noCache, moduleCacheDir, timeout, rootDir, http);
+            externalProperties,
+            env,
+            color,
+            noCache,
+            moduleCacheDir,
+            timeout,
+            rootDir,
+            http,
+            traceMode);
     result = 31 * result + hashPatterns(allowedModules);
     result = 31 * result + hashPatterns(allowedResources);
     return result;

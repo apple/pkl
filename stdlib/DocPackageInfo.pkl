@@ -26,7 +26,7 @@
 /// * amends this template
 /// * is named _doc-package-info.pkl_
 /// * is passed to the _pkldoc_ command together with the modules to generate documentation for.
-/// 
+///
 /// Each module to generate documentation must declare a module name that starts with a package [name].
 /// For example, the following are valid module declarations for package _com.example_:
 /// * `module com.example.Birds`
@@ -63,14 +63,14 @@
 /// @Deprecated { message = "Use `com.example.Birds.Parrot` instead" }
 /// amends "pkl:PackageInfo"
 /// ```
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.DocPackageInfo
 
+// used by doc comments
+import "pkl:DocPackageInfo"
+import "pkl:Project"
 import "pkl:reflect"
 import "pkl:semver"
-// used by doc comments
-import "pkl:Project"
-import "pkl:DocPackageInfo"
 
 /// The name of this package.
 name: PackageName
@@ -173,19 +173,20 @@ class PackageDependency {
 }
 
 /// A package name.
-typealias PackageName =
-  String(!contains("/"))
+typealias PackageName = String(!contains("/"))
 
 /// A package version.
-typealias PackageVersion =
-  String(semver.isValid(this))
+typealias PackageVersion = String(semver.isValid(this))
 
 @Unlisted
-fixed overview: String(!isBlank) = moduleMirror.docComment ??
-    throw("""
+fixed overview: String(!isBlank) =
+  moduleMirror.docComment
+    ?? throw(
+      """
       Missing overview documentation for package `\(name)`.
       To fix this problem, add a doc comment to `doc-package-info.pkl` (above `amends "pkl:DocPackageInfo"`).
-      """)
+      """
+    )
 
 @Unlisted
 fixed overviewImports: Map<String, Uri> = moduleMirror.imports

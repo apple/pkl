@@ -15,6 +15,7 @@
  */
 import org.gradle.accessors.dm.LibrariesForLibs
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins {
@@ -43,6 +44,7 @@ tasks.compileKotlin {
 
 tasks.withType<KotlinJvmCompile>().configureEach {
   compilerOptions {
+    languageVersion = KotlinVersion.KOTLIN_2_1
     jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
     freeCompilerArgs.addAll("-Xjdk-release=${buildInfo.jvmTarget}")
   }

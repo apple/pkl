@@ -15,23 +15,21 @@
 //===----------------------------------------------------------------------===//
 
 /// Utilities for generating shell scripts.
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.shell
 
 /// Escapes [str] by enclosing it in single quotes.
 ///
 /// Also handles single quotes occurring within [str].
 function escapeWithSingleQuotes(str: String): String =
-  let (processChar = (acc, ch) ->
+  let (
+    processChar = (acc, ch) ->
       if (acc.isEmpty)
         List(List(ch))
       else if (acc.last.last != "'" && ch != "'")
         acc.replace(acc.lastIndex, acc.last.add(ch))
       else
-        acc.add(List(ch)))
-    let (grouped = str.chars.fold(List(), processChar))
-      grouped
-        .map((chSeq) ->
-            if (chSeq == List("'")) #"\'"#
-            else "'\(chSeq.join(""))'")
-        .join("")
+        acc.add(List(ch))
+  )
+  let (grouped = str.chars.fold(List(), processChar))
+    grouped.map((chSeq) -> if (chSeq == List("'")) #"\'"# else "'\(chSeq.join(""))'").join("")

@@ -17,6 +17,7 @@ package org.pkl.parser;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.util.ErrorMessages;
 
 public class Lexer {
@@ -25,7 +26,11 @@ public class Lexer {
   private final int size;
   protected int cursor = 0;
   protected int sCursor = 0;
-  private char lookahead;
+  private int line = 1;
+  private int sLine = 1;
+  private int col = 1;
+  private int sCol = 1;
+  private int lookahead;
   private State state = State.DEFAULT;
   private final Deque<InterpolationScope> interpolationStack = new ArrayDeque<>();
   private boolean stringEnded = false;
@@ -33,7 +38,7 @@ public class Lexer {
   // how many newlines exist between two subsequent tokens
   protected int newLinesBetween = 0;
 
-  private static final char EOF = Short.MAX_VALUE;
+  private static final int EOF = -1;
 
   public Lexer(String input) {
     source = input.toCharArray();
@@ -48,6 +53,11 @@ public class Lexer {
   // The span of the last lexed token
   public Span span() {
     return new Span(sCursor, cursor - sCursor);
+  }
+
+  // The full span of the last lexed token
+  public FullSpan fullSpan() {
+    return new FullSpan(sCursor, cursor - sCursor, sLine, sCol, line, col);
   }
 
   // The text of the last lexed token
@@ -65,6 +75,8 @@ public class Lexer {
 
   public Token next() {
     sCursor = cursor;
+    sLine = line;
+    sCol = col;
     newLinesBetween = 0;
     return switch (state) {
       case DEFAULT -> nextDefault();
@@ -79,7 +91,9 @@ public class Lexer {
       sCursor = cursor;
       if (ch == '\n') {
         newLinesBetween++;
+        sLine = line;
       }
+      sCol = col;
       ch = nextChar();
     }
     return switch (ch) {
@@ -234,7 +248,7 @@ public class Lexer {
           yield lexNumber(ch);
         } else if (isIdentifierStart(ch)) {
           yield lexIdentifier();
-        } else throw lexError(ErrorMessages.create("invalidCharacter", ch), cursor - 1, 1);
+        } else throw lexError(ErrorMessages.create("invalidCharacter", (char) ch), cursor - 1, 1);
       }
     };
   }
@@ -436,7 +450,7 @@ public class Lexer {
       case 'u' -> lexUnicodeEscape();
       default ->
           throw lexError(
-              ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + ch, "\\"),
+              ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + (char) ch, "\\"),
               cursor - 2,
               2);
     };
@@ -489,7 +503,7 @@ public class Lexer {
   }
 
   private void lexQuotedIdentifier() {
-    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r') {
+    while (lookahead != '`' && lookahead != '\n' && lookahead != '\r' && lookahead != EOF) {
       nextChar();
     }
     if (lookahead == '`') {
@@ -499,7 +513,7 @@ public class Lexer {
     }
   }
 
-  private Token lexNumber(char start) {
+  private Token lexNumber(int start) {
     if (start == '0') {
       if (lookahead == 'x' || lookahead == 'X') {
         nextChar();
@@ -612,9 +626,9 @@ public class Lexer {
     if (lookahead == '_') {
       throw lexError("invalidSeparatorPosition");
     }
-    var ch = (int) lookahead;
+    var ch = lookahead;
     if (!(ch >= 48 && ch <= 55)) {
-      throw unexpectedChar((char) ch, "octal number");
+      throw unexpectedChar(ch, "octal number");
     }
     while ((ch >= 48 && ch <= 55) || ch == '_') {
       nextChar();
@@ -657,20 +671,19 @@ public class Lexer {
     return Token.SHEBANG;
   }
 
-  private boolean isHex(char ch) {
-    var code = (int) ch;
+  private boolean isHex(int code) {
     return (code >= 48 && code <= 57) || (code >= 97 && code <= 102) || (code >= 65 && code <= 70);
   }
 
-  private static boolean isIdentifierStart(char c) {
+  private static boolean isIdentifierStart(int c) {
     return c == '_' || c == '$' || Character.isUnicodeIdentifierStart(c);
   }
 
-  private static boolean isIdentifierPart(char c) {
+  private static boolean isIdentifierPart(int c) {
     return c != EOF && (c == '$' || Character.isUnicodeIdentifierPart(c));
   }
 
-  private char nextChar() {
+  private int nextChar() {
     var tmp = lookahead;
     cursor++;
     if (cursor >= size) {
@@ -678,15 +691,23 @@ public class Lexer {
     } else {
       lookahead = source[cursor];
     }
+    if (tmp == '\n') {
+      line++;
+      col = 1;
+    } else {
+      col++;
+    }
     return tmp;
   }
 
   private void backup() {
     lookahead = source[--cursor];
+    col--;
   }
 
   private void backup(int amount) {
     cursor -= amount;
+    col -= amount;
     lookahead = source[cursor];
   }
 
@@ -704,7 +725,14 @@ public class Lexer {
     return new ParserError(msg, span);
   }
 
-  private ParserError unexpectedChar(char got, String didYouMean) {
+  private ParserError unexpectedChar(int got, String didYouMean) {
+    if (got == EOF) {
+      return unexpectedChar("EOF", didYouMean);
+    }
+    return lexError("unexpectedCharacter", (char) got, didYouMean);
+  }
+
+  private ParserError unexpectedChar(String got, String didYouMean) {
     return lexError("unexpectedCharacter", got, didYouMean);
   }
 

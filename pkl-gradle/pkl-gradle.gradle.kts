@@ -89,7 +89,7 @@ gradlePlugin {
 gradlePluginTests {
   // keep in sync with `PklPlugin.MIN_GRADLE_VERSION`
   minGradleVersion = GradleVersion.version("8.2")
-  maxGradleVersion = GradleVersion.version("8.99")
+  maxGradleVersion = GradleVersion.version("9.99")
   skippedGradleVersions = listOf()
 }
 

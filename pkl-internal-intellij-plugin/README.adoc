@@ -1,0 +1,4 @@
+Internal IntelliJ plugin for developing the Pkl codebase.
+
+This plugin is intentionally not published anywhere.
+For usage, see the docs in link:../DEVELOPMENT.adoc[DEVELOPMENT.adoc].

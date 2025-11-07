@@ -43,7 +43,7 @@ import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
 
 class Server(private val transport: MessageTransport) : AutoCloseable {
-  private val evaluators: MutableMap<Long, BinaryEvaluator> = ConcurrentHashMap()
+  private val evaluators: MutableMap<Long, Evaluator> = ConcurrentHashMap()
 
   // https://github.com/jano7/executor would be the perfect executor here
   private val executor: ExecutorService = Executors.newSingleThreadExecutor()
@@ -97,7 +97,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
   }
 
   private fun handleCreateEvaluator(message: CreateEvaluatorRequest) {
-    val evaluatorId = Random.Default.nextLong()
+    val evaluatorId = Random.nextLong()
     val baseResponse = CreateEvaluatorResponse(message.requestId(), null, null)
 
     val evaluator =
@@ -125,7 +125,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
 
     executor.execute {
       try {
-        val resp = evaluator.evaluate(ModuleSource.create(msg.moduleUri, msg.moduleText), msg.expr)
+        val src = ModuleSource.create(msg.moduleUri, msg.moduleText)
+        val resp = evaluator.evaluateExpressionPklBinary(src, msg.expr ?: "module")
         transport.send(baseResponse.copy(result = resp))
       } catch (e: PklBugException) {
         transport.send(baseResponse.copy(error = e.toString()))
@@ -182,50 +183,55 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     )
   }
 
-  private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): BinaryEvaluator {
+  private fun createEvaluator(message: CreateEvaluatorRequest, evaluatorId: Long): Evaluator {
     val modulePaths = message.modulePaths ?: emptyList()
     val resolver = ModulePathResolver(modulePaths)
-    val allowedModules = message.allowedModules?.map { Pattern.compile(it) } ?: emptyList()
-    val allowedResources = message.allowedResources?.map { Pattern.compile(it) } ?: emptyList()
-    val rootDir = message.rootDir
-    val env = message.env ?: emptyMap()
-    val properties = message.properties ?: emptyMap()
-    val timeout = message.timeout
-    val cacheDir = message.cacheDir
-    val httpClient =
-      with(HttpClient.builder()) {
-        message.http?.proxy?.let { proxy ->
-          setProxy(proxy.address, proxy.noProxy ?: listOf())
-          proxy.address?.let(IoUtils::setSystemProxy)
-          proxy.noProxy?.let { System.setProperty("http.nonProxyHosts", it.joinToString("|")) }
+
+    try {
+      return with(EvaluatorBuilder.unconfigured()) {
+        setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
+        color = false
+        httpClient =
+          with(HttpClient.builder()) {
+            message.http?.proxy?.let { proxy ->
+              setProxy(proxy.address, proxy.noProxy ?: listOf())
+              proxy.address?.let(IoUtils::setSystemProxy)
+              proxy.noProxy?.let { System.setProperty("http.nonProxyHosts", it.joinToString("|")) }
+            }
+            message.http?.caCertificates?.let(::addCertificates)
+            message.http?.rewrites?.let(::setRewrites)
+            buildLazily()
+          }
+        securityManager =
+          with(SecurityManagers.standardBuilder()) {
+            message.allowedModules?.let { patterns ->
+              setAllowedModules(patterns.map { Pattern.compile(it) })
+            }
+            message.allowedResources?.let { patterns ->
+              setAllowedResources(patterns.map { Pattern.compile(it) })
+            }
+            setRootDir(message.rootDir)
+            build()
+          }
+        logger = ClientLogger(evaluatorId, transport)
+        addModuleKeyFactories(createModuleKeyFactories(message, evaluatorId, resolver))
+        addResourceReaders(createResourceReaders(message, evaluatorId, resolver))
+        message.env?.let { environmentVariables = it }
+        message.properties?.let { externalProperties = it }
+        timeout = message.timeout
+        moduleCacheDir = message.cacheDir
+        message.project?.let { proj ->
+          val dependencies = buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
+          log("Got dependencies: $dependencies")
+          setProjectDependencies(dependencies)
         }
-        message.http?.caCertificates?.let(::addCertificates)
-        buildLazily()
+        outputFormat = message.outputFormat
+        message.traceMode?.let { traceMode = it }
+        build()
       }
-    val dependencies =
-      message.project?.let { proj ->
-        buildDeclaredDependencies(proj.projectFileUri, proj.dependencies, null)
-      }
-    log("Got dependencies: $dependencies")
-    return BinaryEvaluator(
-      StackFrameTransformers.defaultTransformer,
-      SecurityManagers.standard(
-        allowedModules,
-        allowedResources,
-        SecurityManagers.defaultTrustLevels,
-        rootDir,
-      ),
-      httpClient,
-      ClientLogger(evaluatorId, transport),
-      createModuleKeyFactories(message, evaluatorId, resolver),
-      createResourceReaders(message, evaluatorId, resolver),
-      env,
-      properties,
-      timeout,
-      cacheDir,
-      dependencies,
-      message.outputFormat,
-    )
+    } catch (e: IllegalArgumentException) {
+      throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)
+    }
   }
 
   private fun createResourceReaders(

@@ -26,7 +26,7 @@
 /// - Documentation generators (such as *Pkldoc*)
 /// - Code generators (such as *pkl-codegen-java* and *pkl-codegen-kotlin*)
 /// - Domain-specific schema validators
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.reflect
 
 import "pkl:base"
@@ -99,6 +99,10 @@ const listingType: DeclaredType = DeclaredType(Class(Listing))
 
 /// A mirror for the `Mapping<unknown, unknown>` type.
 const mappingType: DeclaredType = DeclaredType(Class(Mapping))
+
+/// A mirror for the `Bytes` type.
+@Since { version = "0.29.0" }
+const bytesType: DeclaredType = DeclaredType(Class(Bytes))
 
 /// A mirror for the `module` type.
 external const moduleType: ModuleType
@@ -212,7 +216,7 @@ external class Module extends Declaration {
 /// A class or type alias declaration.
 abstract external class TypeDeclaration extends Declaration {
   /// The class or type alias reflected upon.
-  abstract hidden reflectee: base.Class|base.TypeAlias
+  abstract hidden reflectee: base.Class | base.TypeAlias
 
   /// The module enclosing this type declaration.
   ///
@@ -248,10 +252,18 @@ external class Class extends TypeDeclaration {
   /// Does not include properties declared in superclasses.
   properties: Map<String, Property>
 
+  /// The properties declared in this class and all superclasses.
+  @Since { version = "0.30.0" }
+  allProperties: Map<String, Property>
+
   /// The methods declared in this class.
   ///
   /// Does not include methods declared in superclasses.
   methods: Map<String, Method>
+
+  /// The methods declared in this class and all superclasses.
+  @Since { version = "0.30.0" }
+  allMethods: Map<String, Method>
 
   /// Tells if this class is a subclass of [other].
   ///
@@ -280,6 +292,16 @@ external class Property extends Declaration {
   ///
   /// [null] if this property does not have a default value.
   hidden defaultValue: Any
+
+  /// The modifiers of this property, merged with any from the containing class's superclasses.
+  @Since { version = "0.30.0" }
+  allModifiers: Set<Modifier>
+
+  /// The annotations of this module, appended with any from the containing class's superclasses.
+  ///
+  /// Annotations are ordered starting with the current class and walking up the class hierarchy.
+  @Since { version = "0.30.0" }
+  allAnnotations: List<Annotation>
 }
 
 /// A method declaration.
@@ -319,13 +341,13 @@ external class TypeParameter {
 }
 
 /// A modifier of a [Declaration].
-typealias Modifier = "abstract"|"external"|"hidden"|"open"|"fixed"|"const"
+typealias Modifier = "abstract" | "external" | "hidden" | "open" | "fixed" | "const"
 
 /// The variance of a [TypeParameter].
 ///
 /// An "in" type parameter is contravariant.
 /// An "out" type parameter is covariant.
-typealias Variance = "in"|"out"
+typealias Variance = "in" | "out"
 
 /// A type as it occurs, say, in a type annotation.
 abstract external class Type {

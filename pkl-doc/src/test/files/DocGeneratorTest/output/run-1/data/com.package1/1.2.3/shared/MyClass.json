@@ -1,0 +1,16 @@
+{
+  "knownUsages": [
+    {
+      "text": "TypeReferences",
+      "href": "../classMethodTypeReferences/TypeReferences.html"
+    },
+    {
+      "text": "moduleMethodTypeReferences",
+      "href": "../moduleMethodTypeReferences/index.html"
+    },
+    {
+      "text": "modulePropertyTypeReferences",
+      "href": "../modulePropertyTypeReferences/index.html"
+    }
+  ]
+}

@@ -1,0 +1,7 @@
+amends "../Bird.pkl"
+
+name = "Ostrich"
+
+favoriteFruit {
+  name = "Orange"
+}

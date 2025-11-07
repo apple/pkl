@@ -15,37 +15,37 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
-import kotlin.io.path.deleteRecursively
-import org.pkl.core.util.json.JsonWriter
+import kotlin.io.path.isRegularFile
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
+import kotlinx.serialization.ExperimentalSerializationApi
+import org.pkl.commons.lazyWithReceiver
 
 // Note: we don't currently make use of persisted type alias data (needs more thought).
-@OptIn(ExperimentalPathApi::class)
+@OptIn(ExperimentalPathApi::class, ExperimentalSerializationApi::class)
 internal class RuntimeDataGenerator(
   private val descendingVersionComparator: Comparator<String>,
   private val outputDir: Path,
-) {
+  consoleOut: OutputStream,
+) : AbstractGenerator(consoleOut) {
 
-  private val packageVersions = mutableMapOf<PackageId, MutableSet<String>>()
-  private val moduleVersions = mutableMapOf<ModuleId, MutableSet<String>>()
-  private val classVersions = mutableMapOf<TypeId, MutableSet<String>>()
-  private val packageUsages = mutableMapOf<PackageRef, MutableSet<PackageRef>>()
+  private val packageVersions: MutableMap<PackageId, MutableSet<PackageRef>> = mutableMapOf()
+  private val classVersions: MutableMap<TypeId, MutableSet<String>> = mutableMapOf()
+  private val packageUsages: MutableMap<PackageRef, MutableSet<PackageRef>> = mutableMapOf()
   private val typeUsages = mutableMapOf<TypeRef, MutableSet<TypeRef>>()
-  private val subtypes = mutableMapOf<TypeRef, MutableSet<TypeRef>>()
+  private val subtypes: MutableMap<TypeRef, MutableSet<TypeRef>> = mutableMapOf()
 
-  fun deleteDataDir() {
-    outputDir.resolve("data").deleteRecursively()
-  }
-
-  fun generate(packages: List<PackageData>) {
+  suspend fun generate(packages: List<PackageData>) {
     collectData(packages)
     writeData(packages)
   }
 
   private fun collectData(packages: List<PackageData>) {
     for (pkg in packages) {
-      packageVersions.add(pkg.ref.pkg, pkg.ref.version)
+      packageVersions.add(pkg.ref.pkg, pkg.ref)
       for (dependency in pkg.dependencies) {
         if (dependency.isStdlib()) continue
         // Every package implicitly depends on the stdlib. Showing this dependency adds unwanted
@@ -53,187 +53,163 @@ internal class RuntimeDataGenerator(
         packageUsages.add(dependency.ref, pkg.ref)
       }
       for (module in pkg.modules) {
-        moduleVersions.add(module.ref.id, module.ref.version)
-        if (module.moduleClass != null) {
-          collectData(module.moduleClass)
-        }
-        for (clazz in module.classes) {
+        for (clazz in module.effectiveClasses) {
           collectData(clazz)
         }
       }
     }
   }
 
+  // only collect type use information when belonging to the same package.
   private fun collectData(clazz: ClassData) {
     classVersions.add(clazz.ref.id, clazz.ref.version)
     for (superclass in clazz.superclasses) {
-      subtypes.add(superclass, clazz.ref)
+      if (superclass.isInSamePackageAs(clazz.ref)) {
+        subtypes.add(superclass, clazz.ref)
+      }
     }
     for (type in clazz.usedTypes) {
-      typeUsages.add(type, clazz.ref)
+      if (type.isInSamePackageAs(clazz.ref)) {
+        typeUsages.add(type, clazz.ref)
+      }
     }
   }
 
-  private fun writeData(packages: List<PackageData>) {
-    for (pkg in packages) {
-      writePackageFile(pkg.ref)
-      for (mod in pkg.modules) {
-        writeModuleFile(mod.ref)
-        for (clazz in mod.classes) {
-          writeClassFile(clazz.ref)
+  val writtenFiles = mutableSetOf<Path>()
+
+  private suspend fun writeData(packages: List<PackageData>) {
+    coroutineScope {
+      for (pkg in packages) {
+        launch { writePackageFilePerVersion(pkg) }
+        for (module in pkg.modules) {
+          for (clazz in module.effectiveClasses) {
+            launch { writeClassFilePerVersion(clazz) }
+          }
+        }
+      }
+      for (pkg in packages.distinctBy { it.ref.pkg }) {
+        launch { writePackageFile(pkg) }
+        for (module in pkg.modules) {
+          for (clazz in module.effectiveClasses) {
+            launch { writeClassFile(clazz) }
+          }
+        }
+      }
+    }
+    updateKnownUsages(packages)
+  }
+
+  private val ModuleData.effectiveClasses: List<ClassData>
+    get() =
+      when (moduleClass) {
+        null -> classes
+        else ->
+          buildList {
+            add(moduleClass)
+            addAll(classes)
+          }
+      }
+
+  /**
+   * It's possible that a new package uses types/packages from things that are already part of the
+   * docsite.
+   *
+   * If so, update the known usages of those things.
+   */
+  private suspend fun updateKnownUsages(packages: List<PackageData>) = coroutineScope {
+    val newlyWrittenPackageRefs = packages.mapTo(mutableSetOf()) { it.ref }
+    val existingPackagesWithUpdatedKnownUsages =
+      packageUsages.keys.filterNot { newlyWrittenPackageRefs.contains(it) }
+    for (ref in existingPackagesWithUpdatedKnownUsages) {
+      launch {
+        val runtimeDataPath = outputDir.resolve(ref.perPackageVersionRuntimeDataPath)
+        // we must not have this package in our docsite.
+        if (!runtimeDataPath.isRegularFile()) return@launch
+        val usages = packageUsages[ref]
+        val existingData = ref.existingPerPackageVersionRuntimeData
+        val data =
+          existingData.addKnownUsages(ref, usages, PackageRef::pkg, descendingVersionComparator)
+        if (data != existingData) {
+          data.doWriteTo(outputDir.resolve(ref.perPackageVersionRuntimeDataPath))
         }
       }
     }
   }
 
-  private fun writePackageFile(ref: PackageRef) {
-    outputDir
-      .resolve("data/${ref.pkg.pathEncoded}/${ref.version.pathEncoded}/index.js")
-      .jsonWriter()
-      .use { writer ->
-        writer.isLenient = true
-        writer.writeLinks(
-          HtmlConstants.KNOWN_VERSIONS,
-          packageVersions.getOrDefault(ref.pkg, setOf()).sortedWith(descendingVersionComparator),
-          { it },
-          { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-          { if (it == ref.version) CssConstants.CURRENT_VERSION else null },
-        )
-        writer.writeLinks(
-          HtmlConstants.KNOWN_USAGES,
-          packageUsages.getOrDefault(ref, setOf()).packagesWithHighestVersions().sortedBy {
-            it.pkg
-          },
-          PackageRef::pkg,
-          { it.pageUrlRelativeTo(ref) },
-          { null },
-        )
-      }
+  private val ElementRef<*>.existingPerPackageRuntimeData: RuntimeData by lazyWithReceiver {
+    val path = outputDir.resolve(perPackageRuntimeDataPath)
+    RuntimeData.readOrEmpty(path)
   }
 
-  private fun writeModuleFile(ref: ModuleRef) {
-    outputDir
-      .resolve(
-        "data/${ref.pkg.pathEncoded}/${ref.version.pathEncoded}/${ref.module.pathEncoded}/index.js"
+  private val ElementRef<*>.existingPerPackageVersionRuntimeData: RuntimeData by lazyWithReceiver {
+    val path = outputDir.resolve(perPackageVersionRuntimeDataPath)
+    RuntimeData.readOrEmpty(path)
+  }
+
+  private fun RuntimeData.doWriteTo(path: Path) {
+    writeTo(path)
+    consoleOut.write("Wrote file ${path.toUri()}\r")
+  }
+
+  private fun RuntimeData.writePerPackageVersion(ref: ElementRef<*>) {
+    val path = outputDir.resolve(ref.perPackageVersionRuntimeDataPath)
+    writtenFiles.add(path)
+    perPackageVersion().writeTo(path)
+    consoleOut.write("Wrote file ${path.toUri()}\r")
+  }
+
+  private fun RuntimeData.writePerPackage(ref: ElementRef<*>) {
+    val path = outputDir.resolve(ref.perPackageRuntimeDataPath)
+    writtenFiles.add(path)
+    perPackage().writeTo(path)
+    consoleOut.write("Wrote file ${path.toUri()}\r")
+  }
+
+  private fun writePackageFile(packageData: PackageData) {
+    val ref = packageData.ref
+    val newVersions = packageVersions[packageData.ref.pkg]?.mapTo(mutableSetOf()) { it.version }
+    val data =
+      ref.existingPerPackageRuntimeData.addKnownVersions(
+        ref,
+        newVersions,
+        descendingVersionComparator,
       )
-      .jsonWriter()
-      .use { writer ->
-        writer.isLenient = true
-        writer.writeLinks(
-          HtmlConstants.KNOWN_VERSIONS,
-          moduleVersions.getOrDefault(ref.id, setOf()).sortedWith(descendingVersionComparator),
-          { it },
-          { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-          { if (it == ref.version) CssConstants.CURRENT_VERSION else null },
-        )
-        writer.writeLinks(
-          HtmlConstants.KNOWN_USAGES,
-          typeUsages.getOrDefault(ref.moduleClassRef, setOf()).typesWithHighestVersions().sortedBy {
-            it.displayName
-          },
-          TypeRef::displayName,
-          { it.pageUrlRelativeTo(ref) },
-          { null },
-        )
-        writer.writeLinks(
-          HtmlConstants.KNOWN_SUBTYPES,
-          subtypes.getOrDefault(ref.moduleClassRef, setOf()).typesWithHighestVersions().sortedBy {
-            it.displayName
-          },
-          TypeRef::displayName,
-          { it.pageUrlRelativeTo(ref) },
-          { null },
-        )
-      }
+    data.writePerPackage(ref)
   }
 
-  private fun writeClassFile(ref: TypeRef) {
-    outputDir
-      .resolve(
-        "data/${ref.pkg.pathEncoded}/${ref.version.pathEncoded}/${ref.module.pathEncoded}/${ref.type.pathEncoded}.js"
+  private fun writePackageFilePerVersion(packageData: PackageData) {
+    val ref = packageData.ref
+    val data =
+      ref.existingPerPackageVersionRuntimeData.addKnownUsages(
+        ref,
+        packageUsages[ref],
+        { it.pkg },
+        descendingVersionComparator,
       )
-      .jsonWriter()
-      .use { writer ->
-        writer.isLenient = true
-        writer.writeLinks(
-          HtmlConstants.KNOWN_VERSIONS,
-          classVersions.getOrDefault(ref.id, setOf()).sortedWith(descendingVersionComparator),
-          { it },
-          { if (it == ref.version) null else ref.copy(version = it).pageUrlRelativeTo(ref) },
-          { if (it == ref.version) CssConstants.CURRENT_VERSION else null },
-        )
-        writer.writeLinks(
-          HtmlConstants.KNOWN_USAGES,
-          typeUsages.getOrDefault(ref, setOf()).typesWithHighestVersions().sortedBy {
-            it.displayName
-          },
-          TypeRef::displayName,
-          { it.pageUrlRelativeTo(ref) },
-          { null },
-        )
-        writer.writeLinks(
-          HtmlConstants.KNOWN_SUBTYPES,
-          subtypes.getOrDefault(ref, setOf()).typesWithHighestVersions().sortedBy {
-            it.displayName
-          },
-          TypeRef::displayName,
-          { it.pageUrlRelativeTo(ref) },
-          { null },
-        )
-      }
+    data.writePerPackageVersion(ref)
   }
 
-  private fun <T> JsonWriter.writeLinks(
-    // HTML element ID
-    id: String,
-    // items based on which links are generated
-    items: List<T>,
-    // link text
-    text: (T) -> String,
-    // link href
-    href: (T) -> String?,
-    // link CSS classes
-    classes: (T) -> String?,
-  ) {
-    if (items.isEmpty()) return
-
-    rawText("runtimeData.links('")
-    rawText(id)
-    rawText("','")
-
-    array {
-      for (item in items) {
-        obj {
-          name("text").value(text(item))
-          name("href").value(href(item))
-          name("classes").value(classes(item))
-        }
-      }
-    }
-
-    rawText("');\n")
+  private fun writeClassFile(classData: ClassData) {
+    val ref = classData.ref
+    val newVersions = classVersions[ref.id]?.mapTo(mutableSetOf()) { it }
+    val data =
+      ref.existingPerPackageRuntimeData.addKnownVersions(
+        ref,
+        newVersions,
+        descendingVersionComparator,
+      )
+    data.writePerPackage(ref)
   }
 
-  private fun Set<PackageRef>.packagesWithHighestVersions(): Collection<PackageRef> {
-    val highestVersions = mutableMapOf<PackageId, PackageRef>()
-    for (ref in this) {
-      val prev = highestVersions[ref.pkg]
-      if (prev == null || descendingVersionComparator.compare(prev.version, ref.version) > 0) {
-        highestVersions[ref.pkg] = ref
-      }
-    }
-    return highestVersions.values
-  }
-
-  private fun Set<TypeRef>.typesWithHighestVersions(): Collection<TypeRef> {
-    val highestVersions = mutableMapOf<TypeId, TypeRef>()
-    for (ref in this) {
-      val prev = highestVersions[ref.id]
-      if (prev == null || descendingVersionComparator.compare(prev.version, ref.version) > 0) {
-        highestVersions[ref.id] = ref
-      }
-    }
-    return highestVersions.values
+  private fun writeClassFilePerVersion(classData: ClassData) {
+    val ref = classData.ref
+    val newSubtypes = subtypes[ref]
+    val newUsages = typeUsages[ref]
+    val data =
+      ref.existingPerPackageVersionRuntimeData
+        .addKnownSubtypes(ref, newSubtypes, descendingVersionComparator)
+        .addKnownUsages(ref, newUsages, TypeRef::displayName, descendingVersionComparator)
+    data.writePerPackageVersion(ref)
   }
 
   private fun <K, V> MutableMap<K, MutableSet<V>>.add(key: K, value: V) {

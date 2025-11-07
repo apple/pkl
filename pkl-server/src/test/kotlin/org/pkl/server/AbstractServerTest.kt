@@ -60,6 +60,27 @@ abstract class AbstractServerTest {
 
   abstract val client: TestTransport
 
+  private val blankCreateEvaluatorRequest =
+    CreateEvaluatorRequest(
+      requestId = 1,
+      http = null,
+      allowedModules = null,
+      allowedResources = null,
+      clientModuleReaders = null,
+      clientResourceReaders = null,
+      modulePaths = null,
+      env = null,
+      properties = null,
+      timeout = null,
+      rootDir = null,
+      cacheDir = null,
+      outputFormat = null,
+      project = null,
+      externalModuleReaders = null,
+      externalResourceReaders = null,
+      traceMode = null,
+    )
+
   @Test
   fun `create and close evaluator`() {
     val evaluatorId = client.sendCreateEvaluatorRequest(123)
@@ -287,13 +308,13 @@ abstract class AbstractServerTest {
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result?.debugYaml)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
       - 6
       - 
-        - bird:/foo.txt
-        - bird:/subdir/bar.txt
+        - 'bird:/foo.txt'
+        - 'bird:/subdir/bar.txt'
     """
           .trimIndent()
       )
@@ -325,7 +346,7 @@ abstract class AbstractServerTest {
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result?.debugYaml)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
         - 6
@@ -526,11 +547,11 @@ abstract class AbstractServerTest {
         """
       - 6
       - 
-        - bird:/Person.pkl
-        - bird:/birds/parrot.pkl
-        - bird:/birds/pigeon.pkl
-        - bird:/majesticBirds/barnOwl.pkl
-        - bird:/majesticBirds/elfOwl.pkl
+        - 'bird:/Person.pkl'
+        - 'bird:/birds/parrot.pkl'
+        - 'bird:/birds/pigeon.pkl'
+        - 'bird:/majesticBirds/barnOwl.pkl'
+        - 'bird:/majesticBirds/elfOwl.pkl'
     """
           .trimIndent()
       )
@@ -622,7 +643,7 @@ abstract class AbstractServerTest {
     val response = client.receive<EvaluateResponse>()
     assertThat(response.error).isNull()
     val tripleQuote = "\"\"\""
-    assertThat(response.result?.debugYaml)
+    assertThat(response.result?.debugRendering)
       .isEqualTo(
         """
       |
@@ -632,7 +653,7 @@ abstract class AbstractServerTest {
             content
             
             $tripleQuote
-          bytes = Bytes(99, 111, 110, 116, 101, 110, 116, 10)
+          base64 = "Y29udGVudAo="
         }
         res2 {
           uri = "modulepath:/dir1/resource1.txt"
@@ -640,11 +661,12 @@ abstract class AbstractServerTest {
             content
             
             $tripleQuote
-          bytes = Bytes(99, 111, 110, 116, 101, 110, 116, 10)
+          base64 = "Y29udGVudAo="
         }
         res3 {
           ressy = "the module2 output"
         }
+
     """
           .trimIndent()
       )
@@ -692,7 +714,7 @@ abstract class AbstractServerTest {
     )
 
     val evaluatorResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluatorResponse.result?.debugYaml).isEqualTo("1")
+    assertThat(evaluatorResponse.result?.debugRendering).isEqualTo("1")
   }
 
   @Test
@@ -732,13 +754,14 @@ abstract class AbstractServerTest {
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.result).isNotNull
-    assertThat(evaluateResponse.result?.debugYaml)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
         |
           firstName = "Pigeon"
           lastName = "Bird"
           fullName = "Pigeon Bird"
+
       """
           .trimIndent()
       )
@@ -772,13 +795,14 @@ abstract class AbstractServerTest {
 
     val response12 = client.receive<EvaluateResponse>()
     assertThat(response12.result).isNotNull
-    assertThat(response12.result?.debugYaml)
+    assertThat(response12.result?.debugRendering)
       .isEqualTo(
         """
         |
           firstName = "Pigeon"
           lastName = "Bird"
           fullName = "Pigeon Bird"
+
       """
           .trimIndent()
       )
@@ -802,13 +826,14 @@ abstract class AbstractServerTest {
 
     val response22 = client.receive<EvaluateResponse>()
     assertThat(response22.result).isNotNull
-    assertThat(response22.result?.debugYaml)
+    assertThat(response22.result?.debugRendering)
       .isEqualTo(
         """
         |
           firstName = "Parrot"
           lastName = "Bird"
           fullName = "Parrot Bird"
+
       """
           .trimIndent()
       )
@@ -931,8 +956,49 @@ abstract class AbstractServerTest {
       )
   }
 
-  private val ByteArray.debugYaml
-    get() = MessagePackDebugRenderer(this).output.trimIndent()
+  @Test
+  fun `http rewrites`() {
+    val evaluatorId =
+      client.sendCreateEvaluatorRequest(
+        http =
+          Http(
+            caCertificates = null,
+            proxy = null,
+            rewrites = mapOf(URI("https://example.com/") to URI("https://example.example/")),
+          )
+      )
+    client.send(
+      EvaluateRequest(
+        1,
+        evaluatorId,
+        URI("repl:text"),
+        "res = import(\"https://example.com/foo.pkl\")",
+        "output.text",
+      )
+    )
+    val response = client.receive<EvaluateResponse>()
+    assertThat(response.error)
+      .contains(
+        "request was rewritten: https://example.com/foo.pkl -> https://example.example/foo.pkl"
+      )
+  }
+
+  @Test
+  fun `http rewrites -- invalid rule`() {
+    client.send(
+      blankCreateEvaluatorRequest.copy(
+        http =
+          Http(
+            caCertificates = null,
+            proxy = null,
+            rewrites = mapOf(URI("https://example.com") to URI("https://example.example/")),
+          )
+      )
+    )
+    val response = client.receive<CreateEvaluatorResponse>()
+    assertThat(response.error)
+      .contains("Rewrite rule must end with '/', but was 'https://example.com'")
+  }
 
   private fun TestTransport.sendCreateEvaluatorRequest(
     requestId: Long = 123,
@@ -959,6 +1025,7 @@ abstract class AbstractServerTest {
         null,
         project,
         http,
+        null,
         null,
         null,
       )

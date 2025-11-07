@@ -15,12 +15,14 @@
  */
 package org.pkl.commons.cli
 
+import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
@@ -166,35 +168,46 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
 
   protected val useColor: Boolean by lazy { cliOptions.color?.hasColor() ?: false }
 
-  private val proxyAddress by lazy {
+  private val proxyAddress: URI? by lazy {
     cliOptions.httpProxy
       ?: project?.evaluatorSettings?.http?.proxy?.address
       ?: settings.http?.proxy?.address
   }
 
-  private val noProxy by lazy {
+  private val noProxy: List<String>? by lazy {
     cliOptions.httpNoProxy
       ?: project?.evaluatorSettings?.http?.proxy?.noProxy
       ?: settings.http?.proxy?.noProxy
   }
 
-  private val externalModuleReaders by lazy {
+  private val httpRewrites: Map<URI, URI>? by lazy {
+    cliOptions.httpRewrites
+      ?: project?.evaluatorSettings?.http?.rewrites
+      ?: settings.http?.rewrites()
+  }
+
+  private val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
     (project?.evaluatorSettings?.externalModuleReaders ?: emptyMap()) +
       cliOptions.externalModuleReaders
   }
 
-  private val externalResourceReaders by lazy {
+  private val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
     (project?.evaluatorSettings?.externalResourceReaders ?: emptyMap()) +
       cliOptions.externalResourceReaders
   }
 
-  private val externalProcesses by lazy {
+  private val externalProcesses:
+    Map<PklEvaluatorSettings.ExternalReader, ExternalReaderProcess> by lazy {
     // Share ExternalReaderProcess instances between configured external resource/module readers
     // with the same spec. This avoids spawning multiple subprocesses if the same reader implements
     // both reader types and/or multiple schemes.
     (externalModuleReaders + externalResourceReaders).values.toSet().associateWith {
       ExternalReaderProcess.of(it)
     }
+  }
+
+  private val traceMode: TraceMode by lazy {
+    cliOptions.traceMode ?: project?.evaluatorSettings?.traceMode ?: TraceMode.COMPACT
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
@@ -210,8 +223,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     }
     if (!certsAdded) {
       val defaultCerts =
-        javaClass.classLoader.getResourceAsStream("org/pkl/commons/cli/PklCARoots.pem")
-          ?: throw CliException("Could not find bundled certificates")
+        this@CliCommand.javaClass.classLoader.getResourceAsStream(
+          "org/pkl/commons/cli/PklCARoots.pem"
+        ) ?: throw CliException("Could not find bundled certificates")
       addCertificates(defaultCerts.readAllBytes())
     }
   }
@@ -232,6 +246,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if ((proxyAddress ?: noProxy) != null) {
         setProxy(proxyAddress, noProxy ?: listOf())
       }
+      httpRewrites?.let(::setRewrites)
       // Lazy building significantly reduces execution time of commands that do minimal work.
       // However, it means that HTTP client initialization errors won't surface until an HTTP
       // request is made.
@@ -292,5 +307,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setLogger(Loggers.stdErr())
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)
+      .setTraceMode(traceMode)
   }
 }

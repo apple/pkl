@@ -18,6 +18,9 @@ res13 = new Dynamic { name = "pigeon"; age = 30 }
 res14 = new Person { name = "pigeon" }
 res15 = null
 res16 = Pair(1, 2)
+res17 = Bytes()
+res18 = Bytes(1, 2, 3)
+res19 = IntSeq(0, 127).toList().toBytes()
 
 output {
   renderer = new YamlRenderer {

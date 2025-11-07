@@ -1,8 +1,38 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.31.0]]
+== 0.31.0 (UNRELEASED)
+
+xref:0.31.adoc[Release Notes]
+
+[[release-0.30.0]]
+== 0.30.0 (2025-10-30)
+
+xref:0.30.adoc[Release notes]
+
+[[release-0.29.1]]
+== 0.29.1 (2025-08-27)
+
+=== Fixes
+
+* Fixes an issue where autocompletion in Bash and ZSH do noes not suggest filenames (https://github.com/apple/pkl/pull/1161[#1161]).
+* Fixes an issue where `pkldoc` throws a runtime error about failing to load class path resources (https://github.com/apple/pkl/issues/1174[#1174]).
+* Fixes an issue where `pkldoc` always runs with `testMode` set to true.
+* Fixes an issue where evaluating a module that ends with an unmatched backtick throws `ArrayIndexOutOfBoundsException` (https://github.com/apple/pkl/issues/1182[#1182]).
+* Fixes the formatting of YAML strings when emitting backslash characters within quoted strings (https://github.com/apple/pkl/pull/1165[#1165]).
+* Fixes an issue where `local` members inside `Mapping` objects are incorrectly encoded into binary format (https://github.com/apple/pkl/issues/1151[#1151]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/gordonbondon[@gordonbondon]
+* https://github.com/HT154[@HT154]
+
 [[release-0.29.0]]
-== 0.29.0 (TBD)
+== 0.29.0 (2025-07-24)
 
 xref:0.29.adoc[Release notes]
 

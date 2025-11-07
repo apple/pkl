@@ -15,13 +15,15 @@
  */
 package org.pkl.doc
 
+import java.io.OutputStream
 import kotlinx.html.*
 
 internal class MainPageGenerator(
   docsiteInfo: DocsiteInfo,
   private val packagesData: List<PackageData>,
   pageScope: SiteScope,
-) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, pageScope) {
+  consoleOut: OutputStream,
+) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, pageScope, consoleOut) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
 
@@ -89,14 +91,12 @@ internal class MainPageGenerator(
       ul {
         for (pkg in sortedPackages) {
           val packageScope =
-            pageScope.packageScopes[pkg.ref.pkg]
-              // create scope for previously generated package
-              ?: pageScope.createEmptyPackageScope(
-                pkg.ref.pkg,
-                pkg.ref.version,
-                pkg.sourceCodeUrlScheme,
-                pkg.sourceCode,
-              )
+            pageScope.createEmptyPackageScope(
+              pkg.ref.pkg,
+              pkg.ref.version,
+              pkg.sourceCodeUrlScheme,
+              pkg.sourceCode,
+            )
 
           val memberDocs =
             MemberDocs(

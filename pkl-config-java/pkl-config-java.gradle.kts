@@ -107,6 +107,7 @@ dependencies {
   api(projects.pklCore)
 
   implementation(libs.geantyref)
+  implementation(libs.msgpack)
 
   testImplementation(libs.javaxInject)
 

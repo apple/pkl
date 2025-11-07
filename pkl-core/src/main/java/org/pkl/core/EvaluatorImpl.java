@@ -28,8 +28,11 @@ import java.util.concurrent.TimeUnit;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
+import org.msgpack.core.MessageBufferPacker;
+import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
@@ -47,6 +50,7 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmPklBinaryEncoder;
 import org.pkl.core.runtime.VmStackOverflowException;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -55,17 +59,18 @@ import org.pkl.core.runtime.VmValueRenderer;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
-public class EvaluatorImpl implements Evaluator {
-  protected final StackFrameTransformer frameTransformer;
-  protected final boolean color;
-  protected final ModuleResolver moduleResolver;
-  protected final Context polyglotContext;
-  protected final @Nullable Duration timeout;
-  protected final @Nullable ScheduledExecutorService timeoutExecutor;
-  protected final SecurityManager securityManager;
-  protected final BufferedLogger logger;
-  protected final PackageResolver packageResolver;
+public final class EvaluatorImpl implements Evaluator {
+  private final StackFrameTransformer frameTransformer;
+  private final boolean color;
+  private final ModuleResolver moduleResolver;
+  private final Context polyglotContext;
+  private final @Nullable Duration timeout;
+  private final @Nullable ScheduledExecutorService timeoutExecutor;
+  private final SecurityManager securityManager;
+  private final BufferedLogger logger;
+  private final PackageResolver packageResolver;
   private final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(1000);
+  private @Nullable MessageBufferPacker messagePacker;
 
   public EvaluatorImpl(
       StackFrameTransformer transformer,
@@ -80,7 +85,8 @@ public class EvaluatorImpl implements Evaluator {
       @Nullable Duration timeout,
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
-      @Nullable String outputFormat) {
+      @Nullable String outputFormat,
+      TraceMode traceMode) {
 
     securityManager = manager;
     frameTransformer = transformer;
@@ -108,7 +114,8 @@ public class EvaluatorImpl implements Evaluator {
                       projectDependencies == null
                           ? null
                           : new ProjectDependenciesManager(
-                              projectDependencies, moduleResolver, securityManager)));
+                              projectDependencies, moduleResolver, securityManager),
+                      traceMode));
             });
     this.timeout = timeout;
     // NOTE: would probably make sense to share executor between evaluators
@@ -212,6 +219,37 @@ public class EvaluatorImpl implements Evaluator {
                 return expressionResult;
               });
     };
+  }
+
+  private MessageBufferPacker getMessagePacker() {
+    if (messagePacker == null) {
+      messagePacker = MessagePack.newDefaultBufferPacker();
+    }
+    messagePacker.clear();
+    return messagePacker;
+  }
+
+  @Override
+  public byte[] evaluateExpressionPklBinary(ModuleSource moduleSource, String expression) {
+    return doEvaluate(
+        moduleSource,
+        (module) -> {
+          var expressionResult =
+              switch (expression) {
+                case "module" -> module;
+                case "output.text" -> VmUtils.readTextProperty(readModuleOutput(module));
+                case "output.value" ->
+                    VmUtils.readMember(readModuleOutput(module), Identifier.VALUE);
+                case "output.bytes" -> VmUtils.readBytesProperty(readModuleOutput(module));
+                default ->
+                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
+              };
+          VmValue.force(expressionResult, false);
+
+          var packer = getMessagePacker();
+          new VmPklBinaryEncoder(packer).renderDocument(expressionResult);
+          return packer.toByteArray();
+        });
   }
 
   @Override
@@ -360,7 +398,7 @@ public class EvaluatorImpl implements Evaluator {
     return evalResult;
   }
 
-  protected <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
+  private <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
     return doEvaluate(
         () -> {
           var moduleKey = moduleResolver.resolve(moduleSource);

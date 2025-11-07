@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,12 +20,16 @@ import java.util.concurrent.ExecutorService
 import java.util.concurrent.TimeUnit
 import org.msgpack.core.MessagePack
 import org.msgpack.value.ImmutableValue
+import org.pkl.commons.test.MessagePackDebugRenderer
 
 fun ByteArray.unpack(): ImmutableValue = MessagePack.newDefaultUnpacker(this).unpackValue()
 
 fun ByteArray.asInt(): Int = unpack().asIntegerValue().asInt()
 
 fun ByteArray.asString(): String = unpack().asStringValue().asString()
+
+val ByteArray.debugRendering: String
+  get() = MessagePackDebugRenderer(this).output
 
 fun createDirectExecutor(): ExecutorService =
   object : AbstractExecutorService() {

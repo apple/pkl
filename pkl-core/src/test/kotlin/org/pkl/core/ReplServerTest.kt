@@ -18,6 +18,7 @@ package org.pkl.core
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.commons.toPath
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
@@ -45,6 +46,7 @@ class ReplServerTest {
       "/".toPath(),
       StackFrameTransformers.defaultTransformer,
       false,
+      TraceMode.COMPACT,
     )
 
   @Test

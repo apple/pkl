@@ -3,7 +3,7 @@
 // the following attributes must be updated immediately before a release
 
 // pkl version corresponding to current git commit without -dev suffix or git hash
-:pkl-version-no-suffix: 0.29.0
+:pkl-version-no-suffix: 0.31.0
 // tells whether pkl version corresponding to current git commit
 // is a release version (:is-release-version: '') or dev version (:!is-release-version:)
 :!is-release-version:
@@ -23,9 +23,9 @@ endif::[]
 
 :uri-maven-docsite: https://central.sonatype.com
 
-:uri-sonatype: https://s01.oss.sonatype.org/content/groups/public
+:uri-snapshot-repo: https://central.sonatype.com/repository/maven-snapshots
 
-:uri-maven-repo: https://s01.oss.sonatype.org/content/groups/public
+:uri-maven-repo: https://central.sonatype.com/repository/maven-snapshots
 ifdef::is-release-version[]
 :uri-maven-repo: https://repo1.maven.org/maven2
 endif::[]
@@ -74,12 +74,17 @@ endif::[]
 :uri-stdlib-mathModule: {uri-pkl-stdlib-docs}/math
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
+:uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
+:uri-stdlib-yamlModule: {uri-pkl-stdlib-docs}/yaml
+:uri-stdlib-YamlParser: {uri-stdlib-yamlModule}/Parser
 :uri-stdlib-evaluatorSettingsModule: {uri-pkl-stdlib-docs}/EvaluatorSettings
+:uri-stdlib-evaluatorSettingsHttpClass: {uri-stdlib-evaluatorSettingsModule}/Http
 :uri-stdlib-Boolean: {uri-stdlib-baseModule}/Boolean
 :uri-stdlib-xor: {uri-stdlib-baseModule}/Boolean#xor()
 :uri-stdlib-implies: {uri-stdlib-baseModule}/Boolean#implies()
 :uri-stdlib-Any: {uri-stdlib-baseModule}/Any
 :uri-stdlib-String: {uri-stdlib-baseModule}/String
+:uri-stdlib-Collection: {uri-stdlib-baseModule}/Collection
 :uri-stdlib-StringToInt: {uri-stdlib-baseModule}/String#toInt()
 :uri-stdlib-Int: {uri-stdlib-baseModule}/Int
 :uri-stdlib-Float: {uri-stdlib-baseModule}/Float
@@ -128,7 +133,10 @@ endif::[]
 :uri-stdlib-Class: {uri-stdlib-baseModule}/Class
 :uri-stdlib-TypeAlias: {uri-stdlib-baseModule}/TypeAlias
 :uri-stdlib-Deprecated: {uri-stdlib-baseModule}/Deprecated
+:uri-stdlib-BaseValueRenderer: {uri-stdlib-baseModule}/BaseValueRenderer
 :uri-stdlib-ValueRenderer: {uri-stdlib-baseModule}/ValueRenderer
+:uri-stdlib-BytesRenderer: {uri-stdlib-baseModule}/BytesRenderer
+:uri-stdlib-YamlRenderer: {uri-stdlib-baseModule}/YamlRenderer
 :uri-stdlib-PcfRenderer-converters: {uri-stdlib-baseModule}/PcfRenderer#converters
 :uri-stdlib-Function: {uri-stdlib-baseModule}/Function
 :uri-stdlib-Function0: {uri-stdlib-baseModule}/Function0
@@ -141,10 +149,12 @@ endif::[]
 :uri-stdlib-Bytes: {uri-stdlib-baseModule}/Bytes
 :uri-stdlib-Resource: {uri-stdlib-baseModule}/Resource
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
+:uri-stdlib-FileOutput: {uri-stdlib-baseModule}/FileOutput
 
 :uri-messagepack: https://msgpack.org/index.html
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md
 
 :uri-pkl-roadmap: https://github.com/orgs/apple/projects/12/views/1
 
+// TODO: figure out what the correct URL should be
 :uri-sonatype-snapshot-download: https://s01.oss.sonatype.org/service/local/artifact/maven/redirect?r=snapshots&g=org.pkl-lang&v={pkl-artifact-version}

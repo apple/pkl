@@ -1,0 +1,18 @@
+function fun(a, b, c, d) = a
+
+noTrailingCommas = fun(1, 2, 3, 4,)
+
+trailingCommas = fun("loooooooooooooooooooongString", "loooooooooooooooongString", "looooooooooooooooongString", "notTooLong")
+
+noTrailingCommaObjParams {
+  fooooooooooooooooooooooooooooooooo, baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaar, baaaaaaaaaaaaaaaaaaaaaz ->
+  1 + 1
+}
+
+trailingCommaInLambdas = (fooooooooooooooooooooooooooooooooo, baaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaar, baaaaaaaaaaaaaaaaaaaaaz) -> 1
+
+trailingCommaInConstraints: String(isSomethingSomethingSomething, isSomethingElse, isSomethingSomethingSomethingElse)
+
+trailingCommaInTypeParameters: Mapping<SomethingSomethingSomethingSomething, SomethingSomething | SomethingElse>
+
+functionType: (ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType, ReaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaalyLongType2, /* comment */) -> String

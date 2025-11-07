@@ -15,21 +15,19 @@
 //===----------------------------------------------------------------------===//
 abstract module GradleJob
 
-import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.5.0#/Config.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/com.circleci.v2@1.7.0#/Config.pkl"
 import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3#/URI.pkl"
 
 /// Whether this is a release build or not.
 isRelease: Boolean = false
 
 /// The OS to run on
-os: "macOS"|"linux"|"windows"
+os: "macOS" | "linux" | "windows"
 
 /// The version of Java to use.
-javaVersion: "17.0"|"21.0"
+javaVersion: "17.0" | "21.0"
 
-fixed javaVersionFull =
-  if (javaVersion == "17.0") "17.0.9+9"
-  else "21.0.5+11"
+fixed javaVersionFull = if (javaVersion == "17.0") "17.0.9+9" else "21.0.5+11"
 
 fixed jdkVersionAlt = javaVersionFull.replaceLast("+", "_")
 
@@ -38,21 +36,24 @@ fixed majorJdkVersion = javaVersionFull.split(".").first
 fixed jdkGitHubReleaseName =
   let (ver =
     // 17.0.9+9 is missing some binaries (see https://github.com/adoptium/adoptium-support/issues/994)
-    if (javaVersionFull == "17.0.9+9" && os == "windows") "jdk-17.0.9+9.1"
-    else "jdk-\(javaVersionFull)"
+      if (javaVersionFull == "17.0.9+9" && os == "windows")
+        "jdk-17.0.9+9.1"
+      else
+        "jdk-\(javaVersionFull)"
   )
     URI.encodeComponent(ver)
 
-fixed gradleArgs = new Listing {
-  "--info"
-  "--stacktrace"
-  "-DtestReportsDir=${HOME}/test-results"
-  "-DpklMultiJdkTesting=true"
-  when (isRelease) {
-    "-DreleaseBuild=true"
-  }
-  ...extraGradleArgs
-}.join(" ")
+fixed gradleArgs =
+  new Listing {
+    "--info"
+    "--stacktrace"
+    "-DtestReportsDir=${HOME}/test-results"
+    "-DpklMultiJdkTesting=true"
+    when (isRelease) {
+      "-DreleaseBuild=true"
+    }
+    ...extraGradleArgs
+  }.join(" ")
 
 extraGradleArgs: Listing<String>
 
@@ -71,6 +72,7 @@ job: Config.Job = new {
         image = "cimg/openjdk:\(javaVersion)"
       }
     }
+    resource_class = "2xlarge"
   }
   when (os == "windows") {
     machine {
@@ -84,7 +86,8 @@ job: Config.Job = new {
       new Config.RunStep {
         name = "Set up environment"
         shell = "bash.exe"
-        command = #"""
+        command =
+          #"""
           # install jdk
           curl -Lf \
           https://github.com/adoptium/temurin\#(majorJdkVersion)-binaries/releases/download/\#(jdkGitHubReleaseName)/OpenJDK\#(majorJdkVersion)U-jdk_x64_windows_hotspot_\#(jdkVersionAlt).zip -o /tmp/jdk.zip

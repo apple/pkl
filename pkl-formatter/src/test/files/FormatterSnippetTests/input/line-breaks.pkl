@@ -1,0 +1,72 @@
+module
+foo.bar.baz
+amends
+"bar.pkl"
+
+import
+"@foo/Foo.pkl"
+as foo
+
+local
+open
+class Bar {}
+
+const
+local
+baz = 10
+
+local
+function
+fun(x) =
+  x
+
+const local prooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooperty: String = "foo"
+
+local function function2(parameter1: Parameter1Type, parameter2: Parameter2Type, parameter3: Parameter3Type, parameter4: Parameter4Type): String = ""
+
+local const function function3(parameter1: String|Int, parameter2: String|Int): Mapping<String|Int, String> =
+  new {}
+
+prop = function2(loooooooooooooooooogParameter1, loooooooooooooooooogParameter2, loooooooooooooooooogParameter3, loooooooooooooooooogParameter4)
+
+prop2: String
+  |Int
+  |Boolean
+
+funcParam = fun(
+  (x, y) -> new Listing {
+  x
+  y
+})
+
+funcParam2 = aFun(foo, 10 * 10, anotherVariable, if (true) 100000 else 200000, (param1, param2) -> param1 * param2)
+
+funcParam3 = aFun(foo, 10 * 10, anotherVariable, 200000, (param1, param2) -> param1 * param2)
+
+funcParam4 = aFun(foo, 10 * 10, anotherVariable, if (true) 100000 else 200000, new Listing {
+  1
+  2
+})
+
+open local class SomeReallyInterestingClassName<in SomeInParameter, out SomeOutParameter> extends AnotherInterestingClassName {
+  foo: Int
+}
+
+local function resourceMapping(type): Mapping<String, unknown> =
+  new Mapping { default = (key) -> (type) { metadata { name = key } } }
+
+local const function biiiiiiiiiiiiiiiiiiiiiiiiigFunction(param1: String, param2: String(!isBlank)): Boolean
+
+local const function someFunction(param1: String, param2: String(!isBlank)): Boolean
+
+local function render(currentIndent: String) =
+  "\(currentIndent)@\(identifier.render(currentIndent))" +
+    if (body == null) "" else " " + body.render(currentIndent)
+
+items: List<Item> =
+  allItems
+    .filter((item) ->
+    badItems.containsKey(item) // some line comment 
+    || item.tags.toList().findOrNull((it) -> it.type == "bookmark") != null // some other line comment
+  )
+    .sortBy((item) -> item.name)

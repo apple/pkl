@@ -1,0 +1,76 @@
+prop1 =
+  """
+  asd \(new { bar = 1 }) asd
+  """
+
+prop2 =
+  """
+  \(let (bar = 15) bar + new { qux = 15 }.toString())
+  """
+
+prop3 =
+  """
+  \(new {
+    // some comment
+    foo = 1
+
+    // some comment
+    bar = 2
+  })
+  """
+
+prop4 =
+  """
+  \(1 + /* block comment */ 2)
+  """
+
+prop5 =
+  """
+  \("""
+  foo
+  bar
+  baz
+  """)
+  """
+
+prop6 = "\(// some line comment
+  /* some block comment */
+  "\("""
+    one
+    two
+    three
+    """)"
+  // some line comment again
+)"
+
+prop7 = "\(
+5
+// trailing line comment
+)"
+
+prop8 = "\(new { foo = 1 bar = 2 baz = 3 })"
+
+prop9 = "\(if (true) 1 else 2)"
+
+prop10 = "\(
+  if (true) 1
+  else 2
+)"
+
+prop11 = "\(
+  new {
+    1;
+    2;
+    3;
+  }
+)"
+
+// single line expressions are not broken up
+prop12 = "Some \(if (true) 1 else 2) reeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallly long string with interpolation"
+
+// multi-line expressions are preserved
+prop13 = "Some \(
+  if (true)
+    1
+  else 2
+  ) reeeaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaallly long string with interpolation"

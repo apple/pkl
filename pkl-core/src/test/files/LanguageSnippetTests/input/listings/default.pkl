@@ -29,3 +29,7 @@ res4 = (res3) {
     name = "Barn Owl"
   }
 }
+
+res5 = (res4.getOrDefault(99)) {
+  name = "Bald Eagle"
+}

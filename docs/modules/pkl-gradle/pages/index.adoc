@@ -25,7 +25,7 @@ It requires Java 17 or higher and Gradle 8.1 or higher.
 Earlier Gradle versions are not supported.
 
 ifndef::is-release-version[]
-NOTE: Snapshots are published to repository `{uri-sonatype}`.
+NOTE: Snapshots are published to repository `{uri-snapshot-repo}`.
 endif::[]
 
 The plugin is applied as follows:

@@ -114,12 +114,12 @@ examples {
     render(".NAN")
     render(".nAn")  // never float
   }
-  
+
   ["tag like strings"] {
     "!!bool true"
     "!!str my string value"
   }
-  
+
   ["number like string keys"] {
     render(new Dynamic {
       `0` = "0"

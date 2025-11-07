@@ -26,9 +26,13 @@ open class CliException(
    */
   message: String,
 
+  /** The cause */
+  cause: Throwable?,
+
   /** The process exit code to use. */
   val exitCode: Int = 1,
-) : RuntimeException(message) {
+) : RuntimeException(message, cause) {
+  constructor(message: String, exitCode: Int = 1) : this(message, null, exitCode)
 
   override fun toString(): String = message!!
 }
@@ -41,7 +45,11 @@ class CliBugException(
   /** The process exit code to use. */
   exitCode: Int = 1,
 ) :
-  CliException("An unexpected error has occurred. Would you mind filing a bug report?", exitCode) {
+  CliException(
+    "An unexpected error has occurred. Would you mind filing a bug report?",
+    theCause,
+    exitCode,
+  ) {
 
   override fun toString(): String = "$message\n\n${theCause.printStackTraceToString()}"
 }

@@ -18,7 +18,7 @@
 ///
 /// Note that some mathematical functions, such as `sign()`, `abs()`, and `round()`,
 /// are directly defined in classes [Number], [Int], and [Float].
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.math
 
 /// The minimum [Int] value: `-9223372036854775808`.
@@ -78,7 +78,6 @@ external minPositiveFloat: Float
 ///
 /// [1]: https://en.wikipedia.org/wiki/E_(mathematical_constant)
 external e: Float
-
 
 /// The number [π][1].
 ///

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import javax.net.ssl.SSLContext;
 import org.pkl.core.util.Nullable;
 
@@ -117,6 +118,37 @@ public interface HttpClient extends AutoCloseable {
      * @throws IllegalArgumentException if `proxyAddress` is invalid.
      */
     Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy);
+
+    /**
+     * Removes any existing rewrites, then adds the given rewrites.
+     *
+     * <p>A rewrite changes outbound HTTP URLs by replacing a source prefix with a targert prefix.
+     *
+     * <p>Each rewrite URI must start with {@code http://} or {@code https://}, and end with {@code
+     * /}.
+     *
+     * <p>Each key describes the prefix of a request, and each value describes the replacement
+     * prefix.
+     *
+     * <p>This can be useful for setting up mirroring of packages, which are fetched over HTTPS.
+     *
+     * <p>In the case of multiple matches, the longest prefix is used.
+     *
+     * <p>The URL hostname is case-insensitive.
+     *
+     * @throws IllegalArgumentException if {@code rewrites} is invalid.
+     * @since 0.29.0
+     */
+    Builder setRewrites(Map<URI, URI> rewrites);
+
+    /**
+     * Adds a rewrite rule.
+     *
+     * @see Builder#setRewrites(Map)
+     * @throws IllegalArgumentException if {@code sourcePrefix} or {@code targetPrefix} is invalid.
+     * @since 0.29.0
+     */
+    Builder addRewrite(URI sourcePrefix, URI targetPrefix);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

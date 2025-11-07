@@ -841,4 +841,17 @@ public final class IoUtils {
       throw new URISyntaxException(uri.toString(), ErrorMessages.create("invalidOpaqueFileUri"));
     }
   }
+
+  public static void validateRewriteRule(URI rewrite) {
+    if (!Objects.equals(rewrite.getScheme(), "http")
+        && !Objects.equals(rewrite.getScheme(), "https")) {
+      throw new IllegalArgumentException(
+          "Rewrite rule must start with 'http://' or 'https://', but was '%s'".formatted(rewrite));
+    }
+
+    if (!rewrite.toString().endsWith("/")) {
+      throw new IllegalArgumentException(
+          "Rewrite rule must end with '/', but was '%s'".formatted(rewrite));
+    }
+  }
 }

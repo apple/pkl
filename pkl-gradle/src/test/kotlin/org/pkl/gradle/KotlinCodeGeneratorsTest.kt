@@ -108,7 +108,7 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
   }
 
   private fun writeBuildFile() {
-    val kotlinVersion = "1.6.0"
+    val kotlinVersion = "2.0.21"
 
     writeFile(
       "build.gradle",

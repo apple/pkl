@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A JSON parser.
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.json
 
 /// A JSON parser.
@@ -45,15 +45,15 @@ class Parser {
   /// Value converters to apply to parsed values.
   ///
   /// For further information see [PcfRenderer.converters].
-  converters: Mapping<Class|String(!isEmpty), (unknown) -> unknown>
+  converters: Mapping<Class | String(!isEmpty), (unknown) -> unknown>
 
   /// Parses [source] as a JSON document.
   ///
   /// Throws if an error occurs during parsing.
   ///
   /// If [source] is a [Resource], the resource URI is included in parse error messages.
-  external function parse(source: Resource|String): Value
+  external function parse(source: Resource | String): Value
 }
 
 /// Pkl representation of a JSON value.
-typealias Value = Null|Boolean|Number|String|Listing|Dynamic|Mapping
+typealias Value = Null | Boolean | Number | String | Listing | Dynamic | Mapping

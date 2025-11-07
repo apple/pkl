@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,13 @@ package org.pkl.core.service;
 
 import static org.pkl.core.module.ProjectDependenciesManager.PKL_PROJECT_FILENAME;
 
+import java.net.URI;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
-import java.util.Objects;
-import java.util.Set;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.*;
@@ -37,6 +36,7 @@ import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
 
 public final class ExecutorSpiImpl implements ExecutorSpi {
   private static final int MAX_HTTP_CLIENTS = 3;
@@ -142,8 +142,14 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
   private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
     List<Path> certificateFiles;
     List<byte[]> certificateBytes;
+    Map<URI, URI> rewrites;
     int testPort;
     try {
+      if (options instanceof ExecutorSpiOptions3 options3) {
+        rewrites = options3.getHttpRewrites();
+      } else {
+        rewrites = Map.of();
+      }
       if (options instanceof ExecutorSpiOptions2 options2) {
         certificateFiles = options2.getCertificateFiles();
         certificateBytes = options2.getCertificateBytes();
@@ -153,14 +159,15 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
         certificateBytes = List.of();
         testPort = -1;
       }
-      // host pkl-executor does not have class ExecutorOptions2 defined.
+      // host pkl-executor does not have class ExecutorOptions2/ExecutorOptions3 defined.
       // this will happen if the pkl-executor distribution is too old.
     } catch (NoClassDefFoundError e) {
       certificateFiles = List.of();
       certificateBytes = List.of();
+      rewrites = Map.of();
       testPort = -1;
     }
-    var clientKey = new HttpClientKey(certificateFiles, certificateBytes, testPort);
+    var clientKey = new HttpClientKey(certificateFiles, certificateBytes, testPort, rewrites);
     return httpClients.computeIfAbsent(
         clientKey,
         (key) -> {
@@ -171,6 +178,7 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
           for (var bytes : key.certificateBytes) {
             builder.addCertificates(bytes);
           }
+          builder.setRewrites(key.rewrites);
           builder.setTestPort(key.testPort);
           // If the above didn't add any certificates,
           // builder will use the JVM's default SSL context.
@@ -178,35 +186,9 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
         });
   }
 
-  private static final class HttpClientKey {
-    final Set<Path> certificateFiles;
-    final Set<byte[]> certificateBytes;
-    final int testPort;
-
-    HttpClientKey(List<Path> certificateFiles, List<byte[]> certificateBytes, int testPort) {
-      // also serves as defensive copy
-      this.certificateFiles = Set.copyOf(certificateFiles);
-      this.certificateBytes = Set.copyOf(certificateBytes);
-      this.testPort = testPort;
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) {
-        return true;
-      }
-      if (obj == null || getClass() != obj.getClass()) {
-        return false;
-      }
-      HttpClientKey that = (HttpClientKey) obj;
-      return certificateFiles.equals(that.certificateFiles)
-          && certificateBytes.equals(that.certificateBytes)
-          && testPort == that.testPort;
-    }
-
-    @Override
-    public int hashCode() {
-      return Objects.hash(certificateFiles, certificateBytes, testPort);
-    }
-  }
+  private record HttpClientKey(
+      List<Path> certificateFiles,
+      List<byte[]> certificateBytes,
+      int testPort,
+      Map<URI, URI> rewrites) {}
 }

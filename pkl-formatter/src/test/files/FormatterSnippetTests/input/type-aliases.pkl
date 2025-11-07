@@ -1,0 +1,6 @@
+typealias
+  Foo
+  =
+  String
+
+typealias VeryLoooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooooongTypeAlias = String(!isEmpty)

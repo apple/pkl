@@ -32,6 +32,7 @@ import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
 import org.pkl.core.packages.PackageResolver;
@@ -82,7 +83,8 @@ public class ReplServer implements AutoCloseable {
       @Nullable String outputFormat,
       Path workingDir,
       StackFrameTransformer frameTransformer,
-      boolean color) {
+      boolean color,
+      TraceMode traceMode) {
 
     this.workingDir = workingDir;
     this.securityManager = securityManager;
@@ -114,7 +116,8 @@ public class ReplServer implements AutoCloseable {
                       moduleCacheDir,
                       outputFormat,
                       packageResolver,
-                      projectDependenciesManager));
+                      projectDependenciesManager,
+                      traceMode));
             });
     language = languageRef.get();
   }

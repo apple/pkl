@@ -1,0 +1,27 @@
+module com.foo.bar.MyModule
+
+extends ".../pklbinaryTest.pkl"
+
+class Person {
+  firstName: String
+  lastName: String
+  age: Int
+}
+
+barnOwl: Person = new {
+  firstName = "Barn Owl"
+  lastName = "Bird"
+  age = 38
+}
+
+pigeon: Person = new {
+  firstName = "Pigeon"
+  lastName = "Bird"
+  age = 41
+}
+
+typealias MyPerson = Person
+
+personClass = Person
+
+personTypeAlias = MyPerson

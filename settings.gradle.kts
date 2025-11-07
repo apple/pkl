@@ -41,7 +41,11 @@ include("pkl-doc")
 
 include("pkl-executor")
 
+include("pkl-formatter")
+
 include("pkl-gradle")
+
+include("pkl-internal-intellij-plugin")
 
 include("pkl-parser")
 
@@ -58,7 +62,7 @@ pluginManagement {
   }
 }
 
-plugins { id("org.gradle.toolchains.foojay-resolver-convention") version ("0.8.0") }
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0") }
 
 @Suppress("UnstableApiUsage") dependencyResolutionManagement { repositories { mavenCentral() } }
 

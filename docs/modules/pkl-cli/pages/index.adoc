@@ -2,6 +2,7 @@
 include::ROOT:partial$component-attributes.adoc[]
 :uri-homebrew: https://brew.sh
 :uri-mise: https://mise.jdx.dev
+:uri-winget: https://learn.microsoft.com/en-us/windows/package-manager/
 
 :uri-pkl-macos-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-amd64&e=bin
 :uri-pkl-macos-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-aarch64&e=bin
@@ -100,6 +101,31 @@ mise use -g pkl@{pkl-version}
 
 # Install and activate Pkl locally
 mise use pkl@{pkl-version}
+----
+endif::[]
+
+ifndef::is-release-version[]
+For instructions, switch to a release version of this page.
+endif::[]
+
+[[winget]]
+=== Windows Package Manager
+
+On Windows, release versions can be installed with {uri-winget}[Windows Package Manager].
+
+ifdef::is-release-version[]
+To install Pkl, run:
+
+[source,shell]
+----
+winget install Apple.Pkl
+----
+
+To update Pkl, run:
+
+[source,shell]
+----
+winget upgrade Apple.Pkl
 ----
 endif::[]
 
@@ -577,7 +603,6 @@ Directory where to store JUnit reports.
 No JUnit reports will be generated if this option is not present.
 ====
 
-[[junit-aggregate-reports]]
 .--junit-aggregate-reports
 [%collapsible]
 ====
@@ -586,7 +611,6 @@ Aggregate JUnit reports into a single file.
 By default it will be `pkl-tests.xml` but you can override it using `--junit-aggregate-suite-name` flag.
 ====
 
-[[junit-aggregate-suite-name]]
 .--junit-aggregate-suite-name
 [%collapsible]
 ====
@@ -708,6 +732,50 @@ pkl shell-completion bash
 # Generate shell completion script for zsh
 pkl shell-completion zsh
 ----
+
+[[command-format]]
+=== `pkl format`
+
+*Synopsis*: `pkl format <options> [<paths>]`
+
+This command formats or checks formatting of Pkl files. +
+Exit codes:
+
+* 0: No violations found.
+* 1: An unexpected error happened (ex.: IO error)
+* 11: Violations were found.
+
+If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
+
+By default, the input files are formatted, and written to standard out.
+
+==== Options
+
+.--grammar-version
+[%collapsible]
+====
+Default: `2` (latest version) +
+Select the grammar compatibility version for the formatter.
+New versions are created for each backward incompatible grammar change.
+====
+
+.-s, --silent
+[%collapsible]
+====
+Skip writing to standard out. Mutually exclusive with `--diff-name-only`.
+====
+
+.-w, --write
+[%collapsible]
+====
+Format files in place, overwriting them. Implies `--diff-name-only`.
+====
+
+.--diff-name-only
+[%collapsible]
+====
+Write the path of files with formatting violations to stdout.
+====
 
 [[common-options]]
 === Common options

@@ -1,0 +1,62 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["single-line lhs, single-line rhs"] {
+    let (val = new Dynamic {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })
+      trace(val["Parrot"].name)
+  }
+  ["single-line lhs, multi-line rhs"] {
+    let (val = new Dynamic {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })
+      trace(val)
+  }
+  ["multi-line lhs, single-line rhs"] {
+    trace((new Dynamic {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })["Parrot"].name)
+  }
+  ["multi-line lhs, multi-line rhs"] {
+    trace(new {
+      ["Parrot"] {
+        name = "Parrot"
+        age = 1234
+        bucketSettings = new {
+          kicked = true
+          ["fjordConfig"] = new {
+            isPining = true
+          }
+        }
+      }
+    })
+  }
+}

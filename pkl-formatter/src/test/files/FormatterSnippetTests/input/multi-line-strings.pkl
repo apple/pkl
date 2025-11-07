@@ -1,0 +1,58 @@
+foo = """
+  asd \(new {
+  bar = 1
+}) asd
+  """
+
+bar = """
+      line 1
+        line 2
+          line3
+      """
+
+baz = """
+\n
+\(bar)
+line
+\u{123}
+"""
+
+// remove unneeded spaces
+qux = """
+  foo
+  
+  bar
+  
+  baz
+    
+  \(foo)
+  """
+
+// mixed tabs and spaces
+quux {
+  // space tab
+  """
+ 	bar
+
+ 	baz
+ 	\(1)
+
+ 	"""
+  // tab tab
+  """
+		bar
+
+		baz
+		\(1)
+
+		"""
+}
+
+obj {
+    data {
+      ["bar"] = """
+        foo
+        
+        """
+    }
+}

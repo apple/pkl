@@ -23,6 +23,7 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
+import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.project.Project
@@ -37,6 +38,7 @@ class AnalyzerTest {
       null,
       null,
       HttpClient.dummyClient(),
+      TraceMode.COMPACT,
     )
 
   @Test
@@ -115,6 +117,7 @@ class AnalyzerTest {
         tempDir.resolve("packages"),
         null,
         HttpClient.dummyClient(),
+        TraceMode.COMPACT,
       )
     PackageServer.populateCacheDir(tempDir.resolve("packages"))
     val file1 =
@@ -190,6 +193,7 @@ class AnalyzerTest {
         tempDir.resolve("packages"),
         project.dependencies,
         HttpClient.dummyClient(),
+        TraceMode.COMPACT,
       )
     val file1 =
       tempDir
@@ -302,6 +306,7 @@ class AnalyzerTest {
         tempDir.resolve("packages"),
         project.dependencies,
         HttpClient.dummyClient(),
+        TraceMode.COMPACT,
       )
     val result = analyzer.importGraph(mainPkl.toUri())
     val birdUri = URI("projectpackage://localhost:0/birds@1.0.0#/bird.pkl")

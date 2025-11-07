@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,18 @@ package org.pkl.core.ast.expression.unary;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.Arrays;
+import java.util.stream.Collectors;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
 
 public final class TraceNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
 
-  private final VmValueRenderer renderer = VmValueRenderer.singleLine(1000000);
+  private static final int MAX_RENDERER_LENGTH = 1000000;
+
+  private final VmValueRenderer compactRenderer = VmValueRenderer.singleLine(MAX_RENDERER_LENGTH);
+  private final VmValueRenderer prettyRenderer = VmValueRenderer.multiLine(Integer.MAX_VALUE);
 
   public TraceNode(SourceSection sourceSection, ExpressionNode valueNode) {
     super(sourceSection);
@@ -40,20 +45,23 @@ public final class TraceNode extends ExpressionNode {
 
   @TruffleBoundary
   private void doTrace(Object value, VmContext context) {
-    if (value instanceof VmObjectLike objectLike) {
-      try {
-        objectLike.force(true, true);
-      } catch (VmException ignored) {
-      }
-    }
-
+    VmValue.force(value, true);
     var sourceSection = valueNode.getSourceSection();
-    var renderedValue = renderer.render(value);
+    var lhs = sourceSection.isAvailable() ? sourceSection.getCharacters().toString() : "<value>";
     var message =
-        (sourceSection.isAvailable() ? sourceSection.getCharacters() : "<value")
-            + " = "
-            + renderedValue;
-
+        switch (context.getTraceMode()) {
+          case COMPACT -> lhs + " = " + compactRenderer.render(value);
+          case PRETTY -> {
+            var rhs = prettyRenderer.render(value);
+            yield (lhs.contains("\n") ? "\n" + addIndent(lhs, "  ") + "\n=" : lhs + " =")
+                + (rhs.contains("\n") ? "\n" + addIndent(rhs, "  ") : " " + rhs)
+                + "\n";
+          }
+        };
     context.getLogger().trace(message, VmUtils.createStackFrame(sourceSection, null));
+  }
+
+  private static String addIndent(String s, String indent) {
+    return Arrays.stream(s.split("\n")).map((it) -> indent + it).collect(Collectors.joining("\n"));
   }
 }

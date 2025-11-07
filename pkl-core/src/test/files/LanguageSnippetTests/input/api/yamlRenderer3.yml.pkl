@@ -18,6 +18,7 @@ res13 = new Dynamic { name = "pigeon"; age = 30 }
 res14 = new Person { name = "pigeon"; age = 30 }
 res15 = null
 res16 = Pair(1, 2)
+res17 = Bytes(1, 2, 3)
 
 output {
   renderer = new YamlRenderer {
@@ -38,6 +39,7 @@ output {
       [Null] = (it) -> "converted"
       [Pair] = (it) -> "converted"
       [IntSeq] = (it) -> "converted"
+      [Bytes] = (it) -> "converted"
     }
   }
 }

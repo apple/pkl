@@ -41,7 +41,7 @@
 ///   2. Set [projectFileUri] to the enclosing module's URI.
 ///      This is necessary to determine the correct project directory, as well as for resolving
 ///      local project dependencies correctly.
-/// 
+///
 ///      The [newInstance()] helper method exists as a convenient way to set this when embedding
 ///      project definitions.
 ///
@@ -64,7 +64,7 @@
 ///   value = project
 /// }
 /// ``` 
-@ModuleInfo { minPklVersion = "0.29.0" }
+@ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.Project
 
 import "pkl:EvaluatorSettings" as EvaluatorSettingsModule
@@ -95,11 +95,11 @@ tests: Listing<String>(isDistinct)
 /// Tells if the project is a local module named `PklProject`, is not self, and has a [package] section
 local isValidLoadDependency = (it: Project) ->
   isUriLocal(projectFileUri, it.projectFileUri)
-  && it.projectFileUri.endsWith("/PklProject")
-  && it != module
-  && it.package != null
+    && it.projectFileUri.endsWith("/PklProject")
+    && it != module
+    && it.package != null
 
-const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
+local const function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
   // This is an imperfect check; should also check that the URIs have the same authority.
   // We should improve this if/when there is a URI library in the stdlib.
   uri1.substring(0, uri1.indexOf(":")) == uri2.substring(0, uri2.indexOf(":"))
@@ -125,7 +125,7 @@ const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
 ///
 /// ```
 /// import "@birds/canary.pkl" // Import a module from the `birds` dependency
-/// 
+///
 /// birdIndex = read("@birds/index.txt") // Read a file from the `birds` dependency
 /// ```
 ///
@@ -139,7 +139,7 @@ const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
 ///
 ///   1. `GET https://example.com/foo@0.5.0` to retrieve the metadata JSON file.
 ///   2. Given the metadata JSON file, make a GET request to the package URI ZIP archive.
-/// 
+///
 /// If this project is published as a package, these dependencies are included within the published
 /// package metadata.
 ///
@@ -149,7 +149,7 @@ const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
 /// This is useful when structuring a single repository that publishes multiple packages.
 ///
 /// To specify a local project dependency, import the relative `PklProject` file.
-/// 
+///
 /// The local project dependency must define its own [package].
 ///
 /// Example:
@@ -176,7 +176,7 @@ const local function isUriLocal(uri1: Uri, uri2: Uri): Boolean =
 ///   1. Gather all dependencies, both direct and transitive.
 ///   2. For each package's major version, determine the highest declared minor version.
 ///   3. Write each resolved dependency to sibling file `PklProject.deps.json`.
-dependencies: Mapping<String(!contains("/")), *RemoteDependency|Project(isValidLoadDependency)>
+dependencies: Mapping<String(!contains("/")), *RemoteDependency | Project(isValidLoadDependency)>
 
 local isFileBasedProject = projectFileUri.startsWith("file:")
 
@@ -196,12 +196,12 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 ///  - [modulePath][EvaluatorSettings.modulePath]
 ///  - [rootDir][EvaluatorSettings.rootDir]
 ///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
-/// 
+///
 /// For each of these, relative paths are resolved against the project's enclosing directory.
 evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
-  (moduleCacheDir != null).implies(isFileBasedProject)
+  (moduleCacheDir != null).implies(isFileBasedProject),
 )
 
 /// The URI of the PklProject file.
@@ -224,11 +224,12 @@ function newInstance(enclosingModule: Module): Project = new {
   projectFileUri = reflect.Module(enclosingModule).uri
 }
 
-const local hasVersion = (it: Uri) ->
+local const hasVersion = (it: Uri) ->
   let (versionSep = it.lastIndexOf("@"))
-    if (versionSep == -1) false
-    else let (version = it.drop(versionSep + 1))
-      semver.parseOrNull(version) != null
+    if (versionSep == -1)
+      false
+    else
+      let (version = it.drop(versionSep + 1)) semver.parseOrNull(version) != null
 
 typealias PackageUri = Uri(startsWith("package:"), hasVersion)
 
@@ -368,7 +369,7 @@ class Package {
   /// ```
   /// license = "Apache-2.0"
   /// ```
-  license: (CommonSpdxLicenseIdentifier|String)?
+  license: (CommonSpdxLicenseIdentifier | String)?
 
   /// The full text of the license associated with this package.
   licenseText: String?
@@ -412,30 +413,30 @@ typealias EvaluatorSettings = EvaluatorSettingsModule
 /// Common software licenses in the [SPDX License List](https://spdx.org/licenses/).
 typealias CommonSpdxLicenseIdentifier =
   "Apache-2.0"
-  |"MIT"
-  |"BSD-2-Clause"
-  |"BSD-3-Clause"
-  |"ISC"
-  |"GPL-3.0"
-  |"GPL-2.0"
-  |"MPL-2.0"
-  |"MPL-1.1"
-  |"MPL-1.0"
-  |"AGPL-1.0-only"
-  |"AGPL-1.0-or-later"
-  |"AGPL-3.0-only"
-  |"AGPL-3.0-or-later"
-  |"LGPL-2.0-only"
-  |"LGPL-2.0-or-later"
-  |"LGPL-2.1-only"
-  |"LGPL-2.1-or-later"
-  |"LGPL-3.0-only"
-  |"LGPL-3.0-or-later"
-  |"EPL-1.0"
-  |"EPL-2.0"
-  |"UPL-1.0"
-  |"BSL-1.0"
-  |"Unlicense"
+    | "MIT"
+    | "BSD-2-Clause"
+    | "BSD-3-Clause"
+    | "ISC"
+    | "GPL-3.0"
+    | "GPL-2.0"
+    | "MPL-2.0"
+    | "MPL-1.1"
+    | "MPL-1.0"
+    | "AGPL-1.0-only"
+    | "AGPL-1.0-or-later"
+    | "AGPL-3.0-only"
+    | "AGPL-3.0-or-later"
+    | "LGPL-2.0-only"
+    | "LGPL-2.0-or-later"
+    | "LGPL-2.1-only"
+    | "LGPL-2.1-or-later"
+    | "LGPL-3.0-only"
+    | "LGPL-3.0-or-later"
+    | "EPL-1.0"
+    | "EPL-2.0"
+    | "UPL-1.0"
+    | "BSL-1.0"
+    | "Unlicense"
 
 @Unlisted
 @Since { version = "0.27.0" }
