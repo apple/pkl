@@ -1,0 +1,65 @@
+amends "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@0.3.2#/PklCI.pkl"
+
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/actions/Common.pkl"
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/actions/Setup.pkl"
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/actions/Artifact.pkl"
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/Workflow.pkl"
+import "jobs/GradleJob.pkl"
+
+local class GradleCheckJob extends GradleJob {
+  local self = this
+  steps {
+    new {
+      name = "gradle check"
+      run = "./gradlew \(self.gradleArgs) check"
+    }
+  }
+}
+
+triggerDocsBuild = "both"
+
+testReports {
+  junit {
+    "*/build/test-results/**/*.xml"
+  }
+  html {
+    "*/build/test-reports/**/*"
+  }
+}
+
+local gradleCheckJobs: Mapping<String, GradleCheckJob> = new {
+  ["gradle-check"] {
+    javaVersion = "21.0"
+    isRelease = false
+    os = "linux"
+  }
+  ["gradle-check-windows"] {
+    javaVersion = "21.0"
+    isRelease = false
+    os = "windows"
+  }
+}
+
+prb {
+  jobs {
+    for (jobName, job in gradleCheckJobs) {
+      [jobName] = job.job
+    }
+  }
+}
+
+build {
+  jobs {
+    for (jobName, job in gradleCheckJobs) {
+      [jobName] = job.job
+    }
+  }
+}
+
+main {
+  jobs {
+    for (jobName, job in gradleCheckJobs) {
+      [jobName] = job.job
+    }
+  }
+}

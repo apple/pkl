@@ -1,0 +1,72 @@
+abstract module GradleJob
+
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/Workflow.pkl"
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/actions/Common.pkl"
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/actions/Setup.pkl"
+import "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3#/URI.pkl"
+
+/// Whether this is a release build or not.
+isRelease: Boolean = false
+
+/// The OS to run on
+os: "macOS" | "linux" | "windows"
+
+/// The version of Java to use.
+javaVersion: "17.0" | "21.0"
+
+extraGradleArgs: Listing<String>
+
+steps: Listing<Workflow.Step>
+
+fixed javaVersionFull = if (javaVersion == "17.0") "17.0.9+9" else "21.0.5+11"
+
+fixed jdkVersionAlt = javaVersionFull.replaceLast("+", "_")
+
+fixed majorJdkVersion = javaVersionFull.split(".").first
+
+fixed jdkGitHubReleaseName =
+  let (ver =
+    // 17.0.9+9 is missing some binaries (see https://github.com/adoptium/adoptium-support/issues/994)
+    if (javaVersionFull == "17.0.9+9" && os == "windows")
+      "jdk-17.0.9+9.1"
+    else
+      "jdk-\(javaVersionFull)"
+  )
+    URI.encodeComponent(ver)
+
+fixed gradleArgs =
+  new Listing {
+    "--info"
+    "--stacktrace"
+    "-DtestReportsDir=${HOME}/test-results"
+    "-DpklMultiJdkTesting=true"
+    when (isRelease) {
+      "-DreleaseBuild=true"
+    }
+    ...extraGradleArgs
+  }.join(" ")
+
+fixed job: Workflow.Job = new {
+  env {
+    ["LANG"] = "en_US.UTF-8"
+    when (os == "windows") {
+      ["JAVA_HOME"] = "/jdk"
+    }
+  }
+  when (os == "macOS") {
+    `if` = "github.repository_owner == 'apple'"
+  }
+  `runs-on` =
+    if (os == "linux") new Workflow.UbuntuLatest {}
+      else if (os == "windows") new Workflow.WindowsLatest {}
+      else new Listing { "self-hosted"; "macos" }
+  steps {
+    // full checkout (needed for spotless)
+    new Common.Checkout { fetchDepth = 0 }
+    new Setup.Java {
+      javaVersion = module.javaVersion
+      distribution = "temurin"
+    }
+    ...module.steps
+  }
+}

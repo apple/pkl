@@ -1,0 +1,74 @@
+# Do not modify!
+# This file was generated from a template using https://github.com/StefMa/pkl-gha
+
+name: Pull Request
+'on':
+  pull_request: {}
+permissions:
+  contents: read
+jobs:
+  gradle-check:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '21.0'
+        distribution: temurin
+    - name: gradle check
+      run: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true check
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-xml
+        path: '*/build/test-results/**/*.xml'
+    - name: Upload event file
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Event File
+        path: ${{ github.event_path }}
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-html
+        path: '*/build/test-reports/**/*'
+  gradle-check-windows:
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v4
+      with:
+        java-version: '21.0'
+        distribution: temurin
+    - name: gradle check
+      run: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true check
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-xml
+        path: '*/build/test-results/**/*.xml'
+    - name: Upload event file
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: Event File
+        path: ${{ github.event_path }}
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v4
+      with:
+        name: test-results-html
+        path: '*/build/test-reports/**/*'

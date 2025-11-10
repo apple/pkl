@@ -1,0 +1,50 @@
+extends "GradleJob.pkl"
+
+import "package://pkg.pkl-lang.org/pkl-project-commons/temp.stefma.gha@0.0.0#/actions/Artifact.pkl"
+
+/// The architecture to use
+arch: "amd64" | "aarch64"
+
+/// Whether to link to musl. Otherwise, links to glibc.
+musl: Boolean = false
+
+/// The Gradle project under which to generate the executable
+project: String
+
+javaVersion = "21.0"
+
+extraGradleArgs {
+  when (os == "macOS" && arch == "amd64") {
+    "-Dpkl.targetArch=\(arch)"
+  }
+  when (musl) {
+    "-Dpkl.musl=true"
+  }
+}
+
+steps {
+  when (os == "linux") {
+    new {
+      name = "Install zlib"
+      run = "sudo apt-get update && sudo apt-get install -y zlib1g-dev"
+    }
+    when (musl) {
+      new {
+        name = "Install musl"
+        run = "sudo apt-get install -y musl-tools"
+      }
+    }
+  }
+  new {
+    name = "gradle buildNative"
+    shell = "bash"
+    run = """
+      ./gradlew \(module.gradleArgs) \(project):buildNative
+      """
+  }
+  new Artifact.Upload {
+    name = "Upload executable artifacts"
+    artifactName = "Build native output \(module.os)/\(arch) (musl: \(musl))"
+    path = "\(project)/build/executable/**/*"
+  }
+}
