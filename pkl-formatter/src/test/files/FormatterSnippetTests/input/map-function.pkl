@@ -8,6 +8,7 @@ bar =
     // leading
     1,
     2,
+    // between
     3,
     4, // trailing
     5,
