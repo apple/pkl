@@ -1,0 +1,93 @@
+abstract module GradleJob
+
+import "@gha/actions/Common.pkl"
+import "@gha/actions/Setup.pkl"
+import "@gha/Workflow.pkl"
+import "@pkl.experimental.uri/URI.pkl"
+
+/// Whether this is a release build or not.
+isRelease: Boolean = false
+
+/// The architecture to use
+arch: "amd64" | "aarch64" = "amd64"
+
+/// The OS to run on.
+os: "macOS" | "linux" | "windows" = "linux"
+
+/// The version of Java to use.
+javaVersion: "17.0" | "21.0"
+
+extraGradleArgs: Listing<String>
+
+steps: Listing<*Workflow.Step | Workflow.TypedStep>
+
+fixed javaVersionFull = if (javaVersion == "17.0") "17.0.9+9" else "21.0.5+11"
+
+fixed jdkVersionAlt = javaVersionFull.replaceLast("+", "_")
+
+fixed majorJdkVersion = javaVersionFull.split(".").first
+
+fixed jdkGitHubReleaseName =
+  let (
+    ver =
+    // 17.0.9+9 is missing some binaries (see https://github.com/adoptium/adoptium-support/issues/994)
+      if (javaVersionFull == "17.0.9+9" && os == "windows")
+        "jdk-17.0.9+9.1"
+      else
+        "jdk-\(javaVersionFull)"
+  )
+    URI.encodeComponent(ver)
+
+fixed gradleArgs =
+  new Listing {
+    "--info"
+    "--stacktrace"
+    "-DtestReportsDir=${HOME}/test-results"
+    "-DpklMultiJdkTesting=true"
+    when (isRelease) {
+      "-DreleaseBuild=true"
+    }
+    ...extraGradleArgs
+  }.join(" ")
+
+fixed job: Workflow.Job = new {
+  env {
+    ["LANG"] = "en_US.UTF-8"
+    when (os == "windows") {
+      ["JAVA_HOME"] = "/jdk"
+    }
+  }
+  when (os == "macOS") {
+    `if` = "github.repository_owner == 'apple'"
+  }
+  `runs-on` =
+    if (os == "linux" && arch == "amd64")
+      "ubuntu-24.04"
+    else if (os == "linux" && arch == "aarch64")
+      "ubuntu-24.04-arm"
+    else if (os == "windows")
+      "windows-latest"
+    else
+      new Listing { "self-hosted"; "macos" }
+  steps {
+    // full checkout (needed for spotless)
+    new Common.Checkout {
+      with {
+        `fetch-depth` = 0
+      }
+    }
+    new Setup.Java {
+      with {
+        `java-version` = module.javaVersion
+        distribution = "temurin"
+        cache = "gradle"
+        architecture =
+          if (arch == "amd64")
+            "x64"
+          else
+            "aarch64"
+      }
+    }
+    ...module.steps
+  }
+}

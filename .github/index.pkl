@@ -1,0 +1,156 @@
+amends "@pkl.impl.ghactions/PklCI.pkl"
+
+import "@gha/Workflow.pkl"
+
+import "jobs/BuildNativeJob.pkl"
+import "jobs/DeployJob.pkl"
+import "jobs/GithubRelease.pkl"
+import "jobs/SimpleGradleJob.pkl"
+
+triggerDocsBuild = "both"
+
+testReports {
+  junit {
+    "*/build/test-results/**/*.xml"
+  }
+  html {
+    "*/build/test-reports/**/*"
+  }
+}
+
+local gradleCheck: SimpleGradleJob = new {
+  javaVersion = "21.0"
+  isRelease = false
+  os = "linux"
+  command = "check"
+}
+
+local gradleCheckWindows: SimpleGradleJob = new {
+  javaVersion = "21.0"
+  isRelease = false
+  os = "windows"
+  command = "check"
+}
+
+local gradleCheckJobs: Workflow.Jobs = new {
+  ["gradle-check"] = gradleCheck.job
+  ["gradle-check-windows"] = gradleCheckWindows.job
+}
+
+local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
+  for (_dist in List("release", "snapshot")) {
+    for (_project in List("pkl-cli", "pkl-doc")) {
+      for (_arch in List("amd64", "aarch64")) {
+        for (_os in List("macOS", "linux")) {
+          // TODO re-enable macOS/amd64 builds
+          when (!(_os == "macOS" && _arch == "amd64")) {
+            ["\(_project)-\(_os)-\(_arch)-\(_dist)"] {
+              arch = _arch
+              os = _os
+              isRelease = _dist == "release"
+              project = _project
+            }
+          }
+        }
+      }
+      ["\(_project)-linux-alpine-amd64-\(_dist)"] {
+        arch = "amd64"
+        os = "linux"
+        musl = true
+        isRelease = _dist == "release"
+        project = _project
+      }
+      ["\(_project)-windows-amd64-\(_dist)"] {
+        arch = "amd64"
+        os = "windows"
+        isRelease = _dist == "release"
+        project = _project
+      }
+    }
+  }
+}
+
+local buildNativeSnapshots = buildNativeJobs.toMap().filter((key, _) -> key.endsWith("snapshot"))
+
+local buildNativeReleases = buildNativeJobs.toMap().filter((key, _) -> key.endsWith("release"))
+
+local benchmarkJob = new SimpleGradleJob { command = "bench:jmh" }.job
+
+local gradleCompatibilityJob =
+  new SimpleGradleJob { command = ":pkl-gradle:build :pkl-gradle:compatibilityTestReleases" }.job
+
+local buildAndTestJobs: Workflow.Jobs = new {
+  ...gradleCheckJobs
+  ["bench"] = benchmarkJob
+  ["gradle-compatibility"] = gradleCompatibilityJob
+  for (k, v in buildNativeSnapshots) {
+    [k] = v.job
+  }
+}
+
+local releaseJobs: Workflow.Jobs = new {
+  ...gradleCheckJobs
+  ["bench"] = benchmarkJob
+  ["gradle-compatibility"] = gradleCompatibilityJob
+  for (k, v in buildNativeReleases) {
+    [k] = v.job
+  }
+}
+
+// By default, just run ./gradlew check on linux.
+// Trigger other checks based on slash commands as PR comments. Examples:
+//
+//    * /build windows                -- Test on Windows
+//    * /build native                 -- Test all native builds
+//    * /build native-pkl-cli         -- Test all pkl-cli os/arch pairs
+//    * /build native-pkl-cli-macos   -- Test pkl-cli on macOS
+prb {
+  jobs {
+    ["gradle-check"] = gradleCheck.job
+    ["gradle-check-windows"] = (gradleCheckWindows.job) {
+      `if` = "startsWith(github.event.comment.body, '/build windows')"
+    }
+    for (jobName, job in buildNativeSnapshots) {
+      [jobName] = (job.job) {
+        local tags =
+          List(
+            "native",
+            "native-\(job.project)",
+            "native-\(job.project)-\(job.os)",
+            "native-\(job.project)-\(job.os)-\(job.arch)",
+          )
+        `if` =
+          tags.map((it) -> "startsWith(github.event.comment.body, '/build \(it)')").join(" || ")
+      }
+    }
+  }
+}
+
+build {
+  jobs = buildAndTestJobs
+}
+
+main {
+  jobs = (buildAndTestJobs) {
+    ["deploy-snapshot"] = (new DeployJob { command = "publishToSonatype" }.job) {
+      needs = buildAndTestJobs.keys.toListing()
+    }
+  }
+}
+
+releaseBranch {
+  jobs = releaseJobs
+}
+
+release {
+  jobs = (releaseJobs) {
+    ["deploy-release"] = (
+      new DeployJob { command = "publishToSonatype closeAndReleaseSonatypeStagingRepository" }.job
+    ) {
+      needs = releaseJobs.keys.toListing()
+    }
+    ["github-release"] = (new GithubRelease {}.job) {
+      needs = "deploy-release"
+    }
+  }
+}

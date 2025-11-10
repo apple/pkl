@@ -1,0 +1,85 @@
+extends "GradleJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+
+/// Whether to link to musl. Otherwise, links to glibc.
+musl: Boolean(implies(module.os == "linux")) = false
+
+/// The Gradle project under which to generate the executable
+project: String
+
+javaVersion = "21.0"
+
+extraGradleArgs {
+  when (os == "macOS" && arch == "amd64") {
+    "-Dpkl.targetArch=\(module.arch)"
+  }
+  when (musl) {
+    "-Dpkl.musl=true"
+  }
+}
+
+local muslVersion = "1.2.5"
+local zlibVersion = "1.2.13"
+
+steps {
+  when (musl) {
+    new {
+      name = "Install musl and zlib"
+      // language=bash
+      run =
+        #"""
+        mkdir -p ~/staticdeps/
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          curl -Lf https://github.com/madler/zlib/releases/download/v\#(zlibVersion)/zlib-\#(zlibVersion).tar.gz -o /tmp/zlib.tar.gz
+
+          mkdir -p /tmp/dep_zlib-\#(zlibVersion) \
+          && cd /tmp/dep_zlib-\#(zlibVersion) \
+          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "zlib-\#(zlibVersion): configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "zlib-\#(zlibVersion): make..." && make -s -j4 \
+          && echo "zlib-\#(zlibVersion): make install..." && make -s install \
+          && rm -rf /tmp/dep_zlib-\#(zlibVersion)
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          curl -Lf https://musl.libc.org/releases/musl-\#(muslVersion).tar.gz -o /tmp/musl.tar.gz
+
+          mkdir -p /tmp/dep_musl-\#(muslVersion) \
+          && cd /tmp/dep_musl-\#(muslVersion) \
+          && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "musl-\#(muslVersion): configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "musl-\#(muslVersion): make..." && make -s -j4 \
+          && echo "musl-\#(muslVersion): make install..." && make -s install \
+          && rm -rf /tmp/dep_musl-\#(muslVersion)
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+        """#
+    }
+  }
+  new {
+    name = "gradle buildNative"
+    shell = "bash"
+    run =
+      """
+      export PATH=~/staticdeps/bin:$PATH
+      ./gradlew \(module.gradleArgs) \(project):buildNative
+      """
+  }
+  new Artifact.Upload {
+    name = "Upload executable artifacts"
+    with {
+      name =
+        if (musl)
+          "\(project)-alpine-\(module.os)-\(module.arch)"
+        else
+          "\(project)-\(module.os)-\(module.arch)"
+      path = "\(project)/build/executable/**/*"
+    }
+  }
+}

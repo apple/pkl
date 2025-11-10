@@ -1,0 +1,719 @@
+# Do not modify!
+# This file was generated from a template using https://github.com/StefMa/pkl-gha
+
+name: Release
+'on':
+  push:
+    branches-ignore:
+    - '**'
+    tags:
+    - '**'
+permissions:
+  contents: read
+jobs:
+  gradle-check:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: check
+      shell: bash
+      run: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true check
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-gradle-check
+        path: '*/build/test-reports/**/*'
+  gradle-check-windows:
+    permissions:
+      checks: write
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: check
+      shell: bash
+      run: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true check
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action/windows@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-gradle-check-windows
+        path: '*/build/test-reports/**/*'
+  bench:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: bench:jmh
+      shell: bash
+      run: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true bench:jmh
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-bench
+        path: '*/build/test-reports/**/*'
+  gradle-compatibility:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
+      shell: bash
+      run: ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-gradle-compatibility
+        path: '*/build/test-reports/**/*'
+  pkl-cli-linux-amd64-release:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-cli-linux-amd64
+        path: pkl-cli/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-cli-linux-amd64-release
+        path: '*/build/test-reports/**/*'
+  pkl-cli-macOS-aarch64-release:
+    if: github.repository_owner == 'apple'
+    permissions:
+      checks: write
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: aarch64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-cli-macOS-aarch64
+        path: pkl-cli/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action/macos@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-cli-macOS-aarch64-release
+        path: '*/build/test-reports/**/*'
+  pkl-cli-linux-aarch64-release:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: aarch64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-cli-linux-aarch64
+        path: pkl-cli/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-cli-linux-aarch64-release
+        path: '*/build/test-reports/**/*'
+  pkl-cli-linux-alpine-amd64-release:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: Install musl and zlib
+      run: |-
+        mkdir -p ~/staticdeps/
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+          mkdir -p /tmp/dep_zlib-1.2.13 \
+          && cd /tmp/dep_zlib-1.2.13 \
+          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "zlib-1.2.13: make..." && make -s -j4 \
+          && echo "zlib-1.2.13: make install..." && make -s install \
+          && rm -rf /tmp/dep_zlib-1.2.13
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          curl -Lf https://musl.libc.org/releases/musl-1.2.5.tar.gz -o /tmp/musl.tar.gz
+
+          mkdir -p /tmp/dep_musl-1.2.5 \
+          && cd /tmp/dep_musl-1.2.5 \
+          && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "musl-1.2.5: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "musl-1.2.5: make..." && make -s -j4 \
+          && echo "musl-1.2.5: make install..." && make -s install \
+          && rm -rf /tmp/dep_musl-1.2.5
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-cli-alpine-linux-amd64
+        path: pkl-cli/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-cli-linux-alpine-amd64-release
+        path: '*/build/test-reports/**/*'
+  pkl-cli-windows-amd64-release:
+    permissions:
+      checks: write
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-cli-windows-amd64
+        path: pkl-cli/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action/windows@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-cli-windows-amd64-release
+        path: '*/build/test-reports/**/*'
+  pkl-doc-linux-amd64-release:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-doc-linux-amd64
+        path: pkl-doc/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-doc-linux-amd64-release
+        path: '*/build/test-reports/**/*'
+  pkl-doc-macOS-aarch64-release:
+    if: github.repository_owner == 'apple'
+    permissions:
+      checks: write
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: aarch64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-doc-macOS-aarch64
+        path: pkl-doc/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action/macos@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-doc-macOS-aarch64-release
+        path: '*/build/test-reports/**/*'
+  pkl-doc-linux-aarch64-release:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: aarch64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-doc-linux-aarch64
+        path: pkl-doc/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-doc-linux-aarch64-release
+        path: '*/build/test-reports/**/*'
+  pkl-doc-linux-alpine-amd64-release:
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: Install musl and zlib
+      run: |-
+        mkdir -p ~/staticdeps/
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          curl -Lf https://github.com/madler/zlib/releases/download/v1.2.13/zlib-1.2.13.tar.gz -o /tmp/zlib.tar.gz
+
+          mkdir -p /tmp/dep_zlib-1.2.13 \
+          && cd /tmp/dep_zlib-1.2.13 \
+          && cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "zlib-1.2.13: configure..." && ./configure --static --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "zlib-1.2.13: make..." && make -s -j4 \
+          && echo "zlib-1.2.13: make install..." && make -s install \
+          && rm -rf /tmp/dep_zlib-1.2.13
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          curl -Lf https://musl.libc.org/releases/musl-1.2.5.tar.gz -o /tmp/musl.tar.gz
+
+          mkdir -p /tmp/dep_musl-1.2.5 \
+          && cd /tmp/dep_musl-1.2.5 \
+          && cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC . \
+          && echo "musl-1.2.5: configure..." && ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null \
+          && echo "musl-1.2.5: make..." && make -s -j4 \
+          && echo "musl-1.2.5: make install..." && make -s install \
+          && rm -rf /tmp/dep_musl-1.2.5
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-doc-alpine-linux-amd64
+        path: pkl-doc/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-doc-linux-alpine-amd64-release
+        path: '*/build/test-reports/**/*'
+  pkl-doc-windows-amd64-release:
+    permissions:
+      checks: write
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: |-
+        export PATH=~/staticdeps/bin:$PATH
+        ./gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: pkl-doc-windows-amd64
+        path: pkl-doc/build/executable/**/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action/windows@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-doc-windows-amd64-release
+        path: '*/build/test-reports/**/*'
+  deploy-release:
+    needs:
+    - gradle-check
+    - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - pkl-cli-linux-amd64-release
+    - pkl-cli-macOS-aarch64-release
+    - pkl-cli-linux-aarch64-release
+    - pkl-cli-linux-alpine-amd64-release
+    - pkl-cli-windows-amd64-release
+    - pkl-doc-linux-amd64-release
+    - pkl-doc-macOS-aarch64-release
+    - pkl-doc-linux-aarch64-release
+    - pkl-doc-linux-alpine-amd64-release
+    - pkl-doc-windows-amd64-release
+    permissions:
+      checks: write
+    runs-on: ubuntu-24.04
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21.0'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - uses: actions/checkout@v5
+    - uses: actions/download-artifact@v6
+    - env:
+        ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEYID }}
+        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+        ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
+        ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
+      run: /gradlew --info --stacktrace -DtestReportsDir=${HOME}/test-results -DpklMultiJdkTesting=true publishToSonatype closeAndReleaseSonatypeStagingRepository
+    - uses: actions/upload-artifact@v5
+      with:
+        path: '*/build/executable/*'
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-deploy-release
+        path: '*/build/test-reports/**/*'
+  github-release:
+    needs: deploy-release
+    permissions:
+      checks: write
+      contents: write
+    runs-on: ubuntu-24.04
+    steps:
+    - uses: actions/download-artifact@v6
+    - name: Publish release on GitHub
+      env:
+        GH_TOKEN: ${{ github.token }}
+        TAG_NAME: ${{ github.ref_name }}
+        GIT_SHA: ${{ github.sha }}
+        GIT_REPO: ${{ github.repository }}
+      run: |-
+        # exclude build_artifacts.txt from publish
+        rm -f */build/executable/*.build_artifacts.txt
+        find */build/executable/* -type d | xargs rm -rf
+        gh release create ${TAG_NAME} \
+          --title "${TAG_NAME}" \
+          --target "${GIT_SHA}" \
+          --verify-tag \
+          --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
+          --repo "${GIT_REPO}" \
+          */build/executable/*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@v2
+      with:
+        comment_mode: 'off'
+        files: '*/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-github-release
+        path: '*/build/test-reports/**/*'
+  trigger-downstream-builds:
+    if: github.repository_owner == 'apple'
+    needs:
+    - gradle-check
+    - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - pkl-cli-linux-amd64-release
+    - pkl-cli-macOS-aarch64-release
+    - pkl-cli-linux-aarch64-release
+    - pkl-cli-linux-alpine-amd64-release
+    - pkl-cli-windows-amd64-release
+    - pkl-doc-linux-amd64-release
+    - pkl-doc-macOS-aarch64-release
+    - pkl-doc-linux-aarch64-release
+    - pkl-doc-linux-alpine-amd64-release
+    - pkl-doc-windows-amd64-release
+    - deploy-release
+    - github-release
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create app token
+      id: app-token
+      uses: actions/create-github-app-token@v2
+      with:
+        app-id: ${{ secrets.PKL_CI_CLIENT_ID }}
+        private-key: ${{ secrets.PKL_CI }}
+        owner: ${{ github.repository_owner }}
+    - name: Trigger pkl-lang.org build
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+      run: |-
+        gh workflow run \
+          --repo apple/pkl-lang.org \
+          --ref main \
+          --field source_run="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+          main.yml

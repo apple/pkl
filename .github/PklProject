@@ -1,0 +1,13 @@
+amends "pkl:Project"
+
+dependencies {
+  ["pkl.impl.ghactions"] {
+    uri = "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@0.4.2"
+  }
+  ["gha"] {
+    uri = "package://pkg.pkl-lang.org/github.com/stefma/pkl-gha/com.github.action@0.0.6"
+  }
+  ["pkl.experimental.uri"] {
+    uri = "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.uri@1.0.3"
+  }
+}

@@ -1,0 +1,38 @@
+extends "GradleJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+import "@gha/actions/Common.pkl"
+import "@gha/Context.pkl"
+
+local self = this
+
+javaVersion = "21.0"
+
+command: String
+
+arch = "amd64"
+
+os = "linux"
+
+steps {
+  new Common.Checkout {}
+  new Artifact.Download {}
+  new {
+    env {
+      ["ORG_GRADLE_PROJECT_signingKeyId"] = Context.secrets("ORG_GRADLE_PROJECT_SIGNINGKEYID")
+      ["ORG_GRADLE_PROJECT_signingKey"] = Context.secrets("ORG_GRADLE_PROJECT_SIGNINGKEY")
+      ["ORG_GRADLE_PROJECT_signingPassword"] =
+        Context.secrets("ORG_GRADLE_PROJECT_SIGNINGPASSWORD")
+      ["ORG_GRADLE_PROJECT_sonatypePassword"] =
+        Context.secrets("ORG_GRADLE_PROJECT_SONATYPEPASSWORD")
+      ["ORG_GRADLE_PROJECT_sonatypeUsername"] =
+        Context.secrets("ORG_GRADLE_PROJECT_SONATYPEUSERNAME")
+    }
+    run = "/gradlew \(self.gradleArgs) \(module.command)"
+  }
+  new Artifact.Upload {
+    with {
+      path = "*/build/executable/*"
+    }
+  }
+}
