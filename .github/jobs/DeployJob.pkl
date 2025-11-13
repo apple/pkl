@@ -15,16 +15,15 @@ os = "linux"
 
 steps {
   new Common.Checkout {}
-  new Artifact.Download {}
+  new Artifact.Download {
+    with {
+      pattern = "executable-**"
+    }
+  }
   new Workflow.Step {
     run = "./gradlew \(self.gradleArgs) \(module.command)"
   }
     |> helpers.withMavenPublishSecrets
-  new Artifact.Upload {
-    with {
-      path = "*/build/executable/*"
-    }
-  }
 }
 
 fixed job {

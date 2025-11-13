@@ -38,9 +38,9 @@ steps {
     with {
       name =
         if (musl)
-          "\(project)-alpine-\(module.os)-\(module.arch)"
+          "executable-\(project)-alpine-\(module.os)-\(module.arch)"
         else
-          "\(project)-\(module.os)-\(module.arch)"
+          "executable-\(project)-\(module.os)-\(module.arch)"
       path = "\(project)/build/executable/**/*"
     }
   }

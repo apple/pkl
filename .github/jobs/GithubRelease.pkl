@@ -12,7 +12,11 @@ fixed job {
   }
   needs = "deploy-release"
   steps {
-    new Artifact.Download {}
+    new Artifact.Download {
+      with {
+        pattern = "executable-**"
+      }
+    }
     new {
       name = "Publish release on GitHub"
       env {
