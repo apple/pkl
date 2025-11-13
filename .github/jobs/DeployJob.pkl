@@ -2,7 +2,8 @@ extends "GradleJob.pkl"
 
 import "@gha/actions/Artifact.pkl"
 import "@gha/actions/Common.pkl"
-import "@gha/Context.pkl"
+import "@gha/Workflow.pkl"
+import "@pkl.impl.ghactions/helpers.pkl"
 
 local self = this
 
@@ -15,19 +16,8 @@ os = "linux"
 steps {
   new Common.Checkout {}
   new Artifact.Download {}
-  new {
-    env {
-      ["ORG_GRADLE_PROJECT_signingKeyId"] = Context.secrets("ORG_GRADLE_PROJECT_SIGNINGKEYID")
-      ["ORG_GRADLE_PROJECT_signingKey"] = Context.secrets("ORG_GRADLE_PROJECT_SIGNINGKEY")
-      ["ORG_GRADLE_PROJECT_signingPassword"] =
-        Context.secrets("ORG_GRADLE_PROJECT_SIGNINGPASSWORD")
-      ["ORG_GRADLE_PROJECT_sonatypePassword"] =
-        Context.secrets("ORG_GRADLE_PROJECT_SONATYPEPASSWORD")
-      ["ORG_GRADLE_PROJECT_sonatypeUsername"] =
-        Context.secrets("ORG_GRADLE_PROJECT_SONATYPEUSERNAME")
-    }
-    run = "./gradlew \(self.gradleArgs) \(module.command)"
-  }
+  new Workflow.Step { run = "./gradlew \(self.gradleArgs) \(module.command)" }
+    |> helpers.withMavenPublishSecrets
   new Artifact.Upload {
     with {
       path = "*/build/executable/*"
