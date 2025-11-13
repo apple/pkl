@@ -2,7 +2,7 @@
 
 files=`git diff --cached --name-status`
 
-if [[ $files =~ .circleci/config.pkl ]]; then
-  pkl eval .circleci/config.pkl -o .circleci/config.yml
-  git add .circleci/config.yml
+if [[ $files =~ .github/* ]]; then
+  pkl eval --project-dir .github/ -m .github .github/index.pkl
+  git add .github/workflows/
 fi

@@ -37,7 +37,7 @@ jobs:
         name: test-results-html-gradle-check
         path: '*/build/test-reports/**/*'
   gradle-check-windows:
-    if: startsWith(github.event.comment.body, '/build windows')
+    if: contains(github.event.pull_request.body, '/build windows')
     runs-on: windows-latest
     env:
       LANG: en_US.UTF-8
@@ -68,7 +68,7 @@ jobs:
         name: test-results-html-gradle-check-windows
         path: '*/build/test-reports/**/*'
   pkl-cli-linux-amd64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-cli') || startsWith(github.event.comment.body, '/build native-pkl-cli-linux') || startsWith(github.event.comment.body, '/build native-pkl-cli-linux-amd64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-cli') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux-amd64')
     runs-on: ubuntu-24.04
     env:
       LANG: en_US.UTF-8
@@ -105,7 +105,7 @@ jobs:
         name: test-results-html-pkl-cli-linux-amd64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-cli-macOS-aarch64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-cli') || startsWith(github.event.comment.body, '/build native-pkl-cli-macOS') || startsWith(github.event.comment.body, '/build native-pkl-cli-macOS-aarch64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-cli') || contains(github.event.pull_request.body, '/build native-pkl-cli-macOS') || contains(github.event.pull_request.body, '/build native-pkl-cli-macOS-aarch64')
     runs-on:
     - self-hosted
     - macos
@@ -144,7 +144,7 @@ jobs:
         name: test-results-html-pkl-cli-macOS-aarch64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-cli-linux-aarch64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-cli') || startsWith(github.event.comment.body, '/build native-pkl-cli-linux') || startsWith(github.event.comment.body, '/build native-pkl-cli-linux-aarch64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-cli') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux-aarch64')
     runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
@@ -181,7 +181,7 @@ jobs:
         name: test-results-html-pkl-cli-linux-aarch64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-cli-linux-alpine-amd64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-cli') || startsWith(github.event.comment.body, '/build native-pkl-cli-linux') || startsWith(github.event.comment.body, '/build native-pkl-cli-linux-amd64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-cli') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux-amd64')
     runs-on: ubuntu-24.04
     env:
       LANG: en_US.UTF-8
@@ -250,7 +250,7 @@ jobs:
         name: test-results-html-pkl-cli-linux-alpine-amd64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-cli-windows-amd64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-cli') || startsWith(github.event.comment.body, '/build native-pkl-cli-windows') || startsWith(github.event.comment.body, '/build native-pkl-cli-windows-amd64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-cli') || contains(github.event.pull_request.body, '/build native-pkl-cli-windows') || contains(github.event.pull_request.body, '/build native-pkl-cli-windows-amd64')
     runs-on: windows-latest
     env:
       LANG: en_US.UTF-8
@@ -288,7 +288,7 @@ jobs:
         name: test-results-html-pkl-cli-windows-amd64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-doc-linux-amd64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-doc') || startsWith(github.event.comment.body, '/build native-pkl-doc-linux') || startsWith(github.event.comment.body, '/build native-pkl-doc-linux-amd64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-doc') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux-amd64')
     runs-on: ubuntu-24.04
     env:
       LANG: en_US.UTF-8
@@ -325,7 +325,7 @@ jobs:
         name: test-results-html-pkl-doc-linux-amd64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-doc-macOS-aarch64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-doc') || startsWith(github.event.comment.body, '/build native-pkl-doc-macOS') || startsWith(github.event.comment.body, '/build native-pkl-doc-macOS-aarch64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-doc') || contains(github.event.pull_request.body, '/build native-pkl-doc-macOS') || contains(github.event.pull_request.body, '/build native-pkl-doc-macOS-aarch64')
     runs-on:
     - self-hosted
     - macos
@@ -364,7 +364,7 @@ jobs:
         name: test-results-html-pkl-doc-macOS-aarch64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-doc-linux-aarch64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-doc') || startsWith(github.event.comment.body, '/build native-pkl-doc-linux') || startsWith(github.event.comment.body, '/build native-pkl-doc-linux-aarch64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-doc') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux-aarch64')
     runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
@@ -401,7 +401,7 @@ jobs:
         name: test-results-html-pkl-doc-linux-aarch64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-doc-linux-alpine-amd64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-doc') || startsWith(github.event.comment.body, '/build native-pkl-doc-linux') || startsWith(github.event.comment.body, '/build native-pkl-doc-linux-amd64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-doc') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux-amd64')
     runs-on: ubuntu-24.04
     env:
       LANG: en_US.UTF-8
@@ -470,7 +470,7 @@ jobs:
         name: test-results-html-pkl-doc-linux-alpine-amd64-snapshot
         path: '*/build/test-reports/**/*'
   pkl-doc-windows-amd64-snapshot:
-    if: startsWith(github.event.comment.body, '/build native') || startsWith(github.event.comment.body, '/build native-pkl-doc') || startsWith(github.event.comment.body, '/build native-pkl-doc-windows') || startsWith(github.event.comment.body, '/build native-pkl-doc-windows-amd64')
+    if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-doc') || contains(github.event.pull_request.body, '/build native-pkl-doc-windows') || contains(github.event.pull_request.body, '/build native-pkl-doc-windows-amd64')
     runs-on: windows-latest
     env:
       LANG: en_US.UTF-8

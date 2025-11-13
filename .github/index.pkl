@@ -98,17 +98,17 @@ local releaseJobs: Workflow.Jobs = new {
 }
 
 // By default, just run ./gradlew check on linux.
-// Trigger other checks based on slash commands as PR comments. Examples:
+// Trigger other checks based on GitHub PR description. Examples:
 //
-//    * /build windows                -- Test on Windows
-//    * /build native                 -- Test all native builds
-//    * /build native-pkl-cli         -- Test all pkl-cli os/arch pairs
-//    * /build native-pkl-cli-macos   -- Test pkl-cli on macOS
+//    * /build windows                     -- Test on Windows
+//    * /build native                      -- Test all native builds
+//    * /build native-pkl-cli              -- Test all pkl-cli os/arch pairs
+//    * /build native-pkl-cli-macos        -- Test pkl-cli on macOS
 prb {
   jobs {
     ["gradle-check"] = gradleCheck.job
     ["gradle-check-windows"] = (gradleCheckWindows.job) {
-      `if` = "startsWith(github.event.comment.body, '/build windows')"
+      `if` = "contains(github.event.pull_request.body, '/build windows')"
     }
     for (jobName, job in buildNativeSnapshots) {
       [jobName] = (job.job) {
@@ -119,8 +119,7 @@ prb {
             "native-\(job.project)-\(job.os)",
             "native-\(job.project)-\(job.os)-\(job.arch)",
           )
-        `if` =
-          tags.map((it) -> "startsWith(github.event.comment.body, '/build \(it)')").join(" || ")
+        `if` = tags.map((it) -> "contains(github.event.pull_request.body, '/build \(it)')").join(" || ")
       }
     }
   }
