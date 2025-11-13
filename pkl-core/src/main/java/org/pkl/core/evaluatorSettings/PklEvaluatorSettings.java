@@ -167,13 +167,12 @@ public record PklEvaluatorSettings(
             var pairs = entry.getValue();
             for (var pair : pairs) {
               if (!HEADER_NAME_REGEX.matcher(pair.getFirst()).matches()) {
-                throw new PklException(
-                  ErrorMessages.create("invalidHeaderName", pair.getFirst()));
+                throw new PklException(ErrorMessages.create("invalidHeaderName", pair.getFirst()));
               }
               if (!HEADER_VALUE_REGEX.matcher(pair.getSecond()).matches()) {
                 throw new PklException(
-                  ErrorMessages.create("invalidHeaderValue", pair.getSecond()));
-              } 
+                    ErrorMessages.create("invalidHeaderValue", pair.getSecond()));
+              }
             }
             try {
               parsedHeaders.put(new URI(uri), pairs);
