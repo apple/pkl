@@ -1,8 +1,11 @@
+module GithubRelease
+
+extends "PklJob.pkl"
+
 import "@gha/actions/Artifact.pkl"
 import "@gha/Context.pkl"
-import "@gha/Workflow.pkl"
 
-fixed job: Workflow.Job = new {
+fixed job {
   `runs-on` = "ubuntu-24.04"
   permissions {
     contents = "write"
@@ -16,7 +19,7 @@ fixed job: Workflow.Job = new {
         ["GH_TOKEN"] = Context.github.token
         ["TAG_NAME"] = Context.github.refName
         ["GIT_SHA"] = Context.github.sha
-        ["GIT_REPO"] = Context.github.repository
+        ["GH_REPO"] = Context.github.repository
       }
       // language=bash
       run =
@@ -29,7 +32,6 @@ fixed job: Workflow.Job = new {
           --target "${GIT_SHA}" \
           --verify-tag \
           --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
-          --repo "${GIT_REPO}" \
           */build/executable/*
         """#
     }

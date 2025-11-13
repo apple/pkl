@@ -5,16 +5,18 @@ import "@gha/Workflow.pkl"
 import "jobs/BuildNativeJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/GithubRelease.pkl"
+import "jobs/GradleJob.pkl"
+import "jobs/PklJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
 
 triggerDocsBuild = "both"
 
 testReports {
   junit {
-    "*/build/test-results/**/*.xml"
+    "**/build/test-results/**/*.xml"
   }
   html {
-    "*/build/test-reports/**/*"
+    "**/build/reports/tests/**/*"
   }
 }
 
@@ -32,9 +34,17 @@ local gradleCheckWindows: SimpleGradleJob = new {
   command = "check"
 }
 
-local gradleCheckJobs: Workflow.Jobs = new {
-  ["gradle-check"] = gradleCheck.job
-  ["gradle-check-windows"] = gradleCheckWindows.job
+local typealias PklJobs = Mapping<String, PklJob>
+
+local toWorkflowJobs: (PklJobs) -> Workflow.Jobs = (it) -> new Workflow.Jobs {
+  for (k, v in it) {
+    [k] = v.job
+  }
+}
+
+local gradleCheckJobs: PklJobs = new {
+  ["gradle-check"] = gradleCheck
+  ["gradle-check-windows"] = gradleCheckWindows
 }
 
 local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
@@ -74,27 +84,24 @@ local buildNativeSnapshots = buildNativeJobs.toMap().filter((key, _) -> key.ends
 
 local buildNativeReleases = buildNativeJobs.toMap().filter((key, _) -> key.endsWith("release"))
 
-local benchmarkJob = new SimpleGradleJob { command = "bench:jmh" }.job
+local benchmarkJob = new SimpleGradleJob { command = "bench:jmh" }
 
-local gradleCompatibilityJob =
-  new SimpleGradleJob { command = ":pkl-gradle:build :pkl-gradle:compatibilityTestReleases" }.job
-
-local buildAndTestJobs: Workflow.Jobs = new {
-  ...gradleCheckJobs
-  ["bench"] = benchmarkJob
-  ["gradle-compatibility"] = gradleCompatibilityJob
-  for (k, v in buildNativeSnapshots) {
-    [k] = v.job
-  }
+local gradleCompatibilityJob = new SimpleGradleJob {
+  command = ":pkl-gradle:build :pkl-gradle:compatibilityTestReleases"
 }
 
-local releaseJobs: Workflow.Jobs = new {
+local buildAndTestJobs: PklJobs = new {
   ...gradleCheckJobs
   ["bench"] = benchmarkJob
   ["gradle-compatibility"] = gradleCompatibilityJob
-  for (k, v in buildNativeReleases) {
-    [k] = v.job
-  }
+  ...buildNativeSnapshots
+}
+
+local releaseJobs: PklJobs = new {
+  ...gradleCheckJobs
+  ["bench"] = benchmarkJob
+  ["gradle-compatibility"] = gradleCompatibilityJob
+  ...buildNativeReleases
 }
 
 // By default, just run ./gradlew check on linux.
@@ -105,13 +112,13 @@ local releaseJobs: Workflow.Jobs = new {
 //    * /build native-pkl-cli              -- Test all pkl-cli os/arch pairs
 //    * /build native-pkl-cli-macos        -- Test pkl-cli on macOS
 prb {
-  jobs {
-    ["gradle-check"] = gradleCheck.job
-    ["gradle-check-windows"] = (gradleCheckWindows.job) {
+  local prbJobs: Mapping<String, GradleJob> = new {
+    ["gradle-check"] = gradleCheck
+    ["gradle-check-windows"] = (gradleCheckWindows) {
       `if` = "contains(github.event.pull_request.body, '/build windows')"
     }
     for (jobName, job in buildNativeSnapshots) {
-      [jobName] = (job.job) {
+      [jobName] = (job) {
         local tags =
           List(
             "native",
@@ -119,37 +126,46 @@ prb {
             "native-\(job.project)-\(job.os)",
             "native-\(job.project)-\(job.os)-\(job.arch)",
           )
-        `if` = tags.map((it) -> "contains(github.event.pull_request.body, '/build \(it)')").join(" || ")
+        `if` =
+          tags.map((it) -> "contains(github.event.pull_request.body, '/build \(it)')").join(" || ")
       }
     }
   }
+  local prbJobs2 = (prbJobs) {
+    [[true]] {
+      // better SLA when not running on nightly
+      nightlyMacOS = false
+    }
+  }
+  jobs = prbJobs2 |> toWorkflowJobs
 }
 
 build {
-  jobs = buildAndTestJobs
+  jobs = buildAndTestJobs |> toWorkflowJobs
 }
 
 main {
-  jobs = (buildAndTestJobs) {
-    ["deploy-snapshot"] = (new DeployJob { command = "publishToSonatype" }.job) {
-      needs = buildAndTestJobs.keys.toListing()
-    }
-  }
+  jobs =
+    (buildAndTestJobs) {
+      ["deploy-snapshot"] = (new DeployJob { command = "publishToSonatype" }) {
+        needs = buildAndTestJobs.keys.toListing()
+      }
+    } |> toWorkflowJobs
 }
 
 releaseBranch {
-  jobs = releaseJobs
+  jobs = releaseJobs |> toWorkflowJobs
 }
 
 release {
   jobs = (releaseJobs) {
     ["deploy-release"] = (
-      new DeployJob { command = "publishToSonatype closeAndReleaseSonatypeStagingRepository" }.job
+      new DeployJob { command = "publishToSonatype closeAndReleaseSonatypeStagingRepository" }
     ) {
       needs = releaseJobs.keys.toListing()
     }
-    ["github-release"] = (new GithubRelease {}.job) {
+    ["github-release"] = (new GithubRelease {}) {
       needs = "deploy-release"
     }
-  }
+  } |> toWorkflowJobs
 }

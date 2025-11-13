@@ -28,7 +28,7 @@ steps {
       ["ORG_GRADLE_PROJECT_sonatypeUsername"] =
         Context.secrets("ORG_GRADLE_PROJECT_SONATYPEUSERNAME")
     }
-    run = "/gradlew \(self.gradleArgs) \(module.command)"
+    run = "./gradlew \(self.gradleArgs) \(module.command)"
   }
   new Artifact.Upload {
     with {
