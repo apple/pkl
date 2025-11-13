@@ -1,10 +1,9 @@
 amends "pkl:Project"
 
 dependencies {
-  ["pkl.impl.ghactions"] = import("../../pkl-project-commons/packages/pkl.impl.ghactions/PklProject")
-//   {
-//     uri = "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@0.4.2"
-//   }
+  ["pkl.impl.ghactions"] {
+    uri = "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@0.6.0"
+  }
   ["gha"] {
     uri = "package://pkg.pkl-lang.org/github.com/stefma/pkl-gha/com.github.action@0.0.6"
   }

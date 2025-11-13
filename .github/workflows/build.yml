@@ -9,6 +9,9 @@ name: Build
     - release/*
     tags-ignore:
     - '**'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
 permissions:
   contents: read
 jobs:
@@ -79,8 +82,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -109,8 +110,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -139,8 +138,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -173,13 +170,10 @@ jobs:
     runs-on:
     - self-hosted
     - macos
-    - nightly
     env:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -213,8 +207,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -248,8 +240,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -358,8 +348,6 @@ jobs:
       JAVA_HOME: /jdk
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -393,8 +381,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -427,13 +413,10 @@ jobs:
     runs-on:
     - self-hosted
     - macos
-    - nightly
     env:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -467,8 +450,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -502,8 +483,6 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -612,8 +591,6 @@ jobs:
       JAVA_HOME: /jdk
     steps:
     - uses: actions/checkout@v5
-      with:
-        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'

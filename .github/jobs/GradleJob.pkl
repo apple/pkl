@@ -15,15 +15,16 @@ arch: "amd64" | "aarch64" = "amd64"
 /// The OS to run on.
 os: "macOS" | "linux" | "windows" = "linux"
 
+// TODO flip this to `true` when nightly macOS is available
 /// Whether to run on nightly macOS.
-nightlyMacOS: Boolean(implies(os == "macOS")) = true
+nightlyMacOS: Boolean(implies(os == "macOS")) = false
 
 extraGradleArgs: Listing<String>
 
 steps: Listing<*Workflow.Step | Workflow.TypedStep>
 
-/// The fetch depth to use
-fetchDepth: Int = 1
+/// The fetch depth to use when doing a git checkout.
+fetchDepth: Int?
 
 fixed gradleArgs =
   new Listing {
@@ -69,8 +70,10 @@ fixed job {
   steps {
     // full checkout (needed for spotless)
     new Common.Checkout {
-      with {
-        `fetch-depth` = 0
+      when (fetchDepth != null) {
+        with {
+          `fetch-depth` = fetchDepth
+        }
       }
     }
     new Setup.Java {
