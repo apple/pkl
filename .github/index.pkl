@@ -64,7 +64,7 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
           }
         }
       }
-      ["\(_project)-linux-alpine-amd64-\(_dist)"] {
+      ["\(_project)-alpine-linux-amd64-\(_dist)"] {
         arch = "amd64"
         os = "linux"
         musl = true
@@ -112,27 +112,30 @@ local releaseJobs: PklJobs = new {
 // By default, just run ./gradlew check on linux.
 // Trigger other checks based on GitHub PR description. Examples:
 //
-//    * /build windows                     -- Test on Windows
-//    * /build native                      -- Test all native builds
-//    * /build native-pkl-cli              -- Test all pkl-cli os/arch pairs
-//    * /build native-pkl-cli-macos        -- Test pkl-cli on macOS
+//    * [windows]                     -- Test on Windows
+//    * [native]                      -- Test all native builds
+//    * [native-pkl-cli]              -- Test all pkl-cli os/arch pairs
+//    * [native-pkl-cli-macos]        -- Test pkl-cli on macOS
 prb {
   local prbJobs: Mapping<String, GradleJob> = new {
     ["gradle-check"] = gradleCheck
     ["gradle-check-windows"] = (gradleCheckWindows) {
-      `if` = "contains(github.event.pull_request.body, '/build windows')"
+      `if` = "contains(github.event.pull_request.body, '[windows]')"
     }
     for (jobName, job in buildNativeSnapshots) {
       [jobName] = (job) {
-        local tags =
-          List(
-            "native",
-            "native-\(job.project)",
-            "native-\(job.project)-\(job.os)",
-            "native-\(job.project)-\(job.os)-\(job.arch)",
-          )
+        local tags = new Listing {
+          "[native]"
+          "[native-\(job.project)]"
+          "[native-\(job.project)-\(job.os)]"
+          "[native-\(job.project)-\(job.os)-\(job.arch)]"
+          "[native-\(job.project)-\(job.os)-\(job.arch)]"
+          when (job.musl) {
+            "[native-\(job.project)-alpine-\(job.os)-\(job.arch)]"
+          }
+        }
         `if` =
-          tags.map((it) -> "contains(github.event.pull_request.body, '/build \(it)')").join(" || ")
+          tags.toList().map((it) -> "contains(github.event.pull_request.body, '\(it)')").join(" || ")
       }
     }
   }

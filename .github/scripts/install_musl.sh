@@ -4,41 +4,6 @@ mkdir -p ~/staticdeps/
 ZLIB_VERSION="1.2.13"
 MUSL_VERSION="1.2.5"
 
-# Apply CVE-2025-26519 security patches to musl
-# Remove this when bumping to musl 1.2.6.
-apply_musl_patches() {
-  echo "Applying CVE-2025-26519 patches to musl-${MUSL_VERSION}..."
-
-  cat > /tmp/musl-cve-2025-26519-1.patch <<'EOF'
---- a/src/locale/iconv.c
-+++ b/src/locale/iconv.c
-@@ -502,7 +502,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **rest
- 				}
- 				c -= 0x81;
- 				d = *((const unsigned char *)*in + 1) - (d<0x31 ? 0x41 : 0x47);
--				if (c >= 93 || c>=0xc6-0x81 && d>0x52)
-+				if (c > 0xc6-0x81 || c==0xc6-0x81 && d>0x52)
- 					goto ilseq;
- 				if (d >= 93 || c>=0x20 && d>0x4b)
- 					goto ilseq;
-EOF
-  patch -p1 < /tmp/musl-cve-2025-26519-1.patch
-
-  cat > /tmp/musl-cve-2025-26519-2.patch <<'EOF'
---- a/src/locale/iconv.c
-+++ b/src/locale/iconv.c
-@@ -543,6 +543,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **rest
- 		case UTF_8:
- 			if (c<0x80) break;
- 			l = wctomb_utf8(outp, c);
-+			if (k>4) goto ilseq;
- 			if (!l) l=1;
- 			outp += l;
- 			break;
-EOF
-  patch -p1 < /tmp/musl-cve-2025-26519-2.patch
-}
-
 # install zlib
 if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
   # Download zlib tarball and signature
@@ -88,9 +53,6 @@ if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
   # shellcheck disable=SC2002
   cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
 
-  apply_musl_patches
-
-  # Install
   echo "musl-${MUSL_VERSION}: configure..." 
   ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
 

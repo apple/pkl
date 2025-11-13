@@ -274,7 +274,7 @@ jobs:
         name: test-results-html-pkl-cli-linux-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
-  pkl-cli-linux-alpine-amd64-snapshot:
+  pkl-cli-alpine-linux-amd64-snapshot:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
@@ -287,7 +287,78 @@ jobs:
         architecture: x64
         cache: gradle
     - name: Install musl and zlib
-      run: "set -e\nmkdir -p ~/staticdeps/\n\nZLIB_VERSION=\"1.2.13\"\nMUSL_VERSION=\"1.2.5\"\n\n# Apply CVE-2025-26519 security patches to musl\n# Remove this when bumping to musl 1.2.6.\napply_musl_patches() {\n  echo \"Applying CVE-2025-26519 patches to musl-${MUSL_VERSION}...\"\n\n  cat > /tmp/musl-cve-2025-26519-1.patch <<'EOF'\n--- a/src/locale/iconv.c\n+++ b/src/locale/iconv.c\n@@ -502,7 +502,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **rest\n \t\t\t\t}\n \t\t\t\tc -= 0x81;\n \t\t\t\td = *((const unsigned char *)*in + 1) - (d<0x31 ? 0x41 : 0x47);\n-\t\t\t\tif (c >= 93 || c>=0xc6-0x81 && d>0x52)\n+\t\t\t\tif (c > 0xc6-0x81 || c==0xc6-0x81 && d>0x52)\n \t\t\t\t\tgoto ilseq;\n \t\t\t\tif (d >= 93 || c>=0x20 && d>0x4b)\n \t\t\t\t\tgoto ilseq;\nEOF\n  patch -p1 < /tmp/musl-cve-2025-26519-1.patch\n\n  cat > /tmp/musl-cve-2025-26519-2.patch <<'EOF'\n--- a/src/locale/iconv.c\n+++ b/src/locale/iconv.c\n@@ -543,6 +543,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **rest\n \t\tcase UTF_8:\n \t\t\tif (c<0x80) break;\n \t\t\tl = wctomb_utf8(outp, c);\n+\t\t\tif (k>4) goto ilseq;\n \t\t\tif (!l) l=1;\n \t\t\toutp += l;\n \t\t\tbreak;\nEOF\n  patch -p1 < /tmp/musl-cve-2025-26519-2.patch\n}\n\n# install zlib\nif [[ ! -f ~/staticdeps/include/zlib.h ]]; then\n  # Download zlib tarball and signature\n  curl -Lf \"https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz\" -o /tmp/zlib.tar.gz\n  curl -Lf \"https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc\" -o /tmp/zlib.tar.gz.asc\n\n  # Import zlib GPG key\n  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA\n\n  # Verify GPG signature\n  echo \"Verifying zlib GPG signature...\"\n  gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz\n\n  mkdir -p \"/tmp/dep_zlib-${ZLIB_VERSION}\"\n  cd \"/tmp/dep_zlib-${ZLIB_VERSION}\"\n  # shellcheck disable=SC2002\n  cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .\n\n  echo \"zlib-${ZLIB_VERSION}: configure...\" \n  ./configure --static --prefix=\"$HOME\"/staticdeps > /dev/null\n\n  echo \"zlib-${ZLIB_VERSION}: make...\" \n  make -s -j4\n\n  echo \"zlib-${ZLIB_VERSION}: make install...\" \n  make -s install\n\n  rm -rf /tmp/dep_zlib-${ZLIB_VERSION}\nfi\n\n# install musl\nif [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then\n  # Download musl tarball and signature\n  curl -Lf \"https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz\" -o /tmp/musl.tar.gz\n  curl -Lf \"https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc\" -o /tmp/musl.tar.gz.asc\n\n  # Import musl GPG key\n  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F\n\n  # Verify GPG signature\n  echo \"Verifying musl GPG signature...\"\n  gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz\n\n  mkdir -p \"/tmp/dep_musl-${MUSL_VERSION}\"\n  cd \"/tmp/dep_musl-${MUSL_VERSION}\"\n\n  # shellcheck disable=SC2002\n  cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .\n\n  apply_musl_patches\n\n  # Install\n  echo \"musl-${MUSL_VERSION}: configure...\" \n  ./configure --disable-shared --prefix=\"$HOME\"/staticdeps > /dev/null\n\n  echo \"musl-${MUSL_VERSION}: make...\" \n  make -s -j4\n\n  echo \"musl-${MUSL_VERSION}: make install...\" \n  make -s install\n\n  rm -rf \"/tmp/dep_musl-${MUSL_VERSION}\"\n\n  # native-image expects to find an executable at this path.\n  ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc\nfi\n\necho \"${HOME}/staticdeps/bin\" >> \"$GITHUB_PATH\"\n"
+      run: |
+        set -e
+        mkdir -p ~/staticdeps/
+
+        ZLIB_VERSION="1.2.13"
+        MUSL_VERSION="1.2.5"
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          # Download zlib tarball and signature
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" -o /tmp/zlib.tar.gz
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc" -o /tmp/zlib.tar.gz.asc
+
+          # Import zlib GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA
+
+          # Verify GPG signature
+          echo "Verifying zlib GPG signature..."
+          gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz
+
+          mkdir -p "/tmp/dep_zlib-${ZLIB_VERSION}"
+          cd "/tmp/dep_zlib-${ZLIB_VERSION}"
+          # shellcheck disable=SC2002
+          cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "zlib-${ZLIB_VERSION}: configure..." 
+          ./configure --static --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "zlib-${ZLIB_VERSION}: make..." 
+          make -s -j4
+
+          echo "zlib-${ZLIB_VERSION}: make install..." 
+          make -s install
+
+          rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          # Download musl tarball and signature
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
+
+          # Import musl GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
+
+          # Verify GPG signature
+          echo "Verifying musl GPG signature..."
+          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
+
+          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
+          cd "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # shellcheck disable=SC2002
+          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "musl-${MUSL_VERSION}: configure..." 
+          ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "musl-${MUSL_VERSION}: make..." 
+          make -s -j4
+
+          echo "musl-${MUSL_VERSION}: make install..." 
+          make -s install
+
+          rm -rf "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+
+        echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
@@ -300,13 +371,13 @@ jobs:
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
       with:
-        name: test-results-xml-pkl-cli-linux-alpine-amd64-snapshot
+        name: test-results-xml-pkl-cli-alpine-linux-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
       with:
-        name: test-results-html-pkl-cli-linux-alpine-amd64-snapshot
+        name: test-results-html-pkl-cli-alpine-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-cli-windows-amd64-snapshot:
@@ -445,7 +516,7 @@ jobs:
         name: test-results-html-pkl-doc-linux-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
-  pkl-doc-linux-alpine-amd64-snapshot:
+  pkl-doc-alpine-linux-amd64-snapshot:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
@@ -458,7 +529,78 @@ jobs:
         architecture: x64
         cache: gradle
     - name: Install musl and zlib
-      run: "set -e\nmkdir -p ~/staticdeps/\n\nZLIB_VERSION=\"1.2.13\"\nMUSL_VERSION=\"1.2.5\"\n\n# Apply CVE-2025-26519 security patches to musl\n# Remove this when bumping to musl 1.2.6.\napply_musl_patches() {\n  echo \"Applying CVE-2025-26519 patches to musl-${MUSL_VERSION}...\"\n\n  cat > /tmp/musl-cve-2025-26519-1.patch <<'EOF'\n--- a/src/locale/iconv.c\n+++ b/src/locale/iconv.c\n@@ -502,7 +502,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **rest\n \t\t\t\t}\n \t\t\t\tc -= 0x81;\n \t\t\t\td = *((const unsigned char *)*in + 1) - (d<0x31 ? 0x41 : 0x47);\n-\t\t\t\tif (c >= 93 || c>=0xc6-0x81 && d>0x52)\n+\t\t\t\tif (c > 0xc6-0x81 || c==0xc6-0x81 && d>0x52)\n \t\t\t\t\tgoto ilseq;\n \t\t\t\tif (d >= 93 || c>=0x20 && d>0x4b)\n \t\t\t\t\tgoto ilseq;\nEOF\n  patch -p1 < /tmp/musl-cve-2025-26519-1.patch\n\n  cat > /tmp/musl-cve-2025-26519-2.patch <<'EOF'\n--- a/src/locale/iconv.c\n+++ b/src/locale/iconv.c\n@@ -543,6 +543,7 @@ size_t iconv(iconv_t cd, char **restrict in, size_t *restrict inb, char **rest\n \t\tcase UTF_8:\n \t\t\tif (c<0x80) break;\n \t\t\tl = wctomb_utf8(outp, c);\n+\t\t\tif (k>4) goto ilseq;\n \t\t\tif (!l) l=1;\n \t\t\toutp += l;\n \t\t\tbreak;\nEOF\n  patch -p1 < /tmp/musl-cve-2025-26519-2.patch\n}\n\n# install zlib\nif [[ ! -f ~/staticdeps/include/zlib.h ]]; then\n  # Download zlib tarball and signature\n  curl -Lf \"https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz\" -o /tmp/zlib.tar.gz\n  curl -Lf \"https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc\" -o /tmp/zlib.tar.gz.asc\n\n  # Import zlib GPG key\n  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA\n\n  # Verify GPG signature\n  echo \"Verifying zlib GPG signature...\"\n  gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz\n\n  mkdir -p \"/tmp/dep_zlib-${ZLIB_VERSION}\"\n  cd \"/tmp/dep_zlib-${ZLIB_VERSION}\"\n  # shellcheck disable=SC2002\n  cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .\n\n  echo \"zlib-${ZLIB_VERSION}: configure...\" \n  ./configure --static --prefix=\"$HOME\"/staticdeps > /dev/null\n\n  echo \"zlib-${ZLIB_VERSION}: make...\" \n  make -s -j4\n\n  echo \"zlib-${ZLIB_VERSION}: make install...\" \n  make -s install\n\n  rm -rf /tmp/dep_zlib-${ZLIB_VERSION}\nfi\n\n# install musl\nif [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then\n  # Download musl tarball and signature\n  curl -Lf \"https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz\" -o /tmp/musl.tar.gz\n  curl -Lf \"https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc\" -o /tmp/musl.tar.gz.asc\n\n  # Import musl GPG key\n  gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F\n\n  # Verify GPG signature\n  echo \"Verifying musl GPG signature...\"\n  gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz\n\n  mkdir -p \"/tmp/dep_musl-${MUSL_VERSION}\"\n  cd \"/tmp/dep_musl-${MUSL_VERSION}\"\n\n  # shellcheck disable=SC2002\n  cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .\n\n  apply_musl_patches\n\n  # Install\n  echo \"musl-${MUSL_VERSION}: configure...\" \n  ./configure --disable-shared --prefix=\"$HOME\"/staticdeps > /dev/null\n\n  echo \"musl-${MUSL_VERSION}: make...\" \n  make -s -j4\n\n  echo \"musl-${MUSL_VERSION}: make install...\" \n  make -s install\n\n  rm -rf \"/tmp/dep_musl-${MUSL_VERSION}\"\n\n  # native-image expects to find an executable at this path.\n  ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc\nfi\n\necho \"${HOME}/staticdeps/bin\" >> \"$GITHUB_PATH\"\n"
+      run: |
+        set -e
+        mkdir -p ~/staticdeps/
+
+        ZLIB_VERSION="1.2.13"
+        MUSL_VERSION="1.2.5"
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          # Download zlib tarball and signature
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" -o /tmp/zlib.tar.gz
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc" -o /tmp/zlib.tar.gz.asc
+
+          # Import zlib GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA
+
+          # Verify GPG signature
+          echo "Verifying zlib GPG signature..."
+          gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz
+
+          mkdir -p "/tmp/dep_zlib-${ZLIB_VERSION}"
+          cd "/tmp/dep_zlib-${ZLIB_VERSION}"
+          # shellcheck disable=SC2002
+          cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "zlib-${ZLIB_VERSION}: configure..." 
+          ./configure --static --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "zlib-${ZLIB_VERSION}: make..." 
+          make -s -j4
+
+          echo "zlib-${ZLIB_VERSION}: make install..." 
+          make -s install
+
+          rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          # Download musl tarball and signature
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
+
+          # Import musl GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
+
+          # Verify GPG signature
+          echo "Verifying musl GPG signature..."
+          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
+
+          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
+          cd "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # shellcheck disable=SC2002
+          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "musl-${MUSL_VERSION}: configure..." 
+          ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "musl-${MUSL_VERSION}: make..." 
+          make -s -j4
+
+          echo "musl-${MUSL_VERSION}: make install..." 
+          make -s install
+
+          rm -rf "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+
+        echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
@@ -471,13 +613,13 @@ jobs:
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
       with:
-        name: test-results-xml-pkl-doc-linux-alpine-amd64-snapshot
+        name: test-results-xml-pkl-doc-alpine-linux-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
       with:
-        name: test-results-html-pkl-doc-linux-alpine-amd64-snapshot
+        name: test-results-html-pkl-doc-alpine-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-doc-windows-amd64-snapshot:
@@ -524,12 +666,12 @@ jobs:
     - pkl-cli-linux-amd64-snapshot
     - pkl-cli-macOS-aarch64-snapshot
     - pkl-cli-linux-aarch64-snapshot
-    - pkl-cli-linux-alpine-amd64-snapshot
+    - pkl-cli-alpine-linux-amd64-snapshot
     - pkl-cli-windows-amd64-snapshot
     - pkl-doc-linux-amd64-snapshot
     - pkl-doc-macOS-aarch64-snapshot
     - pkl-doc-linux-aarch64-snapshot
-    - pkl-doc-linux-alpine-amd64-snapshot
+    - pkl-doc-alpine-linux-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
     permissions:
       checks: write
