@@ -208,7 +208,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-cli-linux-aarch64-snapshot:
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
     steps:
@@ -462,7 +462,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-doc-linux-aarch64-snapshot:
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
     steps:

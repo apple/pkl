@@ -20,16 +20,18 @@ testReports {
   }
 }
 
-local gradleCheck: SimpleGradleJob = new {
+local baseGradleCheck: SimpleGradleJob = new {
   isRelease = false
-  os = "linux"
   command = "check"
+  fetchDepth = 0
 }
 
-local gradleCheckWindows: SimpleGradleJob = new {
-  isRelease = false
+local gradleCheck = (baseGradleCheck) {
+  os = "linux"
+}
+
+local gradleCheckWindows = (baseGradleCheck) {
   os = "windows"
-  command = "check"
 }
 
 local typealias PklJobs = Mapping<String, PklJob>

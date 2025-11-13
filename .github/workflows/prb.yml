@@ -149,7 +149,7 @@ jobs:
         if-no-files-found: ignore
   pkl-cli-linux-aarch64-snapshot:
     if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-cli') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux') || contains(github.event.pull_request.body, '/build native-pkl-cli-linux-aarch64')
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
     steps:
@@ -411,7 +411,7 @@ jobs:
         if-no-files-found: ignore
   pkl-doc-linux-aarch64-snapshot:
     if: contains(github.event.pull_request.body, '/build native') || contains(github.event.pull_request.body, '/build native-pkl-doc') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux') || contains(github.event.pull_request.body, '/build native-pkl-doc-linux-aarch64')
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
     steps:

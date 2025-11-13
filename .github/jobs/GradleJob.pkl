@@ -22,6 +22,9 @@ extraGradleArgs: Listing<String>
 
 steps: Listing<*Workflow.Step | Workflow.TypedStep>
 
+/// The fetch depth to use
+fetchDepth: Int = 1
+
 fixed gradleArgs =
   new Listing {
     "--info"
@@ -52,13 +55,17 @@ fixed job {
     if (os == "linux" && arch == "amd64")
       "ubuntu-latest"
     else if (os == "linux" && arch == "aarch64")
-      "ubuntu-latest-arm"
+      "ubuntu-24.04-arm"
     else if (os == "windows")
       "windows-latest"
-    else if (nightlyMacOS)
-      new Listing { "self-hosted"; "macos"; "nightly" }
     else
-      new Listing { "self-hosted"; "macos" }
+      new Listing {
+        "self-hosted"
+        "macos"
+        when (nightlyMacOS) {
+          "nightly"
+        }
+      }
   steps {
     // full checkout (needed for spotless)
     new Common.Checkout {

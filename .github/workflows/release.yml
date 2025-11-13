@@ -207,7 +207,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-cli-linux-aarch64-release:
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
     steps:
@@ -461,7 +461,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-doc-linux-aarch64-release:
-    runs-on: ubuntu-latest-arm
+    runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
     steps:
@@ -698,7 +698,7 @@ jobs:
     needs: deploy-release
     permissions:
       contents: write
-    runs-on: ubuntu-24.04
+    runs-on: ubuntu-latest
     steps:
     - uses: actions/download-artifact@v6
     - name: Publish release on GitHub

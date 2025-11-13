@@ -6,7 +6,7 @@ import "@gha/actions/Artifact.pkl"
 import "@gha/Context.pkl"
 
 fixed job {
-  `runs-on` = "ubuntu-24.04"
+  `runs-on` = "ubuntu-latest"
   permissions {
     contents = "write"
   }
