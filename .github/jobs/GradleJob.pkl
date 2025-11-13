@@ -18,9 +18,6 @@ os: "macOS" | "linux" | "windows" = "linux"
 /// Whether to run on nightly macOS.
 nightlyMacOS: Boolean(implies(os == "macOS")) = true
 
-/// The version of Java to use.
-javaVersion: "17.0" | "21.0"
-
 extraGradleArgs: Listing<String>
 
 steps: Listing<*Workflow.Step | Workflow.TypedStep>
@@ -71,7 +68,7 @@ fixed job {
     }
     new Setup.Java {
       with {
-        `java-version` = module.javaVersion
+        `java-version` = "21"
         distribution = "temurin"
         cache = "gradle"
         architecture =

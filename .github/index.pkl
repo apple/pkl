@@ -21,14 +21,12 @@ testReports {
 }
 
 local gradleCheck: SimpleGradleJob = new {
-  javaVersion = "21.0"
   isRelease = false
   os = "linux"
   command = "check"
 }
 
 local gradleCheckWindows: SimpleGradleJob = new {
-  javaVersion = "21.0"
   isRelease = false
   os = "windows"
   command = "check"

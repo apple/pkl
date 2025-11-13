@@ -6,8 +6,6 @@ import "@gha/Context.pkl"
 
 local self = this
 
-javaVersion = "21.0"
-
 command: String
 
 arch = "amd64"

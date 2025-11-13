@@ -8,8 +8,6 @@ musl: Boolean(implies(module.os == "linux")) = false
 /// The Gradle project under which to generate the executable
 project: String
 
-javaVersion = "21.0"
-
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(module.arch)"

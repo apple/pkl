@@ -6,8 +6,6 @@ command: String
 
 os = "linux"
 
-javaVersion = "21.0"
-
 steps {
   new {
     name = module.name
