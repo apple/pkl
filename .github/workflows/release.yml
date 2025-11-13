@@ -636,6 +636,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+    environment: maven-release
     steps:
     - uses: actions/checkout@v5
     - uses: actions/setup-java@v5

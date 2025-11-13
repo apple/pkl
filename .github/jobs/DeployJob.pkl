@@ -16,11 +16,17 @@ os = "linux"
 steps {
   new Common.Checkout {}
   new Artifact.Download {}
-  new Workflow.Step { run = "./gradlew \(self.gradleArgs) \(module.command)" }
+  new Workflow.Step {
+    run = "./gradlew \(self.gradleArgs) \(module.command)"
+  }
     |> helpers.withMavenPublishSecrets
   new Artifact.Upload {
     with {
       path = "*/build/executable/*"
     }
   }
+}
+
+fixed job {
+  environment = "maven-release"
 }
