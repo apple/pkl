@@ -14,7 +14,7 @@ local command =
       // NOTE: `build` doesn't build native executables
       "\(project):build"
     }
-  }.join("\n")
+  }.join(" ")
 
 steps {
   new Common.Checkout {}
