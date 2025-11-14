@@ -1,0 +1,31 @@
+extends "GradleJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+import "@gha/actions/Common.pkl"
+import "@gha/Workflow.pkl"
+import "@pkl.impl.ghactions/helpers.pkl"
+
+local self = this
+
+command: String
+
+arch = "amd64"
+
+os = "linux"
+
+steps {
+  new Common.Checkout {}
+  new Artifact.Download {
+    with {
+      pattern = "executable-**"
+    }
+  }
+  new Workflow.Step {
+    run = "./gradlew \(self.gradleArgs) \(module.command)"
+  }
+    |> helpers.withMavenPublishSecrets
+}
+
+fixed job {
+  environment = "maven-release"
+}

@@ -1,0 +1,29 @@
+abstract module PklJob
+
+import "@gha/Workflow.pkl"
+
+/// Identify any jobs that must complete successfully before this job will run.
+///
+/// It can be a string or array of strings.
+/// If a job fails or is skipped, all jobs that need it are skipped unless the jobs use a conditional expression that
+/// causes the job to continue.
+/// If a run contains a series of jobs that need each other, a failure or skip applies to all jobs in the dependency
+/// chain from the point of failure or skip onwards. If you would like a job to run even if a job it is dependent on
+/// did not succeed, use the `always()` conditional expression in `jobs.<job_id>.if`.
+///
+/// See: <https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idneeds>
+needs: (String | *Listing<String>)?
+
+/// A conditional to prevent a job from running unless a condition is met.
+///
+/// You can use any supported context and expression to create a conditional.
+/// For more information on which contexts are supported in this key, see
+/// [Contexts reference](https://docs.github.com/en/actions/reference/workflows-and-actions/contexts#context-availability).
+@SourceCode { language = "GithubExpressionLanguage" }
+`if`: String?
+
+/// The underlying workflow job
+fixed job: Workflow.Job = new {
+  `if` = module.`if`
+  needs = module.needs
+}
