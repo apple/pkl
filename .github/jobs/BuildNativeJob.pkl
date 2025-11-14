@@ -17,7 +17,6 @@ extraGradleArgs {
   }
 }
 
-
 steps {
   when (musl) {
     new {
@@ -28,10 +27,7 @@ steps {
   new {
     name = "gradle buildNative"
     shell = "bash"
-    run =
-      """
-      ./gradlew \(module.gradleArgs) \(project):buildNative
-      """
+    run = "./gradlew \(module.gradleArgs) \(project):buildNative"
   }
   new Artifact.Upload {
     name = "Upload executable artifacts"
@@ -41,7 +37,9 @@ steps {
           "executable-\(project)-alpine-\(module.os)-\(module.arch)"
         else
           "executable-\(project)-\(module.os)-\(module.arch)"
-      path = "\(project)/build/executable/**/*"
+      // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
+      // See https://github.com/actions/upload-artifact/issues/206
+      path = "\(project)*/build/executable/**/*"
     }
   }
 }
