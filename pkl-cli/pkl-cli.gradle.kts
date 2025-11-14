@@ -138,8 +138,7 @@ fun Exec.useRootDirAndSuppressOutput() {
 }
 
 // 0.28 Preparing for JDK21 toolchains revealed that `testStartJavaExecutable` may pass, even though
-// the evaluator fails. To catch this, we need to test the evaluator. We render the CircleCI config
-// as a realistic test of the fat JAR.
+// the evaluator fails. To catch this, we eval a simple expression using the fat jar.
 val testEvalJavaExecutable by
   setupJavaExecutableRun("testEvalJavaExecutable", evalTestFlags) { useRootDirAndSuppressOutput() }
 

@@ -355,7 +355,7 @@ open class BuildInfo(private val project: Project) {
   }
 
   val hasMuslToolchain: Boolean by lazy {
-    // see "install musl" in .circleci/jobs/BuildNativeJob.pkl
+    // see .github/scripts/install_musl.sh
     File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
   }
 
