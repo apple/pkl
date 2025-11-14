@@ -1,0 +1,47 @@
+extends "GradleJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+
+/// Whether to link to musl. Otherwise, links to glibc.
+musl: Boolean(implies(module.os == "linux")) = false
+
+/// The Gradle project under which to generate the executable
+project: String
+
+extraGradleArgs {
+  when (os == "macOS" && arch == "amd64") {
+    "-Dpkl.targetArch=\(module.arch)"
+  }
+  when (musl) {
+    "-Dpkl.musl=true"
+  }
+}
+
+
+steps {
+  when (musl) {
+    new {
+      name = "Install musl and zlib"
+      run = read("../scripts/install_musl.sh").text
+    }
+  }
+  new {
+    name = "gradle buildNative"
+    shell = "bash"
+    run =
+      """
+      ./gradlew \(module.gradleArgs) \(project):buildNative
+      """
+  }
+  new Artifact.Upload {
+    name = "Upload executable artifacts"
+    with {
+      name =
+        if (musl)
+          "executable-\(project)-alpine-\(module.os)-\(module.arch)"
+        else
+          "executable-\(project)-\(module.os)-\(module.arch)"
+      path = "\(project)/build/executable/**/*"
+    }
+  }
+}
