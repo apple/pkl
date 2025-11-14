@@ -102,7 +102,8 @@ To install:
 3. Select the zip file within `pkl-internal-intellij-plugin/build/distributions`.
 
 == Resources
-For automated build setup examples see our https://github.com/apple/pkl/blob/main/.circleci/[CircleCI] jobs like our https://github.com/apple/pkl/blob/main/.circleci/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.
+
+For automated build setup examples see our https://github.com/apple/pkl/blob/main/.github/[GitHub Actions] jobs like our https://github.com/apple/pkl/blob/main/.github/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.
 
 === Truffle
 
