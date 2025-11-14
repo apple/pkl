@@ -1,6 +1,6 @@
 abstract module PklJob
 
-import "@gha/Workflow.pkl"
+extends "@pkl.impl.ghactions/jobs/PklJob.pkl"
 
 /// Identify any jobs that must complete successfully before this job will run.
 ///
@@ -23,7 +23,7 @@ needs: (String | *Listing<String>)?
 `if`: String?
 
 /// The underlying workflow job
-fixed job: Workflow.Job = new {
+fixed job {
   `if` = module.`if`
   needs = module.needs
 }
