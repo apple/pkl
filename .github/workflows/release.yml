@@ -184,7 +184,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-cli-linux-amd64
-        path: pkl-cli/build/executable/**/*
+        path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -220,7 +220,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-cli-macOS-aarch64
-        path: pkl-cli/build/executable/**/*
+        path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -253,7 +253,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-cli-linux-aarch64
-        path: pkl-cli/build/executable/**/*
+        path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -359,7 +359,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-cli-alpine-linux-amd64
-        path: pkl-cli/build/executable/**/*
+        path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -393,7 +393,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-cli-windows-amd64
-        path: pkl-cli/build/executable/**/*
+        path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -426,7 +426,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-doc-linux-amd64
-        path: pkl-doc/build/executable/**/*
+        path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -462,7 +462,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-doc-macOS-aarch64
-        path: pkl-doc/build/executable/**/*
+        path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -495,7 +495,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-doc-linux-aarch64
-        path: pkl-doc/build/executable/**/*
+        path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -601,7 +601,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-doc-alpine-linux-amd64
-        path: pkl-doc/build/executable/**/*
+        path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -635,7 +635,7 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: executable-pkl-doc-windows-amd64
-        path: pkl-doc/build/executable/**/*
+        path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -741,6 +741,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   publish-test-results:
+    if: '!failure() && !cancelled()'
     needs:
     - gradle-check
     - gradle-check-windows
@@ -771,7 +772,7 @@ jobs:
       uses: EnricoMi/publish-unit-test-result-action@v2
       with:
         comment_mode: 'off'
-        files: '**/build/test-results/**/*.xml'
+        files: test-results-xml-*/**/*.xml
     - name: Upload Test Result HTML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
