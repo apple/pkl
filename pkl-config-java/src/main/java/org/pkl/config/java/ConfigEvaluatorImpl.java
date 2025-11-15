@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,6 +32,18 @@ final class ConfigEvaluatorImpl implements ConfigEvaluator {
   public Config evaluate(ModuleSource moduleSource) {
     var module = evaluator.evaluate(moduleSource);
     return new CompositeConfig("", mapper, module);
+  }
+
+  @Override
+  public Config evaluateOutputValue(ModuleSource moduleSource) {
+    var value = evaluator.evaluateOutputValue(moduleSource);
+    return Config.makeConfig(value, mapper);
+  }
+
+  @Override
+  public Config evaluateExpression(ModuleSource moduleSource, String expression) {
+    var value = evaluator.evaluateExpression(moduleSource, expression);
+    return Config.makeConfig(value, mapper);
   }
 
   @Override

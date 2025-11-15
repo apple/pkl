@@ -110,7 +110,7 @@ public interface Config {
     return fromPklBinary(inputStream, ValueMapper.preconfigured());
   }
 
-  private static Config makeConfig(Object decoded, ValueMapper mapper) {
+  static Config makeConfig(Object decoded, ValueMapper mapper) {
     if (decoded instanceof Composite composite) {
       return new CompositeConfig("", mapper, composite);
     }

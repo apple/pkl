@@ -15,16 +15,20 @@
  */
 package org.pkl.config.java;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.pkl.core.ModuleSource.text;
+
+import org.junit.jupiter.api.Test;
 
 public class ConfigTest extends AbstractConfigTest {
   private static final ConfigEvaluator evaluator = ConfigEvaluator.preconfigured();
 
+  private static final String pigeonText =
+      "pigeon { age = 30; friends = List(\"john\", \"mary\"); address { street = \"Fuzzy St.\" } }";
+
   @Override
   protected Config getPigeonConfig() {
-    return evaluator.evaluate(
-        text(
-            "pigeon { age = 30; friends = List(\"john\", \"mary\"); address { street = \"Fuzzy St.\" } }"));
+    return evaluator.evaluate(text(pigeonText));
   }
 
   @Override
@@ -41,5 +45,21 @@ public class ConfigTest extends AbstractConfigTest {
   @Override
   protected Config getMapConfig() {
     return evaluator.evaluate(text("x = Map(\"one\", 1, \"two\", 2)"));
+  }
+
+  @Test
+  public void evaluateOutputValue() {
+    var valueConfig =
+        evaluator.evaluateOutputValue(
+            text(pigeonText + "\noutput { value = (outer) { pigeon { age = 99 } } }"));
+    var pigeon = valueConfig.get("pigeon").as(Person.class);
+    assertThat(pigeon.age).isEqualTo(99);
+  }
+
+  @Test
+  public void evaluateExpression() {
+    var addressConfig = evaluator.evaluateExpression(text(pigeonText), "pigeon.address");
+    var address = addressConfig.as(Address.class);
+    assertThat(address.street).isEqualTo("Fuzzy St.");
   }
 }
