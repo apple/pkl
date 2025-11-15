@@ -682,6 +682,7 @@ jobs:
     - uses: actions/download-artifact@v6
       with:
         pattern: executable-**
+        merge-multiple: true
     - env:
         ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEYID }}
         ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}

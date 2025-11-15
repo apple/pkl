@@ -18,6 +18,7 @@ steps {
   new Artifact.Download {
     with {
       pattern = "executable-**"
+      `merge-multiple` = true
     }
   }
   new Workflow.Step {
