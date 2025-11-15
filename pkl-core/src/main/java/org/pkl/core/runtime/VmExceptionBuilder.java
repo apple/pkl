@@ -388,6 +388,10 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  public VmExceptionBuilder nullPropertyInHashCode(String propertyName) {
+    return evalError("nullPropertyInHashCode", propertyName);
+  }
+
   public VmException build() {
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
