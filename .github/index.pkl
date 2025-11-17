@@ -53,14 +53,11 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
     for (_project in List("pkl-cli", "pkl-doc")) {
       for (_arch in List("amd64", "aarch64")) {
         for (_os in List("macOS", "linux")) {
-          // TODO re-enable macOS/amd64 builds
-          when (!(_os == "macOS" && _arch == "amd64")) {
-            ["\(_project)-\(_os)-\(_arch)-\(_dist)"] {
-              arch = _arch
-              os = _os
-              isRelease = _dist == "release"
-              project = _project
-            }
+          ["\(_project)-\(_os)-\(_arch)-\(_dist)"] {
+            arch = _arch
+            os = _os
+            isRelease = _dist == "release"
+            project = _project
           }
         }
       }

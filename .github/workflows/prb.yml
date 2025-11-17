@@ -74,6 +74,43 @@ jobs:
         name: test-results-html-gradle-check-windows
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+  pkl-cli-macOS-amd64-snapshot:
+    if: (contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-cli]') || contains(github.event.pull_request.body, '[native-pkl-cli-macOS]') || contains(github.event.pull_request.body, '[native-pkl-cli-macOS-amd64]') || contains(github.event.pull_request.body, '[native-pkl-cli-macOS-amd64]')) && github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: executable-pkl-cli-macOS-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-pkl-cli-macOS-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+        if-no-files-found: ignore
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-cli-macOS-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
   pkl-cli-linux-amd64-snapshot:
     if: contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-cli]') || contains(github.event.pull_request.body, '[native-pkl-cli-linux]') || contains(github.event.pull_request.body, '[native-pkl-cli-linux-amd64]') || contains(github.event.pull_request.body, '[native-pkl-cli-linux-amd64]')
     runs-on: ubuntu-latest
@@ -323,6 +360,43 @@ jobs:
       uses: actions/upload-artifact@v5
       with:
         name: test-results-html-pkl-cli-windows-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-doc-macOS-amd64-snapshot:
+    if: (contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-doc]') || contains(github.event.pull_request.body, '[native-pkl-doc-macOS]') || contains(github.event.pull_request.body, '[native-pkl-doc-macOS-amd64]') || contains(github.event.pull_request.body, '[native-pkl-doc-macOS-amd64]')) && github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@v5
+    - uses: actions/setup-java@v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+        cache: gradle
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@v5
+      with:
+        name: executable-pkl-doc-macOS-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-xml-pkl-doc-macOS-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+        if-no-files-found: ignore
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@v5
+      with:
+        name: test-results-html-pkl-doc-macOS-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   pkl-doc-linux-amd64-snapshot:

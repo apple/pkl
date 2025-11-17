@@ -11,6 +11,7 @@ project: String
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(module.arch)"
+    "-Dpkl.native--native-compiler-path=.github/scripts/cc_macos_amd64.sh"
   }
   when (musl) {
     "-Dpkl.musl=true"
