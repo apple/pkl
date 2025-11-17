@@ -91,7 +91,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -379,7 +379,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:

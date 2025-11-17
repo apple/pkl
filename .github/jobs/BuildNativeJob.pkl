@@ -1,6 +1,7 @@
 extends "GradleJob.pkl"
 
 import "@gha/actions/Artifact.pkl"
+import "@gha/Context.pkl"
 
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean(implies(module.os == "linux")) = false
@@ -11,7 +12,7 @@ project: String
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(module.arch)"
-    "-Dpkl.native--native-compiler-path=.github/scripts/cc_macos_amd64.sh"
+    "-Dpkl.native--native-compiler-path=\(Context.github.workspace)/.github/scripts/cc_macos_amd64.sh"
   }
   when (musl) {
     "-Dpkl.musl=true"
