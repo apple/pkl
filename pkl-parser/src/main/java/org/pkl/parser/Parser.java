@@ -1393,6 +1393,10 @@ public class Parser {
           children.add(ret);
           typ = new Type.FunctionType(children, tk.span.endWith(ret.span()));
         } else {
+          if (children.isEmpty()) {
+            backtrack();
+            throw parserError("unexpectedTokenForType", ")");
+          }
           typ = new ParenthesizedType((Type) children.get(0), tk.span.endWith(end));
         }
       }
