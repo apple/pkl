@@ -105,6 +105,7 @@ class ParserComparisonTest {
         "errors/moduleWithHighMinPklVersionAndParseErrors.pkl",
         "errors/underscore.pkl",
         "errors/shebang.pkl",
+        "errors/emptyParenthesizedTypeAnnotation.pkl",
         "notAUnionDefault.pkl",
         "multipleDefaults.pkl",
         "modules/invalidModule1.pkl",
