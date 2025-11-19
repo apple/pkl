@@ -788,6 +788,17 @@ The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-download-pac
 
 include::../../pkl-cli/partials/cli-project-options.adoc[]
 
+[[root-options]]
+=== Root options
+
+The root `pkl` command supports the following options:
+
+.-v, --version
+[%collapsible]
+====
+Display version information.
+====
+
 == Evaluating Modules
 
 Say we have the following module:
