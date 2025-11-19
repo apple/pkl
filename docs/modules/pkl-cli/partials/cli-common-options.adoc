@@ -109,12 +109,6 @@ Duration, in seconds, after which evaluation of a source module will be timed ou
 Note that a timeout is treated the same as a program error in that any subsequent source modules will not be evaluated.
 ====
 
-.-v, --version
-[%collapsible]
-====
-Display version information.
-====
-
 .-w, --working-dir
 [%collapsible]
 ====
