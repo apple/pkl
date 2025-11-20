@@ -1,0 +1,239 @@
+amends "../snippetTest.pkl"
+
+local class Person {
+  name: String
+  age: Int = 0
+}
+
+open local class Animal {
+  name: String
+  age: Int
+}
+
+local class Dog extends Animal {
+  breed: String = "Unknown"
+}
+
+local class Config {
+  port: Int(isBetween(1, 65535))
+}
+
+local class ServerConfig {
+  host: String
+  port: Int
+}
+
+local class Settings {
+  enabled: Boolean = true
+  timeout: Int = 30
+}
+
+examples {
+  ["basic conversion"] {
+    // Convert Dynamic with properties to Mixin
+    local dynamic1 = new Dynamic {
+      name = "Pigeon"
+      age = 42
+    }
+    local mixin1 = dynamic1.toMixin()
+    new Dynamic { name = "Original" } |> mixin1
+  }
+
+  ["empty Dynamic"] {
+    // Empty Dynamic should create identity mixin
+    local emptyDynamic = new Dynamic {}
+    local emptyMixin = emptyDynamic.toMixin()
+    new Dynamic { existing = "value" } |> emptyMixin
+  }
+
+  ["with elements"] {
+    // Elements should be appended
+    local dynamicWithElements = new Dynamic {
+      "element1"
+      "element2"
+    }
+    local mixinWithElements = dynamicWithElements.toMixin()
+    new Dynamic { "base" } |> mixinWithElements
+  }
+
+  ["with entries"] {
+    // Entries should be merged
+    local dynamicWithEntries = new Dynamic {
+      ["key1"] = "value1"
+      ["key2"] = "value2"
+    }
+    local mixinWithEntries = dynamicWithEntries.toMixin()
+    new Dynamic { ["baseKey"] = "baseValue" } |> mixinWithEntries
+  }
+
+  ["with mixed members"] {
+    // Properties, elements, and entries should all be merged
+    local dynamicMixed = new Dynamic {
+      prop = "property"
+      "element"
+      ["entry"] = "entryValue"
+    }
+    local mixinMixed = dynamicMixed.toMixin()
+    new Dynamic { baseProp = "base" } |> mixinMixed
+  }
+
+  ["applying to Typed object"] {
+    // Mixin should work with typed objects
+    local dynamicPerson = new Dynamic {
+      name = "Modified"
+      age = 100
+    }
+    local mixinPerson = dynamicPerson.toMixin()
+    new Person { name = "Original"; age = 20 } |> mixinPerson
+  }
+
+  ["chaining mixins"] {
+    // Multiple mixins can be chained
+    local mixin1 = new Dynamic { extra = "value" }.toMixin()
+    local mixin2 = new Dynamic { another = "field" }.toMixin()
+    new Dynamic { base = "start" } |> mixin1 |> mixin2
+  }
+
+  ["reusable mixin"] {
+    // Mixin can be applied to multiple objects
+    local reusableMixin = new Dynamic { shared = "config" }.toMixin()
+    new {
+      first = new Dynamic { id = 1 } |> reusableMixin
+      second = new Dynamic { id = 2 } |> reusableMixin
+    }
+  }
+
+  ["overriding properties"] {
+    // Properties from mixin should override base properties
+    local overrideDynamic = new Dynamic {
+      name = "Override"
+      value = 999
+    }
+    local overrideMixin = overrideDynamic.toMixin()
+    new Dynamic { name = "Original"; value = 1; other = "keep" } |> overrideMixin
+  }
+
+  ["replacement vs merge for nested objects"] {
+    // Test replacement vs merge semantics
+    local base = new {
+      a1 {
+        b1 = 2
+      }
+      a2 {
+        b1 = 2
+      }
+    }
+    local overrideValue = new Dynamic {
+      a1 = new Dynamic {
+        b2 = 2
+      }
+      a2 {
+        b2 = 2
+      }
+    }
+    (base) |> overrideValue.toMixin()
+  }
+
+  ["integer entry keys vs elements"] {
+    // CRITICAL: Test that integer entry keys are NOT offset like elements
+    // This tests the fix for using member.isElement() instead of key instanceof Long
+    local mixinWithIntKeys = new Dynamic {
+      [5] = "entry at 5"
+      [10] = "entry at 10"
+      "element0"
+      "element1"
+    }.toMixin()
+    new Dynamic {
+      "base0"
+      "base1"
+      [99] = "base entry at 99"
+    } |> mixinWithIntKeys
+  }
+
+  ["class hierarchy"] {
+    // Test with class inheritance
+    local mixin = new Dynamic {
+      age = 5
+      breed = "Labrador"
+    }.toMixin()
+    new Dog { name = "Buddy"; age = 3 } |> mixin
+  }
+
+  ["constraints are preserved"] {
+    // Mixin should preserve constraints from base object
+    local mixin = new Dynamic { port = 8080 }.toMixin()
+    new Config { port = 3000 } |> mixin
+  }
+
+  ["local members are not exposed"] {
+    // Local members in mixin source should not appear in result
+    local source = new Dynamic {
+      local helper = "should not appear"
+      visible = "should appear"
+    }
+    new Dynamic { base = "value" } |> source.toMixin()
+  }
+
+  ["nested amendment semantics"] {
+    // Deep nesting with amendments should work correctly
+    local mixin = new Dynamic {
+      outerVal {
+        inner = new Dynamic {
+          deep = "value"
+        }
+      }
+    }.toMixin()
+    new Dynamic {
+      outerVal {
+        inner = new Dynamic {
+          shallow = "base"
+        }
+        sibling = "data"
+      }
+    } |> mixin
+  }
+
+  ["typed object to mixin"] {
+    // Non-Dynamic typed objects can also be converted to mixins
+    local config = new ServerConfig {
+      host = "localhost"
+      port = 8080
+    }
+    new Dynamic { existing = "field" } |> config.toMixin()
+  }
+
+  ["mixin from typed class with defaults"] {
+    // Test that default values work correctly
+    local mixin = new Settings { enabled = false }.toMixin()
+    new Dynamic { custom = "value" } |> mixin
+  }
+
+  ["element index offset with gaps"] {
+    // Elements should be offset correctly even with gaps in parent
+    local mixin = new Dynamic {
+      "mixinElement0"
+      "mixinElement1"
+    }.toMixin()
+    new Dynamic {
+      "base0"
+      "base1"
+      "base2"
+    } |> mixin
+  }
+
+  ["empty parent with mixin elements"] {
+    // Elements should start at 0 when parent has no elements
+    local mixin = new Dynamic {
+      "elem0"
+      "elem1"
+    }.toMixin()
+    new Dynamic { prop = "value" } |> mixin
+  }
+
+  ["mixin self application"] {
+    // Applying mixin derived from an object to itself
+    local obj = new Dynamic { count = 1 }
+    local mixin = obj.toMixin()
+    obj |> mixin
+  }
+}
