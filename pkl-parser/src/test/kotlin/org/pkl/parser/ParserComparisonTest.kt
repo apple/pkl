@@ -93,6 +93,7 @@ class ParserComparisonTest {
         "stringError1.pkl",
         "annotationIsNotExpression2.pkl",
         "amendsRequiresParens.pkl",
+        "errors/binopDifferentLine.pkl",
         "errors/parser18.pkl",
         "errors/nested1.pkl",
         "errors/invalidCharacterEscape.pkl",
