@@ -195,11 +195,13 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
-  @TruffleBoundary
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
-
+    // Seed the cache s.t. we short-circuit when coming back to hash the same value.
+    // The cached hash will be updated again with the final hash code value.
     force(false);
+    cachedHash = -1;
+
     var result = 0;
 
     for (var key : clazz.getAllRegularPropertyNames()) {
