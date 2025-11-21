@@ -1,0 +1,5 @@
+import "Qux.pkl"
+
+prop: Qux?
+
+typealias Bar = "bar"

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,9 +16,11 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.util.Nullable;
@@ -73,9 +75,36 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     var result = module.getCachedValue(importName);
     if (result == null) {
       result = callNode.call(member.getCallTarget(), module, module, importName);
+
+      var importedModule = (VmTyped) result;
+      if (importedModule.isNotInitialized() && importedModule.getModuleInfo().isAmend()) {
+        // this is an amending module. Try to find the prototype
+        var proto = findPrototypeModule(this, importedModule);
+        if (proto == null) {
+          throw exceptionBuilder()
+              .evalError("cannotFindModuleImport", importName)
+              .withSourceSection(importNameSection)
+              .build();
+        }
+        return proto;
+      }
+
       module.setCachedValue(importName, result);
     }
     return (VmTyped) result;
+  }
+
+  public static @Nullable VmTyped findPrototypeModule(Node node, VmTyped notInitializedModule) {
+    VmTyped amendingModule = null;
+    var moduleInfo = notInitializedModule.getModuleInfo();
+    var amendedModuleKey = moduleInfo.getAmendedModuleKey();
+
+    while (amendedModuleKey != null) {
+      amendingModule = VmLanguage.get(node).loadModule(amendedModuleKey, node);
+      moduleInfo = amendingModule.getModuleInfo();
+      amendedModuleKey = moduleInfo.getAmendedModuleKey();
+    }
+    return amendingModule;
   }
 
   protected @Nullable Object getType(

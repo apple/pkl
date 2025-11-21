@@ -99,7 +99,10 @@ public final class ClassNode extends ExpressionNode {
       // nodes
       // via static final fields without having to fear recursive field initialization.
       prototype = module;
-      prototype.setExtraStorage(moduleInfo);
+      // Only set ModuleInfo if not already set (to handle cyclic dependencies)
+      if (!prototype.hasExtraStorage()) {
+        prototype.setExtraStorage(moduleInfo);
+      }
       prototype.addProperties(prototypeMembers);
     } else {
       prototype =
