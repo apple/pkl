@@ -204,9 +204,7 @@ public final class VmTyped extends VmObject {
 
     for (var key : clazz.getAllRegularPropertyNames()) {
       var value = getCachedValue(key);
-      if (value == null) {
-        throw new VmExceptionBuilder().nullPropertyInHashCode(key.toString()).build();
-      }
+      if (value == null) throw new VmExceptionBuilder().stackOverflowError().build();
       result = 31 * result + value.hashCode();
     }
 

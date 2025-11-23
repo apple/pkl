@@ -345,8 +345,8 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  public VmExceptionBuilder nullPropertyInHashCode(String propertyName) {
-    return evalError("nullPropertyInHashCode", propertyName);
+  public VmExceptionBuilder stackOverflowError() {
+    return evalError("stackOverflow");
   }
 
   public VmException build() {
