@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Invalid token at position. Expected a class, typealias, method, or property.
+
+x | /*comment*/-
+               ^
+at binopDifferentLine (file:///$snippetsDir/input/errors/binopDifferentLine.pkl)
