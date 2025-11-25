@@ -1,0 +1,65 @@
+open class NameTransform extends Annotation {
+  prefix: String
+
+  const apply: (String, NameTransform, Any) -> Pair<String, Any> = (name, annotation, value) ->
+    Pair(annotation.prefix + name, value)
+}
+
+class CamelCase extends NameTransform {
+  prefix: String = ""
+
+  const apply = (name, annotation, value) ->
+    Pair(
+      (annotation.prefix + name).replaceAllMapped(Regex("[^A-Za-z0-9]+([A-Za-z0-9])"), (match) ->
+        match.groups[1].value.toUpperCase()
+      ),
+      value,
+    )
+}
+
+class MultiplyValue extends Annotation {
+  factor: Number
+  const apply: (String, NameTransform, Any) -> Pair<String, Any> = (name, annotation, value) ->
+    Pair(name, value * annotation.factor)
+}
+
+open class Foo {
+  no_converter: Int = 1
+  
+  @NameTransform { prefix = "foo_" }
+  prefixed_with_foo: Int = 2
+  
+  @NameTransform { prefix = "foo_" }
+  @CamelCase
+  prefixed_then_camel_cased: Int = 3
+  
+  @CamelCase
+  @NameTransform { prefix = "foo_" }
+  camel_cased_then_prefixed: Int = 4
+
+  @NameTransform { prefix = "foo_" }
+  subclass_applies_first: Int = 5
+
+  @MultiplyValue { factor = 2 }
+  transform_value: Int = 6
+
+  @MultiplyValue { factor = 2 }
+  @MultiplyValue { factor = 3 }
+  transform_value_repeatedly: Int = 7
+}
+
+class Bar extends Foo {
+  @CamelCase
+  subclass_applies_first: Int = 5
+}
+
+output {
+  value = new Bar {}
+  renderer = new PcfRenderer {
+    converters {
+      [NameTransform] = new NameTransform {}.apply
+      [CamelCase] = new CamelCase {}.apply
+      [MultiplyValue] = new MultiplyValue {}.apply
+    }
+  }
+}

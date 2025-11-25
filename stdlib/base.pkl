@@ -347,7 +347,20 @@ abstract class BaseValueRenderer {
   /// Paths are matched against path specs component-wise in reverse order.
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
-  converters: Mapping<Class | String, (unknown) -> Any>
+  ///
+  /// Annotation converters:
+  /// - When key is [Class] that is subclass of [Annotation] and value has three parameters.
+  /// - Checked for each property of [Typed] values.
+  /// - Allows transforming property names and value.
+  /// - Each of the property annotations of the enclosing class is checked in order: starting with
+  ///   the annotations (in order) of the current class, then repeating up the class hierarchy.
+  /// - Multiple annotation converters can apply; converters for matching annotations are called in
+  ///   order, with the result of one being passed to the next.
+  /// - Annotation converters can overlap with class/path converters and apply first.
+  converters: Mapping<
+    Class | String,
+    ((unknown) -> Any) | (String, unknown, unknown) -> Pair<String, Any>,
+  >
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.

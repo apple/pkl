@@ -16,12 +16,14 @@
 package org.pkl.core.stdlib;
 
 import java.util.*;
+import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
 public final class PklConverter implements VmValueConverter<Object> {
   private final Map<VmClass, VmFunction> typeConverters;
+  private final Map<VmClass, VmFunction> annotationConverters;
   private final Pair<Object[], VmFunction>[] pathConverters;
 
   private final @Nullable VmFunction stringConverter;
@@ -49,6 +51,7 @@ public final class PklConverter implements VmValueConverter<Object> {
     // but let's not rely on this implementation detail.
     converters.force(false, false);
     typeConverters = createTypeConverters(converters);
+    annotationConverters = createAnnotationConverters(converters);
     pathConverters = createPathConverters(converters);
 
     stringConverter = typeConverters.get(BaseModule.getStringClass());
@@ -177,13 +180,55 @@ public final class PklConverter implements VmValueConverter<Object> {
     return doConvert(value, path, nullConverter);
   }
 
+  @Override
+  public Pair<Identifier, Object> convertProperty(
+      ClassProperty property, Object value, Iterable<Object> path) {
+    var name = property.getName();
+    for (var annotation : property.getAllAnnotations()) {
+      var converter = findAnnotationConverter(annotation.getVmClass());
+      if (converter == null) {
+        continue;
+      }
+      var nameVal = (VmPair) converter.apply(name.toString(), annotation, value);
+      name = Identifier.get((String) nameVal.getFirst());
+      value = nameVal.getSecond();
+    }
+
+    return Pair.of(name, value);
+  }
+
   private Map<VmClass, VmFunction> createTypeConverters(VmMapping converters) {
     var result = new HashMap<VmClass, VmFunction>();
     converters.iterateMemberValues(
         (key, member, value) -> {
           assert value != null; // forced in ctor
           if (key instanceof VmClass vmClass) {
-            result.put(vmClass, (VmFunction) value);
+            var vmFunction = (VmFunction) value;
+            if (vmClass.isSubclassOf(BaseModule.getAnnotationClass())
+                && vmFunction.getParameterCount() > 1) {
+              // when the class is a subclass of Annotation and the function doesn't have 1 param
+              // this goes in annotationConverters instead
+              return true;
+            }
+            result.put(vmClass, vmFunction);
+          }
+          return true;
+        });
+    return result;
+  }
+
+  private Map<VmClass, VmFunction> createAnnotationConverters(VmMapping converters) {
+    var result = new HashMap<VmClass, VmFunction>();
+    converters.iterateMemberValues(
+        (key, member, value) -> {
+          assert value != null; // forced in ctor
+          if (key instanceof VmClass vmClass
+              && vmClass.isSubclassOf(BaseModule.getAnnotationClass())) {
+            var vmFunction = (VmFunction) value;
+            if (vmFunction.getParameterCount() != 3) {
+              return true;
+            }
+            result.put(vmClass, vmFunction);
           }
           return true;
         });
@@ -221,8 +266,16 @@ public final class PklConverter implements VmValueConverter<Object> {
    * method will return the most specific converter for a type.
    */
   private @Nullable VmFunction findTypeConverter(VmClass clazz) {
+    return findConverterByType(typeConverters, clazz);
+  }
+
+  private @Nullable VmFunction findAnnotationConverter(VmClass clazz) {
+    return findConverterByType(annotationConverters, clazz);
+  }
+
+  private @Nullable VmFunction findConverterByType(Map<VmClass, VmFunction> bag, VmClass clazz) {
     for (var current = clazz; current != null; current = current.getSuperclass()) {
-      var found = typeConverters.get(current);
+      var found = bag.get(current);
       if (found != null) return found;
     }
     return null;
