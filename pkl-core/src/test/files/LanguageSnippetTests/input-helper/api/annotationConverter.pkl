@@ -1,0 +1,19 @@
+class LineComment extends ConvertProperty {
+  text: String
+
+  valuePrefix: String = ""
+  prefix: String
+  suffix: String = ""
+
+  render = (prop, renderer) ->
+    Pair(prop.key, new RenderDirective {
+      text =
+        List(
+          valuePrefix,
+          (renderer as ValueRenderer).renderValue(prop.value),
+          prefix,
+          outer.text,
+          suffix,
+        ).join("")
+    })
+}

@@ -44,7 +44,7 @@ import org.pkl.core.util.MutableReference;
 
 /** Runs test results examples and facts. */
 public final class TestRunner {
-  private static final PklConverter converter = new PklConverter(VmMapping.empty());
+  private static final PklConverter converter = PklConverter.NOOP;
   private final BufferedLogger logger;
   private final StackFrameTransformer stackFrameTransformer;
   private final boolean overwrite;

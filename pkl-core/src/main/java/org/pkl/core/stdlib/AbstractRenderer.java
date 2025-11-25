@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
@@ -162,6 +163,9 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   /** Visits a property of a {@link VmDynamic} or {@link VmTyped}. */
   protected abstract void visitProperty(Identifier name, Object value, boolean isFirst);
 
+  /** Perform logic for rendering a render directive in place of a property */
+  protected abstract void visitPropertyRenderDirective(VmTyped value, boolean isFirst);
+
   protected abstract void endDynamic(VmDynamic value, boolean isEmpty);
 
   protected abstract void endTyped(VmTyped value, boolean isEmpty);
@@ -195,7 +199,12 @@ public abstract class AbstractRenderer implements VmValueVisitor {
         (memberKey, member, memberValue) -> {
           if (member.isClass() || member.isTypeAlias()) return true;
           assert member.isProp();
-          doVisitProperty((Identifier) memberKey, memberValue, member.getSourceSection(), isFirst);
+          doVisitProperty(
+              (Identifier) memberKey,
+              memberValue,
+              value.getVmClass().getProperty((Identifier) memberKey),
+              member.getSourceSection(),
+              isFirst);
           return true;
         });
 
@@ -218,7 +227,7 @@ public abstract class AbstractRenderer implements VmValueVisitor {
           var sourceSection = member.getSourceSection();
           if (member.isProp()) {
             if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
-            doVisitProperty((Identifier) memberKey, memberValue, sourceSection, isFirst);
+            doVisitProperty((Identifier) memberKey, memberValue, null, sourceSection, isFirst);
           } else if (member.isEntry()) {
             if (!canRenderPropertyOrEntry) cannotRenderObjectWithElementsAndOtherMembers(value);
             doVisitEntry(memberKey, memberValue, sourceSection, isFirst);
@@ -327,10 +336,19 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   }
 
   private void doVisitProperty(
-      Identifier name, Object value, SourceSection sourceSection, MutableBoolean isFirst) {
+      Identifier name,
+      Object value,
+      @Nullable ClassProperty property,
+      SourceSection sourceSection,
+      MutableBoolean isFirst) {
     var prevSourceSection = currSourceSection;
     currSourceSection = sourceSection;
     currPath.push(name);
+    if (property != null) {
+      var propVal = converter.convertProperty(property, value, currPath);
+      name = propVal.getFirst();
+      value = propVal.getSecond();
+    }
     var convertedValue = converter.convert(value, currPath);
     if (!(skipNullProperties && convertedValue instanceof VmNull)) {
       visitProperty(name, convertedValue, isFirst.getAndSetFalse());

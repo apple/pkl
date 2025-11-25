@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,45 @@ public final class ClassProperty extends ClassMember {
     this.initializer = initializer;
   }
 
+  /** Returned annotations are ordered from base class to leaf class then from top to bottom */
+  public List<VmTyped> getAllAnnotations(boolean ascending) {
+    var annotations = new ArrayList<VmTyped>();
+
+    if (ascending) {
+      for (var clazz = getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
+        var p = clazz.getDeclaredProperty(getName());
+        if (p != null) {
+          annotations.addAll(p.getAnnotations());
+        }
+      }
+    } else {
+      doGetAllAnnotationsDescending(getDeclaringClass(), annotations);
+    }
+
+    return annotations;
+  }
+
+  private void doGetAllAnnotationsDescending(VmClass clazz, List<VmTyped> annotations) {
+    if (clazz.getSuperclass() != null) {
+      doGetAllAnnotationsDescending(clazz.getSuperclass(), annotations);
+    }
+    var p = clazz.getDeclaredProperty(getName());
+    if (p != null) {
+      annotations.addAll(p.getAnnotations());
+    }
+  }
+
+  public VmSet getAllModifierMirrors() {
+    var mods = 0;
+    for (var clazz = getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
+      var parent = clazz.getDeclaredProperty(getName());
+      if (parent != null) {
+        mods |= parent.getModifiers();
+      }
+    }
+    return VmModifier.getMirrors(mods, false);
+  }
+
   public @Nullable PropertyTypeNode getTypeNode() {
     return typeNode;
   }
@@ -68,44 +107,8 @@ public final class ClassProperty extends ClassMember {
     return name.toString();
   }
 
-  public static final class Mirror {
-    private final ClassProperty prop;
-    private final VmClass clazz;
-
-    Mirror(ClassProperty prop, VmClass clazz) {
-      this.prop = prop;
-      this.clazz = clazz;
-    }
-
-    public ClassProperty getProperty() {
-      return prop;
-    }
-
-    public List<VmTyped> getAllAnnotations() {
-      var annotations = new ArrayList<VmTyped>();
-      for (var klazz = clazz; klazz != null; klazz = klazz.getSuperclass()) {
-        var p = klazz.getDeclaredProperty(prop.getName());
-        if (p != null) {
-          annotations.addAll(p.getAnnotations());
-        }
-      }
-      return annotations;
-    }
-
-    public VmSet getAllModifierMirrors() {
-      var mods = 0;
-      for (var klazz = clazz; klazz != null; klazz = klazz.getSuperclass()) {
-        var parent = klazz.getDeclaredProperty(prop.getName());
-        if (parent != null) {
-          mods |= parent.getModifiers();
-        }
-      }
-      return VmModifier.getMirrors(mods, false);
-    }
-  }
-
-  public VmTyped getMirror(VmClass clazz) {
-    return MirrorFactories.propertyFactory.create(new Mirror(this, clazz));
+  public VmTyped getMirror() {
+    return MirrorFactories.propertyFactory.create(this);
   }
 
   public VmSet getModifierMirrors() {

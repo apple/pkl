@@ -9,6 +9,7 @@ Available standard library modules:
 pkl:analyze
 pkl:base
 pkl:Benchmark
+pkl:convert
 pkl:DocPackageInfo
 pkl:DocsiteInfo
 pkl:EvaluatorSettings

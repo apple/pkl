@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,7 +38,7 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
   }
 
   public VmPklBinaryEncoder(MessageBufferPacker packer) {
-    this(packer, new PklConverter(VmMapping.empty()));
+    this(packer, PklConverter.NOOP);
   }
 
   private void packCode(PklBinaryCode code) throws IOException {
@@ -256,6 +256,11 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
       throw PklBugException.unreachableCode();
     }
     visit(value);
+  }
+
+  @Override
+  protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+    visitRenderDirective(value);
   }
 
   @Override

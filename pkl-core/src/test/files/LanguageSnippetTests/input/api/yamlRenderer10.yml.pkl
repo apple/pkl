@@ -1,0 +1,41 @@
+import "pkl:yaml"
+
+import ".../input-helper/api/annotationConverter.pkl"
+
+class Tag extends ConvertProperty {
+  tag: String(startsWith("!"))
+
+  render = (prop, renderer) ->
+    if (renderer is YamlRenderer)
+      Pair(prop.key, new RenderDirective {
+        text = " \(tag) \(renderer.renderValue(prop.value))"
+      })
+    else
+      prop
+}
+
+@yaml.Property { name = "FOO" }
+foo: String = "a"
+
+@annotationConverter.LineComment { text = "bar" }
+bar: String = "b"
+
+baz: Nested
+
+class Nested {
+  @annotationConverter.LineComment { text = "qux" }
+  qux: String = "c"
+
+  quux: String = "c"
+
+  @Tag { tag = "!!foo" }
+  quuux: String = "d"
+}
+
+output {
+  renderer = new YamlRenderer {
+    annotationTransformers {
+      [annotationConverter.LineComment] { prefix = " # "; valuePrefix = " " }
+    }
+  }
+}

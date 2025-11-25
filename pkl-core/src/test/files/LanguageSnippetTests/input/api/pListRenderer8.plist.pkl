@@ -1,0 +1,23 @@
+import ".../input-helper/api/annotationConverter.pkl"
+
+foo: String = "a"
+
+@annotationConverter.LineComment { text = "bar" }
+bar: String = "b"
+
+baz: Nested
+
+class Nested {
+  @annotationConverter.LineComment { text = "qux" }
+  qux: String = "c"
+
+  quux: String = "c"
+}
+
+output {
+  renderer = new PListRenderer {
+    annotationTransformers {
+      [annotationConverter.LineComment] { prefix = "<!-- "; suffix = " -->" }
+    }
+  }
+}

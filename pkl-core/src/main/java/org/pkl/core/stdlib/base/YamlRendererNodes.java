@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,10 +69,13 @@ public final class YamlRendererNodes {
     var indentWidth = ((Long) VmUtils.readMember(self, Identifier.INDENT_WIDTH)).intValue();
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
     var isStream = (boolean) VmUtils.readMember(self, Identifier.IS_STREAM);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
     return new YamlRenderer(
-        builder, " ".repeat(indentWidth), converter, omitNullProperties, mode, isStream);
+        builder,
+        " ".repeat(indentWidth),
+        PklConverter.fromRenderer(self),
+        omitNullProperties,
+        mode,
+        isStream);
   }
 
   private static final class YamlRenderer extends AbstractStringRenderer {
@@ -329,6 +332,14 @@ public final class YamlRendererNodes {
       emitter.emit(name.toString(), currIndent, true);
       builder.append(':');
       visit(value);
+    }
+
+    @Override
+    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+      if (!isFirst) {
+        startNewLine();
+      }
+      visitRenderDirective(value);
     }
 
     @Override

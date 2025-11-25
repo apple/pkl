@@ -20,12 +20,14 @@
 @ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.base
 
-// math import used for doc comments
+// json, math, and yaml imports used for doc comments
+import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
 import "pkl:pklbinary"
 import "pkl:protobuf"
 import "pkl:xml"
+import "pkl:yaml"
 
 /// The top type of the type hierarchy.
 ///
@@ -349,11 +351,44 @@ abstract class BaseValueRenderer {
   /// Paths are matched against path specs component-wise in reverse order.
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
+  ///
   converters: Mapping<Class | String, (unknown) -> Any>
+
+  /// Customizations for [ConvertProperty] annotation behaviors.
+  ///
+  /// This property is consulted to transform [ConvertProperty] annotation values.
+  /// This can be used to customize or override the conversion behavior for a specific renderer.
+  /// If multiple entries match the annotation's class, the most specific class (according to class
+  /// hierarchy) wins.
+  ///
+  /// See [ConvertProperty] for detailed information about annotation converters.
+  @Since { version = "0.31.0" }
+  annotationTransformers: Mapping<Class, Mixin<ConvertProperty>>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
   extension: String?
+}
+
+/// Base class for annotations that influence how [BaseValueRenderer] transforms the names and
+/// values of [Typed] value.
+///
+/// Annotation converters are checked for each property of rendered [Typed] values.
+/// If a property has a [ConvertProperty] annotation, the annotation's [ConvertProperty.render]
+/// function is called.
+/// The function must return a [Pair] of the converted property name and value.
+///
+/// Each of the property annotations of the enclosing class is checked in order, starting with the
+/// annotations (top to bottom) of the base class, then repeating for each child class in the
+/// hierarchy.
+/// Multiple annotation converters can apply per property; the output of one converter is used as
+/// input to the next.
+///
+/// Annotation converters can coexist with [BaseValueRenderer.converters] and apply first.
+open class ConvertProperty extends Annotation {
+  /// Function called by [BaseValueRenderer] types during rendering to transform property
+  /// names and values.
+  render: (Pair<String, Any>, BaseValueRenderer) -> (Pair<String, Any>)
 }
 
 /// Base class for rendering Pkl values in some textual output format.
@@ -466,6 +501,16 @@ class PcfRenderDirective {
 }
 
 /// Renders values as JSON.
+///
+/// The [json.Property] annotation can be used to change how a property name renders into XML.
+///
+/// Example:
+/// ```
+/// import "pkl:json"
+///
+/// @json.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class JsonRenderer extends ValueRenderer {
   extension = "json"
 
@@ -486,6 +531,16 @@ class JsonRenderer extends ValueRenderer {
 /// Renders values as YAML.
 ///
 /// To render a YAML stream, set [isStream] to [true].
+///
+/// The [yaml.Property] annotation can be used to change how a property name renders into XML.
+///
+/// Example:
+/// ```
+/// import "pkl:yaml"
+///
+/// @yaml.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class YamlRenderer extends ValueRenderer {
   extension = "yaml"
 

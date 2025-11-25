@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -135,9 +135,8 @@ public final class RendererNodes {
   @TruffleBoundary
   private static ProtobufRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
 
-    return new ProtobufRenderer(builder, indent, new PklConverter(converters));
+    return new ProtobufRenderer(builder, indent, PklConverter.fromRenderer(self));
   }
 
   private static final class ProtobufRenderer extends AbstractStringRenderer {
@@ -420,6 +419,13 @@ public final class RendererNodes {
       }
       var popped = propertyPath.pop();
       assert name == popped : "Corrupted traversal stack.";
+    }
+
+    @Override
+    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+      startNewLine();
+      // append verbatim
+      builder.append(VmUtils.readTextProperty(value));
     }
 
     private void startNewLine() {

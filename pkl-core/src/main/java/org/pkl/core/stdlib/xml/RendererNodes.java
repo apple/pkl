@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,10 +34,13 @@ public final class RendererNodes {
     var rootElementName = (String) VmUtils.readMember(self, Identifier.ROOT_ELEMENT_NAME);
     var rootElementAttributes =
         (VmMapping) VmUtils.readMember(self, Identifier.ROOT_ELEMENT_ATTRIBUTES);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
     return new Renderer(
-        builder, indent, xmlVersion, rootElementName, rootElementAttributes, converter);
+        builder,
+        indent,
+        xmlVersion,
+        rootElementName,
+        rootElementAttributes,
+        PklConverter.fromRenderer(self));
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {
@@ -228,6 +231,12 @@ public final class RendererNodes {
       } else {
         writeXmlElement(name.toString(), null, value, true, true);
       }
+    }
+
+    @Override
+    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+      startNewLine();
+      visitRenderDirective(value);
     }
 
     // No-op for XML
