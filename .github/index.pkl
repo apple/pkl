@@ -2,13 +2,13 @@ amends "@pkl.impl.ghactions/PklCI.pkl"
 
 import "@gha/Workflow.pkl"
 
+import "jobs/BuildJavaExecutableJob.pkl"
 import "jobs/BuildNativeJob.pkl"
 import "jobs/DeployJob.pkl"
 import "jobs/GithubRelease.pkl"
 import "jobs/GradleJob.pkl"
 import "jobs/PklJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
-import "jobs/BuildJavaExecutableJob.pkl"
 
 triggerDocsBuild = "both"
 
@@ -132,7 +132,10 @@ prb {
           }
         }
         `if` =
-          tags.toList().map((it) -> "contains(github.event.pull_request.body, '\(it)')").join(" || ")
+          tags
+            .toList()
+            .map((it) -> "contains(github.event.pull_request.body, '\(it)')")
+            .join(" || ")
       }
     }
   }
@@ -152,7 +155,14 @@ build {
 main {
   jobs =
     (buildAndTestJobs) {
-      ["deploy-snapshot"] = (new DeployJob { command = "publishToSonatype" }) {
+      ["deploy-snapshot"] = (
+        new DeployJob {
+          extraGradleArgs {
+            "--no-parallel"
+          }
+          command = "publishToSonatype"
+        }
+      ) {
         needs = buildAndTestJobs.keys.toListing()
       }
     } |> toWorkflowJobs
@@ -163,14 +173,15 @@ releaseBranch {
 }
 
 release {
-  jobs = (releaseJobs) {
-    ["deploy-release"] = (
-      new DeployJob { command = "publishToSonatype closeAndReleaseSonatypeStagingRepository" }
-    ) {
-      needs = releaseJobs.keys.toListing()
-    }
-    ["github-release"] = (new GithubRelease {}) {
-      needs = "deploy-release"
-    }
-  } |> toWorkflowJobs
+  jobs =
+    (releaseJobs) {
+      ["deploy-release"] = (
+        new DeployJob { command = "publishToSonatype closeAndReleaseSonatypeStagingRepository" }
+      ) {
+        needs = releaseJobs.keys.toListing()
+      }
+      ["github-release"] = (new GithubRelease {}) {
+        needs = "deploy-release"
+      }
+    } |> toWorkflowJobs
 }
