@@ -763,7 +763,7 @@ jobs:
         ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true publishToSonatype
+      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true --no-parallel publishToSonatype
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
