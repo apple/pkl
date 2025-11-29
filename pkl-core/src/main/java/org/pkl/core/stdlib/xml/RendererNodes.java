@@ -34,10 +34,13 @@ public final class RendererNodes {
     var rootElementName = (String) VmUtils.readMember(self, Identifier.ROOT_ELEMENT_NAME);
     var rootElementAttributes =
         (VmMapping) VmUtils.readMember(self, Identifier.ROOT_ELEMENT_ATTRIBUTES);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
     return new Renderer(
-        builder, indent, xmlVersion, rootElementName, rootElementAttributes, converter);
+        builder,
+        indent,
+        xmlVersion,
+        rootElementName,
+        rootElementAttributes,
+        PklConverter.fromRenderer(self));
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {

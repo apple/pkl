@@ -69,10 +69,13 @@ public final class YamlRendererNodes {
     var indentWidth = ((Long) VmUtils.readMember(self, Identifier.INDENT_WIDTH)).intValue();
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
     var isStream = (boolean) VmUtils.readMember(self, Identifier.IS_STREAM);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
     return new YamlRenderer(
-        builder, " ".repeat(indentWidth), converter, omitNullProperties, mode, isStream);
+        builder,
+        " ".repeat(indentWidth),
+        PklConverter.fromRenderer(self),
+        omitNullProperties,
+        mode,
+        isStream);
   }
 
   private static final class YamlRenderer extends AbstractStringRenderer {

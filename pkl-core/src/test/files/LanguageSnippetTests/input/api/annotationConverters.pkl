@@ -56,7 +56,7 @@ class Bar extends Foo {
 output {
   value = new Bar {}
   renderer = new PcfRenderer {
-    converters {
+    annotationConverters {
       [NameTransform] = new NameTransform {}.apply
       [CamelCase] = new CamelCase {}.apply
       [MultiplyValue] = new MultiplyValue {}.apply

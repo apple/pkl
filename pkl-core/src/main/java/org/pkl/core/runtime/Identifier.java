@@ -62,6 +62,7 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier ROOT_ELEMENT_NAME = get("rootElementName");
   public static final Identifier ROOT_ELEMENT_ATTRIBUTES = get("rootElementAttributes");
   public static final Identifier CONVERTERS = get("converters");
+  public static final Identifier ANNOTATION_CONVERTERS = get("annotationConverters");
   public static final Identifier USE_MAPPING = get("useMapping");
 
   // members of pkl.base#RegexMatch

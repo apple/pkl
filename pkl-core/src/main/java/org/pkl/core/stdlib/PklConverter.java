@@ -46,12 +46,13 @@ public final class PklConverter implements VmValueConverter<Object> {
   private final @Nullable VmFunction classConverter;
   private final @Nullable VmFunction typeAliasConverter;
 
-  public PklConverter(VmMapping converters) {
+  public PklConverter(VmMapping converters, VmMapping annotationConverters) {
     // As of 0.18, `converters` is forced by the mapping type check,
     // but let's not rely on this implementation detail.
     converters.force(false, false);
+    annotationConverters.force(false, false);
     typeConverters = createTypeConverters(converters);
-    annotationConverters = createAnnotationConverters(converters);
+    this.annotationConverters = createAnnotationConverters(annotationConverters);
     pathConverters = createPathConverters(converters);
 
     stringConverter = typeConverters.get(BaseModule.getStringClass());
@@ -73,6 +74,20 @@ public final class PklConverter implements VmValueConverter<Object> {
     nullConverter = typeConverters.get(BaseModule.getNullClass());
     classConverter = typeConverters.get(BaseModule.getClassClass());
     typeAliasConverter = typeConverters.get(BaseModule.getTypeAliasClass());
+  }
+
+  public static final PklConverter NOOP = new PklConverter(VmMapping.empty(), VmMapping.empty());
+
+  public static PklConverter fromRenderer(VmTyped renderer) {
+    var converters = (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERTERS);
+    var annotationConverters =
+        (VmMapping) VmUtils.readMember(renderer, Identifier.ANNOTATION_CONVERTERS);
+    return new PklConverter(converters, annotationConverters);
+  }
+
+  public static PklConverter fromParser(VmTyped parser) {
+    var converters = (VmMapping) VmUtils.readMember(parser, Identifier.CONVERTERS);
+    return new PklConverter(converters, VmMapping.empty()); // no annotation converters in parsers
   }
 
   @Override
@@ -203,33 +218,19 @@ public final class PklConverter implements VmValueConverter<Object> {
         (key, member, value) -> {
           assert value != null; // forced in ctor
           if (key instanceof VmClass vmClass) {
-            var vmFunction = (VmFunction) value;
-            if (vmClass.isSubclassOf(BaseModule.getAnnotationClass())
-                && vmFunction.getParameterCount() > 1) {
-              // when the class is a subclass of Annotation and the function doesn't have 1 param
-              // this goes in annotationConverters instead
-              return true;
-            }
-            result.put(vmClass, vmFunction);
+            result.put(vmClass, (VmFunction) value);
           }
           return true;
         });
     return result;
   }
 
-  private Map<VmClass, VmFunction> createAnnotationConverters(VmMapping converters) {
+  private Map<VmClass, VmFunction> createAnnotationConverters(VmMapping annotationConverters) {
     var result = new HashMap<VmClass, VmFunction>();
-    converters.iterateMemberValues(
+    annotationConverters.iterateMemberValues(
         (key, member, value) -> {
           assert value != null; // forced in ctor
-          if (key instanceof VmClass vmClass
-              && vmClass.isSubclassOf(BaseModule.getAnnotationClass())) {
-            var vmFunction = (VmFunction) value;
-            if (vmFunction.getParameterCount() != 3) {
-              return true;
-            }
-            result.put(vmClass, vmFunction);
-          }
+          result.put((VmClass) key, (VmFunction) value);
           return true;
         });
     return result;

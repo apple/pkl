@@ -348,19 +348,26 @@ abstract class BaseValueRenderer {
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
   ///
-  /// Annotation converters:
-  /// - When key is [Class] that is subclass of [Annotation] and value has three parameters.
-  /// - Checked for each property of [Typed] values.
-  /// - Allows transforming property names and value.
-  /// - Each of the property annotations of the enclosing class is checked in order: starting with
-  ///   the annotations (in order) of the current class, then repeating up the class hierarchy.
-  /// - Multiple annotation converters can apply; converters for matching annotations are called in
-  ///   order, with the result of one being passed to the next.
-  /// - Annotation converters can overlap with class/path converters and apply first.
-  converters: Mapping<
-    Class | String,
-    ((unknown) -> Any) | (String, unknown, unknown) -> Pair<String, Any>,
-  >
+  converters: Mapping<Class | String, (unknown) -> Any>
+
+  /// Annotation converters to apply before values are rendered.
+  ///
+  /// Annotation converters are checked for each property of rendered [Typed] values.
+  /// If a property has an annotation for which a converter is defined, the converter function is
+  /// called with the property name, the value of the annotation, and the property value. The
+  /// converter function must return a [Pair] of the converted property name and value.
+  ///
+  /// Each of the property annotations of the enclosing class is checked in order, starting with the
+  /// annotations (top to bottom) of the current class, then repeating for each parent class in the
+  /// hierarchy.
+  /// Multiple annotation converters can apply; converters for matching annotations are called in
+  /// order, with the result of one being passed to the next.
+  ///
+  /// At most one converter is applied per annotation. The most specific class (according to class
+  /// hierarchy) wins.
+  ///
+  /// Annotation converters can overlap with [converters] and apply first.
+  annotationConverters: Mapping<Class, (String, unknown, unknown) -> Pair<String, Any>>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
