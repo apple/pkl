@@ -52,4 +52,8 @@ examples {
 
     new Resource { base64 = "AQIDBA==" }.bytes
   }
+
+  ["absolute URI scheme with plus"] {
+    module.catch(() -> read("foo+bar///?baz=buz"))
+  }
 }
