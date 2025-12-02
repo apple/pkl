@@ -30,12 +30,14 @@ import java.net.URI;
 import java.text.DecimalFormat;
 import java.text.DecimalFormatSymbols;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
 import org.organicdesign.fp.collections.ImMap;
+import org.pkl.core.FileOutput;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.SecurityManager;
@@ -177,6 +179,49 @@ public final class VmUtils {
 
   public static VmBytes readBytesProperty(VmObjectLike receiver) {
     return (VmBytes) VmUtils.readMember(receiver, Identifier.BYTES);
+  }
+
+  public static VmTyped readModuleOutput(VmTyped module) {
+    var value = VmUtils.readMember(module, Identifier.OUTPUT);
+    if (value instanceof VmTyped typedOutput
+        && typedOutput.getVmClass().getPClassInfo() == PClassInfo.ModuleOutput) {
+      return typedOutput;
+    }
+
+    var moduleUri = module.getModuleInfo().getModuleKey().getUri();
+    var builder =
+        new VmExceptionBuilder()
+            .evalError(
+                "invalidModuleOutput",
+                "output",
+                PClassInfo.ModuleOutput.getDisplayName(),
+                VmUtils.getClass(value).getPClassInfo().getDisplayName(),
+                moduleUri);
+    var outputMember = module.getMember(Identifier.OUTPUT);
+    assert outputMember != null;
+    var uriOfValueMember = outputMember.getSourceSection().getSource().getURI();
+    // If `output` was explicitly re-assigned, show that in the stack trace.
+    if (!uriOfValueMember.equals(PClassInfo.pklBaseUri)) {
+      builder.withSourceSection(outputMember.getBodySection()).withMemberName("output");
+    }
+    throw builder.build();
+  }
+
+  public static Map<String, FileOutput> readFilesProperty(
+      VmObjectLike receiver, Function<VmTyped, FileOutput> fileOutputFactory) {
+    var filesOrNull = VmUtils.readMember(receiver, Identifier.FILES);
+    if (filesOrNull instanceof VmNull) {
+      return Map.of();
+    }
+    var files = (VmMapping) filesOrNull;
+    var result = new LinkedHashMap<String, FileOutput>();
+    files.forceAndIterateMemberValues(
+        (key, member, value) -> {
+          assert member.isEntry();
+          result.put((String) key, fileOutputFactory.apply((VmTyped) value));
+          return true;
+        });
+    return result;
   }
 
   @TruffleBoundary
@@ -855,7 +900,7 @@ public final class VmUtils {
       String expression,
       SecurityManager securityManager,
       ModuleResolver moduleResolver) {
-    var syntheticModule = ModuleKeys.synthetic(URI.create(REPL_TEXT), expression);
+    var syntheticModule = ModuleKeys.synthetic(REPL_TEXT_URI, expression);
     ResolvedModuleKey resolvedModule;
     try {
       resolvedModule = syntheticModule.resolve(securityManager);
@@ -870,7 +915,7 @@ public final class VmUtils {
             source.createSection(0, source.getLength()),
             VmUtils.unavailableSourceSection(),
             null,
-            "repl:text",
+            REPL_TEXT,
             syntheticModule,
             resolvedModule,
             false);
@@ -913,5 +958,21 @@ public final class VmUtils {
   @TruffleBoundary
   public static String concat(String str1, String str2) {
     return str1 + str2;
+  }
+
+  /** Check that a value is a VmTyped and that it inherits from the given class */
+  public static VmTyped checkAmends(Object value, VmClass clazz) {
+    if (!(value instanceof VmTyped typed)) {
+      throw new VmExceptionBuilder().typeMismatch(value, clazz).build();
+    }
+    return checkAmends(typed, clazz);
+  }
+
+  /** Check that a typed value inherits from the given class */
+  public static VmTyped checkAmends(VmTyped value, VmClass clazz) {
+    if (!value.getVmClass().isSubclassOf(clazz)) {
+      throw new VmExceptionBuilder().typeMismatch(value.getVmClass(), clazz).build();
+    }
+    return value;
   }
 }

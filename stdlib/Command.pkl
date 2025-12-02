@@ -1,0 +1,290 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Defines inputs and outputs for CLI commands implemented in Pkl.
+///
+/// Modules extending `pkl:Command` may configure [ModuleOutput.text], [ModuleOutput.bytes], and/or
+/// [ModuleOutput.files] of [output] to influence the effect of the command.
+///
+/// Command modules should override [options] and provide their own class declaring options:
+/// ```
+/// extends "pkl:Command"
+///
+/// options: Options
+///
+/// class Options {
+///   // ...
+/// }
+/// ```
+@ModuleInfo { minPklVersion = "0.31.0" }
+open module pkl.Command
+
+import "pkl:Command"
+import "pkl:reflect"
+
+local commandClass = reflect.Class(getClass())
+
+/// Command configuration.
+hidden command: CommandInfo = new {
+  name = // choose the name of the module if the command is a module or the class otherwise
+    if (commandClass.name == "ModuleClass") reflect.Module(module).name else commandClass.name
+  description = commandClass.docComment // works for both classes and module classes
+}
+
+/// Command line options.
+///
+/// This property is set by the runtime during command execution.
+/// It must not be amended or overridden by modules or classes extending [Command].
+///
+/// Command modules should override this property and provide their own options type.
+/// The properties of the specified type declare the command line flags and arguments accepted by
+/// the command.
+///
+/// Example:
+/// ```
+/// extends "pkl:Command"
+///
+/// options: Options
+///
+/// class Options {
+///   /// Maximum number of tries to attempt operation before giving up.
+///   `max-tries`: UInt = 3
+///
+///   /// Duration after which operation will be timed out.
+///   @Flag { convert = module.convertDuration; metavar = "duration" }
+///   timeout: Duration = 30.s
+///
+///   /// Whether to use cache data locally.
+///   @BooleanFlag
+///   cache: Boolean = true
+///
+///   /// Log verbosity.
+///   @CountedFlag { shortName = "v" }
+///   verbose: Int
+///
+///   /// File paths to operate on.
+///   @Argument { completionCandidates = "paths" }
+///   path: Listing<String>
+/// }
+/// ```
+hidden options: Typed
+
+/// The value of the parent command with parsed options.
+///
+/// This property is set by the runtime during command execution.
+/// It must not be amended or overridden by modules or classes extending [Command].
+///
+/// The parent command is `null` for root commands.
+hidden parent: Command?
+
+/// The value of the root command with parsed options.
+///
+/// This property is set by the runtime during command execution.
+///
+/// The root command is `null` for root commands.
+hidden fixed root: Command? = parent?.root ?? parent
+
+/// Command configuration.
+class CommandInfo {
+  /// The name of the subcommand.
+  ///
+  /// Default value: the name of the module or class extending [Command].
+  name: String
+
+  /// A description of the command; shown in its CLI help.
+  ///
+  /// Default value: the doc comment of the module or class extending [Command].
+  description: String?
+
+  /// Hide this command from CLI help.
+  hide: Boolean = false
+
+  /// If this command is executed, return an error and print CLI usage.
+  ///
+  /// Only applicable to commands with [subcommands].
+  ///
+  /// This is enabled by default when this command has [subcommands].
+  /// Overriding it to `false` will allow this command to be executed directly.
+  noOp: Boolean(implies(!subcommands.isEmpty)) = !subcommands.isEmpty
+
+  /// Child commands.
+  ///
+  /// Must have unique [name] values.
+  // NB: not using isDistinctBy constraint because the command runtime can give better errors
+  subcommands: Listing<Command>
+}
+
+/// Annotates [options] properties to configure them as named CLI flags.
+// NB: this should be a sealed class once Pkl supports them
+abstract class BaseFlag extends Annotation {
+  /// Abbreviated flag name.
+  shortName: Char?
+
+  /// Hide this option from CLI help.
+  hide: Boolean = false
+}
+
+/// Annotates an [options] property to configure it as a named CLI flag that accepts a value.
+class Flag extends BaseFlag {
+  /// Text to use in place of the option value in CLI help.
+  ///
+  /// If not specified, the value is derived from the flag's type.
+  metavar: String?
+
+  /// Customize the behavior of parsing the raw option values.
+  ///
+  /// When the return value is an [Import] value or a [Pair] member, [List] or [Set] element
+  /// containing an [Import], the URI or glob URI specified by the value is imported and the value
+  /// is replaced with the value of the imported module(s).
+  ///
+  /// If no transform is provided, the raw flag value are parsed according to the option's type:
+  ///
+  /// | Type                       | Behavior |
+  /// | -------------------------- | -------- |
+  /// | [String]                   | Value is used verbatim |
+  /// | [Char]                     | Value is used verbatim; must be exactly one character |
+  /// | [Boolean]                  | True values: `true`, `t`, `1`, `yes`, `y`, `on`; False values: `false`, `f`, `0`, `no`, `n`, `off` |
+  /// | [Number]                   | Value is parsed as an [Int] if possible, otherwise parsed as [Float] |
+  /// | [Float]                    | Value is parsed as a [Float] |
+  /// | [Int]                      | Value is parsed as an [Int] |
+  /// | [Int8], [Int16], [Int32], [UInt], [UInt8], [UInt16], [UInt32] | Value is parsed as an [Int] and must be within the type's range |
+  /// | Union of [String] literals | Value is used verbatim; must match a member of the union |
+  /// | [Listing], [List], [Set]   | Element values are parsed based on the above primitive types |
+  /// | [Mapping], [Map], [Pair]   | Value is split into a [Pair] on the first `"="` and each substring is parsed based on the above primitive types |
+  /// | Other types                | An error is thrown; `convert` should be defined explicitly |
+  convert: ((String) -> Any)?
+
+  /// Specifies whether the flag may be specified more than once.
+  ///
+  /// If not specified, this is determined based on the option's type.
+  /// Options with type [Listing], [List], [Set], [Mapping], or [Map] are mulitple by default.
+  /// Overriding this behavior generally requires setting [convert] and/or [transformAll].
+  multiple: Boolean?
+
+  /// Customize the behavior of turning all parsed flag values into the final option value.
+  ///
+  /// If no value is provided, all flag values are transformed according to the option's type:
+  ///
+  /// | Type              | Behavior |
+  /// | ----------------- | -------- |
+  /// | [Mapping], [Map]  | Each value must be a [Pair], each pair becomes an entry in the result. |
+  /// | [Listing], [List] | Result is all option values in the order specified |
+  /// | [Set]             | Result is all unique option values |
+  /// | Other types       | Result is the last value specified option value |
+  transformAll: ((List<Any>) -> Any)?
+
+  /// Specify how this flag should be completed in generated shell completions.
+  ///
+  /// If set to `"paths"`, the completion candidates will be local file paths. 
+  /// If set to a [Listing], the completion candidates will be the specified literal strings.
+  ///
+  /// Options with a string literal union type use the members of the union as completion candidates
+  /// by default.
+  completionCandidates: "paths" | *Listing<String>(isDistinct)
+}
+
+/// Annotates [Boolean] [options] properties to configure them as named CLI flags that may be
+/// specified zero or one times.
+///
+/// Boolean flags produce a pair of flags in the form `--<name>`/`--no-<name>`.
+///
+/// Annotating a property with a type other than [Boolean] is an error.
+class BooleanFlag extends BaseFlag
+
+/// Annotates [Integer] [options] properties to configure them as named CLI flags that may be
+/// specified zero or more times.
+///
+/// Counted flags produce a value equal to the number of times a flag is specified.
+///
+/// Annotating a property with a type other than [Int] is an error.
+class CountedFlag extends BaseFlag
+
+/// Annotates an [options] property to configure it as a positional CLI argument.
+class Argument extends Annotation {
+  /// Customize the behavior of turning the raw option values string into the final value.
+  ///
+  /// When the return value is an [Import] value or a [Pair] member, [List] or [Set] element
+  /// containing an [Import], the URI or glob URI specified by the value is imported and the value
+  /// is replaced with the value of the imported module(s).
+  ///
+  /// If no value is provided, each option value is transformed using the same rules as
+  /// [Flag.convert].
+  convert: ((String) -> Any)?
+
+  /// Specifies whether the argument may be specified more than once.
+  ///
+  /// If not specified, this is determined based on the option's type.
+  /// Options with type [Listing], [List], [Set], [Mapping], or [Map] are multiple by default.
+  /// Overriding this behavior generally requires setting [convert] and/or [transformAll].
+  ///
+  /// Only one argument per command may be multiple.
+  multiple: Boolean?
+
+  /// Customize the behavior of turning all parsed flag values into the final option value.
+  ///
+  /// If no value is provided, all option values are transformed using the same rules as
+  /// [Flag.transformAll].
+  transformAll: ((List<Any>) -> Any)?
+
+  /// Specify how this flag should be completed in generated shell completions.
+  ///
+  /// If set to `"paths"`, the completion candidates will be local file paths. 
+  /// If set to a [Listing], the completion candidates will be the specified literal strings.
+  ///
+  /// Options with a string literal union type use the members of the union as completion candidates
+  /// by default.
+  completionCandidates: "paths" | *Listing<String>(isDistinct)
+}
+
+/// A value used in [Flag.convert] and [Argument.convert] to declare an option as a dynamic
+/// import.
+class Import {
+  /// The absolute URI of the module to import.
+  uri: String
+
+  /// Whether [uri] should be interpreted as a glob pattern.
+  ///
+  /// When `false`, the replacement value is the value of the specified module.
+  /// When `true`, the replacement value is a [Mapping] from [String] keys to matched module values. 
+  glob: Boolean = false
+}
+
+local const quantityRegex = Regex(#"([0-9]+(?:\.[0-9]+)?)\.?([A-Za-z]+)"#)
+
+local const function parseQuantity(value: String, typeName: String): Pair<Float, String> =
+  let (match = quantityRegex.matchEntire(value))
+    if (match == null)
+      throw("Unable to parse \(typeName) from string '\(value)'")
+    else
+      Pair(match.groups[1].value.toFloat(), match.groups[2].value.toLowerCase())
+
+/// A convert function for [Duration] values.
+///
+/// For use with [Flag.convert] and [Argument.convert].
+hidden const convertDuration: (String) -> Duration = (value: String) ->
+  let (quantity = parseQuantity(value, "Duration"))
+  let (_unit = quantity.second)
+  let (unit = if (_unit is DurationUnit) _unit else null)
+    quantity.first.toDuration(unit ?? throw("Unable to parse DurationUnit from '\(_unit)'"))
+
+/// A convert function for [DataSize] values.
+///
+/// For use with [Flag.convert] and [Argument.convert].
+hidden const convertDataSize: (String) -> DataSize = (value: String) ->
+  let (quantity = parseQuantity(value, "DataSize"))
+  let (_unit = quantity.second)
+  let (unit = if (_unit is DataSizeUnit) _unit else null)
+    quantity.first.toDataSize(unit ?? throw("Unable to parse DataSizeUnit from '\(_unit)'"))
