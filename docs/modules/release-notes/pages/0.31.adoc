@@ -42,7 +42,7 @@ Things to watch out for when upgrading.
 
 The following bugs have been fixed.
 
-* XXX (https://github.com/apple/pkl/issues/XXX[XXX])
+* Fix parsing of URLs with plus signs (https://github.com/apple/pkl/pull/1335[#1335]).
 
 == Contributors [small]#🙏#
 

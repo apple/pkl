@@ -53,6 +53,8 @@ examples {
     new Resource { base64 = "AQIDBA==" }.bytes
   }
 
+  // test parsing of URIs.
+  // see https://github.com/apple/pkl/pull/1335
   ["absolute URI scheme with plus"] {
     module.catch(() -> read("foo+bar///?baz=buz"))
   }
