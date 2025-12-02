@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.Iterator;
-import org.organicdesign.fp.xform.Xform;
+import org.pkl.core.util.paguro.xform.Xform;
 
 public abstract class VmCollection extends VmValue implements Iterable<Object> {
   public interface Builder<T extends VmCollection> {

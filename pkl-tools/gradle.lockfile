@@ -59,6 +59,5 @@ org.jline:jline-reader:3.23.0=runtimeClasspath,testRuntimeClasspath
 org.jline:jline-terminal-jansi:3.23.0=runtimeClasspath,testRuntimeClasspath
 org.jline:jline-terminal:3.23.0=runtimeClasspath,testRuntimeClasspath
 org.msgpack:msgpack-core:0.9.8=runtimeClasspath,testRuntimeClasspath
-org.organicdesign:Paguro:3.10.3=runtimeClasspath,testRuntimeClasspath
 org.snakeyaml:snakeyaml-engine:2.10=runtimeClasspath,testRuntimeClasspath
 empty=annotationProcessor,fatJar,firstPartySourcesJars,placeholderAnnotationProcessor,placeholderCompileClasspath,placeholderRuntimeClasspath,shadow,signatures,testAnnotationProcessor

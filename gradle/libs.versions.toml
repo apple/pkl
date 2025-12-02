@@ -44,7 +44,6 @@ log4j = "2.17.1"
 msgpack = "0.9.8"
 nexusPublishPlugin = "2.0.0"
 nuValidator = "20.+"
-paguro = "3.+"
 shadowPlugin = "9.+"
 slf4j = "1.+"
 snakeYaml = "2.+"
@@ -87,8 +86,6 @@ kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-corou
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
-# to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
-paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
 shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.gradle.plugin", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }

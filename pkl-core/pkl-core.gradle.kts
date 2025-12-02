@@ -49,8 +49,6 @@ dependencies {
   implementation(libs.truffleApi)
   implementation(libs.graalSdk)
 
-  implementation(libs.paguro) { exclude(group = "org.jetbrains", module = "annotations") }
-
   implementation(libs.snakeYaml)
 
   testImplementation(projects.pklCommonsTest)
@@ -120,6 +118,9 @@ tasks.test {
     excludeEngines("AlpineLanguageSnippetTestsEngine")
     excludeEngines("WindowsLanguageSnippetTestsEngine")
   }
+
+  // testing very large lists requires more memory than the default 512m!
+  maxHeapSize = "1g"
 }
 
 val testJavaExecutable by
@@ -135,6 +136,9 @@ val testJavaExecutable by
         // executable;
         // to verify that we don't want to include them here)
         (configurations.testRuntimeClasspath.get() - configurations.runtimeClasspath.get())
+
+    // testing very large lists requires more memory than the default 512m!
+    maxHeapSize = "1g"
   }
 
 tasks.check { dependsOn(testJavaExecutable) }
