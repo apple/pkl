@@ -17,6 +17,7 @@ package org.pkl.cli
 
 import com.github.ajalt.clikt.core.BadParameterValue
 import com.github.ajalt.clikt.core.CliktError
+import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.parse
 import java.nio.file.Path
 import kotlin.io.path.createDirectory
@@ -35,6 +36,11 @@ import org.pkl.core.Release
 
 class CliMainTest {
   private val rootCmd = RootCommand()
+
+  @Test
+  fun `do it`() {
+    rootCmd.main(listOf("run", "../test.pkl", "../test2*.pkl"))
+  }
 
   @Test
   fun `duplicate CLI option produces meaningful error message`(@TempDir tempDir: Path) {
