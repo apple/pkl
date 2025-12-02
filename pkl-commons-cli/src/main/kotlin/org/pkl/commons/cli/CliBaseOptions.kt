@@ -29,7 +29,7 @@ import org.pkl.core.util.IoUtils
 /** Base options shared between CLI commands. */
 data class CliBaseOptions(
   /** The source modules to evaluate. Relative URIs are resolved against [workingDir]. */
-  private val sourceModules: List<URI> = listOf(),
+  val sourceModules: List<URI> = listOf(),
 
   /**
    * The URI patterns that determine which modules can be loaded and evaluated. Patterns are matched

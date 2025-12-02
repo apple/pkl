@@ -92,6 +92,8 @@ public final class ModuleCache {
           return BaseModule.getModule();
         case "Benchmark":
           return BenchmarkModule.getModule();
+        case "Command":
+          return CommandModule.getModule();
         case "jsonnet":
           return JsonnetModule.getModule();
         case "math":

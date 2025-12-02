@@ -471,13 +471,15 @@ public final class GlobResolver {
    * Resolves a glob expression.
    *
    * <p>Each pair is the expanded form of the glob pattern, paired with its resolved absolute URI.
+   *
+   * <p>globPattern must be absolute is enclosing module details are null.
    */
   @TruffleBoundary
   public static Map<String, ResolvedGlobElement> resolveGlob(
       SecurityManager securityManager,
       ReaderBase reader,
-      ModuleKey enclosingModuleKey,
-      URI enclosingUri,
+      @Nullable ModuleKey enclosingModuleKey,
+      @Nullable URI enclosingUri,
       String globPattern)
       throws IOException,
           SecurityManagerException,
@@ -486,6 +488,10 @@ public final class GlobResolver {
 
     var result = new LinkedHashMap<String, ResolvedGlobElement>();
     var hasAbsoluteGlob = globPattern.matches("\\w+:.*");
+    if ((enclosingModuleKey == null || enclosingUri == null) && !hasAbsoluteGlob) {
+      // callers must check that the glob is absolute if calling with null enclosing info
+      throw PklBugException.unreachableCode();
+    }
 
     if (reader.hasHierarchicalUris()) {
       var splitPattern = splitGlobPatternIntoBaseAndWildcards(reader, globPattern, hasAbsoluteGlob);
@@ -493,7 +499,10 @@ public final class GlobResolver {
       var globParts = splitPattern.second;
       // short-circuit for glob pattern with no wildcards (can only match 0 or 1 element)
       if (globParts.length == 0) {
-        var resolvedUri = IoUtils.resolve(reader, enclosingUri, globPattern);
+        var resolvedUri =
+            enclosingUri == null
+                ? URI.create(globPattern)
+                : IoUtils.resolve(reader, enclosingUri, globPattern);
         if (reader.hasElement(securityManager, resolvedUri)) {
           result.put(globPattern, new ResolvedGlobElement(globPattern, resolvedUri, true));
         }
@@ -501,7 +510,10 @@ public final class GlobResolver {
       }
       URI baseUri;
       try {
-        baseUri = IoUtils.resolve(securityManager, enclosingModuleKey, URI.create(basePath));
+        baseUri =
+            enclosingModuleKey == null
+                ? URI.create(basePath)
+                : IoUtils.resolve(securityManager, enclosingModuleKey, URI.create(basePath));
       } catch (URISyntaxException e) {
         // assertion: this is only thrown if the pattern starts with a triple-dot import.
         // the language will throw an error if glob imports is combined with triple-dots.

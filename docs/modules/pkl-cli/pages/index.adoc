@@ -526,6 +526,21 @@ The old expected files will be deleted if present.
 
 This command also takes <<common-options, common options>>.
 
+[[command-run]]
+=== `pkl run`
+
+*Synopsis:* `pkl run [<options>] [<module>] [<command options>]`
+
+Evaluate a CLI command defined by `<module>`.
+
+<module>::
+The absolute or relative URIs of the command module to run. Relative URIs are resolved against the working directory.
+
+<command options>::
+Additional CLI options and arguments defined by `<module>`.
+
+This command also takes <<common-options, common options>>, but they must be specified before `<module>`. 
+
 [[command-repl]]
 === `pkl repl`
 
@@ -780,7 +795,7 @@ Write the path of files with formatting violations to stdout.
 [[common-options]]
 === Common options
 
-The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, <<command-download-package>>, and <<command-analyze-imports>> commands support the following common options:
+The <<command-eval>>, <<command-test>>, <<command-run>>, <<command-repl>>, <<command-project-resolve>>, <<command-project-package>>, <<command-download-package>>, and <<command-analyze-imports>> commands support the following common options:
 
 include::../../pkl-cli/partials/cli-common-options.adoc[]
 
@@ -880,6 +895,208 @@ pkl eval --format=json --output-path=%{moduleDir}/%{moduleName}.json config1.pkl
 If multiple module outputs are written to the same file, or to standard output, their outputs are concatenated.
 By default, module outputs are separated with `---`, as in a YAML stream.
 The separator can be customized using the `--module-output-separator` option.
+
+[[cli-tools]]
+== Implementing CLI Tools
+
+CLI tools can be implemented in Pkl by modules extending the `pkl:Command` module.
+These tools are executed by running `pkl run`.
+
+Pkl commands have a few properties that distinguish them from standard module evaluation:
+
+* Users provide input to commands using familiar command line idioms, providing a better experience than deriving inputs from xref:language-reference:index.adoc#resources[resources] like external properties or environment variables.
+* Commands can produce output to standard output and written files at the same time.
+* Like CLI tools written in other languages, command file output may write to any absolute path (not just relative to the `--multiple-file-output-path` option).
+* Commands provide a way to dynamically import modules when they are specified as command line options.
+
+Commands are implemented as regular modules and declare their support command line flags and positional arguments using a class with annotated properties.
+
+=== Defining Commands
+
+Commands are defined by creating a module that extends `pkl:Command`:
+
+[source,pkl%tested]
+.my-tool.pkl
+----
+/// This doc comment becomes part of the command's CLI help!
+extends "pkl:Command"
+
+options: Options
+
+class Options {
+  // Define CLI flags/arguments...
+}
+
+// Regular module code...
+----
+
+When commands are executed, the Pkl runtime parses and validates provided options and synthesizes a module that amends the command's.
+This synthesized module overrides the `options` property to set the parsed value for each option.
+This module is evaluated and its `output.bytes` property is written to the standard output and files specified by `output.files` are written to the filesystem.
+
+=== Command Options
+
+Each property of the class of a command's `options` property becomes a command line options.
+A property's doc comment, if present, becomes the corresponding option's CLI help description.
+Properties must have xref:language-reference:index.adoc#type-annotations[type annotations] to determine how they are parsed.
+
+Properties may be annotated with link:{uri-stdlib-Command-Flag}[`@Flag`] or link:{uri-stdlib-Command-Argument}[`@Argument`] to influence how they behave:
+
+* Properties annotated with `@Flag` become CLI flags named `--<property name>`.
+* Properties annotated with `@Argument` become positional CLI arguments and are parsed in the order they appear in the class.
+* Properties with no annotation are treated the same as `@Flag` with no further customization.
+
+A property's type determines how it is parsed:
+
+|===
+|Type |Notes
+
+|`String`
+|
+
+|`Char`
+|Behaves like `String` but must be a single character
+
+|`Boolean`
+|True values: `true`, `t`, `1`, `yes`, `y`, `on`
+
+False values: `false`, `f`, `0`, `no`, `n`, `off`
+
+|`Number`
+|Produces an `Int` if the value can be parsed as one, otherwise produces a `Float`
+
+|`Float`
+|
+
+|`Int`
+|
+
+|`Int8`, `Int16`, `Int32`, `UInt`, `UInt8`, `UInt16`, `UInt32`
+|Behaves like `Int` but enforces the type's bounds check
+
+|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals]
+|Behaves like `String` but only admits specific values.
+
+|`List<Element>`, `Set<Element>`
+|`Element` type must be a primitive type or union of string literals.
+
+Only a single `List` or `Set` positional argument is permitted per command.
+
+|`Map<Key, Value>`
+|`Key` and `Value` types must both be primitive types or unions of string literals.
+
+Only applies to flags; forbidden for positional arguments.
+
+|===
+
+A property with a xref:language-reference:index.adoc#nullable-types[nullable type] is optional and, if not specified on the command line, will have value `null`.
+Type constraints are enforced when the command is executed.
+
+==== Custom Option Parsing
+
+A property may be annotated with any type if its `@Flag` or `@Argument` annotation has the `parse` property set.
+The `parse` property overrides how the raw option value is interpreted and may be set a few different ways:
+
+* An xref:language-reference:index.adoc#anonymous-functions[anonymous function] that accepts the raw string value passed on the command line and returns a value of the property's annotated type.
+* The special value `"import"`, which treats the option's value as a module URI (as if it were passed to `pkl eval`) and sets the option's value to imported contents of the module.
+* The special value `"import*"`, which treats the option's value as a xref:language-reference:index.adoc#globbed-imports[globbed module URI] and sets the option's value to a link:{uri-stdlib-Mapping}[`Mapping`] with keys that are the resolved absolute module URIs and values that are the imported module contents. When specifying glob import options, it will often be necessary to quote the value to avoid it being interpreted by the shell.
+
+Parse functions compose with `List<Element>`, `Set<Element>`, and `Map<Key, Value>` option types.
+The parse function is called once for each `List`/`Set` element or `Map` value.
+
+=== Subcommands
+
+Like many other command line libraries, `pkl:Command` allows building commands into a hierarchy with a root command and subcommands:
+
+[source,pkl%tested]
+.my-tool.pkl
+----
+extends "pkl:Command"
+
+command {
+  subcommands { // <1>
+    import("subcommand1.pkl")
+    import("subcommand2.pkl")
+  }
+}
+----
+<1> May also be assigned from a glob import, eg. `subcommands = import*("subcommand*.pkl")`
+
+[source,pkl%tested]
+.subcommand1.pkl
+----
+extends "pkl:Command"
+
+import "my-tool.pkl"
+
+parent: `my-tool` // <1>
+
+// Regular module code...
+----
+<1> Optional; asserts that this is a subcommand of `my-tool` and simplifies accessing parent command properties and options
+
+=== Testing Commands
+
+Command module are normal Pkl modules, so they may be imported and used like any other module.
+This is particularly helpful when testing commands, as the command's `options` and `parent` properties can be populated by test code.
+
+Testing the above command and subcommand might look like this:
+
+[source,pkl%tested]
+----
+amends "pkl:test"
+
+import "my-tool.pkl"
+import "subcommand1.pkl"
+
+examples {
+  ["Test my-tool"] {
+    (`my-tool`) {
+      options {
+        // Set my-tool options here...
+      }
+    }.output.text
+  }
+  ["Test subcommand1"] {
+    (subcommand1) {
+      parent { // this amends `my-tool`
+        options {
+          // Set my-tool options here...
+        }
+      }
+      options {
+        // Set subcommand options here...
+      }
+    }.output.text
+  }
+}
+----
+
+=== Commands as standalone scripts
+
+On *nix platforms, Pkl commands can be configured to run as standalone tools that can be invoked without the `pkl run` command.
+To achieve this, the command file must be marked executable (i.e. `chmod +x my-tool.pkl`) and a link:https://en.wikipedia.org/wiki/Shebang_(Unix)[shebang comment] must be added on the first line of the file:
+
+[source,pkl%parsed]
+----
+#!/usr/bin/env -S pkl run
+----
+
+NOTE: The `-S` flag for `env` is required on Linux systems due to a limitation of shebang handling in the Linux kernel.
+While not required on other *nix platforms like macOS, but it should be included for compatibility.
+
+==== Shell Completion
+
+Like with Pkl's own CLI, <<command-shell-completion, shell completions>> can be generated for standalone scripts.
+
+[source,shell]
+----
+# Generate shell completion script for bash
+./my-tool.pkl shell-completion bash
+
+# Generate shell completion script for zsh
+./my-tool.pkl shell-completion zsh
+----
 
 [[repl]]
 == Working with the REPL
