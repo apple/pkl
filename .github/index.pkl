@@ -19,6 +19,11 @@ testReports {
   html {
     "**/build/reports/tests/**/*"
   }
+  excludeJobs {
+    "bench"
+    "deploy-release"
+    "github-release"
+  }
 }
 
 local baseGradleCheck: SimpleGradleJob = new {

@@ -90,19 +90,6 @@ jobs:
     - name: bench:jmh
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true bench:jmh
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-bench
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-bench
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   gradle-compatibility:
     runs-on: ubuntu-latest
     env:
@@ -786,7 +773,6 @@ jobs:
     needs:
     - gradle-check
     - gradle-check-windows
-    - bench
     - gradle-compatibility
     - java-executables-snapshot
     - pkl-cli-macOS-amd64-snapshot

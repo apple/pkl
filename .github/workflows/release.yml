@@ -90,19 +90,6 @@ jobs:
     - name: bench:jmh
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true bench:jmh
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-bench
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-bench
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   gradle-compatibility:
     runs-on: ubuntu-latest
     env:
@@ -768,19 +755,6 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true publishToSonatype closeAndReleaseSonatypeStagingRepository
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-deploy-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-deploy-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   github-release:
     needs: deploy-release
     permissions:
@@ -807,25 +781,11 @@ jobs:
           --verify-tag \
           --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
           */build/executable/*
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-github-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-github-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   publish-test-results:
     if: '!failure() && !cancelled()'
     needs:
     - gradle-check
     - gradle-check-windows
-    - bench
     - gradle-compatibility
     - java-executables-release
     - pkl-cli-macOS-amd64-release
@@ -840,8 +800,6 @@ jobs:
     - pkl-doc-linux-aarch64-release
     - pkl-doc-alpine-linux-amd64-release
     - pkl-doc-windows-amd64-release
-    - deploy-release
-    - github-release
     permissions:
       checks: write
     runs-on: ubuntu-latest
