@@ -69,19 +69,27 @@ publishing {
 
 val testNativeExecutable by
   tasks.registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     inputs.dir("src/test/files/DocGeneratorTest/input")
     outputs.dir("src/test/files/DocGeneratorTest/output")
     systemProperty("org.pkl.doc.NativeExecutableTest", "true")
-    include(listOf("**/NativeExecutableTest.class"))
+
+    filter { includeTestsMatching("org.pkl.doc.NativeExecutableTest") }
   }
 
 val testJavaExecutable by
   tasks.registering(Test::class) {
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+
     dependsOn(tasks.javaExecutable)
     inputs.dir("src/test/files/DocGeneratorTest/input")
     outputs.dir("src/test/files/DocGeneratorTest/output")
     systemProperty("org.pkl.doc.JavaExecutableTest", "true")
-    include(listOf("**/JavaExecutableTest.class"))
+
+    filter { includeTestsMatching("org.pkl.doc.JavaExecutableTest") }
   }
 
 tasks.check { dependsOn(testJavaExecutable) }
