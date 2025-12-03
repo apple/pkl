@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,15 +21,15 @@ import java.util.Set;
 import org.organicdesign.fp.collections.ImSet;
 import org.organicdesign.fp.collections.MutSet;
 import org.organicdesign.fp.collections.PersistentHashSet;
-import org.organicdesign.fp.collections.RrbTree;
-import org.organicdesign.fp.collections.RrbTree.ImRrbt;
-import org.organicdesign.fp.collections.RrbTree.MutRrbt;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Iterators.ReverseTruffleIterator;
 import org.pkl.core.runtime.Iterators.TruffleIterator;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.RrbTree;
+import org.pkl.core.util.RrbTree.ImRrbt;
+import org.pkl.core.util.RrbTree.MutRrbt;
 
 public final class VmSet extends VmCollection {
   public static final VmSet EMPTY = new VmSet(PersistentHashSet.empty(), RrbTree.empty());
