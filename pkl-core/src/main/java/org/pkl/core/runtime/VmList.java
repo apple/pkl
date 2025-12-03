@@ -26,9 +26,9 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Iterators.ReverseTruffleIterator;
 import org.pkl.core.runtime.Iterators.TruffleIterator;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.RrbTree;
-import org.pkl.core.util.RrbTree.ImRrbt;
-import org.pkl.core.util.RrbTree.MutRrbt;
+import org.pkl.core.util.paguro.RrbTree;
+import org.pkl.core.util.paguro.RrbTree.ImRrbt;
+import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 // currently the backing collection is realized at the end of each VmList operation
 // this trades efficiency for ease of understanding, as it eliminates the complexity

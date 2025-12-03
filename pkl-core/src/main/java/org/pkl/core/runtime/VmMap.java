@@ -26,9 +26,9 @@ import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.RrbTree;
-import org.pkl.core.util.RrbTree.ImRrbt;
-import org.pkl.core.util.RrbTree.MutRrbt;
+import org.pkl.core.util.paguro.RrbTree;
+import org.pkl.core.util.paguro.RrbTree.ImRrbt;
+import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, Object>> {
   public static final VmMap EMPTY = new VmMap(PersistentHashMap.empty(), RrbTree.empty());

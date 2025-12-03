@@ -27,9 +27,9 @@ import org.pkl.core.runtime.Iterators.ReverseTruffleIterator;
 import org.pkl.core.runtime.Iterators.TruffleIterator;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Nullable;
-import org.pkl.core.util.RrbTree;
-import org.pkl.core.util.RrbTree.ImRrbt;
-import org.pkl.core.util.RrbTree.MutRrbt;
+import org.pkl.core.util.paguro.RrbTree;
+import org.pkl.core.util.paguro.RrbTree.ImRrbt;
+import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 public final class VmSet extends VmCollection {
   public static final VmSet EMPTY = new VmSet(PersistentHashSet.empty(), RrbTree.empty());

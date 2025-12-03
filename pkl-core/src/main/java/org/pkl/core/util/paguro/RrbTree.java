@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.util;
+package org.pkl.core.util.paguro;
 
 import static org.organicdesign.fp.collections.Cowry.*;
 import static org.organicdesign.fp.indent.IndentUtils.arrayString;
@@ -34,22 +34,7 @@ import org.organicdesign.fp.indent.Indented;
 import org.organicdesign.fp.oneOf.Option;
 import org.organicdesign.fp.tuple.Tuple2;
 import org.organicdesign.fp.tuple.Tuple4;
-
-// This file is adapted from https://github.com/GlenKPeterson/Paguro:
-//
-// Copyright 2016-05-28 PlanBase Inc. & Glen Peterson
-//
-// Licensed under the Apache License, Version 2.0 (the "License");
-// you may not use this file except in compliance with the License.
-// You may obtain a copy of the License at
-//
-// http://www.apache.org/licenses/LICENSE-2.0
-//
-// Unless required by applicable law or agreed to in writing, software
-// distributed under the License is distributed on an "AS IS" BASIS,
-// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
-// See the License for the specific language governing permissions and
-// limitations under the License.
+import org.pkl.core.util.Nullable;
 
 /**
  * An RRB Tree is an immutable List (like Clojure's PersistentVector) that also supports random
@@ -97,6 +82,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
 
   private static final Object[] EMPTY_ARRAY = new Object[0];
 
+  @SuppressWarnings("unchecked")
   private static <T> T[] singleElementArray(T elem) {
     return (T[]) new Object[] {elem};
   }
@@ -158,7 +144,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     /** {@inheritDoc} */
     @Override
     public MutRrbt<E> appendSome(Fn0<? extends Option<E>> supplier) {
-      return supplier.apply().match((it) -> append(it), () -> this);
+      return supplier.apply().match(this::append, () -> this);
     }
 
     /** {@inheritDoc} */
@@ -186,48 +172,12 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       return this;
     }
 
-    void debugValidate() {
-      if (focusLength > STRICT_NODE_LENGTH) {
-        throw new IllegalStateException(
-            "focus len:"
-                + focusLength
-                + " gt STRICT_NODE_LENGTH:"
-                + STRICT_NODE_LENGTH
-                + "\n"
-                + this.indentedStr(0));
-      }
-      int sz = root.debugValidate();
-      if (sz != size - focusLength) {
-        throw new IllegalStateException(
-            "Size incorrect.  Root size: "
-                + root.size()
-                + " RrbSize: "
-                + size
-                + " focusLen: "
-                + focusLength
-                + "\n"
-                + this.indentedStr(0));
-      }
-      if ((focusStartIndex < 0) || (focusStartIndex > size)) {
-        throw new IllegalStateException("focusStartIndex out of bounds!\n" + this.indentedStr(0));
-      }
-      if (!root.equals(eliminateUnnecessaryAncestors(root))) {
-        throw new IllegalStateException("Unnecessary ancestors!\n" + this.indentedStr(0));
-      }
-    }
-
     /** {@inheritDoc} */
     @Override
     public E get(int i) {
       if ((i < 0) || (i > size)) {
         throw new IndexOutOfBoundsException("Index: " + i + " size: " + size);
       }
-
-      // This is a debugging assertion - can't be covered by a test.
-      //        if ( (focusStartIndex < 0) || (focusStartIndex > size) ) {
-      //            throw new IllegalStateException("focusStartIndex: " + focusStartIndex +
-      //                                            " size: " + size);
-      //        }
 
       if (i >= focusStartIndex) {
         int focusOffset = i - focusStartIndex;
@@ -301,7 +251,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         }
         // Shift existing items past insertion index to the right
         int numItemsToShift = focusLength - diff;
-        //                   src, srcPos, dest, destPos,  length
         if (numItemsToShift > 0) {
           System.arraycopy(focus, diff, focus, diff + 1, numItemsToShift);
         }
@@ -426,12 +375,12 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     // have the same internal structure as an instance of this class.
 
     // For serializable.  Make sure to change whenever internal data format changes.
-    private static final long serialVersionUID = 20170625165600L;
+    @Serial private static final long serialVersionUID = 20170625165600L;
 
     // Check out Josh Bloch Item 78, p. 312 for an explanation of what's going on here.
     private static class SerializationProxy<E> implements Serializable {
       // For serializable.  Make sure to change whenever internal data format changes.
-      private static final long serialVersionUID = 20160904155600L;
+      @Serial private static final long serialVersionUID = 20160904155600L;
 
       private final int size;
       private transient RrbTree<E> rrbTree;
@@ -442,6 +391,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       }
 
       // Taken from Josh Bloch Item 75, p. 298
+      @Serial
       private void writeObject(ObjectOutputStream s) throws IOException {
         s.defaultWriteObject();
         // Write out all elements in the proper order
@@ -450,6 +400,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         }
       }
 
+      @Serial
       @SuppressWarnings("unchecked")
       private void readObject(ObjectInputStream s) throws IOException, ClassNotFoundException {
         s.defaultReadObject();
@@ -460,15 +411,18 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         rrbTree = temp.immutable();
       }
 
+      @Serial
       private Object readResolve() {
         return rrbTree;
       }
     }
 
+    @Serial
     private Object writeReplace() {
       return new SerializationProxy<>(this);
     }
 
+    @Serial
     private void readObject(java.io.ObjectInputStream in)
         throws IOException, ClassNotFoundException {
       throw new InvalidObjectException("Proxy required");
@@ -493,7 +447,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     /** {@inheritDoc} */
     @Override
     public ImRrbt<E> appendSome(Fn0<? extends Option<E>> supplier) {
-      return supplier.apply().match((it) -> append(it), () -> this);
+      return supplier.apply().match(this::append, () -> this);
     }
 
     /** {@inheritDoc} */
@@ -508,48 +462,12 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       return this.mutable().precat(es).immutable();
     }
 
-    void debugValidate() {
-      if (focus.length > STRICT_NODE_LENGTH) {
-        throw new IllegalStateException(
-            "focus len:"
-                + focus.length
-                + " gt STRICT_NODE_LENGTH:"
-                + STRICT_NODE_LENGTH
-                + "\n"
-                + this.indentedStr(0));
-      }
-      int sz = root.debugValidate();
-      if (sz != size - focus.length) {
-        throw new IllegalStateException(
-            "Size incorrect.  Root size: "
-                + root.size()
-                + " RrbSize: "
-                + size
-                + " focusLen: "
-                + focus.length
-                + "\n"
-                + this.indentedStr(0));
-      }
-      if ((focusStartIndex < 0) || (focusStartIndex > size)) {
-        throw new IllegalStateException("focusStartIndex out of bounds!\n" + this.indentedStr(0));
-      }
-      if (!root.equals(eliminateUnnecessaryAncestors(root))) {
-        throw new IllegalStateException("Unnecessary ancestors!\n" + this.indentedStr(0));
-      }
-    }
-
     /** {@inheritDoc} */
     @Override
     public E get(int i) {
       if ((i < 0) || (i > size)) {
         throw new IndexOutOfBoundsException("Index: " + i + " size: " + size);
       }
-
-      // This is a debugging assertion - can't be covered by a test.
-      //        if ( (focusStartIndex < 0) || (focusStartIndex > size) ) {
-      //            throw new IllegalStateException("focusStartIndex: " + focusStartIndex +
-      //                                            " size: " + size);
-      //        }
 
       if (i >= focusStartIndex) {
         int focusOffset = i - focusStartIndex;
@@ -709,9 +627,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
   @Override
   public abstract RrbTree<E> appendSome(Fn0<? extends Option<E>> supplier);
 
-  /** Internal validation method for testing. */
-  abstract void debugValidate();
-
   /** {@inheritDoc} */
   @Override
   public abstract E get(int i);
@@ -790,14 +705,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     Node<E> leftRoot = pushFocus();
     Node<E> rightRoot = that.pushFocus();
 
-    //        if (leftRoot != eliminateUnnecessaryAncestors(leftRoot)) {
-    //            throw new IllegalStateException("Left had unnecessary ancestors!");
-    //        }
-
-    //        if (rightRoot != eliminateUnnecessaryAncestors(rightRoot)) {
-    //            throw new IllegalStateException("Right had unnecessary ancestors!");
-    //        }
-
     // Whether to add the right tree to the left one (true) or vice-versa (false).
     // True also means left is taller, false: right is taller.
     boolean leftIntoRight = leftRoot.height() < rightRoot.height();
@@ -820,30 +727,19 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     Node<E> n = taller;
 
     // This is the maximum we can descend into the taller tree (before running out of tree)
-    //        int maxDescent = taller.height() - 1;
 
     // Actual amount we're going to descend.
     int descentDepth = taller.height() - shorter.height();
-    //        if ( (descentDepth < 0) || (descentDepth >= taller.height()) ) {
-    //            throw new IllegalStateException("Illegal descent depth: " + descentDepth);
-    //        }
     Node<E>[] ancestors = genericNodeArray(descentDepth);
     int i = 0;
     for (; i < ancestors.length; i++) {
       // Add an ancestor to array
       ancestors[i] = n;
-      //            if (n instanceof Leaf) {
-      //                throw new IllegalStateException("Somehow found a leaf node");
-      //            }
       n = n.endChild(leftIntoRight);
     }
     // i is incremented before leaving the loop, so decrement it here to make it point
     // to ancestors.length - 1;
     i--;
-
-    //        if (n.height() != shorter.height()) {
-    //            throw new IllegalStateException("Didn't get to proper height");
-    //        }
 
     // Most compact: Descend the taller tree to shorter.height and find room for all
     //     shorter children as children of that node.
@@ -852,17 +748,12 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       Node<E>[] kids;
       kids = ((Relaxed<E>) shorter).nodes;
       n = n.addEndChildren(leftIntoRight, kids);
-      //                System.out.println("n0=" + n.indentedStr(3));
     }
 
     if (i >= 0) {
       // Go back up one after lowest check.
       n = ancestors[i];
-      //                System.out.println("n1=" + n.indentedStr(3));
       i--;
-      //            if (n.height() != shorter.height() + 1) {
-      //                throw new IllegalStateException("Didn't go back up enough");
-      //            }
     }
 
     // TODO: Is this used?
@@ -875,7 +766,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       i--;
 
       shorter = addAncestor(shorter);
-      //            shorter.debugValidate();
 
       // Sometimes we care about which is shorter and sometimes about left and right.
       // Since we fixed the shorter tree, we have to update the left/right
@@ -891,27 +781,17 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     // we have room in n for the shorter as a child.
 
     if (shorter.height() == (n.height() - 1)) {
-      //            if (!n.thisNodeHasRelaxedCapacity(1)) {
-      //                throw new IllegalStateException("somehow got here without relaxed
-      // capacity...");
-      //            }
       // Shorter one level below n and there's room
       // Trees are not equal height and there's room somewhere.
       n = n.addEndChild(leftIntoRight, shorter);
-      //                System.out.println("n2=" + n.indentedStr(3));
-      //            n.debugValidate();
     } else if (i < 0) {
       // 2 trees of equal height: make a new parent
-      //            if (shorter.height() != n.height()) {
-      //                throw new IllegalStateException("Expected trees of equal height");
-      //            }
 
       @SuppressWarnings("unchecked") // Need raw types here.
       Node<E>[] newRootArray = new Node[] {leftRoot, rightRoot};
       int leftSize = leftRoot.size();
       Node<E> newRoot =
           new Relaxed<>(new int[] {leftSize, leftSize + rightRoot.size()}, newRootArray);
-      //            newRoot.debugValidate();
       return makeNew(emptyArray(), 0, 0, newRoot, newRoot.size());
     } else {
       throw new IllegalStateException("How did we get here?");
@@ -935,7 +815,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       i--;
     }
 
-    //        n.debugValidate();
     return makeNew(emptyArray(), 0, 0, n, n.size());
   }
 
@@ -995,9 +874,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     // the focus.
 
     SplitNode<E> split = newRoot.splitAt(splitIndex);
-
-    //        split.left().debugValidate();
-    //        split.right().debugValidate();
 
     E[] lFocus = split.leftFocus();
     Node<E> left = eliminateUnnecessaryAncestors(split.left());
@@ -1111,11 +987,9 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
 
   // ================================ Node private inner classes ================================
 
-  private interface Node<T> extends Indented {
+  protected interface Node<T> extends Indented {
     /** Returns the immediate child node at the given index. */
     Node<T> child(int childIdx);
-
-    int debugValidate();
 
     /** Returns the leftMost (first) or right-most (last) child */
     Node<T> endChild(boolean leftMost);
@@ -1132,14 +1006,8 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     /** Returns the maximum depth below this node. Leaf nodes are height 1. */
     int height();
 
-    //        /** Try to add all sub-nodes to this one. */
-    //        Node<T> join(Node<T> that);
-
     /** Number of items stored in this node */
     int size();
-
-    //        /** Returns true if this node's array is not full */
-    //        boolean thisNodeHasCapacity();
 
     /** Can this node take the specified number of children? */
     boolean thisNodeHasRelaxedCapacity(int numItems);
@@ -1152,11 +1020,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
      * @return true if we can do so without otherwise adjusting the tree.
      */
     boolean hasRelaxedCapacity(int index, int size);
-
-    // Splitting a strict node yields an invalid Relaxed node (too short).
-    // We don't yet split Leaf nodes.
-    // So this needs to only be implemented on Relaxed for now.
-    //        Relaxed<T>[] split();
 
     /** Returns the number of immediate children of this node, not all descendants. */
     int numChildren();
@@ -1171,20 +1034,9 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     SplitNode<T> splitAt(int splitIndex);
   }
 
-  //    private interface BranchNode<T> extends Node<T> {
-  //    }
-
-  //    /** For calcCumulativeSizes */
-  //    private static final class CumulativeSizes {
-  //        int szSoFar; // Size so far (of all things to left)
-  //        int srcOffset; // offset in source array
-  //        int[] destArray; // the destination array
-  //        int destPos; // offset in destArray to copy to
-  //        int length; // number of items to copy.
-  //    }
-
   /** This class is the return type when splitting a node. */
-  private static class SplitNode<T> extends Tuple4<Node<T>, T[], Node<T>, T[]> implements Indented {
+  protected static class SplitNode<T> extends Tuple4<Node<T>, T[], Node<T>, T[]>
+      implements Indented {
     /**
      * Constructor.
      *
@@ -1195,12 +1047,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
      */
     SplitNode(Node<T> ln, T[] lf, Node<T> rn, T[] rf) {
       super(ln, lf, rn, rf);
-      //            if (lf.length > STRICT_NODE_LENGTH) {
-      //                throw new IllegalStateException("Left focus too long: " + arrayString(lf));
-      //            }
-      //            if (rf.length > STRICT_NODE_LENGTH) {
-      //                throw new IllegalStateException("Right focus too long: " + arrayString(rf));
-      //            }
     }
 
     public Node<T> left() {
@@ -1266,19 +1112,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       throw new UnsupportedOperationException("Don't call this on a leaf");
     }
 
-    @Override
-    public int debugValidate() {
-      if (items.length == 0) {
-        return 0;
-      }
-      if (items.length < MIN_NODE_LENGTH) {
-        throw new IllegalStateException("Leaf too short!\n" + this.indentedStr(0));
-      } else if (items.length >= MAX_NODE_LENGTH) {
-        throw new IllegalStateException("Leaf too long!\n" + this.indentedStr(0));
-      }
-      return items.length;
-    }
-
     /** Returns the leftMost (first) or right-most (last) child */
     @Override
     public Node<T> endChild(boolean leftMost) {
@@ -1312,31 +1145,13 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       return items.length;
     }
 
-    // If we want to add one more to an existing leaf node, it must already be part of a
-    // relaxed tree.
-    //        public boolean thisNodeHasCapacity() { return items.length < MAX_NODE_LENGTH; }
-
     @Override
     public boolean hasRelaxedCapacity(int index, int size) {
-      // Appends and prepends need to be a good size, but random inserts do not.
-      //            if ( (size < 1) || (size >= MAX_NODE_LENGTH) ) {
-      //                throw new IllegalArgumentException("Bad size: " + size);
-      //              // + " MIN_NODE_LENGTH=" + MIN_NODE_LENGTH + " MAX_NODE_LENGTH=" +
-      // MAX_NODE_LENGTH);
-      //            }
       return (items.length + size) < MAX_NODE_LENGTH;
     }
 
     @Override
     public SplitNode<T> splitAt(int splitIndex) {
-      //            if (splitIndex < 0) {
-      //                throw new IllegalArgumentException("Called splitAt when splitIndex < 0");
-      //            }
-      //            if (splitIndex > items.length - 1) {
-      //                throw new IllegalArgumentException("Called splitAt when splitIndex >
-      // orig.length - 1");
-      //            }
-
       // Should we just ensure that the split is between 1 and items.length (exclusive)?
       if (splitIndex == 0) {
         return new SplitNode<>(emptyLeaf(), emptyArray(), emptyLeaf(), items);
@@ -1364,7 +1179,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     private Leaf<T>[] spliceAndSplit(T[] oldFocus, int splitIndex) {
       // Consider optimizing:
       T[] newItems = spliceIntoArrayAt(oldFocus, items, splitIndex, null);
-      //                                             (Class<T>) items[0].getClass());
 
       // Shift right one is divide-by 2.
       Tuple2<T[], T[]> split = splitArray(newItems, newItems.length >> 1);
@@ -1380,9 +1194,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     // I think this can only be called when the root node is a leaf.
     @Override
     public Node<T> pushFocus(int index, T[] oldFocus) {
-      //            if (oldFocus.length == 0) {
-      //                throw new IllegalStateException("Never call this with an empty focus!");
-      //            }
       // We put the empty Leaf as the root of the empty vector.  It stays there
       // until the first call to this method, at which point, the oldFocus becomes the
       // new root.
@@ -1407,24 +1218,16 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
 
     @Override
     public Node<T> replace(int idx, T t) {
-      //            if (idx >= size()) {
-      //                throw new IllegalArgumentException("Invalid index " + idx + " >= " +
-      // size());
-      //            }
       return new Leaf<>(replaceInArrayAt(t, items, idx, null));
     }
 
     @Override
     public boolean thisNodeHasRelaxedCapacity(int numItems) {
-      //            if ( (numItems < 1) || (numItems >= MAX_NODE_LENGTH) ) {
-      //                throw new IllegalArgumentException("Bad size: " + numItems);
-      //            }
       return items.length + numItems < MAX_NODE_LENGTH;
     }
 
     @Override
     public String toString() {
-      //            return "Leaf("+ arrayString(items) + ")";
       return arrayString(items);
     }
 
@@ -1448,58 +1251,11 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     Relaxed(int[] szs, Node<T>[] ns) {
       cumulativeSizes = szs;
       nodes = ns;
-
-      // Consider removing constraint validations before shipping for performance
-      //            if (cumulativeSizes.length < 1) {
-      //                throw new IllegalArgumentException("cumulativeSizes.length < 1");
-      //            }
-      //            if (nodes.length < 1) {
-      //                throw new IllegalArgumentException("nodes.length < 1");
-      //            }
-      //            if (cumulativeSizes.length != nodes.length) {
-      //                throw new IllegalArgumentException(
-      //                        "cumulativeSizes.length:" + cumulativeSizes.length +
-      //                        " != nodes.length:" + nodes.length);
-      //            }
-
-      //            int cumulativeSize = 0;
-      //            for (int i = 0; i < nodes.length; i++) {
-      //                cumulativeSize += nodes[i].size();
-      //                if (cumulativeSize != cumulativeSizes[i]) {
-      //                    throw new IllegalArgumentException(
-      //                            "nodes[" + i + "].size() was " +
-      //                            nodes[i].size() +
-      //                            " which is not compatible with cumulativeSizes[" +
-      //                            i + "] which was " + cumulativeSizes[i] +
-      //                            "\n\tcumulativeSizes=" + arrayString(cumulativeSizes) +
-      //                            "\n\tnodes=" + arrayString(nodes));
-      //                }
-      //            }
     }
 
     @Override
     public Node<T> child(int childIdx) {
       return nodes[childIdx];
-    }
-
-    @Override
-    public int debugValidate() {
-      int sz = 0;
-      int height = height() - 1;
-      if (nodes.length != cumulativeSizes.length) {
-        throw new IllegalStateException("Unequal size of nodes and sizes!\n" + this.indentedStr(0));
-      }
-      for (int i = 0; i < nodes.length; i++) {
-        Node<T> n = nodes[i];
-        if (n.height() != height) {
-          throw new IllegalStateException("Unequal height!\n" + this.indentedStr(0));
-        }
-        sz += n.size();
-        if (sz != cumulativeSizes[i]) {
-          throw new IllegalStateException("Cumulative Sizes are wrong!\n" + this.indentedStr(0));
-        }
-      }
-      return sz;
     }
 
     /** Returns the leftMost (first) or right-most (last) child */
@@ -1517,12 +1273,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     /** Adds kids as leftmost or rightmost of current children */
     @Override
     public Node<T> addEndChildren(boolean leftMost, Node<T>[] newKids) {
-      //            if (!thisNodeHasRelaxedCapacity(newKids.length)) {
-      //                throw new IllegalStateException("Can't add enough kids");
-      //            }
-      //            if (nodes[0].height() != newKids[0].height()) {
-      //                throw new IllegalStateException("Kids not same height");
-      //            }
       @SuppressWarnings("unchecked")
       Node<T>[] res = spliceIntoArrayAt(newKids, nodes, leftMost ? 0 : nodes.length, Node.class);
       // TODO: Figure out which side we inserted on and do the math to adjust counts instead
@@ -1547,16 +1297,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
      * @return The index of the immediate child of this node that the desired node resides in.
      */
     private int subNodeIndex(int treeIndex) {
-      // For radix=4 this is actually faster, or at least as fast...
-      //            for (int i = 0; i < cumulativeSizes.length; i++) {
-      //                if (treeIndex < cumulativeSizes[i]) {
-      //                    return i;
-      //                }
-      //            }
-      //            if (treeIndex == size()) {
-      //                return cumulativeSizes.length - 1;
-      //            }
-
       // treeSize = cumulativeSizes[cumulativeSizes.length - 1]
       // range of sub-node indices: 0 to cumulativeSizes.length - 1
       // range of tree indices: 0 to treeSize
@@ -1569,7 +1309,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       //
       // Now guess the sub-node index (quickly).
 
-      var guessLong = ((long) cumulativeSizes.length * treeIndex) / size();
+      var guessLong = StrictMath.multiplyExact((long) cumulativeSizes.length, treeIndex) / size();
       if (guessLong >= cumulativeSizes.length) {
         // Guessed beyond end length - returning last item.
         return cumulativeSizes.length - 1;
@@ -1593,14 +1333,11 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       //         that guess
       if (guessedCumSize < treeIndex) {
         while (guess < (cumulativeSizes.length - 1)) {
-          //                    System.out.println("    Too low.  Check higher...");
           guessedCumSize = cumulativeSizes[++guess];
           if (guessedCumSize >= treeIndex) {
-            //                        System.out.println("    RIGHT!");
             // See note in equal case below...
             return (guessedCumSize == treeIndex) ? guess + 1 : guess;
           }
-          //                    System.out.println("    ==== Guess higher...");
         }
         throw new IllegalStateException("Can we get here?  If so, how?");
       } else if (guessedCumSize > (treeIndex + MIN_NODE_LENGTH)) {
@@ -1608,18 +1345,14 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         // guessedCumSize greater than (treeIndex + MIN_NODE_LENGTH)
         //         Decrement guess and check result again until less, then return PREVIOUS guess
         while (guess > 0) {
-          //                    System.out.println("    Maybe too high.  Check lower...");
           int nextGuess = guess - 1;
           guessedCumSize = cumulativeSizes[nextGuess];
 
           if (guessedCumSize <= treeIndex) {
-            //                        System.out.println("    RIGHT!");
             return guess;
           }
-          //                    System.out.println("    ======= Guess lower...");
           guess = nextGuess;
         }
-        //                System.out.println("    Returning lower: " + guess);
         return guess;
       } else if (guessedCumSize == treeIndex) {
         // guessedCumSize equal to the treeIndex (see note about size)
@@ -1634,7 +1367,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         // Hopefully this still leads to a relatively balanced tree...
         return (treeIndex == size()) ? guess : guess + 1;
       } else {
-        //                System.out.println("    First guess: " + guess);
         return guess;
       }
     }
@@ -1665,10 +1397,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     @Override
     public boolean hasRelaxedCapacity(int index, int size) {
       // I think we can add any number of items (less than MAX_NODE_LENGTH)
-      //            if ( (size < MIN_NODE_LENGTH) || (size > MAX_NODE_LENGTH) ) {
-      //            if ( (size < 1) || (size > MAX_NODE_LENGTH) ) {
-      //                throw new IllegalArgumentException("Bad size: " + size);
-      //            }
       if (thisNodeHasRelaxedCapacity(1)) {
         return true;
       }
@@ -1696,9 +1424,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     @Override
     public SplitNode<T> splitAt(int splitIndex) {
       int size = size();
-      //            if ( (splitIndex < 0) || (splitIndex > size) ) {
-      //                throw new IllegalArgumentException("Bad splitIndex: " + splitIndex);
-      //            }
       if (splitIndex == 0) {
         return new SplitNode<>(emptyLeaf(), emptyArray(), emptyLeaf(), emptyArray());
       }
@@ -1721,9 +1446,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
           rightCumSizes[i] = rightCumSizes[i] - bias;
         }
         Node<T> left = new Relaxed<>(leftCumSizes, splitNodes._1());
-        //                left.debugValidate();
         Node<T> right = new Relaxed<>(rightCumSizes, splitNodes._2());
-        //                right.debugValidate();
 
         return new SplitNode<>(
             left, emptyArray(),
@@ -1735,23 +1458,23 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
 
       final Node<T> left;
       Node<T> splitLeft = split.left();
-      //            splitLeft.debugValidate();
 
       if (subNodeIndex == 0) {
-        //                debug("If we have a single left node, it doesn't need a parent.");
         left = splitLeft;
       } else {
         boolean haveLeft = (splitLeft.size() > 0);
         int numLeftItems = subNodeIndex + (haveLeft ? 1 : 0);
         int[] leftCumSizes = new int[numLeftItems];
         Node<T>[] leftNodes = genericNodeArray(numLeftItems);
-        //                      src, srcPos,    dest,destPos, length
         System.arraycopy(cumulativeSizes, 0, leftCumSizes, 0, numLeftItems);
         if (haveLeft) {
-          int cumulativeSize = (numLeftItems > 1) ? leftCumSizes[numLeftItems - 2] : 0;
+          // we (and the static analyzer) know numLeftItems > 1 because:
+          // * subNodeIndexcan't be negative because nodes[subNodeIndex] succeeded
+          // * subNodeIndex can't be zero because we're in the else
+          // * haveLeft is true
+          int cumulativeSize = leftCumSizes[numLeftItems - 2];
           leftCumSizes[numLeftItems - 1] = cumulativeSize + splitLeft.size();
         }
-        //                    debug("leftCumSizes=" + arrayString(leftCumSizes));
         // Copy one less item if we are going to add the split one in a moment.
         // I could have written:
         //     haveLeft ? numLeftItems - 1
@@ -1763,34 +1486,12 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
           while (splitLeft.height() < this.height() - 1) {
             splitLeft = addAncestor(splitLeft);
           }
-          //                    if ( (leftNodes.length > 0) &&
-          //                         (leftNodes[0].height() != splitLeft.height()) ) {
-          //                        throw new IllegalStateException("nodesHeight: " +
-          // leftNodes[0].height() +
-          //                                                        " splitLeftHeight: " +
-          // splitLeft.height());
-          //                    }
           leftNodes[numLeftItems - 1] = splitLeft;
         }
         left = new Relaxed<>(leftCumSizes, leftNodes);
-        //                left.debugValidate();
       }
 
       final Node<T> right = fixRight(nodes, split.right(), subNodeIndex);
-      //            right.debugValidate();
-
-      //            debug("RETURNING=", ret);
-      //            if (this.size() != ret.size()) {
-      //                throw new IllegalStateException(
-      //                        "Split on " + this.size() + " items returned " +
-      //                        ret.size() + " items\n" +
-      //                        "original=" + this.indentedStr(9) + "\n" +
-      //                        "splitIndex=" + splitIndex + "\n" +
-      //                        "leftFocus=" + arrayString(split.leftFocus()) + "\n" +
-      //                        "left=" + left.indentedStr(5) + "\n" +
-      //                        "rightFocus=" + arrayString(split.rightFocus()) + "\n" +
-      //                        "right=" + right.indentedStr(6));
-      //            }
 
       return new SplitNode<>(
           left, split.leftFocus(),
@@ -1865,9 +1566,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
           }
           newCumSizes[subNodeIndex] = cumulativeSize + oldFocus.length;
           numToSkip = 1;
-          //                    for (int i = subNodeIndex + 1; i < newCumSizes.length; i++) {
-          //                        newCumSizes[i] = cumulativeSizes[i - 1] + oldFocus.length;
-          //                    }
         } else {
           // Grab the array from the existing leaf node, make the insert, and yield two
           // new leaf nodes.
@@ -1884,9 +1582,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
 
           // Copy nodes and cumulativeSizes before split
           if (subNodeIndex > 0) {
-            //               src,srcPos,dest,destPos,length
             System.arraycopy(nodes, 0, newNodes, 0, subNodeIndex);
-            //               src,   srcPos, dest,    destPos, length
             System.arraycopy(cumulativeSizes, 0, newCumSizes, 0, subNodeIndex);
 
             leftSize = cumulativeSizes[subNodeIndex - 1];
@@ -1900,7 +1596,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
           newCumSizes[subNodeIndex + 1] = leftSize + rightLeaf.size();
 
           if (subNodeIndex < (nodes.length - 1)) {
-            //               src,srcPos,dest,destPos,length
             System.arraycopy(
                 nodes,
                 subNodeIndex + 1,
@@ -1938,8 +1633,10 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       newNodes[subNodeIndex] = node1;
       newNodes[subNodeIndex + 1] = node2;
 
-      // If we aren't inserting at the last item, array-copy the nodes after the insert
-      // point.
+      // If we aren't inserting at the last item, array-copy the nodes after the insert point.
+      // FIXME: the static analyzer says this is always true but I don't believe it
+      // FIXME: "find cause" doesn't appear to account for the possible mutation on L1556
+      //noinspection ConstantValue
       if (subNodeIndex < nodes.length) {
         System.arraycopy(
             nodes, subNodeIndex + 1, newNodes, subNodeIndex + 2, nodes.length - subNodeIndex - 1);
@@ -1959,10 +1656,8 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       }
 
       Relaxed<T> newRelaxed = new Relaxed<>(newCumSizes, newNodes);
-      //            debug("newRelaxed2:\n" + newRelaxed.indentedStr(0));
 
       return newRelaxed.pushFocus(index, oldFocus);
-      //            debug("Parent after:" + after.indentedStr(0));
     }
 
     @SuppressWarnings("unchecked")
@@ -1977,9 +1672,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
 
     @Override
     public String indentedStr(int indent) {
-      StringBuilder sB =
-          new StringBuilder() // indentSpace(indent)
-              .append("Relaxed(");
+      StringBuilder sB = new StringBuilder().append("Relaxed(");
       int nextIndent = indent + sB.length();
       sB.append("cumulativeSizes=")
           .append(arrayString(cumulativeSizes))
@@ -2058,9 +1751,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       Node<T>[] newNodes = insertIntoArrayAt(newNode, ns, subNodeIndex, Node.class);
 
       int oldLen = oldCumSizes.length;
-      //            if (subNodeIndex > oldLen) {
-      //                throw new IllegalStateException("subNodeIndex > oldCumSizes.length");
-      //            }
 
       int[] newCumSizes = new int[oldLen + 1];
       // Copy unchanged cumulative sizes
@@ -2090,15 +1780,8 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
      */
     @SuppressWarnings("unchecked")
     public static <T> Node<T> fixRight(Node<T>[] origNodes, Node<T> splitRight, int subNodeIndex) {
-      //            if ( (splitRight.size() > 0) &&
-      //                 (origNodes[0].height() != splitRight.height()) ) {
-      //                throw new IllegalStateException("Passed a splitRight node of a different
-      // height" +
-      //                                                " than the origNodes!");
-      //            }
       Node<T> right;
       if (subNodeIndex == (origNodes.length - 1)) {
-        //                right = splitRight;
         right = new Relaxed<T>(new int[] {splitRight.size()}, new Node[] {splitRight});
       } else {
         boolean haveRightSubNode = splitRight.size() > 0;
@@ -2113,7 +1796,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         int destCopyStartIdx = 0;
 
         if (haveRightSubNode) {
-          //                 src,       srcPos,          dest, destPos, length
           System.arraycopy(origNodes, subNodeIndex + 1, rightNodes, 1, numRightNodes - 1);
 
           rightNodes[0] = splitRight;
@@ -2121,7 +1803,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
           rightCumSizes[0] = cumulativeSize;
           destCopyStartIdx = 1;
         } else {
-          //                 src,       srcPos,          dest, destPos, length
           System.arraycopy(origNodes, subNodeIndex + 1, rightNodes, 0, numRightNodes);
         }
 
@@ -2134,7 +1815,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
         }
 
         right = new Relaxed<>(rightCumSizes, rightNodes);
-        //                right.debugValidate();
       }
       return right;
     } // end fixRight()
@@ -2158,7 +1838,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
     public Node<E> next() {
       return node.child(idx++);
     }
-    //        public String toString() { return "IdxNode(" + idx + " " + node + ")"; }
   }
 
   final class Iter implements UnmodSortedIterator<E> {
@@ -2208,7 +1887,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       if (leafArrayIdx < leafArray.length) {
         return true;
       }
-      //            if (leafArray.length == 0) { return false; }
       leafArray = nextLeafArray();
       leafArrayIdx = 0;
       return leafArray.length > 0;
@@ -2242,7 +1920,6 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
       if (isFirst) {
         isFirst = false;
       } else {
-        //                sB.append(" ");
         if (items[0] instanceof Leaf) {
           sB.append(" ");
         } else {
