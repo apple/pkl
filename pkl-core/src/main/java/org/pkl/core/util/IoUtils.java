@@ -48,7 +48,7 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 public final class IoUtils {
 
   // Don't match paths like `C:\`, which are drive letters on Windows.
-  private static final Pattern uriLike = Pattern.compile("\\w+:[^\\\\].*");
+  private static final Pattern uriLike = Pattern.compile("[\\w+.-]+:[^\\\\].*");
 
   private static final Pattern windowsPathLike = Pattern.compile("\\w:\\\\.*");
 
