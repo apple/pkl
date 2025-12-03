@@ -109,6 +109,8 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -137,6 +139,8 @@ jobs:
       LANG: en_US.UTF-8
     steps:
     - uses: actions/checkout@v5
+      with:
+        fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
         java-version: '21'

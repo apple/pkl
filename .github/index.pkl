@@ -86,9 +86,12 @@ local benchmarkJob: SimpleGradleJob = new { command = "bench:jmh" }
 
 local gradleCompatibilityJob: SimpleGradleJob = new {
   command = ":pkl-gradle:build :pkl-gradle:compatibilityTestReleases"
+  fetchDepth = 0
 }
 
-local buildJavaExecutableJob: BuildJavaExecutableJob = new {}
+local buildJavaExecutableJob: BuildJavaExecutableJob = new {
+  fetchDepth = 0
+}
 
 local buildAndTestJobs: PklJobs = new {
   ...gradleCheckJobs
