@@ -754,7 +754,7 @@ jobs:
         ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true publishToSonatype closeAndReleaseSonatypeStagingRepository
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true publishToSonatype closeAndReleaseSonatypeStagingRepository
   github-release:
     needs: deploy-release
     permissions:
