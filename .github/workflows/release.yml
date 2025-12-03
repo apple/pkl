@@ -30,7 +30,7 @@ jobs:
         cache: gradle
     - name: check
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true check
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -61,7 +61,7 @@ jobs:
         cache: gradle
     - name: check
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true check
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -89,20 +89,7 @@ jobs:
         cache: gradle
     - name: bench:jmh
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true bench:jmh
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-bench
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-bench
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true bench:jmh
   gradle-compatibility:
     runs-on: ubuntu-latest
     env:
@@ -119,7 +106,7 @@ jobs:
         cache: gradle
     - name: :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@v5
@@ -150,7 +137,7 @@ jobs:
     - uses: actions/checkout@v5
     - name: gradle build java executables
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -186,7 +173,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -219,7 +206,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -255,7 +242,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -288,7 +275,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -394,7 +381,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -428,7 +415,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -464,7 +451,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -497,7 +484,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -533,7 +520,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -566,7 +553,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -672,7 +659,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.musl=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -706,7 +693,7 @@ jobs:
         cache: gradle
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@v5
       with:
@@ -767,20 +754,7 @@ jobs:
         ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
-      run: ./gradlew --info --stacktrace -DpklMultiJdkTesting=true publishToSonatype closeAndReleaseSonatypeStagingRepository
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-deploy-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-deploy-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true publishToSonatype closeAndReleaseSonatypeStagingRepository
   github-release:
     needs: deploy-release
     permissions:
@@ -807,25 +781,11 @@ jobs:
           --verify-tag \
           --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
           */build/executable/*
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-github-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-github-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   publish-test-results:
     if: '!failure() && !cancelled()'
     needs:
     - gradle-check
     - gradle-check-windows
-    - bench
     - gradle-compatibility
     - java-executables-release
     - pkl-cli-macOS-amd64-release
@@ -840,8 +800,6 @@ jobs:
     - pkl-doc-linux-aarch64-release
     - pkl-doc-alpine-linux-amd64-release
     - pkl-doc-windows-amd64-release
-    - deploy-release
-    - github-release
     permissions:
       checks: write
     runs-on: ubuntu-latest
