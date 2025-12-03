@@ -1,6 +1,6 @@
 = Pkl 0.30 Release Notes
 :version: 0.30
-:version-minor: 0.30.0
+:version-minor: 0.30.1
 :release-date: November 3rd, 2025
 
 :yaml-binary-scalar: https://yaml.org/type/binary.html

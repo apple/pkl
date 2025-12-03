@@ -1,6 +1,26 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.30.1]]
+== 0.30.1 (2025-12-03)
+
+=== Fixes
+
+* Fixes formatting of `Map` constructors with line comments (https://github.com/apple/pkl/pull/1312[#1312]).
+* Fixes a crash when parsing empty parenthesized types (https://github.com/apple/pkl/pull/1323[#1323]).
+* Fixes a parser issue allowing too many newlines between tokens (https://github.com/apple/pkl/pull/1328[#1328]).
+* Fixes parsing of URIs with schemes containing `+`, `-`, or `.` (https://github.com/apple/pkl/pull/1335[#1335]).
+* Fixes a crash when creating very large `List` instances (https://github.com/apple/pkl/pull/1337[#1337]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/spyoungtech[@spyoungtech]
+* https://github.com/stackoverflow[@stackoverflow]
+
 [[release-0.30.0]]
 == 0.30.0 (2025-10-30)
 
