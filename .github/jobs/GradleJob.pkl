@@ -30,6 +30,7 @@ fixed gradleArgs =
   new Listing {
     "--info"
     "--stacktrace"
+    "--no-daemon"
     "-DpklMultiJdkTesting=true"
     when (isRelease) {
       "-DreleaseBuild=true"
