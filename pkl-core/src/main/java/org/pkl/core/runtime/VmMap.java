@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,13 +22,13 @@ import java.util.function.Consumer;
 import org.organicdesign.fp.collections.ImMap;
 import org.organicdesign.fp.collections.MutMap;
 import org.organicdesign.fp.collections.PersistentHashMap;
-import org.organicdesign.fp.collections.RrbTree;
-import org.organicdesign.fp.collections.RrbTree.ImRrbt;
-import org.organicdesign.fp.collections.RrbTree.MutRrbt;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.paguro.RrbTree;
+import org.pkl.core.util.paguro.RrbTree.ImRrbt;
+import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, Object>> {
   public static final VmMap EMPTY = new VmMap(PersistentHashMap.empty(), RrbTree.empty());

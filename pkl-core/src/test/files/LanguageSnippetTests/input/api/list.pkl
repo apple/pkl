@@ -238,6 +238,7 @@ examples {
     List().repeat(1)
     List().repeat(5)
     module.catch(() -> list1.repeat(-1))
+    List(0).repeat(118866785).length // triggers an overflow wraparound in original paguro impl
   }
 
   ["sortWith()"] {
