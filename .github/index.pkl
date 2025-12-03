@@ -184,11 +184,14 @@ release {
   jobs =
     (releaseJobs) {
       ["deploy-release"] = (
-        new DeployJob { command = "publishToSonatype closeAndReleaseSonatypeStagingRepository" }
+        new DeployJob {
+          isRelease = true
+          command = "publishToSonatype closeAndReleaseSonatypeStagingRepository"
+        }
       ) {
         needs = releaseJobs.keys.toListing()
       }
-      ["github-release"] = (new GithubRelease {}) {
+      ["github-release"] = new GithubRelease {
         needs = "deploy-release"
       }
     } |> toWorkflowJobs
