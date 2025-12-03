@@ -2,15 +2,15 @@
   "catalogs": {},
   "aliases": {
     "pkl": {
-      "script-ref": "org.pkl-lang:pkl-cli-java:0.30.0",
+      "script-ref": "org.pkl-lang:pkl-cli-java:0.30.1",
       "java-agents": []
     },
     "pkl-codegen-java": {
-      "script-ref": "org.pkl-lang:pkl-codegen-java:0.30.0",
+      "script-ref": "org.pkl-lang:pkl-codegen-java:0.30.1",
       "java-agents": []
     },
     "pkl-codegen-kotlin": {
-      "script-ref": "org.pkl-lang:pkl-codegen-kotlin:0.30.0",
+      "script-ref": "org.pkl-lang:pkl-codegen-kotlin:0.30.1",
       "java-agents": []
     }
   },
