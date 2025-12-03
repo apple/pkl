@@ -28,7 +28,7 @@
 /// The `pkl-binary` format uses MessagePack encoding.
 /// Its specification is available at
 /// <https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html>.
-@ModuleInfo { minPklVersion = "0.30.0" }
+@ModuleInfo { minPklVersion = "0.30.1" }
 module pkl.pklbinary
 
 /// Render values as `pkl-binary`.

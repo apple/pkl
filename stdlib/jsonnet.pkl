@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A [Jsonnet](https://jsonnet.org) renderer.
-@ModuleInfo { minPklVersion = "0.30.0" }
+@ModuleInfo { minPklVersion = "0.30.1" }
 module pkl.jsonnet
 
 /// Constructs an [ImportStr].

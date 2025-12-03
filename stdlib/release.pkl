@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// Information about the Pkl release that the current program runs on.
-@ModuleInfo { minPklVersion = "0.30.0" }
+@ModuleInfo { minPklVersion = "0.30.1" }
 module pkl.release
 
 import "pkl:semver"
