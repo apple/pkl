@@ -1,0 +1,14 @@
+version: 2
+updates:
+- directory: /
+  exclude-paths:
+  - .github/workflows/prb.yml
+  - .github/workflows/main.yml
+  - .github/workflows/build.yml
+  - .github/workflows/release.yml
+  - .github/workflows/release-branch.yml
+  - .github/workflows/test_report.yml
+  - .github/workflows/__dependabot_pr_polish__.yml
+  package-ecosystem: github-actions
+  schedule:
+    interval: weekly
