@@ -113,4 +113,11 @@ class FormatterTest {
 
     walkDir(outputDir)
   }
+
+  @Test
+  fun `whitespace only`() {
+    for (src in listOf(";;;", "\n", "\n\n\n", "\t")) {
+      assertThat(format(src)).isEqualTo("\n")
+    }
+  }
 }
