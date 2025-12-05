@@ -83,6 +83,7 @@ val assembleNative by
 val testNative by
   tasks.registering {
     group = "verification"
+    dependsOn(assembleNative)
 
     if (!buildInfo.isCrossArchSupported && buildInfo.isCrossArch) {
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
@@ -125,5 +126,5 @@ val checkNative by
 val buildNative by
   tasks.registering {
     group = "build"
-    dependsOn(assembleNative, checkNative)
+    dependsOn(checkNative)
   }
