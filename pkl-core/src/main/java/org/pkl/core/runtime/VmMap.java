@@ -279,9 +279,14 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   }
 
   @Override
-  @TruffleBoundary
   public int hashCode() {
-    return map.hashCode();
+    var result = 0;
+    for (var entry : map) {
+      var key = entry.getKey();
+      var value = entry.getValue();
+      result += key.hashCode() ^ value.hashCode();
+    }
+    return result;
   }
 
   @TruffleBoundary

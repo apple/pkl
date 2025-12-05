@@ -453,9 +453,17 @@ public final class VmList extends VmCollection {
   }
 
   @Override
-  @TruffleBoundary
   public int hashCode() {
-    return rrbt.hashCode();
+    int ret = 1;
+
+    for (Object item : rrbt) {
+      ret *= 31;
+      if (item != null) {
+        ret += item.hashCode();
+      }
+    }
+
+    return ret;
   }
 
   private static final class Builder implements VmCollection.Builder<VmList> {
