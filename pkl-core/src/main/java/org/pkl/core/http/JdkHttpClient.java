@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
 import java.net.ConnectException;
+import java.net.URI;
 import java.net.http.HttpClient.Redirect;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
@@ -41,11 +42,13 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import javax.annotation.concurrent.ThreadSafe;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
+import org.pkl.core.Pair;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
@@ -54,6 +57,7 @@ import org.pkl.core.util.Exceptions;
 final class JdkHttpClient implements HttpClient {
   // non-private for testing
   final java.net.http.HttpClient underlying;
+  final Map<URI, List<Pair<String, String>>> headers;
 
   // call java.net.http.HttpClient.close() if available (JDK 21+)
   private static final MethodHandle closeMethod;
@@ -77,7 +81,8 @@ final class JdkHttpClient implements HttpClient {
       List<Path> certificateFiles,
       List<ByteBuffer> certificateBytes,
       Duration connectTimeout,
-      java.net.ProxySelector proxySelector) {
+      java.net.ProxySelector proxySelector,
+      Map<URI, List<Pair<String, String>>> headers) {
     underlying =
         java.net.http.HttpClient.newBuilder()
             .sslContext(createSslContext(certificateFiles, certificateBytes))
@@ -85,13 +90,22 @@ final class JdkHttpClient implements HttpClient {
             .proxy(proxySelector)
             .followRedirects(Redirect.NORMAL)
             .build();
+    this.headers = headers;
   }
 
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
       throws IOException {
     try {
-      return underlying.send(request, responseBodyHandler);
+      var wrappedRequestBuilder = HttpRequest.newBuilder(request, (name, value) -> true);
+      for (var entry : headers.entrySet()) {
+        if (RequestRewritingClient.matchesRewriteRule(request.uri(), entry.getKey())) {
+          for (var value : entry.getValue()) {
+            wrappedRequestBuilder.header(value.getFirst(), value.getSecond());
+          }
+        }
+      }
+      return underlying.send(wrappedRequestBuilder.build(), responseBodyHandler);
     } catch (ConnectException e) {
       // original exception has no message
       throw new ConnectException(
