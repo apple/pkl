@@ -69,9 +69,8 @@ public final class PropertiesRendererNodes {
   private static PropertiesRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
     var restrictCharset = (boolean) VmUtils.readMember(self, Identifier.RESTRICT_CHARSET);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var PklConverter = new PklConverter(converters);
-    return new PropertiesRenderer(builder, omitNullProperties, restrictCharset, PklConverter);
+    return new PropertiesRenderer(
+        builder, omitNullProperties, restrictCharset, PklConverter.fromRenderer(self));
   }
 
   private static final class PropertiesRenderer extends AbstractStringRenderer {
