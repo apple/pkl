@@ -40,9 +40,31 @@ val generateTestConfigClasses by
     )
   }
 
-tasks.processTestResources { dependsOn(generateTestConfigClasses) }
+val generateTestConfigRecordClasses by
+  tasks.registering(JavaExec::class) {
+    val outputDir = layout.buildDirectory.dir("testConfigRecordClasses")
+    outputs.dir(outputDir)
+    inputs.dir("src/test/resources/recordsCodegenPkl")
 
-tasks.compileTestKotlin { dependsOn(generateTestConfigClasses) }
+    classpath = pklCodegenJava
+    mainClass.set("org.pkl.codegen.java.Main")
+    argumentProviders.add(
+      CommandLineArgumentProvider {
+        listOf(
+          "--output-dir",
+          outputDir.get().asFile.path,
+          "--generate-javadoc",
+          "--generate-records",
+          //          "--rename",
+          //          "com.example.=com.example.records.",
+        ) + fileTree("src/test/resources/recordsCodegenPkl").map { it.path }
+      }
+    )
+  }
+
+tasks.processTestResources { dependsOn(generateTestConfigClasses, generateTestConfigRecordClasses) }
+
+tasks.compileTestKotlin { dependsOn(generateTestConfigClasses, generateTestConfigRecordClasses) }
 
 val bundleTests by tasks.registering(Jar::class) { from(sourceSets.test.get().output) }
 
@@ -75,6 +97,9 @@ val testFromJar by
 sourceSets.getByName("test") {
   java.srcDir(layout.buildDirectory.dir("testConfigClasses/java"))
   resources.srcDir(layout.buildDirectory.dir("testConfigClasses/resources"))
+
+  java.srcDir(layout.buildDirectory.dir("testConfigRecordClasses/java"))
+  resources.srcDir(layout.buildDirectory.dir("testConfigRecordClasses/resources"))
 }
 
 dependencies {

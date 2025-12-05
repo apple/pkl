@@ -1,0 +1,110 @@
+package my;
+
+import java.lang.String;
+import org.pkl.config.java.mapper.Named;
+import org.pkl.config.java.mapper.NonNull;
+import org.pkl.core.Duration;
+<1<
+import java.lang.Override;
+import java.util.function.Consumer;
+import org.pkl.codegen.java.common.code.Wither;
+>1>
+<2<
+import lombok.Builder;
+>2>
+
+public record Mod() {
+  public interface Foo {
+    long one();
+  }
+
+  public interface INone extends Foo {
+  }
+
+  <2< @Builder >2>
+  public record None(@Named("one") long one) implements Foo, INone <1< , Wither<None, None.Memento> >1> {
+    <1<
+    @Override
+    public @NonNull None with(final @NonNull Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public long one;
+
+      private Memento(final @NonNull None r) {
+        one = r.one;
+      }
+
+      private @NonNull None build() {
+        return new None(one);
+      }
+    }
+    >1>
+  }
+
+  public interface IBar extends INone {
+    String two();
+  }
+
+  <2< @Builder >2>
+  public record Bar(@Named("one") long one,
+      @Named("two") String two) implements INone, IBar <1< , Wither<Bar, Bar.Memento> >1> {
+    <1<  
+    @Override
+    public @NonNull Bar with(final @NonNull Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public long one;
+
+      public String two;
+
+      private Memento(final @NonNull Bar r) {
+        one = r.one;
+        two = r.two;
+      }
+
+      private @NonNull Bar build() {
+        return new Bar(one, two);
+      }
+    }
+    >1>
+  }
+
+  <2< @Builder >2>
+  public record Baz(@Named("one") long one, @Named("two") String two,
+      @Named("three") @NonNull Duration three) implements IBar <1< , Wither<Baz, Baz.Memento> >1> {
+    <1<  
+    @Override
+    public @NonNull Baz with(final @NonNull Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public long one;
+
+      public String two;
+
+      public @NonNull Duration three;
+
+      private Memento(final @NonNull Baz r) {
+        one = r.one;
+        two = r.two;
+        three = r.three;
+      }
+
+      private @NonNull Baz build() {
+        return new Baz(one, two, three);
+      }
+    }
+    >1>
+  }
+}
