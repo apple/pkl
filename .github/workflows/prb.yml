@@ -117,6 +117,8 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
     - uses: actions/checkout@v5
     - uses: actions/setup-java@v5
       with:
@@ -124,6 +126,8 @@ jobs:
         distribution: temurin
         architecture: x64
         cache: gradle
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -146,6 +150,8 @@ jobs:
         name: test-results-html-pkl-cli-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
   pkl-cli-macOS-aarch64-snapshot:
     if: (contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-cli]') || contains(github.event.pull_request.body, '[native-pkl-cli-macOS]') || contains(github.event.pull_request.body, '[native-pkl-cli-macOS-aarch64]') || contains(github.event.pull_request.body, '[native-pkl-cli-macOS-aarch64]')) && github.repository_owner == 'apple'
     runs-on:
@@ -189,6 +195,8 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
     - uses: actions/checkout@v5
     - uses: actions/setup-java@v5
       with:
@@ -196,6 +204,8 @@ jobs:
         distribution: temurin
         architecture: aarch64
         cache: gradle
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -218,6 +228,8 @@ jobs:
         name: test-results-html-pkl-cli-linux-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
   pkl-cli-alpine-linux-amd64-snapshot:
     if: contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-cli]') || contains(github.event.pull_request.body, '[native-pkl-cli-linux]') || contains(github.event.pull_request.body, '[native-pkl-cli-linux-amd64]') || contains(github.event.pull_request.body, '[native-pkl-cli-linux-amd64]') || contains(github.event.pull_request.body, '[native-pkl-cli-alpine-linux-amd64]')
     runs-on: ubuntu-latest
@@ -405,6 +417,8 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
     - uses: actions/checkout@v5
     - uses: actions/setup-java@v5
       with:
@@ -412,6 +426,8 @@ jobs:
         distribution: temurin
         architecture: x64
         cache: gradle
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -434,6 +450,8 @@ jobs:
         name: test-results-html-pkl-doc-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
   pkl-doc-macOS-aarch64-snapshot:
     if: (contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-doc]') || contains(github.event.pull_request.body, '[native-pkl-doc-macOS]') || contains(github.event.pull_request.body, '[native-pkl-doc-macOS-aarch64]') || contains(github.event.pull_request.body, '[native-pkl-doc-macOS-aarch64]')) && github.repository_owner == 'apple'
     runs-on:
@@ -477,6 +495,8 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
     - uses: actions/checkout@v5
     - uses: actions/setup-java@v5
       with:
@@ -484,6 +504,8 @@ jobs:
         distribution: temurin
         architecture: aarch64
         cache: gradle
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -506,6 +528,8 @@ jobs:
         name: test-results-html-pkl-doc-linux-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
   pkl-doc-alpine-linux-amd64-snapshot:
     if: contains(github.event.pull_request.body, '[native]') || contains(github.event.pull_request.body, '[native-pkl-doc]') || contains(github.event.pull_request.body, '[native-pkl-doc-linux]') || contains(github.event.pull_request.body, '[native-pkl-doc-linux-amd64]') || contains(github.event.pull_request.body, '[native-pkl-doc-linux-amd64]') || contains(github.event.pull_request.body, '[native-pkl-doc-alpine-linux-amd64]')
     runs-on: ubuntu-latest
