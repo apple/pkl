@@ -23,6 +23,8 @@ extraGradleArgs: Listing<String>
 
 steps: Listing<*Workflow.Step | Workflow.TypedStep>
 
+preSteps: Listing<*Workflow.Step | Workflow.TypedStep>
+
 /// The fetch depth to use when doing a git checkout.
 fetchDepth: Int?
 
@@ -69,6 +71,7 @@ fixed job {
         }
       }
   steps {
+    ...preSteps
     // full checkout (needed for spotless)
     new Common.Checkout {
       when (fetchDepth != null) {
