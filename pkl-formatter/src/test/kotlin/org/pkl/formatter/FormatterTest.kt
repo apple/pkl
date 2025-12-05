@@ -115,7 +115,7 @@ class FormatterTest {
   }
 
   @Test
-  fun `whiespace only`() {
+  fun `whitespace only`() {
     for (src in listOf(";;;", "\n", "\n\n\n", "\t")) {
       assertThat(format(src)).isEqualTo("\n")
     }
