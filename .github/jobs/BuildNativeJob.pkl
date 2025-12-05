@@ -19,11 +19,28 @@ extraGradleArgs {
   }
 }
 
+preSteps {
+  when (os == "linux" && !musl) {
+    new {
+      name = "Install deps"
+      run = "dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en"
+    }
+  }
+}
+
 steps {
   when (musl) {
     new {
       name = "Install musl and zlib"
       run = read("../scripts/install_musl.sh").text
+    }
+  }
+  // workaround for https://github.com/actions/checkout/issues/1048
+  when (os == "linux" && !musl) {
+    new {
+      name = "Fix git ownership"
+      // language=bash
+      run = "git status || git config --system --add safe.directory $GITHUB_WORKSPACE"
     }
   }
   new {
