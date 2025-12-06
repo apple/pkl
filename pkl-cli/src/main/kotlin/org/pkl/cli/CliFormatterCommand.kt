@@ -110,7 +110,6 @@ constructor(
 
         val formatted = format(contents)
         if (contents != formatted) {
-          status.update(FORMATTING_VIOLATION)
           if (diffNameOnly || overwrite) {
             // if `--diff-name-only` or `-w` is specified, only write file names
             writeLine(pathStr)
@@ -118,6 +117,9 @@ constructor(
 
           if (overwrite) {
             path.writeText(formatted, Charsets.UTF_8)
+          } else {
+            // only exit on violation for "check" operations, not when overwriting
+            status.update(FORMATTING_VIOLATION)
           }
         }
 
