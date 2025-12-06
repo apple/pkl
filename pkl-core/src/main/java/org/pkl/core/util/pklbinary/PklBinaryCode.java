@@ -33,6 +33,8 @@ public enum PklBinaryCode {
   TYPEALIAS((byte) 0x0D),
   FUNCTION((byte) 0x0E),
   BYTES((byte) 0x0F),
+  REFERENCE((byte) 0x20),
+  REFERENCE_ACCESS((byte) 0x21),
 
   PROPERTY((byte) 0x10),
   ENTRY((byte) 0x11),
