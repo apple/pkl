@@ -69,16 +69,12 @@ val assembleNative by
       buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
         wraps(assembleNativeWindowsAmd64)
       }
-      buildInfo.os.isWindows && buildInfo.targetArch == "aarch64" -> {
-        logger.warn("Windows Aarch64 is not supported by GraalVM, skipping assembleNative")
-      }
-      buildInfo.musl -> {
-        throw GradleException("Building musl on ${buildInfo.os} is not supported")
-      }
       else -> {
-        throw GradleException(
-          "Unsupported os/arch pair: ${buildInfo.os.name}/${buildInfo.targetArch}"
-        )
+        doLast {
+          throw GradleException(
+            "Cannot build targeting ${buildInfo.os.name}/${buildInfo.targetArch} with musl=${buildInfo.musl}"
+          )
+        }
       }
     }
   }
@@ -109,16 +105,12 @@ val testNative by
       buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
         dependsOn(testNativeWindowsAmd64)
       }
-      buildInfo.os.isWindows && buildInfo.targetArch == "aarch64" -> {
-        logger.warn("Windows Aarch64 is not supported by GraalVM, skipping testNative")
-      }
-      buildInfo.musl -> {
-        throw GradleException("Building musl on ${buildInfo.os} is not supported")
-      }
       else -> {
-        throw GradleException(
-          "Unsupported os/arch pair: ${buildInfo.os.name}/${buildInfo.targetArch}"
-        )
+        doLast {
+          throw GradleException(
+            "Cannot build targeting ${buildInfo.os.name}/${buildInfo.targetArch} with musl=${buildInfo.musl}"
+          )
+        }
       }
     }
   }
