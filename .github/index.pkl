@@ -21,8 +21,8 @@ testReports {
   }
   excludeJobs {
     "bench"
-    "deploy-release"
     "github-release"
+    Regex("deploy-.*")
   }
 }
 

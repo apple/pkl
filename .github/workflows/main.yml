@@ -779,19 +779,6 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true --no-parallel publishToSonatype
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-xml-deploy-snapshot
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@v5
-      with:
-        name: test-results-html-deploy-snapshot
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   publish-test-results:
     if: '!failure() && !cancelled()'
     needs:
@@ -811,7 +798,6 @@ jobs:
     - pkl-doc-linux-aarch64-snapshot
     - pkl-doc-alpine-linux-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
-    - deploy-snapshot
     permissions:
       checks: write
     runs-on: ubuntu-latest
