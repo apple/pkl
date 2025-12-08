@@ -741,9 +741,9 @@ pkl shell-completion zsh
 This command formats or checks formatting of Pkl files. +
 Exit codes:
 
-* 0: No violations found.
+* 0: No violations found or files were updated.
 * 1: An unexpected error happened (ex.: IO error)
-* 11: Violations were found.
+* 11: Violations were found (when running without `--write`).
 
 If the path is a directory, recursively looks for files with a `.pkl` extension, or files named `PklProject`.
 
@@ -787,6 +787,17 @@ include::../../pkl-cli/partials/cli-common-options.adoc[]
 The <<command-eval>>, <<command-test>>, <<command-repl>>, <<command-download-package>>, and <<command-analyze-imports>> commands also take the following options:
 
 include::../../pkl-cli/partials/cli-project-options.adoc[]
+
+[[root-options]]
+=== Root options
+
+The root `pkl` command supports the following options:
+
+.-v, --version
+[%collapsible]
+====
+Display version information.
+====
 
 == Evaluating Modules
 

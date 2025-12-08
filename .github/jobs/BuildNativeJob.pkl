@@ -1,0 +1,64 @@
+extends "GradleJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+import "@gha/Context.pkl"
+
+/// Whether to link to musl. Otherwise, links to glibc.
+musl: Boolean(implies(module.os == "linux")) = false
+
+/// The Gradle project under which to generate the executable
+project: String
+
+extraGradleArgs {
+  when (os == "macOS" && arch == "amd64") {
+    "-Dpkl.targetArch=\(module.arch)"
+    "-Dpkl.native--native-compiler-path=\(Context.github.workspace)/.github/scripts/cc_macos_amd64.sh"
+  }
+  when (musl) {
+    "-Dpkl.musl=true"
+  }
+}
+
+preSteps {
+  when (os == "linux" && !musl) {
+    new {
+      name = "Install deps"
+      run = "dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en"
+    }
+  }
+}
+
+steps {
+  when (musl) {
+    new {
+      name = "Install musl and zlib"
+      run = read("../scripts/install_musl.sh").text
+    }
+  }
+  // workaround for https://github.com/actions/checkout/issues/1048
+  when (os == "linux" && !musl) {
+    new {
+      name = "Fix git ownership"
+      // language=bash
+      run = "git status || git config --system --add safe.directory $GITHUB_WORKSPACE"
+    }
+  }
+  new {
+    name = "gradle buildNative"
+    shell = "bash"
+    run = "./gradlew \(module.gradleArgs) \(project):buildNative"
+  }
+  new Artifact.Upload {
+    name = "Upload executable artifacts"
+    with {
+      name =
+        if (musl)
+          "executable-\(project)-alpine-\(module.os)-\(module.arch)"
+        else
+          "executable-\(project)-\(module.os)-\(module.arch)"
+      // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
+      // See https://github.com/actions/upload-artifact/issues/206
+      path = "\(project)*/build/executable/**/*"
+    }
+  }
+}

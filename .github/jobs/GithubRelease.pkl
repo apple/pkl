@@ -1,0 +1,44 @@
+module GithubRelease
+
+extends "PklJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+import "@gha/Context.pkl"
+
+fixed job {
+  `runs-on` = "ubuntu-latest"
+  permissions {
+    contents = "write"
+  }
+  needs = "deploy-release"
+  steps {
+    new Artifact.Download {
+      with {
+        pattern = "executable-**"
+        `merge-multiple` = true
+      }
+    }
+    new {
+      name = "Publish release on GitHub"
+      env {
+        ["GH_TOKEN"] = Context.github.token
+        ["TAG_NAME"] = Context.github.refName
+        ["GIT_SHA"] = Context.github.sha
+        ["GH_REPO"] = Context.github.repository
+      }
+      // language=bash
+      run =
+        #"""
+        # exclude build_artifacts.txt from publish
+        rm -f */build/executable/*.build_artifacts.txt
+        find */build/executable/* -type d | xargs rm -rf
+        gh release create ${TAG_NAME} \
+          --title "${TAG_NAME}" \
+          --target "${GIT_SHA}" \
+          --verify-tag \
+          --notes "Release notes: https://pkl-lang.org/main/current/release-notes/changelog.html#release-${TAG_NAME}" \
+          */build/executable/*
+        """#
+    }
+  }
+}

@@ -49,13 +49,13 @@ constructor(
     return Formatter().format(contents, grammarVersion)
   }
 
-  private fun writeErr(error: String) {
+  private fun writeErrLine(error: String) {
     errWriter.write(error)
     errWriter.appendLine()
     errWriter.flush()
   }
 
-  private fun write(message: String) {
+  private fun writeLine(message: String) {
     if (silent) return
     consoleWriter.write(message)
     consoleWriter.appendLine()
@@ -88,7 +88,7 @@ constructor(
       }
       ERROR -> {
         if (!silent) {
-          writeErr("An error occurred during formatting.")
+          writeErrLine("An error occurred during formatting.")
         }
         throw CliTestException("", status.status)
       }
@@ -110,25 +110,28 @@ constructor(
 
         val formatted = format(contents)
         if (contents != formatted) {
-          status.update(FORMATTING_VIOLATION)
           if (diffNameOnly || overwrite) {
             // if `--diff-name-only` or `-w` is specified, only write file names
-            write(pathStr)
+            writeLine(pathStr)
           }
 
           if (overwrite) {
             path.writeText(formatted, Charsets.UTF_8)
+          } else {
+            // only exit on violation for "check" operations, not when overwriting
+            status.update(FORMATTING_VIOLATION)
           }
         }
 
         if (!diffNameOnly && !overwrite) {
-          write(formatted)
+          consoleWriter.write(formatted)
+          consoleWriter.flush()
         }
       } catch (pe: GenericParserError) {
-        writeErr("Could not format `$pathStr`: $pe")
+        writeErrLine("Could not format `$pathStr`: $pe")
         status.update(ERROR)
       } catch (e: IOException) {
-        writeErr("IO error while reading `$pathStr`: ${e.message}")
+        writeErrLine("IO error while reading `$pathStr`: ${e.message}")
         status.update(ERROR)
       }
     }

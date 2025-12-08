@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.lang.Runtime.Version
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 import org.gradle.accessors.dm.LibrariesForLibs
@@ -135,7 +136,6 @@ val windowsExecutableAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
-    extraNativeImageArgs.add("-Dfile.encoding=UTF-8")
   }
 
 val assembleNative by tasks.existing
@@ -167,13 +167,46 @@ val testStartNativeExecutable by
     }
   }
 
+val requiredGlibcVersion: Version = Version.parse("2.17")
+
+val checkGlibc by
+  tasks.registering {
+    enabled = buildInfo.os.isLinux && !buildInfo.musl
+    dependsOn(assembleNative)
+    doLast {
+      val exec =
+        providers.exec {
+          commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
+        }
+      val output = exec.standardOutput.asText.get()
+      val minimumGlibcVersion =
+        output
+          .split("\n")
+          .mapNotNull { line ->
+            val match = Regex("GLIBC_([.0-9]*)").find(line)
+            match?.groups[1]?.let { Version.parse(it.value) }
+          }
+          .maxOrNull()
+      if (minimumGlibcVersion == null) {
+        throw GradleException(
+          "Could not determine glibc version from executable. objdump output: $output"
+        )
+      }
+      if (minimumGlibcVersion > requiredGlibcVersion) {
+        throw GradleException(
+          "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
+        )
+      }
+    }
+  }
+
 // Expose underlying task's outputs
 private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
   dependsOn(other)
   outputs.files(other)
 }
 
-val testNative by tasks.existing { dependsOn(testStartNativeExecutable) }
+val testNative by tasks.existing { dependsOn(testStartNativeExecutable, checkGlibc) }
 
 val assembleNativeMacOsAarch64 by tasks.existing { wraps(macExecutableAarch64) }
 

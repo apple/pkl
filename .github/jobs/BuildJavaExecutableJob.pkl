@@ -1,0 +1,33 @@
+extends "GradleJob.pkl"
+
+import "@gha/actions/Artifact.pkl"
+import "@gha/actions/Common.pkl"
+
+// Keep this in sync with projects that build java executables
+local projects: List<String> = List("pkl-doc", "pkl-cli", "pkl-codegen-java", "pkl-codegen-kotlin")
+
+local command =
+  new Listing<String> {
+    "./gradlew"
+    module.gradleArgs
+    for (project in projects) {
+      // NOTE: `build` doesn't build native executables
+      "\(project):build"
+    }
+  }.join(" ")
+
+steps {
+  new Common.Checkout {}
+  new {
+    name = "gradle build java executables"
+    shell = "bash"
+    run = command
+  }
+  new Artifact.Upload {
+    name = "Upload executable artifacts"
+    with {
+      name = "executable-java"
+      path = "*/build/executable/**/*"
+    }
+  }
+}

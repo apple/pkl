@@ -229,9 +229,14 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     if (children.size == 1) return format(children[0])
     val firstNode = node.firstProperChild()!!
     return if (firstNode.text() == "Map") {
-      val nodes = mutableListOf<FormatNode>()
-      nodes += format(firstNode)
-      nodes += formatArgumentList(children[1], twoBy2 = true)
+      val nodes =
+        formatGenericWithGen(children, null) { node, _ ->
+          if (node.type == NodeType.ARGUMENT_LIST) {
+            formatArgumentList(node, twoBy2 = true)
+          } else {
+            format(node)
+          }
+        }
       Nodes(nodes)
     } else {
       Nodes(formatGeneric(children, null))
@@ -591,7 +596,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     twoBy2: Boolean = false,
   ): FormatNode {
     val children = node.children
-    val shouldMultiline = shouldMultlineNodes(node) { it.isTerminal(",") }
+    val shouldMultiline = shouldMultilineNodes(node) { it.isTerminal(",") }
     val sep: (Node, Node) -> FormatNode = { _, _ ->
       if (shouldMultiline) forceSpaceyLine() else spaceOrLine()
     }
@@ -626,7 +631,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     }
   }
 
-  private fun shouldMultlineNodes(node: Node, predicate: (Node) -> Boolean): Boolean {
+  private fun shouldMultilineNodes(node: Node, predicate: (Node) -> Boolean): Boolean {
     for (idx in 0..<node.children.lastIndex) {
       val prev = node.children[idx]
       val next = node.children[idx + 1]
@@ -684,13 +689,24 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       if (node.isTerminal(",")) {
         commas++
         if (commas == 2) {
+          val suffixes = mutableListOf<Node>()
+          while (tmp.isNotEmpty() && tmp.last().type.isAffix) {
+            // trailing comments should not be paired
+            suffixes += tmp.removeLast()
+          }
           res += Node(NodeType.ARGUMENT_LIST_ELEMENTS, tmp)
+          while (suffixes.isNotEmpty()) {
+            res += suffixes.removeFirst()
+          }
           res += node
           commas = 0
           tmp = mutableListOf()
         } else {
           tmp += node
         }
+      } else if (tmp.isEmpty() && node.type.isAffix) {
+        // leading comments should not be paired
+        res += node
       } else {
         tmp += node
       }
@@ -1021,7 +1037,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
 
   private fun formatBinaryOpExpr(node: Node): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
-    val shouldMultiline = shouldMultlineNodes(node) { it.type == NodeType.OPERATOR }
+    val shouldMultiline = shouldMultilineNodes(node) { it.type == NodeType.OPERATOR }
     val nodes =
       formatGeneric(flat) { prev, next ->
         val sep = if (shouldMultiline) forceSpaceyLine() else spaceOrLine()

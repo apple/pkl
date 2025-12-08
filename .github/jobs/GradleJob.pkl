@@ -1,0 +1,97 @@
+abstract module GradleJob
+
+extends "PklJob.pkl"
+
+import "@gha/actions/Common.pkl"
+import "@gha/actions/Setup.pkl"
+import "@gha/Workflow.pkl"
+
+/// Whether this is a release build or not.
+isRelease: Boolean = false
+
+/// The architecture to use
+arch: "amd64" | "aarch64" = "amd64"
+
+/// The OS to run on.
+os: "macOS" | "linux" | "windows" = "linux"
+
+// TODO flip this to `true` when nightly macOS is available
+/// Whether to run on nightly macOS.
+nightlyMacOS: Boolean(implies(os == "macOS")) = false
+
+extraGradleArgs: Listing<String>
+
+steps: Listing<*Workflow.Step | Workflow.TypedStep>
+
+preSteps: Listing<*Workflow.Step | Workflow.TypedStep>
+
+/// The fetch depth to use when doing a git checkout.
+fetchDepth: Int?
+
+fixed gradleArgs =
+  new Listing {
+    "--info"
+    "--stacktrace"
+    "--no-daemon"
+    "-DpklMultiJdkTesting=true"
+    when (isRelease) {
+      "-DreleaseBuild=true"
+    }
+    ...extraGradleArgs
+  }.join(" ")
+
+fixed job {
+  env {
+    ["LANG"] = "en_US.UTF-8"
+    when (os == "windows") {
+      ["JAVA_HOME"] = "/jdk"
+    }
+  }
+  when (os == "macOS") {
+    `if` =
+      let (cond = "github.repository_owner == 'apple'")
+        if (super.`if` != null)
+          "(\(super.`if`)) && \(cond)"
+        else
+          cond
+  }
+  `runs-on` =
+    if (os == "linux" && arch == "amd64")
+      "ubuntu-latest"
+    else if (os == "linux" && arch == "aarch64")
+      "ubuntu-24.04-arm"
+    else if (os == "windows")
+      "windows-latest"
+    else
+      new Listing {
+        "self-hosted"
+        "macos"
+        when (nightlyMacOS) {
+          "nightly"
+        }
+      }
+  steps {
+    ...preSteps
+    // full checkout (needed for spotless)
+    new Common.Checkout {
+      when (fetchDepth != null) {
+        with {
+          `fetch-depth` = fetchDepth
+        }
+      }
+    }
+    new Setup.Java {
+      with {
+        `java-version` = "21"
+        distribution = "temurin"
+        cache = "gradle"
+        architecture =
+          if (arch == "amd64")
+            "x64"
+          else
+            "aarch64"
+      }
+    }
+    ...module.steps
+  }
+}

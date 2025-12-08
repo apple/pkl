@@ -1393,6 +1393,9 @@ public class Parser {
           children.add(ret);
           typ = new Type.FunctionType(children, tk.span.endWith(ret.span()));
         } else {
+          if (children.isEmpty()) {
+            throw new ParserError(ErrorMessages.create("unexpectedTokenForType", ")"), end);
+          }
           typ = new ParenthesizedType((Type) children.get(0), tk.span.endWith(end));
         }
       }
@@ -1808,11 +1811,13 @@ public class Parser {
   private FullToken forceNext() {
     var tk = lexer.next();
     precededBySemicolon = false;
+    var newLines = lexer.newLinesBetween;
     while (tk.isAffix()) {
       precededBySemicolon = precededBySemicolon || tk == Token.SEMICOLON;
       tk = lexer.next();
+      newLines += lexer.newLinesBetween;
     }
-    return new FullToken(tk, lexer.span(), lexer.newLinesBetween);
+    return new FullToken(tk, lexer.span(), newLines);
   }
 
   // Like next, but don't ignore comments
