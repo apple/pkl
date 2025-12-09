@@ -2,8 +2,8 @@ module GithubRelease
 
 extends "PklJob.pkl"
 
-import "@gha/actions/Artifact.pkl"
-import "@gha/Context.pkl"
+import "@gha/catalog.pkl"
+import "@gha/context.pkl"
 
 fixed job {
   `runs-on` = "ubuntu-latest"
@@ -12,7 +12,7 @@ fixed job {
   }
   needs = "deploy-release"
   steps {
-    new Artifact.Download {
+    (catalog.`actions/download-artifact@v5`) {
       with {
         pattern = "executable-**"
         `merge-multiple` = true
@@ -21,10 +21,10 @@ fixed job {
     new {
       name = "Publish release on GitHub"
       env {
-        ["GH_TOKEN"] = Context.github.token
-        ["TAG_NAME"] = Context.github.refName
-        ["GIT_SHA"] = Context.github.sha
-        ["GH_REPO"] = Context.github.repository
+        ["GH_TOKEN"] = context.github.token
+        ["TAG_NAME"] = context.github.refName
+        ["GIT_SHA"] = context.github.sha
+        ["GH_REPO"] = context.github.repository
       }
       // language=bash
       run =

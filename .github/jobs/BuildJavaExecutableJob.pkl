@@ -1,7 +1,6 @@
 extends "GradleJob.pkl"
 
-import "@gha/actions/Artifact.pkl"
-import "@gha/actions/Common.pkl"
+import "@gha/catalog.pkl"
 
 // Keep this in sync with projects that build java executables
 local projects: List<String> = List("pkl-doc", "pkl-cli", "pkl-codegen-java", "pkl-codegen-kotlin")
@@ -17,13 +16,13 @@ local command =
   }.join(" ")
 
 steps {
-  new Common.Checkout {}
+  catalog.`actions/checkout@v6`
   new {
     name = "gradle build java executables"
     shell = "bash"
     run = command
   }
-  new Artifact.Upload {
+  (catalog.`actions/upload-artifact@v5`) {
     name = "Upload executable artifacts"
     with {
       name = "executable-java"

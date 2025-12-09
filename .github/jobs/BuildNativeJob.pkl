@@ -1,7 +1,7 @@
 extends "GradleJob.pkl"
 
-import "@gha/actions/Artifact.pkl"
-import "@gha/Context.pkl"
+import "@gha/catalog.pkl"
+import "@gha/context.pkl"
 
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean(implies(module.os == "linux")) = false
@@ -12,7 +12,7 @@ project: String
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(module.arch)"
-    "-Dpkl.native--native-compiler-path=\(Context.github.workspace)/.github/scripts/cc_macos_amd64.sh"
+    "-Dpkl.native--native-compiler-path=\(context.github.workspace)/.github/scripts/cc_macos_amd64.sh"
   }
   when (musl) {
     "-Dpkl.musl=true"
@@ -48,7 +48,7 @@ steps {
     shell = "bash"
     run = "./gradlew \(module.gradleArgs) \(project):buildNative"
   }
-  new Artifact.Upload {
+  (catalog.`actions/upload-artifact@v5`) {
     name = "Upload executable artifacts"
     with {
       name =
@@ -59,6 +59,14 @@ steps {
       // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
       // See https://github.com/actions/upload-artifact/issues/206
       path = "\(project)*/build/executable/**/*"
+    }
+  }
+}
+
+fixed job {
+  when (os == "linux" && !musl) {
+    container {
+      image = "redhat/ubi8:8.10"
     }
   }
 }
