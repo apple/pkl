@@ -1239,7 +1239,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     // skip semicolons
     val children = children.filter { !it.isSemicolon() }
     // short circuit
-    if (children.isEmpty()) return listOf(spaceOrLine())
+    if (children.isEmpty()) return emptyList()
     if (children.size == 1) return listOf(format(children[0]))
 
     val nodes = mutableListOf<FormatNode>()
