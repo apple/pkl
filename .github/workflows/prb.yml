@@ -1,6 +1,4 @@
-# Do not modify!
-# This file was generated from a template using https://github.com/StefMa/pkl-gha
-
+# Generated from Workflow.pkl. DO NOT EDIT.
 name: Pull Request
 'on':
   pull_request: {}
@@ -15,8 +13,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
         fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
@@ -48,8 +47,9 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
         fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
@@ -82,7 +82,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -119,7 +121,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -160,7 +164,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -197,7 +203,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -236,7 +244,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -345,7 +355,9 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -382,7 +394,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -419,7 +433,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -460,7 +476,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -497,7 +515,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -536,7 +556,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -645,7 +667,9 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -686,7 +710,9 @@ jobs:
   check-pkl-github-actions:
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: Setup Pkl
       id: setup-pkl
       env:

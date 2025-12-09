@@ -1,6 +1,4 @@
-# Do not modify!
-# This file was generated from a template using https://github.com/StefMa/pkl-gha
-
+# Generated from Workflow.pkl. DO NOT EDIT.
 name: Build (release branch)
 'on':
   push:
@@ -19,8 +17,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
         fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
@@ -50,8 +49,9 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
         fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
@@ -80,7 +80,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -95,8 +97,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
         fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
@@ -125,8 +128,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
       with:
+        persist-credentials: false
         fetch-depth: 0
     - uses: actions/setup-java@v5
       with:
@@ -134,7 +138,9 @@ jobs:
         distribution: temurin
         architecture: x64
         cache: gradle
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - name: gradle build java executables
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
@@ -164,7 +170,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -199,7 +207,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -239,7 +249,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -274,7 +286,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -311,7 +325,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -418,7 +434,9 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -454,7 +472,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -489,7 +509,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -529,7 +551,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -564,7 +588,9 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -601,7 +627,9 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -708,7 +736,9 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@v5
+    - uses: actions/checkout@v6
+      with:
+        persist-credentials: false
     - uses: actions/setup-java@v5
       with:
         java-version: '21'
@@ -737,7 +767,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   publish-test-results:
-    if: '!failure() && !cancelled()'
+    if: '!cancelled()'
     needs:
     - gradle-check
     - gradle-check-windows
@@ -759,7 +789,7 @@ jobs:
       checks: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@v6
+    - uses: actions/download-artifact@v5
       with:
         pattern: test-results-xml-*
     - name: Publish test results

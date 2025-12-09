@@ -1,7 +1,6 @@
 extends "GradleJob.pkl"
 
-import "@gha/actions/Artifact.pkl"
-import "@gha/actions/Common.pkl"
+import "@gha/catalog.pkl"
 import "@gha/Workflow.pkl"
 import "@pkl.impl.ghactions/helpers.pkl"
 
@@ -14,8 +13,8 @@ arch = "amd64"
 os = "linux"
 
 steps {
-  new Common.Checkout {}
-  new Artifact.Download {
+  catalog.`actions/checkout@v6`
+  (catalog.`actions/download-artifact@v5`) {
     with {
       pattern = "executable-**"
       `merge-multiple` = true

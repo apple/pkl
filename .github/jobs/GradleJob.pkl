@@ -2,9 +2,8 @@ abstract module GradleJob
 
 extends "PklJob.pkl"
 
-import "@gha/actions/Common.pkl"
-import "@gha/actions/Setup.pkl"
 import "@gha/Workflow.pkl"
+import "@gha/catalog.pkl"
 
 /// Whether this is a release build or not.
 isRelease: Boolean = false
@@ -21,9 +20,9 @@ nightlyMacOS: Boolean(implies(os == "macOS")) = false
 
 extraGradleArgs: Listing<String>
 
-steps: Listing<*Workflow.Step | Workflow.TypedStep>
+steps: Listing<Workflow.Step>
 
-preSteps: Listing<*Workflow.Step | Workflow.TypedStep>
+preSteps: Listing<Workflow.Step>
 
 /// The fetch depth to use when doing a git checkout.
 fetchDepth: Int?
@@ -73,14 +72,14 @@ fixed job {
   steps {
     ...preSteps
     // full checkout (needed for spotless)
-    new Common.Checkout {
+    (catalog.`actions/checkout@v6`) {
       when (fetchDepth != null) {
         with {
           `fetch-depth` = fetchDepth
         }
       }
     }
-    new Setup.Java {
+    (catalog.`actions/setup-java@v5`) {
       with {
         `java-version` = "21"
         distribution = "temurin"

@@ -196,27 +196,3 @@ release {
       }
     } |> toWorkflowJobs
 }
-
-output {
-  files {
-    [[true]] {
-      renderer {
-        converters {
-          ["jobs"] = (it: Mapping<String, Workflow.Job>) ->
-            it
-              .toMap()
-              .mapValues((name, job) ->
-                if (name.contains("linux") && !name.contains("alpine"))
-                  job
-                    .toMap()
-                    .put("container", new Dynamic {
-                      image = "redhat/ubi8:8.10"
-                    })
-                else
-                  job
-              )
-        }
-      }
-    }
-  }
-}
