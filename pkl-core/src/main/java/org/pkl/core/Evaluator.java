@@ -225,6 +225,17 @@ public interface Evaluator extends AutoCloseable {
   TestResults evaluateTest(ModuleSource moduleSource, boolean overwrite);
 
   /**
+   * Parses the command into a spec describing it.
+   *
+   * <p>This requires that the target module be a command module; it must either amend or extend
+   * module {@code "pkl:Command"}. Otherwise, a type mismatch error is thrown.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  CommandSpec evaluateCommand(ModuleSource moduleSource);
+
+  /**
    * Releases all resources held by this evaluator. If an {@code evaluate} method is currently
    * executing, this method blocks until cancellation of that execution has completed.
    *

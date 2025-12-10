@@ -143,17 +143,6 @@ constructor(
     }
   }
 
-  private fun Evaluator.writeOutput(moduleSource: ModuleSource, writeTo: Path): Boolean {
-    if (options.expression == null) {
-      val bytes = evaluateOutputBytes(moduleSource)
-      writeTo.writeBytes(bytes)
-      return bytes.isNotEmpty()
-    }
-    val text = evaluateExpressionString(moduleSource, options.expression)
-    writeTo.writeString(text)
-    return text.isNotEmpty()
-  }
-
   private fun Evaluator.evalOutput(moduleSource: ModuleSource): ByteArray {
     if (options.expression == null) {
       return evaluateOutputBytes(moduleSource)
@@ -227,27 +216,12 @@ constructor(
     }
   }
 
-  private fun OutputStream.writeText(text: String) = write(text.toByteArray())
-
-  private fun OutputStream.writeLine(text: String) {
-    writeText(text)
-    writeText("\n")
-  }
-
   private fun toModuleSource(uri: URI, reader: InputStream) =
     if (uri == VmUtils.REPL_TEXT_URI) {
       ModuleSource.create(uri, reader.readAllBytes().toString(StandardCharsets.UTF_8))
     } else {
       ModuleSource.uri(uri)
     }
-
-  private fun checkPathSpec(pathSpec: String) {
-    val illegal = pathSpec.indexOfFirst { IoUtils.isReservedFilenameChar(it) && it != '/' }
-    if (illegal == -1) {
-      return
-    }
-    throw CliException("Path spec `$pathSpec` contains illegal character `${pathSpec[illegal]}`.")
-  }
 
   /**
    * Renders each module's `output.files`, writing each entry as a file into the specified output
