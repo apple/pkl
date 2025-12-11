@@ -2205,6 +2205,25 @@ external class Function0<out Result> extends Function<Result> {
 external class Function1<in Param1, out Result> extends Function<Result> {
   @AlsoKnownAs { names { "call"; "invoke" } }
   external function apply(p1: Param1): Result
+
+  /// Composes this function with [other].
+  /// Returns a new function that first applies [other], then applies this function to the result.
+  ///
+  /// Example:
+  /// ```
+  /// local addOne = (x) -> x + 1
+  /// local double = (x) -> x * 2
+  /// res = double.compose(addOne).apply(5) // Returns 12
+  /// ```
+  @Since { version = "0.31.0" }
+  function compose<T>(other: Function1<T, Param1>): Function1<T, Result> = (arg) ->
+    this.apply(other.apply(arg))
+
+  /// Composes [other] function with this.
+  /// Same as `compose` but the functions are executed in reverse order.
+  @Since { version = "0.31.0" }
+  function andThen<T>(other: Function1<T, Param1>): Function1<T, Result> = (arg) ->
+    other.apply(this.apply(arg))
 }
 
 /// A function literal with two parameters.
