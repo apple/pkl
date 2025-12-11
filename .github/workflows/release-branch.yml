@@ -17,11 +17,11 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -32,13 +32,13 @@ jobs:
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-gradle-check
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-gradle-check
         path: '**/build/reports/tests/**/*'
@@ -49,11 +49,11 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -64,13 +64,13 @@ jobs:
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-gradle-check-windows
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-gradle-check-windows
         path: '**/build/reports/tests/**/*'
@@ -80,10 +80,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -97,11 +97,11 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -112,13 +112,13 @@ jobs:
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-gradle-compatibility
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-gradle-compatibility
         path: '**/build/reports/tests/**/*'
@@ -128,36 +128,36 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
         architecture: x64
         cache: gradle
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
     - name: gradle build java executables
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-java
         path: '*/build/executable/**/*'
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-java-executables-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-java-executables-snapshot
         path: '**/build/reports/tests/**/*'
@@ -170,10 +170,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -183,19 +183,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-cli-macOS-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-cli-macOS-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-macOS-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -207,10 +207,10 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -222,19 +222,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-cli-linux-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-cli-linux-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -249,10 +249,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -262,19 +262,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-cli-macOS-aarch64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-cli-macOS-aarch64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-macOS-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -286,10 +286,10 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -301,19 +301,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-cli-linux-aarch64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-cli-linux-aarch64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-linux-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -325,10 +325,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -411,19 +411,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-cli-alpine-linux-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-cli-alpine-linux-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-alpine-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -434,10 +434,10 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -447,19 +447,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-cli-windows-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-cli-windows-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-windows-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -472,10 +472,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -485,19 +485,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-doc-macOS-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-doc-macOS-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-macOS-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -509,10 +509,10 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -524,19 +524,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-doc-linux-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-doc-linux-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -551,10 +551,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -564,19 +564,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-doc-macOS-aarch64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-doc-macOS-aarch64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-macOS-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -588,10 +588,10 @@ jobs:
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -603,19 +603,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-doc-linux-aarch64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-doc-linux-aarch64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-linux-aarch64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -627,10 +627,10 @@ jobs:
     env:
       LANG: en_US.UTF-8
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -713,19 +713,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-doc-alpine-linux-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-doc-alpine-linux-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-alpine-linux-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -736,10 +736,10 @@ jobs:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
     steps:
-    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8
+    - uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e
+    - uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
       with:
         java-version: '21'
         distribution: temurin
@@ -749,19 +749,19 @@ jobs:
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: executable-pkl-doc-windows-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-xml-pkl-doc-windows-amd64-snapshot
         path: '**/build/test-results/**/*.xml'
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-windows-amd64-snapshot
         path: '**/build/reports/tests/**/*'
@@ -789,18 +789,18 @@ jobs:
       checks: write
     runs-on: ubuntu-latest
     steps:
-    - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0
+    - uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
       with:
         pattern: test-results-xml-*
     - name: Publish test results
       if: '!cancelled()'
-      uses: EnricoMi/publish-unit-test-result-action@6e8f8c55b476f977d1c58cfbd7e337cbf86d917f
+      uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2
       with:
         comment_mode: 'off'
         files: test-results-xml-*/**/*.xml
     - name: Upload Test Result HTML
       if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-publish-test-results
         path: '**/build/reports/tests/**/*'
@@ -830,7 +830,7 @@ jobs:
     steps:
     - name: Create app token
       id: app-token
-      uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf
+      uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
       with:
         app-id: ${{ secrets.PKL_CI_CLIENT_ID }}
         private-key: ${{ secrets.PKL_CI }}

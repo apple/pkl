@@ -9,15 +9,24 @@
       }
     },
     "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1": {
-      "type": "local",
+      "type": "remote",
       "uri": "projectpackage://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1.1.0",
-      "path": "../../pkl-project-commons/packages/pkl.impl.ghactions"
+      "checksums": {
+        "sha256": "ae9bbd571a427030712d6a914a3fb6b9df91900b00f5042afe705f7b8182b356"
+      }
     },
     "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1": {
       "type": "remote",
       "uri": "projectpackage://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1.1.1",
       "checksums": {
         "sha256": "1e6e29b441ffdee2605d317f6543a4a604aab5af472b63f0c47d92a3b4b36f7f"
+      }
+    },
+    "package://pkg.pkl-lang.org/pkl-pantry/com.github.dependabot@1": {
+      "type": "remote",
+      "uri": "projectpackage://pkg.pkl-lang.org/pkl-pantry/com.github.dependabot@1.0.0",
+      "checksums": {
+        "sha256": "02ef6f25bfca5b1d095db73ea15de79d2d2c6832ebcab61e6aba90554382abcb"
       }
     }
   }
