@@ -4,11 +4,10 @@
 # It also gets updated by dependabot (see .github/dependabot.yml).
 # Generated from Workflow.pkl. DO NOT EDIT.
 name: __lockfile__
-'on':
-  schedule:
-  - cron: '* * 31 2 *'
+'on': {}
 jobs:
   locks:
+    if: 'false'
     runs-on: nothing
     steps:
     - name: EnricoMi/publish-unit-test-result-action@v2
