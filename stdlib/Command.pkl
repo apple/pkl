@@ -79,7 +79,7 @@ class CommandInfo {
 
   /// Child commands.
   ///
-  /// Must have unique [name] and [aliases]
+  /// Must have unique [name] values.
   subcommands: *Listing<Command> | Mapping<String, Command>
 }
 
@@ -115,7 +115,7 @@ local const function parseQuantity(value: String, typeName: String): Pair<Float,
 /// A parse function for [Duration] values.
 ///
 /// For use with [Flag.parse] and [Argument.parse].
-const parseDuration: (String) -> Duration = (value: String) ->
+hidden const parseDuration: (String) -> Duration = (value: String) ->
   let (quantity = parseQuantity(value, "Duration"))
   let (_unit = quantity.second)
   let (unit = if (_unit is DurationUnit) _unit else null)
@@ -124,7 +124,7 @@ const parseDuration: (String) -> Duration = (value: String) ->
 /// A parse function for [DataSize] values.
 ///
 /// For use with [Flag.parse] and [Argument.parse].
-const parseDataSize: (String) -> DataSize = (value: String) ->
+hidden const parseDataSize: (String) -> DataSize = (value: String) ->
   let (quantity = parseQuantity(value, "DataSize"))
   let (_unit = quantity.second)
   let (unit = if (_unit is DataSizeUnit) _unit else null)

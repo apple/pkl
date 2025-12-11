@@ -242,7 +242,7 @@ public final class CommandSpecParser {
 
   private @Nullable Object getDefaultValue(ClassProperty prop) {
     var constantValue = prop.getInitializer().getConstantValue();
-    if (constantValue != null) return constantValue;
+    if (constantValue != null) return VmValue.export(constantValue);
 
     var bodyNode = prop.getInitializer().getMemberNode();
     if (bodyNode == null || bodyNode.getBodyNode() instanceof DefaultPropertyBodyNode) {
@@ -392,10 +392,19 @@ public final class CommandSpecParser {
 
   private List<CommandSpec> collectSubcommands(VmTyped commandInfo, ImList<String> commandPath) {
     var subcommands = new ArrayList<CommandSpec>();
+    var subcommandNames = new HashSet<String>();
     var subcommandsProperty = (VmObject) VmUtils.readMember(commandInfo, Identifier.SUBCOMMANDS);
     subcommandsProperty.force(false, false);
     subcommandsProperty.iterateAlreadyForcedMemberValues(
-        (key, member, value) -> subcommands.add(parse((VmTyped) value, commandPath)));
+        (key, member, value) -> {
+          var spec = parse((VmTyped) value, commandPath);
+          if (subcommandNames.contains(spec.name())) {
+            throw new RuntimeException("command XXX has duplicate subcommands named YYY");
+          }
+          subcommandNames.add(spec.name());
+          subcommands.add(spec);
+          return true;
+        });
 
     return subcommands;
   }
