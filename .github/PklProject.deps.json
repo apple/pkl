@@ -3,16 +3,16 @@
   "resolvedDependencies": {
     "package://pkg.pkl-lang.org/pkl-pantry/com.github.actions@1": {
       "type": "remote",
-      "uri": "projectpackage://pkg.pkl-lang.org/pkl-pantry/com.github.actions@1.2.0",
+      "uri": "projectpackage://pkg.pkl-lang.org/pkl-pantry/com.github.actions@1.3.0",
       "checksums": {
-        "sha256": "eac84e03db6815625a0a8f8dfe4597421284ad28f4425dbd72f529b236fea6b9"
+        "sha256": "76174cb974310b3d952280b76ed224eb4ee6fd5419bf696ad9a66fba44bd427d"
       }
     },
     "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1": {
       "type": "remote",
-      "uri": "projectpackage://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1.1.2",
+      "uri": "projectpackage://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1.1.3",
       "checksums": {
-        "sha256": "00b07bd19ce17d5d16104138d4a4281f82abb84d3b217972767f9bdc1e5a4263"
+        "sha256": "0c8849aab3429d4a1ea27c247a0005e4a8997eb386ba7278cfeaa4855dc5c6f2"
       }
     },
     "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1": {
