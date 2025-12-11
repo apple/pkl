@@ -18,7 +18,7 @@ jobs:
     - name: actions/create-github-app-token@v2
       uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
     - name: actions/download-artifact@v5
-      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v5
     - name: actions/setup-java@v5
       uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
     - name: actions/upload-artifact@v5
