@@ -1,0 +1,27 @@
+#file: noinspection MandatoryParamsAbsent,UndefinedAction
+# This is a fake workflow that never runs.
+# It's used to pin actions to specific git SHAs when generating actual workflows.
+# It also gets updated by dependabot (see .github/dependabot.yml).
+# Generated from Workflow.pkl. DO NOT EDIT.
+name: __lockfile__
+'on':
+  schedule:
+  - cron: '* * 31 2 *'
+jobs:
+  locks:
+    runs-on: nothing
+    steps:
+    - name: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@34d7c956a59aed1bfebf31df77b8de55db9bbaaf # v2
+    - name: actions/checkout@v6
+      uses: actions/checkout@8e8c483db84b4bee98b60c0593521ed34d9990e8 # v6
+    - name: actions/create-github-app-token@v2
+      uses: actions/create-github-app-token@29824e69f54612133e76f7eaac726eef6c875baf # v2
+    - name: actions/download-artifact@v5
+      uses: actions/download-artifact@634f93cb2916e3fdff6788551b99b062d0335ce0 # v5
+    - name: actions/setup-java@v5
+      uses: actions/setup-java@f2beeb24e141e01a676f977032f5a29d81c9e27e # v5
+    - name: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+    - name: dawidd6/action-download-artifact@v11
+      uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
