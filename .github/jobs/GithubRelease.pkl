@@ -12,7 +12,7 @@ fixed job {
   }
   needs = "deploy-release"
   steps {
-    (catalog.`actions/download-artifact@v5`) {
+    (catalog.`actions/download-artifact@v6`) {
       with {
         pattern = "executable-**"
         `merge-multiple` = true
