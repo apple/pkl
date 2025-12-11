@@ -343,9 +343,17 @@ public final class VmSet extends VmCollection {
   }
 
   @Override
-  @TruffleBoundary
   public int hashCode() {
-    return set.hashCode();
+    int ret = 1;
+
+    for (Object item : set) {
+      ret *= 31;
+      if (item != null) {
+        ret += item.hashCode();
+      }
+    }
+
+    return ret;
   }
 
   private static final class Builder implements VmCollection.Builder<VmSet> {
