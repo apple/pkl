@@ -39,7 +39,46 @@ class CliMainTest {
 
   @Test
   fun `do it`() {
-    rootCmd.main(listOf("run", "../test.pkl"))
+    rootCmd.main(
+      listOf(
+        "run",
+        "../test.pkl",
+        "123",
+        "foo",
+        "bar",
+        "baz",
+        "qux",
+        "--number=1",
+        "--float=2",
+        "--int=3",
+        "--int8=4",
+        "--int16=5",
+        "--int32=6",
+        "--uint=7",
+        "--uint8=8",
+        "--uint16=9",
+        "--uint32=10",
+        "--boolean",
+        "--string=hi",
+        "--char=a",
+        "--enum=foo",
+        "--listString=foo",
+        "--listString=bar",
+        "--listUInt8=1",
+        "--listUInt8=10",
+        "--listUInt8=100",
+        "--listBoolean=true",
+        "--listBoolean=true",
+        "--listBoolean=false",
+        "--setString=baz",
+        "--setString=qux",
+        "--setUInt8=2",
+        "--setUInt8=20",
+        "--setUInt8=200",
+        "--duration=4.5.d",
+        "--dataSize=128MiB",
+      )
+    )
   }
 
   @Test

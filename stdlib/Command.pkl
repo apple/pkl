@@ -53,7 +53,7 @@ hidden options: Options
 /// Set by the runtime during command execution.
 ///
 /// Not set for root commands.
-hidden fixed parent: Command?
+hidden parent: Command?
 
 class Options
 
@@ -63,11 +63,6 @@ class CommandInfo {
   /// Default value: the name of the class or module extending [Command].
   /// Names that are `CamelCased` are transformed to `kebab-case`.
   name: String
-
-  /// Other names for this subcommand.
-  ///
-  /// Must not overlap with the [name] or aliases of any sibling command.
-  aliases: Listing<String>(isDistinct)
 
   /// A long description of the command.
   ///
@@ -95,20 +90,6 @@ class Flag extends Annotation {
   /// Hide this option from CLI help.
   hide: Boolean = false
 
-  /// Delimiter on which to split option values.
-  ///
-  /// Only applicable to [Set], [List], or [Map] options.
-  ///
-  /// If [parse] is specified, values are split and the function is called repeatedly.
-  separator: String(this != keyValueSeparator)?
-
-  /// Delimiter on which to split keys from values.
-  ///
-  /// Only applicable [Map] options.
-  ///
-  /// If [parse] is specified, key-value pairs are split and the function is called with the value.
-  keyValueSeparator: String = "="
-
   /// Customize the behavior of turning the raw option value string into the final value.
   ///
   /// The return type must match the annotated property's type.
@@ -121,3 +102,30 @@ class Argument extends Annotation {
   /// The return type must match the annotated property's type.
   parse: ((String) -> unknown)?
 }
+
+local const quantityRegex = Regex(#"([0-9]+(?:\.[0-9]+)?)\.?([A-Za-z]+)"#)
+
+local const function parseQuantity(value: String, typeName: String): Pair<Float, String> =
+  let (match = quantityRegex.matchEntire(value))
+    if (match == null)
+      throw("Unable to parse \(typeName) from string '\(value)'")
+    else
+      Pair(match.groups[1].value.toFloat(), match.groups[2].value.toLowerCase())
+
+/// A parse function for [Duration] values.
+///
+/// For use with [Flag.parse] and [Argument.parse].
+const parseDuration: (String) -> Duration = (value: String) ->
+  let (quantity = parseQuantity(value, "Duration"))
+  let (_unit = quantity.second)
+  let (unit = if (_unit is DurationUnit) _unit else null)
+    quantity.first.toDuration(unit ?? throw("Unable to parse DurationUnit from '\(_unit)'"))
+
+/// A parse function for [DataSize] values.
+///
+/// For use with [Flag.parse] and [Argument.parse].
+const parseDataSize: (String) -> DataSize = (value: String) ->
+  let (quantity = parseQuantity(value, "DataSize"))
+  let (_unit = quantity.second)
+  let (unit = if (_unit is DataSizeUnit) _unit else null)
+    quantity.first.toDataSize(unit ?? throw("Unable to parse DataSizeUnit from '\(_unit)'"))

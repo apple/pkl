@@ -53,6 +53,14 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   }
 
   @TruffleBoundary
+  public static VmMap create(Map<Object, Object> map) {
+    if (map.isEmpty()) return EMPTY;
+    return new VmMap(
+        PersistentHashMap.of(map.entrySet()),
+        RrbTree.emptyMutable().concat(map.keySet()).immutable());
+  }
+
+  @TruffleBoundary
   public static VmMap createFromConstantNodes(ExpressionNode[] constantNodes) {
     // builder takes care of handling empty case
     var builder = new Builder();

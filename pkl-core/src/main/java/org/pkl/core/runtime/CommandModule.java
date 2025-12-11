@@ -18,7 +18,6 @@ package org.pkl.core.runtime;
 import static org.pkl.core.PClassInfo.pklCommandUri;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import org.pkl.core.CommandSpec.Argument;
 
 public final class CommandModule extends StdLibModule {
   static final VmTyped instance = VmUtils.createEmptyModule();

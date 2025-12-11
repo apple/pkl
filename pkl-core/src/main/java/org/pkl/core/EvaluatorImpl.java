@@ -24,6 +24,7 @@ import java.util.Map;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
@@ -275,14 +276,15 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   @Override
-  public CommandSpec evaluateCommand(ModuleSource moduleSource) {
-    return doEvaluate(
+  public void evaluateCommand(ModuleSource moduleSource, Consumer<CommandSpec> run) {
+    doEvaluate(
         moduleSource,
         (module) -> {
           var commandRunner =
               new CommandSpecParser(
                   securityManager, (fileOutput) -> new FileOutputImpl(this, fileOutput));
-          return commandRunner.parse(module);
+          run.accept(commandRunner.parse(module));
+          return null;
         });
   }
 

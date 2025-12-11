@@ -22,7 +22,6 @@ import org.pkl.core.util.Nullable;
 
 public record CommandSpec(
     String name,
-    List<String> aliases,
     @Nullable String description,
     boolean hide,
     boolean noOp,
@@ -30,22 +29,19 @@ public record CommandSpec(
     List<Argument> arguments,
     List<CommandSpec> subcommands,
     ApplyFunction apply) {
-  
+
   public record Flag(
       String name,
       @Nullable String shortName,
-      @Nullable String separator,
-      @Nullable String keyValueSeparator,
-      Object type, // TODO
+      OptionType type,
       @Nullable Object defaultValue,
       @Nullable ParseOptionFunction parse,
       @Nullable String description,
-      boolean required,
       boolean hide) {}
 
   public record Argument(
       String name,
-      Object type, // TODO
+      OptionType type,
       @Nullable ParseOptionFunction parse,
       @Nullable String description) {}
 
@@ -64,4 +60,101 @@ public record CommandSpec(
   }
 
   public record Result(byte[] outputBytes, Map<String, FileOutput> outputFiles) {}
+
+  public abstract static sealed class OptionType {
+    private final boolean required;
+
+    protected OptionType(boolean required) {
+      this.required = required;
+    }
+
+    public boolean isRequired() {
+      return required;
+    }
+
+    public static final class Primitive extends OptionType {
+      public enum Type {
+        NUMBER,
+        FLOAT,
+        INT,
+        INT8,
+        INT16,
+        INT32,
+        UINT,
+        UINT8,
+        UINT16,
+        UINT32,
+        BOOLEAN,
+        STRING,
+        CHAR
+      }
+
+      private final Type type;
+
+      public Primitive(Type type, boolean required) {
+        super(required);
+        this.type = type;
+      }
+
+      public Type getType() {
+        return type;
+      }
+    }
+
+    public static final class Enum extends OptionType {
+      private final List<String> choices;
+
+      public Enum(List<String> choices, boolean required) {
+        super(required);
+        this.choices = choices;
+      }
+
+      public List<String> getChoices() {
+        return choices;
+      }
+    }
+
+    public static final class Collection extends OptionType {
+      public enum Type {
+        LIST,
+        SET
+      }
+
+      private final Type type;
+      private final OptionType valueType;
+
+      public Collection(Type type, OptionType valueType, boolean required) {
+        super(required);
+        this.type = type;
+        this.valueType = valueType;
+      }
+
+      public Type getType() {
+        return type;
+      }
+
+      public OptionType getValueType() {
+        return valueType;
+      }
+    }
+
+    public static final class Map extends OptionType {
+      private final OptionType keyType;
+      private final OptionType valueType;
+
+      public Map(OptionType keyType, OptionType valueType, boolean required) {
+        super(required);
+        this.keyType = keyType;
+        this.valueType = valueType;
+      }
+
+      public OptionType getKeyType() {
+        return keyType;
+      }
+
+      public OptionType getValueType() {
+        return valueType;
+      }
+    }
+  }
 }

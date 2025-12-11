@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
+import org.pkl.core.util.Nullable;
 
 /** A Pkl type as used in type annotations. */
 public abstract class PType implements Serializable {
@@ -187,13 +188,19 @@ public abstract class PType implements Serializable {
     @Serial private static final long serialVersionUID = 0L;
 
     private final List<PType> elementTypes;
+    private final @org.pkl.core.util.Nullable PType defaultElement;
 
-    public Union(List<PType> elementTypes) {
+    public Union(List<PType> elementTypes, @org.pkl.core.util.Nullable PType defaultElement) {
       this.elementTypes = elementTypes;
+      this.defaultElement = defaultElement;
     }
 
     public List<PType> getElementTypes() {
       return elementTypes;
+    }
+
+    public @org.pkl.core.util.Nullable PType getDefaultElement() {
+      return defaultElement;
     }
   }
 
