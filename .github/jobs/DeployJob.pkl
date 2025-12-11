@@ -14,7 +14,7 @@ os = "linux"
 
 steps {
   catalog.`actions/checkout@v6`
-  (catalog.`actions/download-artifact@v5`) {
+  (catalog.`actions/download-artifact@v6`) {
     with {
       pattern = "executable-**"
       `merge-multiple` = true
