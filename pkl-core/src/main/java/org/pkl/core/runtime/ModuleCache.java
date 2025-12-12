@@ -92,6 +92,8 @@ public final class ModuleCache {
           return BaseModule.getModule();
         case "Benchmark":
           return BenchmarkModule.getModule();
+        case "Command":
+          return CommandModule.getModule();
         case "pklbinary":
           return PklBinaryModule.getModule();
         case "jsonnet":
