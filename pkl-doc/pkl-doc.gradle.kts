@@ -69,6 +69,7 @@ publishing {
 
 val testNativeExecutable by
   tasks.registering(Test::class) {
+    dependsOn(tasks.assembleNative)
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 
