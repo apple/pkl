@@ -1,0 +1,42 @@
+package my;
+
+import org.pkl.config.java.Generated;
+import org.pkl.config.java.mapper.Named;
+<1<
+import java.lang.Override;
+import org.pkl.config.java.mapper.NonNull;
+import java.util.function.Consumer;
+import org.pkl.codegen.java.common.code.Wither;
+>1>
+<2<
+import lombok.Builder;
+>2>
+
+@Generated
+public record Mod() {
+  @Generated
+  <2< @Builder >2>
+  public record GeneratedAnnotation(
+      @Named("test") boolean test) <1< implements Wither<GeneratedAnnotation, GeneratedAnnotation.Memento> >1> {
+    <1<
+    @Override
+    public @NonNull GeneratedAnnotation with(final @NonNull Consumer<Memento> setter) {
+      final var memento = new Memento(this);
+      setter.accept(memento);
+      return memento.build();
+    }
+
+    public static final class Memento {
+      public boolean test;
+
+      private Memento(final @NonNull GeneratedAnnotation r) {
+        test = r.test;
+      }
+
+      private @NonNull GeneratedAnnotation build() {
+        return new GeneratedAnnotation(test);
+      }
+    }
+    >1>
+  }
+}
