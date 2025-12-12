@@ -973,7 +973,9 @@ public class Parser {
             if (lookahead == Token.DOT) {
               next();
               var identifier = parseIdentifier();
-              if (lookahead == Token.LPAREN) {
+              if (lookahead == Token.LPAREN
+                  && !precededBySemicolon
+                  && _lookahead.newLinesBetween == 0) {
                 var args = parseArgumentList();
                 yield new SuperAccessExpr(identifier, args, start.endWith(args.span()));
               } else {

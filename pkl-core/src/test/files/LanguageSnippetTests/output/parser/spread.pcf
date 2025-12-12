@@ -1,0 +1,8 @@
+qux {
+  new {
+    bar = 1
+    new {
+      qux = 1
+    }
+  }
+}
