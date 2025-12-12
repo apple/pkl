@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ public final class PClass extends Member implements Value {
   private final List<TypeParameter> typeParameters;
   private final Map<String, Property> properties;
   private final Map<String, Method> methods;
+  private final @Nullable PClass moduleClass;
 
   private @Nullable PType supertype;
   private @Nullable PClass superclass;
@@ -42,12 +43,14 @@ public final class PClass extends Member implements Value {
       PClassInfo<?> classInfo,
       List<TypeParameter> typeParameters,
       Map<String, Property> properties,
-      Map<String, Method> methods) {
+      Map<String, Method> methods,
+      @Nullable PClass moduleClass) {
     super(docComment, sourceLocation, modifiers, annotations, classInfo.getSimpleName());
     this.classInfo = classInfo;
     this.typeParameters = typeParameters;
     this.properties = properties;
     this.methods = methods;
+    this.moduleClass = moduleClass;
   }
 
   public void initSupertype(PType supertype, PClass superclass) {
@@ -119,6 +122,11 @@ public final class PClass extends Member implements Value {
     return allMethods;
   }
 
+  /** Returns the class's containing module's class, or this class if it is a module class. */
+  public PClass getModuleClass() {
+    return moduleClass != null ? moduleClass : this;
+  }
+
   @Override
   public void accept(ValueVisitor visitor) {
     visitor.visitClass(this);
@@ -136,6 +144,10 @@ public final class PClass extends Member implements Value {
 
   public String toString() {
     return getDisplayName();
+  }
+
+  public boolean isSubclassOf(PClass other) {
+    return this == other || getSuperclass() != null && getSuperclass().isSubclassOf(other);
   }
 
   public abstract static class ClassMember extends Member {
