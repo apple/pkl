@@ -135,9 +135,8 @@ public final class RendererNodes {
   @TruffleBoundary
   private static ProtobufRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
 
-    return new ProtobufRenderer(builder, indent, new PklConverter(converters));
+    return new ProtobufRenderer(builder, indent, PklConverter.fromRenderer(self));
   }
 
   private static final class ProtobufRenderer extends AbstractStringRenderer {

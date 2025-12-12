@@ -38,7 +38,7 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
   }
 
   public VmPklBinaryEncoder(MessageBufferPacker packer) {
-    this(packer, new PklConverter(VmMapping.empty()));
+    this(packer, PklConverter.NOOP);
   }
 
   private void packCode(PklBinaryCode code) throws IOException {
