@@ -4,7 +4,12 @@
 # It also gets updated by dependabot (see .github/dependabot.yml).
 # Generated from Workflow.pkl. DO NOT EDIT.
 name: __lockfile__
-'on': {}
+'on':
+  push:
+    branches-ignore:
+    - '**'
+    tags-ignore:
+    - '**'
 jobs:
   locks:
     if: 'false'
