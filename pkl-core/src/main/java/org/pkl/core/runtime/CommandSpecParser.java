@@ -15,11 +15,13 @@
  */
 package org.pkl.core.runtime;
 
+import static org.pkl.core.runtime.VmUtils.REPL_TEXT;
+import static org.pkl.core.runtime.VmUtils.REPL_TEXT_URI;
+
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
-import java.net.URI;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,8 +29,6 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.Function;
 import org.graalvm.collections.EconomicMap;
-import org.organicdesign.fp.collections.ImList;
-import org.organicdesign.fp.collections.PersistentVector;
 import org.pkl.core.CommandSpec;
 import org.pkl.core.CommandSpec.OptionType;
 import org.pkl.core.CommandSpec.OptionType.Collection;
@@ -42,14 +42,15 @@ import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.expression.literal.AmendModuleNode;
 import org.pkl.core.ast.expression.literal.AmendModuleNodeGen;
+import org.pkl.core.ast.expression.literal.PropertiesLiteralNodeGen;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ModuleNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.util.EconomicMaps;
@@ -69,10 +70,6 @@ public final class CommandSpecParser {
   }
 
   public CommandSpec parse(VmTyped commandModule) {
-    return parse(commandModule, PersistentVector.empty());
-  }
-
-  private CommandSpec parse(VmTyped commandModule, ImList<String> commandPath) {
     checkAmends(commandModule, CommandModule.getModule().getVmClass());
     checkPropertyIsUndefined(commandModule, Identifier.OPTIONS);
     checkPropertyIsUndefined(commandModule, Identifier.PARENT);
@@ -83,7 +80,6 @@ public final class CommandSpecParser {
             VmUtils.readMember(commandModule, Identifier.COMMAND),
             CommandModule.getCommandInfoClass());
     var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
-    var newCommandPath = commandPath.append(commandName);
     var optionSpecs = collectOptions(optionsClass);
 
     return new CommandSpec(
@@ -93,15 +89,14 @@ public final class CommandSpecParser {
         (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
         optionSpecs.getFirst(),
         optionSpecs.getSecond(),
-        collectSubcommands(commandInfo, newCommandPath),
+        collectSubcommands(commandInfo),
         (options, parent) ->
             new CommandSpec.State(
                 buildExecutionModule(
-                    newCommandPath,
                     commandModule,
                     buildObject(optionsClass, options),
-                    parent == null ? null : (AmendModuleNode) parent.moduleNode()),
-                (it) -> evaluateResult((AmendModuleNode) it)));
+                    parent == null ? null : (SubcommandState) parent.contents()),
+                (it) -> evaluateResult(commandModule, (SubcommandState) it)));
   }
 
   private static @Nullable String exportNullableString(VmObjectLike value, Object key) {
@@ -210,6 +205,9 @@ public final class CommandSpecParser {
             shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
             parseFunction = getParseFunction(flagAnnotation);
             hide = (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
+          }
+          if ("help".equals(name) || "h".equals(shortName)) {
+            throw new RuntimeException("flags may not have name 'help' or short name 'h'");
           }
 
           flagNames.add(name);
@@ -390,14 +388,14 @@ public final class CommandSpecParser {
     return ((VmFunction) func)::apply;
   }
 
-  private List<CommandSpec> collectSubcommands(VmTyped commandInfo, ImList<String> commandPath) {
+  private List<CommandSpec> collectSubcommands(VmTyped commandInfo) {
     var subcommands = new ArrayList<CommandSpec>();
     var subcommandNames = new HashSet<String>();
     var subcommandsProperty = (VmObject) VmUtils.readMember(commandInfo, Identifier.SUBCOMMANDS);
     subcommandsProperty.force(false, false);
     subcommandsProperty.iterateAlreadyForcedMemberValues(
         (key, member, value) -> {
-          var spec = parse((VmTyped) value, commandPath);
+          var spec = parse((VmTyped) value);
           if (subcommandNames.contains(spec.name())) {
             throw new RuntimeException("command XXX has duplicate subcommands named YYY");
           }
@@ -434,15 +432,62 @@ public final class CommandSpecParser {
         VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
   }
 
+  private record SubcommandState(VmTyped module, EconomicMap<Object, ObjectMember> members) {}
+
   /**
    * Synthesize a module that amends the command module and sets options and parent.
    *
    * <p>The return value is suitable as an argument to buildExecutionModule or evaluateResult.
    */
-  private AmendModuleNode buildExecutionModule(
-      List<String> names, VmTyped module, VmTyped options, @Nullable AmendModuleNode parent) {
-    var uriString = "repl:Command#/" + String.join("/", names);
-    var syntheticModule = ModuleKeys.synthetic(URI.create(uriString), "");
+  private SubcommandState buildExecutionModule(
+      VmTyped module, VmTyped options, @Nullable SubcommandState parent) {
+    EconomicMap<Object, ObjectMember> properties = EconomicMaps.create(parent != null ? 2 : 1);
+    options.force(false, true);
+    properties.put(
+        Identifier.OPTIONS, VmUtils.createSyntheticObjectProperty(Identifier.OPTIONS, "", options));
+
+    if (parent != null) {
+      var language = VmLanguage.get(null);
+      var amendParent =
+          PropertiesLiteralNodeGen.create(
+              VmUtils.unavailableSourceSection(),
+              language,
+              "",
+              false,
+              null,
+              new UnresolvedTypeNode[] {},
+              parent.members,
+              new ImportNode(
+                  language,
+                  VmUtils.unavailableSourceSection(),
+                  parent.module.getModuleInfo().getResolvedModuleKey(),
+                  parent.module.getModuleInfo().getModuleKey().getUri()));
+
+      var parentProperty = module.getVmClass().getProperty(Identifier.PARENT);
+      assert parentProperty != null;
+      properties.put(
+          Identifier.PARENT,
+          VmUtils.createObjectProperty(
+              language,
+              VmUtils.unavailableSourceSection(),
+              VmUtils.unavailableSourceSection(),
+              Identifier.PARENT,
+              "",
+              new FrameDescriptor(),
+              VmModifier.NONE,
+              amendParent,
+              parentProperty.getTypeNode()));
+    }
+
+    return new SubcommandState(module, properties);
+  }
+
+  /** Given a synthesized module, evaluate it and return the output bytes/files */
+  private CommandSpec.Result evaluateResult(VmTyped module, SubcommandState parent) {
+    var language = VmLanguage.get(null);
+    var context = VmContext.get(null);
+
+    var syntheticModule = ModuleKeys.synthetic(REPL_TEXT_URI, "");
     ResolvedModuleKey resolvedModule;
     try {
       resolvedModule = syntheticModule.resolve(securityManager);
@@ -456,51 +501,23 @@ public final class CommandSpecParser {
             VmUtils.unavailableSourceSection(),
             VmUtils.unavailableSourceSection(),
             null,
-            uriString,
+            REPL_TEXT,
             syntheticModule,
             resolvedModule,
             true);
-    var language = VmLanguage.get(null);
 
-    EconomicMap<Object, ObjectMember> properties = EconomicMaps.create(parent != null ? 2 : 1);
-    options.force(false, true);
-    properties.put(
-        Identifier.OPTIONS, VmUtils.createSyntheticObjectProperty(Identifier.OPTIONS, "", options));
-
-    if (parent != null) {
-      var parentProperty = module.getVmClass().getProperty(Identifier.PARENT);
-      assert parentProperty != null;
-      properties.put(
-          Identifier.PARENT,
-          VmUtils.createObjectProperty(
-              language,
-              VmUtils.unavailableSourceSection(),
-              VmUtils.unavailableSourceSection(),
-              Identifier.PARENT,
-              "",
-              new FrameDescriptor(),
-              VmModifier.NONE,
-              parent,
-              parentProperty.getTypeNode()));
-    }
-
-    return AmendModuleNodeGen.create(
-        VmUtils.unavailableSourceSection(),
-        language,
-        new ExpressionNode[] {},
-        properties,
-        moduleInfo,
-        new ImportNode(
-            language,
+    var amendModuleNode =
+        AmendModuleNodeGen.create(
             VmUtils.unavailableSourceSection(),
-            resolvedModule,
-            module.getModuleInfo().getResolvedModuleKey().getUri()));
-  }
-
-  /** Given a synthesized module, evaluate it and return the output bytes/files */
-  private CommandSpec.Result evaluateResult(AmendModuleNode amendModuleNode) {
-    var language = VmLanguage.get(null);
-    var context = VmContext.get(null);
+            language,
+            new ExpressionNode[] {},
+            parent.members,
+            moduleInfo,
+            new ImportNode(
+                language,
+                VmUtils.unavailableSourceSection(),
+                resolvedModule,
+                module.getModuleInfo().getResolvedModuleKey().getUri()));
 
     var moduleNode =
         new ModuleNode(

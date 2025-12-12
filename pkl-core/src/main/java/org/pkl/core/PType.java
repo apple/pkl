@@ -18,7 +18,6 @@ package org.pkl.core;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
-import org.pkl.core.util.Nullable;
 
 /** A Pkl type as used in type annotations. */
 public abstract class PType implements Serializable {

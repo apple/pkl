@@ -121,9 +121,10 @@ constructor(
       writtenFiles[realPath] = pathSpec
       realPath.createParentDirectories()
       realPath.writeBytes(fileOutput.bytes)
-      errStream.writeText(
-        IoUtils.relativize(resolvedPath, currentWorkingDir).toString() + IoUtils.getLineSeparator()
-      )
+      val displayPath =
+        if (Path.of(pathSpec).isAbsolute) pathSpec
+        else IoUtils.relativize(resolvedPath, currentWorkingDir).toString()
+      errStream.writeText(displayPath + IoUtils.getLineSeparator())
       errStream.flush()
     }
   }
@@ -157,7 +158,6 @@ constructor(
             .mapNotNull { it as? ArgumentDelegate<*> }
             .associateBy({ it.name }, { it.value })
 
-      runner.outputStream.writeLine("> $commandName")
       val state = spec.apply.apply(opts, currentContext.obj as CommandSpec.State?)
       currentContext.obj = state
 

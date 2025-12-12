@@ -53,9 +53,9 @@ public record CommandSpec(
     State apply(Map<String, Object> options, @Nullable State parent);
   }
 
-  public record State(Object moduleNode, Function<Object, Result> reify) {
+  public record State(Object contents, Function<Object, Result> reify) {
     public Result evaluate() {
-      return reify.apply(moduleNode);
+      return reify.apply(contents);
     }
   }
 
@@ -125,6 +125,7 @@ public record CommandSpec(
 
       public Collection(Type type, OptionType valueType, boolean required) {
         super(required);
+        assert valueType instanceof Primitive || valueType instanceof Enum;
         this.type = type;
         this.valueType = valueType;
       }
@@ -144,6 +145,8 @@ public record CommandSpec(
 
       public Map(OptionType keyType, OptionType valueType, boolean required) {
         super(required);
+        assert keyType instanceof Primitive || keyType instanceof Enum;
+        assert valueType instanceof Primitive || valueType instanceof Enum;
         this.keyType = keyType;
         this.valueType = valueType;
       }
