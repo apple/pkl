@@ -2598,6 +2598,10 @@ public abstract class TypeNode extends PklNode {
       return childNode.createDefaultValue(language, headerSection, qualifiedName);
     }
 
+    public TypeNode getBaseTypeNode() {
+      return childNode;
+    }
+
     public SourceSection getBaseTypeSection() {
       return childNode.getSourceSection();
     }

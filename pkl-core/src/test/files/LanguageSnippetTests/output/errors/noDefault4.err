@@ -1,12 +1,12 @@
 –– Pkl Error ––
-Tried to read property `foo` but its value is undefined.
-Union type `Foo|"baz"` has no default member.
+Tried to read property `c` but its value is undefined.
+Union type `Listing<String> | String` (from type alias `B`) has no default member.
 
-x | foo: Foo|"baz"
-    ^^^
-at noDefault2#foo (file:///$snippetsDir/input/errors/noDefault2.pkl)
+x | c: C
+    ^
+at noDefault4#c (file:///$snippetsDir/input/errors/noDefault4.pkl)
 
-The above error occurred when rendering path `foo` of module `file:///$snippetsDir/input/errors/noDefault2.pkl`.
+The above error occurred when rendering path `c` of module `file:///$snippetsDir/input/errors/noDefault4.pkl`.
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

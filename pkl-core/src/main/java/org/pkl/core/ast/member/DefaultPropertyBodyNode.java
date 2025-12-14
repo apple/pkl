@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,9 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
+import org.pkl.core.ast.type.TypeNode.TypeAliasTypeNode;
+import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.Nullable;
@@ -50,8 +53,30 @@ public final class DefaultPropertyBodyNode extends ExpressionNode {
     }
 
     CompilerDirectives.transferToInterpreter();
+
+    // attempt to give a hint when a union type is missing a default
+    String aliasName = null;
+    String unionTypeSource = null;
+    if (typeNode != null) {
+      var tn = typeNode.getTypeNode();
+      while (true) {
+        if (tn instanceof TypeAliasTypeNode typeAlias) {
+          aliasName = typeAlias.getVmTypeAlias().getSimpleName();
+          tn = typeAlias.getVmTypeAlias().getTypeNode();
+        } else if (tn instanceof ConstrainedTypeNode constrained) {
+          tn = constrained.getBaseTypeNode();
+        } else {
+          break;
+        }
+      }
+      if (tn instanceof UnionTypeNode union) {
+        unionTypeSource = union.getSourceSection().getCharacters().toString();
+      }
+    }
+
     throw exceptionBuilder()
-        .undefinedPropertyValue(propertyName, VmUtils.getReceiver(frame))
+        .undefinedPropertyValue(
+            propertyName, VmUtils.getReceiver(frame), unionTypeSource, aliasName)
         .build();
   }
 }
