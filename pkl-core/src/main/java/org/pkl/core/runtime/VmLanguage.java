@@ -33,7 +33,7 @@ import org.pkl.parser.syntax.Module;
 @TruffleLanguage.Registration(
     id = "pkl",
     name = "Pkl",
-    version = "0.30.1",
+    version = "0.30.2",
     characterMimeTypes = VmLanguage.MIME_TYPE,
     contextPolicy = ContextPolicy.SHARED)
 public final class VmLanguage extends TruffleLanguage<VmContext> {
