@@ -7,9 +7,17 @@ include::ROOT:partial$component-attributes.adoc[]
 === Fixes
 
 * Fixes formatting of blank files (https://github.com/apple/pkl/pull/1351[#1351]).
-* Fixes an issue where `pkl format` adds an additional superfluous newline when writing formatted content to standard output (https://github.com/apple/pkl/issues/1346[#1346]).
+* Fixes an issue where the `pkl format` CLI command adds an extra newline when writing formatted content to standard output (https://github.com/apple/pkl/issues/1346[#1346]).
 * Make linux executables link to glibc 2.17 (https://github.com/apple/pkl/pull/1352[#1352]).
 * Fix incorrect parsing of super expressions (https://github.com/apple/pkl/pull/1364[#1364]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/HT154[@HT154]
+* https://github.com/stackoverflow[@stackoverflow]
 
 [[release-0.30.1]]
 == 0.30.1 (2025-12-03)
