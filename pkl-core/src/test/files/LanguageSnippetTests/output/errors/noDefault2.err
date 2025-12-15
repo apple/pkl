@@ -1,6 +1,7 @@
 –– Pkl Error ––
 Tried to read property `foo` but its value is undefined.
-Union type `Foo|"baz"` has no default member.
+Union type `Foo|"baz"` has no default member denoted by `*`.
+Either update the type to specify a default member or explicitly assign a value.
 
 x | foo: Foo|"baz"
     ^^^
