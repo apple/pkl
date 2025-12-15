@@ -113,4 +113,7 @@ image:https://github.com/apple/pkl/actions/workflows/main.yml/badge.svg?style=sv
 
 |https://github.com/apple/tree-sitter-pkl[`apple/tree-sitter-pkl`]
 |Tree-sitter parser for Pkl
+
+|https://github.com/apple/highlightjs-pkl[`apple/highlightjs-pkl`]
+|Highlight.js syntax highlighting for Pkl 
 |===
