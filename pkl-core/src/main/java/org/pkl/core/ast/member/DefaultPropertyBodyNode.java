@@ -69,7 +69,7 @@ public final class DefaultPropertyBodyNode extends ExpressionNode {
           break;
         }
       }
-      if (tn instanceof UnionTypeNode union) {
+      if (tn instanceof UnionTypeNode union && !union.getHasDefaultElement()) {
         unionTypeSource = union.getSourceSection().getCharacters().toString();
       }
     }

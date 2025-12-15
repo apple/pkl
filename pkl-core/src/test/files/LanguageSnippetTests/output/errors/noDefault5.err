@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Tried to read property `foo` but its value is undefined.
+
+x | foo: *String|Listing<String>
+    ^^^
+at noDefault5#foo (file:///$snippetsDir/input/errors/noDefault5.pkl)
+
+The above error occurred when rendering path `foo` of module `file:///$snippetsDir/input/errors/noDefault5.pkl`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
