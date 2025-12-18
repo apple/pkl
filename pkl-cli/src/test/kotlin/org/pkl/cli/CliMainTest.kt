@@ -38,11 +38,6 @@ class CliMainTest {
   private val rootCmd = RootCommand()
 
   @Test
-  fun `do it`() {
-    rootCmd.main(listOf("run", "../test.pkl", "../test2*.pkl"))
-  }
-
-  @Test
   fun `duplicate CLI option produces meaningful error message`(@TempDir tempDir: Path) {
     val inputFile = tempDir.resolve("test.pkl").writeString("").toString()
 
