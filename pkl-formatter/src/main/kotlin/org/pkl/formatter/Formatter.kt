@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ class Formatter {
    * @return the formatted Pkl source code as a string
    * @throws java.io.IOException if the file cannot be read
    */
+  @JvmOverloads
   fun format(path: Path, grammarVersion: GrammarVersion = GrammarVersion.latest()): String {
     return format(Files.readString(path), grammarVersion)
   }
@@ -42,6 +43,7 @@ class Formatter {
    * @param grammarVersion grammar compatibility version
    * @return the formatted Pkl source code as a string
    */
+  @JvmOverloads
   fun format(text: String, grammarVersion: GrammarVersion = GrammarVersion.latest()): String {
     val parser = GenericParser()
     val builder = Builder(text, grammarVersion)
@@ -60,7 +62,6 @@ enum class GrammarVersion(val version: Int, val versionSpan: String) {
   V2(2, "0.30+");
 
   companion object {
-    @JvmStatic
-    fun latest(): GrammarVersion = entries.maxBy { it.version }
+    @JvmStatic fun latest(): GrammarVersion = entries.maxBy { it.version }
   }
 }

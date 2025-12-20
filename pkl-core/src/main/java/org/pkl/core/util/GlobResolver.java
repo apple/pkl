@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -472,7 +472,7 @@ public final class GlobResolver {
    *
    * <p>Each pair is the expanded form of the glob pattern, paired with its resolved absolute URI.
    *
-   * <p>globPattern must be absolute is enclosing module details are null.
+   * <p>globPattern must be absolute if enclosing module details are null.
    */
   @TruffleBoundary
   public static Map<String, ResolvedGlobElement> resolveGlob(

@@ -17,7 +17,6 @@ package org.pkl.cli
 
 import com.github.ajalt.clikt.core.BadParameterValue
 import com.github.ajalt.clikt.core.CliktError
-import com.github.ajalt.clikt.core.main
 import com.github.ajalt.clikt.core.parse
 import java.nio.file.Path
 import kotlin.io.path.createDirectory

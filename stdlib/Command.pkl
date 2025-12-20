@@ -16,10 +16,19 @@
 
 /// Defines inputs and outputs for CLI commands implemented in Pkl.
 ///
-/// TODO example
-///
 /// Modules extending `pkl:Command` may configure [ModuleOutput.text], [ModuleOutput.bytes], and/or
 /// [ModuleOutput.files] of [output] to influence the effect of the command.
+///
+/// Command modules should override [options] and provide their own class declaring options:
+/// ```
+/// extends "pkl:Command"
+///
+/// options: Options
+///
+/// class Options extends BaseOptions {
+///   // ...
+/// }
+/// ```
 @ModuleInfo { minPklVersion = "0.31.0" }
 abstract module pkl.Command
 
@@ -31,26 +40,35 @@ local commandClass = reflect.Class(getClass())
 /// Command configuration.
 hidden command: CommandInfo = new {
   name = // choose the name of the module if the command is a module or the class otherwise
-    let (
-      baseName =
-        if (commandClass.name == "ModuleClass")
-          reflect.Module(module).name
-        else
-          commandClass.name
-    )
-      baseName.replaceAllMapped(Regex("[A-Z]"), (match) -> "-\(match.value.toLowerCase())")
-
+    if (commandClass.name == "ModuleClass") reflect.Module(module).name else commandClass.name
   description = commandClass.docComment // works for both clases and module classes
 }
 
 /// Command line options.
 ///
 /// Set by the runtime during command execution.
-hidden options: Options
+/// Must not be amended or overridden.
+///
+/// Command modules should override this property and provide their own options type.
+/// The properties of the specified type declare the command line flags and arguments accepted by
+/// the command.
+///
+/// Example:
+/// ```
+/// extends "pkl:Command"
+///
+/// options: Options
+///
+/// class Options extends BaseOptions {
+///   // define flags and arguments here
+/// }
+/// ```
+hidden options: BaseOptions
 
 /// The value of the parent command with parsed options.
 ///
 /// Set by the runtime during command execution.
+/// Must not be amended or overridden.
 ///
 /// `null` for root commands.
 hidden parent: Command?
@@ -62,7 +80,7 @@ hidden parent: Command?
 /// `null` for root commands.
 hidden fixed root: Command? = parent?.root ?? parent
 
-class Options
+open class BaseOptions
 
 class CommandInfo {
   /// The name of the subcommand.
@@ -81,12 +99,12 @@ class CommandInfo {
   /// Hide this command from CLI help.
   hide: Boolean = false
 
-  /// Disable executing this command and only dispatch a subcommand.
+  /// If this command is executed, return an error and print CLI usage.
   ///
-  /// If this command has [subcommands] and is executed, it will fail and print its CLI help.
+  /// Only applicable to commands with [subcommands].
   ///
   /// This is enabled by default when this command has [subcommands].
-  /// Overriding it to `false` will allow this command to be executed.
+  /// Overriding it to `false` will allow this command to be executed directly.
   noOp: Boolean(implies(!subcommands.isEmpty)) = !subcommands.isEmpty
 
   /// Child commands.
