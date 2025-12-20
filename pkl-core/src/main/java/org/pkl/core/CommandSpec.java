@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core;
 import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.pkl.core.util.Nullable;
 
 public record CommandSpec(
@@ -76,19 +77,30 @@ public record CommandSpec(
 
     public static final class Primitive extends OptionType {
       public enum Type {
-        NUMBER,
-        FLOAT,
-        INT,
-        INT8,
-        INT16,
-        INT32,
-        UINT,
-        UINT8,
-        UINT16,
-        UINT32,
-        BOOLEAN,
-        STRING,
-        CHAR
+        NUMBER("Number"),
+        FLOAT("Float"),
+        INT("Int"),
+        INT8("Int8"),
+        INT16("Int16"),
+        INT32("Int32"),
+        UINT("UInt"),
+        UINT8("UInt8"),
+        UINT16("UInt16"),
+        UINT32("UInt32"),
+        BOOLEAN("Boolean"),
+        STRING("String"),
+        CHAR("Char");
+
+        private final String pklTypeName;
+
+        Type(String pklTypeName) {
+          this.pklTypeName = pklTypeName;
+        }
+
+        @Override
+        public String toString() {
+          return pklTypeName;
+        }
       }
 
       private final Type type;
@@ -104,7 +116,7 @@ public record CommandSpec(
 
       @Override
       public String toString() {
-        return type.toString().toLowerCase();
+        return type.toString();
       }
     }
 
@@ -122,14 +134,25 @@ public record CommandSpec(
 
       @Override
       public String toString() {
-        return String.join("|", choices);
+        return choices.stream().map((it) -> "\"" + it + "\"").collect(Collectors.joining("|"));
       }
     }
 
     public static final class Collection extends OptionType {
       public enum Type {
-        LIST,
-        SET
+        LIST("List"),
+        SET("Set");
+
+        private final String pklTypeName;
+
+        Type(String pklTypeName) {
+          this.pklTypeName = pklTypeName;
+        }
+
+        @Override
+        public String toString() {
+          return pklTypeName;
+        }
       }
 
       private final Type type;
@@ -152,7 +175,7 @@ public record CommandSpec(
 
       @Override
       public String toString() {
-        return String.format("%s<%s>", type.toString().toLowerCase(), valueType);
+        return String.format("%s<%s>", type.toString(), valueType);
       }
     }
 
@@ -178,7 +201,7 @@ public record CommandSpec(
 
       @Override
       public String toString() {
-        return String.format("map<%s, %s>", keyType, valueType);
+        return String.format("Map<%s, %s>", keyType, valueType);
       }
     }
   }

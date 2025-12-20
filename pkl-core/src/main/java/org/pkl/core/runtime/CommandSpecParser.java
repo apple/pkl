@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,6 @@ package org.pkl.core.runtime;
 import static org.pkl.core.runtime.VmUtils.REPL_TEXT;
 import static org.pkl.core.runtime.VmUtils.REPL_TEXT_URI;
 
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -38,10 +37,10 @@ import org.pkl.core.CommandSpec.OptionType.Primitive;
 import org.pkl.core.FileOutput;
 import org.pkl.core.PNull;
 import org.pkl.core.PType;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.expression.literal.AmendModuleNodeGen;
 import org.pkl.core.ast.expression.literal.PropertiesLiteralNodeGen;
@@ -78,16 +77,15 @@ public final class CommandSpecParser {
     this.makeFileOutput = makeFileOutput;
   }
 
-  public CommandSpec parse(VmTyped commandModule) {
-    checkAmends(commandModule, CommandModule.getModule().getVmClass());
-    checkPropertyIsUndefined(commandModule, Identifier.OPTIONS);
-    checkPropertyIsUndefined(commandModule, Identifier.PARENT);
+  public CommandSpec parse(VmTyped command) {
+    checkAmends(command, CommandModule.getModule().getVmClass());
+    checkPropertyIsUndefined(command, Identifier.OPTIONS);
+    checkPropertyIsUndefined(command, Identifier.PARENT);
 
-    var optionsClass = getOptionsClass(commandModule);
+    var optionsClass = getOptionsClass(command);
     var commandInfo =
         checkAmends(
-            VmUtils.readMember(commandModule, Identifier.COMMAND),
-            CommandModule.getCommandInfoClass());
+            VmUtils.readMember(command, Identifier.COMMAND), CommandModule.getCommandInfoClass());
     var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
     var optionSpecs = collectOptions(optionsClass);
 
@@ -102,10 +100,10 @@ public final class CommandSpecParser {
         (options, parent) ->
             new CommandSpec.State(
                 buildExecutionModule(
-                    commandModule,
+                    command,
                     buildObject(optionsClass, options),
                     parent == null ? null : (SubcommandState) parent.contents()),
-                (it) -> evaluateResult(commandModule, (SubcommandState) it)));
+                (it) -> evaluateResult(command, (SubcommandState) it)));
   }
 
   private static @Nullable String exportNullableString(VmObjectLike value, Object key) {
@@ -113,20 +111,18 @@ public final class CommandSpecParser {
     return result instanceof PNull ? null : (String) result;
   }
 
-  private VmClass getOptionsClass(VmTyped commandModule) {
-    var optionsProperty = commandModule.getVmClass().getProperty(Identifier.OPTIONS);
+  private VmClass getOptionsClass(VmTyped command) {
+    var optionsProperty = command.getVmClass().getProperty(Identifier.OPTIONS);
     if (optionsProperty == null) {
-      throw exceptionBuilder()
-          .cannotFindMember(commandModule, Identifier.OPTIONS)
-          .withSourceSection(commandModule.getVmClass().getSourceSection())
-          .build();
+      // at this point we've asserted the command extends pkl:Command
+      throw PklBugException.unreachableCode();
     }
     var optionsPropertyTypeNode = optionsProperty.getTypeNode();
     if (optionsPropertyTypeNode == null) {
-      throw exceptionBuilder()
-          .withSourceSection(optionsProperty.getSourceSection())
-          .evalError("commandOptionNoTypeAnnotation", "options", " in `pkl:Command` subclass")
-          .build();
+      // at this point we've asserted the options property exists and that it is neither amended nor
+      // assigned
+      // the only possibility here is that it has a type annotation or this wouldn't parse
+      throw PklBugException.unreachableCode();
     }
     var optionsTypeNode = optionsPropertyTypeNode.getTypeNode();
     if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
@@ -175,16 +171,18 @@ public final class CommandSpecParser {
           }
         }
 
-        var defaultValue = getDefaultValue(prop);
         if (flagAnnotation != null && argAnnotation != null) {
           throw exceptionBuilder()
-              .withSourceSection(prop.getSourceSection())
+              .withSourceSection(prop.getHeaderSection())
               .evalError("commandOptionBothFlagAndArgument", prop.getName())
               .build();
-        } else if (argAnnotation != null) {
+        }
+
+        if (argAnnotation != null) {
+          var defaultValue = getDefaultValue(prop, true);
           if (defaultValue != null) {
             throw exceptionBuilder()
-                .withSourceSection(prop.getSourceSection())
+                .withSourceSection(prop.getHeaderSection())
                 .evalError("commandArgumentUnexpectedDefaultValue", prop.getName())
                 .build();
           }
@@ -192,8 +190,13 @@ public final class CommandSpecParser {
           var type = getOptionType(prop, parseFunction, null);
           if (type instanceof OptionType.Map) {
             throw exceptionBuilder()
-                .withSourceSection(prop.getSourceSection())
+                .withSourceSection(prop.getHeaderSection())
                 .evalError("commandArgumentUnexpectedMapType", prop.getName())
+                .build();
+          } else if (!(type instanceof OptionType.Collection) && !type.isRequired()) {
+            throw exceptionBuilder()
+                .withSourceSection(prop.getHeaderSection())
+                .evalError("commandArgumentUnexpectedNullableNonCollectionType", prop.getName())
                 .build();
           }
           argNames.add(name);
@@ -201,6 +204,7 @@ public final class CommandSpecParser {
               new CommandSpec.Argument(
                   name, type, parseFunction, VmUtils.exportDocComment(prop.getDocComment())));
         } else {
+          var defaultValue = getDefaultValue(prop, false);
           String shortName = null;
           CommandSpec.ParseOptionFunction parseFunction = null;
           boolean hide = false;
@@ -211,7 +215,7 @@ public final class CommandSpecParser {
           }
           if ("help".equals(name) || "h".equals(shortName)) {
             throw exceptionBuilder()
-                .withSourceSection(prop.getSourceSection())
+                .withSourceSection(prop.getHeaderSection())
                 .evalError("commandFlagHelpCollision", prop.getName())
                 .build();
           }
@@ -222,7 +226,8 @@ public final class CommandSpecParser {
                   name,
                   shortName,
                   getOptionType(prop, parseFunction, defaultValue),
-                  defaultValue,
+                  // if the default value isn't a constant, don't surface it to the CLI layer
+                  defaultValue == COMPLEX_DEFAULT_EXPRESSION ? null : defaultValue,
                   parseFunction,
                   VmUtils.exportDocComment(prop.getDocComment()),
                   hide));
@@ -236,7 +241,7 @@ public final class CommandSpecParser {
       if (arg.type() instanceof Collection) {
         if (multipleArgName != null) {
           throw exceptionBuilder()
-              .withSourceSection(optionsClass.getSourceSection())
+              .withSourceSection(optionsClass.getHeaderSection())
               .evalError("commandArgumentsMultipleListOrSet")
               .build();
         }
@@ -247,28 +252,51 @@ public final class CommandSpecParser {
     return Pair.of(flags, args);
   }
 
-  private @Nullable Object getDefaultValue(ClassProperty prop) {
-    var constantValue = prop.getInitializer().getConstantValue();
-    if (constantValue != null) return VmValue.export(constantValue);
+  // This sigil used to indicate that an option has a default value that is a non-constant expr.
+  // These values cause a flag to be marked optional, but are not shown in CLI help.
+  // Thus, they are not evaluated at spec parse time.
+  private static final Object COMPLEX_DEFAULT_EXPRESSION = new Object() {};
 
+  private @Nullable Object getDefaultValue(ClassProperty prop, boolean requireExplicit) {
+    // if the default is a constant, surface it to the CLI layer informationally
+    var constantValue = prop.getInitializer().getConstantValue();
+    if (constantValue != null) {
+      // Map/List/Set literals may be constants if all their arguments are constants
+      // return the complex default sigil in that case!!
+      // only primitives returned here (non-VmValues: Float, Long, String, Boolean)
+      return constantValue instanceof VmValue ? COMPLEX_DEFAULT_EXPRESSION : constantValue;
+    }
+
+    // if the default is defined, we're not required but don't evaluate the expression
+    // return the sigil value to indicate this
     var bodyNode = prop.getInitializer().getMemberNode();
-    if (bodyNode == null || bodyNode.getBodyNode() instanceof DefaultPropertyBodyNode) {
+    if (bodyNode != null && !(bodyNode.getBodyNode() instanceof DefaultPropertyBodyNode)) {
+      return COMPLEX_DEFAULT_EXPRESSION;
+    }
+
+    // otherwise, if type-based defaults are allowed (eg. by flags, for string literal unions)
+    // attempt to discover the type's default
+    if (!requireExplicit) {
       var typeNode = prop.getTypeNode();
       if (typeNode == null) {
         throw exceptionBuilder()
-            .withSourceSection(prop.getSourceSection())
-            .evalError("commandOptionNoTypeAnnotation", prop.getName(), "")
+            .withSourceSection(prop.getHeaderSection())
+            .evalError("commandOptionNoTypeAnnotation", prop.getName())
             .withHint("Option properties require type annotations.")
             .build();
       }
 
-      if (stripConstraints(typeNode.export()) instanceof PType.Union union
-          && union.getDefaultElement() != null) {
+      var type = stripConstraints(typeNode.export());
+      if (type instanceof PType.Alias alias) {
+        type = stripConstraints(alias.getAliasedType());
+      }
+
+      if (type instanceof PType.Union union && union.getDefaultElement() != null) {
         var elements = union.getElementTypes();
         for (var element : elements) {
           if (!(element instanceof PType.StringLiteral)) {
             throw exceptionBuilder()
-                .withSourceSection(prop.getSourceSection())
+                .withSourceSection(prop.getHeaderSection())
                 .evalError(
                     "commandOptionUnsupportedType",
                     prop.getName(),
@@ -279,23 +307,10 @@ public final class CommandSpecParser {
         }
         return ((PType.StringLiteral) union.getDefaultElement()).getLiteral();
       }
-
-      return null;
     }
 
-    var language = VmLanguage.get(null);
-    var rootNode =
-        new SimpleRootNode(
-            language,
-            new FrameDescriptor(),
-            bodyNode.getSourceSection(),
-            "",
-            bodyNode.getBodyNode());
-    var callNode = Truffle.getRuntime().createIndirectCallNode();
-    var value =
-        callNode.call(rootNode.getCallTarget(), prop.getOwner(), prop.getOwner(), prop.getName());
-    VmValue.force(value, false);
-    return VmValue.export(value);
+    // otherwise we have no default!
+    return null;
   }
 
   private OptionType getOptionType(
@@ -305,8 +320,8 @@ public final class CommandSpecParser {
     var typeNode = prop.getTypeNode();
     if (typeNode == null) {
       throw exceptionBuilder()
-          .withSourceSection(prop.getSourceSection())
-          .evalError("commandOptionNoTypeAnnotation", prop.getName(), "")
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionNoTypeAnnotation", prop.getName())
           .build();
     }
     var type = stripConstraints(typeNode.export());
@@ -314,7 +329,7 @@ public final class CommandSpecParser {
     if (type instanceof PType.Nullable nullable) {
       if (!required) {
         throw exceptionBuilder()
-            .withSourceSection(prop.getSourceSection())
+            .withSourceSection(prop.getHeaderSection())
             .evalError("commandOptionTypeNullableWithDefaultValue", prop.getName())
             .build();
       }
@@ -344,35 +359,68 @@ public final class CommandSpecParser {
       } else if (clazz == BaseModule.getStringClass().export()) {
         return new Primitive(Primitive.Type.STRING, required);
       } else if (clazz == BaseModule.getListClass().export()) {
+        if (classType.getTypeArguments().size() != 1) {
+          throw exceptionBuilder()
+              .withSourceSection(prop.getHeaderSection())
+              .evalError(
+                  "commandOptionUnsupportedType",
+                  prop.getName(),
+                  "",
+                  typeNode.getSourceSection().getCharacters())
+              .withHint("List options must provide one type argument.")
+              .build();
+        }
         var elementType = getOptionType(prop, typeNode, classType.getTypeArguments().get(0), true);
         if (!(elementType instanceof Primitive || elementType instanceof Enum)) {
           throw exceptionBuilder()
-              .withSourceSection(prop.getSourceSection())
+              .withSourceSection(prop.getHeaderSection())
               .evalError("commandOptionUnsupportedType", prop.getName(), "element ", elementType)
               .build();
         }
         return new Collection(Collection.Type.LIST, elementType, required);
       } else if (clazz == BaseModule.getSetClass().export()) {
+        if (classType.getTypeArguments().size() != 1) {
+          throw exceptionBuilder()
+              .withSourceSection(prop.getHeaderSection())
+              .evalError(
+                  "commandOptionUnsupportedType",
+                  prop.getName(),
+                  "",
+                  typeNode.getSourceSection().getCharacters())
+              .withHint("Set options must provide one type argument.")
+              .build();
+        }
         var elementType = getOptionType(prop, typeNode, classType.getTypeArguments().get(0), true);
         if (!(elementType instanceof Primitive || elementType instanceof Enum)) {
           throw exceptionBuilder()
-              .withSourceSection(prop.getSourceSection())
+              .withSourceSection(prop.getHeaderSection())
               .evalError("commandOptionUnsupportedType", prop.getName(), "element ", elementType)
               .build();
         }
         return new Collection(Collection.Type.SET, elementType, required);
       } else if (clazz == BaseModule.getMapClass().export()) {
+        if (classType.getTypeArguments().size() != 2) {
+          throw exceptionBuilder()
+              .withSourceSection(prop.getHeaderSection())
+              .evalError(
+                  "commandOptionUnsupportedType",
+                  prop.getName(),
+                  "",
+                  typeNode.getSourceSection().getCharacters())
+              .withHint("Map options must provide two type arguments.")
+              .build();
+        }
         var keyType = getOptionType(prop, typeNode, classType.getTypeArguments().get(0), true);
         if (!(keyType instanceof Primitive || keyType instanceof Enum)) {
           throw exceptionBuilder()
-              .withSourceSection(prop.getSourceSection())
+              .withSourceSection(prop.getHeaderSection())
               .evalError("commandOptionUnsupportedType", prop.getName(), "key ", keyType)
               .build();
         }
         var valueType = getOptionType(prop, typeNode, classType.getTypeArguments().get(1), true);
         if (!(valueType instanceof Primitive || valueType instanceof Enum)) {
           throw exceptionBuilder()
-              .withSourceSection(prop.getSourceSection())
+              .withSourceSection(prop.getHeaderSection())
               .evalError("commandOptionUnsupportedType", prop.getName(), "value ", valueType)
               .build();
         }
@@ -380,7 +428,9 @@ public final class CommandSpecParser {
       }
     } else if (type instanceof PType.Alias aliasType) {
       var alias = aliasType.getTypeAlias();
-      if (alias == BaseModule.getUIntTypeAlias().export()) {
+      if (stripConstraints(aliasType.getAliasedType()) instanceof PType.Union union) {
+        type = union;
+      } else if (alias == BaseModule.getUIntTypeAlias().export()) {
         return new Primitive(Primitive.Type.UINT, required);
       } else if (alias == BaseModule.getUInt8TypeAlias().export()) {
         return new Primitive(Primitive.Type.UINT8, required);
@@ -397,13 +447,16 @@ public final class CommandSpecParser {
       } else if (alias == BaseModule.getCharTypeAlias().export()) {
         return new Primitive(Primitive.Type.CHAR, required);
       }
-    } else if (type instanceof PType.Union union) {
+    }
+
+    // not behind and else to catch the alias-to-string-literal-union case above
+    if (type instanceof PType.Union union) {
       var elements = union.getElementTypes();
       var choices = new ArrayList<String>(elements.size());
       for (var element : elements) {
         if (!(element instanceof PType.StringLiteral stringLiteral)) {
           throw exceptionBuilder()
-              .withSourceSection(prop.getSourceSection())
+              .withSourceSection(prop.getHeaderSection())
               .evalError(
                   "commandOptionUnsupportedType",
                   prop.getName(),
@@ -417,7 +470,7 @@ public final class CommandSpecParser {
     }
 
     throw exceptionBuilder()
-        .withSourceSection(prop.getSourceSection())
+        .withSourceSection(prop.getHeaderSection())
         .evalError(
             "commandOptionUnsupportedType",
             prop.getName(),
@@ -427,8 +480,8 @@ public final class CommandSpecParser {
   }
 
   private static PType stripConstraints(PType type) {
-    if (type instanceof PType.Constrained constrained) {
-      return constrained.getBaseType();
+    while (type instanceof PType.Constrained constrained) {
+      type = constrained.getBaseType();
     }
     return type;
   }
@@ -664,14 +717,14 @@ public final class CommandSpecParser {
   /** Check that a value is a VmTyped and that it inherits from the given class */
   private VmTyped checkAmends(Object value, VmClass clazz) {
     if (!(value instanceof VmTyped typed)) {
-      throw new VmExceptionBuilder().typeMismatch(value, clazz).build();
+      throw exceptionBuilder().typeMismatch(value, clazz).build();
     }
 
     var valueClass = typed.getVmClass();
     while (valueClass != clazz) {
       valueClass = valueClass.getSuperclass();
       if (valueClass == null) {
-        throw new VmExceptionBuilder().typeMismatch(value, clazz).build();
+        throw exceptionBuilder().typeMismatch(value, clazz).build();
       }
     }
 

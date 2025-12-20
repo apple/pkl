@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -228,8 +228,12 @@ public interface Evaluator extends AutoCloseable {
   /**
    * Parses the command into a spec describing it and invokes the {@code run} argument.
    *
-   * <p>This requires that the target module be a command module; it must either extend module
-   * {@code "pkl:Command"}. Otherwise, a type mismatch error is thrown.
+   * <p>This requires that the target module be a command module; it must extend module {@code
+   * "pkl:Command"}. Otherwise, a type mismatch error is thrown.
+   *
+   * <p>Unlike other evaluator methods, the resulting {@link CommandSpec} must be handled in a
+   * closure. This is because specs must be applied to parsed CLI options to produce command state
+   * that is eventually evaluated, which must happen in the active context of an evaluator.
    *
    * @throws PklException if an error occurs during evaluation
    * @throws IllegalStateException if this evaluator has already been closed

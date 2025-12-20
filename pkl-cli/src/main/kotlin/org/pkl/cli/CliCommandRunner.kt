@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.pkl.core.CommandSpec
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.FileOutput
 import org.pkl.core.ModuleSource.uri
+import org.pkl.core.PklException
 import org.pkl.core.util.IoUtils
 
 class CliCommandRunner
@@ -64,14 +65,20 @@ constructor(
     val evaluator = builder.build()
     evaluator.use {
       evaluator.evaluateCommand(uri(normalizedSourceModule)) { spec ->
-        val root = SynthesizedRunCommand(spec, this, options.sourceModules.first().toString())
-        root.subcommands(
-          CompletionCommand(
-            name = "shell-completion",
-            help = "Generate a completion script for the given shell",
+        try {
+          val root = SynthesizedRunCommand(spec, this, options.sourceModules.first().toString())
+          root.subcommands(
+            CompletionCommand(
+              name = "shell-completion",
+              help = "Generate a completion script for the given shell",
+            )
           )
-        )
-        root.main(args)
+          root.parse(args)
+        } catch (e: PklException) {
+          throw e
+        } catch (e: Exception) {
+          throw e.message?.let { PklException(it, e) } ?: PklException(e)
+        }
       }
     }
   }
@@ -109,7 +116,6 @@ constructor(
       checkPathSpec(pathSpec)
       val resolvedPath = outputDir.resolve(pathSpec).normalize()
       val realPath = if (resolvedPath.exists()) resolvedPath.toRealPath() else resolvedPath
-      // FIXME: should we validate against options.normalizedRootDir?
       val previousOutput = writtenFiles[realPath]
       if (previousOutput != null) {
         throw CliException(
@@ -149,6 +155,47 @@ constructor(
 
     override fun help(context: Context): String = spec.description ?: ""
 
+    private fun registerFlag(flag: CommandSpec.Flag) {
+      val names =
+        if (flag.shortName == null) arrayOf("--${flag.name}")
+        else arrayOf("--${flag.name}", "-${flag.shortName}")
+      val flag0 = option(names = names, help = spec.description ?: "", hidden = flag.hide)
+      val type = flag.type
+      registerOption(
+        when (type) {
+          is CommandSpec.OptionType.Primitive,
+          is CommandSpec.OptionType.Enum,
+          is CommandSpec.OptionType.Collection ->
+            flag0.convert(type, flag.parse, runner.options.normalizedWorkingDir).flag(flag)
+          is CommandSpec.OptionType.Map ->
+            flag0
+              .splitPair("=")
+              .convert {
+                Pair(
+                  convertValue(it.first, type.keyType, "key"),
+                  if (flag.parse != null) flag.parse!!.parse(it.second)
+                  else convertValue(it.second, type.valueType, "value"),
+                )
+              }
+              .multiple()
+              .toMap()
+        }
+      )
+    }
+
+    private fun registerArgument(arg: CommandSpec.Argument) {
+      val arg0 = argument(arg.name, arg.description ?: "")
+      registerArgument(
+        when (val type = arg.type) {
+          is CommandSpec.OptionType.Primitive,
+          is CommandSpec.OptionType.Enum,
+          is CommandSpec.OptionType.Collection ->
+            arg0.convert(type, arg.parse, runner.options.normalizedWorkingDir).argument(arg)
+          else -> throw CliException("Unexpected argument type $type")
+        }
+      )
+    }
+
     override fun run() {
       if (currentContext.invokedSubcommand is CompletionCommand) return
 
@@ -181,52 +228,6 @@ constructor(
       runner.writeOutput(result.outputBytes)
       runner.writeMultipleFileOutput(result.outputFiles)
     }
-
-    private fun registerFlag(flag: CommandSpec.Flag) {
-      val names =
-        if (flag.shortName == null) arrayOf("--${flag.name}")
-        else arrayOf("--${flag.name}", "-${flag.shortName}")
-      val flag0 = option(names = names, help = spec.description ?: "", hidden = flag.hide)
-      val type = flag.type
-      registerOption(
-        when (type) {
-          is CommandSpec.OptionType.Primitive,
-          is CommandSpec.OptionType.Enum,
-          is CommandSpec.OptionType.Collection ->
-            flag0.convert(type, flag.parse, runner.options.normalizedWorkingDir).flag(flag)
-          is CommandSpec.OptionType.Map ->
-            flag0
-              .splitPair("=")
-              .convert {
-                Pair(
-                  convertValue(it.first, type.keyType, "key"),
-                  if (flag.parse != null) flag.parse!!.parse(it.second)
-                  else convertValue(it.second, type.valueType, "value"),
-                )
-              }
-              .multiple(
-                default =
-                  (flag.defaultValue?.let { default ->
-                    (default as Map<*, *>).entries.toList().map { Pair(it.key!!, it.value!!) }
-                  } ?: emptyList())
-              )
-              .toMap()
-        }
-      )
-    }
-
-    private fun registerArgument(arg: CommandSpec.Argument) {
-      val arg0 = argument(arg.name, arg.description ?: "")
-      registerArgument(
-        when (val type = arg.type) {
-          is CommandSpec.OptionType.Primitive,
-          is CommandSpec.OptionType.Enum,
-          is CommandSpec.OptionType.Collection ->
-            arg0.convert(type, arg.parse, runner.options.normalizedWorkingDir).argument(arg)
-          else -> throw CliException("Unexpected argument type $type")
-        }
-      )
-    }
   }
 }
 
@@ -244,7 +245,7 @@ private fun <InT> NullableOption<InT, InT>.flag(flag: CommandSpec.Flag) =
           flag.type is CommandSpec.OptionType.Collection ->
             when {
               it.isEmpty() && flag.type.isRequired -> throw MissingOption(option)
-              it.isEmpty() && !flag.type.isRequired -> flag.defaultValue
+              it.isEmpty() && !flag.type.isRequired -> it
               else ->
                 if (
                   (flag.type as CommandSpec.OptionType.Collection).type ==
@@ -253,9 +254,8 @@ private fun <InT> NullableOption<InT, InT>.flag(flag: CommandSpec.Flag) =
                   it.toSet()
                 else it
             }
-          flag.defaultValue != null -> it.lastOrNull() ?: flag.defaultValue
           flag.type.isRequired -> it.lastOrNull() ?: throw MissingOption(option)
-          else -> it
+          else -> it.lastOrNull()
         }
       }
     else -> throw CliException("Unexpected collection flag value type $valueType")
@@ -300,7 +300,15 @@ fun RawOption.convert(
         } else it
       return@convert parseFunction.parse(parseArg)
     }
-  else convert { convertValue(it, type, null) }.copy(metavarGetter = { type.toString() })
+  else
+    convert {
+        convertValue(
+          it,
+          if (type is CommandSpec.OptionType.Collection) type.valueType else type,
+          null,
+        )
+      }
+      .copy(metavarGetter = { type.toString() })
 
 @Suppress("DuplicatedCode")
 fun RawArgument.convert(
@@ -321,7 +329,14 @@ fun RawArgument.convert(
         } else it
       return@convert parseFunction.parse(parseArg)
     }
-  else convert { convertValue(it, type, null) }
+  else
+    convert {
+      convertValue(
+        it,
+        if (type is CommandSpec.OptionType.Collection) type.valueType else type,
+        null,
+      )
+    }
 
 // helpers for converting primitives/enums
 
@@ -342,12 +357,12 @@ private val convertValue:
       is CommandSpec.OptionType.Primitive ->
         when (type.type) {
           CommandSpec.OptionType.Primitive.Type.NUMBER ->
-            value.toIntOrNull() ?: value.toDoubleOrNull()
+            value.toLongOrNull() ?: value.toDoubleOrNull()
           CommandSpec.OptionType.Primitive.Type.FLOAT -> value.toDoubleOrNull()
           CommandSpec.OptionType.Primitive.Type.INT -> value.toLongOrNull(this, type)
           // ranges based on org.pkl.core.stdlib.math.MathNodes
           CommandSpec.OptionType.Primitive.Type.INT8 ->
-            value.toLongOrNull(this, type, Byte.MIN_VALUE.toLong()..<Byte.MAX_VALUE)
+            value.toLongOrNull(this, type, Byte.MIN_VALUE.toLong()..Byte.MAX_VALUE)
           CommandSpec.OptionType.Primitive.Type.INT16 ->
             value.toLongOrNull(this, type, Short.MIN_VALUE.toLong()..Short.MAX_VALUE)
           CommandSpec.OptionType.Primitive.Type.INT32 ->
@@ -381,6 +396,6 @@ private val convertValue:
       is CommandSpec.OptionType.Enum ->
         if (type.choices.contains(value)) value
         else fail("invalid choice: $value. (choose from ${type.choices.joinToString()})")
-      else -> fail("unsupported ${mapPosition?.let { "map $it " }}type $type")
+      else -> fail("unsupported ${mapPosition?.let { "map $it " } ?: ""}type $type")
     } ?: fail("$value is not a valid $type")
   }

@@ -974,7 +974,7 @@ False values: `false`, `f`, `0`, `no`, `n`, `off`
 |`Int8`, `Int16`, `Int32`, `UInt`, `UInt8`, `UInt16`, `UInt32`
 |Behaves like `Int` but enforces the type's bounds check
 
-|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals]
+|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals] or a xref:language-reference:index.adoc#type-aliases[type alias] to one
 |Behaves like `String` but only admits specific values.
 
 |`List<Element>`, `Set<Element>`
@@ -1033,11 +1033,11 @@ parent: `my-tool` // <1>
 
 // Regular module code...
 ----
-<1> Optional; asserts that this is a subcommand of `my-tool` and simplifies accessing parent command properties and options
+<1> Optional; asserts that this is a subcommand of `my-tool` and simplifies accessing properties and options of the parent command
 
 === Testing Commands
 
-Command module are normal Pkl modules, so they may be imported and used like any other module.
+Command modules are normal Pkl modules, so they may be imported and used like any other module.
 This is particularly helpful when testing commands, as the command's `options` and `parent` properties can be populated by test code.
 
 Testing the above command and subcommand might look like this:
