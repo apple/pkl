@@ -974,7 +974,7 @@ False values: `false`, `f`, `0`, `no`, `n`, `off`
 |`Int8`, `Int16`, `Int32`, `UInt`, `UInt8`, `UInt16`, `UInt32`
 |Behaves like `Int` but enforces the type's bounds check
 
-|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals]
+|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals] or a xref:language-reference:index.adoc#type-aliases[type alias] to one
 |Behaves like `String` but only admits specific values.
 
 |`List<Element>`, `Set<Element>`

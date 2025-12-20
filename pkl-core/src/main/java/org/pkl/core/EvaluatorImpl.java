@@ -368,6 +368,9 @@ public final class EvaluatorImpl implements Evaluator {
     } catch (VmException e) {
       handleTimeout(timeoutTask);
       throw e.toPklException(frameTransformer, color);
+    } catch (PklException e) {
+      // evaluateCommand can throw PklException from the CLI layer, pass them through
+      throw e;
     } catch (Exception e) {
       throw new PklBugException(e);
     } catch (ExceptionInInitializerError e) {
