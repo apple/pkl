@@ -45,10 +45,12 @@ import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
 import org.pkl.parser.syntax.Class;
@@ -172,7 +174,7 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings({"StatementWithEmptyBody", "DataFlowIssue"})
+  @SuppressWarnings({"StatementWithEmptyBody"})
   private List<Object> evaluate(
       ReplState replState,
       String requestId,
@@ -448,7 +450,10 @@ public class ReplServer implements AutoCloseable {
   }
 
   private String render(Object value) {
-    return VmValueRenderer.multiLine(Integer.MAX_VALUE).render(value);
+    var sb = new AnsiStringBuilder(true);
+    var src = VmValueRenderer.multiLine(Integer.MAX_VALUE).render(value);
+    SyntaxHighlighter.writeTo(sb, src);
+    return sb.toString();
   }
 
   private static class ReplState {

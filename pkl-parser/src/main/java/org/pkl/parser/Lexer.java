@@ -65,6 +65,14 @@ public class Lexer {
     return new String(source, sCursor, cursor - sCursor);
   }
 
+  public int getStartCursor() {
+    return sCursor;
+  }
+
+  public int getCursor() {
+    return cursor;
+  }
+
   public char[] getSource() {
     return source;
   }
