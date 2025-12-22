@@ -1,0 +1,3 @@
+local typealias B = Listing<String> | String
+
+b: B

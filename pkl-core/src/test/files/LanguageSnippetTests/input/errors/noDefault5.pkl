@@ -1,0 +1,3 @@
+// should not get "union with no default" diagnostic here (since there is a default)
+// and lack of default value is due to String's lack of default value
+foo: *String|Listing<String>

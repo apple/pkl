@@ -810,6 +810,10 @@ public abstract class TypeNode extends PklNode {
       return elementTypeNodes;
     }
 
+    public boolean getHasDefaultElement() {
+      return defaultIndex != -1;
+    }
+
     @Override
     public boolean isNoopTypeCheck() {
       return skipElementTypeChecks;
@@ -2596,6 +2600,10 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language, SourceSection headerSection, String qualifiedName) {
 
       return childNode.createDefaultValue(language, headerSection, qualifiedName);
+    }
+
+    public TypeNode getBaseTypeNode() {
+      return childNode;
     }
 
     public SourceSection getBaseTypeSection() {

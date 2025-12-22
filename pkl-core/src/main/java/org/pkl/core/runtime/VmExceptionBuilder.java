@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -124,9 +124,19 @@ public final class VmExceptionBuilder {
     return withExternalMessage("undefinedValue");
   }
 
-  public VmExceptionBuilder undefinedPropertyValue(Identifier propertyName, Object receiver) {
+  public VmExceptionBuilder undefinedPropertyValue(
+      Identifier propertyName,
+      Object receiver,
+      @Nullable String unionTypeSource,
+      @Nullable String typeAliasName) {
     kind = VmException.Kind.UNDEFINED_VALUE;
     this.receiver = receiver;
+    if (unionTypeSource != null && typeAliasName != null) {
+      return withExternalMessage(
+          "undefinedPropertyValueUnionAlias", propertyName, unionTypeSource, typeAliasName);
+    } else if (unionTypeSource != null) {
+      return withExternalMessage("undefinedPropertyValueUnion", propertyName, unionTypeSource);
+    }
     return withExternalMessage("undefinedPropertyValue", propertyName);
   }
 
