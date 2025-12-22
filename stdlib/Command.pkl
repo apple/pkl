@@ -1,0 +1,149 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Defines inputs and outputs for CLI commands implemented in Pkl.
+///
+/// TODO example
+///
+/// Modules extending `pkl:Command` may configure [ModuleOutput.text], [ModuleOutput.bytes], and/or
+/// [ModuleOutput.files] of [output] to influence the effect of the command.
+@ModuleInfo { minPklVersion = "0.31.0" }
+abstract module pkl.Command
+
+import "pkl:Command"
+import "pkl:reflect"
+
+local commandClass = reflect.Class(getClass())
+
+/// Command configuration.
+hidden command: CommandInfo = new {
+  name = // choose the name of the module if the command is a module or the class otherwise
+    let (
+      baseName =
+        if (commandClass.name == "ModuleClass")
+          reflect.Module(module).name
+        else
+          commandClass.name
+    )
+      baseName.replaceAllMapped(Regex("[A-Z]"), (match) -> "-\(match.value.toLowerCase())")
+
+  description = commandClass.docComment // works for both clases and module classes
+}
+
+/// Command line options.
+///
+/// Set by the runtime during command execution.
+hidden options: Options
+
+/// The value of the parent command with parsed options.
+///
+/// Set by the runtime during command execution.
+///
+/// `null` for root commands.
+hidden parent: Command?
+
+/// The value of the root command with parsed options.
+///
+/// Set by the runtime during command execution.
+///
+/// `null` for root commands.
+hidden fixed root: Command? = parent?.root ?? parent
+
+class Options
+
+class CommandInfo {
+  /// The name of the subcommand.
+  ///
+  /// Default value: the name of the module or class extending [Command].
+  /// Names that are `CamelCased` are transformed to `kebab-case`.
+  name: String
+
+  /// A long description of the command.
+  ///
+  /// Shown in the CLI help for this command.
+  ///
+  /// Default value: the doc comment of the module or class extending [Command].
+  description: String?
+
+  /// Hide this command from CLI help.
+  hide: Boolean = false
+
+  /// Disable executing this command and only dispatch a subcommand.
+  ///
+  /// If this command has [subcommands] and is executed, it will fail and print its CLI help.
+  ///
+  /// This is enabled by default when this command has [subcommands].
+  /// Overriding it to `false` will allow this command to be executed.
+  noOp: Boolean(implies(!subcommands.isEmpty)) = !subcommands.isEmpty
+
+  /// Child commands.
+  ///
+  /// Must have unique [name] values.
+  subcommands: *Listing<Command> | Mapping<String, Command>
+}
+
+/// Annotates [options] properties to configure them as named CLI flags.
+class Flag extends Annotation {
+  /// Abbreviated flag name.
+  shortName: Char?
+
+  /// Hide this option from CLI help.
+  hide: Boolean = false
+
+  /// Customize the behavior of turning the raw option value string into the final value.
+  ///
+  /// If a function, the return type must match the annotated property's type.
+  /// If "import", the raw option is treated as an import URI.
+  /// If "import*", the raw option is treated as a glob import URI.
+  parse: (*((String) -> unknown) | "import" | "import*")?
+}
+
+/// Annotates [options] properties to configure them as positional CLI arguments.
+class Argument extends Annotation {
+  /// Customize the behavior of turning the raw option value string into the final value.
+  ///
+  /// If a function, the return type must match the annotated property's type.
+  /// If "import", the raw option is treated as an import URI.
+  /// If "import*", the raw option is treated as a glob import URI.
+  parse: (*((String) -> unknown) | "import" | "import*")?
+}
+
+local const quantityRegex = Regex(#"([0-9]+(?:\.[0-9]+)?)\.?([A-Za-z]+)"#)
+
+local const function parseQuantity(value: String, typeName: String): Pair<Float, String> =
+  let (match = quantityRegex.matchEntire(value))
+    if (match == null)
+      throw("Unable to parse \(typeName) from string '\(value)'")
+    else
+      Pair(match.groups[1].value.toFloat(), match.groups[2].value.toLowerCase())
+
+/// A parse function for [Duration] values.
+///
+/// For use with [Flag.parse] and [Argument.parse].
+hidden const parseDuration: (String) -> Duration = (value: String) ->
+  let (quantity = parseQuantity(value, "Duration"))
+  let (_unit = quantity.second)
+  let (unit = if (_unit is DurationUnit) _unit else null)
+    quantity.first.toDuration(unit ?? throw("Unable to parse DurationUnit from '\(_unit)'"))
+
+/// A parse function for [DataSize] values.
+///
+/// For use with [Flag.parse] and [Argument.parse].
+hidden const parseDataSize: (String) -> DataSize = (value: String) ->
+  let (quantity = parseQuantity(value, "DataSize"))
+  let (_unit = quantity.second)
+  let (unit = if (_unit is DataSizeUnit) _unit else null)
+    quantity.first.toDataSize(unit ?? throw("Unable to parse DataSizeUnit from '\(_unit)'"))
