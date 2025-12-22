@@ -66,6 +66,9 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
 
   protected ClassMethod findSupermethod(VirtualFrame frame) {
     var owner = VmUtils.getOwner(frame);
+    while (owner instanceof org.pkl.core.runtime.VmFunction) {
+      owner = owner.getEnclosingOwner();
+    }
     assert owner.isPrototype();
 
     var superclass = owner.getVmClass().getSuperclass();
