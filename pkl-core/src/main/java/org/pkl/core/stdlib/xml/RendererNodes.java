@@ -40,7 +40,7 @@ public final class RendererNodes {
         xmlVersion,
         rootElementName,
         rootElementAttributes,
-        PklConverter.fromRenderer(self));
+        PklConverter.fromRenderer(self, XmlModule.getPropertyClass()));
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {

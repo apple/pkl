@@ -18,11 +18,11 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.net.URI;
 
-public final class XmlModule extends StdLibModule {
+public final class ProtobufModule extends StdLibModule {
   private static final VmTyped instance = VmUtils.createEmptyModule();
 
   static {
-    loadModule(URI.create("pkl:xml"), instance);
+    loadModule(URI.create("pkl:protobuf"), instance);
   }
 
   public static VmTyped getModule() {
@@ -33,32 +33,8 @@ public final class XmlModule extends StdLibModule {
     return PropertyClass.instance;
   }
 
-  public static VmClass getInlineClass() {
-    return InlineClass.instance;
-  }
-
-  public static VmClass getCommentClass() {
-    return CommentClass.instance;
-  }
-
-  public static VmClass getCDataClass() {
-    return CDataClass.instance;
-  }
-
   private static final class PropertyClass {
     static final VmClass instance = loadClass("Property");
-  }
-
-  private static final class InlineClass {
-    static final VmClass instance = loadClass("Inline");
-  }
-
-  private static final class CommentClass {
-    static final VmClass instance = loadClass("Comment");
-  }
-
-  private static final class CDataClass {
-    static final VmClass instance = loadClass("CData");
   }
 
   @TruffleBoundary

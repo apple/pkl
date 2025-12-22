@@ -22,8 +22,12 @@ import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
 public final class PklConverter implements VmValueConverter<Object> {
+  private interface AnnotationConverter {
+    VmPair convert(String property, VmTyped annotation, Object value);
+  }
+
   private final Map<VmClass, VmFunction> typeConverters;
-  private final Map<VmClass, VmFunction> annotationConverters;
+  private final Map<VmClass, AnnotationConverter> annotationConverters;
   private final Pair<Object[], VmFunction>[] pathConverters;
 
   private final @Nullable VmFunction stringConverter;
@@ -46,13 +50,17 @@ public final class PklConverter implements VmValueConverter<Object> {
   private final @Nullable VmFunction classConverter;
   private final @Nullable VmFunction typeAliasConverter;
 
-  public PklConverter(VmMapping converters, VmMapping annotationConverters) {
+  private PklConverter(
+      VmMapping converters,
+      VmMapping annotationConverters,
+      @Nullable VmClass propertyNameAnnotation) {
     // As of 0.18, `converters` is forced by the mapping type check,
     // but let's not rely on this implementation detail.
     converters.force(false, false);
     annotationConverters.force(false, false);
     typeConverters = createTypeConverters(converters);
-    this.annotationConverters = createAnnotationConverters(annotationConverters);
+    this.annotationConverters =
+        createAnnotationConverters(annotationConverters, propertyNameAnnotation);
     pathConverters = createPathConverters(converters);
 
     stringConverter = typeConverters.get(BaseModule.getStringClass());
@@ -76,18 +84,27 @@ public final class PklConverter implements VmValueConverter<Object> {
     typeAliasConverter = typeConverters.get(BaseModule.getTypeAliasClass());
   }
 
-  public static final PklConverter NOOP = new PklConverter(VmMapping.empty(), VmMapping.empty());
+  public static final PklConverter NOOP =
+      new PklConverter(VmMapping.empty(), VmMapping.empty(), null);
+
+  public static PklConverter fromRenderer(VmTyped renderer, VmClass propertyNameAnnotation) {
+    var converters = (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERTERS);
+    var annotationConverters =
+        (VmMapping) VmUtils.readMember(renderer, Identifier.ANNOTATION_CONVERTERS);
+    return new PklConverter(converters, annotationConverters, propertyNameAnnotation);
+  }
 
   public static PklConverter fromRenderer(VmTyped renderer) {
     var converters = (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERTERS);
     var annotationConverters =
         (VmMapping) VmUtils.readMember(renderer, Identifier.ANNOTATION_CONVERTERS);
-    return new PklConverter(converters, annotationConverters);
+    return new PklConverter(converters, annotationConverters, null);
   }
 
   public static PklConverter fromParser(VmTyped parser) {
     var converters = (VmMapping) VmUtils.readMember(parser, Identifier.CONVERTERS);
-    return new PklConverter(converters, VmMapping.empty()); // no annotation converters in parsers
+    return new PklConverter(
+        converters, VmMapping.empty(), null); // no annotation converters in parsers
   }
 
   @Override
@@ -204,7 +221,7 @@ public final class PklConverter implements VmValueConverter<Object> {
       if (converter == null) {
         continue;
       }
-      var nameVal = (VmPair) converter.apply(name.toString(), annotation, value);
+      var nameVal = converter.convert(name.toString(), annotation, value);
       name = Identifier.get((String) nameVal.getFirst());
       value = nameVal.getSecond();
     }
@@ -225,14 +242,26 @@ public final class PklConverter implements VmValueConverter<Object> {
     return result;
   }
 
-  private Map<VmClass, VmFunction> createAnnotationConverters(VmMapping annotationConverters) {
-    var result = new HashMap<VmClass, VmFunction>();
+  private Map<VmClass, AnnotationConverter> createAnnotationConverters(
+      VmMapping annotationConverters, @Nullable VmClass propertyNameAnnotation) {
+    var result = new HashMap<VmClass, AnnotationConverter>();
     annotationConverters.iterateMemberValues(
         (key, member, value) -> {
           assert value != null; // forced in ctor
-          result.put((VmClass) key, (VmFunction) value);
+          result.put(
+              (VmClass) key,
+              (name, annotation, val) ->
+                  (VmPair) ((VmFunction) value).apply(name, annotation, val));
           return true;
         });
+
+    if (propertyNameAnnotation != null && !result.containsKey(propertyNameAnnotation)) {
+      result.put(
+          propertyNameAnnotation,
+          (name, annotation, val) ->
+              new VmPair(VmUtils.readMember(annotation, Identifier.NAME), val));
+    }
+
     return result;
   }
 
@@ -270,11 +299,11 @@ public final class PklConverter implements VmValueConverter<Object> {
     return findConverterByType(typeConverters, clazz);
   }
 
-  private @Nullable VmFunction findAnnotationConverter(VmClass clazz) {
+  private @Nullable AnnotationConverter findAnnotationConverter(VmClass clazz) {
     return findConverterByType(annotationConverters, clazz);
   }
 
-  private @Nullable VmFunction findConverterByType(Map<VmClass, VmFunction> bag, VmClass clazz) {
+  private <T> @Nullable T findConverterByType(Map<VmClass, T> bag, VmClass clazz) {
     for (var current = clazz; current != null; current = current.getSuperclass()) {
       var found = bag.get(current);
       if (found != null) return found;

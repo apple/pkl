@@ -47,7 +47,11 @@ public final class RendererNodes {
     var indent = (String) VmNull.unwrap(VmUtils.readMember(self, Identifier.INDENT));
     if (indent == null) indent = "";
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    return new Renderer(builder, indent, omitNullProperties, PklConverter.fromRenderer(self));
+    return new Renderer(
+        builder,
+        indent,
+        omitNullProperties,
+        PklConverter.fromRenderer(self, JsonnetModule.getPropertyClass()));
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {

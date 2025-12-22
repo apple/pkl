@@ -35,6 +35,7 @@ import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.runtime.YamlModule;
 import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
@@ -72,7 +73,7 @@ public final class YamlRendererNodes {
     return new YamlRenderer(
         builder,
         " ".repeat(indentWidth),
-        PklConverter.fromRenderer(self),
+        PklConverter.fromRenderer(self, YamlModule.getPropertyClass()),
         omitNullProperties,
         mode,
         isStream);

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,12 +29,20 @@ public final class JsonnetModule extends StdLibModule {
     return instance;
   }
 
+  public static VmClass getPropertyClass() {
+    return PropertyClass.instance;
+  }
+
   public static VmClass getImportStrClass() {
     return ImportStrClass.instance;
   }
 
   public static VmClass getExtVarClass() {
     return ExtVarClass.instance;
+  }
+
+  private static final class PropertyClass {
+    static final VmClass instance = loadClass("Property");
   }
 
   private static final class ImportStrClass {

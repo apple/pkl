@@ -25,6 +25,10 @@ import "pkl:reflect"
 /// Note: This class is _experimental_ and not ready for production use.
 ///
 /// As of this release, only Protocol Buffers' text format is supported.
+///
+/// An annotation converter for [Property] is implicitly added to allow renaming properties during
+/// protobuf rendering.
+/// Add an explicit annotation converter for [Property] to override this behavior.
 class Renderer extends ValueRenderer {
   /// The characters to use for indenting output.
   ///
@@ -37,4 +41,11 @@ class Renderer extends ValueRenderer {
 
   /// Returns the canonical name for [type].
   external function renderType(type: reflect.Type): String
+}
+
+/// Annotate properties of classes and modules with this class to override how the protobuf
+/// [Renderer] interprets a property's name.
+class Property extends Annotation {
+  /// The new name to use for the annotated property when rendered by [Renderer].
+  name: String
 }

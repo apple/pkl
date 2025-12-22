@@ -1,0 +1,21 @@
+// test json.Property implicit annotation converter
+import "pkl:json"
+
+class Foo {
+  @json.Property { name = "new-name" }
+  oldName: String
+}
+
+foo: Foo = new {
+  oldName = "hello world"
+}
+
+unaltered: String = new JsonRenderer {
+  annotationConverters {
+    [json.Property] = (name, _, value) -> Pair(name, value)
+  }
+}.renderDocument(foo)
+
+output {
+  renderer = new JsonRenderer {}
+}
