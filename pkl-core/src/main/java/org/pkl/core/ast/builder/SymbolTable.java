@@ -327,6 +327,8 @@ public final class SymbolTable {
     }
 
     public final boolean isClassMemberScope() {
+      var effectiveScope = skipLambdaScopes();
+      var parent = effectiveScope.parent;
       if (parent == null) return false;
 
       return parent.isClassScope()
