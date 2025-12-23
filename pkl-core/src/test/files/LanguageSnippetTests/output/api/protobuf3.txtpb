@@ -1,0 +1,4 @@
+foo: {
+  new_name: "hello world"
+}
+unaltered: "oldName: \"hello world\"\n"

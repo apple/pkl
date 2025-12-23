@@ -1,0 +1,21 @@
+// test protobuf.Property implicit annotation converter
+import "pkl:protobuf"
+
+class Foo {
+  @protobuf.Property { name = "new_name" }
+  oldName: String
+}
+
+foo: Foo = new {
+  oldName = "hello world"
+}
+
+unaltered: String = new protobuf.Renderer {
+  annotationConverters {
+    [protobuf.Property] = (name, _, value) -> Pair(name, value)
+  }
+}.renderDocument(foo)
+
+output {
+  renderer = new protobuf.Renderer {}
+}

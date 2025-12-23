@@ -65,7 +65,7 @@ public final class ParserNodes {
     }
 
     private Object doParse(VmTyped self, String text, String uri) {
-      var converter = createConverter(self);
+      var converter = PklConverter.fromParser(self);
       var load = createLoad(self, text, uri, converter);
 
       try {
@@ -101,7 +101,7 @@ public final class ParserNodes {
     }
 
     private VmList doParseAll(VmTyped self, String text, String uri) {
-      var converter = createConverter(self);
+      var converter = PklConverter.fromParser(self);
       var load = createLoad(self, text, uri, converter);
       var builder = VmList.EMPTY.builder();
 
@@ -121,11 +121,6 @@ public final class ParserNodes {
 
       return builder.build();
     }
-  }
-
-  private static PklConverter createConverter(VmTyped self) {
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    return new PklConverter(converters);
   }
 
   private static int getMaxCollectionAliases(VmTyped self) {

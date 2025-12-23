@@ -50,6 +50,10 @@ function ExtVar(_name: String): ExtVar = new { name = _name }
 /// To render an `importstr` construct, use [ImportStr()].
 /// To render an `std.extVar()` call, use [ExtVar()].
 ///
+/// An annotation converter for [Property] is implicitly added to allow renaming properties during
+/// josnnet rendering.
+/// Add an explicit annotation converter for [Property] to override this behavior.
+///
 /// Example:
 /// ```
 /// import "pkl:jsonnet"
@@ -89,6 +93,13 @@ class Renderer extends ValueRenderer {
   external function renderDocument(value: Any): String
 
   external function renderValue(value: Any): String
+}
+
+/// Annotate properties of classes and modules with this class to override how the jsonnet
+/// [Renderer] interprets a property's name.
+class Property extends Annotation {
+  /// The new name to use for the annotated property when rendered by [Renderer].
+  name: String
 }
 
 /// An `importstr` construct that, when evaluated by Jsonnet, returns the content of a UTF-8 text file.

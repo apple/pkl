@@ -1,0 +1,21 @@
+// test xml.Property implicit annotation converter
+import "pkl:xml"
+
+class Foo {
+  @xml.Property { name = "new-name" }
+  oldName: String
+}
+
+foo: Foo = new {
+  oldName = "hello world"
+}
+
+unaltered: String = new xml.Renderer {
+  annotationConverters {
+    [xml.Property] = (name, _, value) -> Pair(name, value)
+  }
+}.renderDocument(foo)
+
+output {
+  renderer = new xml.Renderer {}
+}

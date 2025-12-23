@@ -92,16 +92,20 @@ public final class ModuleCache {
           return BaseModule.getModule();
         case "Benchmark":
           return BenchmarkModule.getModule();
-        case "pklbinary":
-          return PklBinaryModule.getModule();
+        case "json":
+          return JsonModule.getModule();
         case "jsonnet":
           return JsonnetModule.getModule();
         case "math":
           return MathModule.getModule();
+        case "pklbinary":
+          return PklBinaryModule.getModule();
         case "platform":
           return PlatformModule.getModule();
         case "project":
           return ProjectModule.getModule();
+        case "protobuf":
+          return ProtobufModule.getModule();
         case "reflect":
           return ReflectModule.getModule();
         case "release":
@@ -115,6 +119,8 @@ public final class ModuleCache {
           return TestModule.getModule();
         case "xml":
           return XmlModule.getModule();
+        case "yaml":
+          return YamlModule.getModule();
         default:
           if (!STDLIB_MODULE_URIS.contains(moduleKey.getUri())) {
             var stdlibModules = String.join("\n", Release.current().standardLibrary().modules());

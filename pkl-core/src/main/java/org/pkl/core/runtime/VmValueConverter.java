@@ -15,6 +15,9 @@
  */
 package org.pkl.core.runtime;
 
+import org.pkl.core.ast.member.ClassProperty;
+import org.pkl.core.util.Pair;
+
 public interface VmValueConverter<T> {
   Object WILDCARD_PROPERTY =
       new Object() {
@@ -81,6 +84,8 @@ public interface VmValueConverter<T> {
   T convertRegex(VmRegex value, Iterable<Object> path);
 
   T convertFunction(VmFunction value, Iterable<Object> path);
+
+  Pair<Identifier, T> convertProperty(ClassProperty property, Object value, Iterable<Object> path);
 
   default T convert(Object value, Iterable<Object> path) {
     if (value instanceof VmValue vmValue) {
