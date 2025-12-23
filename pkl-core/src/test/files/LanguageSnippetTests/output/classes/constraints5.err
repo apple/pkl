@@ -2,6 +2,11 @@
 Type constraint `this >= min` violated.
 Value: 3
 
+    this >= min
+    |    |  |
+    3    |  4
+         false
+
 x | max: Int(this >= min)
              ^^^^^^^^^^^
 at constraints5#Gauge.max (file:///$snippetsDir/input/classes/constraints5.pkl)

@@ -1,0 +1,32 @@
+–– Pkl Error ––
+Type constraint `isCapitalized` violated.
+Value: "hello"
+
+    (it: String) ->
+    let (first = it.take(1).toUpperCase())
+                 |  |       |
+                 |  "h"     "H"
+                 "hello"
+
+      it == "\(first)\(it.drop(1))"
+      |  |  |  |       |  |
+      |  |  |  "H"     |  "ello"
+      |  |  "Hello"    "hello"
+      |  false
+      "hello"
+
+x | foo: String(isCapitalized) = "hello"
+                ^^^^^^^^^^^^^
+at typeConstraints6#foo (file:///$snippetsDir/input/errors/power/typeConstraints6.pkl)
+
+x | foo: String(isCapitalized) = "hello"
+                                 ^^^^^^^
+at typeConstraints6#foo (file:///$snippetsDir/input/errors/power/typeConstraints6.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

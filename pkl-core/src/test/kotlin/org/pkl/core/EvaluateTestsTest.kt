@@ -88,10 +88,26 @@ class EvaluateTestsTest {
     assertThat(res.failures.size).isEqualTo(2)
 
     val fail1 = res.failures[0]
-    assertThat(fail1.message).isEqualTo("1 == 2 (repl:text)")
+    assertThat(fail1.message)
+      .isEqualTo(
+        """
+      1 == 2 (repl:text)
+        |
+        false
+      """
+          .trimIndent()
+      )
 
     val fail2 = res.failures[1]
-    assertThat(fail2.message).isEqualTo(""""foo" == "bar" (repl:text)""")
+    assertThat(fail2.message)
+      .isEqualTo(
+        """
+      "foo" == "bar" (repl:text)
+            |
+            false
+      """
+          .trimIndent()
+      )
   }
 
   @Test

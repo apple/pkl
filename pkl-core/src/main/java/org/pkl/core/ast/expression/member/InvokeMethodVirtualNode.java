@@ -23,6 +23,8 @@ import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -40,6 +42,7 @@ import org.pkl.core.runtime.VmFunction;
 @ImportStatic(Identifier.class)
 @NodeChild(value = "receiverNode", type = ExpressionNode.class)
 @NodeChild(value = "receiverClassNode", type = GetClassNode.class, executeWith = "receiverNode")
+@GenerateWrapper
 public abstract class InvokeMethodVirtualNode extends ExpressionNode {
   protected final Identifier methodName;
   @Children private final ExpressionNode[] argumentNodes;
@@ -171,6 +174,12 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
             argumentNodes.length,
             lookupMode != MemberLookupMode.EXPLICIT_RECEIVER)
         .build();
+  }
+
+  @Override
+  public WrapperNode createWrapper(ProbeNode probe) {
+    return new InvokeMethodVirtualNodeWrapper(
+        sourceSection, methodName, argumentNodes, lookupMode, needsConst, this, probe);
   }
 
   private void checkConst(ClassMethod method) {

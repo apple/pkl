@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,12 +21,14 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.pkl.core.*;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 
 public final class VmBugException extends VmException {
   public VmBugException(
-      String message,
+      @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
@@ -35,7 +37,8 @@ public final class VmBugException extends VmException {
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
       @Nullable String hint,
-      Map<CallTarget, StackFrame> insertedStackFrames) {
+      Map<CallTarget, StackFrame> insertedStackFrames,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder) {
 
     super(
         message,
@@ -47,7 +50,8 @@ public final class VmBugException extends VmException {
         sourceSection,
         memberName,
         hint,
-        insertedStackFrames);
+        insertedStackFrames,
+        messageBuilder);
   }
 
   @Override
@@ -59,7 +63,7 @@ public final class VmBugException extends VmException {
   @Override
   @TruffleBoundary
   public PklException toPklException(StackFrameTransformer transformer, boolean color) {
-    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color);
+    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color, true);
     var rendered = renderer.render(this);
     return new PklBugException(rendered, this);
   }

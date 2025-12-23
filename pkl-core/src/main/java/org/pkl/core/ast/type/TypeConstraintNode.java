@@ -27,11 +27,13 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.runtime.BaseModule;
+import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmUtils;
 
 @NodeChild(value = "bodyNode", type = ExpressionNode.class)
 public abstract class TypeConstraintNode extends PklNode {
+
   @CompilationFinal private int customThisSlot = -1;
 
   protected TypeConstraintNode(SourceSection sourceSection) {
@@ -39,6 +41,8 @@ public abstract class TypeConstraintNode extends PklNode {
   }
 
   public abstract void execute(VirtualFrame frame);
+
+  protected abstract ExpressionNode getBodyNode();
 
   public String export() {
     return getSourceSection().getCharacters().toString();
@@ -49,8 +53,15 @@ public abstract class TypeConstraintNode extends PklNode {
     initConstraintSlot(frame);
 
     if (!result) {
-      throw new VmTypeMismatchException.Constraint(
-          sourceSection, frame.getAuxiliarySlot(customThisSlot));
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      try (var valueTracker = VmContext.get(this).getValueTrackerFactory().create()) {
+        getBodyNode().executeGeneric(frame);
+        throw new VmTypeMismatchException.Constraint(
+            sourceSection,
+            frame.getAuxiliarySlot(customThisSlot),
+            sourceSection,
+            valueTracker.values());
+      }
     }
   }
 
@@ -64,7 +75,12 @@ public abstract class TypeConstraintNode extends PklNode {
     var value = frame.getAuxiliarySlot(customThisSlot);
     var result = applyNode.executeBoolean(function, value);
     if (!result) {
-      throw new VmTypeMismatchException.Constraint(sourceSection, value);
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      try (var valueTracker = VmContext.get(this).getValueTrackerFactory().create()) {
+        applyNode.executeBoolean(function, value);
+        throw new VmTypeMismatchException.Constraint(
+            sourceSection, value, function.getRootNode().getSourceSection(), valueTracker.values());
+      }
     }
   }
 

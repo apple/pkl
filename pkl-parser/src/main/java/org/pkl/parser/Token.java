@@ -191,6 +191,35 @@ public enum Token {
     };
   }
 
+  public boolean isOperator() {
+    return switch (this) {
+      case POW,
+          STAR,
+          DIV,
+          INT_DIV,
+          MOD,
+          PLUS,
+          MINUS,
+          GT,
+          GTE,
+          LT,
+          LTE,
+          IS,
+          AS,
+          EQUAL,
+          NOT_EQUAL,
+          AND,
+          OR,
+          PIPE,
+          COALESCE,
+          DOT,
+          QDOT,
+          LBRACK ->
+          true;
+      default -> false;
+    };
+  }
+
   public boolean isAffix() {
     return switch (this) {
       case LINE_COMMENT, BLOCK_COMMENT, SEMICOLON -> true;

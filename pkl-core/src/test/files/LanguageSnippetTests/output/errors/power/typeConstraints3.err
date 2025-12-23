@@ -1,0 +1,41 @@
+–– Pkl Error ––
+Type constraint `this
+  + two
+    / three
+  == four` violated.
+Value: 4
+
+    this
+    |
+    4
+
+    + two
+    | |
+    | 2
+    4.666666666666667
+
+      / three
+      | |
+      | 3
+      0.6666666666666666
+
+    == four
+    |  |
+    |  4
+    false
+
+x | foo: Int(this
+             ^^^^
+at typeConstraints3#foo (file:///$snippetsDir/input/errors/power/typeConstraints3.pkl)
+
+x | == four) = 4
+               ^
+at typeConstraints3#foo (file:///$snippetsDir/input/errors/power/typeConstraints3.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

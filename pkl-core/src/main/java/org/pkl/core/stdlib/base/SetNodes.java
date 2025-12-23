@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.expression.binary.GreaterThanNode;
 import org.pkl.core.ast.expression.binary.GreaterThanNodeGen;
@@ -625,7 +626,7 @@ public final class SetNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self) {
+    protected Object eval(VirtualFrame frame, VmSet self) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -633,7 +634,7 @@ public final class SetNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (lessThanNode.executeWith(elem, result)) {
+        if (lessThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -650,7 +651,7 @@ public final class SetNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self) {
+    protected Object eval(VirtualFrame frame, VmSet self) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -658,7 +659,7 @@ public final class SetNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (lessThanNode.executeWith(elem, result)) {
+        if (lessThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -677,7 +678,7 @@ public final class SetNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmSet self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -687,7 +688,7 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (lessThanNode.executeWith(elemValue, resultValue)) {
+        if (lessThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -707,7 +708,7 @@ public final class SetNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmSet self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -717,7 +718,7 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (lessThanNode.executeWith(elemValue, resultValue)) {
+        if (lessThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -793,7 +794,7 @@ public final class SetNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self) {
+    protected Object eval(VirtualFrame frame, VmSet self) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -801,7 +802,7 @@ public final class SetNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (greaterThanNode.executeWith(elem, result)) {
+        if (greaterThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -818,7 +819,7 @@ public final class SetNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self) {
+    protected Object eval(VirtualFrame frame, VmSet self) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -826,7 +827,7 @@ public final class SetNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (greaterThanNode.executeWith(elem, result)) {
+        if (greaterThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -845,7 +846,7 @@ public final class SetNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmSet self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -855,7 +856,7 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (greaterThanNode.executeWith(elemValue, resultValue)) {
+        if (greaterThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -875,7 +876,7 @@ public final class SetNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmSet self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmSet self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -885,7 +886,7 @@ public final class SetNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (greaterThanNode.executeWith(elemValue, resultValue)) {
+        if (greaterThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -958,8 +959,8 @@ public final class SetNodes {
     @Child private CompareNode compareNode = new CompareNode();
 
     @Specialization
-    protected VmList eval(VmSet self) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareNode, null));
+    protected VmList eval(VirtualFrame frame, VmSet self) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareNode, null));
     }
   }
 
@@ -967,8 +968,8 @@ public final class SetNodes {
     @Child private CompareByNode compareByNode = new CompareByNode();
 
     @Specialization
-    protected VmList eval(VmSet self, VmFunction selector) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareByNode, selector));
+    protected VmList eval(VirtualFrame frame, VmSet self, VmFunction selector) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareByNode, selector));
     }
   }
 
@@ -976,8 +977,8 @@ public final class SetNodes {
     @Child private CompareWithNode compareWithNode = new CompareWithNode();
 
     @Specialization
-    protected VmList eval(VmSet self, VmFunction function) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareWithNode, function));
+    protected VmList eval(VirtualFrame frame, VmSet self, VmFunction function) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareWithNode, function));
     }
   }
 

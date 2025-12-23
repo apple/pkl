@@ -1,0 +1,3 @@
+local list = List(1, 2, 3)
+
+foo: Dynamic(this == new Dynamic { ...list })
