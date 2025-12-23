@@ -60,6 +60,10 @@ public final class VmTyped extends VmObject {
     return clazz;
   }
 
+  public boolean isNotInitialized() {
+    return clazz == null;
+  }
+
   public @Nullable VmTyped getParent() {
     return (VmTyped) parent;
   }
