@@ -2,12 +2,15 @@
 Type constraint `firstOneIsSandy` violated.
 Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
-x | birds: Listing(firstOneIsSandy) = new {
-                   ^^^^^^^^^^^^^^^
-at constraintDetails1#birds (file:///$snippetsDir/input/errors/constraintDetails1.pkl)
+    (it: Listing<Bird>) -> it[0].name == "Sandy"
+                           | |   |    |
+                           | |   |    false
+                           | |   "Bob"
+                           | new Bird { name = "Bob" }
+                           new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
 x | birds: Listing(firstOneIsSandy) = new {
-                                      ^^^^^
+                   ^^^^^^^^^^^^^^^
 at constraintDetails1#birds (file:///$snippetsDir/input/errors/constraintDetails1.pkl)
 
 xxx | renderer.renderDocument(value)

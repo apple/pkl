@@ -81,7 +81,7 @@ class CliTestRunnerTest {
       facts {
         ["fail"] {
           4 == 9
-          "foo" != "bar"
+          1 == 5
         }
       }
     """
@@ -101,8 +101,13 @@ class CliTestRunnerTest {
           facts
             ✘ fail
                4 == 9 (/tempDir/test.pkl, line xx)
+                 |
+                 false
+               1 == 5 (/tempDir/test.pkl, line xx)
+                 |
+                 false
 
-        0.0% tests pass [1/1 failed], 50.0% asserts pass [1/2 failed]
+        0.0% tests pass [1/1 failed], 0.0% asserts pass [2/2 failed]
 
         """
           .trimIndent()
@@ -283,12 +288,14 @@ class CliTestRunnerTest {
       <testsuite name="test" tests="2" failures="1">
           <testcase classname="test.facts" name="foo"></testcase>
           <testcase classname="test.facts" name="bar">
-              <failure message="Fact Failure">5 == 9 (/tempDir/test.pkl, line xx)</failure>
+              <failure message="Fact Failure">5 == 9 (/tempDir/test.pkl, line xx)
+        |
+        false</failure>
           </testcase>
           <system-err><![CDATA[9 = 9
       ]]></system-err>
       </testsuite>
-      
+
     """
           .trimIndent()
       )
@@ -481,26 +488,30 @@ class CliTestRunnerTest {
     assertThat(junitReport)
       .isEqualTo(
         """
-      <?xml version="1.0" encoding="UTF-8"?>
-      <testsuites name="pkl-tests" tests="5" failures="3">
-          <testsuite name="test1" tests="2" failures="1">
-              <testcase classname="test1.facts" name="foo"></testcase>
-              <testcase classname="test1.facts" name="bar">
-                  <failure message="Fact Failure">5 == 9 (/tempDir/test1.pkl, line xx)</failure>
-              </testcase>
-          </testsuite>
-          <testsuite name="test2" tests="3" failures="2">
-              <testcase classname="test2.facts" name="xxx">
-                  <failure message="Fact Failure">false (/tempDir/test2.pkl, line xx)</failure>
-              </testcase>
-              <testcase classname="test2.facts" name="yyy">
-                  <failure message="Fact Failure">false (/tempDir/test2.pkl, line xx)</failure>
-              </testcase>
-              <testcase classname="test2.facts" name="zzz"></testcase>
-          </testsuite>
-      </testsuites>
-      
-    """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuites name="pkl-tests" tests="5" failures="3">
+            <testsuite name="test1" tests="2" failures="1">
+                <testcase classname="test1.facts" name="foo"></testcase>
+                <testcase classname="test1.facts" name="bar">
+                    <failure message="Fact Failure">5 == 9 (/tempDir/test1.pkl, line xx)
+          |
+          false</failure>
+                </testcase>
+            </testsuite>
+            <testsuite name="test2" tests="3" failures="2">
+                <testcase classname="test2.facts" name="xxx">
+                    <failure message="Fact Failure">false (/tempDir/test2.pkl, line xx)
+        </failure>
+                </testcase>
+                <testcase classname="test2.facts" name="yyy">
+                    <failure message="Fact Failure">false (/tempDir/test2.pkl, line xx)
+        </failure>
+                </testcase>
+                <testcase classname="test2.facts" name="zzz"></testcase>
+            </testsuite>
+        </testsuites>
+
+      """
           .trimIndent()
       )
   }

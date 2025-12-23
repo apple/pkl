@@ -52,11 +52,11 @@ public abstract sealed class StringPart extends AbstractNode {
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
       if (o == null || getClass() != o.getClass()) {
         return false;
+      }
+      if (this == o) {
+        return true;
       }
       if (!super.equals(o)) {
         return false;

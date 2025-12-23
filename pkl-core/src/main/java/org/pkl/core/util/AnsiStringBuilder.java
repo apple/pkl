@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.io.PrintWriter;
 import java.util.EnumSet;
 import java.util.Set;
 
-@SuppressWarnings("DuplicatedCode")
+@SuppressWarnings({"DuplicatedCode", "UnusedReturnValue"})
 public final class AnsiStringBuilder {
   private final StringBuilder builder = new StringBuilder();
   private final boolean usingColor;
@@ -105,6 +105,38 @@ public final class AnsiStringBuilder {
     declaredCodes.addAll(prevDeclaredCodes);
     runnable.run();
     declaredCodes = prevDeclaredCodes;
+    return this;
+  }
+
+  public AnsiStringBuilder append(EnumSet<AnsiCode> codes, Runnable runnable) {
+    if (!usingColor) {
+      runnable.run();
+      return this;
+    }
+    var prevDeclaredCodes = declaredCodes;
+    declaredCodes = EnumSet.copyOf(codes);
+    declaredCodes.addAll(prevDeclaredCodes);
+    runnable.run();
+    declaredCodes = prevDeclaredCodes;
+    return this;
+  }
+
+  /** Provides a runnable where anything appended is not affected by the existing context. */
+  public AnsiStringBuilder appendSandboxed(Runnable runnable) {
+    if (!usingColor) {
+      runnable.run();
+      return this;
+    }
+    var myCodes = currentCodes;
+    var myDeclaredCodes = declaredCodes;
+    currentCodes = EnumSet.noneOf(AnsiCode.class);
+    declaredCodes = EnumSet.noneOf(AnsiCode.class);
+    doReset();
+    runnable.run();
+    doReset();
+    currentCodes = myCodes;
+    declaredCodes = myDeclaredCodes;
+    doAppendCodes(currentCodes);
     return this;
   }
 

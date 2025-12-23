@@ -48,6 +48,11 @@ public class GenericParser {
     spanLookahead = _lookahead.span;
   }
 
+  public Node parseExpression(String source) {
+    init(source);
+    return parseExpr();
+  }
+
   public Node parseModule(String source) {
     init(source);
     if (lookahead == Token.EOF) {

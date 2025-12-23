@@ -9,7 +9,3 @@ at pkl.Project#dependencies (pkl:Project)
 * Value is not of type `Project(isValidLoadDependency)` because:
   Type constraint `isValidLoadDependency` violated.
   Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetti...
-
-x | ["badLocalProject"] = import("../badLocalProject/PklProject")
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at PklProject#dependencies["badLocalProject"] (file:///$snippetsDir/input/projects/badProjectDeps4/PklProject)

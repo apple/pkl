@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,8 +27,8 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklName;
 
 public final class TestNodes {
-  private static final VmExceptionRenderer noStackTraceExceptionRenderer =
-      new VmExceptionRenderer(null, false);
+  private static final VmExceptionRenderer testNodeRenderer =
+      new VmExceptionRenderer(null, false, false);
 
   private TestNodes() {}
 
@@ -64,7 +64,7 @@ public final class TestNodes {
 
   @TruffleBoundary
   private static String render(VmException e) {
-    return noStackTraceExceptionRenderer
+    return testNodeRenderer
         .render(e)
         .lines()
         .skip(1) // remove meaningless header line

@@ -1,0 +1,7 @@
+foo: String(startsWith(bub.name)) = "Huzzah"
+
+bub: Person = new { name = "Bub" }
+
+class Person {
+  name: String
+}

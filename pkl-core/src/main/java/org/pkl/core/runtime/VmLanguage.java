@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.ContextThreadLocal;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleLanguage.ContextPolicy;
+import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import org.pkl.core.ast.builder.AstBuilder;
@@ -36,6 +37,7 @@ import org.pkl.parser.syntax.Module;
     version = "0.31.0-dev",
     characterMimeTypes = VmLanguage.MIME_TYPE,
     contextPolicy = ContextPolicy.SHARED)
+@ProvidedTags(PklTags.Expression.class)
 public final class VmLanguage extends TruffleLanguage<VmContext> {
   public static final String MIME_TYPE = "application/x-pkl";
 
@@ -51,7 +53,7 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
 
   @Override
   protected VmContext createContext(Env env) {
-    return new VmContext();
+    return new VmContext(this, env);
   }
 
   @Override

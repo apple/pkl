@@ -1,0 +1,5 @@
+foo: String(isCapitalized) = "hello"
+
+local isCapitalized = (it: String) ->
+  let (first = it.take(1).toUpperCase())
+    it == "\(first)\(it.drop(1))"
