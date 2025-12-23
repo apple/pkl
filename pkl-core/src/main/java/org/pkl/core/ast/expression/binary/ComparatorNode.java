@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.binary;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class ComparatorNode extends BinaryExpressionNode {
@@ -22,5 +23,5 @@ public abstract class ComparatorNode extends BinaryExpressionNode {
     super(sourceSection);
   }
 
-  public abstract boolean executeWith(Object left, Object right);
+  public abstract boolean executeWith(VirtualFrame frame, Object left, Object right);
 }

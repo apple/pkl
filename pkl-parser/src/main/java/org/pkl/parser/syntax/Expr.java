@@ -127,7 +127,22 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class SingleLineStringLiteralExpr extends Expr {
+  public abstract static sealed class StringLiteralExpr extends Expr
+      permits SingleLineStringLiteralExpr, MultiLineStringLiteralExpr {
+    public abstract List<StringPart> getParts();
+
+    public StringLiteralExpr(Span span, List<StringPart> parts) {
+      super(span, parts);
+    }
+
+    public final boolean hasInterpolation() {
+      var children = children();
+      assert children != null;
+      return children.size() > 1;
+    }
+  }
+
+  public static final class SingleLineStringLiteralExpr extends StringLiteralExpr {
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
 
@@ -158,7 +173,7 @@ public abstract sealed class Expr extends AbstractNode {
     }
   }
 
-  public static final class MultiLineStringLiteralExpr extends Expr {
+  public static final class MultiLineStringLiteralExpr extends StringLiteralExpr {
     private final Span startDelimiterSpan;
     private final Span endDelimiterSpan;
 

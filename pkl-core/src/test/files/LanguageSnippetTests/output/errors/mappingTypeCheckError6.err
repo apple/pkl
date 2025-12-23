@@ -2,6 +2,10 @@
 Type constraint `length == 5` violated.
 Value: "hi"
 
+    length == 5
+    |      |
+    2      false
+
 xx | res: Mapping<Listing<String(length == 5)>, String> = bar
                                  ^^^^^^^^^^^
 at mappingTypeCheckError6#res (file:///$snippetsDir/input/errors/mappingTypeCheckError6.pkl)
@@ -9,10 +13,6 @@ at mappingTypeCheckError6#res (file:///$snippetsDir/input/errors/mappingTypeChec
 x | [b] = "foo"
      ^
 at mappingTypeCheckError6#bar[#1] (file:///$snippetsDir/input/errors/mappingTypeCheckError6.pkl)
-
-xx | res: Mapping<Listing<String(length == 5)>, String> = bar
-                                                          ^^^
-at mappingTypeCheckError6#res (file:///$snippetsDir/input/errors/mappingTypeCheckError6.pkl)
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

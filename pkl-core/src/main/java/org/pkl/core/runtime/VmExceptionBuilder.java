@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,13 @@ import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
+import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import org.pkl.core.StackFrame;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
 import org.pkl.core.runtime.VmException.ProgramValue;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -49,6 +51,7 @@ import org.pkl.core.util.Nullable;
  *       preferable but isn't currently used. One problem with special formatting is that error
  *       output doesn't always go to a terminal and hence may be rendered verbatim.)
  */
+@SuppressWarnings("UnusedReturnValue")
 public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
@@ -86,6 +89,7 @@ public final class VmExceptionBuilder {
   }
 
   private @Nullable String message;
+  private @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageRenderer;
   private @Nullable Throwable cause;
   private VmException.Kind kind = VmException.Kind.EVAL_ERROR;
   private boolean isExternalMessage;
@@ -293,6 +297,12 @@ public final class VmExceptionBuilder {
     return withMessage(message, args);
   }
 
+  public VmExceptionBuilder withMessageRenderer(
+      BiConsumer<AnsiStringBuilder, Boolean> messageRenderer) {
+    this.messageRenderer = messageRenderer;
+    return this;
+  }
+
   public VmExceptionBuilder withProgramValue(String name, Object value) {
     programValues.add(new ProgramValue(name, value));
     return this;
@@ -346,8 +356,11 @@ public final class VmExceptionBuilder {
   }
 
   public VmException build() {
-    if (message == null) {
+    if (message == null && messageRenderer == null) {
       throw new IllegalStateException("No message set.");
+    }
+    if (message != null && messageRenderer != null) {
+      throw new IllegalStateException("Both message and messageBuilder are set");
     }
 
     var effectiveInsertedStackFrames =
@@ -364,7 +377,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hint,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              messageRenderer);
       case UNDEFINED_VALUE ->
           new VmUndefinedValueException(
               message,
@@ -377,7 +391,8 @@ public final class VmExceptionBuilder {
               memberName,
               hint,
               receiver,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              messageRenderer);
       case BUG ->
           new VmBugException(
               message,
@@ -389,7 +404,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hint,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              messageRenderer);
       case WRAPPED ->
           new VmWrappedEvalException(
               message,
@@ -402,7 +418,8 @@ public final class VmExceptionBuilder {
               memberName,
               hint,
               effectiveInsertedStackFrames,
-              wrappedException);
+              wrappedException,
+              messageRenderer);
     };
   }
 

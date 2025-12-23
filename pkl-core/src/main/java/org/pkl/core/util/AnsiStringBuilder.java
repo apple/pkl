@@ -108,6 +108,19 @@ public final class AnsiStringBuilder {
     return this;
   }
 
+  public AnsiStringBuilder append(EnumSet<AnsiCode> codes, Runnable runnable) {
+    if (!usingColor) {
+      runnable.run();
+      return this;
+    }
+    var prevDeclaredCodes = declaredCodes;
+    declaredCodes = EnumSet.copyOf(codes);
+    declaredCodes.addAll(prevDeclaredCodes);
+    runnable.run();
+    declaredCodes = prevDeclaredCodes;
+    return this;
+  }
+
   /** Provides a runnable where anything appended is not affected by the existing context. */
   public AnsiStringBuilder appendSandboxed(Runnable runnable) {
     if (!usingColor) {

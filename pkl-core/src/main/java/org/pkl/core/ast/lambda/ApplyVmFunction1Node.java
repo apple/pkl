@@ -86,4 +86,9 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
 
     return callNode.call(function.getCallTarget(), function.getThisValue(), function, arg1);
   }
+
+  @Override
+  public boolean isInstrumentable() {
+    return false;
+  }
 }

@@ -16,7 +16,6 @@
 package org.pkl.core.util;
 
 import java.util.EnumSet;
-import java.util.Set;
 import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 
 public final class AnsiTheme {
@@ -24,7 +23,7 @@ public final class AnsiTheme {
 
   public static final AnsiCode ERROR_MESSAGE_HINT = AnsiCode.YELLOW;
   public static final AnsiCode ERROR_HEADER = AnsiCode.RED;
-  public static final Set<AnsiCode> ERROR_MESSAGE = EnumSet.of(AnsiCode.RED, AnsiCode.BOLD);
+  public static final EnumSet<AnsiCode> ERROR_MESSAGE = EnumSet.of(AnsiCode.RED, AnsiCode.BOLD);
 
   public static final AnsiCode STACK_FRAME = AnsiCode.FAINT;
   public static final AnsiCode STACK_TRACE_MARGIN = AnsiCode.YELLOW;

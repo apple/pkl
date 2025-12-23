@@ -31,6 +31,10 @@ public record Span(int charIndex, int length) {
     return charIndex + length - 1;
   }
 
+  public int stopIndexExclusive() {
+    return charIndex + length;
+  }
+
   public Span stopSpan() {
     return new Span(charIndex + length - 1, 1);
   }
@@ -41,5 +45,15 @@ public record Span(int charIndex, int length) {
 
   public Span grow(int amount) {
     return new Span(charIndex, length + amount);
+  }
+
+  /** Tells if {@code other} is entirely within this span. */
+  public boolean contains(Span other) {
+    var offset = other.charIndex - charIndex;
+    if (offset < 0) {
+      return false;
+    }
+    var maxLength = length - offset;
+    return other.length <= maxLength;
   }
 }

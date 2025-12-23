@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,17 @@ import org.pkl.core.util.Nullable;
 public final class VmExceptionRenderer {
   private final @Nullable StackTraceRenderer stackTraceRenderer;
   private final boolean color;
+  private final boolean powerAssertions;
 
   /**
    * Constructs an error renderer with the given stack trace renderer. If stack trace renderer is
    * {@code null}, stack traces will not be included in error output.
    */
-  public VmExceptionRenderer(@Nullable StackTraceRenderer stackTraceRenderer, boolean color) {
+  public VmExceptionRenderer(
+      @Nullable StackTraceRenderer stackTraceRenderer, boolean color, boolean powerAssertions) {
     this.stackTraceRenderer = stackTraceRenderer;
     this.color = color;
+    this.powerAssertions = powerAssertions;
   }
 
   @TruffleBoundary
@@ -99,7 +102,14 @@ public final class VmExceptionRenderer {
     if (withHeader) {
       out.append(AnsiTheme.ERROR_HEADER, "–– Pkl Error ––").append('\n');
     }
-    out.append(AnsiTheme.ERROR_MESSAGE, message).append('\n');
+    if (exception.getMessageBuilder() != null) {
+      out.append(
+          AnsiTheme.ERROR_MESSAGE,
+          () -> exception.getMessageBuilder().accept(out, powerAssertions));
+      out.append('\n');
+    } else {
+      out.append(AnsiTheme.ERROR_MESSAGE, message).append('\n');
+    }
 
     // include cause's message unless it's the same as this exception's message
     if (exception.getCause() != null) {

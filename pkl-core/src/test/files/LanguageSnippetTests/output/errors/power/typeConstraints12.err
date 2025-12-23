@@ -1,0 +1,24 @@
+–– Pkl Error ––
+Type constraint `this.length > 5` violated.
+Value: "bob"
+
+    this.length > 5
+    |    |      |
+    |    3      false
+    "bob"
+
+x | foo: String(true, this.length > 5) = "bob"
+                      ^^^^^^^^^^^^^^^
+at typeConstraints12#foo (file:///$snippetsDir/input/errors/power/typeConstraints12.pkl)
+
+x | foo: String(true, this.length > 5) = "bob"
+                                         ^^^^^
+at typeConstraints12#foo (file:///$snippetsDir/input/errors/power/typeConstraints12.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

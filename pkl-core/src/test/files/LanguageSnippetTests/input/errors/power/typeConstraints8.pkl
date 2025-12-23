@@ -1,0 +1,1 @@
+foo: NonNull = null

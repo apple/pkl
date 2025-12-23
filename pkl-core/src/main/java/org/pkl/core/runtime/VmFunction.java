@@ -26,6 +26,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmFunction extends VmObjectLike {
+
   private final Object thisValue;
   private final int paramCount;
   private final PklRootNode rootNode;
@@ -95,6 +96,10 @@ public final class VmFunction extends VmObjectLike {
   @Override
   public UnmodifiableEconomicMap<Object, ObjectMember> getMembers() {
     return EconomicMaps.create();
+  }
+
+  public PklRootNode getRootNode() {
+    return rootNode;
   }
 
   @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.ast.type;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ControlFlowException;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -26,6 +27,7 @@ import org.pkl.core.ValueFormatter;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
@@ -36,6 +38,7 @@ import org.pkl.core.util.Nullable;
  * there aren't any.)
  */
 public abstract class VmTypeMismatchException extends ControlFlowException {
+
   protected final SourceSection sourceSection;
   protected final Object actualValue;
   protected @Nullable Map<CallTarget, StackFrame> insertedStackFrames = null;
@@ -54,7 +57,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   }
 
   @TruffleBoundary
-  public abstract void describe(StringBuilder builder, String indent);
+  public abstract void describe(
+      AnsiStringBuilder builder, String indent, boolean withPowerAssertions);
 
   @TruffleBoundary
   public abstract VmException toVmException();
@@ -68,6 +72,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   }
 
   public static final class Simple extends VmTypeMismatchException {
+
     private final Object expectedType;
 
     public Simple(SourceSection sourceSection, Object actualValue, Object expectedType) {
@@ -83,7 +88,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     @TruffleBoundary
-    public void describe(StringBuilder builder, String indent) {
+    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       String renderedType;
       var valueFormatter = ValueFormatter.basic();
       if (expectedType instanceof String string) {
@@ -150,8 +155,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     protected VmExceptionBuilder exceptionBuilder() {
-      var builder = new StringBuilder();
-      describe(builder, "");
+      var builder = new AnsiStringBuilder(true);
+      describe(builder, "", false);
 
       return super.exceptionBuilder()
           .adhocEvalError(builder.toString())
@@ -160,21 +165,35 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   }
 
   public static final class Constraint extends VmTypeMismatchException {
-    public Constraint(SourceSection sourceSection, Object actualValue) {
+
+    private final SourceSection constraintBodySourceSection;
+    private final Map<Node, List<Object>> trackedValues;
+
+    public Constraint(
+        SourceSection sourceSection,
+        Object actualValue,
+        SourceSection constraintBodySourceSection,
+        Map<Node, List<Object>> trackedValues) {
       super(sourceSection, actualValue);
+      this.constraintBodySourceSection = constraintBodySourceSection;
+      this.trackedValues = trackedValues;
     }
 
     @Override
     @TruffleBoundary
-    public void describe(StringBuilder builder, String indent) {
+    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      var expression = sourceSection.getCharacters().toString();
       builder
-          .append(
-              ErrorMessages.createIndented(
-                  "typeConstraintViolated", indent, sourceSection.getCharacters().toString()))
+          .append(ErrorMessages.createIndented("typeConstraintViolated", indent, expression))
           .append("\n")
           .append(indent)
           .append("Value: ")
           .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
+      if (withPowerAssertions) {
+        builder.append("\n\n");
+        PowerAssertions.render(
+            builder, indent + "    ", constraintBodySourceSection, trackedValues, null);
+      }
     }
 
     @Override
@@ -185,11 +204,9 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     protected VmExceptionBuilder exceptionBuilder() {
-      var builder = new StringBuilder();
-      describe(builder, "");
-
       return super.exceptionBuilder()
-          .adhocEvalError(builder.toString())
+          .withMessageRenderer(
+              (builder, withPowerAssertions) -> describe(builder, "", withPowerAssertions))
           .withSourceSection(sourceSection);
     }
   }
@@ -210,7 +227,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     @TruffleBoundary
-    public void describe(StringBuilder builder, String indent) {
+    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       describeSummary(builder, indent);
       describeDetails(builder, indent);
     }
@@ -223,10 +240,10 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     protected VmExceptionBuilder exceptionBuilder() {
-      var summary = new StringBuilder();
+      var summary = new AnsiStringBuilder(true);
       describeSummary(summary, "");
 
-      var details = new StringBuilder();
+      var details = new AnsiStringBuilder(true);
       describeDetails(details, "");
 
       return super.exceptionBuilder()
@@ -235,7 +252,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           .withHint(details.toString());
     }
 
-    private void describeSummary(StringBuilder builder, String indent) {
+    private void describeSummary(AnsiStringBuilder builder, String indent) {
       var nonTrivialMismatches = findNonTrivialMismatches();
 
       if (nonTrivialMismatches.isEmpty()) {
@@ -267,12 +284,14 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
     }
 
-    private void describeDetails(StringBuilder builder, String indent) {
+    private void describeDetails(AnsiStringBuilder builder, String indent) {
       var nonTrivialMismatches = findNonTrivialMismatches();
 
       var isPeerError = false;
       for (var idx : nonTrivialMismatches) {
-        if (!indent.isEmpty() || isPeerError) builder.append("\n\n");
+        if (!indent.isEmpty() || isPeerError) {
+          builder.append("\n\n");
+        }
         isPeerError = true;
         builder
             .append(
@@ -285,7 +304,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
                         .getCharacters()
                         .toString()))
             .append("\n");
-        children[idx].describe(builder, indent + "  ");
+        children[idx].describe(builder, indent + "  ", false);
       }
     }
 
@@ -304,13 +323,14 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   }
 
   public static final class Nothing extends VmTypeMismatchException {
+
     public Nothing(SourceSection sourceSection, Object actualValue) {
       super(sourceSection, actualValue);
     }
 
     @Override
     @TruffleBoundary
-    public void describe(StringBuilder builder, String indent) {
+    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       builder
           .append(
               ErrorMessages.createIndented(
@@ -329,8 +349,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     protected VmExceptionBuilder exceptionBuilder() {
-      var builder = new StringBuilder();
-      describe(builder, "");
+      var builder = new AnsiStringBuilder(true);
+      describe(builder, "", false);
 
       return super.exceptionBuilder()
           .adhocEvalError(builder.toString())

@@ -2,6 +2,10 @@
 Type constraint `endsWith(lastName)` violated.
 Value: "Jimmy Bird"
 
+    endsWith(lastName)
+    |        |
+    false    "Birdo"
+
 x | typealias Birds = Listing<String(endsWith(lastName))>
                                      ^^^^^^^^^^^^^^^^^^
 at typeAliasContext#res (file:///$snippetsDir/input/types/helpers/originalTypealias.pkl)

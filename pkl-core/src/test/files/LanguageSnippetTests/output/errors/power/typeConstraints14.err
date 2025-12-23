@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Type constraint `startsWith(super.name)` violated.
+Value: "Bubby"
+
+    startsWith(super.name)
+    |                |
+    false            "Foo"
+
+x | bub: String(startsWith(super.name)) = "Bubby"
+                ^^^^^^^^^^^^^^^^^^^^^^
+at typeConstraints14#Bar.bub (file:///$snippetsDir/input/errors/power/typeConstraints14.pkl)
+
+x | bub: String(startsWith(super.name)) = "Bubby"
+                                          ^^^^^^^
+at typeConstraints14#Bar.bub (file:///$snippetsDir/input/errors/power/typeConstraints14.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
