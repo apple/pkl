@@ -1,0 +1,24 @@
+–– Pkl Error ––
+Type constraint `startsWith(bub.name)` violated.
+Value: "Huzzah"
+
+    startsWith(bub.name)
+    |          |   |
+    false      |   "Bub"
+               new Person { name = "Bub" }
+
+x | foo: String(startsWith(bub.name)) = "Huzzah"
+                ^^^^^^^^^^^^^^^^^^^^
+at typeConstraints2#foo (file:///$snippetsDir/input/errors/power/typeConstraints2.pkl)
+
+x | foo: String(startsWith(bub.name)) = "Huzzah"
+                                        ^^^^^^^^
+at typeConstraints2#foo (file:///$snippetsDir/input/errors/power/typeConstraints2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,12 +17,15 @@ package org.pkl.core.ast.expression.binary;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 
 @NodeInfo(shortName = "<")
+@GenerateWrapper
 public abstract class LessThanNode extends ComparatorNode {
   protected LessThanNode(SourceSection sourceSection) {
     super(sourceSection);
@@ -62,5 +65,10 @@ public abstract class LessThanNode extends ComparatorNode {
   @Specialization
   protected boolean eval(VmDataSize left, VmDataSize right) {
     return left.compareTo(right) < 0;
+  }
+
+  @Override
+  public WrapperNode createWrapper(ProbeNode probe) {
+    return new LessThanNodeWrapper(sourceSection, this, probe);
   }
 }

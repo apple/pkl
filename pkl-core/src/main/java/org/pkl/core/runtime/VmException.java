@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.pkl.core.*;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmException extends AbstractTruffleException {
@@ -33,9 +35,10 @@ public abstract class VmException extends AbstractTruffleException {
   private final @Nullable String memberName;
   protected @Nullable String hint;
   private final Map<CallTarget, StackFrame> insertedStackFrames;
+  @Nullable private final BiConsumer<AnsiStringBuilder, Boolean> messageBuilder;
 
   public VmException(
-      String message,
+      @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
@@ -44,7 +47,8 @@ public abstract class VmException extends AbstractTruffleException {
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
       @Nullable String hint,
-      Map<CallTarget, StackFrame> insertedStackFrames) {
+      Map<CallTarget, StackFrame> insertedStackFrames,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder) {
     super(message, cause, UNLIMITED_STACK_TRACE, location);
     this.isExternalMessage = isExternalMessage;
     this.messageArguments = messageArguments;
@@ -53,6 +57,7 @@ public abstract class VmException extends AbstractTruffleException {
     this.memberName = memberName;
     this.hint = hint;
     this.insertedStackFrames = insertedStackFrames;
+    this.messageBuilder = messageBuilder;
   }
 
   public final boolean isExternalMessage() {
@@ -91,6 +96,10 @@ public abstract class VmException extends AbstractTruffleException {
     return insertedStackFrames;
   }
 
+  public @Nullable BiConsumer<AnsiStringBuilder, Boolean> getMessageBuilder() {
+    return messageBuilder;
+  }
+
   public enum Kind {
     EVAL_ERROR,
     UNDEFINED_VALUE,
@@ -110,7 +119,7 @@ public abstract class VmException extends AbstractTruffleException {
 
   @TruffleBoundary
   public PklException toPklException(StackFrameTransformer transformer, boolean color) {
-    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color);
+    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color, true);
     var rendered = renderer.render(this);
     return new PklException(rendered);
   }

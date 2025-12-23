@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.pkl.core.StackFrame;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 
 public class VmWrappedEvalException extends VmEvalException {
@@ -28,7 +30,7 @@ public class VmWrappedEvalException extends VmEvalException {
   private final VmException wrappedException;
 
   public VmWrappedEvalException(
-      String message,
+      @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
@@ -38,7 +40,8 @@ public class VmWrappedEvalException extends VmEvalException {
       @Nullable String memberName,
       @Nullable String hint,
       Map<CallTarget, StackFrame> insertedStackFrames,
-      VmException wrappedException) {
+      VmException wrappedException,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder) {
     super(
         message,
         cause,
@@ -49,7 +52,8 @@ public class VmWrappedEvalException extends VmEvalException {
         sourceSection,
         memberName,
         hint,
-        insertedStackFrames);
+        insertedStackFrames,
+        messageBuilder);
     this.wrappedException = wrappedException;
   }
 

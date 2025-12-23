@@ -1,0 +1,9 @@
+open class Foo {
+  name: String = "Foo"
+}
+
+class Bar extends Foo {
+  bub: String(startsWith(super.name)) = "Bubby"
+}
+
+bar: Bar
