@@ -71,7 +71,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
           options.base.color?.hasColor() ?: false,
           options.base.traceMode ?: TraceMode.COMPACT,
         )
-      Repl(options.base.normalizedWorkingDir, server).run()
+      Repl(options.base.normalizedWorkingDir, server, options.base.color?.hasColor() ?: false).run()
     }
   }
 }
