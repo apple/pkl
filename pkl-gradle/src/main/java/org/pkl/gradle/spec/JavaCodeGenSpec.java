@@ -23,6 +23,12 @@ public interface JavaCodeGenSpec extends CodeGenSpec {
 
   Property<Boolean> getGenerateJavadoc();
 
+  Property<Boolean> getGenerateRecords();
+
+  Property<Boolean> getUseWithers();
+
+  Property<Boolean> getUseLombokBuilders();
+
   Property<String> getParamsAnnotation();
 
   Property<String> getNonNullAnnotation();

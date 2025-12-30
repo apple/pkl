@@ -27,7 +27,7 @@ jimfs = "1.+"
 # (at least not without additional configuration; tested with 3.25.1 and 3.27.1)
 jline = "3.23.0"
 jmh = "1.+"
-jmhPlugin = "0.7.2"
+jmhPlugin = "0.7.3"
 jsr305 = "3.+"
 junit = "5.+"
 junitPlatform = "1.+"
@@ -71,10 +71,13 @@ jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
 jlineTerminalJansi = { group = "org.jline", name = "jline-terminal-jansi", version.ref = "jline" }
 jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
-junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
-junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
-junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
-junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
+
+junitBom = { group = "org.junit", name = "junit-bom", version.ref = "junit" }
+junitApi = { module = "org.junit.jupiter:junit-jupiter-api" }
+junitEngine = { module = "org.junit.jupiter:junit-jupiter-engine" }
+junitParams = { module = "org.junit.jupiter:junit-jupiter-params" }
+junitLauncher = { module = "org.junit.platform:junit-platform-launcher" }
+
 kotlinCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
@@ -94,7 +97,7 @@ shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.grad
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 snakeYaml = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = "snakeYaml" }
-spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotlessPlugin"}
+spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotlessPlugin" }
 svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVm" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }

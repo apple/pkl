@@ -131,6 +131,40 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
       )
       .associate()
 
+  private val generateRecords: Boolean by
+    option(
+        names = arrayOf("--generate-records"),
+        help =
+          """
+            Whether to generate Java records and the related interfaces.
+            This overrides any Java class generation related options! 
+          """
+            .trimIndent(),
+      )
+      .flag()
+
+  private val useWithers: Boolean by
+    option(
+        names = arrayOf("--use-withers"),
+        help =
+          """
+            Whether to generate JEP 468 like withers for records.
+          """
+            .trimIndent(),
+      )
+      .flag()
+
+  private val useLombokBuilders: Boolean by
+    option(
+        names = arrayOf("--use-lombok-builders"),
+        help =
+          """
+            Whether to generate Lombok Builders for records.
+          """
+            .trimIndent(),
+      )
+      .flag()
+
   override val helpString: String = "Generate Java classes and interfaces from Pkl module(s)"
 
   override fun run() {
@@ -147,6 +181,9 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
         nonNullAnnotation = nonNullAnnotation,
         implementSerializable = implementSerializable,
         renames = renames,
+        generateRecords = generateRecords,
+        useWithers = generateRecords && useWithers,
+        useLombokBuilders = generateRecords && useLombokBuilders,
       )
     CliJavaCodeGenerator(options).run()
   }

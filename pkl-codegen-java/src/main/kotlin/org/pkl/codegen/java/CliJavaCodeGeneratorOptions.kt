@@ -77,6 +77,19 @@ data class CliJavaCodeGeneratorOptions(
    * Pkl module name, and the value is the desired replacement.
    */
   val renames: Map<String, String> = emptyMap(),
+
+  /**
+   * Whether to generate Java records and the related interfaces.
+   *
+   * This overrides any Java class generation related options!
+   */
+  val generateRecords: Boolean = false,
+
+  /** Whether to generate JEP 468 like withers for records. */
+  val useWithers: Boolean = false,
+
+  /** Whether to generate Lombok Builders for records. */
+  val useLombokBuilders: Boolean = false,
 ) {
   @Suppress("DeprecatedCallableAddReplaceWith")
   @Deprecated("deprecated without replacement")
@@ -84,14 +97,17 @@ data class CliJavaCodeGeneratorOptions(
 
   internal fun toJavaCodeGeneratorOptions() =
     JavaCodeGeneratorOptions(
-      indent,
-      addGeneratedAnnotation,
-      generateGetters,
-      generateJavadoc,
-      generateSpringBootConfig,
-      paramsAnnotation,
-      nonNullAnnotation,
-      implementSerializable,
-      renames,
+      indent = indent,
+      addGeneratedAnnotation = addGeneratedAnnotation,
+      generateGetters = generateGetters,
+      generateJavadoc = generateJavadoc,
+      generateSpringBootConfig = generateSpringBootConfig,
+      paramsAnnotation = paramsAnnotation,
+      nonNullAnnotation = nonNullAnnotation,
+      implementSerializable = implementSerializable,
+      renames = renames,
+      generateRecords = generateRecords,
+      useWithers = useWithers,
+      useLombokBuilders = useLombokBuilders,
     )
 }

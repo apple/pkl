@@ -31,11 +31,31 @@ class CliJavaCodeGenerator(private val options: CliJavaCodeGeneratorOptions) :
     val builder = evaluatorBuilder()
     try {
       builder.build().use { evaluator ->
+        if (options.generateRecords) {
+          if (options.useWithers) {
+            options.outputDir.resolve(JavaRecordCodeGenerator.commonCodePackageFile).apply {
+              createParentDirectories()
+                .writeString(
+                  JavaRecordCodeGenerator.generateCommonCode(options.toJavaCodeGeneratorOptions())
+                )
+            }
+          }
+
+          if (options.useLombokBuilders) {
+            TODO("not implemented in this Pkl version yet")
+          }
+        }
+
         for (moduleUri in options.base.normalizedSourceModules) {
           val schema = evaluator.evaluateSchema(ModuleSource.uri(moduleUri))
-          val codeGenerator = JavaCodeGenerator(schema, options.toJavaCodeGeneratorOptions())
+
+          val output =
+            if (options.generateRecords)
+              JavaRecordCodeGenerator(schema, options.toJavaCodeGeneratorOptions()).output
+            else JavaCodeGenerator(schema, options.toJavaCodeGeneratorOptions()).output
+
           try {
-            for ((fileName, fileContents) in codeGenerator.output) {
+            for ((fileName, fileContents) in output) {
               val outputFile = options.outputDir.resolve(fileName)
               try {
                 outputFile.createParentDirectories().writeString(fileContents)

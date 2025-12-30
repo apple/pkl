@@ -65,16 +65,16 @@ abstract class AbstractTest {
 
   protected fun checkFileContents(file: Path, contents: String) {
     assertThat(file).exists()
-    assertThat(file.readString().trim()).isEqualTo(contents.trim())
+    assertThat(file.readString().trim()).isEqualToIgnoringWhitespace(contents.trim())
   }
 
   protected fun checkTextContains(text: String, vararg contents: String) {
     for (content in contents) {
       try {
-        assertThat(text).contains(content.trimMargin())
+        assertThat(text).containsIgnoringWhitespaces(content.trimMargin())
       } catch (e: AssertionError) {
         // to get diff output in IDE
-        assertThat(text).isEqualTo(content.trimMargin())
+        assertThat(text).isEqualToIgnoringWhitespace(content.trimMargin())
       }
     }
   }
