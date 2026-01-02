@@ -9,3 +9,29 @@ at pkl.Project#dependencies (pkl:Project)
 * Value is not of type `Project(isValidLoadDependency)` because:
   Type constraint `isValidLoadDependency` violated.
   Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetti...
+
+      (it: Project) ->
+      isUriLocal(projectFileUri, it.projectFileUri)
+      |          |               |  |
+      true       |               |  "file:///$snippetsDir/input/proje...
+                 |               new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSettings { externalProperti...
+                 "file:///$snippetsDir/input/proje...
+
+        && it.projectFileUri.endsWith("/PklProject")
+        |  |  |              |
+        |  |  |              true
+        |  |  "file:///$snippetsDir/input/proje...
+        |  new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSettings { externalProperti...
+        true
+
+        && it != module
+        |  |  |
+        |  |  true
+        |  new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSettings { externalProperti...
+        true
+
+        && it.package != null
+        |  |  |       |
+        |  |  null    false
+        |  new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSettings { externalProperti...
+        false

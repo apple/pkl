@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -192,7 +192,7 @@ class StackTraceRendererTest {
     val loop = StackTraceRenderer.StackFrameLoop(loopFrames, 1)
     val frames = listOf(createFrame("bar", 1), createFrame("baz", 2), loop)
     val formatter = AnsiStringBuilder(false)
-    renderer.doRender(frames, null, formatter, "", true)
+    renderer.doRender(frames, null, null, formatter, "", true)
     val renderedFrames = formatter.toString()
     assertThat(renderedFrames)
       .isEqualTo(

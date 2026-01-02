@@ -2813,7 +2813,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       throw exceptionBuilder()
           .evalError(e.getMessage(), e.getMessageArguments())
           .withCause(e.getCause())
-          .withHint(e.getHint())
+          .withHintBuilder(e.getHintBuilder())
           .withSourceSection(createSourceSection(ctx))
           .build();
     } catch (ExternalReaderProcessException e) {

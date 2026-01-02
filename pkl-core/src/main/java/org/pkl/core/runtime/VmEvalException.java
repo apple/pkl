@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,25 +31,25 @@ public class VmEvalException extends VmException {
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
-      @Nullable String hint,
-      Map<CallTarget, StackFrame> insertedStackFrames,
-      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder) {
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
+      Map<CallTarget, StackFrame> insertedStackFrames) {
 
     super(
         message,
         cause,
         isExternalMessage,
         messageArguments,
+        messageBuilder,
         programValues,
         location,
         sourceSection,
         memberName,
-        hint,
-        insertedStackFrames,
-        messageBuilder);
+        hintBuilder,
+        insertedStackFrames);
   }
 }

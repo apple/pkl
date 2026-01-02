@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.BiConsumer;
 import java.util.function.Function;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.AnsiStringBuilder;
@@ -31,15 +32,20 @@ public final class StackTraceRenderer {
     this.frameTransformer = frameTransformer;
   }
 
-  public void render(List<StackFrame> frames, @Nullable String hint, AnsiStringBuilder out) {
+  public void render(
+      List<StackFrame> frames,
+      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
+      AnsiStringBuilder out) {
     var compressed = compressFrames(frames);
-    doRender(compressed, hint, out, "", true);
+    doRender(compressed, hint, hintBuilder, out, "", true);
   }
 
   // non-private for testing
   void doRender(
       List<Object /*StackFrame|StackFrameLoop*/> frames,
       @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       AnsiStringBuilder out,
       String leftMargin,
       boolean isFirstElement) {
@@ -47,7 +53,7 @@ public final class StackTraceRenderer {
       if (frame instanceof StackFrameLoop loop) {
         // ensure a cycle of length 1 doesn't get rendered as a loop
         if (loop.count == 1) {
-          doRender(loop.frames, null, out, leftMargin, isFirstElement);
+          doRender(loop.frames, null, null, out, leftMargin, isFirstElement);
         } else {
           if (!isFirstElement) {
             out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
@@ -57,9 +63,9 @@ public final class StackTraceRenderer {
               .append(AnsiTheme.STACK_TRACE_LOOP_COUNT, loop.count)
               .append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
-          doRender(loop.frames, null, out, newLeftMargin, isFirstElement);
+          doRender(loop.frames, null, null, out, newLeftMargin, isFirstElement);
           if (isFirstElement) {
-            renderHint(hint, out, newLeftMargin);
+            renderHint(hint, hintBuilder, out, newLeftMargin);
             isFirstElement = false;
           }
           out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin + "└─").append('\n');
@@ -72,7 +78,7 @@ public final class StackTraceRenderer {
       }
 
       if (isFirstElement) {
-        renderHint(hint, out, leftMargin);
+        renderHint(hint, hintBuilder, out, leftMargin);
         isFirstElement = false;
       }
     }
@@ -84,13 +90,20 @@ public final class StackTraceRenderer {
     renderSourceLocation(transformed, out, leftMargin);
   }
 
-  private void renderHint(@Nullable String hint, AnsiStringBuilder out, String leftMargin) {
-    if (hint == null || hint.isEmpty()) return;
+  private void renderHint(
+      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
+      AnsiStringBuilder out,
+      String leftMargin) {
+    if (hint == null && hintBuilder == null) return;
 
-    out.append('\n')
-        .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
-        .append(AnsiTheme.ERROR_MESSAGE_HINT, hint)
-        .append('\n');
+    out.append('\n').append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin);
+    if (hint != null) {
+      out.append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
+    } else {
+      out.append(AnsiTheme.ERROR_MESSAGE_HINT, () -> hintBuilder.accept(out, true));
+    }
+    out.append('\n');
   }
 
   private void renderSourceLine(StackFrame frame, AnsiStringBuilder out, String leftMargin) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,8 @@ public final class VmExceptionRenderer {
 
   private void renderException(VmException exception, AnsiStringBuilder out, boolean withHeader) {
     String message;
-    var hint = exception.getHint();
+    var hintBuilder = exception.getHintBuilder();
+    @Nullable String hint = null;
     if (exception.isExternalMessage()) {
       var totalMessage =
           ErrorMessages.create(exception.getMessage(), exception.getMessageArguments());
@@ -142,10 +143,13 @@ public final class VmExceptionRenderer {
       }
 
       if (!frames.isEmpty()) {
-        stackTraceRenderer.render(frames, hint, out.append('\n'));
+        stackTraceRenderer.render(frames, hint, hintBuilder, out.append('\n'));
       } else if (hint != null) {
         // render hint if there are no stack frames
         out.append('\n').append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
+      } else if (hintBuilder != null) {
+        out.append('\n')
+            .append(AnsiTheme.ERROR_MESSAGE_HINT, () -> hintBuilder.accept(out, powerAssertions));
       }
     }
   }
