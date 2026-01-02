@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -101,12 +101,13 @@ public final class SyntaxHighlighter {
       EnumSet.of(Token.INT, Token.FLOAT, Token.BIN, Token.OCT, Token.HEX);
 
   public static void writeTo(AnsiStringBuilder out, String src) {
+    var prevLength = out.length();
     try {
       var lexer = new Lexer(src);
       doHighlightNormal(out, lexer.next(), lexer, Token.EOF);
     } catch (ParserError err) {
       // bail out and emit everything un-highlighted
-      out.setLength(0);
+      out.setLength(prevLength);
       out.append(src);
     }
   }

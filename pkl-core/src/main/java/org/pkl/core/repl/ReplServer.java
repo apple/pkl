@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -71,6 +71,7 @@ public class ReplServer implements AutoCloseable {
   private final VmExceptionRenderer errorRenderer;
   private final PackageResolver packageResolver;
   private final @Nullable ProjectDependenciesManager projectDependenciesManager;
+  private final boolean color;
 
   public ReplServer(
       SecurityManager securityManager,
@@ -92,6 +93,7 @@ public class ReplServer implements AutoCloseable {
     this.securityManager = securityManager;
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
     this.errorRenderer = new VmExceptionRenderer(new StackTraceRenderer(frameTransformer), color);
+    this.color = color;
     replState = new ReplState(createEmptyReplModule(BaseModule.getModuleClass().getPrototype()));
 
     var languageRef = new MutableReference<VmLanguage>(null);
@@ -450,7 +452,7 @@ public class ReplServer implements AutoCloseable {
   }
 
   private String render(Object value) {
-    var sb = new AnsiStringBuilder(true);
+    var sb = new AnsiStringBuilder(color);
     var src = VmValueRenderer.multiLine(Integer.MAX_VALUE).render(value);
     SyntaxHighlighter.writeTo(sb, src);
     return sb.toString();

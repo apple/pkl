@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,7 +59,9 @@ internal class Repl(workingDir: Path, private val server: ReplServer, private va
       .apply {
         history(history)
         terminal(terminal)
-        highlighter(PklHighlighter())
+        if (color) {
+          highlighter(PklHighlighter())
+        }
         completer(AggregateCompleter(CommandCompleter, FileCompleter(workingDir)))
         option(Option.DISABLE_EVENT_EXPANSION, true)
         variable(LineReader.HISTORY_FILE, (IoUtils.getPklHomeDir().resolve("repl-history")))
