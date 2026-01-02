@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,7 +34,7 @@ import org.pkl.core.util.Nullable;
 /**
  * Indicates that a type check failed. [TypeNode]s use this exception instead of [VmException] to
  * make type checking of union types efficient. Note that any [TruffleBoundary] between throw and
- * catch location of this exception must set `transferToInterpreterOnException = false`. (Currently
+ * catch location of this exception must a `transferToInterpreterOnException = false`. (Currently
  * there aren't any.)
  */
 public abstract class VmTypeMismatchException extends ControlFlowException {
@@ -57,19 +57,33 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   }
 
   @TruffleBoundary
-  public abstract void describe(
+  public abstract void buildMessage(
       AnsiStringBuilder builder, String indent, boolean withPowerAssertions);
 
   @TruffleBoundary
-  public abstract VmException toVmException();
+  public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {}
 
-  protected VmExceptionBuilder exceptionBuilder() {
-    var builder = new VmExceptionBuilder();
+  @TruffleBoundary
+  public final VmException toVmException() {
+    return exceptionBuilder().build();
+  }
+
+  protected final VmExceptionBuilder exceptionBuilder() {
+    var builder =
+        new VmExceptionBuilder()
+            .withSourceSection(sourceSection)
+            .withMessageBuilder(
+                (b, withPowerAssertions) -> buildMessage(b, "", withPowerAssertions));
+    if (hasHint()) {
+      builder.withHintBuilder((b, withPowerAssertions) -> buildHint(b, "", withPowerAssertions));
+    }
     if (insertedStackFrames != null) {
       builder.withInsertedStackFrames(insertedStackFrames);
     }
     return builder;
   }
+
+  protected abstract Boolean hasHint();
 
   public static final class Simple extends VmTypeMismatchException {
 
@@ -88,7 +102,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     @TruffleBoundary
-    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       String renderedType;
       var valueFormatter = ValueFormatter.basic();
       if (expectedType instanceof String string) {
@@ -148,19 +163,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
 
     @Override
-    @TruffleBoundary
-    public VmException toVmException() {
-      return exceptionBuilder().build();
-    }
-
-    @Override
-    protected VmExceptionBuilder exceptionBuilder() {
-      var builder = new AnsiStringBuilder(true);
-      describe(builder, "", false);
-
-      return super.exceptionBuilder()
-          .adhocEvalError(builder.toString())
-          .withSourceSection(sourceSection);
+    protected Boolean hasHint() {
+      return false;
     }
   }
 
@@ -181,7 +185,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     @TruffleBoundary
-    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       var expression = sourceSection.getCharacters().toString();
       builder
           .append(ErrorMessages.createIndented("typeConstraintViolated", indent, expression))
@@ -189,25 +194,17 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           .append(indent)
           .append("Value: ")
           .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
-      if (withPowerAssertions) {
-        builder.append("\n\n");
-        PowerAssertions.render(
-            builder, indent + "    ", constraintBodySourceSection, trackedValues, null);
+      if (!withPowerAssertions) {
+        return;
       }
+      builder.append("\n\n");
+      PowerAssertions.render(
+          builder, indent + "    ", constraintBodySourceSection, trackedValues, null);
     }
 
     @Override
-    @TruffleBoundary
-    public VmException toVmException() {
-      return exceptionBuilder().build();
-    }
-
-    @Override
-    protected VmExceptionBuilder exceptionBuilder() {
-      return super.exceptionBuilder()
-          .withMessageRenderer(
-              (builder, withPowerAssertions) -> describe(builder, "", withPowerAssertions))
-          .withSourceSection(sourceSection);
+    protected Boolean hasHint() {
+      return false;
     }
   }
 
@@ -226,33 +223,15 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
 
     @Override
-    @TruffleBoundary
-    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
-      describeSummary(builder, indent);
-      describeDetails(builder, indent);
+    protected Boolean hasHint() {
+      var nonTrivialMatches = findNonTrivialMismatches();
+      return !nonTrivialMatches.isEmpty();
     }
 
     @Override
     @TruffleBoundary
-    public VmException toVmException() {
-      return exceptionBuilder().build();
-    }
-
-    @Override
-    protected VmExceptionBuilder exceptionBuilder() {
-      var summary = new AnsiStringBuilder(true);
-      describeSummary(summary, "");
-
-      var details = new AnsiStringBuilder(true);
-      describeDetails(details, "");
-
-      return super.exceptionBuilder()
-          .adhocEvalError(summary.toString())
-          .withSourceSection(sourceSection)
-          .withHint(details.toString());
-    }
-
-    private void describeSummary(AnsiStringBuilder builder, String indent) {
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       var nonTrivialMismatches = findNonTrivialMismatches();
 
       if (nonTrivialMismatches.isEmpty()) {
@@ -284,12 +263,14 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
     }
 
-    private void describeDetails(AnsiStringBuilder builder, String indent) {
+    @Override
+    @TruffleBoundary
+    public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       var nonTrivialMismatches = findNonTrivialMismatches();
 
       var isPeerError = false;
       for (var idx : nonTrivialMismatches) {
-        if (!indent.isEmpty() || isPeerError) {
+        if (isPeerError) {
           builder.append("\n\n");
         }
         isPeerError = true;
@@ -304,7 +285,12 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
                         .getCharacters()
                         .toString()))
             .append("\n");
-        children[idx].describe(builder, indent + "  ", false);
+        var child = children[idx];
+        child.buildMessage(builder, indent + "  ", withPowerAssertions);
+        if (child.hasHint()) {
+          builder.append("\n\n");
+          child.buildHint(builder, indent + "  ", withPowerAssertions);
+        }
       }
     }
 
@@ -330,7 +316,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
 
     @Override
     @TruffleBoundary
-    public void describe(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       builder
           .append(
               ErrorMessages.createIndented(
@@ -342,19 +329,8 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
 
     @Override
-    @TruffleBoundary
-    public VmException toVmException() {
-      return exceptionBuilder().build();
-    }
-
-    @Override
-    protected VmExceptionBuilder exceptionBuilder() {
-      var builder = new AnsiStringBuilder(true);
-      describe(builder, "", false);
-
-      return super.exceptionBuilder()
-          .adhocEvalError(builder.toString())
-          .withSourceSection(sourceSection);
+    protected Boolean hasHint() {
+      return false;
     }
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,6 +57,7 @@ public final class VmExceptionBuilder {
   private @Nullable Object receiver;
   private @Nullable Map<CallTarget, StackFrame> insertedStackFrames;
   private VmException wrappedException;
+  private @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
 
   public static class MultilineValue {
     private final Iterable<?> lines;
@@ -89,7 +90,7 @@ public final class VmExceptionBuilder {
   }
 
   private @Nullable String message;
-  private @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageRenderer;
+  private @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder;
   private @Nullable Throwable cause;
   private VmException.Kind kind = VmException.Kind.EVAL_ERROR;
   private boolean isExternalMessage;
@@ -98,7 +99,6 @@ public final class VmExceptionBuilder {
   private @Nullable Node location;
   private @Nullable SourceSection sourceSection;
   private @Nullable String memberName;
-  private @Nullable String hint;
 
   public VmExceptionBuilder typeMismatch(Object value, VmClass expectedType) {
     if (value instanceof VmNull) {
@@ -297,9 +297,9 @@ public final class VmExceptionBuilder {
     return withMessage(message, args);
   }
 
-  public VmExceptionBuilder withMessageRenderer(
-      BiConsumer<AnsiStringBuilder, Boolean> messageRenderer) {
-    this.messageRenderer = messageRenderer;
+  public VmExceptionBuilder withMessageBuilder(
+      BiConsumer<AnsiStringBuilder, Boolean> messageBuilder) {
+    this.messageBuilder = messageBuilder;
     return this;
   }
 
@@ -339,7 +339,15 @@ public final class VmExceptionBuilder {
   }
 
   public VmExceptionBuilder withHint(@Nullable String hint) {
-    this.hint = hint;
+    if (hint != null) {
+      this.hintBuilder = (builder, ignored) -> builder.append(hint);
+    }
+    return this;
+  }
+
+  public VmExceptionBuilder withHintBuilder(
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder) {
+    this.hintBuilder = hintBuilder;
     return this;
   }
 
@@ -356,10 +364,10 @@ public final class VmExceptionBuilder {
   }
 
   public VmException build() {
-    if (message == null && messageRenderer == null) {
+    if (message == null && messageBuilder == null) {
       throw new IllegalStateException("No message set.");
     }
-    if (message != null && messageRenderer != null) {
+    if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
     }
 
@@ -372,54 +380,54 @@ public final class VmExceptionBuilder {
               cause,
               isExternalMessage,
               messageArguments,
+              messageBuilder,
               programValues,
               location,
               sourceSection,
               memberName,
-              hint,
-              effectiveInsertedStackFrames,
-              messageRenderer);
+              hintBuilder,
+              effectiveInsertedStackFrames);
       case UNDEFINED_VALUE ->
           new VmUndefinedValueException(
               message,
               cause,
               isExternalMessage,
               messageArguments,
+              messageBuilder,
               programValues,
               location,
               sourceSection,
               memberName,
-              hint,
+              hintBuilder,
               receiver,
-              effectiveInsertedStackFrames,
-              messageRenderer);
+              effectiveInsertedStackFrames);
       case BUG ->
           new VmBugException(
               message,
               cause,
               isExternalMessage,
               messageArguments,
+              messageBuilder,
               programValues,
               location,
               sourceSection,
               memberName,
-              hint,
-              effectiveInsertedStackFrames,
-              messageRenderer);
+              hintBuilder,
+              effectiveInsertedStackFrames);
       case WRAPPED ->
           new VmWrappedEvalException(
               message,
               cause,
               isExternalMessage,
               messageArguments,
+              messageBuilder,
               programValues,
               location,
               sourceSection,
               memberName,
-              hint,
+              hintBuilder,
               effectiveInsertedStackFrames,
-              wrappedException,
-              messageRenderer);
+              wrappedException);
     };
   }
 
