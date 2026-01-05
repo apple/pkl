@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 plugins {
-  `java-platform`
   pklAllProjects
-  pklPublishBom
+  `java-platform`
+  `maven-publish`
+  signing
 }
 
 description = "Pkl BOM that includes all modules"
@@ -42,7 +43,8 @@ dependencies {
 
 publishing {
   publications {
-    named<MavenPublication>("library") {
+    create<MavenPublication>("library") {
+      from(components["javaPlatform"])
       pom {
         url.set("https://github.com/apple/pkl/tree/main/pkl-bom")
         description.set("Bill of Materials for managing Pkl dependency versions")
@@ -50,3 +52,9 @@ publishing {
     }
   }
 }
+
+configurePklPomMetadata()
+
+configurePomValidation()
+
+configurePklSigning()
