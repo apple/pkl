@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -263,13 +263,15 @@ constructor(
       }
       val moduleSource = toModuleSource(moduleUri, inputStream)
       val output = evaluator.evaluateOutputFiles(moduleSource)
+      val realOutputDir = if (outputDir.exists()) outputDir.toRealPath() else outputDir
+
       for ((pathSpec, fileOutput) in output) {
         checkPathSpec(pathSpec)
-        val resolvedPath = outputDir.resolve(pathSpec).normalize()
+        val resolvedPath = realOutputDir.resolve(pathSpec).normalize()
         val realPath = if (resolvedPath.exists()) resolvedPath.toRealPath() else resolvedPath
-        if (!realPath.startsWith(outputDir)) {
+        if (!realPath.startsWith(realOutputDir)) {
           throw CliException(
-            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$outputDir`."
+            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
           )
         }
         val previousOutput = writtenFiles[realPath]
