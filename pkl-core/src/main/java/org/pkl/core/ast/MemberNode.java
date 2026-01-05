@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.ast;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.runtime.VmExceptionBuilder;
@@ -46,7 +47,8 @@ public abstract class MemberNode extends PklRootNode {
     return new VmExceptionBuilder().withSourceSection(getHeaderSection());
   }
 
-  public boolean isUndefined() {
-    return bodyNode instanceof DefaultPropertyBodyNode propBodyNode && propBodyNode.isUndefined();
+  public boolean isUndefined(VirtualFrame frame) {
+    return bodyNode instanceof DefaultPropertyBodyNode propBodyNode
+        && propBodyNode.isUndefined(frame);
   }
 }

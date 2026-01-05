@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -116,6 +116,7 @@ public abstract class TypeNode extends PklNode {
 
   // method arguments are used when default value contains a root node
   public @Nullable Object createDefaultValue(
+      VirtualFrame frame,
       VmLanguage language,
       // header section of the property or method that carries the type annotation
       SourceSection headerSection,
@@ -473,6 +474,16 @@ public abstract class TypeNode extends PklNode {
     protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
+      return TypeNode.createDefaultValue(moduleClass);
+    }
   }
 
   public static final class StringLiteralTypeNode extends ObjectSlotTypeNode {
@@ -504,7 +515,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return literal;
     }
@@ -572,7 +586,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmDynamic.empty();
     }
@@ -622,7 +639,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return TypeNode.createDefaultValue(clazz);
     }
@@ -691,7 +711,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return TypeNode.createDefaultValue(clazz);
     }
@@ -734,10 +757,13 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmNull.withDefault(
-          elementTypeNode.createDefaultValue(language, headerSection, qualifiedName));
+          elementTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName));
     }
 
     @Override
@@ -817,12 +843,15 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return defaultIndex == -1
           ? null
           : elementTypeNodes[defaultIndex].createDefaultValue(
-              language, headerSection, qualifiedName);
+              frame, language, headerSection, qualifiedName);
     }
 
     @Override
@@ -1021,9 +1050,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    @TruffleBoundary
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return unionDefault;
     }
@@ -1063,7 +1094,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmList.EMPTY;
     }
@@ -1152,7 +1186,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmList.EMPTY;
     }
@@ -1240,7 +1277,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public final Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmSet.EMPTY;
     }
@@ -1332,7 +1372,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmMap.EMPTY;
     }
@@ -1586,45 +1629,48 @@ public abstract class TypeNode extends PklNode {
       return valueTypeCastNode;
     }
 
-    // either (if defaultMemberValue != null):
-    // x: Listing<Foo> // = new Listing {
-    //   default = name -> new Foo {}
-    // }
-    // or (if defaultMemberValue == null):
-    // x: Listing<Int> // = new Listing {
-    //   default = Undefined()
-    // }
-    @Override
     @TruffleBoundary
-    public final Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
-
-      if (valueTypeNode instanceof UnknownTypeNode) {
-        if (isListing()) {
-          return new VmListing(
-              VmUtils.createEmptyMaterializedFrame(),
-              BaseModule.getListingClass().getPrototype(),
-              EconomicMaps.create(),
-              0);
-        }
-
-        return new VmMapping(
+    private Object newEmptyListingOrMapping() {
+      if (isListing()) {
+        return new VmListing(
             VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getMappingClass().getPrototype(),
-            EconomicMaps.create());
+            BaseModule.getListingClass().getPrototype(),
+            EconomicMaps.create(),
+            0);
       }
 
+      return new VmMapping(
+          VmUtils.createEmptyMaterializedFrame(),
+          BaseModule.getMappingClass().getPrototype(),
+          EconomicMaps.create());
+    }
+
+    @TruffleBoundary
+    private Object newEmptyListingOrMapping(ObjectMember defaultMember) {
+      if (isListing()) {
+        return new VmListing(
+            VmUtils.createEmptyMaterializedFrame(),
+            BaseModule.getListingClass().getPrototype(),
+            EconomicMaps.of(Identifier.DEFAULT, defaultMember),
+            0);
+      }
+
+      return new VmMapping(
+          VmUtils.createEmptyMaterializedFrame(),
+          BaseModule.getMappingClass().getPrototype(),
+          EconomicMaps.of(Identifier.DEFAULT, defaultMember));
+    }
+
+    @TruffleBoundary
+    private ObjectMember createDefaultMember(
+        SourceSection headerSection, String qualifiedName, @Nullable Object defaultMemberValue) {
       var defaultMember =
           new ObjectMember(
               headerSection,
               headerSection,
               VmModifier.HIDDEN,
               Identifier.DEFAULT,
-              qualifiedName + ".default");
-
-      var defaultMemberValue =
-          valueTypeNode.createDefaultValue(language, headerSection, qualifiedName);
-
+              VmUtils.concat(qualifiedName, ".default"));
       if (defaultMemberValue == null) {
         defaultMember.initMemberNode(
             new UntypedObjectMemberNode(
@@ -1645,23 +1691,38 @@ public abstract class TypeNode extends PklNode {
                     language,
                     new FrameDescriptor(),
                     headerSection,
-                    defaultMember.getQualifiedName() + ".<function>",
+                    VmUtils.concat(defaultMember.getQualifiedName(), ".<function>"),
                     new ConstantValueNode(defaultMemberValue)),
                 null));
       }
+      return defaultMember;
+    }
 
-      if (isListing()) {
-        return new VmListing(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getListingClass().getPrototype(),
-            EconomicMaps.of(Identifier.DEFAULT, defaultMember),
-            0);
+    // either (if defaultMemberValue != null):
+    // x: Listing<Foo> // = new Listing {
+    //   default = name -> new Foo {}
+    // }
+    // or (if defaultMemberValue == null):
+    // x: Listing<Int> // = new Listing {
+    //   default = Undefined()
+    // }
+    @Override
+    public final Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+
+      if (valueTypeNode instanceof UnknownTypeNode) {
+        return newEmptyListingOrMapping();
       }
 
-      return new VmMapping(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getMappingClass().getPrototype(),
-          EconomicMaps.of(Identifier.DEFAULT, defaultMember));
+      var defaultMemberValue =
+          valueTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+
+      var defaultMember = createDefaultMember(headerSection, qualifiedName, defaultMemberValue);
+
+      return newEmptyListingOrMapping(defaultMember);
     }
 
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
@@ -2030,7 +2091,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -2441,34 +2505,41 @@ public abstract class TypeNode extends PklNode {
       }
     }
 
-    @Override
     @TruffleBoundary
+    private VmFunction newMixin(VmLanguage language, String qualifiedName) {
+      //noinspection ConstantConditions
+      return new VmFunction(
+          VmUtils.createEmptyMaterializedFrame(),
+          // Assumption: don't need to set the correct `thisValue`
+          // because it is guaranteed to be never accessed.
+          null,
+          1,
+          new IdentityMixinNode(
+              language,
+              new FrameDescriptor(),
+              getSourceSection(),
+              qualifiedName,
+              typeArgumentNodes.length == 1
+                  ?
+                  // shouldn't need to deepCopy() this node because it isn't used as @Child
+                  // anywhere else
+                  typeArgumentNodes[0]
+                  : null),
+          null);
+    }
+
+    @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       if (typeAlias == BaseModule.getMixinTypeAlias()) {
-        //noinspection ConstantConditions
-        return new VmFunction(
-            VmUtils.createEmptyMaterializedFrame(),
-            // Assumption: don't need to set the correct `thisValue`
-            // because it is guaranteed to be never accessed.
-            null,
-            1,
-            new IdentityMixinNode(
-                language,
-                new FrameDescriptor(),
-                getSourceSection(),
-                qualifiedName,
-                typeArgumentNodes.length == 1
-                    ?
-                    // shouldn't need to deepCopy() this node because it isn't used as @Child
-                    // anywhere else
-                    typeArgumentNodes[0]
-                    : null),
-            null);
+        return newMixin(language, qualifiedName);
       }
 
-      return aliasedTypeNode.createDefaultValue(language, headerSection, qualifiedName);
+      return aliasedTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
     }
 
     @Override
@@ -2593,9 +2664,12 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
-      return childNode.createDefaultValue(language, headerSection, qualifiedName);
+      return childNode.createDefaultValue(frame, language, headerSection, qualifiedName);
     }
 
     public SourceSection getBaseTypeSection() {
