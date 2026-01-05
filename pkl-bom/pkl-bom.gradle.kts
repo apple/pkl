@@ -26,9 +26,6 @@ dependencies {
     api(projects.pklCli)
     api(projects.pklCodegenJava)
     api(projects.pklCodegenKotlin)
-    api(projects.pklCommons)
-    api(projects.pklCommonsCli)
-    api(projects.pklCommonsTest)
     // Use explicit coordinates for pkl-config-java to avoid ambiguity with fatJar publication
     api("${project.group}:pkl-config-java:${project.version}")
     api("${project.group}:pkl-config-java-all:${project.version}")
@@ -39,7 +36,6 @@ dependencies {
     api(projects.pklFormatter)
     api(projects.pklGradle)
     api(projects.pklParser)
-    api(projects.pklServer)
     api(projects.pklTools)
   }
 }
