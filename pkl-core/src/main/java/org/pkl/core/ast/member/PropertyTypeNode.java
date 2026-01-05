@@ -69,7 +69,11 @@ public final class PropertyTypeNode extends PklRootNode {
       defaultValue =
           typeNode.createDefaultValue(
               frame, VmLanguage.get(this), getSourceSection(), qualifiedPropertyName);
-      defaultValueInitialized = true;
+      // can't cache default value for `module` type in a non-final module because it's a self-type
+      // (the default value changes when inherited).
+      if (typeNode.isFinalType()) {
+        defaultValueInitialized = true;
+      }
     }
     return defaultValue;
   }

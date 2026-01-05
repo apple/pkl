@@ -50,15 +50,20 @@ public final class GetParentForTypeNode extends ExpressionNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     if (defaultValue != null) return defaultValue;
-
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
     var typeNode = getTypeNode(frame);
-    defaultValue =
+    var defaultValue =
         typeNode.createDefaultValue(frame, VmLanguage.get(this), sourceSection, qualifiedName);
 
-    if (defaultValue != null) {
+    // can't cache default value for `module` type in a non-final module because it's a self-type
+    // (the default value changes when inherited).
+    if (typeNode.isFinalType() && defaultValue != null) {
       unresolvedTypeNode = null;
+      this.defaultValue = defaultValue;
+    }
+
+    if (defaultValue != null) {
       return defaultValue;
     }
 
