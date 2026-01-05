@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.pkl.core.util.LateInit;
 /** Resolves `<type>` to the type's default value in `new <type> { ... }`. */
 public final class GetParentForTypeNode extends ExpressionNode {
   @Child private UnresolvedTypeNode unresolvedTypeNode;
+  @Child private TypeNode typeNode;
   private final String qualifiedName;
 
   @CompilationFinal @LateInit Object defaultValue;
@@ -37,14 +38,24 @@ public final class GetParentForTypeNode extends ExpressionNode {
     this.qualifiedName = qualifiedName;
   }
 
+  private TypeNode getTypeNode(VirtualFrame frame) {
+    if (typeNode == null) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      typeNode = unresolvedTypeNode.execute(frame);
+      adoptChildren();
+    }
+    return typeNode;
+  }
+
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     if (defaultValue != null) return defaultValue;
 
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
-    var typeNode = unresolvedTypeNode.execute(frame);
-    defaultValue = typeNode.createDefaultValue(VmLanguage.get(this), sourceSection, qualifiedName);
+    var typeNode = getTypeNode(frame);
+    defaultValue =
+        typeNode.createDefaultValue(frame, VmLanguage.get(this), sourceSection, qualifiedName);
 
     if (defaultValue != null) {
       unresolvedTypeNode = null;

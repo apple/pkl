@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -908,5 +908,10 @@ public final class VmUtils {
   public static boolean shouldRunTypeCheck(VirtualFrame frame) {
     return frame.getArguments().length != 4
         || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
+  }
+
+  @TruffleBoundary
+  public static String concat(String str1, String str2) {
+    return str1 + str2;
   }
 }
