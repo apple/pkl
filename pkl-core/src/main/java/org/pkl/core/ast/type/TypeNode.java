@@ -125,11 +125,23 @@ public abstract class TypeNode extends PklNode {
     return null;
   }
 
-  /**
-   * Visit child type nodes; but not parameterized types (does not visit {@code String} in {@code
-   * Listing<String>}).
-   */
-  protected abstract boolean acceptTypeNode(TypeNodeConsumer consumer);
+  public final boolean isFinalType() {
+    var ret = new MutableBoolean(true);
+    acceptTypeNode(
+        true,
+        typeNode -> {
+          // assumption: don't need to worry about `NonFinalClassTypeNode`
+          if (typeNode instanceof NonFinalModuleTypeNode) {
+            ret.set(false);
+            return false;
+          }
+          return true;
+        });
+    return ret.get();
+  }
+
+  /** Visit child type nodes of this type. */
+  protected abstract boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer);
 
   public static TypeNode forClass(SourceSection sourceSection, VmClass clazz) {
     return clazz.isClosed()
@@ -217,7 +229,6 @@ public abstract class TypeNode extends PklNode {
     public TypeNode initWriteSlotNode(int slot) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       this.slot = slot;
-      //noinspection DataFlowIssue
       writeFrameSlotNode = WriteFrameSlotNodeGen.create(sourceSection, slot, null);
       return this;
     }
@@ -322,7 +333,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -374,7 +385,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -419,8 +430,17 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      return TypeNode.createDefaultValue(moduleClass);
     }
   }
 
@@ -471,7 +491,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -534,7 +554,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -562,7 +582,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -600,7 +620,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -656,14 +676,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
 
   /**
-   * An `open` or `abstract` class type. Since this node is not used for String/Boolean/Int/Float
-   * and their supertypes, only `VmValue`s can possibly pass its type check.
+   * An {@code open} or {@code abstract} class type. Since this node is not used for
+   * String/Boolean/Int/Float and their supertypes, only {@link VmValue}s can possibly pass its type
+   * check.
    */
   public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode {
     protected final VmClass clazz;
@@ -728,7 +749,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -798,11 +819,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
-      if (!consumer.accept(this)) {
-        return false;
-      }
-      return elementTypeNode.acceptTypeNode(consumer);
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this) && elementTypeNode.acceptTypeNode(visitTypeArguments, consumer);
     }
   }
 
@@ -890,7 +908,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (!consumer.accept(this)) {
         return false;
       }
@@ -901,7 +919,7 @@ public abstract class TypeNode extends PklNode {
         if (!ret) {
           continue;
         }
-        if (!elementTypeNodes[i].acceptTypeNode(consumer)) {
+        if (!elementTypeNodes[i].acceptTypeNode(visitTypeArguments, consumer)) {
           ret = false;
         }
       }
@@ -921,6 +939,7 @@ public abstract class TypeNode extends PklNode {
       var seenParameterizedClasses = EconomicSets.<VmClass>create();
       var ret = new MutableBoolean(false);
       this.acceptTypeNode(
+          false,
           (typeNode) -> {
             if (!typeNode.isParametric()) {
               return true;
@@ -1045,7 +1064,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1123,7 +1142,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1180,7 +1199,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
@@ -1313,7 +1335,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
@@ -1410,7 +1435,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this)
+            && keyTypeNode.acceptTypeNode(true, consumer)
+            && valueTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
@@ -1505,7 +1535,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && valueTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
   }
@@ -1578,7 +1611,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        assert keyTypeNode != null;
+        return consumer.accept(this) && valueTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
   }
@@ -1851,7 +1888,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1922,7 +1959,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1999,7 +2036,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -2070,7 +2107,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this)
+            && firstTypeNode.acceptTypeNode(true, consumer)
+            && secondTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
@@ -2123,7 +2165,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -2177,7 +2219,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2212,7 +2254,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2255,7 +2297,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected final boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2324,7 +2366,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2368,7 +2410,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2412,7 +2454,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2569,11 +2611,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
-      if (!consumer.accept(this)) {
-        return false;
-      }
-      return aliasedTypeNode.acceptTypeNode(consumer);
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this) && aliasedTypeNode.acceptTypeNode(visitTypeArguments, consumer);
     }
 
     @Override
@@ -2696,11 +2735,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (!consumer.accept(this)) {
         return false;
       }
-      return childNode.acceptTypeNode(consumer);
+      return childNode.acceptTypeNode(visitTypeArguments, consumer);
     }
 
     public VmTyped getMirror() {
@@ -2736,7 +2775,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2764,7 +2803,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2823,7 +2862,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2851,7 +2890,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2891,7 +2930,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2931,7 +2970,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
