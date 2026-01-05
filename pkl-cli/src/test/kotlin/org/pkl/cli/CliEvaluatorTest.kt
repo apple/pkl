@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1632,6 +1632,95 @@ result = someLib.x
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  @DisabledOnOs(OS.WINDOWS)
+  fun `multiple file output works with symlinked output directory`() {
+    val realOutputDir = tempDir.resolve("real-output").createDirectories()
+
+    val symlinkOutputDir =
+      Files.createSymbolicLink(tempDir.resolve("symlink-output"), realOutputDir)
+
+    val sourceFile =
+      writePklFile(
+        "test.pkl",
+        """
+          pigeon {
+            name = "Pigeon"
+            diet = "Seeds"
+          }
+          parrot {
+            name = "Parrot"
+            diet = "Seeds"
+          }
+          output {
+            files {
+              ["pigeon.json"] {
+                value = pigeon
+                renderer = new JsonRenderer {}
+              }
+              ["birds/parrot.yaml"] {
+                value = parrot
+                renderer = new YamlRenderer {}
+              }
+            }
+          }
+        """
+          .trimIndent(),
+      )
+
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(sourceModules = listOf(sourceFile), workingDir = tempDir),
+        multipleFileOutputPath = symlinkOutputDir.toString(),
+      )
+
+    CliEvaluator(options).run()
+
+    checkOutputFile(
+      realOutputDir.resolve("pigeon.json"),
+      "pigeon.json",
+      """
+        {
+          "name": "Pigeon",
+          "diet": "Seeds"
+        }
+      """
+        .trimIndent(),
+    )
+
+    checkOutputFile(
+      realOutputDir.resolve("birds/parrot.yaml"),
+      "parrot.yaml",
+      """
+        name: Parrot
+        diet: Seeds
+      """
+        .trimIndent(),
+    )
+
+    checkOutputFile(
+      symlinkOutputDir.resolve("pigeon.json"),
+      "pigeon.json",
+      """
+        {
+          "name": "Pigeon",
+          "diet": "Seeds"
+        }
+      """
+        .trimIndent(),
+    )
+
+    checkOutputFile(
+      symlinkOutputDir.resolve("birds/parrot.yaml"),
+      "parrot.yaml",
+      """
+        name: Parrot
+        diet: Seeds
+      """
+        .trimIndent(),
+    )
   }
 
   private fun evalModuleThatImportsPackage(certsFile: Path?, testPort: Int = -1) {
