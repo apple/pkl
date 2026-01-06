@@ -67,7 +67,7 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
    * (non-language-snippet) test to make sure this is `""` before commit.
    */
   // language=regexp
-  internal val selection: String = ""
+  internal val selection: String = "objects/hashCode"
 
   protected val packageServer: PackageServer = PackageServer()
 
