@@ -24,6 +24,7 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.Deque;
+import java.util.LinkedHashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
@@ -208,10 +209,12 @@ public class PowerAssertions {
     return null;
   }
 
-  private static List<LayerEntry> getLayerEntries(
+  private static Collection<LayerEntry> getLayerEntries(
       Map<Node, List<Object>> trackedValues, SourceSection sourceSection) {
     var exprNode = parser.parseExpressionInput(sourceSection.getCharacters().toString());
-    var ret = new ArrayList<LayerEntry>();
+    // it's possible that two nodes can turn into identical `SourceEntry`s; ensure these entries are
+    // distinct by using a set.
+    var ret = new LinkedHashSet<LayerEntry>();
     for (var entry : trackedValues.entrySet()) {
       var truffleNode = entry.getKey();
       var values = entry.getValue();
@@ -250,7 +253,7 @@ public class PowerAssertions {
   }
 
   private static List<Collection<LayerEntry>> buildLayers(
-      List<LayerEntry> layerEntries, SourceSection line) {
+      Collection<LayerEntry> layerEntries, SourceSection line) {
     var sortedSections =
         layerEntries.stream()
             .filter((it) -> it.startLine() == line.getStartLine())
@@ -339,7 +342,7 @@ public class PowerAssertions {
       AnsiStringBuilder out,
       String indent,
       SourceSection line,
-      List<LayerEntry> layerEntries,
+      Collection<LayerEntry> layerEntries,
       int trimStart,
       @Nullable Consumer<AnsiStringBuilder> lineSuffix) {
     var layers = buildLayers(layerEntries, line);
