@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,22 +18,40 @@ package org.pkl.cli.repl
 import java.io.IOException
 import java.net.URI
 import java.nio.file.Path
+import java.util.regex.Pattern
 import kotlin.io.path.deleteIfExists
 import org.fusesource.jansi.Ansi
 import org.jline.reader.EndOfFileException
+import org.jline.reader.Highlighter
+import org.jline.reader.LineReader
 import org.jline.reader.LineReader.Option
 import org.jline.reader.LineReaderBuilder
 import org.jline.reader.UserInterruptException
 import org.jline.reader.impl.completer.AggregateCompleter
 import org.jline.reader.impl.history.DefaultHistory
 import org.jline.terminal.TerminalBuilder
+import org.jline.utils.AttributedString
 import org.jline.utils.InfoCmp
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
+import org.pkl.core.util.AnsiStringBuilder
+import org.pkl.core.util.AnsiStringBuilder.AnsiCode
 import org.pkl.core.util.IoUtils
+import org.pkl.core.util.SyntaxHighlighter
 
-internal class Repl(workingDir: Path, private val server: ReplServer) {
+class PklHighlighter : Highlighter {
+  override fun highlight(reader: LineReader, buffer: String): AttributedString {
+    val ansi = AnsiStringBuilder(true).apply { SyntaxHighlighter.writeTo(this, buffer) }.toString()
+    return AttributedString.fromAnsi(ansi)
+  }
+
+  override fun setErrorPattern(pattern: Pattern) {}
+
+  override fun setErrorIndex(idx: Int) {}
+}
+
+internal class Repl(workingDir: Path, private val server: ReplServer, private val color: Boolean) {
   private val terminal = TerminalBuilder.builder().apply { jansi(true) }.build()
   private val history = DefaultHistory()
   private val reader =
@@ -41,12 +59,12 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
       .apply {
         history(history)
         terminal(terminal)
+        if (color) {
+          highlighter(PklHighlighter())
+        }
         completer(AggregateCompleter(CommandCompleter, FileCompleter(workingDir)))
         option(Option.DISABLE_EVENT_EXPANSION, true)
-        variable(
-          org.jline.reader.LineReader.HISTORY_FILE,
-          (IoUtils.getPklHomeDir().resolve("repl-history")),
-        )
+        variable(LineReader.HISTORY_FILE, (IoUtils.getPklHomeDir().resolve("repl-history")))
       }
       .build()
 
@@ -54,6 +72,12 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
   private var quit = false
   private var maybeQuit = false
   private var nextRequestId = 0
+
+  private fun String.faint(): String {
+    val sb = AnsiStringBuilder(color)
+    sb.append(AnsiCode.FAINT, this)
+    return sb.toString()
+  }
 
   fun run() {
     // JLine 2 history file is incompatible with JLine 3
@@ -70,11 +94,11 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
           try {
             if (continuation) {
               nextRequestId -= 1
-              reader.readLine(" ".repeat("pkl$nextRequestId> ".length))
+              reader.readLine(" ".repeat("pkl$nextRequestId> ".length).faint())
             } else {
-              reader.readLine("pkl$nextRequestId> ")
+              reader.readLine("pkl$nextRequestId> ".faint())
             }
-          } catch (e: UserInterruptException) {
+          } catch (_: UserInterruptException) {
             if (!continuation && reader.buffer.length() == 0) {
               if (maybeQuit) quit()
               else {
@@ -87,7 +111,7 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
             inputBuffer = ""
             continuation = false
             continue
-          } catch (e: EndOfFileException) {
+          } catch (_: EndOfFileException) {
             ":quit"
           }
 
@@ -111,10 +135,10 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
     } finally {
       try {
         history.save()
-      } catch (ignored: IOException) {}
+      } catch (_: IOException) {}
       try {
         terminal.close()
-      } catch (ignored: IOException) {}
+      } catch (_: IOException) {}
     }
   }
 
@@ -124,10 +148,12 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
       candidates.isEmpty() -> {
         println("Unknown command: `${inputBuffer.drop(1)}`")
       }
+
       candidates.size > 1 -> {
         print("Which of the following did you mean?  ")
         println(candidates.joinToString(separator = "  ") { "`:${it.type}`" })
       }
+
       else -> {
         doExecuteCommand(candidates.single())
       }
@@ -193,16 +219,20 @@ internal class Repl(workingDir: Path, private val server: ReplServer) {
         is ReplResponse.EvalSuccess -> {
           println(response.result)
         }
+
         is ReplResponse.EvalError -> {
           println(response.message)
         }
+
         is ReplResponse.InternalError -> {
           throw response.cause
         }
+
         is ReplResponse.IncompleteInput -> {
           assert(responses.size == 1)
           continuation = true
         }
+
         else -> throw IllegalStateException("Unexpected response: $response")
       }
     }

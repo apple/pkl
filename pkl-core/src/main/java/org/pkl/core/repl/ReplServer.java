@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -45,10 +45,12 @@ import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
 import org.pkl.parser.syntax.Class;
@@ -69,6 +71,7 @@ public class ReplServer implements AutoCloseable {
   private final VmExceptionRenderer errorRenderer;
   private final PackageResolver packageResolver;
   private final @Nullable ProjectDependenciesManager projectDependenciesManager;
+  private final boolean color;
 
   public ReplServer(
       SecurityManager securityManager,
@@ -90,6 +93,7 @@ public class ReplServer implements AutoCloseable {
     this.securityManager = securityManager;
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
     this.errorRenderer = new VmExceptionRenderer(new StackTraceRenderer(frameTransformer), color);
+    this.color = color;
     replState = new ReplState(createEmptyReplModule(BaseModule.getModuleClass().getPrototype()));
 
     var languageRef = new MutableReference<VmLanguage>(null);
@@ -172,7 +176,7 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings({"StatementWithEmptyBody", "DataFlowIssue"})
+  @SuppressWarnings({"StatementWithEmptyBody"})
   private List<Object> evaluate(
       ReplState replState,
       String requestId,
@@ -448,7 +452,10 @@ public class ReplServer implements AutoCloseable {
   }
 
   private String render(Object value) {
-    return VmValueRenderer.multiLine(Integer.MAX_VALUE).render(value);
+    var sb = new AnsiStringBuilder(color);
+    var src = VmValueRenderer.multiLine(Integer.MAX_VALUE).render(value);
+    SyntaxHighlighter.writeTo(sb, src);
+    return sb.toString();
   }
 
   private static class ReplState {

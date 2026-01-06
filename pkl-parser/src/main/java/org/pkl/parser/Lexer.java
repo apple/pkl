@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,6 +63,14 @@ public class Lexer {
   // The text of the last lexed token
   public String text() {
     return new String(source, sCursor, cursor - sCursor);
+  }
+
+  public int getStartCursor() {
+    return sCursor;
+  }
+
+  public int getCursor() {
+    return cursor;
   }
 
   public char[] getSource() {

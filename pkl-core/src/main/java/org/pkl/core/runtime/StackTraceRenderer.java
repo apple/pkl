@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import org.pkl.core.StackFrame;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.SyntaxHighlighter;
 
 public final class StackTraceRenderer {
   private final Function<StackFrame, StackFrame> frameTransformer;
@@ -104,9 +105,11 @@ public final class StackTraceRenderer {
 
     var prefix = frame.getStartLine() + " | ";
     out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
-        .append(AnsiTheme.STACK_TRACE_LINE_NUMBER, prefix)
-        .append(sourceLine)
-        .append('\n')
+        .append(AnsiTheme.STACK_TRACE_LINE_NUMBER, prefix);
+
+    SyntaxHighlighter.writeTo(out, sourceLine);
+
+    out.append('\n')
         .append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
         .append(" ".repeat(prefix.length() + startColumn - 1))
         .append(AnsiTheme.STACK_TRACE_CARET, "^".repeat(endColumn - startColumn + 1))
