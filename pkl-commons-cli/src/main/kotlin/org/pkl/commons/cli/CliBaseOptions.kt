@@ -148,10 +148,10 @@ data class CliBaseOptions(
   val httpHeaders: Map<String, Map<String, List<String>>>? = null,
 
   /** External module reader process specs */
-  val externalModuleReaders: Map<String, ExternalReader> = mapOf(),
+  val externalModuleReaders: Map<String, ExternalReader>? = null,
 
   /** External resource reader process specs */
-  val externalResourceReaders: Map<String, ExternalReader> = mapOf(),
+  val externalResourceReaders: Map<String, ExternalReader>? = null,
 
   /** Defines options for the formatting of calls to the trace() method. */
   val traceMode: TraceMode? = null,

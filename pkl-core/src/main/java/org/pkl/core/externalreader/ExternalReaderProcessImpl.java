@@ -16,6 +16,7 @@
 package org.pkl.core.externalreader;
 
 import com.google.errorprone.annotations.concurrent.GuardedBy;
+import java.io.File;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.time.Duration;
@@ -105,6 +106,10 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
       }
 
       var builder = new ProcessBuilder(command);
+      var workingDir = spec.workingDir();
+      if (workingDir != null) {
+        builder.directory(new File(workingDir));
+      }
       builder.redirectError(Redirect.INHERIT); // inherit stderr from this pkl process
       try {
         process = builder.start();

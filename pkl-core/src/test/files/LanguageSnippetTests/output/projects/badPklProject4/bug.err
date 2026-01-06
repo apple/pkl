@@ -1,0 +1,6 @@
+–– Pkl Error ––
+URI `file:///not a valid uri` has invalid syntax.
+
+xxx | moduleCacheDir = resolvePath(enclosingUri, module.moduleCacheDir!!, forWindows)
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.EvaluatorSettings#resolveForOs.moduleCacheDir (pkl:EvaluatorSettings)

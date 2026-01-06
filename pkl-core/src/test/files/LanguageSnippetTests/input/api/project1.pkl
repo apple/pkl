@@ -1,0 +1,32 @@
+amends "../snippetTest.pkl"
+
+import "pkl:platform"
+import "pkl:Project"
+
+examples {
+  local macos = new platform.OperatingSystem { name = "macOS" }
+
+  ["resolvedEvaluatorSettings"] {
+    new Project {
+      projectFileUri = "file:///path/to/PklProject"
+      evaluatorSettings {
+        modulePath {
+          "modulepath/first"
+          "modulepath/second"
+        }
+        moduleCacheDir = "path/to/cache"
+        externalModuleReaders {
+          ["relative path"] {
+            executable = "foo/executable"
+          }
+          ["absolute path"] {
+            executable = "/path/to/executable"
+          }
+          ["command name"] {
+            executable = "foo"
+          }
+        }
+      }
+    }.evaluatorSettings.resolveForOs("file:///path/to/PklProject", macos)
+  }
+}

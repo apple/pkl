@@ -1,0 +1,4 @@
+res = """
+  res = read("file:///file.txt")
+  
+  """

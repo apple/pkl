@@ -1,0 +1,25 @@
+examples {
+  ["resolvedEvaluatorSettings"] {
+    new {
+      modulePath {
+        "/path/to/modulepath/first"
+        "/path/to/modulepath/second"
+      }
+      moduleCacheDir = "/path/to/path/to/cache"
+      externalModuleReaders {
+        ["relative path"] {
+          executable = "/path/to/foo/executable"
+          workingDir = "/path/to"
+        }
+        ["absolute path"] {
+          executable = "/path/to/executable"
+          workingDir = "/path/to"
+        }
+        ["command name"] {
+          executable = "foo"
+          workingDir = "/path/to"
+        }
+      }
+    }
+  }
+}

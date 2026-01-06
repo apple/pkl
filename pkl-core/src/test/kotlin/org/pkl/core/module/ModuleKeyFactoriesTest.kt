@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,55 @@
  */
 package org.pkl.core.module
 
+import java.io.File
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
+import java.util.regex.Pattern
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.outputStream
 import org.assertj.core.api.Assertions.assertThat
+import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
+import org.pkl.core.EvaluatorBuilder
+import org.pkl.core.ModuleSource
 import org.pkl.core.SecurityManagers
-import org.pkl.core.externalreader.*
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
+import org.pkl.core.externalreader.ExternalReaderProcess
+import org.pkl.core.externalreader.TestExternalModuleReader
+import org.pkl.core.externalreader.TestExternalReaderProcess
+import org.pkl.core.resource.ResourceReaders
+import org.pkl.core.util.IoUtils
 
 class ModuleKeyFactoriesTest {
+  companion object {
+    private val externalReaderFixture by lazy {
+      val readerPath =
+        "pkl-core/build/fixtures/externalreader".let { if (IoUtils.isWindows()) "$it.bat" else it }
+
+      FileTestUtils.rootProjectDir.resolve(readerPath).also { path ->
+        if (!Files.exists(path)) {
+          throw AssertionError(
+            "Fixture `externalreader` not found. To fix this problem, first run" +
+              " `./gradlew pkl-core:externalReaderFixture`."
+          )
+        }
+      }
+    }
+
+    @JvmStatic
+    private fun pathEnvIsSet(): Boolean {
+      return System.getenv("PATH")
+        ?.split(File.pathSeparator)
+        ?.contains(externalReaderFixture.toAbsolutePath().toString()) ?: false
+    }
+  }
+
   @Test
   fun `standard library`() {
     val factory = ModuleKeyFactories.standardLibrary
@@ -146,4 +181,34 @@ class ModuleKeyFactoriesTest {
     proc.close()
     runtime.close()
   }
+
+  @Test
+  fun `external process -- spawning an executable using a path`() {
+    testExternalReader(externalReaderFixture.toAbsolutePath().toString())
+  }
+
+  @Test
+  fun `external process -- spawning an executable using a simple name off PATH`() {
+    assumeTrue(pathEnvIsSet(), "PATH contains fixtures dir")
+    testExternalReader("externalreader")
+  }
+
+  private fun testExternalReader(executable: String) {
+    val evaluator = makeEvaluatorWithExternalReader(executable)
+    val result = evaluator.use {
+      evaluator.evaluateExpression(ModuleSource.uri("pkl:base"), "read(\"foo:foo\").text")
+    }
+    assertThat(result).isEqualTo("hello")
+  }
+
+  private fun makeEvaluatorWithExternalReader(reader: String) =
+    with(EvaluatorBuilder.preconfigured()) {
+      val process =
+        ExternalReaderProcess.of(PklEvaluatorSettings.ExternalReader(reader, listOf(), null))
+      addModuleKeyFactory(ModuleKeyFactories.externalProcess("foo", process))
+      addResourceReader(ResourceReaders.externalProcess("foo", process))
+      setAllowedModules(allowedModules + listOf(Pattern.compile("foo:")))
+      setAllowedResources(allowedResources + listOf(Pattern.compile("foo:")))
+      build()
+    }
 }

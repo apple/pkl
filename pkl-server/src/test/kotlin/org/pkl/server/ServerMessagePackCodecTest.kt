@@ -54,7 +54,7 @@ class ServerMessagePackCodecTest {
     val resourceReader2 = Messages.ResourceReaderSpec("resourceReader2", true, false)
     val moduleReader1 = Messages.ModuleReaderSpec("moduleReader1", true, true, true)
     val moduleReader2 = Messages.ModuleReaderSpec("moduleReader2", true, false, false)
-    val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"))
+    val externalReader = ExternalReader("external-cmd", listOf("arg1", "arg2"), "/foo/bar")
     roundtrip(
       CreateEvaluatorRequest(
         requestId = 123,

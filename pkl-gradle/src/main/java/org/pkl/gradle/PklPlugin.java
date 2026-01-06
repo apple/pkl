@@ -326,6 +326,14 @@ public class PklPlugin implements Plugin<Project> {
     spec.getTestPort().convention(-1);
 
     spec.getHttpNoProxy().convention(List.of());
+
+    var gradleProjectDir =
+        project.provider(
+            () -> project.getLayout().getProjectDirectory().getAsFile().getAbsolutePath());
+    spec.getExternalModuleReaders()
+        .configureEach(reader -> reader.getWorkingDir().convention(gradleProjectDir));
+    spec.getExternalResourceReaders()
+        .configureEach(reader -> reader.getWorkingDir().convention(gradleProjectDir));
   }
 
   private void configureCodeGenSpec(Project project, CodeGenSpec spec) {

@@ -110,7 +110,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {
     @Suppress("PklCliDirectProjectEvaluatorSettingsAccess")
-    if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
+    if (cliOptions.omitProjectSettings) null else project?.resolvedEvaluatorSettings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
@@ -193,11 +193,11 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (evaluatorSettings?.externalModuleReaders ?: emptyMap()) + cliOptions.externalModuleReaders
+    cliOptions.externalModuleReaders ?: evaluatorSettings?.externalModuleReaders ?: mapOf()
   }
 
   protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (evaluatorSettings?.externalResourceReaders ?: emptyMap()) + cliOptions.externalResourceReaders
+    cliOptions.externalResourceReaders ?: evaluatorSettings?.externalResourceReaders ?: mapOf()
   }
 
   private val externalProcesses:

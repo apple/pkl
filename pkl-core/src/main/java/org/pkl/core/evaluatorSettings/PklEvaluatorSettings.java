@@ -26,7 +26,6 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
@@ -57,17 +56,13 @@ public record PklEvaluatorSettings(
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
-  public static PklEvaluatorSettings parse(
-      Value input, BiFunction<? super String, ? super String, Path> pathNormalizer) {
+  public static PklEvaluatorSettings parse(Value input) {
     if (!(input instanceof PObject pSettings)) {
       throw PklBugException.unreachableCode();
     }
 
     var moduleCacheDirStr = (String) pSettings.get("moduleCacheDir");
-    var moduleCacheDir =
-        moduleCacheDirStr == null
-            ? null
-            : pathNormalizer.apply(moduleCacheDirStr, "moduleCacheDir");
+    var moduleCacheDir = moduleCacheDirStr == null ? null : Path.of(moduleCacheDirStr);
 
     var allowedModulesStrs = (List<String>) pSettings.get("allowedModules");
     var allowedModules =
@@ -82,13 +77,10 @@ public record PklEvaluatorSettings(
             : allowedResourcesStrs.stream().map(Pattern::compile).toList();
 
     var modulePathStrs = (List<String>) pSettings.get("modulePath");
-    var modulePath =
-        modulePathStrs == null
-            ? null
-            : modulePathStrs.stream().map(it -> pathNormalizer.apply(it, "modulePath")).toList();
+    var modulePath = modulePathStrs == null ? null : modulePathStrs.stream().map(Path::of).toList();
 
     var rootDirStr = (String) pSettings.get("rootDir");
-    var rootDir = rootDirStr == null ? null : pathNormalizer.apply(rootDirStr, "rootDir");
+    var rootDir = rootDirStr == null ? null : Path.of(rootDirStr);
 
     var externalModuleReadersRaw = (Map<String, Value>) pSettings.get("externalModuleReaders");
     var externalModuleReaders =
@@ -219,13 +211,16 @@ public record PklEvaluatorSettings(
     }
   }
 
-  public record ExternalReader(String executable, @Nullable List<String> arguments) {
+  public record ExternalReader(
+      String executable, @Nullable List<String> arguments, @Nullable String workingDir) {
     @SuppressWarnings("unchecked")
     public static ExternalReader parse(Value input) {
       if (input instanceof PObject externalReader) {
         var executable = (String) externalReader.getProperty("executable");
         var arguments = (List<String>) externalReader.get("arguments");
-        return new ExternalReader(executable, arguments);
+        var workingDir = externalReader.getProperty("workingDir");
+        return new ExternalReader(
+            executable, arguments, workingDir instanceof PNull ? null : (String) workingDir);
       }
       throw PklBugException.unreachableCode();
     }

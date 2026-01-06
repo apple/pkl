@@ -304,6 +304,8 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     externalReaderProcesses
       .computeIfAbsent(evaluatorId) { ConcurrentHashMap() }
       .computeIfAbsent(spec) {
-        ExternalReaderProcess.of(PklEvaluatorSettings.ExternalReader(it.executable, it.arguments))
+        ExternalReaderProcess.of(
+          PklEvaluatorSettings.ExternalReader(it.executable, it.arguments, it.workingDir)
+        )
       }
 }

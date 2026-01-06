@@ -191,23 +191,32 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 /// Evaluator settings do not get published as part of a package.
 /// It is not possible for a package dependency to influence the evaluator settings of a project.
 ///
-/// The following values can only be set if this is a file-based project.
+/// The following values can only be set if this is a file-based project:
 ///
 ///  - [modulePath][EvaluatorSettings.modulePath]
 ///  - [rootDir][EvaluatorSettings.rootDir]
 ///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
-///
-/// For each of these, relative paths are resolved against the project's enclosing directory.
+///  - [externalModuleReaders][EvaluatorSettings.externalModuleReaders]
+///  - [externalResourceReaders][EvaluatorSettings.externalResourceReaders]
 evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
   (moduleCacheDir != null).implies(isFileBasedProject),
+  (externalModuleReaders != null).implies(isFileBasedProject),
+  (externalResourceReaders != null).implies(isFileBasedProject),
 )
+
+/// The [evaluatorSettings] resolved against the project dir.
+@Since { version = "0.32.0" }
+fixed resolvedEvaluatorSettings: EvaluatorSettingsModule = evaluatorSettings.resolve(projectFileUri)
 
 /// The URI of the PklProject file.
 ///
-/// This value is used to resolve relative paths when importing another local project as a
-/// dependency.
+/// This value is used to:
+///
+///  * Resolve relative paths when importing another local project as a
+///    dependency.
+///  * Resolve relative paths declared within [evaluatorSettings].
 projectFileUri: String = reflect.Module(module).uri
 
 /// Instantiates a project definition within the enclosing module.
@@ -229,7 +238,8 @@ local const hasVersion = (it: Uri) ->
     if (versionSep == -1)
       false
     else
-      let (version = it.drop(versionSep + 1)) semver.parseOrNull(version) != null
+      let (version = it.drop(versionSep + 1))
+        semver.parseOrNull(version) != null
 
 typealias PackageUri = Uri(startsWith("package:"), hasVersion)
 

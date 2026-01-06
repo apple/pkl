@@ -28,12 +28,12 @@ import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.util.IoUtils
 
 @OptIn(ExperimentalPathApi::class)
 class CliCommandTest {
-
   private val cmd =
     object : BaseCommand("test", "") {
       val projectOptions: ProjectOptions by ProjectOptions()
@@ -171,5 +171,33 @@ class CliCommandTest {
           .overridingErrorMessage("project evaluator settings returned null for ${it.name}")
           .isNotNull
       }
+  }
+
+  @Test
+  fun `--external-module-reader blows away PklProject externalModuleReaders`(
+    @TempDir tempDir: Path
+  ) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        // language=pkl
+        """
+        amends "pkl:Project"
+
+        evaluatorSettings {
+          externalModuleReaders {
+            ["foo"] {
+              executable = "foo"
+            }
+          }
+        }
+        """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--external-module-reader", "bar=bar"))
+    val opts = cmd.baseOptions.baseOptions(emptyList(), null, true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myExternalModuleReaders)
+      .isEqualTo(mapOf("bar" to PklEvaluatorSettings.ExternalReader("bar", listOf(), null)))
   }
 }

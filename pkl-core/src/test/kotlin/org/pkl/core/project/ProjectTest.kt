@@ -18,6 +18,7 @@ package org.pkl.core.project
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern
+import kotlin.io.path.createDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -153,10 +154,55 @@ class ProjectTest {
     )
     val project = Project.loadFromPath(projectPath)
     assertThat(project.`package`).isEqualTo(expectedPackage)
-    assertThat(project.evaluatorSettings).isEqualTo(expectedSettings)
+    assertThat(project.resolvedEvaluatorSettings).isEqualTo(expectedSettings)
     assertThat(project.annotations).isEqualTo(expectedAnnotations)
     assertThat(project.tests)
       .isEqualTo(listOf(path.resolve("test1.pkl"), path.resolve("test2.pkl")))
+  }
+
+  @Test
+  fun `loadFromPath() resolvedEvaluatorSettings`(@TempDir path: Path) {
+    val projectPath =
+      path.resolve("PklProject").also {
+        it.writeString(
+          """
+          amends "pkl:Project"
+
+          projectFileUri = "file:///path/to/PklProject"
+
+          evaluatorSettings {
+            rootDir = "."
+            moduleCacheDir = "cache/"
+            modulePath {
+              "modulepath1/"
+              "modulepath2/"
+            }
+          }
+          """
+            .trimIndent()
+        )
+      }
+    val project = Project.loadFromPath(projectPath)
+    assertThat(project.resolvedEvaluatorSettings)
+      .usingRecursiveComparison()
+      .isEqualTo(
+        PklEvaluatorSettings(
+          null,
+          null,
+          null,
+          null,
+          null,
+          null,
+          Path.of("/path/to/cache/"),
+          listOf(Path.of("/path/to/modulepath1/"), Path.of("/path/to/modulepath2/")),
+          null,
+          Path.of("/path/to"),
+          null,
+          null,
+          null,
+          null,
+        )
+      )
   }
 
   @Test
@@ -260,5 +306,60 @@ class ProjectTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `external readers -- executable path is relative to project dir`(@TempDir tempDir: Path) {
+    val projectDir = tempDir.resolve("project").also { it.createDirectories() }
+    val pklProject =
+      projectDir.resolve("PklProject").also {
+        it.writeString(
+          // language=pkl
+          """
+          amends "pkl:Project"
+
+          evaluatorSettings {
+            externalModuleReaders {
+              ["foo"] {
+                executable = "foo/bar/baz"
+              }
+            }
+          }
+          """
+            .trimIndent()
+        )
+      }
+    val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
+    assertThat(project.resolvedEvaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.resolvedEvaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo(projectDir.resolve("foo/bar/baz").toString())
+  }
+
+  @Test
+  fun `external readers -- executable is unmodified simple name`(@TempDir tempDir: Path) {
+    val projectDir = tempDir.resolve("project").also { it.createDirectories() }
+    val pklProject =
+      projectDir.resolve("PklProject").also {
+        it.writeString(
+          // language=pkl
+          """
+          amends "pkl:Project"
+
+          evaluatorSettings {
+            externalModuleReaders {
+              ["foo"] {
+                executable = "my-command"
+              }
+            }
+          }
+          """
+            .trimIndent()
+        )
+      }
+
+    val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
+    assertThat(project.evaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo("my-command")
   }
 }
