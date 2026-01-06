@@ -1,0 +1,20 @@
+–– Pkl Error ––
+Type constraint `name?.contains("Bob") ?? false` violated.
+Value: new Bird { name = "Pigeon" }
+
+    name?.contains("Bob") ?? false
+    |     |               |
+    |     false           false
+    "Pigeon"
+
+x | p: Bird(name?.contains("Bob") ?? false) = new {
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at typeConstraints16#p (file:///$snippetsDir/input/errors/power/typeConstraints16.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
