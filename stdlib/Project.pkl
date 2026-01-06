@@ -196,12 +196,16 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 ///  - [modulePath][EvaluatorSettings.modulePath]
 ///  - [rootDir][EvaluatorSettings.rootDir]
 ///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
+///  - [externalModuleReaders][EvaluatorSettings.externalModuleReaders]
+///  - [externalResourceReaders][EvaluatorSettings.externalResourceReaders]
 ///
 /// For each of these, relative paths are resolved against the project's enclosing directory.
 evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
   (moduleCacheDir != null).implies(isFileBasedProject),
+  (externalModuleReaders != null).implies(isFileBasedProject),
+  (externalResourceReaders != null).implies(isFileBasedProject),
 )
 
 /// The URI of the PklProject file.

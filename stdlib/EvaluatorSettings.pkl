@@ -228,7 +228,7 @@ class ExternalReader {
   /// On macOS, Linux, and Windows platforms, this may be:
   ///
   ///   * An absolute path
-  ///   * A relative path (to the current working directory)
+  ///   * A relative path
   ///   * The name of the executable, to be resolved against the `PATH` environment variable 
   executable: String
 

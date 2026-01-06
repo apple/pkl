@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -186,14 +186,14 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       ?: settings.http?.rewrites()
   }
 
-  private val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (project?.evaluatorSettings?.externalModuleReaders ?: emptyMap()) +
-      cliOptions.externalModuleReaders
+  protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+    cliOptions.externalModuleReaders ?: project?.evaluatorSettings?.externalModuleReaders ?: mapOf()
   }
 
-  private val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (project?.evaluatorSettings?.externalResourceReaders ?: emptyMap()) +
-      cliOptions.externalResourceReaders
+  protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+    cliOptions.externalResourceReaders
+      ?: project?.evaluatorSettings?.externalResourceReaders
+      ?: mapOf()
   }
 
   private val externalProcesses:

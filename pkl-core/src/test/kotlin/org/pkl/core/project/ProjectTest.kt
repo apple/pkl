@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,12 @@
 package org.pkl.core.project
 
 import java.net.URI
+import java.nio.file.Files
 import java.nio.file.Path
+import java.nio.file.attribute.PosixFilePermission
 import java.util.regex.Pattern
+import kotlin.io.path.createDirectories
+import kotlin.io.path.createFile
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -31,6 +35,7 @@ import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
 import org.pkl.core.packages.PackageUri
+import org.pkl.core.util.IoUtils
 
 class ProjectTest {
   @Test
@@ -260,5 +265,71 @@ class ProjectTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `external readers -- executable path is relative to project dir`(@TempDir tempDir: Path) {
+    val projectDir = tempDir.resolve("project").also { it.createDirectories() }
+    val pklProject =
+      projectDir.resolve("PklProject").also {
+        it.writeString(
+          // language=pkl
+          """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "foo"
+          }
+        }
+      }
+      """
+            .trimIndent()
+        )
+      }
+    val executableName = if (IoUtils.isWindows()) "foo.cmd" else "foo"
+    val executable =
+      projectDir.resolve(executableName).also {
+        it.createFile()
+        if (!IoUtils.isWindows()) {
+          Files.setPosixFilePermissions(it, setOf(PosixFilePermission.OWNER_EXECUTE))
+        }
+      }
+    val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
+    assertThat(project.evaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo(executable.toAbsolutePath().toString())
+  }
+
+  @Test
+  fun `external readers -- executable is unmodified if not resolvable relative to project dir`(
+    @TempDir tempDir: Path
+  ) {
+    // echo exists in POSIX and also Windows (both command prompt and PowerShell)
+    val projectDir = tempDir.resolve("project").also { it.createDirectories() }
+    val pklProject =
+      projectDir.resolve("PklProject").also {
+        it.writeString(
+          // language=pkl
+          """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "echo"
+          }
+        }
+      }
+      """
+            .trimIndent()
+        )
+      }
+
+    val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
+    assertThat(project.evaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo("echo")
   }
 }

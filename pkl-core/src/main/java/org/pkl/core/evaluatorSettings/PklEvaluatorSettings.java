@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.evaluatorSettings;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -56,7 +57,7 @@ public record PklEvaluatorSettings(
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
   public static PklEvaluatorSettings parse(
-      Value input, BiFunction<? super String, ? super String, Path> pathNormalizer) {
+      Value input, BiFunction<String, String, Path> pathNormalizer) {
     if (!(input instanceof PObject pSettings)) {
       throw PklBugException.unreachableCode();
     }
@@ -95,7 +96,8 @@ public record PklEvaluatorSettings(
             : externalModuleReadersRaw.entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
+                        Entry::getKey,
+                        entry -> ExternalReader.parse(entry.getValue(), pathNormalizer)));
 
     var externalResourceReadersRaw = (Map<String, Value>) pSettings.get("externalResourceReaders");
     var externalResourceReaders =
@@ -104,7 +106,8 @@ public record PklEvaluatorSettings(
             : externalResourceReadersRaw.entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
+                        Entry::getKey,
+                        entry -> ExternalReader.parse(entry.getValue(), pathNormalizer)));
 
     var color = (String) pSettings.get("color");
     var traceMode = (String) pSettings.get("traceMode");
@@ -190,10 +193,15 @@ public record PklEvaluatorSettings(
 
   public record ExternalReader(String executable, @Nullable List<String> arguments) {
     @SuppressWarnings("unchecked")
-    public static ExternalReader parse(Value input) {
+    public static ExternalReader parse(
+        Value input, BiFunction<String, String, Path> pathNormalizer) {
       if (input instanceof PObject externalReader) {
         var executable = (String) externalReader.getProperty("executable");
+        var executablePath = pathNormalizer.apply(executable, "executable");
         var arguments = (List<String>) externalReader.get("arguments");
+        if (Files.exists(executablePath)) {
+          return new ExternalReader(executablePath.toString(), arguments);
+        }
         return new ExternalReader(executable, arguments);
       }
       throw PklBugException.unreachableCode();
