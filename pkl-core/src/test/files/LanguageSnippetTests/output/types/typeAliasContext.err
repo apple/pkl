@@ -3,7 +3,7 @@ Type constraint `endsWith(lastName)` violated.
 Value: "Jimmy Bird"
 
     endsWith(lastName)
-    |        |
+    │        │
     false    "Birdo"
 
 x | typealias Birds = Listing<String(endsWith(lastName))>

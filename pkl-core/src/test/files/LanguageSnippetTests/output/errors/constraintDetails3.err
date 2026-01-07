@@ -3,8 +3,8 @@ Type constraint `toList().every((it: Listing<Bird>) -> it[0].name == "Bob")` vio
 Value: new Listing { new Listing { new Bird { name = "Eagle" }; new Bird { name = ? ...
 
     toList().every((it: Listing<Bird>) -> it[0].name == "Bob")
-    |        |
-    |        false
+    │        │
+    │        false
     List(new Listing { new Bird { name = "Eagle" }; new Bird { name = ? } })
 
 x | foo: Listing(toList().every((it: Listing<Bird>) -> it[0].name == "Bob")) = new {

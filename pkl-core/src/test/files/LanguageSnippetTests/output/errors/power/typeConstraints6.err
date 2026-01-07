@@ -4,15 +4,15 @@ Value: "hello"
 
     (it: String) ->
     let (first = it.take(1).toUpperCase())
-                 |  |       |
-                 |  "h"     "H"
+                 │  │       │
+                 │  "h"     "H"
                  "hello"
 
       it == "\(first)\(it.drop(1))"
-      |  |  |  |       |  |
-      |  |  |  "H"     |  "ello"
-      |  |  "Hello"    "hello"
-      |  false
+      │  │  │  │       │  │
+      │  │  │  "H"     │  "ello"
+      │  │  "Hello"    "hello"
+      │  false
       "hello"
 
 x | foo: String(isCapitalized) = "hello"

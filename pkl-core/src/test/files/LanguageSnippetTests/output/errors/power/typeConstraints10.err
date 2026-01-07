@@ -3,10 +3,10 @@ Type constraint `this == new Dynamic { ...list }` violated.
 Value: new Dynamic {}
 
     this == new Dynamic { ...list }
-    |    |  |                |
-    |    |  |                List(1, 2, 3)
-    |    |  new Dynamic { 1; 2; 3 }
-    |    false
+    │    │  │                │
+    │    │  │                List(1, 2, 3)
+    │    │  new Dynamic { 1; 2; 3 }
+    │    false
     new Dynamic {}
 
 x | foo: Dynamic(this == new Dynamic { ...list })

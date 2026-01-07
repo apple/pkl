@@ -3,10 +3,10 @@ Type constraint `firstOneIsSandy` violated.
 Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
     (it: Listing<Bird>) -> it[0].name == "Sandy"
-                           | |   |    |
-                           | |   |    false
-                           | |   "Bob"
-                           | new Bird { name = "Bob" }
+                           │ │   │    │
+                           │ │   │    false
+                           │ │   "Bob"
+                           │ new Bird { name = "Bob" }
                            new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
 x | birds: Listing(firstOneIsSandy) = new {

@@ -3,7 +3,7 @@ Type constraint `startsWith(super.name)` violated.
 Value: "Bubby"
 
     startsWith(super.name)
-    |                |
+    │                │
     false            "Foo"
 
 x | bub: String(startsWith(super.name)) = "Bubby"

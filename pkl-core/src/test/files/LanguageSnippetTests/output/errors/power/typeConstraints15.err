@@ -11,8 +11,8 @@ at typeConstraints15#foo (file:///$snippetsDir/input/errors/power/typeConstraint
   Value: "bar"
 
       this == "foo"
-      |    |
-      |    false
+      │    │
+      │    false
       "bar"
 
 * Value is not of type `String(this == "qux")` because:
@@ -20,8 +20,8 @@ at typeConstraints15#foo (file:///$snippetsDir/input/errors/power/typeConstraint
   Value: "bar"
 
       this == "qux"
-      |    |
-      |    false
+      │    │
+      │    false
       "bar"
 
 x | foo: String(this == "foo") | String(this == "qux") = "bar"

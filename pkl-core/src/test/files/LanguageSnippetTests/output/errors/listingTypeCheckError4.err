@@ -3,7 +3,7 @@ Type constraint `endsWith("ga")` violated.
 Value: "hola"
 
     endsWith("ga")
-    |
+    │
     false
 
 x | res: Listing<String(!isEmpty)> = new Listing<String(endsWith("ga"))> {

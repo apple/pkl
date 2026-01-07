@@ -3,8 +3,8 @@ Type constraint `this.length > 5` violated.
 Value: "bob"
 
     this.length > 5
-    |    |      |
-    |    3      false
+    │    │      │
+    │    3      false
     "bob"
 
 x | foo: String(true, this.length > 5) = "bob"

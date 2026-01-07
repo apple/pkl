@@ -3,7 +3,7 @@ Type constraint `isBetween(0, 65535)` violated.
 Value: -1
 
     isBetween(0, 65535)
-    |
+    │
     false
 
 xxxx | typealias UInt16 = Int(isBetween(0, 65535))

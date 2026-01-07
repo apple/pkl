@@ -3,7 +3,7 @@ Type constraint `!(this is Null)` violated.
 Value: null
 
     !(this is Null)
-    |
+    │
     false
 
 xx | typealias NonNull = Any(!(this is Null))

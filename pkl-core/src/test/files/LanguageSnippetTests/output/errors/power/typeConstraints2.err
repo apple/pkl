@@ -3,8 +3,8 @@ Type constraint `startsWith(bub.name)` violated.
 Value: "Huzzah"
 
     startsWith(bub.name)
-    |          |   |
-    false      |   "Bub"
+    │          │   │
+    false      │   "Bub"
                new Person { name = "Bub" }
 
 x | foo: String(startsWith(bub.name)) = "Huzzah"

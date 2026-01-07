@@ -3,9 +3,9 @@ Type constraint `this == new Dynamic { for (elem in list) { elem + 1 } }` violat
 Value: new Dynamic {}
 
     this == new Dynamic { for (elem in list) { elem + 1 } }
-    |    |  |                          |
-    |    |  new Dynamic { 2 }          List(1)
-    |    false
+    │    │  │                          │
+    │    │  new Dynamic { 2 }          List(1)
+    │    false
     new Dynamic {}
 
 x | foo: Dynamic(this == new Dynamic { for (elem in list) { elem + 1 } })

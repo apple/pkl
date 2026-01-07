@@ -3,8 +3,8 @@ Type constraint `this == "foo"` violated.
 Value: "bar"
 
     this == "foo"
-    |    |
-    |    false
+    │    │
+    │    false
     "bar"
 
 x | foo: String(this == "foo") = "bar"

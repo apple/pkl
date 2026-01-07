@@ -92,7 +92,7 @@ class EvaluateTestsTest {
       .isEqualTo(
         """
       1 == 2 (repl:text)
-        |
+        │
         false
       """
           .trimIndent()
@@ -103,7 +103,7 @@ class EvaluateTestsTest {
       .isEqualTo(
         """
       "foo" == "bar" (repl:text)
-            |
+            │
             false
       """
           .trimIndent()

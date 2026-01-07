@@ -3,8 +3,8 @@ Type constraint `name?.contains("Bob") ?? false` violated.
 Value: new Bird { name = "Pigeon" }
 
     name?.contains("Bob") ?? false
-    |     |               |
-    |     false           false
+    │     │               │
+    │     false           false
     "Pigeon"
 
 x | p: Bird(name?.contains("Bob") ?? false) = new {
