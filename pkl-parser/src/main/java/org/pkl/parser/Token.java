@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -186,6 +186,35 @@ public enum Token {
           CASE,
           SWITCH,
           VARARG ->
+          true;
+      default -> false;
+    };
+  }
+
+  public boolean isOperator() {
+    return switch (this) {
+      case POW,
+          STAR,
+          DIV,
+          INT_DIV,
+          MOD,
+          PLUS,
+          MINUS,
+          GT,
+          GTE,
+          LT,
+          LTE,
+          IS,
+          AS,
+          EQUAL,
+          NOT_EQUAL,
+          AND,
+          OR,
+          PIPE,
+          COALESCE,
+          DOT,
+          QDOT,
+          LBRACK ->
           true;
       default -> false;
     };

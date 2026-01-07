@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,13 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.Collections;
 import java.util.Deque;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.pkl.core.StackFrame;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 import org.pkl.parser.Lexer;
 
@@ -29,38 +32,40 @@ public final class VmUndefinedValueException extends VmEvalException {
   private final @Nullable Object receiver;
 
   public VmUndefinedValueException(
-      String message,
+      @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
-      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       @Nullable Object receiver,
-      Map<CallTarget, StackFrame> insertedStackFrames) {
+      @Nullable Map<CallTarget, StackFrame> insertedStackFrames) {
 
     super(
         message,
         cause,
         isExternalMessage,
         messageArguments,
+        messageBuilder,
         programValues,
         location,
         sourceSection,
         memberName,
-        hint,
-        insertedStackFrames);
+        hintBuilder,
+        insertedStackFrames == null ? Collections.emptyMap() : insertedStackFrames);
 
     this.receiver = receiver;
   }
 
   public VmUndefinedValueException fillInHint(Deque<Object> path, Object topLevelValue) {
-    if (hint != null) return this;
+    if (hintBuilder != null) return this;
+    var builder = new StringBuilder();
     var memberKey = getMessageArguments()[0];
     path.push(memberKey);
-    var builder = new StringBuilder();
     builder.append("The above error occurred when rendering path `");
     renderPath(builder, path);
     builder.append('`');
@@ -72,7 +77,7 @@ public final class VmUndefinedValueException extends VmEvalException {
           .append('`');
     }
     builder.append('.');
-    hint = builder.toString();
+    this.hintBuilder = (b, ignored) -> b.append(builder.toString());
     return this;
   }
 

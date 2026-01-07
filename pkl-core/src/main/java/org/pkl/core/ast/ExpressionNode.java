@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,12 +16,18 @@
 package org.pkl.core.ast;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
+import com.oracle.truffle.api.instrumentation.Tag;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.runtime.PklTags;
 import org.pkl.core.runtime.VmTypesGen;
 import org.pkl.core.runtime.VmUtils;
 
-public abstract class ExpressionNode extends PklNode {
+@GenerateWrapper
+public abstract class ExpressionNode extends PklNode implements InstrumentableNode {
   protected ExpressionNode(SourceSection sourceSection) {
     super(sourceSection);
   }
@@ -42,5 +48,20 @@ public abstract class ExpressionNode extends PklNode {
 
   public boolean executeBoolean(VirtualFrame frame) throws UnexpectedResultException {
     return VmTypesGen.expectBoolean(executeGeneric(frame));
+  }
+
+  @Override
+  public boolean hasTag(Class<? extends Tag> tag) {
+    return tag == PklTags.Expression.class;
+  }
+
+  @Override
+  public boolean isInstrumentable() {
+    return true;
+  }
+
+  @Override
+  public WrapperNode createWrapper(ProbeNode probe) {
+    return new ExpressionNodeWrapper(this, probe);
   }
 }

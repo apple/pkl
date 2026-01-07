@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,11 @@ public class GenericParser {
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
     spanLookahead = _lookahead.span;
+  }
+
+  public Node parseExpression(String source) {
+    init(source);
+    return parseExpr();
   }
 
   public Node parseModule(String source) {
