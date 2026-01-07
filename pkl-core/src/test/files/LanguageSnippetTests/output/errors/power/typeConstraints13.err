@@ -3,10 +3,10 @@ Type constraint `this == "Hello, \(name)"` violated.
 Value: "Hello, Patty"
 
     this == "Hello, \(name)"
-    |    |  |         |
-    |    |  |         "Bub"
-    |    |  "Hello, Bub"
-    |    false
+    │    │  │         │
+    │    │  │         "Bub"
+    │    │  "Hello, Bub"
+    │    false
     "Hello, Patty"
 
 x | foo: String(this == "Hello, \(name)") = "Hello, Patty"

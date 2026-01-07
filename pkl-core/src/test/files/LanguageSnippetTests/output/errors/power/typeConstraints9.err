@@ -3,8 +3,8 @@ Type constraint `IntSeq(1, 5).toList().contains(this)` violated.
 Value: 10
 
     IntSeq(1, 5).toList().contains(this)
-                 |        |        |
-                 |        false    10
+                 │        │        │
+                 │        false    10
                  List(1, 2, 3, 4, 5)
 
 x | foo: Int(IntSeq(1, 5).toList().contains(this)) = 10

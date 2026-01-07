@@ -3,10 +3,10 @@ Type constraint `isCapitalized` violated.
 Value: "hello"
 
     (it: String) -> it == it.capitalize()
-                    |  |  |  |
-                    |  |  |  "Hello"
-                    |  |  "hello"
-                    |  false
+                    │  │  │  │
+                    │  │  │  "Hello"
+                    │  │  "hello"
+                    │  false
                     "hello"
 
 x | foo: String(isCapitalized) = "hello"

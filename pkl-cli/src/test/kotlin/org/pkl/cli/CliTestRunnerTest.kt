@@ -101,10 +101,10 @@ class CliTestRunnerTest {
           facts
             ✘ fail
                4 == 9 (/tempDir/test.pkl, line xx)
-                 |
+                 │
                  false
                1 == 5 (/tempDir/test.pkl, line xx)
-                 |
+                 │
                  false
 
         0.0% tests pass [1/1 failed], 0.0% asserts pass [2/2 failed]
@@ -289,7 +289,7 @@ class CliTestRunnerTest {
           <testcase classname="test.facts" name="foo"></testcase>
           <testcase classname="test.facts" name="bar">
               <failure message="Fact Failure">5 == 9 (/tempDir/test.pkl, line xx)
-        |
+        │
         false</failure>
           </testcase>
           <system-err><![CDATA[9 = 9
@@ -494,7 +494,7 @@ class CliTestRunnerTest {
                 <testcase classname="test1.facts" name="foo"></testcase>
                 <testcase classname="test1.facts" name="bar">
                     <failure message="Fact Failure">5 == 9 (/tempDir/test1.pkl, line xx)
-          |
+          │
           false</failure>
                 </testcase>
             </testsuite>

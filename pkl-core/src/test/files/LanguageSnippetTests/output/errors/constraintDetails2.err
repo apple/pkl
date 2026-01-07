@@ -4,14 +4,14 @@ Type constraint `let (myself: Listing<Bird> = this)
 Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
     let (myself: Listing<Bird> = this)
-                                 |
+                                 │
                                  new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
     myself[0].name == "Sandy"
-    |     |   |    |
-    |     |   |    false
-    |     |   "Bob"
-    |     new Bird { name = "Bob" }
+    │     │   │    │
+    │     │   │    false
+    │     │   "Bob"
+    │     new Bird { name = "Bob" }
     new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
 x | let (myself: Listing<Bird> = this)

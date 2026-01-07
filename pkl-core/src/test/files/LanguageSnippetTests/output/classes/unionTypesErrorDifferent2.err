@@ -11,7 +11,7 @@ at unionTypesErrorDifferent2#X.a (file:///$snippetsDir/input/classes/unionTypesE
   Value: List(1, 2, 3)
 
       length > 3
-      |      |
+      │      │
       3      false
 
 x | a = List(1, 2, 3)

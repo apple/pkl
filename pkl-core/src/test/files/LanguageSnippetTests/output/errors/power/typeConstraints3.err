@@ -6,22 +6,22 @@ Type constraint `this
 Value: 4
 
     this
-    |
+    │
     4
 
     + two
-    | |
-    | 2
+    │ │
+    │ 2
     4.666666666666667
 
       / three
-      | |
-      | 3
+      │ │
+      │ 3
       0.6666666666666666
 
     == four
-    |  |
-    |  4
+    │  │
+    │  4
     false
 
 x | foo: Int(this

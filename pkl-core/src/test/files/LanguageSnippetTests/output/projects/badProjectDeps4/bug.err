@@ -12,24 +12,24 @@ at pkl.Project#dependencies (pkl:Project)
 
       (it: Project) ->
       isUriLocal(projectFileUri, it.projectFileUri)
-      |          |               |  |
-      true       |               |  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
-                 |               new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
+      │          │               │  │
+      true       │               │  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
+                 │               new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
                  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
 
         && it.projectFileUri.endsWith("/PklProject")
-        |  |  |              |
-        |  |  |              true
-        |  |  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
-        |  new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
+        │  │  │              │
+        │  │  │              true
+        │  │  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
+        │  new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
         true
 
         && it != module
-        |  |  |
-        |  |  false
-        |  new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
+        │  │  │
+        │  │  false
+        │  new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
         false
 
         && it.package != null
-        |
+        │
         false

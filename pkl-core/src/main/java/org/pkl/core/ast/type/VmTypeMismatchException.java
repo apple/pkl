@@ -34,7 +34,7 @@ import org.pkl.core.util.Nullable;
 /**
  * Indicates that a type check failed. [TypeNode]s use this exception instead of [VmException] to
  * make type checking of union types efficient. Note that any [TruffleBoundary] between throw and
- * catch location of this exception must a `transferToInterpreterOnException = false`. (Currently
+ * catch location of this exception must set `transferToInterpreterOnException = false`. (Currently
  * there aren't any.)
  */
 public abstract class VmTypeMismatchException extends ControlFlowException {

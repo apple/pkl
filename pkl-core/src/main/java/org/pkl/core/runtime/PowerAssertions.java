@@ -328,15 +328,13 @@ public class PowerAssertions {
   }
 
   public static String trimLeadingWhitespace(String str, int n) {
-    var start = 0;
-    var count = 0;
+    var i = 0;
 
-    while (start < str.length() && count < n && Character.isWhitespace(str.charAt(start))) {
-      start++;
-      count++;
+    while (i < str.length() && i < n && Character.isWhitespace(str.charAt(i))) {
+      i++;
     }
 
-    return str.substring(start);
+    return str.substring(i);
   }
 
   private static boolean renderLine(
@@ -486,7 +484,7 @@ public class PowerAssertions {
 
     @Override
     public void appendTo(AnsiStringBuilder builder) {
-      builder.append(AnsiCode.FAINT, "|");
+      builder.append(AnsiCode.FAINT, "│");
     }
 
     @Override

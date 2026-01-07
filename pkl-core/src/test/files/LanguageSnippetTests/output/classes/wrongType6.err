@@ -3,8 +3,8 @@ Type constraint `!isEmpty` violated.
 Value: List()
 
     !isEmpty
-    ||
-    |true
+    ││
+    │true
     false
 
 x | names: List<String>(!isEmpty)

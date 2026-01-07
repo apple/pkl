@@ -3,8 +3,8 @@ Type constraint `this >= min` violated.
 Value: 3
 
     this >= min
-    |    |  |
-    3    |  4
+    │    │  │
+    3    │  4
          false
 
 x | max: Int(this >= min)
