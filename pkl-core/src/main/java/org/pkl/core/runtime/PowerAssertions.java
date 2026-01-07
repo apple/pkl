@@ -38,6 +38,7 @@ import org.pkl.core.ast.type.GetParentForTypeNode;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Lexer;
 import org.pkl.parser.Parser;
 import org.pkl.parser.Token;
@@ -473,7 +474,7 @@ public class PowerAssertions {
 
     @Override
     public void appendTo(AnsiStringBuilder builder) {
-      builder.append(src);
+      SyntaxHighlighter.writeTo(builder, src);
     }
   }
 
