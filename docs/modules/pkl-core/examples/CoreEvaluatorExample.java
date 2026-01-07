@@ -7,7 +7,7 @@ import org.pkl.core.PObject;
 import org.junit.jupiter.api.Test;
 
 // the pkl-jvm-examples repo has a similar example
-@SuppressWarnings({"unchecked", "unused", "ConstantConditions"})
+@SuppressWarnings({"unchecked", "unused", "ConstantConditions", "NewClassNamingConvention"})
 public class CoreEvaluatorExample {
   @Test
   public void usage() {

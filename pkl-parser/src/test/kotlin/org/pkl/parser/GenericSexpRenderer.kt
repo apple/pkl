@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,19 +69,6 @@ class GenericSexpRenderer(code: String) {
     }
     tab = oldTab
     buf.append(')')
-  }
-
-  private fun renderQualifiedAccess(node: Node) {
-    var children = node.children
-    if (children.last().type == NodeType.UNQUALIFIED_ACCESS_EXPR) {
-      children = children.dropLast(1) + collectChildren(children.last())
-    }
-    val toRender = mutableListOf<Node>()
-    for (child in children) {
-      if (child.type in IGNORED_CHILDREN || child.type == NodeType.OPERATOR) continue
-      toRender += child
-    }
-    doRender(name(node), toRender)
   }
 
   private fun renderDefaultUnionType(node: Node) {

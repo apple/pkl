@@ -4,7 +4,7 @@ import org.pkl.config.java.JavaType;
 import org.pkl.core.ModuleSource;
 import org.junit.jupiter.api.Test;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "NewClassNamingConvention"})
 // the pkl-jvm-examples repo has a similar example
 public class JavaConfigExample {
   @Test

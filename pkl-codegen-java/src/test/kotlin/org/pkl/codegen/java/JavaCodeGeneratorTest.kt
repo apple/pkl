@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -595,10 +595,7 @@ class JavaCodeGeneratorTest {
     assertAll(
       "toString() returns Pkl name",
       javaClass.enumConstants.zip(cases) { enumConstant, (pklName, _) ->
-        {
-          assertThat(enumConstant.toString()).isEqualTo(pklName)
-          Unit
-        }
+        { assertThat(enumConstant.toString()).isEqualTo(pklName) }
       },
     )
   }
@@ -2264,7 +2261,7 @@ class JavaCodeGeneratorTest {
   }
 
   private fun Map<String, String>.validateContents(
-    vararg assertions: kotlin.Pair<String, List<String>>
+    @Suppress("RemoveRedundantQualifierName") vararg assertions: kotlin.Pair<String, List<String>>
   ) {
     val files = toMutableMap()
 
@@ -2289,7 +2286,7 @@ class JavaCodeGeneratorTest {
   }
 
   private fun JavaCodeGeneratorOptions.generateFiles(
-    vararg pklModules: kotlin.Pair<String, String>
+    @Suppress("RemoveRedundantQualifierName") vararg pklModules: kotlin.Pair<String, String>
   ): Map<String, String> =
     generateFiles(*pklModules.map { (name, text) -> PklModule(name, text) }.toTypedArray())
 

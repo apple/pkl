@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,7 +27,8 @@ public final class DataSizeNodes {
   private DataSizeNodes() {}
 
   @ImportStatic(MathUtils.class)
-  public abstract static class value extends ExternalPropertyNode {
+  @PklName("value")
+  public abstract static class valueProperty extends ExternalPropertyNode {
     @Specialization(guards = "isMathematicalInteger(self.getValue())")
     protected long evalInt(VmDataSize self) {
       return (long) self.getValue();

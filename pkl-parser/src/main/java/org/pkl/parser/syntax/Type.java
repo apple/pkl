@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -73,7 +73,9 @@ public abstract sealed class Type extends AbstractNode {
 
     public StringConstant getStr() {
       assert children != null;
-      return (StringConstant) children.get(0);
+      var ret = (StringConstant) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 
@@ -89,7 +91,9 @@ public abstract sealed class Type extends AbstractNode {
 
     public QualifiedIdentifier getName() {
       assert children != null;
-      return (QualifiedIdentifier) children.get(0);
+      var ret = (QualifiedIdentifier) children.get(0);
+      assert ret != null;
+      return ret;
     }
 
     public @Nullable TypeArgumentList getArgs() {
@@ -110,7 +114,9 @@ public abstract sealed class Type extends AbstractNode {
 
     public Type getType() {
       assert children != null;
-      return (Type) children.get(0);
+      var ret = (Type) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 
@@ -126,7 +132,9 @@ public abstract sealed class Type extends AbstractNode {
 
     public Type getType() {
       assert children != null;
-      return (Type) children.get(0);
+      var ret = (Type) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 
@@ -142,7 +150,9 @@ public abstract sealed class Type extends AbstractNode {
 
     public Type getType() {
       assert children != null;
-      return (Type) children.get(0);
+      var ret = (Type) children.get(0);
+      assert ret != null;
+      return ret;
     }
 
     @SuppressWarnings("unchecked")
@@ -190,11 +200,11 @@ public abstract sealed class Type extends AbstractNode {
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
       if (o == null || getClass() != o.getClass()) {
         return false;
+      }
+      if (this == o) {
+        return true;
       }
       if (!super.equals(o)) {
         return false;
@@ -227,7 +237,9 @@ public abstract sealed class Type extends AbstractNode {
 
     public Type getRet() {
       assert children != null;
-      return (Type) children.get(children.size() - 1);
+      var ret = (Type) children.get(children.size() - 1);
+      assert ret != null;
+      return ret;
     }
   }
 }

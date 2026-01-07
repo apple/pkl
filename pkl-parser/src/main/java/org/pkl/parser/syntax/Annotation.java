@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,9 @@ public class Annotation extends AbstractNode {
 
   public Type getType() {
     assert children != null;
-    return (Type) children.get(0);
+    var ret = (Type) children.get(0);
+    assert ret != null;
+    return ret;
   }
 
   public @Nullable ObjectBody getBody() {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -112,7 +112,7 @@ internal val String.uriEncodedComponent
  * Follows `encodeURI` from ECMAScript.
  */
 internal val String.uriEncoded
-  get(): String = replace(Regex("([^;/?:@&=+\$,#]+)")) { it.value.uriEncodedComponent }
+  get(): String = replace(Regex("([^;/?:@&=+$,#]+)")) { it.value.uriEncodedComponent }
 
 fun getModulePath(moduleName: String, packagePrefix: String): String =
   moduleName.substring(packagePrefix.length).replace('.', '/')
