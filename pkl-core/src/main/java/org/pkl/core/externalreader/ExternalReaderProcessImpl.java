@@ -17,6 +17,8 @@ package org.pkl.core.externalreader;
 
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Map;
@@ -86,8 +88,26 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
     return ExternalResourceResolver.of(getTransport(), evaluatorId);
   }
 
-  private @Nullable String getExecutablePath(String executable) {
-    if (executable.contains("/") || executable.contains("\"")) {
+  private @Nullable String getExecutablePath(String executable)
+      throws ExternalReaderProcessException {
+    if (IoUtils.isUriLike(executable)) {
+      try {
+        var uri = new URI(executable);
+        if (!uri.getScheme().equalsIgnoreCase("file")) {
+          throw new ExternalReaderProcessException(
+              ErrorMessages.create("cannotSpawnNonFileExecutable", uri));
+        }
+        if (!uri.getPath().startsWith("/")) {
+          throw new ExternalReaderProcessException(
+              ErrorMessages.create("invalidOpaqueFileUri", uri));
+        }
+        return uri.getPath();
+      } catch (URISyntaxException e) {
+        throw new ExternalReaderProcessException(
+            ErrorMessages.create("invalidReaderExecutableUri", executable));
+      }
+    }
+    if (executable.contains("/")) {
       return executable;
     }
     var resolved = IoUtils.findExecutableOnPath(executable);
@@ -116,7 +136,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
     var executable = getExecutablePath(spec.executable());
     if (executable == null) {
       throw new ExternalReaderProcessException(
-          ErrorMessages.create("cannotFindCommand", spec.executable()));
+          ErrorMessages.create("cannotResolveExternalReaderCommand", spec.executable()));
     }
     command.add(executable);
     if (spec.arguments() != null) {

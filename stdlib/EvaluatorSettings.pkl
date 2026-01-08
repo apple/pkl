@@ -125,13 +125,13 @@ traceMode: ("compact" | "pretty")?
 hidden enclosingUri: String
 
 local function resolvePath(base: String, path: String) =
-  if (path.startsWith("/") || path.startsWith(Regex(#"([a-z]:)?\\"#)))
+  if (path.startsWith("/") || path is AbsoluteUri)
     path
   else
     "\(base)/\(path)"
 
 local function resolveExecutable(base: String, path: String) =
-  if (path.contains("/") || path.contains("\\"))
+  if (path.contains("/"))
     resolvePath(base, path)
   else
     path
@@ -285,6 +285,8 @@ class Proxy {
   noProxy: Listing<String>(isDistinct)
 }
 
+local typealias AbsoluteUri = String(matches(Regex(#"[\w+.-]+:[^\\].*"#)))
+
 @Since { version = "0.27.0" }
 class ExternalReader {
   /// The external reader executable.
@@ -292,66 +294,17 @@ class ExternalReader {
   /// Will be spawned with the same environment variables and working directory as the Pkl process.
   /// This may be:
   ///
-  ///   * An absolute path
-  ///   * A relative path
+  ///   * An absolute or relative path, delineated with `/`
+  ///   * A file URI
   ///   * The name of the executable, to be resolved against the `PATH` environment variable 
   ///
-  /// On Windows, it is acceptable to use either `\` or `/` as the path separator.
+  /// To represent a path within a drive on Windows, use a file URI (e.g.
+  /// `file:///C:/path/to/executable`).
   ///
   /// A simple name without slashes (e.g. `"my-command"`) is resolved against the `PATH`
   /// environment variable, rather than against the enclosing directory.
-  ///
-  /// To resolve this as a path, prefix it with `./` (or `.\` on Windows).
-  executable: String
+  executable: String((this is AbsoluteUri).implies(startsWith("file:/")))
 
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
-}
-
-/// Machiney for URI percent decoding.
-// TODO: replace me when URI stdlib is introduced
-@Unlisted
-local class Impl {
-  const percentDecode = (str: String) ->
-    str.replaceAllMapped(PERCENT_REGEX, (match) ->
-      let (bytes = getBytes(match.value))
-        doPercentDecode(bytes)
-    )
-
-  local const PERCENT_REGEX = Regex(#"(?:%[\da-fA-F]{2})+"#)
-
-  local const hexDigits = "0123456789ABCDEF"
-
-  local const function getBytes(str: String): List<UInt8> =
-    str
-      .split("%")
-      .drop(1)
-      .map((it) ->
-        let (msb = hexDigits.indexOf(it[0].toUpperCase()))
-        let (lsb = hexDigits.indexOf(it[1].toUpperCase()))
-          lsb + (msb * 16)
-      )
-
-  local const function doPercentDecode(bytes: List<UInt8>): String = _doPercentDecode(bytes, "")
-
-  local const function _doPercentDecode(bytes: List<UInt8>, ret: String) =
-    if (bytes.length == 0)
-      ret
-    else if (bytes[0] < 0x80)
-      _doPercentDecode(bytes.drop(1), ret + bytes[0].toChar())
-    else if (bytes[0] < 0xE0)
-      let (b0 = bytes[0].and(0x1f).shl(6))
-      let (b1 = bytes[1].and(0x3f))
-        _doPercentDecode(bytes.drop(2), ret + b0.or(b1).toChar())
-    else if (bytes[0] < 0xF0)
-      let (b0 = bytes[0].and(0xf).shl(12))
-      let (b1 = bytes[1].and(0x3f).shl(6))
-      let (b2 = bytes[2].and(0x3f))
-        _doPercentDecode(bytes.drop(3), ret + b0.or(b1).or(b2).toChar())
-    else
-      let (b0 = bytes[0].and(0x7).shl(18))
-      let (b1 = bytes[1].and(0x3f).shl(12))
-      let (b2 = bytes[2].and(0x3f).shl(6))
-      let (b3 = bytes[3].and(0x3f))
-        _doPercentDecode(bytes.drop(4), ret + b0.or(b1).or(b2).or(b3).toChar())
 }

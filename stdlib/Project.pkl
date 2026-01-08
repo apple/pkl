@@ -208,19 +208,20 @@ evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),
   (moduleCacheDir != null).implies(isFileBasedProject),
-  (!relativeExecutables(externalModuleReaders).isEmpty).implies(isFileBasedProject),
-  (!relativeExecutables(externalResourceReaders).isEmpty).implies(isFileBasedProject),
+  pathBasedExecutables(externalModuleReaders).isNotEmpty.implies(isFileBasedProject),
+  pathBasedExecutables(externalResourceReaders).isNotEmpty.implies(isFileBasedProject),
 )
 
-local function relativeExecutables(
+/// The executables that are path segments (those that contain `/` characters)
+local function pathBasedExecutables(
   it: Mapping<String, EvaluatorSettingsModule.ExternalReader>?,
 ): List<String> =
-  if (it == null)
-    List()
-  else
-    let (executables = it.toMap().values.map((it) -> it.executable))
-    let (relativeExecutables = executables.filter((it) -> it.contains("/") || it.contains("\\")))
-      relativeExecutables
+  it
+    ?.toMap()
+    ?.values
+    ?.map((it) -> it.executable)
+    ?.filter((it) -> it.contains("/"))
+    ?? List()
 
 /// The evaluator settings, whose various settings are resolved against the project root dir.
 @Since { version = "0.31.0" }

@@ -1,0 +1,11 @@
+–– Pkl Error ––
+Type constraint `pathBasedExecutables(externalModuleReaders).isNotEmpty.implies(isFileBasedProject)` violated.
+Value: new ModuleClass { externalProperties = ?; env = ?; allowedModules = ?; allowe...
+
+xxx | pathBasedExecutables(externalModuleReaders).isNotEmpty.implies(isFileBasedProject),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.Project#evaluatorSettings (pkl:Project)
+
+x | evaluatorSettings {
+    ^^^^^^^^^^^^^^^^^^^
+at PklProject#evaluatorSettings (file:///$snippetsDir/input/projects/badPklProject7/PklProject)

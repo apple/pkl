@@ -338,7 +338,31 @@ class ProjectTest {
       )
     assertThatCode { Project.load(src) }
       .hasMessageContaining(
-        "Type constraint `(!relativeExecutables(externalModuleReaders).isEmpty).implies(isFileBasedProject)` violated"
+        "Type constraint `pathBasedExecutables(externalModuleReaders).isNotEmpty.implies(isFileBasedProject)` violated."
+      )
+  }
+
+  @Test
+  fun `cannot set non-file URI`() {
+    val src =
+      ModuleSource.text(
+        // language=pkl
+        """
+      amends "pkl:Project"
+      
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "qux:///path/to/executable"
+          }
+        }
+      }
+    """
+          .trimIndent()
+      )
+    assertThatCode { Project.load(src) }
+      .hasMessageContaining(
+        "Type constraint `(this is AbsoluteUri).implies(startsWith(\"file:/\"))` violated."
       )
   }
 }
