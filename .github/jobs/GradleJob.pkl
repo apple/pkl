@@ -3,7 +3,7 @@ abstract module GradleJob
 extends "PklJob.pkl"
 
 import "@gha/Workflow.pkl"
-import "@gha/catalog.pkl"
+import "@pkl.impl.ghactions/catalog.pkl"
 
 /// Whether this is a release build or not.
 isRelease: Boolean = false
@@ -83,7 +83,6 @@ fixed job {
       with {
         `java-version` = "21"
         distribution = "temurin"
-        cache = "gradle"
         architecture =
           if (arch == "amd64")
             "x64"
@@ -91,6 +90,7 @@ fixed job {
             "aarch64"
       }
     }
+    catalog.`gradle/actions/setup-gradle@v5`
     ...module.steps
   }
 }

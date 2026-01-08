@@ -10,9 +10,9 @@
     },
     "package://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1": {
       "type": "remote",
-      "uri": "projectpackage://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1.1.6",
+      "uri": "projectpackage://pkg.pkl-lang.org/pkl-project-commons/pkl.impl.ghactions@1.2.0",
       "checksums": {
-        "sha256": "efe36e694f45b0804c5fcc746774727c016c866478b8c1eb0ea86d00c8bd8cf2"
+        "sha256": "2f60e7167eab8728c4f60196fd5b6e9965723797528a859f36eb0ecbd2db2909"
       }
     },
     "package://pkg.pkl-lang.org/pkl-pantry/pkl.experimental.deepToTyped@1": {
