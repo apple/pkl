@@ -11,11 +11,23 @@ facts {
     !str1.isEmpty
   }
 
+  ["isNotEmpty"] {
+    !"".isNotEmpty
+    str1.isNotEmpty
+  }
+
   ["isBlank"] {
     "".isBlank
     "   ".isBlank
     "\t\n\r".isBlank
     !str1.isBlank
+  }
+
+  ["isNotBlank"] {
+    !"".isNotBlank
+    !"   ".isNotBlank
+    !"\t\n\r".isNotBlank
+    str1.isNotBlank
   }
 
   ["isBase64"] {

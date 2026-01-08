@@ -1204,6 +1204,16 @@ external class String extends Any {
   /// ```
   external isEmpty: Boolean
 
+  /// Tells whether this string is not empty.
+  ///
+  /// Facts:
+  /// ```
+  /// !"".isNotEmpty
+  /// "abc".isNotEmpty
+  /// ```
+  @Since { version = "0.31.0" }
+  external isNotEmpty: Boolean
+
   /// Tells if all characters in this string have Unicode property "White_Space".
   ///
   /// Facts:
@@ -1214,6 +1224,18 @@ external class String extends Any {
   /// !("abc".isBlank)
   /// ```
   external isBlank: Boolean
+
+  /// Tells if at least one character is not Unicode "White_Space".
+  ///
+  /// Facts:
+  /// ```
+  /// !"".isNotBlank
+  /// !"   ".isNotBlank
+  /// "\t\n\r".isNotBlank
+  /// "abc".isNotBlank
+  /// ```
+  @Since { version = "0.31.0" }
+  external isNotBlank: Boolean
 
   /// Tells if this string is a valid regular expression according to [Regex].
   external isRegex: Boolean
@@ -1964,6 +1986,10 @@ class Listing<out Element> extends Object {
   /// Tells if this listing is empty, that is, has zero elements.
   external isEmpty: Boolean
 
+  /// Tells if this listing is not empty, that is, it has at least one element.
+  @Since { version = "0.31.0" }
+  external isNotEmpty: Boolean
+
   /// The index of the last element in this listing (same as `length - 1`).
   ///
   /// Returns `-1` for an empty list.
@@ -2144,6 +2170,10 @@ class Mapping<out Key, out Value> extends Object {
   /// Tells if this mapping is empty, that is, has zero entries.
   external isEmpty: Boolean
 
+  /// Tells whether this mapping is not empty, that is, it has at least one entry.
+  @Since { version = "0.31.0" }
+  external isNotEmpty: Boolean
+
   /// The number of entries in this mapping.
   external length: Int
 
@@ -2312,6 +2342,16 @@ abstract external class Collection<out Element> extends Any {
   /// List().isEmpty
   /// ```
   abstract isEmpty: Boolean
+
+  /// Tells whether this collection is not empty.
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).isNotEmpty
+  /// !List().isNotEmpty
+  /// ```
+  @Since { version = "0.31.0" }
+  abstract isNotEmpty: Boolean
 
   /// The first element in this collection.
   ///
@@ -3015,6 +3055,9 @@ external class List<out Element> extends Collection<Element> {
 
   external isEmpty: Boolean
 
+  @Since { version = "0.31.0" }
+  external isNotEmpty: Boolean
+
   /// The index of the last element in this list (same as `length - 1`).
   ///
   /// Returns `-1` for an empty list.
@@ -3303,7 +3346,11 @@ external const function Set<Element>(elements: VarArgs<Element>): Set<Element>
 /// ```
 external class Set<out Element> extends Collection<Element> {
   external length: Int
+
   external isEmpty: Boolean
+
+  @Since { version = "0.31.0" }
+  external isNotEmpty: Boolean
 
   external first: Element
   external firstOrNull: Element?
@@ -3466,6 +3513,10 @@ external class Map<out Key, out Value> extends Any {
 
   /// Tells whether this map is empty.
   external isEmpty: Boolean
+
+  /// Tells whether this map not empty.
+  @Since { version = "0.31.0" }
+  external isNotEmpty: Boolean
 
   /// Returns the value for [key].
   ///

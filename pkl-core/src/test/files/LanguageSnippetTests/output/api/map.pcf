@@ -3,6 +3,10 @@ facts {
     true
     true
   }
+  ["isNotEmpty"] {
+    true
+    true
+  }
   ["containsKey()"] {
     true
     true

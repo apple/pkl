@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,6 @@
  */
 package org.pkl.core.stdlib.base;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
@@ -28,7 +27,6 @@ import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
 
@@ -37,15 +35,15 @@ public final class MappingNodes {
 
   public abstract static class isEmpty extends ExternalPropertyNode {
     @Specialization
-    @TruffleBoundary
     protected boolean eval(VmMapping self) {
-      for (VmObjectLike curr = self; curr != null; curr = curr.getParent()) {
-        var cursor = EconomicMaps.getEntries(curr.getMembers());
-        while (cursor.advance()) {
-          if (!(cursor.getKey() instanceof Identifier)) return false;
-        }
-      }
-      return true;
+      return self.isEmpty();
+    }
+  }
+
+  public abstract static class isNotEmpty extends ExternalPropertyNode {
+    @Specialization
+    protected boolean eval(VmMapping self) {
+      return !self.isEmpty();
     }
   }
 

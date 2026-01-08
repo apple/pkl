@@ -42,7 +42,16 @@ facts {
     !altered.isEmpty
     !computedIndex.isEmpty
   }
-  
+
+  ["isNotEmpty"] {
+    !empty.isNotEmpty
+    !empty2.isNotEmpty
+    base.isNotEmpty
+    derived.isNotEmpty
+    altered.isNotEmpty
+    computedIndex.isNotEmpty
+  }
+
   ["lastIndex"] {
     empty.lastIndex == -1
     empty2.lastIndex == -1

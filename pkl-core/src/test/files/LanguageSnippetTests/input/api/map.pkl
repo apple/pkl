@@ -8,6 +8,11 @@ facts {
     !map1.isEmpty
   }
 
+  ["isNotEmpty"] {
+    !Map().isNotEmpty
+    map1.isNotEmpty
+  }
+
   ["containsKey()"] {
     map1.containsKey("two")
     !Map().containsKey("two")

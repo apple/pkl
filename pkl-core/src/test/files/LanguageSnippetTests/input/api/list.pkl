@@ -12,6 +12,11 @@ facts {
     !list1.isEmpty
   }
 
+  ["isNotEmpty"] {
+    !List().isNotEmpty
+    list1.isNotEmpty
+  }
+
   ["every()"] {
     list1.every((x) -> x <= 3)
     !list1.every((x) -> x > 2)
