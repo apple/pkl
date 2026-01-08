@@ -22,7 +22,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: check
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
@@ -56,7 +57,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: check
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
@@ -90,7 +92,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
@@ -129,7 +132,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
@@ -172,7 +176,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -211,7 +216,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
@@ -252,7 +258,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: Install musl and zlib
       run: |
         set -e
@@ -363,7 +370,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -402,7 +410,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
@@ -441,7 +450,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
@@ -484,7 +494,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -523,7 +534,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
     - name: gradle buildNative
@@ -564,7 +576,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: Install musl and zlib
       run: |
         set -e
@@ -675,7 +688,8 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-        cache: gradle
+    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+      with: {}
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
