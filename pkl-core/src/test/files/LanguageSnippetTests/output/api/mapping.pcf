@@ -5,6 +5,12 @@ facts {
     true
     true
   }
+  ["isNotEmpty"] {
+    true
+    true
+    true
+    true
+  }
   ["containsKey()"] {
     true
     true

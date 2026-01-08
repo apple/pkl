@@ -12,6 +12,11 @@ facts {
     !set1.isEmpty
   }
 
+  ["isNotEmpty"] {
+    !Set().isNotEmpty
+    set1.isNotEmpty
+  }
+
   ["every()"] {
     set1.every((x) -> x <= 3)
     !set1.every((x) -> x > 2)

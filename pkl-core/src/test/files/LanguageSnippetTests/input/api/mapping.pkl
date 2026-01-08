@@ -48,6 +48,13 @@ facts {
     empty2.isEmpty
   }
 
+  ["isNotEmpty"] {
+    base.isNotEmpty
+    derived.isNotEmpty
+    !empty.isNotEmpty
+    !empty2.isNotEmpty
+  }
+
   ["containsKey()"] {
     base.containsKey("Pigeon")
     base.containsKey("Parrot")

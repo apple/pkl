@@ -3,7 +3,7 @@
 :version-minor: 0.XX.0
 :release-date: TBD
 
-link:ROOT:partial$component-attributes.adoc[role=include]
+include::ROOT:partial$component-attributes.adoc[]
 
 Pkl {version} was released on {release-date}. +
 [.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
@@ -26,7 +26,21 @@ News you don't want to miss.
 
 Ready when you need them.
 
-=== XXX
+=== Standard Library changes
+
+New properties have been added to the standard library (https://github.com/apple/pkl/pull/1396[#1396]).
+
+==== Additions to `pkl:base`
+
+The following APIs have been added:
+
+* link:{uri-stdlib-List}#isNotEmpty[`List.isNotEmpty`]
+* link:{uri-stdlib-Map}#isNotEmpty[`Map.isNotEmpty`]
+* link:{uri-stdlib-Set}#isNotEmpty[`Set.isNotEmpty`]
+* link:{uri-stdlib-Listing}#isNotEmpty[`Listing.isNotEmpty`]
+* link:{uri-stdlib-Mapping}#isNotEmpty[`Mapping.isNotEmpty`]
+* link:{uri-stdlib-String}#isNotEmpty[`String.isNotEmpty`]
+* link:{uri-stdlib-String}#isNotBlank[`String.isNotBlank`]
 
 == Breaking Changes [small]#💔#
 

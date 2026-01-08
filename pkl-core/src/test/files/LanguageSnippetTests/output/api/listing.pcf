@@ -7,6 +7,14 @@ facts {
     true
     true
   }
+  ["isNotEmpty"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["lastIndex"] {
     true
     true

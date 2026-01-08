@@ -181,4 +181,8 @@ public final class VmMapping extends VmListingOrMapping {
     cachedLength = count.get();
     return cachedLength;
   }
+
+  public boolean isEmpty() {
+    return getLength() == 0;
+  }
 }
