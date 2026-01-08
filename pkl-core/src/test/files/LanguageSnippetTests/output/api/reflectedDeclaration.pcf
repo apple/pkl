@@ -830,6 +830,30 @@ alias {
           name = "isEmpty"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isNotEmpty", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells whether this string is not empty.
+            
+            Facts:
+            ```
+            !"".isNotEmpty
+            "abc".isNotEmpty
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "isNotEmpty"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.31.0"
+          })
         }, "isBlank", new {
           location {
             line = XXXX
@@ -852,6 +876,32 @@ alias {
           name = "isBlank"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isNotBlank", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if at least one character is not Unicode "White_Space".
+            
+            Facts:
+            ```
+            !"".isNotBlank
+            !"   ".isNotBlank
+            "\\t\\n\\r".isNotBlank
+            "abc".isNotBlank
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "isNotBlank"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.31.0"
+          })
         }, "isRegex", new {
           location {
             line = XXXX
@@ -1124,6 +1174,30 @@ alias {
           name = "isEmpty"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isNotEmpty", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells whether this string is not empty.
+            
+            Facts:
+            ```
+            !"".isNotEmpty
+            "abc".isNotEmpty
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "isNotEmpty"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.31.0"
+          })
         }, "isBlank", new {
           location {
             line = XXXX
@@ -1146,6 +1220,32 @@ alias {
           name = "isBlank"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isNotBlank", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if at least one character is not Unicode "White_Space".
+            
+            Facts:
+            ```
+            !"".isNotBlank
+            !"   ".isNotBlank
+            "\\t\\n\\r".isNotBlank
+            "abc".isNotBlank
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "isNotBlank"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.31.0"
+          })
         }, "isRegex", new {
           location {
             line = XXXX
