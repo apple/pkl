@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
@@ -85,6 +86,17 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
     return ExternalResourceResolver.of(getTransport(), evaluatorId);
   }
 
+  private @Nullable String getExecutablePath(String executable) {
+    if (executable.contains("/") || executable.contains("\"")) {
+      return executable;
+    }
+    var resolved = IoUtils.findExecutableOnPath(executable);
+    if (resolved != null) {
+      return resolved.toAbsolutePath().toString();
+    }
+    return null;
+  }
+
   private MessageTransport getTransport() throws ExternalReaderProcessException {
     synchronized (lock) {
       if (closed) {
@@ -100,9 +112,13 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
       }
     }
 
-    // This relies on Java/OS behavior around PATH resolution, absolute/relative paths, etc.
     var command = new ArrayList<String>();
-    command.add(spec.executable());
+    var executable = getExecutablePath(spec.executable());
+    if (executable == null) {
+      throw new ExternalReaderProcessException(
+          ErrorMessages.create("cannotFindCommand", spec.executable()));
+    }
+    command.add(executable);
     if (spec.arguments() != null) {
       command.addAll(spec.arguments());
     }

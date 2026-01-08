@@ -51,8 +51,7 @@ Things to watch out for when upgrading.
 The following changes have been made when loading external readers:
 
 1. Executable paths declared inside a PklProject file are resolved relative to the enclosing directory, instead of the current working directory.
-2. In a PklProject, the `externalModuleReaders` and `externalResourceReaders` properties of `evaluatorSettings` cannot be set in a non-file project.
-3. The `--external-module-reader` and `--external-resource-reader` CLI flags will _replace_ any external readers otherwise configured within a PklProject, instead of add to it. +
+2. The `--external-module-reader` and `--external-resource-reader` CLI flags will _replace_ any external readers otherwise configured within a PklProject, instead of add to it. +
 +
 This makes this behavior consistent with how other settings work.
 

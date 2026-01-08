@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.util;
 
 import com.oracle.truffle.api.TruffleOptions;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -853,5 +854,23 @@ public final class IoUtils {
       throw new IllegalArgumentException(
           "Rewrite rule must end with '/', but was '%s'".formatted(rewrite));
     }
+  }
+
+  public static @Nullable Path findExecutableOnPath(String executable) {
+    var pathEnvVar = System.getenv("PATH");
+    if (pathEnvVar == null) {
+      return null;
+    }
+    var extensions = isWindows() ? List.of(".cmd", ".bat", ".exe", ".dll") : List.of("");
+    var pathDirs = pathEnvVar.split(File.pathSeparator);
+    for (var dir : pathDirs) {
+      for (var extension : extensions) {
+        var candidate = Path.of(dir, executable + extension);
+        if (Files.exists(candidate) && Files.isExecutable(candidate)) {
+          return candidate;
+        }
+      }
+    }
+    return null;
   }
 }

@@ -19,6 +19,8 @@
 @Since { version = "0.26.0" }
 module pkl.EvaluatorSettings
 
+import "pkl:EvaluatorSettings"
+
 /// The external properties available to Pkl, read using the `prop:` scheme.
 externalProperties: Mapping<String, String>?
 
@@ -117,6 +119,70 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 /// - `"pretty"`: All structures passed to trace() will be indented and emitted across multiple lines.
 @Since { version = "0.30.0" }
 traceMode: ("compact" | "pretty")?
+
+/// The enclosing URI used to resolve relative paths.
+@Since { version = "0.31.0" }
+hidden enclosingUri: String
+
+local function resolvePath(base: String, path: String) =
+  if (path.startsWith("/") || path.startsWith(Regex(#"([a-z]:)?\\"#)))
+    path
+  else
+    "\(base)/\(path)"
+
+local function resolveExecutable(base: String, path: String) =
+  if (path.contains("/") || path.contains("\\"))
+    resolvePath(base, path)
+  else
+    path
+
+/// These evaluator settings, whose settings are resolved against [baseDir].
+///
+/// The following settings are resolved:
+///
+///   * [modulePath]
+///   * [rootDir]
+///   * [moduleCacheDir]
+///   * [externalResourceReaders]
+///   * [externalModuleReaders]
+@Since { version = "0.31.0" }
+function resolve(baseDir: String): EvaluatorSettings = (module) {
+  when (module.modulePath != null) {
+    modulePath = new {
+      for (path in module.modulePath!!) {
+        resolvePath(baseDir, path)
+      }
+    }
+  }
+
+  when (module.rootDir != null) {
+    rootDir = resolvePath(baseDir, module.rootDir!!)
+  }
+
+  when (module.moduleCacheDir != null) {
+    moduleCacheDir = resolvePath(baseDir, module.moduleCacheDir!!)
+  }
+
+  when (module.externalResourceReaders != null) {
+    externalResourceReaders {
+      for (readerName, reader in module.externalResourceReaders!!) {
+        [readerName] {
+          executable = resolveExecutable(baseDir, reader.executable)
+        }
+      }
+    }
+  }
+
+  when (module.externalModuleReaders != null) {
+    externalModuleReaders {
+      for (readerName, reader in module.externalModuleReaders!!) {
+        [readerName] {
+          executable = resolveExecutable(baseDir, reader.executable)
+        }
+      }
+    }
+  }
+}
 
 local const hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
@@ -224,14 +290,68 @@ class ExternalReader {
   /// The external reader executable.
   ///
   /// Will be spawned with the same environment variables and working directory as the Pkl process.
-  /// Executable is resolved according to the operating system's process spawning rules.
-  /// On macOS, Linux, and Windows platforms, this may be:
+  /// This may be:
   ///
   ///   * An absolute path
   ///   * A relative path
   ///   * The name of the executable, to be resolved against the `PATH` environment variable 
+  ///
+  /// On Windows, it is acceptable to use either `\` or `/` as the path separator.
+  ///
+  /// A simple name without slashes (e.g. `"my-command"`) is resolved against the `PATH`
+  /// environment variable, rather than against the enclosing directory.
+  ///
+  /// To resolve this as a path, prefix it with `./` (or `.\` on Windows).
   executable: String
 
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
+}
+
+/// Machiney for URI percent decoding.
+// TODO: replace me when URI stdlib is introduced
+@Unlisted
+local class Impl {
+  const percentDecode = (str: String) ->
+    str.replaceAllMapped(PERCENT_REGEX, (match) ->
+      let (bytes = getBytes(match.value))
+        doPercentDecode(bytes)
+    )
+
+  local const PERCENT_REGEX = Regex(#"(?:%[\da-fA-F]{2})+"#)
+
+  local const hexDigits = "0123456789ABCDEF"
+
+  local const function getBytes(str: String): List<UInt8> =
+    str
+      .split("%")
+      .drop(1)
+      .map((it) ->
+        let (msb = hexDigits.indexOf(it[0].toUpperCase()))
+        let (lsb = hexDigits.indexOf(it[1].toUpperCase()))
+          lsb + (msb * 16)
+      )
+
+  local const function doPercentDecode(bytes: List<UInt8>): String = _doPercentDecode(bytes, "")
+
+  local const function _doPercentDecode(bytes: List<UInt8>, ret: String) =
+    if (bytes.length == 0)
+      ret
+    else if (bytes[0] < 0x80)
+      _doPercentDecode(bytes.drop(1), ret + bytes[0].toChar())
+    else if (bytes[0] < 0xE0)
+      let (b0 = bytes[0].and(0x1f).shl(6))
+      let (b1 = bytes[1].and(0x3f))
+        _doPercentDecode(bytes.drop(2), ret + b0.or(b1).toChar())
+    else if (bytes[0] < 0xF0)
+      let (b0 = bytes[0].and(0xf).shl(12))
+      let (b1 = bytes[1].and(0x3f).shl(6))
+      let (b2 = bytes[2].and(0x3f))
+        _doPercentDecode(bytes.drop(3), ret + b0.or(b1).or(b2).toChar())
+    else
+      let (b0 = bytes[0].and(0x7).shl(18))
+      let (b1 = bytes[1].and(0x3f).shl(12))
+      let (b2 = bytes[2].and(0x3f).shl(6))
+      let (b3 = bytes[3].and(0x3f))
+        _doPercentDecode(bytes.drop(4), ret + b0.or(b1).or(b2).or(b3).toChar())
 }

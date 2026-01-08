@@ -106,7 +106,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {
-    if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
+    if (cliOptions.omitProjectSettings) null else project?.resolvedEvaluatorSettings
   }
 
   protected val allowedModules: List<Pattern> by lazy {
@@ -169,31 +169,25 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   protected val useColor: Boolean by lazy { cliOptions.color?.hasColor() ?: false }
 
   private val proxyAddress: URI? by lazy {
-    cliOptions.httpProxy
-      ?: project?.evaluatorSettings?.http?.proxy?.address
-      ?: settings.http?.proxy?.address
+    cliOptions.httpProxy ?: evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
   }
 
   private val noProxy: List<String>? by lazy {
     cliOptions.httpNoProxy
-      ?: project?.evaluatorSettings?.http?.proxy?.noProxy
+      ?: evaluatorSettings?.http?.proxy?.noProxy
       ?: settings.http?.proxy?.noProxy
   }
 
   private val httpRewrites: Map<URI, URI>? by lazy {
-    cliOptions.httpRewrites
-      ?: project?.evaluatorSettings?.http?.rewrites
-      ?: settings.http?.rewrites()
+    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites()
   }
 
   protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    cliOptions.externalModuleReaders ?: project?.evaluatorSettings?.externalModuleReaders ?: mapOf()
+    cliOptions.externalModuleReaders ?: evaluatorSettings?.externalModuleReaders ?: mapOf()
   }
 
   protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    cliOptions.externalResourceReaders
-      ?: project?.evaluatorSettings?.externalResourceReaders
-      ?: mapOf()
+    cliOptions.externalResourceReaders ?: evaluatorSettings?.externalResourceReaders ?: mapOf()
   }
 
   private val externalProcesses:
@@ -207,7 +201,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val traceMode: TraceMode by lazy {
-    cliOptions.traceMode ?: project?.evaluatorSettings?.traceMode ?: TraceMode.COMPACT
+    cliOptions.traceMode ?: evaluatorSettings?.traceMode ?: TraceMode.COMPACT
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {

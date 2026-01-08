@@ -17,7 +17,6 @@ package org.pkl.core.evaluatorSettings;
 
 import java.net.URI;
 import java.net.URISyntaxException;
-import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
@@ -25,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.Duration;
@@ -56,17 +54,13 @@ public record PklEvaluatorSettings(
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
-  public static PklEvaluatorSettings parse(
-      Value input, BiFunction<String, String, Path> pathNormalizer) {
+  public static PklEvaluatorSettings parse(Value input) {
     if (!(input instanceof PObject pSettings)) {
       throw PklBugException.unreachableCode();
     }
 
     var moduleCacheDirStr = (String) pSettings.get("moduleCacheDir");
-    var moduleCacheDir =
-        moduleCacheDirStr == null
-            ? null
-            : pathNormalizer.apply(moduleCacheDirStr, "moduleCacheDir");
+    var moduleCacheDir = moduleCacheDirStr == null ? null : Path.of(moduleCacheDirStr).normalize();
 
     var allowedModulesStrs = (List<String>) pSettings.get("allowedModules");
     var allowedModules =
@@ -81,13 +75,10 @@ public record PklEvaluatorSettings(
             : allowedResourcesStrs.stream().map(Pattern::compile).toList();
 
     var modulePathStrs = (List<String>) pSettings.get("modulePath");
-    var modulePath =
-        modulePathStrs == null
-            ? null
-            : modulePathStrs.stream().map(it -> pathNormalizer.apply(it, "modulePath")).toList();
+    var modulePath = modulePathStrs == null ? null : modulePathStrs.stream().map(Path::of).toList();
 
     var rootDirStr = (String) pSettings.get("rootDir");
-    var rootDir = rootDirStr == null ? null : pathNormalizer.apply(rootDirStr, "rootDir");
+    var rootDir = rootDirStr == null ? null : Path.of(rootDirStr).normalize();
 
     var externalModuleReadersRaw = (Map<String, Value>) pSettings.get("externalModuleReaders");
     var externalModuleReaders =
@@ -96,8 +87,7 @@ public record PklEvaluatorSettings(
             : externalModuleReadersRaw.entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        Entry::getKey,
-                        entry -> ExternalReader.parse(entry.getValue(), pathNormalizer)));
+                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
 
     var externalResourceReadersRaw = (Map<String, Value>) pSettings.get("externalResourceReaders");
     var externalResourceReaders =
@@ -106,8 +96,7 @@ public record PklEvaluatorSettings(
             : externalResourceReadersRaw.entrySet().stream()
                 .collect(
                     Collectors.toMap(
-                        Entry::getKey,
-                        entry -> ExternalReader.parse(entry.getValue(), pathNormalizer)));
+                        Entry::getKey, entry -> ExternalReader.parse(entry.getValue())));
 
     var color = (String) pSettings.get("color");
     var traceMode = (String) pSettings.get("traceMode");
@@ -193,15 +182,10 @@ public record PklEvaluatorSettings(
 
   public record ExternalReader(String executable, @Nullable List<String> arguments) {
     @SuppressWarnings("unchecked")
-    public static ExternalReader parse(
-        Value input, BiFunction<String, String, Path> pathNormalizer) {
+    public static ExternalReader parse(Value input) {
       if (input instanceof PObject externalReader) {
         var executable = (String) externalReader.getProperty("executable");
-        var executablePath = pathNormalizer.apply(executable, "executable");
         var arguments = (List<String>) externalReader.get("arguments");
-        if (Files.exists(executablePath)) {
-          return new ExternalReader(executablePath.toString(), arguments);
-        }
         return new ExternalReader(executable, arguments);
       }
       throw PklBugException.unreachableCode();

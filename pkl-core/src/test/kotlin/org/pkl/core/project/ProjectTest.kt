@@ -16,12 +16,9 @@
 package org.pkl.core.project
 
 import java.net.URI
-import java.nio.file.Files
 import java.nio.file.Path
-import java.nio.file.attribute.PosixFilePermission
 import java.util.regex.Pattern
 import kotlin.io.path.createDirectories
-import kotlin.io.path.createFile
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -35,7 +32,6 @@ import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.http.HttpClient
 import org.pkl.core.packages.PackageUri
-import org.pkl.core.util.IoUtils
 
 class ProjectTest {
   @Test
@@ -158,7 +154,7 @@ class ProjectTest {
     )
     val project = Project.loadFromPath(projectPath)
     assertThat(project.`package`).isEqualTo(expectedPackage)
-    assertThat(project.evaluatorSettings).isEqualTo(expectedSettings)
+    assertThat(project.resolvedEvaluatorSettings).isEqualTo(expectedSettings)
     assertThat(project.annotations).isEqualTo(expectedAnnotations)
     assertThat(project.tests)
       .isEqualTo(listOf(path.resolve("test1.pkl"), path.resolve("test2.pkl")))
@@ -280,7 +276,7 @@ class ProjectTest {
       evaluatorSettings {
         externalModuleReaders {
           ["foo"] {
-            executable = "foo"
+            executable = "foo/bar/baz"
           }
         }
       }
@@ -288,25 +284,14 @@ class ProjectTest {
             .trimIndent()
         )
       }
-    val executableName = if (IoUtils.isWindows()) "foo.cmd" else "foo"
-    val executable =
-      projectDir.resolve(executableName).also {
-        it.createFile()
-        if (!IoUtils.isWindows()) {
-          Files.setPosixFilePermissions(it, setOf(PosixFilePermission.OWNER_EXECUTE))
-        }
-      }
     val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
-    assertThat(project.evaluatorSettings.externalModuleReaders).hasSize(1)
-    assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
-      .isEqualTo(executable.toAbsolutePath().toString())
+    assertThat(project.resolvedEvaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.resolvedEvaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo(projectDir.resolve("foo/bar/baz").toString())
   }
 
   @Test
-  fun `external readers -- executable is unmodified if not resolvable relative to project dir`(
-    @TempDir tempDir: Path
-  ) {
-    // echo exists in POSIX and also Windows (both command prompt and PowerShell)
+  fun `external readers -- executable is unmodified simple name`(@TempDir tempDir: Path) {
     val projectDir = tempDir.resolve("project").also { it.createDirectories() }
     val pklProject =
       projectDir.resolve("PklProject").also {
@@ -318,7 +303,7 @@ class ProjectTest {
       evaluatorSettings {
         externalModuleReaders {
           ["foo"] {
-            executable = "echo"
+            executable = "my-command"
           }
         }
       }
@@ -330,6 +315,30 @@ class ProjectTest {
     val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
     assertThat(project.evaluatorSettings.externalModuleReaders).hasSize(1)
     assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
-      .isEqualTo("echo")
+      .isEqualTo("my-command")
+  }
+
+  @Test
+  fun `cannot set relative executable in non-file project`() {
+    val src =
+      ModuleSource.text(
+        // language=pkl
+        """
+      amends "pkl:Project"
+      
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "foo/bar"
+          }
+        }
+      }
+    """
+          .trimIndent()
+      )
+    assertThatCode { Project.load(src) }
+      .hasMessageContaining(
+        "Type constraint `(!relativeExecutables(externalModuleReaders).isEmpty).implies(isFileBasedProject)` violated"
+      )
   }
 }
