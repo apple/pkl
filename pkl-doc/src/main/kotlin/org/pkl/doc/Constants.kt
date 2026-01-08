@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,9 +24,4 @@ internal object HtmlConstants {
 
   /** The `known-usages` element ID. */
   const val KNOWN_USAGES: String = "known-usages"
-}
-
-internal object CssConstants {
-  /** The `current-version` CSS class. */
-  const val CURRENT_VERSION: String = "current-version"
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,11 +23,11 @@ import org.pkl.core.SecurityManagers
 
 class CliCommandTest {
 
-  class CliTest(private val options: CliBaseOptions) : CliCommand(options) {
+  class CliTest(options: CliBaseOptions) : CliCommand(options) {
     override fun doRun() = Unit
 
-    val _allowedResources = allowedResources
-    val _allowedModules = allowedModules
+    val myAllowedResources = allowedResources
+    val myAllowedModules = allowedModules
   }
 
   private val cmd =
@@ -57,12 +57,12 @@ class CliCommandTest {
     )
     val opts = cmd.baseOptions.baseOptions(emptyList(), null, true)
     val cliTest = CliTest(opts)
-    assertThat(cliTest._allowedModules.map { it.pattern() })
+    assertThat(cliTest.myAllowedModules.map { it.pattern() })
       .isEqualTo(
         SecurityManagers.defaultAllowedModules.map { it.pattern() } +
           listOf("\\Qscheme3:\\E", "\\Qscheme4:\\E", "\\Qscheme+ext:\\E")
       )
-    assertThat(cliTest._allowedResources.map { it.pattern() })
+    assertThat(cliTest.myAllowedResources.map { it.pattern() })
       .isEqualTo(
         SecurityManagers.defaultAllowedResources.map { it.pattern() } +
           listOf("\\Qscheme1:\\E", "\\Qscheme2:\\E", "\\Qscheme+ext:\\E")

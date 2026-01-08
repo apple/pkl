@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
+@SuppressWarnings("unused")
 public final class TypeAlias extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
@@ -54,12 +55,16 @@ public final class TypeAlias extends AbstractNode {
 
   public Keyword getTypealiasKeyword() {
     assert children != null;
-    return (Keyword) children.get(nameOffset);
+    var ret = (Keyword) children.get(nameOffset);
+    assert ret != null;
+    return ret;
   }
 
   public Identifier getName() {
     assert children != null;
-    return (Identifier) children.get(nameOffset + 1);
+    var ret = (Identifier) children.get(nameOffset + 1);
+    assert ret != null;
+    return ret;
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
@@ -69,7 +74,9 @@ public final class TypeAlias extends AbstractNode {
 
   public Type getType() {
     assert children != null;
-    return (Type) children.get(nameOffset + 3);
+    var ret = (Type) children.get(nameOffset + 3);
+    assert ret != null;
+    return ret;
   }
 
   @SuppressWarnings("DuplicatedCode")
@@ -83,7 +90,9 @@ public final class TypeAlias extends AbstractNode {
         break;
       }
     }
-    var end = children.get(nameOffset + 1).span();
+    var endNode = children.get(nameOffset + 1);
+    assert endNode != null;
+    var end = endNode.span();
     var tparList = children.get(nameOffset + 2);
     if (tparList != null) {
       end = tparList.span();

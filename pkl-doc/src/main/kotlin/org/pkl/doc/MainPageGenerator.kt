@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ internal class MainPageGenerator(
   private val packagesData: List<PackageData>,
   pageScope: SiteScope,
   consoleOut: OutputStream,
-) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, pageScope, consoleOut) {
+) : MainOrPackagePageGenerator<SiteScope>(docsiteInfo, pageScope, consoleOut) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
 

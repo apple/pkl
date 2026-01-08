@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,11 @@ final class MinPklVersionChecker {
         if (!Identifier.MIN_PKL_VERSION.toString().equals(prop.getIdentifier().getValue()))
           continue;
 
-        var versionText = prop.getExpr().text(source.toCharArray());
+        var versionTextExpr = prop.getExpr();
+        if (versionTextExpr == null) {
+          return;
+        }
+        var versionText = versionTextExpr.text(source.toCharArray());
 
         Version version;
         try {

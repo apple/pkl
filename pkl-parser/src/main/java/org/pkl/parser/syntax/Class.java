@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,12 +54,16 @@ public final class Class extends AbstractNode {
 
   public Keyword getClassKeyword() {
     assert children != null;
-    return (Keyword) children.get(keywordOffset);
+    var ret = (Keyword) children.get(keywordOffset);
+    assert ret != null;
+    return ret;
   }
 
   public Identifier getName() {
     assert children != null;
-    return (Identifier) children.get(keywordOffset + 1);
+    var ret = (Identifier) children.get(keywordOffset + 1);
+    assert ret != null;
+    return ret;
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {

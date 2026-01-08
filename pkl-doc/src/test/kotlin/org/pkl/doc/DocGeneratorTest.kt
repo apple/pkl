@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,7 +32,7 @@ class DocGeneratorTest {
   fun `uses virtual thread executor on JDK 21`() {
     // On older JDKs, we get a ThreadPoolExecutor.
     // not sure if there's a better assertion to make here.
-    assertThat(DocGenerator.Companion.executor.javaClass.canonicalName)
+    assertThat(DocGenerator.executor.javaClass.canonicalName)
       .isEqualTo("java.util.concurrent.ThreadPerTaskExecutor")
   }
 }

@@ -9,12 +9,18 @@ googleJavaFormat = "1.25.2"
 # must not use `+` because used in download URL
 # 23.1.x requires JDK 20+
 graalVm = "25.0.0"
+#noinspection UnusedVersionCatalogEntry
 graalVmJdkVersion = "25.0.0"
 # slightly hacky but convenient place so we remember to update the checksum
+#noinspection UnusedVersionCatalogEntry
 graalVmSha256-macos-x64 = "04278cf867d040e29dc71dd7727793f0ea67eb72adce8a35d04b87b57906778d"
+#noinspection UnusedVersionCatalogEntry
 graalVmSha256-macos-aarch64 = "c446d5aaeda98660a4c14049d299e9fba72105a007df89f19d27cf3979d37158"
+#noinspection UnusedVersionCatalogEntry
 graalVmSha256-linux-x64 = "1862f2ce97387a303cae4c512cb21baf36fafd2457c3cbbc10d87db94b89d3dd"
+#noinspection UnusedVersionCatalogEntry
 graalVmSha256-linux-aarch64 = "6c3c8b7617006c5d174d9cf7d357ccfb4bae77a4df1294ee28084fcb6eea8921"
+#noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-x64 = "33ef1d186b5c1e95465fcc97e637bc26e72d5f2250a8615b9c5d667ed5c17fd0"
 ideaExtPlugin = "1.1.9"
 intellijPlugin = "2.10.1"
@@ -62,6 +68,7 @@ geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = 
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
 graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
+#noinspection UnusedVersionCatalogEntry
 intellij = { group = "com.jetbrains.intellij.idea", name = "ideaIC", version.ref = "intellij" }
 javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
@@ -75,7 +82,6 @@ junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.re
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
 junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
-kotlinCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-compiler-embeddable", version.ref = "kotlin" }
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
 kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
@@ -84,8 +90,10 @@ kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", ve
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+#noinspection UnusedVersionCatalogEntry
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
+#noinspection UnusedVersionCatalogEntry
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }

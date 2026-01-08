@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,46 +28,51 @@ import org.pkl.core.DurationUnit;
 public class ConversionsTest {
   @Test
   public void pStringToFile() {
-    var file = Conversions.pStringToFile.converter.convert("relative/path", null);
+    var file =
+        Conversions.pStringToFile.converter.convert("relative/path", ValueMapper.preconfigured());
     assertThat(file).isEqualTo(new File("relative/path"));
 
-    var file2 = Conversions.pStringToFile.converter.convert("/absolute/path", null);
+    var file2 =
+        Conversions.pStringToFile.converter.convert("/absolute/path", ValueMapper.preconfigured());
     assertThat(file2).isEqualTo(new File("/absolute/path"));
 
-    var file3 = Conversions.pStringToFile.converter.convert("", null);
+    var file3 = Conversions.pStringToFile.converter.convert("", ValueMapper.preconfigured());
     assertThat(file3).isEqualTo(new File(""));
   }
 
   @Test
   public void pStringToPath() {
-    var path = Conversions.pStringToPath.converter.convert("relative/path", null);
+    var path =
+        Conversions.pStringToPath.converter.convert("relative/path", ValueMapper.preconfigured());
     assertThat(path).isEqualTo(Path.of("relative/path"));
 
-    var path2 = Conversions.pStringToPath.converter.convert("/absolute/path", null);
+    var path2 =
+        Conversions.pStringToPath.converter.convert("/absolute/path", ValueMapper.preconfigured());
     assertThat(path2).isEqualTo(Path.of("/absolute/path"));
 
-    var path3 = Conversions.pStringToPath.converter.convert("", null);
+    var path3 = Conversions.pStringToPath.converter.convert("", ValueMapper.preconfigured());
     assertThat(path3).isEqualTo(Path.of(""));
   }
 
   @Test
   public void pStringToPattern() {
     var str = "(?i)\\w*";
-    var pattern = Conversions.pStringToPattern.converter.convert(str, null);
+    var pattern = Conversions.pStringToPattern.converter.convert(str, ValueMapper.preconfigured());
     assertThat(pattern.pattern()).isEqualTo(str);
   }
 
   @Test
   public void pRegexToString() {
     var regex = Pattern.compile("(?i)\\w*");
-    var str = Conversions.pRegexToString.converter.convert(regex, null);
+    var str = Conversions.pRegexToString.converter.convert(regex, ValueMapper.preconfigured());
     assertThat(str).isEqualTo("(?i)\\w*");
   }
 
   @Test
   public void pDurationToDuration() {
     var pDuration = new Duration(100, DurationUnit.MINUTES);
-    var duration = Conversions.pDurationToDuration.converter.convert(pDuration, null);
+    var duration =
+        Conversions.pDurationToDuration.converter.convert(pDuration, ValueMapper.preconfigured());
     assertThat(duration).isEqualTo(java.time.Duration.of(100, ChronoUnit.MINUTES));
   }
 }

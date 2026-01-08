@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -89,6 +89,7 @@ public class JavaTypeTest {
     assertThat(javaType.getType()).isEqualTo(Types.mapOf(String.class, Types.listOf(URI.class)));
   }
 
+  @SuppressWarnings({"EqualsWithItself", "AssertBetweenInconvertibleTypes"})
   @Test
   public void sameTypesConstructedInDifferentWaysAreEqual() {
     var type1 = JavaType.mapOf(JavaType.of(String.class), JavaType.listOf(URI.class));

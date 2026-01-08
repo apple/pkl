@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Error;
@@ -57,9 +56,8 @@ public final class JUnitReport implements TestReport {
 
   @Override
   public void summarize(List<TestResults> allTestResults, Writer writer) throws IOException {
-    var totalTests = allTestResults.stream().collect(Collectors.summingLong(r -> r.totalTests()));
-    var totalFailures =
-        allTestResults.stream().collect(Collectors.summingLong(r -> r.totalFailures()));
+    var totalTests = allTestResults.stream().mapToLong(TestResults::totalTests).sum();
+    var totalFailures = allTestResults.stream().mapToLong(TestResults::totalFailures).sum();
 
     assert aggregateSuiteName != null;
 
@@ -69,12 +67,11 @@ public final class JUnitReport implements TestReport {
             "tests", totalTests,
             "failures", totalFailures);
 
-    var tests =
-        allTestResults.stream()
-            .map(r -> buildSuite(r))
-            .collect(Collectors.toCollection(ArrayList::new));
-
-    var suite = buildXmlElement("testsuites", attrs, tests.toArray(new VmDynamic[0]));
+    var suite =
+        buildXmlElement(
+            "testsuites",
+            attrs,
+            allTestResults.stream().map(this::buildSuite).toArray(VmDynamic[]::new));
 
     writer.append(renderXML("    ", "1.0", suite));
   }

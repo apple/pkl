@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -83,6 +83,8 @@ public final class ModuleDecl extends AbstractNode {
     if (extendsOrAmends != null) {
       return start.endWith(extendsOrAmends.span());
     }
-    return start.endWith(children.get(nameOffset + 1).span());
+    var end = children.get(nameOffset + 1);
+    assert end != null;
+    return start.endWith(end.span());
   }
 }

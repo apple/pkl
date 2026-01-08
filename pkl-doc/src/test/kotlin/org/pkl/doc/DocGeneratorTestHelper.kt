@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,17 +84,6 @@ class DocGeneratorTestHelper {
   internal val actualOutputFiles: List<Path> by lazy { baseActualOutputDir.listFilesRecursively() }
 
   internal val cacheDir: Path by lazy { tempDir.resolve("cache") }
-
-  internal val sourceModules =
-    listOf(
-      docsiteModule,
-      package1PackageModule,
-      package2PackageModule,
-      URI("package://localhost:0/birds@0.5.0"),
-      URI("package://localhost:0/fruit@1.1.0"),
-      URI("package://localhost:0/unlisted@1.0.0"),
-      URI("package://localhost:0/deprecated@1.0.0"),
-    ) + package1InputModules + package2InputModules
 
   internal val expectedRelativeOutputFiles: List<String> by lazy {
     expectedOutputFiles.map { path ->
