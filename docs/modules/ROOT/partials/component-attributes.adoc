@@ -147,6 +147,8 @@ endif::[]
 :uri-stdlib-Function4: {uri-stdlib-baseModule}/Function4
 :uri-stdlib-Function5: {uri-stdlib-baseModule}/Function5
 :uri-stdlib-Bytes: {uri-stdlib-baseModule}/Bytes
+:uri-stdlib-Reference: {uri-stdlib-baseModule}/Reference
+:uri-stdlib-ReferenceAccess: {uri-stdlib-baseModule}/ReferenceAccess
 :uri-stdlib-Resource: {uri-stdlib-baseModule}/Resource
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
 :uri-stdlib-FileOutput: {uri-stdlib-baseModule}/FileOutput

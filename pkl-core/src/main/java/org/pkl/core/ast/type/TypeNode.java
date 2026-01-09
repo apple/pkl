@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -2038,6 +2039,80 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    @Override
+    protected boolean isParametric() {
+      return true;
+    }
+  }
+
+  @ImportStatic(BaseModule.class)
+  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
+    private TypeNode valueTypeNode;
+    @Child private ExpressionNode getModuleNode;
+
+    public ReferenceTypeNode(SourceSection sourceSection, TypeNode valueTypeNode) {
+      super(sourceSection);
+      this.valueTypeNode = valueTypeNode;
+      this.getModuleNode = new GetModuleNode(sourceSection);
+    }
+
+    @SuppressWarnings("unused")
+    @Specialization(guards = "value.getVmClass() == getReferenceClass()")
+    protected Object eval(VirtualFrame frame, VmReference value) {
+      if (valueTypeNode.isNoopTypeCheck()) {
+        return value;
+      }
+
+      var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      if (value.checkType(TypeNode.export(valueTypeNode), module.getVmClass().export())) {
+        return value;
+      }
+      // TODO better exceptions?
+      throw new VmExceptionBuilder()
+          .adhocEvalError(
+              "reference type mismatch Reference<%s> and %s",
+              value.getCandidateTypes(), TypeNode.export(valueTypeNode))
+          .build();
+    }
+
+    @Fallback
+    protected Object fallback(Object value) {
+      throw typeMismatch(value, BaseModule.getReferenceClass());
+    }
+
+    @Override
+    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+      return consumer.accept(this);
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return BaseModule.getReferenceClass();
+    }
+
+    @Override
+    public VmList getTypeArgumentMirrors() {
+      return VmList.of(valueTypeNode.getMirror());
+    }
+
+    @Override
+    protected boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof ReferenceTypeNode referenceTypeNode)) {
+        return false;
+      }
+      return valueTypeNode.isEquivalentTo(referenceTypeNode.valueTypeNode);
+    }
+
+    @Override
+    public boolean isNoopTypeCheck() {
+      return valueTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected PType doExport() {
+      return new PType.Class(BaseModule.getReferenceClass().export(), valueTypeNode.doExport());
     }
 
     @Override
