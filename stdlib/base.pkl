@@ -20,7 +20,9 @@
 @ModuleInfo { minPklVersion = "0.30.2" }
 module pkl.base
 
+// math import used for doc comments
 import "pkl:jsonnet"
+import "pkl:math"
 import "pkl:pklbinary"
 import "pkl:protobuf"
 import "pkl:xml"
