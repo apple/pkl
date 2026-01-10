@@ -28,6 +28,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -53,6 +54,10 @@ import org.pkl.core.util.Nonnull;
 import org.pkl.core.util.Nullable;
 
 public abstract class TypeNode extends PklNode {
+
+  public interface ClassTypeNode {
+    VmClass getVmClass();
+  }
 
   protected TypeNode(SourceSection sourceSection) {
     super(sourceSection);
@@ -391,7 +396,8 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** The `module` type for a final module. */
-  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     private final VmClass moduleClass;
 
     public FinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
@@ -445,7 +451,8 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** The `module` type for an open module. */
-  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode {
+  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     private final VmClass moduleClass; // only used by getVmClass()
     @Child private ExpressionNode getModuleNode;
 
@@ -630,7 +637,7 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only `VmValue`s can possibly pass its type
    * check.
    */
-  public static final class FinalClassTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalClassTypeNode extends ObjectSlotTypeNode implements ClassTypeNode {
     private final VmClass clazz;
 
     public FinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -686,7 +693,8 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only {@link VmValue}s can possibly pass its type
    * check.
    */
-  public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode {
+  public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     protected final VmClass clazz;
 
     public NonFinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -876,7 +884,8 @@ public abstract class TypeNode extends PklNode {
     protected PType doExport() {
       var elementTypes =
           Arrays.stream(elementTypeNodes).map(TypeNode::export).collect(Collectors.toList());
-      return new PType.Union(elementTypes);
+      var defaultType = defaultIndex == -1 ? null : elementTypes.get(defaultIndex);
+      return new PType.Union(elementTypes, defaultType);
     }
 
     @Override
@@ -1050,8 +1059,16 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected PType doExport() {
-      return new PType.Union(
-          stringLiterals.stream().map(StringLiteral::new).collect(Collectors.toList()));
+      PType defaultType = null;
+      var elementTypes = new ArrayList<PType>(stringLiterals.size());
+      for (var element : stringLiterals) {
+        var literal = new StringLiteral(element);
+        elementTypes.add(literal);
+        if (element.equals(unionDefault)) {
+          defaultType = literal;
+        }
+      }
+      return new PType.Union(elementTypes, defaultType);
     }
 
     @Override

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.pkl.core.util.IoUtils
 /** Base options shared between CLI commands. */
 data class CliBaseOptions(
   /** The source modules to evaluate. Relative URIs are resolved against [workingDir]. */
-  private val sourceModules: List<URI> = listOf(),
+  val sourceModules: List<URI> = listOf(),
 
   /**
    * The URI patterns that determine which modules can be loaded and evaluated. Patterns are matched

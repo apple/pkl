@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.ArrayList;
 import java.util.List;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
@@ -51,6 +52,23 @@ public abstract class ClassMember extends Member {
 
   public final List<VmTyped> getAnnotations() {
     return annotations;
+  }
+
+  /**
+   * Return all annotations starting from the declaring class and traversing up the class hierarchy
+   */
+  public final List<VmTyped> getAllAnnotations() {
+    assert name != null;
+    var allAnnotations = new ArrayList<>(annotations);
+    var clazz = getDeclaringClass().getSuperclass();
+    while (clazz != null) {
+      var prop = clazz.getProperty(name);
+      if (prop != null) {
+        allAnnotations.addAll(prop.getAnnotations());
+      }
+      clazz = clazz.getSuperclass();
+    }
+    return allAnnotations;
   }
 
   /** Returns the prototype of the class that declares this member. */
