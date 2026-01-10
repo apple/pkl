@@ -1,0 +1,1 @@
+foo = read("foo:bar")
