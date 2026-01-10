@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmUtils;
 
 public abstract class InvokeSuperMethodNode extends ExpressionNode {
@@ -66,9 +67,10 @@ public abstract class InvokeSuperMethodNode extends ExpressionNode {
 
   protected ClassMethod findSupermethod(VirtualFrame frame) {
     var owner = VmUtils.getOwner(frame);
-    while (owner instanceof org.pkl.core.runtime.VmFunction) {
+    while (owner instanceof VmFunction) {
       owner = owner.getEnclosingOwner();
     }
+    assert owner != null : "VmFunction always has a parent";
     assert owner.isPrototype();
 
     var superclass = owner.getVmClass().getSuperclass();
