@@ -32,6 +32,10 @@ module pkl.xml
 ///
 /// To set the name and attributes of the XML document's root element,
 /// use [rootElementName] and [rootElementAttributes].
+///
+/// An annotation converter for [Property] is implicitly added to allow renaming properties during
+/// XML rendering.
+/// Add an explicit annotation converter for [Property] to override this behavior.
 class Renderer extends ValueRenderer {
   extension = "xml"
 
@@ -52,6 +56,13 @@ class Renderer extends ValueRenderer {
   external function renderValue(value: Any): String
 }
 
+/// Annotate properties of classes and modules with this class to override how the XML [Renderer]
+/// interprets a property's name.
+class Property extends Annotation {
+  /// The new name to use for the annotated property when rendered by [Renderer].
+  name: String
+}
+
 /// Creates an XML element with the given name.
 ///
 /// Use this method to directly define an XML element
@@ -68,10 +79,10 @@ class Renderer extends ValueRenderer {
 ///
 /// To define the XML element's content, add child values (normally also called "elements") to the `Element` object:
 /// ```
-/// order = xml.Element("order") {       // element with one child
-///   xml.Element("item") {              // element with two children
-///     xml.Element("name") { "banana" } // element with one child
-///     xml.Element("quantity") { 42 }   // element with one child
+/// order = (xml.Element("order")) {       // element with one child
+///   (xml.Element("item")) {              // element with two children
+///     (xml.Element("name")) { "banana" } // element with one child
+///     (xml.Element("quantity")) { 42 }   // element with one child
 ///   }
 /// }
 /// ```

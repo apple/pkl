@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,6 +44,7 @@ import org.pkl.core.ast.type.TypeNode.UnionOfStringLiteralsTypeNode;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.ProtobufModule;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmDataSize;
@@ -135,9 +136,9 @@ public final class RendererNodes {
   @TruffleBoundary
   private static ProtobufRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
 
-    return new ProtobufRenderer(builder, indent, new PklConverter(converters));
+    return new ProtobufRenderer(
+        builder, indent, PklConverter.fromRenderer(self, ProtobufModule.getPropertyClass()));
   }
 
   private static final class ProtobufRenderer extends AbstractStringRenderer {

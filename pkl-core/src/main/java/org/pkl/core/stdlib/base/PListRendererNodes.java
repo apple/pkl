@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,9 +48,7 @@ public final class PListRendererNodes {
 
   private static PListRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
-    return new PListRenderer(builder, indent, converter);
+    return new PListRenderer(builder, indent, PklConverter.fromRenderer(self));
   }
 
   // keep in sync with org.pkl.core.PListRenderer

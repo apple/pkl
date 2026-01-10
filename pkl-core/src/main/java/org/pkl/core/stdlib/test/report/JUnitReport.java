@@ -236,8 +236,7 @@ public final class JUnitReport implements TestReport {
 
   private static String renderXML(String indent, String version, VmDynamic value) {
     var builder = new StringBuilder();
-    var converter = new PklConverter(VmMapping.empty());
-    var renderer = new Renderer(builder, indent, version, "", VmMapping.empty(), converter);
+    var renderer = new Renderer(builder, indent, version, "", VmMapping.empty(), PklConverter.NOOP);
     renderer.renderDocument(value);
     return builder.toString();
   }

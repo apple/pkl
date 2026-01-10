@@ -1,0 +1,10 @@
+{
+  foo: {
+    'new-name': 'hello world',
+  },
+  unaltered: |||
+    {
+      oldName: 'hello world',
+    }
+  |||,
+}

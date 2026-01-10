@@ -20,12 +20,14 @@
 @ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.base
 
-// math import used for doc comments
+// json, math, and yaml imports used for doc comments
+import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
 import "pkl:pklbinary"
 import "pkl:protobuf"
 import "pkl:xml"
+import "pkl:yaml"
 
 /// The top type of the type hierarchy.
 ///
@@ -349,7 +351,27 @@ abstract class BaseValueRenderer {
   /// Paths are matched against path specs component-wise in reverse order.
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
+  ///
   converters: Mapping<Class | String, (unknown) -> Any>
+
+  /// Annotation converters to apply before values are rendered.
+  ///
+  /// Annotation converters are checked for each property of rendered [Typed] values.
+  /// If a property has an annotation for which a converter is defined, the converter function is
+  /// called with the property name, the value of the annotation, and the property value. The
+  /// converter function must return a [Pair] of the converted property name and value.
+  ///
+  /// Each of the property annotations of the enclosing class is checked in order, starting with the
+  /// annotations (top to bottom) of the current class, then repeating for each parent class in the
+  /// hierarchy.
+  /// Multiple annotation converters can apply; converters for matching annotations are called in
+  /// order, with the result of one being passed to the next.
+  ///
+  /// At most one converter is applied per annotation. The most specific class (according to class
+  /// hierarchy) wins.
+  ///
+  /// Annotation converters can overlap with [converters] and apply first.
+  annotationConverters: Mapping<Class, (String, Annotation, unknown) -> Pair<String, Any>>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
@@ -466,6 +488,10 @@ class PcfRenderDirective {
 }
 
 /// Renders values as JSON.
+///
+/// An annotation converter for [json.Property] is implicitly added to allow renaming properties
+/// during JSON rendering.
+/// Add an explicit annotation converter for [json.Property] to override this behavior.
 class JsonRenderer extends ValueRenderer {
   extension = "json"
 
@@ -486,6 +512,10 @@ class JsonRenderer extends ValueRenderer {
 /// Renders values as YAML.
 ///
 /// To render a YAML stream, set [isStream] to [true].
+///
+/// An annotation converter for [yaml.Property] is implicitly added to allow renaming properties
+/// during YAML rendering.
+/// Add an explicit annotation converter for [yaml.Property] to override this behavior.
 class YamlRenderer extends ValueRenderer {
   extension = "yaml"
 

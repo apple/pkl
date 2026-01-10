@@ -1,0 +1,21 @@
+// test yaml.Property implicit annotation converter
+import "pkl:yaml"
+
+class Foo {
+  @yaml.Property { name = "new-name" }
+  oldName: String
+}
+
+foo: Foo = new {
+  oldName = "hello world"
+}
+
+unaltered: String = new YamlRenderer {
+  annotationConverters {
+    [yaml.Property] = (name, _, value) -> Pair(name, value)
+  }
+}.renderDocument(foo)
+
+output {
+  renderer = new YamlRenderer {}
+}

@@ -1,0 +1,7 @@
+no_converter = 1
+foo_prefixed_with_foo = 2
+fooPrefixedThenCamelCased = 3
+foo_camelCasedThenPrefixed = 4
+foo_subclassAppliesFirst = 5
+transform_value = 12
+transform_value_repeatedly = 42
