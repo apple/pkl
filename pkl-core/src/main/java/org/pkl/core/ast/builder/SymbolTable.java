@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -327,6 +327,8 @@ public final class SymbolTable {
     }
 
     public final boolean isClassMemberScope() {
+      var effectiveScope = skipLambdaScopes();
+      var parent = effectiveScope.parent;
       if (parent == null) return false;
 
       return parent.isClassScope()
