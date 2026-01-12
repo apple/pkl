@@ -1,0 +1,10 @@
+foo: Int(this
+  + two
+    / three
+  == four) = 4
+
+local two = 2
+
+local three = 3
+
+local four = 4

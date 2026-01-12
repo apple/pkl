@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -123,7 +123,11 @@ class TestsTest : AbstractTest() {
             ✔ divide numbers
             ✘ fail
                4 == 9 (file:///file, line x)
+                 │
+                 false
                "foo" == "bar" (file:///file, line x)
+                     │
+                     false
           examples
             ✔ user 0
             ✘ user 1
@@ -233,14 +237,19 @@ class TestsTest : AbstractTest() {
 
     assertThat(report)
       .isEqualTo(
+        // language=xml
         """
         <?xml version="1.0" encoding="UTF-8"?>
         <testsuite name="test" tests="5" failures="2">
             <testcase classname="test.facts" name="sum numbers"></testcase>
             <testcase classname="test.facts" name="divide numbers"></testcase>
             <testcase classname="test.facts" name="fail">
-                <failure message="Fact Failure">4 == 9 (file:///file, line x)</failure>
-                <failure message="Fact Failure">&quot;foo&quot; == &quot;bar&quot; (file:///file, line x)</failure>
+                <failure message="Fact Failure">4 == 9 (file:///file, line x)
+          │
+          false</failure>
+                <failure message="Fact Failure">&quot;foo&quot; == &quot;bar&quot; (file:///file, line x)
+              │
+              false</failure>
             </testcase>
             <testcase classname="test.examples" name="user 0"></testcase>
             <testcase classname="test.examples" name="user 1">
@@ -259,7 +268,7 @@ class TestsTest : AbstractTest() {
             <system-err><![CDATA[8 = 8
         ]]></system-err>
         </testsuite>
-        
+
         """
           .trimIndent()
       )

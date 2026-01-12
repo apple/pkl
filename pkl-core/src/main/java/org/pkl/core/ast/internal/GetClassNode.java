@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,10 +19,13 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.instrumentation.GenerateWrapper;
+import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
 
+@GenerateWrapper
 // NOTE: needs to be kept in sync with VmUtils.getClass()
 @NodeChild(value = "valueNode", type = ExpressionNode.class)
 public abstract class GetClassNode extends ExpressionNode {
@@ -75,5 +78,10 @@ public abstract class GetClassNode extends ExpressionNode {
     // - comes after String/long/double/boolean specializations
     // - has a guard that triggers per-class respecialization
     return ((VmValue) value).getClass();
+  }
+
+  @Override
+  public WrapperNode createWrapper(ProbeNode probe) {
+    return new GetClassNodeWrapper(this, probe);
   }
 }
