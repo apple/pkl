@@ -164,13 +164,13 @@ class CommandSpecParserTest {
         """
           extends "pkl:Command"
           options: Options
-          abstract class Options extends BaseOptions {}
+          abstract class Options {}
         """
           .trimIndent(),
       )
 
     val exc = assertThrows<PklException> { parse(moduleUri) }
-    assertThat(exc.message).contains("abstract class Options extends BaseOptions {")
+    assertThat(exc.message).contains("abstract class Options {")
     assertThat(exc.message)
       .contains(
         "Class `cmd#Options` for type annotation on `options` property in `pkl:Command` subclass must not be abstract."
@@ -275,7 +275,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         @Flag
         @Argument
         foo: String
@@ -297,7 +297,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo = "bar"
       }
     """
@@ -316,7 +316,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: String? = "bar"
       }
     """
@@ -336,7 +336,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: "oops" | String
       }
     """
@@ -356,7 +356,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         @Argument
         foo: String = "bar"
       }
@@ -376,7 +376,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         @Argument
         foo: String?
       }
@@ -397,7 +397,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         @Argument
         foo: Map<String, String>
       }
@@ -417,7 +417,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-          class Options extends BaseOptions {
+          class Options {
             foo: String = "hi"
             bar: String = foo
             baz: Map<String, String> = Map()
@@ -490,7 +490,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         help: Boolean
       }
     """
@@ -510,7 +510,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         @Flag { shortName = "h" }
         showHelp: Boolean
       }
@@ -531,7 +531,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         @Argument
         list: List<String>
         @Argument
@@ -542,7 +542,7 @@ class CommandSpecParserTest {
       )
 
     val exc = assertThrows<PklException> { parse(moduleUri) }
-    assertThat(exc.message).contains("class Options extends BaseOptions {")
+    assertThat(exc.message).contains("class Options {")
     assertThat(exc.message)
       .contains("More than one `List` or `Set` property annotated with `@Argument` found.")
   }
@@ -554,7 +554,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: List<List<"a" | "b">>
       }
     """
@@ -574,7 +574,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: List<Map<String, "a" | "b">>
       }
     """
@@ -596,7 +596,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: Map<String, List<"a" | "b">>
       }
     """
@@ -616,7 +616,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: Map<String, Map<String, "a" | "b">>
       }
     """
@@ -638,7 +638,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: Map<Map<String, "a" | "b">, String>
       }
     """
@@ -660,7 +660,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: Map<Map<String, "a" | "b">, String>
       }
     """
@@ -682,7 +682,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: Foo
       }
       class Foo
@@ -702,7 +702,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         a: String(true)
         b: String?(true)
         c: String(true)?
@@ -750,7 +750,7 @@ class CommandSpecParserTest {
           "cmd_$type.pkl",
           renderOptions +
             """
-      class Options extends BaseOptions {
+      class Options {
         foo: $type
       }
     """
@@ -772,7 +772,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options extends BaseOptions {
+      class Options {
         foo: Map
       }
     """

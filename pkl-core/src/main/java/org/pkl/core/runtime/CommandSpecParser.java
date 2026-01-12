@@ -125,6 +125,9 @@ public final class CommandSpecParser {
       throw PklBugException.unreachableCode();
     }
     var optionsTypeNode = optionsPropertyTypeNode.getTypeNode();
+    if (optionsTypeNode instanceof TypeNode.TypedTypeNode) {
+      return BaseModule.getTypedClass();
+    }
     if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
       throw exceptionBuilder()
           .withSourceSection(optionsTypeNode.getSourceSection())
