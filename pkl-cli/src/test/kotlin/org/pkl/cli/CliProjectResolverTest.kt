@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,9 @@ package org.pkl.cli
 import java.io.File
 import java.io.StringWriter
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import org.assertj.core.api.Assertions.assertThat
+import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
@@ -27,6 +29,7 @@ import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.writeString
 import org.pkl.core.util.IoUtils
 
 class CliProjectResolverTest {
@@ -456,5 +459,41 @@ class CliProjectResolverTest {
     """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `IOException when writing to PklProject-deps-json`(@TempDir tempDir: Path) {
+    val consoleOut = StringWriter()
+    val errOut = StringWriter()
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        """
+      amends "pkl:Project"
+
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
+        }
+      }
+    """
+          .trimIndent()
+      )
+    // coerce an IOException by making this a directory
+    val depsJsonFile = tempDir.resolve("PklProject.deps.json").also { it.createDirectories() }
+    assertThatCode {
+        CliProjectResolver(
+            CliBaseOptions(
+              caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+              testPort = packageServer.port,
+              noCache = true,
+            ),
+            listOf(tempDir),
+            consoleWriter = consoleOut,
+            errWriter = errOut,
+          )
+          .run()
+      }
+      .hasMessageContaining("Failed to write to $depsJsonFile")
   }
 }
