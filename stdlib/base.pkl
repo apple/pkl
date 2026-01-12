@@ -364,14 +364,15 @@ abstract class BaseValueRenderer {
   /// Each of the property annotations of the enclosing class is checked in order, starting with the
   /// annotations (top to bottom) of the current class, then repeating for each parent class in the
   /// hierarchy.
-  /// Multiple annotation converters can apply; converters for matching annotations are called in
-  /// order, with the result of one being passed to the next.
+  /// Multiple annotation converters can apply per property; converters for matching annotations are
+  /// called in order, with the result of one being passed to the next.
   ///
   /// At most one converter is applied per annotation. The most specific class (according to class
   /// hierarchy) wins.
   ///
-  /// Annotation converters can overlap with [converters] and apply first.
-  annotationConverters: Mapping<Class, (String, Annotation, unknown) -> Pair<String, Any>>
+  /// Annotation converters can coexist with [converters] and apply first.
+  @Since { version = "0.31.0" }
+  annotationConverters: Mapping<Class, (Annotation, String, unknown) -> Pair<String, Any>>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
@@ -489,9 +490,15 @@ class PcfRenderDirective {
 
 /// Renders values as JSON.
 ///
-/// An annotation converter for [json.Property] is implicitly added to allow renaming properties
-/// during JSON rendering.
-/// Add an explicit annotation converter for [json.Property] to override this behavior.
+/// The [json.Property] annotation can be used to change how a property name renders into JSON.
+///
+/// Example:
+/// ```
+/// import "pkl:json"
+///
+/// @json.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class JsonRenderer extends ValueRenderer {
   extension = "json"
 
@@ -513,9 +520,15 @@ class JsonRenderer extends ValueRenderer {
 ///
 /// To render a YAML stream, set [isStream] to [true].
 ///
-/// An annotation converter for [yaml.Property] is implicitly added to allow renaming properties
-/// during YAML rendering.
-/// Add an explicit annotation converter for [yaml.Property] to override this behavior.
+/// The [yaml.Property] annotation can be used to change how a property name renders into YAML.
+///
+/// Example:
+/// ```
+/// import "pkl:yaml"
+///
+/// @yaml.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class YamlRenderer extends ValueRenderer {
   extension = "yaml"
 

@@ -56,8 +56,8 @@ public final class ClassProperty extends ClassMember {
 
   public List<VmTyped> getAllAnnotations() {
     var annotations = new ArrayList<VmTyped>();
-    for (var klazz = getDeclaringClass(); klazz != null; klazz = klazz.getSuperclass()) {
-      var p = klazz.getDeclaredProperty(getName());
+    for (var clazz = getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
+      var p = clazz.getDeclaredProperty(getName());
       if (p != null) {
         annotations.addAll(p.getAnnotations());
       }
@@ -92,8 +92,8 @@ public final class ClassProperty extends ClassMember {
 
     public List<VmTyped> getAllAnnotations() {
       var annotations = new ArrayList<VmTyped>();
-      for (var klazz = prop.getDeclaringClass(); klazz != null; klazz = klazz.getSuperclass()) {
-        var p = klazz.getDeclaredProperty(prop.getName());
+      for (var clazz = prop.getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
+        var p = clazz.getDeclaredProperty(prop.getName());
         if (p != null) {
           annotations.addAll(p.getAnnotations());
         }
@@ -103,8 +103,8 @@ public final class ClassProperty extends ClassMember {
 
     public VmSet getAllModifierMirrors() {
       var mods = 0;
-      for (var klazz = prop.getDeclaringClass(); klazz != null; klazz = klazz.getSuperclass()) {
-        var parent = klazz.getDeclaredProperty(prop.getName());
+      for (var clazz = prop.getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
+        var parent = clazz.getDeclaredProperty(prop.getName());
         if (parent != null) {
           mods |= parent.getModifiers();
         }

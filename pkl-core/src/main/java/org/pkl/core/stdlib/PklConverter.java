@@ -251,7 +251,7 @@ public final class PklConverter implements VmValueConverter<Object> {
           result.put(
               (VmClass) key,
               (name, annotation, val) ->
-                  (VmPair) ((VmFunction) value).apply(name, annotation, val));
+                  (VmPair) ((VmFunction) value).apply(annotation, name, val));
           return true;
         });
 

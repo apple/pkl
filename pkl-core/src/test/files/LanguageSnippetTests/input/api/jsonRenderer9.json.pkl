@@ -12,7 +12,7 @@ foo: Foo = new {
 
 unaltered: String = new JsonRenderer {
   annotationConverters {
-    [json.Property] = (name, _, value) -> Pair(name, value)
+    [json.Property] = (_, name, value) -> Pair(name, value)
   }
 }.renderDocument(foo)
 

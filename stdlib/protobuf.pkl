@@ -26,9 +26,15 @@ import "pkl:reflect"
 ///
 /// As of this release, only Protocol Buffers' text format is supported.
 ///
-/// An annotation converter for [Property] is implicitly added to allow renaming properties during
-/// protobuf rendering.
-/// Add an explicit annotation converter for [Property] to override this behavior.
+/// The [Property] annotation can be used to change how a property name renders into protobuf.
+///
+/// Example:
+/// ```
+/// import "pkl:protobuf"
+///
+/// @protobuf.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class Renderer extends ValueRenderer {
   /// The characters to use for indenting output.
   ///

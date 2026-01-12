@@ -1,14 +1,14 @@
 open class NameTransform extends Annotation {
   prefix: String
 
-  const apply: (String, NameTransform, Any) -> Pair<String, Any> = (name, annotation, value) ->
+  const apply: (NameTransform, String, Any) -> Pair<String, Any> = (annotation, name, value) ->
     Pair(annotation.prefix + name, value)
 }
 
 class CamelCase extends NameTransform {
   prefix: String = ""
 
-  const apply = (name, annotation, value) ->
+  const apply = (annotation, name, value) ->
     Pair(
       (annotation.prefix + name).replaceAllMapped(Regex("[^A-Za-z0-9]+([A-Za-z0-9])"), (match) ->
         match.groups[1].value.toUpperCase()
@@ -19,7 +19,7 @@ class CamelCase extends NameTransform {
 
 class MultiplyValue extends Annotation {
   factor: Number
-  const apply: (String, NameTransform, Any) -> Pair<String, Any> = (name, annotation, value) ->
+  const apply: (NameTransform, String, Any) -> Pair<String, Any> = (annotation, name, value) ->
     Pair(name, value * annotation.factor)
 }
 

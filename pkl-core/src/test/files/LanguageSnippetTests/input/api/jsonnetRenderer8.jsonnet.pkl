@@ -12,7 +12,7 @@ foo: Foo = new {
 
 unaltered: String = new jsonnet.Renderer {
   annotationConverters {
-    [jsonnet.Property] = (name, _, value) -> Pair(name, value)
+    [jsonnet.Property] = (_, name, value) -> Pair(name, value)
   }
 }.renderDocument(foo)
 

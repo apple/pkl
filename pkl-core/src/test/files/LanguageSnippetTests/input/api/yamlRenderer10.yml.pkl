@@ -12,7 +12,7 @@ foo: Foo = new {
 
 unaltered: String = new YamlRenderer {
   annotationConverters {
-    [yaml.Property] = (name, _, value) -> Pair(name, value)
+    [yaml.Property] = (_, name, value) -> Pair(name, value)
   }
 }.renderDocument(foo)
 

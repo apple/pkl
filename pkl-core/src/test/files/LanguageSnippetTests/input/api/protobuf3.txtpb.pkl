@@ -12,7 +12,7 @@ foo: Foo = new {
 
 unaltered: String = new protobuf.Renderer {
   annotationConverters {
-    [protobuf.Property] = (name, _, value) -> Pair(name, value)
+    [protobuf.Property] = (_, name, value) -> Pair(name, value)
   }
 }.renderDocument(foo)
 
