@@ -25,7 +25,7 @@
 ///
 /// options: Options
 ///
-/// class Options extends BaseOptions {
+/// class Options {
 ///   // ...
 /// }
 /// ```
@@ -59,11 +59,11 @@ hidden command: CommandInfo = new {
 ///
 /// options: Options
 ///
-/// class Options extends BaseOptions {
+/// class Options {
 ///   // define flags and arguments here
 /// }
 /// ```
-hidden options: BaseOptions
+hidden options: Typed
 
 /// The value of the parent command with parsed options.
 ///
@@ -79,8 +79,6 @@ hidden parent: Command?
 ///
 /// `null` for root commands.
 hidden fixed root: Command? = parent?.root ?? parent
-
-open class BaseOptions
 
 class CommandInfo {
   /// The name of the subcommand.
