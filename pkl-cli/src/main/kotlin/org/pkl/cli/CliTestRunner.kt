@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import org.pkl.commons.cli.*
 import org.pkl.core.Closeables
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
+import org.pkl.core.PklException
 import org.pkl.core.TestResults
 import org.pkl.core.stdlib.test.report.JUnitReport
 import org.pkl.core.stdlib.test.report.SimpleReport
@@ -106,6 +107,9 @@ constructor(
         } catch (ex: Exception) {
           errWriter.appendLine("Error evaluating module ${moduleUri.path}:")
           errWriter.write(ex.message ?: "")
+          if (ex !is PklException) {
+            errWriter.write(ex.stackTraceToString())
+          }
           if (moduleUri != sources.last()) {
             errWriter.appendLine()
           }
