@@ -742,6 +742,8 @@ jobs:
         echo "$DIR" >> "$GITHUB_PATH"
         echo "pkl_exec=$PKL_EXEC" >> "$GITHUB_OUTPUT"
     - shell: bash
+      run: rm -rf .github/**/[a-z]*.yml
+    - shell: bash
       run: pkl eval -m .github/ --project-dir .github/ .github/index.pkl
     - name: check git status
       shell: bash
