@@ -469,7 +469,7 @@ typealias CommonSpdxLicenseIdentifier =
 @Since { version = "0.27.0" }
 fixed annotations: List<Annotation> = reflect.moduleOf(this).annotations
 
-/// Machiney for URI percent decoding.
+/// Machinery for URI percent decoding.
 // TODO: replace me when URI stdlib is introduced
 @Unlisted
 local class Impl {

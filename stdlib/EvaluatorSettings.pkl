@@ -120,10 +120,6 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 @Since { version = "0.30.0" }
 traceMode: ("compact" | "pretty")?
 
-/// The enclosing URI used to resolve relative paths.
-@Since { version = "0.31.0" }
-hidden enclosingUri: String
-
 local function resolvePath(base: String, path: String) =
   if (path.startsWith("/") || path is AbsoluteUri)
     path
