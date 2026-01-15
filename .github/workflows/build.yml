@@ -5,6 +5,7 @@ name: Build
     branches-ignore:
     - main
     - release/*
+    - dependabot/**
     tags-ignore:
     - '**'
 concurrency:
