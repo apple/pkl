@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,12 @@ public final class VmFunction extends VmObjectLike {
   // this method
   public Object apply(Object arg1, Object arg2) {
     return getCallTarget().call(thisValue, this, arg1, arg2);
+  }
+
+  // if call site is a node, use ApplyVmFunction3Node.execute() or DirectCallNode.call() instead of
+  // this method
+  public Object apply(Object arg1, Object arg2, Object arg3) {
+    return getCallTarget().call(thisValue, this, arg1, arg2, arg3);
   }
 
   public VmFunction copy(

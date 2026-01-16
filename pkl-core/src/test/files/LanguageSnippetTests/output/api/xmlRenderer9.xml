@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <foo>
+    <new-name>hello world</new-name>
+  </foo>
+  <unaltered>&lt;?xml version=&quot;1.0&quot; encoding=&quot;UTF-8&quot;?&gt;
+&lt;root&gt;
+  &lt;oldName&gt;hello world&lt;/oldName&gt;
+&lt;/root&gt;
+</unaltered>
+</root>

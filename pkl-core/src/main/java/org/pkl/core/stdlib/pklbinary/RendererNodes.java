@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,9 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.msgpack.core.MessageBufferPacker;
 import org.msgpack.core.MessagePack;
-import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmBytes;
-import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmPklBinaryEncoder;
 import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.Nullable;
@@ -64,8 +61,6 @@ public final class RendererNodes {
   }
 
   private static VmPklBinaryEncoder createRenderer(VmTyped self, MessageBufferPacker packer) {
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
-    return new VmPklBinaryEncoder(packer, converter);
+    return new VmPklBinaryEncoder(packer, PklConverter.fromRenderer(self));
   }
 }

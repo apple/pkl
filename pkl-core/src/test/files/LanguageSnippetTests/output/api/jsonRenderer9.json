@@ -1,0 +1,6 @@
+{
+  "foo": {
+    "new-name": "hello world"
+  },
+  "unaltered": "{\n  \"oldName\": \"hello world\"\n}\n"
+}

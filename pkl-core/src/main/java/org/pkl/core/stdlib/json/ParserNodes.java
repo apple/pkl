@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ public final class ParserNodes {
     }
 
     private Object doParse(VmTyped self, String text) {
-      var converter = createConverter(self);
+      var converter = PklConverter.fromParser(self);
       var useMapping = (boolean) VmUtils.readMember(self, Identifier.USE_MAPPING);
       var handler = new Handler(converter, useMapping);
       var parser = new JsonParser(handler);
@@ -62,11 +62,6 @@ public final class ParserNodes {
       }
       return converter.convert(handler.value, List.of(VmValueConverter.TOP_LEVEL_VALUE));
     }
-  }
-
-  private static PklConverter createConverter(VmTyped self) {
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    return new PklConverter(converters);
   }
 
   private static class Handler

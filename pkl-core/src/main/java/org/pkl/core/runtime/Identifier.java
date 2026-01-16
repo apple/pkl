@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,6 +62,7 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier ROOT_ELEMENT_NAME = get("rootElementName");
   public static final Identifier ROOT_ELEMENT_ATTRIBUTES = get("rootElementAttributes");
   public static final Identifier CONVERTERS = get("converters");
+  public static final Identifier ANNOTATION_CONVERTERS = get("annotationConverters");
   public static final Identifier USE_MAPPING = get("useMapping");
 
   // members of pkl.base#RegexMatch

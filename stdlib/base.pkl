@@ -20,12 +20,14 @@
 @ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.base
 
-// math import used for doc comments
+// json, math, and yaml imports used for doc comments
+import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
 import "pkl:pklbinary"
 import "pkl:protobuf"
 import "pkl:xml"
+import "pkl:yaml"
 
 /// The top type of the type hierarchy.
 ///
@@ -349,7 +351,33 @@ abstract class BaseValueRenderer {
   /// Paths are matched against path specs component-wise in reverse order.
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
+  ///
   converters: Mapping<Class | String, (unknown) -> Any>
+
+  /// Annotation converters to apply before values are rendered.
+  ///
+  /// Annotation converters are checked for each property of rendered [Typed] values.
+  /// If a property has an annotation for which a converter is defined, the converter function is
+  /// called with the property name, the value of the annotation, and the property value.
+  /// The converter function should return a [Pair] of the converted property name and value.
+  /// If the returned value is a [RenderDirective], the renderer will output its contents verbatim.
+  /// If the renderer produces newlines and indentation, the directive's content is rendered with
+  /// the same whitespace as sibling properties.
+  ///
+  /// Each of the property annotations of the enclosing class is checked in order, starting with the
+  /// annotations (top to bottom) of the current class, then repeating for each parent class in the
+  /// hierarchy.
+  /// At most one annotation converter can apply per property; checking concludes after the first
+  /// annotation that matches a converter.
+  /// When an annotation matches multiple converters, the most specific class (according to class
+  /// hierarchy) wins.
+  ///
+  /// Annotation converters can coexist with [converters] and apply first.
+  @Since { version = "0.31.0" }
+  annotationConverters: Mapping<
+    Class,
+    (Annotation, String, unknown) -> Pair<String, Any> | RenderDirective,
+  >
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
@@ -466,6 +494,16 @@ class PcfRenderDirective {
 }
 
 /// Renders values as JSON.
+///
+/// The [json.Property] annotation can be used to change how a property name renders into JSON.
+///
+/// Example:
+/// ```
+/// import "pkl:json"
+///
+/// @json.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class JsonRenderer extends ValueRenderer {
   extension = "json"
 
@@ -486,6 +524,16 @@ class JsonRenderer extends ValueRenderer {
 /// Renders values as YAML.
 ///
 /// To render a YAML stream, set [isStream] to [true].
+///
+/// The [yaml.Property] annotation can be used to change how a property name renders into YAML.
+///
+/// Example:
+/// ```
+/// import "pkl:yaml"
+///
+/// @yaml.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class YamlRenderer extends ValueRenderer {
   extension = "yaml"
 

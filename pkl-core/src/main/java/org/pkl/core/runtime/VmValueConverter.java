@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 package org.pkl.core.runtime;
+
+import org.pkl.core.ast.member.ClassProperty;
+import org.pkl.core.util.Pair;
 
 public interface VmValueConverter<T> {
   Object WILDCARD_PROPERTY =
@@ -81,6 +84,9 @@ public interface VmValueConverter<T> {
   T convertRegex(VmRegex value, Iterable<Object> path);
 
   T convertFunction(VmFunction value, Iterable<Object> path);
+
+  /** Returns with an empty identifier if the second value is a RenderDirective */
+  Pair<Identifier, T> convertProperty(ClassProperty property, Object value, Iterable<Object> path);
 
   default T convert(Object value, Iterable<Object> path) {
     if (value instanceof VmValue vmValue) {
