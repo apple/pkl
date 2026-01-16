@@ -99,6 +99,18 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
   }
 
   @Specialization
+  protected VmReference eval(VmReference reference, Object key) {
+    var result = reference.withSubscriptAccess(key);
+    if (result != null) return result;
+
+    CompilerDirectives.transferToInterpreter();
+    // TODO
+    throw exceptionBuilder()
+        .adhocEvalError("unabled to index reference<FooBarBaz> with key {0}", key)
+        .build();
+  }
+
+  @Specialization
   protected long eval(VmBytes receiver, long index) {
     if (index < 0 || index >= receiver.getLength()) {
       CompilerDirectives.transferToInterpreter();

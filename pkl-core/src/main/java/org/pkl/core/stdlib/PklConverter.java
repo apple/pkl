@@ -43,6 +43,8 @@ public final class PklConverter implements VmValueConverter<Object> {
   private final @Nullable VmFunction nullConverter;
   private final @Nullable VmFunction classConverter;
   private final @Nullable VmFunction typeAliasConverter;
+  private final @Nullable VmFunction referenceConverter;
+  private final @Nullable VmFunction referenceAccessConverter;
 
   public PklConverter(VmMapping converters) {
     // As of 0.18, `converters` is forced by the mapping type check,
@@ -70,6 +72,8 @@ public final class PklConverter implements VmValueConverter<Object> {
     nullConverter = typeConverters.get(BaseModule.getNullClass());
     classConverter = typeConverters.get(BaseModule.getClassClass());
     typeAliasConverter = typeConverters.get(BaseModule.getTypeAliasClass());
+    referenceConverter = typeConverters.get(BaseModule.getReferenceClass());
+    referenceAccessConverter = typeConverters.get(BaseModule.getReferenceAccessClass());
   }
 
   @Override
@@ -175,6 +179,16 @@ public final class PklConverter implements VmValueConverter<Object> {
   @Override
   public Object convertNull(VmNull value, Iterable<Object> path) {
     return doConvert(value, path, nullConverter);
+  }
+
+  @Override
+  public Object convertReference(VmReference value, Iterable<Object> path) {
+    return doConvert(value, path, referenceConverter);
+  }
+
+  @Override
+  public Object convertReferenceAccess(VmReference.Access value, Iterable<Object> path) {
+    return doConvert(value, path, referenceAccessConverter);
   }
 
   private Map<VmClass, VmFunction> createTypeConverters(VmMapping converters) {
