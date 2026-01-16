@@ -423,6 +423,13 @@ public final class RendererNodes {
       assert name == popped : "Corrupted traversal stack.";
     }
 
+    @Override
+    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+      if (!propertyPath.isEmpty()) startNewLine();
+      // append verbatim
+      builder.append(VmUtils.readTextProperty(value));
+    }
+
     private void startNewLine() {
       if (indent.isEmpty() || builder.isEmpty() || builder.charAt(builder.length() - 1) == '\n')
         return;

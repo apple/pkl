@@ -358,21 +358,26 @@ abstract class BaseValueRenderer {
   ///
   /// Annotation converters are checked for each property of rendered [Typed] values.
   /// If a property has an annotation for which a converter is defined, the converter function is
-  /// called with the property name, the value of the annotation, and the property value. The
-  /// converter function must return a [Pair] of the converted property name and value.
+  /// called with the property name, the value of the annotation, and the property value.
+  /// The converter function should return a [Pair] of the converted property name and value.
+  /// If the returned value is a [RenderDirective], the renderer will output its contents verbatim.
+  /// If the renderer produces newlines and indentation, the directive's content is rendered with
+  /// the same whitespace as sibling properties.
   ///
   /// Each of the property annotations of the enclosing class is checked in order, starting with the
   /// annotations (top to bottom) of the current class, then repeating for each parent class in the
   /// hierarchy.
-  /// Multiple annotation converters can apply per property; converters for matching annotations are
-  /// called in order, with the result of one being passed to the next.
-  ///
-  /// At most one converter is applied per annotation. The most specific class (according to class
+  /// At most one annotation converter can apply per property; checking concludes after the first
+  /// annotation that matches a converter.
+  /// When an annotation matches multiple converters, the most specific class (according to class
   /// hierarchy) wins.
   ///
   /// Annotation converters can coexist with [converters] and apply first.
   @Since { version = "0.31.0" }
-  annotationConverters: Mapping<Class, (Annotation, String, unknown) -> Pair<String, Any>>
+  annotationConverters: Mapping<
+    Class,
+    (Annotation, String, unknown) -> Pair<String, Any> | RenderDirective,
+  >
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.

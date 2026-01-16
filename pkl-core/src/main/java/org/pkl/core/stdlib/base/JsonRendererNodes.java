@@ -238,6 +238,13 @@ public final class JsonRendererNodes {
     }
 
     @Override
+    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+      if (!isFirst) builder.append(',');
+      startNewLine();
+      visitRenderDirective(value);
+    }
+
+    @Override
     protected void endDynamic(VmDynamic value, boolean isEmpty) {
       if (value.hasElements()) {
         endArray(isEmpty);

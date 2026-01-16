@@ -23,7 +23,7 @@ import org.pkl.core.util.Pair;
 
 public final class PklConverter implements VmValueConverter<Object> {
   private interface AnnotationConverter {
-    VmPair convert(String property, VmTyped annotation, Object value);
+    Object convert(String property, VmTyped annotation, Object value);
   }
 
   private final Map<VmClass, VmFunction> typeConverters;
@@ -221,9 +221,10 @@ public final class PklConverter implements VmValueConverter<Object> {
       if (converter == null) {
         continue;
       }
-      var nameVal = converter.convert(name.toString(), annotation, value);
-      name = Identifier.get((String) nameVal.getFirst());
-      value = nameVal.getSecond();
+      var converted = converter.convert(name.toString(), annotation, value);
+      return converted instanceof VmPair vmPair
+          ? Pair.of(Identifier.get((String) vmPair.getFirst()), vmPair.getSecond())
+          : Pair.of(Identifier.get(""), converted); // RenderDirective
     }
 
     return Pair.of(name, value);

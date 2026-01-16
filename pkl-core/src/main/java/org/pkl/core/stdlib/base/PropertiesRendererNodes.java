@@ -232,6 +232,11 @@ public final class PropertiesRendererNodes {
     }
 
     @Override
+    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+      visitRenderDirective(value);
+    }
+
+    @Override
     protected void endDynamic(VmDynamic value, boolean isEmpty) {}
 
     @Override

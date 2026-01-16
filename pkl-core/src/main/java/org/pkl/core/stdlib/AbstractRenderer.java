@@ -163,6 +163,9 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   /** Visits a property of a {@link VmDynamic} or {@link VmTyped}. */
   protected abstract void visitProperty(Identifier name, Object value, boolean isFirst);
 
+  /** Perform logic for rendering a render directive in place of a property */
+  protected abstract void visitPropertyRenderDirective(VmTyped value, boolean isFirst);
+
   protected abstract void endDynamic(VmDynamic value, boolean isEmpty);
 
   protected abstract void endTyped(VmTyped value, boolean isEmpty);
@@ -346,9 +349,14 @@ public abstract class AbstractRenderer implements VmValueVisitor {
       name = propVal.getFirst();
       value = propVal.getSecond();
     }
-    var convertedValue = converter.convert(value, currPath);
-    if (!(skipNullProperties && convertedValue instanceof VmNull)) {
-      visitProperty(name, convertedValue, isFirst.getAndSetFalse());
+    if (name.toString().isEmpty()) {
+      assert isRenderDirective(value);
+      visitPropertyRenderDirective((VmTyped) value, isFirst.getAndSetFalse());
+    } else {
+      var convertedValue = converter.convert(value, currPath);
+      if (!(skipNullProperties && convertedValue instanceof VmNull)) {
+        visitProperty(name, convertedValue, isFirst.getAndSetFalse());
+      }
     }
     currPath.pop();
     currSourceSection = prevSourceSection;

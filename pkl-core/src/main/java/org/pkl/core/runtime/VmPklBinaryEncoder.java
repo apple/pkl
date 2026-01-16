@@ -259,6 +259,11 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
   }
 
   @Override
+  protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
+    visitRenderDirective(value);
+  }
+
+  @Override
   public void visitClass(VmClass value) {
     try {
       packer.packArrayHeader(3);
