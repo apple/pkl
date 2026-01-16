@@ -1,0 +1,3 @@
+import "../../input-helper/cycles/amendsFoo.pkl"
+
+foo: amendsFoo.Bar = "bar"
