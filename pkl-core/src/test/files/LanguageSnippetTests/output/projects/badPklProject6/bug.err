@@ -1,0 +1,27 @@
+–– Pkl Error ––
+Type constraint `(this is AbsoluteUri).implies(startsWith("file:/"))` violated.
+Value: "qux:/foo"
+
+xxx | executable: String((this is AbsoluteUri).implies(startsWith("file:/")))
+                         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.EvaluatorSettings#ExternalReader.executable (pkl:EvaluatorSettings)
+
+x | executable = "qux:/foo"
+                 ^^^^^^^^^^
+at PklProject#evaluatorSettings.externalModuleReaders["foo"].executable (file:///$snippetsDir/input/projects/badPklProject6/PklProject)
+
+xxx | ?.map((it) -> it.executable)
+                    ^^^^^^^^^^^^^
+at pkl.Project#pathBasedExecutables.<function#1> (pkl:Project)
+
+xxx | it
+      ^^
+at pkl.Project#pathBasedExecutables (pkl:Project)
+
+xxx | pathBasedExecutables(externalModuleReaders).isNotEmpty.implies(isFileBasedProject),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.Project#evaluatorSettings (pkl:Project)
+
+x | evaluatorSettings {
+    ^^^^^^^^^^^^^^^^^^^
+at PklProject#evaluatorSettings (file:///$snippetsDir/input/projects/badPklProject6/PklProject)
