@@ -95,7 +95,8 @@ public final class SyntaxHighlighter {
           Token.OPEN);
 
   private static final EnumSet<Token> control =
-      EnumSet.of(Token.NEW, Token.IF, Token.ELSE, Token.WHEN, Token.FOR, Token.IN, Token.OUT);
+      EnumSet.of(
+          Token.NEW, Token.IF, Token.ELSE, Token.WHEN, Token.FOR, Token.IN, Token.OUT, Token.LET);
 
   private static final EnumSet<Token> number =
       EnumSet.of(Token.INT, Token.FLOAT, Token.BIN, Token.OCT, Token.HEX);
