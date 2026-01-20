@@ -49,7 +49,6 @@ public record Span(int charIndex, int length) {
 
   /** Tells if {@code other} is entirely within this span. */
   public boolean contains(Span other) {
-    return charIndex <= other.charIndex
-        && other.charIndex + other.length <= charIndex + length;
+    return charIndex <= other.charIndex && other.charIndex + other.length <= charIndex + length;
   }
 }

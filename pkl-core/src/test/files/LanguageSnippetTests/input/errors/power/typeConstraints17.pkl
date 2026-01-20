@@ -1,0 +1,4 @@
+local name = "Bob"
+local function greet(name: String) = "Hello, \(name)"
+
+foo: Any(greet(name) == "Hello, \(name)!") = null

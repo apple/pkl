@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinPropertyNode;
@@ -139,6 +140,16 @@ public class PowerAssertions {
   // treats method calls like `List(1, 2, 3)` as literal values.
   private static boolean isLiteral(Node truffleNode, org.pkl.parser.syntax.Node parserNode) {
     if (isLiteral(parserNode)) {
+      return true;
+    }
+    if (truffleNode instanceof ConstantValueNode) {
+      if (parserNode instanceof UnqualifiedAccessExpr unqualifiedAccessExpr) {
+        // Assumption: if we have both ConstantValueNode, and the parser node is
+        // UnqualifiedAccessExpr with arguments, then this must be a `List()`, `Map()`, etc.
+        //
+        // Note: a local property whose value is a constant will also turn into a ConstantValueNode.
+        return unqualifiedAccessExpr.getArgumentList() != null;
+      }
       return true;
     }
     // assumption: only calls to methods within the base module are direct method calls.

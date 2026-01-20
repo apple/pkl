@@ -1,0 +1,12 @@
+local num = 1
+
+// stdlib constructors that have a non-literal are not treated as literals
+foo: Int(
+    IntSeq(num, 5).toList().contains(this)
+    || Map(num, 2, 3, 4).values.contains(this)
+    || List(num, 2, 3, 4).contains(this)
+    || Set(num, 2, 3, 4).contains(this)
+    || Pair(num, 2).second == this
+    || Bytes(num, 2, 3, 4).toList().contains(this)
+    || Regex("\(num)234").toString().length == this
+  ) = 10

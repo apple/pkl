@@ -1,5 +1,11 @@
 –– Pkl Error ––
-Type constraint `IntSeq(1, 5).toList().contains(this)` violated.
+Type constraint `IntSeq(1, 5).toList().contains(this)
+    || Map(1, 2, 3, 4).values.contains(this)
+    || List(1, 2, 3, 4).contains(this)
+    || Set(1, 2, 3, 4).contains(this)
+    || Pair(1, 2).second == this
+    || Bytes(1, 2, 3, 4).toList().contains(this)
+    || Regex("1234").toString().length == this` violated.
 Value: 10
 
     IntSeq(1, 5).toList().contains(this)
@@ -7,12 +13,41 @@ Value: 10
                  │        false    10
                  List(1, 2, 3, 4, 5)
 
-x | foo: Int(IntSeq(1, 5).toList().contains(this)) = 10
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+    || Map(1, 2, 3, 4).values.contains(this)
+    │                  │      │        │
+    false              │      false    10
+                       List(2, 4)
+
+    || List(1, 2, 3, 4).contains(this)
+    │                   │        │
+    false               false    10
+
+    || Set(1, 2, 3, 4).contains(this)
+    │                  │        │
+    false              false    10
+
+    || Pair(1, 2).second == this
+    │             │      │  │
+    false         2      │  10
+                         false
+
+    || Bytes(1, 2, 3, 4).toList().contains(this)
+    │                    │        │        │
+    false                │        false    10
+                         List(1, 2, 3, 4)
+
+    || Regex("1234").toString().length == this
+    │                │          │      │  │
+    false            │          13     │  10
+                     │                 false
+                     "Regex(\"1234\")"
+
+x | IntSeq(1, 5).toList().contains(this)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at typeConstraints9#foo (file:///$snippetsDir/input/errors/power/typeConstraints9.pkl)
 
-x | foo: Int(IntSeq(1, 5).toList().contains(this)) = 10
-                                                     ^^
+x | ) = 10
+        ^^
 at typeConstraints9#foo (file:///$snippetsDir/input/errors/power/typeConstraints9.pkl)
 
 xxx | renderer.renderDocument(value)

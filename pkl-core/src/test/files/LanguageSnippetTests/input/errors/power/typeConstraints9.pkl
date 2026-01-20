@@ -1,1 +1,10 @@
-foo: Int(IntSeq(1, 5).toList().contains(this)) = 10
+// stdlib constructors are treated as literals
+foo: Int(
+    IntSeq(1, 5).toList().contains(this)
+    || Map(1, 2, 3, 4).values.contains(this)
+    || List(1, 2, 3, 4).contains(this)
+    || Set(1, 2, 3, 4).contains(this)
+    || Pair(1, 2).second == this
+    || Bytes(1, 2, 3, 4).toList().contains(this)
+    || Regex("1234").toString().length == this
+  ) = 10
