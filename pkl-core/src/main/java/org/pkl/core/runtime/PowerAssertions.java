@@ -147,7 +147,8 @@ public class PowerAssertions {
         // Assumption: if we have both ConstantValueNode, and the parser node is
         // UnqualifiedAccessExpr with arguments, then this must be a `List()`, `Map()`, etc.
         //
-        // Note: a local property whose value is a constant will also turn into a ConstantValueNode.
+        // Note: reading a local property whose value is a constant will also turn into a
+        // ConstantValueNode.
         return unqualifiedAccessExpr.getArgumentList() != null;
       }
       return true;

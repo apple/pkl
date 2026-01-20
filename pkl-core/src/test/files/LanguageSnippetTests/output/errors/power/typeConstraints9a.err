@@ -52,11 +52,11 @@ Value: 10
 
 x | IntSeq(num, 5).toList().contains(this)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at typeConstraints18#foo (file:///$snippetsDir/input/errors/power/typeConstraints18.pkl)
+at typeConstraints9a#foo (file:///$snippetsDir/input/errors/power/typeConstraints9a.pkl)
 
 xx | ) = 10
          ^^
-at typeConstraints18#foo (file:///$snippetsDir/input/errors/power/typeConstraints18.pkl)
+at typeConstraints9a#foo (file:///$snippetsDir/input/errors/power/typeConstraints9a.pkl)
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

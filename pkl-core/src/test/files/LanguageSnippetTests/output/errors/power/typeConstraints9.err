@@ -46,8 +46,8 @@ x | IntSeq(1, 5).toList().contains(this)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at typeConstraints9#foo (file:///$snippetsDir/input/errors/power/typeConstraints9.pkl)
 
-x | ) = 10
-        ^^
+xx | ) = 10
+         ^^
 at typeConstraints9#foo (file:///$snippetsDir/input/errors/power/typeConstraints9.pkl)
 
 xxx | renderer.renderDocument(value)
