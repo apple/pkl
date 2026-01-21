@@ -181,4 +181,10 @@ public final class VmFunction extends VmObjectLike {
   public int hashCode() {
     return System.identityHashCode(this);
   }
+
+  @Override
+  @TruffleBoundary
+  public String toString() {
+    return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
+  }
 }

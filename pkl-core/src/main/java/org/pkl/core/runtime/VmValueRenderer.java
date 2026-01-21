@@ -34,8 +34,13 @@ public final class VmValueRenderer {
   private final String interiorNewline;
   private final String indent;
   private String currIndent = "";
+  private static final VmValueRenderer maxSingleLine =
+      new VmValueRenderer(Integer.MAX_VALUE, " ", "; ", "");
 
   public static VmValueRenderer singleLine(int lengthLimit) {
+    if (lengthLimit == Integer.MAX_VALUE) {
+      return maxSingleLine;
+    }
     return new VmValueRenderer(lengthLimit, " ", "; ", "");
   }
 
