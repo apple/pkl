@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,5 +85,10 @@ public abstract class ApplyVmFunction1Node extends ExpressionNode {
       VmFunction function, Object arg1, @Cached("create()") IndirectCallNode callNode) {
 
     return callNode.call(function.getCallTarget(), function.getThisValue(), function, arg1);
+  }
+
+  @Override
+  public boolean isInstrumentable() {
+    return false;
   }
 }

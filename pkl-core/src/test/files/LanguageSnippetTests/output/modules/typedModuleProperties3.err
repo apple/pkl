@@ -2,6 +2,11 @@
 Type constraint `!isEmpty` violated.
 Value: ""
 
+    !isEmpty
+    ││
+    │true
+    false
+
 x | res1: String(!isEmpty) = ""
                  ^^^^^^^^
 at typedModuleProperties3#res1 (file:///$snippetsDir/input/modules/typedModuleProperties3.pkl)

@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Expected value of type `*RemoteDependency | Project(isValidLoadDependency)`, but got a different `pkl.Project`.
-Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetting...
+Value: new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] ...
 
 xxx | dependencies: Mapping<String(!contains("/")), *RemoteDependency | Project(isValidLoadDependency)>
                                                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -8,8 +8,32 @@ at pkl.Project#dependencies (pkl:Project)
 
 * Value is not of type `Project(isValidLoadDependency)` because:
   Type constraint `isValidLoadDependency` violated.
-  Value: new ModuleClass { package = null; tests {}; dependencies {}; evaluatorSetti...
+  Value: new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"...
 
-x | ["badLocalProject"] = import("../badLocalProject/PklProject")
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+      (it: Project) ->
+      isUriLocal(projectFileUri, it.projectFileUri)
+      │          │               │  │
+      true       │               │  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
+                 │               new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
+                 "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
+
+        && it.projectFileUri.endsWith("/PklProject")
+        │  │  │              │
+        │  │  │              true
+        │  │  "file:///$snippetsDir/projects/badProjectDeps4/PklProject"
+        │  new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
+        true
+
+        && it != module
+        │  │  │
+        │  │  false
+        │  new ModuleClass { package = ?; tests = ?; dependencies { ["badLocalProject"] = ? }; evaluatorSett...
+        false
+
+        && it.package != null
+        │
+        false
+
+x | ["badLocalProject"] = import("PklProject")
+                          ^^^^^^^^^^^^^^^^^^^^
 at PklProject#dependencies["badLocalProject"] (file:///$snippetsDir/input/projects/badProjectDeps4/PklProject)

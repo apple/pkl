@@ -29,6 +29,8 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.pkl.core.PType;
@@ -40,6 +42,7 @@ import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
+import org.pkl.core.ast.internal.SyntheticNode;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -142,6 +145,14 @@ public abstract class TypeNode extends PklNode {
 
   /** Visit child type nodes of this type. */
   protected abstract boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer);
+
+  protected VmTypeMismatchException constraintException(Object value, SourceSection sourceSection) {
+    throw new VmTypeMismatchException.Constraint(
+        sourceSection,
+        value,
+        sourceSection,
+        Map.of(new SyntheticNode(sourceSection), List.of(false)));
+  }
 
   public static TypeNode forClass(SourceSection sourceSection, VmClass clazz) {
     return clazz.isClosed()
@@ -1719,9 +1730,9 @@ public abstract class TypeNode extends PklNode {
         //noinspection ConstantConditions
         defaultMember.initConstantValue(
             new VmFunction(
-                VmUtils.createEmptyMaterializedFrame(),
                 // Assumption: don't need to set the correct `thisValue`
                 // because it is guaranteed to be never accessed.
+                VmUtils.createEmptyMaterializedFrame(),
                 null,
                 1,
                 new SimpleRootNode(
@@ -2232,8 +2243,8 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmNull) {
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getNonNullTypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw constraintException(value, BaseModule.getNonNullTypeAlias().getConstraintSection());
       }
       return value;
     }
@@ -2274,7 +2285,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if ((l & mask) == l) return value;
 
-        throw new VmTypeMismatchException.Constraint(typealias.getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var sourceSection = typealias.getConstraintSection();
+        throw constraintException(value, sourceSection);
       }
 
       throw new VmTypeMismatchException.Simple(
@@ -2337,8 +2350,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.byteValue()) return value;
 
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getInt8TypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var sourceSection = BaseModule.getInt8TypeAlias().getConstraintSection();
+        throw constraintException(value, sourceSection);
       }
 
       throw new VmTypeMismatchException.Simple(
@@ -2381,8 +2395,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.shortValue()) return value;
 
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getInt16TypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var sourceSection = BaseModule.getInt16TypeAlias().getConstraintSection();
+        throw constraintException(value, sourceSection);
       }
 
       throw new VmTypeMismatchException.Simple(
@@ -2425,10 +2440,11 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.intValue()) return value;
 
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getInt32TypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw constraintException(value, BaseModule.getInt32TypeAlias().getConstraintSection());
       }
 
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       throw new VmTypeMismatchException.Simple(
           BaseModule.getInt32TypeAlias().getBaseTypeSection(), value, BaseModule.getIntClass());
     }

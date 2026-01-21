@@ -1,0 +1,37 @@
+–– Pkl Error ––
+Expected value of type `String(this == "foo") | String(this == "qux")`, but got a different `String`.
+Value: "bar"
+
+x | foo: String(this == "foo") | String(this == "qux") = "bar"
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at typeConstraints15#foo (file:///$snippetsDir/input/errors/power/typeConstraints15.pkl)
+
+* Value is not of type `String(this == "foo")` because:
+  Type constraint `this == "foo"` violated.
+  Value: "bar"
+
+      this == "foo"
+      │    │
+      │    false
+      "bar"
+
+* Value is not of type `String(this == "qux")` because:
+  Type constraint `this == "qux"` violated.
+  Value: "bar"
+
+      this == "qux"
+      │    │
+      │    false
+      "bar"
+
+x | foo: String(this == "foo") | String(this == "qux") = "bar"
+                                                         ^^^^^
+at typeConstraints15#foo (file:///$snippetsDir/input/errors/power/typeConstraints15.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

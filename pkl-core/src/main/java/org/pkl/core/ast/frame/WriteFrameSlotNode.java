@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,5 +77,10 @@ public abstract class WriteFrameSlotNode extends ExpressionNode {
   protected final boolean isBooleanOrIllegal(VirtualFrame frame) {
     var kind = frame.getFrameDescriptor().getSlotKind(slot);
     return kind == FrameSlotKind.Boolean || kind == FrameSlotKind.Illegal;
+  }
+
+  @Override
+  public boolean isInstrumentable() {
+    return false;
   }
 }

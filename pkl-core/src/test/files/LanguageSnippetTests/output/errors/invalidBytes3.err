@@ -2,6 +2,10 @@
 Type constraint `isBetween(0, 255)` violated.
 Value: 65535
 
+    isBetween(0, 255)
+    │
+    false
+
 xxxx | typealias UInt8 = Int(isBetween(0, 255))
                              ^^^^^^^^^^^^^^^^^
 at invalidBytes3#bytes (pkl:base)

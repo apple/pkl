@@ -2,6 +2,11 @@
 Type constraint `!isEmpty` violated.
 Value: List()
 
+    !isEmpty
+    ││
+    │true
+    false
+
 x | names: List<String>(!isEmpty)
                         ^^^^^^^^
 at wrongType6#Person.names (file:///$snippetsDir/input/classes/wrongType6.pkl)

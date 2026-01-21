@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public final class VmFunction extends VmObjectLike {
+
   private final Object thisValue;
   private final int paramCount;
   private final PklRootNode rootNode;
@@ -95,6 +96,10 @@ public final class VmFunction extends VmObjectLike {
   @Override
   public UnmodifiableEconomicMap<Object, ObjectMember> getMembers() {
     return EconomicMaps.create();
+  }
+
+  public PklRootNode getRootNode() {
+    return rootNode;
   }
 
   @Override

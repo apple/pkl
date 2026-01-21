@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -88,10 +88,26 @@ class EvaluateTestsTest {
     assertThat(res.failures.size).isEqualTo(2)
 
     val fail1 = res.failures[0]
-    assertThat(fail1.message).isEqualTo("1 == 2 (repl:text)")
+    assertThat(fail1.message)
+      .isEqualTo(
+        """
+      1 == 2 (repl:text)
+        │
+        false
+      """
+          .trimIndent()
+      )
 
     val fail2 = res.failures[1]
-    assertThat(fail2.message).isEqualTo(""""foo" == "bar" (repl:text)""")
+    assertThat(fail2.message)
+      .isEqualTo(
+        """
+      "foo" == "bar" (repl:text)
+            │
+            false
+      """
+          .trimIndent()
+      )
   }
 
   @Test

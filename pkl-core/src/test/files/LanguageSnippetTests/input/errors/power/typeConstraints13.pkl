@@ -1,0 +1,3 @@
+name: String = "Bub"
+
+foo: String(this == "Hello, \(name)") = "Hello, Patty" 

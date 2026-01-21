@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.pkl.core.StackFrame;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 
 public class VmWrappedEvalException extends VmEvalException {
@@ -28,15 +30,16 @@ public class VmWrappedEvalException extends VmEvalException {
   private final VmException wrappedException;
 
   public VmWrappedEvalException(
-      String message,
+      @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
-      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       Map<CallTarget, StackFrame> insertedStackFrames,
       VmException wrappedException) {
     super(
@@ -44,11 +47,12 @@ public class VmWrappedEvalException extends VmEvalException {
         cause,
         isExternalMessage,
         messageArguments,
+        messageBuilder,
         programValues,
         location,
         sourceSection,
         memberName,
-        hint,
+        hintBuilder,
         insertedStackFrames);
     this.wrappedException = wrappedException;
   }

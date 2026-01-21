@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.binary.LessThanNode;
 import org.pkl.core.ast.expression.binary.LessThanNodeGen;
@@ -32,7 +33,8 @@ public final class CollectionNodes {
   private CollectionNodes() {}
 
   public abstract static class SortComparatorNode extends PklNode {
-    public abstract boolean executeWith(Object left, Object right, @Nullable VmFunction function);
+    public abstract boolean executeWith(
+        VirtualFrame frame, Object left, Object right, @Nullable VmFunction function);
   }
 
   public static final class CompareNode extends SortComparatorNode {
@@ -42,9 +44,10 @@ public final class CollectionNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Override
-    public boolean executeWith(Object left, Object right, @Nullable VmFunction function) {
+    public boolean executeWith(
+        VirtualFrame frame, Object left, Object right, @Nullable VmFunction function) {
       assert function == null;
-      return lessThanNode.executeWith(left, right);
+      return lessThanNode.executeWith(frame, left, right);
     }
   }
 
@@ -57,11 +60,12 @@ public final class CollectionNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Override
-    public boolean executeWith(Object left, Object right, @Nullable VmFunction selector) {
+    public boolean executeWith(
+        VirtualFrame frame, Object left, Object right, @Nullable VmFunction selector) {
       assert selector != null;
       var leftResult = applyLambdaNode.execute(selector, left);
       var rightResult = applyLambdaNode.execute(selector, right);
-      return lessThanNode.executeWith(leftResult, rightResult);
+      return lessThanNode.executeWith(frame, leftResult, rightResult);
     }
   }
 
@@ -69,7 +73,8 @@ public final class CollectionNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Override
-    public boolean executeWith(Object left, Object right, @Nullable VmFunction comparator) {
+    public boolean executeWith(
+        VirtualFrame frame, Object left, Object right, @Nullable VmFunction comparator) {
       assert comparator != null;
       var result = applyLambdaNode.execute(comparator, left, right);
 

@@ -1,5 +1,10 @@
 amends "pkl:Project"
 
 dependencies {
-  ["badLocalProject"] = import("../badLocalProject/PklProject")
+  ["badLocalProject"] = import("PklProject")
 }
+
+// hack: override the project file URI so that our tests render the same error message
+// across different machines (it will truncate at 100 chars, and otherwise would be influenced by
+// where the pkl project is placed within the file tree).
+projectFileUri = "file:///$snippetsDir/projects/badProjectDeps4/PklProject"

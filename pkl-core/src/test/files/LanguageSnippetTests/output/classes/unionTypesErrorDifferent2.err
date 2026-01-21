@@ -10,6 +10,10 @@ at unionTypesErrorDifferent2#X.a (file:///$snippetsDir/input/classes/unionTypesE
   Type constraint `length > 3` violated.
   Value: List(1, 2, 3)
 
+      length > 3
+      │      │
+      3      false
+
 x | a = List(1, 2, 3)
         ^^^^^^^^^^^^^
 at unionTypesErrorDifferent2#res1.a (file:///$snippetsDir/input/classes/unionTypesErrorDifferent2.pkl)

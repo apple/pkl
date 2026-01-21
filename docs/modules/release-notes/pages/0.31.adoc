@@ -20,7 +20,89 @@ To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
 
 News you don't want to miss.
 
-=== XXX
+=== Power Assertions
+
+Pkl's test output and error output has been improved with power assertions (https://github.com/apple/pkl/pull/1384[#1384])!
+
+Pkl has two places that are effectively assertions.
+These are:
+
+* Type constraint expressions
+* Test facts
+
+Currently, when these assertions fail, the error message prints the assertion's source section.
+However, this information can sometimes be lacking.
+It tells you what the mechanics of the assertion is, but doesn't tell you _why_ the assertion is failing.
+
+For example, here is the current error output of a failing typecheck.
+
+[source,text]
+----
+–– Pkl Error ––
+Type constraint `name.endsWith(lastName)` violated.
+Value: new Person { name = "Bub Johnson" }
+
+7 | passenger: Person(name.endsWith(lastName)) = new { name = "Bub Johnson" }
+----
+
+Just from this error message, we don't know what the last name is supposed to be.
+What is `name` supposed to end with?
+We just know it's some property called `lastName` but, we don't know what it _is_. 
+
+In Pkl 0.31, the error output becomes:
+
+[source,text]
+----
+–– Pkl Error ––
+Type constraint `name.endsWith(lastName)` violated.
+Value: new Person { name = "Bub Johnson" }
+
+    name.endsWith(lastName)
+    │    │        │
+    │    false    "Smith"
+    "Bub Johnson"
+
+7 | passenger: Person(name.endsWith(lastName)) = new { name = "Bub Johnson" }
+----
+
+Now, we know what the expecation actually is.
+
+This type of diagram is also added to test facts.
+When tests fail, Pkl emits a diagram of the expression, and the values produced.
+
+For example, given the following test:
+
+.math.pkl
+[source,pkl]
+----
+amends "pkl:test"
+
+facts {
+  local function add(a: Int, b: Int) = a * b
+  local function divide(a: Int, b: Int) = a % b
+  ["math"] {
+    add(3, 4) == 7
+    divide(8, 2) == 4
+  }
+}
+----
+
+The error output now includes a power assertion diagram, which helps explain why the test failed.
+
+[source,text]
+----
+module math
+  facts
+    ✘ math
+       add(3, 4) == 7 (math.pkl:9)
+       │         │
+       12        false
+       divide(8, 2) == 4 (math.pkl:10)
+       │            │
+       0            false
+
+0.0% tests pass [1/1 failed], 0.0% asserts pass [2/2 failed]
+----
 
 == Noteworthy [small]#🎶#
 

@@ -3,6 +3,17 @@ Type constraint `let (myself: Listing<Bird> = this)
       myself[0].name == "Sandy"` violated.
 Value: new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
 
+    let (myself: Listing<Bird> = this)
+                                 │
+                                 new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+
+    myself[0].name == "Sandy"
+    │     │   │    │
+    │     │   │    false
+    │     │   "Bob"
+    │     new Bird { name = "Bob" }
+    new Listing { new Bird { name = "Bob" }; new Bird { name = ? } }
+
 x | let (myself: Listing<Bird> = this)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at constraintDetails2#birds (file:///$snippetsDir/input/errors/constraintDetails2.pkl)
