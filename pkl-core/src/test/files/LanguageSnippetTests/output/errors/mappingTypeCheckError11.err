@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Expected value of type `mappingTypeCheckError11#Bar`, but got type `mappingTypeCheckError11#Foo`.
-Value: new Foo {}
+Value: new mappingTypeCheckError11#Foo {}
 
 x | local c = b as Mapping<Int, Bar>
                                 ^^^

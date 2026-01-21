@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Cannot iterate over value of type `spreadSyntaxCannotIterateOverTyped#Person`.
-Value: new Person { name = ? }
+Value: new spreadSyntaxCannotIterateOverTyped#Person { name = ? }
 
 x | ...person
        ^^^^^^
