@@ -13,6 +13,10 @@ x | foo: Dynamic(this == new Dynamic { ...list })
                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at typeConstraints10#foo (file:///$snippetsDir/input/errors/power/typeConstraints10.pkl)
 
+x | foo: Dynamic(this == new Dynamic { ...list })
+    ^^^
+at typeConstraints10#foo (file:///$snippetsDir/input/errors/power/typeConstraints10.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

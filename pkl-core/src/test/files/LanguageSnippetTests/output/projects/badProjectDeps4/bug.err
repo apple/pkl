@@ -33,3 +33,7 @@ at pkl.Project#dependencies (pkl:Project)
         && it.package != null
         │
         false
+
+x | ["badLocalProject"] = import("PklProject")
+                          ^^^^^^^^^^^^^^^^^^^^
+at PklProject#dependencies["badLocalProject"] (file:///$snippetsDir/input/projects/badProjectDeps4/PklProject)

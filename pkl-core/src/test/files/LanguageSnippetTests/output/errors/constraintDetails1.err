@@ -13,6 +13,10 @@ x | birds: Listing(firstOneIsSandy) = new {
                    ^^^^^^^^^^^^^^^
 at constraintDetails1#birds (file:///$snippetsDir/input/errors/constraintDetails1.pkl)
 
+x | birds: Listing(firstOneIsSandy) = new {
+                                      ^^^^^
+at constraintDetails1#birds (file:///$snippetsDir/input/errors/constraintDetails1.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

@@ -10,6 +10,10 @@ x | foo: List(fold(0, (a, b) -> a + b) == 5) = myList
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at typeConstraints4#foo (file:///$snippetsDir/input/errors/power/typeConstraints4.pkl)
 
+x | foo: List(fold(0, (a, b) -> a + b) == 5) = myList
+                                               ^^^^^^
+at typeConstraints4#foo (file:///$snippetsDir/input/errors/power/typeConstraints4.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

@@ -11,6 +11,10 @@ x | p: Bird(name?.contains("Bob") ?? false) = new {
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at typeConstraints16#p (file:///$snippetsDir/input/errors/power/typeConstraints16.pkl)
 
+x | p: Bird(name?.contains("Bob") ?? false) = new {
+                                              ^^^^^
+at typeConstraints16#p (file:///$snippetsDir/input/errors/power/typeConstraints16.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

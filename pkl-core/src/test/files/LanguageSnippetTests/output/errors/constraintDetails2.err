@@ -18,6 +18,10 @@ x | let (myself: Listing<Bird> = this)
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at constraintDetails2#birds (file:///$snippetsDir/input/errors/constraintDetails2.pkl)
 
+x | new {
+    ^^^^^
+at constraintDetails2#birds (file:///$snippetsDir/input/errors/constraintDetails2.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
