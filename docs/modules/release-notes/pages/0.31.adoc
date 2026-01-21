@@ -30,7 +30,7 @@ These are:
 * Type constraint expressions
 * Test facts
 
-Currently, when these assertions fail, the error message tells prints the assertion's source section.
+Currently, when these assertions fail, the error message prints the assertion's source section.
 However, this information can sometimes be lacking.
 It tells you what the mechanics of the assertion is, but doesn't tell you _why_ the assertion is failing.
 

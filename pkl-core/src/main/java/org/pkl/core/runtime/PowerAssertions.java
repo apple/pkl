@@ -169,6 +169,7 @@ public class PowerAssertions {
 
   private static boolean shouldHide(
       Node truffleNode, org.pkl.parser.syntax.Node parserNode, Object value, Expr rootExpr) {
+    // literal values are self-evident in their source code
     if (isLiteral(truffleNode, parserNode)) {
       return true;
     }

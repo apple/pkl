@@ -19,7 +19,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 
 public abstract class ComparatorNode extends BinaryExpressionNode {
-  public ComparatorNode(SourceSection sourceSection) {
+  protected ComparatorNode(SourceSection sourceSection) {
     super(sourceSection);
   }
 
