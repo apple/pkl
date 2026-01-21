@@ -39,7 +39,7 @@ public abstract class PklNode extends Node {
   }
 
   @Override
-  public SourceSection getSourceSection() {
+  public final SourceSection getSourceSection() {
     if (this instanceof WrapperNode wrapperNode) {
       return wrapperNode.getDelegateNode().getSourceSection();
     }
