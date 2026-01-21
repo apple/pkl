@@ -34,6 +34,10 @@ examples {
     "My name is Pigeon and I'm 42 years old."
     "null"
     "null"
+    "new Function0 {}"
+    "new Function1 {}"
+    "new Function2 {}"
+    "new Function3 {}"
   }
   ["escaping"] {
     "\\\"\\("

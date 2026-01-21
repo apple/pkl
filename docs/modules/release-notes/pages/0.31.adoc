@@ -138,7 +138,7 @@ Things to watch out for when upgrading.
 
 The following bugs have been fixed.
 
-* XXX (https://github.com/apple/pkl/issues/XXX[XXX])
+* Incorrect Function.toString() (https://github.com/apple/pkl/issues/1410[#1410])
 
 == Contributors [small]#🙏#
 

@@ -2,3 +2,5 @@ res1 = "abc"
 res2 = true
 res3 = false
 res4 = 6
+res5 = "new Function1 {}"
+res6 = "new Function2 {}"

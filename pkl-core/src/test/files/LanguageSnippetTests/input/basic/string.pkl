@@ -43,6 +43,10 @@ examples {
     "\(new Person2 { name = "Pigeon"; age = 42 })"
     "\(null)"
     "\(Null(new Person { name = "Pigeon"; age = 42 }))"
+    "\(() -> null)"
+    "\((p1) -> null)"
+    "\((p1, p2) -> null)"
+    "\((p1, p2, p3) -> null)"
   }
 
   ["escaping"] {

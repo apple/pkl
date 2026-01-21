@@ -10,3 +10,6 @@ res3 = even.apply(11)
 local mult = (x, y) -> x * y
 
 res4 = mult.apply(2, 3)
+
+res5 = even.toString()
+res6 = mult.toString()
