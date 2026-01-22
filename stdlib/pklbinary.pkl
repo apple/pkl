@@ -32,6 +32,11 @@
 module pkl.pklbinary
 
 /// Render values as `pkl-binary`.
+///
+/// The `pkl-binary` renderer disables all [ConvertProperty] annotation converters by default
+/// because `pkl-binary` data is intended to closely represent native Pkl types and data.
+/// This behavior may be overridden for [ConvertProperty] or its subclasses by adding an entry to
+/// [Renderer.convertPropertyTransformers].
 class Renderer extends BytesRenderer {
   /// Renders [value] as `pkl-binary`.
   external function renderValue(value: Any): Bytes
@@ -40,4 +45,11 @@ class Renderer extends BytesRenderer {
   ///
   /// Every `pkl-binary` value is also a valid document.
   external function renderDocument(value: Any): Bytes
+
+  convertPropertyTransformers {
+    // disable all property conversions by default
+    [ConvertProperty] {
+      render = (property, _) -> property
+    }
+  }
 }

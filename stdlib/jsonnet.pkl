@@ -69,7 +69,7 @@ function ExtVar(_name: String): ExtVar = new { name = _name }
 /// }
 /// ```
 ///
-/// The [Property] annotation can be used to change how a property name renders into XML.
+/// The [Property] annotation can be used to change how a property name renders into Jsonnet.
 ///
 /// Example:
 /// ```
@@ -103,6 +103,7 @@ class Renderer extends ValueRenderer {
 
 /// Annotate properties of classes and modules with this class to override how a [Renderer]
 /// interprets a property's name.
+@Since { version = "0.31.0" }
 class Property extends ConvertProperty {
   /// The new name to use for the annotated property when rendered by [Renderer].
   name: String

@@ -280,16 +280,6 @@ public final class PListRendererNodes {
     }
 
     @Override
-    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
-      if (isFirst) {
-        builder.append("<dict>").append(LINE_BREAK);
-      }
-      builder.append(currIndent);
-      visitRenderDirective(value);
-      builder.append(LINE_BREAK);
-    }
-
-    @Override
     protected void endDynamic(VmDynamic value, boolean isEmpty) {
       if (value.hasElements()) {
         endArray(isEmpty);

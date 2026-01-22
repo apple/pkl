@@ -163,9 +163,6 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   /** Visits a property of a {@link VmDynamic} or {@link VmTyped}. */
   protected abstract void visitProperty(Identifier name, Object value, boolean isFirst);
 
-  /** Perform logic for rendering a render directive in place of a property */
-  protected abstract void visitPropertyRenderDirective(VmTyped value, boolean isFirst);
-
   protected abstract void endDynamic(VmDynamic value, boolean isEmpty);
 
   protected abstract void endTyped(VmTyped value, boolean isEmpty);
@@ -338,14 +335,14 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   private void doVisitProperty(
       Identifier name,
       Object value,
-      @Nullable ClassProperty property,
+      @Nullable ClassProperty classProperty,
       SourceSection sourceSection,
       MutableBoolean isFirst) {
     var prevSourceSection = currSourceSection;
     currSourceSection = sourceSection;
     currPath.push(name);
-    if (property != null) {
-      var propVal = converter.convertProperty(property, value, currPath);
+    if (classProperty != null) {
+      var propVal = converter.convertProperty(classProperty, value, currPath);
       name = propVal.getFirst();
       value = propVal.getSecond();
     }

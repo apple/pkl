@@ -34,7 +34,7 @@ class Nested {
 
 output {
   renderer = new YamlRenderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       [annotationConverter.LineComment] { prefix = " # "; valuePrefix = " " }
     }
   }

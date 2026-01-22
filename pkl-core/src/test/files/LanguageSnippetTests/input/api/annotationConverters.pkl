@@ -40,7 +40,11 @@ open class Foo {
 
   @SubtractValue { difference = 2 }
   @MultiplyValue { factor = 3 }
-  @SubtractValue { difference = 4 }
+  @ConvertProperty {
+    render = (prop, _) -> Pair(prop.key, prop.value as Number + 4)
+  }
+  @MultiplyValue { factor = 3 }
+  @SubtractValue { difference = 11 }
   in_order: Int = 5
 }
 
@@ -52,7 +56,7 @@ class Bar extends Foo {
 output {
   value = new Bar {}
   renderer = new PcfRenderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       [Prefix] { prefix = "foo_" }
     }
   }

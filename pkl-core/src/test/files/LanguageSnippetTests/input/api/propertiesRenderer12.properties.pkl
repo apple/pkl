@@ -16,7 +16,7 @@ class Nested {
 
 output {
   renderer = new PropertiesRenderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       [annotationConverter.LineComment] { prefix = "\n# " }
     }
   }

@@ -19,7 +19,7 @@ class Nested {
 
 output {
   renderer = new jsonnet.Renderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       [annotationConverter.LineComment] { prefix = ", // " }
     }
   }

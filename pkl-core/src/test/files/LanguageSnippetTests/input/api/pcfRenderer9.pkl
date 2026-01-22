@@ -16,7 +16,7 @@ class Nested {
 
 output {
   renderer = new PcfRenderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       [annotationConverter.LineComment] { prefix = " // "; valuePrefix = "= " }
     }
   }

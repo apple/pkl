@@ -280,15 +280,6 @@ public final class PcfRenderer extends AbstractStringRenderer {
   }
 
   @Override
-  protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
-    if (!builder.isEmpty()) {
-      builder.append('\n');
-      builder.append(currIndent);
-    }
-    visitRenderDirective(value);
-  }
-
-  @Override
   protected void endDynamic(VmDynamic value, boolean isEmpty) {
     endObject(value, isEmpty);
   }

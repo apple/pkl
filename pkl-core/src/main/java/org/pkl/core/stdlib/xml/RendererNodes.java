@@ -233,12 +233,6 @@ public final class RendererNodes {
       }
     }
 
-    @Override
-    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
-      startNewLine();
-      visitRenderDirective(value);
-    }
-
     // No-op for XML
     @Override
     protected void endDynamic(VmDynamic value, boolean isEmpty) {}

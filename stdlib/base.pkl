@@ -351,7 +351,6 @@ abstract class BaseValueRenderer {
   /// Paths are matched against path specs component-wise in reverse order.
   /// For example, paths `server.timeout` and `racks[*].server.timeout`
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
-  ///
   converters: Mapping<Class | String, (unknown) -> Any>
 
   /// Customizations for [ConvertProperty] annotation behaviors.
@@ -361,34 +360,61 @@ abstract class BaseValueRenderer {
   /// If multiple entries match the annotation's class, the most specific class (according to class
   /// hierarchy) wins.
   ///
-  /// See [ConvertProperty] for detailed information about annotation converters.
+  /// See [ConvertProperty] for detailed information.
   @Since { version = "0.31.0" }
-  annotationTransformers: Mapping<Class, Mixin<ConvertProperty>>
+  convertPropertyTransformers: Mapping<Class, Mixin<ConvertProperty>>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
   extension: String?
 }
 
-/// Base class for annotations that influence how [BaseValueRenderer] transforms the names and
-/// values of [Typed] value.
+/// Conversion to be applied to properties when rendered through [BaseValueRenderer].
 ///
-/// Annotation converters are checked for each property of rendered [Typed] values.
-/// If a property has a [ConvertProperty] annotation, the annotation's [ConvertProperty.render]
-/// function is called.
+/// During rendering, the annotation's [render] function is called.
 /// The function must return a [Pair] of the converted property name and value.
 ///
-/// Each of the property annotations of the enclosing class is checked in order, starting with the
-/// annotations (top to bottom) of the base class, then repeating for each child class in the
-/// hierarchy.
-/// Multiple annotation converters can apply per property; the output of one converter is used as
-/// input to the next.
+/// Multiple [ConvertProperty] annotations can apply per property, and the output of one
+/// annotation's [render] function is used as input to the next.
+/// Annotations are applied the order as declared on the property.
+/// If the annotated property is overriding a parent property, the parent property's annotations are
+/// applied first.
 ///
-/// Annotation converters can coexist with [BaseValueRenderer.converters] and apply first.
+/// These conversions can coexist with [BaseValueRenderer.converters], and applies first.
+///
+/// These conversions only affect rendering of class properties.
+/// Applying this to other types of members does not impact rendering.
+///
+/// These conversions can be overriden with [BaseValueRenderer.convertPropertyTransformers].
+///
+/// Example:
+///
+/// ```
+/// // convert duration to the number of seconds
+/// @ConvertProperty {
+///   render = (property, _) -> Pair(property.key, property.value.toUnit("s"))
+/// }
+/// timeout: Duration
+/// ```
+///
+/// [ConvertProperty] can be subclassed to define re-usable property converters.
+/// The conversion defined in the previous example can be rewritten as:
+///
+/// ```
+/// class ConvertDuration extends ConvertProperty {
+///   unit: DurationUnit
+///
+///   render = (property: Pair<String, Duration>, _) -> Pair(property.key, property.value.toUnit(unit))
+/// }
+///
+/// @ConvertDuration { unit = "s" }
+/// timeout: Duration
+/// ```
+@Since { version = "0.31.0" }
 open class ConvertProperty extends Annotation {
   /// Function called by [BaseValueRenderer] types during rendering to transform property
   /// names and values.
-  render: (Pair<String, Any>, BaseValueRenderer) -> (Pair<String, Any>)
+  render: (Pair<String, Any>, BaseValueRenderer) -> Pair<String, Any>
 }
 
 /// Base class for rendering Pkl values in some textual output format.
@@ -502,7 +528,7 @@ class PcfRenderDirective {
 
 /// Renders values as JSON.
 ///
-/// The [json.Property] annotation can be used to change how a property name renders into XML.
+/// The [json.Property] annotation can be used to change how a property name renders into JSON.
 ///
 /// Example:
 /// ```
@@ -532,7 +558,7 @@ class JsonRenderer extends ValueRenderer {
 ///
 /// To render a YAML stream, set [isStream] to [true].
 ///
-/// The [yaml.Property] annotation can be used to change how a property name renders into XML.
+/// The [yaml.Property] annotation can be used to change how a property name renders into YAML.
 ///
 /// Example:
 /// ```

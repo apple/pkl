@@ -54,7 +54,6 @@ public final class ClassProperty extends ClassMember {
     this.initializer = initializer;
   }
 
-  /** Returned annotations are ordered from base class to leaf class then from top to bottom */
   public List<VmTyped> getAllAnnotations(boolean ascending) {
     var annotations = new ArrayList<VmTyped>();
 

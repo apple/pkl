@@ -19,7 +19,7 @@ class Nested {
 
 output {
   renderer = new JsonRenderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       // NB: this renders https://json5.org format which is a superset of JSON that supports commas. 
       [annotationConverter.LineComment] { prefix = ", // " }
     }

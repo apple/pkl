@@ -20,6 +20,7 @@ module pkl.yaml
 
 /// Annotate properties of classes and modules with this class to override how a [YamlRenderer]
 /// interprets a property's name.
+@Since { version = "0.31.0" }
 class Property extends ConvertProperty {
   /// The new name to use for the annotated property when rendered by [YamlRenderer].
   name: String

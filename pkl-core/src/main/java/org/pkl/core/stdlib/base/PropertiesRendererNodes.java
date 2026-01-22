@@ -232,14 +232,6 @@ public final class PropertiesRendererNodes {
     }
 
     @Override
-    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
-      builder.append(VmUtils.readTextProperty(value));
-      if (isDocument) {
-        writeLineBreak();
-      }
-    }
-
-    @Override
     protected void endDynamic(VmDynamic value, boolean isEmpty) {}
 
     @Override

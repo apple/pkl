@@ -16,7 +16,7 @@ class Nested {
 
 output {
   renderer = new PListRenderer {
-    annotationTransformers {
+    convertPropertyTransformers {
       [annotationConverter.LineComment] { prefix = "<!-- "; suffix = " -->" }
     }
   }

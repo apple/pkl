@@ -2,4 +2,4 @@ no_converter = 1
 foo_prefixed_with_foo = 2
 fooBaseClassFirst = 3
 transform_value = 8
-in_order = 5
+in_order = 28

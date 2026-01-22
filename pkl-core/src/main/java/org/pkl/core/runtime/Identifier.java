@@ -50,7 +50,7 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.base#Listing and pkl.base#Mapping
   public static final Identifier DEFAULT = get("default");
 
-  // members of pkl.base#ValueRenderer subclasses
+  // members of pkl.base#BaseValueRenderer subclasses
   public static final Identifier MODE = get("mode");
   public static final Identifier INDENT = get("indent");
   public static final Identifier INDENT_WIDTH = get("indentWidth");
@@ -62,8 +62,11 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier ROOT_ELEMENT_NAME = get("rootElementName");
   public static final Identifier ROOT_ELEMENT_ATTRIBUTES = get("rootElementAttributes");
   public static final Identifier CONVERTERS = get("converters");
-  public static final Identifier ANNOTATION_TRANSFORMERS = get("annotationTransformers");
+  public static final Identifier CONVERT_PROPERTY_TRANSFORMERS = get("convertPropertyTransformers");
   public static final Identifier USE_MAPPING = get("useMapping");
+
+  // members of pkl.base#ConvertProperty
+  public static final Identifier RENDER = get("render");
 
   // members of pkl.base#RegexMatch
   public static final Identifier VALUE = get("value");
@@ -143,9 +146,6 @@ public final class Identifier implements Comparable<Identifier> {
 
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
-
-  // members of pkl.convert
-  public static final Identifier RENDER = get("render");
 
   // common in lambdas etc
   public static final Identifier IT = get("it");

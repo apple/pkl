@@ -335,14 +335,6 @@ public final class YamlRendererNodes {
     }
 
     @Override
-    protected void visitPropertyRenderDirective(VmTyped value, boolean isFirst) {
-      if (!isFirst) {
-        startNewLine();
-      }
-      visitRenderDirective(value);
-    }
-
-    @Override
     protected void endDynamic(VmDynamic value, boolean isEmpty) {
       if (value.hasElements()) {
         endYamlSequence(isEmpty);
