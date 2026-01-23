@@ -82,6 +82,10 @@ public interface VmValueConverter<T> {
 
   T convertFunction(VmFunction value, Iterable<Object> path);
 
+  T convertReference(VmReference value, Iterable<Object> path);
+
+  T convertReferenceAccess(VmReference.Access value, Iterable<Object> path);
+
   default T convert(Object value, Iterable<Object> path) {
     if (value instanceof VmValue vmValue) {
       return vmValue.accept(this, path);
