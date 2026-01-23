@@ -288,6 +288,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     isMethodReturnTypeChecked = !isStdLibModule || IoUtils.isTestMode();
   }
 
+  public ModuleInfo getModuleInfo() {
+    return moduleInfo;
+  }
+
   public static AstBuilder create(
       Source source,
       VmLanguage language,
@@ -311,7 +315,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       var moduleName = IoUtils.inferModuleName(moduleKey);
       moduleInfo =
           new ModuleInfo(
-              sourceSection, headerSection, null, moduleName, moduleKey, resolvedModuleKey, false);
+              sourceSection,
+              headerSection,
+              null,
+              moduleName,
+              moduleKey,
+              resolvedModuleKey,
+              false,
+              null);
     } else {
       var declaredModuleName = moduleDecl.getName();
       var moduleName =
@@ -320,6 +331,20 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               : IoUtils.inferModuleName(moduleKey);
       var clause = moduleDecl.getExtendsOrAmendsDecl();
       var isAmend = clause != null && clause.getType() == ExtendsOrAmendsClause.Type.AMENDS;
+
+      // if this is an amending module, resolve the module being amended
+      ModuleKey amendedModuleKey = null;
+      if (isAmend) {
+        try {
+          var amendedModuleUri = URI.create(clause.getUrl().getString());
+          if (!amendedModuleUri.isAbsolute()) {
+            amendedModuleUri = resolvedModuleKey.getUri().resolve(amendedModuleUri);
+          }
+          amendedModuleKey = moduleResolver.resolve(amendedModuleUri, null);
+        } catch (Exception ignored) {
+        }
+      }
+
       moduleInfo =
           new ModuleInfo(
               sourceSection,
@@ -328,7 +353,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               moduleName,
               moduleKey,
               resolvedModuleKey,
-              isAmend);
+              isAmend,
+              amendedModuleKey);
     }
 
     return new AstBuilder(source, language, moduleInfo, moduleResolver);
