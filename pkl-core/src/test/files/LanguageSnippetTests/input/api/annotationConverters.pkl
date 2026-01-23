@@ -1,0 +1,63 @@
+open class Prefix extends ConvertProperty {
+  prefix: String
+
+  render = (prop, _) -> Pair(prefix + prop.key, prop.value)
+}
+
+class CamelCase extends ConvertProperty {
+  render = (prop, _) ->
+    Pair(
+      prop.key.replaceAllMapped(Regex("[^A-Za-z0-9]+([A-Za-z0-9])"), (match) ->
+        match.groups[1].value.toUpperCase()
+      ),
+      prop.value,
+    )
+}
+
+class MultiplyValue extends ConvertProperty {
+  factor: Number
+  render = (prop, _) ->
+    Pair(prop.key, prop.value as Number * factor)
+}
+
+class SubtractValue extends ConvertProperty {
+  difference: Number
+  render = (prop, _) ->
+    Pair(prop.key, prop.value as Number - difference)
+}
+
+open class Foo {
+  no_converter: Int = 1
+
+  @Prefix { prefix = "foo_" }
+  prefixed_with_foo: Int = 2
+
+  @Prefix { prefix = "foo_" }
+  base_class_first: Int = 3
+
+  @MultiplyValue { factor = 2 }
+  transform_value: Int = 4
+
+  @SubtractValue { difference = 2 }
+  @MultiplyValue { factor = 3 }
+  @ConvertProperty {
+    render = (prop, _) -> Pair(prop.key, prop.value as Number + 4)
+  }
+  @MultiplyValue { factor = 3 }
+  @SubtractValue { difference = 11 }
+  in_order: Int = 5
+}
+
+class Bar extends Foo {
+  @CamelCase
+  base_class_first: Int = 3
+}
+
+output {
+  value = new Bar {}
+  renderer = new PcfRenderer {
+    convertPropertyTransformers {
+      [Prefix] { prefix = "foo_" }
+    }
+  }
+}

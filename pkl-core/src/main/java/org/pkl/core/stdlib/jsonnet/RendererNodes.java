@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,9 +47,7 @@ public final class RendererNodes {
     var indent = (String) VmNull.unwrap(VmUtils.readMember(self, Identifier.INDENT));
     if (indent == null) indent = "";
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
-    return new Renderer(builder, indent, omitNullProperties, converter);
+    return new Renderer(builder, indent, omitNullProperties, PklConverter.fromRenderer(self));
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {

@@ -25,6 +25,16 @@ import "pkl:reflect"
 /// Note: This class is _experimental_ and not ready for production use.
 ///
 /// As of this release, only Protocol Buffers' text format is supported.
+///
+/// The [Property] annotation can be used to change how a property name renders into Protobuf.
+///
+/// Example:
+/// ```
+/// import "pkl:protobuf"
+///
+/// @protobuf.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class Renderer extends ValueRenderer {
   /// The characters to use for indenting output.
   ///
@@ -37,4 +47,14 @@ class Renderer extends ValueRenderer {
 
   /// Returns the canonical name for [type].
   external function renderType(type: reflect.Type): String
+}
+
+/// Annotate properties of classes and modules with this class to override how a [Renderer]
+/// interprets a property's name.
+@Since { version = "0.31.0" }
+class Property extends ConvertProperty {
+  /// The new name to use for the annotated property when rendered by [Renderer].
+  name: String
+
+  render = (prop, renderer) -> if (renderer is Renderer) Pair(name, prop.value) else prop
 }

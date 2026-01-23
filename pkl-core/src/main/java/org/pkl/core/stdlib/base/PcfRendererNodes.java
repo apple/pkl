@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,12 +46,14 @@ public final class PcfRendererNodes {
 
   private static PcfRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
     var useCustomStringDelimiters =
         (boolean) VmUtils.readMember(self, Identifier.USE_CUSTOM_STRING_DELIMITERS);
-    var converter = new PklConverter(converters);
     return new PcfRenderer(
-        builder, indent, converter, omitNullProperties, useCustomStringDelimiters);
+        builder,
+        indent,
+        PklConverter.fromRenderer(self),
+        omitNullProperties,
+        useCustomStringDelimiters);
   }
 }

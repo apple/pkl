@@ -18,6 +18,16 @@
 @ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.json
 
+/// Annotate properties of classes and modules with this class to override how a [JsonRenderer]
+/// interprets a property's name.
+@Since { version = "0.31.0" }
+class Property extends ConvertProperty {
+  /// The new name to use for the annotated property when rendered by [JsonRenderer].
+  name: String
+
+  render = (prop, renderer) -> if (renderer is JsonRenderer) Pair(name, prop.value) else prop
+}
+
 /// A JSON parser.
 ///
 /// JSON values are mapped to Pkl values as follows:

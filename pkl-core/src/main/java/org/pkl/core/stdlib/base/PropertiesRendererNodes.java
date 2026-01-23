@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,9 +69,8 @@ public final class PropertiesRendererNodes {
   private static PropertiesRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
     var restrictCharset = (boolean) VmUtils.readMember(self, Identifier.RESTRICT_CHARSET);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var PklConverter = new PklConverter(converters);
-    return new PropertiesRenderer(builder, omitNullProperties, restrictCharset, PklConverter);
+    return new PropertiesRenderer(
+        builder, omitNullProperties, restrictCharset, PklConverter.fromRenderer(self));
   }
 
   private static final class PropertiesRenderer extends AbstractStringRenderer {

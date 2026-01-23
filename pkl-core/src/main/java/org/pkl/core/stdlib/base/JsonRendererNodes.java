@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,9 +52,7 @@ public final class JsonRendererNodes {
   private static JsonRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
-    return new JsonRenderer(builder, indent, converter, omitNullProperties);
+    return new JsonRenderer(builder, indent, PklConverter.fromRenderer(self), omitNullProperties);
   }
 
   private static final class JsonRenderer extends AbstractStringRenderer {

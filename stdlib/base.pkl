@@ -20,12 +20,14 @@
 @ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.base
 
-// math import used for doc comments
+// json, math, and yaml imports used for doc comments
+import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
 import "pkl:pklbinary"
 import "pkl:protobuf"
 import "pkl:xml"
+import "pkl:yaml"
 
 /// The top type of the type hierarchy.
 ///
@@ -351,9 +353,68 @@ abstract class BaseValueRenderer {
   /// both match path spec `server.timeout`, whereas path `server.timeout.millis` does not.
   converters: Mapping<Class | String, (unknown) -> Any>
 
+  /// Customizations for [ConvertProperty] annotation behaviors.
+  ///
+  /// This property is consulted to transform [ConvertProperty] annotation values.
+  /// This can be used to customize or override the conversion behavior for a specific renderer.
+  /// If multiple entries match the annotation's class, the most specific class (according to class
+  /// hierarchy) wins.
+  ///
+  /// See [ConvertProperty] for detailed information.
+  @Since { version = "0.31.0" }
+  convertPropertyTransformers: Mapping<Class, Mixin<ConvertProperty>>
+
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.
   extension: String?
+}
+
+/// Conversion to be applied to properties when rendered through [BaseValueRenderer].
+///
+/// During rendering, the annotation's [render] function is called.
+/// The function must return a [Pair] of the converted property name and value.
+///
+/// Multiple [ConvertProperty] annotations can apply per property, and the output of one
+/// annotation's [render] function is used as input to the next.
+/// Annotations are applied the order as declared on the property.
+/// If the annotated property is overriding a parent property, the parent property's annotations are
+/// applied first.
+///
+/// These conversions can coexist with [BaseValueRenderer.converters], and applies first.
+///
+/// These conversions only affect rendering of class properties.
+/// Applying this to other types of members does not impact rendering.
+///
+/// These conversions can be overriden with [BaseValueRenderer.convertPropertyTransformers].
+///
+/// Example:
+///
+/// ```
+/// // convert duration to the number of seconds
+/// @ConvertProperty {
+///   render = (property, _) -> Pair(property.key, property.value.toUnit("s"))
+/// }
+/// timeout: Duration
+/// ```
+///
+/// [ConvertProperty] can be subclassed to define re-usable property converters.
+/// The conversion defined in the previous example can be rewritten as:
+///
+/// ```
+/// class ConvertDuration extends ConvertProperty {
+///   unit: DurationUnit
+///
+///   render = (property: Pair<String, Duration>, _) -> Pair(property.key, property.value.toUnit(unit))
+/// }
+///
+/// @ConvertDuration { unit = "s" }
+/// timeout: Duration
+/// ```
+@Since { version = "0.31.0" }
+open class ConvertProperty extends Annotation {
+  /// Function called by [BaseValueRenderer] types during rendering to transform property
+  /// names and values.
+  render: (Pair<String, Any>, BaseValueRenderer) -> Pair<String, Any>
 }
 
 /// Base class for rendering Pkl values in some textual output format.
@@ -466,6 +527,16 @@ class PcfRenderDirective {
 }
 
 /// Renders values as JSON.
+///
+/// The [json.Property] annotation can be used to change how a property name renders into JSON.
+///
+/// Example:
+/// ```
+/// import "pkl:json"
+///
+/// @json.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class JsonRenderer extends ValueRenderer {
   extension = "json"
 
@@ -486,6 +557,16 @@ class JsonRenderer extends ValueRenderer {
 /// Renders values as YAML.
 ///
 /// To render a YAML stream, set [isStream] to [true].
+///
+/// The [yaml.Property] annotation can be used to change how a property name renders into YAML.
+///
+/// Example:
+/// ```
+/// import "pkl:yaml"
+///
+/// @yaml.Property { name = "wing_span" }
+/// wingSpan: Int
+/// ```
 class YamlRenderer extends ValueRenderer {
   extension = "yaml"
 
