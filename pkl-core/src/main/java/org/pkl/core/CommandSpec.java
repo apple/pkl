@@ -30,6 +30,13 @@ public record CommandSpec(
     List<Argument> arguments,
     List<CommandSpec> subcommands,
     ApplyFunction apply) {
+  
+  public interface Option {
+    String name();
+    OptionType type();
+    @Nullable ParseOptionFunction parse();
+    @Nullable String description();
+  }
 
   public record Flag(
       String name,
@@ -38,13 +45,13 @@ public record CommandSpec(
       @Nullable Object defaultValue,
       @Nullable ParseOptionFunction parse,
       @Nullable String description,
-      boolean hide) {}
+      boolean hide) implements Option {}
 
   public record Argument(
       String name,
       OptionType type,
       @Nullable ParseOptionFunction parse,
-      @Nullable String description) {}
+      @Nullable String description) implements Option {}
 
   public interface ParseOptionFunction {
     boolean isImport();
@@ -141,6 +148,7 @@ public record CommandSpec(
     public static final class Collection extends OptionType {
       public enum Type {
         LIST("List"),
+        LISTING("Listing"),
         SET("Set");
 
         private final String pklTypeName;
@@ -180,15 +188,37 @@ public record CommandSpec(
     }
 
     public static final class Map extends OptionType {
+      public enum Type {
+        MAP("Map"),
+        MAPPING("Mapping");
+
+        private final String pklTypeName;
+
+        Type(String pklTypeName) {
+          this.pklTypeName = pklTypeName;
+        }
+
+        @Override
+        public String toString() {
+          return pklTypeName;
+        }
+      }
+      
+      private final Type type;
       private final OptionType keyType;
       private final OptionType valueType;
 
-      public Map(OptionType keyType, OptionType valueType, boolean required) {
+      public Map(Type type, OptionType keyType, OptionType valueType, boolean required) {
         super(required);
+        this.type = type;
         assert keyType instanceof Primitive || keyType instanceof Enum;
         assert valueType instanceof Primitive || valueType instanceof Enum;
         this.keyType = keyType;
         this.valueType = valueType;
+      }
+
+      public Type getType() {
+        return type;
       }
 
       public OptionType getKeyType() {
@@ -201,7 +231,7 @@ public record CommandSpec(
 
       @Override
       public String toString() {
-        return String.format("Map<%s, %s>", keyType, valueType);
+        return String.format("%s<%s, %s>", type.toString(), keyType, valueType);
       }
     }
   }

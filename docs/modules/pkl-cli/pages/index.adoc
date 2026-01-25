@@ -977,12 +977,12 @@ False values: `false`, `f`, `0`, `no`, `n`, `off`
 |xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals] or a xref:language-reference:index.adoc#type-aliases[type alias] to one
 |Behaves like `String` but only admits specific values.
 
-|`List<Element>`, `Set<Element>`
+|`List<Element>`, `Listing<Element>`, `Set<Element>`
 |`Element` type must be a primitive type or union of string literals.
 
 Only a single `List` or `Set` positional argument is permitted per command.
 
-|`Map<Key, Value>`
+|`Map<Key, Value>`, `Mapping<Key, Value>`
 |`Key` and `Value` types must both be primitive types or unions of string literals.
 
 Only applies to flags; forbidden for positional arguments.

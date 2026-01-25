@@ -108,7 +108,7 @@ class CommandInfo {
   /// Child commands.
   ///
   /// Must have unique [name] values.
-  subcommands: *Listing<Command> | Mapping<String, Command>
+  subcommands: Listing<Command>(isDistinctBy((it) -> it.name))
 }
 
 /// Annotates [options] properties to configure them as named CLI flags.

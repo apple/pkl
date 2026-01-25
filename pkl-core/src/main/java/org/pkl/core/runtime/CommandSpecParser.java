@@ -94,14 +94,14 @@ public final class CommandSpecParser {
         exportNullableString(commandInfo, Identifier.DESCRIPTION),
         (Boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
         (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
-        optionSpecs.getFirst(),
-        optionSpecs.getSecond(),
+        optionSpecs.flags(),
+        optionSpecs.arguments(),
         collectSubcommands(commandInfo),
         (options, parent) ->
             new CommandSpec.State(
                 buildExecutionModule(
                     command,
-                    buildObject(optionsClass, options),
+                    buildObject(optionsClass, optionSpecs, options),
                     parent == null ? null : (SubcommandState) parent.contents()),
                 (it) -> evaluateResult(command, (SubcommandState) it)));
   }
@@ -144,8 +144,24 @@ public final class CommandSpecParser {
     }
     return clazz;
   }
+  
+  record OptionSpecs(List<CommandSpec.Flag> flags, List<CommandSpec.Argument> arguments) {
+    @Nullable CommandSpec.Option getOption(String name) {
+      for (var flag : flags) {
+        if (flag.name().equals(name)) {
+          return flag;
+        }
+      }
+      for (var argument : arguments) {
+        if (argument.name().equals(name)) {
+          return argument;
+        }
+      }
+      return null;
+    }
+  }
 
-  private Pair<List<CommandSpec.Flag>, List<CommandSpec.Argument>> collectOptions(
+  private OptionSpecs collectOptions(
       VmClass optionsClass) {
     var flags = new ArrayList<CommandSpec.Flag>();
     var flagNames = new HashSet<String>();
@@ -157,6 +173,7 @@ public final class CommandSpecParser {
       for (var prop : clazz.getDeclaredProperties()) {
         var name = prop.getName().toString();
         if (prop.isLocal()
+            || prop.isConstOrFixed()
             || clazz.isHiddenProperty(prop.getName())
             || prop.isExternal()
             || flagNames.contains(name)
@@ -252,7 +269,7 @@ public final class CommandSpecParser {
       }
     }
 
-    return Pair.of(flags, args);
+    return new OptionSpecs(flags, args);
   }
 
   // This sigil used to indicate that an option has a default value that is a non-constant expr.
@@ -361,7 +378,8 @@ public final class CommandSpecParser {
         return new Primitive(Primitive.Type.BOOLEAN, required);
       } else if (clazz == BaseModule.getStringClass().export()) {
         return new Primitive(Primitive.Type.STRING, required);
-      } else if (clazz == BaseModule.getListClass().export()) {
+      } else if (clazz == BaseModule.getListClass().export()
+          || clazz == BaseModule.getListingClass().export()) {
         if (classType.getTypeArguments().size() != 1) {
           throw exceptionBuilder()
               .withSourceSection(prop.getHeaderSection())
@@ -380,7 +398,12 @@ public final class CommandSpecParser {
               .evalError("commandOptionUnsupportedType", prop.getName(), "element ", elementType)
               .build();
         }
-        return new Collection(Collection.Type.LIST, elementType, required);
+        return new Collection(
+            clazz == BaseModule.getListingClass().export()
+                ? Collection.Type.LISTING
+                : Collection.Type.LIST,
+            elementType,
+            required);
       } else if (clazz == BaseModule.getSetClass().export()) {
         if (classType.getTypeArguments().size() != 1) {
           throw exceptionBuilder()
@@ -401,7 +424,8 @@ public final class CommandSpecParser {
               .build();
         }
         return new Collection(Collection.Type.SET, elementType, required);
-      } else if (clazz == BaseModule.getMapClass().export()) {
+      } else if (clazz == BaseModule.getMapClass().export()
+          || clazz == BaseModule.getMappingClass().export()) {
         if (classType.getTypeArguments().size() != 2) {
           throw exceptionBuilder()
               .withSourceSection(prop.getHeaderSection())
@@ -427,7 +451,13 @@ public final class CommandSpecParser {
               .evalError("commandOptionUnsupportedType", prop.getName(), "value ", valueType)
               .build();
         }
-        return new OptionType.Map(keyType, valueType, required);
+        return new OptionType.Map(
+            clazz == BaseModule.getListingClass().export()
+                ? OptionType.Map.Type.MAPPING
+                : OptionType.Map.Type.MAP,
+            keyType,
+            valueType,
+            required);
       }
     } else if (type instanceof PType.Alias aliasType) {
       var alias = aliasType.getTypeAlias();
@@ -578,20 +608,37 @@ public final class CommandSpecParser {
    *
    * <p>Transforms List into VmList, Set into VmSet, and Map into VmMap.
    */
-  private VmTyped buildObject(VmClass clazz, Map<String, Object> properties) {
+  private VmTyped buildObject(VmClass clazz, OptionSpecs optionsSpecs, Map<String, Object> properties) {
     EconomicMap<Object, ObjectMember> members = EconomicMaps.create(properties.size());
     for (var prop : properties.entrySet()) {
+      var key = prop.getKey();
       var value = prop.getValue();
+      var opt = optionsSpecs.getOption(key);
+      assert opt != null; 
       if (value == null) continue;
-      if (value instanceof List<?> list) {
-        value = VmList.create(list);
-      } else if (value instanceof Set<?> set) {
-        value = VmSet.create(set);
-      } else if (value instanceof Map<?, ?> map) {
+      if (opt.type() instanceof OptionType.Collection collection) {
+        value = switch (collection.getType()) {
+          case LIST -> VmList.create((List<?>) value);
+          case LISTING -> {
+            var builder = new VmObjectBuilder();
+            ((List<?>) value).forEach(builder::addElement);
+            yield builder.toListing();
+          }
+          case SET -> VmSet.create((Set<?>) value);
+        };
+      } if (opt.type() instanceof OptionType.Map map) {
         //noinspection unchecked
-        value = VmMap.create((Map<Object, Object>) map);
+        var mapValue = (Map<Object, Object>) value;
+        value = switch (map.getType()) {
+          case MAP -> VmMap.create(mapValue);
+          case MAPPING -> {
+            var builder = new VmObjectBuilder();
+            mapValue.forEach(builder::addEntry);
+            yield builder.toMapping();
+          }
+        };
       }
-      var identifier = Identifier.get(prop.getKey());
+      var identifier = Identifier.get(key);
       members.put(identifier, VmUtils.createSyntheticObjectProperty(identifier, "", value));
     }
     return new VmTyped(
