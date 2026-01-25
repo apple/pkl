@@ -1,0 +1,9 @@
+amends "pkl:Project"
+
+evaluatorSettings {
+  externalModuleReaders {
+    ["foo"] {
+      executable = "qux:/foo"
+    }
+  }
+}

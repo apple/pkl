@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -145,10 +145,10 @@ data class CliBaseOptions(
   val httpRewrites: Map<URI, URI>? = null,
 
   /** External module reader process specs */
-  val externalModuleReaders: Map<String, ExternalReader> = mapOf(),
+  val externalModuleReaders: Map<String, ExternalReader>? = null,
 
   /** External resource reader process specs */
-  val externalResourceReaders: Map<String, ExternalReader> = mapOf(),
+  val externalResourceReaders: Map<String, ExternalReader>? = null,
 
   /** Defines options for the formatting of calls to the trace() method. */
   val traceMode: TraceMode? = null,
