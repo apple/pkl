@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1302,7 +1302,10 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun getBaseSeparator(prev: Node, next: Node): FormatNode? {
+
     return when {
+      endsInLineComment(prev) && endsInLineComment(next) -> mustForceLine()
+
       endsInLineComment(prev) -> {
         if (prev.linesBetween(next) > 1) {
           TWO_NEWLINES

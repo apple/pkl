@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -120,4 +120,39 @@ class FormatterTest {
       assertThat(format(src)).isEqualTo("\n")
     }
   }
+
+
+@Test
+fun `multi line comments - no extra empty lines`() {
+  val input =
+    """
+      import "pkl:json" // used for doc comments
+      import "pkl:jsonnet"
+      import "pkl:math" // used for doc comments
+      import "pkl:pklbinary"
+      import "pkl:protobuf"
+      import "pkl:xml"
+      import "pkl:yaml" // used for doc comments
+    """
+
+  val expected =
+    """
+      // used for doc comments
+      // used for doc comments
+      // used for doc comments
+      import "pkl:json"
+      import "pkl:jsonnet"
+      import "pkl:math"
+      import "pkl:pklbinary"
+      import "pkl:protobuf"
+      import "pkl:xml"
+      import "pkl:yaml"
+      
+    """
+
+  val formatted = format(input)
+
+  assertThat(formatted).isEqualTo(expected.trimIndent())
+}
+
 }
