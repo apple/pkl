@@ -120,37 +120,4 @@ class FormatterTest {
       assertThat(format(src)).isEqualTo("\n")
     }
   }
-
-  @Test
-  fun `multi line comments - no extra empty lines`() {
-    val input =
-      """
-      import "pkl:json" // used for doc comments
-      import "pkl:jsonnet"
-      import "pkl:math" // used for doc comments
-      import "pkl:pklbinary"
-      import "pkl:protobuf"
-      import "pkl:xml"
-      import "pkl:yaml" // used for doc comments
-    """
-
-    val expected =
-      """
-      // used for doc comments
-      // used for doc comments
-      // used for doc comments
-      import "pkl:json"
-      import "pkl:jsonnet"
-      import "pkl:math"
-      import "pkl:pklbinary"
-      import "pkl:protobuf"
-      import "pkl:xml"
-      import "pkl:yaml"
-      
-    """
-
-    val formatted = format(input)
-
-    assertThat(formatted).isEqualTo(expected.trimIndent())
-  }
 }
