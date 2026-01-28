@@ -24,6 +24,7 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
+import org.pkl.core.Pair;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -149,6 +150,14 @@ public interface HttpClient extends AutoCloseable {
      * @since 0.29.0
      */
     Builder addRewrite(URI sourcePrefix, URI targetPrefix);
+
+    /**
+     * Sets the HTTP headers for the request, replacing any previously configured headers.
+     *
+     * <p>This method clears all existing headers and replaces them with the contents of the
+     * provided map.
+     */
+    Builder setHeaders(Map<URI, List<Pair<String, String>>> headers);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

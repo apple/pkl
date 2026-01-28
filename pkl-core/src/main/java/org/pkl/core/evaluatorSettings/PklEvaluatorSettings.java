@@ -30,6 +30,7 @@ import java.util.stream.Collectors;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
+import org.pkl.core.Pair;
 import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.Value;
@@ -52,6 +53,10 @@ public record PklEvaluatorSettings(
     @Nullable Map<String, ExternalReader> externalModuleReaders,
     @Nullable Map<String, ExternalReader> externalResourceReaders,
     @Nullable TraceMode traceMode) {
+
+  public static final Pattern HEADER_NAME_REGEX = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$");
+  public static final Pattern HEADER_VALUE_REGEX =
+      Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$");
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -126,8 +131,11 @@ public record PklEvaluatorSettings(
         traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase()));
   }
 
-  public record Http(@Nullable Proxy proxy, @Nullable Map<URI, URI> rewrites) {
-    public static final Http DEFAULT = new Http(null, Collections.emptyMap());
+  public record Http(
+      @Nullable Proxy proxy,
+      @Nullable Map<URI, URI> rewrites,
+      @Nullable Map<URI, List<Pair<String, String>>> headers) {
+    public static final Http DEFAULT = new Http(null, Collections.emptyMap(), null);
 
     @SuppressWarnings("unchecked")
     public static @Nullable Http parse(@Nullable Value input) {
@@ -136,10 +144,9 @@ public record PklEvaluatorSettings(
       } else if (input instanceof PObject http) {
         var proxy = Proxy.parse((Value) http.getProperty("proxy"));
         var rewrites = http.getProperty("rewrites");
-        if (rewrites instanceof PNull) {
-          return new Http(proxy, null);
-        } else {
-          var parsedRewrites = new HashMap<URI, URI>();
+        HashMap<URI, URI> parsedRewrites = null;
+        if (!(rewrites instanceof PNull)) {
+          parsedRewrites = new HashMap<>();
           for (var entry : ((Map<String, String>) rewrites).entrySet()) {
             var key = entry.getKey();
             var value = entry.getValue();
@@ -149,8 +156,32 @@ public record PklEvaluatorSettings(
               throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
             }
           }
-          return new Http(proxy, parsedRewrites);
         }
+        var headers = http.getProperty("headers");
+        HashMap<URI, List<org.pkl.core.Pair<String, String>>> parsedHeaders = null;
+        if (!(headers instanceof PNull)) {
+          parsedHeaders = new HashMap<>();
+          var headersMap = (Map<String, List<Pair<String, String>>>) headers;
+          for (var entry : headersMap.entrySet()) {
+            var uri = entry.getKey();
+            var pairs = entry.getValue();
+            for (var pair : pairs) {
+              if (!HEADER_NAME_REGEX.matcher(pair.getFirst()).matches()) {
+                throw new PklException(ErrorMessages.create("invalidHeaderName", pair.getFirst()));
+              }
+              if (!HEADER_VALUE_REGEX.matcher(pair.getSecond()).matches()) {
+                throw new PklException(
+                    ErrorMessages.create("invalidHeaderValue", pair.getSecond()));
+              }
+            }
+            try {
+              parsedHeaders.put(new URI(uri), pairs);
+            } catch (URISyntaxException e) {
+              throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
+            }
+          }
+        }
+        return new Http(proxy, parsedRewrites, parsedHeaders);
       } else {
         throw PklBugException.unreachableCode();
       }

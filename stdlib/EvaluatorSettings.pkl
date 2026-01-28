@@ -126,7 +126,10 @@ local const hasNonEmptyHostname = (it: String) ->
 
 /// A key or value in [Http.rewrites].
 @Since { version = "0.29.0" }
-typealias HttpRewrite = String(startsWith(Regex("https?://")), endsWith("/"), hasNonEmptyHostname)
+typealias HttpPrefix = String(startsWith(Regex("https?://")), endsWith("/"), hasNonEmptyHostname)
+
+@Deprecated { since = "0.30.0"; replaceWith = "HttpPrefix" }
+typealias HttpRewrite = HttpPrefix
 
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
@@ -168,7 +171,11 @@ class Http {
   /// An rewrite target should also not contain a query string or fragment component
   /// (not schematically enforced).
   @Since { version = "0.29.0" }
-  rewrites: Mapping<HttpRewrite, HttpRewrite>?
+  rewrites: Mapping<HttpPrefix, HttpPrefix>?
+  
+  /// HTTP headers to add to outbound requests targeting specified URLs.
+  @Since { version = "0.30.0" }
+  headers: Mapping<HttpPrefix, Mapping<HttpHeaderName, Listing<HttpHeaderValue>>>?
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.
@@ -235,3 +242,55 @@ class ExternalReader {
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
 }
+
+typealias ReservedHttpHeaderName = 
+  "accept-charset"
+  | "accept-encoding"
+  | "access-control-request-headers"
+  | "access-control-request-method"
+  | "connection"
+  | "content-length"
+  | "cookie"
+  | "date"
+  | "dnt"
+  | "expect"
+  | "host"
+  | "keep-alive"
+  | "origin"
+  | "permissions-policy"
+  | "referer"
+  | "te"
+  | "trailer"
+  | "transfer-encoding"
+  | "upgrade"
+  | "via"
+
+const local ReservedHttpHeaderPrefix = new Listing {
+  "proxy-"
+  "sec-"
+  "access-control-"
+}
+
+const local hasReservedHttpHeaderPrefix = (header: String) ->
+  ReservedHttpHeaderPrefix.any((it) -> header.startsWith(it))
+ 
+const local httpHeaderNameRegex = Regex("^[a-zA-Z0-9!#\\$%&'*+-.^_`|~]+$")
+const local hasValidHttpHeaderName = (header: String) ->
+    httpHeaderNameRegex.findMatchesIn(header)
+
+@Since {version = "0.30.0" }
+typealias HttpHeaderName = String(
+  this == toLowerCase(),
+  !(this is ReservedHttpHeaderName),
+  !hasReservedHttpHeaderPrefix.apply(this),
+  hasValidHttpHeaderName
+)
+
+const local httpHeaderValueRegex = Regex("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
+const local hasValidHttpHeaderValue = (value : String) ->
+    httpHeaderValueRegex.findMatchesIn(value)
+
+@Since {version = "0.30.0"}
+typealias HttpHeaderValue = String(
+  hasValidHttpHeaderValue
+)

@@ -20,6 +20,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.time.Duration
 import java.util.regex.Pattern
+import org.pkl.core.Pair
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
@@ -143,6 +144,9 @@ data class CliBaseOptions(
 
   /** URL prefixes to rewrite. */
   val httpRewrites: Map<URI, URI>? = null,
+
+  /** HTTP headers to add to the request. */
+  val httpHeaders: Map<URI, List<Pair<String, String>>>? = null,
 
   /** External module reader process specs */
   val externalModuleReaders: Map<String, ExternalReader> = mapOf(),

@@ -31,7 +31,9 @@ import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
+import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.Color
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
@@ -275,6 +277,58 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
+  val httpHeaders: Map<URI, List<PPair<String, String>>> by
+    option(
+        names = arrayOf("--http-headers"),
+        metavar = "<uri>=<header name>:<header value>[,<header name>:<header value>...]",
+        help = "HTTP header to add to the request.",
+      )
+      .convert { it ->
+        val (uriStr, headers) =
+          it.split("=", limit = 2).let { parts ->
+            require(parts.size == 2) {
+              "Headers must be in the form of <prefix>=<header name>:<header value>"
+            }
+            parts[0] to parts[1]
+          }
+
+        try {
+          val uri = URI(uriStr.trim())
+
+          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
+          val headerPairs =
+            headers.split(',').map { header ->
+              val (headerName, headerValue) =
+                headerRegex.find(header)?.destructured
+                  ?: fail("Header '$header' is not in 'name:value' format.")
+              require(PklEvaluatorSettings.HEADER_NAME_REGEX.matcher(headerName).matches()) {
+                "HTTP header name '$headerName' has invalid syntax."
+              }
+              require(PklEvaluatorSettings.HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
+                "HTTP header value '$headerValue' has invalid syntax"
+              }
+              PPair(headerName, headerValue)
+            }
+          uri to headerPairs
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
+        } catch (e: URISyntaxException) {
+          val message = buildString {
+            append("HTTP headers target `${e.input}` has invalid syntax (${e.reason}).")
+            if (e.index > -1) {
+              append("\n\n")
+              append(e.input)
+              append("\n")
+              append(" ".repeat(e.index))
+              append("^")
+            }
+          }
+          fail(message)
+        }
+      }
+      .multiple()
+      .toMap()
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -340,6 +394,7 @@ class BaseOptions : OptionGroup() {
       httpProxy = proxy,
       httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
+      httpHeaders = httpHeaders.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
       traceMode = traceMode,

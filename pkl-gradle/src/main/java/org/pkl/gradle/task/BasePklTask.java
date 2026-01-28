@@ -43,6 +43,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.Pair;
 import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
@@ -146,6 +147,10 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract MapProperty<URI, URI> getHttpRewrites();
 
+  @Input
+  @Optional
+  public abstract MapProperty<URI, List<Pair<String, String>>> getHttpHeaders();
+
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
    * Truffle use an un-optimized runtime.
@@ -200,6 +205,7 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
               getHttpRewrites().getOrNull(),
+              getHttpHeaders().getOrNull(),
               Map.of(),
               Map.of(),
               null);
