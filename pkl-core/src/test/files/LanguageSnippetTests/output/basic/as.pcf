@@ -35,8 +35,8 @@ examples {
     "Expected value of type `Null`, but got type `List`. Value: List(1, 2, 3)"
     "Expected value of type `Null`, but got type `Set`. Value: Set(1, 2, 3)"
     "Expected value of type `Null`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
-    "Expected value of type `Null`, but got type `as#Base`. Value: new Base {}"
-    "Expected value of type `Null`, but got type `as#Derived`. Value: new Derived {}"
+    "Expected value of type `Null`, but got type `as#Base`. Value: new as#Base {}"
+    "Expected value of type `Null`, but got type `as#Derived`. Value: new as#Derived {}"
     "Expected value of type `Null`, but got type `Mapping`. Value: new Mapping { [\"name\"] = \"Pigeon\"; [\"age\"] = 40 }"
     "Expected value of type `Null`, but got type `Class`. Value: as#Base"
     "Expected value of type `Null`, but got type `Listing`. Value: new Listing { null; null; \"Expected value of type `Null`, but got type `Strin..."
@@ -59,9 +59,9 @@ examples {
     "Expected value of type `Int`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
     "Expected value of type `Int`, but got `null`."
     "Expected value of type `Int`, but got `null`."
-    "Expected value of type `Int`, but got type `as#Base`. Value: new Base {}"
+    "Expected value of type `Int`, but got type `as#Base`. Value: new as#Base {}"
     "Expected value of type `Int`, but got type `Function1`. Value: new Function1 {}"
-    "Expected value of type `Int`, but got type `as#Derived`. Value: new Derived {}"
+    "Expected value of type `Int`, but got type `as#Derived`. Value: new as#Derived {}"
     "Expected value of type `Int`, but got type `Mapping`. Value: new Mapping { [\"name\"] = \"Pigeon\"; [\"age\"] = 40 }"
     "Expected value of type `Int`, but got type `Class`. Value: as#Base"
     "Expected value of type `Int`, but got type `Listing`. Value: new Listing { 42; \"Expected value of type `Int`, but got type `String`. Value..."
@@ -83,8 +83,8 @@ examples {
     "Expected value of type `as#Other`, but got type `Map`. Value: Map(1, \"one\", 2, \"two\", 3, \"three\")"
     "Expected value of type `as#Other`, but got `null`."
     "Expected value of type `as#Other`, but got `null`."
-    "Expected value of type `as#Other`, but got type `as#Base`. Value: new Base {}"
-    "Expected value of type `as#Other`, but got type `as#Derived`. Value: new Derived {}"
+    "Expected value of type `as#Other`, but got type `as#Base`. Value: new as#Base {}"
+    "Expected value of type `as#Other`, but got type `as#Derived`. Value: new as#Derived {}"
     "Expected value of type `as#Other`, but got type `Mapping`. Value: new Mapping { [\"name\"] = \"Pigeon\"; [\"age\"] = 40 }"
     "Expected value of type `as#Other`, but got type `Class`. Value: as#Base"
     "Expected value of type `as#Other`, but got type `Listing`. Value: new Listing { \"Expected value of type `as#Other`, but got type `String`. Valu..."
@@ -124,7 +124,7 @@ examples {
   }
   ["derived class"] {
     new {}
-    "Expected value of type `as#Derived`, but got type `as#Base`. Value: new Base {}"
+    "Expected value of type `as#Derived`, but got type `as#Base`. Value: new as#Base {}"
   }
   ["Mapping"] {
     new {

@@ -115,10 +115,10 @@ examples {
       ["annAOverrideB"] {
         name = "annAOverrideB"
         annotations {
-          "new MyAnn {}"
+          "new reflect4#MyAnn {}"
         }
         allAnnotations {
-          "new MyAnn {}"
+          "new reflect4#MyAnn {}"
           "new Unlisted {}"
         }
         modifiers {}
@@ -128,10 +128,10 @@ examples {
       ["annAOverrideC"] {
         name = "annAOverrideC"
         annotations {
-          "new MyAnn {}"
+          "new reflect4#MyAnn {}"
         }
         allAnnotations {
-          "new MyAnn {}"
+          "new reflect4#MyAnn {}"
           "new Unlisted {}"
         }
         modifiers {}
@@ -145,7 +145,7 @@ examples {
         }
         allAnnotations {
           "new AlsoKnownAs { names { \"mergedAnnotations\" } }"
-          "new MyAnn {}"
+          "new reflect4#MyAnn {}"
           "new Unlisted {}"
         }
         modifiers {}
