@@ -36,24 +36,56 @@ public final class CommandModule extends StdLibModule {
     return CommandInfoClass.instance;
   }
 
+  public static VmClass getBaseFlagClass() {
+    return BaseFlagClass.instance;
+  }
+
   public static VmClass getFlagClass() {
     return FlagClass.instance;
+  }
+
+  public static VmClass getBooleanFlagClass() {
+    return BooleanFlagClass.instance;
+  }
+
+  public static VmClass getCountedFlagClass() {
+    return CountedFlagClass.instance;
   }
 
   public static VmClass getArgumentClass() {
     return ArgumentClass.instance;
   }
 
+  public static VmClass getImportClass() {
+    return ImportClass.instance;
+  }
+
   private static final class CommandInfoClass {
     static final VmClass instance = loadClass("CommandInfo");
+  }
+
+  private static final class BaseFlagClass {
+    static final VmClass instance = loadClass("BaseFlag");
   }
 
   private static final class FlagClass {
     static final VmClass instance = loadClass("Flag");
   }
 
+  private static final class BooleanFlagClass {
+    static final VmClass instance = loadClass("BooleanFlag");
+  }
+
+  private static final class CountedFlagClass {
+    static final VmClass instance = loadClass("CountedFlag");
+  }
+
   private static final class ArgumentClass {
     static final VmClass instance = loadClass("Argument");
+  }
+
+  private static final class ImportClass {
+    static final VmClass instance = loadClass("Import");
   }
 
   @TruffleBoundary

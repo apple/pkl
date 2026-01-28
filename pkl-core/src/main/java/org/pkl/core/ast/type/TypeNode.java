@@ -1105,6 +1105,14 @@ public abstract class TypeNode extends PklNode {
 
       return unionDefault;
     }
+
+    public Set<String> getStringLiterals() {
+      return stringLiterals;
+    }
+
+    public @Nullable String getUnionDefault() {
+      return unionDefault;
+    }
   }
 
   public static final class CollectionTypeNode extends ObjectSlotTypeNode {
@@ -1436,6 +1444,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getMapClass();
+    }
+
+    public TypeNode getKeyTypeNode() {
+      return keyTypeNode;
     }
 
     public TypeNode getValueTypeNode() {
@@ -2148,6 +2160,14 @@ public abstract class TypeNode extends PklNode {
     protected boolean isParametric() {
       return true;
     }
+
+    public TypeNode getFirstTypeNode() {
+      return firstTypeNode;
+    }
+
+    public TypeNode getSecondTypeNode() {
+      return secondTypeNode;
+    }
   }
 
   public static class VarArgsTypeNode extends ObjectSlotTypeNode {
@@ -2329,6 +2349,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected final boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    public long getMask() {
+      return mask;
     }
   }
 
@@ -2522,6 +2546,10 @@ public abstract class TypeNode extends PklNode {
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
     }
 
+    public TypeNode getAliasedTypeNode() {
+      return aliasedTypeNode;
+    }
+
     @Override
     public FrameSlotKind getFrameSlotKind() {
       return aliasedTypeNode.getFrameSlotKind();
@@ -2685,6 +2713,10 @@ public abstract class TypeNode extends PklNode {
       this.language = language;
       this.childNode = childNode;
       this.constraintNodes = constraintNodes;
+    }
+
+    public TypeNode getChildTypeNode() {
+      return childNode;
     }
 
     @Override

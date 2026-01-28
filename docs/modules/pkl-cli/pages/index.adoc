@@ -937,6 +937,7 @@ This module is evaluated and its `output.bytes` property is written to the stand
 === Command Options
 
 Each property of the class of a command's `options` property becomes a command line options.
+Properties with the `local`, `hidden`, `fixed`, and/or `const` modifiers are not parsed as options
 A property's doc comment, if present, becomes the corresponding option's CLI help description.
 Properties must have xref:language-reference:index.adoc#type-annotations[type annotations] to determine how they are parsed.
 
@@ -980,14 +981,14 @@ False values: `false`, `f`, `0`, `no`, `n`, `off`
 |`List<Element>`, `Listing<Element>`, `Set<Element>`
 |`Element` type must be a primitive type or union of string literals.
 
-Only a single `List` or `Set` positional argument is permitted per command.
 
 |`Map<Key, Value>`, `Mapping<Key, Value>`
 |`Key` and `Value` types must both be primitive types or unions of string literals.
 
-Only applies to flags; forbidden for positional arguments.
 
 |===
+
+Only a single positional argument accepting multiple values is permitted per command.
 
 A property with a xref:language-reference:index.adoc#nullable-types[nullable type] is optional and, if not specified on the command line, will have value `null`.
 Type constraints are enforced when the command is executed.

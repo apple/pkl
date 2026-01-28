@@ -156,7 +156,11 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier NOOP = get("noOp");
   public static final Identifier SUBCOMMANDS = get("subcommands");
   public static final Identifier SHORT_NAME = get("shortName");
-  public static final Identifier PARSE = get("parse");
+  public static final Identifier METAVAR = get("metavar");
+  public static final Identifier MULTIPLE = get("multiple");
+  public static final Identifier CONVERT = get("convert");
+  public static final Identifier TRANSFORM_ALL = get("transformAll");
+  public static final Identifier GLOB = get("glob");
 
   // common in lambdas etc
   public static final Identifier IT = get("it");

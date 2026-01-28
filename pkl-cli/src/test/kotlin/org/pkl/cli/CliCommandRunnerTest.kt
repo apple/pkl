@@ -336,6 +336,11 @@ class CliCommandRunnerTest {
         `enum-alias-default`: MyEnum
         `enum-alias-explicit-default`: MyEnum = "e"
         `enum-alias-default-overridden`: MyEnum
+        
+        `enum-single`: "x"
+        `enum-single-nullable`: "x"?
+        `enum-single-explicit-default`: "x" = "x"
+        `enum-single-overridden`: "x"
       }
     """
             .trimIndent(),
@@ -343,7 +348,7 @@ class CliCommandRunnerTest {
     val output =
       runToStdout(
         CliBaseOptions(sourceModules = listOf(moduleUri)),
-        listOf("--enum=a", "--enum-alias-default-overridden=d"),
+        listOf("--enum=a", "--enum-alias-default-overridden=d", "--enum-single-overridden=x"),
       )
     assertThat(output)
       .isEqualTo(
@@ -354,7 +359,11 @@ class CliCommandRunnerTest {
         `enum-alias-default` = "f"
         `enum-alias-explicit-default` = "e"
         `enum-alias-default-overridden` = "d"
-        
+        `enum-single` = "x"
+        `enum-single-nullable` = null
+        `enum-single-explicit-default` = "x"
+        `enum-single-overridden` = "x"
+
         """
           .trimIndent()
       )
@@ -537,20 +546,20 @@ class CliCommandRunnerTest {
   }
 
   @Test
-  fun `parse Duration`() {
+  fun `convert Duration`() {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
         renderOptions +
           """
       class Options {
-        @Argument { parse = module.parseDuration }
+        @Argument { convert = module.convertDuration }
         a: Duration
-        @Argument { parse = module.parseDuration }
+        @Argument { convert = module.convertDuration }
         b: Duration
-        @Argument { parse = module.parseDuration }
+        @Argument { convert = module.convertDuration }
         c: Duration
-        @Argument { parse = module.parseDuration }
+        @Argument { convert = module.convertDuration }
         d: Duration
       }
     """
@@ -575,20 +584,20 @@ class CliCommandRunnerTest {
   }
 
   @Test
-  fun `parse DataSize`() {
+  fun `convert DataSize`() {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
         renderOptions +
           """
       class Options {
-        @Argument { parse = module.parseDataSize }
+        @Argument { convert = module.convertDataSize }
         a: DataSize
-        @Argument { parse = module.parseDataSize }
+        @Argument { convert = module.convertDataSize }
         b: DataSize
-        @Argument { parse = module.parseDataSize }
+        @Argument { convert = module.convertDataSize }
         c: DataSize
-        @Argument { parse = module.parseDataSize }
+        @Argument { convert = module.convertDataSize }
         d: DataSize
       }
     """
@@ -613,14 +622,14 @@ class CliCommandRunnerTest {
   }
 
   @Test
-  fun `parse import`() {
+  fun `convert import`() {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
         renderOptions +
           """
       class Options {
-        @Argument { parse = "import" }
+        @Argument { convert = (it) -> new Import{ uri = it } }
         fromImport: Module
       }
     """
@@ -653,7 +662,7 @@ class CliCommandRunnerTest {
   }
 
   @Test
-  fun `parse glob import`() {
+  fun `convert glob import`() {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
@@ -668,7 +677,7 @@ class CliCommandRunnerTest {
       }
       
       class Options {
-        @Argument { parse = "import*" }
+        @Argument { convert = (it) -> new Import { uri = it; glob = true }; multiple = false }
         fromGlobImport: Mapping<String, base>
       }
     """
@@ -730,14 +739,14 @@ class CliCommandRunnerTest {
   }
 
   @Test
-  fun `parse that throws`() {
+  fun `convert that throws`() {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
         renderOptions +
           """
       class Options {
-        @Argument { parse = (it) -> throw("oops!") }
+        @Argument { convert = (it) -> throw("oops!") }
         foo: String
       }
     """

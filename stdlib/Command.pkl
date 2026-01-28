@@ -30,7 +30,7 @@
 /// }
 /// ```
 @ModuleInfo { minPklVersion = "0.31.0" }
-abstract module pkl.Command
+open module pkl.Command
 
 import "pkl:Command"
 import "pkl:reflect"
@@ -108,33 +108,124 @@ class CommandInfo {
   /// Child commands.
   ///
   /// Must have unique [name] values.
-  subcommands: Listing<Command>(isDistinctBy((it) -> it.name))
+  subcommands: Listing<Command>(isDistinctBy((it) -> it.command.name))
 }
 
 /// Annotates [options] properties to configure them as named CLI flags.
-class Flag extends Annotation {
+// NB: this should be a sealed class once Pkl supports them
+abstract class BaseFlag extends Annotation {
   /// Abbreviated flag name.
   shortName: Char?
 
   /// Hide this option from CLI help.
   hide: Boolean = false
-
-  /// Customize the behavior of turning the raw option value string into the final value.
-  ///
-  /// If a function, the return type must match the annotated property's type.
-  /// If "import", the raw option is treated as an import URI.
-  /// If "import*", the raw option is treated as a glob import URI.
-  parse: (*((String) -> unknown) | "import" | "import*")?
 }
 
-/// Annotates [options] properties to configure them as positional CLI arguments.
-class Argument extends Annotation {
-  /// Customize the behavior of turning the raw option value string into the final value.
+/// Annotates an [options] property to configure it as a named CLI flag that accepts a value.
+class Flag extends BaseFlag {
+  /// Text to use in place of the option value in CLI help.
   ///
-  /// If a function, the return type must match the annotated property's type.
-  /// If "import", the raw option is treated as an import URI.
-  /// If "import*", the raw option is treated as a glob import URI.
-  parse: (*((String) -> unknown) | "import" | "import*")?
+  /// If not specified, the value is derived from the flag's type.
+  metavar: String?
+
+  /// Customize the behavior of parsing the raw option values.
+  ///
+  /// When the return value is an [Import] value or a [Pair] member, [List] or [Set] element
+  /// containing an [Import], the URI or glob URI specified by the value is imported and the value
+  /// is replaced with the value of the imported module(s).
+  ///
+  /// If no transform is provided, the raw flag value are parsed according to the option's type:
+  ///
+  /// | Type                     | Behavior |
+  /// | ------------------------ | -------- |
+  /// | [String]                 | Value is used verbatim |
+  /// | [Char]                   | Value is used verbatim; must be exactly one character |
+  /// | [Boolean]                | True values: `true`, `t`, `1`, `yes`, `y`, `on`; False values: `false`, `f`, `0`, `no`, `n`, `off` |
+  /// | [Number]                 | Value is parsed as an [Int] if possible, otherwise parsed as [Float] |
+  /// | [Float]                  | Value is parsed as a [Float] |
+  /// | [Int]                    | Value is parsed as an [Int] |
+  /// | [Int8], [Int16], [Int32], [UInt], [UInt8], [UInt16], [UInt32] | Value is parsed as an [Int] and must be wihtin the type's range |
+  /// | [Mapping], [Map], [Pair] | Value is split into a [Pair] on the first `"="` and each substring is parsed based on the above primitive types |
+  /// | [Listing], [List], [Set] | Value is parsed based on the above primitive types |
+  /// | Other types              | An error is thrown; `convert` should be defined explicitly |
+  convert: ((String) -> Any)?
+
+  /// Specifies whether the flag may be specified more than once.
+  ///
+  /// If not specified, this is determined based on the option's type.
+  /// Options with type [Listing], [List], [Set], [Mapping], or [Map] are mulitple by default.
+  /// Overriding this behavior generally requires setting [convert] and/or [transformAll].
+  multiple: Boolean?
+
+  /// Customize the behavior of turning all parsed flag values into the final option value.
+  ///
+  /// If no value is provided, all flag values are transformed according to the option's type:
+  ///
+  /// | Type              | Behavior |
+  /// | ----------------- | -------- |
+  /// | [Mapping], [Map]  | Each value must be a [Pair], each pair becomes an entry in the result. |
+  /// | [Listing], [List] | Result is all option values in the order specified |
+  /// | [Set]             | Result is all unique option values |
+  /// | Other types       | Result is the last value specified option value |
+  transformAll: ((List<Any>) -> Any)?
+}
+
+/// Annotates [Boolean] [options] properties to configure them as named CLI flags that may be
+/// specified zero or one times.
+///
+/// Boolean flags produce a pair of flags in the form `--<name>`/`--no-<name>`.
+///
+/// Annotating a property with a type other than [Boolean] is an error.
+class BooleanFlag extends BaseFlag
+
+/// Annotates [Integer] [options] properties to configure them as named CLI flags that may be
+/// specified zero or more times.
+///
+/// Counted flags produce a value equal to the number of times a flag is specified.
+///
+/// Annotating a property with a type other than [Int], [Int8], [Int16], [Int32], [UInt], [UInt8],
+/// [UInt16], or [UInt32] is an error.
+class CountedFlag extends BaseFlag
+
+/// Annotates an [options] property to configure it as a positional CLI argument.
+class Argument extends Annotation {
+  /// Customize the behavior of turning the raw option values string into the final value.
+  ///
+  /// When the return value is an [Import] value or a [Pair] member, [List] or [Set] element
+  /// containing an [Import], the URI or glob URI specified by the value is imported and the value
+  /// is replaced with the value of the imported module(s).
+  ///
+  /// If no value is provided, each option value is transformed using the same rules as
+  /// [Flag.convert].
+  convert: ((String) -> Any)?
+
+  /// Specifies whether the argument may be specified more than once.
+  ///
+  /// If not specified, this is determined based on the option's type.
+  /// Options with type [Listing], [List], [Set], [Mapping], or [Map] are multiple by default.
+  /// Overriding this behavior generally requires setting [convert] and/or [transformAll].
+  ///
+  /// Only one argument per command may be multiple.
+  multiple: Boolean?
+
+  /// Customize the behavior of turning all parsed flag values into the final option value.
+  ///
+  /// If no value is provided, all option values are transformed using the same rules as
+  /// [Flag.transformAll].
+  transformAll: ((List<Any>) -> Any)?
+}
+
+/// A value used in [Flag.transform] and [Argument.transform] to declare an option as a dynamic
+/// import.
+class Import {
+  /// The absolute URI of the module to import.
+  uri: String
+
+  /// Whether [uri] should be interpreted as a glob pattern.
+  ///
+  /// When `false`, the replacement value is the value of the specified module.
+  /// When `true`, the replacement value is a [Mapping] from [String] keys to matched module values. 
+  glob: Boolean = false
 }
 
 local const quantityRegex = Regex(#"([0-9]+(?:\.[0-9]+)?)\.?([A-Za-z]+)"#)
@@ -146,19 +237,19 @@ local const function parseQuantity(value: String, typeName: String): Pair<Float,
     else
       Pair(match.groups[1].value.toFloat(), match.groups[2].value.toLowerCase())
 
-/// A parse function for [Duration] values.
+/// A convert function for [Duration] values.
 ///
-/// For use with [Flag.parse] and [Argument.parse].
-hidden const parseDuration: (String) -> Duration = (value: String) ->
+/// For use with [Flag.convert] and [Argument.convert].
+hidden const convertDuration: (String) -> Duration = (value: String) ->
   let (quantity = parseQuantity(value, "Duration"))
   let (_unit = quantity.second)
   let (unit = if (_unit is DurationUnit) _unit else null)
     quantity.first.toDuration(unit ?? throw("Unable to parse DurationUnit from '\(_unit)'"))
 
-/// A parse function for [DataSize] values.
+/// A convert function for [DataSize] values.
 ///
-/// For use with [Flag.parse] and [Argument.parse].
-hidden const parseDataSize: (String) -> DataSize = (value: String) ->
+/// For use with [Flag.convert] and [Argument.convert].
+hidden const convertDataSize: (String) -> DataSize = (value: String) ->
   let (quantity = parseQuantity(value, "DataSize"))
   let (_unit = quantity.second)
   let (unit = if (_unit is DataSizeUnit) _unit else null)

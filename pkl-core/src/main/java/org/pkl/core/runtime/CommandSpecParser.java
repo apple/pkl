@@ -22,21 +22,25 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
+import java.net.URISyntaxException;
+import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.CommandSpec;
-import org.pkl.core.CommandSpec.OptionType;
-import org.pkl.core.CommandSpec.OptionType.Collection;
-import org.pkl.core.CommandSpec.OptionType.Enum;
-import org.pkl.core.CommandSpec.OptionType.Primitive;
+import org.pkl.core.CommandSpec.Argument;
+import org.pkl.core.CommandSpec.BooleanFlag;
+import org.pkl.core.CommandSpec.CountedFlag;
+import org.pkl.core.CommandSpec.Option.BadValue;
+import org.pkl.core.CommandSpec.Option.MisingOption;
 import org.pkl.core.FileOutput;
 import org.pkl.core.PNull;
-import org.pkl.core.PType;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
@@ -49,7 +53,6 @@ import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ModuleNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.ast.member.PropertyTypeNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
@@ -58,6 +61,7 @@ import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
@@ -94,488 +98,15 @@ public final class CommandSpecParser {
         exportNullableString(commandInfo, Identifier.DESCRIPTION),
         (Boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
         (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
-        optionSpecs.flags(),
-        optionSpecs.arguments(),
+        optionSpecs,
         collectSubcommands(commandInfo),
         (options, parent) ->
             new CommandSpec.State(
                 buildExecutionModule(
                     command,
-                    buildObject(optionsClass, optionSpecs, options),
+                    buildObject(optionsClass, options),
                     parent == null ? null : (SubcommandState) parent.contents()),
                 (it) -> evaluateResult(command, (SubcommandState) it)));
-  }
-
-  private static @Nullable String exportNullableString(VmObjectLike value, Object key) {
-    var result = VmValue.export(VmUtils.readMember(value, key));
-    return result instanceof PNull ? null : (String) result;
-  }
-
-  private VmClass getOptionsClass(VmTyped command) {
-    var optionsProperty = command.getVmClass().getProperty(Identifier.OPTIONS);
-    if (optionsProperty == null) {
-      // at this point we've asserted the command extends pkl:Command
-      throw PklBugException.unreachableCode();
-    }
-    var optionsPropertyTypeNode = optionsProperty.getTypeNode();
-    if (optionsPropertyTypeNode == null) {
-      // at this point we've asserted the options property exists and that it is neither amended nor
-      // assigned
-      // the only possibility here is that it has a type annotation or this wouldn't parse
-      throw PklBugException.unreachableCode();
-    }
-    var optionsTypeNode = optionsPropertyTypeNode.getTypeNode();
-    if (optionsTypeNode instanceof TypeNode.TypedTypeNode) {
-      return BaseModule.getTypedClass();
-    }
-    if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
-      throw exceptionBuilder()
-          .withSourceSection(optionsTypeNode.getSourceSection())
-          .evalError(
-              "commandOptionsTypeNotClass", optionsTypeNode.getSourceSection().getCharacters())
-          .build();
-    }
-    var clazz = node.getVmClass();
-    if (clazz.isAbstract()) {
-      throw exceptionBuilder()
-          .withSourceSection(clazz.getHeaderSection())
-          .evalError("commandOptionsTypeAbstractClass", clazz.getQualifiedName())
-          .build();
-    }
-    return clazz;
-  }
-  
-  record OptionSpecs(List<CommandSpec.Flag> flags, List<CommandSpec.Argument> arguments) {
-    @Nullable CommandSpec.Option getOption(String name) {
-      for (var flag : flags) {
-        if (flag.name().equals(name)) {
-          return flag;
-        }
-      }
-      for (var argument : arguments) {
-        if (argument.name().equals(name)) {
-          return argument;
-        }
-      }
-      return null;
-    }
-  }
-
-  private OptionSpecs collectOptions(
-      VmClass optionsClass) {
-    var flags = new ArrayList<CommandSpec.Flag>();
-    var flagNames = new HashSet<String>();
-    var args = new ArrayList<CommandSpec.Argument>();
-    var argNames = new HashSet<String>();
-
-    var clazz = optionsClass;
-    while (clazz != null) {
-      for (var prop : clazz.getDeclaredProperties()) {
-        var name = prop.getName().toString();
-        if (prop.isLocal()
-            || prop.isConstOrFixed()
-            || clazz.isHiddenProperty(prop.getName())
-            || prop.isExternal()
-            || flagNames.contains(name)
-            || argNames.contains(name)) continue;
-
-        VmTyped flagAnnotation = null;
-        VmTyped argAnnotation = null;
-        for (var annotation : prop.getAllAnnotations()) {
-          if (annotation.getVmClass() == CommandModule.getFlagClass()) {
-            if (flagAnnotation != null) continue;
-            flagAnnotation = annotation;
-          } else if (annotation.getVmClass() == CommandModule.getArgumentClass()) {
-            if (argAnnotation != null) continue;
-            argAnnotation = annotation;
-          }
-        }
-
-        if (flagAnnotation != null && argAnnotation != null) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError("commandOptionBothFlagAndArgument", prop.getName())
-              .build();
-        }
-
-        if (argAnnotation != null) {
-          var defaultValue = getDefaultValue(prop, true);
-          if (defaultValue != null) {
-            throw exceptionBuilder()
-                .withSourceSection(prop.getHeaderSection())
-                .evalError("commandArgumentUnexpectedDefaultValue", prop.getName())
-                .build();
-          }
-          var parseFunction = getParseFunction(argAnnotation);
-          var type = getOptionType(prop, parseFunction, null);
-          if (type instanceof OptionType.Map) {
-            throw exceptionBuilder()
-                .withSourceSection(prop.getHeaderSection())
-                .evalError("commandArgumentUnexpectedMapType", prop.getName())
-                .build();
-          } else if (!(type instanceof OptionType.Collection) && !type.isRequired()) {
-            throw exceptionBuilder()
-                .withSourceSection(prop.getHeaderSection())
-                .evalError("commandArgumentUnexpectedNullableNonCollectionType", prop.getName())
-                .build();
-          }
-          argNames.add(name);
-          args.add(
-              new CommandSpec.Argument(
-                  name, type, parseFunction, VmUtils.exportDocComment(prop.getDocComment())));
-        } else {
-          var defaultValue = getDefaultValue(prop, false);
-          String shortName = null;
-          CommandSpec.ParseOptionFunction parseFunction = null;
-          boolean hide = false;
-          if (flagAnnotation != null) {
-            shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
-            parseFunction = getParseFunction(flagAnnotation);
-            hide = (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
-          }
-          if ("help".equals(name) || "h".equals(shortName)) {
-            throw exceptionBuilder()
-                .withSourceSection(prop.getHeaderSection())
-                .evalError("commandFlagHelpCollision", prop.getName())
-                .build();
-          }
-
-          flagNames.add(name);
-          flags.add(
-              new CommandSpec.Flag(
-                  name,
-                  shortName,
-                  getOptionType(prop, parseFunction, defaultValue),
-                  // if the default value isn't a constant, don't surface it to the CLI layer
-                  defaultValue == COMPLEX_DEFAULT_EXPRESSION ? null : defaultValue,
-                  parseFunction,
-                  VmUtils.exportDocComment(prop.getDocComment()),
-                  hide));
-        }
-      }
-      clazz = clazz.getSuperclass();
-    }
-
-    String multipleArgName = null;
-    for (var arg : args) {
-      if (arg.type() instanceof Collection) {
-        if (multipleArgName != null) {
-          throw exceptionBuilder()
-              .withSourceSection(optionsClass.getHeaderSection())
-              .evalError("commandArgumentsMultipleListOrSet")
-              .build();
-        }
-        multipleArgName = arg.name();
-      }
-    }
-
-    return new OptionSpecs(flags, args);
-  }
-
-  // This sigil used to indicate that an option has a default value that is a non-constant expr.
-  // These values cause a flag to be marked optional, but are not shown in CLI help.
-  // Thus, they are not evaluated at spec parse time.
-  private static final Object COMPLEX_DEFAULT_EXPRESSION = new Object() {};
-
-  private @Nullable Object getDefaultValue(ClassProperty prop, boolean requireExplicit) {
-    // if the default is a constant, surface it to the CLI layer informationally
-    var constantValue = prop.getInitializer().getConstantValue();
-    if (constantValue != null) {
-      // Map/List/Set literals may be constants if all their arguments are constants
-      // return the complex default sigil in that case!!
-      // only primitives returned here (non-VmValues: Float, Long, String, Boolean)
-      return constantValue instanceof VmValue ? COMPLEX_DEFAULT_EXPRESSION : constantValue;
-    }
-
-    // if the default is defined, we're not required but don't evaluate the expression
-    // return the sigil value to indicate this
-    var bodyNode = prop.getInitializer().getMemberNode();
-    if (bodyNode != null && !(bodyNode.getBodyNode() instanceof DefaultPropertyBodyNode)) {
-      return COMPLEX_DEFAULT_EXPRESSION;
-    }
-
-    // otherwise, if type-based defaults are allowed (eg. by flags, for string literal unions)
-    // attempt to discover the type's default
-    if (!requireExplicit) {
-      var typeNode = prop.getTypeNode();
-      if (typeNode == null) {
-        throw exceptionBuilder()
-            .withSourceSection(prop.getHeaderSection())
-            .evalError("commandOptionNoTypeAnnotation", prop.getName())
-            .withHint("Option properties require type annotations.")
-            .build();
-      }
-
-      var type = stripConstraints(typeNode.export());
-      if (type instanceof PType.Alias alias) {
-        type = stripConstraints(alias.getAliasedType());
-      }
-
-      if (type instanceof PType.Union union && union.getDefaultElement() != null) {
-        var elements = union.getElementTypes();
-        for (var element : elements) {
-          if (!(element instanceof PType.StringLiteral)) {
-            throw exceptionBuilder()
-                .withSourceSection(prop.getHeaderSection())
-                .evalError(
-                    "commandOptionUnsupportedType",
-                    prop.getName(),
-                    "",
-                    typeNode.getSourceSection().getCharacters())
-                .build();
-          }
-        }
-        return ((PType.StringLiteral) union.getDefaultElement()).getLiteral();
-      }
-    }
-
-    // otherwise we have no default!
-    return null;
-  }
-
-  private OptionType getOptionType(
-      ClassProperty prop,
-      CommandSpec.@Nullable ParseOptionFunction parseFunction,
-      @Nullable Object defaultValue) {
-    var typeNode = prop.getTypeNode();
-    if (typeNode == null) {
-      throw exceptionBuilder()
-          .withSourceSection(prop.getHeaderSection())
-          .evalError("commandOptionNoTypeAnnotation", prop.getName())
-          .build();
-    }
-    var type = stripConstraints(typeNode.export());
-    var required = defaultValue == null;
-    if (type instanceof PType.Nullable nullable) {
-      if (!required) {
-        throw exceptionBuilder()
-            .withSourceSection(prop.getHeaderSection())
-            .evalError("commandOptionTypeNullableWithDefaultValue", prop.getName())
-            .build();
-      }
-      required = false;
-      type = nullable.getBaseType();
-    }
-    if (parseFunction != null) {
-      return new Primitive(Primitive.Type.STRING, required);
-    }
-
-    return getOptionType(prop, typeNode, type, required);
-  }
-
-  private OptionType getOptionType(
-      ClassProperty prop, PropertyTypeNode typeNode, PType type, boolean required) {
-    type = stripConstraints(type);
-    if (type instanceof PType.Class classType) {
-      var clazz = classType.getPClass();
-      if (clazz == BaseModule.getNumberClass().export()) {
-        return new Primitive(Primitive.Type.NUMBER, required);
-      } else if (clazz == BaseModule.getFloatClass().export()) {
-        return new Primitive(Primitive.Type.FLOAT, required);
-      } else if (clazz == BaseModule.getIntClass().export()) {
-        return new Primitive(Primitive.Type.INT, required);
-      } else if (clazz == BaseModule.getBooleanClass().export()) {
-        return new Primitive(Primitive.Type.BOOLEAN, required);
-      } else if (clazz == BaseModule.getStringClass().export()) {
-        return new Primitive(Primitive.Type.STRING, required);
-      } else if (clazz == BaseModule.getListClass().export()
-          || clazz == BaseModule.getListingClass().export()) {
-        if (classType.getTypeArguments().size() != 1) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError(
-                  "commandOptionUnsupportedType",
-                  prop.getName(),
-                  "",
-                  typeNode.getSourceSection().getCharacters())
-              .withHint("List options must provide one type argument.")
-              .build();
-        }
-        var elementType = getOptionType(prop, typeNode, classType.getTypeArguments().get(0), true);
-        if (!(elementType instanceof Primitive || elementType instanceof Enum)) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError("commandOptionUnsupportedType", prop.getName(), "element ", elementType)
-              .build();
-        }
-        return new Collection(
-            clazz == BaseModule.getListingClass().export()
-                ? Collection.Type.LISTING
-                : Collection.Type.LIST,
-            elementType,
-            required);
-      } else if (clazz == BaseModule.getSetClass().export()) {
-        if (classType.getTypeArguments().size() != 1) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError(
-                  "commandOptionUnsupportedType",
-                  prop.getName(),
-                  "",
-                  typeNode.getSourceSection().getCharacters())
-              .withHint("Set options must provide one type argument.")
-              .build();
-        }
-        var elementType = getOptionType(prop, typeNode, classType.getTypeArguments().get(0), true);
-        if (!(elementType instanceof Primitive || elementType instanceof Enum)) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError("commandOptionUnsupportedType", prop.getName(), "element ", elementType)
-              .build();
-        }
-        return new Collection(Collection.Type.SET, elementType, required);
-      } else if (clazz == BaseModule.getMapClass().export()
-          || clazz == BaseModule.getMappingClass().export()) {
-        if (classType.getTypeArguments().size() != 2) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError(
-                  "commandOptionUnsupportedType",
-                  prop.getName(),
-                  "",
-                  typeNode.getSourceSection().getCharacters())
-              .withHint("Map options must provide two type arguments.")
-              .build();
-        }
-        var keyType = getOptionType(prop, typeNode, classType.getTypeArguments().get(0), true);
-        if (!(keyType instanceof Primitive || keyType instanceof Enum)) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError("commandOptionUnsupportedType", prop.getName(), "key ", keyType)
-              .build();
-        }
-        var valueType = getOptionType(prop, typeNode, classType.getTypeArguments().get(1), true);
-        if (!(valueType instanceof Primitive || valueType instanceof Enum)) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError("commandOptionUnsupportedType", prop.getName(), "value ", valueType)
-              .build();
-        }
-        return new OptionType.Map(
-            clazz == BaseModule.getListingClass().export()
-                ? OptionType.Map.Type.MAPPING
-                : OptionType.Map.Type.MAP,
-            keyType,
-            valueType,
-            required);
-      }
-    } else if (type instanceof PType.Alias aliasType) {
-      var alias = aliasType.getTypeAlias();
-      if (stripConstraints(aliasType.getAliasedType()) instanceof PType.Union union) {
-        type = union;
-      } else if (alias == BaseModule.getUIntTypeAlias().export()) {
-        return new Primitive(Primitive.Type.UINT, required);
-      } else if (alias == BaseModule.getUInt8TypeAlias().export()) {
-        return new Primitive(Primitive.Type.UINT8, required);
-      } else if (alias == BaseModule.getUInt16TypeAlias().export()) {
-        return new Primitive(Primitive.Type.UINT16, required);
-      } else if (alias == BaseModule.getUInt32TypeAlias().export()) {
-        return new Primitive(Primitive.Type.UINT32, required);
-      } else if (alias == BaseModule.getInt8TypeAlias().export()) {
-        return new Primitive(Primitive.Type.INT8, required);
-      } else if (alias == BaseModule.getInt16TypeAlias().export()) {
-        return new Primitive(Primitive.Type.INT16, required);
-      } else if (alias == BaseModule.getInt32TypeAlias().export()) {
-        return new Primitive(Primitive.Type.INT32, required);
-      } else if (alias == BaseModule.getCharTypeAlias().export()) {
-        return new Primitive(Primitive.Type.CHAR, required);
-      }
-    }
-
-    // not behind and else to catch the alias-to-string-literal-union case above
-    if (type instanceof PType.Union union) {
-      var elements = union.getElementTypes();
-      var choices = new ArrayList<String>(elements.size());
-      for (var element : elements) {
-        if (!(element instanceof PType.StringLiteral stringLiteral)) {
-          throw exceptionBuilder()
-              .withSourceSection(prop.getHeaderSection())
-              .evalError(
-                  "commandOptionUnsupportedType",
-                  prop.getName(),
-                  "",
-                  typeNode.getSourceSection().getCharacters())
-              .build();
-        }
-        choices.add(stringLiteral.getLiteral());
-      }
-      return new OptionType.Enum(choices, required);
-    }
-
-    throw exceptionBuilder()
-        .withSourceSection(prop.getHeaderSection())
-        .evalError(
-            "commandOptionUnsupportedType",
-            prop.getName(),
-            "",
-            typeNode.getSourceSection().getCharacters())
-        .build();
-  }
-
-  private static PType stripConstraints(PType type) {
-    while (type instanceof PType.Constrained constrained) {
-      type = constrained.getBaseType();
-    }
-    return type;
-  }
-
-  private @Nullable CommandSpec.ParseOptionFunction getParseFunction(VmTyped annotation) {
-    var func = VmUtils.readMember(annotation, Identifier.PARSE);
-    if (func instanceof VmNull) {
-      return null;
-    } else if (func.equals("import")) {
-      return new ParseFunction(true, this::importParse);
-    } else if (func.equals("import*")) {
-      return new ParseFunction(true, this::importGlobParse);
-    }
-    return new ParseFunction(false, ((VmFunction) func)::apply);
-  }
-
-  private record ParseFunction(boolean isImport, Function<String, Object> func)
-      implements CommandSpec.ParseOptionFunction {
-    @Override
-    public Object parse(String value) {
-      return func.apply(value);
-    }
-  }
-
-  private Object importParse(String uriString) {
-    var moduleKey = moduleResolver.resolve(URI.create(uriString));
-    return VmLanguage.get(null).loadModule(moduleKey);
-  }
-
-  private Object importGlobParse(String globPattern) {
-    var language = VmLanguage.get(null);
-    var importUri = URI.create(globPattern);
-    var globModuleKey = moduleResolver.resolve(importUri);
-
-    try {
-      if (!globModuleKey.isGlobbable()) {
-        throw exceptionBuilder()
-            .evalError("cannotGlobUri", importUri, importUri.getScheme())
-            .build();
-      }
-      var resolvedElements =
-          GlobResolver.resolveGlob(securityManager, globModuleKey, null, null, globPattern);
-
-      var builder = new VmObjectBuilder(resolvedElements.size());
-      for (var entry : resolvedElements.entrySet()) {
-        var moduleKey = moduleResolver.resolve(entry.getValue().uri());
-        builder.addEntry(entry.getKey(), language.loadModule(moduleKey));
-      }
-      return builder.toMapping(resolvedElements);
-    } catch (IOException e) {
-      throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
-    } catch (ExternalReaderProcessException e) {
-      throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
-    } catch (SecurityManagerException e) {
-      throw exceptionBuilder().withCause(e).build();
-    } catch (InvalidGlobPatternException e) {
-      throw exceptionBuilder()
-          .evalError("invalidGlobPattern", globPattern)
-          .withHint(e.getMessage())
-          .build();
-    }
   }
 
   private List<CommandSpec> collectSubcommands(VmTyped commandInfo) {
@@ -603,41 +134,695 @@ public final class CommandSpecParser {
     return subcommands;
   }
 
+  // region options handling
+
+  private VmClass getOptionsClass(VmTyped command) {
+    var optionsProperty = command.getVmClass().getProperty(Identifier.OPTIONS);
+    if (optionsProperty == null) {
+      // at this point we've asserted the command extends pkl:Command
+      throw PklBugException.unreachableCode();
+    }
+    var optionsPropertyTypeNode = optionsProperty.getTypeNode();
+    if (optionsPropertyTypeNode == null) {
+      // at this point we've asserted the options property exists and that it is neither amended nor
+      // assigned
+      // the only possibility here is that it has a type annotation, otherwise this wouldn't parse
+      throw PklBugException.unreachableCode();
+    }
+    var optionsTypeNode = optionsPropertyTypeNode.getTypeNode();
+    if (optionsTypeNode instanceof TypeNode.TypedTypeNode) {
+      return BaseModule.getTypedClass();
+    }
+    if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
+      throw exceptionBuilder()
+          .withSourceSection(optionsTypeNode.getSourceSection())
+          .evalError(
+              "commandOptionsTypeNotClass", optionsTypeNode.getSourceSection().getCharacters())
+          .build();
+    }
+    var clazz = node.getVmClass();
+    if (clazz.isAbstract()) {
+      throw exceptionBuilder()
+          .withSourceSection(clazz.getHeaderSection())
+          .evalError("commandOptionsTypeAbstractClass", clazz.getQualifiedName())
+          .build();
+    }
+    return clazz;
+  }
+
+  private Iterable<CommandSpec.Option> collectOptions(VmClass optionsClass) {
+    CommandSpec.Argument lastRepeatedArg = null;
+    EconomicMap<String, CommandSpec.Option> opts = EconomicMap.create();
+
+    var clazz = optionsClass;
+    while (clazz != null) {
+      for (var prop : clazz.getDeclaredProperties()) {
+        var name = prop.getName().toString();
+        if (VmModifier.isLocalOrExternalOrAbstractOrFixedOrConst(prop.getModifiers())
+            || opts.containsKey(name)) continue;
+
+        VmTyped flagAnnotation = null;
+        VmTyped argAnnotation = null;
+        for (var annotation : prop.getAllAnnotations()) {
+          if (annotation.getVmClass().isSubclassOf(CommandModule.getBaseFlagClass())) {
+            if (flagAnnotation != null) continue;
+            flagAnnotation = annotation;
+          } else if (annotation.getVmClass() == CommandModule.getArgumentClass()) {
+            if (argAnnotation != null) continue;
+            argAnnotation = annotation;
+          }
+        }
+
+        if (flagAnnotation != null && argAnnotation != null) {
+          throw exceptionBuilder()
+              .withSourceSection(prop.getHeaderSection())
+              .evalError("commandOptionBothFlagAndArgument", prop.getName())
+              .build();
+        }
+
+        if (argAnnotation != null) {
+          var arg = collectArgument(prop, argAnnotation);
+          opts.put(arg.name(), arg);
+          if (arg.repeated()) {
+            if (lastRepeatedArg == null) {
+              lastRepeatedArg = arg;
+            } else {
+              throw exceptionBuilder()
+                  .withSourceSection(optionsClass.getHeaderSection())
+                  .evalError("commandArgumentsMultipleRepeated", lastRepeatedArg.name(), arg.name())
+                  .build();
+            }
+          }
+        } else {
+          CommandSpec.Option flag;
+          if (flagAnnotation == null
+              || flagAnnotation.getVmClass() == CommandModule.getFlagClass()) {
+            flag = collectFlag(prop, flagAnnotation);
+          } else if (flagAnnotation.getVmClass() == CommandModule.getBooleanFlagClass()) {
+            flag = collectBooleanFlag(prop, flagAnnotation);
+          } else if (flagAnnotation.getVmClass() == CommandModule.getCountedFlagClass()) {
+            flag = collectCountedFlag(prop, flagAnnotation);
+          } else {
+            throw PklBugException.unreachableCode();
+          }
+          opts.put(flag.name(), flag);
+        }
+      }
+      clazz = clazz.getSuperclass();
+    }
+
+    return opts.getValues();
+  }
+
+  private void checkFlagNames(ClassProperty prop, String name, @Nullable String shortName) {
+    if ("help".equals(name) || "h".equals(shortName)) {
+      throw exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandFlagHelpCollision", prop.getName())
+          .build();
+    }
+  }
+
+  private CommandSpec.Flag collectFlag(ClassProperty prop, @Nullable VmTyped flagAnnotation) {
+    var name = prop.getName().toString();
+    var transform = new OptionBehavior(flagAnnotation, false).resolve(prop, false);
+    String shortName = null;
+    boolean hide = false;
+    if (flagAnnotation != null) {
+      shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
+      hide = (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
+    }
+    checkFlagNames(prop, name, shortName);
+
+    return new CommandSpec.Flag(
+        name,
+        VmUtils.exportDocComment(prop.getDocComment()),
+        !transform.isOptional(),
+        transform.getEach(),
+        transform.getAll(),
+        shortName,
+        transform.getMetavar(),
+        hide,
+        (transform.getDefaultValue() == COMPLEX_DEFAULT_EXPRESSION
+                || transform.getDefaultValue() == null)
+            ? null
+            : transform.getDefaultValue().toString());
+  }
+
+  private CommandSpec.BooleanFlag collectBooleanFlag(ClassProperty prop, VmTyped flagAnnotation) {
+    var name = prop.getName().toString();
+    var shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
+    checkFlagNames(prop, name, shortName);
+
+    // assert type is Boolean
+    var typeInfo = resolveType(prop);
+    if (!(typeInfo.getFirst() instanceof TypeNode.BooleanTypeNode)) {
+      throw exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError(
+              "commandFlagInvalidType",
+              prop.getName(),
+              "BooleanFlag",
+              typeInfo.getFirst().getSourceSection().getCharacters(),
+              "Boolean")
+          .build();
+    }
+
+    return new BooleanFlag(
+        name,
+        VmUtils.exportDocComment(prop.getDocComment()),
+        shortName,
+        (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE),
+        (Boolean) getDefaultValue(prop, false));
+  }
+
+  private CommandSpec.CountedFlag collectCountedFlag(ClassProperty prop, VmTyped flagAnnotation) {
+    var name = prop.getName().toString();
+    var shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
+    checkFlagNames(prop, name, shortName);
+
+    // assert type is integral
+    var typeInfo = resolveType(prop);
+    if (!(typeInfo.getFirst() instanceof TypeNode.IntTypeNode
+        || typeInfo.getFirst() instanceof TypeNode.Int8TypeAliasTypeNode
+        || typeInfo.getFirst() instanceof TypeNode.Int16TypeAliasTypeNode
+        || typeInfo.getFirst() instanceof TypeNode.Int32TypeAliasTypeNode
+        || typeInfo.getFirst() instanceof TypeNode.UIntTypeAliasTypeNode // catches UInt16, UInt32
+        || typeInfo.getFirst() instanceof TypeNode.UInt8TypeAliasTypeNode)) {
+      throw exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError(
+              "commandFlagInvalidType",
+              prop.getName(),
+              "CountedFlag",
+              typeInfo.getFirst().getSourceSection().getCharacters(),
+              "Int | Int8 | Int16 | Int32 | UInt | UInt8 | UInt16 | UInt32")
+          .build();
+    }
+
+    if (getDefaultValue(prop, true) != null) {
+      throw exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionUnexpectedDefaultValue", prop.getName(), "Argument")
+          .build();
+    }
+
+    return new CountedFlag(
+        name,
+        VmUtils.exportDocComment(prop.getDocComment()),
+        shortName,
+        (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE));
+  }
+
+  private Argument collectArgument(ClassProperty prop, VmTyped argAnnotation) {
+    var transform = new OptionBehavior(argAnnotation, false).resolve(prop, true);
+    if (transform.getDefaultValue() != null) {
+      throw exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionUnexpectedDefaultValue", prop.getName(), "Argument")
+          .build();
+    } else if (transform.isOptional() && !transform.getMultiple()) {
+      throw exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandArgumentUnexpectedNonRepeatedNullableType", prop.getName())
+          .build();
+    }
+
+    return new CommandSpec.Argument(
+        prop.getName().toString(),
+        VmUtils.exportDocComment(prop.getDocComment()),
+        transform.getEach(),
+        transform.getAll(),
+        transform.getMultiple());
+  }
+
+  /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
+  private Pair<TypeNode, Boolean> resolveType(ClassProperty prop) {
+    var propertyTypeNode = prop.getTypeNode();
+    if (propertyTypeNode != null) {
+      return resolveType(propertyTypeNode.getTypeNode());
+    }
+    throw exceptionBuilder()
+        .withSourceSection(prop.getHeaderSection())
+        .evalError("commandOptionNoTypeAnnotation", prop.getName())
+        .build();
+  }
+
+  /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
+  private Pair<TypeNode, Boolean> resolveType(TypeNode typeNode) {
+    var isNullable = false;
+    while (true) {
+      if (typeNode instanceof TypeNode.NullableTypeNode nullableTypeNode) {
+        isNullable = true;
+        typeNode = nullableTypeNode.getElementTypeNode();
+      } else if (typeNode instanceof TypeNode.ConstrainedTypeNode constrainedTypeNode) {
+        typeNode = constrainedTypeNode.getChildTypeNode();
+      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode) {
+        if (typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) break;
+        typeNode = typeAliasTypeNode.getAliasedTypeNode();
+      } else {
+        break;
+      }
+    }
+
+    return Pair.of(typeNode, isNullable);
+  }
+
+  // This sigil used to indicate that an option has a default value that is a non-constant expr.
+  // These values cause a flag to be marked optional, but are not shown in CLI help.
+  // Thus, they are not evaluated at spec parse time.
+  private static final Object COMPLEX_DEFAULT_EXPRESSION = new Object() {};
+
+  private @Nullable Object getDefaultValue(ClassProperty prop, boolean requireExplicit) {
+    // if the default is a constant, surface it to the CLI layer informationally
+    var constantValue = prop.getInitializer().getConstantValue();
+    if (constantValue != null) {
+      // Map/List/Set literals may be constants if all their arguments are constants
+      // return the complex default sigil in that case!!
+      // only primitives returned here (non-VmValues: Float, Long, String, Boolean)
+      return constantValue instanceof VmValue ? COMPLEX_DEFAULT_EXPRESSION : constantValue;
+    }
+
+    // if the default is defined, we're not required but don't evaluate the expression
+    // return the sigil value to indicate this
+    var bodyNode = prop.getInitializer().getMemberNode();
+    if (bodyNode != null && !(bodyNode.getBodyNode() instanceof DefaultPropertyBodyNode)) {
+      return COMPLEX_DEFAULT_EXPRESSION;
+    }
+
+    // otherwise, if type-based defaults are allowed
+    // (eg. for @Flag, for string literal and string literal unions)
+    // attempt to discover the type's default
+    if (!requireExplicit) {
+      var resolved = resolveType(prop);
+      if (resolved.getSecond()) {
+        // wrapped by a nullable, no default value
+        return null;
+      }
+      if (resolved.getFirst() instanceof TypeNode.UnionOfStringLiteralsTypeNode union
+          && union.getUnionDefault() != null) {
+        return union.getUnionDefault();
+      } else if (resolved.getFirst() instanceof TypeNode.StringLiteralTypeNode literal) {
+        return literal.getLiteral();
+      }
+    }
+
+    // otherwise we have no default!
+    return null;
+  }
+
+  private class OptionBehavior {
+    private @Nullable BiFunction<String, URI, Object> each;
+    private @Nullable Function<List<Object>, Object> all;
+    private @Nullable Boolean multiple;
+    private @Nullable String metavar;
+    private @Nullable Object defaultValue = null;
+    private boolean isNullable = false;
+
+    private OptionBehavior(
+        @Nullable BiFunction<String, URI, Object> each,
+        @Nullable Function<List<Object>, Object> all,
+        @Nullable Boolean multiple,
+        @Nullable String metavar) {
+      this.each = each;
+      this.all = all;
+      this.multiple = multiple;
+      this.metavar = metavar;
+    }
+
+    private OptionBehavior() {
+      this(null, null, null, null);
+    }
+
+    public OptionBehavior(@Nullable VmTyped annotation, boolean hasMetavar) {
+      this(
+          annotation == null
+              ? null
+              : VmUtils.readMember(annotation, Identifier.CONVERT) instanceof VmFunction func
+                  ? (rawValue, workingDirUri) -> {
+                    try {
+                      return handleImports(func.apply(rawValue), workingDirUri);
+                    } catch (VmException e) {
+                      throw new BadValue(e.getMessage());
+                    }
+                  }
+                  : null,
+          annotation == null
+              ? null
+              : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
+                  ? (it) -> {
+                    try {
+                      return func.apply(it);
+                    } catch (VmException e) {
+                      throw new BadValue(e.getMessage());
+                    }
+                  }
+                  : null,
+          annotation == null
+              ? null
+              : VmUtils.readMember(annotation, Identifier.MULTIPLE) instanceof Boolean bool
+                  ? bool
+                  : null,
+          annotation == null
+              ? null
+              : hasMetavar ? exportNullableString(annotation, Identifier.METAVAR) : null);
+    }
+
+    public OptionBehavior resolve(ClassProperty prop, boolean requireExplicitDefault) {
+      var resolved = resolveType(prop);
+      var typeNode = resolved.getFirst();
+      isNullable = resolved.getSecond();
+      defaultValue = CommandSpecParser.this.getDefaultValue(prop, requireExplicitDefault);
+
+      return resolve(prop, typeNode, false);
+    }
+
+    private OptionBehavior resolve(ClassProperty prop, TypeNode typeNode, boolean inTypeArgument) {
+      if (typeNode instanceof TypeNode.NumberTypeNode) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                try {
+                  return Long.parseLong(rawValue);
+                } catch (NumberFormatException e) {
+                  try {
+                    return Double.parseDouble(rawValue);
+                  } catch (NumberFormatException e2) {
+                    throw BadValue.invalid(rawValue, METAVAR_NUMBER);
+                  }
+                }
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_NUMBER;
+      } else if (typeNode instanceof TypeNode.FloatTypeNode) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                try {
+                  return Double.parseDouble(rawValue);
+                } catch (NumberFormatException e) {
+                  throw BadValue.invalid(rawValue, METAVAR_FLOAT);
+                }
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_FLOAT;
+      } else if (typeNode instanceof TypeNode.IntTypeNode) {
+        if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT;
+      } else if (typeNode instanceof TypeNode.Int8TypeAliasTypeNode) {
+        if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT8;
+      } else if (typeNode instanceof TypeNode.Int16TypeAliasTypeNode) {
+        if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT16;
+      } else if (typeNode instanceof TypeNode.Int32TypeAliasTypeNode) {
+        if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT32;
+      } else if (typeNode instanceof TypeNode.UIntTypeAliasTypeNode uIntTypeAliasTypeNode) {
+        var mask = uIntTypeAliasTypeNode.getMask();
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (mask == 0x000000000000FFFFL) {
+          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
+          if (metavar == null) metavar = METAVAR_UINT16;
+        } else if (mask == 0x00000000FFFFFFFFL) {
+          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
+          if (metavar == null) metavar = METAVAR_UINT32;
+        } else {
+          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
+          if (metavar == null) metavar = METAVAR_UINT;
+        }
+      } else if (typeNode instanceof TypeNode.UInt8TypeAliasTypeNode) {
+        if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_UINT8;
+      } else if (typeNode instanceof TypeNode.BooleanTypeNode) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                var value = rawValue.toLowerCase();
+                if (TRUE_VALUES.contains(value)) {
+                  return true;
+                } else if (FALSE_VALUES.contains(value)) {
+                  return false;
+                }
+                throw BadValue.invalid(rawValue, "boolean");
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_BOOLEAN;
+      } else if (typeNode instanceof TypeNode.StringTypeNode) {
+        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_STRING;
+      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode
+          && typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
+                return rawValue;
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_CHAR;
+      } else if (typeNode
+          instanceof TypeNode.UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
+        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted();
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                if (!unionOfStringLiteralsTypeNode.getStringLiterals().contains(rawValue)) {
+                  throw BadValue.invalidChoice(rawValue, choices.toList());
+                }
+                return rawValue;
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = "[" + choices.collect(Collectors.joining(", ")) + "]";
+      } else if (typeNode instanceof TypeNode.StringLiteralTypeNode stringLiteralTypeNode) {
+        var choice = stringLiteralTypeNode.getLiteral();
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                if (!rawValue.equals(choice)) {
+                  throw BadValue.invalidChoice(rawValue, choice);
+                }
+                return rawValue;
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = "[" + choice + "]";
+      } else if (typeNode instanceof TypeNode.ListingTypeNode listingTypeNode) {
+        handleElement(listingTypeNode.getValueTypeNode(), prop);
+        if (multiple == null) multiple = true;
+        if (all == null)
+          all =
+              !multiple
+                  ? this::allChooseLast
+                  : (values) -> {
+                    if (values.isEmpty()) return null;
+                    var builder = new VmObjectBuilder();
+                    values.forEach(builder::addElement);
+                    return builder.toListing();
+                  };
+      } else if (typeNode instanceof TypeNode.MappingTypeNode mappingTypeNode) {
+        assert mappingTypeNode.getKeyTypeNode() != null;
+        handleEntry(mappingTypeNode.getKeyTypeNode(), mappingTypeNode.getValueTypeNode(), prop);
+        if (multiple == null) multiple = true;
+        if (all == null)
+          all =
+              !multiple
+                  ? this::allChooseLast
+                  : (values) -> {
+                    if (values.isEmpty()) return null;
+                    var builder = new VmObjectBuilder();
+                    values.forEach(
+                        (entry) ->
+                            builder.addEntry(
+                                ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
+                    return builder.toMapping();
+                  };
+      } else if (typeNode instanceof TypeNode.ListTypeNode listTypeNode) {
+        handleElement(listTypeNode.getElementTypeNode(), prop);
+        if (multiple == null) multiple = true;
+        if (all == null)
+          all =
+              !multiple
+                  ? this::allChooseLast
+                  : (values) -> values.isEmpty() ? null : VmList.create(values);
+      } else if (typeNode instanceof TypeNode.SetTypeNode setTypeNode) {
+        handleElement(setTypeNode.getElementTypeNode(), prop);
+        if (multiple == null) multiple = true;
+        if (all == null)
+          all =
+              !multiple
+                  ? this::allChooseLast
+                  : (values) -> values.isEmpty() ? null : VmSet.create(values);
+      } else if (typeNode instanceof TypeNode.MapTypeNode mapTypeNode) {
+        handleEntry(mapTypeNode.getKeyTypeNode(), mapTypeNode.getValueTypeNode(), prop);
+        if (multiple == null) multiple = true;
+        if (all == null)
+          all =
+              !multiple
+                  ? this::allChooseLast
+                  : (values) -> {
+                    if (values.isEmpty()) return null;
+                    var builder = VmMap.builder();
+                    values.forEach(
+                        (entry) ->
+                            builder.add(((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
+                    return builder.build();
+                  };
+      } else if (typeNode instanceof TypeNode.PairTypeNode pairTypeNode) {
+        handleEntry(pairTypeNode.getFirstTypeNode(), pairTypeNode.getSecondTypeNode(), prop);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+      } else if (!inTypeArgument && each == null && all == null) {
+        // if another type and no transform functions are provided, that's an error
+        throw exceptionBuilder()
+            .withSourceSection(prop.getHeaderSection())
+            .evalError(
+                "commandOptionUnsupportedType",
+                prop.getName(),
+                "",
+                typeNode.getSourceSection().getCharacters())
+            .withHint("Use a supported type or define a transformEach and/or transformAll function")
+            .build();
+      } else {
+        // if we have at least one transform then allow the type and fill in reasonable defaults
+        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_VALUE;
+      }
+
+      return this;
+    }
+
+    private static final String METAVAR_NUMBER = "number";
+    private static final String METAVAR_FLOAT = "float";
+    private static final String METAVAR_INT = "int";
+    private static final String METAVAR_INT8 = "int8";
+    private static final String METAVAR_INT16 = "int16";
+    private static final String METAVAR_INT32 = "int32";
+    private static final String METAVAR_UINT = "uint";
+    private static final String METAVAR_UINT8 = "uint8";
+    private static final String METAVAR_UINT16 = "uint16";
+    private static final String METAVAR_UINT32 = "uint32";
+    private static final String METAVAR_BOOLEAN = "[true|false]";
+    private static final String METAVAR_STRING = "text";
+    private static final String METAVAR_CHAR = "char";
+    private static final String METAVAR_VALUE = "value";
+
+    private static final Set<String> TRUE_VALUES = Set.of("true", "t", "1", "yes", "y", "on");
+    private static final Set<String> FALSE_VALUES = Set.of("false", "f", "0", "no", "n", "off");
+
+    /** Sets each and metavar if they're not set */
+    private void handleElement(TypeNode valueType, ClassProperty prop) {
+      if (each != null && metavar != null) return;
+      var transformValue =
+          new OptionBehavior().resolve(prop, resolveType(valueType).getFirst(), true);
+      if (each == null)
+        each = (rawValue, workingDirUri) -> transformValue.getEach().apply(rawValue, workingDirUri);
+      if (metavar == null) metavar = transformValue.getMetavar();
+    }
+
+    /** Sets each and metavar if they're not set */
+    private void handleEntry(TypeNode keyType, TypeNode valueType, ClassProperty prop) {
+      if (each != null && metavar != null) return;
+      var transformKey = new OptionBehavior().resolve(prop, resolveType(keyType).getFirst(), true);
+      var transformValue =
+          new OptionBehavior().resolve(prop, resolveType(valueType).getFirst(), true);
+      if (each == null)
+        each =
+            (rawValue, workingDirUri) -> {
+              var split = rawValue.split("=", 2);
+              if (split.length != 2) {
+                throw BadValue.badKeyValue(rawValue);
+              }
+              return new VmPair(
+                  transformKey.getEach().apply(split[0], workingDirUri),
+                  transformValue.getEach().apply(split[1], workingDirUri));
+            };
+      if (metavar == null) metavar = transformKey.getMetavar() + "=" + transformValue.getMetavar();
+    }
+
+    private @Nullable Object allChooseLast(List<Object> values) {
+      if (!values.isEmpty()) return values.get(values.size() - 1);
+      if (isOptional()) return null;
+      throw new MisingOption();
+    }
+
+    private static BiFunction<String, URI, Object> eachLong(long min, long max, String typeName) {
+      return (rawValue, workingDirUri) -> {
+        try {
+          var longValue = Long.parseLong(rawValue);
+          if (longValue >= min && longValue <= max) {
+            return longValue;
+          }
+          throw BadValue.invalid(rawValue, typeName);
+        } catch (NumberFormatException e) {
+          throw BadValue.invalid(rawValue, typeName);
+        }
+      };
+    }
+
+    public BiFunction<String, URI, Object> getEach() {
+      assert each != null;
+      return each;
+    }
+
+    public Function<List<Object>, Object> getAll() {
+      assert all != null;
+      return all;
+    }
+
+    public Boolean getMultiple() {
+      assert multiple != null;
+      return multiple;
+    }
+
+    public String getMetavar() {
+      assert metavar != null;
+      return metavar;
+    }
+
+    public @Nullable Object getDefaultValue() {
+      return defaultValue;
+    }
+
+    public boolean isOptional() {
+      return isNullable || defaultValue != null;
+    }
+  }
+
+  // endregion
+  // region evaluation path
+
   /**
    * Given a map, construct a typed value of the given class.
    *
    * <p>Transforms List into VmList, Set into VmSet, and Map into VmMap.
    */
-  private VmTyped buildObject(VmClass clazz, OptionSpecs optionsSpecs, Map<String, Object> properties) {
+  private VmTyped buildObject(VmClass clazz, Map<String, Object> properties) {
     EconomicMap<Object, ObjectMember> members = EconomicMaps.create(properties.size());
     for (var prop : properties.entrySet()) {
       var key = prop.getKey();
       var value = prop.getValue();
-      var opt = optionsSpecs.getOption(key);
-      assert opt != null; 
       if (value == null) continue;
-      if (opt.type() instanceof OptionType.Collection collection) {
-        value = switch (collection.getType()) {
-          case LIST -> VmList.create((List<?>) value);
-          case LISTING -> {
-            var builder = new VmObjectBuilder();
-            ((List<?>) value).forEach(builder::addElement);
-            yield builder.toListing();
-          }
-          case SET -> VmSet.create((Set<?>) value);
-        };
-      } if (opt.type() instanceof OptionType.Map map) {
-        //noinspection unchecked
-        var mapValue = (Map<Object, Object>) value;
-        value = switch (map.getType()) {
-          case MAP -> VmMap.create(mapValue);
-          case MAPPING -> {
-            var builder = new VmObjectBuilder();
-            mapValue.forEach(builder::addEntry);
-            yield builder.toMapping();
-          }
-        };
-      }
       var identifier = Identifier.get(key);
       members.put(identifier, VmUtils.createSyntheticObjectProperty(identifier, "", value));
     }
@@ -764,6 +949,145 @@ public final class CommandSpecParser {
         VmUtils.readFilesProperty(output, makeFileOutput));
   }
 
+  // endregion
+  // region dynamic import handling
+
+  private static boolean isImport(VmTyped value) {
+    return value.getVmClass() == CommandModule.getImportClass();
+  }
+
+  private static boolean isImport(Object value) {
+    return value instanceof VmTyped vmTyped
+        && vmTyped.getVmClass() == CommandModule.getImportClass();
+  }
+
+  // for convert handle imports by replace Command.Import values
+  // with imported module or Mapping<String, Module> values
+  // Command.Import instances in returned Pair, List, Set, or Map values are replaced as well
+  // other types or nested instances of the above are not affected
+  private Object handleImports(Object result, URI workingDirUri) {
+    if (result instanceof VmTyped vmTyped && isImport(vmTyped)) {
+      return handleImport(vmTyped, workingDirUri);
+    } else if (result instanceof VmPair vmPair) {
+      if (!isImport(vmPair.getFirst()) && !isImport(vmPair.getSecond())) {
+        return vmPair;
+      }
+      return new VmPair(
+          isImport(vmPair.getFirst())
+              ? handleImport((VmTyped) vmPair.getFirst(), workingDirUri)
+              : vmPair.getFirst(),
+          isImport(vmPair.getSecond())
+              ? handleImport((VmTyped) vmPair.getSecond(), workingDirUri)
+              : vmPair.getSecond());
+    } else if (result instanceof VmCollection vmCollection) {
+      for (var elem : vmCollection) {
+        if (isImport(elem)) {
+          var builder = vmCollection.builder();
+          vmCollection.forEach(
+              it -> builder.add(isImport(it) ? handleImport((VmTyped) it, workingDirUri) : it));
+          return builder.build();
+        }
+      }
+      return vmCollection;
+    } else if (result instanceof VmMap vmMap) {
+      for (var entry : vmMap) {
+        if (isImport(entry.getKey()) || isImport(entry.getValue())) {
+          var builder = VmMap.builder();
+          vmMap.forEach(
+              it ->
+                  builder.add(
+                      isImport(it.getKey())
+                          ? handleImport((VmTyped) it.getKey(), workingDirUri)
+                          : it.getKey(),
+                      isImport(it.getValue())
+                          ? handleImport((VmTyped) it.getValue(), workingDirUri)
+                          : it.getValue()));
+          return builder.build();
+        }
+      }
+    }
+    return result;
+  }
+
+  private Object handleImport(VmTyped mport, URI workingDirUri) {
+    var moduleName = (String) VmUtils.readMember(mport, Identifier.URI);
+    String uriString;
+    // Ported from org.pkl.cli.commons.cli.commands.BaseOptions:
+    try {
+      // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
+      // into `URI("C", null, "/foo/bar", null)`.
+      var modulePath = Path.of(moduleName);
+      var uri =
+          IoUtils.isUriLike(moduleName)
+              ? new URI(moduleName)
+              : IoUtils.isWindowsAbsolutePath(moduleName)
+                  ? modulePath.toUri()
+                  : new URI(null, null, IoUtils.toNormalizedPathString(modulePath), null);
+      uriString =
+          uri.isAbsolute() ? uri.toString() : IoUtils.resolve(workingDirUri, uri).toString();
+    } catch (URISyntaxException e) {
+      throw exceptionBuilder()
+          .evalError("invalidModuleUri", moduleName)
+          .withHint(e.getReason())
+          .build();
+    }
+    ;
+
+    var isGlob = (Boolean) VmUtils.readMember(mport, Identifier.GLOB);
+    var importUri = URI.create(uriString);
+    var language = VmLanguage.get(null);
+
+    // non-glob
+    if (!isGlob) {
+      var moduleKey = moduleResolver.resolve(importUri);
+      return language.loadModule(moduleKey);
+    }
+
+    // glob
+    var globModuleKey = moduleResolver.resolve(importUri);
+
+    try {
+      if (!globModuleKey.isGlobbable()) {
+        throw exceptionBuilder()
+            .evalError("cannotGlobUri", importUri, importUri.getScheme())
+            .build();
+      }
+      var resolvedElements =
+          GlobResolver.resolveGlob(securityManager, globModuleKey, null, null, uriString);
+
+      var builder = new VmObjectBuilder(resolvedElements.size());
+      for (var entry : resolvedElements.entrySet()) {
+        var moduleKey = moduleResolver.resolve(entry.getValue().uri());
+        builder.addEntry(entry.getKey(), language.loadModule(moduleKey));
+      }
+      return builder.toMapping(resolvedElements);
+    } catch (IOException e) {
+      throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
+    } catch (ExternalReaderProcessException e) {
+      throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
+    } catch (SecurityManagerException e) {
+      throw exceptionBuilder().withCause(e).build();
+    } catch (InvalidGlobPatternException e) {
+      throw exceptionBuilder()
+          .evalError("invalidGlobPattern", uriString)
+          .withHint(e.getMessage())
+          .build();
+    }
+  }
+
+  // endregion
+  // region utilities
+
+  private static @Nullable String exportNullableString(VmObjectLike value, Object key) {
+    var result = VmValue.export(VmUtils.readMember(value, key));
+    return result instanceof PNull ? null : (String) result;
+  }
+
+  private static @Nullable Boolean exportNullableBoolean(VmObjectLike value, Object key) {
+    var result = VmValue.export(VmUtils.readMember(value, key));
+    return result instanceof PNull ? null : (Boolean) result;
+  }
+
   /** Check that a value is a VmTyped and that it inherits from the given class */
   private VmTyped checkAmends(Object value, VmClass clazz) {
     if (!(value instanceof VmTyped typed)) {
@@ -806,4 +1130,6 @@ public final class CommandSpecParser {
   private VmExceptionBuilder exceptionBuilder() {
     return new VmExceptionBuilder();
   }
+
+  // endregion
 }
