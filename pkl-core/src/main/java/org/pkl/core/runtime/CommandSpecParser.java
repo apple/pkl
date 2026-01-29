@@ -304,11 +304,12 @@ public final class CommandSpecParser {
     // assert type is integral
     var typeInfo = resolveType(prop);
     if (!(typeInfo.getFirst() instanceof TypeNode.IntTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.Int8TypeAliasTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.Int16TypeAliasTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.Int32TypeAliasTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.UIntTypeAliasTypeNode // catches UInt16, UInt32
-        || typeInfo.getFirst() instanceof TypeNode.UInt8TypeAliasTypeNode)) {
+            || typeInfo.getFirst() instanceof TypeNode.Int8TypeAliasTypeNode
+            || typeInfo.getFirst() instanceof TypeNode.Int16TypeAliasTypeNode
+            || typeInfo.getFirst() instanceof TypeNode.Int32TypeAliasTypeNode
+            || typeInfo.getFirst() instanceof TypeNode.UIntTypeAliasTypeNode // also UInt16, UInt32
+            || typeInfo.getFirst() instanceof TypeNode.UInt8TypeAliasTypeNode)
+        || typeInfo.getSecond()) {
       throw exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError(
@@ -472,7 +473,7 @@ public final class CommandSpecParser {
               : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
                   ? (it) -> {
                     try {
-                      return func.apply(it);
+                      return func.apply(VmList.create(it));
                     } catch (VmException e) {
                       throw new BadValue(e.getMessage());
                     }
@@ -493,6 +494,12 @@ public final class CommandSpecParser {
       var typeNode = resolved.getFirst();
       isNullable = resolved.getSecond();
       defaultValue = CommandSpecParser.this.getDefaultValue(prop, requireExplicitDefault);
+      if (isNullable && defaultValue != null) {
+        throw exceptionBuilder()
+            .evalError("commandOptionTypeNullableWithDefaultValue", prop.getName())
+            .withSourceSection(prop.getHeaderSection())
+            .build();
+      }
 
       return resolve(prop, typeNode, false);
     }
