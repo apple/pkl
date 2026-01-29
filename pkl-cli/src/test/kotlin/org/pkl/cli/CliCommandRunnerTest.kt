@@ -33,6 +33,7 @@ import org.junit.jupiter.api.AfterEach
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.cli.CliBaseOptions
+import org.pkl.commons.cli.CliException
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
@@ -461,7 +462,7 @@ class CliCommandRunnerTest {
   }
 
   @Test
-  fun `collection args`() {
+  fun `sequence args`() {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
@@ -507,6 +508,108 @@ class CliCommandRunnerTest {
         """
           .trimIndent()
       )
+
+    val moduleUri3 =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @Argument
+        listing: Listing<Number>
+      }
+    """
+            .trimIndent(),
+      )
+    val output3 =
+      runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri3)), listOf("1", "0", "0.0", "1"))
+    assertThat(output3)
+      .isEqualTo(
+        """
+        listing {
+          1
+          0
+          0.0
+          1
+        }
+        
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `keyval args`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @Argument
+        map: Map<Number, Number>
+      }
+    """
+            .trimIndent(),
+      )
+    val output =
+      runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("1=0", "0.0=1"))
+    assertThat(output)
+      .isEqualTo(
+        """
+        map = Map(1, 0, 0.0, 1)
+        
+        """
+          .trimIndent()
+      )
+
+    val moduleUri2 =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @Argument
+        mapping: Mapping<Number, Number>
+      }
+    """
+            .trimIndent(),
+      )
+    val output2 =
+      runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri2)), listOf("1=0", "0.0=1"))
+    assertThat(output2)
+      .isEqualTo(
+        """
+        mapping {
+          [1] = 0
+          [0.0] = 1
+        }
+        
+        """
+          .trimIndent()
+      )
+
+    val moduleUri3 =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @Argument
+        pair: Pair<Number, Number>
+      }
+    """
+            .trimIndent(),
+      )
+    val output3 = runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri3)), listOf("1=0.0"))
+    assertThat(output3)
+      .isEqualTo(
+        """
+        pair = Pair(1, 0.0)
+        
+        """
+          .trimIndent()
+      )
   }
 
   @Test
@@ -539,6 +642,87 @@ class CliCommandRunnerTest {
         `map-nullable` = null
         `map-default` = Map("x", 123, "y", 456.789)
         `enum-map` = Map("a", "b", "b", "c")
+        
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `mapping flags`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      typealias MyEnum = "a" | "b" | *"c"
+      class Options {
+        mapping: Mapping<Char, Number>
+        `mapping-nullable`: Mapping<Char, Number>?
+        `mapping-default`: Mapping<Char, Number> = new { ["x"] = 123; ["y"] = 456.789 }
+        
+        `enum-mapping`: Mapping<MyEnum, MyEnum>
+      }
+    """
+            .trimIndent(),
+      )
+    val output =
+      runToStdout(
+        CliBaseOptions(sourceModules = listOf(moduleUri)),
+        listOf("--mapping=a=0.0", "--mapping=b=1", "--enum-mapping=a=b", "--enum-mapping=b=c"),
+      )
+    assertThat(output)
+      .isEqualTo(
+        """
+        mapping {
+          ["a"] = 0.0
+          ["b"] = 1
+        }
+        `mapping-nullable` = null
+        `mapping-default` {
+          ["x"] = 123
+          ["y"] = 456.789
+        }
+        `enum-mapping` {
+          ["a"] = "b"
+          ["b"] = "c"
+        }
+        
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `pair flags`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      typealias MyEnum = "a" | "b" | *"c"
+      class Options {
+        pair: Pair<Char, Number>
+        `pair-nullable`: Pair<Char, Number>?
+        `pair-default`: Pair<Char, Number> = Pair("x", 123)
+        
+        `enum-pair`: Pair<MyEnum, MyEnum>
+      }
+    """
+            .trimIndent(),
+      )
+    val output =
+      runToStdout(
+        CliBaseOptions(sourceModules = listOf(moduleUri)),
+        listOf("--pair=a=0.0", "--enum-pair=a=b"),
+      )
+    assertThat(output)
+      .isEqualTo(
+        """
+        pair = Pair("a", 0.0)
+        `pair-nullable` = null
+        `pair-default` = Pair("x", 123)
+        `enum-pair` = Pair("a", "b")
         
         """
           .trimIndent()
@@ -758,5 +942,154 @@ class CliCommandRunnerTest {
         runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("hi"))
       }
     assertThat(exc.message).isEqualTo("oops!")
+  }
+
+  @Test
+  fun `boolean flag`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @BooleanFlag
+        `bool-true`: Boolean
+        @BooleanFlag
+        `bool-false`: Boolean
+        @BooleanFlag
+        `bool-nullable`: Boolean?
+        @BooleanFlag
+        `bool-default-true`: Boolean = true
+        @BooleanFlag
+        `bool-default-false`: Boolean = false
+      }
+    """
+            .trimIndent(),
+      )
+
+    val output =
+      runToStdout(
+        CliBaseOptions(sourceModules = listOf(moduleUri)),
+        listOf("--bool-true", "--no-bool-false"),
+      )
+    assertThat(output)
+      .isEqualTo(
+        """
+        `bool-true` = true
+        `bool-false` = false
+        `bool-nullable` = null
+        `bool-default-true` = true
+        `bool-default-false` = false
+        
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `boolean flag with bad type`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @BooleanFlag
+        foo: String
+      }
+    """
+            .trimIndent(),
+      )
+
+    val exc =
+      assertThrows<CliException> {
+        runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("hi"))
+      }
+    assertThat(exc.message)
+      .contains("Option `foo` with annotation `@BooleanFlag` has invalid type `String`.")
+  }
+
+  @Test
+  fun `counted flag`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @CountedFlag { shortName = "a" }
+        int: Int
+        @CountedFlag { shortName = "b" }
+        int8: Int8
+        @CountedFlag { shortName = "c" }
+        int16: Int16
+        @CountedFlag { shortName = "d" }
+        int32: Int32
+        @CountedFlag { shortName = "e" }
+        uint: UInt
+        @CountedFlag { shortName = "f" }
+        uint8: UInt8
+        @CountedFlag { shortName = "g" }
+        uint16: UInt16
+        @CountedFlag { shortName = "i" }
+        uint32: UInt32
+      }
+    """
+            .trimIndent(),
+      )
+
+    val output =
+      runToStdout(
+        CliBaseOptions(sourceModules = listOf(moduleUri)),
+        listOf("-abbcccddddeeeeeffffffgggggggiiiiiiii"),
+      )
+    assertThat(output)
+      .isEqualTo(
+        """
+        int = 1
+        int8 = 2
+        int16 = 3
+        int32 = 4
+        uint = 5
+        uint8 = 6
+        uint16 = 7
+        uint32 = 8
+        
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `test transformAll`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @Flag {
+          multiple = true
+          transformAll = (values) -> values.fold(0, (res, acc) -> res + acc)
+        }
+        foo: Int
+      }
+    """
+            .trimIndent(),
+      )
+
+    val output =
+      runToStdout(
+        CliBaseOptions(sourceModules = listOf(moduleUri)),
+        listOf("--foo=1", "--foo=5", "--foo=8"),
+      )
+    assertThat(output)
+      .isEqualTo(
+        """
+        foo = 14
+        
+        """
+          .trimIndent()
+      )
   }
 }

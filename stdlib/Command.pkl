@@ -108,7 +108,8 @@ class CommandInfo {
   /// Child commands.
   ///
   /// Must have unique [name] values.
-  subcommands: Listing<Command>(isDistinctBy((it) -> it.command.name))
+  // NB: not using isDistinctBy constraint because the command runtime can give better errors
+  subcommands: Listing<Command>
 }
 
 /// Annotates [options] properties to configure them as named CLI flags.

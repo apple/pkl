@@ -304,11 +304,12 @@ public final class CommandSpecParser {
     // assert type is integral
     var typeInfo = resolveType(prop);
     if (!(typeInfo.getFirst() instanceof TypeNode.IntTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.Int8TypeAliasTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.Int16TypeAliasTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.Int32TypeAliasTypeNode
-        || typeInfo.getFirst() instanceof TypeNode.UIntTypeAliasTypeNode // catches UInt16, UInt32
-        || typeInfo.getFirst() instanceof TypeNode.UInt8TypeAliasTypeNode)) {
+            || typeInfo.getFirst() instanceof TypeNode.Int8TypeAliasTypeNode
+            || typeInfo.getFirst() instanceof TypeNode.Int16TypeAliasTypeNode
+            || typeInfo.getFirst() instanceof TypeNode.Int32TypeAliasTypeNode
+            || typeInfo.getFirst() instanceof TypeNode.UIntTypeAliasTypeNode // also UInt16, UInt32
+            || typeInfo.getFirst() instanceof TypeNode.UInt8TypeAliasTypeNode)
+        || typeInfo.getSecond()) {
       throw exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError(
@@ -472,7 +473,7 @@ public final class CommandSpecParser {
               : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
                   ? (it) -> {
                     try {
-                      return func.apply(it);
+                      return func.apply(VmList.create(it));
                     } catch (VmException e) {
                       throw new BadValue(e.getMessage());
                     }
@@ -493,139 +494,22 @@ public final class CommandSpecParser {
       var typeNode = resolved.getFirst();
       isNullable = resolved.getSecond();
       defaultValue = CommandSpecParser.this.getDefaultValue(prop, requireExplicitDefault);
+      if (isNullable && defaultValue != null) {
+        throw exceptionBuilder()
+            .evalError("commandOptionTypeNullableWithDefaultValue", prop.getName())
+            .withSourceSection(prop.getHeaderSection())
+            .build();
+      }
 
-      return resolve(prop, typeNode, false);
+      resolve(prop, typeNode);
+      return this;
     }
 
-    private OptionBehavior resolve(ClassProperty prop, TypeNode typeNode, boolean inTypeArgument) {
-      if (typeNode instanceof TypeNode.NumberTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                try {
-                  return Long.parseLong(rawValue);
-                } catch (NumberFormatException e) {
-                  try {
-                    return Double.parseDouble(rawValue);
-                  } catch (NumberFormatException e2) {
-                    throw BadValue.invalid(rawValue, METAVAR_NUMBER);
-                  }
-                }
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_NUMBER;
-      } else if (typeNode instanceof TypeNode.FloatTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                try {
-                  return Double.parseDouble(rawValue);
-                } catch (NumberFormatException e) {
-                  throw BadValue.invalid(rawValue, METAVAR_FLOAT);
-                }
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_FLOAT;
-      } else if (typeNode instanceof TypeNode.IntTypeNode) {
-        if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT;
-      } else if (typeNode instanceof TypeNode.Int8TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT8;
-      } else if (typeNode instanceof TypeNode.Int16TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT16;
-      } else if (typeNode instanceof TypeNode.Int32TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT32;
-      } else if (typeNode instanceof TypeNode.UIntTypeAliasTypeNode uIntTypeAliasTypeNode) {
-        var mask = uIntTypeAliasTypeNode.getMask();
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (mask == 0x000000000000FFFFL) {
-          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
-          if (metavar == null) metavar = METAVAR_UINT16;
-        } else if (mask == 0x00000000FFFFFFFFL) {
-          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
-          if (metavar == null) metavar = METAVAR_UINT32;
-        } else {
-          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
-          if (metavar == null) metavar = METAVAR_UINT;
-        }
-      } else if (typeNode instanceof TypeNode.UInt8TypeAliasTypeNode) {
-        if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_UINT8;
-      } else if (typeNode instanceof TypeNode.BooleanTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                var value = rawValue.toLowerCase();
-                if (TRUE_VALUES.contains(value)) {
-                  return true;
-                } else if (FALSE_VALUES.contains(value)) {
-                  return false;
-                }
-                throw BadValue.invalid(rawValue, "boolean");
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_BOOLEAN;
-      } else if (typeNode instanceof TypeNode.StringTypeNode) {
-        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_STRING;
-      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode
-          && typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
-                return rawValue;
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_CHAR;
-      } else if (typeNode
-          instanceof TypeNode.UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
-        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted();
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (!unionOfStringLiteralsTypeNode.getStringLiterals().contains(rawValue)) {
-                  throw BadValue.invalidChoice(rawValue, choices.toList());
-                }
-                return rawValue;
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + choices.collect(Collectors.joining(", ")) + "]";
-      } else if (typeNode instanceof TypeNode.StringLiteralTypeNode stringLiteralTypeNode) {
-        var choice = stringLiteralTypeNode.getLiteral();
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (!rawValue.equals(choice)) {
-                  throw BadValue.invalidChoice(rawValue, choice);
-                }
-                return rawValue;
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + choice + "]";
-      } else if (typeNode instanceof TypeNode.ListingTypeNode listingTypeNode) {
+    private void resolve(ClassProperty prop, TypeNode typeNode) {
+      if (resolvePrimitive(typeNode)) {
+        return;
+      }
+      if (typeNode instanceof TypeNode.ListingTypeNode listingTypeNode) {
         handleElement(listingTypeNode.getValueTypeNode(), prop);
         if (multiple == null) multiple = true;
         if (all == null)
@@ -690,7 +574,31 @@ public final class CommandSpecParser {
         handleEntry(pairTypeNode.getFirstTypeNode(), pairTypeNode.getSecondTypeNode(), prop);
         if (all == null) all = this::allChooseLast;
         if (multiple == null) multiple = false;
-      } else if (!inTypeArgument && each == null && all == null) {
+      } else if (typeNode instanceof TypeNode.FinalClassTypeNode finalClassTypeNode
+          && (finalClassTypeNode.getVmClass() == BaseModule.getListingClass()
+              || finalClassTypeNode.getVmClass() == BaseModule.getMappingClass()
+              || finalClassTypeNode.getVmClass() == BaseModule.getListClass()
+              || finalClassTypeNode.getVmClass() == BaseModule.getSetClass()
+              || finalClassTypeNode.getVmClass() == BaseModule.getMapClass()
+              || finalClassTypeNode.getVmClass() == BaseModule.getPairClass())) {
+        // if a supported type is provided without type arguments
+        throw exceptionBuilder()
+            .withSourceSection(prop.getHeaderSection())
+            .evalError(
+                "commandOptionUnsupportedType",
+                prop.getName(),
+                "",
+                typeNode.getSourceSection().getCharacters())
+            .withHint(
+                finalClassTypeNode.getVmClass().getSimpleName()
+                    + " options must provide "
+                    + switch (finalClassTypeNode.getVmClass().getTypeParameterCount()) {
+                      case 1 -> "one type argument.";
+                      case 2 -> "two type arguments.";
+                      default -> throw PklBugException.unreachableCode();
+                    })
+            .build();
+      } else if (each == null && all == null) {
         // if another type and no transform functions are provided, that's an error
         throw exceptionBuilder()
             .withSourceSection(prop.getHeaderSection())
@@ -708,8 +616,177 @@ public final class CommandSpecParser {
         if (multiple == null) multiple = false;
         if (metavar == null) metavar = METAVAR_VALUE;
       }
+    }
+
+    private OptionBehavior resolveTypeArgument(
+        ClassProperty prop, TypeNode typeNode, String typeArgumentName) {
+      if (resolvePrimitive(typeNode)) {
+        return this;
+      }
+
+      if (each == null) {
+        // if another type and no convert function is provided, that's an error
+        throw exceptionBuilder()
+            .withSourceSection(prop.getHeaderSection())
+            .evalError(
+                "commandOptionUnsupportedType",
+                prop.getName(),
+                typeArgumentName + " ",
+                typeNode.getSourceSection().getCharacters())
+            .withHint("Use a supported type or define a transformEach and/or transformAll function")
+            .build();
+      } else if (metavar == null) {
+        // if we have a convert function then allow the type and set a reasonable metavar default
+        metavar = METAVAR_VALUE;
+        // all and multiple don't matter since they're ignored for type args
+      }
 
       return this;
+    }
+
+    private boolean resolvePrimitive(TypeNode typeNode) {
+      if (typeNode instanceof TypeNode.NumberTypeNode) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                try {
+                  return Long.parseLong(rawValue);
+                } catch (NumberFormatException e) {
+                  try {
+                    return Double.parseDouble(rawValue);
+                  } catch (NumberFormatException e2) {
+                    throw BadValue.invalid(rawValue, METAVAR_NUMBER);
+                  }
+                }
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_NUMBER;
+        return true;
+      } else if (typeNode instanceof TypeNode.FloatTypeNode) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                try {
+                  return Double.parseDouble(rawValue);
+                } catch (NumberFormatException e) {
+                  throw BadValue.invalid(rawValue, METAVAR_FLOAT);
+                }
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_FLOAT;
+        return true;
+      } else if (typeNode instanceof TypeNode.IntTypeNode) {
+        if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT;
+        return true;
+      } else if (typeNode instanceof TypeNode.Int8TypeAliasTypeNode) {
+        if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT8;
+        return true;
+      } else if (typeNode instanceof TypeNode.Int16TypeAliasTypeNode) {
+        if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT16;
+        return true;
+      } else if (typeNode instanceof TypeNode.Int32TypeAliasTypeNode) {
+        if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_INT32;
+        return true;
+      } else if (typeNode instanceof TypeNode.UIntTypeAliasTypeNode uIntTypeAliasTypeNode) {
+        var mask = uIntTypeAliasTypeNode.getMask();
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (mask == 0x000000000000FFFFL) {
+          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
+          if (metavar == null) metavar = METAVAR_UINT16;
+        } else if (mask == 0x00000000FFFFFFFFL) {
+          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
+          if (metavar == null) metavar = METAVAR_UINT32;
+        } else {
+          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
+          if (metavar == null) metavar = METAVAR_UINT;
+        }
+        return true;
+      } else if (typeNode instanceof TypeNode.UInt8TypeAliasTypeNode) {
+        if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_UINT8;
+        return true;
+      } else if (typeNode instanceof TypeNode.BooleanTypeNode) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                var value = rawValue.toLowerCase();
+                if (TRUE_VALUES.contains(value)) {
+                  return true;
+                } else if (FALSE_VALUES.contains(value)) {
+                  return false;
+                }
+                throw BadValue.invalid(rawValue, "boolean");
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_BOOLEAN;
+        return true;
+      } else if (typeNode instanceof TypeNode.StringTypeNode) {
+        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_STRING;
+        return true;
+      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode
+          && typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
+                return rawValue;
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = METAVAR_CHAR;
+        return true;
+      } else if (typeNode
+          instanceof TypeNode.UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
+        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted();
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                if (!unionOfStringLiteralsTypeNode.getStringLiterals().contains(rawValue)) {
+                  throw BadValue.invalidChoice(rawValue, choices.toList());
+                }
+                return rawValue;
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = "[" + choices.collect(Collectors.joining(", ")) + "]";
+        return true;
+      } else if (typeNode instanceof TypeNode.StringLiteralTypeNode stringLiteralTypeNode) {
+        var choice = stringLiteralTypeNode.getLiteral();
+        if (each == null)
+          each =
+              (rawValue, workingDirUri) -> {
+                if (!rawValue.equals(choice)) {
+                  throw BadValue.invalidChoice(rawValue, choice);
+                }
+                return rawValue;
+              };
+        if (all == null) all = this::allChooseLast;
+        if (multiple == null) multiple = false;
+        if (metavar == null) metavar = "[" + choice + "]";
+        return true;
+      }
+      return false;
     }
 
     private static final String METAVAR_NUMBER = "number";
@@ -734,18 +811,21 @@ public final class CommandSpecParser {
     private void handleElement(TypeNode valueType, ClassProperty prop) {
       if (each != null && metavar != null) return;
       var transformValue =
-          new OptionBehavior().resolve(prop, resolveType(valueType).getFirst(), true);
-      if (each == null)
-        each = (rawValue, workingDirUri) -> transformValue.getEach().apply(rawValue, workingDirUri);
-      if (metavar == null) metavar = transformValue.getMetavar();
+          new OptionBehavior(each, all, multiple, metavar)
+              .resolveTypeArgument(prop, resolveType(valueType).getFirst(), "element");
+      each = transformValue.getEach();
+      metavar = transformValue.getMetavar();
     }
 
     /** Sets each and metavar if they're not set */
     private void handleEntry(TypeNode keyType, TypeNode valueType, ClassProperty prop) {
       if (each != null && metavar != null) return;
-      var transformKey = new OptionBehavior().resolve(prop, resolveType(keyType).getFirst(), true);
+      var transformKey =
+          new OptionBehavior(each, all, multiple, metavar)
+              .resolveTypeArgument(prop, resolveType(keyType).getFirst(), "key");
       var transformValue =
-          new OptionBehavior().resolve(prop, resolveType(valueType).getFirst(), true);
+          new OptionBehavior(each, all, multiple, metavar)
+              .resolveTypeArgument(prop, resolveType(valueType).getFirst(), "value");
       if (each == null)
         each =
             (rawValue, workingDirUri) -> {
