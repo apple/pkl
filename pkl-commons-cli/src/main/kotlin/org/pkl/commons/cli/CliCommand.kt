@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli
 
+import com.github.ajalt.clikt.core.CliktError
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -46,6 +47,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       proxyAddress?.let(IoUtils::setSystemProxy)
       doRun()
     } catch (e: PklException) {
+      if (e.cause is CliktError) throw e.cause!!
       throw CliException(e.message!!)
     } catch (e: CliException) {
       throw e

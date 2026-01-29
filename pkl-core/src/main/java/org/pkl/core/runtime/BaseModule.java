@@ -227,8 +227,24 @@ public final class BaseModule extends StdLibModule {
     return MixinTypeAlias.instance;
   }
 
+  public static VmTypeAlias getUIntTypeAlias() {
+    return UIntTypeAlias.instance;
+  }
+
   public static VmTypeAlias getUInt8TypeAlias() {
     return UInt8TypeAlias.instance;
+  }
+
+  public static VmTypeAlias getUInt16TypeAlias() {
+    return UInt16TypeAlias.instance;
+  }
+
+  public static VmTypeAlias getUInt32TypeAlias() {
+    return UInt32TypeAlias.instance;
+  }
+
+  public static VmTypeAlias getCharTypeAlias() {
+    return CharTypeAlias.instance;
   }
 
   private static final class AnyClass {
@@ -403,8 +419,24 @@ public final class BaseModule extends StdLibModule {
     static final VmTypeAlias instance = loadTypeAlias("Int32");
   }
 
+  private static final class UIntTypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt");
+  }
+
   private static final class UInt8TypeAlias {
     static final VmTypeAlias instance = loadTypeAlias("UInt8");
+  }
+
+  private static final class UInt16TypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt16");
+  }
+
+  private static final class UInt32TypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt32");
+  }
+
+  private static final class CharTypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("Char");
   }
 
   private static final class MixinTypeAlias {

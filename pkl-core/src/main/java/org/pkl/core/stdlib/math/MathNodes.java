@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,14 +51,14 @@ public final class MathNodes {
   public abstract static class minInt8 extends ExternalPropertyNode {
     @Specialization
     protected long eval(VmTyped self) {
-      return -128;
+      return Byte.MIN_VALUE;
     }
   }
 
   public abstract static class maxInt8 extends ExternalPropertyNode {
     @Specialization
     protected long eval(VmTyped self) {
-      return 127;
+      return Byte.MAX_VALUE;
     }
   }
 
