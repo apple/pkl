@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -81,7 +81,8 @@ public final class Project {
       SecurityManager securityManager,
       @Nullable java.time.Duration timeout,
       StackFrameTransformer stackFrameTransformer,
-      Map<String, String> envVars) {
+      Map<String, String> envVars,
+      boolean powerAssertions) {
     try (var evaluator =
         EvaluatorBuilder.unconfigured()
             .setSecurityManager(securityManager)
@@ -92,9 +93,27 @@ public final class Project {
             .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
+            .setPowerAssertions(powerAssertions)
             .build()) {
       return load(evaluator, ModuleSource.path(path));
     }
+  }
+
+  /**
+   * Loads Project data from the given {@link Path}.
+   *
+   * <p>Evaluates a module's {@code output.value} to allow for embedding a project within a
+   * template.
+   *
+   * @throws PklException if an error occurred while evaluating the project file.
+   */
+  public static Project loadFromPath(
+      Path path,
+      SecurityManager securityManager,
+      @Nullable java.time.Duration timeout,
+      StackFrameTransformer stackFrameTransformer,
+      Map<String, String> envVars) {
+    return loadFromPath(path, securityManager, timeout, stackFrameTransformer, envVars, false);
   }
 
   /** Convenience method to load a project with the default stack frame transformer. */

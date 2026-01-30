@@ -171,13 +171,13 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
   public static final class Constraint extends VmTypeMismatchException {
 
     private final SourceSection constraintBodySourceSection;
-    private final Map<Node, List<Object>> trackedValues;
+    private final @Nullable Map<Node, List<Object>> trackedValues;
 
     public Constraint(
         SourceSection sourceSection,
         Object actualValue,
         SourceSection constraintBodySourceSection,
-        Map<Node, List<Object>> trackedValues) {
+        @Nullable Map<Node, List<Object>> trackedValues) {
       super(sourceSection, actualValue);
       this.constraintBodySourceSection = constraintBodySourceSection;
       this.trackedValues = trackedValues;
@@ -194,7 +194,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           .append(indent)
           .append("Value: ")
           .append(VmValueRenderer.singleLine(80 - indent.length()).render(actualValue));
-      if (!withPowerAssertions) {
+      if (!withPowerAssertions || trackedValues == null) {
         return;
       }
       builder.append("\n\n");

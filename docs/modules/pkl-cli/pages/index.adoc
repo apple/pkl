@@ -454,6 +454,16 @@ output {
 ----
 ====
 
+[[power-assertions-eval]]
+.--power-assertions
+[%collapsible]
+====
+Default: disabled +
+Enable power assertions for detailed assertion failure messages.
+When enabled, type constraint failures will show intermediate values in the assertion expression.
+This option has a performance impact when constraint failures occur.
+====
+
 This command also takes <<common-options, common options>>.
 
 [[command-server]]
@@ -522,6 +532,16 @@ Used in combination with `--junit-aggregate-reports` flag.
 ====
 Force generation of expected examples. +
 The old expected files will be deleted if present.
+====
+
+[[power-assertions-test]]
+.--power-assertions, --no-power-assertions
+[%collapsible]
+====
+Default: enabled +
+Enable or disable power assertions for detailed assertion failure messages.
+When enabled, test failures will show intermediate values in the assertion expression, making it easier to understand why a test failed.
+Use `--no-power-assertions` to disable this feature if you prefer simpler output.
 ====
 
 This command also takes <<common-options, common options>>.

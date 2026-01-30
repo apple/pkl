@@ -54,13 +54,19 @@ public abstract class TypeConstraintNode extends PklNode {
 
     if (!result) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      try (var valueTracker = VmContext.get(this).getValueTrackerFactory().create()) {
-        getBodyNode().executeGeneric(frame);
+      var vmContext = VmContext.get(this);
+      if (vmContext.getPowerAssertions()) {
+        try (var valueTracker = vmContext.getValueTrackerFactory().create()) {
+          getBodyNode().executeGeneric(frame);
+          throw new VmTypeMismatchException.Constraint(
+              sourceSection,
+              frame.getAuxiliarySlot(customThisSlot),
+              sourceSection,
+              valueTracker.values());
+        }
+      } else {
         throw new VmTypeMismatchException.Constraint(
-            sourceSection,
-            frame.getAuxiliarySlot(customThisSlot),
-            sourceSection,
-            valueTracker.values());
+            sourceSection, frame.getAuxiliarySlot(customThisSlot), sourceSection, null);
       }
     }
   }
@@ -76,10 +82,19 @@ public abstract class TypeConstraintNode extends PklNode {
     var result = applyNode.executeBoolean(function, value);
     if (!result) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      try (var valueTracker = VmContext.get(this).getValueTrackerFactory().create()) {
-        applyNode.executeBoolean(function, value);
+      var vmContext = VmContext.get(this);
+      if (vmContext.getPowerAssertions()) {
+        try (var valueTracker = vmContext.getValueTrackerFactory().create()) {
+          applyNode.executeBoolean(function, value);
+          throw new VmTypeMismatchException.Constraint(
+              sourceSection,
+              value,
+              function.getRootNode().getSourceSection(),
+              valueTracker.values());
+        }
+      } else {
         throw new VmTypeMismatchException.Constraint(
-            sourceSection, value, function.getRootNode().getSourceSection(), valueTracker.values());
+            sourceSection, value, function.getRootNode().getSourceSection(), null);
       }
     }
   }

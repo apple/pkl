@@ -52,7 +52,12 @@ class CliTestRunnerTest {
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     runner.run()
@@ -89,7 +94,12 @@ class CliTestRunnerTest {
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     assertThatCode { runner.run() }.hasMessage("Tests failed.")
@@ -131,7 +141,12 @@ class CliTestRunnerTest {
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     assertThatCode { runner.run() }.hasMessage("Tests failed.")
@@ -173,7 +188,12 @@ class CliTestRunnerTest {
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     assertThatCode { runner.run() }.hasMessage("Tests failed.")
@@ -229,7 +249,12 @@ class CliTestRunnerTest {
       )
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     assertThatCode { runner.run() }.hasMessage("Tests failed.")
@@ -275,7 +300,12 @@ class CliTestRunnerTest {
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val noopWriter = noopWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions(junitDir = tempDir)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     assertThatCode { runner.run() }.hasMessageContaining("failed")
@@ -320,7 +350,12 @@ class CliTestRunnerTest {
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val noopWriter = noopWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions(junitDir = tempDir)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
     assertThatCode { runner.run() }.hasMessageContaining("failed")
@@ -474,6 +509,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input1.toUri(), input2.toUri()),
         settings = URI("pkl:settings"),
+        powerAssertions = true,
       )
     val testOpts = CliTestOptions(junitDir = tempDir, junitAggregateReports = true)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
@@ -601,7 +637,12 @@ class CliTestRunnerTest {
       )
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     assertThatCode { runner.run() }.hasMessage("Tests failed.")
@@ -640,7 +681,12 @@ class CliTestRunnerTest {
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
     val err = StringWriter()
-    val opts = CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+    val opts =
+      CliBaseOptions(
+        sourceModules = listOf(input.toUri()),
+        settings = URI("pkl:settings"),
+        powerAssertions = true,
+      )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
     val exception = assertThrows<CliException> { runner.run() }
@@ -680,7 +726,11 @@ class CliTestRunnerTest {
       val out = StringWriter()
       val err = StringWriter()
       val opts =
-        CliBaseOptions(sourceModules = listOf(input.toUri()), settings = URI("pkl:settings"))
+        CliBaseOptions(
+          sourceModules = listOf(input.toUri()),
+          settings = URI("pkl:settings"),
+          powerAssertions = true,
+        )
       val testOpts = CliTestOptions()
       val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
       runner.run()

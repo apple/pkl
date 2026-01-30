@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,6 +69,8 @@ public final class EvaluatorBuilder {
   private @Nullable DeclaredDependencies dependencies;
 
   private TraceMode traceMode = TraceMode.COMPACT;
+
+  private boolean powerAssertions = false;
 
   private EvaluatorBuilder() {}
 
@@ -468,6 +470,17 @@ public final class EvaluatorBuilder {
     return this.traceMode;
   }
 
+  /** Sets whether power assertions are enabled. */
+  public EvaluatorBuilder setPowerAssertions(boolean powerAssertions) {
+    this.powerAssertions = powerAssertions;
+    return this;
+  }
+
+  /** Returns whether power assertions are enabled. */
+  public boolean getPowerAssertions() {
+    return powerAssertions;
+  }
+
   /**
    * Given a project, sets its dependencies, and also applies any evaluator settings if set.
    *
@@ -578,6 +591,7 @@ public final class EvaluatorBuilder {
         moduleCacheDir,
         dependencies,
         outputFormat,
-        traceMode);
+        traceMode,
+        powerAssertions);
   }
 }
