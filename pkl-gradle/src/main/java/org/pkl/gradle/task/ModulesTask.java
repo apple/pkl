@@ -164,8 +164,8 @@ public abstract class ModulesTask extends BasePklTask {
               null,
               List.of(),
               getHttpRewrites().getOrNull(),
-              Map.of(),
-              Map.of(),
+              parseExternalReaders(getExternalModuleReaders()),
+              parseExternalReaders(getExternalResourceReaders()),
               null);
     }
     return cachedOptions;
