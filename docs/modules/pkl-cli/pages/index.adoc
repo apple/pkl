@@ -905,11 +905,11 @@ These tools are executed by running `pkl run`.
 Pkl commands have a few properties that distinguish them from standard module evaluation:
 
 * Users provide input to commands using familiar command line idioms, providing a better experience than deriving inputs from xref:language-reference:index.adoc#resources[resources] like external properties or environment variables.
-* Commands can produce output to standard output and written files at the same time.
+* Commands can produce output to standard output (via `output.text` or `output.bytes`) and written files (via `output.files`) at the same time.
 * Like CLI tools written in other languages, command file output may write to any absolute path (not just relative to the `--multiple-file-output-path` option).
 * Commands provide a way to dynamically import modules when they are specified as command line options.
 
-Commands are implemented as regular modules and declare their support command line flags and positional arguments using a class with annotated properties.
+Commands are implemented as regular modules and declare their supported command line flags and positional arguments using a class with annotated properties.
 
 === Defining Commands
 
@@ -930,33 +930,50 @@ class Options {
 // Regular module code...
 ----
 
-When commands are executed, the Pkl runtime parses and validates provided options and synthesizes a module that amends the command's.
-This synthesized module overrides the `options` property to set the parsed value for each option.
-This module is evaluated and its `output.bytes` property is written to the standard output and files specified by `output.files` are written to the filesystem.
+Like `pkl eval`, when a command completes without an evaluation error the process exits successfully (exit code 0).
+Commands can return a failure using `throw` (exit code 1), but otherwise may not control the exit code.
+
+Commands may set `output.text`/`output.bytes` and/or `output.files`.
+Unlike `pkl eval`, both outputs (stdout and files) are processed for all commands, so commands may write files and generate output.
+Additionally, keys in `output.files` are not "sandboxed" by `--multiple-file-output-path`.
+Instead, file entries with absolute paths are written to the specified path and entries with relative path are written relative to the current working directory (or `--working-dir` if specified).
+
+IMPORTANT: Users of `pkl run` must be aware of the security implications of this behavior.
+Command line tools implemented in Pkl will be able to write or overwrite any file that the user has permissions to modify.
+This matches the behavior of command line tools written in any other language.
+
+Beyond writing to files (via `output.files`) and the standard output (via `output.text` or `output.bytes`), commands may not trigger side effects not already available in Pkl.
+Pkl provides no facility for making arbitrary HTTP requests (i.e. non-`GET` methods or setting headers), executing other programs, or any other side effect.
+If additional functionality is desired, xref:language-reference:index.adoc#external-readers[external readers] may be used to extends Pkl's capabilities.
 
 === Command Options
 
-Each property of the class of a command's `options` property becomes a command line options.
+Each property of the class of a command's `options` property becomes a command line option.
 Properties with the `local`, `hidden`, `fixed`, and/or `const` modifiers are not parsed as options
 A property's doc comment, if present, becomes the corresponding option's CLI help description.
 Properties must have xref:language-reference:index.adoc#type-annotations[type annotations] to determine how they are parsed.
 
-Properties may be annotated with link:{uri-stdlib-Command-Flag}[`@Flag`] or link:{uri-stdlib-Command-Argument}[`@Argument`] to influence how they behave:
+Properties may be xref:language-reference:index.adoc#annotations[annotated] to influence how they behave:
 
-* Properties annotated with `@Flag` become CLI flags named `--<property name>`.
-* Properties annotated with `@Argument` become positional CLI arguments and are parsed in the order they appear in the class.
+* Properties annotated with link:{uri-stdlib-Command-Flag}[`@Flag`] become CLI flags named `--<property name>` that accept a value.
+* `Boolean` properties annotated with link:{uri-stdlib-Command-BooleanFlag}[`@BooleanFlag`] become CLI flags named `--<property name>` and `--no-<property name>` that result in `true` and `false` values, respectively.
+* `Int` (and type aliases of `Int`) properties annotated with link:{uri-stdlib-Command-CountedFlag}[`@CountedFlag`] become CLI flags named `--<property name>` that produce a value equal to the number of times they are present on the command line.
+* Properties annotated with link:{uri-stdlib-Command-Argument}[`@Argument`] become positional CLI arguments and are parsed in the order they appear in the class.
 * Properties with no annotation are treated the same as `@Flag` with no further customization.
 
-A property's type determines how it is parsed:
+Flag options may set a `shortName` property to define a single-character alias (`-<short name>`).
+Like many other CLI flag systems, flag abbreviations may be combined (e.g. `-a -b -v -v -f some-value` is equivalent `-abvvf some-value`).
+
+A `@Flag` or `@Argument` property's type annotation determines how it is converted from the raw string value:
 
 |===
-|Type |Notes
+|Type |Behavior
 
 |`String`
-|
+|Value is used verbatim.
 
 |`Char`
-|Behaves like `String` but must be a single character
+|Value is used verbatim but must be exactly one character.
 
 |`Boolean`
 |True values: `true`, `t`, `1`, `yes`, `y`, `on`
@@ -964,46 +981,80 @@ A property's type determines how it is parsed:
 False values: `false`, `f`, `0`, `no`, `n`, `off`
 
 |`Number`
-|Produces an `Int` if the value can be parsed as one, otherwise produces a `Float`
+|Value is parsed as an `Int` if possible, otherwise parsed as `Float`.
 
 |`Float`
-|
+|Value is parsed as a `Float`.
 
 |`Int`
-|
+|Value is parsed as a `Int`.
 
 |`Int8`, `Int16`, `Int32`, `UInt`, `UInt8`, `UInt16`, `UInt32`
-|Behaves like `Int` but enforces the type's bounds check
+|Value is parsed as a `Int` and must be within the type's range.
 
-|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals] or a xref:language-reference:index.adoc#type-aliases[type alias] to one
-|Behaves like `String` but only admits specific values.
+|xref:language-reference:index.adoc#union-types[Union] of xref:language-reference:index.adoc#string-literal-types[string literals]
+|Value is used verbatim but must match a member of the union.
 
 |`List<Element>`, `Listing<Element>`, `Set<Element>`
-|`Element` type must be a primitive type or union of string literals.
+|Each occurrence of the option becomes an element of the final value.
 
+`Element` values are parsed based on the above primitive types.
 
 |`Map<Key, Value>`, `Mapping<Key, Value>`
-|`Key` and `Value` types must both be primitive types or unions of string literals.
+|Each occurrence of the option becomes an entry of the final value.
 
+Values are split on the first `"="` character; the first part is parsed as `Key` and the second as `Value`, both based on the above primitive types.
+
+|`Pair<First, Second>`
+|Value is split on the first `"="` character; the first part is parsed as `First` and the second as `Second`, both based on the above primitive types.
 
 |===
+
+If a flag that accepts only a single value is provided multiple times, the last occurrence becomes the final value.
 
 Only a single positional argument accepting multiple values is permitted per command.
 
 A property with a xref:language-reference:index.adoc#nullable-types[nullable type] is optional and, if not specified on the command line, will have value `null`.
-Type constraints are enforced when the command is executed.
+Properties with default values are also optional.
+Type constraints are evaluated when the command is executed, so additional restrictions on option values are enforced at runtime.
 
-==== Custom Option Parsing
+==== Custom Option Conversion and Aggregation
 
-A property may be annotated with any type if its `@Flag` or `@Argument` annotation has the `parse` property set.
-The `parse` property overrides how the raw option value is interpreted and may be set a few different ways:
+A property may be annotated with any type if its `@Flag` or `@Argument` annotation sets the `convert` or `transformAll` properties.
+The `convert` property is a xref:language-reference:index.adoc#anonymous-functions[function] that overrides how _each_ raw option value is interpreted.
+The `transformAll` property is a function that overrides how _all_ parsed option values become the final property value.
 
-* An xref:language-reference:index.adoc#anonymous-functions[anonymous function] that accepts the raw string value passed on the command line and returns a value of the property's annotated type.
-* The special value `"import"`, which treats the option's value as a module URI (as if it were passed to `pkl eval`) and sets the option's value to imported contents of the module.
-* The special value `"import*"`, which treats the option's value as a xref:language-reference:index.adoc#globbed-imports[globbed module URI] and sets the option's value to a link:{uri-stdlib-Mapping}[`Mapping`] with keys that are the resolved absolute module URIs and values that are the imported module contents. When specifying glob import options, it will often be necessary to quote the value to avoid it being interpreted by the shell.
+The `convert` function may return an link:{uri-stdlib-Command-Import}[`Import`] value that is replaced during option parsing with the actual value of the module specified by its `uri` property.
+If `glob` is `true`, the replacement value is a `Mapping`; its keys are the _absolute_ URIs of the matched modules and its values are the actual module values.
+When specifying glob import options on the command line, it is often necessary to quote the value to avoid it being interpreted by the shell.
+If the return value of `convert` is a `List`, `Set`, `Map`, or `Pair`, each contained value (elements and entry keys/values) that are `Import` values are also replaced.
 
-Parse functions compose with `List<Element>`, `Set<Element>`, and `Map<Key, Value>` option types.
-The parse function is called once for each `List`/`Set` element or `Map` value.
+[IMPORTANT]
+====
+If an option has type `Mapping<String, «some module type»>` and should accept a single glob pattern value, the option's annotation must also set `multiple = false` to override the default behavior of `Mapping` options accepting multiple values.
+Example:
+[source%parsed,{pkl}]
+----
+@Flag {
+  convert = (it) -> new Import { uri = it; glob = true }
+  multiple = false
+}
+birds: Mapping<String, Bird>
+----
+
+If multiple glob patterns values should be accepted and merged, `transformAll` may be used to merge every glob-imported `Mapping`:
+[source%parsed,{pkl}]
+----
+@Flag {
+  convert = (it) -> new Import { uri = it; glob = true }
+  transformAll =
+    (values) -> values.fold(new Mapping {}, (result, element) ->
+      (result) { ...element }
+    )
+}
+birds: Mapping<String, Bird>
+----
+====
 
 === Subcommands
 
@@ -1015,13 +1066,15 @@ Like many other command line libraries, `pkl:Command` allows building commands i
 extends "pkl:Command"
 
 command {
-  subcommands { // <1>
+  subcommands {
     import("subcommand1.pkl")
     import("subcommand2.pkl")
+    for (_, subcommand in import*("./subcommands/*.pkl")) {
+      subcommand
+    }
   }
 }
 ----
-<1> May also be assigned from a glob import, eg. `subcommands = import*("subcommand*.pkl")`
 
 [source,pkl%tested]
 .subcommand1.pkl
@@ -1035,6 +1088,8 @@ parent: `my-tool` // <1>
 // Regular module code...
 ----
 <1> Optional; asserts that this is a subcommand of `my-tool` and simplifies accessing properties and options of the parent command
+
+Each element of `subcommands` must have a unique value for `command.name`.
 
 === Testing Commands
 
@@ -1073,6 +1128,7 @@ examples {
 }
 ----
 
+[[commands-as-standalone-scripts]]
 === Commands as standalone scripts
 
 On *nix platforms, Pkl commands can be configured to run as standalone tools that can be invoked without the `pkl run` command.
@@ -1098,6 +1154,22 @@ Like with Pkl's own CLI, <<command-shell-completion, shell completions>> can be 
 # Generate shell completion script for zsh
 ./my-tool.pkl shell-completion zsh
 ----
+
+==== Defining Completion Candidates
+
+TODO
+
+=== Flag name ambiguities
+
+It is possible for commands to define flags with names or short names that collide with Pkl's own command line options.
+To avoid ambiguity in parsing these options, all flags for Pkl itself (e.g. `--root-dir`) must be placed before the root command module's URI.
+Command authors are encouraged to avoid overlapping with Pkl's built-in flags, but this may not always be feasible, especially for single-character abbreviated names.
+
+This imposes a limitation around <<commands-as-standalone-scripts,standalone commands>> that prevents users from customizing Pkl evaluator options when they are invoked.
+There are two recommended workarounds for this limitation:
+
+* Use a `PklProject` to define evaluator settings instead of doing so on the command line.
+* If the command line must be used, switch to invoking via `pkl run [<flags>] [<root command module>]`.
 
 [[repl]]
 == Working with the REPL

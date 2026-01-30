@@ -152,8 +152,12 @@ endif::[]
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
 :uri-stdlib-FileOutput: {uri-stdlib-baseModule}/FileOutput
 :uri-stdlib-Annotation: {uri-stdlib-baseModule}/Annotation
+:uri-stdlib-ConvertProperty: {uri-stdlib-baseModule}/ConvertProperty
 :uri-stdlib-Command-Flag: {uri-stdlib-CommandModule}/Flag
+:uri-stdlib-Command-BooleanFlag: {uri-stdlib-CommandModule}/BooleanFlag
+:uri-stdlib-Command-CountedFlag: {uri-stdlib-CommandModule}/CountedFlag
 :uri-stdlib-Command-Argument: {uri-stdlib-CommandModule}/Argument
+:uri-stdlib-Command-Import: {uri-stdlib-CommandModule}/Import
 
 :uri-messagepack: https://msgpack.org/index.html
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md

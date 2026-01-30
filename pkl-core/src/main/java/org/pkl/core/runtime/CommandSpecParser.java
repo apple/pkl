@@ -105,6 +105,11 @@ public final class CommandSpecParser {
                 buildExecutionModule(
                     command,
                     buildObject(optionsClass, options),
+                    // NB: these next two lines are the only place where we lose type safety.
+                    // SubcommandState is type-erased to Object in the public API to hide internals.
+                    // Consumers of this API must ensure CommandSpec.apply is only ever passed an
+                    // instance of CommandSpec.State previously returned from a prior invocation
+                    // of CommandSpec.apply.
                     parent == null ? null : (SubcommandState) parent.contents()),
                 (it) -> evaluateResult(command, (SubcommandState) it)));
   }

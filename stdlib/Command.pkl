@@ -137,18 +137,19 @@ class Flag extends BaseFlag {
   ///
   /// If no transform is provided, the raw flag value are parsed according to the option's type:
   ///
-  /// | Type                     | Behavior |
-  /// | ------------------------ | -------- |
-  /// | [String]                 | Value is used verbatim |
-  /// | [Char]                   | Value is used verbatim; must be exactly one character |
-  /// | [Boolean]                | True values: `true`, `t`, `1`, `yes`, `y`, `on`; False values: `false`, `f`, `0`, `no`, `n`, `off` |
-  /// | [Number]                 | Value is parsed as an [Int] if possible, otherwise parsed as [Float] |
-  /// | [Float]                  | Value is parsed as a [Float] |
-  /// | [Int]                    | Value is parsed as an [Int] |
+  /// | Type                       | Behavior |
+  /// | -------------------------- | -------- |
+  /// | [String]                   | Value is used verbatim |
+  /// | [Char]                     | Value is used verbatim; must be exactly one character |
+  /// | [Boolean]                  | True values: `true`, `t`, `1`, `yes`, `y`, `on`; False values: `false`, `f`, `0`, `no`, `n`, `off` |
+  /// | [Number]                   | Value is parsed as an [Int] if possible, otherwise parsed as [Float] |
+  /// | [Float]                    | Value is parsed as a [Float] |
+  /// | [Int]                      | Value is parsed as an [Int] |
   /// | [Int8], [Int16], [Int32], [UInt], [UInt8], [UInt16], [UInt32] | Value is parsed as an [Int] and must be wihtin the type's range |
-  /// | [Mapping], [Map], [Pair] | Value is split into a [Pair] on the first `"="` and each substring is parsed based on the above primitive types |
-  /// | [Listing], [List], [Set] | Value is parsed based on the above primitive types |
-  /// | Other types              | An error is thrown; `convert` should be defined explicitly |
+  /// | Union of [String] literals | Value is used verbatim; must match a member of the union |
+  /// | [Listing], [List], [Set]   | Element values are parsed based on the above primitive types |
+  /// | [Mapping], [Map], [Pair]   | Value is split into a [Pair] on the first `"="` and each substring is parsed based on the above primitive types |
+  /// | Other types                | An error is thrown; `convert` should be defined explicitly |
   convert: ((String) -> Any)?
 
   /// Specifies whether the flag may be specified more than once.
@@ -216,7 +217,7 @@ class Argument extends Annotation {
   transformAll: ((List<Any>) -> Any)?
 }
 
-/// A value used in [Flag.transform] and [Argument.transform] to declare an option as a dynamic
+/// A value used in [Flag.convert] and [Argument.convert] to declare an option as a dynamic
 /// import.
 class Import {
   /// The absolute URI of the module to import.
