@@ -29,6 +29,7 @@ import kotlin.io.path.writeBytes
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
 import org.pkl.commons.cli.CliException
+import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.commons.currentWorkingDir
 import org.pkl.core.Closeables
 import org.pkl.core.CommandSpec
@@ -65,6 +66,7 @@ constructor(
       evaluator.evaluateCommand(uri(normalizedSourceModule)) { spec ->
         try {
           val root = SynthesizedRunCommand(spec, this, options.sourceModules.first().toString())
+          root.installCommonOptions(includeVersion = false)
           root.subcommands(
             CompletionCommand(
               name = "shell-completion",

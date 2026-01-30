@@ -919,6 +919,7 @@ Commands are defined by creating a module that extends `pkl:Command`:
 .my-tool.pkl
 ----
 /// This doc comment becomes part of the command's CLI help!
+/// Markdown formatting is **allowed!**
 extends "pkl:Command"
 
 options: Options
@@ -951,6 +952,7 @@ If additional functionality is desired, xref:language-reference:index.adoc#exter
 Each property of the class of a command's `options` property becomes a command line option.
 Properties with the `local`, `hidden`, `fixed`, and/or `const` modifiers are not parsed as options
 A property's doc comment, if present, becomes the corresponding option's CLI help description.
+Doc comments are interpreted as Markdown text and formatted nicely when displayed to users.
 Properties must have xref:language-reference:index.adoc#type-annotations[type annotations] to determine how they are parsed.
 
 Properties may be xref:language-reference:index.adoc#annotations[annotated] to influence how they behave:

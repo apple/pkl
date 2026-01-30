@@ -27,14 +27,16 @@ import org.pkl.core.Release
 
 private val theme = Theme { styles["markdown.code.span"] = TextStyle(bold = true) }
 
-fun <T : BaseCliktCommand<T>> T.installCommonOptions() {
+fun <T : BaseCliktCommand<T>> T.installCommonOptions(includeVersion: Boolean = true) {
   installMordantMarkdown()
 
-  versionOption(
-    Release.current().versionInfo,
-    names = setOf("-v", "--version"),
-    message = { if (commandName == "pkl") it else it.replaceFirst("Pkl", commandName) },
-  )
+  if (includeVersion) {
+    versionOption(
+      Release.current().versionInfo,
+      names = setOf("-v", "--version"),
+      message = { if (commandName == "pkl") it else it.replaceFirst("Pkl", commandName) },
+    )
+  }
 
   context { terminal = Terminal(theme = theme) }
 }

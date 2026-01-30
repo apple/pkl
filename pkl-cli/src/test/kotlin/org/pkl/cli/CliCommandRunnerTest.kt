@@ -17,6 +17,7 @@ package org.pkl.cli
 
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.MissingOption
+import com.github.ajalt.clikt.core.PrintHelpMessage
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.ByteArrayOutputStream
 import java.net.URI
