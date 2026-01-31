@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.*
 import com.github.ajalt.clikt.parameters.arguments.*
@@ -36,6 +37,7 @@ import org.pkl.core.CommandSpec
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.FileOutput
 import org.pkl.core.ModuleSource.uri
+import org.pkl.core.PklBugException
 import org.pkl.core.PklException
 import org.pkl.core.util.IoUtils
 
@@ -153,6 +155,7 @@ constructor(
                   help = opt.helpText ?: "",
                   metavar = opt.metavar,
                   hidden = opt.hidden,
+                  completionCandidates = opt.completionCandidates?.toClikt(),
                 )
                 .convert {
                   try {
@@ -251,3 +254,10 @@ constructor(
     }
   }
 }
+
+fun CommandSpec.CompletionCandidates.toClikt(): CompletionCandidates =
+  when (this) {
+    CommandSpec.CompletionCandidates.PATH -> CompletionCandidates.Path
+    is CommandSpec.CompletionCandidates.Fixed -> CompletionCandidates.Fixed(values)
+    else -> throw PklBugException.unreachableCode()
+  }

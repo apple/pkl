@@ -15,15 +15,14 @@
  */
 package org.pkl.core.runtime;
 
-import static org.pkl.core.PClassInfo.pklCommandUri;
-
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import java.net.URI;
 
 public final class CommandModule extends StdLibModule {
   static final VmTyped instance = VmUtils.createEmptyModule();
 
   static {
-    loadModule(pklCommandUri, instance);
+    loadModule(URI.create("pkl:Command"), instance);
   }
 
   private CommandModule() {}

@@ -36,6 +36,7 @@ import org.graalvm.collections.EconomicMap;
 import org.pkl.core.CommandSpec;
 import org.pkl.core.CommandSpec.Argument;
 import org.pkl.core.CommandSpec.BooleanFlag;
+import org.pkl.core.CommandSpec.CompletionCandidates.Fixed;
 import org.pkl.core.CommandSpec.CountedFlag;
 import org.pkl.core.CommandSpec.Option.BadValue;
 import org.pkl.core.CommandSpec.Option.MisingOption;
@@ -188,7 +189,7 @@ public final class CommandSpecParser {
 
         VmTyped flagAnnotation = null;
         VmTyped argAnnotation = null;
-        for (var annotation : prop.getAllAnnotations()) {
+        for (var annotation : prop.getAllAnnotations(true)) {
           if (annotation.getVmClass().isSubclassOf(CommandModule.getBaseFlagClass())) {
             if (flagAnnotation != null) continue;
             flagAnnotation = annotation;
@@ -250,7 +251,7 @@ public final class CommandSpecParser {
 
   private CommandSpec.Flag collectFlag(ClassProperty prop, @Nullable VmTyped flagAnnotation) {
     var name = prop.getName().toString();
-    var transform = new OptionBehavior(flagAnnotation, false).resolve(prop, false);
+    var behavior = new OptionBehavior(flagAnnotation, false).resolve(prop, false);
     String shortName = null;
     boolean hide = false;
     if (flagAnnotation != null) {
@@ -262,16 +263,17 @@ public final class CommandSpecParser {
     return new CommandSpec.Flag(
         name,
         VmUtils.exportDocComment(prop.getDocComment()),
-        !transform.isOptional(),
-        transform.getEach(),
-        transform.getAll(),
+        !behavior.isOptional(),
+        behavior.getEach(),
+        behavior.getAll(),
+        behavior.getCompletionCandidates(),
         shortName,
-        transform.getMetavar(),
+        behavior.getMetavar(),
         hide,
-        (transform.getDefaultValue() == COMPLEX_DEFAULT_EXPRESSION
-                || transform.getDefaultValue() == null)
+        (behavior.getDefaultValue() == COMPLEX_DEFAULT_EXPRESSION
+                || behavior.getDefaultValue() == null)
             ? null
-            : transform.getDefaultValue().toString());
+            : behavior.getDefaultValue().toString());
   }
 
   private CommandSpec.BooleanFlag collectBooleanFlag(ClassProperty prop, VmTyped flagAnnotation) {
@@ -341,13 +343,13 @@ public final class CommandSpecParser {
   }
 
   private Argument collectArgument(ClassProperty prop, VmTyped argAnnotation) {
-    var transform = new OptionBehavior(argAnnotation, false).resolve(prop, true);
-    if (transform.getDefaultValue() != null) {
+    var behavior = new OptionBehavior(argAnnotation, false).resolve(prop, true);
+    if (behavior.getDefaultValue() != null) {
       throw exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError("commandOptionUnexpectedDefaultValue", prop.getName(), "Argument")
           .build();
-    } else if (transform.isOptional() && !transform.getMultiple()) {
+    } else if (behavior.isOptional() && !behavior.getMultiple()) {
       throw exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError("commandArgumentUnexpectedNonRepeatedNullableType", prop.getName())
@@ -357,9 +359,10 @@ public final class CommandSpecParser {
     return new CommandSpec.Argument(
         prop.getName().toString(),
         VmUtils.exportDocComment(prop.getDocComment()),
-        transform.getEach(),
-        transform.getAll(),
-        transform.getMultiple());
+        behavior.getEach(),
+        behavior.getAll(),
+        behavior.getCompletionCandidates(),
+        behavior.getMultiple());
   }
 
   /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
@@ -442,6 +445,7 @@ public final class CommandSpecParser {
     private @Nullable Function<List<Object>, Object> all;
     private @Nullable Boolean multiple;
     private @Nullable String metavar;
+    private @Nullable CommandSpec.CompletionCandidates completionCandidates;
     private @Nullable Object defaultValue = null;
     private boolean isNullable = false;
 
@@ -449,15 +453,13 @@ public final class CommandSpecParser {
         @Nullable BiFunction<String, URI, Object> each,
         @Nullable Function<List<Object>, Object> all,
         @Nullable Boolean multiple,
-        @Nullable String metavar) {
+        @Nullable String metavar,
+        @Nullable CommandSpec.CompletionCandidates completionCandidates) {
       this.each = each;
       this.all = all;
       this.multiple = multiple;
       this.metavar = metavar;
-    }
-
-    private OptionBehavior() {
-      this(null, null, null, null);
+      this.completionCandidates = completionCandidates;
     }
 
     public OptionBehavior(@Nullable VmTyped annotation, boolean hasMetavar) {
@@ -491,7 +493,8 @@ public final class CommandSpecParser {
                   : null,
           annotation == null
               ? null
-              : hasMetavar ? exportNullableString(annotation, Identifier.METAVAR) : null);
+              : hasMetavar ? exportNullableString(annotation, Identifier.METAVAR) : null,
+          annotation == null ? null : exportCompletionCandidates(annotation));
     }
 
     public OptionBehavior resolve(ClassProperty prop, boolean requireExplicitDefault) {
@@ -775,6 +778,8 @@ public final class CommandSpecParser {
         if (all == null) all = this::allChooseLast;
         if (multiple == null) multiple = false;
         if (metavar == null) metavar = "[" + choices.collect(Collectors.joining(", ")) + "]";
+        if (completionCandidates == null)
+          completionCandidates = new Fixed(unionOfStringLiteralsTypeNode.getStringLiterals());
         return true;
       } else if (typeNode instanceof TypeNode.StringLiteralTypeNode stringLiteralTypeNode) {
         var choice = stringLiteralTypeNode.getLiteral();
@@ -789,6 +794,7 @@ public final class CommandSpecParser {
         if (all == null) all = this::allChooseLast;
         if (multiple == null) multiple = false;
         if (metavar == null) metavar = "[" + choice + "]";
+        if (completionCandidates == null) completionCandidates = new Fixed(Set.of(choice));
         return true;
       }
       return false;
@@ -816,7 +822,7 @@ public final class CommandSpecParser {
     private void handleElement(TypeNode valueType, ClassProperty prop) {
       if (each != null && metavar != null) return;
       var transformValue =
-          new OptionBehavior(each, all, multiple, metavar)
+          new OptionBehavior(each, all, multiple, metavar, completionCandidates)
               .resolveTypeArgument(prop, resolveType(valueType).getFirst(), "element");
       each = transformValue.getEach();
       metavar = transformValue.getMetavar();
@@ -826,10 +832,10 @@ public final class CommandSpecParser {
     private void handleEntry(TypeNode keyType, TypeNode valueType, ClassProperty prop) {
       if (each != null && metavar != null) return;
       var transformKey =
-          new OptionBehavior(each, all, multiple, metavar)
+          new OptionBehavior(each, all, multiple, metavar, completionCandidates)
               .resolveTypeArgument(prop, resolveType(keyType).getFirst(), "key");
       var transformValue =
-          new OptionBehavior(each, all, multiple, metavar)
+          new OptionBehavior(each, all, multiple, metavar, completionCandidates)
               .resolveTypeArgument(prop, resolveType(valueType).getFirst(), "value");
       if (each == null)
         each =
@@ -865,6 +871,19 @@ public final class CommandSpecParser {
       };
     }
 
+    private static @Nullable CommandSpec.CompletionCandidates exportCompletionCandidates(
+        VmTyped annotation) {
+      var value = VmUtils.readMember(annotation, Identifier.COMPLETION_CANDIDATES);
+      if (value instanceof VmNull) return null;
+      if (value.equals("path")) return CommandSpec.CompletionCandidates.PATH;
+
+      // otherwise value is Listing<String> so will export to List<String>
+      if (!(value instanceof VmListing vmListing)) throw PklBugException.unreachableCode();
+      var result = new HashSet<String>(vmListing.getLength());
+      vmListing.forceAndIterateMemberValues((key, member, val) -> result.add((String) val));
+      return new Fixed(result);
+    }
+
     public BiFunction<String, URI, Object> getEach() {
       assert each != null;
       return each;
@@ -883,6 +902,10 @@ public final class CommandSpecParser {
     public String getMetavar() {
       assert metavar != null;
       return metavar;
+    }
+
+    public @Nullable CommandSpec.CompletionCandidates getCompletionCandidates() {
+      return completionCandidates;
     }
 
     public @Nullable Object getDefaultValue() {

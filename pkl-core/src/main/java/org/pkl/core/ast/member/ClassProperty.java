@@ -54,33 +54,6 @@ public final class ClassProperty extends ClassMember {
     this.initializer = initializer;
   }
 
-  public List<VmTyped> getAllAnnotations(boolean ascending) {
-    var annotations = new ArrayList<VmTyped>();
-
-    if (ascending) {
-      for (var clazz = getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
-        var p = clazz.getDeclaredProperty(getName());
-        if (p != null) {
-          annotations.addAll(p.getAnnotations());
-        }
-      }
-    } else {
-      doGetAllAnnotationsDescending(getDeclaringClass(), annotations);
-    }
-
-    return annotations;
-  }
-
-  private void doGetAllAnnotationsDescending(VmClass clazz, List<VmTyped> annotations) {
-    if (clazz.getSuperclass() != null) {
-      doGetAllAnnotationsDescending(clazz.getSuperclass(), annotations);
-    }
-    var p = clazz.getDeclaredProperty(getName());
-    if (p != null) {
-      annotations.addAll(p.getAnnotations());
-    }
-  }
-
   public VmSet getAllModifierMirrors() {
     var mods = 0;
     for (var clazz = getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {

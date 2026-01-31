@@ -170,6 +170,15 @@ class Flag extends BaseFlag {
   /// | [Set]             | Result is all unique option values |
   /// | Other types       | Result is the last value specified option value |
   transformAll: ((List<Any>) -> Any)?
+
+  /// Specify how this flag should be completed in generated shell completions.
+  ///
+  /// If set to `"path"`, the completion candidates will be local file paths. 
+  /// If set to a [Listing], the completion candidates will be the specified literal strings.
+  ///
+  /// Options with a string literal union type use the members of the union as completion candidates
+  /// by default.
+  completionCandidates: "path" | *Listing<String>(isDistinct)
 }
 
 /// Annotates [Boolean] [options] properties to configure them as named CLI flags that may be
@@ -215,6 +224,15 @@ class Argument extends Annotation {
   /// If no value is provided, all option values are transformed using the same rules as
   /// [Flag.transformAll].
   transformAll: ((List<Any>) -> Any)?
+
+  /// Specify how this flag should be completed in generated shell completions.
+  ///
+  /// If set to `"path"`, the completion candidates will be local file paths. 
+  /// If set to a [Listing], the completion candidates will be the specified literal strings.
+  ///
+  /// Options with a string literal union type use the members of the union as completion candidates
+  /// by default.
+  completionCandidates: "paths" | *Listing<String>(isDistinct)
 }
 
 /// A value used in [Flag.convert] and [Argument.convert] to declare an option as a dynamic

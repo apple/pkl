@@ -18,6 +18,7 @@ package org.pkl.core;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.pkl.core.util.Nullable;
@@ -65,12 +66,31 @@ public record CommandSpec(
     }
   }
 
+  public abstract static sealed class CompletionCandidates {
+    public static final CompletionCandidates PATH = new StaticCompletionCandidates();
+
+    public static final class Fixed extends CompletionCandidates {
+      private final Set<String> values;
+
+      public Fixed(Set<String> values) {
+        this.values = values;
+      }
+
+      public Set<String> getValues() {
+        return values;
+      }
+    }
+
+    private static final class StaticCompletionCandidates extends CompletionCandidates {}
+  }
+
   public record Flag(
       String name,
       @Nullable String helpText,
       boolean showAsRequired,
       BiFunction<String, URI, Object> transformEach,
       Function<List<Object>, Object> transformAll,
+      @Nullable CompletionCandidates completionCandidates,
       @Nullable String shortName,
       String metavar,
       boolean hidden,
@@ -115,6 +135,7 @@ public record CommandSpec(
       @Nullable String helpText,
       BiFunction<String, URI, Object> transformEach,
       Function<List<Object>, Object> transformAll,
+      @Nullable CompletionCandidates completionCandidates,
       boolean repeated)
       implements Option {
     @Override

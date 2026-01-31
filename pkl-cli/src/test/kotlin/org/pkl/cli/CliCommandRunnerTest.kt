@@ -17,7 +17,7 @@ package org.pkl.cli
 
 import com.github.ajalt.clikt.core.CliktError
 import com.github.ajalt.clikt.core.MissingOption
-import com.github.ajalt.clikt.core.PrintHelpMessage
+import com.github.ajalt.clikt.core.PrintCompletionMessage
 import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.ByteArrayOutputStream
 import java.net.URI
@@ -1091,6 +1091,48 @@ class CliCommandRunnerTest {
         
         """
           .trimIndent()
+      )
+  }
+
+  @Test
+  fun `completion candidates`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        none: String?
+        enum: *"a" | "b" | "c"
+        @Flag { completionCandidates = "path" }
+        path: String?
+        @Flag { completionCandidates { "foo"; "bar"; "baz" } }
+        explicit: String?
+      }
+    """
+            .trimIndent(),
+      )
+    val exc =
+      assertThrows<PrintCompletionMessage> {
+        runToStdout(
+          CliBaseOptions(sourceModules = listOf(moduleUri)),
+          listOf("shell-completion", "bash"),
+        )
+      }
+    assertThat(exc.message)
+      .contains(
+        """
+    "--none")
+      ;;
+    "--enum")
+      COMPREPLY=($(compgen -W 'a b c' -- "${'$'}{word}"))
+      ;;
+    "--path")
+       __complete_files "${'$'}{word}"
+      ;;
+    "--explicit")
+      COMPREPLY=($(compgen -W 'bar baz foo' -- "${'$'}{word}"))
+      ;;"""
       )
   }
 }

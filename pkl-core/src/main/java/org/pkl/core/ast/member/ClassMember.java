@@ -54,21 +54,31 @@ public abstract class ClassMember extends Member {
     return annotations;
   }
 
-  /**
-   * Return all annotations starting from the declaring class and traversing up the class hierarchy
-   */
-  public final List<VmTyped> getAllAnnotations() {
-    assert name != null;
-    var allAnnotations = new ArrayList<>(annotations);
-    var clazz = getDeclaringClass().getSuperclass();
-    while (clazz != null) {
-      var prop = clazz.getProperty(name);
-      if (prop != null) {
-        allAnnotations.addAll(prop.getAnnotations());
+  public List<VmTyped> getAllAnnotations(boolean ascending) {
+    var annotations = new ArrayList<VmTyped>();
+
+    if (ascending) {
+      for (var clazz = getDeclaringClass(); clazz != null; clazz = clazz.getSuperclass()) {
+        var p = clazz.getDeclaredProperty(getName());
+        if (p != null) {
+          annotations.addAll(p.getAnnotations());
+        }
       }
-      clazz = clazz.getSuperclass();
+    } else {
+      doGetAllAnnotationsDescending(getDeclaringClass(), annotations);
     }
-    return allAnnotations;
+
+    return annotations;
+  }
+
+  private void doGetAllAnnotationsDescending(VmClass clazz, List<VmTyped> annotations) {
+    if (clazz.getSuperclass() != null) {
+      doGetAllAnnotationsDescending(clazz.getSuperclass(), annotations);
+    }
+    var p = clazz.getDeclaredProperty(getName());
+    if (p != null) {
+      annotations.addAll(p.getAnnotations());
+    }
   }
 
   /** Returns the prototype of the class that declares this member. */

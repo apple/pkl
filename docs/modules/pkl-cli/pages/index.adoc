@@ -1157,9 +1157,16 @@ Like with Pkl's own CLI, <<command-shell-completion, shell completions>> can be 
 ./my-tool.pkl shell-completion zsh
 ----
 
-==== Defining Completion Candidates
+==== Customizing Completion Candidates
 
-TODO
+`@Flag` and `@Argument` annotations may specify the `completionCandidates` to improve generated shell completions.
+
+Valid values include:
+
+* A `Listing<String>` of literal string values to offer for completion.
+* The literal string `"path"`, which offers local file paths for completion.
+
+Options with a string literal union type implicitly offer the members of the union as completion candidates.
 
 === Flag name ambiguities
 
