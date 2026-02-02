@@ -26,7 +26,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: check
       shell: bash
@@ -59,7 +59,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: check
       shell: bash
@@ -90,7 +90,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: bench:jmh
       shell: bash
@@ -109,7 +109,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
       shell: bash
@@ -141,7 +141,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -183,7 +183,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: gradle buildNative
       shell: bash
@@ -221,7 +221,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
@@ -264,7 +264,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: gradle buildNative
       shell: bash
@@ -302,7 +302,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
@@ -342,7 +342,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: Install musl and zlib
       run: |
@@ -452,7 +452,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: gradle buildNative
       shell: bash
@@ -491,7 +491,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: gradle buildNative
       shell: bash
@@ -529,7 +529,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
@@ -572,7 +572,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: gradle buildNative
       shell: bash
@@ -610,7 +610,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: aarch64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
@@ -650,7 +650,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: Install musl and zlib
       run: |
@@ -760,7 +760,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - name: gradle buildNative
       shell: bash
@@ -815,7 +815,7 @@ jobs:
         java-version: '21'
         distribution: temurin
         architecture: x64
-    - uses: gradle/actions/setup-gradle@4d9f0ba0025fe599b4ebab900eb7f3a1d93ef4c2 # v5
+    - uses: gradle/actions/setup-gradle@f29f5a9d7b09a7c6b29859002d29d24e1674c884 # v5
       with: {}
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
