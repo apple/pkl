@@ -154,7 +154,7 @@ data class CliBaseOptions(
   val traceMode: TraceMode? = null,
 
   /** Whether power assertions are enabled. */
-  val powerAssertions: Boolean = false,
+  val powerAssertionsEnabled: Boolean = false,
 ) {
 
   companion object {

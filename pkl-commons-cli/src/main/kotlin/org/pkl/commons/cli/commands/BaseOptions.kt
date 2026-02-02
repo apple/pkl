@@ -316,7 +316,7 @@ class BaseOptions : OptionGroup() {
     modules: List<URI>,
     projectOptions: ProjectOptions? = null,
     testMode: Boolean = false,
-    powerAssertions: Boolean = false,
+    powerAssertionsEnabled: Boolean = false,
   ): CliBaseOptions {
     return CliBaseOptions(
       sourceModules = modules,
@@ -344,7 +344,7 @@ class BaseOptions : OptionGroup() {
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
       traceMode = traceMode,
-      powerAssertions = powerAssertions,
+      powerAssertionsEnabled = powerAssertionsEnabled,
     )
   }
 }

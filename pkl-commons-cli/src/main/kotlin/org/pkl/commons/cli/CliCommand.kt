@@ -102,7 +102,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       cliOptions.timeout,
       stackFrameTransformer,
       envVars,
-      cliOptions.powerAssertions,
+      cliOptions.powerAssertionsEnabled,
     )
   }
 
@@ -309,6 +309,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)
       .setTraceMode(traceMode)
-      .setPowerAssertions(cliOptions.powerAssertions)
+      .setPowerAssertionsEnabled(cliOptions.powerAssertionsEnabled)
   }
 }

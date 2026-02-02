@@ -471,13 +471,13 @@ public final class EvaluatorBuilder {
   }
 
   /** Sets whether power assertions are enabled. */
-  public EvaluatorBuilder setPowerAssertions(boolean powerAssertions) {
+  public EvaluatorBuilder setPowerAssertionsEnabled(boolean powerAssertions) {
     this.powerAssertions = powerAssertions;
     return this;
   }
 
   /** Returns whether power assertions are enabled. */
-  public boolean getPowerAssertions() {
+  public boolean getPowerAssertionsEnabled() {
     return powerAssertions;
   }
 

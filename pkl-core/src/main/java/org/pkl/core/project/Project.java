@@ -93,7 +93,7 @@ public final class Project {
             .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
-            .setPowerAssertions(powerAssertions)
+            .setPowerAssertionsEnabled(powerAssertions)
             .build()) {
       return load(evaluator, ModuleSource.path(path));
     }

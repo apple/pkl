@@ -28,7 +28,7 @@ import org.pkl.core.ModuleSource.*
 
 class EvaluateTestsTest {
 
-  private val evaluator = EvaluatorBuilder.preconfigured().setPowerAssertions(true).build()
+  private val evaluator = EvaluatorBuilder.preconfigured().setPowerAssertionsEnabled(true).build()
 
   @Test
   fun `test successful module`() {

@@ -74,7 +74,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
   private val testMode: Boolean by
     option(names = arrayOf("--test-mode"), help = "Internal test mode", hidden = true).flag()
 
-  private val powerAssertions: Boolean by
+  private val powerAssertionsEnabled: Boolean by
     option(
         names = arrayOf("--power-assertions"),
         help = "Enable power assertions for detailed assertion failure messages.",
@@ -89,7 +89,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
             modules,
             projectOptions,
             testMode = testMode,
-            powerAssertions = powerAssertions,
+            powerAssertionsEnabled = powerAssertionsEnabled,
           ),
         outputPath = outputPath,
         outputFormat = baseOptions.format,

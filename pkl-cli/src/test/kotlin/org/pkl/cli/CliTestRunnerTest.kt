@@ -56,7 +56,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -98,7 +98,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -145,7 +145,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -192,7 +192,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -253,7 +253,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -304,7 +304,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions(junitDir = tempDir)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
@@ -354,7 +354,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions(junitDir = tempDir)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
@@ -509,7 +509,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input1.toUri(), input2.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions(junitDir = tempDir, junitAggregateReports = true)
     val runner = CliTestRunner(opts, testOpts, noopWriter, noopWriter)
@@ -641,7 +641,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -685,7 +685,7 @@ class CliTestRunnerTest {
       CliBaseOptions(
         sourceModules = listOf(input.toUri()),
         settings = URI("pkl:settings"),
-        powerAssertions = true,
+        powerAssertionsEnabled = true,
       )
     val testOpts = CliTestOptions()
     val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)
@@ -729,7 +729,7 @@ class CliTestRunnerTest {
         CliBaseOptions(
           sourceModules = listOf(input.toUri()),
           settings = URI("pkl:settings"),
-          powerAssertions = true,
+          powerAssertionsEnabled = true,
         )
       val testOpts = CliTestOptions()
       val runner = CliTestRunner(opts, testOpts, consoleWriter = out, errWriter = err)

@@ -45,7 +45,7 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
 
   private val testOptions by TestOptions()
 
-  private val powerAssertions: Boolean by
+  private val powerAssertionsEnabled: Boolean by
     option(
         names = arrayOf("--power-assertions"),
         help = "Enable power assertions for detailed assertion failure messages.",
@@ -55,7 +55,11 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
   override fun run() {
     CliTestRunner(
         options =
-          baseOptions.baseOptions(modules, projectOptions, powerAssertions = powerAssertions),
+          baseOptions.baseOptions(
+            modules,
+            projectOptions,
+            powerAssertionsEnabled = powerAssertionsEnabled,
+          ),
         testOptions = testOptions.cliTestOptions,
       )
       .run()

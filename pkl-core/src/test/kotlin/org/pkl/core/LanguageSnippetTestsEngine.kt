@@ -178,7 +178,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
           .addCertificates(FileTestUtils.selfSignedCertificate)
           .buildLazily()
       )
-      .setPowerAssertions(true)
+      .setPowerAssertionsEnabled(true)
   }
 
   override val testClass: KClass<*> = LanguageSnippetTests::class
