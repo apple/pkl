@@ -82,7 +82,7 @@ public final class Project {
       @Nullable java.time.Duration timeout,
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars,
-      boolean powerAssertions) {
+      boolean powerAssertionsEnabled) {
     try (var evaluator =
         EvaluatorBuilder.unconfigured()
             .setSecurityManager(securityManager)
@@ -93,7 +93,7 @@ public final class Project {
             .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
-            .setPowerAssertionsEnabled(powerAssertions)
+            .setPowerAssertionsEnabled(powerAssertionsEnabled)
             .build()) {
       return load(evaluator, ModuleSource.path(path));
     }

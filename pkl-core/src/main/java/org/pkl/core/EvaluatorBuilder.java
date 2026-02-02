@@ -70,7 +70,7 @@ public final class EvaluatorBuilder {
 
   private TraceMode traceMode = TraceMode.COMPACT;
 
-  private boolean powerAssertions = false;
+  private boolean powerAssertionsEnabled = false;
 
   private EvaluatorBuilder() {}
 
@@ -472,13 +472,13 @@ public final class EvaluatorBuilder {
 
   /** Sets whether power assertions are enabled. */
   public EvaluatorBuilder setPowerAssertionsEnabled(boolean powerAssertions) {
-    this.powerAssertions = powerAssertions;
+    this.powerAssertionsEnabled = powerAssertions;
     return this;
   }
 
   /** Returns whether power assertions are enabled. */
   public boolean getPowerAssertionsEnabled() {
-    return powerAssertions;
+    return powerAssertionsEnabled;
   }
 
   /**
@@ -592,6 +592,6 @@ public final class EvaluatorBuilder {
         dependencies,
         outputFormat,
         traceMode,
-        powerAssertions);
+        powerAssertionsEnabled);
   }
 }
