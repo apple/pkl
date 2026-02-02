@@ -38,7 +38,8 @@ public final class VmContext {
   private final VmValueTrackerFactory valueTrackerFactory;
 
   public VmContext(VmLanguage vmLanguage, Env env) {
-    this.valueTrackerFactory = new VmValueTrackerFactory(env.lookup(Instrumenter.class));
+    this.valueTrackerFactory =
+        new VmValueTrackerFactory(env.lookup(Instrumenter.class), vmLanguage);
   }
 
   @LateInit private Holder holder;
@@ -162,7 +163,7 @@ public final class VmContext {
     return holder.traceMode;
   }
 
-  public boolean getPowerAssertions() {
+  public boolean getPowerAssertionsEnabled() {
     return holder.powerAssertions;
   }
 

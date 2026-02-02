@@ -79,7 +79,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
         names = arrayOf("--power-assertions"),
         help = "Enable power assertions for detailed assertion failure messages.",
       )
-      .flag()
+      .flag("--no-power-assertions", default = true, defaultForHelp = "enabled")
 
   override fun run() {
     val options =

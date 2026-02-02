@@ -71,7 +71,7 @@ public class PowerAssertions {
    * --no-power-assertions) or via EvaluatorBuilder.setPowerAssertions().
    */
   public static boolean isEnabled() {
-    return VmContext.get(null).getPowerAssertions();
+    return VmContext.get(null).getPowerAssertionsEnabled();
   }
 
   private static final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(100);

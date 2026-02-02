@@ -455,13 +455,13 @@ output {
 ====
 
 [[power-assertions-eval]]
-.--power-assertions
+.--power-assertions, --no-power-assertions
 [%collapsible]
 ====
-Default: disabled +
-Enable power assertions for detailed assertion failure messages.
+Default: enabled +
+Enable or disable power assertions for detailed assertion failure messages.
 When enabled, type constraint failures will show intermediate values in the assertion expression.
-This option has a performance impact when constraint failures occur.
+Use `--no-power-assertions` to disable this feature if you prefer simpler output or better performance.
 ====
 
 This command also takes <<common-options, common options>>.

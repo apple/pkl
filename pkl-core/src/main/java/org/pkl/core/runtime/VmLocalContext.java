@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,15 @@ package org.pkl.core.runtime;
 public class VmLocalContext {
   private boolean shouldEagerTypecheck = false;
 
+  /** Whether we are currently inside a type test ({@code is} check). */
+  private boolean inTypeTest = false;
+
+  /**
+   * Number of active {@link VmValueTracker} instances. Used to determine if instrumentation is
+   * already active.
+   */
+  private int activeTrackerDepth = 0;
+
   public VmLocalContext() {}
 
   public void shouldEagerTypecheck(boolean shouldEagerTypecheck) {
@@ -27,5 +36,25 @@ public class VmLocalContext {
 
   public boolean shouldEagerTypecheck() {
     return this.shouldEagerTypecheck;
+  }
+
+  public void setInTypeTest(boolean inTypeTest) {
+    this.inTypeTest = inTypeTest;
+  }
+
+  public boolean isInTypeTest() {
+    return inTypeTest;
+  }
+
+  public void enterTracker() {
+    activeTrackerDepth++;
+  }
+
+  public void exitTracker() {
+    activeTrackerDepth--;
+  }
+
+  public boolean hasActiveTracker() {
+    return activeTrackerDepth > 0;
   }
 }
