@@ -38,7 +38,8 @@ public final class VmContext {
   private final VmValueTrackerFactory valueTrackerFactory;
 
   public VmContext(VmLanguage vmLanguage, Env env) {
-    this.valueTrackerFactory = new VmValueTrackerFactory(env.lookup(Instrumenter.class));
+    this.valueTrackerFactory =
+        new VmValueTrackerFactory(env.lookup(Instrumenter.class), vmLanguage);
   }
 
   @LateInit private Holder holder;
@@ -59,6 +60,7 @@ public final class VmContext {
     private final @Nullable PackageResolver packageResolver;
     private final @Nullable ProjectDependenciesManager projectDependenciesManager;
     private final TraceMode traceMode;
+    private final boolean powerAssertions;
 
     public Holder(
         StackFrameTransformer frameTransformer,
@@ -73,7 +75,8 @@ public final class VmContext {
         @Nullable String outputFormat,
         @Nullable PackageResolver packageResolver,
         @Nullable ProjectDependenciesManager projectDependenciesManager,
-        TraceMode traceMode) {
+        TraceMode traceMode,
+        boolean powerAssertions) {
 
       this.frameTransformer = frameTransformer;
       this.securityManager = securityManager;
@@ -95,6 +98,7 @@ public final class VmContext {
       this.packageResolver = packageResolver;
       this.projectDependenciesManager = projectDependenciesManager;
       this.traceMode = traceMode;
+      this.powerAssertions = powerAssertions;
     }
   }
 
@@ -157,6 +161,10 @@ public final class VmContext {
 
   public TraceMode getTraceMode() {
     return holder.traceMode;
+  }
+
+  public boolean getPowerAssertionsEnabled() {
+    return holder.powerAssertions;
   }
 
   public VmValueTrackerFactory getValueTrackerFactory() {

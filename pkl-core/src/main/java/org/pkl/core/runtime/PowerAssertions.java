@@ -66,6 +66,14 @@ import org.pkl.parser.syntax.StringPart.StringInterpolation;
 public class PowerAssertions {
   private PowerAssertions() {}
 
+  /**
+   * Power assertions can be enabled/disabled via CLI flags (--power-assertions /
+   * --no-power-assertions) or via EvaluatorBuilder.setPowerAssertions().
+   */
+  public static boolean isEnabled() {
+    return VmContext.get(null).getPowerAssertionsEnabled();
+  }
+
   private static final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(100);
   private static final Parser parser = new Parser();
 

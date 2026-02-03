@@ -32,10 +32,13 @@ import org.pkl.core.util.Nullable;
 public final class VmValueTracker implements AutoCloseable {
 
   private final EventBinding<ExecutionEventNodeFactory> binding;
+  private final VmLocalContext localContext;
 
   private final Map<Node, List<Object>> values = new IdentityHashMap<>();
 
-  public VmValueTracker(Instrumenter instrumenter) {
+  public VmValueTracker(Instrumenter instrumenter, VmLocalContext localContext) {
+    this.localContext = localContext;
+    localContext.enterTracker();
     binding =
         instrumenter.attachExecutionEventFactory(
             SourceSectionFilter.newBuilder().tagIs(PklTags.Expression.class).build(),
@@ -61,6 +64,7 @@ public final class VmValueTracker implements AutoCloseable {
 
   @Override
   public void close() {
+    localContext.exitTracker();
     binding.dispose();
   }
 }

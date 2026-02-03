@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,8 @@ import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import java.net.URI
 import org.pkl.cli.CliTestRunner
 import org.pkl.commons.cli.commands.BaseCommand
@@ -43,9 +45,21 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
 
   private val testOptions by TestOptions()
 
+  private val powerAssertionsEnabled: Boolean by
+    option(
+        names = arrayOf("--power-assertions"),
+        help = "Enable power assertions for detailed assertion failure messages.",
+      )
+      .flag("--no-power-assertions", default = true, defaultForHelp = "enabled")
+
   override fun run() {
     CliTestRunner(
-        options = baseOptions.baseOptions(modules, projectOptions),
+        options =
+          baseOptions.baseOptions(
+            modules,
+            projectOptions,
+            powerAssertionsEnabled = powerAssertionsEnabled,
+          ),
         testOptions = testOptions.cliTestOptions,
       )
       .run()

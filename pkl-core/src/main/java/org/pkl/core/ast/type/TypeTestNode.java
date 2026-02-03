@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "is")
@@ -55,11 +56,16 @@ public final class TypeTestNode extends ExpressionNode {
     // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
     // https://github.com/apple/pkl/issues/639
     Object value = valueNode.executeGeneric(frame);
+    var localContext = VmLanguage.get(this).localContext.get();
+    boolean wasInTypeTest = localContext.isInTypeTest();
+    localContext.setInTypeTest(true);
     try {
       typeNode.executeEagerly(frame, value);
       return true;
     } catch (VmTypeMismatchException e) {
       return false;
+    } finally {
+      localContext.setInTypeTest(wasInTypeTest);
     }
   }
 }

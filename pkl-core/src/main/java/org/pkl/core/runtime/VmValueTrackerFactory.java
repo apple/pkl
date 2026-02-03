@@ -21,13 +21,15 @@ import com.oracle.truffle.api.instrumentation.Instrumenter;
 public final class VmValueTrackerFactory {
 
   private final Instrumenter instrumenter;
+  private final VmLanguage language;
 
-  public VmValueTrackerFactory(Instrumenter instrumenter) {
+  public VmValueTrackerFactory(Instrumenter instrumenter, VmLanguage language) {
     this.instrumenter = instrumenter;
+    this.language = language;
   }
 
   @TruffleBoundary
   public VmValueTracker create() {
-    return new VmValueTracker(instrumenter);
+    return new VmValueTracker(instrumenter, language.localContext.get());
   }
 }

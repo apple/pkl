@@ -41,6 +41,7 @@ import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
+import org.pkl.core.util.Nullable;
 
 /** Runs test results examples and facts. */
 public final class TestRunner {
@@ -112,14 +113,20 @@ public final class TestRunner {
                 try {
                   var factValue = VmUtils.readMember(listing, idx);
                   if (factValue == Boolean.FALSE) {
-                    try (var valueTracker = valueTrackerFactory.create()) {
-                      listing.cachedValues.clear();
-                      VmUtils.readMember(listing, idx);
+                    if (PowerAssertions.isEnabled()) {
+                      try (var valueTracker = valueTrackerFactory.create()) {
+                        listing.cachedValues.clear();
+                        VmUtils.readMember(listing, idx);
+                        var failure =
+                            factFailure(
+                                member.getSourceSection(),
+                                getDisplayUri(member),
+                                valueTracker.values());
+                        resultBuilder.addFailure(failure);
+                      }
+                    } else {
                       var failure =
-                          factFailure(
-                              member.getSourceSection(),
-                              getDisplayUri(member),
-                              valueTracker.values());
+                          factFailure(member.getSourceSection(), getDisplayUri(member), null);
                       resultBuilder.addFailure(failure);
                     }
                   } else {
@@ -408,17 +415,25 @@ public final class TestRunner {
   }
 
   private Failure factFailure(
-      SourceSection sourceSection, String location, Map<Node, List<Object>> trackedValues) {
+      SourceSection sourceSection,
+      String location,
+      @Nullable Map<Node, List<Object>> trackedValues) {
     var sb = new AnsiStringBuilder(useColor);
-    PowerAssertions.render(
-        sb,
-        "",
-        sourceSection,
-        trackedValues,
-        (it) -> {
-          it.append(" ");
-          appendLocation(it, location);
-        });
+    if (trackedValues != null) {
+      PowerAssertions.render(
+          sb,
+          "",
+          sourceSection,
+          trackedValues,
+          (it) -> {
+            it.append(" ");
+            appendLocation(it, location);
+          });
+    } else {
+      sb.append(sourceSection.getCharacters());
+      sb.append(" ");
+      appendLocation(sb, location);
+    }
     return new Failure("Fact Failure", sb.toString());
   }
 

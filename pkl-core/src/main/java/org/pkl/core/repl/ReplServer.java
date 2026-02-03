@@ -122,7 +122,8 @@ public class ReplServer implements AutoCloseable {
                       outputFormat,
                       packageResolver,
                       projectDependenciesManager,
-                      traceMode));
+                      traceMode,
+                      true));
             });
     language = languageRef.get();
   }

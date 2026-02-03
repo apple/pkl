@@ -29,6 +29,7 @@ import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmUtils;
 
 @NodeChild(value = "bodyNode", type = ExpressionNode.class)
@@ -54,13 +55,26 @@ public abstract class TypeConstraintNode extends PklNode {
 
     if (!result) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      try (var valueTracker = VmContext.get(this).getValueTrackerFactory().create()) {
-        getBodyNode().executeGeneric(frame);
+      var vmContext = VmContext.get(this);
+      var localContext = VmLanguage.get(this).localContext.get();
+      // Use power assertions if enabled and not in type test or already instrumenting.
+      // This prevents `is` checks from triggering instrumentation, but allows them to
+      // participate if instrumentation is already active.
+      var usePowerAssertions =
+          vmContext.getPowerAssertionsEnabled()
+              && (!localContext.isInTypeTest() || localContext.hasActiveTracker());
+      if (usePowerAssertions) {
+        try (var valueTracker = vmContext.getValueTrackerFactory().create()) {
+          getBodyNode().executeGeneric(frame);
+          throw new VmTypeMismatchException.Constraint(
+              sourceSection,
+              frame.getAuxiliarySlot(customThisSlot),
+              sourceSection,
+              valueTracker.values());
+        }
+      } else {
         throw new VmTypeMismatchException.Constraint(
-            sourceSection,
-            frame.getAuxiliarySlot(customThisSlot),
-            sourceSection,
-            valueTracker.values());
+            sourceSection, frame.getAuxiliarySlot(customThisSlot), sourceSection, null);
       }
     }
   }
@@ -76,10 +90,26 @@ public abstract class TypeConstraintNode extends PklNode {
     var result = applyNode.executeBoolean(function, value);
     if (!result) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      try (var valueTracker = VmContext.get(this).getValueTrackerFactory().create()) {
-        applyNode.executeBoolean(function, value);
+      var vmContext = VmContext.get(this);
+      var localContext = VmLanguage.get(this).localContext.get();
+      // Use power assertions if enabled and not in type test or already instrumenting.
+      // This prevents `is` checks from triggering instrumentation, but allows them to
+      // participate if instrumentation is already active.
+      var usePowerAssertions =
+          vmContext.getPowerAssertionsEnabled()
+              && (!localContext.isInTypeTest() || localContext.hasActiveTracker());
+      if (usePowerAssertions) {
+        try (var valueTracker = vmContext.getValueTrackerFactory().create()) {
+          applyNode.executeBoolean(function, value);
+          throw new VmTypeMismatchException.Constraint(
+              sourceSection,
+              value,
+              function.getRootNode().getSourceSection(),
+              valueTracker.values());
+        }
+      } else {
         throw new VmTypeMismatchException.Constraint(
-            sourceSection, value, function.getRootNode().getSourceSection(), valueTracker.values());
+            sourceSection, value, function.getRootNode().getSourceSection(), null);
       }
     }
   }
