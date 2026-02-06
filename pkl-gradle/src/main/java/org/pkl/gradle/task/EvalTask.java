@@ -23,7 +23,6 @@ import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.file.FileCollection;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;
-import org.gradle.api.provider.Provider;
 import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.Internal;
@@ -56,19 +55,16 @@ public abstract class EvalTask extends ModulesTask {
   @Optional
   public abstract Property<String> getExpression();
 
-  private final Provider<CliEvaluator> cliEvaluator =
-      getProviders()
-          .provider(
-              () ->
-                  new CliEvaluator(
-                      new CliEvaluatorOptions(
-                          getCliBaseOptions(),
-                          getOutputFile().get().getAsFile().getAbsolutePath(),
-                          getOutputFormat().get(),
-                          getModuleOutputSeparator().get(),
-                          mapAndGetOrNull(
-                              getMultipleFileOutputDir(), it -> it.getAsFile().getAbsolutePath()),
-                          getExpression().getOrNull())));
+  private CliEvaluator createCliEvaluator() {
+    return new CliEvaluator(
+        new CliEvaluatorOptions(
+            getCliBaseOptions(),
+            getOutputFile().get().getAsFile().getAbsolutePath(),
+            getOutputFormat().get(),
+            getModuleOutputSeparator().get(),
+            mapAndGetOrNull(getMultipleFileOutputDir(), it -> it.getAsFile().getAbsolutePath()),
+            getExpression().getOrNull()));
+  }
 
   @SuppressWarnings("unused")
   @OutputFiles
@@ -76,7 +72,7 @@ public abstract class EvalTask extends ModulesTask {
   public FileCollection getEffectiveOutputFiles() {
     return getObjects()
         .fileCollection()
-        .from(cliEvaluator.map(e -> nullToEmpty(e.getOutputFiles())));
+        .from(getProviders().provider(() -> nullToEmpty(createCliEvaluator().getOutputFiles())));
   }
 
   @OutputDirectories
@@ -84,7 +80,9 @@ public abstract class EvalTask extends ModulesTask {
   public FileCollection getEffectiveOutputDirs() {
     return getObjects()
         .fileCollection()
-        .from(cliEvaluator.map(e -> nullToEmpty(e.getOutputDirectories())));
+        .from(
+            getProviders()
+                .provider(() -> nullToEmpty(createCliEvaluator().getOutputDirectories())));
   }
 
   private static <T> Set<T> nullToEmpty(@Nullable Set<T> set) {
@@ -95,6 +93,6 @@ public abstract class EvalTask extends ModulesTask {
   protected void doRunTask() {
     //noinspection ResultOfMethodCallIgnored
     getOutputs().getPreviousOutputFiles().forEach(File::delete);
-    cliEvaluator.get().run();
+    createCliEvaluator().run();
   }
 }

@@ -35,7 +35,7 @@ public abstract class KotlinCodeGenTask extends CodeGenTask {
     new CliKotlinCodeGenerator(
             new CliKotlinCodeGeneratorOptions(
                 getCliBaseOptions(),
-                getProject().file(getOutputDir()).toPath(),
+                getOutputDir().get().getAsFile().toPath(),
                 getIndent().get(),
                 getGenerateKdoc().get(),
                 getGenerateSpringBootConfig().get(),

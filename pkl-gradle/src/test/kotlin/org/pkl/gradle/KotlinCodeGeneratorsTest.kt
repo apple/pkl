@@ -85,6 +85,17 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
   }
 
   @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile()
+    writePklFile()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("configClasses")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
+  }
+
+  @Test
   fun `no source modules`() {
     writeFile(
       "build.gradle",

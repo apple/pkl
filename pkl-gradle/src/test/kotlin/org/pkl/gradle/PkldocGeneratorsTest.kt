@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,7 +56,7 @@ class PkldocGeneratorsTest : AbstractTest() {
       authors { "publisher@apple.com" }
       sourceCode = "sources.apple.com/"
       issueTracker = "issues.apple.com"
-    """
+      """
         .trimIndent(),
     )
     writeFile(
@@ -75,7 +75,7 @@ class PkldocGeneratorsTest : AbstractTest() {
       }
 
       other = 42
-    """
+      """
         .trimIndent(),
     )
 
@@ -135,6 +135,54 @@ class PkldocGeneratorsTest : AbstractTest() {
   }
 
   @Test
+  fun `is configuration cache compatible`() {
+    writeFile(
+      "build.gradle",
+      """
+      plugins {
+        id "org.pkl-lang"
+      }
+
+      pkl {
+        pkldocGenerators {
+          pkldoc {
+            sourceModules = ["doc-package-info.pkl", "mod.pkl"]
+            outputDir = file("build/pkldoc")
+            settingsModule = "pkl:settings"
+          }
+        }
+      }
+    """,
+    )
+    writeFile(
+      "doc-package-info.pkl",
+      """
+      /// Overview documentation for the test package.
+      amends "pkl:DocPackageInfo"
+      name = "testpkg"
+      version = "1.0.0"
+      importUri = "https://example.com/"
+      authors { "test@example.com" }
+      sourceCode = "https://example.com/source"
+      issueTracker = "https://example.com/issues"
+    """,
+    )
+    writeFile(
+      "mod.pkl",
+      """
+      module testpkg.mod
+
+      greeting: String = "hello"
+    """,
+    )
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("pkldoc")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
+  }
+
+  @Test
   fun `no source modules`() {
     writeFile(
       "build.gradle",
@@ -149,7 +197,7 @@ class PkldocGeneratorsTest : AbstractTest() {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 

@@ -16,8 +16,6 @@
 package org.pkl.gradle;
 
 import java.io.File;
-import java.nio.file.Files;
-import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Optional;
@@ -38,7 +36,6 @@ import org.gradle.plugins.ide.idea.model.IdeaModel;
 import org.gradle.util.GradleVersion;
 import org.jspecify.annotations.Nullable;
 import org.pkl.cli.CliEvaluatorOptions;
-import org.pkl.core.ImportGraph;
 import org.pkl.core.OutputFormat;
 import org.pkl.core.util.IoUtils;
 import org.pkl.gradle.spec.AnalyzeImportsSpec;
@@ -70,45 +67,38 @@ public class PklPlugin implements Plugin<Project> {
 
   private static final String MIN_GRADLE_VERSION = "8.2";
 
-  private @Nullable Project __project;
-
   @Override
   public void apply(Project project) {
-    __project = project;
 
     if (GradleVersion.current().compareTo(GradleVersion.version(MIN_GRADLE_VERSION)) < 0) {
       throw new GradleException(
           String.format("Plugin `org.pkl` requires Gradle %s or higher.", MIN_GRADLE_VERSION));
     }
 
-    var extension = project().getExtensions().create("pkl", PklExtension.class);
-    configureExtension(extension);
+    var extension = project.getExtensions().create("pkl", PklExtension.class);
+    configureExtension(project, extension);
   }
 
-  private Project project() {
-    assert __project != null;
-    return __project;
+  private void configureExtension(Project project, PklExtension extension) {
+    configureEvalTasks(project, extension.getEvaluators());
+    configureJavaCodeGenTasks(project, extension.getJavaCodeGenerators());
+    configureKotlinCodeGenTasks(project, extension.getKotlinCodeGenerators());
+    configurePkldocTasks(project, extension.getPkldocGenerators());
+    configureTestTasks(project, extension.getTests());
+    configureProjectPackageTasks(project, extension.getProject().getPackagers());
+    configureProjectResolveTasks(project, extension.getProject().getResolvers());
+    configureAnalyzeImportsTasks(project, extension.getAnalyzers().getImports());
   }
 
-  private void configureExtension(PklExtension extension) {
-    configureEvalTasks(extension.getEvaluators());
-    configureJavaCodeGenTasks(extension.getJavaCodeGenerators());
-    configureKotlinCodeGenTasks(extension.getKotlinCodeGenerators());
-    configurePkldocTasks(extension.getPkldocGenerators());
-    configureTestTasks(extension.getTests());
-    configureProjectPackageTasks(extension.getProject().getPackagers());
-    configureProjectResolveTasks(extension.getProject().getResolvers());
-    configureAnalyzeImportsTasks(extension.getAnalyzers().getImports());
-  }
-
-  private void configureProjectPackageTasks(NamedDomainObjectContainer<ProjectPackageSpec> specs) {
+  private void configureProjectPackageTasks(
+      Project project, NamedDomainObjectContainer<ProjectPackageSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
+          configureBaseSpec(project, spec);
           spec.getOutputPath()
-              .convention(project().getLayout().getBuildDirectory().dir("generated/pkl/packages"));
+              .convention(project.getLayout().getBuildDirectory().dir("generated/pkl/packages"));
           spec.getOverwrite().convention(false);
-          var packageTask = createTask(ProjectPackageTask.class, spec);
+          var packageTask = createTask(project, ProjectPackageTask.class, spec);
           packageTask.configure(
               task -> {
                 task.getProjectDirectories().from(spec.getProjectDirectories());
@@ -117,12 +107,12 @@ public class PklPlugin implements Plugin<Project> {
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
               });
-          project()
+          project
               .getPluginManager()
               .withPlugin(
                   "base",
                   appliedPlugin ->
-                      project()
+                      project
                           .getTasks()
                           .named(
                               LifecycleBasePlugin.BUILD_TASK_NAME,
@@ -130,38 +120,40 @@ public class PklPlugin implements Plugin<Project> {
         });
   }
 
-  private void configureProjectResolveTasks(NamedDomainObjectContainer<ProjectResolveSpec> specs) {
+  private void configureProjectResolveTasks(
+      Project project, NamedDomainObjectContainer<ProjectResolveSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
-          var resolveTask = createTask(ProjectResolveTask.class, spec);
+          configureBaseSpec(project, spec);
+          var resolveTask = createTask(project, ProjectResolveTask.class, spec);
           resolveTask.configure(
               task -> task.getProjectDirectories().from(spec.getProjectDirectories()));
         });
   }
 
-  private void configureAnalyzeImportsTasks(NamedDomainObjectContainer<AnalyzeImportsSpec> specs) {
+  private void configureAnalyzeImportsTasks(
+      Project project, NamedDomainObjectContainer<AnalyzeImportsSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
+          configureBaseSpec(project, spec);
           spec.getOutputFormat().convention(OutputFormat.PCF.toString());
-          var analyzeImportsTask = createTask(AnalyzeImportsTask.class, spec);
+          var analyzeImportsTask = createTask(project, AnalyzeImportsTask.class, spec);
           analyzeImportsTask.configure(
               task -> {
                 task.getOutputFormat().set(spec.getOutputFormat());
                 task.getOutputFile().set(spec.getOutputFile());
-                configureModulesTask(task, spec, null);
+                configureModulesTask(project, task, spec, null);
               });
         });
   }
 
-  private void configureEvalTasks(NamedDomainObjectContainer<EvalSpec> specs) {
+  private void configureEvalTasks(Project project, NamedDomainObjectContainer<EvalSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
+          configureBaseSpec(project, spec);
           spec.getOutputFile()
               .convention(
-                  project()
+                  project
                       .getLayout()
                       .getProjectDirectory()
                       // %{moduleDir} is resolved relatively to the working directory,
@@ -174,7 +166,7 @@ public class PklPlugin implements Plugin<Project> {
           spec.getExpression()
               .convention(CliEvaluatorOptions.Companion.getDefaults().getExpression());
 
-          createModulesTask(EvalTask.class, spec)
+          createModulesTask(project, EvalTask.class, spec)
               .configure(
                   task -> {
                     task.getOutputFile().set(spec.getOutputFile());
@@ -186,11 +178,12 @@ public class PklPlugin implements Plugin<Project> {
         });
   }
 
-  private void configureJavaCodeGenTasks(NamedDomainObjectContainer<JavaCodeGenSpec> specs) {
+  private void configureJavaCodeGenTasks(
+      Project project, NamedDomainObjectContainer<JavaCodeGenSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
-          configureCodeGenSpec(spec);
+          configureBaseSpec(project, spec);
+          configureCodeGenSpec(project, spec);
 
           spec.getGenerateGetters().convention(false);
           spec.getGenerateJavadoc().convention(false);
@@ -198,14 +191,13 @@ public class PklPlugin implements Plugin<Project> {
           // constructor parameters annotations by setting this property to `null`.
           spec.getParamsAnnotation()
               .set(
-                  project()
-                      .provider(
-                          () ->
-                              spec.getGenerateSpringBootConfig().get()
-                                  ? null
-                                  : "org.pkl.config.java.mapper.Named"));
+                  project.provider(
+                      () ->
+                          spec.getGenerateSpringBootConfig().get()
+                              ? null
+                              : "org.pkl.config.java.mapper.Named"));
 
-          createModulesTask(JavaCodeGenTask.class, spec)
+          createModulesTask(project, JavaCodeGenTask.class, spec)
               .configure(
                   task -> {
                     configureCodeGenTask(task, spec);
@@ -216,26 +208,26 @@ public class PklPlugin implements Plugin<Project> {
                   });
         });
 
-    project()
-        .afterEvaluate(
-            prj ->
-                specs.all(
-                    spec -> {
-                      configureIdeaModule(spec);
-                      configureCodeGenSpecSourceDirectories(
-                          spec, "java", s -> Optional.of(s.getJava()));
-                    }));
+    project.afterEvaluate(
+        prj ->
+            specs.all(
+                spec -> {
+                  configureIdeaModule(prj, spec);
+                  configureCodeGenSpecSourceDirectories(
+                      prj, spec, "java", s -> Optional.of(s.getJava()));
+                }));
   }
 
-  private void configureKotlinCodeGenTasks(NamedDomainObjectContainer<KotlinCodeGenSpec> specs) {
+  private void configureKotlinCodeGenTasks(
+      Project project, NamedDomainObjectContainer<KotlinCodeGenSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
-          configureCodeGenSpec(spec);
+          configureBaseSpec(project, spec);
+          configureCodeGenSpec(project, spec);
 
           spec.getGenerateKdoc().convention(false);
 
-          createModulesTask(KotlinCodeGenTask.class, spec)
+          createModulesTask(project, KotlinCodeGenTask.class, spec)
               .configure(
                   task -> {
                     configureCodeGenTask(task, spec);
@@ -243,32 +235,31 @@ public class PklPlugin implements Plugin<Project> {
                   });
         });
 
-    project()
-        .afterEvaluate(
-            prj ->
-                specs.all(
-                    spec -> {
-                      configureIdeaModule(spec);
-                      configureCodeGenSpecSourceDirectories(
-                          spec, "kotlin", this::getKotlinSourceDirectorySet);
-                    }));
+    project.afterEvaluate(
+        prj ->
+            specs.all(
+                spec -> {
+                  configureIdeaModule(project, spec);
+                  configureCodeGenSpecSourceDirectories(
+                      project, spec, "kotlin", this::getKotlinSourceDirectorySet);
+                }));
   }
 
-  private void configurePkldocTasks(NamedDomainObjectContainer<PkldocSpec> specs) {
+  private void configurePkldocTasks(Project project, NamedDomainObjectContainer<PkldocSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
+          configureBaseSpec(project, spec);
 
           spec.getOutputDir()
               .convention(
-                  project()
+                  project
                       .getLayout()
                       .getBuildDirectory()
                       .map(it -> it.dir("pkldoc").dir(spec.getName())));
 
           spec.getNoSymlinks().convention(false);
 
-          createModulesTask(PkldocTask.class, spec)
+          createModulesTask(project, PkldocTask.class, spec)
               .configure(
                   task -> {
                     task.getOutputDir().set(spec.getOutputDir());
@@ -277,26 +268,26 @@ public class PklPlugin implements Plugin<Project> {
         });
   }
 
-  private void configureTestTasks(NamedDomainObjectContainer<TestSpec> specs) {
+  private void configureTestTasks(Project project, NamedDomainObjectContainer<TestSpec> specs) {
     specs.all(
         spec -> {
-          configureBaseSpec(spec);
+          configureBaseSpec(project, spec);
 
           spec.getOverwrite().convention(false);
 
-          var testTask = createModulesTask(TestTask.class, spec);
+          var testTask = createModulesTask(project, TestTask.class, spec);
           testTask.configure(
               task -> {
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
               });
 
-          project()
+          project
               .getPluginManager()
               .withPlugin(
                   "base",
                   appliedPlugin ->
-                      project()
+                      project
                           .getTasks()
                           .named(
                               LifecycleBasePlugin.CHECK_TASK_NAME,
@@ -304,7 +295,7 @@ public class PklPlugin implements Plugin<Project> {
         });
   }
 
-  private void configureBaseSpec(BasePklSpec spec) {
+  private void configureBaseSpec(Project project, BasePklSpec spec) {
     spec.getAllowedModules()
         .convention(
             List.of(
@@ -313,7 +304,7 @@ public class PklPlugin implements Plugin<Project> {
     spec.getAllowedResources()
         .convention(List.of("env:", "prop:", "file:", "modulepath:", "https:", "package:"));
 
-    spec.getEvalRootDir().convention(project().getRootProject().getLayout().getProjectDirectory());
+    spec.getEvalRootDir().convention(project.getRootProject().getLayout().getProjectDirectory());
 
     // Defaulting to OS env vars is bad for reproducibility and cachability.
     // Hence, this spec defaults to empty env vars, which is consistent with other Gradle tasks
@@ -330,22 +321,21 @@ public class PklPlugin implements Plugin<Project> {
     spec.getHttpNoProxy().convention(List.of());
   }
 
-  private void configureCodeGenSpec(CodeGenSpec spec) {
+  private void configureCodeGenSpec(Project project, CodeGenSpec spec) {
     spec.getOutputDir()
         .convention(
-            project()
+            project
                 .getLayout()
                 .getBuildDirectory()
                 .map(it -> it.dir("generated").dir("pkl").dir(spec.getName())));
 
     spec.getSourceSet()
         .convention(
-            project()
+            project
                 .getProviders()
                 .provider(
                     () -> {
-                      var sourceSets =
-                          project().getExtensions().findByType(SourceSetContainer.class);
+                      var sourceSets = project.getExtensions().findByType(SourceSetContainer.class);
                       if (sourceSets == null) {
                         return null;
                       }
@@ -360,10 +350,10 @@ public class PklPlugin implements Plugin<Project> {
 
     spec.getAddGeneratedAnnotation().convention(false);
 
-    configureCodeGenSpecModulePath(spec);
+    configureCodeGenSpecModulePath(project, spec);
   }
 
-  private void configureCodeGenSpecModulePath(CodeGenSpec spec) {
+  private void configureCodeGenSpecModulePath(Project project, CodeGenSpec spec) {
     // Set module path to all of the configured resources source directories and the compile
     // classpath to find Pkl modules that are classpath resources.
     // Compilation classpath should be correct (vs. runtime classpath) if the library author
@@ -379,7 +369,7 @@ public class PklPlugin implements Plugin<Project> {
     // Refer to configureCodeGenSpecSourceDirectories for logic which links the codegen task
     // to sourceSet.getResources().getSourceDirectories().
 
-    var modulePath = project().files();
+    var modulePath = project.files();
     modulePath
         .from(getResourceSourceDirectoriesExceptSpecOutput(spec))
         // This technically breaks the dependency on compile classpath builder tasks,
@@ -412,21 +402,26 @@ public class PklPlugin implements Plugin<Project> {
                                 .getFiles()));
   }
 
-  // Must be called from Project.afterEvaluate() only, because this method depends
-  // on user-provided configuration not accessible with lazy configuration.
   private void configureCodeGenSpecSourceDirectories(
+      Project project,
       CodeGenSpec spec,
       String languageName,
       Function<? super SourceSet, ? extends Optional<SourceDirectorySet>>
           extractSourceDirectorySet) {
-    var task = project().getTasks().named(spec.getName(), CodeGenTask.class);
-    var sourceSet = spec.getSourceSet().get();
+    var task = project.getTasks().named(spec.getName(), CodeGenTask.class);
+    var sourceSet = spec.getSourceSet().getOrNull();
+    if (sourceSet == null) {
+      throw new GradleException(
+          "Could not find a source set for code generator '"
+              + spec.getName()
+              + "'. Either apply a JVM plugin (e.g. 'java') or set the sourceSet property explicitly.");
+    }
     extractSourceDirectorySet
         .apply(sourceSet)
         .ifPresentOrElse(
             dirSet -> dirSet.srcDir(task.flatMap(t -> t.getOutputDir().dir(languageName))),
             () ->
-                project()
+                project
                     .getLogger()
                     .debug(
                         "Source directory set for language {} is not available, "
@@ -436,18 +431,23 @@ public class PklPlugin implements Plugin<Project> {
     sourceSet.getResources().srcDir(task.flatMap(t -> t.getOutputDir().dir("resources")));
   }
 
-  // Must be called from Project.afterEvaluate() only, because this method depends
-  // on user-provided configuration not accessible with lazy configuration.
-  private void configureIdeaModule(CodeGenSpec spec) {
-    project()
+  private void configureIdeaModule(Project project, CodeGenSpec spec) {
+    project
         .getPluginManager()
         .withPlugin(
             "idea",
             plugin -> {
-              var module = project().getExtensions().getByType(IdeaModel.class).getModule();
+              var module = project.getExtensions().getByType(IdeaModel.class).getModule();
               var outputDir = spec.getOutputDir().get().getAsFile();
               module.getGeneratedSourceDirs().add(outputDir);
-              if (spec.getSourceSet().get().getName().toLowerCase().contains("test")) {
+              var sourceSet = spec.getSourceSet().getOrNull();
+              if (sourceSet == null) {
+                throw new GradleException(
+                    "Could not find a source set for code generator '"
+                        + spec.getName()
+                        + "'. Either apply a JVM plugin (e.g. 'java') or set the sourceSet property explicitly.");
+              }
+              if (sourceSet.getName().toLowerCase().contains("test")) {
                 module.getTestSources().from(append(module.getTestSources().getFiles(), outputDir));
               } else {
                 module.setSourceDirs(append(module.getSourceDirs(), outputDir));
@@ -464,7 +464,9 @@ public class PklPlugin implements Plugin<Project> {
     task.getRenames().set(spec.getRenames());
   }
 
-  private <T extends BasePklTask, S extends BasePklSpec> void configureBaseTask(T task, S spec) {
+  private <T extends BasePklTask, S extends BasePklSpec> void configureBaseTask(
+      Project project, T task, S spec) {
+    task.getWorkingDir().set(project.getLayout().getProjectDirectory());
     task.getAllowedModules().set(spec.getAllowedModules());
     task.getAllowedResources().set(spec.getAllowedResources());
     task.getEnvironmentVariables().set(spec.getEnvironmentVariables());
@@ -482,30 +484,13 @@ public class PklPlugin implements Plugin<Project> {
     task.getHttpRewrites().set(spec.getHttpRewrites());
   }
 
-  private List<File> getTransitiveModules(AnalyzeImportsTask analyzeTask) {
-    var outputFile = analyzeTask.getOutputFile().get().getAsFile().toPath();
-    if (!analyzeTask.getOnlyIf().isSatisfiedBy(analyzeTask)) {
-      return Collections.emptyList();
-    }
-    try {
-      var contents = Files.readString(outputFile);
-      ImportGraph importGraph = ImportGraph.parseFromJson(contents);
-      var imports = importGraph.resolvedImports().values();
-      return imports.stream()
-          .filter((it) -> it.getScheme().equalsIgnoreCase("file"))
-          .map(File::new)
-          .toList();
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
-  }
-
   private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
+      Project project,
       T task,
       S spec,
       @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask,
       @Nullable Transformer<List<?>, List<?>> mapSourceModules) {
-    configureBaseTask(task, spec);
+    configureBaseTask(project, task, spec);
     if (mapSourceModules != null) {
       task.getSourceModules().set(spec.getSourceModules().map(mapSourceModules));
     } else {
@@ -518,28 +503,39 @@ public class PklPlugin implements Plugin<Project> {
       task.getTransitiveModules().set(spec.getTransitiveModules());
     } else if (analyzeImportsTask != null) {
       task.dependsOn(analyzeImportsTask);
-      task.getTransitiveModules().set(analyzeImportsTask.map(this::getTransitiveModules));
+      // Map the output file provider to the list of transitive files
+      // This avoids capturing the task reference directly, making it configuration-cache-safe
+      task.getTransitiveModules()
+          .set(
+              analyzeImportsTask
+                  .flatMap(AnalyzeImportsTask::getOutputFile)
+                  .map(PluginUtils::parseTransitiveFiles));
     }
   }
 
   private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(
-      T task, S spec, @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask) {
-    configureModulesTask(task, spec, analyzeImportsTask, null);
+      Project project,
+      T task,
+      S spec,
+      @Nullable TaskProvider<AnalyzeImportsTask> analyzeImportsTask) {
+    configureModulesTask(project, task, spec, analyzeImportsTask, null);
   }
 
-  private TaskProvider<AnalyzeImportsTask> createAnalyzeImportsTask(ModulesSpec spec) {
+  private TaskProvider<AnalyzeImportsTask> createAnalyzeImportsTask(
+      Project project, ModulesSpec spec) {
     var outputFile =
-        project()
+        project
             .getLayout()
             .getBuildDirectory()
             .file("pkl-gradle/imports/" + spec.getName() + ".json");
-    return project()
+    return project
         .getTasks()
         .register(
             spec.getName() + "GatherImports",
             AnalyzeImportsTask.class,
             task -> {
               configureModulesTask(
+                  project,
                   task,
                   spec,
                   null,
@@ -573,20 +569,21 @@ public class PklPlugin implements Plugin<Project> {
    * needing to manually provide transitive modules.
    */
   private <T extends ModulesTask> TaskProvider<T> createModulesTask(
-      Class<T> taskClass, ModulesSpec spec) {
-    var analyzeImportsTask = createAnalyzeImportsTask(spec);
-    return project()
+      Project project, Class<T> taskClass, ModulesSpec spec) {
+    var analyzeImportsTask = createAnalyzeImportsTask(project, spec);
+    return project
         .getTasks()
         .register(
             spec.getName(),
             taskClass,
-            task -> configureModulesTask(task, spec, analyzeImportsTask));
+            task -> configureModulesTask(project, task, spec, analyzeImportsTask));
   }
 
-  private <T extends BasePklTask> TaskProvider<T> createTask(Class<T> taskClass, BasePklSpec spec) {
-    return project()
+  private <T extends BasePklTask> TaskProvider<T> createTask(
+      Project project, Class<T> taskClass, BasePklSpec spec) {
+    return project
         .getTasks()
-        .register(spec.getName(), taskClass, task -> configureBaseTask(task, spec));
+        .register(spec.getName(), taskClass, task -> configureBaseTask(project, task, spec));
   }
 
   private <T> Set<T> append(Set<? extends T> set1, T element) {

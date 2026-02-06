@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,6 +85,28 @@ class JavaCodeGeneratorsTest : AbstractTest() {
   }
 
   @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile()
+    writePklFile()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("configClasses")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
+
+    val generatedModuleFile = testProjectDir.resolve("build/generated/java/foo/bar/Mod.java")
+    assertThat(generatedModuleFile).exists()
+    checkTextContains(
+      generatedModuleFile.readText(),
+      "package foo.bar;",
+      "public final class Mod {",
+      "public final @Nonnull Object other;",
+      "public static final class Person {",
+      "public final @Nonnull String name;",
+    )
+  }
+
+  @Test
   fun `no source modules`() {
     writeFile(
       "build.gradle",
@@ -105,6 +127,53 @@ class JavaCodeGeneratorsTest : AbstractTest() {
 
     val result = runTask("evalTest", true)
     assertThat(result.output).contains("No source modules specified.")
+  }
+
+  @Test
+  fun `source set configured after pkl block`() {
+    writeFile(
+      "build.gradle",
+      """
+      plugins {
+        id "java"
+        id "org.pkl-lang"
+      }
+
+      sourceSets {
+        integTest {}
+      }
+
+      repositories {
+        mavenCentral()
+      }
+
+      dependencies {
+        integTestImplementation "javax.inject:javax.inject:1"
+        integTestImplementation "com.google.code.findbugs:jsr305:3.0.2"
+      }
+
+      pkl {
+        javaCodeGenerators {
+          configClasses {
+            sourceModules = ["mod.pkl"]
+            outputDir = file("build/generated")
+            paramsAnnotation = "javax.inject.Named"
+            nonNullAnnotation = "javax.annotation.Nonnull"
+            settingsModule = "pkl:settings"
+            renames = ['org': 'foo.bar']
+          }
+        }
+      }
+
+      pkl.javaCodeGenerators.configClasses.sourceSet = sourceSets.integTest
+      """,
+    )
+    writePklFile()
+
+    runTask("compileIntegTestJava")
+
+    val classesDir = testProjectDir.resolve("build/classes/java/integTest")
+    assertThat(classesDir.resolve("foo/bar/Mod.class")).exists()
   }
 
   private fun writeBuildFile() {
