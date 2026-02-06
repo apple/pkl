@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,20 +47,11 @@ class PklFormatterFunc(@Transient private val configuration: Configuration) :
 
   private val formatterClass by lazy { classLoader.loadClass("org.pkl.formatter.Formatter") }
 
-  private val grammarVersionClass by lazy {
-    classLoader.loadClass("org.pkl.formatter.GrammarVersion")
-  }
-
-  private val grammarVersionLatestMethod by lazy { grammarVersionClass.getMethod("latest") }
-
-  private val formatMethod by lazy {
-    formatterClass.getMethod("format", String::class.java, grammarVersionClass)
-  }
+  private val formatMethod by lazy { formatterClass.getMethod("format", String::class.java) }
 
   private val formatterInstance by lazy { formatterClass.getConstructor().newInstance() }
 
   override fun apply(input: String): String {
-    val latestGrammarVersion = grammarVersionLatestMethod(null)
-    return formatMethod(formatterInstance, input, latestGrammarVersion) as String
+    return formatMethod(formatterInstance, input) as String
   }
 }

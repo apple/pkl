@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli
 
+import com.github.ajalt.clikt.core.CliktError
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -46,6 +47,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       proxyAddress?.let(IoUtils::setSystemProxy)
       doRun()
     } catch (e: PklException) {
+      if (e.cause is CliktError) throw e.cause!!
       throw CliException(e.message!!)
     } catch (e: CliException) {
       throw e

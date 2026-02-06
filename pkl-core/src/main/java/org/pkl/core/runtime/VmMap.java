@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,6 +50,14 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   public static VmMap create(ImMap<Object, Object> map, ImRrbt<Object> keyOrder) {
     if (map.isEmpty()) return EMPTY;
     return new VmMap(map, keyOrder);
+  }
+
+  @TruffleBoundary
+  public static VmMap create(Map<Object, Object> map) {
+    if (map.isEmpty()) return EMPTY;
+    return new VmMap(
+        PersistentHashMap.of(map.entrySet()),
+        RrbTree.emptyMutable().concat(map.keySet()).immutable());
   }
 
   @TruffleBoundary

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +27,16 @@ import org.pkl.core.Release
 
 private val theme = Theme { styles["markdown.code.span"] = TextStyle(bold = true) }
 
-fun <T : BaseCliktCommand<T>> T.installCommonOptions() {
+fun <T : BaseCliktCommand<T>> T.installCommonOptions(includeVersion: Boolean = true) {
   installMordantMarkdown()
 
-  versionOption(
-    Release.current().versionInfo,
-    names = setOf("-v", "--version"),
-    message = { if (commandName == "pkl") it else it.replaceFirst("Pkl", commandName) },
-  )
+  if (includeVersion) {
+    versionOption(
+      Release.current().versionInfo,
+      names = setOf("-v", "--version"),
+      message = { if (commandName == "pkl") it else it.replaceFirst("Pkl", commandName) },
+    )
+  }
 
   context { terminal = Terminal(theme = theme) }
 }
