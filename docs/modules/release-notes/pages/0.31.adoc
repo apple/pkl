@@ -132,13 +132,13 @@ Things to watch out for when upgrading.
 
 == Miscellaneous [small]#🐸#
 
-* XXX
+* Improve formatting of imports to keep surrounding comments (https://github.com/apple/pkl/pull/1424[#1424]).
 
 == Bugs fixed [small]#🐜#
 
 The following bugs have been fixed.
 
-* Incorrect Function.toString() (https://github.com/apple/pkl/issues/1410[#1410])
+* Incorrect Function.toString() (https://github.com/apple/pkl/issues/1410[#1410]).
 
 == Contributors [small]#🙏#
 

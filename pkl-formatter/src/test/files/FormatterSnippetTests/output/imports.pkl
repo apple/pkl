@@ -10,12 +10,15 @@ import "@foo/Foo.pkl" as foo
 
 import "..."
 import "module1.pkl"
+// module2 leading
+// module2 leading 2
 import "module2.pkl"
-import "module11.pkl"
+/* module 11 leading */
+import "module11.pkl" /* module11 block */ // trailing module11
 import "Module12.pkl"
 
 import* "file:///tmp/*.pkl"
 
 import* "@foo/**.pkl"
 
-import* "**.pkl"
+import* "**.pkl" /* ** */ // glob import
