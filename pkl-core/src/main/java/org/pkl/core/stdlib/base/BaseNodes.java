@@ -24,9 +24,11 @@ import org.pkl.core.runtime.VmIntSeq;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmPair;
+import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.runtime.VmValue;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
@@ -149,6 +151,13 @@ public final class BaseNodes {
       // invocations of this method are handled specially in AstBuilder
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().bug("Node `BaseNodes.Bytes` should never be executed.").build();
+    }
+  }
+
+  public abstract static class Reference extends ExternalMethod1Node {
+    @Specialization
+    protected VmReference eval(VirtualFrame frame, VmTyped self, VmValue rootValue) {
+      return new VmReference(rootValue);
     }
   }
 }

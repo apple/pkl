@@ -1,0 +1,16 @@
+a {
+  name = "a"
+  id = "some-a-value"
+}
+b {
+  name = "b"
+  aId = "${a.id}"
+  aProperties = "${a.outputs}"
+  aValues {
+    "${a.outputs.foo}"
+    "${a.outputs.someMapping[key]}"
+    "${a.outputs.someMap[123]}"
+    "${a.outputs.someListing[0]}"
+    "${a.outputs.someList[9223372036854775807]}"
+  }
+}

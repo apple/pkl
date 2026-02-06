@@ -1,0 +1,66 @@
+import "pkl:math"
+
+abstract class Resource {
+  name: String
+}
+
+class A extends Resource {
+  id: String
+  hidden outputs: AProperties
+}
+
+class AProperties {
+  foo: Int
+  someMapping: Mapping<String, Int>
+  someMap: Map<Int, Int>
+  someListing: Listing<Int>
+  someList: List<Int>
+}
+
+class B extends Resource {
+  aId: String | Reference<String>
+  aProperties: AProperties | Reference<AProperties>
+  aValues: Listing<Int | Reference<Int>>
+}
+
+a: A = new {
+  name = "a"
+  id = "some-a-value"
+}
+
+local aRef: Reference<A> = Reference(a)
+
+b: B = new {
+  name = "b"
+  aId = aRef.id
+  aProperties = aRef.outputs
+  aValues {
+    aRef.outputs.foo
+    aRef.outputs.someMapping["key"]
+    aRef.outputs.someMap[123]
+    aRef.outputs.someListing[0]
+    aRef.outputs.someList[math.maxInt]
+  }
+}
+
+function renderReference(ref: Reference): String =
+  if (ref.getRootValue() is Resource)
+    let (resource = ref.getRootValue() as Resource)
+    let (
+      path =
+        ref
+          .getPath()
+          .toList()
+          .map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]")
+    )
+      "${\(resource.name)\(path.join(""))}"
+  else
+    throw("can only render references rooted to Resource instances")
+
+output {
+  renderer {
+    converters {
+      [Reference] = (it) -> renderReference(it)
+    }
+  }
+}
