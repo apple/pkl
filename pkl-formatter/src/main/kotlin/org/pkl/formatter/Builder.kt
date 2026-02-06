@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1148,16 +1148,59 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     return Nodes(nodes)
   }
 
+  private data class ImportWithComments(
+    val leadingAffixes: List<Node>,
+    val import: Node,
+    val trailingAffixes: List<Node>,
+  )
+
+  private fun buildImportsWithComments(children: List<Node>): List<ImportWithComments> {
+    val result = mutableListOf<ImportWithComments>()
+    var pendingAffixes = mutableListOf<Node>()
+    var lastImport: Node? = null
+    var lastTrailing = mutableListOf<Node>()
+    var lastLeading = mutableListOf<Node>()
+
+    for (child in children) {
+      if (child.type.isAffix) {
+        if (lastImport != null && lastImport.span.lineEnd == child.span.lineBegin) {
+          // trailing comment on the same line as the preceding import
+          lastTrailing.add(child)
+        } else {
+          // leading comment for the next import
+          // first, flush the previous import
+          if (lastImport != null) {
+            result.add(ImportWithComments(lastLeading, lastImport, lastTrailing))
+            lastImport = null
+            lastTrailing = mutableListOf()
+            lastLeading = mutableListOf()
+          }
+          pendingAffixes.add(child)
+        }
+      } else {
+        // import node
+        if (lastImport != null) {
+          result.add(ImportWithComments(lastLeading, lastImport, lastTrailing))
+          lastTrailing = mutableListOf()
+        }
+        lastLeading = pendingAffixes
+        pendingAffixes = mutableListOf()
+        lastImport = child
+      }
+    }
+    // flush the last import
+    if (lastImport != null) {
+      result.add(ImportWithComments(lastLeading, lastImport, lastTrailing))
+    }
+    return result
+  }
+
   private fun formatImportList(node: Node): FormatNode {
     val nodes = mutableListOf<FormatNode>()
-    val children = node.children.groupBy { it.type.isAffix }
-    if (children[true] != null) {
-      nodes += formatGeneric(children[true]!!, spaceOrLine())
-      nodes += forceLine()
-    }
 
-    val allImports = children[false]!!
-    val imports = allImports.groupBy { it.findChildByType(NodeType.TERMINAL)?.text(source) }
+    val allImportsWithComments = buildImportsWithComments(node.children)
+    val imports =
+      allImportsWithComments.groupBy { it.import.findChildByType(NodeType.TERMINAL)?.text(source) }
     if (imports["import"] != null) {
       formatImportListHelper(imports["import"]!!, nodes)
       if (imports["import*"] != null) nodes += TWO_NEWLINES
@@ -1169,25 +1212,41 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
     return Nodes(nodes)
   }
 
-  private fun formatImportListHelper(allImports: List<Node>, nodes: MutableList<FormatNode>) {
+  private fun formatImportWithComments(entry: ImportWithComments, nodes: MutableList<FormatNode>) {
+    if (entry.leadingAffixes.isNotEmpty()) {
+      nodes += formatGeneric(entry.leadingAffixes, spaceOrLine())
+      nodes += forceLine()
+    }
+    nodes += format(entry.import)
+    for (affix in entry.trailingAffixes) {
+      nodes += Space
+      nodes += format(affix)
+    }
+  }
+
+  private fun formatImportListHelper(
+    allImports: List<ImportWithComments>,
+    nodes: MutableList<FormatNode>,
+  ) {
+    val comparator = ImportComparator(source)
     val imports =
-      allImports.groupBy { imp ->
-        val url = getImportUrl(imp)
+      allImports.groupBy { entry ->
+        val url = getImportUrl(entry.import)
         when {
           ABSOLUTE_URL_REGEX.matches(url) -> 0
           url.startsWith('@') -> 1
           else -> 2
         }
       }
-    val absolute = imports[0]?.sortedWith(ImportComparator(source))
-    val projects = imports[1]?.sortedWith(ImportComparator(source))
-    val relatives = imports[2]?.sortedWith(ImportComparator(source))
+    val absolute = imports[0]?.sortedWith(compareBy(comparator) { it.import })
+    val projects = imports[1]?.sortedWith(compareBy(comparator) { it.import })
+    val relatives = imports[2]?.sortedWith(compareBy(comparator) { it.import })
     var shouldNewline = false
 
     if (absolute != null) {
       for ((i, imp) in absolute.withIndex()) {
         if (i > 0) nodes += forceLine()
-        nodes += format(imp)
+        formatImportWithComments(imp, nodes)
       }
       if (projects != null || relatives != null) nodes += forceLine()
       shouldNewline = true
@@ -1197,7 +1256,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       if (shouldNewline) nodes += forceLine()
       for ((i, imp) in projects.withIndex()) {
         if (i > 0) nodes += forceLine()
-        nodes += format(imp)
+        formatImportWithComments(imp, nodes)
       }
       if (relatives != null) nodes += forceLine()
       shouldNewline = true
@@ -1207,7 +1266,7 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       if (shouldNewline) nodes += forceLine()
       for ((i, imp) in relatives.withIndex()) {
         if (i > 0) nodes += forceLine()
-        nodes += format(imp)
+        formatImportWithComments(imp, nodes)
       }
     }
   }
