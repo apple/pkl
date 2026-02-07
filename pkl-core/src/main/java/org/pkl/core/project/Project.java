@@ -62,6 +62,7 @@ public final class Project {
   private final @Nullable Package pkg;
   private final DeclaredDependencies dependencies;
   private final PklEvaluatorSettings evaluatorSettings;
+  private final PklEvaluatorSettings resolvedEvaluatorSettings;
   private final URI projectFileUri;
   private final URI projectBaseUri;
   private final List<URI> tests;
@@ -297,9 +298,14 @@ public final class Project {
         getProperty(
             module,
             "evaluatorSettings",
-            (settings) ->
-                PklEvaluatorSettings.parse(
-                    (Value) settings, (it, name) -> resolveNullablePath(it, projectBaseUri, name)));
+            (settings) -> PklEvaluatorSettings.parse((Value) settings));
+
+    var resolvedEvaluatorSettings =
+        getProperty(
+            module,
+            "resolvedEvaluatorSettings",
+            (settings) -> PklEvaluatorSettings.parse((Value) settings));
+
     @SuppressWarnings("unchecked")
     var testPathStrs = (List<String>) getProperty(module, "tests");
     var tests =
@@ -312,6 +318,7 @@ public final class Project {
         pkg,
         dependencies,
         evaluatorSettings,
+        resolvedEvaluatorSettings,
         projectFileUri,
         projectBaseUri,
         tests,
@@ -367,24 +374,6 @@ public final class Project {
     return new URI((String) value);
   }
 
-  /**
-   * Resolve a path string against projectBaseUri.
-   *
-   * @throws PackageLoadError if projectBaseUri is not a {@code file:} URI.
-   */
-  private static @Nullable Path resolveNullablePath(
-      @Nullable String path, URI projectBaseUri, String propertyName) {
-    if (path == null) {
-      return null;
-    }
-    try {
-      return Path.of(projectBaseUri).resolve(path).normalize();
-    } catch (FileSystemNotFoundException e) {
-      throw new PackageLoadError(
-          "relativePathPropertyDefinedByProjectFromNonFileUri", projectBaseUri, propertyName);
-    }
-  }
-
   @SuppressWarnings("unchecked")
   private static Package parsePackage(PObject pObj) throws URISyntaxException {
     var name = (String) pObj.getProperty("name");
@@ -426,6 +415,7 @@ public final class Project {
       @Nullable Package pkg,
       DeclaredDependencies dependencies,
       PklEvaluatorSettings evaluatorSettings,
+      PklEvaluatorSettings resolvedEvaluatorSettings,
       URI projectFileUri,
       URI projectBaseUri,
       List<URI> tests,
@@ -434,6 +424,7 @@ public final class Project {
     this.pkg = pkg;
     this.dependencies = dependencies;
     this.evaluatorSettings = evaluatorSettings;
+    this.resolvedEvaluatorSettings = resolvedEvaluatorSettings;
     this.projectFileUri = projectFileUri;
     this.projectBaseUri = projectBaseUri;
     this.tests = tests;
@@ -453,6 +444,15 @@ public final class Project {
 
   public PklEvaluatorSettings getEvaluatorSettings() {
     return evaluatorSettings;
+  }
+
+  /**
+   * The evaluator settings whose paths have been resolved against the project dir.
+   *
+   * @since 0.31.0
+   */
+  public PklEvaluatorSettings getResolvedEvaluatorSettings() {
+    return resolvedEvaluatorSettings;
   }
 
   public URI getProjectFileUri() {
@@ -502,6 +502,7 @@ public final class Project {
     return localProjectDependencies;
   }
 
+  @SuppressWarnings("unused")
   public URI getProjectBaseUri() {
     return projectBaseUri;
   }

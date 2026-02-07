@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.project
 import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern
+import kotlin.io.path.createDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.Test
@@ -153,7 +154,7 @@ class ProjectTest {
     )
     val project = Project.loadFromPath(projectPath)
     assertThat(project.`package`).isEqualTo(expectedPackage)
-    assertThat(project.evaluatorSettings).isEqualTo(expectedSettings)
+    assertThat(project.resolvedEvaluatorSettings).isEqualTo(expectedSettings)
     assertThat(project.annotations).isEqualTo(expectedAnnotations)
     assertThat(project.tests)
       .isEqualTo(listOf(path.resolve("test1.pkl"), path.resolve("test2.pkl")))
@@ -259,6 +260,109 @@ class ProjectTest {
         
         """
           .trimIndent()
+      )
+  }
+
+  @Test
+  fun `external readers -- executable path is relative to project dir`(@TempDir tempDir: Path) {
+    val projectDir = tempDir.resolve("project").also { it.createDirectories() }
+    val pklProject =
+      projectDir.resolve("PklProject").also {
+        it.writeString(
+          // language=pkl
+          """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "foo/bar/baz"
+          }
+        }
+      }
+      """
+            .trimIndent()
+        )
+      }
+    val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
+    assertThat(project.resolvedEvaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.resolvedEvaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo(projectDir.resolve("foo/bar/baz").toString())
+  }
+
+  @Test
+  fun `external readers -- executable is unmodified simple name`(@TempDir tempDir: Path) {
+    val projectDir = tempDir.resolve("project").also { it.createDirectories() }
+    val pklProject =
+      projectDir.resolve("PklProject").also {
+        it.writeString(
+          // language=pkl
+          """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "my-command"
+          }
+        }
+      }
+      """
+            .trimIndent()
+        )
+      }
+
+    val project = Project.loadFromPath(pklProject, SecurityManagers.defaultManager, null)
+    assertThat(project.evaluatorSettings.externalModuleReaders).hasSize(1)
+    assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
+      .isEqualTo("my-command")
+  }
+
+  @Test
+  fun `cannot set relative executable in non-file project`() {
+    val src =
+      ModuleSource.text(
+        // language=pkl
+        """
+      amends "pkl:Project"
+      
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "foo/bar"
+          }
+        }
+      }
+    """
+          .trimIndent()
+      )
+    assertThatCode { Project.load(src) }
+      .hasMessageContaining(
+        "Type constraint `pathBasedExecutables(externalModuleReaders).isNotEmpty.implies(isFileBasedProject)` violated."
+      )
+  }
+
+  @Test
+  fun `cannot set non-file URI`() {
+    val src =
+      ModuleSource.text(
+        // language=pkl
+        """
+      amends "pkl:Project"
+      
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "qux:///path/to/executable"
+          }
+        }
+      }
+    """
+          .trimIndent()
+      )
+    assertThatCode { Project.load(src) }
+      .hasMessageContaining(
+        "Type constraint `(this is AbsoluteUri).implies(startsWith(\"file:/\"))` violated."
       )
   }
 }
