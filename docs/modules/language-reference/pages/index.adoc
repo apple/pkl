@@ -2736,6 +2736,10 @@ output {
 
 For more on path-based converters, see {uri-stdlib-PcfRenderer-converters}[PcfRenderer.converters].
 
+Special <<annotations,Annotations>> may also be used to influence how class properties are rendered.
+The `ConvertProperty` annotation (and subclasses of it) are automatically applied during.
+For more on annotation-based converters, see link:{uri-stdlib-ConvertProperty}[ConvertProperty].
+
 Sometimes it is useful to directly compute the final module output, bypassing `output.value` and `output.converters`.
 To do so, set the link:{uri-stdlib-baseModule}/ModuleOutput#text[output.text] property to a String value:
 
@@ -3203,6 +3207,7 @@ This section discusses language features that are generally more relevant to tem
 <<module-keyword,`module` Keyword>> +
 <<glob-patterns,Glob Patterns>> +
 <<doc-comments,Doc Comments>> +
+<<annotations,Annotations>> +
 <<name-resolution,Name Resolution>> +
 <<reserved-keywords,Reserved Keywords>> +
 <<blank-identifiers,Blank Identifiers>> +
@@ -5332,7 +5337,7 @@ Module-level members can be prefixed with `module.` to resolve name conflicts:
 /// See [module.pigeon].
 ----
 
-To exclude a member from documentation and code completion, annotate it with `@Unlisted`:
+To exclude a member from documentation and code completion, <<annotations,annotate>> it with `@Unlisted`:
 
 [source%parsed,{pkl}]
 ----
@@ -5348,6 +5353,47 @@ The following member links are marked up as code but not rendered as links:footn
 * links to a method's own parameters
 
 Nevertheless, it is a good practice to use member links in the above cases.
+
+[[annotations]]
+=== Annotations
+
+Annotations are a mechanism to provides extra metadata about Pkl <<modules,modules>>, <<classes,classes>>, <<methods,methods>>, and <<properties,properties>>.
+They provide metadata about the type or member they annotate that can be via link:{uri-stdlib-reflectModule}[reflection] or Pkl's Java APIs.
+The most common use cases for annotations are to add metadata to influence behavior of xref:pkl-doc:index.adoc[Pkldoc], code generation tools, or <<module-output,module output>>.
+
+Annotations are regular Pkl objects whose class extends link:{uri-stdlib-Annotation}[`Annotation`].
+Annotation instances are defined similarly to regular <<classes, class instances>>, but instead of using the `new` keyword the class name is prefixed with `@`.
+The object body may be omitted if an annotation's class has no properties or the declared annotation does not override any of the class's default values
+Multiple annotations may be defined on a member.
+If the annotated member has a <<doc-comments,doc comment>>, the annotation is defined between the comment and the member.
+
+[source%tested,{pkl}]
+----
+/// Module doc comment
+@SomeAnnotation // <1>
+module myModule
+
+class SomeAnnotation extends Annotation { // <2>
+  description: String = "some annotation"
+}
+
+/// Module doc comment
+@SomeAnnotation // <3>
+class Bird {
+  @SomeAnnotation { description = "some property" } // <4>
+  name: String
+
+  @SomeAnnotation { description = "some method" } // <5>
+  @Unlisted // <6>
+  function greet(greeting: String): String = "\(greeting), \(name)!"
+}
+----
+<1> An annotation applied to a module. The annotation(s) must precede the `module` clause and follow the doc comment. The object body is omitted.
+<2> The definition of an annotation class.
+<3> An annotation appied to a class. The object body is omitted.
+<4> An annotation applied to a property. The object body is included because the `description` property is overridden.
+<5> An annotation applied to a method. The object body is included because the `description` property is overridden.
+<6> A second annotation applied to the same method.
 
 [[name-resolution]]
 === Name Resolution
