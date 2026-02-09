@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,8 @@ import java.net.URISyntaxException;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse.BodyHandlers;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
+import java.nio.file.NoSuchFileException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -257,6 +259,21 @@ public final class ResourceReaders {
     @Override
     public Optional<Object> read(URI uri) throws IOException, URISyntaxException {
       IoUtils.validateFileUri(uri);
+      // Use resolveSecurePath to get a symlink-free path verified under rootDir.
+      var securityManager = VmContext.get(null).getSecurityManager();
+      try {
+        var securePath = securityManager.resolveSecurePath(uri);
+        if (securePath != null) {
+          try (var in = Files.newInputStream(securePath, LinkOption.NOFOLLOW_LINKS)) {
+            var content = in.readAllBytes();
+            return Optional.of(new Resource(uri, content));
+          } catch (NoSuchFileException e) {
+            return Optional.empty();
+          }
+        }
+      } catch (SecurityManagerException e) {
+        throw new IOException(e);
+      }
       return super.read(uri);
     }
 

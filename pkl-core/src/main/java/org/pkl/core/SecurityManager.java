@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,10 @@
  */
 package org.pkl.core;
 
+import java.io.IOException;
 import java.net.URI;
+import java.nio.file.Path;
+import org.pkl.core.util.Nullable;
 
 /**
  * Enforces a security model during {@link Evaluator evaluation}.
@@ -40,4 +43,20 @@ public interface SecurityManager {
    * to access the given URI.
    */
   void checkResolveResource(URI resource) throws SecurityManagerException;
+
+  /**
+   * Resolves the given {@code file:} URI to a secure, symlink-free path that has been verified to
+   * be within the root directory (if one is configured). The returned path can be opened with
+   * {@link java.nio.file.LinkOption#NOFOLLOW_LINKS}.
+   *
+   * <p>Returns {@code null} for non-{@code file:} URIs or if no root directory is configured.
+   *
+   * @param uri the URI to resolve
+   * @return the resolved, symlink-free path under root directory, or {@code null}
+   * @throws SecurityManagerException if the resolved path is not within the root directory
+   * @throws IOException if the path cannot be resolved
+   */
+  default @Nullable Path resolveSecurePath(URI uri) throws SecurityManagerException, IOException {
+    return null;
+  }
 }

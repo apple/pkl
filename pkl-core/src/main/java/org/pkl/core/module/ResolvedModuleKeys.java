@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,13 +15,14 @@
  */
 package org.pkl.core.module;
 
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.net.URI;
 import java.net.URL;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.AccessDeniedException;
 import java.nio.file.Files;
+import java.nio.file.LinkOption;
 import java.nio.file.Path;
 import org.pkl.core.util.IoUtils;
 
@@ -32,9 +33,19 @@ public final class ResolvedModuleKeys {
   /**
    * Creates a resolved module key backed by the given file path. The resulting module will be
    * loaded from that file path and cached using the given URI as cache key.
+   *
+   * @param nofollow if true, the file will be opened with {@link LinkOption#NOFOLLOW_LINKS}.
+   */
+  public static ResolvedModuleKey file(ModuleKey original, URI uri, Path path, boolean nofollow) {
+    return new FileKey(original, uri, path, nofollow);
+  }
+
+  /**
+   * Creates a resolved module key backed by the given file path. The resulting module will be
+   * loaded from that file path and cached using the given URI as cache key.
    */
   public static ResolvedModuleKey file(ModuleKey original, URI uri, Path path) {
-    return new File(original, uri, path);
+    return new FileKey(original, uri, path, false);
   }
 
   /**
@@ -62,15 +73,17 @@ public final class ResolvedModuleKeys {
     return new Delegated(delegate, original);
   }
 
-  private static class File implements ResolvedModuleKey {
+  private static class FileKey implements ResolvedModuleKey {
     final ModuleKey original;
     final URI uri;
     final Path path;
+    final boolean nofollow;
 
-    File(ModuleKey original, URI uri, Path path) {
+    FileKey(ModuleKey original, URI uri, Path path, boolean nofollow) {
       this.original = original;
       this.uri = uri;
       this.path = path;
+      this.nofollow = nofollow;
     }
 
     @Override
@@ -86,6 +99,11 @@ public final class ResolvedModuleKeys {
     @Override
     public String loadSource() throws IOException {
       try {
+        if (nofollow) {
+          try (InputStream in = Files.newInputStream(path, LinkOption.NOFOLLOW_LINKS)) {
+            return new String(in.readAllBytes(), StandardCharsets.UTF_8);
+          }
+        }
         return Files.readString(path, StandardCharsets.UTF_8);
       } catch (AccessDeniedException e) {
         // Windows throws `AccessDeniedException` when reading directories.
