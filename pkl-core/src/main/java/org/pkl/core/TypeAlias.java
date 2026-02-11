@@ -28,6 +28,7 @@ public final class TypeAlias extends Member implements Value {
   private final String moduleName;
   private final String qualifiedName;
   private final List<TypeParameter> typeParameters;
+  private final PClass moduleClass;
 
   @LateInit private PType aliasedType;
 
@@ -39,11 +40,13 @@ public final class TypeAlias extends Member implements Value {
       String simpleName,
       String moduleName,
       String qualifiedName,
-      List<TypeParameter> typeParameters) {
+      List<TypeParameter> typeParameters,
+      PClass moduleClass) {
     super(docComment, sourceLocation, modifiers, annotations, simpleName);
     this.moduleName = moduleName;
     this.qualifiedName = qualifiedName;
     this.typeParameters = typeParameters;
+    this.moduleClass = moduleClass;
   }
 
   public void initAliasedType(PType type) {
@@ -76,6 +79,10 @@ public final class TypeAlias extends Member implements Value {
 
   public List<TypeParameter> getTypeParameters() {
     return typeParameters;
+  }
+
+  public PClass getModuleClass() {
+    return moduleClass;
   }
 
   /** Returns the type that this type alias stands for. */

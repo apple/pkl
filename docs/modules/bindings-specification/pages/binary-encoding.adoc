@@ -187,6 +187,24 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+
+|link:{uri-stdlib-Reference}[Reference]
+|`0x20`
+|`<value>`
+|Root value
+|link:{uri-messagepack-array}[array]
+|Array of link:{uri-stdlib-ReferenceAccess}[property access] values
+|
+|
+
+|link:{uri-stdlib-ReferenceAccess}[ReferenceAccess]
+|`0x21`
+|link:{uri-messagepack-str}[str] (when a property access) or link:{uri-messagepack-str}[nil] (when a subscript access)
+|Property name
+|`<value>` or link:{uri-messagepack-str}[nil] (when a property access)
+|Key value
+|
+|
 |===
 
 [[type-name-encoding]]
