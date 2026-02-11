@@ -341,8 +341,8 @@ class BaseOptions : OptionGroup() {
       httpProxy = proxy,
       httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
-      externalModuleReaders = externalModuleReaders,
-      externalResourceReaders = externalResourceReaders,
+      externalModuleReaders = externalModuleReaders.ifEmpty { null },
+      externalResourceReaders = externalResourceReaders.ifEmpty { null },
       traceMode = traceMode,
       powerAssertionsEnabled = powerAssertionsEnabled,
     )
