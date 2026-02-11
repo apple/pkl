@@ -100,7 +100,7 @@ public final class ResolvedModuleKeys {
     public String loadSource() throws IOException {
       try {
         if (nofollow) {
-          try (InputStream in = Files.newInputStream(path, LinkOption.NOFOLLOW_LINKS)) {
+          try (var in = Files.newInputStream(path, LinkOption.NOFOLLOW_LINKS)) {
             return new String(in.readAllBytes(), StandardCharsets.UTF_8);
           }
         }
