@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -345,10 +345,18 @@ public final class ModuleKeys {
       if (java.io.File.separatorChar == '\\' && uriPath != null && uriPath.contains("\\")) {
         throw new FileNotFoundException();
       }
-      var realPath = IoUtils.pathOf(uri).toRealPath();
+      // Use resolveSecurePath to atomically resolve symlinks and verify under rootDir.
+      // The returned path is symlink-free, so it can be opened with NOFOLLOW_LINKS.
+      var securePath = securityManager.resolveSecurePath(uri);
+      Path realPath;
+      if (securePath != null) {
+        realPath = securePath;
+      } else {
+        realPath = IoUtils.pathOf(uri).toRealPath();
+      }
       var resolvedUri = realPath.toUri();
       securityManager.checkResolveModule(resolvedUri);
-      return ResolvedModuleKeys.file(this, resolvedUri, realPath);
+      return ResolvedModuleKeys.file(this, resolvedUri, realPath, securePath != null);
     }
 
     @Override
@@ -413,8 +421,14 @@ public final class ModuleKeys {
         throws IOException, SecurityManagerException {
       securityManager.checkResolveModule(uri);
 
-      var path = resolver.resolve(uri).toRealPath();
-      return ResolvedModuleKeys.file(this, path.toUri(), path);
+      var securePath = securityManager.resolveSecurePath(uri);
+      Path path;
+      if (securePath != null) {
+        path = securePath;
+      } else {
+        path = resolver.resolve(uri).toRealPath();
+      }
+      return ResolvedModuleKeys.file(this, path.toUri(), path, securePath != null);
     }
   }
 

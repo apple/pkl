@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -169,6 +169,19 @@ public final class SecurityManagers {
             ErrorMessages.create("insufficientModuleTrustLevel", importedModule, importingModule);
         throw new SecurityManagerException(message);
       }
+    }
+
+    @Override
+    public @Nullable Path resolveSecurePath(URI uri) throws SecurityManagerException, IOException {
+      if (rootDir == null || !uri.isAbsolute() || !uri.getScheme().equals("file")) {
+        return null;
+      }
+      var path = Path.of(uri);
+      var realPath = path.toRealPath();
+      if (!realPath.startsWith(rootDir)) {
+        throw new SecurityManagerException(ErrorMessages.create("modulePastRootDir", uri, rootDir));
+      }
+      return realPath;
     }
 
     private @Nullable Path normalizePath(@Nullable Path path) {
