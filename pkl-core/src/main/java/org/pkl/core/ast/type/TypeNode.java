@@ -57,6 +57,10 @@ import org.pkl.core.util.Nullable;
 
 public abstract class TypeNode extends PklNode {
 
+  public interface ClassTypeNode {
+    VmClass getVmClass();
+  }
+
   protected TypeNode(SourceSection sourceSection) {
     super(sourceSection);
   }
@@ -402,7 +406,8 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** The `module` type for a final module. */
-  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     private final VmClass moduleClass;
 
     public FinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
@@ -456,7 +461,8 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** The `module` type for an open module. */
-  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode {
+  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     private final VmClass moduleClass; // only used by getVmClass()
     @Child private ExpressionNode getModuleNode;
 
@@ -641,7 +647,7 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only `VmValue`s can possibly pass its type
    * check.
    */
-  public static final class FinalClassTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalClassTypeNode extends ObjectSlotTypeNode implements ClassTypeNode {
     private final VmClass clazz;
 
     public FinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -697,7 +703,8 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only {@link VmValue}s can possibly pass its type
    * check.
    */
-  public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode {
+  public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     protected final VmClass clazz;
 
     public NonFinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -1088,6 +1095,14 @@ public abstract class TypeNode extends PklNode {
 
       return unionDefault;
     }
+
+    public Set<String> getStringLiterals() {
+      return stringLiterals;
+    }
+
+    public @Nullable String getUnionDefault() {
+      return unionDefault;
+    }
   }
 
   public static final class CollectionTypeNode extends ObjectSlotTypeNode {
@@ -1419,6 +1434,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getMapClass();
+    }
+
+    public TypeNode getKeyTypeNode() {
+      return keyTypeNode;
     }
 
     public TypeNode getValueTypeNode() {
@@ -2131,6 +2150,14 @@ public abstract class TypeNode extends PklNode {
     protected boolean isParametric() {
       return true;
     }
+
+    public TypeNode getFirstTypeNode() {
+      return firstTypeNode;
+    }
+
+    public TypeNode getSecondTypeNode() {
+      return secondTypeNode;
+    }
   }
 
   public static class VarArgsTypeNode extends ObjectSlotTypeNode {
@@ -2312,6 +2339,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected final boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    public long getMask() {
+      return mask;
     }
   }
 
@@ -2505,6 +2536,10 @@ public abstract class TypeNode extends PklNode {
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
     }
 
+    public TypeNode getAliasedTypeNode() {
+      return aliasedTypeNode;
+    }
+
     @Override
     public FrameSlotKind getFrameSlotKind() {
       return aliasedTypeNode.getFrameSlotKind();
@@ -2668,6 +2703,10 @@ public abstract class TypeNode extends PklNode {
       this.language = language;
       this.childNode = childNode;
       this.constraintNodes = constraintNodes;
+    }
+
+    public TypeNode getChildTypeNode() {
+      return childNode;
     }
 
     @Override

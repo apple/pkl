@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,6 +43,10 @@ public abstract class AmendModuleNode extends SpecializedObjectLiteralNode {
     super(sourceSection, language, "", false, null, new UnresolvedTypeNode[0], properties);
     this.annotationNodes = annotationNodes;
     this.moduleInfo = moduleInfo;
+  }
+
+  public ModuleInfo getModuleInfo() {
+    return moduleInfo;
   }
 
   @Override

@@ -69,7 +69,7 @@ public final class TestRunner {
     var resultsBuilder = new TestResults.Builder(info.getModuleName(), getDisplayUri(info));
 
     try {
-      checkAmendsPklTest(testModule);
+      VmUtils.checkAmends(testModule, TestModule.getModule().getVmClass());
     } catch (VmException v) {
       var error =
           new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, useColor));
@@ -81,17 +81,6 @@ public final class TestRunner {
 
     resultsBuilder.setStdErr(logger.getLogs());
     return resultsBuilder.build();
-  }
-
-  private void checkAmendsPklTest(VmTyped value) {
-    var testModuleClass = TestModule.getModule().getVmClass();
-    var moduleClass = value.getVmClass();
-    while (moduleClass != testModuleClass) {
-      moduleClass = moduleClass.getSuperclass();
-      if (moduleClass == null) {
-        throw new VmExceptionBuilder().typeMismatch(value, testModuleClass).build();
-      }
-    }
   }
 
   private TestSectionResults runFacts(VmTyped testModule) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.core;
 
 import java.util.Map;
+import java.util.function.Consumer;
 import org.pkl.core.runtime.VmEvalException;
 
 /**
@@ -223,6 +224,20 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   TestResults evaluateTest(ModuleSource moduleSource, boolean overwrite);
+
+  /**
+   * Parses the command module into a spec that describes the CLI options and subcommands.
+   *
+   * <p>This requires that the target module be a {@code "pkl:Command"} instance.
+   *
+   * <p>Unlike other evaluator methods, the resulting {@link CommandSpec} must be handled in a
+   * closure. This is because specs must be applied to parsed CLI options to produce command state
+   * that is eventually evaluated, which must happen in the active context of an evaluator.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  void evaluateCommand(ModuleSource moduleSource, Consumer<CommandSpec> run);
 
   /**
    * Releases all resources held by this evaluator. If an {@code evaluate} method is currently

@@ -3961,6 +3961,7 @@ emailList: List<EmailAddress> // <2>
 <1> equivalent to `email: String(contains("@"))` for type checking purposes
 <2> equivalent to `emailList: List<String(contains("@"))>` for type checking purposes
 
+[[nullable-types]]
 ==== Nullable Types
 
 Class types such as `Bird` (see above) do not admit `null` values.

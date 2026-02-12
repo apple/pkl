@@ -147,6 +147,22 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
 
+  // members of pkl.Command
+  public static final Identifier OPTIONS = get("options");
+  public static final Identifier PARENT = get("parent");
+  public static final Identifier COMMAND = get("command");
+  public static final Identifier DESCRIPTION = get("description");
+  public static final Identifier HIDE = get("hide");
+  public static final Identifier NOOP = get("noOp");
+  public static final Identifier SUBCOMMANDS = get("subcommands");
+  public static final Identifier SHORT_NAME = get("shortName");
+  public static final Identifier METAVAR = get("metavar");
+  public static final Identifier MULTIPLE = get("multiple");
+  public static final Identifier CONVERT = get("convert");
+  public static final Identifier TRANSFORM_ALL = get("transformAll");
+  public static final Identifier GLOB = get("glob");
+  public static final Identifier COMPLETION_CANDIDATES = get("completionCandidates");
+
   // common in lambdas etc
   public static final Identifier IT = get("it");
 
