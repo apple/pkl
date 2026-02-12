@@ -376,7 +376,7 @@ public final class VmValueRenderer {
 
       VmClass clazz = value.getVmClass();
       append("new ");
-      append(clazz.getSimpleName());
+      append(clazz.getDisplayName());
       append(' ');
     }
 
