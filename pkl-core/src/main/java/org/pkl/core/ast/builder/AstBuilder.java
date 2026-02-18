@@ -106,7 +106,6 @@ import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
 import org.pkl.core.ast.expression.member.InvokeMethodDirectNode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
-import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNode;
@@ -118,7 +117,9 @@ import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.expression.primary.OuterNode;
+import org.pkl.core.ast.expression.primary.PartiallyResolvedMethod;
 import org.pkl.core.ast.expression.primary.PartiallyResolvedVariable;
+import org.pkl.core.ast.expression.primary.ResolveParseTimeMethodNode;
 import org.pkl.core.ast.expression.primary.ResolveParseTimeVariableNode;
 import org.pkl.core.ast.expression.primary.ResolveVariableNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
@@ -284,7 +285,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private final boolean isReplMode;
 
   public AstBuilder(
-      Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
+      Source source,
+      VmLanguage language,
+      ModuleInfo moduleInfo,
+      @Nullable Module module,
+      ModuleResolver moduleResolver) {
     super(source);
     this.language = language;
     this.moduleInfo = moduleInfo;
@@ -297,12 +302,18 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     isStdLibModule = ModuleKeys.isStdLibModule(moduleKey);
     externalMemberRegistry = MemberRegistryFactory.get(moduleKey);
     if (isBaseModule) {
-      symbolTable = new SymbolTable(moduleInfo);
+      symbolTable = new SymbolTable(moduleInfo, module);
     } else {
-      symbolTable = new SymbolTable(moduleInfo, baseModule);
+      symbolTable = new SymbolTable(moduleInfo, module, baseModule);
     }
     isMethodReturnTypeChecked = !isStdLibModule || IoUtils.isTestMode();
     isReplMode = !isStdLibModule && "repl".equals(moduleKey.getUri().getHost());
+  }
+
+  // Constructor for REPL/expression parsing where no Module syntax tree is available
+  public AstBuilder(
+      Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
+    this(source, language, moduleInfo, null, moduleResolver);
   }
 
   public static AstBuilder create(
@@ -348,7 +359,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               isAmend);
     }
 
-    return new AstBuilder(source, language, moduleInfo, moduleResolver);
+    return new AstBuilder(source, language, moduleInfo, ctx, moduleResolver);
   }
 
   @Override
@@ -669,32 +680,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 identifier,
                 res -> {
                   if (res instanceof ConstantProperty c) {
-                    var gennode = new ConstantValueNode(sourceSection, c.constant());
-                    return new PartiallyResolvedVariable.Resolved(gennode);
+                    return new PartiallyResolvedVariable.ConstantVar(c.constant());
                   } else if (res instanceof LocalClassProperty p) {
-                    var gennode = new ReadLocalPropertyNode(sourceSection, p.name(), p.levelUp());
-                    return new PartiallyResolvedVariable.Resolved(gennode);
+                    return new PartiallyResolvedVariable.LocalPropertyVar(p.name(), p.isConst());
                   } else if (res instanceof NormalClassProperty p) {
-                    // TODO: check const
-                    var gennode =
-                        ReadPropertyNodeGen.create(
-                            sourceSection,
-                            p.name(),
-                            MemberLookupMode.IMPLICIT_LEXICAL,
-                            // we already checked for const-safety, no need to recheck
-                            false,
-                            p.levelUp() == 0
-                                ? new GetReceiverNode()
-                                : new GetEnclosingReceiverNode(p.levelUp()));
-                    return new PartiallyResolvedVariable.Resolved(gennode);
+                    return new PartiallyResolvedVariable.PropertyVar(p.name(), p.isConst());
                   } else if (res instanceof LetOrLambdaProperty) {
                     return new PartiallyResolvedVariable.FrameSlotVar(identifier);
                   }
                   return null;
                 });
         if (node != null) {
-          return new ResolveParseTimeVariableNode(node, sourceSection);
-          // return (ExpressionNode) node;
+          return new ResolveParseTimeVariableNode(
+              node, sourceSection, scope.getConstLevel(), scope.getConstDepth(), identifier);
         }
       }
       // fall back to resolve variable node
@@ -702,7 +700,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     if (!isReplMode) {
-      var node =
+      var result =
           scope.resolveMethod(
               identifier,
               res -> {
@@ -721,10 +719,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                     return new InvokeMethodDirectNode(
                         createSourceSection(expr), m.method(), m.receiver(), args);
                   }
+                } else if (shouldResolveVariables && !isStdLibModule) {
+                  if (res instanceof MethodResolution.LexicalMethod lm) {
+                    return new PartiallyResolvedMethod.LexicalMethodVar(identifier, lm.isConst());
+                  } else if (res instanceof MethodResolution.VirtualMethod vm) {
+                    return new PartiallyResolvedMethod.VirtualMethodVar(identifier, vm.isConst());
+                  }
                 }
                 return null;
               });
-      if (node != null) return (ExpressionNode) node;
+      if (result instanceof ExpressionNode n) return n;
+      if (result instanceof PartiallyResolvedMethod pm) {
+        var args = visitArgumentList(argList);
+        return new ResolveParseTimeMethodNode(
+            pm, sourceSection, args, scope.getConstLevel(), scope.getConstDepth(), identifier);
+      }
     }
 
     // TODO: support qualified calls (e.g., `import "pkl:base"; x =

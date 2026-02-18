@@ -13,17 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.ast.builder;
+package org.pkl.core.ast.expression.primary;
 
-import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.member.ClassMethod;
+import org.pkl.core.runtime.Identifier;
 
-public sealed interface MethodResolution {
+public sealed interface PartiallyResolvedMethod {
 
-  record DirectMethod(ClassMethod method, ExpressionNode receiver, boolean isBase)
-      implements MethodResolution {}
+  record LexicalMethodVar(Identifier name, boolean isConst) implements PartiallyResolvedMethod {}
 
-  record LexicalMethod(boolean isConst) implements MethodResolution {}
-
-  record VirtualMethod(boolean isConst) implements MethodResolution {}
+  record VirtualMethodVar(Identifier name, boolean isConst) implements PartiallyResolvedMethod {}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,17 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.PklBugException;
+import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.builder.ConstLevel;
+import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
+import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.frame.ReadEnclosingFrameSlotNodeGen;
 import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
+import org.pkl.core.ast.member.Member;
+import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
 /**
@@ -30,16 +38,27 @@ import org.pkl.core.runtime.VmUtils;
  *
  * <ol>
  *   <li>Frame slot nodes cannot always be resolved at parse time.
- *   <li>Mixins/function amending may introduce futher level ups that cannot be calculated at parse
+ *   <li>Mixins/function amending may introduce further level ups that cannot be calculated at parse
  *       time
  * </ol>
  */
 public final class ResolveParseTimeVariableNode extends ExpressionNode {
   private final PartiallyResolvedVariable pvar;
+  private final ConstLevel constLevel;
+  private final int constDepth;
+  private final Identifier variableName;
 
-  public ResolveParseTimeVariableNode(PartiallyResolvedVariable pvar, SourceSection sourceSection) {
+  public ResolveParseTimeVariableNode(
+      PartiallyResolvedVariable pvar,
+      SourceSection sourceSection,
+      ConstLevel constLevel,
+      int constDepth,
+      Identifier variableName) {
     super(sourceSection);
     this.pvar = pvar;
+    this.constLevel = constLevel;
+    this.constDepth = constDepth;
+    this.variableName = variableName;
   }
 
   @Override
@@ -52,16 +71,81 @@ public final class ResolveParseTimeVariableNode extends ExpressionNode {
     // invalidation will be done by Node.replace() in the caller
     CompilerDirectives.transferToInterpreter();
 
-    // frame slot vars need to be resolved at runtime
-    if (pvar instanceof PartiallyResolvedVariable.FrameSlotVar flvar) {
-      var variableName = flvar.name();
-      var localPropertyName = variableName.toLocalProperty();
+    if (pvar instanceof PartiallyResolvedVariable.ConstantVar cvar) {
+      return new ConstantValueNode(sourceSection, cvar.value());
+    }
+
+    if (pvar instanceof PartiallyResolvedVariable.LocalPropertyVar lpvar) {
+      var name = lpvar.name();
       var currFrame = frame;
       var currOwner = VmUtils.getOwner(currFrame);
       var levelsUp = 0;
 
       do {
-        var slot = ResolveVariableNode.findFrameSlot(currFrame, variableName, localPropertyName);
+        var localMember = currOwner.getMember(name);
+        if (localMember != null) {
+          assert localMember.isLocal();
+
+          if (!lpvar.isConst()) {
+            checkConst(currOwner, localMember, levelsUp);
+          }
+
+          var value = localMember.getConstantValue();
+          if (value != null) {
+            return new ConstantValueNode(sourceSection, value);
+          }
+
+          return new ReadLocalPropertyNode(sourceSection, name, levelsUp);
+        }
+
+        currFrame = currOwner.getEnclosingFrame();
+        currOwner = VmUtils.getOwnerOrNull(currFrame);
+        levelsUp += 1;
+      } while (currOwner != null);
+
+      throw PklBugException.unreachableCode();
+    }
+
+    if (pvar instanceof PartiallyResolvedVariable.PropertyVar ppvar) {
+      var name = ppvar.name();
+      var currFrame = frame;
+      var currOwner = VmUtils.getOwner(currFrame);
+      var levelsUp = 0;
+
+      do {
+        var member = currOwner.getMember(name);
+        if (member != null) {
+          assert !member.isLocal();
+
+          if (!ppvar.isConst()) {
+            checkConst(currOwner, member, levelsUp);
+          }
+
+          return ReadPropertyNodeGen.create(
+              sourceSection,
+              name,
+              MemberLookupMode.IMPLICIT_LEXICAL,
+              false,
+              levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp));
+        }
+
+        currFrame = currOwner.getEnclosingFrame();
+        currOwner = VmUtils.getOwnerOrNull(currFrame);
+        levelsUp += 1;
+      } while (currOwner != null);
+
+      throw PklBugException.unreachableCode();
+    }
+
+    if (pvar instanceof PartiallyResolvedVariable.FrameSlotVar flvar) {
+      var fsvName = flvar.name();
+      var localPropertyName = fsvName.toLocalProperty();
+      var currFrame = frame;
+      var currOwner = VmUtils.getOwner(currFrame);
+      var levelsUp = 0;
+
+      do {
+        var slot = ResolveVariableNode.findFrameSlot(currFrame, fsvName, localPropertyName);
         if (slot != -1) {
           return levelsUp == 0
               ? ReadFrameSlotNodeGen.create(getSourceSection(), slot)
@@ -76,10 +160,24 @@ public final class ResolveParseTimeVariableNode extends ExpressionNode {
       // if this variable was resolved at parse time, this should never happen
       throw PklBugException.unreachableCode();
     }
-    // Resolved vars are already resolved, so just return them
-    if (pvar instanceof PartiallyResolvedVariable.Resolved res) {
-      return res.node();
-    }
+
     throw PklBugException.unreachableCode();
+  }
+
+  @SuppressWarnings("DuplicatedCode")
+  private void checkConst(VmObjectLike currOwner, Member member, int levelsUp) {
+    if (!constLevel.isConst()) {
+      return;
+    }
+    var memberIsOutsideConstScope = levelsUp > constDepth;
+    var invalid =
+        switch (constLevel) {
+          case ALL -> memberIsOutsideConstScope && !member.isConst();
+          case MODULE -> currOwner.isModuleObject() && !member.isConst();
+          default -> false;
+        };
+    if (invalid) {
+      throw exceptionBuilder().evalError("propertyMustBeConst", variableName.toString()).build();
+    }
   }
 }
