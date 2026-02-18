@@ -17,7 +17,6 @@ package org.pkl.core.ast.builder;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
-import com.oracle.truffle.api.nodes.Node;
 import java.util.*;
 import java.util.function.Function;
 import org.pkl.core.TypeParameter;
@@ -52,13 +51,14 @@ import org.pkl.parser.syntax.Parameter;
 public final class SymbolTable {
   private Scope currentScope;
 
-  public SymbolTable(ModuleInfo moduleInfo) {
-    currentScope = new ModuleScope(moduleInfo);
+  public SymbolTable(ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module) {
+    currentScope = new ModuleScope(moduleInfo, module);
   }
 
-  public SymbolTable(ModuleInfo moduleInfo, VmTyped base) {
+  public SymbolTable(
+      ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module, VmTyped base) {
     var baseScope = new BaseScope(base);
-    currentScope = new ModuleScope(moduleInfo, baseScope);
+    currentScope = new ModuleScope(moduleInfo, module, baseScope);
   }
 
   public Scope getCurrentScope() {
@@ -316,7 +316,10 @@ public final class SymbolTable {
       var depth = -1;
       var lexicalScope = getLexicalScope();
       while (lexicalScope.getConstLevel() == ConstLevel.ALL) {
-        depth += 1;
+        // LambdaScope inherits constLevel but doesn't create a const scope barrier
+        if (!(lexicalScope instanceof LambdaScope)) {
+          depth += 1;
+        }
         var parent = lexicalScope.getParent();
         if (parent == null) {
           return depth;
@@ -406,7 +409,7 @@ public final class SymbolTable {
       return resolve((scope, levelUp) -> scope.doResolveProperty(name, levelUp, fun));
     }
 
-    public @Nullable Node resolveMethod(Identifier name, Function<MethodResolution, Node> fun) {
+    public @Nullable Object resolveMethod(Identifier name, Function<MethodResolution, Object> fun) {
       return resolve((scope, levelUp) -> scope.doResolveMethod(name, levelUp, fun));
     }
 
@@ -445,7 +448,8 @@ public final class SymbolTable {
         Function<PropertyResolution, PartiallyResolvedVariable> callback);
 
     @Nullable
-    Node doResolveMethod(Identifier name, int levelUp, Function<MethodResolution, Node> callback);
+    Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback);
   }
 
   public static class ObjectScope extends Scope implements LexicalScope {
@@ -471,12 +475,17 @@ public final class SymbolTable {
         int levelUp,
         Function<PropertyResolution, PartiallyResolvedVariable> callback) {
       var strName = name.toString();
+      // Underscore is a discard identifier and should not be resolvable
+      if (strName.equals("_")) {
+        return null;
+      }
       var prop = props.get(strName);
       if (prop != null) {
         if (VmModifier.isLocal(prop)) {
-          return callback.apply(new LocalClassProperty(name.toLocalProperty(), levelUp));
+          return callback.apply(
+              new LocalClassProperty(name.toLocalProperty(), VmModifier.isConst(prop)));
         } else {
-          return callback.apply(new NormalClassProperty(name, levelUp));
+          return callback.apply(new NormalClassProperty(name, VmModifier.isConst(prop)));
         }
       }
       var paramIndex = params.get(strName);
@@ -488,12 +497,13 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
-      //      var method = methods.get(name.toString());
-      //      if (method != null) {
-      //
-      //      }
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+      var method = methods.get(name.toString());
+      if (method != null) {
+        // Object methods are always local
+        return callback.apply(new LexicalMethod(VmModifier.isConst(method)));
+      }
       return null;
     }
 
@@ -564,16 +574,23 @@ public final class SymbolTable {
 
   public static final class ModuleScope extends Scope implements LexicalScope {
     private final ModuleInfo moduleInfo;
+    private final Map<Identifier, List<Modifier>> properties;
+    private final Map<Identifier, ClassMethod> methods;
 
-    public ModuleScope(ModuleInfo moduleInfo) {
+    public ModuleScope(ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module) {
       super(null, null, moduleInfo.getModuleName(), ConstLevel.NONE, FrameDescriptor.newBuilder());
       this.moduleInfo = moduleInfo;
+      this.properties = module != null ? collectProperties(module) : Map.of();
+      this.methods = module != null ? collectMethods(module) : Map.of();
     }
 
     // modules other than base have pkl:base as their parent
-    public ModuleScope(ModuleInfo moduleInfo, BaseScope base) {
+    public ModuleScope(
+        ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module, BaseScope base) {
       super(base, null, moduleInfo.getModuleName(), ConstLevel.NONE, FrameDescriptor.newBuilder());
       this.moduleInfo = moduleInfo;
+      this.properties = module != null ? collectProperties(module) : Map.of();
+      this.methods = module != null ? collectMethods(module) : Map.of();
     }
 
     @Override
@@ -581,13 +598,58 @@ public final class SymbolTable {
         Identifier name,
         int levelUp,
         Function<PropertyResolution, PartiallyResolvedVariable> callback) {
-      return null;
+      var modifiers = properties.get(name);
+      if (modifiers == null) return null;
+      if (isLocal(modifiers)) {
+        return callback.apply(new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)));
+      } else {
+        return callback.apply(new NormalClassProperty(name, isConst(modifiers)));
+      }
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
-      return null;
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+      var method = methods.get(name);
+      if (method == null) return null;
+      var methodIsConst = isConst(method.getModifiers());
+      if (isLocal(method.getModifiers())) {
+        return callback.apply(new LexicalMethod(methodIsConst));
+      } else {
+        return callback.apply(new VirtualMethod(methodIsConst));
+      }
+    }
+
+    private static Map<Identifier, List<Modifier>> collectProperties(
+        org.pkl.parser.syntax.Module module) {
+      var map = new HashMap<Identifier, List<Modifier>>();
+      for (var prop : module.getProperties()) {
+        map.put(Identifier.get(prop.getName().getValue()), prop.getModifiers());
+      }
+      return map;
+    }
+
+    private static Map<Identifier, ClassMethod> collectMethods(
+        org.pkl.parser.syntax.Module module) {
+      var map = new HashMap<Identifier, ClassMethod>();
+      for (var method : module.getMethods()) {
+        map.put(Identifier.get(method.getName().getValue()), method);
+      }
+      return map;
+    }
+
+    private static boolean isLocal(List<Modifier> modifiers) {
+      for (var modifier : modifiers) {
+        if (modifier.getValue() == ModifierValue.LOCAL) return true;
+      }
+      return false;
+    }
+
+    private static boolean isConst(List<Modifier> modifiers) {
+      for (var modifier : modifiers) {
+        if (modifier.getValue() == ModifierValue.CONST) return true;
+      }
+      return false;
     }
   }
 
@@ -627,8 +689,8 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
       var method = base.getVmClass().getDeclaredMethod(name);
       if (method != null) {
         assert !method.isLocal();
@@ -658,7 +720,11 @@ public final class SymbolTable {
         Identifier name,
         int levelUp,
         Function<PropertyResolution, PartiallyResolvedVariable> callback) {
-      var index = bindings.indexOf(name.toString());
+      var nameStr = name.toString();
+      if (nameStr.equals("_")) {
+        return null;
+      }
+      var index = bindings.indexOf(nameStr);
       if (index != -1) {
         return callback.apply(new LetOrLambdaProperty(name));
       }
@@ -666,8 +732,8 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
       return null;
     }
   }
@@ -682,7 +748,7 @@ public final class SymbolTable {
         int slot,
         String qualifiedName,
         FrameDescriptor.Builder frameDescriptorBuilder) {
-      super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
+      super(parent, null, qualifiedName, parent.getConstLevel(), frameDescriptorBuilder);
       this.bindings = bindings;
       this.slot = slot;
     }
@@ -692,17 +758,20 @@ public final class SymbolTable {
         Identifier name,
         int levelUp,
         Function<PropertyResolution, PartiallyResolvedVariable> callback) {
-      var index = bindings.indexOf(name.toString());
+      var nameStr = name.toString();
+      if (nameStr.equals("_")) {
+        return null;
+      }
+      var index = bindings.indexOf(nameStr);
       if (index != -1) {
-        var _slot = slot != -1 ? slot : index;
         return callback.apply(new LetOrLambdaProperty(name));
       }
       return null;
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
       return null;
     }
   }
@@ -748,7 +817,11 @@ public final class SymbolTable {
         Identifier name,
         int levelUp,
         Function<PropertyResolution, PartiallyResolvedVariable> callback) {
-      var index = params.indexOf(name.toString());
+      var nameStr = name.toString();
+      if (nameStr.equals("_")) {
+        return null;
+      }
+      var index = params.indexOf(nameStr);
       if (index >= 0) {
         return callback.apply(new LetOrLambdaProperty(name));
       }
@@ -756,8 +829,8 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
       return null;
     }
   }
@@ -807,22 +880,23 @@ public final class SymbolTable {
       var modifiers = properties.get(name);
       if (modifiers == null) return null;
       if (isLocal(modifiers)) {
-        return callback.apply(new LocalClassProperty(name.toLocalProperty(), levelUp));
+        return callback.apply(new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)));
       } else {
-        return callback.apply(new NormalClassProperty(name, levelUp));
+        return callback.apply(new NormalClassProperty(name, isConst(modifiers)));
       }
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
 
       var method = methods.get(name);
       if (method == null) return null;
+      var methodIsConst = isConst(method.getModifiers());
       if (isClosed || isLocal(method.getModifiers())) {
-        return callback.apply(new LexicalMethod(method, levelUp));
+        return callback.apply(new LexicalMethod(methodIsConst));
       } else {
-        return callback.apply(new VirtualMethod(method, levelUp));
+        return callback.apply(new VirtualMethod(methodIsConst));
       }
     }
 
@@ -849,6 +923,13 @@ public final class SymbolTable {
     private static boolean isLocal(List<Modifier> modifiers) {
       for (var modifier : modifiers) {
         if (modifier.getValue() == ModifierValue.LOCAL) return true;
+      }
+      return false;
+    }
+
+    private static boolean isConst(List<Modifier> modifiers) {
+      for (var modifier : modifiers) {
+        if (modifier.getValue() == ModifierValue.CONST) return true;
       }
       return false;
     }
@@ -915,12 +996,13 @@ public final class SymbolTable {
         Identifier name,
         int levelUp,
         Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+      // annotation scopes don't have variables, the inner object scope might have
       return null;
     }
 
     @Override
-    public @Nullable Node doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Node> callback) {
+    public @Nullable Object doResolveMethod(
+        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
       return null;
     }
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,15 @@
  */
 package org.pkl.core.ast.expression.primary;
 
-import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 
 public sealed interface PartiallyResolvedVariable {
 
-  record Resolved(ExpressionNode node) implements PartiallyResolvedVariable {}
+  record ConstantVar(Object value) implements PartiallyResolvedVariable {}
+
+  record LocalPropertyVar(Identifier name, boolean isConst) implements PartiallyResolvedVariable {}
+
+  record PropertyVar(Identifier name, boolean isConst) implements PartiallyResolvedVariable {}
 
   record FrameSlotVar(Identifier name) implements PartiallyResolvedVariable {}
 }
