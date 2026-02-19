@@ -31,6 +31,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
+import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.CommandSpec;
@@ -45,6 +46,7 @@ import org.pkl.core.PNull;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
+import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.expression.literal.AmendModuleNodeGen;
@@ -71,14 +73,20 @@ public final class CommandSpecParser {
 
   private final ModuleResolver moduleResolver;
   private final SecurityManager securityManager;
+  private final StackFrameTransformer frameTransformer;
+  private final boolean color;
   private final Function<VmTyped, FileOutput> makeFileOutput;
 
   public CommandSpecParser(
       ModuleResolver moduleResolver,
       SecurityManager securityManager,
+      StackFrameTransformer frameTransformer,
+      boolean color,
       Function<VmTyped, FileOutput> makeFileOutput) {
     this.moduleResolver = moduleResolver;
     this.securityManager = securityManager;
+    this.frameTransformer = frameTransformer;
+    this.color = color;
     this.makeFileOutput = makeFileOutput;
   }
 
@@ -462,24 +470,13 @@ public final class CommandSpecParser {
           annotation == null
               ? null
               : VmUtils.readMember(annotation, Identifier.CONVERT) instanceof VmFunction func
-                  ? (rawValue, workingDirUri) -> {
-                    try {
-                      return handleImports(func.apply(rawValue), workingDirUri);
-                    } catch (VmException e) {
-                      throw new BadValue(e.getMessage());
-                    }
-                  }
+                  ? (rawValue, workingDirUri) ->
+                      handleErrors(() -> handleImports(func.apply(rawValue), workingDirUri))
                   : null,
           annotation == null
               ? null
               : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
-                  ? (it) -> {
-                    try {
-                      return func.apply(VmList.create(it));
-                    } catch (VmException e) {
-                      throw new BadValue(e.getMessage());
-                    }
-                  }
+                  ? (it) -> handleErrors(() -> func.apply(VmList.create(it)))
                   : null,
           annotation == null
               ? null
@@ -1062,6 +1059,31 @@ public final class CommandSpecParser {
   private static boolean isImport(Object value) {
     return value instanceof VmTyped vmTyped
         && vmTyped.getVmClass() == CommandModule.getImportClass();
+  }
+
+  // handle errors from convert/transformAll and correctly format them for the CLI
+  private Object handleErrors(Supplier<Object> f) {
+    try {
+      try {
+        return f.get();
+      } catch (VmStackOverflowException e) {
+        if (VmUtils.isPklBug(e)) {
+          throw new VmExceptionBuilder()
+              .bug("Stack overflow")
+              .withCause(e.getCause())
+              .build()
+              .toPklException(frameTransformer, color);
+        }
+        throw e.toPklException(frameTransformer, color);
+      } catch (VmException e) {
+        throw e.toPklException(frameTransformer, color);
+      } catch (Exception e) {
+        throw new PklBugException(e);
+      }
+    } catch (Throwable e) {
+      // add a newline so this prints nicely under "Error: invalid value for <name>:"
+      throw new BadValue("\n" + e.getMessage());
+    }
   }
 
   // for convert handle imports by replace Command.Import values
