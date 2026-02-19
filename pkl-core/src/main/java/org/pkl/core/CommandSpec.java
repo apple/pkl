@@ -100,7 +100,7 @@ public record CommandSpec(
     public String[] getNames() {
       return shortName == null
           ? new String[] {"--" + name}
-          : new String[] {"--" + name, "-" + shortName};
+          : new String[] {"-" + shortName, "--" + name};
     }
   }
 
@@ -115,7 +115,7 @@ public record CommandSpec(
     public String[] getNames() {
       return shortName == null
           ? new String[] {"--" + name}
-          : new String[] {"--" + name, "-" + shortName};
+          : new String[] {"-" + shortName, "--" + name};
     }
   }
 
@@ -126,7 +126,7 @@ public record CommandSpec(
     public String[] getNames() {
       return shortName == null
           ? new String[] {"--" + name}
-          : new String[] {"--" + name, "-" + shortName};
+          : new String[] {"-" + shortName, "--" + name};
     }
   }
 

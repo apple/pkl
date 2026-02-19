@@ -239,7 +239,7 @@ constructor(
           .mapNotNull {
             val opt = it as? OptionWithValues<*, *, *> ?: return@mapNotNull null
             return@mapNotNull if (it.names.contains("--help")) null
-            else it.names.first().trimStart('-') to opt.value
+            else it.names.last().trimStart('-') to opt.value
           }
           .toMap() +
           registeredArguments()

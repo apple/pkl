@@ -85,7 +85,15 @@ class CliCommandRunnerTest {
 
   private fun runToStdout(options: CliBaseOptions, args: List<String>): String {
     val outWriter = ByteArrayOutputStream()
-    CliCommandRunner(options, args, outWriter, ByteArrayOutputStream()).run()
+    CliCommandRunner(
+        options,
+        setOf("root-dir"),
+        emptySet(),
+        args,
+        outWriter,
+        ByteArrayOutputStream(),
+      )
+      .run()
     return outWriter.toString(StandardCharsets.UTF_8)
   }
 
@@ -1071,9 +1079,9 @@ class CliCommandRunnerTest {
         int16: Int16
         @CountedFlag { shortName = "d" }
         int32: Int32
-        @CountedFlag { shortName = "e" }
+        @CountedFlag { shortName = "x" }
         uint: UInt
-        @CountedFlag { shortName = "f" }
+        @CountedFlag { shortName = "y" }
         uint8: UInt8
         @CountedFlag { shortName = "g" }
         uint16: UInt16
@@ -1087,7 +1095,7 @@ class CliCommandRunnerTest {
     val output =
       runToStdout(
         CliBaseOptions(sourceModules = listOf(moduleUri)),
-        listOf("-abbcccddddeeeeeffffffgggggggiiiiiiii"),
+        listOf("-abbcccddddxxxxxyyyyyygggggggiiiiiiii"),
       )
     assertThat(output)
       .isEqualTo(

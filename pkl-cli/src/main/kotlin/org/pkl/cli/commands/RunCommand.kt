@@ -27,7 +27,7 @@ import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 
-class RunCommand : BaseCommand(name = "run", helpLink = helpLink, useShortOptionNames = false) {
+class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
   override val helpString = "Run a Pkl pkl:Command CLI tool"
   override val treatUnknownOptionsAsArgs = true
 
