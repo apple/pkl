@@ -33,6 +33,7 @@ import org.pkl.core.util.IoUtils
 import org.pkl.formatter.Formatter
 import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
+import org.pkl.parser.ParserError
 
 class CliFormatterCommand
 @JvmOverloads
@@ -127,7 +128,10 @@ constructor(
           consoleWriter.write(formatted)
           consoleWriter.flush()
         }
-      } catch (pe: GenericParserError) {
+      } catch (pe: ParserError) { // thrown by the lexer
+        writeErrLine("Could not format `$pathStr`: $pe")
+        status.update(ERROR)
+      } catch (pe: GenericParserError) { // thrown by the generic parser
         writeErrLine("Could not format `$pathStr`: $pe")
         status.update(ERROR)
       } catch (e: IOException) {
