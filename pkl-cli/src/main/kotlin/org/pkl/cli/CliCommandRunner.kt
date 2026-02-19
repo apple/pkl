@@ -114,6 +114,13 @@ constructor(
       checkPathSpec(pathSpec)
       val resolvedPath = outputDir.resolve(pathSpec).normalize()
       val realPath = if (resolvedPath.exists()) resolvedPath.toRealPath() else resolvedPath
+      options.normalizedRootDir?.let { rootDir ->
+        if (!realPath.startsWith(rootDir)) {
+          throw CliException(
+            "Output file conflict: `output.files` entry `\"$pathSpec\"` resolves to file path `$realPath`, which is outside root directory `$rootDir`."
+          )
+        }
+      }
       val previousOutput = writtenFiles[realPath]
       if (previousOutput != null) {
         throw CliException(
