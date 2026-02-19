@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,9 @@ import java.nio.file.Path
 import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.cli.CliBugException
 import org.pkl.commons.cli.CliException
 import org.pkl.core.util.StringBuilderWriter
 import org.pkl.formatter.GrammarVersion
@@ -43,5 +45,23 @@ class CliFormatterTest {
       cmd.run()
     } catch (_: CliException) {}
     assertThat(sb.toString()).isEqualTo("foo = 1\n")
+  }
+
+  @Test
+  fun `parse errors do not result in bug exceptions`(@TempDir tempDir: Path) {
+    val file = tempDir.resolve("foo.pkl").also { it.writeText("foo = \"/foo/\\\${BAR}/baz\"") }
+    val sb = StringBuilder()
+    val writer = StringBuilderWriter(sb)
+    val cmd =
+      CliFormatterCommand(
+        listOf(file),
+        GrammarVersion.latest(),
+        overwrite = false,
+        diffNameOnly = false,
+        silent = false,
+        consoleWriter = writer,
+      )
+    val exc = assertThrows<CliException> { cmd.run() }
+    assertThat(exc).isNotInstanceOf(CliBugException::class.java)
   }
 }
