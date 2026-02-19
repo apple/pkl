@@ -563,7 +563,7 @@ Relative URIs are resolved against the working directory.
 <command options>::
 Additional CLI options and arguments defined by `<module>`.
 
-This command also takes <<common-options, common options>>, but they must be specified before `<module>`. 
+This command also takes <<common-options, common options>>.
 
 [[command-repl]]
 === `pkl repl`
@@ -999,7 +999,16 @@ Properties may be xref:language-reference:index.adoc#annotations[annotated] to i
 * Properties with no annotation are treated the same as `@Flag` with no further customization.
 
 Flag options may set a `shortName` property to define a single-character abbreviation (`-<short name>`).
-Flag abbreviations may be combined (e.g. `-a -b -v -v -f some-value` is equivalent to `-abvvf some-value`).
+Flag abbreviations may be combined (e.g. `-a -b -v -v -q some-value` is equivalent to `-abvvq some-value`).
+
+[CAUTION]
+====
+Flag names and short names may not conflict with <<common-options,common options>>.
+Future versions of Pkl may introduce additional common options and the names of these options will become forbidden for use in `pkl:Command`.
+Thus, any Pkl release that adds common options may introduce breaking changes for commands.
+
+While unfortunate, this behavior eliminates potentially dangerous or misleading ambiguities between Pkl-defined and user-defined options.
+====
 
 A `@Flag` or `@Argument` property's type annotation determines how it is converted from the raw string value:
 
