@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,12 +19,16 @@ import com.github.ajalt.clikt.core.CliktCommand
 import com.github.ajalt.clikt.core.Context
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
 
-abstract class BaseCommand(name: String, private val helpLink: String) : CliktCommand(name = name) {
+abstract class BaseCommand(
+  name: String,
+  private val helpLink: String,
+  useShortOptionNames: Boolean = true,
+) : CliktCommand(name = name) {
   abstract val helpString: String
 
   override fun help(context: Context) = helpString
 
   final override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
-  val baseOptions: BaseOptions by BaseOptions()
+  val baseOptions: BaseOptions by BaseOptions(useShortOptionNames)
 }

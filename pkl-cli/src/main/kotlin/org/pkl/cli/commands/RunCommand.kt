@@ -27,7 +27,7 @@ import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 
-class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
+class RunCommand : BaseCommand(name = "run", helpLink = helpLink, useShortOptionNames = false) {
   override val helpString = "Run a Pkl pkl:Command CLI tool"
   override val treatUnknownOptionsAsArgs = true
 
@@ -45,6 +45,20 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
   private val projectOptions by ProjectOptions()
 
   override fun run() {
-    CliCommandRunner(baseOptions.baseOptions(listOf(module), projectOptions), args).run()
+    val reservedFlagNames = mutableSetOf<String>()
+    val reservedFlagShortNames = mutableSetOf<String>()
+    registeredOptions().forEach { opt ->
+      (opt.names + opt.secondaryNames).forEach {
+        if (it.startsWith("--")) reservedFlagNames.add(it.trimStart('-'))
+        else reservedFlagShortNames.add(it.trimStart('-'))
+      }
+    }
+    CliCommandRunner(
+        baseOptions.baseOptions(listOf(module), projectOptions),
+        reservedFlagNames,
+        reservedFlagShortNames,
+        args,
+      )
+      .run()
   }
 }

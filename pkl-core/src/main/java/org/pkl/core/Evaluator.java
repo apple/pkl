@@ -16,6 +16,7 @@
 package org.pkl.core;
 
 import java.util.Map;
+import java.util.Set;
 import java.util.function.Consumer;
 import org.pkl.core.runtime.VmEvalException;
 
@@ -237,7 +238,11 @@ public interface Evaluator extends AutoCloseable {
    * @throws PklException if an error occurs during evaluation
    * @throws IllegalStateException if this evaluator has already been closed
    */
-  void evaluateCommand(ModuleSource moduleSource, Consumer<CommandSpec> run);
+  void evaluateCommand(
+      ModuleSource moduleSource,
+      Set<String> reservedFlagNames,
+      Set<String> reservedFlagShortNames,
+      Consumer<CommandSpec> run);
 
   /**
    * Releases all resources held by this evaluator. If an {@code evaluate} method is currently

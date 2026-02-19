@@ -38,7 +38,7 @@ import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
 
 @Suppress("MemberVisibilityCanBePrivate")
-class BaseOptions : OptionGroup() {
+class BaseOptions(useShortOptionNames: Boolean = true) : OptionGroup() {
   companion object {
     /**
      * Parses [moduleName] into a URI. If scheme is not present, we expect that this is a file path
@@ -98,7 +98,17 @@ class BaseOptions : OptionGroup() {
   private val defaults = CliBaseOptions()
 
   private val output =
-    arrayOf("json", "jsonnet", "pcf", "properties", "plist", "textproto", "xml", "yaml")
+    arrayOf(
+      "json",
+      "jsonnet",
+      "pcf",
+      "properties",
+      "plist",
+      "textproto",
+      "xml",
+      "yaml",
+      "pkl-binary",
+    )
 
   val allowedModules: List<Pattern> by
     option(
@@ -132,7 +142,8 @@ class BaseOptions : OptionGroup() {
 
   val workingDir: Path by
     option(
-        names = arrayOf("-w", "--working-dir"),
+        names =
+          if (useShortOptionNames) arrayOf("-w", "--working-dir") else arrayOf("--working-dir"),
         help = "Base path that relative module paths are resolved against.",
       )
       .single()
@@ -141,7 +152,7 @@ class BaseOptions : OptionGroup() {
 
   val properties: Map<String, String> by
     option(
-        names = arrayOf("-p", "--property"),
+        names = if (useShortOptionNames) arrayOf("-p", "--property") else arrayOf("--property"),
         metavar = "name=value",
         help = "External property to set (repeatable).",
       )
@@ -165,7 +176,7 @@ class BaseOptions : OptionGroup() {
 
   val format: String? by
     option(
-        names = arrayOf("-f", "--format"),
+        names = if (useShortOptionNames) arrayOf("-f", "--format") else arrayOf("--format"),
         help = "Output format to generate. <${output.joinToString()}>",
         completionCandidates = CompletionCandidates.Fixed(output.toSet()),
       )
@@ -173,7 +184,7 @@ class BaseOptions : OptionGroup() {
 
   val envVars: Map<String, String> by
     option(
-        names = arrayOf("-e", "--env-var"),
+        names = if (useShortOptionNames) arrayOf("-e", "--env-var") else arrayOf("--env-var"),
         metavar = "name=value",
         help = "Environment variable to set (repeatable).",
       )
@@ -200,7 +211,7 @@ class BaseOptions : OptionGroup() {
 
   val timeout: Duration? by
     option(
-        names = arrayOf("-t", "--timeout"),
+        names = if (useShortOptionNames) arrayOf("-t", "--timeout") else arrayOf("--timeout"),
         metavar = "number",
         help = "Duration, in seconds, after which evaluation of a source module will be timed out.",
       )

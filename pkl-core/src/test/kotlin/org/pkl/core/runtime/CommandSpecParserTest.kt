@@ -57,7 +57,7 @@ class CommandSpecParserTest {
 
   private fun parse(moduleUri: URI): CommandSpec {
     var spec: CommandSpec? = null
-    evaluator.evaluateCommand(uri(moduleUri)) { spec = it }
+    evaluator.evaluateCommand(uri(moduleUri), setOf("root-dir")) { spec = it }
     return spec!!
   }
 
@@ -440,8 +440,7 @@ class CommandSpecParserTest {
 
     val exc = assertThrows<PklException> { parse(moduleUri) }
     assertThat(exc.message).contains("help: Boolean")
-    assertThat(exc.message)
-      .contains("Flag option `help` may not have name \"help\" or short name \"h\".")
+    assertThat(exc.message).contains("Flag option `help` name collides with a reserved flag name.")
   }
 
   @Test
@@ -462,7 +461,27 @@ class CommandSpecParserTest {
     val exc = assertThrows<PklException> { parse(moduleUri) }
     assertThat(exc.message).contains("showHelp: Boolean")
     assertThat(exc.message)
-      .contains("Flag option `showHelp` may not have name \"help\" or short name \"h\".")
+      .contains("Flag option `showHelp` short name `h` collides with a reserved flag short name.")
+  }
+
+  @Test
+  fun `flag with collision on reserved option name`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        `root-dir`: String
+      }
+    """
+            .trimIndent(),
+      )
+
+    val exc = assertThrows<PklException> { parse(moduleUri) }
+    assertThat(exc.message).contains("`root-dir`: String")
+    assertThat(exc.message)
+      .contains("Flag option `root-dir` name collides with a reserved flag name.")
   }
 
   @Test
