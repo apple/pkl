@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
@@ -30,10 +29,11 @@ import java.nio.file.Path
 import org.pkl.cli.CliProjectPackager
 import org.pkl.cli.CliProjectResolver
 import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.commons.cli.commands.NoOpCommand
 import org.pkl.commons.cli.commands.TestOptions
 import org.pkl.commons.cli.commands.single
 
-class ProjectCommand : NoOpCliktCommand(name = "project") {
+class ProjectCommand : NoOpCommand(name = "project") {
   override fun help(context: Context) = "Run commands related to projects"
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"

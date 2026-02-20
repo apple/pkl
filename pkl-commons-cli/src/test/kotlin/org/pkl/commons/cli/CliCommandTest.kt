@@ -16,11 +16,18 @@
 package org.pkl.commons.cli
 
 import com.github.ajalt.clikt.core.parse
+import java.net.URI
+import java.nio.file.Path
+import kotlin.io.path.ExperimentalPathApi
+import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.core.SecurityManagers
 
+@OptIn(ExperimentalPathApi::class)
 class CliCommandTest {
 
   class CliTest(options: CliBaseOptions) : CliCommand(options) {
@@ -28,6 +35,7 @@ class CliCommandTest {
 
     val myAllowedResources = allowedResources
     val myAllowedModules = allowedModules
+    val myResolvedSourceModules = resolvedSourceModules
   }
 
   private val cmd =
@@ -55,7 +63,7 @@ class CliCommandTest {
         "scheme+ext=reader5 with args",
       )
     )
-    val opts = cmd.baseOptions.baseOptions(emptyList(), null, true)
+    val opts = cmd.baseOptions.baseOptions(emptyList(), testMode = true)
     val cliTest = CliTest(opts)
     assertThat(cliTest.myAllowedModules.map { it.pattern() })
       .isEqualTo(
@@ -67,5 +75,113 @@ class CliCommandTest {
         SecurityManagers.defaultAllowedResources.map { it.pattern() } +
           listOf("\\Qscheme1:\\E", "\\Qscheme2:\\E", "\\Qscheme+ext:\\E")
       )
+  }
+
+  @Test
+  fun `@-notation package URIs - treated as relative paths when no project present`(
+    @TempDir tempDir: Path
+  ) {
+    cmd.parse(arrayOf("--working-dir=$tempDir"))
+    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myResolvedSourceModules)
+      .isEqualTo(listOf(tempDir.toUri().resolve("@foo/bar.pkl")))
+  }
+
+  @Test
+  fun `@-notation package URIs - empty paths are rejected`(@TempDir tempDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeText(
+        """
+      amends "pkl:Project"
+    """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--working-dir=$tempDir"))
+    val opts = cmd.baseOptions.baseOptions(listOf(URI("@no.slash")), testMode = true)
+    val exc = assertThrows<CliException> { CliTest(opts) }
+    assertThat(exc.message).isEqualTo("Invalid project dependency URI `@no.slash`.")
+  }
+
+  @Test
+  fun `@-notation package URIs - missing dependencies are rejected`(@TempDir tempDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeText(
+        """
+      amends "pkl:Project"
+    """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--working-dir=$tempDir"))
+    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
+    val exc = assertThrows<CliException> { CliTest(opts) }
+    assertThat(exc.message).isEqualTo("Project does not contain dependency `@foo`.")
+  }
+
+  @Test
+  fun `@-notation package URIs - local dependencies are rejected`(
+    @TempDir tempDir: Path,
+    @TempDir depDir: Path,
+  ) {
+    depDir
+      .resolve("PklProject")
+      .writeText(
+        """
+      amends "pkl:Project"
+      
+      package {
+        name = "foo"
+        baseUri = "package://example.com/foo"
+        version = "0.0.1"
+        packageZipUrl = "https://example.com/foo@\(version).zip"
+      }
+    """
+          .trimIndent()
+      )
+
+    tempDir
+      .resolve("PklProject")
+      .writeText(
+        """
+      amends "pkl:Project"
+
+      dependencies {
+        ["foo"] = import("$depDir/PklProject")
+      }
+    """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--working-dir=$tempDir"))
+    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
+    val exc = assertThrows<CliException> { CliTest(opts) }
+    assertThat(exc.message)
+      .isEqualTo(
+        "Only remote project dependencies may be referenced using @-notation. Dependency `@foo` is a local dependency."
+      )
+  }
+
+  @Test
+  fun `@-notation package URIs - remote dependencies are resolved`(@TempDir tempDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeText(
+        """
+      amends "pkl:Project"
+
+      dependencies {
+        ["foo"] {
+          uri = "package://example.com/foo@1.2.3"
+        }
+      }
+    """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--working-dir=$tempDir"))
+    val opts = cmd.baseOptions.baseOptions(listOf(URI("@foo/bar.pkl")), testMode = true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myResolvedSourceModules)
+      .isEqualTo(listOf(tempDir.toUri().resolve("package://example.com/foo@1.2.3#/bar.pkl")))
   }
 }

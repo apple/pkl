@@ -17,21 +17,22 @@ package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.completion.CompletionCommand
 import com.github.ajalt.clikt.core.Context
-import com.github.ajalt.clikt.core.NoOpCliktCommand
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.core.subcommands
+import org.pkl.commons.cli.commands.NoOpCommand
 import org.pkl.commons.cli.commands.installCommonOptions
 import org.pkl.core.Release
 
 internal val helpLink = "${Release.current().documentation.homepage}pkl-cli/index.html#usage"
 
-class RootCommand : NoOpCliktCommand(name = "pkl") {
+class RootCommand : NoOpCommand(name = "pkl") {
   override val printHelpOnEmptyArgs = true
 
   override fun helpEpilog(context: Context) = "For more information, visit $helpLink"
 
   init {
     context {
+      readArgumentFile = null
       suggestTypoCorrection = { given, possible ->
         if (!given.startsWith("-")) {
           registeredSubcommands().map { it.commandName }

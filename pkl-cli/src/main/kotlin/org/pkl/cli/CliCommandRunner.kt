@@ -52,8 +52,6 @@ constructor(
   private val errStream: OutputStream = System.err,
 ) : CliCommand(options) {
 
-  private val normalizedSourceModule = options.normalizedSourceModules.first()
-
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
@@ -68,7 +66,7 @@ constructor(
     val evaluator = builder.build()
     evaluator.use {
       evaluator.evaluateCommand(
-        uri(normalizedSourceModule),
+        uri(resolvedSourceModules.first()),
         reservedFlagNames,
         reservedFlagShortNames,
       ) { spec ->
