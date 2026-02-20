@@ -91,13 +91,9 @@ public final class CommandSpecParser {
     this.securityManager = securityManager;
     this.frameTransformer = frameTransformer;
     this.color = color;
-    this.reservedFlagNames = new HashSet<>(reservedFlagNames);
-    this.reservedFlagShortNames = new HashSet<>(reservedFlagShortNames);
+    this.reservedFlagNames = reservedFlagNames;
+    this.reservedFlagShortNames = reservedFlagShortNames;
     this.makeFileOutput = makeFileOutput;
-
-    // guarantee these are always reserved:
-    this.reservedFlagNames.add("help");
-    this.reservedFlagShortNames.add("h");
   }
 
   public CommandSpec parse(VmTyped command) {

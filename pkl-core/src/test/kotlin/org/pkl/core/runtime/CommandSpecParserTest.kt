@@ -57,7 +57,7 @@ class CommandSpecParserTest {
 
   private fun parse(moduleUri: URI): CommandSpec {
     var spec: CommandSpec? = null
-    evaluator.evaluateCommand(uri(moduleUri), setOf("root-dir"), emptySet()) { spec = it }
+    evaluator.evaluateCommand(uri(moduleUri), setOf("help", "root-dir"), setOf("h")) { spec = it }
     return spec!!
   }
 

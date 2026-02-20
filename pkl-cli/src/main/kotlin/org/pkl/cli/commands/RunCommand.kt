@@ -63,8 +63,8 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
       if (showHelp) throw PrintHelpMessage(currentContext)
       else throw MissingArgument(registeredArguments().find { it.name == "module" }!!)
 
-    val reservedFlagNames = mutableSetOf<String>()
-    val reservedFlagShortNames = mutableSetOf<String>()
+    val reservedFlagNames = mutableSetOf("help")
+    val reservedFlagShortNames = mutableSetOf("h")
     registeredOptions().forEach { opt ->
       (opt.names + opt.secondaryNames).forEach {
         if (it.startsWith("--")) reservedFlagNames.add(it.trimStart('-'))
