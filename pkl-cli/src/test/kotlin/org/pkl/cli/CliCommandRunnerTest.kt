@@ -942,7 +942,52 @@ class CliCommandRunnerTest {
       assertThrows<CliktError> {
         runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("hi"))
       }
-    assertThat(exc.message).isEqualTo("oops!")
+    assertThat(exc.message).contains("oops!")
+  }
+
+  @Test
+  fun `convert with eval error`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        @Argument { convert = (it) -> it.noSuchMethod() }
+        foo: String
+      }
+    """
+            .trimIndent(),
+      )
+
+    val exc =
+      assertThrows<CliktError> {
+        runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("hi"))
+      }
+    assertThat(exc.message).contains("Cannot find method `noSuchMethod` in class `String`.")
+  }
+
+  @Test
+  fun `convert with stack overflow`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      const function overflow(it) = overflow(it)
+      class Options {
+        @Argument { convert = (it) -> overflow(it) }
+        foo: String
+      }
+    """
+            .trimIndent(),
+      )
+
+    val exc =
+      assertThrows<CliktError> {
+        runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri)), listOf("hi"))
+      }
+    assertThat(exc.message).contains("A stack overflow occurred.")
   }
 
   @Test

@@ -15,7 +15,6 @@
  */
 package org.pkl.core;
 
-import com.oracle.truffle.api.TruffleStackTrace;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -286,6 +285,8 @@ public final class EvaluatorImpl implements Evaluator {
               new CommandSpecParser(
                   moduleResolver,
                   securityManager,
+                  frameTransformer,
+                  color,
                   (fileOutput) -> new FileOutputImpl(this, fileOutput));
           run.accept(commandRunner.parse(module));
           return null;
@@ -358,7 +359,7 @@ public final class EvaluatorImpl implements Evaluator {
     try {
       evalResult = supplier.get();
     } catch (VmStackOverflowException e) {
-      if (isPklBug(e)) {
+      if (VmUtils.isPklBug(e)) {
         throw new VmExceptionBuilder()
             .bug("Stack overflow")
             .withCause(e.getCause())
@@ -387,7 +388,7 @@ public final class EvaluatorImpl implements Evaluator {
       if (e.getClass()
           .getName()
           .equals("com.oracle.truffle.polyglot.PolyglotEngineImpl$CancelExecution")) {
-        // Truffle cancelled evaluation in response to polyglotContext.close(true) triggered by
+        // Truffle canceled evaluation in response to polyglotContext.close(true) triggered by
         // TimeoutTask
         handleTimeout(timeoutTask);
         throw PklBugException.unreachableCode();
@@ -398,7 +399,7 @@ public final class EvaluatorImpl implements Evaluator {
       try {
         polyglotContext.leave();
       } catch (IllegalStateException ignored) {
-        // happens if evaluation has already been cancelled with polyglotContext.close(true)
+        // happens if evaluation has already been canceled with polyglotContext.close(true)
       }
     }
 
@@ -462,15 +463,6 @@ public final class EvaluatorImpl implements Evaluator {
           .withMemberName(module.getModuleInfo().getModuleName())
           .build();
     }
-  }
-
-  private boolean isPklBug(VmStackOverflowException e) {
-    // There's no good way to tell if a StackOverflowError came from Pkl, or from our
-    // implementation.
-    // This is a simple heuristic; it's pretty likely that any stack overflow error that occurs
-    // if there's less than 100 truffle frames is due to our own doing.
-    var truffleStackTraceElements = TruffleStackTrace.getStackTrace(e);
-    return truffleStackTraceElements != null && truffleStackTraceElements.size() < 100;
   }
 
   // ScheduledFuture.cancel() is problematic, so let's handle cancellation on our own

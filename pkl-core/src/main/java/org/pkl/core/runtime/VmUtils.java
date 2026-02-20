@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.api.source.Source;
@@ -974,5 +975,14 @@ public final class VmUtils {
       throw new VmExceptionBuilder().typeMismatch(value.getVmClass(), clazz).build();
     }
     return value;
+  }
+
+  public static boolean isPklBug(VmStackOverflowException e) {
+    // There's no good way to tell if a StackOverflowError came from Pkl, or from our
+    // implementation.
+    // This is a simple heuristic; it's pretty likely that any stack overflow error that occurs
+    // if there's less than 100 truffle frames is due to our own doing.
+    var truffleStackTraceElements = TruffleStackTrace.getStackTrace(e);
+    return truffleStackTraceElements != null && truffleStackTraceElements.size() < 100;
   }
 }
