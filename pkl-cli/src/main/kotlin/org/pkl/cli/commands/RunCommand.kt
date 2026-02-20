@@ -16,11 +16,16 @@
 package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.completion.CompletionCandidates
+import com.github.ajalt.clikt.core.MissingArgument
+import com.github.ajalt.clikt.core.PrintHelpMessage
 import com.github.ajalt.clikt.core.context
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.convert
 import com.github.ajalt.clikt.parameters.arguments.multiple
+import com.github.ajalt.clikt.parameters.arguments.optional
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.flag
+import com.github.ajalt.clikt.parameters.options.option
 import java.net.URI
 import org.pkl.cli.CliCommandRunner
 import org.pkl.commons.cli.commands.BaseCommand
@@ -32,19 +37,46 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
   override val treatUnknownOptionsAsArgs = true
 
   init {
-    context { allowInterspersedArgs = false }
+    context {
+      // override clikt's built-in help behavior
+      // the built-in --help is eager so any --help/-h would force printing of pkl run's help
+      // which is not desired when a command module (or any of its subcommands) are present
+      // since that would mean command-defined help is gated behind a non-obvious `-- --help`
+      helpOptionNames = emptySet()
+    }
   }
 
-  val module: URI by
-    argument(name = "module", completionCandidates = CompletionCandidates.Path).convert {
-      BaseOptions.parseModuleName(it)
-    }
+  private val showHelp by option("-h", "--help", help = "Show this message and exit").flag()
+
+  val module: URI? by
+    argument(name = "module", completionCandidates = CompletionCandidates.Path)
+      .convert { BaseOptions.parseModuleName(it) }
+      .optional()
 
   val args: List<String> by argument(name = "args").multiple()
 
   private val projectOptions by ProjectOptions()
 
   override fun run() {
-    CliCommandRunner(baseOptions.baseOptions(listOf(module), projectOptions), args).run()
+    // if no module is specified but --help is show help, otherwise error becuase module is missing
+    if (module == null)
+      if (showHelp) throw PrintHelpMessage(currentContext)
+      else throw MissingArgument(registeredArguments().find { it.name == "module" }!!)
+
+    val reservedFlagNames = mutableSetOf("help")
+    val reservedFlagShortNames = mutableSetOf("h")
+    registeredOptions().forEach { opt ->
+      (opt.names + opt.secondaryNames).forEach {
+        if (it.startsWith("--")) reservedFlagNames.add(it.trimStart('-'))
+        else reservedFlagShortNames.add(it.trimStart('-'))
+      }
+    }
+    CliCommandRunner(
+        baseOptions.baseOptions(listOf(module!!), projectOptions),
+        reservedFlagNames,
+        reservedFlagShortNames,
+        if (showHelp) args + listOf("--help") else args,
+      )
+      .run()
   }
 }

@@ -20,6 +20,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
@@ -277,7 +278,11 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   @Override
-  public void evaluateCommand(ModuleSource moduleSource, Consumer<CommandSpec> run) {
+  public void evaluateCommand(
+      ModuleSource moduleSource,
+      Set<String> reservedFlagNames,
+      Set<String> reservedFlagShortNames,
+      Consumer<CommandSpec> run) {
     doEvaluate(
         moduleSource,
         (module) -> {
@@ -287,6 +292,8 @@ public final class EvaluatorImpl implements Evaluator {
                   securityManager,
                   frameTransformer,
                   color,
+                  reservedFlagNames,
+                  reservedFlagShortNames,
                   (fileOutput) -> new FileOutputImpl(this, fileOutput));
           run.accept(commandRunner.parse(module));
           return null;

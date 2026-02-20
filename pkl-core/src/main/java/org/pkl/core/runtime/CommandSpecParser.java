@@ -75,6 +75,8 @@ public final class CommandSpecParser {
   private final SecurityManager securityManager;
   private final StackFrameTransformer frameTransformer;
   private final boolean color;
+  private final Set<String> reservedFlagNames;
+  private final Set<String> reservedFlagShortNames;
   private final Function<VmTyped, FileOutput> makeFileOutput;
 
   public CommandSpecParser(
@@ -82,11 +84,15 @@ public final class CommandSpecParser {
       SecurityManager securityManager,
       StackFrameTransformer frameTransformer,
       boolean color,
+      Set<String> reservedFlagNames,
+      Set<String> reservedFlagShortNames,
       Function<VmTyped, FileOutput> makeFileOutput) {
     this.moduleResolver = moduleResolver;
     this.securityManager = securityManager;
     this.frameTransformer = frameTransformer;
     this.color = color;
+    this.reservedFlagNames = reservedFlagNames;
+    this.reservedFlagShortNames = reservedFlagShortNames;
     this.makeFileOutput = makeFileOutput;
   }
 
@@ -249,11 +255,22 @@ public final class CommandSpecParser {
   }
 
   private void checkFlagNames(ClassProperty prop, String name, @Nullable String shortName) {
-    if ("help".equals(name) || "h".equals(shortName)) {
-      throw exceptionBuilder()
-          .withSourceSection(prop.getHeaderSection())
-          .evalError("commandFlagHelpCollision", prop.getName())
-          .build();
+    for (var reserved : reservedFlagNames) {
+      if (reserved.equals(name)) {
+        throw exceptionBuilder()
+            .withSourceSection(prop.getHeaderSection())
+            .evalError("commandFlagNameCollision", prop.getName(), "name", "")
+            .build();
+      }
+    }
+    for (var reserved : reservedFlagShortNames) {
+      if (reserved.equals(shortName)) {
+        throw exceptionBuilder()
+            .withSourceSection(prop.getHeaderSection())
+            .evalError(
+                "commandFlagNameCollision", prop.getName(), "short name", "`" + shortName + "` ")
+            .build();
+      }
     }
   }
 

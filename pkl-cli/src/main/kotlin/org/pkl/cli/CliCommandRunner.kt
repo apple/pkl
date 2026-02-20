@@ -45,6 +45,8 @@ class CliCommandRunner
 @JvmOverloads
 constructor(
   private val options: CliBaseOptions,
+  private val reservedFlagNames: Set<String>,
+  private val reservedFlagShortNames: Set<String>,
   private val args: List<String>,
   private val outputStream: OutputStream = System.out,
   private val errStream: OutputStream = System.err,
@@ -65,7 +67,11 @@ constructor(
   private fun evalCmd(builder: EvaluatorBuilder) {
     val evaluator = builder.build()
     evaluator.use {
-      evaluator.evaluateCommand(uri(normalizedSourceModule)) { spec ->
+      evaluator.evaluateCommand(
+        uri(normalizedSourceModule),
+        reservedFlagNames,
+        reservedFlagShortNames,
+      ) { spec ->
         try {
           val root = SynthesizedRunCommand(spec, this, options.sourceModules.first().toString())
           root.installCommonOptions(includeVersion = false)
@@ -233,7 +239,7 @@ constructor(
           .mapNotNull {
             val opt = it as? OptionWithValues<*, *, *> ?: return@mapNotNull null
             return@mapNotNull if (it.names.contains("--help")) null
-            else it.names.first().trimStart('-') to opt.value
+            else it.names.last().trimStart('-') to opt.value
           }
           .toMap() +
           registeredArguments()
