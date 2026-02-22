@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -117,7 +117,7 @@ public final class ResolveVariableNode extends ExpressionNode {
           return new ConstantValueNode(sourceSection, value);
         }
 
-        return new ReadLocalPropertyNode(sourceSection, localMember, levelsUp);
+        return new ReadLocalPropertyNode(sourceSection, localPropertyName, levelsUp);
       }
 
       var member = currOwner.getMember(variableName);
@@ -213,7 +213,7 @@ public final class ResolveVariableNode extends ExpressionNode {
     }
   }
 
-  private static int findFrameSlot(VirtualFrame frame, Object identifier1, Object identifier2) {
+  public static int findFrameSlot(VirtualFrame frame, Object identifier1, Object identifier2) {
     var descriptor = frame.getFrameDescriptor();
     // Search backwards. The for-generator implementation exploits this
     // to shadow a slot by appending a slot with the same name.
