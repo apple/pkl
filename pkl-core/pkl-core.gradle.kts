@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,16 @@ plugins {
   idea
 }
 
-val generatorSourceSet = sourceSets.register("generator")
+val generatorSourceSet: NamedDomainObjectProvider<SourceSet> = sourceSets.register("generator")
+
+val externalReaderFixtureSourceSet: NamedDomainObjectProvider<SourceSet> =
+  sourceSets.register("externalReaderFixture") {
+    compileClasspath += sourceSets.test.get().output + sourceSets.test.get().compileClasspath
+    runtimeClasspath += sourceSets.test.get().output + sourceSets.test.get().runtimeClasspath
+  }
+
+val externalReaderFixtureImplementation: Configuration by
+  configurations.getting { extendsFrom(configurations.testImplementation.get()) }
 
 idea {
   module {
@@ -110,8 +119,46 @@ tasks.compileJava { options.generatedSourceOutputDirectory.set(file("generated/t
 
 tasks.compileKotlin { enabled = false }
 
+val externalReaderFixture by
+  tasks.registering {
+    group = "build"
+    dependsOn(tasks.named("compileExternalReaderFixtureJava"))
+    inputs.files(externalReaderFixtureSourceSet.map { it.output })
+    val fileName = if (buildInfo.os.isWindows) "externalreader.bat" else "externalreader"
+    val outputFile = layout.buildDirectory.file("fixtures/$fileName")
+    outputs.file(outputFile)
+    doLast {
+      val classpath = externalReaderFixtureSourceSet.get().runtimeClasspath.asPath
+      val scriptContent =
+        if (buildInfo.os.isWindows) {
+          """
+          @echo off
+          java -cp $classpath org.pkl.core.externalreaderfixture.Main
+        """
+            .trimIndent()
+        } else {
+          """
+          #!/usr/bin/env bash
+
+          java -cp $classpath org.pkl.core.externalreaderfixture.Main
+        """
+            .trimIndent()
+        }
+
+      outputFile.get().asFile.writeText(scriptContent)
+      outputFile.get().asFile.setExecutable(true)
+      println("Created external reader ${outputFile.get().asFile.absolutePath}")
+    }
+  }
+
 tasks.test {
   configureTest()
+  dependsOn(externalReaderFixture)
+  environment(
+    "PATH",
+    listOf(System.getenv("PATH"), layout.buildDirectory.dir("fixtures/").get())
+      .joinToString(File.pathSeparator),
+  )
   useJUnitPlatform {
     excludeEngines("MacAmd64LanguageSnippetTestsEngine")
     excludeEngines("MacAarch64LanguageSnippetTestsEngine")
@@ -123,6 +170,12 @@ tasks.test {
 
   // testing very large lists requires more memory than the default 512m!
   maxHeapSize = "1g"
+
+  dependsOn(externalReaderFixture)
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixture.map { it.outputs.files.singleFile.absolutePath },
+  )
 }
 
 val testJavaExecutable by

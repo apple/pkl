@@ -19,6 +19,8 @@
 @Since { version = "0.26.0" }
 module pkl.EvaluatorSettings
 
+import "pkl:EvaluatorSettings"
+
 /// The external properties available to Pkl, read using the `prop:` scheme.
 externalProperties: Mapping<String, String>?
 
@@ -117,6 +119,66 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 /// - `"pretty"`: All structures passed to trace() will be indented and emitted across multiple lines.
 @Since { version = "0.30.0" }
 traceMode: ("compact" | "pretty")?
+
+local function resolvePath(base: String, path: String) =
+  if (path.startsWith("/") || path is AbsoluteUri)
+    path
+  else
+    "\(base)/\(path)"
+
+local function resolveExecutable(base: String, path: String) =
+  if (path.contains("/"))
+    resolvePath(base, path)
+  else
+    path
+
+/// These evaluator settings, whose settings are resolved against [baseDir].
+///
+/// The following settings are resolved:
+///
+///   * [modulePath]
+///   * [rootDir]
+///   * [moduleCacheDir]
+///   * [externalResourceReaders]
+///   * [externalModuleReaders]
+@Since { version = "0.31.0" }
+function resolve(baseDir: String): EvaluatorSettings = (module) {
+  when (module.modulePath != null) {
+    modulePath = new {
+      for (path in module.modulePath!!) {
+        resolvePath(baseDir, path)
+      }
+    }
+  }
+
+  when (module.rootDir != null) {
+    rootDir = resolvePath(baseDir, module.rootDir!!)
+  }
+
+  when (module.moduleCacheDir != null) {
+    moduleCacheDir = resolvePath(baseDir, module.moduleCacheDir!!)
+  }
+
+  when (module.externalResourceReaders != null) {
+    externalResourceReaders {
+      for (readerName, reader in module.externalResourceReaders!!) {
+        [readerName] {
+          executable = resolveExecutable(baseDir, reader.executable)
+        }
+      }
+    }
+  }
+
+  when (module.externalModuleReaders != null) {
+    externalModuleReaders {
+      for (readerName, reader in module.externalModuleReaders!!) {
+        [readerName] {
+          executable = resolveExecutable(baseDir, reader.executable)
+        }
+      }
+    }
+  }
+}
 
 local const hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
@@ -219,18 +281,25 @@ class Proxy {
   noProxy: Listing<String>(isDistinct)
 }
 
+local typealias AbsoluteUri = String(matches(Regex(#"[\w+.-]+:[^\\].*"#)))
+
 @Since { version = "0.27.0" }
 class ExternalReader {
   /// The external reader executable.
   ///
   /// Will be spawned with the same environment variables and working directory as the Pkl process.
-  /// Executable is resolved according to the operating system's process spawning rules.
-  /// On macOS, Linux, and Windows platforms, this may be:
+  /// This may be:
   ///
-  ///   * An absolute path
-  ///   * A relative path (to the current working directory)
+  ///   * An absolute or relative path, delineated with `/`
+  ///   * A file URI
   ///   * The name of the executable, to be resolved against the `PATH` environment variable 
-  executable: String
+  ///
+  /// To represent a path within a drive on Windows, use a file URI (e.g.
+  /// `file:///C:/path/to/executable`).
+  ///
+  /// A simple name without slashes (e.g. `"my-command"`) is resolved against the `PATH`
+  /// environment variable, rather than against the enclosing directory.
+  executable: String((this is AbsoluteUri).implies(startsWith("file:/")))
 
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?

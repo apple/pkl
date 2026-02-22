@@ -488,7 +488,7 @@ public final class EvaluatorBuilder {
    */
   public EvaluatorBuilder applyFromProject(Project project) {
     this.dependencies = project.getDependencies();
-    var settings = project.getEvaluatorSettings();
+    var settings = project.getResolvedEvaluatorSettings();
     if (securityManager != null) {
       throw new IllegalStateException(
           "Cannot call both `setSecurityManager` and `setProject`, because both define security manager settings. Call `setProjectOnly` if the security manager is desired.");

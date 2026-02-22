@@ -16,10 +16,15 @@
 package org.pkl.commons.cli
 
 import com.github.ajalt.clikt.core.parse
+import java.nio.file.Path
+import kotlin.collections.mapOf
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.commands.BaseCommand
+import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
+import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 
 class CliCommandTest {
 
@@ -28,6 +33,8 @@ class CliCommandTest {
 
     val myAllowedResources = allowedResources
     val myAllowedModules = allowedModules
+    val myExternalModuleReaders = externalModuleReaders
+    val myExternalResourceReaders = externalResourceReaders
   }
 
   private val cmd =
@@ -67,5 +74,33 @@ class CliCommandTest {
         SecurityManagers.defaultAllowedResources.map { it.pattern() } +
           listOf("\\Qscheme1:\\E", "\\Qscheme2:\\E", "\\Qscheme+ext:\\E")
       )
+  }
+
+  @Test
+  fun `--external-module-reader blows away PklProject externalModuleReaders`(
+    @TempDir tempDir: Path
+  ) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        // language=pkl
+        """
+      amends "pkl:Project"
+
+      evaluatorSettings {
+        externalModuleReaders {
+          ["foo"] {
+            executable = "foo"
+          }
+        }
+      }
+      """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--external-module-reader", "bar=bar"))
+    val opts = cmd.baseOptions.baseOptions(emptyList(), null, true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myExternalModuleReaders)
+      .isEqualTo(mapOf("bar" to PklEvaluatorSettings.ExternalReader("bar", listOf())))
   }
 }

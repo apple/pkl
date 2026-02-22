@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
-import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import org.pkl.core.Duration;
@@ -55,17 +54,13 @@ public record PklEvaluatorSettings(
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
-  public static PklEvaluatorSettings parse(
-      Value input, BiFunction<? super String, ? super String, Path> pathNormalizer) {
+  public static PklEvaluatorSettings parse(Value input) {
     if (!(input instanceof PObject pSettings)) {
       throw PklBugException.unreachableCode();
     }
 
     var moduleCacheDirStr = (String) pSettings.get("moduleCacheDir");
-    var moduleCacheDir =
-        moduleCacheDirStr == null
-            ? null
-            : pathNormalizer.apply(moduleCacheDirStr, "moduleCacheDir");
+    var moduleCacheDir = moduleCacheDirStr == null ? null : Path.of(moduleCacheDirStr).normalize();
 
     var allowedModulesStrs = (List<String>) pSettings.get("allowedModules");
     var allowedModules =
@@ -80,13 +75,10 @@ public record PklEvaluatorSettings(
             : allowedResourcesStrs.stream().map(Pattern::compile).toList();
 
     var modulePathStrs = (List<String>) pSettings.get("modulePath");
-    var modulePath =
-        modulePathStrs == null
-            ? null
-            : modulePathStrs.stream().map(it -> pathNormalizer.apply(it, "modulePath")).toList();
+    var modulePath = modulePathStrs == null ? null : modulePathStrs.stream().map(Path::of).toList();
 
     var rootDirStr = (String) pSettings.get("rootDir");
-    var rootDir = rootDirStr == null ? null : pathNormalizer.apply(rootDirStr, "rootDir");
+    var rootDir = rootDirStr == null ? null : Path.of(rootDirStr).normalize();
 
     var externalModuleReadersRaw = (Map<String, Value>) pSettings.get("externalModuleReaders");
     var externalModuleReaders =
