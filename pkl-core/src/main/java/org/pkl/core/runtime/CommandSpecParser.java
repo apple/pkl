@@ -1161,13 +1161,13 @@ public final class CommandSpecParser {
     try {
       // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
       // into `URI("C", null, "/foo/bar", null)`.
-      var modulePath = Path.of(moduleName);
+      @SuppressWarnings("DuplicateExpressions")
       var uri =
           IoUtils.isUriLike(moduleName)
               ? new URI(moduleName)
               : IoUtils.isWindowsAbsolutePath(moduleName)
-                  ? modulePath.toUri()
-                  : new URI(null, null, IoUtils.toNormalizedPathString(modulePath), null);
+                  ? Path.of(moduleName).toUri()
+                  : new URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null);
       uriString =
           uri.isAbsolute() ? uri.toString() : IoUtils.resolve(workingDirUri, uri).toString();
     } catch (URISyntaxException e) {
