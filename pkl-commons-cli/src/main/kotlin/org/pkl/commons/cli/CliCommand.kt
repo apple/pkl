@@ -86,6 +86,35 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     }
   }
 
+  protected fun resolveModuleUri(uri: URI): URI =
+    if (uri.isAbsolute) uri
+    else { // must be @dep/mod.pkl notation!!
+      if (!uri.path.startsWith('@'))
+        throw CliBugException(
+          RuntimeException("tried to resolve project URI `$uri` with no @ prefix")
+        )
+      if (project == null)
+        throw CliBugException(
+          RuntimeException("tried to resolve project URI `$uri` with no project present")
+        )
+      val dep = uri.path.substringBefore('/').drop(1)
+      val path = uri.path.dropWhile { it != '/' }
+      if (path.isEmpty()) throw CliException("Invalid project dependency URI `$uri`.")
+
+      val remoteDep =
+        project!!.dependencies.remoteDependencies()[dep]
+          ?: if (project!!.dependencies.localDependencies().containsKey(dep))
+            throw CliException(
+              "Only remote project dependencies may be referenced using @-notation. Dependency `@$dep` is a local dependency."
+            )
+          else throw CliException("Project does not contain dependency `@$dep`.")
+      remoteDep.packageUri.toPackageAssetUri(path).uri
+    }
+
+  protected val resolvedSourceModules: List<URI> =
+    if (project == null) cliOptions.normalizedSourceModules
+    else cliOptions.normalizedSourceModules.map(::resolveModuleUri)
+
   protected fun loadProject(projectFile: Path): Project {
     val securityManager =
       SecurityManagers.standard(

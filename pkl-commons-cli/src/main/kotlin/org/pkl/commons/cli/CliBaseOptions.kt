@@ -175,11 +175,19 @@ data class CliBaseOptions(
   /** [rootDir] after normalization. */
   val normalizedRootDir: Path? = rootDir?.let(normalizedWorkingDir::resolve)
 
+  /** The effective project directory, if exists. */
+  val normalizedProjectFile: Path? by lazy {
+    projectDir?.resolve(ProjectDependenciesManager.PKL_PROJECT_FILENAME)
+      ?: normalizedWorkingDir.getProjectFile(rootDir)
+  }
+
   /** [sourceModules] after normalization. */
   val normalizedSourceModules: List<URI> =
     sourceModules
       .map { uri ->
-        if (uri.isAbsolute) uri else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
+        if (uri.isAbsolute) uri
+        else if (uri.path.startsWith("@") && !noProject && normalizedProjectFile != null) uri
+        else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
       }
       // sort modules to make cli output independent of source module order
       .sorted()
@@ -194,12 +202,6 @@ data class CliBaseOptions(
 
   /** [moduleCacheDir] after normalization. */
   val normalizedModuleCacheDir: Path? = moduleCacheDir?.let(normalizedWorkingDir::resolve)
-
-  /** The effective project directory, if exists. */
-  val normalizedProjectFile: Path? by lazy {
-    projectDir?.resolve(ProjectDependenciesManager.PKL_PROJECT_FILENAME)
-      ?: normalizedWorkingDir.getProjectFile(rootDir)
-  }
 
   /** [caCertificates] after normalization. */
   val normalizedCaCertificates: List<Path> = caCertificates.map(normalizedWorkingDir::resolve)

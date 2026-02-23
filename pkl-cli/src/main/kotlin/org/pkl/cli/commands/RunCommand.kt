@@ -49,7 +49,11 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
   private val showHelp by option("-h", "--help", help = "Show this message and exit").flag()
 
   val module: URI? by
-    argument(name = "module", completionCandidates = CompletionCandidates.Path)
+    argument(
+        name = "module",
+        help = "Root pkl:Command module to invoke.",
+        completionCandidates = CompletionCandidates.Path,
+      )
       .convert { BaseOptions.parseModuleName(it) }
       .optional()
 
