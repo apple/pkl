@@ -65,7 +65,7 @@ hidden command: CommandInfo = new {
 ///
 ///   /// Duration after which operation will be timed out.
 ///   @Flag { convert = module.convertDuration; metavar = "duration" }
-///   timeout: Duration = 30.s
+///   `connection-timeout`: Duration = 30.s
 ///
 ///   /// Whether to use cache data locally.
 ///   @BooleanFlag

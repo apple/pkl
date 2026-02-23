@@ -2,20 +2,10 @@
 :version: XXX (e.g., 0.9)
 :version-minor: XXX (e.g., 0.9.0)
 :release-date: XXX (e.g., July 11, 2018)
+:version-next: XXX (e.g., 0.10)
+:version-next-date: XXX (e.g., July 2018)
 
-include::ROOT:partial$component-attributes.adoc[]
-
-Pkl {version} was released on {release-date}. +
-[.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
-
-XXX
-
-The next release (XXX) is scheduled for XXX (e.g., August 2, 2021).
-
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
-
-[small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
-To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
+include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
