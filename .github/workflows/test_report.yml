@@ -25,7 +25,7 @@ jobs:
         name_is_regexp: true
         run_id: ${{ github.event.workflow_run.id }}
     - name: Publish test results
-      uses: EnricoMi/publish-unit-test-result-action@27d65e188ec43221b20d26de30f4892fad91df2f # v2
+      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
       with:
         commit: ${{ github.event.workflow_run.head_sha }}
         comment_mode: 'off'
