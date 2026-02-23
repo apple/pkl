@@ -819,14 +819,25 @@ class CliCommandRunnerTest {
     val moduleUri =
       writePklFile(
         "cmd.pkl",
-        renderOptions +
-          """
+        """
+      extends "pkl:Command"
+      
+      options: Options
+      
+      output {
+        value = (options) {
+          fromImport {
+           baz = true // assert that imported modules are not forced
+          }
+        }
+      }
+      
       class Options {
         @Argument { convert = (it) -> new Import{ uri = it } }
         fromImport: Module
       }
     """
-            .trimIndent(),
+          .trimIndent(),
       )
 
     val importUri =
@@ -835,6 +846,7 @@ class CliCommandRunnerTest {
         """
       foo = 1
       bar = "baz"
+      baz: Boolean
     """
           .trimIndent(),
       )
@@ -847,6 +859,7 @@ class CliCommandRunnerTest {
         fromImport {
           foo = 1
           bar = "baz"
+          baz = true
         }
         
         """
@@ -866,7 +879,13 @@ class CliCommandRunnerTest {
       options: Options
       
       output {
-        value = options
+        value = (options) {
+          fromGlobImport {
+            [[true]] {
+              baz = true // assert that imported modules are not forced
+            }
+          }
+        }
       }
       
       class Options {
@@ -883,6 +902,7 @@ class CliCommandRunnerTest {
         """
       foo: Int
       bar: String
+      baz: Boolean
     """
           .trimIndent(),
       )
@@ -919,10 +939,12 @@ class CliCommandRunnerTest {
           ["file:/<dir>/glob1.pkl"] {
             foo = 1
             bar = "baz"
+            baz = true
           }
           ["file:/<dir>/glob2.pkl"] {
             foo = 2
             bar = "qux"
+            baz = true
           }
         }
         
