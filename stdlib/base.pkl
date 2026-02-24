@@ -2959,14 +2959,6 @@ abstract external class Collection<out Element> extends Any {
   /// ```
   abstract function zip<Other>(coll: Collection<Other>): Collection<Pair<Element, Other>>
 
-  /// Transposes this two-dimensional collection of collections.
-  ///
-  /// The *n*th row of the resulting collection corresponds to the
-  /// *n*th column of this collection.
-  /// Throws if an element of this collection is not itself a collection.
-  /* Note: Can't specify return type precisely. */
-  abstract function transpose(): Collection
-
   /// Converts the elements of this collection to strings and concatenates them inserting
   /// [separator] between elements.
   abstract function join(separator: String): String
