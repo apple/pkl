@@ -1,28 +1,18 @@
 = Pkl 0.31 Release Notes
 :version: 0.31
-:version-minor: 0.XX.0
-:release-date: TBD
+:version-minor: 0.31.0
+:release-date: February 26th, 2026
+:version-next: 0.32
+:version-next-date: July 2026
 
-include::ROOT:partial$component-attributes.adoc[]
-
-Pkl {version} was released on {release-date}. +
-[.small]#The latest bugfix release is {version-minor}. (xref:changelog.adoc[All Versions])#
-
-The next release (0.XX) is scheduled for ???..
-To see what's coming in the future, follow the {uri-pkl-roadmap}[Pkl Roadmap].
-
-Please send feedback and questions to https://github.com/apple/pkl/discussions[GitHub Discussions], or submit an issue on https://github.com/apple/pkl/issues/new[GitHub]. +
-
-[small]#Pkl is hosted on https://github.com/apple/pkl[GitHub].
-To get started, follow xref:pkl-cli:index.adoc#installation[Installation].#
+include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
-News you don't want to miss.
-
+[[power-assertions]]
 === Power Assertions
 
-Pkl's test output and error output has been improved with power assertions (https://github.com/apple/pkl/pull/1384[#1384])!
+Pkl's test output and error output has been improved with power assertions (pr:https://github.com/apple/pkl/pull/1384[], pr:https://github.com/apple/pkl/pull/1419[])!
 
 Pkl has two places that are effectively assertions.
 These are:
@@ -47,7 +37,7 @@ Value: new Person { name = "Bub Johnson" }
 
 Just from this error message, we don't know what the last name is supposed to be.
 What is `name` supposed to end with?
-We just know it's some property called `lastName` but, we don't know what it _is_. 
+We just know it's some property called `lastName` but, we don't know what it _is_.
 
 In Pkl 0.31, the error output becomes:
 
@@ -104,44 +94,258 @@ module math
 0.0% tests pass [1/1 failed], 0.0% asserts pass [2/2 failed]
 ----
 
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0026-power-assertions.adoc[SPICE-0026].
+
+[[cli-framework]]
+=== CLI Framework
+
+Pkl 0.31 introduces a new framework for implementing CLI tools in Pkl (pr:https://github.com/apple/pkl/pull/1367[], pr:https://github.com/apple/pkl/pull/1431[], pr:https://github.com/apple/pkl/pull/1432[], pr:https://github.com/apple/pkl/pull/1436[]).
+
+The framework provides a way to build command line tools with user experience idioms that will be immediately familiar to users.
+CLI tools implemented in Pkl have largely the same capabilities as normal Pkl evaluation (i.e. writing to standard output and files), but this may be extended using xref:language-reference:index.adoc#external-readers[external readers].
+
+Commands are defined by extending the pkldoc:#[pkl:Command] module:
+
+.bird-generator.pkl
+[source,pkl]
+----
+extends "pkl:Command"
+
+options: Options
+
+class Options {
+  /// Mapping of <bird>=<bird age> pairs defining the list of birds.
+  @Argument
+  birds: Mapping<String, Number>
+
+  /// Aggregation function to apply to all bird ages.
+  aggregate: *"sum" | "mean" | "count"
+}
+
+class Bird {
+  /// Name of the bird.
+  name: String
+
+  /// Age of the bird in years.
+  age: Number
+}
+
+birds: Listing<Bird> = new {
+  for (_name, _age in options.birds) {
+    new { name = _name; age = _age }
+  }
+}
+
+result: Number =
+  if (options.aggregate == "sum")
+    birds.toList().fold(0.0, (result, bird) -> result + bird.age)
+  else if (options.aggregate == "mean")
+    birds.toList().fold(0.0, (result, bird) -> result + bird.age) / birds.length
+  else
+    birds.length
+----
+
+Commands are executed using the `pkl run` CLI subcommand:
+
+[source,bash]
+----
+$ pkl run bird-generator.pkl pigeon --aggregate=mean Pigeon=1 Hawk=8 Eagle=3
+birds {
+  new {
+    name = "Pigeon"
+    age = 1
+  }
+  new {
+    name = "Hawk"
+    age = 8
+  }
+  new {
+    name = "Eagle"
+    age = 3
+  }
+}
+result = 4.0
+----
+
+Automatic CLI help is provided:
+
+[source,bash]
+----
+$ pkl run test.pkl -h
+Usage: test.pkl [<options>] [<birds>]... <command> [<args>]...
+
+Options:
+  --aggregate=<count, mean, sum>  Aggregation function to apply to all bird ages.
+  -h, --help                      Show this message and exit
+
+Arguments:
+  <birds>  Mapping of <bird>=<bird age> pairs defining the list of birds.
+----
+
+To learn more about this feature, consult xref:pkl-cli:index.adoc#cli-tools[the documentation] and https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0025-pkl-run-cli-framework.adoc[SPICE-0025].
+
 == Noteworthy [small]#🎶#
 
-Ready when you need them.
+=== Syntax Highlighting
+
+The Pkl CLI displays Pkl code in several locations: stack frames within errors messages, <<power-assertions,power assertions>>, and in the xref:pkl-cli:index.adoc#repl[REPL].
+This code is now syntax highlighted to improve readability (pr:https://github.com/apple/pkl/pull/1385[], pr:https://github.com/apple/pkl/pull/1409[]):
+
+image::syntax-highlight-error.png[syntax highlighted output]
+
+[[cli-dependency-notation]]
+=== CLI Support for Dependency Notation
+
+The Pkl CLI now supports specifying modules using xref:language-reference:index.adoc#project-dependencies[dependency notation] (pr:https://github.com/apple/pkl/pull/1434[]).
+This is especially helpful for <<cli-framework,CLI commands>> defined in Packages:
+
+[source,bash]
+----
+$ pkl run @my-tool/cmd.pkl ...
+----
+
+This enhancement applies to the `pkl eval`, `pkl run`, `pkl test`, and `pkl analyze imports` commands.
+It also applies to the `pkldoc`, `pkl-codegen-java`, and `pkl-codegen-kotlin` tools.
+
+[NOTE]
+Dependency notation only works for remote package dependencies. xref:language-reference:index.adoc#local-dependencies[Local dependencies] are not supported.
+
+=== Property Converter Annotations
+
+Pkl provides the pkldoc:BaseValueRenderers#converters[] mechanism for transforming values during rendering.
+Converters are flexible, but their design makes some transformations awkward.
+In particular, modifying property names during rendering required a lot of extra code.
+
+The new pkldoc:ConvertProperty[] annotation adds a way to express parameterized per-property name and value transformations (pr:https://github.com/apple/pkl/pull/1333[]).
+
+To learn more about this feature, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0024-annotation-converters.adoc[SPICE-0024].
+
+Additional new Pkl APIs for per-format property renaming will be added for many built-in renderers:
+
+.fmt.pkl
+[source,pkl]
+----
+import "pkl:json"
+import "pkl:yaml"
+
+@json.Property { name = "foo_bar" }
+@yaml.Property { name = "foo-bar" }
+fooBar: String = "hello world"
+----
+
+[source,terminaloutput]
+----
+$ pkl eval fmt.pkl -f json
+{
+  "foo_bar": "hello world"
+}
+
+$ pkl eval fmt.pkl -f yaml
+foo-bar: hello world
+----
+
+=== Java API changes
+
+==== New classes
+
+New classes are introduced to the Java API.
+
+* `org.pkl.core.CommandSpec`
+
+==== New methods
+
+New methods are introduced to the Java API.
+
+* `org.pkl.core.Evaluator.evaluateCommand`
+* `org.pkl.core.EvaluatorBuilder.setPowerAssertionsEnabled`
+* `org.pkl.core.EvaluatorBuilder.getPowerAssertionsEnabled`
+* `org.pkl.core.SecurityManager.resolveSecurePath`
+* `org.pkl.config.java.ConfigEvaluator.evaluateOutputValue`
+* `org.pkl.coznfig.java.ConfigEvaluator.evaluateExpression`
 
 === Standard Library changes
 
-New properties have been added to the standard library (https://github.com/apple/pkl/pull/1396[#1396]).
+New properties have been added to the standard library (pr:https://github.com/apple/pkl/pull/1396[]).
 
 ==== Additions to `pkl:base`
 
-The following APIs have been added:
+* pkldoc:List#isNotEmpty[]
+* pkldoc:Map#isNotEmpty[]
+* pkldoc:Set#isNotEmpty[]
+* pkldoc:Listing#isNotEmpty[]
+* pkldoc:Mapping#isNotEmpty[]
+* pkldoc:String#isNotEmpty[]
+* pkldoc:String#isNotBlank[]
+* pkldoc:ConvertProperty[]
+* pkldoc:BaseValueRenderer#convertPropertyTransformers[]
 
-* link:{uri-stdlib-List}#isNotEmpty[`List.isNotEmpty`]
-* link:{uri-stdlib-Map}#isNotEmpty[`Map.isNotEmpty`]
-* link:{uri-stdlib-Set}#isNotEmpty[`Set.isNotEmpty`]
-* link:{uri-stdlib-Listing}#isNotEmpty[`Listing.isNotEmpty`]
-* link:{uri-stdlib-Mapping}#isNotEmpty[`Mapping.isNotEmpty`]
-* link:{uri-stdlib-String}#isNotEmpty[`String.isNotEmpty`]
-* link:{uri-stdlib-String}#isNotBlank[`String.isNotBlank`]
+==== New module `pkl:Command`
+
+The pkldoc:#[pkl:Command] standard library module is added.
+
+==== Additions to `pkl:json`
+
+* pkldoc:Property[pkl:json]
+
+==== Additions to `pkl:jsonnet`
+
+* pkldoc:Property[pkl:jsonnet]
+
+==== Additions to `pkl:protobuf`
+
+* pkldoc:Property[pkl:protobuf]
+
+==== Additions to `pkl:xml`
+
+* pkldoc:Property[pkl:xml]
+
+==== Additions to `pkl:yaml`
+
+* pkldoc:Property[pkl:yaml]
 
 == Breaking Changes [small]#💔#
 
 Things to watch out for when upgrading.
 
-=== XXX
+=== Removal of `@argfile` support
+
+Prior versions of Pkl had an undocumented feature allowing inclusion of CLI arguments from files using `@path/to/file`.
+In order to support <<cli-dependency-notation,dependency notation>> on the CLI, `@argfile` support has been removed from Pkl.
+
+=== Removal of `Collection#transpose()`
+
+Prior versions of Pkl defined a `transpose()` method on the `Collection` class.
+This method was never implemented and threw an error when called.
+As it was never functional, it has been removed entirely without a deprecation warning (pr:https://github.com/apple/pkl/pull/1437[]).
 
 == Miscellaneous [small]#🐸#
 
-* Improve formatting of imports to keep surrounding comments (https://github.com/apple/pkl/pull/1424[#1424]).
+* Improve formatting of imports to keep surrounding comments (pr:https://github.com/apple/pkl/pull/1424[]).
+* Add support for evaluating module output and expressions to `ConfigEvaluator` (pr:https://github.com/apple/pkl/pull/1297[]).
+* The `pkl format --write` command now exits successfully when formatting violations are found and updated (pr:https://github.com/apple/pkl/pull/1340[]).
+* Add `pkl-bom` module to aid in aligning Pkl Java dependencies (pr:https://github.com/apple/pkl/pull/1390[]).
+* Improve error message when writing `PklProject.deps.json` fails (pr:https://github.com/apple/pkl/pull/1405[]).
+* Add information about pkldoc:Annotation[]s to the language reference (pr:https://github.com/apple/pkl/pull/1427[]).
+* Improved usability for the `org.pkl.formatter.Formatter` Java API (pr:https://github.com/apple/pkl/pull/1428[]).
 
 == Bugs fixed [small]#🐜#
 
 The following bugs have been fixed.
 
-* Incorrect Function.toString() (https://github.com/apple/pkl/issues/1410[#1410]).
+* `Function.toString()` returns incorrect result (pr:https://github.com/apple/pkl/pull/1411[]).
+* Failure when `--multiple-file-output-path` is a symlink (pr:https://github.com/apple/pkl/pull/1389[]).
+* The `module` type in a non-final module has default value of type `Dynamic` (pr:https://github.com/apple/pkl/pull/1392[]).
+* The `module` type is cached incorrectly in some cases (pr:https://github.com/apple/pkl/pull/1393[]).
+* A possible race condition involving symlinks could bypass `--root-dir` during module and resource reading (pr:https://github.com/apple/pkl/pull/1426[]).
+* `pkl format` produces internal stack traces when lexing fails (pr:https://github.com/apple/pkl/pull/1430[]).
+* `super` access expressions are parsed incorrectly inside the spread operator (pr:https://github.com/apple/pkl/pull/1364[]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/bioball[@bioball]
+* https://github.com/eddie4941[@eddie4941]
+* https://github.com/HT154[@HT154]
+* https://github.com/stackoverflow[@stackoverflow]
+* https://github.com/StefMa[@StefMa]
