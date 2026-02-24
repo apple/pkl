@@ -1070,10 +1070,10 @@ A property may be annotated with any type if its `@Flag` or `@Argument` annotati
 The `convert` property is a xref:language-reference:index.adoc#anonymous-functions[function] that overrides how _each_ raw option value is interpreted.
 The `transformAll` property is a function that overrides how _all_ parsed option values become the final property value.
 
-The `convert` function may return an link:{uri-stdlib-Command-Import}[`Import`] value that is replaced during option parsing with the actual value of the module specified by its `uri` property.
+The `convert` and `transformAll` functions may return an pkldoc:Import[pkl:Command] value that is replaced during option parsing with the actual value of the module specified by its `uri` property.
 If `glob` is `true`, the replacement value is a `Mapping`; its keys are the _absolute_ URIs of the matched modules and its values are the actual module values.
 When specifying glob import options on the command line, it is often necessary to quote the value to avoid it being interpreted by the shell.
-If the return value of `convert` is a `List`, `Set`, `Map`, or `Pair`, each contained value (elements and entry keys/values) that are `Import` values are also replaced.
+If the return value of `convert` or `transformAll` is a `List`, `Set`, `Map`, or `Pair`, each contained value (elements and entry keys/values) that are `Import` values are also replaced.
 
 [IMPORTANT]
 ====

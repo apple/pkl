@@ -462,7 +462,7 @@ public final class CommandSpecParser {
 
   private class OptionBehavior {
     private @Nullable BiFunction<String, URI, Object> each;
-    private @Nullable Function<List<Object>, Object> all;
+    private @Nullable BiFunction<List<Object>, URI, Object> all;
     private @Nullable Boolean multiple;
     private @Nullable String metavar;
     private @Nullable CommandSpec.CompletionCandidates completionCandidates;
@@ -471,7 +471,7 @@ public final class CommandSpecParser {
 
     private OptionBehavior(
         @Nullable BiFunction<String, URI, Object> each,
-        @Nullable Function<List<Object>, Object> all,
+        @Nullable BiFunction<List<Object>, URI, Object> all,
         @Nullable Boolean multiple,
         @Nullable String metavar,
         @Nullable CommandSpec.CompletionCandidates completionCandidates) {
@@ -493,7 +493,9 @@ public final class CommandSpecParser {
           annotation == null
               ? null
               : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
-                  ? (it) -> handleBadValue(() -> func.apply(VmList.create(it)))
+                  ? (values, workingDirUri) ->
+                      handleBadValue(
+                          () -> handleImports(func.apply(VmList.create(values)), workingDirUri))
                   : null,
           annotation == null
               ? null
@@ -533,7 +535,7 @@ public final class CommandSpecParser {
           all =
               !multiple
                   ? this::allChooseLast
-                  : (values) -> {
+                  : (values, workingDirUri) -> {
                     if (values.isEmpty()) return null;
                     var builder = new VmObjectBuilder();
                     values.forEach(builder::addElement);
@@ -547,7 +549,7 @@ public final class CommandSpecParser {
           all =
               !multiple
                   ? this::allChooseLast
-                  : (values) -> {
+                  : (values, workingDirUri) -> {
                     if (values.isEmpty()) return null;
                     var builder = new VmObjectBuilder();
                     values.forEach(
@@ -563,7 +565,7 @@ public final class CommandSpecParser {
           all =
               !multiple
                   ? this::allChooseLast
-                  : (values) -> values.isEmpty() ? null : VmList.create(values);
+                  : (values, workingDirUri) -> values.isEmpty() ? null : VmList.create(values);
       } else if (typeNode instanceof TypeNode.SetTypeNode setTypeNode) {
         handleElement(setTypeNode.getElementTypeNode(), prop);
         if (multiple == null) multiple = true;
@@ -571,7 +573,7 @@ public final class CommandSpecParser {
           all =
               !multiple
                   ? this::allChooseLast
-                  : (values) -> values.isEmpty() ? null : VmSet.create(values);
+                  : (values, workingDirUri) -> values.isEmpty() ? null : VmSet.create(values);
       } else if (typeNode instanceof TypeNode.MapTypeNode mapTypeNode) {
         handleEntry(mapTypeNode.getKeyTypeNode(), mapTypeNode.getValueTypeNode(), prop);
         if (multiple == null) multiple = true;
@@ -579,7 +581,7 @@ public final class CommandSpecParser {
           all =
               !multiple
                   ? this::allChooseLast
-                  : (values) -> {
+                  : (values, workingDirUri) -> {
                     if (values.isEmpty()) return null;
                     var builder = VmMap.builder();
                     values.forEach(
@@ -860,7 +862,7 @@ public final class CommandSpecParser {
       if (metavar == null) metavar = transformKey.getMetavar() + "=" + transformValue.getMetavar();
     }
 
-    private @Nullable Object allChooseLast(List<Object> values) {
+    private @Nullable Object allChooseLast(List<Object> values, URI workingDirUri) {
       if (!values.isEmpty()) return values.get(values.size() - 1);
       if (isOptional()) return null;
       throw new MissingOption();
@@ -898,7 +900,7 @@ public final class CommandSpecParser {
       return each;
     }
 
-    public Function<List<Object>, Object> getAll() {
+    public BiFunction<List<Object>, URI, Object> getAll() {
       assert all != null;
       return all;
     }

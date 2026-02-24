@@ -868,6 +868,65 @@ class CliCommandRunnerTest {
   }
 
   @Test
+  fun `transformAll import`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        """
+      extends "pkl:Command"
+      
+      options: Options
+      
+      output {
+        value = (options) {
+          fromImport {
+           baz = true // assert that imported modules are not forced
+          }
+        }
+      }
+      
+      class Options {
+        @Flag {
+          convert = (it) -> new Import{ uri = it }
+          transformAll = (values) -> values.firstOrNull ?? new Import { uri = "./default.pkl" }
+        }
+        fromImport: Module
+      }
+    """
+          .trimIndent(),
+      )
+
+    val importUri =
+      writePklFile(
+        "default.pkl",
+        """
+      foo = 1
+      bar = "baz"
+      baz: Boolean
+    """
+          .trimIndent(),
+      )
+
+    val output =
+      runToStdout(
+        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
+        emptyList(),
+      )
+    assertThat(output)
+      .isEqualTo(
+        """
+        fromImport {
+          foo = 1
+          bar = "baz"
+          baz = true
+        }
+        
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `convert glob import`() {
     val moduleUri =
       writePklFile(
