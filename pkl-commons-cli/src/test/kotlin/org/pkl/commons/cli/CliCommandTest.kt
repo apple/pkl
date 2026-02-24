@@ -148,7 +148,7 @@ class CliCommandTest {
       amends "pkl:Project"
 
       dependencies {
-        ["foo"] = import("$depDir/PklProject")
+        ["foo"] = import("${depDir.toUri().resolve("PklProject")}")
       }
     """
           .trimIndent()

@@ -126,7 +126,7 @@ public final class CommandSpecParser {
                     // instance of CommandSpec.State previously returned from a prior invocation
                     // of CommandSpec.apply.
                     parent == null ? null : (SubcommandState) parent.contents()),
-                (it) -> evaluateResult(command, (SubcommandState) it)));
+                (it) -> handleErrors(() -> evaluateResult(command, (SubcommandState) it))));
   }
 
   private List<CommandSpec> collectSubcommands(VmTyped commandInfo) {
@@ -488,12 +488,12 @@ public final class CommandSpecParser {
               ? null
               : VmUtils.readMember(annotation, Identifier.CONVERT) instanceof VmFunction func
                   ? (rawValue, workingDirUri) ->
-                      handleErrors(() -> handleImports(func.apply(rawValue), workingDirUri))
+                      handleBadValue(() -> handleImports(func.apply(rawValue), workingDirUri))
                   : null,
           annotation == null
               ? null
               : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
-                  ? (it) -> handleErrors(() -> func.apply(VmList.create(it)))
+                  ? (it) -> handleBadValue(() -> func.apply(VmList.create(it)))
                   : null,
           annotation == null
               ? null
@@ -957,7 +957,6 @@ public final class CommandSpecParser {
   private SubcommandState buildExecutionModule(
       VmTyped module, VmTyped options, @Nullable SubcommandState parent) {
     EconomicMap<Object, ObjectMember> properties = EconomicMaps.create(parent != null ? 2 : 1);
-    options.force(false, true);
     properties.put(
         Identifier.OPTIONS, VmUtils.createSyntheticObjectProperty(Identifier.OPTIONS, "", options));
 
@@ -1079,31 +1078,35 @@ public final class CommandSpecParser {
   }
 
   // handle errors from convert/transformAll and correctly format them for the CLI
-  private Object handleErrors(Supplier<Object> f) {
+  private Object handleBadValue(Supplier<Object> f) {
     try {
-      try {
-        return f.get();
-      } catch (VmStackOverflowException e) {
-        if (VmUtils.isPklBug(e)) {
-          throw new VmExceptionBuilder()
-              .bug("Stack overflow")
-              .withCause(e.getCause())
-              .build()
-              .toPklException(frameTransformer, color);
-        }
-        throw e.toPklException(frameTransformer, color);
-      } catch (VmException e) {
-        throw e.toPklException(frameTransformer, color);
-      } catch (Exception e) {
-        throw new PklBugException(e);
-      }
+      return handleErrors(f);
     } catch (Throwable e) {
       // add a newline so this prints nicely under "Error: invalid value for <name>:"
       throw new BadValue("\n" + e.getMessage());
     }
   }
 
-  // for convert handle imports by replace Command.Import values
+  private <T> T handleErrors(Supplier<T> f) {
+    try {
+      return f.get();
+    } catch (VmStackOverflowException e) {
+      if (VmUtils.isPklBug(e)) {
+        throw new VmExceptionBuilder()
+            .bug("Stack overflow")
+            .withCause(e.getCause())
+            .build()
+            .toPklException(frameTransformer, color);
+      }
+      throw e.toPklException(frameTransformer, color);
+    } catch (VmException e) {
+      throw e.toPklException(frameTransformer, color);
+    } catch (Exception e) {
+      throw new PklBugException(e);
+    }
+  }
+
+  // for convert, handle imports by replacing Command.Import values
   // with imported module or Mapping<String, Module> values
   // Command.Import instances in returned Pair, List, Set, or Map values are replaced as well
   // other types or nested instances of the above are not affected
@@ -1158,13 +1161,13 @@ public final class CommandSpecParser {
     try {
       // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
       // into `URI("C", null, "/foo/bar", null)`.
-      var modulePath = Path.of(moduleName);
+      @SuppressWarnings("DuplicateExpressions")
       var uri =
           IoUtils.isUriLike(moduleName)
               ? new URI(moduleName)
               : IoUtils.isWindowsAbsolutePath(moduleName)
-                  ? modulePath.toUri()
-                  : new URI(null, null, IoUtils.toNormalizedPathString(modulePath), null);
+                  ? Path.of(moduleName).toUri()
+                  : new URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null);
       uriString =
           uri.isAbsolute() ? uri.toString() : IoUtils.resolve(workingDirUri, uri).toString();
     } catch (URISyntaxException e) {
