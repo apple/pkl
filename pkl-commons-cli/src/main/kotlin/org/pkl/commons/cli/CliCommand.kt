@@ -111,9 +111,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       remoteDep.packageUri.toPackageAssetUri(path).uri
     }
 
-  protected val resolvedSourceModules: List<URI> =
+  protected val resolvedSourceModules: List<URI> by lazy {
     if (project == null) cliOptions.normalizedSourceModules
     else cliOptions.normalizedSourceModules.map(::resolveModuleUri)
+  }
 
   protected fun loadProject(projectFile: Path): Project {
     val securityManager =

@@ -196,7 +196,7 @@ image::syntax-highlight-error.png[syntax highlighted output]
 [[cli-dependency-notation]]
 === CLI Support for Dependency Notation
 
-The Pkl CLI now supports specifying modules using xref:language-reference:index.adoc#project-dependencies[dependency notation] (pr:https://github.com/apple/pkl/pull/1434[]).
+The Pkl CLI now supports specifying modules using xref:language-reference:index.adoc#project-dependencies[dependency notation] (pr:https://github.com/apple/pkl/pull/1434[], pr:https://github.com/apple/pkl/pull/1439[]).
 This is especially helpful for <<cli-framework,CLI commands>> defined in Packages:
 
 [source,bash]
