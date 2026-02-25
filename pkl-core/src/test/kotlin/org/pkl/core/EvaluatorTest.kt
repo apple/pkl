@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -280,6 +280,57 @@ class EvaluatorTest {
     assertThat(e.message)
       .contains(
         "Refusing to load module `file:///non/existing.pkl` because it is not within the root directory (`--root-dir`)."
+      )
+  }
+
+  @Test
+  fun `cannot import module from zip filesystem located outside root dir`(
+    @TempDir tempDir: Path,
+    @TempDir forbidden: Path,
+  ) {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = tempDir
+        build()
+      }
+
+    val zipFile = createModulesZip(forbidden)
+
+    val module =
+      tempDir
+        .resolve("test.pkl")
+        .writeString("res = import(\"jar:${zipFile.toUri()}!/foo/var/module1.pkl\")")
+
+    val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+    assertThat(e)
+      .hasMessageContaining(
+        "Refusing to load module `jar:${zipFile.toUri()}!/foo/var/module1.pkl` because it is not within the root directory (`--root-dir`)."
+      )
+  }
+
+  @Test
+  fun `cannot read resource from zip filesystem located outside root dir`(
+    @TempDir tempDir: Path,
+    @TempDir forbidden: Path,
+  ) {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = tempDir
+        allowedResources.add(Pattern.compile("jar:file:"))
+        build()
+      }
+
+    val zipFile = createModulesZip(forbidden)
+
+    val module =
+      tempDir
+        .resolve("test.pkl")
+        .writeString("res = read(\"jar:${zipFile.toUri()}!/foo/var/module1.pkl\")")
+
+    val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+    assertThat(e)
+      .hasMessageContaining(
+        "Refusing to read resource `jar:${zipFile.toUri()}!/foo/var/module1.pkl` because it is not within the root directory (`--root-dir`)."
       )
   }
 

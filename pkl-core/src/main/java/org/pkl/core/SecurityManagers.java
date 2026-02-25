@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /** A provider for {@link SecurityManager}s. */
@@ -213,13 +214,17 @@ public final class SecurityManagers {
     }
 
     private void checkIsUnderRootDir(URI uri, boolean isResource) throws SecurityManagerException {
-      if (!uri.isAbsolute()) {
-        throw new AssertionError("Expected absolute URI but got: " + uri);
+      // handle jar:file: URIs correctly:
+      var checkUri =
+          uri.getScheme().equals("jar") ? IoUtils.createUri(uri.getSchemeSpecificPart()) : uri;
+
+      if (!checkUri.isAbsolute()) {
+        throw new AssertionError("Expected absolute URI but got: " + checkUri);
       }
 
-      if (rootDir == null || !uri.getScheme().equals("file")) return;
+      if (rootDir == null || !checkUri.getScheme().equals("file")) return;
 
-      var path = Path.of(uri);
+      var path = Path.of(checkUri);
       if (Files.exists(path)) {
         try {
           path = path.toRealPath();
