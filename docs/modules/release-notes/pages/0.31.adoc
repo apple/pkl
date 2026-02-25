@@ -339,6 +339,7 @@ The following bugs have been fixed.
 * A possible race condition involving symlinks could bypass `--root-dir` during module and resource reading (pr:https://github.com/apple/pkl/pull/1426[]).
 * `pkl format` produces internal stack traces when lexing fails (pr:https://github.com/apple/pkl/pull/1430[]).
 * `super` access expressions are parsed incorrectly inside the spread operator (pr:https://github.com/apple/pkl/pull/1364[]).
+* Modules and resources with `jar:file:` URIs were not properly sandboxed by `--root-dir` (pr:https://github.com/apple/pkl/pull/1442[]).
 
 == Contributors [small]#🙏#
 
