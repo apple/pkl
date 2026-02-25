@@ -89,7 +89,7 @@ public record CommandSpec(
       @Nullable String helpText,
       boolean showAsRequired,
       BiFunction<String, URI, Object> transformEach,
-      Function<List<Object>, Object> transformAll,
+      BiFunction<List<Object>, URI, Object> transformAll,
       @Nullable CompletionCandidates completionCandidates,
       @Nullable String shortName,
       String metavar,
@@ -134,7 +134,7 @@ public record CommandSpec(
       String name,
       @Nullable String helpText,
       BiFunction<String, URI, Object> transformEach,
-      Function<List<Object>, Object> transformAll,
+      BiFunction<List<Object>, URI, Object> transformAll,
       @Nullable CompletionCandidates completionCandidates,
       boolean repeated)
       implements Option {

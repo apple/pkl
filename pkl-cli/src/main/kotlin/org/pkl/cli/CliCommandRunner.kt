@@ -22,6 +22,7 @@ import com.github.ajalt.clikt.parameters.arguments.*
 import com.github.ajalt.clikt.parameters.options.*
 import com.github.ajalt.clikt.parameters.types.int
 import java.io.OutputStream
+import java.net.URI
 import java.nio.file.Path
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.exists
@@ -159,7 +160,7 @@ constructor(
                 )
                 .convert {
                   try {
-                    opt.transformEach.apply(it, runner.options.normalizedWorkingDir.toUri())
+                    opt.transformEach.apply(it, workingDirUri)
                   } catch (e: CommandSpec.Option.BadValue) {
                     fail(e.message!!)
                   } catch (_: CommandSpec.Option.MissingOption) {
@@ -168,7 +169,7 @@ constructor(
                 }
                 .transformAll(opt.defaultValue, opt.showAsRequired) {
                   try {
-                    opt.transformAll.apply(it)
+                    opt.transformAll.apply(it, workingDirUri)
                   } catch (e: CommandSpec.Option.BadValue) {
                     fail(e.message!!)
                   } catch (_: CommandSpec.Option.MissingOption) {
@@ -201,7 +202,7 @@ constructor(
                 )
                 .convert {
                   try {
-                    opt.transformEach.apply(it, runner.options.normalizedWorkingDir.toUri())
+                    opt.transformEach.apply(it, workingDirUri)
                   } catch (e: CommandSpec.Option.BadValue) {
                     fail(e.message!!)
                   } catch (_: CommandSpec.Option.MissingOption) {
@@ -210,7 +211,7 @@ constructor(
                 }
                 .transformAll(if (opt.repeated) -1 else 1, !opt.repeated) {
                   try {
-                    opt.transformAll.apply(it)
+                    opt.transformAll.apply(it, workingDirUri)
                   } catch (e: CommandSpec.Option.BadValue) {
                     fail(e.message!!)
                   } catch (_: CommandSpec.Option.MissingOption) {
@@ -222,6 +223,8 @@ constructor(
       }
       spec.subcommands.forEach { subcommands(SynthesizedRunCommand(it, runner)) }
     }
+
+    val workingDirUri: URI by lazy { runner.options.normalizedWorkingDir.toUri() }
 
     override val invokeWithoutSubcommand = true
 

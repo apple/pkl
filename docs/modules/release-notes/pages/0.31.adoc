@@ -99,7 +99,7 @@ To learn more about this feature, consult https://github.com/apple/pkl-evolution
 [[cli-framework]]
 === CLI Framework
 
-Pkl 0.31 introduces a new framework for implementing CLI tools in Pkl (pr:https://github.com/apple/pkl/pull/1367[], pr:https://github.com/apple/pkl/pull/1431[], pr:https://github.com/apple/pkl/pull/1432[], pr:https://github.com/apple/pkl/pull/1436[]).
+Pkl 0.31 introduces a new framework for implementing CLI tools in Pkl (pr:https://github.com/apple/pkl/pull/1367[], pr:https://github.com/apple/pkl/pull/1431[], pr:https://github.com/apple/pkl/pull/1432[], pr:https://github.com/apple/pkl/pull/1436[], pr:https://github.com/apple/pkl/pull/1440[]).
 
 The framework provides a way to build command line tools with user experience idioms that will be immediately familiar to users.
 CLI tools implemented in Pkl have largely the same capabilities as normal Pkl evaluation (i.e. writing to standard output and files), but this may be extended using xref:language-reference:index.adoc#external-readers[external readers].

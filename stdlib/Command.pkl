@@ -176,6 +176,10 @@ class Flag extends BaseFlag {
 
   /// Customize the behavior of turning all parsed flag values into the final option value.
   ///
+  /// When the return value is an [Import] value or a [Pair] member, [List] or [Set] element
+  /// containing an [Import], the URI or glob URI specified by the value is imported and the value
+  /// is replaced with the value of the imported module(s).
+  ///
   /// If no value is provided, all flag values are transformed according to the option's type:
   ///
   /// | Type              | Behavior |
@@ -234,6 +238,10 @@ class Argument extends Annotation {
   multiple: Boolean?
 
   /// Customize the behavior of turning all parsed flag values into the final option value.
+  ///
+  /// When the return value is an [Import] value or a [Pair] member, [List] or [Set] element
+  /// containing an [Import], the URI or glob URI specified by the value is imported and the value
+  /// is replaced with the value of the imported module(s).
   ///
   /// If no value is provided, all option values are transformed using the same rules as
   /// [Flag.transformAll].
