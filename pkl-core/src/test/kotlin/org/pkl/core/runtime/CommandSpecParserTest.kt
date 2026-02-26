@@ -293,26 +293,6 @@ class CommandSpecParserTest {
   }
 
   @Test
-  fun `nullable option with default not allowed`() {
-    val moduleUri =
-      writePklFile(
-        "cmd.pkl",
-        renderOptions +
-          """
-      class Options {
-        foo: String? = "bar"
-      }
-    """
-            .trimIndent(),
-      )
-
-    val exc = assertThrows<PklException> { parse(moduleUri) }
-    assertThat(exc.message).contains("foo: String? = \"bar\"")
-    assertThat(exc.message)
-      .contains("Unexpected option property `foo` with nullable type and default value")
-  }
-
-  @Test
   fun `option with union type containing non-string-literals`() {
     val moduleUri =
       writePklFile(

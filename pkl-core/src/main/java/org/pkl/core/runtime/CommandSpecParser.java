@@ -513,12 +513,6 @@ public final class CommandSpecParser {
       var typeNode = resolved.getFirst();
       isNullable = resolved.getSecond();
       defaultValue = CommandSpecParser.this.getDefaultValue(prop, requireExplicitDefault);
-      if (isNullable && defaultValue != null) {
-        throw exceptionBuilder()
-            .evalError("commandOptionTypeNullableWithDefaultValue", prop.getName())
-            .withSourceSection(prop.getHeaderSection())
-            .build();
-      }
 
       resolve(prop, typeNode);
       return this;

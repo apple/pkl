@@ -99,7 +99,7 @@ To learn more about this feature, consult https://github.com/apple/pkl-evolution
 [[cli-framework]]
 === CLI Framework
 
-Pkl 0.31 introduces a new framework for implementing CLI tools in Pkl (pr:https://github.com/apple/pkl/pull/1367[], pr:https://github.com/apple/pkl/pull/1431[], pr:https://github.com/apple/pkl/pull/1432[], pr:https://github.com/apple/pkl/pull/1436[], pr:https://github.com/apple/pkl/pull/1440[]).
+Pkl 0.31 introduces a new framework for implementing CLI tools in Pkl (pr:https://github.com/apple/pkl/pull/1367[], pr:https://github.com/apple/pkl/pull/1431[], pr:https://github.com/apple/pkl/pull/1432[], pr:https://github.com/apple/pkl/pull/1436[], pr:https://github.com/apple/pkl/pull/1440[], pr:https://github.com/apple/pkl/pull/1444[]).
 
 The framework provides a way to build command line tools with user experience idioms that will be immediately familiar to users.
 CLI tools implemented in Pkl have largely the same capabilities as normal Pkl evaluation (i.e. writing to standard output and files), but this may be extended using xref:language-reference:index.adoc#external-readers[external readers].
@@ -339,6 +339,7 @@ The following bugs have been fixed.
 * A possible race condition involving symlinks could bypass `--root-dir` during module and resource reading (pr:https://github.com/apple/pkl/pull/1426[]).
 * `pkl format` produces internal stack traces when lexing fails (pr:https://github.com/apple/pkl/pull/1430[]).
 * `super` access expressions are parsed incorrectly inside the spread operator (pr:https://github.com/apple/pkl/pull/1364[]).
+* Modules and resources with `jar:file:` URIs were not properly sandboxed by `--root-dir` (pr:https://github.com/apple/pkl/pull/1442[]).
 
 == Contributors [small]#🙏#
 
