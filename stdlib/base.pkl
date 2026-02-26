@@ -17,7 +17,7 @@
 /// Fundamental properties, methods, and classes for writing Pkl programs.
 ///
 /// Members of this module are automatically available in every Pkl module.
-@ModuleInfo { minPklVersion = "0.31.0" }
+@ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.base
 
 // json, math, and yaml imports used for doc comments
