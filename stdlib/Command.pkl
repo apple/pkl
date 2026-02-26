@@ -29,7 +29,7 @@
 ///   // ...
 /// }
 /// ```
-@ModuleInfo { minPklVersion = "0.31.0" }
+@ModuleInfo { minPklVersion = "0.32.0" }
 open module pkl.Command
 
 import "pkl:Command"

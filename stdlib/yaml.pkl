@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A YAML 1.2 compliant YAML parser.
-@ModuleInfo { minPklVersion = "0.31.0" }
+@ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.yaml
 
 /// Annotate properties of classes and modules with this class to override how a [YamlRenderer]

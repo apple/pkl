@@ -1,9 +1,9 @@
-= Pkl XXX Release Notes
-:version: XXX (e.g., 0.9)
-:version-minor: XXX (e.g., 0.9.0)
-:release-date: XXX (e.g., July 11, 2018)
-:version-next: XXX (e.g., 0.10)
-:version-next-date: XXX (e.g., July 2018)
+= Pkl 0.32.0 Release Notes
+:version: 0.32
+:version-minor: 0.32.0
+:release-date: TBD
+:version-next: 0.33
+:version-next-date: TBD
 
 include::partial$intro.adoc[]
 
