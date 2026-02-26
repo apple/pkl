@@ -34,7 +34,7 @@ import org.pkl.parser.syntax.Module;
 @TruffleLanguage.Registration(
     id = "pkl",
     name = "Pkl",
-    version = "0.31.0-dev",
+    version = "0.31.0",
     characterMimeTypes = VmLanguage.MIME_TYPE,
     contextPolicy = ContextPolicy.SHARED)
 @ProvidedTags(PklTags.Expression.class)
