@@ -2,9 +2,10 @@
 include::ROOT:partial$component-attributes.adoc[]
 
 [[release-0.31.0]]
-== 0.31.0 (UNRELEASED)
+== 0.31.0 (2026-02-26)
 
 xref:0.31.adoc[Release Notes]
+
 [[release-0.30.2]]
 
 == 0.30.2 (2025-12-15)
