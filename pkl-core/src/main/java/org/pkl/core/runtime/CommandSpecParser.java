@@ -407,7 +407,6 @@ public final class CommandSpecParser {
       } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode) {
         if (typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) break;
         typeNode = typeAliasTypeNode.getAliasedTypeNode();
-        break;
       } else {
         break;
       }
