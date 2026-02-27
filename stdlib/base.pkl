@@ -1966,7 +1966,21 @@ external class DataSize extends Any {
 /// manipulated = pigeon.toMap().mapKeys((key, value) -> key.reverse())
 /// manipulated.toDynamic() // new { eman = "Pigeon"; ega = 42 }
 /// ```
-abstract external class Object extends Any
+abstract external class Object extends Any {
+  /// Converts this object to a [Mixin] function.
+  ///
+  /// The resulting mixin can be applied to any object using the `|>` operator
+  /// to amend it with the properties, elements, and entries from this object.
+  ///
+  /// Example:
+  /// ```
+  /// obj = new { name = "Pigeon"; age = 42 }
+  /// person = new Person { name = "Original" } |> obj.toMixin()
+  /// // person.name == "Pigeon", person.age == 42
+  /// ```
+  @Since { version = "0.31.0" }
+  external function toMixin(): Mixin
+}
 
 /// Base class for objects whose members are described by a class definition.
 ///
