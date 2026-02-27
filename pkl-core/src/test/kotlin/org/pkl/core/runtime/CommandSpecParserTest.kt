@@ -787,4 +787,31 @@ class CommandSpecParserTest {
       .contains("Option `foo` with annotation `@CountedFlag` has invalid type `String`.")
     assertThat(exc.message).contains("Expected type: `Int`")
   }
+
+  @Test
+  fun `union typed option validates invalid choice without stream error`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      class Options {
+        format: "json" | "yaml" | "toml"
+      }
+    """
+            .trimIndent(),
+      )
+
+    val spec = parse(moduleUri)
+    val flag = spec.options.first() as CommandSpec.Flag
+
+    assertThat(flag.metavar()).isEqualTo("[json, toml, yaml]")
+
+    val apply =
+      assertThrows<CommandSpec.Option.BadValue> {
+        flag.transformEach().apply("xml", URI("file:///tmp"))
+      }
+    assertThat(apply.message).contains("invalid choice")
+    assertThat(apply.message).contains("xml")
+  }
 }
