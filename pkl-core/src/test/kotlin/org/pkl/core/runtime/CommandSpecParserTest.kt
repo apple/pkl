@@ -814,4 +814,28 @@ class CommandSpecParserTest {
     assertThat(apply.message).contains("invalid choice")
     assertThat(apply.message).contains("xml")
   }
+
+  @Test
+  fun `typealias of nullable is resolved as optional`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        renderOptions +
+          """
+      typealias OptionalString = String?
+      class Options {
+        foo: OptionalString
+      }
+    """
+            .trimIndent(),
+      )
+
+    val spec = parse(moduleUri)
+
+    assertThat(spec.options.toList()[0]).isInstanceOf(CommandSpec.Flag::class.java)
+    (spec.options.toList()[0] as CommandSpec.Flag).apply {
+      assertThat(this.name).isEqualTo("foo")
+      assertThat(this.showAsRequired).isFalse()
+    }
+  }
 }
