@@ -1160,6 +1160,29 @@ result = someLib.x
   }
 
   @Test
+  fun `evaluate output expression - nested structure to JSON`() {
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+      person {
+        friend { name = "Bilbo" }
+      }
+    """
+          .trimIndent(),
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
+        expression = "person",
+        outputFormat = "json",
+      )
+    val buffer = StringWriter()
+    CliEvaluator(options, consoleWriter = buffer).run()
+    assertThat(buffer.toString()).isEqualTo("{ \"friend\": { \"name\": \"Bilbo\" } }")
+  }
+
+  @Test
   fun `skip PklProject file`() {
     val moduleUri =
       writePklFile(
