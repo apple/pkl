@@ -55,7 +55,7 @@ Value: new Person { name = "Bub Johnson" }
 7 | passenger: Person(name.endsWith(lastName)) = new { name = "Bub Johnson" }
 ----
 
-Now, we know what the expecation actually is.
+Now, we know what the expectation is.
 
 This type of diagram is also added to test facts.
 When tests fail, Pkl emits a diagram of the expression, and the values produced.
