@@ -32,7 +32,6 @@ import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.pkl.core.CommandSpec;
 import org.pkl.core.CommandSpec.Argument;
@@ -771,18 +770,18 @@ public final class CommandSpecParser {
         return true;
       } else if (typeNode
           instanceof TypeNode.UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
-        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted();
+        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted().toList();
         if (each == null)
           each =
               (rawValue, workingDirUri) -> {
                 if (!unionOfStringLiteralsTypeNode.getStringLiterals().contains(rawValue)) {
-                  throw BadValue.invalidChoice(rawValue, choices.toList());
+                  throw BadValue.invalidChoice(rawValue, choices);
                 }
                 return rawValue;
               };
         if (all == null) all = this::allChooseLast;
         if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + choices.collect(Collectors.joining(", ")) + "]";
+        if (metavar == null) metavar = "[" + String.join(", ", choices) + "]";
         if (completionCandidates == null)
           completionCandidates = new Fixed(unionOfStringLiteralsTypeNode.getStringLiterals());
         return true;
