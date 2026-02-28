@@ -5,7 +5,7 @@ Value: "Huzzah"
     startsWith(bub.name)
     │          │   │
     false      │   "Bub"
-               new Person { name = "Bub" }
+               new typeConstraints2#Person { name = "Bub" }
 
 x | foo: String(startsWith(bub.name)) = "Huzzah"
                 ^^^^^^^^^^^^^^^^^^^^
