@@ -4922,7 +4922,7 @@ animals {
 ==== Receiver
 
 The receiver is the bottom-most object in the <<prototype-chain>>.
-That means that, within the context of an amending object, the reciever is the amending object.
+That means that, within the context of an amending object, the receiver is the amending object.
 
 Example:
 [source,pkl]
