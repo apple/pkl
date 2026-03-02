@@ -1361,7 +1361,10 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun getBaseSeparator(prev: Node, next: Node): FormatNode? {
+
     return when {
+      endsInLineComment(prev) && endsInLineComment(next) -> mustForceLine()
+
       endsInLineComment(prev) -> {
         if (prev.linesBetween(next) > 1) {
           TWO_NEWLINES
