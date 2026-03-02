@@ -1,0 +1,303 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A [Starlark](https://github.com/bazelbuild/starlark) renderer.
+@ModuleInfo { minPklVersion = "0.31.0" }
+module pkl.starlark
+
+/// Renders values as [Starlark](https://github.com/bazelbuild/starlark/blob/master/spec.md).
+///
+/// Pkl values are mapped to Starlark values as follows:
+///
+/// | Pkl type       | Starlark type    |
+/// | -------------- | ---------------- |
+/// | [Null]         | None             |
+/// | [Boolean]      | bool             |
+/// | [Int]          | int              |
+/// | [Float]        | float            |
+/// | [String]       | string           |
+/// | [List]         | list             |
+/// | [Set]          | set              |
+/// | [Map]          | dict             |
+/// | [Listing]      | list             |
+/// | [Mapping]      | dict             |
+/// | [Dynamic]      | struct (if properties) or list (if elements) |
+/// | [Typed]        | function call    |
+/// | [Pair]         | tuple            |
+///
+/// Some Pkl types, such as [Duration] and [DataSize], don't have a Starlark equivalent.
+/// To render values of such types, define _output converters_ (see [Renderer.converters]).
+///
+/// When rendering module output, [Typed] properties are rendered as rule instantiations
+/// (function calls) with an injected `name` argument derived from the property name.
+/// All other properties are rendered as variable assignments.
+///
+/// Example:
+/// ```
+/// import "pkl:starlark"
+///
+/// class CcLibrary {
+///   srcs: Listing<String>
+///   deps: Listing<String>
+/// }
+///
+/// myLib = new CcLibrary {
+///   srcs { "foo.cc" }
+///   deps { ":bar" }
+/// }
+///
+/// output {
+///   renderer = new starlark.Renderer {}
+/// }
+/// ```
+///
+/// The above renders as:
+/// ```
+/// cc_library(
+///     name = "myLib",
+///     srcs = [
+///         "foo.cc",
+///     ],
+///     deps = [
+///         ":bar",
+///     ],
+/// )
+/// ```
+class Renderer extends ValueRenderer {
+  extension = "starlark"
+
+  /// The characters to use for indenting output.
+  ///
+  /// If empty (`""`), renders everything on a single line.
+  indent: String = "    "
+
+  /// Whether to omit properties and map entries whose value is `null`.
+  omitNullProperties: Boolean = true
+
+  /// Renders [value] as a Starlark document.
+  ///
+  /// If [value] is a [Typed] or [Dynamic] object, its properties are rendered
+  /// as top-level Starlark statements. Otherwise, the value is rendered directly.
+  function renderDocument(value: Any): String =
+    if (value is Typed | Dynamic)
+      renderModuleObject(value)
+    else
+      renderValue(value)
+
+  function renderValue(value: Any): String = renderAny(value, 0)
+
+  // --- Converter support ---
+
+  local convertersMap: Map = converters.toMap()
+
+  local function getConvertersForValue(value: Any): List =
+    new Listing {
+      when (convertersMap.containsKey(value.getClass())) {
+        convertersMap[value.getClass()]
+      }
+      when (convertersMap.containsKey("*")) {
+        convertersMap["*"]
+      }
+    }.toList()
+
+  local function applyConverters(value: Any): Any =
+    if (value == null)
+      null
+    else
+      let (convs = getConvertersForValue(value))
+        convs.fold(value, (acc, c) -> c.apply(acc))
+
+  // --- String rendering (leverage JsonRenderer for escaping) ---
+
+  local jsonRenderer = new JsonRenderer {}
+
+  local function renderString(s: String): String = jsonRenderer.renderValue(s)
+
+  // --- Indentation ---
+
+  local isInline: Boolean = indent.isEmpty
+
+  local function indentStr(depth: Int): String = indent.repeat(depth)
+
+  // --- Core renderer: apply converters, then dispatch ---
+
+  local function renderAny(value: Any, depth: Int): String =
+    renderConverted(applyConverters(value), depth)
+
+  local function renderConverted(value: Any, depth: Int): String =
+    if (value == null)
+      "None"
+    else if (value is RenderDirective)
+      value.text
+    else if (value is Boolean)
+      if (value) "True" else "False"
+    else if (value is Int | Float)
+      "\(value)"
+    else if (value is String)
+      renderString(value)
+    else if (value is Pair)
+      renderPair(value, depth)
+    else if (value is Set)
+      "set(\(renderList(value.toList(), depth)))"
+    else if (value is List | Listing)
+      renderList(toListValue(value), depth)
+    else if (value is Map | Mapping)
+      renderDict(toMapValue(value), depth)
+    else if (value is Dynamic)
+      renderDynamic(value, depth)
+    else if (value is Typed)
+      renderTypedFunctionCall(value.getClass().simpleName, value.toMap(), depth)
+    else
+      throw(
+        "Cannot render value of type `\(value.getClass().simpleName)` as Starlark. Value: \(value)"
+      )
+
+  // --- Type coercions ---
+
+  local function toListValue(value: List | Listing): List =
+    if (value is List) value else value.toList()
+
+  local function toMapValue(value: Map | Mapping): Map = if (value is Map) value else value.toMap()
+
+  // --- List / Listing → [...] ---
+
+  local function renderList(items: List, depth: Int): String =
+    if (items.isEmpty)
+      "[]"
+    else if (isInline)
+      "[\(items.map((it) -> renderAny(it, depth)).join(", "))]"
+    else
+      "[\n\(items.map((it) -> "\(indentStr(depth + 1))\(renderAny(it, depth + 1))").join(",\n")),\n\(indentStr(depth))]"
+
+  // --- Map / Mapping → {...} ---
+
+  local function renderDict(entries: Map, depth: Int): String =
+    let (filtered = if (omitNullProperties) entries.filter((_, v) -> v != null) else entries)
+      if (filtered.isEmpty)
+        "{}"
+      else if (isInline)
+        "{\(new Listing { for (k, v in filtered) { "\(renderDictKey(k)): \(renderAny(v, depth))" } }.join(", "))}"
+      else
+        let (
+          lines =
+            new Listing {
+              for (k, v in filtered) {
+                "\(indentStr(depth + 1))\(renderDictKey(k)): \(renderAny(v, depth + 1))"
+              }
+            }.toList()
+        )
+          "{\n\(lines.join(",\n")),\n\(indentStr(depth))}"
+
+  local function renderDictKey(key: Any): String =
+    if (key is String)
+      renderString(key)
+    else if (key is RenderDirective)
+      key.text
+    else
+      throw("Cannot render non-string dict key: \(key)")
+
+  // --- Pair → tuple ---
+
+  local function renderPair(pair: Pair, depth: Int): String =
+    "(\(renderAny(pair.first, depth)), \(renderAny(pair.second, depth)))"
+
+  // --- Dynamic → struct(...) or [...] ---
+
+  local function renderDynamic(value: Dynamic, depth: Int): String =
+    if (value.toList().isEmpty)
+      renderFunctionCall("struct", value.toMap(), depth)
+    else
+      renderList(value.toList(), depth)
+
+  // --- Function call: name(key = val, ...) ---
+  //
+  // Dynamic/struct: arguments sorted alphabetically by key.
+  // Typed: `name` argument always first, remaining arguments sorted alphabetically.
+
+  local function renderFunctionCall(callName: String, props: Map, depth: Int): String =
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+    let (sorted = filtered.entries.sortBy((e) -> "\(e.first)"))
+      if (filtered.isEmpty)
+        "\(callName)()"
+      else if (isInline)
+        "\(callName)(\(new Listing { for (e in sorted) { "\(e.first) = \(renderAny(e.second, depth))" } }.join(", ")))"
+      else
+        let (
+          lines =
+            new Listing {
+              for (e in sorted) {
+                "\(indentStr(depth + 1))\(e.first) = \(renderAny(e.second, depth + 1))"
+              }
+            }.toList()
+        )
+          "\(callName)(\n\(lines.join(",\n")),\n\(indentStr(depth)))"
+
+  local function renderTypedFunctionCall(callName: String, props: Map, depth: Int): String =
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+    let (sorted = filtered.entries.sortBy((e) -> if ("\(e.first)" == "name") "" else "\(e.first)"))
+      if (filtered.isEmpty)
+        "\(callName)()"
+      else if (isInline)
+        "\(callName)(\(new Listing { for (e in sorted) { "\(e.first) = \(renderAny(e.second, depth))" } }.join(", ")))"
+      else
+        let (
+          lines =
+            new Listing {
+              for (e in sorted) {
+                "\(indentStr(depth + 1))\(e.first) = \(renderAny(e.second, depth + 1))"
+              }
+            }.toList()
+        )
+          "\(callName)(\n\(lines.join(",\n")),\n\(indentStr(depth)))"
+
+  // --- Module-level / document-level rendering ---
+
+  local function renderModuleObject(value: Typed | Dynamic): String =
+    let (props = value.toMap())
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+      filtered.entries
+        .map((e) -> renderTopLevelStatement(e.first.toString(), applyConverters(e.second)))
+        .join("\n")
+
+  local function renderTopLevelStatement(name: String, value: Any): String =
+    if (value is Typed && !(value is RenderDirective))
+      renderRuleCall(name, value)
+    else
+      "\(name) = \(renderConverted(value, 0))\n"
+
+  local function renderRuleCall(name: String, value: Typed): String =
+    let (props = value.toMap())
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+    let (withoutName = filtered.filter((k, _) -> k != "name"))
+    let (sortedRest = withoutName.entries.sortBy((e) -> "\(e.first)"))
+      if (isInline)
+        let (
+          inlineArgs =
+            List("name = \"\(name)\"")
+              + new Listing { for (e in sortedRest) { "\(e.first) = \(renderAny(e.second, 0))" } }
+                .toList()
+        )
+          "\(value.getClass().simpleName)(\(inlineArgs.join(", ")))\n"
+      else
+        let (
+          lines =
+            List("\(indent)name = \"\(name)\"")
+              + new Listing {
+                for (e in sortedRest) { "\(indent)\(e.first) = \(renderAny(e.second, 1))" }
+              }.toList()
+        )
+          "\(value.getClass().simpleName)(\n\(lines.join(",\n")),\n)\n"
+}
