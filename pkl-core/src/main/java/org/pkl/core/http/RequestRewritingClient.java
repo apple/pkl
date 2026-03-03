@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,7 +28,10 @@ import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.regex.Pattern;
+import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
+import org.pkl.core.Pair;
 import org.pkl.core.PklBugException;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.Nullable;
@@ -54,6 +57,7 @@ final class RequestRewritingClient implements HttpClient {
   final int testPort;
   final HttpClient delegate;
   private final List<Entry<URI, URI>> rewrites;
+  private final List<Pair<Pattern, List<Pair<String, String>>>> headers;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -62,7 +66,8 @@ final class RequestRewritingClient implements HttpClient {
       Duration requestTimeout,
       int testPort,
       HttpClient delegate,
-      Map<URI, URI> rewrites) {
+      Map<URI, URI> rewrites,
+      List<Pair<Pattern, List<Pair<String, String>>>> headers) {
     this.userAgent = userAgent;
     this.requestTimeout = requestTimeout;
     this.testPort = testPort;
@@ -72,6 +77,7 @@ final class RequestRewritingClient implements HttpClient {
             .map((it) -> Map.entry(normalizeRewrite(it.getKey()), normalizeRewrite(it.getValue())))
             .sorted(Comparator.comparingInt((it) -> -it.getKey().toString().length()))
             .toList();
+    this.headers = headers;
   }
 
   @Override
@@ -112,6 +118,9 @@ final class RequestRewritingClient implements HttpClient {
         .map()
         .forEach((name, values) -> values.forEach(value -> builder.header(name, value)));
     builder.setHeader("User-Agent", userAgent);
+    for (var header : this.getHeaders(original.uri())) {
+      builder.header(header.getFirst(), header.getSecond());
+    }
 
     var method = original.method();
     original
@@ -214,6 +223,16 @@ final class RequestRewritingClient implements HttpClient {
       ret = HttpUtils.setPort(ret, testPort);
     }
     return ret;
+  }
+
+  private List<Pair<String, String>> getHeaders(URI uri) {
+    return headers.stream()
+        .flatMap(
+            rule ->
+                rule.getFirst().asPredicate().test(uri.toString())
+                    ? rule.getSecond().stream()
+                    : Stream.empty())
+        .toList();
   }
 
   private void checkNotClosed(HttpRequest request) {

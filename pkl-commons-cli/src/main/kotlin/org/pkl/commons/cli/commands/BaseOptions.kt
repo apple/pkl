@@ -33,10 +33,10 @@ import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
 import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.Color
-import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
+import org.pkl.core.util.GlobResolver
 import org.pkl.core.util.IoUtils
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -95,6 +95,9 @@ class BaseOptions : OptionGroup() {
         Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
       }
     }
+
+    val HEADER_NAME_REGEX = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$")
+    val HEADER_VALUE_REGEX = Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
   }
 
   private val defaults = CliBaseOptions()
@@ -287,14 +290,14 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
-  val httpHeaders: Map<URI, List<PPair<String, String>>> by
+  val httpHeaders: List<PPair<Pattern, List<PPair<String, String>>>> by
     option(
         names = arrayOf("--http-headers"),
-        metavar = "<uri>=<header name>:<header value>[,<header name>:<header value>...]",
+        metavar = "<url-pattern>=<header name>:<header value>[,<header name>:<header value>...]",
         help = "HTTP header to add to the request.",
       )
       .convert { it ->
-        val (uriStr, headers) =
+        val (stringPattern, headers) =
           it.split("=", limit = 2).let { parts ->
             require(parts.size == 2) {
               "Headers must be in the form of <prefix>=<header name>:<header value>"
@@ -303,7 +306,7 @@ class BaseOptions : OptionGroup() {
           }
 
         try {
-          val uri = URI(uriStr.trim())
+          var pattern = GlobResolver.toRegexPattern(stringPattern)
 
           val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
           val headerPairs =
@@ -311,15 +314,15 @@ class BaseOptions : OptionGroup() {
               val (headerName, headerValue) =
                 headerRegex.find(header)?.destructured
                   ?: fail("Header '$header' is not in 'name:value' format.")
-              require(PklEvaluatorSettings.HEADER_NAME_REGEX.matcher(headerName).matches()) {
+              require(HEADER_NAME_REGEX.matcher(headerName).matches()) {
                 "HTTP header name '$headerName' has invalid syntax."
               }
-              require(PklEvaluatorSettings.HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
+              require(HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
                 "HTTP header value '$headerValue' has invalid syntax"
               }
               PPair(headerName, headerValue)
             }
-          uri to headerPairs
+          PPair(pattern, headerPairs)
         } catch (e: IllegalArgumentException) {
           fail(e.message!!)
         } catch (e: URISyntaxException) {
@@ -337,7 +340,6 @@ class BaseOptions : OptionGroup() {
         }
       }
       .multiple()
-      .toMap()
 
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
