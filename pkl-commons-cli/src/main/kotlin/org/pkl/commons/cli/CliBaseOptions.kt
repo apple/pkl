@@ -146,7 +146,7 @@ data class CliBaseOptions(
   val httpRewrites: Map<URI, URI>? = null,
 
   /** HTTP headers to add to the request. */
-  val httpHeaders: Map<URI, List<Pair<String, String>>>? = null,
+  val httpHeaders: List<Pair<Pattern, List<Pair<String, String>>>>? = null,
 
   /** External module reader process specs */
   val externalModuleReaders: Map<String, ExternalReader> = mapOf(),

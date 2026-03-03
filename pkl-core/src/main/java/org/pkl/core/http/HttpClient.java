@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 import javax.net.ssl.SSLContext;
 import org.pkl.core.Pair;
 import org.pkl.core.util.Nullable;
@@ -157,7 +158,7 @@ public interface HttpClient extends AutoCloseable {
      * <p>This method clears all existing headers and replaces them with the contents of the
      * provided map.
      */
-    Builder setHeaders(Map<URI, List<Pair<String, String>>> headers);
+    Builder setHeaders(List<Pair<Pattern, List<Pair<String, String>>>> headers);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

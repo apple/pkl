@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import org.pkl.core.PObject
 import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.settings.PklSettings.Editor
+import org.pkl.core.util.GlobResolver
 
 class PklSettingsTest {
   @Test
@@ -67,7 +68,7 @@ class PklSettingsTest {
         }
         headers {
           ["https://foo.com/"] {
-            Pair("X-Foo", "bar")
+            ["x-foo"] = "bar"
           }
         }
       }
@@ -83,7 +84,9 @@ class PklSettingsTest {
           listOf("example.com", "pkg.pkl-lang.org"),
         ),
         mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
-        mapOf(URI("https://foo.com/") to listOf(PPair("X-Foo", "bar"))),
+        listOf(
+          PPair(GlobResolver.toRegexPattern("https://foo.com/"), listOf(PPair("x-foo", "bar")))
+        ),
       )
 
     assertThat(settings).isEqualTo(PklSettings(Editor.SYSTEM, expectedHttp))
