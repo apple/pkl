@@ -139,6 +139,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {
+    @Suppress("PklCliDirectProjectEvaluatorSettingsAccess")
     if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
   }
 
@@ -199,27 +200,29 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  protected val useColor: Boolean by lazy { cliOptions.color?.hasColor() ?: false }
+  protected val useColor: Boolean by lazy {
+    cliOptions.color?.hasColor() ?: evaluatorSettings?.color?.hasColor() ?: false
+  }
 
-  private val proxyAddress: URI? by lazy {
+  protected val proxyAddress: URI? by lazy {
     cliOptions.httpProxy ?: evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
   }
 
-  private val noProxy: List<String>? by lazy {
+  protected val noProxy: List<String>? by lazy {
     cliOptions.httpNoProxy
       ?: evaluatorSettings?.http?.proxy?.noProxy
       ?: settings.http?.proxy?.noProxy
   }
 
-  private val httpRewrites: Map<URI, URI>? by lazy {
+  protected val httpRewrites: Map<URI, URI>? by lazy {
     cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites()
   }
 
-  private val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+  protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
     (evaluatorSettings?.externalModuleReaders ?: emptyMap()) + cliOptions.externalModuleReaders
   }
 
-  private val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+  protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
     (evaluatorSettings?.externalResourceReaders ?: emptyMap()) + cliOptions.externalResourceReaders
   }
 
