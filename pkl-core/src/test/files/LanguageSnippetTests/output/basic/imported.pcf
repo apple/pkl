@@ -1,2 +1,6 @@
 foo = 6
 bar = 3
+baz {
+  qux = 4
+  quux = 12
+}

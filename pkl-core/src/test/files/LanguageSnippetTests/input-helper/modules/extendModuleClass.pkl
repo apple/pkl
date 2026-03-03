@@ -1,0 +1,3 @@
+extends Widget in ".../input/basic/imported.pkl"
+
+corge = quux * qux

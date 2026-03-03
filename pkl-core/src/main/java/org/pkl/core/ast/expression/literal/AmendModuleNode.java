@@ -26,6 +26,7 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 
@@ -77,5 +78,11 @@ public abstract class AmendModuleNode extends SpecializedObjectLiteralNode {
     moduleInfo.initAnnotations(VmUtils.evaluateAnnotations(frame, annotationNodes));
 
     return module;
+  }
+
+  // when using `amends Foo in "bar.pkl"`
+  @Specialization
+  protected VmTyped eval(VirtualFrame frame, VmClass superclass) {
+    return eval(frame, superclass.getPrototype());
   }
 }

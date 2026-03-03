@@ -1,0 +1,6 @@
+extendModuleClass {
+  qux = 2
+  quux = 6
+  corge = 12
+}
+extendModuleValue = "Class `imported#Widget` cannot be extended or used as type because it amends another module or class."

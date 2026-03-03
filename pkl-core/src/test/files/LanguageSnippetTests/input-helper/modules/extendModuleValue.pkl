@@ -1,0 +1,1 @@
+extends baz in ".../input/basic/imported.pkl"

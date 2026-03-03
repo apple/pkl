@@ -1,0 +1,3 @@
+amends Widget in ".../input/basic/imported.pkl"
+
+qux = 5

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -59,6 +59,8 @@ import org.pkl.parser.syntax.Expr.UnqualifiedAccessExpr;
 import org.pkl.parser.syntax.ExtendsOrAmendsClause;
 import org.pkl.parser.syntax.Identifier;
 import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.ImportDeconstruction;
+import org.pkl.parser.syntax.ImportDeconstructionList;
 import org.pkl.parser.syntax.Keyword;
 import org.pkl.parser.syntax.Modifier;
 import org.pkl.parser.syntax.Module;
@@ -245,19 +247,22 @@ public class Parser {
   }
 
   private @Nullable ExtendsOrAmendsClause parseExtendsAmendsDecl() {
-    if (lookahead == Token.EXTENDS) {
-      var tk = next().span;
-      var url = parseStringConstant();
-      return new ExtendsOrAmendsClause(
-          url, ExtendsOrAmendsClause.Type.EXTENDS, tk.endWith(url.span()));
+    var type =
+        lookahead == Token.EXTENDS
+            ? ExtendsOrAmendsClause.Type.EXTENDS
+            : lookahead == Token.AMENDS ? ExtendsOrAmendsClause.Type.AMENDS : null;
+    if (type == null) {
+      return null;
     }
-    if (lookahead == Token.AMENDS) {
-      var tk = next().span;
-      var url = parseStringConstant();
-      return new ExtendsOrAmendsClause(
-          url, ExtendsOrAmendsClause.Type.AMENDS, tk.endWith(url.span()));
+
+    var tk = next().span;
+    Identifier parentTypeName = null;
+    if (lookahead == Token.IDENTIFIER) {
+      parentTypeName = parseIdentifier();
+      expect(Token.IN, "unexpectedToken", "in");
     }
-    return null;
+    var url = parseStringConstant();
+    return new ExtendsOrAmendsClause(url, parentTypeName, type, tk.endWith(url.span()));
   }
 
   private ImportClause parseImportDecl() {
@@ -272,12 +277,50 @@ public class Parser {
     var str = parseStringConstant();
     var end = str.span();
     Identifier alias = null;
+    ImportDeconstructionList deconstructions = null;
+    if (lookahead == Token.AS) {
+      next();
+      if (isGlob) {
+        alias = parseIdentifier();
+        end = alias.span();
+      } else if (lookahead == Token.IDENTIFIER) {
+        alias = parseIdentifier();
+        if (lookahead == Token.COMMA) { // alias with deconstruction(s)
+          next();
+          deconstructions = parseImportDeconstructionList(null);
+          end = deconstructions.span();
+        } else { // just an alias
+          end = alias.span();
+        }
+      } else { // just deconstruction(s)
+        deconstructions = parseImportDeconstructionList("identifier");
+        end = deconstructions.span();
+      }
+    }
+    return new ImportClause(str, isGlob, alias, deconstructions, start.endWith(end));
+  }
+
+  private ImportDeconstructionList parseImportDeconstructionList(
+      @Nullable String additonalExpectation) {
+    var start =
+        additonalExpectation != null
+            ? expect(Token.LBRACE, "unexpectedToken2", "identifier", "{").span
+            : expect(Token.LBRACE, "unexpectedToken", "{").span;
+    var deconstructions = parseListOf(Token.COMMA, Token.RBRACE, this::parseImportDeconstruction);
+    var end = expect(Token.RBRACE, "unexpectedToken2", ",", "}").span;
+    return new ImportDeconstructionList(deconstructions, start.endWith(end));
+  }
+
+  private ImportDeconstruction parseImportDeconstruction() {
+    var name = parseIdentifier();
+    var span = name.span();
+    Identifier alias = null;
     if (lookahead == Token.AS) {
       next();
       alias = parseIdentifier();
-      end = alias.span();
+      span = span.endWith(alias.span());
     }
-    return new ImportClause(str, isGlob, alias, start.endWith(end));
+    return new ImportDeconstruction(name, alias, span);
   }
 
   private MemberHeader parseMemberHeader() {
