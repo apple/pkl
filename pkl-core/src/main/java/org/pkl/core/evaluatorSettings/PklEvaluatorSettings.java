@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.evaluatorSettings;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,6 +28,7 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
@@ -35,6 +37,8 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.Value;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.GlobResolver;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.Nullable;
 
 /** Java version of {@code pkl.EvaluatorSettings}. */
@@ -53,10 +57,6 @@ public record PklEvaluatorSettings(
     @Nullable Map<String, ExternalReader> externalModuleReaders,
     @Nullable Map<String, ExternalReader> externalResourceReaders,
     @Nullable TraceMode traceMode) {
-
-  public static final Pattern HEADER_NAME_REGEX = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$");
-  public static final Pattern HEADER_VALUE_REGEX =
-      Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$");
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -134,7 +134,7 @@ public record PklEvaluatorSettings(
   public record Http(
       @Nullable Proxy proxy,
       @Nullable Map<URI, URI> rewrites,
-      @Nullable Map<URI, List<Pair<String, String>>> headers) {
+      @Nullable List<Pair<Pattern, List<Pair<String, String>>>> headers) {
     public static final Http DEFAULT = new Http(null, Collections.emptyMap(), null);
 
     @SuppressWarnings("unchecked")
@@ -157,31 +157,36 @@ public record PklEvaluatorSettings(
             }
           }
         }
-        var headers = http.getProperty("headers");
-        HashMap<URI, List<org.pkl.core.Pair<String, String>>> parsedHeaders = null;
-        if (!(headers instanceof PNull)) {
-          parsedHeaders = new HashMap<>();
-          var headersMap = (Map<String, List<Pair<String, String>>>) headers;
-          for (var entry : headersMap.entrySet()) {
-            var uri = entry.getKey();
-            var pairs = entry.getValue();
-            for (var pair : pairs) {
-              if (!HEADER_NAME_REGEX.matcher(pair.getFirst()).matches()) {
-                throw new PklException(ErrorMessages.create("invalidHeaderName", pair.getFirst()));
-              }
-              if (!HEADER_VALUE_REGEX.matcher(pair.getSecond()).matches()) {
-                throw new PklException(
-                    ErrorMessages.create("invalidHeaderValue", pair.getSecond()));
-              }
-            }
+        var headerDefs = http.getProperty("headers");
+        List<Pair<Pattern, List<Pair<String, String>>>> parsedHeaderDefs = null;
+        if (!(headerDefs instanceof PNull)) {
+          parsedHeaderDefs = new ArrayList<>();
+          var headerDefsMap = (Map<String, Map<String, Object>>) headerDefs;
+          for (var entry : headerDefsMap.entrySet()) {
+            var stringPattern = entry.getKey();
+            var headersMap = entry.getValue();
             try {
-              parsedHeaders.put(new URI(uri), pairs);
-            } catch (URISyntaxException e) {
-              throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
+              var urlPattern = GlobResolver.toRegexPattern(stringPattern);
+              var pairs =
+                  headersMap.entrySet().stream()
+                      .flatMap(
+                          header -> {
+                            var value = header.getValue();
+                            if (value instanceof List) {
+                              return ((List<String>) value)
+                                  .stream().map(v -> new Pair(header.getKey(), v));
+                            } else {
+                              return Stream.of(new Pair(header.getKey(), value));
+                            }
+                          })
+                      .toList();
+              parsedHeaderDefs.add(new Pair(urlPattern, pairs));
+            } catch (InvalidGlobPatternException e) {
+              throw new PklException(ErrorMessages.create("invalidUri", stringPattern));
             }
           }
         }
-        return new Http(proxy, parsedRewrites, parsedHeaders);
+        return new Http(proxy, parsedRewrites, parsedHeaderDefs);
       } else {
         throw PklBugException.unreachableCode();
       }

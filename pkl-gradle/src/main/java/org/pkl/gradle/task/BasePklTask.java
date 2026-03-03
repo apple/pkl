@@ -164,7 +164,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
-  public abstract MapProperty<URI, List<Pair<String, String>>> getHttpHeaders();
+  public abstract ListProperty<Pair<Pattern, List<Pair<String, String>>>> getHttpHeaders();
 
   @Input
   @Optional
