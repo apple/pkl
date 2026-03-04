@@ -96,7 +96,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-cli:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -135,7 +135,7 @@ jobs:
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
     - name: Fix git ownership
-      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -219,7 +219,7 @@ jobs:
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
     - name: Fix git ownership
-      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -414,7 +414,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 -Dpkl.native--native-compiler-path=${{ github.workspace }}/.github/scripts/cc_macos_amd64.sh pkl-doc:buildNative
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -453,7 +453,7 @@ jobs:
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
     - name: Fix git ownership
-      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -537,7 +537,7 @@ jobs:
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
     - name: Fix git ownership
-      run: git status || git config --system --add safe.directory $GITHUB_WORKSPACE
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative

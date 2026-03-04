@@ -12,7 +12,7 @@ project: String
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(module.arch)"
-    "-Dpkl.native--native-compiler-path=\(context.github.workspace)/.github/scripts/cc_macos_amd64.sh"
+    #""-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh""#
   }
   when (musl) {
     "-Dpkl.musl=true"
@@ -40,7 +40,7 @@ steps {
     new {
       name = "Fix git ownership"
       // language=bash
-      run = "git status || git config --system --add safe.directory $GITHUB_WORKSPACE"
+      run = #"git status || git config --system --add safe.directory "$GITHUB_WORKSPACE""#
     }
   }
   new {
