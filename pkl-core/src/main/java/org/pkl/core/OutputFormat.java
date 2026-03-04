@@ -22,6 +22,7 @@ public enum OutputFormat {
   PCF("pcf"),
   PROPERTIES("properties"),
   PLIST("plist"),
+  STARLARK("starlark"),
   TEXTPROTO("textproto"),
   XML("xml"),
   YAML("yaml");
