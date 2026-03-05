@@ -304,7 +304,7 @@ public class Parser {
       @Nullable String additonalExpectation) {
     var start =
         additonalExpectation != null
-            ? expect(Token.LBRACE, "unexpectedToken2", "identifier", "{").span
+            ? expect(Token.LBRACE, "unexpectedToken2", additonalExpectation, "{").span
             : expect(Token.LBRACE, "unexpectedToken", "{").span;
     var deconstructions = parseListOf(Token.COMMA, Token.RBRACE, this::parseImportDeconstruction);
     var end = expect(Token.RBRACE, "unexpectedToken2", ",", "}").span;

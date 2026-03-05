@@ -25,8 +25,8 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.ModuleInfo;
-import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmClass;
+import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 

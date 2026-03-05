@@ -10,4 +10,6 @@ foo
   .bar
 
 amends
+Qux
+in
 "baz.pkl"
