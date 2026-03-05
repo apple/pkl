@@ -28,6 +28,8 @@ public class VmLocalContext {
    */
   private int activeTrackerDepth = 0;
 
+  private boolean instrumentationUsed = false;
+
   public VmLocalContext() {}
 
   public void shouldEagerTypecheck(boolean shouldEagerTypecheck) {
@@ -48,6 +50,7 @@ public class VmLocalContext {
 
   public void enterTracker() {
     activeTrackerDepth++;
+    instrumentationUsed = true;
   }
 
   public void exitTracker() {
@@ -56,5 +59,9 @@ public class VmLocalContext {
 
   public boolean hasActiveTracker() {
     return activeTrackerDepth > 0;
+  }
+
+  public boolean getInstrumentationUsed() {
+    return instrumentationUsed;
   }
 }
