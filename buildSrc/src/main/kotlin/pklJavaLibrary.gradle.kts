@@ -55,6 +55,14 @@ spotless {
     target("src/*/java/**/*.java")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
+  scala {
+    scalafmt(libs.versions.scalafmt.get())
+    target("src/*/scala/**/*.scala")
+    licenseHeaderFile(
+      rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"),
+      "package ",
+    )
+  }
   kotlin {
     ktfmt(libs.versions.ktfmt.get()).googleStyle()
     target("src/*/kotlin/**/*.kt")
