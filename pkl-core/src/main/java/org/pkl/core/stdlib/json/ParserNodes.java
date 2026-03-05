@@ -27,6 +27,7 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.JsonHandler;
 import org.pkl.core.util.json.JsonParser;
@@ -167,7 +168,13 @@ public final class ParserNodes {
 
     @Override
     public void startObjectValue(@Nullable EconomicMap<Object, ObjectMember> members, String name) {
-      currPath.push(Identifier.get(name));
+      var identifier = Identifier.get(name);
+      if (!useMapping && identifier == Identifier.DEFAULT) {
+        // https://github.com/apple/pkl/issues/561
+        throw new ParseException(
+            ErrorMessages.create("jsonParseErrorDynamicPropertyDefault"), getLocation());
+      }
+      currPath.push(identifier);
     }
 
     @Override

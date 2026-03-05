@@ -47,3 +47,7 @@ res15 = List(new {
 }, new {
   hobby = "surfing"
 })
+res16 = "Error parsing YAML document."
+res17 {
+  ["default"] = null
+}
