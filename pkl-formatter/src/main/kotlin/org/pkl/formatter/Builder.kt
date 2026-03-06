@@ -83,6 +83,9 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       NodeType.IMPORT_LIST -> formatImportList(node)
       NodeType.IMPORT -> formatImport(node)
       NodeType.IMPORT_ALIAS -> Group(newId(), formatGeneric(node.children, spaceOrLine()))
+      NodeType.IMPORT_DECONSTRUCTION_LIST -> formatImportDeconstructionList(node)
+      NodeType.IMPORT_DECONSTRUCTION_LIST_ELEMENTS -> formatImportDeconstructionListElements(node)
+      NodeType.IMPORT_DECONSTRUCTION -> formatImportDeconstruction(node)
       NodeType.CLASS -> formatClass(node)
       NodeType.CLASS_HEADER -> formatClassHeader(node)
       NodeType.CLASS_HEADER_EXTENDS -> formatClassHeaderExtends(node)
@@ -370,7 +373,11 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
   }
 
   private fun formatAmendsExtendsClause(node: Node): FormatNode {
-    val prefix = formatGeneric(node.children.dropLast(1), spaceOrLine())
+    val prefix =
+      formatGenericWithGen(node.children.dropLast(1), spaceOrLine()) { elem, _ ->
+        if (elem.isTerminal("in") || elem.type == NodeType.IDENTIFIER) indent(format(elem))
+        else format(elem)
+      }
     // string constant
     val suffix = Indent(listOf(format(node.children.last())))
     return Group(newId(), prefix + listOf(spaceOrLine()) + suffix)
@@ -381,6 +388,39 @@ internal class Builder(sourceText: String, private val grammarVersion: GrammarVe
       newId(),
       formatGenericWithGen(node.children, spaceOrLine()) { node, _ ->
         if (node.isTerminal("import")) format(node) else indent(format(node))
+      },
+    )
+  }
+
+  private fun formatImportDeconstructionList(node: Node): FormatNode {
+    val id = newId()
+    val nodes =
+      formatGeneric(node.children) { prev, next ->
+        if (prev.isTerminal("{") || next.isTerminal("}")) {
+          if (next.isTerminal("}")) {
+            // trailing comma
+            // TODO: determine if we should unconditionally add the trailing comma
+            // TODO since this is not valid syntax before that was introduced
+            if (grammarVersion == GrammarVersion.V1) {
+              Line
+            } else {
+              ifWrap(id, nodes(Text(","), line()), line())
+            }
+          } else line()
+        } else spaceOrLine()
+      }
+    return Group(id, nodes)
+  }
+
+  private fun formatImportDeconstructionListElements(node: Node): FormatNode {
+    return Indent(formatGeneric(node.children, spaceOrLine()))
+  }
+
+  private fun formatImportDeconstruction(node: Node): FormatNode {
+    return Group(
+      newId(),
+      formatGenericWithGen(node.children, spaceOrLine()) { elem, _ ->
+        if (elem == node.firstProperChild()) format(elem) else indent(format(elem))
       },
     )
   }

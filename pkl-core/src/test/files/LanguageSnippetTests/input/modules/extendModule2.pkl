@@ -1,0 +1,8 @@
+import "pkl:test"
+
+// these don't extend Module so they have no `output` property
+// thus cannot be rendered directly
+extendModuleClass = (import(".../input-helper/modules/extendModuleClass.pkl")) {
+  qux = 2
+}
+extendModuleValue = test.catch(() -> import(".../input-helper/modules/extendModuleValue.pkl"))
