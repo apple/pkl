@@ -56,7 +56,8 @@ public interface SecurityManager {
    * @throws SecurityManagerException if the resolved path is not within the root directory
    * @throws IOException if the path cannot be resolved
    */
-  default @Nullable Path resolveSecurePath(URI uri) throws SecurityManagerException, IOException {
+  default @Nullable Path resolveSecurePath(URI uri, boolean isResource)
+      throws SecurityManagerException, IOException {
     return null;
   }
 }

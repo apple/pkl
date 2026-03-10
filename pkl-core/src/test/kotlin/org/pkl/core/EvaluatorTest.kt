@@ -22,6 +22,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.writeText
@@ -29,7 +30,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.createTempFile
 import org.pkl.commons.test.PackageServer
@@ -538,6 +542,28 @@ class EvaluatorTest {
             .trimIndent()
         )
     }
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  @Timeout(1, unit = TimeUnit.SECONDS)
+  fun `root dir check happens without any UNC or SMB access`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = Path.of("/tmp/test")
+        build()
+      }
+    // this uses a TEST-NET-1 IP which has no server running in order to force a timeout-driven
+    // failure (takes ~20s)
+    // root dir check failure should prevent any I/O and fail fast instead of hitting the timeout
+    val exc =
+      assertThrows<PklException> {
+        evaluator.evaluate(text("result = import(\"file://192.0.2.1/share/nope.pkl\")"))
+      }
+    assertThat(exc)
+      .hasMessageContaining(
+        "Refusing to load module `file://192.0.2.1/share/nope.pkl` because it is not within the root directory (`--root-dir`)."
+      )
   }
 
   private fun checkModule(module: PModule) {
