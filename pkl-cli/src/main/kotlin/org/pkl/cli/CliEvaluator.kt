@@ -240,8 +240,7 @@ constructor(
 
       for ((pathSpec, fileOutput) in output) {
         checkPathSpec(pathSpec)
-        val resolvedPath = realOutputDir.resolve(pathSpec).normalize()
-        val realPath = if (resolvedPath.exists()) resolvedPath.toRealPath() else resolvedPath
+        val (realPath, resolvedPath) = realOutputDir.resolveRealPath(Path.of(pathSpec))
         if (!realPath.startsWith(realOutputDir)) {
           throw CliException(
             "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
@@ -268,5 +267,23 @@ constructor(
         outputStream.flush()
       }
     }
+  }
+
+  /**
+   * Resolves [rel] against this Path name-by-name. At each step, the real path is resolved if the
+   * file exists. The normalized real path and normalized resolved path are returned. This has the
+   * same effect as `this.resolve(rel).toRealPath().normalize()`, except that the real paths account
+   * for symlinks in the middle of the relative path.
+   */
+  private fun Path.resolveRealPath(rel: Path): Pair<Path, Path> {
+    assert(!rel.isAbsolute)
+    var resolved = this
+    var real = this
+    for (name in rel) {
+      resolved = resolved.resolve(name)
+      real = real.resolve(name)
+      if (real.exists()) real = real.toRealPath()
+    }
+    return real.normalize() to resolved.normalize()
   }
 }
