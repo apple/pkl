@@ -932,6 +932,37 @@ result = someLib.x
   }
 
   @Test
+  @DisabledOnOs(OS.WINDOWS)
+  fun `multiple file output throws if files are written outside the base path via symlink`() {
+    val output = tempDir.resolve(".output").createDirectories()
+    val outside = tempDir.resolve("outside").createDirectories()
+    output.resolve("outside").createSymbolicLinkPointingTo(outside)
+
+    val moduleUri =
+      writePklFile(
+        "test.pkl",
+        """
+        output {
+          files {
+            ["outside/foo.txt"] {
+              text = "bar"
+            }
+          }
+        }
+      """
+          .trimIndent(),
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(sourceModules = listOf(moduleUri), workingDir = tempDir),
+        multipleFileOutputPath = ".output",
+      )
+    assertThatCode { evalToConsole(options) }
+      .hasMessageStartingWith("Output file conflict:")
+      .hasMessageContaining("which is outside output directory")
+  }
+
+  @Test
   fun `multiple file output throws if file path is a directory`() {
     tempDir.resolve(".output/myDir").createDirectories()
     val moduleUris =
