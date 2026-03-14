@@ -13,11 +13,11 @@ To import the project into IntelliJ, go to File->Open and select the project's r
 If the project is opened but not imported, look for a popup in the lower right corner
 and click its "Import Gradle Project" link.
 . (recommended) Install {uri-gng}[gng] +
-_gng_ enables to run Gradle commands with `gw` (instead of `./gradlew`) from any subdirectory.
+_gng_ enables you to run Gradle commands with `gw` (instead of `./gradlew`) from any subdirectory.
 . (recommended) Set up Git ignore-revs +
 `git config blame.ignoreRevsFile .git-blame-ignore-revs`
 . (recommended) Install {uri-jenv}[jenv] and plugins +
-_jenv_ use specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 21. +
+_jenv_ uses specific JDK versions in certain subdirectories. _Pkl_ comes with a `.java-version` file specifying JDK 21. +
 Enable _jenv_ plugins for better handling by `gradle`:
 +
 [source,shell]
@@ -110,12 +110,12 @@ For automated build setup examples see our https://github.com/apple/pkl/blob/mai
 * http://ssw.jku.at/Research/Projects/JVM/Truffle.html[Homepage]
 * https://github.com/graalvm/truffle[GitHub]
 * http://lafo.ssw.uni-linz.ac.at/javadoc/truffle/latest/[Javadoc]
-* http://mail.openjdk.java.net/pipermail/graal-dev/[Mailing List]
+* https://mail.openjdk.org/pipermail/graal-dev/[Mailing List]
 * https://medium.com/@octskyward/graal-truffle-134d8f28fb69#.2db370y2g[Graal & Truffle (Article)]
 * https://comserv.cs.ut.ee/home/files/Pool_ComputerScience_2016.pdf?study=ATILoputoo&reference=6319668E7151D556131810BC3F4A627D7FEF5F3B[Truffle Overview (see chapter 1)]
 * https://gist.github.com/smarr/d1f8f2101b5cc8e14e12[Truffle: Languages and Material]
 * https://github.com/smarr/truffle-notes[Truffle Notes]
-* https://wiki.openjdk.java.net/display/Graal/Truffle+FAQ+and+Guidelines[Truffle FAQ]
+* https://www.graalvm.org/latest/graalvm-as-a-platform/language-implementation-framework/[Truffle Language Implementation Framework]
 
 === Other Config Languages
 
