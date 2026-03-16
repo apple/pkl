@@ -282,15 +282,13 @@ local const hasValidHttpHeaderName = (header: String) ->
 @Since { version = "0.32.0" }
 typealias HttpHeaderName =
   String(
-    (it: String) -> it == toLowerCase(),
-    (it: String) -> !(it is ReservedHttpHeaderName),
-    (it: String) -> !hasReservedHttpHeaderPrefix.apply(it),
+    this == toLowerCase(),
+    !(this is ReservedHttpHeaderName),
+    !hasReservedHttpHeaderPrefix.apply(this),
     hasValidHttpHeaderName,
   )
 
 local const httpHeaderValueRegex = Regex("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
-local const hasValidHttpHeaderValue = (value: String) ->
-  !httpHeaderValueRegex.findMatchesIn(value).isEmpty
 
 @Since { version = "0.32.0" }
-typealias HttpHeaderValue = String(hasValidHttpHeaderValue)
+typealias HttpHeaderValue = String(!httpHeaderValueRegex.findMatchesIn(this).isEmpty)
