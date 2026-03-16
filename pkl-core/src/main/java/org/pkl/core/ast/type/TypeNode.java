@@ -985,6 +985,11 @@ public abstract class TypeNode extends PklNode {
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
+      // disallow power assertions from triggering in case one union member checks successfully
+      var localContext = VmLanguage.get(this).localContext.get();
+      boolean wasInTypeTest = localContext.isInTypeTest();
+      localContext.setInTypeTest(true);
+
       // Do eager checks (shallow-force) if there are two listings or two mappings represented.
       // (we can't know that `new Listing { 0; "hi" }[0]` fails for `Listing<Int>|Listing<String>`
       // without checking both index 0 and index 1).
@@ -992,15 +997,36 @@ public abstract class TypeNode extends PklNode {
       for (var i = 0; i < elementTypeNodes.length; i++) {
         var elementTypeNode = elementTypeNodes[i];
         try {
-          if (shouldEagerCheck) {
-            return elementTypeNode.executeEagerly(frame, value);
-          } else {
-            return elementTypeNode.executeLazily(frame, value);
-          }
+          var result =
+              shouldEagerCheck
+                  ? elementTypeNode.executeEagerly(frame, value)
+                  : elementTypeNode.executeLazily(frame, value);
+          localContext.setInTypeTest(wasInTypeTest);
+          return result;
         } catch (VmTypeMismatchException e) {
           typeMismatches[i] = e;
         }
       }
+
+      // all members failed to type check
+      // if enabled, re-execute type checks to generate power assertions
+      localContext.setInTypeTest(wasInTypeTest);
+      if (VmContext.get(this).getPowerAssertionsEnabled()
+          && (!wasInTypeTest || localContext.hasActiveTracker())) {
+        for (var i = 0; i < elementTypeNodes.length; i++) {
+          var elementTypeNode = elementTypeNodes[i];
+          try {
+            if (shouldEagerCheck) {
+              elementTypeNode.executeEagerly(frame, value);
+            } else {
+              elementTypeNode.executeLazily(frame, value);
+            }
+          } catch (VmTypeMismatchException e) {
+            typeMismatches[i] = e;
+          }
+        }
+      }
+
       throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
     }
 
@@ -1011,14 +1037,36 @@ public abstract class TypeNode extends PklNode {
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
+      // disallow power assertions from triggering in case one union member checks successfully
+      var localContext = VmLanguage.get(this).localContext.get();
+      boolean wasInTypeTest = localContext.isInTypeTest();
+      localContext.setInTypeTest(true);
+
       for (var i = 0; i < elementTypeNodes.length; i++) {
         // eager checks
         try {
-          return elementTypeNodes[i].executeEagerly(frame, value);
+          var result = elementTypeNodes[i].executeEagerly(frame, value);
+          localContext.setInTypeTest(wasInTypeTest);
+          return result;
         } catch (VmTypeMismatchException e) {
           typeMismatches[i] = e;
         }
       }
+
+      // all members failed to type check
+      // if enabled, re-execute type checks to generate power assertions
+      localContext.setInTypeTest(wasInTypeTest);
+      if (VmContext.get(this).getPowerAssertionsEnabled()
+          && (!wasInTypeTest || localContext.hasActiveTracker())) {
+        for (var i = 0; i < elementTypeNodes.length; i++) {
+          try {
+            elementTypeNodes[i].executeEagerly(frame, value);
+          } catch (VmTypeMismatchException e) {
+            typeMismatches[i] = e;
+          }
+        }
+      }
+
       throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
     }
   }
