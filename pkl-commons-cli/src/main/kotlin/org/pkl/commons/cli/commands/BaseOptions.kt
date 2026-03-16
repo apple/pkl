@@ -300,28 +300,26 @@ class BaseOptions : OptionGroup() {
       .transformAll { it ->
         val headersMap = mutableMapOf<String, MutableList<PPair<String, String>>>()
 
-        for ((stringPattern, header) in it) {
-          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
-          val (headerName, headerValue) =
-            headerRegex.find(header)?.destructured
-              ?: fail("Header '$header' is not in 'name:value' format.")
-          require(HEADER_NAME_REGEX.matcher(headerName).matches()) {
-            "HTTP header name '$headerName' has invalid syntax."
-          }
-          require(HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
-            "HTTP header value '$headerValue' has invalid syntax"
-          }
-          val headerPair = PPair(headerName, headerValue)
-          val headerPairList = headersMap[stringPattern]
-          if (headerPairList == null) {
-            headersMap[stringPattern] = mutableListOf(headerPair)
-          } else {
-            headerPairList.add(headerPair)
-          }
-        }
-
         try {
+          for ((stringPattern, header) in it) {
+            val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
+            val (headerName, headerValue) =
+              headerRegex.find(header)?.destructured
+                ?: fail("Header '$header' is not in 'name:value' format.")
+            IoUtils.validateHeaderName(headerName)
+            IoUtils.validateHeaderValue(headerValue)
+            val headerPair = PPair(headerName, headerValue)
+            val headerPairList = headersMap[stringPattern]
+            if (headerPairList == null) {
+              headersMap[stringPattern] = mutableListOf(headerPair)
+            } else {
+              headerPairList.add(headerPair)
+            }
+          }
+
           headersMap.entries.map { PPair(GlobResolver.toRegexPattern(it.key), it.value) }
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
         } catch (e: GlobResolver.InvalidGlobPatternException) {
           fail(e.message!!)
         }
