@@ -293,53 +293,39 @@ class BaseOptions : OptionGroup() {
   val httpHeaders: List<PPair<Pattern, List<PPair<String, String>>>> by
     option(
         names = arrayOf("--http-headers"),
-        metavar = "<url-pattern>=<header name>:<header value>[,<header name>:<header value>...]",
+        metavar = "<url-pattern>=<header name>:<header value>",
         help = "HTTP header to add to the request.",
       )
-      .convert { it ->
-        val (stringPattern, headers) =
-          it.split("=", limit = 2).let { parts ->
-            require(parts.size == 2) {
-              "Headers must be in the form of <prefix>=<header name>:<header value>"
-            }
-            parts[0] to parts[1]
+      .splitPair()
+      .transformAll { it ->
+        val headersMap = mutableMapOf<String, MutableList<PPair<String, String>>>()
+
+        for ((stringPattern, header) in it) {
+          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
+          val (headerName, headerValue) =
+            headerRegex.find(header)?.destructured
+              ?: fail("Header '$header' is not in 'name:value' format.")
+          require(HEADER_NAME_REGEX.matcher(headerName).matches()) {
+            "HTTP header name '$headerName' has invalid syntax."
           }
+          require(HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
+            "HTTP header value '$headerValue' has invalid syntax"
+          }
+          val headerPair = PPair(headerName, headerValue)
+          val headerPairList = headersMap[stringPattern]
+          if (headerPairList == null) {
+            headersMap[stringPattern] = mutableListOf(headerPair)
+          } else {
+            headerPairList.add(headerPair)
+          }
+        }
 
         try {
-          var pattern = GlobResolver.toRegexPattern(stringPattern)
-
-          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
-          val headerPairs =
-            headers.split(',').map { header ->
-              val (headerName, headerValue) =
-                headerRegex.find(header)?.destructured
-                  ?: fail("Header '$header' is not in 'name:value' format.")
-              require(HEADER_NAME_REGEX.matcher(headerName).matches()) {
-                "HTTP header name '$headerName' has invalid syntax."
-              }
-              require(HEADER_VALUE_REGEX.matcher(headerValue).matches()) {
-                "HTTP header value '$headerValue' has invalid syntax"
-              }
-              PPair(headerName, headerValue)
-            }
-          PPair(pattern, headerPairs)
-        } catch (e: IllegalArgumentException) {
+          headersMap.entries.map { PPair(GlobResolver.toRegexPattern(it.key), it.value) }
+        } catch (e: GlobResolver.InvalidGlobPatternException) {
           fail(e.message!!)
-        } catch (e: URISyntaxException) {
-          val message = buildString {
-            append("HTTP headers target `${e.input}` has invalid syntax (${e.reason}).")
-            if (e.index > -1) {
-              append("\n\n")
-              append(e.input)
-              append("\n")
-              append(" ".repeat(e.index))
-              append("^")
-            }
-          }
-          fail(message)
         }
       }
-      .multiple()
 
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
