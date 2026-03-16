@@ -128,7 +128,7 @@ local const hasNonEmptyHostname = (it: String) ->
 @Since { version = "0.29.0" }
 typealias HttpRewrite = String(startsWith(Regex("https?://")), endsWith("/"), hasNonEmptyHostname)
 
-@Since { version = "0.31.0" }
+@Since { version = "0.32.0" }
 typealias UrlPattern = String(endsWith(Regex("[/*]")))
 
 /// Settings that control how Pkl talks to HTTP(S) servers.
@@ -174,7 +174,7 @@ class Http {
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
 
   /// HTTP headers to add to outbound requests targeting specified URLs.
-  @Since { version = "0.31.0" }
+  @Since { version = "0.32.0" }
   headers: Mapping<UrlPattern, Mapping<HttpHeaderName, *Listing<HttpHeaderValue> | HttpHeaderValue>>?
 }
 
@@ -243,6 +243,7 @@ class ExternalReader {
   arguments: Listing<String>?
 }
 
+@Since { version = "0.32.0" }
 typealias ReservedHttpHeaderName =
   "accept-charset"
     | "accept-encoding"
@@ -278,7 +279,7 @@ local const httpHeaderNameRegex = Regex("^[a-zA-Z0-9!#\\$%&'*+-.^_`|~]+$")
 local const hasValidHttpHeaderName = (header: String) ->
   !httpHeaderNameRegex.findMatchesIn(header).isEmpty
 
-@Since { version = "0.31.0" }
+@Since { version = "0.32.0" }
 typealias HttpHeaderName =
   String(
     (it: String) -> it == toLowerCase(),
@@ -291,5 +292,5 @@ local const httpHeaderValueRegex = Regex("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$
 local const hasValidHttpHeaderValue = (value: String) ->
   !httpHeaderValueRegex.findMatchesIn(value).isEmpty
 
-@Since { version = "0.31.0" }
+@Since { version = "0.32.0" }
 typealias HttpHeaderValue = String(hasValidHttpHeaderValue)
