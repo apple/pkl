@@ -308,13 +308,9 @@ class BaseOptions : OptionGroup() {
                 ?: fail("Header '$header' is not in 'name:value' format.")
             IoUtils.validateHeaderName(headerName)
             IoUtils.validateHeaderValue(headerValue)
-            val headerPair = PPair(headerName, headerValue)
-            val headerPairList = headersMap[stringPattern]
-            if (headerPairList == null) {
-              headersMap[stringPattern] = mutableListOf(headerPair)
-            } else {
-              headerPairList.add(headerPair)
-            }
+            headersMap
+              .computeIfAbsent(stringPattern) { mutableListOf() }
+              .add(PPair(headerName, headerValue))
           }
 
           headersMap.entries.map { PPair(GlobResolver.toRegexPattern(it.key), it.value) }
