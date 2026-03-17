@@ -173,14 +173,17 @@ public final class SecurityManagers {
     }
 
     @Override
-    public @Nullable Path resolveSecurePath(URI uri) throws SecurityManagerException, IOException {
+    public @Nullable Path resolveSecurePath(URI uri, boolean isResource)
+        throws SecurityManagerException, IOException {
       if (rootDir == null || !uri.isAbsolute() || !uri.getScheme().equals("file")) {
         return null;
       }
       var path = Path.of(uri);
       var realPath = path.toRealPath();
       if (!realPath.startsWith(rootDir)) {
-        throw new SecurityManagerException(ErrorMessages.create("modulePastRootDir", uri, rootDir));
+        var errorMessageKey = isResource ? "resourcePastRootDir" : "modulePastRootDir";
+        var message = ErrorMessages.create(errorMessageKey, uri, rootDir);
+        throw new SecurityManagerException(message);
       }
       return realPath;
     }
@@ -225,7 +228,10 @@ public final class SecurityManagers {
       if (rootDir == null || !checkUri.getScheme().equals("file")) return;
 
       var path = Path.of(checkUri);
-      if (Files.exists(path)) {
+      // authority is non-null if uri represents a UNC path
+      // so skip toRealPath() to avoid unauthorized I/O
+      var isUnc = checkUri.getAuthority() != null && !checkUri.getAuthority().isEmpty();
+      if (!isUnc && Files.exists(path)) {
         try {
           path = path.toRealPath();
         } catch (IOException e) {
