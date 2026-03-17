@@ -1,0 +1,15 @@
+import "imported.pkl" as _imported, { Widget as _Widget, baz }
+import "imported2.pkl" as imported2, { baz as qux, bax as quux }
+import "pkl:test"
+
+a = _imported
+b: _imported = new {
+  foo = 7
+}
+c = baz
+d: _Widget = new {
+  qux = 5
+}
+e = test.catch(() -> new baz {}) // TODO provide a better error here than an assertion failure
+f = test.catch(() -> new qux {}) // TODO provide a better error here than an assertion failure
+g = test.catch(() -> new imported2 {}) // TODO provide a better error here than an assertion failure

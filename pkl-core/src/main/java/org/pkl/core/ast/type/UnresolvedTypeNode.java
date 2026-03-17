@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -191,13 +191,17 @@ public abstract class UnresolvedTypeNode extends PklNode {
         return new TypeAliasTypeNode(sourceSection, alias, new TypeNode[0]);
       }
 
-      var module = (VmTyped) type;
-      assert module.isModuleObject();
-      var clazz = module.getVmClass();
-      if (!module.isPrototype()) {
-        throw exceptionBuilder().evalError("notAModuleType", clazz.getModuleName()).build();
+      var moduleOrClass = (VmTyped) type;
+      var clazz = moduleOrClass.getVmClass();
+      if (!moduleOrClass.isPrototype()) {
+        throw exceptionBuilder()
+            .evalError(
+                "notAModuleOrClassType",
+                moduleOrClass.isModuleObject() ? "Module" : "Class",
+                clazz.getDisplayName())
+            .build();
       }
-      return TypeNode.forClass(sourceSection, module.getVmClass());
+      return TypeNode.forClass(sourceSection, clazz);
     }
   }
 
