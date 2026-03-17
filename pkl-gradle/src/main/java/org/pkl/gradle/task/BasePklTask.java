@@ -43,6 +43,7 @@ import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
+import org.pkl.core.Pair;
 import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
@@ -148,6 +149,10 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
+  public abstract ListProperty<Pair<Pattern, List<Pair<String, String>>>> getHttpHeaders();
+
+  @Input
+  @Optional
   public abstract Property<Boolean> getPowerAssertions();
 
   /**
@@ -204,6 +209,7 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpProxy().getOrNull(),
               getHttpNoProxy().getOrElse(List.of()),
               getHttpRewrites().getOrNull(),
+              getHttpHeaders().getOrNull(),
               Map.of(),
               Map.of(),
               null,
