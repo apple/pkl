@@ -1,0 +1,62 @@
+res1 = "123"
+res2 = "1.23"
+res3 = "False"
+res4 = "\"pigeon\""
+res6 = """
+  [
+      "pigeon",
+      "parrot",
+  ]
+  """
+res7 = """
+  set([
+      "pigeon",
+      "parrot",
+  ])
+  """
+res8 = """
+  {
+      "name": "pigeon",
+      "age": 42,
+  }
+  """
+res9 = """
+  [
+      "pigeon",
+      "parrot",
+  ]
+  """
+res10 = """
+  {
+      "name": "pigeon",
+      "age": 42,
+  }
+  """
+res11 = """
+  struct(
+      age = 42,
+      name = "pigeon",
+  )
+  """
+res12 = """
+  Person(
+      name = "pigeon",
+      age = 42,
+  )
+  """
+res13 = "None"
+res15 = "(1, 2)"
+res16 = """
+  ("pigeon", [
+      1,
+      2,
+      3,
+  ])
+  """
+res14 = "Cannot render value of type `Duration` as Starlark. Value: 1.min"
+res17 = "Cannot render value of type `DataSize` as Starlark. Value: 1.mb"
+res18 = "Cannot render value of type `Class` as Starlark. Value: starlarkRenderer1#Person"
+res19 = "Cannot render value of type `TypeAlias` as Starlark. Value: starlarkRenderer1#Email"
+res20 = "Cannot render value of type `Function1` as Starlark. Value: new Function1 {}"
+res21 = "ouch"
+res22 = "Cannot render value of type `IntSeq` as Starlark. Value: IntSeq(1, 4)"
