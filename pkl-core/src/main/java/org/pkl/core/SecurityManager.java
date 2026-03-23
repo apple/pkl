@@ -52,6 +52,7 @@ public interface SecurityManager {
    * <p>Returns {@code null} for non-{@code file:} URIs or if no root directory is configured.
    *
    * @param uri the URI to resolve
+   * @param isResource denotes if uri belongs to a resource (otherwise, a module)
    * @return the resolved, symlink-free path under root directory, or {@code null}
    * @throws SecurityManagerException if the resolved path is not within the root directory
    * @throws IOException if the path cannot be resolved
@@ -59,5 +60,21 @@ public interface SecurityManager {
   default @Nullable Path resolveSecurePath(URI uri, boolean isResource)
       throws SecurityManagerException, IOException {
     return null;
+  }
+
+  /**
+   * Resolves the given {@code file:} URI to a secure, symlink-free path that has been verified to
+   * be within the root directory (if one is configured). The returned path can be opened with
+   * {@link java.nio.file.LinkOption#NOFOLLOW_LINKS}.
+   *
+   * <p>Returns {@code null} for non-{@code file:} URIs or if no root directory is configured.
+   *
+   * @param uri the URI to resolve
+   * @return the resolved, symlink-free path under root directory, or {@code null}
+   * @throws SecurityManagerException if the resolved path is not within the root directory
+   * @throws IOException if the path cannot be resolved
+   */
+  default @Nullable Path resolveSecurePath(URI uri) throws SecurityManagerException, IOException {
+    return resolveSecurePath(uri, false);
   }
 }

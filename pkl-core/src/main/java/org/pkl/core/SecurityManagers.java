@@ -175,7 +175,10 @@ public final class SecurityManagers {
     @Override
     public @Nullable Path resolveSecurePath(URI uri, boolean isResource)
         throws SecurityManagerException, IOException {
-      if (rootDir == null || !uri.isAbsolute() || !uri.getScheme().equals("file")) {
+      if (rootDir == null
+          || !uri.isAbsolute()
+          || !uri.getScheme().equals("file")
+          || (uri.getAuthority() != null && !uri.getAuthority().isEmpty())) {
         return null;
       }
       var path = Path.of(uri);
@@ -228,10 +231,17 @@ public final class SecurityManagers {
       if (rootDir == null || !checkUri.getScheme().equals("file")) return;
 
       var path = Path.of(checkUri);
-      // authority is non-null if uri represents a UNC path
-      // so skip toRealPath() to avoid unauthorized I/O
-      var isUnc = checkUri.getAuthority() != null && !checkUri.getAuthority().isEmpty();
-      if (!isUnc && Files.exists(path)) {
+
+      // uri represents a UNC path if authority is non-null
+      // so treat this like a potentially redirected HTTP read:
+      // check if both the given and real paths are under rootDir
+      if (checkUri.getAuthority() != null && !checkUri.getAuthority().isEmpty()) {
+        doCheckIsUnderRootDir(path.normalize(), uri, isResource);
+      }
+      // if given path is under rootDir, do I/O to determine if the real path is under the root dir
+      // this can result in a nasty timeout (~20s) in Files.exists if the server doesn't respond :(
+
+      if (Files.exists(path)) {
         try {
           path = path.toRealPath();
         } catch (IOException e) {
@@ -243,6 +253,12 @@ public final class SecurityManagers {
         path = path.normalize();
       }
 
+      doCheckIsUnderRootDir(path, uri, isResource);
+    }
+
+    private void doCheckIsUnderRootDir(Path path, URI uri, boolean isResource)
+        throws SecurityManagerException {
+      assert rootDir != null;
       if (!path.startsWith(rootDir)) {
         var errorMessageKey = isResource ? "resourcePastRootDir" : "modulePastRootDir";
         var message = ErrorMessages.create(errorMessageKey, uri, rootDir);

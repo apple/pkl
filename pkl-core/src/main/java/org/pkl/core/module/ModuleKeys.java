@@ -347,7 +347,7 @@ public final class ModuleKeys {
       }
       // Use resolveSecurePath to atomically resolve symlinks and verify under rootDir.
       // The returned path is symlink-free, so it can be opened with NOFOLLOW_LINKS.
-      var securePath = securityManager.resolveSecurePath(uri, false);
+      var securePath = securityManager.resolveSecurePath(uri);
       Path realPath;
       if (securePath != null) {
         realPath = securePath;
@@ -421,7 +421,7 @@ public final class ModuleKeys {
         throws IOException, SecurityManagerException {
       securityManager.checkResolveModule(uri);
 
-      var securePath = securityManager.resolveSecurePath(uri, false);
+      var securePath = securityManager.resolveSecurePath(uri);
       Path path;
       if (securePath != null) {
         path = securePath;
