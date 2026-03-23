@@ -519,6 +519,7 @@ public final class ModuleKeys {
     @Override
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
+      securityManager.checkResolveModule(uri);
       var httpClient = VmContext.get(null).getHttpClient();
       var request = HttpRequest.newBuilder(uri).build();
       var response = httpClient.send(request, BodyHandlers.ofInputStream());
