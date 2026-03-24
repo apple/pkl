@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,7 @@ import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.resource.Resource;
+import org.pkl.core.util.Nullable;
 
 final class ExternalResourceResolverImpl implements ExternalResourceResolver {
   private final MessageTransport transport;
@@ -48,15 +49,14 @@ final class ExternalResourceResolverImpl implements ExternalResourceResolver {
 
   public Optional<Object> read(URI uri) throws IOException {
     var result = doRead(uri);
-    return Optional.of(new Resource(uri, result));
+    return result == null ? Optional.empty() : Optional.of(new Resource(uri, result));
   }
 
   public boolean hasElement(SecurityManager securityManager, URI elementUri)
       throws SecurityManagerException {
     securityManager.checkResolveResource(elementUri);
     try {
-      doRead(elementUri);
-      return true;
+      return doRead(elementUri) != null;
     } catch (IOException e) {
       return false;
     }
@@ -98,7 +98,7 @@ final class ExternalResourceResolverImpl implements ExternalResourceResolver {
             }));
   }
 
-  public byte[] doRead(URI baseUri) throws IOException {
+  public byte @Nullable [] doRead(URI baseUri) throws IOException {
     return MessageTransports.resolveFuture(
         readResponses.computeIfAbsent(
             baseUri,
@@ -113,10 +113,8 @@ final class ExternalResourceResolverImpl implements ExternalResourceResolver {
                       if (response instanceof ReadResourceResponse resp) {
                         if (resp.error() != null) {
                           future.completeExceptionally(new IOException(resp.error()));
-                        } else if (resp.contents() != null) {
-                          future.complete(resp.contents());
                         } else {
-                          future.complete(new byte[0]);
+                          future.complete(resp.contents());
                         }
                       } else {
                         future.completeExceptionally(new ProtocolException("unexpected response"));
