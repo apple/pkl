@@ -336,6 +336,16 @@ public final class EvaluatorImpl implements Evaluator {
     }
   }
 
+  // for use in tests to determine whether an evaluator ever triggered instrumentation
+  boolean isInstrumentationEverUsed() {
+    polyglotContext.enter();
+    try {
+      return VmLanguage.get(null).localContext.get().isInstrumentationEverUsed();
+    } finally {
+      polyglotContext.leave();
+    }
+  }
+
   String evaluateOutputText(VmTyped fileOutput) {
     return doEvaluate(() -> VmUtils.readTextProperty(fileOutput));
   }
