@@ -262,7 +262,7 @@ public final class ResourceReaders {
       // Use resolveSecurePath to get a symlink-free path verified under rootDir.
       var securityManager = VmContext.get(null).getSecurityManager();
       try {
-        var securePath = securityManager.resolveSecurePath(uri);
+        var securePath = securityManager.resolveSecurePath(uri, true);
         if (securePath != null) {
           try (var in = Files.newInputStream(securePath, LinkOption.NOFOLLOW_LINKS)) {
             var content = in.readAllBytes();
