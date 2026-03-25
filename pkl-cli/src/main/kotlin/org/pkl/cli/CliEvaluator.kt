@@ -271,9 +271,9 @@ constructor(
 
   /**
    * Resolves [rel] against this Path name-by-name. At each step, the real path is resolved if the
-   * file exists. The normalized real path and normalized resolved path are returned. This has the
-   * same effect as `this.resolve(rel).toRealPath().normalize()`, except that the real paths account
-   * for symlinks in the middle of the relative path.
+   * file exists. The normalized real path and normalized resolved path are returned. This has a
+   * similar effect to `this.resolve(rel).toRealPath().normalize()`, but the real paths account for
+   * symlinks in the middle of the relative path so the full path need not exist.
    */
   private fun Path.resolveRealPath(rel: Path): Pair<Path, Path> {
     assert(!rel.isAbsolute)
