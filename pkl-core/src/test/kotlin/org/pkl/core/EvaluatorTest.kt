@@ -566,6 +566,69 @@ class EvaluatorTest {
       )
   }
 
+  @Test
+  fun `constraint failures activate instrumentation`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    val exc =
+      assertThrows<PklException> {
+        evaluator.evaluate(
+          text(
+            """
+    foo: String(chars.first == "a") = "boo"
+    """
+              .trimIndent()
+          )
+        )
+      }
+
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isTrue
+  }
+
+  @Test
+  fun `union single-member constraint failures do not activate instrumentation`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    evaluator.evaluate(
+      text(
+        """
+    foo: String(startsWith("a")) | String(startsWith("b")) | String(startsWith("c")) = "cool"
+    """
+          .trimIndent()
+      )
+    )
+
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
+  }
+
+  @Test
+  fun `type test failures do not activate instrumentation`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    evaluator.evaluate(
+      text(
+        """
+    foo = "bar" is Int(this > 0)
+    """
+          .trimIndent()
+      )
+    )
+
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
+  }
+
   private fun checkModule(module: PModule) {
     assertThat(module.properties.size).isEqualTo(2)
     assertThat(module.getProperty("name")).isEqualTo("pigeon")
