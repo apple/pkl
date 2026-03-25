@@ -337,10 +337,10 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   // for use in tests to determine whether an evaluator ever triggered instrumentation
-  boolean wasInstrumentationUsed() {
+  boolean isInstrumentationEverUsed() {
     polyglotContext.enter();
     try {
-      return VmLanguage.get(null).localContext.get().getInstrumentationUsed();
+      return VmLanguage.get(null).localContext.get().isInstrumentationEverUsed();
     } finally {
       polyglotContext.leave();
     }

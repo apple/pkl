@@ -586,7 +586,7 @@ class EvaluatorTest {
         )
       }
 
-    assertThat((evaluator as EvaluatorImpl).wasInstrumentationUsed()).isTrue
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isTrue
   }
 
   @Test
@@ -600,13 +600,13 @@ class EvaluatorTest {
     evaluator.evaluate(
       text(
         """
-    foo: String(startsWith("a")) | String(startsWith("b")) = "boo"
+    foo: String(startsWith("a")) | String(startsWith("b")) | String(startsWith("c")) = "cool"
     """
           .trimIndent()
       )
     )
 
-    assertThat((evaluator as EvaluatorImpl).wasInstrumentationUsed()).isFalse
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
   }
 
   @Test
@@ -626,7 +626,7 @@ class EvaluatorTest {
       )
     )
 
-    assertThat((evaluator as EvaluatorImpl).wasInstrumentationUsed()).isFalse
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
   }
 
   private fun checkModule(module: PModule) {

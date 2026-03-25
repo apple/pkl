@@ -987,7 +987,7 @@ public abstract class TypeNode extends PklNode {
 
       // disallow power assertions from triggering in case one union member checks successfully
       var localContext = VmLanguage.get(this).localContext.get();
-      boolean wasInTypeTest = localContext.isInTypeTest();
+      var wasInTypeTest = localContext.isInTypeTest();
       localContext.setInTypeTest(true);
 
       // Do eager checks (shallow-force) if there are two listings or two mappings represented.
@@ -1039,7 +1039,7 @@ public abstract class TypeNode extends PklNode {
 
       // disallow power assertions from triggering in case one union member checks successfully
       var localContext = VmLanguage.get(this).localContext.get();
-      boolean wasInTypeTest = localContext.isInTypeTest();
+      var wasInTypeTest = localContext.isInTypeTest();
       localContext.setInTypeTest(true);
 
       for (var i = 0; i < elementTypeNodes.length; i++) {

@@ -28,7 +28,7 @@ public class VmLocalContext {
    */
   private int activeTrackerDepth = 0;
 
-  private boolean instrumentationUsed = false;
+  private boolean instrumentationEverUsed = false;
 
   public VmLocalContext() {}
 
@@ -50,7 +50,7 @@ public class VmLocalContext {
 
   public void enterTracker() {
     activeTrackerDepth++;
-    instrumentationUsed = true;
+    instrumentationEverUsed = true;
   }
 
   public void exitTracker() {
@@ -61,7 +61,7 @@ public class VmLocalContext {
     return activeTrackerDepth > 0;
   }
 
-  public boolean getInstrumentationUsed() {
-    return instrumentationUsed;
+  public boolean isInstrumentationEverUsed() {
+    return instrumentationEverUsed;
   }
 }
