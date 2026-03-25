@@ -4,6 +4,35 @@ include::ROOT:partial$component-attributes.adoc[]
 [[release-0.32.0]]
 == 0.32.0 (UNRELEASED)
 
+[[release-0.31.1]]
+== 0.31.1 (2026-03-26)
+
+=== Breaking Changes [small]#💔#
+
+* Allow nullable reads for custom/external resources (https://github.com/apple/pkl/pull/1471[#1471]).
+
+This allows custom/external resources to produce `null` values for nullable reads (`read?`).
+
+=== Fixes
+
+* Fix typo in changelog and language reference (https://github.com/apple/pkl/pull/1455[#1455]).
+* Fix bugs in `CommandSpecParser` (https://github.com/apple/pkl/pull/1448[#1448], https://github.com/apple/pkl/pull/1449[#1449]).
+* Respect `--omit-project-settings` for all evaluator options (https://github.com/apple/pkl/pull/1459[#1459]).
+* Fix SecurityManager check for HTTP(S) module URIs (https://github.com/apple/pkl/pull/1463[#1463]).
+* Fix module reflection when instrumentation is active (https://github.com/apple/pkl/pull/1464[#1464]).
+* Fix power assertion activation for union members (https://github.com/apple/pkl/pull/1462[#1462]).
+* Prevent I/O when checking UNC paths against `--root-dir` (https://github.com/apple/pkl/pull/1466[#1466]).
+* Prevent `--multiple-file-output-path` writes from following symlinks outside the target directory
+(https://github.com/apple/pkl/pull/1467[#1467]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/04cb[@04cb]
+* https://github.com/HT154[@HT154]
+* https://github.com/KushalP[@KushalP]
+
 [[release-0.31.0]]
 == 0.31.0 (2026-02-26)
 
