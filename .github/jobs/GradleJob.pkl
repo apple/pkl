@@ -90,7 +90,13 @@ fixed job {
             "aarch64"
       }
     }
-    catalog.`gradle/actions/setup-gradle@v5`
+    (catalog.`gradle/actions/setup-gradle@v5`) {
+      when (isRelease) {
+        with {
+          `cache-disabled` = true
+        }
+      }
+    }
     ...module.steps
   }
 }
