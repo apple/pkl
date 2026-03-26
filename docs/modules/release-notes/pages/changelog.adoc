@@ -4,6 +4,36 @@ include::ROOT:partial$component-attributes.adoc[]
 [[release-0.32.0]]
 == 0.32.0 (UNRELEASED)
 
+[[release-0.31.1]]
+== 0.31.1 (2026-03-26)
+
+=== Breaking Changes [small]#💔#
+
+* Allow nullable reads for custom/external resources (pr:https://github.com/apple/pkl/pull/1471[]).
+
+This allows custom/external resources to produce `null` values for xref:language-reference:index.adoc#nullable-reads[nullable reads] (`read?`).
+While this is a breaking change in behavior, it is currently not possible to exercise with versions of pkl-go or pkl-swift released prior to this change.
+
+=== Fixes
+
+* Fix typo in changelog and language reference (pr:https://github.com/apple/pkl/pull/1455[]).
+* Fix bugs in `CommandSpecParser` (pr:https://github.com/apple/pkl/pull/1448[], pr:https://github.com/apple/pkl/pull/1449[]).
+* Respect `--omit-project-settings` for all evaluator options (pr:https://github.com/apple/pkl/pull/1459[]).
+* Fix SecurityManager check for HTTP(S) module URIs (pr:https://github.com/apple/pkl/pull/1463[]).
+* Fix performance regression caused by activation of power assertion instrumentation during some union type checks (pr:https://github.com/apple/pkl/pull/1462[]).
+* Fix module reflection when power assertion instrumentation is active (pr:https://github.com/apple/pkl/pull/1464[]).
+* Prevent I/O when checking UNC paths against `--root-dir` (pr:https://github.com/apple/pkl/pull/1466[]).
+* Prevent `--multiple-file-output-path` writes from following symlinks outside the target directory
+(pr:https://github.com/apple/pkl/pull/1467[]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/04cb[@04cb]
+* https://github.com/HT154[@HT154]
+* https://github.com/KushalP[@KushalP]
+
 [[release-0.31.0]]
 == 0.31.0 (2026-02-26)
 
