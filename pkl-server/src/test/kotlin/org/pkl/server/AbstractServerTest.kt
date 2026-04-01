@@ -15,6 +15,8 @@
  */
 package org.pkl.server
 
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.net.URI
 import java.nio.file.Path
 import java.util.concurrent.ExecutorService
@@ -837,6 +839,101 @@ abstract class AbstractServerTest {
       """
           .trimIndent()
       )
+  }
+
+  /**
+   * Regression test for concurrent message encoding.
+   *
+   * The pkl server's main thread sends [CreateEvaluatorResponse] while the executor thread
+   * sends [EvaluateResponse].  Without synchronization on the encoder, these writes interleave
+   * on the output stream, corrupting the MessagePack framing.
+   *
+   * This test exercises the race directly: two threads write different message types through
+   * the same [ServerMessagePackEncoder] into a pipe, and a reader thread decodes every message.
+   * Any interleaved write produces a decode error.
+   *
+   * Only meaningful with `USE_DIRECT_TRANSPORT = false` (the default).
+   */
+  @Test
+  fun `concurrent encoding -- multiple evaluators with module reads`() {
+    if (USE_DIRECT_TRANSPORT) return
+
+    val pipeIn = PipedInputStream(1 shl 20) // 1 MB buffer
+    val pipeOut = PipedOutputStream(pipeIn)
+    val encoder = ServerMessagePackEncoder(pipeOut)
+    val decoder = ServerMessagePackDecoder(pipeIn)
+
+    val iterations = 2000
+    val padding = ByteArray(8192) // large payload to widen the race window
+    val errors = mutableListOf<Throwable>()
+    val decoded = java.util.concurrent.atomic.AtomicInteger(0)
+    val done = java.util.concurrent.CountDownLatch(2)
+
+    // Writer A: CreateEvaluatorResponse (small messages)
+    val writerA = Thread {
+      try {
+        for (i in 0 until iterations) {
+          encoder.encode(CreateEvaluatorResponse(i.toLong(), i.toLong(), null))
+        }
+      } catch (e: Exception) {
+        synchronized(errors) { errors.add(e) }
+      } finally {
+        done.countDown()
+      }
+    }
+
+    // Writer B: EvaluateResponse (large messages with 8 KB payload)
+    val writerB = Thread {
+      try {
+        for (i in 0 until iterations) {
+          encoder.encode(
+            EvaluateResponse(i.toLong() + iterations, i.toLong(), padding, null)
+          )
+        }
+      } catch (e: Exception) {
+        synchronized(errors) { errors.add(e) }
+      } finally {
+        done.countDown()
+      }
+    }
+
+    // Reader: decode all messages, check each is well-formed.
+    val reader = Thread {
+      try {
+        while (decoded.get() < iterations * 2) {
+          val msg = decoder.decode() ?: break
+          decoded.incrementAndGet()
+          when (msg) {
+            is CreateEvaluatorResponse -> {}
+            is EvaluateResponse -> {}
+            else -> synchronized(errors) {
+              errors.add(AssertionError("Wrong message type: ${msg.javaClass.simpleName}"))
+            }
+          }
+        }
+      } catch (e: Exception) {
+        synchronized(errors) { errors.add(e) }
+      }
+    }
+
+    reader.start()
+    writerA.start()
+    writerB.start()
+
+    done.await(30, java.util.concurrent.TimeUnit.SECONDS)
+    pipeOut.close()
+    reader.join(10_000)
+
+    synchronized(errors) {
+      if (errors.isNotEmpty()) {
+        throw AssertionError(
+          "${errors.size} encoding errors (decoded ${decoded.get()}/${iterations * 2}): " +
+            errors.first().message,
+          errors.first(),
+        )
+      }
+    }
+    assertThat(decoded.get()).isEqualTo(iterations * 2)
   }
 
   @Test

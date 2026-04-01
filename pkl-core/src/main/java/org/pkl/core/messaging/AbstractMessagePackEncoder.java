@@ -41,10 +41,17 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
 
   @Override
   public final void encode(Message msg) throws IOException, ProtocolException {
-    packer.packArrayHeader(2);
-    packer.packInt(msg.type().getCode());
-    encodeMessage(msg);
-    packer.flush();
+    // Serialize access to the packer.  In pkl server mode the main thread
+    // (handling CreateEvaluatorRequest) and the executor thread (sending
+    // EvaluateResponse / ReadModuleRequest) call encode() concurrently.
+    // Without this lock their writes interleave, corrupting the MessagePack
+    // stream.  See JvmServerTest "concurrent encoding" for a regression test.
+    synchronized (packer) {
+      packer.packArrayHeader(2);
+      packer.packInt(msg.type().getCode());
+      encodeMessage(msg);
+      packer.flush();
+    }
   }
 
   protected void packMapHeader(int size, @Nullable Object value1) throws IOException {
