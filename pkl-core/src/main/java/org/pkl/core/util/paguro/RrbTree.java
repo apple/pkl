@@ -1,5 +1,5 @@
 /*
- * Copyright © 2016-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2016-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -1016,7 +1016,7 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
      * Can we put focus at the given index without reshuffling nodes?
      *
      * @param index the index we want to insert at
-     * @param size the number of items to insert. Must be size < MAX_NODE_LENGTH
+     * @param size the number of items to insert. Must be {@code size < MAX_NODE_LENGTH}
      * @return true if we can do so without otherwise adjusting the tree.
      */
     boolean hasRelaxedCapacity(int index, int size);

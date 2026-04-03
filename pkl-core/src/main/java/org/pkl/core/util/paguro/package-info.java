@@ -8,7 +8,7 @@
  *
  * <p>Original license:
  *
- * <p>Copyright 2016-05-28 PlanBase Inc. & Glen Peterson
+ * <p>Copyright 2016-05-28 PlanBase Inc. &amp; Glen Peterson
  *
  * <p>Licensed under the Apache License, Version 2.0 (the "License"); you may not use this file
  * except in compliance with the License.
