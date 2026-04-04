@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -846,13 +846,13 @@ abstract class AbstractServerTest {
   /**
    * Regression test for concurrent message encoding.
    *
-   * The pkl server's main thread sends [CreateEvaluatorResponse] while the executor thread
-   * sends [EvaluateResponse].  Without synchronization on the encoder, these writes interleave
-   * on the output stream, corrupting the MessagePack framing.
+   * The pkl server's main thread sends [CreateEvaluatorResponse] while the executor thread sends
+   * [EvaluateResponse]. Without synchronization on the encoder, these writes interleave on the
+   * output stream, corrupting the MessagePack framing.
    *
-   * This test exercises the race directly: two threads write different message types through
-   * the same [ServerMessagePackEncoder] into a pipe, and a reader thread decodes every message.
-   * Any interleaved write produces a decode error.
+   * This test exercises the race directly: two threads write different message types through the
+   * same [ServerMessagePackEncoder] into a pipe, and a reader thread decodes every message. Any
+   * interleaved write produces a decode error.
    *
    * Only meaningful with `USE_DIRECT_TRANSPORT = false` (the default).
    */
@@ -888,9 +888,7 @@ abstract class AbstractServerTest {
     val writerB = Thread {
       try {
         for (i in 0 until iterations) {
-          encoder.encode(
-            EvaluateResponse(i.toLong() + iterations, i.toLong(), padding, null)
-          )
+          encoder.encode(EvaluateResponse(i.toLong() + iterations, i.toLong(), padding, null))
         }
       } catch (e: Exception) {
         synchronized(errors) { errors.add(e) }
@@ -908,9 +906,10 @@ abstract class AbstractServerTest {
           when (msg) {
             is CreateEvaluatorResponse -> {}
             is EvaluateResponse -> {}
-            else -> synchronized(errors) {
-              errors.add(AssertionError("Wrong message type: ${msg.javaClass.simpleName}"))
-            }
+            else ->
+              synchronized(errors) {
+                errors.add(AssertionError("Wrong message type: ${msg.javaClass.simpleName}"))
+              }
           }
         }
       } catch (e: Exception) {
