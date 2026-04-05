@@ -36,11 +36,13 @@ jmh = "1.+"
 jmhPlugin = "0.7.2"
 jsr305 = "3.+"
 junit = "6.+"
-kotlin = "2.2.20"
+kotlin = "2.2.21"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
-kotlinxHtml = "0.11.0"
-kotlinxSerialization = "1.8.0"
+kotlinxHtml = "0.12.0"
+# 1.8.1 is the last version that supports Kotlin 2.1,
+# which is the language level currently set in pklKotlinLibrary.
+kotlinxSerialization = "1.8.1"
 kotlinxCoroutines = "1.+"
 ktfmt = "0.53"
 # replaces nuValidator's log4j dependency

@@ -181,7 +181,7 @@ internal abstract class PageGenerator<out S>(
             } else {
               "Click or press 'S' to search this package"
             }
-          autoComplete = false
+          autoComplete = "off"
           if (packageName != null) {
             require(packageVersion != null)
             attributes["data-package-name"] = packageName

@@ -1,8 +1,8 @@
 # This is a Gradle generated file for dependency locking.
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
-org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.2.20=pklFormatter
-org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.20=pklFormatter
-org.jetbrains.kotlin:kotlin-stdlib:2.2.20=pklFormatter
+org.jetbrains.kotlin:kotlin-stdlib-jdk7:2.2.21=pklFormatter
+org.jetbrains.kotlin:kotlin-stdlib-jdk8:2.2.21=pklFormatter
+org.jetbrains.kotlin:kotlin-stdlib:2.2.21=pklFormatter
 org.jetbrains:annotations:13.0=pklFormatter
 empty=signatures
