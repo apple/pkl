@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,25 +23,27 @@ val validatorConfiguration: Configuration =
   configurations.create("validator") {
     resolutionStrategy.eachDependency {
       if (requested.group == "log4j" && requested.name == "log4j") {
-        @Suppress("UnstableApiUsage") useTarget(buildInfo.libs.findLibrary("log4j12Api").get())
+        useTarget(buildInfo.libs.findLibrary("log4j12Api").get())
         because("mitigate critical security vulnerabilities")
       }
     }
   }
 
 dependencies {
-  @Suppress("UnstableApiUsage")
   validatorConfiguration(buildInfo.libs.findLibrary("nuValidator").get()) {
-    // we only want jetty-util and jetty-util-ajax (with the right version)
-    // couldn't find a more robust way to express this
+    // remove unnecessary dependencies
+    // (some of the requested versions don't even exist on Maven Central)
+    exclude(group = "org.eclipse.jetty", module = "jetty-alpn-client")
     exclude(group = "org.eclipse.jetty", module = "jetty-continuation")
     exclude(group = "org.eclipse.jetty", module = "jetty-http")
-    exclude(group = "org.eclipse.jetty", module = "jetty-io")
     exclude(group = "org.eclipse.jetty", module = "jetty-security")
     exclude(group = "org.eclipse.jetty", module = "jetty-server")
     exclude(group = "org.eclipse.jetty", module = "jetty-servlets")
+    exclude(group = "org.eclipse.jetty", module = "jetty-jakarta-servlet-api")
+    exclude(group = "org.eclipse.jetty.toolchain")
     exclude(group = "javax.servlet")
-    exclude(group = "commons-fileupload")
+    exclude(group = "org.apache.commons", module = "commons-fileupload2-core")
+    exclude(group = "org.apache.commons", module = "commons-fileupload2-jakarta-servlet5")
   }
 }
 

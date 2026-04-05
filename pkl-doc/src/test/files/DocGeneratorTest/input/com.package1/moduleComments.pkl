@@ -1,6 +1,6 @@
 /// The greatest breakthrough since ever.
 ///
-/// ### Installation
+/// ## Installation
 ///
 /// Just follow these simple steps:
 ///
@@ -18,7 +18,7 @@
 ///
 /// 😀😀😀 emoji day 😎😎😎 don't get 😡😡😡
 ///
-/// ### Code
+/// ## Code
 ///
 /// The code is beautiful:
 ///
