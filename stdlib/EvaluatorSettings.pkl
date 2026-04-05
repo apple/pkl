@@ -128,6 +128,9 @@ local const hasNonEmptyHostname = (it: String) ->
 @Since { version = "0.29.0" }
 typealias HttpRewrite = String(startsWith(Regex("https?://")), endsWith("/"), hasNonEmptyHostname)
 
+@Since { version = "0.32.0" }
+typealias UrlPattern = String(endsWith(Regex("[/*]")))
+
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
   /// Configuration of the HTTP proxy to use.
@@ -169,6 +172,10 @@ class Http {
   /// (not schematically enforced).
   @Since { version = "0.29.0" }
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
+
+  /// HTTP headers to add to outbound requests targeting specified URLs.
+  @Since { version = "0.32.0" }
+  headers: Mapping<UrlPattern, Mapping<HttpHeaderName, *Listing<HttpHeaderValue> | HttpHeaderValue>>?
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.
@@ -235,3 +242,53 @@ class ExternalReader {
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
 }
+
+@Since { version = "0.32.0" }
+typealias ReservedHttpHeaderName =
+  "accept-charset"
+    | "accept-encoding"
+    | "access-control-request-headers"
+    | "access-control-request-method"
+    | "connection"
+    | "content-length"
+    | "cookie"
+    | "date"
+    | "dnt"
+    | "expect"
+    | "host"
+    | "keep-alive"
+    | "origin"
+    | "permissions-policy"
+    | "referer"
+    | "te"
+    | "trailer"
+    | "transfer-encoding"
+    | "upgrade"
+    | "via"
+
+local const ReservedHttpHeaderPrefix = new Listing {
+  "proxy-"
+  "sec-"
+  "access-control-"
+}
+
+local const hasReservedHttpHeaderPrefix = (header: String) ->
+  ReservedHttpHeaderPrefix.any((it) -> header.startsWith(it))
+
+local const httpHeaderNameRegex = Regex("^[a-zA-Z0-9!#\\$%&'*+-.^_`|~]+$")
+local const hasValidHttpHeaderName = (header: String) ->
+  !httpHeaderNameRegex.findMatchesIn(header).isEmpty
+
+@Since { version = "0.32.0" }
+typealias HttpHeaderName =
+  String(
+    this == toLowerCase(),
+    !(this is ReservedHttpHeaderName),
+    !hasReservedHttpHeaderPrefix.apply(this),
+    hasValidHttpHeaderName,
+  )
+
+local const httpHeaderValueRegex = Regex("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
+
+@Since { version = "0.32.0" }
+typealias HttpHeaderValue = String(!httpHeaderValueRegex.findMatchesIn(this).isEmpty)
