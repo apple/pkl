@@ -1,0 +1,27 @@
+a {
+  foo = 6
+  bar = 3
+  baz {
+    qux = 4
+    quux = 12
+  }
+}
+b {
+  foo = 7
+  bar = 3
+  baz {
+    qux = 4
+    quux = 12
+  }
+}
+c {
+  qux = 4
+  quux = 12
+}
+d {
+  qux = 5
+  quux = 15
+}
+e = "Class `imported` cannot be extended or used as type because it amends another module or class."
+f = "Class `imported` cannot be extended or used as type because it amends another module or class."
+g = "Module `imported` cannot be extended or used as type because it amends another module or class."

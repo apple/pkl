@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot find property `output` in module `amendModuleValue`.
+
+Available properties in module `amendModuleValue`:
+quux
+qux

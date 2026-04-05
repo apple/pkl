@@ -130,6 +130,12 @@ public class GenericParser {
       var subChildren = new ArrayList<Node>();
       subChildren.add(makeTerminal(next()));
       ff(subChildren);
+      if (lookahead == Token.IDENTIFIER) {
+        subChildren.add(parseIdentifier());
+        ff(subChildren);
+        expect(Token.IN, subChildren, "unexpectedToken", "in");
+        ff(subChildren);
+      }
       subChildren.add(parseStringConstant());
       children.add(new Node(type, subChildren));
     }
@@ -141,7 +147,7 @@ public class GenericParser {
     children.add(parseIdentifier());
     while (lookahead() == Token.DOT) {
       ff(children);
-      children.add(new Node(NodeType.TERMINAL, next().span));
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseIdentifier());
     }
@@ -155,13 +161,52 @@ public class GenericParser {
     children.add(parseStringConstant());
     if (lookahead() == Token.AS) {
       ff(children);
-      var alias = new ArrayList<Node>();
-      alias.add(makeTerminal(next()));
-      ff(alias);
-      alias.add(parseIdentifier());
-      children.add(new Node(NodeType.IMPORT_ALIAS, alias));
+      var as = makeTerminal(next());
+      if (lookahead == Token.IDENTIFIER) {
+        var alias = new ArrayList<Node>();
+        alias.add(as); // as
+        ff(alias);
+        alias.add(parseIdentifier());
+
+        children.add(new Node(NodeType.IMPORT_ALIAS, alias));
+        ff(children);
+
+        if (lookahead == Token.COMMA) {
+          children.add(parseImportDeconstructionList(makeTerminal(next()), null));
+        }
+      } else {
+        children.add(parseImportDeconstructionList(as, "identifier"));
+      }
     }
     return new Node(NodeType.IMPORT, children);
+  }
+
+  private Node parseImportDeconstructionList(
+      Node separator, @Nullable String additonalExpectation) {
+    var children = new ArrayList<Node>();
+    children.add(separator); // as or ,
+    ff(children);
+    if (additonalExpectation != null)
+      expect(Token.LBRACE, children, "unexpectedToken2", additonalExpectation, "{");
+    else expect(Token.LBRACE, children, "unexpectedToken", "{");
+    ff(children);
+    var elements = new ArrayList<Node>();
+    parseListOf(Token.RBRACE, elements, this::parseImportDeconstruction);
+    children.add(new Node(NodeType.IMPORT_DECONSTRUCTION_LIST_ELEMENTS, elements));
+    expect(Token.RBRACE, children, "unexpectedToken2", ",", "}");
+    return new Node(NodeType.IMPORT_DECONSTRUCTION_LIST, children);
+  }
+
+  private Node parseImportDeconstruction() {
+    var children = new ArrayList<Node>();
+    children.add(parseIdentifier());
+    if (lookahead() == Token.AS) {
+      ff(children);
+      children.add(makeTerminal(next()));
+      ff(children);
+      children.add(parseIdentifier());
+    }
+    return new Node(NodeType.IMPORT_DECONSTRUCTION, children);
   }
 
   private HeaderResult parseMemberHeader(List<Node> children) {

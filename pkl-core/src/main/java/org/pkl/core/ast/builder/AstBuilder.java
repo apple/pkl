@@ -1325,11 +1325,22 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var extendsOrAmendsClause = moduleDecl != null ? moduleDecl.getExtendsOrAmendsDecl() : null;
 
-    var supermoduleNode =
-        extendsOrAmendsClause == null
-            ? resolveBaseModuleClass(
-                org.pkl.core.runtime.Identifier.MODULE, BaseModule::getModuleClass)
-            : doVisitImport(false, extendsOrAmendsClause, extendsOrAmendsClause.getUrl());
+    ExpressionNode supermoduleNode;
+    if (extendsOrAmendsClause == null) {
+      supermoduleNode =
+          resolveBaseModuleClass(
+              org.pkl.core.runtime.Identifier.MODULE, BaseModule::getModuleClass);
+    } else {
+      supermoduleNode = doVisitImport(false, extendsOrAmendsClause, extendsOrAmendsClause.getUrl());
+      if (extendsOrAmendsClause.getParentTypeName() != null) {
+        supermoduleNode =
+            ReadPropertyNodeGen.create(
+                createSourceSection(extendsOrAmendsClause),
+                org.pkl.core.runtime.Identifier.get(
+                    extendsOrAmendsClause.getParentTypeName().getValue()),
+                supermoduleNode);
+      }
+    }
 
     var propertyNames =
         CollectionUtils.<String>newHashSet(
@@ -1421,9 +1432,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var result = EconomicMaps.<Object, ObjectMember>create(totalSize);
 
     for (var _import : imports) {
-      var member = visitImportClause(_import);
-      checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
-      EconomicMaps.put(result, member.getName(), member);
+      visitImportClause(_import)
+          .forEach(
+              (member) -> {
+                checkDuplicateMember(member.getName(), member.getHeaderSection(), propertyNames);
+                EconomicMaps.put(result, member.getName(), member);
+              });
     }
 
     for (var clazz : classes) {
@@ -1479,7 +1493,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public ObjectMember visitImportClause(ImportClause imp) {
+  public List<ObjectMember> visitImportClause(ImportClause imp) {
     var importNode = doVisitImport(imp.isGlob(), imp, imp.getImportStr());
     var moduleKey = moduleResolver.resolve(importNode.getImportUri());
     var importName =
@@ -1487,28 +1501,68 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             imp.getAlias() != null ? imp.getAlias().getValue() : IoUtils.inferModuleName(moduleKey),
             true);
 
-    return symbolTable.enterProperty(
-        importName,
-        ConstLevel.NONE,
-        scope -> {
-          var modifiers = VmModifier.IMPORT | VmModifier.LOCAL | VmModifier.CONST;
-          if (imp.isGlob()) {
-            modifiers = modifiers | VmModifier.GLOB;
-          }
-          var result =
-              new ObjectMember(
-                  importNode.getSourceSection(),
-                  importNode.getSourceSection(),
-                  modifiers,
-                  scope.getName(),
-                  scope.getQualifiedName());
+    var imports =
+        new ArrayList<ObjectMember>(
+            1
+                + (imp.getDeconstructions() != null
+                    ? imp.getDeconstructions().getDeconstructions().size()
+                    : 0));
+    imports.add(
+        symbolTable.enterProperty(
+            importName,
+            ConstLevel.NONE,
+            scope -> handleImportClauseItem(imp, importNode, null, scope)));
 
-          result.initMemberNode(
-              new UntypedObjectMemberNode(
-                  language, scope.buildFrameDescriptor(), result, importNode));
+    if (imp.getDeconstructions() == null) return imports;
+    assert !imp.isGlob();
+    for (var deconstruction : imp.getDeconstructions().getDeconstructions()) {
+      var deconstructionName =
+          org.pkl.core.runtime.Identifier.property(
+              deconstruction.getAlias() != null
+                  ? deconstruction.getAlias().getValue()
+                  : deconstruction.getName().getValue(),
+              true);
+      imports.add(
+          symbolTable.enterProperty(
+              deconstructionName,
+              ConstLevel.NONE,
+              scope ->
+                  handleImportClauseItem(
+                      imp,
+                      importNode,
+                      org.pkl.core.runtime.Identifier.get(deconstruction.getName().getValue()),
+                      scope)));
+    }
+    return imports;
+  }
 
-          return result;
-        });
+  private ObjectMember handleImportClauseItem(
+      ImportClause imp,
+      AbstractImportNode importNode,
+      @Nullable org.pkl.core.runtime.Identifier memberName,
+      SymbolTable.PropertyScope scope) {
+    var modifiers = VmModifier.IMPORT | VmModifier.LOCAL | VmModifier.CONST;
+    if (imp.isGlob()) {
+      modifiers = modifiers | VmModifier.GLOB;
+    }
+    var result =
+        new ObjectMember(
+            importNode.getSourceSection(),
+            importNode.getSourceSection(),
+            modifiers,
+            scope.getName(),
+            scope.getQualifiedName());
+
+    result.initMemberNode(
+        new UntypedObjectMemberNode(
+            language,
+            scope.buildFrameDescriptor(),
+            result,
+            memberName == null
+                ? importNode
+                : ReadPropertyNodeGen.create(createSourceSection(imp), memberName, importNode)));
+
+    return result;
   }
 
   @Override

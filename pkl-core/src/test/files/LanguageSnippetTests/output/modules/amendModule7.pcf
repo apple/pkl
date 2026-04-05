@@ -1,0 +1,8 @@
+amendModuleClass {
+  qux = 5
+  quux = 15
+}
+amendModuleValue {
+  qux = 5
+  quux = 15
+}

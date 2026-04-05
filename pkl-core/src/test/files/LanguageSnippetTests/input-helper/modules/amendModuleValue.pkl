@@ -1,0 +1,3 @@
+amends baz in ".../input/basic/imported.pkl"
+
+qux = 5

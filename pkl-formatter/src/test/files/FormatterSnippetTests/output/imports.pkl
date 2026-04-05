@@ -7,6 +7,26 @@ import "pkl:reflect"
 
 import "@bar/Bar.pkl"
 import "@foo/Foo.pkl" as foo
+import
+  "@foo/Foo.pkl"
+  as foo
+  , {
+    Bar,
+    Baz as baz,
+    Qux as quux,
+    Quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuux
+      as
+      quuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuuux,
+  }
+import "@foo/Foo.pkl" as { /* Bar */ Bar, Baz as baz /* baz */} // qux
+import
+  "@foo/Foo.pkl"
+  as { /* 1 */ hello,
+    world /* 2 */ , /* a */ a as b,
+    b /* b */ as c,
+    c as /* c */ d,
+    d as e /* d */,
+  } // quux
 
 import "..."
 import "module1.pkl"

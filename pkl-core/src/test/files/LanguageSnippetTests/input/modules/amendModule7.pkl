@@ -1,0 +1,4 @@
+// these don't extend Module so they have no `output` property
+// thus cannot be rendered directly
+amendModuleClass = import(".../input-helper/modules/amendModuleClass.pkl")
+amendModuleValue = import(".../input-helper/modules/amendModuleValue.pkl")
