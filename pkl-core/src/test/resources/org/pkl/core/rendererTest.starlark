@@ -1,0 +1,112 @@
+int = 123
+
+float = 1.23
+
+bool = True
+
+string = "Pigeon"
+
+unicodeString = "abc😀abc😎abc"
+
+multiLineString = "have a\ngreat\nday"
+
+list = [
+    123,
+    1.23,
+    True,
+    "Pigeon",
+    "abc😀abc😎abc",
+    "have a\ngreat\nday",
+    [
+        1,
+        2,
+        3,
+    ],
+    set([
+        1,
+        2,
+        3,
+    ]),
+    {
+        "one": 1,
+    },
+    struct(
+        name = "Pigeon",
+    ),
+]
+
+set = set([
+    123,
+    1.23,
+    True,
+    "Pigeon",
+    "abc😀abc😎abc",
+    "have a\ngreat\nday",
+    [
+        1,
+        2,
+        3,
+    ],
+    set([
+        1,
+        2,
+        3,
+    ]),
+    {
+        "one": 1,
+    },
+    struct(
+        name = "Pigeon",
+    ),
+])
+
+map = {
+    "one": 123,
+    "two": 1.23,
+    "three": True,
+    "four": "Pigeon",
+    "five": "abc😀abc😎abc",
+    "six": "have a\ngreat\nday",
+    "seven": [
+        1,
+        2,
+        3,
+    ],
+    "eight": set([
+        1,
+        2,
+        3,
+    ]),
+    "nine": {
+        "one": 1,
+    },
+    "ten": struct(
+        name = "Pigeon",
+    ),
+}
+
+Person(
+    name = "typedObject",
+    address = Address(
+        street = "Folsom St.",
+    ),
+    age = 30,
+    hobbies = [
+        "swimming",
+        "gardening",
+        "reading",
+    ],
+)
+
+container = struct(
+    address = struct(
+        hobbies = [
+            "swimming",
+            "gardening",
+            "reading",
+        ],
+        street = "Folsom St.",
+    ),
+    age = 30,
+    name = "Pigeon",
+)
