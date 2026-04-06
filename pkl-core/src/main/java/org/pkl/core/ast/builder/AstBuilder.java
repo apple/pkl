@@ -45,6 +45,10 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.builder.PropertyResolution.ConstantProperty;
+import org.pkl.core.ast.builder.PropertyResolution.LetOrLambdaProperty;
+import org.pkl.core.ast.builder.PropertyResolution.LocalClassProperty;
+import org.pkl.core.ast.builder.PropertyResolution.NormalClassProperty;
 import org.pkl.core.ast.builder.SymbolTable.AnnotationScope;
 import org.pkl.core.ast.builder.SymbolTable.ClassScope;
 import org.pkl.core.ast.expression.binary.AdditionNodeGen;
@@ -99,6 +103,7 @@ import org.pkl.core.ast.expression.literal.TrueLiteralNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
+import org.pkl.core.ast.expression.member.InvokeMethodDirectNode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
@@ -112,6 +117,10 @@ import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.expression.primary.OuterNode;
+import org.pkl.core.ast.expression.primary.PartiallyResolvedMethod;
+import org.pkl.core.ast.expression.primary.PartiallyResolvedVariable;
+import org.pkl.core.ast.expression.primary.ResolveParseTimeMethodNode;
+import org.pkl.core.ast.expression.primary.ResolveParseTimeVariableNode;
 import org.pkl.core.ast.expression.primary.ResolveVariableNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.expression.ternary.IfElseNode;
@@ -272,20 +281,39 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private final ExternalMemberRegistry externalMemberRegistry;
   private final SymbolTable symbolTable;
   private final boolean isMethodReturnTypeChecked;
+  // we resolve variables at runtime in repl mode
+  private final boolean isReplMode;
 
   public AstBuilder(
-      Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
+      Source source,
+      VmLanguage language,
+      ModuleInfo moduleInfo,
+      @Nullable Module module,
+      ModuleResolver moduleResolver) {
     super(source);
     this.language = language;
     this.moduleInfo = moduleInfo;
 
+    // force loading of pkl:base for parse time variable resolution
+    var baseModule = BaseModule.getModule();
     moduleKey = moduleInfo.getModuleKey();
     this.moduleResolver = moduleResolver;
     isBaseModule = ModuleKeys.isBaseModule(moduleKey);
     isStdLibModule = ModuleKeys.isStdLibModule(moduleKey);
     externalMemberRegistry = MemberRegistryFactory.get(moduleKey);
-    symbolTable = new SymbolTable(moduleInfo);
+    if (isBaseModule) {
+      symbolTable = new SymbolTable(moduleInfo, module);
+    } else {
+      symbolTable = new SymbolTable(moduleInfo, module, baseModule);
+    }
     isMethodReturnTypeChecked = !isStdLibModule || IoUtils.isTestMode();
+    isReplMode = !isStdLibModule && "repl".equals(moduleKey.getUri().getHost());
+  }
+
+  // Constructor for REPL/expression parsing where no Module syntax tree is available
+  public AstBuilder(
+      Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
+    this(source, language, moduleInfo, null, moduleResolver);
   }
 
   public static AstBuilder create(
@@ -331,7 +359,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               isAmend);
     }
 
-    return new AstBuilder(source, language, moduleInfo, moduleResolver);
+    return new AstBuilder(source, language, moduleInfo, ctx, moduleResolver);
   }
 
   @Override
@@ -635,35 +663,81 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     };
   }
 
+  private static final boolean shouldResolveVariables = true;
+
   @Override
   public ExpressionNode visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr) {
     var identifier = toIdentifier(expr.getIdentifier().getValue());
     var argList = expr.getArgumentList();
 
+    var scope = symbolTable.getCurrentScope();
+    var sourceSection = createSourceSection(expr);
+
     if (argList == null) {
+      if (shouldResolveVariables && !isReplMode && !isStdLibModule) {
+        var node =
+            scope.resolveProperty(
+                identifier,
+                res -> {
+                  if (res instanceof ConstantProperty c) {
+                    return new PartiallyResolvedVariable.ConstantVar(c.constant());
+                  } else if (res instanceof LocalClassProperty p) {
+                    return new PartiallyResolvedVariable.LocalPropertyVar(p.name(), p.isConst());
+                  } else if (res instanceof NormalClassProperty p) {
+                    return new PartiallyResolvedVariable.PropertyVar(p.name(), p.isConst());
+                  } else if (res instanceof LetOrLambdaProperty) {
+                    return new PartiallyResolvedVariable.FrameSlotVar(identifier);
+                  }
+                  return null;
+                });
+        if (node != null) {
+          return new ResolveParseTimeVariableNode(
+              node, sourceSection, scope.getConstLevel(), scope.getConstDepth(), identifier);
+        }
+      }
+      // fall back to resolve variable node
       return createResolveVariableNode(createSourceSection(expr), identifier);
     }
 
-    // TODO: make sure that no user-defined List/Set/Map method is in scope
+    if (!isReplMode) {
+      var result =
+          scope.resolveMethod(
+              identifier,
+              res -> {
+                if (res instanceof MethodResolution.DirectMethod m) {
+                  if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.LIST) {
+                    return doVisitListLiteral(expr, argList);
+                  } else if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.SET) {
+                    return doVisitSetLiteral(expr, argList);
+                  } else if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.MAP) {
+                    return doVisitMapLiteral(expr, argList);
+                  } else if (m.isBase()
+                      && identifier == org.pkl.core.runtime.Identifier.BYTES_CONSTRUCTOR) {
+                    return doVisitBytesLiteral(expr, argList);
+                  } else {
+                    var args = visitArgumentList(argList);
+                    return new InvokeMethodDirectNode(
+                        createSourceSection(expr), m.method(), m.receiver(), args);
+                  }
+                } else if (shouldResolveVariables && !isStdLibModule) {
+                  if (res instanceof MethodResolution.LexicalMethod lm) {
+                    return new PartiallyResolvedMethod.LexicalMethodVar(identifier, lm.isConst());
+                  } else if (res instanceof MethodResolution.VirtualMethod vm) {
+                    return new PartiallyResolvedMethod.VirtualMethodVar(identifier, vm.isConst());
+                  }
+                }
+                return null;
+              });
+      if (result instanceof ExpressionNode n) return n;
+      if (result instanceof PartiallyResolvedMethod pm) {
+        var args = visitArgumentList(argList);
+        return new ResolveParseTimeMethodNode(
+            pm, sourceSection, args, scope.getConstLevel(), scope.getConstDepth(), identifier);
+      }
+    }
+
     // TODO: support qualified calls (e.g., `import "pkl:base"; x =
     // base.List()/Set()/Map()/Bytes()`) for correctness
-    if (identifier == org.pkl.core.runtime.Identifier.LIST) {
-      return doVisitListLiteral(expr, argList);
-    }
-
-    if (identifier == org.pkl.core.runtime.Identifier.SET) {
-      return doVisitSetLiteral(expr, argList);
-    }
-
-    if (identifier == org.pkl.core.runtime.Identifier.MAP) {
-      return doVisitMapLiteral(expr, argList);
-    }
-
-    if (identifier == org.pkl.core.runtime.Identifier.BYTES_CONSTRUCTOR) {
-      return doVisitBytesLiteral(expr, argList);
-    }
-
-    var scope = symbolTable.getCurrentScope();
 
     return new ResolveMethodNode(
         createSourceSection(expr),
@@ -981,10 +1055,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var parameter = letExpr.getParameter();
     var frameBuilder = FrameDescriptor.newBuilder();
     UnresolvedTypeNode[] typeNodes;
+    var bindings = new ArrayList<String>();
+    var slot = -1;
     if (parameter instanceof TypedIdentifier par) {
       typeNodes = new UnresolvedTypeNode[] {visitTypeAnnotation(par.getTypeAnnotation())};
-      frameBuilder.addSlot(
-          FrameSlotKind.Illegal, toIdentifier(par.getIdentifier().getValue()), null);
+      slot =
+          frameBuilder.addSlot(
+              FrameSlotKind.Illegal, toIdentifier(par.getIdentifier().getValue()), null);
+      bindings.add(par.getIdentifier().getValue());
     } else {
       typeNodes = new UnresolvedTypeNode[0];
     }
@@ -993,6 +1071,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     UnresolvedFunctionNode functionNode =
         symbolTable.enterLambda(
+            bindings,
+            slot,
             frameBuilder,
             scope -> {
               var expr = visitExpr(letExpr.getExpr());
@@ -1016,6 +1096,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var params = expr.getParameterList();
     var descriptorBuilder = createFrameDescriptorBuilder(params);
     var paramCount = params.getParameters().size();
+    var bindings = new ArrayList<String>();
 
     if (paramCount > 5) {
       throw exceptionBuilder()
@@ -1024,9 +1105,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .build();
     }
 
+    for (var par : params.getParameters()) {
+      if (par instanceof TypedIdentifier ti) {
+        bindings.add(ti.getIdentifier().getValue());
+      } else {
+        bindings.add("_");
+      }
+    }
+
     var isCustomThisScope = symbolTable.getCurrentScope().isCustomThisScope();
 
     return symbolTable.enterLambda(
+        bindings,
+        -1,
         descriptorBuilder,
         scope -> {
           var exprNode = visitExpr(expr.getExpr());
@@ -1167,7 +1258,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitMemberPredicate(MemberPredicate ctx) {
-    var keyNode = symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred()));
+    var keyNode =
+        symbolTable.enterForEager(
+            (scp) -> symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred())));
     var member =
         doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
     var isFrameStored =
@@ -1209,8 +1302,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             ? new GeneratorMemberNode[0]
             : doVisitForWhenBody(member.getElseClause());
 
-    return new GeneratorWhenNode(
-        sourceSection, visitExpr(member.getPredicate()), thenNodes, elseNodes);
+    // when predicates cannot see their direct scope
+    var predicateNode = symbolTable.enterForEager((scope) -> visitExpr(member.getPredicate()));
+    return new GeneratorWhenNode(sourceSection, predicateNode, thenNodes, elseNodes);
   }
 
   private GeneratorMemberNode[] doVisitForWhenBody(ObjectBody body) {
@@ -1232,6 +1326,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     TypedIdentifier valueTypedIdentifier = null;
     if (valueParameter instanceof TypedIdentifier ti) valueTypedIdentifier = ti;
 
+    var params = new ArrayList<String>();
+    if (ctx.getP1() instanceof TypedIdentifier ti) {
+      params.add(ti.getIdentifier().getValue());
+    }
+    if (ctx.getP2() != null) {
+      if (ctx.getP2() instanceof TypedIdentifier ti) {
+        params.add(ti.getIdentifier().getValue());
+      }
+    }
+
     var keyIdentifier =
         keyTypedIdentifier == null
             ? null
@@ -1251,12 +1355,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var memberDescriptorBuilder = currentScope.newForGeneratorMemberDescriptorBuilder();
     var keySlot = -1;
     var valueSlot = -1;
+    var nestLevel = -1;
     if (keyIdentifier != null) {
       keySlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
+      nestLevel = keySlot;
       memberDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
     }
     if (valueIdentifier != null) {
       valueSlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
+      if (nestLevel == -1) nestLevel = valueSlot;
       memberDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
     }
     var unresolvedKeyTypeNode =
@@ -1279,9 +1386,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
                 .initWriteSlotNode(valueSlot)
             : null;
-    var iterableNode = visitExpr(ctx.getExpr());
+    var iterableNode = symbolTable.enterForEager(scope -> visitExpr(ctx.getExpr()));
     var memberNodes =
         symbolTable.enterForGenerator(
+            params,
+            nestLevel,
             generatorDescriptorBuilder,
             memberDescriptorBuilder,
             scope -> doVisitForWhenBody(ctx.getBody()));
@@ -1534,6 +1643,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     return symbolTable.enterClass(
         className,
+        clazz,
         typeParameters,
         scope -> {
           var supertypeCtx = clazz.getSuperClass();
@@ -1610,6 +1720,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public Integer visitModifier(Modifier modifier) {
+    return toModifier(modifier);
+  }
+
+  public static int toModifier(Modifier modifier) {
     return switch (modifier.getValue()) {
       case EXTERNAL -> VmModifier.EXTERNAL;
       case ABSTRACT -> VmModifier.ABSTRACT;
@@ -1759,9 +1873,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var descriptorBuilder = createFrameDescriptorBuilder(paramListCtx);
     var paramCount = paramListCtx.getParameters().size();
 
+    var bindings = new ArrayList<String>();
+    for (var param : paramListCtx.getParameters()) {
+      if (param instanceof Parameter.TypedIdentifier id) {
+        bindings.add(id.getIdentifier().getValue());
+      } else {
+        bindings.add("_");
+      }
+    }
+
     return symbolTable.enterMethod(
         methodName,
         getConstLevel(modifiers),
+        bindings,
         descriptorBuilder,
         typeParameters,
         scope -> {
@@ -2005,6 +2129,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   private ExpressionNode doVisitObjectBody(ObjectBody body, ExpressionNode parentNode) {
     return symbolTable.enterObjectScope(
+        body,
         (scope) -> {
           var objectMembers = body.getMembers();
           if (objectMembers.isEmpty()) {
@@ -2289,7 +2414,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private Pair<ExpressionNode, ObjectMember> doVisitObjectEntry(ObjectEntry entry) {
-    var keyNode = visitExpr(entry.getKey());
+    var keyNode = symbolTable.enterForEager((scp) -> visitExpr(entry.getKey()));
+    // var keyNode = visitExpr(entry.getKey());
 
     var member =
         doVisitObjectEntryBody(
@@ -2370,9 +2496,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var frameDescriptorBuilder = createFrameDescriptorBuilder(paramList);
 
+    var bindings = new ArrayList<String>();
+    for (var param : paramList.getParameters()) {
+      if (param instanceof Parameter.TypedIdentifier id) {
+        bindings.add(id.getIdentifier().getValue());
+      } else {
+        bindings.add("_");
+      }
+    }
+
     return symbolTable.enterMethod(
         methodName,
         getConstLevel(modifiers),
+        bindings,
         frameDescriptorBuilder,
         List.of(),
         scope -> {
