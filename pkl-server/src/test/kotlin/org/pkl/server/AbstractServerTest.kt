@@ -857,6 +857,8 @@ abstract class AbstractServerTest {
    * Only meaningful with `USE_DIRECT_TRANSPORT = false` (the default).
    */
   @Test
+  @Disabled
+  // TODO re-enable this; disabled due to flakiness (see https://github.com/apple/pkl/issues/1493)
   fun `concurrent encoding -- multiple evaluators with module reads`() {
     if (USE_DIRECT_TRANSPORT) return
 
