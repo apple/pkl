@@ -35,8 +35,7 @@ jline = "3.23.0"
 jmh = "1.+"
 jmhPlugin = "0.7.2"
 jsr305 = "3.+"
-junit = "5.+"
-junitPlatform = "1.+"
+junit = "6.+"
 kotlin = "2.2.20"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
@@ -81,7 +80,7 @@ jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "j
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
-junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
+junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
 kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
