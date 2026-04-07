@@ -47,7 +47,7 @@ constructor(
   private val errWriter: Writer = System.err.writer(),
 ) : CliCommand(CliBaseOptions()) {
   private fun format(contents: String): String {
-    return Formatter().format(contents, grammarVersion)
+    return Formatter(grammarVersion).format(contents)
   }
 
   private fun writeErrLine(error: String) {
