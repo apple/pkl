@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.pkl.parser;
 
 import org.pkl.parser.syntax.generic.FullSpan;
 
-public class GenericParserError extends RuntimeException {
+public final class GenericParserError extends RuntimeException {
   private final FullSpan span;
 
   public GenericParserError(String msg, FullSpan span) {

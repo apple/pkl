@@ -20,7 +20,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class TypeAnnotation extends AbstractNode {
+public final class TypeAnnotation extends AbstractNode {
   public TypeAnnotation(Type type, Span span) {
     super(span, List.of(type));
   }

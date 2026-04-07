@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.pkl.parser;
 import org.pkl.parser.syntax.Module;
 import org.pkl.parser.util.Nullable;
 
-public class ParserError extends RuntimeException {
+public final class ParserError extends RuntimeException {
   private final Span span;
   private @Nullable Module partialParseResult;
 

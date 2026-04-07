@@ -21,7 +21,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class ExtendsOrAmendsClause extends AbstractNode {
+public final class ExtendsOrAmendsClause extends AbstractNode {
   private final Type type;
 
   public ExtendsOrAmendsClause(StringConstant url, Type type, Span span) {
