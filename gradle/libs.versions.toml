@@ -8,21 +8,21 @@ geantyref = "1.+"
 #noinspection UnusedVersionCatalogEntry
 googleJavaFormat = "1.35.0"
 # must not use `+` because used in download URL
-# 23.1.x requires JDK 20+
-graalVm = "25.0.0"
+# 25.0.2 no longer supports macos-x64
+graalVm = "25.0.1"
 #noinspection UnusedVersionCatalogEntry
-graalVmJdkVersion = "25.0.0"
+graalVmJdkVersion = "25.0.1"
 # slightly hacky but convenient place so we remember to update the checksum
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-x64 = "04278cf867d040e29dc71dd7727793f0ea67eb72adce8a35d04b87b57906778d"
+graalVmSha256-macos-x64 = "a3d895b4cd1c783badbd277ec70409806bd4102fca0d2a60dbaeb0bab41aec30"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-aarch64 = "c446d5aaeda98660a4c14049d299e9fba72105a007df89f19d27cf3979d37158"
+graalVmSha256-macos-aarch64 = "066339f24a8ab5c161548491a9400f7344e7761a1e46f8979e76c7ef11d5bc76"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-x64 = "1862f2ce97387a303cae4c512cb21baf36fafd2457c3cbbc10d87db94b89d3dd"
+graalVmSha256-linux-x64 = "01e39fe1a87f28b842a3e4e3b77be9b544dca3a58fa6e93b924a6106c8bac7fb"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-aarch64 = "6c3c8b7617006c5d174d9cf7d357ccfb4bae77a4df1294ee28084fcb6eea8921"
+graalVmSha256-linux-aarch64 = "7aa0b9935a80e67f37c6025678393dbd123bb6f2226811decbc1a13093fc8ae2"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-windows-x64 = "33ef1d186b5c1e95465fcc97e637bc26e72d5f2250a8615b9c5d667ed5c17fd0"
+graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4ce442e344ca27"
 ideaExtPlugin = "1.4.1"
 intellijPlugin = "2.10.1"
 intellij = "2025.2.3"
