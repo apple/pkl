@@ -45,7 +45,10 @@ kotlinxHtml = "0.12.0"
 # which is the language level currently set in pklKotlinLibrary.
 kotlinxSerialization = "1.8.1"
 kotlinxCoroutines = "1.+"
-ktfmt = "0.53"
+# 0.62 might require a higher Kotlin version; fails with:
+# ktfmt(java.lang.NoClassDefFoundError)
+# Could not initialize class com.facebook.ktfmt.util.CompatibilityUtilsKt
+ktfmt = "0.61"
 # replaces nuValidator's log4j dependency
 # 2.17.1 is the last version compatible with nuValidator
 log4j = "2.17.1"
