@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,10 +23,14 @@ import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.pkl.cli.CliProjectResolver;
 
+@CacheableTask
 public abstract class ProjectResolveTask extends BasePklTask {
   @Internal
   public abstract ConfigurableFileCollection getProjectDirectories();
@@ -34,6 +38,7 @@ public abstract class ProjectResolveTask extends BasePklTask {
   // Only the `PklProject` files matter for creating PklProject.deps.json files.
   // Otherwise, these tasks can be considered up to date.
   @InputFiles
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   public Provider<List<File>> getProjectPklFiles() {
     return getProjectDirectories()
         .getElements()

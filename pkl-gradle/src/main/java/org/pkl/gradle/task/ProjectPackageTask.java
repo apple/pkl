@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,8 @@ import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.UntrackedTask;
 import org.pkl.cli.CliProjectPackager;
 import org.pkl.commons.cli.CliTestOptions;
@@ -34,6 +36,7 @@ import org.pkl.commons.cli.CliTestOptions;
 @UntrackedTask(because = "Output names are known only after execution")
 public abstract class ProjectPackageTask extends BasePklTask {
   @InputFiles
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   public abstract ConfigurableFileCollection getProjectDirectories();
 
   @Internal
