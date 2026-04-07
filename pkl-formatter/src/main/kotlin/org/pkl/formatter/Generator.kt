@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,8 +29,7 @@ import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
 import org.pkl.formatter.ast.Wrap
 
-internal class Generator {
-  private val buf: StringBuilder = StringBuilder()
+internal class Generator(private val buf: Appendable) {
   private var indent: Int = 0
   private var size: Int = 0
   private val wrapped: MutableSet<Int> = mutableSetOf()
@@ -136,10 +135,6 @@ internal class Generator {
     if (nodes.size < 2) return 0
     val beforeLast = nodes[nodes.lastIndex - 1]
     return if (beforeLast is Text) beforeLast.text.length else 0
-  }
-
-  override fun toString(): String {
-    return buf.toString()
   }
 
   companion object {

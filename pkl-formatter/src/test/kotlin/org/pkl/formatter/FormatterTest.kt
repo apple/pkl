@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -119,5 +119,13 @@ class FormatterTest {
     for (src in listOf(";;;", "\n", "\n\n\n", "\t")) {
       assertThat(format(src)).isEqualTo("\n")
     }
+  }
+
+  @Test
+  fun `read from Reader and write to Appendable`() {
+    val input = "  x  =  42".reader()
+    val output = StringBuilder()
+    Formatter().format(input, output)
+    assertThat(output.toString()).isEqualTo("x = 42\n")
   }
 }
