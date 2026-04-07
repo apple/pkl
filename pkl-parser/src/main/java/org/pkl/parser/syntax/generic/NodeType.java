@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,6 +70,7 @@ public enum NodeType {
   STRING_CHARS,
   OPERATOR,
   STRING_NEWLINE,
+  STRING_CONTINUATION,
   STRING_ESCAPE,
 
   // members

@@ -75,6 +75,11 @@ final class Builder {
           OPERATOR ->
           new Text(node.text(source));
       case STRING_NEWLINE -> mustForceLine();
+      case STRING_CONTINUATION -> {
+        var escape = node.text(source);
+        yield new Nodes(
+            List.of(new Text(escape.substring(0, escape.length() - 1)), mustForceLine()));
+      }
       case MODULE_DECLARATION -> formatModuleDeclaration(node);
       case MODULE_DEFINITION -> formatModuleDefinition(node);
       case SINGLE_LINE_STRING_LITERAL_EXPR -> formatSingleLineString(node);
@@ -922,7 +927,9 @@ final class Builder {
       if (elem.type == NodeType.TERMINAL && text(elem).endsWith("(")) {
         isInStringInterpolation = true;
       }
-      result.add(format(elem));
+      var formatted = format(elem);
+      if (formatted instanceof Nodes formattedNodes) result.addAll(formattedNodes.nodes());
+      else result.add(formatted);
       prev = elem;
     }
     return result;

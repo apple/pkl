@@ -18,6 +18,7 @@ package org.pkl.core.util;
 import static org.pkl.parser.Token.FALSE;
 import static org.pkl.parser.Token.NULL;
 import static org.pkl.parser.Token.STRING_ESCAPE_BACKSLASH;
+import static org.pkl.parser.Token.STRING_ESCAPE_CONTINUATION;
 import static org.pkl.parser.Token.STRING_ESCAPE_NEWLINE;
 import static org.pkl.parser.Token.STRING_ESCAPE_QUOTE;
 import static org.pkl.parser.Token.STRING_ESCAPE_RETURN;
@@ -41,7 +42,8 @@ public final class SyntaxHighlighter {
           STRING_ESCAPE_RETURN,
           STRING_ESCAPE_QUOTE,
           STRING_ESCAPE_BACKSLASH,
-          STRING_ESCAPE_UNICODE);
+          STRING_ESCAPE_UNICODE,
+          STRING_ESCAPE_CONTINUATION);
 
   private static final EnumSet<Token> constant = EnumSet.of(TRUE, FALSE, NULL);
 
