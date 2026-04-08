@@ -20,7 +20,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class ClassMethod extends AbstractNode {
+public final class ClassMethod extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
   private final Span headerSpan;

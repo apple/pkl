@@ -20,7 +20,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class StringConstant extends AbstractNode {
+public final class StringConstant extends AbstractNode {
   private final String string;
 
   public StringConstant(String string, Span span) {

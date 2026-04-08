@@ -20,12 +20,12 @@ import java.util.Deque;
 import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.util.ErrorMessages;
 
-public class Lexer {
+public final class Lexer {
 
   private final char[] source;
   private final int size;
-  protected int cursor = 0;
-  protected int sCursor = 0;
+  private int cursor = 0;
+  private int sCursor = 0;
   private int line = 1;
   private int sLine = 1;
   private int col = 1;
@@ -36,7 +36,7 @@ public class Lexer {
   private boolean stringEnded = false;
   private boolean isEscape = false;
   // how many newlines exist between two subsequent tokens
-  protected int newLinesBetween = 0;
+  private int newLinesBetween = 0;
 
   private static final int EOF = -1;
 
@@ -71,6 +71,10 @@ public class Lexer {
 
   public int getCursor() {
     return cursor;
+  }
+
+  public int getNewLinesBetween() {
+    return newLinesBetween;
   }
 
   public char[] getSource() {
