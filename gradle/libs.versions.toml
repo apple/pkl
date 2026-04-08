@@ -24,8 +24,6 @@ graalVmSha256-linux-aarch64 = "7aa0b9935a80e67f37c6025678393dbd123bb6f2226811dec
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4ce442e344ca27"
 ideaExtPlugin = "1.4.1"
-intellijPlugin = "2.10.1"
-intellij = "2025.2.3"
 javaPoet = "0.+"
 javaxInject = "1"
 jansi = "2.+"
@@ -73,8 +71,6 @@ geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = 
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
 graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
-#noinspection UnusedVersionCatalogEntry
-intellij = { group = "com.jetbrains.intellij.idea", name = "ideaIC", version.ref = "intellij" }
 javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
 jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
@@ -123,4 +119,3 @@ jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }
-intellij = { id = "org.jetbrains.intellij.platform", version.ref = "intellijPlugin" }

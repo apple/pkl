@@ -47,8 +47,6 @@ include("pkl-formatter")
 
 include("pkl-gradle")
 
-include("pkl-internal-intellij-plugin")
-
 include("pkl-parser")
 
 include("pkl-server")
