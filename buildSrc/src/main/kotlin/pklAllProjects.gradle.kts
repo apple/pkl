@@ -52,14 +52,14 @@ configurations.all {
 }
 
 plugins.withType(JavaPlugin::class).configureEach {
-  tasks.withType<JavaCompile>().configureEach { options.release = 17 }
+  tasks.withType<JavaCompile>().configureEach { options.release = buildInfo.jvmTarget }
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
   compilerOptions {
-    jvmTarget = JvmTarget.JVM_17
+    jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
     freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all")
-    freeCompilerArgs.add("-Xjdk-release=17")
+    freeCompilerArgs.add("-Xjdk-release=${buildInfo.jvmTarget}")
   }
 }
 
@@ -110,7 +110,6 @@ tasks.withType(Test::class).configureEach {
   }
   debugOptions {
     enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
-    @Suppress("UnstableApiUsage")
     host = "*"
     port = 5005
     suspend = true
@@ -121,7 +120,6 @@ tasks.withType(Test::class).configureEach {
 tasks.withType(JavaExec::class).configureEach {
   debugOptions {
     enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
-    @Suppress("UnstableApiUsage")
     host = "*"
     port = 5005
     suspend = true
