@@ -15,13 +15,14 @@
  */
 package org.pkl.parser.syntax;
 
+import java.util.List;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 
 public final class Keyword extends AbstractNode {
 
   public Keyword(Span span) {
-    super(span, null);
+    super(span, List.of());
   }
 
   @Override

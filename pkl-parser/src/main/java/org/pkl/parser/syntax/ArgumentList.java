@@ -33,7 +33,6 @@ public final class ArgumentList extends AbstractNode {
 
   @SuppressWarnings("unchecked")
   public List<Expr> getArguments() {
-    assert children != null;
     return (List<Expr>) children;
   }
 }

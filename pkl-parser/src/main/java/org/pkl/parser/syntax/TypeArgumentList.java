@@ -27,7 +27,6 @@ public final class TypeArgumentList extends AbstractNode {
 
   @SuppressWarnings("unchecked")
   public List<Type> getTypes() {
-    assert children != null;
     return (List<Type>) children;
   }
 

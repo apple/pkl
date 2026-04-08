@@ -36,7 +36,6 @@ public final class ImportClause extends AbstractNode {
   }
 
   public StringConstant getImportStr() {
-    assert children != null;
     var ret = (StringConstant) children.get(0);
     assert ret != null;
     return ret;
@@ -47,7 +46,6 @@ public final class ImportClause extends AbstractNode {
   }
 
   public @Nullable Identifier getAlias() {
-    assert children != null;
     return (Identifier) children.get(1);
   }
 

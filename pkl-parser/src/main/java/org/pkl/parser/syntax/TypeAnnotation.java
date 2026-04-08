@@ -31,7 +31,6 @@ public final class TypeAnnotation extends AbstractNode {
   }
 
   public Type getType() {
-    assert children != null;
     var ret = (Type) children.get(0);
     assert ret != null;
     return ret;

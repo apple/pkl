@@ -32,7 +32,6 @@ public final class ParameterList extends AbstractNode {
 
   @SuppressWarnings("unchecked")
   public List<Parameter> getParameters() {
-    assert children != null;
     return (List<Parameter>) children;
   }
 }

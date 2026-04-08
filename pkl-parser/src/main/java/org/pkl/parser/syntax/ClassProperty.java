@@ -36,42 +36,35 @@ public final class ClassProperty extends AbstractNode {
   }
 
   public @Nullable DocComment getDocComment() {
-    assert children != null;
     return (DocComment) children.get(0);
   }
 
   @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
-    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
-    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public Identifier getName() {
-    assert children != null;
     var ret = (Identifier) children.get(nameOffset);
     assert ret != null;
     return ret;
   }
 
   public @Nullable TypeAnnotation getTypeAnnotation() {
-    assert children != null;
     return (TypeAnnotation) children.get(nameOffset + 1);
   }
 
   public @Nullable Expr getExpr() {
-    assert children != null;
     return (Expr) children.get(nameOffset + 2);
   }
 
   @SuppressWarnings("unchecked")
   public List<ObjectBody> getBodyList() {
-    assert children != null;
     return (List<ObjectBody>) children.subList(nameOffset + 3, children.size());
   }
 }

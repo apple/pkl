@@ -34,7 +34,6 @@ public final class ClassBody extends AbstractNode {
 
   public List<ClassProperty> getProperties() {
     var props = new ArrayList<ClassProperty>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof ClassProperty prop) {
         props.add(prop);
@@ -45,7 +44,6 @@ public final class ClassBody extends AbstractNode {
 
   public List<ClassMethod> getMethods() {
     var methods = new ArrayList<ClassMethod>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof ClassMethod method) {
         methods.add(method);

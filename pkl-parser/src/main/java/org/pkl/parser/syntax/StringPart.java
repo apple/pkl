@@ -23,7 +23,7 @@ import org.pkl.parser.util.Nullable;
 
 public abstract sealed class StringPart extends AbstractNode {
 
-  public StringPart(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public StringPart(Span span, List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
@@ -36,7 +36,7 @@ public abstract sealed class StringPart extends AbstractNode {
     private final String string;
 
     public StringChars(String string, Span span) {
-      super(span, null);
+      super(span, List.of());
       this.string = string;
     }
 
@@ -77,7 +77,6 @@ public abstract sealed class StringPart extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;

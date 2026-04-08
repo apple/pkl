@@ -15,6 +15,7 @@
  */
 package org.pkl.parser.syntax;
 
+import java.util.List;
 import java.util.Objects;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
@@ -23,7 +24,7 @@ public final class Identifier extends AbstractNode {
   private final String value;
 
   public Identifier(String value, Span span) {
-    super(span, null);
+    super(span, List.of());
     this.value = value;
   }
 

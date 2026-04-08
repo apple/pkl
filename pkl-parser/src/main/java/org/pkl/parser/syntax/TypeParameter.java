@@ -39,7 +39,6 @@ public final class TypeParameter extends AbstractNode {
   }
 
   public Identifier getIdentifier() {
-    assert children != null;
     var ret = (Identifier) children.get(0);
     assert ret != null;
     return ret;
