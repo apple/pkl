@@ -20,7 +20,6 @@ import java.net.URI
 import java.nio.file.Path
 import java.util.regex.Pattern
 import kotlin.io.path.deleteIfExists
-import org.fusesource.jansi.Ansi
 import org.jline.reader.EndOfFileException
 import org.jline.reader.Highlighter
 import org.jline.reader.LineReader
@@ -52,7 +51,7 @@ class PklHighlighter : Highlighter {
 }
 
 internal class Repl(workingDir: Path, private val server: ReplServer, private val color: Boolean) {
-  private val terminal = TerminalBuilder.builder().apply { jansi(true) }.build()
+  private val terminal = TerminalBuilder.builder().apply { jni(true) }.build()
   private val history = DefaultHistory()
   private val reader =
     LineReaderBuilder.builder()
@@ -249,14 +248,20 @@ internal class Repl(workingDir: Path, private val server: ReplServer, private va
   }
 
   private fun highlight(str: String): String {
-    val ansi = Ansi.ansi()
-    var normal = true
+    // Inserting ANSI codes into a string that may already contain ANSI codes is problematic.
+    // This code preserves existing behavior but should eventually be removed.
+    val builder = StringBuilder()
+    var bold = false
     for (part in str.split("`", "```")) {
-      ansi.a(part)
-      normal = !normal
-      if (!normal) ansi.bold() else ansi.boldOff()
+      if (bold) {
+        builder.append("\u001B[1m")
+        builder.append(part)
+        builder.append("\u001B[22m")
+      } else {
+        builder.append(part)
+      }
+      bold = !bold
     }
-    ansi.reset()
-    return ansi.toString()
+    return builder.toString()
   }
 }
