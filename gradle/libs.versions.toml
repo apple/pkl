@@ -26,11 +26,8 @@ graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4
 ideaExtPlugin = "1.4.1"
 javaPoet = "0.+"
 javaxInject = "1"
-jansi = "2.+"
 jimfs = "1.+"
-# later versions don't work with native image
-# (at least not without additional configuration; tested with 3.25.1 and 3.27.1)
-jline = "3.23.0"
+jline = "4.+"
 jmh = "1.+"
 jmhPlugin = "0.7.3"
 jsr305 = "3.+"
@@ -73,11 +70,10 @@ graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graal
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
 javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
-jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
 jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline" }
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
-jlineTerminalJansi = { group = "org.jline", name = "jline-terminal-jansi", version.ref = "jline" }
+jlineTerminalJni = { group = "org.jline", name = "jline-terminal-jni", version.ref = "jline" }
 jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }

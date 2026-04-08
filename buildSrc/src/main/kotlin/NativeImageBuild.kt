@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,6 +118,8 @@ abstract class NativeImageBuild : DefaultTask() {
         add("--initialize-at-build-time=")
         // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
         add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
+        // needed for jline-terminal-jni
+        add("--initialize-at-run-time=org.jline.nativ,org.jline.terminal.impl.jni")
         add("--no-fallback")
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
         add("-H:IncludeResources=org/jline/utils/.*")
