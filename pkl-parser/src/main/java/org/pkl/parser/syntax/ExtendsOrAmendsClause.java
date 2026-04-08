@@ -15,7 +15,7 @@
  */
 package org.pkl.parser.syntax;
 
-import java.util.List;
+import java.util.Arrays;
 import java.util.Objects;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
@@ -24,8 +24,9 @@ import org.pkl.parser.util.Nullable;
 public class ExtendsOrAmendsClause extends AbstractNode {
   private final Type type;
 
-  public ExtendsOrAmendsClause(StringConstant url, Type type, Span span) {
-    super(span, List.of(url));
+  public ExtendsOrAmendsClause(
+      StringConstant url, @Nullable Identifier parentTypeName, Type type, Span span) {
+    super(span, Arrays.asList(url, parentTypeName));
     this.type = type;
   }
 
@@ -39,6 +40,11 @@ public class ExtendsOrAmendsClause extends AbstractNode {
     var ret = (StringConstant) children.get(0);
     assert ret != null;
     return ret;
+  }
+
+  public @Nullable Identifier getParentTypeName() {
+    assert children != null;
+    return (Identifier) children.get(1);
   }
 
   public Type getType() {

@@ -222,7 +222,7 @@ public class ReplServer implements AutoCloseable {
           var exprNode = builder.visitExpr(expr);
           evaluateExpr(replState, exprNode, forceResults, results);
         } else if (tree instanceof ImportClause importClause) {
-          addStaticModuleProperty(builder.visitImportClause(importClause));
+          builder.visitImportClause(importClause).forEach(this::addStaticModuleProperty);
         } else if (tree instanceof ClassProperty classProperty) {
           var propertyNode = builder.visitClassProperty(classProperty);
           var property = addModuleProperty(propertyNode);
