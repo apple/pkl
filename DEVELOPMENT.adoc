@@ -92,14 +92,9 @@ Example: `./gradlew test -Djvmdebug=true`
 
 == Snippet Test Plugin
 
-There is an IntelliJ plugin meant for development on the Pkl project itself.
-This plugin provides a split pane window when viewing snippet tests such as LanguageSnippetTests and FormatterSnippetTests.
+There is an IntelliJ plugin meant for development on the Pkl project itself located in https://github.com/apple/pkl-project-commons[pkl-project-commons].
 
-To install:
-
-1. Run `./gradlew pkl-internal-intellij-plugin:buildPlugin`.
-2. Within IntelliJ, run the action "Install Plugin From Disk...".
-3. Select the zip file within `pkl-internal-intellij-plugin/build/distributions`.
+See https://github.com/apple/pkl-project-commons?tab=readme-ov-file#internal-intellij-plugin[its readme] for instructions on how to set it up.
 
 == Resources
 
