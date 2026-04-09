@@ -1,0 +1,64 @@
+examples {
+  ["simple types"] {
+    true
+    true
+    true
+  }
+  ["declared type"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["nullable type"] {
+    true
+    true
+  }
+  ["union type"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["function type"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["constrained type"] {
+    true
+    true
+    true
+    true
+  }
+  ["parenthesized type"] {
+    true
+    true
+  }
+  ["string constant type"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["type annotation"] {
+    true
+    true
+    true
+  }
+}

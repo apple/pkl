@@ -1,0 +1,170 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function parse(source: String) = syntax.parse(source)
+
+local function body(source: String) =
+  let (result = parse("x { \(source) }"))
+    let (mod = result as syntax.ModuleNode)
+      mod.properties.first.objectBodies.first
+
+examples {
+  ["object property"] {
+    local b = body("name = \"hello\"")
+    b.properties.length == 1
+    b.properties.first is syntax.ObjectPropertyNode
+    b.properties.first.name.value == "name"
+    b.properties.first.value is syntax.SingleLineStringLiteralExprNode
+    b.properties.first.modifiers == null
+    b.properties.first.typeAnnotation == null
+    b.properties.first.objectBodies.length == 0
+  }
+
+  ["object property with type and modifiers"] {
+    local b = body("hidden name: String = \"hello\"")
+    b.properties.length == 1
+    b.properties.first.modifiers != null
+    b.properties.first.modifiers!!.modifiers == List("hidden")
+    b.properties.first.typeAnnotation != null
+    b.properties.first.typeAnnotation!!.type is syntax.DeclaredTypeNode
+  }
+
+  ["object property with amending body"] {
+    local b = body("inner { x = 1 }")
+    b.properties.length == 1
+    b.properties.first.name.value == "inner"
+    b.properties.first.value == null
+    b.properties.first.objectBodies.length == 1
+    b.properties.first.objectBodies.first is syntax.ObjectBodyNode
+  }
+
+  ["object method"] {
+    local b = body("function greet(who: String): String = \"hi\"")
+    b.methods.length == 1
+    b.methods.first is syntax.ObjectMethodNode
+    b.methods.first.name.value == "greet"
+    b.methods.first.parameterList.parameters.length == 1
+    b.methods.first.parameterList.parameters.first.identifier!!.value == "who"
+    b.methods.first.returnType != null
+    b.methods.first.body is syntax.SingleLineStringLiteralExprNode
+  }
+
+  ["object element"] {
+    local b = body("1\n  2\n  3")
+    b.elements.length == 3
+    b.elements[0] is syntax.ObjectElementNode
+    b.elements[0].expression is syntax.IntLiteralExprNode
+    b.elements[1].expression is syntax.IntLiteralExprNode
+    b.elements[2].expression is syntax.IntLiteralExprNode
+  }
+
+  ["object entry"] {
+    local b = body("[\"key\"] = 42")
+    b.entries.length == 1
+    b.entries.first is syntax.ObjectEntryNode
+    b.entries.first.key is syntax.SingleLineStringLiteralExprNode
+    b.entries.first.value is syntax.IntLiteralExprNode
+  }
+
+  ["object entry with amending body"] {
+    local b = body("[\"key\"] { x = 1 }")
+    b.entries.length == 1
+    b.entries.first.key is syntax.SingleLineStringLiteralExprNode
+    b.entries.first.objectBodies.length == 1
+  }
+
+  ["object spread"] {
+    local b = body("...other")
+    b.members.length == 1
+    b.members.first is syntax.ObjectSpreadNode
+    (b.members.first as syntax.ObjectSpreadNode).isNullable == false
+    (b.members.first as syntax.ObjectSpreadNode).expression is syntax.UnqualifiedAccessExprNode
+  }
+
+  ["nullable object spread"] {
+    local b = body("...?other")
+    b.members.length == 1
+    b.members.first is syntax.ObjectSpreadNode
+    (b.members.first as syntax.ObjectSpreadNode).isNullable == true
+  }
+
+  ["member predicate"] {
+    local b = body("[[name == \"foo\"]] = 1")
+    b.members.length == 1
+    b.members.first is syntax.MemberPredicateNode
+    (b.members.first as syntax.MemberPredicateNode).condition is syntax.BinaryOpExprNode
+    (b.members.first as syntax.MemberPredicateNode).value is syntax.IntLiteralExprNode
+  }
+
+  ["member predicate with amending body"] {
+    local b = body("[[name == \"foo\"]] { x = 1 }")
+    local pred = b.members.first as syntax.MemberPredicateNode
+    pred.condition is syntax.BinaryOpExprNode
+    pred.value == null
+    pred.objectBodies.length == 1
+  }
+
+  ["for generator"] {
+    local b = body("for (item in items) { item }")
+    b.members.length == 1
+    b.members.first is syntax.ForGeneratorNode
+    local gen = b.members.first as syntax.ForGeneratorNode
+    gen.keyParameter == null
+    gen.valueParameter.identifier!!.value == "item"
+    gen.iterable is syntax.UnqualifiedAccessExprNode
+    gen.body is syntax.ObjectBodyNode
+  }
+
+  ["for generator with key"] {
+    local b = body("for (k, v in items) { v }")
+    local gen = b.members.first as syntax.ForGeneratorNode
+    gen.keyParameter != null
+    gen.keyParameter!!.identifier!!.value == "k"
+    gen.valueParameter.identifier!!.value == "v"
+  }
+
+  ["when generator"] {
+    local b = body("when (flag) { 1 }")
+    b.members.length == 1
+    b.members.first is syntax.WhenGeneratorNode
+    local gen = b.members.first as syntax.WhenGeneratorNode
+    gen.condition is syntax.UnqualifiedAccessExprNode
+    gen.thenBody is syntax.ObjectBodyNode
+    gen.elseBody == null
+  }
+
+  ["when generator with else"] {
+    local b = body("when (flag) { 1 } else { 2 }")
+    local gen = b.members.first as syntax.WhenGeneratorNode
+    gen.condition is syntax.UnqualifiedAccessExprNode
+    gen.thenBody is syntax.ObjectBodyNode
+    gen.elseBody != null
+    gen.elseBody is syntax.ObjectBodyNode
+  }
+
+  ["object body with parameters"] {
+    local result = parse("x = new Listing { a, b -> a }")
+    local mod = result as syntax.ModuleNode
+    local propVal = mod.properties.first.value
+    propVal is syntax.NewExprNode
+    local newBody = (propVal as syntax.NewExprNode).body
+    newBody.parameters.length == 2
+    newBody.parameters[0].identifier!!.value == "a"
+    newBody.parameters[1].identifier!!.value == "b"
+  }
+
+  ["mixed object members"] {
+    local b = body("""
+      name = "pkl"
+      1
+      ["key"] = 2
+      function f() = 3
+      """)
+    b.properties.length == 1
+    b.elements.length == 1
+    b.entries.length == 1
+    b.methods.length == 1
+    b.members.length == 4
+  }
+}

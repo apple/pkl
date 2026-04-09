@@ -1,0 +1,113 @@
+examples {
+  ["object property"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["object property with type and modifiers"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["object property with amending body"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["object method"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["object element"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["object entry"] {
+    true
+    true
+    true
+    true
+  }
+  ["object entry with amending body"] {
+    true
+    true
+    true
+  }
+  ["object spread"] {
+    true
+    true
+    true
+    true
+  }
+  ["nullable object spread"] {
+    true
+    true
+    true
+  }
+  ["member predicate"] {
+    true
+    true
+    true
+    true
+  }
+  ["member predicate with amending body"] {
+    true
+    true
+    true
+  }
+  ["for generator"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["for generator with key"] {
+    true
+    true
+    true
+  }
+  ["when generator"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["when generator with else"] {
+    true
+    true
+    true
+    true
+  }
+  ["object body with parameters"] {
+    true
+    true
+    true
+    true
+  }
+  ["mixed object members"] {
+    true
+    true
+    true
+    true
+    true
+  }
+}
