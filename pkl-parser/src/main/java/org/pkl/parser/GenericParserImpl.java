@@ -18,12 +18,12 @@ package org.pkl.parser;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
 import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
 import org.pkl.parser.util.ErrorMessages;
-import org.pkl.parser.util.Nullable;
 
 @SuppressWarnings("DuplicatedCode")
 class GenericParserImpl {
@@ -1125,6 +1125,8 @@ class GenericParserImpl {
 
     if (lookahead() != Token.UNION) {
       if (hasDefault) {
+        //noinspection ConstantValue (NullAway needs this assertion, IntelliJ doesn't)
+        assert start != null;
         throw parserError(ErrorMessages.create("notAUnion"), start.endWith(first.span));
       }
       return first;

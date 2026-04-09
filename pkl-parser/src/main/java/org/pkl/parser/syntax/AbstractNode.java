@@ -18,8 +18,8 @@ package org.pkl.parser.syntax;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public abstract class AbstractNode implements Node {
   protected final Span span;
@@ -62,7 +62,7 @@ public abstract class AbstractNode implements Node {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

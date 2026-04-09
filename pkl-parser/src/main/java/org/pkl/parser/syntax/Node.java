@@ -16,21 +16,20 @@
 package org.pkl.parser.syntax;
 
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public interface Node {
   Span span();
 
-  @Nullable
-  Node parent();
+  @Nullable Node parent();
 
   void setParent(Node parent);
 
   List<? extends @Nullable Node> children();
 
-  <T> T accept(ParserVisitor<? extends T> visitor);
+  <T> T accept(ParserVisitor<T> visitor);
 
   default String text(char[] source) {
     return new String(source, span().charIndex(), span().length());

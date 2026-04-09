@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,7 +84,7 @@ for ((key, value) in relocations) {
   }
 }
 
-val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/")
+val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/", "org/jspecify")
 
 tasks.shadowJar {
   inputs.property("relocations", relocations)
@@ -148,37 +148,36 @@ val testFatJar by
 
 tasks.check { dependsOn(testFatJar) }
 
-val validateFatJar by
-  tasks.registering {
-    val outputFile = layout.buildDirectory.file("validateFatJar/result.txt")
-    inputs.files(tasks.shadowJar)
-    inputs.property("nonRelocations", nonRelocations)
-    outputs.file(outputFile)
+val validateFatJar by tasks.registering {
+  val outputFile = layout.buildDirectory.file("validateFatJar/result.txt")
+  inputs.files(tasks.shadowJar)
+  inputs.property("nonRelocations", nonRelocations)
+  outputs.file(outputFile)
 
-    doLast {
-      val unshadowedFiles = mutableListOf<String>()
-      zipTree(tasks.shadowJar.get().outputs.files.singleFile).visit {
-        val fileDetails = this
-        val path = fileDetails.relativePath.pathString
-        if (
-          !(fileDetails.isDirectory ||
-            path.startsWith("org/pkl/") ||
-            path.startsWith("META-INF/") ||
-            nonRelocations.any { path.startsWith(it) })
-        ) {
-          // don't throw exception inside `visit`
-          // as this gives a misleading "Could not expand ZIP" error message
-          unshadowedFiles.add(path)
-        }
-      }
-      if (unshadowedFiles.isEmpty()) {
-        outputFile.get().asFile.writeText("SUCCESS")
-      } else {
-        outputFile.get().asFile.writeText("FAILURE")
-        throw GradleException("Found unshadowed files:\n" + unshadowedFiles.joinToString("\n"))
+  doLast {
+    val unshadowedFiles = mutableListOf<String>()
+    zipTree(tasks.shadowJar.get().outputs.files.singleFile).visit {
+      val fileDetails = this
+      val path = fileDetails.relativePath.pathString
+      if (
+        !(fileDetails.isDirectory ||
+          path.startsWith("org/pkl/") ||
+          path.startsWith("META-INF/") ||
+          nonRelocations.any { path.startsWith(it) })
+      ) {
+        // don't throw exception inside `visit`
+        // as this gives a misleading "Could not expand ZIP" error message
+        unshadowedFiles.add(path)
       }
     }
+    if (unshadowedFiles.isEmpty()) {
+      outputFile.get().asFile.writeText("SUCCESS")
+    } else {
+      outputFile.get().asFile.writeText("FAILURE")
+      throw GradleException("Found unshadowed files:\n" + unshadowedFiles.joinToString("\n"))
+    }
   }
+}
 
 tasks.check { dependsOn(validateFatJar) }
 

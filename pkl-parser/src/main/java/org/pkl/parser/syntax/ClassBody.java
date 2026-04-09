@@ -19,7 +19,6 @@ import java.util.ArrayList;
 import java.util.List;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class ClassBody extends AbstractNode {
 
@@ -28,7 +27,7 @@ public final class ClassBody extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitClassBody(this);
   }
 

@@ -106,6 +106,7 @@ public enum Token {
   QSPREAD,
   UNDERSCORE,
   EOF,
+  SOF, // start-of-file sentinel
   SEMICOLON,
 
   INT,

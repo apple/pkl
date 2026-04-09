@@ -16,23 +16,23 @@
 package org.pkl.parser.syntax;
 
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 @SuppressWarnings("unused")
 public final class TypeAlias extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
 
-  public TypeAlias(List<Node> children, int modifiersOffset, int nameOffset, Span span) {
+  public TypeAlias(List<@Nullable Node> children, int modifiersOffset, int nameOffset, Span span) {
     super(span, children);
     this.modifiersOffset = modifiersOffset;
     this.nameOffset = nameOffset;
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitTypeAlias(this);
   }
 

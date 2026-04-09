@@ -17,9 +17,9 @@ package org.pkl.parser.syntax;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class ExtendsOrAmendsClause extends AbstractNode {
   private final Type type;
@@ -30,7 +30,7 @@ public final class ExtendsOrAmendsClause extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitExtendsOrAmendsClause(this);
   }
 
@@ -56,9 +56,8 @@ public final class ExtendsOrAmendsClause extends AbstractNode {
         + '}';
   }
 
-  @SuppressWarnings("ConstantValue")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }

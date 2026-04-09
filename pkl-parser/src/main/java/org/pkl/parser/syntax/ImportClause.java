@@ -17,9 +17,9 @@ package org.pkl.parser.syntax;
 
 import java.util.Arrays;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class ImportClause extends AbstractNode {
   private final boolean isGlob;
@@ -31,7 +31,7 @@ public final class ImportClause extends AbstractNode {
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitImportClause(this);
   }
 
@@ -54,9 +54,8 @@ public final class ImportClause extends AbstractNode {
     return "Import{isGlob=" + isGlob + ", span=" + span + ", children=" + children + '}';
   }
 
-  @SuppressWarnings("ConstantValue")
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (o == null || getClass() != o.getClass()) {
       return false;
     }

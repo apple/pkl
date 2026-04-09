@@ -15,8 +15,8 @@
  */
 package org.pkl.parser;
 
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Module;
-import org.pkl.parser.util.Nullable;
 
 public final class ParserError extends RuntimeException {
   private final Span span;

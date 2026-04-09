@@ -18,9 +18,9 @@ package org.pkl.parser.syntax;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 @SuppressWarnings("unused")
 public abstract sealed class ObjectMember extends AbstractNode {
@@ -35,7 +35,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitObjectElement(this);
     }
 
@@ -49,13 +49,13 @@ public abstract sealed class ObjectMember extends AbstractNode {
   public static final class ObjectProperty extends ObjectMember {
     private final int identifierOffset;
 
-    public ObjectProperty(List<Node> nodes, int identifierOffset, Span span) {
+    public ObjectProperty(List<@Nullable Node> nodes, int identifierOffset, Span span) {
       super(span, nodes);
       this.identifierOffset = identifierOffset;
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitObjectProperty(this);
     }
 
@@ -87,13 +87,13 @@ public abstract sealed class ObjectMember extends AbstractNode {
   public static final class ObjectMethod extends ObjectMember {
     private final int identifierOffset;
 
-    public ObjectMethod(List<Node> nodes, int identifierOffset, Span span) {
+    public ObjectMethod(List<@Nullable Node> nodes, int identifierOffset, Span span) {
       super(span, nodes);
       this.identifierOffset = identifierOffset;
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitObjectMethod(this);
     }
 
@@ -158,12 +158,12 @@ public abstract sealed class ObjectMember extends AbstractNode {
   }
 
   public static final class MemberPredicate extends ObjectMember {
-    public MemberPredicate(List<Node> nodes, Span span) {
+    public MemberPredicate(List<@Nullable Node> nodes, Span span) {
       super(span, nodes);
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitMemberPredicate(this);
     }
 
@@ -184,12 +184,12 @@ public abstract sealed class ObjectMember extends AbstractNode {
   }
 
   public static final class ObjectEntry extends ObjectMember {
-    public ObjectEntry(List<Node> nodes, Span span) {
+    public ObjectEntry(List<@Nullable Node> nodes, Span span) {
       super(span, nodes);
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitObjectEntry(this);
     }
 
@@ -218,7 +218,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitObjectSpread(this);
     }
 
@@ -244,9 +244,8 @@ public abstract sealed class ObjectMember extends AbstractNode {
           + '}';
     }
 
-    @SuppressWarnings("ConstantValue")
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
@@ -273,7 +272,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitWhenGenerator(this);
     }
 
@@ -301,7 +300,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitForGenerator(this);
     }
 

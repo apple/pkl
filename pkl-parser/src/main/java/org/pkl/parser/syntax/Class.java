@@ -16,22 +16,22 @@
 package org.pkl.parser.syntax;
 
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class Class extends AbstractNode {
   private final int modifiersOffset;
   private final int keywordOffset;
 
-  public Class(List<Node> nodes, int modifiersOffset, int keywordOffset, Span span) {
+  public Class(List<@Nullable Node> nodes, int modifiersOffset, int keywordOffset, Span span) {
     super(span, nodes);
     this.modifiersOffset = modifiersOffset;
     this.keywordOffset = keywordOffset;
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitClass(this);
   }
 

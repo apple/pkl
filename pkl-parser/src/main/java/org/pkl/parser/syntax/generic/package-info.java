@@ -1,4 +1,4 @@
-@NonnullByDefault
+@NullMarked
 package org.pkl.parser.syntax.generic;
 
-import org.pkl.parser.util.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

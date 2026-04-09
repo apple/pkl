@@ -4,6 +4,8 @@ checksumPlugin = "1.4.0"
 clikt = "5.+"
 commonMark = "0.+"
 downloadTaskPlugin = "5.7.0"
+errorProne = "2.48.0"
+errorPronePlugin = "5.1.0"
 geantyref = "1.+"
 #noinspection UnusedVersionCatalogEntry
 googleJavaFormat = "1.35.0"
@@ -33,6 +35,7 @@ jimfs = "1.+"
 jline = "4.+"
 jmh = "1.+"
 jmhPlugin = "0.7.3"
+jspecify = "1.0.0"
 jsr305 = "3.+"
 junit = "6.+"
 kotlinBom = "2.2.21"
@@ -53,6 +56,8 @@ ktfmt = "0.62"
 log4j = "2.17.1"
 msgpack = "0.9.11"
 nexusPublishPlugin = "2.0.0"
+nullaway = "0.13.1"
+nullawayPlugin = "3.0.0"
 nuValidator = "26.+"
 paguro = "3.+"
 shadowPlugin = "9.+"
@@ -68,6 +73,9 @@ cliktMarkdown = { group = "com.github.ajalt.clikt", name = "clikt-markdown", ver
 commonMark = { group = "org.commonmark", name = "commonmark", version.ref = "commonMark" }
 commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables", version.ref = "commonMark" }
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
+#noinspection UnusedVersionCatalogEntry
+errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
+errorPronePlugin = { group = "net.ltgt.gradle", name = "gradle-errorprone-plugin", version.ref = "errorPronePlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
 graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graalVm" }
@@ -78,6 +86,8 @@ jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
 jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline" }
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
 jlineTerminalJni = { group = "org.jline", name = "jline-terminal-jni", version.ref = "jline" }
+#noinspection UnusedVersionCatalogEntry
+jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
 jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
@@ -99,6 +109,9 @@ log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", versi
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
 #noinspection UnusedVersionCatalogEntry
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
+#noinspection UnusedVersionCatalogEntry
+nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "nullaway" }
+nullawayPlugin = { group = "net.ltgt.gradle", name = "gradle-nullaway-plugin", version.ref = "nullawayPlugin" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
@@ -116,8 +129,12 @@ wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock"
 
 [plugins] # ordered alphabetically
 checksum = { id = "org.gradle.crypto.checksum", version.ref = "checksumPlugin" }
+#noinspection UnusedVersionCatalogEntry
+errorProne = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtPlugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinToolchain" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
+#noinspection UnusedVersionCatalogEntry
+nullaway = { id = "net.ltgt.nullaway", version.ref = "nullawayPlugin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }

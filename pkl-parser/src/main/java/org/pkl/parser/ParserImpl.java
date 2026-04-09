@@ -20,6 +20,7 @@ import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Annotation;
 import org.pkl.parser.syntax.ArgumentList;
 import org.pkl.parser.syntax.Class;
@@ -85,7 +86,6 @@ import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameter;
 import org.pkl.parser.syntax.TypeParameterList;
 import org.pkl.parser.util.ErrorMessages;
-import org.pkl.parser.util.Nullable;
 
 @SuppressWarnings("DuplicatedCode")
 final class ParserImpl {
@@ -94,7 +94,7 @@ final class ParserImpl {
   private Token lookahead;
   private Span spanLookahead;
   private boolean backtracking = false;
-  private FullToken prev;
+  private FullToken prev = new FullToken(Token.SOF, new Span(0, 0), 0);
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
 
@@ -113,7 +113,7 @@ final class ParserImpl {
     var start = spanLookahead;
     Span end = null;
     ModuleDecl moduleDecl;
-    var nodes = new ArrayList<Node>();
+    var nodes = new ArrayList<@Nullable Node>();
     try {
       var header = parseMemberHeader();
 
@@ -157,7 +157,7 @@ final class ParserImpl {
   }
 
   ReplInput parseReplInput() {
-    var nodes = new ArrayList<Node>();
+    var nodes = new ArrayList<@Nullable Node>();
     while (lookahead != Token.EOF) {
       var header = parseMemberHeader();
       switch (lookahead) {
@@ -193,7 +193,11 @@ final class ParserImpl {
     if (nodes.isEmpty()) {
       span = new Span(0, 0);
     } else {
-      span = nodes.get(0).span().endWith(nodes.get(nodes.size() - 1).span());
+      var first = nodes.get(0);
+      var last = nodes.get(nodes.size() - 1);
+      assert first != null;
+      assert last != null;
+      span = first.span().endWith(last.span());
     }
     return new ReplInput(nodes, span);
   }
@@ -220,7 +224,7 @@ final class ParserImpl {
       end = extendsOrAmendsDecl.span();
     }
     if (moduleName != null || extendsOrAmendsDecl != null) {
-      var children = new ArrayList<Node>();
+      var children = new ArrayList<@Nullable Node>();
       children.add(header.docComment);
       children.addAll(header.annotations);
       var modifiersOffset = children.size();
@@ -229,6 +233,10 @@ final class ParserImpl {
       children.add(moduleKeyword);
       children.add(moduleName);
       children.add(extendsOrAmendsDecl);
+      //noinspection ConstantValue (NullAway needs this assertion, IntelliJ doesn't)
+      assert start != null;
+      //noinspection ConstantValue
+      assert end != null;
       return new ModuleDecl(children, modifiersOffset, nameOffset, start.endWith(end));
     }
     return null;
@@ -315,7 +323,7 @@ final class ParserImpl {
     return new DocComment(spans);
   }
 
-  private Span parseModuleMember(MemberHeader header, List<Node> nodes) {
+  private Span parseModuleMember(MemberHeader header, List<@Nullable Node> nodes) {
     switch (lookahead) {
       case IDENTIFIER -> {
         var node = parseClassProperty(header);
@@ -361,7 +369,8 @@ final class ParserImpl {
     }
     expect(Token.ASSIGN, "unexpectedToken", "=");
     var type = parseType();
-    var children = new ArrayList<Node>(header.annotations.size() + header.modifiers.size() + 5);
+    var children =
+        new ArrayList<@Nullable Node>(header.annotations.size() + header.modifiers.size() + 5);
     children.add(header.docComment);
     children.addAll(header.annotations);
     var modifiersOffset = header.annotations.size() + 1;
@@ -377,7 +386,7 @@ final class ParserImpl {
   private Class parseClass(MemberHeader header) {
     var classKeyword = next();
     var startSpan = header.span(classKeyword.span);
-    var children = new ArrayList<Node>();
+    var children = new ArrayList<@Nullable Node>();
     children.add(header.docComment);
     children.addAll(header.annotations);
     var modifiersOffset = header.annotations.size() + 1;
@@ -433,7 +442,7 @@ final class ParserImpl {
   private ClassProperty parseClassProperty(MemberHeader header) {
     var name = parseIdentifier();
     var start = header.span(name.span());
-    var children = new ArrayList<Node>();
+    var children = new ArrayList<@Nullable Node>();
     children.add(header.docComment);
     children.addAll(header.annotations);
     var modifiersOffset = header.annotations.size() + 1;
@@ -481,7 +490,7 @@ final class ParserImpl {
     var func = expect(Token.FUNCTION, "unexpectedToken", "function").span;
     var start = header.span(func);
     var headerSpanStart = header.modifierSpan(func);
-    var children = new ArrayList<Node>();
+    var children = new ArrayList<@Nullable Node>();
     children.add(header.docComment);
     children.addAll(header.annotations);
     var modifiersOffset = header.annotations.size() + 1;
@@ -522,7 +531,7 @@ final class ParserImpl {
 
   private ObjectBody parseObjectBody() {
     var start = expect(Token.LBRACE, "unexpectedToken", "{").span;
-    List<Node> nodes = new ArrayList<>();
+    var nodes = new ArrayList<Node>();
     var membersOffset = -1;
     if (lookahead == Token.RBRACE) {
       return new ObjectBody(List.of(), 0, start.endWith(next().span));
@@ -656,7 +665,7 @@ final class ParserImpl {
     if (typeAnnotation != null || lookahead == Token.ASSIGN) {
       expect(Token.ASSIGN, "unexpectedToken", "=");
       var expr = parseExpr("}");
-      var nodes = new ArrayList<Node>(allModifiers.size() + 4);
+      var nodes = new ArrayList<@Nullable Node>(allModifiers.size() + 4);
       nodes.addAll(allModifiers);
       nodes.add(identifier);
       nodes.add(typeAnnotation);
@@ -666,7 +675,7 @@ final class ParserImpl {
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    var nodes = new ArrayList<Node>(allModifiers.size() + 4);
+    var nodes = new ArrayList<@Nullable Node>(allModifiers.size() + 4);
     nodes.addAll(allModifiers);
     nodes.add(identifier);
     nodes.add(null);
@@ -693,7 +702,7 @@ final class ParserImpl {
     }
     expect(Token.ASSIGN, "unexpectedToken", "=");
     var expr = parseExpr("}");
-    var nodes = new ArrayList<Node>(modifiers.size() + 6);
+    var nodes = new ArrayList<@Nullable Node>(modifiers.size() + 6);
     nodes.addAll(modifiers);
     nodes.add(new Keyword(function));
     nodes.add(identifier);
@@ -728,7 +737,7 @@ final class ParserImpl {
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    var nodes = new ArrayList<Node>(bodies.size() + 2);
+    var nodes = new ArrayList<@Nullable Node>(bodies.size() + 2);
     nodes.add(pred);
     nodes.add(null);
     nodes.addAll(bodies);
@@ -746,7 +755,7 @@ final class ParserImpl {
     }
     var bodies = parseBodyList();
     var end = bodies.get(bodies.size() - 1).span();
-    var nodes = new ArrayList<Node>(bodies.size() + 2);
+    var nodes = new ArrayList<@Nullable Node>(bodies.size() + 2);
     nodes.add(key);
     nodes.add(null);
     nodes.addAll(bodies);
@@ -1043,7 +1052,7 @@ final class ParserImpl {
 
   @SuppressWarnings("DuplicatedCode")
   private Expr parseExprRest(Expr expr) {
-    // non null
+    // non-null
     if (lookahead == Token.NON_NULL) {
       var end = next().span;
       var res = new NonNullExpr(expr, expr.span().endWith(end));
@@ -1125,7 +1134,6 @@ final class ParserImpl {
         case INTERPOLATION_START -> {
           var istart = next().span;
           if (!builder.isEmpty()) {
-            assert startSpan != null;
             parts.add(new StringChars(builder.toString(), startSpan.endWith(end)));
             builder = new StringBuilder();
           }
@@ -1196,11 +1204,12 @@ final class ParserImpl {
     return renderString(nodes, indent);
   }
 
-  @SuppressWarnings("DataFlowIssue")
   private List<StringPart> renderString(List<TempNode> nodes, String commonIndent) {
     var parts = new ArrayList<StringPart>();
     var builder = new StringBuilder();
-    var endOffset = nodes.get(nodes.size() - 1).token.token == Token.STRING_NEWLINE ? 1 : 2;
+    var lastToken = nodes.get(nodes.size() - 1).token;
+    assert lastToken != null;
+    var endOffset = lastToken.token == Token.STRING_NEWLINE ? 1 : 2;
     var isNewLine = true;
     Span start = null;
     Span end = null;
@@ -1208,6 +1217,8 @@ final class ParserImpl {
       var node = nodes.get(i);
       if (node.node != null) {
         if (!builder.isEmpty()) {
+          assert start != null;
+          assert end != null;
           parts.add(new StringChars(builder.toString(), start.endWith(end)));
           builder = new StringBuilder();
           start = null;
@@ -1253,6 +1264,8 @@ final class ParserImpl {
       }
     }
     if (!builder.isEmpty()) {
+      assert start != null;
+      assert end != null;
       parts.add(new StringChars(builder.toString(), start.endWith(end)));
     }
     return parts;
@@ -1448,7 +1461,7 @@ final class ParserImpl {
 
   private Annotation parseAnnotation() {
     var start = next().span;
-    var children = new ArrayList<Node>(2);
+    var children = new ArrayList<@Nullable Node>(2);
     var type = parseType();
     children.add(type);
     ObjectBody body = null;
@@ -1688,7 +1701,7 @@ final class ParserImpl {
   }
 
   private record TempNode(
-      @Nullable FullToken token, @Nullable StringPart.StringInterpolation node) {
+      @Nullable FullToken token, StringPart.@Nullable StringInterpolation node) {
     Span span() {
       if (token != null) return token.span;
       assert node != null;
@@ -1764,13 +1777,7 @@ final class ParserImpl {
       return !(docComment == null && annotations.isEmpty() && modifiers.isEmpty());
     }
 
-    @SuppressWarnings("DataFlowIssue")
-    @Nullable
-    Span span() {
-      return span(null);
-    }
-
-    Span span(Span or) {
+    @Nullable Span span() {
       if (docComment != null) {
         return docComment.span();
       }
@@ -1780,7 +1787,12 @@ final class ParserImpl {
       if (!modifiers().isEmpty()) {
         return modifiers.get(0).span();
       }
-      return or;
+      return null;
+    }
+
+    Span span(Span or) {
+      var span = span();
+      return span != null ? span : or;
     }
 
     Span modifierSpan(Span or) {

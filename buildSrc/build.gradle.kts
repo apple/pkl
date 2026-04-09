@@ -28,6 +28,8 @@ val toolchainVersion = 25
 
 dependencies {
   implementation(libs.downloadTaskPlugin)
+  implementation(libs.errorPronePlugin)
+  implementation(libs.nullawayPlugin)
   implementation(libs.spotlessPlugin)
   implementation(libs.kotlinPlugin) { exclude(module = "kotlin-android-extensions") }
   implementation(libs.shadowPlugin)
