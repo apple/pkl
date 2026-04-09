@@ -25,6 +25,7 @@ pkl:release
 pkl:semver
 pkl:settings
 pkl:shell
+pkl:syntax
 pkl:test
 pkl:xml
 pkl:yaml
