@@ -219,9 +219,6 @@ public class PowerAssertions {
       return parserNode;
     }
     var children = parserNode.children();
-    if (children == null) {
-      return null;
-    }
     for (var child : children) {
       var found = findParserNode(node, child, offset);
       if (found != null) {

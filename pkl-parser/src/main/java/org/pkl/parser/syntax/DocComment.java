@@ -23,7 +23,7 @@ public final class DocComment extends AbstractNode {
   private final List<Span> spans;
 
   public DocComment(List<Span> spans) {
-    super(spans.get(0).endWith(spans.get(spans.size() - 1)), null);
+    super(spans.get(0).endWith(spans.get(spans.size() - 1)), List.of());
     this.spans = spans;
   }
 

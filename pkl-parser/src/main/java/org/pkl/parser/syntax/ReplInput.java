@@ -32,7 +32,6 @@ public final class ReplInput extends AbstractNode {
 
   @SuppressWarnings("unchecked")
   public List<Node> getNodes() {
-    assert children != null;
     return (List<Node>) children;
   }
 }

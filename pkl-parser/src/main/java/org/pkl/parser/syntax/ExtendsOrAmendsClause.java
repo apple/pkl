@@ -35,7 +35,6 @@ public final class ExtendsOrAmendsClause extends AbstractNode {
   }
 
   public StringConstant getUrl() {
-    assert children != null;
     var ret = (StringConstant) children.get(0);
     assert ret != null;
     return ret;

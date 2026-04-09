@@ -25,13 +25,13 @@ import org.pkl.parser.util.Nullable;
 @SuppressWarnings("unused")
 public abstract sealed class Expr extends AbstractNode {
 
-  public Expr(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public Expr(Span span, List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
   public static final class ThisExpr extends Expr {
     public ThisExpr(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -42,7 +42,7 @@ public abstract sealed class Expr extends AbstractNode {
 
   public static final class OuterExpr extends Expr {
     public OuterExpr(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -53,7 +53,7 @@ public abstract sealed class Expr extends AbstractNode {
 
   public static final class ModuleExpr extends Expr {
     public ModuleExpr(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -64,7 +64,7 @@ public abstract sealed class Expr extends AbstractNode {
 
   public static final class NullLiteralExpr extends Expr {
     public NullLiteralExpr(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -77,7 +77,7 @@ public abstract sealed class Expr extends AbstractNode {
     private final boolean b;
 
     public BoolLiteralExpr(boolean b, Span span) {
-      super(span, null);
+      super(span, List.of());
       this.b = b;
     }
 
@@ -95,7 +95,7 @@ public abstract sealed class Expr extends AbstractNode {
     private final String number;
 
     public IntLiteralExpr(String number, Span span) {
-      super(span, null);
+      super(span, List.of());
       this.number = number;
     }
 
@@ -113,7 +113,7 @@ public abstract sealed class Expr extends AbstractNode {
     private final String number;
 
     public FloatLiteralExpr(String number, Span span) {
-      super(span, null);
+      super(span, List.of());
       this.number = number;
     }
 
@@ -137,7 +137,6 @@ public abstract sealed class Expr extends AbstractNode {
 
     public final boolean hasInterpolation() {
       var children = children();
-      assert children != null;
       return children.size() > 1;
     }
   }
@@ -160,7 +159,6 @@ public abstract sealed class Expr extends AbstractNode {
 
     @SuppressWarnings("unchecked")
     public List<StringPart> getParts() {
-      assert children != null;
       return (List<StringPart>) children;
     }
 
@@ -191,7 +189,6 @@ public abstract sealed class Expr extends AbstractNode {
 
     @SuppressWarnings("unchecked")
     public List<StringPart> getParts() {
-      assert children != null;
       return (List<StringPart>) children;
     }
 
@@ -215,7 +212,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -233,7 +229,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -254,7 +249,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public StringConstant getImportStr() {
-      assert children != null;
       var ret = (StringConstant) children.get(0);
       assert ret != null;
       return ret;
@@ -279,7 +273,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -308,14 +301,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Identifier getIdentifier() {
-      assert children != null;
       var ret = (Identifier) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public @Nullable ArgumentList getArgumentList() {
-      assert children != null;
       return (ArgumentList) children.get(1);
     }
   }
@@ -339,14 +330,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Identifier getIdentifier() {
-      assert children != null;
       var ret = (Identifier) children.get(1);
       assert ret != null;
       return ret;
@@ -357,7 +346,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public @Nullable ArgumentList getArgumentList() {
-      assert children != null;
       return (ArgumentList) children.get(2);
     }
   }
@@ -373,14 +361,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Identifier getIdentifier() {
-      assert children != null;
       var ret = (Identifier) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public @Nullable ArgumentList getArgumentList() {
-      assert children != null;
       return (ArgumentList) children.get(1);
     }
   }
@@ -396,7 +382,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getArg() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -414,14 +399,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Expr getArg() {
-      assert children != null;
       var ret = (Expr) children.get(1);
       assert ret != null;
       return ret;
@@ -439,21 +422,18 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getCond() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Expr getThen() {
-      assert children != null;
       var ret = (Expr) children.get(1);
       assert ret != null;
       return ret;
     }
 
     public Expr getEls() {
-      assert children != null;
       var ret = (Expr) children.get(2);
       assert ret != null;
       return ret;
@@ -471,21 +451,18 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Parameter getParameter() {
-      assert children != null;
       var ret = (Parameter) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Expr getBindingExpr() {
-      assert children != null;
       var ret = (Expr) children.get(1);
       assert ret != null;
       return ret;
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(2);
       assert ret != null;
       return ret;
@@ -503,14 +480,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public ParameterList getParameterList() {
-      assert children != null;
       var ret = (ParameterList) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(1);
       assert ret != null;
       return ret;
@@ -528,7 +503,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -546,12 +520,10 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public @Nullable Type getType() {
-      assert children != null;
       return (Type) children.get(0);
     }
 
     public ObjectBody getBody() {
-      assert children != null;
       var ret = (ObjectBody) children.get(1);
       assert ret != null;
       return ret;
@@ -573,14 +545,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public ObjectBody getBody() {
-      assert children != null;
       var ret = (ObjectBody) children.get(1);
       assert ret != null;
       return ret;
@@ -598,7 +568,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -616,7 +585,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -634,7 +602,6 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -655,14 +622,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getLeft() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Expr getRight() {
-      assert children != null;
       var ret = (Expr) children.get(1);
       assert ret != null;
       return ret;
@@ -709,14 +674,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Type getType() {
-      assert children != null;
       var ret = (Type) children.get(1);
       assert ret != null;
       return ret;
@@ -734,14 +697,12 @@ public abstract sealed class Expr extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public Type getType() {
-      assert children != null;
       var ret = (Type) children.get(1);
       assert ret != null;
       return ret;

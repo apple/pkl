@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,13 +32,11 @@ public final class Module extends AbstractNode {
   }
 
   public @Nullable ModuleDecl getDecl() {
-    assert children != null;
     // children can be empty when there was a parse error
     return children.isEmpty() ? null : (ModuleDecl) children.get(0);
   }
 
   public List<ImportClause> getImports() {
-    assert children != null;
     if (children.size() < 2) return List.of();
     var res = new ArrayList<ImportClause>();
     for (int i = 1; i < children.size(); i++) {
@@ -55,7 +53,6 @@ public final class Module extends AbstractNode {
 
   public List<org.pkl.parser.syntax.Class> getClasses() {
     var res = new ArrayList<org.pkl.parser.syntax.Class>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof Class clazz) {
         res.add(clazz);
@@ -66,7 +63,6 @@ public final class Module extends AbstractNode {
 
   public List<TypeAlias> getTypeAliases() {
     var res = new ArrayList<TypeAlias>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof TypeAlias typeAlias) {
         res.add(typeAlias);
@@ -77,7 +73,6 @@ public final class Module extends AbstractNode {
 
   public List<ClassProperty> getProperties() {
     var res = new ArrayList<ClassProperty>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof ClassProperty classProperty) {
         res.add(classProperty);
@@ -88,7 +83,6 @@ public final class Module extends AbstractNode {
 
   public List<ClassMethod> getMethods() {
     var res = new ArrayList<ClassMethod>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof ClassMethod classMethod) {
         res.add(classMethod);

@@ -25,7 +25,7 @@ import org.pkl.parser.util.Nullable;
 @SuppressWarnings("unused")
 public abstract sealed class ObjectMember extends AbstractNode {
 
-  public ObjectMember(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public ObjectMember(Span span, List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
@@ -40,7 +40,6 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -62,30 +61,25 @@ public abstract sealed class ObjectMember extends AbstractNode {
 
     @SuppressWarnings("unchecked")
     public List<Modifier> getModifiers() {
-      assert children != null;
       return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
     public Identifier getIdentifier() {
-      assert children != null;
       var ret = (Identifier) children.get(identifierOffset);
       assert ret != null;
       return ret;
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      assert children != null;
       return (TypeAnnotation) children.get(identifierOffset + 1);
     }
 
     public @Nullable Expr getExpr() {
-      assert children != null;
       return (Expr) children.get(identifierOffset + 2);
     }
 
     @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
-      assert children != null;
       return (List<ObjectBody>) children.subList(identifierOffset + 3, children.size());
     }
   }
@@ -105,43 +99,36 @@ public abstract sealed class ObjectMember extends AbstractNode {
 
     @SuppressWarnings("unchecked")
     public List<Modifier> getModifiers() {
-      assert children != null;
       return (List<Modifier>) children.subList(0, identifierOffset);
     }
 
     public Keyword getFunctionKeyword() {
-      assert children != null;
       var ret = (Keyword) children.get(identifierOffset);
       assert ret != null;
       return ret;
     }
 
     public Identifier getIdentifier() {
-      assert children != null;
       var ret = (Identifier) children.get(identifierOffset + 1);
       assert ret != null;
       return ret;
     }
 
     public @Nullable TypeParameterList getTypeParameterList() {
-      assert children != null;
       return (TypeParameterList) children.get(identifierOffset + 2);
     }
 
     public ParameterList getParamList() {
-      assert children != null;
       var ret = (ParameterList) children.get(identifierOffset + 3);
       assert ret != null;
       return ret;
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      assert children != null;
       return (TypeAnnotation) children.get(identifierOffset + 4);
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(identifierOffset + 5);
       assert ret != null;
       return ret;
@@ -150,7 +137,6 @@ public abstract sealed class ObjectMember extends AbstractNode {
     @SuppressWarnings("DuplicatedCode")
     public Span headerSpan() {
       Span start = null;
-      assert children != null;
       for (var child : children) {
         if (child != null) {
           start = child.span();
@@ -182,20 +168,17 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     public Expr getPred() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public @Nullable Expr getExpr() {
-      assert children != null;
       return (Expr) children.get(1);
     }
 
     @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
-      assert children != null;
       return (List<ObjectBody>) children.subList(2, children.size());
     }
   }
@@ -211,20 +194,17 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     public Expr getKey() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public @Nullable Expr getValue() {
-      assert children != null;
       return (Expr) children.get(1);
     }
 
     @SuppressWarnings("unchecked")
     public List<ObjectBody> getBodyList() {
-      assert children != null;
       return (List<ObjectBody>) children.subList(2, children.size());
     }
   }
@@ -243,7 +223,6 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
@@ -299,21 +278,18 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     public Expr getPredicate() {
-      assert children != null;
       var ret = (Expr) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public ObjectBody getThenClause() {
-      assert children != null;
       var ret = (ObjectBody) children.get(1);
       assert ret != null;
       return ret;
     }
 
     public @Nullable ObjectBody getElseClause() {
-      assert children != null;
       return (ObjectBody) children.get(2);
     }
   }
@@ -330,26 +306,22 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
 
     public Parameter getP1() {
-      assert children != null;
       var ret = (Parameter) children.get(0);
       assert ret != null;
       return ret;
     }
 
     public @Nullable Parameter getP2() {
-      assert children != null;
       return (Parameter) children.get(1);
     }
 
     public Expr getExpr() {
-      assert children != null;
       var ret = (Expr) children.get(2);
       assert ret != null;
       return ret;
     }
 
     public ObjectBody getBody() {
-      assert children != null;
       var ret = (ObjectBody) children.get(3);
       assert ret != null;
       return ret;

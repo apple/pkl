@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,22 +23,20 @@ import org.pkl.parser.util.Nullable;
 
 public abstract class AbstractNode implements Node {
   protected final Span span;
-  protected final @Nullable List<? extends @Nullable Node> children;
+  protected final List<? extends @Nullable Node> children;
   protected @Nullable Node parent;
 
-  public AbstractNode(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public AbstractNode(Span span, List<? extends @Nullable Node> children) {
     this.span = span;
-    if (children != null) {
-      this.children = Collections.unmodifiableList(children);
+    if (children.isEmpty()) {
+      // optimization: always store an unwrapped List.of()
+      this.children = List.of();
     } else {
-      this.children = null;
+      this.children = Collections.unmodifiableList(children);
     }
-
-    if (children != null) {
-      for (var node : children) {
-        if (node != null) {
-          node.setParent(this);
-        }
+    for (var node : children) {
+      if (node != null) {
+        node.setParent(this);
       }
     }
   }
@@ -59,7 +57,7 @@ public abstract class AbstractNode implements Node {
   }
 
   @Override
-  public @Nullable List<? extends @Nullable Node> children() {
+  public List<? extends @Nullable Node> children() {
     return children;
   }
 

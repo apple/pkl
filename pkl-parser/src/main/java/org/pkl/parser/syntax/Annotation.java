@@ -31,14 +31,12 @@ public final class Annotation extends AbstractNode {
   }
 
   public Type getType() {
-    assert children != null;
     var ret = (Type) children.get(0);
     assert ret != null;
     return ret;
   }
 
   public @Nullable ObjectBody getBody() {
-    assert children != null;
     return (ObjectBody) children.get(1);
   }
 }

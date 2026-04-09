@@ -36,41 +36,34 @@ public final class ModuleDecl extends AbstractNode {
   }
 
   public @Nullable DocComment getDocComment() {
-    assert children != null;
     return (DocComment) children.get(0);
   }
 
   @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
-    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
-    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public @Nullable Keyword getModuleKeyword() {
-    assert children != null;
     return (Keyword) children.get(nameOffset);
   }
 
   public @Nullable QualifiedIdentifier getName() {
-    assert children != null;
     return (QualifiedIdentifier) children.get(nameOffset + 1);
   }
 
   public @Nullable ExtendsOrAmendsClause getExtendsOrAmendsDecl() {
-    assert children != null;
     return (ExtendsOrAmendsClause) children.get(nameOffset + 2);
   }
 
   @SuppressWarnings("DuplicatedCode")
   public Span headerSpan() {
     Span start = null;
-    assert children != null;
     for (var i = modifiersOffset; i < children.size(); i++) {
       var child = children.get(i);
       if (child != null) {
