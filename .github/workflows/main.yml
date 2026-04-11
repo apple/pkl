@@ -831,6 +831,20 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
       run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true --no-parallel publishToSonatype
+  dependency-submission:
+    permissions:
+      contents: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+    - uses: gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
+      with: {}
   publish-test-results:
     if: '!cancelled()'
     needs:
@@ -891,6 +905,7 @@ jobs:
     - pkl-doc-alpine-linux-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
     - deploy-snapshot
+    - dependency-submission
     - publish-test-results
     runs-on: ubuntu-latest
     steps:

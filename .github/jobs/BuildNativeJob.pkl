@@ -23,7 +23,8 @@ preSteps {
   when (os == "linux" && !musl) {
     new {
       name = "Install deps"
-      run = "dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en"
+      run =
+        "dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en"
     }
   }
 }

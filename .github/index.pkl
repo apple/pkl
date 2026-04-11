@@ -22,6 +22,8 @@ testReports {
   excludeJobs {
     "bench"
     "github-release"
+    "dependency-submission"
+    "dependency-review"
     Regex("deploy-.*")
   }
 }
@@ -114,6 +116,23 @@ local releaseJobs: PklJobs = new {
   ...buildNativeReleases
 }
 
+local dependencySubmission: Workflow.Job = new {
+  `runs-on` = "ubuntu-latest"
+  permissions {
+    contents = "write"
+  }
+  steps {
+    module.catalog.`actions/checkout@v6`
+    (module.catalog.`actions/setup-java@v5`) {
+      with {
+        `java-version` = "25"
+        distribution = "temurin"
+      }
+    }
+    module.catalog.`gradle/actions/dependency-submission@v6`
+  }
+}
+
 // By default, just run ./gradlew check on linux.
 // Trigger other checks based on GitHub PR description. Examples:
 //
@@ -153,7 +172,16 @@ prb {
       nightlyMacOS = false
     }
   }
-  jobs = prbJobs2 |> toWorkflowJobs
+  jobs = (prbJobs2 |> toWorkflowJobs) {
+    ["dependency-review"] {
+      `runs-on` = "ubuntu-latest"
+      steps {
+        module.catalog.`actions/checkout@v6`
+        module.catalog.`actions/dependency-review-action@v4`
+      }
+    }
+    ["dependency-submission"] = dependencySubmission
+  }
 }
 
 build {
@@ -161,7 +189,7 @@ build {
 }
 
 main {
-  jobs =
+  local _jobs =
     (buildAndTestJobs) {
       ["deploy-snapshot"] = (
         new DeployJob {
@@ -174,6 +202,10 @@ main {
         needs = buildAndTestJobs.keys.toListing()
       }
     } |> toWorkflowJobs
+
+  jobs = (_jobs) {
+    ["dependency-submission"] = dependencySubmission
+  }
 }
 
 releaseBranch {
