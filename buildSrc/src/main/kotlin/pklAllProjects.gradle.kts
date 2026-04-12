@@ -15,8 +15,6 @@
  */
 import com.diffplug.gradle.spotless.KotlinGradleExtension
 import org.gradle.accessors.dm.LibrariesForLibs
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
 plugins { id("com.diffplug.spotless") }
 
@@ -42,25 +40,9 @@ configurations {
   }
 }
 
-configurations.all {
-  resolutionStrategy.eachDependency {
-    if (requested.group == "org.jetbrains.kotlin") {
-      // prevent transitive deps from bumping Koltin version
-      useVersion(libs.versions.kotlin.get())
-    }
-  }
-}
-
-plugins.withType(JavaPlugin::class).configureEach {
-  tasks.withType<JavaCompile>().configureEach { options.release = buildInfo.jvmTarget }
-}
-
-tasks.withType<KotlinJvmCompile>().configureEach {
-  compilerOptions {
-    jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
-    freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all")
-    freeCompilerArgs.add("-Xjdk-release=${buildInfo.jvmTarget}")
-  }
+tasks.withType<JavaCompile>().configureEach {
+  javaCompiler = buildInfo.javaCompiler
+  options.release = buildInfo.jvmTarget
 }
 
 plugins.withType(IdeaPlugin::class).configureEach {
@@ -97,10 +79,9 @@ plugins.withType(MavenPublishPlugin::class).configureEach {
 
 // settings.gradle.kts sets `--write-locks`
 // if Gradle command line contains this task name
-val updateDependencyLocks by
-  tasks.registering {
-    doLast { configurations.filter { it.isCanBeResolved }.forEach { it.resolve() } }
-  }
+val updateDependencyLocks by tasks.registering {
+  doLast { configurations.filter { it.isCanBeResolved }.forEach { it.resolve() } }
+}
 
 val allDependencies by tasks.registering(DependencyReportTask::class)
 

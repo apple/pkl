@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,6 +46,7 @@ class PPairToKotlinPairTest {
   @Test
   fun ex1() {
     val ex1 = module.getProperty("ex1")
+    @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN")
     val mapped: Pair<Int, Duration> =
       mapper.map(
         ex1,

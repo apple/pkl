@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ private val ltsReleases =
     JavaLanguageVersion.of(11),
     JavaLanguageVersion.of(17),
     JavaLanguageVersion.of(21),
+    JavaLanguageVersion.of(25),
   )
 
 /** Describes an inclusive range of JVM versions, based on the [JavaLanguageVersion] type. */

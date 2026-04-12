@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ fun <This, Return> lazyWithReceiver(
 class LazyWithReceiver<This, out Return>(val initializer: This.() -> Return) {
   private val values = WeakHashMap<This, Return>()
 
-  private val lock = Object()
+  private val lock = Any()
 
   operator fun getValue(thisValue: This, property: KProperty<*>): Return =
     synchronized(lock) { values.getOrPut(thisValue) { thisValue.initializer() } }

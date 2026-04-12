@@ -82,7 +82,7 @@ data class JavaCodeGeneratorOptions(
    *
    * The specified annotation type must have a [java.lang.annotation.Target] of
    * [java.lang.annotation.ElementType.TYPE_USE] or the generated code may not compile. If set to
-   * `null`, [org.pkl.config.java.mapper.NonNull] will be used.
+   * `null`, `org.pkl.config.java.mapper.NonNull` will be used.
    */
   val nonNullAnnotation: String? = null,
 
@@ -105,7 +105,7 @@ class JavaCodeGenerator(
 ) {
 
   companion object {
-    private val OBJECT = ClassName.get(Object::class.java)
+    private val OBJECT = ClassName.get(Any::class.java)
     private val STRING = ClassName.get(String::class.java)
     private val DURATION = ClassName.get(Duration::class.java)
     private val DURATION_UNIT = ClassName.get(DurationUnit::class.java)
@@ -295,7 +295,7 @@ class JavaCodeGenerator(
         MethodSpec.methodBuilder("equals")
           .addModifiers(Modifier.PUBLIC)
           .addAnnotation(Override::class.java)
-          .addParameter(Object::class.java, "obj")
+          .addParameter(Any::class.java, "obj")
           .returns(Boolean::class.java)
           .addStatement("if (this == obj) return true")
           .addStatement("if (obj == null) return false")
@@ -418,7 +418,7 @@ class JavaCodeGenerator(
       val hasJavadoc =
         docComment != null && codegenOptions.generateJavadoc && !codegenOptions.generateGetters
       if (hasJavadoc) {
-        builder.addJavadoc(renderAsJavadoc(docComment!!))
+        builder.addJavadoc(renderAsJavadoc(docComment))
       }
 
       if (codegenOptions.generateGetters) {
@@ -466,7 +466,7 @@ class JavaCodeGenerator(
       val docComment = property.docComment
       val hasJavadoc = docComment != null && codegenOptions.generateJavadoc
       if (hasJavadoc) {
-        builder.addJavadoc(renderAsJavadoc(docComment!!))
+        builder.addJavadoc(renderAsJavadoc(docComment))
       }
 
       generateDeprecation(
@@ -583,7 +583,7 @@ class JavaCodeGenerator(
       val docComment = pClass.docComment
       val hasJavadoc = docComment != null && codegenOptions.generateJavadoc
       if (hasJavadoc) {
-        builder.addJavadoc(renderAsJavadoc(docComment!!))
+        builder.addJavadoc(renderAsJavadoc(docComment))
       }
 
       generateDeprecation(
@@ -707,7 +707,7 @@ class JavaCodeGenerator(
       .addModifiers(Modifier.STATIC)
       .addParameter(StringBuilder::class.java, "builder")
       .addParameter(String::class.java, "name")
-      .addParameter(Object::class.java, "value")
+      .addParameter(Any::class.java, "value")
       .addStatement("builder.append(\"\\n  \").append(name).append(\" = \")")
       .addStatement(
         "\$T lines = \$T.toString(value).split(\"\\n\")",

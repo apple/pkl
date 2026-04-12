@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,7 @@ internal class SearchIndexGenerator(private val outputDir: Path, consoleOut: Out
     }
   }
 
-  private object KindSerializer : KSerializer<Kind> {
+  internal object KindSerializer : KSerializer<Kind> {
     override val descriptor: SerialDescriptor = PrimitiveSerialDescriptor("Kind", PrimitiveKind.INT)
 
     override fun serialize(encoder: Encoder, value: Kind) {

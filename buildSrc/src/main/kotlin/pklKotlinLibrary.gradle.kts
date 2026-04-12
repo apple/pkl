@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,38 +14,16 @@
  * limitations under the License.
  */
 import org.gradle.accessors.dm.LibrariesForLibs
-import org.jetbrains.kotlin.gradle.dsl.JvmTarget
-import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
-import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 
-plugins {
-  id("pklJavaLibrary")
-  kotlin("jvm")
-}
+plugins { id("pklJavaLibrary") }
 
-// Build configuration.
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-// Version Catalog library symbols.
 val libs = the<LibrariesForLibs>()
 
 dependencies {
-  // At least some of our kotlin APIs contain Kotlin stdlib types
-  // that aren't compiled away by kotlinc (e.g., `kotlin.Function`).
-  // So let's be conservative and default to `api` for now.
-  // For Kotlin APIs that only target Kotlin users (e.g., pkl-config-kotlin),
-  // it won't make a difference.
-  api(buildInfo.libs.findLibrary("kotlinStdLib").get())
-}
-
-tasks.compileKotlin {
-  enabled = true // disabled by pklJavaLibrary
-}
-
-tasks.withType<KotlinJvmCompile>().configureEach {
-  compilerOptions {
-    languageVersion = KotlinVersion.KOTLIN_2_1
-    jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
-    freeCompilerArgs.addAll("-Xjdk-release=${buildInfo.jvmTarget}")
-  }
+  // Kotlin libraries typically expose stdlib types in their public APIs.
+  // Therefore, the stdlib must be available on the consumer's compile classpath,
+  // and "implementation" is not sufficient.
+  api(libs.kotlinStdLib)
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,7 +48,15 @@ class EmbeddedExecutorTest {
     private val executor: Executor,
     private val spiOptionsVersion: Int,
     private val name: String,
+    /**
+     * The maximum JVM version this executor is compatible with, e.g., because the Pkl
+     * distribution's Truffle version does not support newer versions.
+     */
+    private val maxJvmVersion: Int,
   ) {
+    val isCompatibleWithCurrentJvm: Boolean
+      get() = Runtime.version().feature() <= maxJvmVersion
+
     fun evaluatePath(modulePath: Path, optionSpec: ExecutorOptions.Builder.() -> Unit): String {
       val options =
         ExecutorOptions.builder().apply(optionSpec).spiOptionsVersion(spiOptionsVersion).build()
@@ -60,21 +68,22 @@ class EmbeddedExecutorTest {
 
   companion object {
     @JvmStatic
-    private val allTestExecutors: List<TestExecutor> by lazy {
+    private val compatibleTestExecutors: List<TestExecutor> by lazy {
       listOf(
-        TestExecutor(executor1_1.value, 1, "SpiOptions1, Executor1, Distribution1"),
+          TestExecutor(executor1_1.value, 1, "SpiOptions1, Executor1, Distribution1", 21),
 
-        // This context has a pkl-executor version that is lower than the distribution version.
-        TestExecutor(executor1_2.value, 1, "SpiOptions1, Executor1, Distribution2"),
-        TestExecutor(executor2_1.value, 1, "SpiOptions1, Executor2, Distribution1"),
-        TestExecutor(executor2_1.value, 3, "SpiOptions3, Executor2, Distribution1"),
-        TestExecutor(executor2_2.value, 1, "SpiOptions1, Executor2, Distribution2"),
-        TestExecutor(executor2_2.value, 3, "SpiOptions3, Executor2, Distribution2"),
-      )
+          // This context has a pkl-executor version that is lower than the distribution version.
+          TestExecutor(executor1_2.value, 1, "SpiOptions1, Executor1, Distribution2", 99),
+          TestExecutor(executor2_1.value, 1, "SpiOptions1, Executor2, Distribution1", 21),
+          TestExecutor(executor2_1.value, 3, "SpiOptions3, Executor2, Distribution1", 21),
+          TestExecutor(executor2_2.value, 1, "SpiOptions1, Executor2, Distribution2", 99),
+          TestExecutor(executor2_2.value, 3, "SpiOptions3, Executor2, Distribution2", 99),
+        )
+        .filter(TestExecutor::isCompatibleWithCurrentJvm)
     }
 
     private val currentExecutor: TestExecutor by lazy {
-      TestExecutor(executor2_2.value, -1, "currentExecutor")
+      TestExecutor(executor2_2.value, -1, "currentExecutor", 99)
     }
 
     // A pkl-executor library that supports ExecutorSpiOptions up to v1
@@ -151,8 +160,8 @@ class EmbeddedExecutorTest {
     assertThat(
         EmbeddedExecutor.extractMinPklVersion(
           """
-      @ModuleInfo { minPklVersion = "1.2.3" }
-    """
+          @ModuleInfo { minPklVersion = "1.2.3" }
+          """
             .trimIndent()
         )
       )
@@ -161,8 +170,8 @@ class EmbeddedExecutorTest {
     assertThat(
         EmbeddedExecutor.extractMinPklVersion(
           """
-      @ModuleInfo{minPklVersion="1.2.3"}
-    """
+          @ModuleInfo{minPklVersion="1.2.3"}
+          """
             .trimIndent()
         )
       )
@@ -171,8 +180,8 @@ class EmbeddedExecutorTest {
     assertThat(
         EmbeddedExecutor.extractMinPklVersion(
           """
-      @ModuleInfo   {   minPklVersion   =   "1.2.3"   }
-    """
+          @ModuleInfo   {   minPklVersion   =   "1.2.3"   }
+          """
             .trimIndent()
         )
       )
@@ -181,10 +190,10 @@ class EmbeddedExecutorTest {
     assertThat(
         EmbeddedExecutor.extractMinPklVersion(
           """
-      @ModuleInfo {
-          minPklVersion = "1.2.3"
-      }
-    """
+          @ModuleInfo {
+              minPklVersion = "1.2.3"
+          }
+          """
             .trimIndent()
         )
       )
@@ -193,11 +202,11 @@ class EmbeddedExecutorTest {
     assertThat(
         EmbeddedExecutor.extractMinPklVersion(
           """
-      @ModuleInfo {
-          author = "foo@bar.apple.com"
-          minPklVersion = "1.2.3"
-      }
-    """
+          @ModuleInfo {
+              author = "foo@bar.apple.com"
+              minPklVersion = "1.2.3"
+          }
+          """
             .trimIndent()
         )
       )
@@ -206,11 +215,11 @@ class EmbeddedExecutorTest {
     assertThat(
         EmbeddedExecutor.extractMinPklVersion(
           """
-      @ModuleInfo {
-          minPklVersion = "1.2.3"
-          author = "foo@bar.apple.com"
-      }
-    """
+          @ModuleInfo {
+              minPklVersion = "1.2.3"
+              author = "foo@bar.apple.com"
+          }
+          """
             .trimIndent()
         )
       )
@@ -239,7 +248,7 @@ class EmbeddedExecutorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `evaluate a module that is missing a ModuleInfo annotation`(
     executor: TestExecutor,
     @TempDir tempDir: Path,
@@ -249,10 +258,10 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      module test
+        module test
 
-      x = 1
-    """
+        x = 1
+        """
           .trimIndent()
       )
 
@@ -270,7 +279,7 @@ class EmbeddedExecutorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `evaluate a module that requests an incompatible Pkl version`(
     executor: TestExecutor,
     @TempDir tempDir: Path,
@@ -280,11 +289,11 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "99.99.99" }
-      module test
+        @ModuleInfo { minPklVersion = "99.99.99" }
+        module test
 
-      x = 1
-    """
+        x = 1
+        """
           .trimIndent()
       )
 
@@ -302,7 +311,7 @@ class EmbeddedExecutorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `evaluate a module that reads environment variables and external properties`(
     executor: TestExecutor,
     @TempDir tempDir: Path,
@@ -312,12 +321,12 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "0.11.0" }
-      module test
+        @ModuleInfo { minPklVersion = "0.11.0" }
+        module test
 
-      x = read("env:ENV_VAR")
-      y = read("prop:property")
-    """
+        x = read("env:ENV_VAR")
+        y = read("prop:property")
+        """
           .trimIndent()
       )
 
@@ -333,16 +342,16 @@ class EmbeddedExecutorTest {
     assertThat(result.trim())
       .isEqualTo(
         """
-      x = "ENV_VAR"
-      y = "property"
-    """
+        x = "ENV_VAR"
+        y = "property"
+        """
           .trimIndent()
           .trim()
       )
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `evaluate a module that depends on another module`(
     executor: TestExecutor,
     @TempDir tempDir: Path,
@@ -352,13 +361,13 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "0.11.0" }
-      amends "template.pkl"
+        @ModuleInfo { minPklVersion = "0.11.0" }
+        amends "template.pkl"
 
-      foo {
-        bar = 42
-      }
-    """
+        foo {
+          bar = 42
+        }
+        """
           .trimIndent()
       )
 
@@ -367,12 +376,12 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      foo: Foo
+        foo: Foo
 
-      class Foo {
-        bar: Int
-      }
-    """
+        class Foo {
+          bar: Int
+        }
+        """
           .trimIndent()
       )
 
@@ -385,28 +394,28 @@ class EmbeddedExecutorTest {
     assertThat(result.trim())
       .isEqualTo(
         """
-      foo {
-        bar = 42
-      }
-    """
+        foo {
+          bar = 42
+        }
+        """
           .trimIndent()
           .trim()
       )
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `evaluate a module whose evaluation fails`(executor: TestExecutor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "0.11.0" }
-      module test
+        @ModuleInfo { minPklVersion = "0.11.0" }
+        module test
 
-      foo = throw("ouch")
-    """
+        foo = throw("ouch")
+        """
           .trimIndent()
       )
 
@@ -427,7 +436,7 @@ class EmbeddedExecutorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `evaluate a module whose project evaluation fails`(
     executor: TestExecutor,
     @TempDir tempDir: Path,
@@ -443,11 +452,11 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      amends "pkl:Project"
-      dependencies {
-        ["myDep"] = import("../nonexistent/PklProject")
-      }
-    """
+        amends "pkl:Project"
+        dependencies {
+          ["myDep"] = import("../nonexistent/PklProject")
+        }
+        """
           .trimIndent()
       )
 
@@ -456,11 +465,11 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "0.11.0" }
-      module test
+        @ModuleInfo { minPklVersion = "0.11.0" }
+        module test
 
-      foo = "bar"
-    """
+        foo = "bar"
+        """
           .trimIndent()
       )
 
@@ -485,20 +494,20 @@ class EmbeddedExecutorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   fun `time out a module`(executor: TestExecutor, @TempDir tempDir: Path) {
     val pklFile = tempDir.resolve("test.pkl")
     pklFile
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "0.11.0" }
-      module test
+        @ModuleInfo { minPklVersion = "0.11.0" }
+        module test
 
-      x = fib(100)
+        x = fib(100)
 
-      function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
-    """
+        function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
+        """
           .trimIndent()
       )
 
@@ -523,13 +532,13 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      @ModuleInfo { minPklVersion = "0.24.0" }
-      module MyModule
+        @ModuleInfo { minPklVersion = "0.24.0" }
+        module MyModule
 
-      import "package://localhost:0/birds@0.5.0#/Bird.pkl"
+        import "package://localhost:0/birds@0.5.0#/Bird.pkl"
 
-      chirpy = new Bird { name = "Chirpy"; favoriteFruit { name = "Orange" } }
-    """
+        chirpy = new Bird { name = "Chirpy"; favoriteFruit { name = "Orange" } }
+        """
           .trimIndent()
       )
     val result =
@@ -545,13 +554,13 @@ class EmbeddedExecutorTest {
     assertThat(result.trim())
       .isEqualTo(
         """
-      chirpy {
-        name = "Chirpy"
-        favoriteFruit {
-          name = "Orange"
+        chirpy {
+          name = "Chirpy"
+          favoriteFruit {
+            name = "Orange"
+          }
         }
-      }
-    """
+        """
           .trimIndent()
       )
 
@@ -566,7 +575,7 @@ class EmbeddedExecutorTest {
       """
       @ModuleInfo { minPklVersion = "0.29.0" }
       result = import("https://example.com/foo.pkl")
-    """
+      """
         .trimIndent()
     )
     assertThatCode {
@@ -582,7 +591,7 @@ class EmbeddedExecutorTest {
   }
 
   @ParameterizedTest
-  @MethodSource("getAllTestExecutors")
+  @MethodSource("getCompatibleTestExecutors")
   @DisabledOnOs(OS.WINDOWS, disabledReason = "Can't populate legacy cache dir on Windows")
   fun `evaluate a project dependency`(executor: TestExecutor, @TempDir tempDir: Path) {
     val cacheDir = tempDir.resolve("packages")
@@ -595,12 +604,12 @@ class EmbeddedExecutorTest {
       .toFile()
       .writeText(
         """
-      amends "pkl:Project"
-      
-      dependencies {
-        ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
-      }
-    """
+        amends "pkl:Project"
+
+        dependencies {
+          ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
+        }
+        """
           .trimIndent()
       )
     val dollar = '$'
@@ -638,11 +647,11 @@ class EmbeddedExecutorTest {
         """
         @ModuleInfo { minPklVersion = "0.24.0" }
         module myModule
-        
+
         import "@birds/catalog/Swallow.pkl"
-        
+
         result = Swallow
-      """
+        """
           .trimIndent()
       )
     val result =
@@ -655,14 +664,14 @@ class EmbeddedExecutorTest {
     assertThat(result)
       .isEqualTo(
         """
-      result {
-        name = "Swallow"
-        favoriteFruit {
-          name = "Apple"
+        result {
+          name = "Swallow"
+          favoriteFruit {
+            name = "Apple"
+          }
         }
-      }
-      
-    """
+
+        """
           .trimIndent()
       )
   }

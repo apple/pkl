@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -108,18 +108,24 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
   }
 
   private fun writeBuildFile() {
-    val kotlinVersion = "2.0.21"
+    val jvmTargetVersion = "17"
+    val kotlinToolchainVersion = "2.3.20"
+    val kotlinTargetVersion = "2.2"
+    val kotlinStdLibVersion = "2.2.21"
 
     writeFile(
       "build.gradle",
       """
+      import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+      import org.jetbrains.kotlin.gradle.dsl.KotlinVersion
+      
       buildscript {
         repositories {
           mavenCentral()
         }
 
         dependencies {
-          classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinVersion") {
+          classpath("org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlinToolchainVersion") {
             exclude module: "kotlin-android-extensions"
           }
         }
@@ -131,12 +137,23 @@ class KotlinCodeGeneratorsTest : AbstractTest() {
 
       apply plugin: "kotlin"
 
+      tasks.withType(JavaCompile).configureEach {
+        options.release = $jvmTargetVersion
+      }
+      
+      kotlin {
+        compilerOptions {
+          jvmTarget = JvmTarget.fromTarget($jvmTargetVersion.toString())
+          languageVersion = KotlinVersion.fromVersion($kotlinTargetVersion.toString())
+        }
+      }
+      
       repositories {
         mavenCentral()
       }
 
       dependencies {
-        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinVersion"
+        implementation "org.jetbrains.kotlin:kotlin-stdlib-jdk8:$kotlinStdLibVersion"
       }
 
       pkl {

@@ -225,7 +225,7 @@ class SexpRenderer {
       buf.append('\n')
       renderExpr(expr)
     }
-    classEntry.bodyList?.let { bodyList ->
+    classEntry.bodyList.let { bodyList ->
       for (body in bodyList) {
         buf.append('\n')
         renderObjectBody(body)
@@ -932,7 +932,7 @@ class SexpRenderer {
       buf.append('\n')
       renderExpr(it)
     }
-    property.bodyList?.let { bodies ->
+    property.bodyList.let { bodies ->
       for (body in bodies) {
         buf.append('\n')
         renderObjectBody(body)
@@ -978,7 +978,7 @@ class SexpRenderer {
       buf.append('\n')
       renderExpr(expr)
     }
-    predicate.bodyList?.let { bodyList ->
+    predicate.bodyList.let { bodyList ->
       for (body in bodyList) {
         buf.append('\n')
         renderObjectBody(body)
@@ -998,7 +998,7 @@ class SexpRenderer {
       buf.append('\n')
       renderExpr(value)
     }
-    entry.bodyList?.let { bodyList ->
+    entry.bodyList.let { bodyList ->
       for (body in bodyList) {
         buf.append('\n')
         renderObjectBody(body)
