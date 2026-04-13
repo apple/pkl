@@ -43,7 +43,15 @@ final class Builder {
   FormatNode format(Node node) {
     return switch (node.type) {
       case MODULE -> formatModule(node);
-      case DOC_COMMENT -> new Nodes(formatGeneric(node.children, (FormatNode) null));
+      case DOC_COMMENT,
+          OBJECT_SPREAD,
+          NON_NULL_EXPR,
+          SUPER_ACCESS_EXPR,
+          IMPORT_EXPR,
+          UNARY_MINUS_EXPR,
+          LOGICAL_NOT_EXPR,
+          NULLABLE_TYPE ->
+          new Nodes(formatGeneric(node.children, (FormatNode) null));
       case DOC_COMMENT_LINE -> formatDocComment(node);
       case LINE_COMMENT,
           BLOCK_COMMENT,
@@ -75,16 +83,20 @@ final class Builder {
       case TYPEALIAS_HEADER -> formatTypealiasHeader(node);
       case TYPEALIAS_BODY -> formatTypealiasBody(node);
       case MODIFIER_LIST -> formatModifierList(node);
-      case PARAMETER_LIST -> formatParameterList(node, null);
-      case PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node);
-      case TYPE_PARAMETER_LIST -> formatTypeParameterList(node);
-      case TYPE_PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node);
-      case TYPE_PARAMETER -> new Group(newId(), formatGeneric(node.children, spaceOrLine()));
+      case PARAMETER_LIST, CONSTRAINED_TYPE_CONSTRAINT, FUNCTION_TYPE_PARAMETERS ->
+          formatParameterList(node, null);
+      case PARAMETER_LIST_ELEMENTS,
+          TYPE_PARAMETER_LIST_ELEMENTS,
+          TYPE_ARGUMENT_LIST_ELEMENTS,
+          CONSTRAINED_TYPE_ELEMENTS ->
+          formatParameterListElements(node);
+      case TYPE_PARAMETER_LIST, TYPE_ARGUMENT_LIST -> formatTypeParameterList(node);
+      case TYPE_PARAMETER, IMPORT_ALIAS ->
+          new Group(newId(), formatGeneric(node.children, spaceOrLine()));
       case PARAMETER -> formatParameter(node);
       case EXTENDS_CLAUSE, AMENDS_CLAUSE -> formatAmendsExtendsClause(node);
       case IMPORT_LIST -> formatImportList(node);
       case IMPORT -> formatImport(node);
-      case IMPORT_ALIAS -> new Group(newId(), formatGeneric(node.children, spaceOrLine()));
       case CLASS -> formatClass(node);
       case CLASS_HEADER -> formatClassHeader(node);
       case CLASS_HEADER_EXTENDS -> formatClassHeaderExtends(node);
@@ -107,7 +119,6 @@ final class Builder {
       case FOR_GENERATOR_HEADER_DEFINITION_HEADER -> formatForGeneratorHeaderDefinitionHeader(node);
       case WHEN_GENERATOR -> formatWhenGenerator(node);
       case WHEN_GENERATOR_HEADER -> formatWhenGeneratorHeader(node);
-      case OBJECT_SPREAD -> new Nodes(formatGeneric(node.children, (FormatNode) null));
       case MEMBER_PREDICATE -> formatMemberPredicate(node);
       case QUALIFIED_IDENTIFIER -> formatQualifiedIdentifier(node);
       case ARGUMENT_LIST -> formatArgumentList(node, false);
@@ -127,30 +138,17 @@ final class Builder {
       case FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node);
       case FUNCTION_LITERAL_BODY -> formatFunctionLiteralBody(node);
       case SUBSCRIPT_EXPR, SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node);
-      case TRACE_EXPR -> formatTraceThrowReadExpr(node);
-      case THROW_EXPR -> formatTraceThrowReadExpr(node);
-      case READ_EXPR -> formatTraceThrowReadExpr(node);
-      case NON_NULL_EXPR -> new Nodes(formatGeneric(node.children, (FormatNode) null));
-      case SUPER_ACCESS_EXPR -> new Nodes(formatGeneric(node.children, (FormatNode) null));
+      case TRACE_EXPR, THROW_EXPR, READ_EXPR -> formatTraceThrowReadExpr(node);
       case PARENTHESIZED_EXPR -> formatParenthesizedExpr(node);
       case PARENTHESIZED_EXPR_ELEMENTS -> formatParenthesizedExprElements(node);
-      case IMPORT_EXPR -> new Nodes(formatGeneric(node.children, (FormatNode) null));
       case LET_EXPR -> formatLetExpr(node);
       case LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node);
       case LET_PARAMETER -> formatLetParameter(node);
-      case UNARY_MINUS_EXPR -> new Nodes(formatGeneric(node.children, (FormatNode) null));
-      case LOGICAL_NOT_EXPR -> new Nodes(formatGeneric(node.children, (FormatNode) null));
       case TYPE_ANNOTATION -> formatTypeAnnotation(node);
-      case TYPE_ARGUMENT_LIST -> formatTypeParameterList(node);
-      case TYPE_ARGUMENT_LIST_ELEMENTS -> formatParameterListElements(node);
       case DECLARED_TYPE -> formatDeclaredType(node);
       case CONSTRAINED_TYPE -> formatConstrainedType(node);
-      case CONSTRAINED_TYPE_CONSTRAINT -> formatParameterList(node, null);
-      case CONSTRAINED_TYPE_ELEMENTS -> formatParameterListElements(node);
-      case NULLABLE_TYPE -> new Nodes(formatGeneric(node.children, (FormatNode) null));
       case UNION_TYPE -> formatUnionType(node);
       case FUNCTION_TYPE -> formatFunctionType(node);
-      case FUNCTION_TYPE_PARAMETERS -> formatParameterList(node, null);
       case STRING_CONSTANT_TYPE -> format(node.children.get(0));
       case PARENTHESIZED_TYPE -> formatParenthesizedType(node);
       case PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node);
@@ -246,15 +244,27 @@ final class Builder {
    *
    * <p>Case 1: Dot calls followed by closing method call: wrap after the opening paren.
    *
-   * <p>``` foo.bar.baz(new { qux = 1 }) ```
+   * <pre>
+   * {@code foo.bar.baz(
+   *   new { qux = 1 }
+   * )}
+   * </pre>
    *
    * <p>Case 2: Dot calls, then method calls: group the leading access together.
    *
-   * <p>``` foo.bar .baz(new { qux = 1 }) .baz() ```
+   * <pre>
+   * {@code foo.bar
+   *  .baz(new { qux = 1 })
+   *  .baz()}
+   * </pre>
    *
    * <p>Case 3: If there are multiple lambdas present, always force a newline.
    *
-   * <p>``` foo .map((it) -> it + 1) .filter((it) -> it.isEven) ```
+   * <pre>
+   * {@code foo
+   *   .map((it) -> it + 1)
+   *   .filter((it) -> it.isEven)}
+   * </pre>
    */
   private FormatNode formatQualifiedAccessExpression(Node node) {
     var lambdaCount = new int[] {0};
@@ -331,9 +341,8 @@ final class Builder {
 
   /**
    * Split a function call node to extract its identifier into the leading group. For example,
-   * `foo.bar(5)` becomes: leading gets `foo.bar`, rest gets `(5)`.
+   * {@code foo.bar(5)} becomes: leading gets {@code foo.bar}, rest gets {@code (5)}.
    */
-  @SuppressWarnings("unchecked")
   private List<Node>[] splitFunctionCallNode(List<Node> nodes) {
     assert !nodes.isEmpty();
     var lastNode = nodes.get(nodes.size() - 1);
@@ -347,6 +356,7 @@ final class Builder {
     var leading = new ArrayList<>(nodes.subList(0, nodes.size() - 1));
     leading.addAll(lastNode.children.subList(0, argListIdx));
     var trailing = lastNode.children.subList(argListIdx, lastNode.children.size());
+    //noinspection unchecked
     return new List[] {leading, trailing};
   }
 
