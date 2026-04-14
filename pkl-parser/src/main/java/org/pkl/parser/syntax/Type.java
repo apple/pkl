@@ -18,9 +18,9 @@ package org.pkl.parser.syntax;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public abstract sealed class Type extends AbstractNode {
 
@@ -34,7 +34,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitUnknownType(this);
     }
   }
@@ -45,7 +45,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitNothingType(this);
     }
   }
@@ -56,7 +56,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitModuleType(this);
     }
   }
@@ -67,7 +67,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitStringConstantType(this);
     }
 
@@ -84,7 +84,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitDeclaredType(this);
     }
 
@@ -105,7 +105,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitParenthesizedType(this);
     }
 
@@ -122,7 +122,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitNullableType(this);
     }
 
@@ -139,7 +139,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitConstrainedType(this);
     }
 
@@ -164,7 +164,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitUnionType(this);
     }
 
@@ -189,9 +189,8 @@ public abstract sealed class Type extends AbstractNode {
           + '}';
     }
 
-    @SuppressWarnings("ConstantValue")
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }
@@ -217,7 +216,7 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     @Override
-    public <T> T accept(ParserVisitor<? extends T> visitor) {
+    public <T> T accept(ParserVisitor<T> visitor) {
       return visitor.visitFunctionType(this);
     }
 

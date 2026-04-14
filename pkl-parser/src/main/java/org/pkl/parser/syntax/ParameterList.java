@@ -18,7 +18,6 @@ package org.pkl.parser.syntax;
 import java.util.List;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class ParameterList extends AbstractNode {
   public ParameterList(List<Parameter> parameters, Span span) {
@@ -26,7 +25,7 @@ public final class ParameterList extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitParameterList(this);
   }
 

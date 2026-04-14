@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,7 +52,7 @@ import org.pkl.parser.syntax.StringPart.StringChars;
  *   <li>read expressions
  * </ul>
  */
-public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Entry>> {
+public class ImportsAndReadsParser extends AbstractAstBuilder<List<Entry>> {
 
   public record Entry(
       boolean isModule,
@@ -141,12 +141,11 @@ public class ImportsAndReadsParser extends AbstractAstBuilder<@Nullable List<Ent
   }
 
   @Override
-  protected @Nullable List<Entry> aggregateResult(
-      @Nullable List<Entry> aggregate, @Nullable List<Entry> nextResult) {
-    if (aggregate == null || aggregate.isEmpty()) {
+  protected List<Entry> aggregateResult(List<Entry> aggregate, List<Entry> nextResult) {
+    if (aggregate.isEmpty()) {
       return nextResult;
     }
-    if (nextResult == null || nextResult.isEmpty()) {
+    if (nextResult.isEmpty()) {
       return aggregate;
     }
     var ret = new ArrayList<Entry>(aggregate.size() + nextResult.size());

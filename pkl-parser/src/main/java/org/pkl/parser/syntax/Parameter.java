@@ -17,9 +17,9 @@ package org.pkl.parser.syntax;
 
 import java.util.Arrays;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public abstract sealed class Parameter extends AbstractNode {
 
@@ -28,7 +28,7 @@ public abstract sealed class Parameter extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitParameter(this);
   }
 

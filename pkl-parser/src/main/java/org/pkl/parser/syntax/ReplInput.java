@@ -16,17 +16,17 @@
 package org.pkl.parser.syntax;
 
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class ReplInput extends AbstractNode {
-  public ReplInput(List<Node> nodes, Span span) {
+  public ReplInput(List<@Nullable Node> nodes, Span span) {
     super(span, nodes);
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitReplInput(this);
   }
 

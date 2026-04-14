@@ -58,6 +58,7 @@ org.jline:jline-native:4.0.12=runtimeClasspath,testRuntimeClasspath
 org.jline:jline-reader:4.0.12=runtimeClasspath,testRuntimeClasspath
 org.jline:jline-terminal-jni:4.0.12=runtimeClasspath,testRuntimeClasspath
 org.jline:jline-terminal:4.0.12=runtimeClasspath,testRuntimeClasspath
+org.jspecify:jspecify:1.0.0=runtimeClasspath,testRuntimeClasspath
 org.msgpack:msgpack-core:0.9.11=runtimeClasspath,testRuntimeClasspath
 org.organicdesign:Paguro:3.10.3=runtimeClasspath,testRuntimeClasspath
 org.snakeyaml:snakeyaml-engine:2.10=runtimeClasspath,testRuntimeClasspath

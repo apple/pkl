@@ -18,7 +18,7 @@ package org.pkl.parser.syntax.generic;
 import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
-import org.pkl.parser.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class Node {
   public final List<Node> children;
@@ -60,7 +60,7 @@ public final class Node {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

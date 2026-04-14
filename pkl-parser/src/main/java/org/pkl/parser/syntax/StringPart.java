@@ -17,9 +17,9 @@ package org.pkl.parser.syntax;
 
 import java.util.List;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public abstract sealed class StringPart extends AbstractNode {
 
@@ -28,7 +28,7 @@ public abstract sealed class StringPart extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitStringPart(this);
   }
 
@@ -49,9 +49,8 @@ public abstract sealed class StringPart extends AbstractNode {
       return "StringChars{string='" + string + '\'' + ", span=" + span + '}';
     }
 
-    @SuppressWarnings("ConstantValue")
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (o == null || getClass() != o.getClass()) {
         return false;
       }

@@ -2,4 +2,5 @@
 # Manual edits can break the build and are not advised.
 # This file is expected to be part of source control.
 org.jetbrains.kotlin:kotlin-bom:2.2.21=pklFormatter
+org.jspecify:jspecify:1.0.0=pklFormatter
 empty=signatures

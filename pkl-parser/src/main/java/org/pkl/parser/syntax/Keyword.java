@@ -26,7 +26,7 @@ public final class Keyword extends AbstractNode {
   }
 
   @Override
-  public <T> T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitKeyword(this);
   }
 }

@@ -16,9 +16,9 @@
 package org.pkl.parser.syntax;
 
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
-import org.pkl.parser.util.Nullable;
 
 public final class ClassMethod extends AbstractNode {
   private final int modifiersOffset;
@@ -26,7 +26,7 @@ public final class ClassMethod extends AbstractNode {
   private final Span headerSpan;
 
   public ClassMethod(
-      List<Node> nodes, int modifiersOffset, int nameOffset, Span headerSpan, Span span) {
+      List<@Nullable Node> nodes, int modifiersOffset, int nameOffset, Span headerSpan, Span span) {
     super(span, nodes);
     this.headerSpan = headerSpan;
     this.modifiersOffset = modifiersOffset;
@@ -34,7 +34,7 @@ public final class ClassMethod extends AbstractNode {
   }
 
   @Override
-  public <T> @Nullable T accept(ParserVisitor<? extends T> visitor) {
+  public <T> T accept(ParserVisitor<T> visitor) {
     return visitor.visitClassMethod(this);
   }
 
