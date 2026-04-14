@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,14 +28,14 @@ class SexpRenderer {
   private var tab = ""
   private var buf = StringBuilder()
 
-  fun render(mod: org.pkl.parser.syntax.Module): String {
+  fun render(mod: Module): String {
     renderModule(mod)
     val res = buf.toString()
     reset()
     return res
   }
 
-  fun renderModule(mod: org.pkl.parser.syntax.Module) {
+  fun renderModule(mod: Module) {
     buf.append(tab)
     buf.append("(module")
     val oldTab = increaseTab()
@@ -430,7 +430,7 @@ class SexpRenderer {
         renderExpr(part.expr)
       } else {
         buf.append('\n').append(tab)
-        buf.append("(stringConstant)")
+        buf.append("(stringChars)")
       }
     }
     buf.append(')')
@@ -515,12 +515,10 @@ class SexpRenderer {
     tab = oldTab
   }
 
-  fun renderQualifiedAccessExpr(expr: QualifiedAccessExpr) {
+  fun renderUnqualifiedAccessExprOfQualified(expr: QualifiedAccessExpr) {
     buf.append(tab)
-    buf.append(if (expr.isNullable) "(nullableQualifiedAccessExpr" else "(qualifiedAccessExpr")
+    buf.append("(unqualifiedAccessExpr")
     val oldTab = increaseTab()
-    buf.append('\n')
-    renderExpr(expr.expr)
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
@@ -528,6 +526,18 @@ class SexpRenderer {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)
     }
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderQualifiedAccessExpr(expr: QualifiedAccessExpr) {
+    buf.append(tab)
+    buf.append(if (expr.isNullable) "(nullableQualifiedAccessExpr" else "(qualifiedAccessExpr")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    renderExpr(expr.expr)
+    buf.append('\n')
+    renderUnqualifiedAccessExprOfQualified(expr)
     buf.append(')')
     tab = oldTab
   }
@@ -736,7 +746,7 @@ class SexpRenderer {
 
   fun renderStringConstant(str: StringConstant) {
     buf.append(tab)
-    buf.append("(stringConstant)")
+    buf.append("(stringChars)")
   }
 
   fun renderTypeAnnotation(typeAnnotation: TypeAnnotation) {
@@ -1082,7 +1092,7 @@ class SexpRenderer {
   }
 
   companion object {
-    private fun sortModuleEntries(mod: org.pkl.parser.syntax.Module): List<Node> {
+    private fun sortModuleEntries(mod: Module): List<Node> {
       val res = mutableListOf<Node>()
       res += mod.classes
       res += mod.typeAliases

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,11 +36,14 @@ import org.gradle.api.provider.MapProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
 import org.gradle.api.provider.ProviderFactory;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFile;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
@@ -48,6 +51,7 @@ import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 import org.pkl.gradle.utils.PluginUtils;
 
+@CacheableTask
 public abstract class BasePklTask extends DefaultTask {
   private static final String TRUFFLE_USE_FALLBACK_RUNTIME_FLAG = "truffle.UseFallbackRuntime";
 
@@ -67,6 +71,7 @@ public abstract class BasePklTask extends DefaultTask {
   public abstract MapProperty<String, String> getExternalProperties();
 
   @InputFiles
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   public abstract ConfigurableFileCollection getModulePath();
 
   @Internal
@@ -79,6 +84,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @InputFile
   @Optional
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   public Provider<File> getSettingsModuleFile() {
     return getParsedSettingsModule()
         .map(
@@ -146,6 +152,10 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   public abstract MapProperty<URI, URI> getHttpRewrites();
 
+  @Input
+  @Optional
+  public abstract Property<Boolean> getPowerAssertions();
+
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
    * Truffle use an un-optimized runtime.
@@ -202,7 +212,8 @@ public abstract class BasePklTask extends DefaultTask {
               getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of(),
-              null);
+              null,
+              getPowerAssertions().getOrElse(false));
     }
     return cachedOptions;
   }

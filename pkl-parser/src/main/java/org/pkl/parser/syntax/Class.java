@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,51 +36,46 @@ public final class Class extends AbstractNode {
   }
 
   public @Nullable DocComment getDocComment() {
-    assert children != null;
     return (DocComment) children.get(0);
   }
 
   @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
-    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
-    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, keywordOffset);
   }
 
   public Keyword getClassKeyword() {
-    assert children != null;
-    return (Keyword) children.get(keywordOffset);
+    var ret = (Keyword) children.get(keywordOffset);
+    assert ret != null;
+    return ret;
   }
 
   public Identifier getName() {
-    assert children != null;
-    return (Identifier) children.get(keywordOffset + 1);
+    var ret = (Identifier) children.get(keywordOffset + 1);
+    assert ret != null;
+    return ret;
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
-    assert children != null;
     return (TypeParameterList) children.get(keywordOffset + 2);
   }
 
   public @Nullable Type getSuperClass() {
-    assert children != null;
     return (Type) children.get(keywordOffset + 3);
   }
 
   public @Nullable ClassBody getBody() {
-    assert children != null;
     return (ClassBody) children.get(keywordOffset + 4);
   }
 
   @SuppressWarnings("DuplicatedCode")
   public Span getHeaderSpan() {
     Span start = null;
-    assert children != null;
     for (var i = modifiersOffset; i < children.size(); i++) {
       var child = children.get(i);
       if (child != null) {

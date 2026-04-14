@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,7 +29,7 @@ import org.pkl.core.util.IoUtils
 /** Base options shared between CLI commands. */
 data class CliBaseOptions(
   /** The source modules to evaluate. Relative URIs are resolved against [workingDir]. */
-  private val sourceModules: List<URI> = listOf(),
+  val sourceModules: List<URI> = listOf(),
 
   /**
    * The URI patterns that determine which modules can be loaded and evaluated. Patterns are matched
@@ -152,6 +152,9 @@ data class CliBaseOptions(
 
   /** Defines options for the formatting of calls to the trace() method. */
   val traceMode: TraceMode? = null,
+
+  /** Whether power assertions are enabled. */
+  val powerAssertionsEnabled: Boolean = false,
 ) {
 
   companion object {
@@ -172,11 +175,19 @@ data class CliBaseOptions(
   /** [rootDir] after normalization. */
   val normalizedRootDir: Path? = rootDir?.let(normalizedWorkingDir::resolve)
 
+  /** The effective project directory, if exists. */
+  val normalizedProjectFile: Path? by lazy {
+    projectDir?.resolve(ProjectDependenciesManager.PKL_PROJECT_FILENAME)
+      ?: normalizedWorkingDir.getProjectFile(rootDir)
+  }
+
   /** [sourceModules] after normalization. */
   val normalizedSourceModules: List<URI> =
     sourceModules
       .map { uri ->
-        if (uri.isAbsolute) uri else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
+        if (uri.isAbsolute) uri
+        else if (uri.path.startsWith("@") && !noProject && normalizedProjectFile != null) uri
+        else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
       }
       // sort modules to make cli output independent of source module order
       .sorted()
@@ -191,12 +202,6 @@ data class CliBaseOptions(
 
   /** [moduleCacheDir] after normalization. */
   val normalizedModuleCacheDir: Path? = moduleCacheDir?.let(normalizedWorkingDir::resolve)
-
-  /** The effective project directory, if exists. */
-  val normalizedProjectFile: Path? by lazy {
-    projectDir?.resolve(ProjectDependenciesManager.PKL_PROJECT_FILENAME)
-      ?: normalizedWorkingDir.getProjectFile(rootDir)
-  }
 
   /** [caCertificates] after normalization. */
   val normalizedCaCertificates: List<Path> = caCertificates.map(normalizedWorkingDir::resolve)

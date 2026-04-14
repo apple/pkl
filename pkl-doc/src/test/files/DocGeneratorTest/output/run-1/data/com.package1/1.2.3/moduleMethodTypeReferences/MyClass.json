@@ -1,1 +1,8 @@
-{}
+{
+  "knownUsages": [
+    {
+      "text": "moduleMethodTypeReferences",
+      "href": "index.html"
+    }
+  ]
+}

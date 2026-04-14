@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.pkl.parser.util.Nullable;
 
 public abstract sealed class Parameter extends AbstractNode {
 
-  public Parameter(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public Parameter(Span span, List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
@@ -34,7 +34,7 @@ public abstract sealed class Parameter extends AbstractNode {
 
   public static final class Underscore extends Parameter {
     public Underscore(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
   }
 
@@ -45,12 +45,12 @@ public abstract sealed class Parameter extends AbstractNode {
     }
 
     public Identifier getIdentifier() {
-      assert children != null;
-      return (Identifier) children.get(0);
+      var ret = (Identifier) children.get(0);
+      assert ret != null;
+      return ret;
     }
 
     public @Nullable TypeAnnotation getTypeAnnotation() {
-      assert children != null;
       return (TypeAnnotation) children.get(1);
     }
   }

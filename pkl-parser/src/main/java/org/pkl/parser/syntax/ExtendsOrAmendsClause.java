@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class ExtendsOrAmendsClause extends AbstractNode {
+public final class ExtendsOrAmendsClause extends AbstractNode {
   private final Type type;
 
   public ExtendsOrAmendsClause(StringConstant url, Type type, Span span) {
@@ -35,8 +35,9 @@ public class ExtendsOrAmendsClause extends AbstractNode {
   }
 
   public StringConstant getUrl() {
-    assert children != null;
-    return (StringConstant) children.get(0);
+    var ret = (StringConstant) children.get(0);
+    assert ret != null;
+    return ret;
   }
 
   public Type getType() {
@@ -58,11 +59,11 @@ public class ExtendsOrAmendsClause extends AbstractNode {
   @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
     if (o == null || getClass() != o.getClass()) {
       return false;
+    }
+    if (this == o) {
+      return true;
     }
     if (!super.equals(o)) {
       return false;

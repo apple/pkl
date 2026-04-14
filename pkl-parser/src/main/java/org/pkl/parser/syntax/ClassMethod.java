@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class ClassMethod extends AbstractNode {
+public final class ClassMethod extends AbstractNode {
   private final int modifiersOffset;
   private final int nameOffset;
   private final Span headerSpan;
@@ -39,44 +39,40 @@ public class ClassMethod extends AbstractNode {
   }
 
   public @Nullable DocComment getDocComment() {
-    assert children != null;
     return (DocComment) children.get(0);
   }
 
   @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
-    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
-    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public Identifier getName() {
-    assert children != null;
-    return (Identifier) children.get(nameOffset);
+    var ret = (Identifier) children.get(nameOffset);
+    assert ret != null;
+    return ret;
   }
 
   public @Nullable TypeParameterList getTypeParameterList() {
-    assert children != null;
     return (TypeParameterList) children.get(nameOffset + 1);
   }
 
   public ParameterList getParameterList() {
-    assert children != null;
-    return (ParameterList) children.get(nameOffset + 2);
+    var ret = (ParameterList) children.get(nameOffset + 2);
+    assert ret != null;
+    return ret;
   }
 
   public @Nullable TypeAnnotation getTypeAnnotation() {
-    assert children != null;
     return (TypeAnnotation) children.get(nameOffset + 3);
   }
 
   public @Nullable Expr getExpr() {
-    assert children != null;
     return (Expr) children.get(nameOffset + 4);
   }
 

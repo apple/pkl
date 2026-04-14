@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,19 +15,21 @@
  */
 package org.pkl.core;
 
-import com.oracle.truffle.api.TruffleStackTrace;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
-import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
+import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
+import org.msgpack.core.MessageBufferPacker;
+import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.evaluatorSettings.TraceMode;
@@ -38,6 +40,7 @@ import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.BaseModule;
+import org.pkl.core.runtime.CommandSpecParser;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.ResourceManager;
@@ -46,8 +49,7 @@ import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.runtime.VmMapping;
-import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmPklBinaryEncoder;
 import org.pkl.core.runtime.VmStackOverflowException;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -56,17 +58,18 @@ import org.pkl.core.runtime.VmValueRenderer;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Nullable;
 
-public class EvaluatorImpl implements Evaluator {
-  protected final StackFrameTransformer frameTransformer;
-  protected final boolean color;
-  protected final ModuleResolver moduleResolver;
-  protected final Context polyglotContext;
-  protected final @Nullable Duration timeout;
-  protected final @Nullable ScheduledExecutorService timeoutExecutor;
-  protected final SecurityManager securityManager;
-  protected final BufferedLogger logger;
-  protected final PackageResolver packageResolver;
+public final class EvaluatorImpl implements Evaluator {
+  private final StackFrameTransformer frameTransformer;
+  private final boolean color;
+  private final ModuleResolver moduleResolver;
+  private final Context polyglotContext;
+  private final @Nullable Duration timeout;
+  private final @Nullable ScheduledExecutorService timeoutExecutor;
+  private final SecurityManager securityManager;
+  private final BufferedLogger logger;
+  private final PackageResolver packageResolver;
   private final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(1000);
+  private @Nullable MessageBufferPacker messagePacker;
 
   public EvaluatorImpl(
       StackFrameTransformer transformer,
@@ -82,7 +85,8 @@ public class EvaluatorImpl implements Evaluator {
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       @Nullable String outputFormat,
-      TraceMode traceMode) {
+      TraceMode traceMode,
+      boolean powerAssertions) {
 
     securityManager = manager;
     frameTransformer = transformer;
@@ -111,7 +115,8 @@ public class EvaluatorImpl implements Evaluator {
                           ? null
                           : new ProjectDependenciesManager(
                               projectDependencies, moduleResolver, securityManager),
-                      traceMode));
+                      traceMode,
+                      powerAssertions));
             });
     this.timeout = timeout;
     // NOTE: would probably make sense to share executor between evaluators
@@ -142,7 +147,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = readModuleOutput(module);
+          var output = VmUtils.readModuleOutput(module);
           return VmUtils.readTextProperty(output);
         });
   }
@@ -151,7 +156,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = readModuleOutput(module);
+          var output = VmUtils.readModuleOutput(module);
           var vmBytes = VmUtils.readBytesProperty(output);
           return vmBytes.export();
         });
@@ -162,7 +167,7 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = readModuleOutput(module);
+          var output = VmUtils.readModuleOutput(module);
           var value = VmUtils.readMember(output, Identifier.VALUE);
           if (value instanceof VmValue vmValue) {
             vmValue.force(false);
@@ -177,20 +182,9 @@ public class EvaluatorImpl implements Evaluator {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = readModuleOutput(module);
-          var filesOrNull = VmUtils.readMember(output, Identifier.FILES);
-          if (filesOrNull instanceof VmNull) {
-            return Map.of();
-          }
-          var files = (VmMapping) filesOrNull;
-          var result = new LinkedHashMap<String, FileOutput>();
-          files.forceAndIterateMemberValues(
-              (key, member, value) -> {
-                assert member.isEntry();
-                result.put((String) key, new FileOutputImpl(this, (VmTyped) value));
-                return true;
-              });
-          return result;
+          var output = VmUtils.readModuleOutput(module);
+          return VmUtils.readFilesProperty(
+              output, (fileOutput) -> new FileOutputImpl(this, fileOutput));
         });
   }
 
@@ -215,6 +209,37 @@ public class EvaluatorImpl implements Evaluator {
                 return expressionResult;
               });
     };
+  }
+
+  private MessageBufferPacker getMessagePacker() {
+    if (messagePacker == null) {
+      messagePacker = MessagePack.newDefaultBufferPacker();
+    }
+    messagePacker.clear();
+    return messagePacker;
+  }
+
+  @Override
+  public byte[] evaluateExpressionPklBinary(ModuleSource moduleSource, String expression) {
+    return doEvaluate(
+        moduleSource,
+        (module) -> {
+          var expressionResult =
+              switch (expression) {
+                case "module" -> module;
+                case "output.text" -> VmUtils.readTextProperty(VmUtils.readModuleOutput(module));
+                case "output.value" ->
+                    VmUtils.readMember(VmUtils.readModuleOutput(module), Identifier.VALUE);
+                case "output.bytes" -> VmUtils.readBytesProperty(VmUtils.readModuleOutput(module));
+                default ->
+                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
+              };
+          VmValue.force(expressionResult, false);
+
+          var packer = getMessagePacker();
+          new VmPklBinaryEncoder(packer).renderDocument(expressionResult);
+          return packer.toByteArray();
+        });
   }
 
   @Override
@@ -253,11 +278,34 @@ public class EvaluatorImpl implements Evaluator {
   }
 
   @Override
+  public void evaluateCommand(
+      ModuleSource moduleSource,
+      Set<String> reservedFlagNames,
+      Set<String> reservedFlagShortNames,
+      Consumer<CommandSpec> run) {
+    doEvaluate(
+        moduleSource,
+        (module) -> {
+          var commandRunner =
+              new CommandSpecParser(
+                  moduleResolver,
+                  securityManager,
+                  frameTransformer,
+                  color,
+                  reservedFlagNames,
+                  reservedFlagShortNames,
+                  (fileOutput) -> new FileOutputImpl(this, fileOutput));
+          run.accept(commandRunner.parse(module));
+          return null;
+        });
+  }
+
+  @Override
   public <T> T evaluateOutputValueAs(ModuleSource moduleSource, PClassInfo<T> classInfo) {
     return doEvaluate(
         moduleSource,
         (module) -> {
-          var output = readModuleOutput(module);
+          var output = VmUtils.readModuleOutput(module);
           var value = VmUtils.readMember(output, Identifier.VALUE);
           var valueClassInfo = VmUtils.getClass(value).getPClassInfo();
           if (valueClassInfo.equals(classInfo)) {
@@ -285,6 +333,16 @@ public class EvaluatorImpl implements Evaluator {
 
     if (timeoutExecutor != null) {
       timeoutExecutor.shutdown();
+    }
+  }
+
+  // for use in tests to determine whether an evaluator ever triggered instrumentation
+  boolean isInstrumentationEverUsed() {
+    polyglotContext.enter();
+    try {
+      return VmLanguage.get(null).localContext.get().isInstrumentationEverUsed();
+    } finally {
+      polyglotContext.leave();
     }
   }
 
@@ -318,7 +376,7 @@ public class EvaluatorImpl implements Evaluator {
     try {
       evalResult = supplier.get();
     } catch (VmStackOverflowException e) {
-      if (isPklBug(e)) {
+      if (VmUtils.isPklBug(e)) {
         throw new VmExceptionBuilder()
             .bug("Stack overflow")
             .withCause(e.getCause())
@@ -330,6 +388,9 @@ public class EvaluatorImpl implements Evaluator {
     } catch (VmException e) {
       handleTimeout(timeoutTask);
       throw e.toPklException(frameTransformer, color);
+    } catch (PklException e) {
+      // evaluateCommand can throw PklException from the CLI layer, pass them through
+      throw e;
     } catch (Exception e) {
       throw new PklBugException(e);
     } catch (ExceptionInInitializerError e) {
@@ -344,7 +405,7 @@ public class EvaluatorImpl implements Evaluator {
       if (e.getClass()
           .getName()
           .equals("com.oracle.truffle.polyglot.PolyglotEngineImpl$CancelExecution")) {
-        // Truffle cancelled evaluation in response to polyglotContext.close(true) triggered by
+        // Truffle canceled evaluation in response to polyglotContext.close(true) triggered by
         // TimeoutTask
         handleTimeout(timeoutTask);
         throw PklBugException.unreachableCode();
@@ -355,7 +416,7 @@ public class EvaluatorImpl implements Evaluator {
       try {
         polyglotContext.leave();
       } catch (IllegalStateException ignored) {
-        // happens if evaluation has already been cancelled with polyglotContext.close(true)
+        // happens if evaluation has already been canceled with polyglotContext.close(true)
       }
     }
 
@@ -363,7 +424,7 @@ public class EvaluatorImpl implements Evaluator {
     return evalResult;
   }
 
-  protected <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
+  private <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
     return doEvaluate(
         () -> {
           var moduleKey = moduleResolver.resolve(moduleSource);
@@ -381,32 +442,6 @@ public class EvaluatorImpl implements Evaluator {
     throw new PklException(
         ErrorMessages.create(
             "evaluationTimedOut", (timeout.getSeconds() + timeout.getNano() / 1_000_000_000d)));
-  }
-
-  private VmTyped readModuleOutput(VmTyped module) {
-    var value = VmUtils.readMember(module, Identifier.OUTPUT);
-    if (value instanceof VmTyped typedOutput
-        && typedOutput.getVmClass().getPClassInfo() == PClassInfo.ModuleOutput) {
-      return typedOutput;
-    }
-
-    var moduleUri = module.getModuleInfo().getModuleKey().getUri();
-    var builder =
-        new VmExceptionBuilder()
-            .evalError(
-                "invalidModuleOutput",
-                "output",
-                PClassInfo.ModuleOutput.getDisplayName(),
-                VmUtils.getClass(value).getPClassInfo().getDisplayName(),
-                moduleUri);
-    var outputMember = module.getMember(Identifier.OUTPUT);
-    assert outputMember != null;
-    var uriOfValueMember = outputMember.getSourceSection().getSource().getURI();
-    // If `output` was explicitly re-assigned, show that in the stack trace.
-    if (!uriOfValueMember.equals(PClassInfo.pklBaseUri)) {
-      builder.withSourceSection(outputMember.getBodySection()).withMemberName("output");
-    }
-    throw builder.build();
   }
 
   private VmException moduleOutputValueTypeMismatch(
@@ -445,15 +480,6 @@ public class EvaluatorImpl implements Evaluator {
           .withMemberName(module.getModuleInfo().getModuleName())
           .build();
     }
-  }
-
-  private boolean isPklBug(VmStackOverflowException e) {
-    // There's no good way to tell if a StackOverflowError came from Pkl, or from our
-    // implementation.
-    // This is a simple heuristic; it's pretty likely that any stack overflow error that occurs
-    // if there's less than 100 truffle frames is due to our own doing.
-    var truffleStackTraceElements = TruffleStackTrace.getStackTrace(e);
-    return truffleStackTraceElements != null && truffleStackTraceElements.size() < 100;
   }
 
   // ScheduledFuture.cancel() is problematic, so let's handle cancellation on our own

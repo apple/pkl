@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -74,10 +74,23 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
   private val testMode: Boolean by
     option(names = arrayOf("--test-mode"), help = "Internal test mode", hidden = true).flag()
 
+  private val powerAssertionsEnabled: Boolean by
+    option(
+        names = arrayOf("--power-assertions"),
+        help = "Enable power assertions for detailed assertion failure messages.",
+      )
+      .flag("--no-power-assertions", default = true, defaultForHelp = "enabled")
+
   override fun run() {
     val options =
       CliEvaluatorOptions(
-        base = baseOptions.baseOptions(modules, projectOptions, testMode = testMode),
+        base =
+          baseOptions.baseOptions(
+            modules,
+            projectOptions,
+            testMode = testMode,
+            powerAssertionsEnabled = powerAssertionsEnabled,
+          ),
         outputPath = outputPath,
         outputFormat = baseOptions.format,
         moduleOutputSeparator = moduleOutputSeparator,

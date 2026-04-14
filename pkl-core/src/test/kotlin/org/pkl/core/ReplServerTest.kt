@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -190,6 +190,37 @@ class ReplServerTest {
 
     val result4 = makeFailingEvalRequest("""greet(44)""")
     assertThat(result4).contains("Expected value of type `String`, but got type `Int`.")
+  }
+
+  @Test
+  fun `syntax highlighting on response values`() {
+    val server =
+      ReplServer(
+        SecurityManagers.defaultManager,
+        HttpClient.dummyClient(),
+        Loggers.stdErr(),
+        listOf(
+          ModuleKeyFactories.standardLibrary,
+          ModuleKeyFactories.classPath(this::class.java.classLoader),
+          ModuleKeyFactories.file,
+        ),
+        listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
+        mapOf("NAME1" to "value1", "NAME2" to "value2"),
+        mapOf("name1" to "value1", "name2" to "value2"),
+        null,
+        null,
+        null,
+        "/".toPath(),
+        StackFrameTransformers.defaultTransformer,
+        true,
+        TraceMode.COMPACT,
+      )
+    val responses = server.handleRequest(ReplRequest.Eval("id", "5.ms", false, false))
+    assertThat(responses).hasSize(1)
+    val response = responses[0]
+
+    assertThat(response).isInstanceOf(ReplResponse.EvalSuccess::class.java)
+    assertThat((response as ReplResponse.EvalSuccess).result).isEqualTo("\u001B[32m5\u001B[0m.ms")
   }
 
   private fun makeEvalRequest(text: String): String {

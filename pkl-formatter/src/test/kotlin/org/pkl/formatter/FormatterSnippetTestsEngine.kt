@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.formatter
 
 import java.nio.file.Path
 import kotlin.io.path.isRegularFile
+import kotlin.io.path.readText
 import kotlin.reflect.KClass
 import org.pkl.commons.test.InputOutputTestEngine
 import org.pkl.parser.ParserError
@@ -58,16 +59,10 @@ abstract class AbstractFormatterSnippetTestsEngine : InputOutputTestEngine() {
 class FormatterSnippetTestsEngine : AbstractFormatterSnippetTestsEngine() {
   override val testClass: KClass<*> = FormatterSnippetTests::class
 
-  override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> {
-    val formatter = Formatter()
-    val (success, output) =
-      try {
-        val res = formatter.format(inputFile)
-        true to res
-      } catch (_: ParserError) {
-        false to ""
-      }
-
-    return success to output
-  }
+  override fun generateOutputFor(inputFile: Path): Pair<Boolean, String> =
+    try {
+      true to Formatter().format(inputFile.readText())
+    } catch (_: ParserError) {
+      false to ""
+    }
 }

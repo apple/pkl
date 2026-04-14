@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,12 +34,12 @@ import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.LateInit;
 import org.pkl.parser.Lexer;
 
-public final class PcfRenderer extends AbstractRenderer {
+public final class PcfRenderer extends AbstractStringRenderer {
   private final ValueFormatter valueFormatter;
 
   private boolean isDocument;
@@ -227,7 +227,7 @@ public final class PcfRenderer extends AbstractRenderer {
   }
 
   private void visitStandaloneValue(Object value) {
-    if (value instanceof VmObjectLike && !VmUtils.isRenderDirective(value)) {
+    if (value instanceof VmObjectLike && !isRenderDirective(value)) {
       builder.append("new ");
     }
     visit(value);

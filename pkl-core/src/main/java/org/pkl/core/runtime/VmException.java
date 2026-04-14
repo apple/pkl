@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,9 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
+import java.util.function.BiConsumer;
 import org.pkl.core.*;
+import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmException extends AbstractTruffleException {
@@ -31,28 +33,31 @@ public abstract class VmException extends AbstractTruffleException {
   private final List<ProgramValue> programValues;
   private final @Nullable SourceSection sourceSection;
   private final @Nullable String memberName;
-  protected @Nullable String hint;
   private final Map<CallTarget, StackFrame> insertedStackFrames;
+  @Nullable private final BiConsumer<AnsiStringBuilder, Boolean> messageBuilder;
+  @Nullable protected BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
 
   public VmException(
-      String message,
+      @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
       Object[] messageArguments,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
-      @Nullable String hint,
+      @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       Map<CallTarget, StackFrame> insertedStackFrames) {
     super(message, cause, UNLIMITED_STACK_TRACE, location);
+    this.messageBuilder = messageBuilder;
     this.isExternalMessage = isExternalMessage;
     this.messageArguments = messageArguments;
     this.programValues = programValues;
     this.sourceSection = sourceSection;
     this.memberName = memberName;
-    this.hint = hint;
     this.insertedStackFrames = insertedStackFrames;
+    this.hintBuilder = hintBuilder;
   }
 
   public final boolean isExternalMessage() {
@@ -75,20 +80,24 @@ public abstract class VmException extends AbstractTruffleException {
     return memberName;
   }
 
-  public @Nullable String getHint() {
-    return hint;
-  }
-
-  public void setHint(@Nullable String hint) {
-    this.hint = hint;
-  }
-
   /**
    * Stack frames to insert into the stack trace presented to the user. For each entry `(target,
    * frame)`, `frame` will be inserted below the top-most frame associated with `target`.
    */
   public final Map<CallTarget, StackFrame> getInsertedStackFrames() {
     return insertedStackFrames;
+  }
+
+  public @Nullable BiConsumer<AnsiStringBuilder, Boolean> getMessageBuilder() {
+    return messageBuilder;
+  }
+
+  public @Nullable BiConsumer<AnsiStringBuilder, Boolean> getHintBuilder() {
+    return hintBuilder;
+  }
+
+  public void setHint(String hint) {
+    this.hintBuilder = ((builder, aBoolean) -> builder.append(hint));
   }
 
   public enum Kind {
@@ -110,7 +119,7 @@ public abstract class VmException extends AbstractTruffleException {
 
   @TruffleBoundary
   public PklException toPklException(StackFrameTransformer transformer, boolean color) {
-    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color);
+    var renderer = new VmExceptionRenderer(new StackTraceRenderer(transformer), color, true);
     var rendered = renderer.render(this);
     return new PklException(rendered);
   }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,20 +25,27 @@ val pklConfigJavaAll: Configuration by configurations.creating
 
 val pklCodegenKotlin: Configuration by configurations.creating
 
-// Ideally, api would extend pklConfigJavaAll,
-// instead of extending pklConfigJava and then patching test task and POM.
-// However, this wouldn't work for IntelliJ.
-configurations.api.get().extendsFrom(pklConfigJava)
+val buildInfo = project.extensions.getByType<BuildInfo>()
 
 dependencies {
-  pklConfigJava(projects.pklConfigJava)
-
-  pklConfigJavaAll(project(":pkl-config-java", "fatJar"))
-
   pklCodegenKotlin(projects.pklCodegenKotlin)
-
   implementation(libs.kotlinReflect)
+  implementation(libs.msgpack)
 
+  // Don't declare a runtime dependency to pkl-config-java because Gradle cannot resolve
+  // the correct publication (library vs fatJar) when generating the POM.
+  // We add the dependency manually to the POM later.
+  //
+  // Avoids this error during publish:
+  //
+  //  > Failed to query the value of property 'dependencies'.
+  //  > Publishing is not able to resolve a dependency on a project with multiple publications that
+  // have different coordinates.
+  //  Found the following publications in project ':pkl-config-java':
+  //  - Maven publication 'fatJar' with coordinates org.pkl-lang:pkl-config-java-all:0.30.0-SNAPSHOT
+  //  - Maven publication 'library' with coordinates org.pkl-lang:pkl-config-java:0.30.0-SNAPSHOT
+  compileOnly(projects.pklConfigJava)
+  testImplementation(projects.pklConfigJava)
   testImplementation(libs.geantyref)
 }
 
@@ -67,9 +74,6 @@ tasks.processTestResources { dependsOn(generateTestConfigClasses) }
 
 tasks.compileTestKotlin { dependsOn(generateTestConfigClasses) }
 
-// use pkl-config-java-all for testing (same as for publishing)
-tasks.test { classpath = classpath - pklConfigJava + pklConfigJavaAll }
-
 // disable publishing of .module until we find a way to manipulate it like POM (or ideally both
 // together)
 tasks.withType<GenerateModuleMetadata> { enabled = false }
@@ -83,22 +87,22 @@ publishing {
           "Kotlin extensions for pkl-config-java, a Java config library based on the Pkl config language."
         )
 
-        // change dependency pkl-config-java to pkl-config-java-all
+        // Modify POM and add pkl-config-java-all dependency
         withXml {
-          val projectElement = asElement()
-          val dependenciesElement =
-            projectElement.getElementsByTagName("dependencies").item(0) as org.w3c.dom.Element
-          val dependencyElements = dependenciesElement.getElementsByTagName("dependency")
-          for (idx in 0 until dependencyElements.length) {
-            val dependencyElement = dependencyElements.item(idx) as org.w3c.dom.Element
-            val artifactIdElement =
-              dependencyElement.getElementsByTagName("artifactId").item(0) as org.w3c.dom.Element
-            if (artifactIdElement.textContent == "pkl-config-java") {
-              artifactIdElement.textContent = "pkl-config-java-all"
-              return@withXml
+          val dependenciesNode = asNode().get("dependencies") as groovy.util.NodeList
+          val dependencies =
+            if (dependenciesNode.isNotEmpty()) {
+              dependenciesNode[0] as groovy.util.Node
+            } else {
+              asNode().appendNode("dependencies")
             }
+
+          dependencies.appendNode("dependency").apply {
+            appendNode("groupId", "org.pkl-lang")
+            appendNode("artifactId", "pkl-config-java-all")
+            appendNode("version", project.version)
+            appendNode("scope", "runtime")
           }
-          throw GradleException("Failed to edit POM of module `pkl-config-kotlin`.")
         }
       }
     }

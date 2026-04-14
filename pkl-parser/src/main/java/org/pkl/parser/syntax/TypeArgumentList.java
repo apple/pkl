@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import java.util.List;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 
-public class TypeArgumentList extends AbstractNode {
+public final class TypeArgumentList extends AbstractNode {
 
   public TypeArgumentList(List<Type> children, Span span) {
     super(span, children);
@@ -27,7 +27,6 @@ public class TypeArgumentList extends AbstractNode {
 
   @SuppressWarnings("unchecked")
   public List<Type> getTypes() {
-    assert children != null;
     return (List<Type>) children;
   }
 

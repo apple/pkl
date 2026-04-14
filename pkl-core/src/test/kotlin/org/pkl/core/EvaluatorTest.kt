@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,6 +22,7 @@ import java.nio.file.FileSystems
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.*
+import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.writeText
@@ -29,7 +30,10 @@ import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.Timeout
 import org.junit.jupiter.api.assertThrows
+import org.junit.jupiter.api.condition.EnabledOnOs
+import org.junit.jupiter.api.condition.OS
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.createTempFile
 import org.pkl.commons.test.PackageServer
@@ -284,6 +288,57 @@ class EvaluatorTest {
   }
 
   @Test
+  fun `cannot import module from zip filesystem located outside root dir`(
+    @TempDir tempDir: Path,
+    @TempDir forbidden: Path,
+  ) {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = tempDir
+        build()
+      }
+
+    val zipFile = createModulesZip(forbidden)
+
+    val module =
+      tempDir
+        .resolve("test.pkl")
+        .writeString("res = import(\"jar:${zipFile.toUri()}!/foo/var/module1.pkl\")")
+
+    val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+    assertThat(e)
+      .hasMessageContaining(
+        "Refusing to load module `jar:${zipFile.toUri()}!/foo/var/module1.pkl` because it is not within the root directory (`--root-dir`)."
+      )
+  }
+
+  @Test
+  fun `cannot read resource from zip filesystem located outside root dir`(
+    @TempDir tempDir: Path,
+    @TempDir forbidden: Path,
+  ) {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = tempDir
+        allowedResources.add(Pattern.compile("jar:file:"))
+        build()
+      }
+
+    val zipFile = createModulesZip(forbidden)
+
+    val module =
+      tempDir
+        .resolve("test.pkl")
+        .writeString("res = read(\"jar:${zipFile.toUri()}!/foo/var/module1.pkl\")")
+
+    val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+    assertThat(e)
+      .hasMessageContaining(
+        "Refusing to read resource `jar:${zipFile.toUri()}!/foo/var/module1.pkl` because it is not within the root directory (`--root-dir`)."
+      )
+  }
+
+  @Test
   fun `cannot read resource located outside root dir`(@TempDir tempDir: Path) {
     val evaluator =
       with(EvaluatorBuilder.preconfigured()) {
@@ -487,6 +542,91 @@ class EvaluatorTest {
             .trimIndent()
         )
     }
+  }
+
+  @Test
+  @EnabledOnOs(OS.WINDOWS)
+  @Timeout(1, unit = TimeUnit.SECONDS)
+  fun `root dir check happens without any UNC or SMB access`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        rootDir = Path.of("/tmp/test")
+        build()
+      }
+    // this uses a TEST-NET-1 IP which has no server running in order to force a timeout-driven
+    // failure (takes ~20s)
+    // root dir check failure should prevent any I/O and fail fast instead of hitting the timeout
+    val exc =
+      assertThrows<PklException> {
+        evaluator.evaluate(text("result = import(\"file://192.0.2.1/share/nope.pkl\")"))
+      }
+    assertThat(exc)
+      .hasMessageContaining(
+        "Refusing to load module `file://192.0.2.1/share/nope.pkl` because it is not within the root directory (`--root-dir`)."
+      )
+  }
+
+  @Test
+  fun `constraint failures activate instrumentation`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    val exc =
+      assertThrows<PklException> {
+        evaluator.evaluate(
+          text(
+            """
+    foo: String(chars.first == "a") = "boo"
+    """
+              .trimIndent()
+          )
+        )
+      }
+
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isTrue
+  }
+
+  @Test
+  fun `union single-member constraint failures do not activate instrumentation`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    evaluator.evaluate(
+      text(
+        """
+    foo: String(startsWith("a")) | String(startsWith("b")) | String(startsWith("c")) = "cool"
+    """
+          .trimIndent()
+      )
+    )
+
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
+  }
+
+  @Test
+  fun `type test failures do not activate instrumentation`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    evaluator.evaluate(
+      text(
+        """
+    foo = "bar" is Int(this > 0)
+    """
+          .trimIndent()
+      )
+    )
+
+    assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
   }
 
   private fun checkModule(module: PModule) {

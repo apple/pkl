@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,9 +15,11 @@
  */
 package org.pkl.cli
 
+import java.io.IOException
 import java.io.Writer
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
+import org.pkl.core.PklException
 import org.pkl.core.SecurityManagers
 import org.pkl.core.module.ProjectDependenciesManager
 import org.pkl.core.packages.PackageResolver
@@ -46,9 +48,13 @@ class CliProjectResolver(
       val dependencies = ProjectDependenciesResolver(project, packageResolver, errWriter).resolve()
       val depsFile =
         projectFile.parent.resolve(ProjectDependenciesManager.PKL_PROJECT_DEPS_FILENAME).toFile()
-      depsFile.outputStream().use { dependencies.writeTo(it) }
-      consoleWriter.appendLine(depsFile.toString())
-      consoleWriter.flush()
+      try {
+        depsFile.outputStream().use { dependencies.writeTo(it) }
+        consoleWriter.appendLine(depsFile.toString())
+        consoleWriter.flush()
+      } catch (e: IOException) {
+        throw PklException("Failed to write to $depsFile: ${e.message}", e)
+      }
     }
   }
 }

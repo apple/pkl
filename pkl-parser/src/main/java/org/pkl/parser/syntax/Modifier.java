@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.parser.syntax;
 
+import java.util.List;
 import java.util.Objects;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
@@ -23,7 +24,7 @@ public final class Modifier extends AbstractNode {
   private final ModifierValue value;
 
   public Modifier(ModifierValue value, Span span) {
-    super(span, null);
+    super(span, List.of());
     this.value = value;
   }
 
@@ -44,11 +45,11 @@ public final class Modifier extends AbstractNode {
   @SuppressWarnings("ConstantValue")
   @Override
   public boolean equals(Object o) {
-    if (this == o) {
-      return true;
-    }
     if (o == null || getClass() != o.getClass()) {
       return false;
+    }
+    if (this == o) {
+      return true;
     }
     Modifier modifier = (Modifier) o;
     return value == modifier.value && Objects.equals(span, modifier.span);

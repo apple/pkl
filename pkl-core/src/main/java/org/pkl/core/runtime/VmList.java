@@ -19,9 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
-import org.organicdesign.fp.collections.RrbTree;
-import org.organicdesign.fp.collections.RrbTree.ImRrbt;
-import org.organicdesign.fp.collections.RrbTree.MutRrbt;
 import org.organicdesign.fp.collections.UnmodCollection;
 import org.organicdesign.fp.collections.UnmodIterable;
 import org.pkl.core.ast.ConstantNode;
@@ -29,6 +26,9 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Iterators.ReverseTruffleIterator;
 import org.pkl.core.runtime.Iterators.TruffleIterator;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.paguro.RrbTree;
+import org.pkl.core.util.paguro.RrbTree.ImRrbt;
+import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 // currently the backing collection is realized at the end of each VmList operation
 // this trades efficiency for ease of understanding, as it eliminates the complexity

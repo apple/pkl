@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,6 @@ package org.pkl.formatter
 
 import org.pkl.formatter.ast.Empty
 import org.pkl.formatter.ast.ForceLine
-import org.pkl.formatter.ast.ForceWrap
 import org.pkl.formatter.ast.FormatNode
 import org.pkl.formatter.ast.Group
 import org.pkl.formatter.ast.IfWrap
@@ -30,8 +29,7 @@ import org.pkl.formatter.ast.SpaceOrLine
 import org.pkl.formatter.ast.Text
 import org.pkl.formatter.ast.Wrap
 
-internal class Generator {
-  private val buf: StringBuilder = StringBuilder()
+internal class Generator(private val buf: Appendable) {
   private var indent: Int = 0
   private var size: Int = 0
   private val wrapped: MutableSet<Int> = mutableSetOf()
@@ -54,11 +52,6 @@ internal class Generator {
           } else {
             Wrap.DETECT
           }
-        node.nodes.forEach { node(it, wrap) }
-      }
-      is ForceWrap -> {
-        wrapped += node.id
-        val wrap = Wrap.ENABLED
         node.nodes.forEach { node(it, wrap) }
       }
       is IfWrap -> {
@@ -95,7 +88,7 @@ internal class Generator {
       }
       is MultilineStringGroup -> {
         val indentLength = indent * INDENT.length
-        val offset = (indentLength + 1) - node.endQuoteCol
+        val oldIndent = indentFor(node)
         var previousNewline = false
         for ((i, child) in node.nodes.withIndex()) {
           when {
@@ -103,9 +96,10 @@ internal class Generator {
             child is Text &&
               previousNewline &&
               child.text.isBlank() &&
-              child.text.length == indentLength &&
+              child.text.length == oldIndent &&
               node.nodes[i + 1] is ForceLine -> {}
-            child is Text && previousNewline && offset != 0 -> text(reposition(child.text, offset))
+            child is Text && previousNewline ->
+              text(reposition(child.text, node.endQuoteCol - 1, indentLength))
             else -> node(child, Wrap.DETECT) // always detect wrapping
           }
           previousNewline = child is ForceLine
@@ -129,16 +123,18 @@ internal class Generator {
     shouldAddIndent = shouldIndent
   }
 
-  private fun reposition(text: String, offset: Int): String {
-    return if (offset > 0) {
-      " ".repeat(offset) + text
-    } else {
-      text.drop(-offset)
-    }
-  }
+  // accept text indented by originalOffset characters (tabs or spaces)
+  // and return it indented by newOffset characters (spaces only)
+  private fun reposition(text: String, originalOffset: Int, newOffset: Int): String =
+    " ".repeat(newOffset) + text.drop(originalOffset)
 
-  override fun toString(): String {
-    return buf.toString()
+  // Returns the indent of this multiline string, which is the size of the last node before the
+  // closing quotes, or 0 if the closing quotes have no indentation
+  private fun indentFor(multi: MultilineStringGroup): Int {
+    val nodes = multi.nodes
+    if (nodes.size < 2) return 0
+    val beforeLast = nodes[nodes.lastIndex - 1]
+    return if (beforeLast is Text) beforeLast.text.length else 0
   }
 
   companion object {

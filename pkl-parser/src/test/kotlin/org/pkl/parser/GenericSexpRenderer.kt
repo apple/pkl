@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -32,10 +32,6 @@ class GenericSexpRenderer(code: String) {
   private fun innerRender(node: Node) {
     if (node.type == NodeType.UNION_TYPE) {
       renderUnionType(node)
-      return
-    }
-    if (node.type == NodeType.BINARY_OP_EXPR && binopName(node).endsWith("ualifiedAccessExpr")) {
-      renderQualifiedAccess(node)
       return
     }
     doRender(name(node), collectChildren(node))
@@ -73,19 +69,6 @@ class GenericSexpRenderer(code: String) {
     }
     tab = oldTab
     buf.append(')')
-  }
-
-  private fun renderQualifiedAccess(node: Node) {
-    var children = node.children
-    if (children.last().type == NodeType.UNQUALIFIED_ACCESS_EXPR) {
-      children = children.dropLast(1) + collectChildren(children.last())
-    }
-    val toRender = mutableListOf<Node>()
-    for (child in children) {
-      if (child.type in IGNORED_CHILDREN || child.type == NodeType.OPERATOR) continue
-      toRender += child
-    }
-    doRender(name(node), toRender)
   }
 
   private fun renderDefaultUnionType(node: Node) {
@@ -130,7 +113,7 @@ class GenericSexpRenderer(code: String) {
     }
 
   private fun NodeType.isStringData(): Boolean =
-    this == NodeType.STRING_CONSTANT || this == NodeType.STRING_ESCAPE
+    this == NodeType.STRING_CHARS || this == NodeType.STRING_ESCAPE
 
   private fun name(node: Node): String =
     when (node.type) {
@@ -142,7 +125,11 @@ class GenericSexpRenderer(code: String) {
       NodeType.EXTENDS_CLAUSE,
       NodeType.AMENDS_CLAUSE -> "extendsOrAmendsClause"
       NodeType.TYPEALIAS -> "typeAlias"
-      NodeType.STRING_ESCAPE -> "stringConstant"
+      NodeType.STRING_ESCAPE -> "stringChars"
+      NodeType.QUALIFIED_ACCESS_EXPR -> {
+        val op = node.findChildByType(NodeType.OPERATOR)!!
+        if (op.text(source) == ".") "qualifiedAccessExpr" else "nullableQualifiedAccessExpr"
+      }
       NodeType.READ_EXPR -> {
         val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
         when (terminal) {

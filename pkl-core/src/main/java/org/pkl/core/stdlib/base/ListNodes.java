@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -53,6 +53,13 @@ public final class ListNodes {
     @Specialization
     protected boolean eval(VmList self) {
       return self.isEmpty();
+    }
+  }
+
+  public abstract static class isNotEmpty extends ExternalPropertyNode {
+    @Specialization
+    protected boolean eval(VmList self) {
+      return !self.isEmpty();
     }
   }
 
@@ -849,7 +856,7 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -857,7 +864,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (lessThanNode.executeWith(elem, result)) {
+        if (lessThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -874,7 +881,7 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -882,7 +889,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (lessThanNode.executeWith(elem, result)) {
+        if (lessThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -899,7 +906,7 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -907,7 +914,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (greaterThanNode.executeWith(elem, result)) {
+        if (greaterThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -924,7 +931,7 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self) {
+    protected Object eval(VirtualFrame frame, VmList self) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -932,7 +939,7 @@ public final class ListNodes {
 
       while (iterator.hasNext()) {
         var elem = iterator.next();
-        if (greaterThanNode.executeWith(elem, result)) {
+        if (greaterThanNode.executeWith(frame, elem, result)) {
           result = elem;
         }
       }
@@ -951,7 +958,7 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -961,7 +968,7 @@ public final class ListNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (lessThanNode.executeWith(elemValue, resultValue)) {
+        if (lessThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -981,7 +988,7 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       self.checkNonEmpty();
 
       var iterator = self.iterator();
@@ -991,7 +998,7 @@ public final class ListNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (greaterThanNode.executeWith(elemValue, resultValue)) {
+        if (greaterThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -1011,7 +1018,7 @@ public final class ListNodes {
         LessThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -1021,7 +1028,7 @@ public final class ListNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (lessThanNode.executeWith(elemValue, resultValue)) {
+        if (lessThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -1041,7 +1048,7 @@ public final class ListNodes {
         GreaterThanNodeGen.create(VmUtils.unavailableSourceSection(), null, null);
 
     @Specialization
-    protected Object eval(VmList self, VmFunction function) {
+    protected Object eval(VirtualFrame frame, VmList self, VmFunction function) {
       if (self.isEmpty()) return VmNull.withoutDefault();
 
       var iterator = self.iterator();
@@ -1051,7 +1058,7 @@ public final class ListNodes {
       while (iterator.hasNext()) {
         var elem = iterator.next();
         var elemValue = applyLambdaNode.execute(function, elem);
-        if (greaterThanNode.executeWith(elemValue, resultValue)) {
+        if (greaterThanNode.executeWith(frame, elemValue, resultValue)) {
           result = elem;
           resultValue = elemValue;
         }
@@ -1154,8 +1161,8 @@ public final class ListNodes {
     @Child private CompareNode compareNode = new CompareNode();
 
     @Specialization
-    protected VmList eval(VmList self) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareNode, null));
+    protected VmList eval(VirtualFrame frame, VmList self) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareNode, null));
     }
   }
 
@@ -1163,8 +1170,8 @@ public final class ListNodes {
     @Child private CompareByNode compareByNode = new CompareByNode();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction selector) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareByNode, selector));
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction selector) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareByNode, selector));
     }
   }
 
@@ -1172,8 +1179,8 @@ public final class ListNodes {
     @Child private CompareWithNode compareWithNode = new CompareWithNode();
 
     @Specialization
-    protected VmList eval(VmList self, VmFunction function) {
-      return VmList.create(MergeSort.sort(self.toArray(), compareWithNode, function));
+    protected VmList eval(VirtualFrame frame, VmList self, VmFunction function) {
+      return VmList.create(MergeSort.sort(frame, self.toArray(), compareWithNode, function));
     }
   }
 

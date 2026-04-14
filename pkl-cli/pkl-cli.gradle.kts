@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -56,10 +56,9 @@ dependencies {
   api(projects.pklCommonsCli)
 
   implementation(projects.pklCommons)
-  implementation(libs.jansi)
   implementation(libs.jlineReader)
   implementation(libs.jlineTerminal)
-  implementation(libs.jlineTerminalJansi)
+  implementation(libs.jlineTerminalJni)
   implementation(projects.pklServer)
   implementation(projects.pklFormatter)
   implementation(libs.clikt)
@@ -138,8 +137,7 @@ fun Exec.useRootDirAndSuppressOutput() {
 }
 
 // 0.28 Preparing for JDK21 toolchains revealed that `testStartJavaExecutable` may pass, even though
-// the evaluator fails. To catch this, we need to test the evaluator. We render the CircleCI config
-// as a realistic test of the fat JAR.
+// the evaluator fails. To catch this, we eval a simple expression using the fat jar.
 val testEvalJavaExecutable by
   setupJavaExecutableRun("testEvalJavaExecutable", evalTestFlags) { useRootDirAndSuppressOutput() }
 

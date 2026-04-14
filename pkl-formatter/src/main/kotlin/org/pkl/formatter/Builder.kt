@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,13 @@ import org.pkl.parser.syntax.Operator
 import org.pkl.parser.syntax.generic.Node
 import org.pkl.parser.syntax.generic.NodeType
 
-internal class Builder(sourceText: String) {
+internal class Builder(sourceText: String, private val grammarVersion: GrammarVersion) {
   private var id: Int = 0
   private val source: CharArray = sourceText.toCharArray()
-  private var prevNode: Node? = null
+  private var noNewlines = false
 
-  fun format(node: Node): FormatNode {
-    prevNode = node
-    return when (node.type) {
+  fun format(node: Node): FormatNode =
+    when (node.type) {
       NodeType.MODULE -> formatModule(node)
       NodeType.DOC_COMMENT -> Nodes(formatGeneric(node.children, null))
       NodeType.DOC_COMMENT_LINE -> formatDocComment(node)
@@ -49,9 +48,8 @@ internal class Builder(sourceText: String) {
       NodeType.TERMINAL,
       NodeType.MODIFIER,
       NodeType.IDENTIFIER,
-      NodeType.STRING_CONSTANT,
+      NodeType.STRING_CHARS,
       NodeType.STRING_ESCAPE,
-      NodeType.SINGLE_LINE_STRING_LITERAL_EXPR,
       NodeType.INT_LITERAL_EXPR,
       NodeType.FLOAT_LITERAL_EXPR,
       NodeType.BOOL_LITERAL_EXPR,
@@ -64,9 +62,10 @@ internal class Builder(sourceText: String) {
       NodeType.NOTHING_TYPE,
       NodeType.SHEBANG,
       NodeType.OPERATOR -> Text(node.text(source))
-      NodeType.STRING_NEWLINE -> ForceLine
+      NodeType.STRING_NEWLINE -> mustForceLine()
       NodeType.MODULE_DECLARATION -> formatModuleDeclaration(node)
       NodeType.MODULE_DEFINITION -> formatModuleDefinition(node)
+      NodeType.SINGLE_LINE_STRING_LITERAL_EXPR -> formatSingleLineString(node)
       NodeType.MULTI_LINE_STRING_LITERAL_EXPR -> formatMultilineString(node)
       NodeType.ANNOTATION -> formatAnnotation(node)
       NodeType.TYPEALIAS -> formatTypealias(node)
@@ -77,13 +76,13 @@ internal class Builder(sourceText: String) {
       NodeType.PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node)
       NodeType.TYPE_PARAMETER_LIST -> formatTypeParameterList(node)
       NodeType.TYPE_PARAMETER_LIST_ELEMENTS -> formatParameterListElements(node)
-      NodeType.TYPE_PARAMETER -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.TYPE_PARAMETER -> Group(newId(), formatGeneric(node.children, spaceOrLine()))
       NodeType.PARAMETER -> formatParameter(node)
       NodeType.EXTENDS_CLAUSE,
       NodeType.AMENDS_CLAUSE -> formatAmendsExtendsClause(node)
       NodeType.IMPORT_LIST -> formatImportList(node)
       NodeType.IMPORT -> formatImport(node)
-      NodeType.IMPORT_ALIAS -> Group(newId(), formatGeneric(node.children, SpaceOrLine))
+      NodeType.IMPORT_ALIAS -> Group(newId(), formatGeneric(node.children, spaceOrLine()))
       NodeType.CLASS -> formatClass(node)
       NodeType.CLASS_HEADER -> formatClassHeader(node)
       NodeType.CLASS_HEADER_EXTENDS -> formatClassHeaderExtends(node)
@@ -128,6 +127,7 @@ internal class Builder(sourceText: String) {
       NodeType.AMENDS_EXPR -> formatNewExpr(node)
       NodeType.NEW_HEADER -> formatNewHeader(node)
       NodeType.UNQUALIFIED_ACCESS_EXPR -> formatUnqualifiedAccessExpression(node)
+      NodeType.QUALIFIED_ACCESS_EXPR -> formatQualifiedAccessExpression(node)
       NodeType.BINARY_OP_EXPR -> formatBinaryOpExpr(node)
       NodeType.FUNCTION_LITERAL_EXPR -> formatFunctionLiteralExpr(node)
       NodeType.FUNCTION_LITERAL_BODY -> formatFunctionLiteralBody(node)
@@ -162,12 +162,11 @@ internal class Builder(sourceText: String) {
       NodeType.PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node)
       else -> throw RuntimeException("Unknown node type: ${node.type}")
     }
-  }
 
   private fun formatModule(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.linesBetween(next) > 1) TWO_NEWLINES else ForceLine
+        if (prev.linesBetween(next) > 1) TWO_NEWLINES else forceLine()
       }
     return Nodes(nodes)
   }
@@ -179,19 +178,19 @@ internal class Builder(sourceText: String) {
   private fun formatModuleDefinition(node: Node): FormatNode {
     val (prefixes, nodes) = splitPrefixes(node.children)
     val fnodes =
-      formatGenericWithGen(nodes, SpaceOrLine) { node, next ->
-        if (next == null) {
-          indent(format(node))
+      formatGenericWithGen(nodes, Space) { node, _ ->
+        if (node.type == NodeType.QUALIFIED_IDENTIFIER) {
+          Nodes(formatGeneric(node.children, null))
         } else {
           format(node)
         }
       }
-    val res = Group(newId(), fnodes)
+    val res = Nodes(fnodes)
     return if (prefixes.isEmpty()) {
       res
     } else {
-      val sep = getSeparator(prefixes.last(), nodes.first())
-      Nodes(formatGeneric(prefixes, SpaceOrLine) + listOf(sep, res))
+      val sep = getSeparator(prefixes.last(), nodes.first(), spaceOrLine())
+      Nodes(formatGeneric(prefixes, spaceOrLine()) + listOf(sep, res))
     }
   }
 
@@ -217,10 +216,10 @@ internal class Builder(sourceText: String) {
     // short circuit
     if (node.children.size == 1) return format(node.children[0])
 
-    val first = listOf(format(node.children[0]), Line)
+    val first = listOf(format(node.children[0]), line())
     val nodes =
       formatGeneric(node.children.drop(1)) { n1, _ ->
-        if (n1.type == NodeType.TERMINAL) null else Line
+        if (n1.type == NodeType.TERMINAL) null else line()
       }
     return Group(newId(), first + listOf(Indent(nodes)))
   }
@@ -230,38 +229,169 @@ internal class Builder(sourceText: String) {
     if (children.size == 1) return format(children[0])
     val firstNode = node.firstProperChild()!!
     return if (firstNode.text() == "Map") {
-      val nodes = mutableListOf<FormatNode>()
-      nodes += format(firstNode)
-      nodes += formatArgumentList(children[1], twoBy2 = true)
+      val nodes =
+        formatGenericWithGen(children, null) { node, _ ->
+          if (node.type == NodeType.ARGUMENT_LIST) {
+            formatArgumentList(node, twoBy2 = true)
+          } else {
+            format(node)
+          }
+        }
       Nodes(nodes)
     } else {
       Nodes(formatGeneric(children, null))
     }
   }
 
+  /**
+   * Special cases when formatting qualified access:
+   *
+   * Case 1: Dot calls followed by closing method call: wrap after the opening paren.
+   *
+   * ```
+   * foo.bar.baz(new {
+   *   qux = 1
+   * })
+   * ```
+   *
+   * Case 2: Dot calls, then method calls: group the leading access together.
+   *
+   * ```
+   * foo.bar
+   *   .baz(new {
+   *     qux = 1
+   *   })
+   *   .baz()
+   * ```
+   *
+   * Case 3: If there are multiple lambdas present, always force a newline.
+   *
+   * ```
+   * foo
+   *   .map((it) -> it + 1)
+   *   .filter((it) -> it.isEven)
+   * ```
+   */
+  private fun formatQualifiedAccessExpression(node: Node): FormatNode {
+    var lambdaCount = 0
+    var methodCallCount = 0
+    var indexBeforeFirstMethodCall = 0
+    val flat = mutableListOf<Node>()
+
+    fun gatherFacts(current: Node) {
+      for (child in current.children) {
+        if (child.type == NodeType.QUALIFIED_ACCESS_EXPR) {
+          gatherFacts(child)
+        } else {
+          flat.add(child)
+          when {
+            isMethodCall(child) -> {
+              methodCallCount++
+              if (hasFunctionLiteral(child, 2)) {
+                lambdaCount++
+              }
+            }
+            methodCallCount == 0 -> {
+              indexBeforeFirstMethodCall = flat.lastIndex
+            }
+          }
+        }
+      }
+    }
+
+    gatherFacts(node)
+
+    val leadingSeparator: (Node, Node) -> FormatNode? = { prev, next ->
+      when {
+        prev.type == NodeType.OPERATOR -> null
+        next.type == NodeType.OPERATOR -> line()
+        else -> spaceOrLine()
+      }
+    }
+
+    val trailingSeparator: (Node, Node) -> FormatNode? = { prev, next ->
+      when {
+        prev.type == NodeType.OPERATOR -> null
+        next.type == NodeType.OPERATOR -> if (lambdaCount > 1) forceLine() else line()
+        else -> spaceOrLine()
+      }
+    }
+
+    val nodes =
+      when {
+        methodCallCount == 1 && isMethodCall(flat.lastProperNode()!!) -> {
+          // lift argument list into its own node
+          val (callChain, argsList) = splitFunctionCallNode(flat)
+          val leadingNodes =
+            indentAfterFirstNewline(formatGeneric(callChain, leadingSeparator), true)
+          val trailingNodes = formatGeneric(argsList, trailingSeparator)
+          val sep = getBaseSeparator(callChain.last(), argsList.first())
+          if (sep != null) {
+            leadingNodes + sep + trailingNodes
+          } else {
+            leadingNodes + trailingNodes
+          }
+        }
+        methodCallCount > 0 && indexBeforeFirstMethodCall > 0 -> {
+          val leading = flat.subList(0, indexBeforeFirstMethodCall)
+          val trailing = flat.subList(indexBeforeFirstMethodCall, flat.size)
+          val leadingNodes = indentAfterFirstNewline(formatGeneric(leading, leadingSeparator), true)
+          val trailingNodes = formatGeneric(trailing, trailingSeparator)
+          leadingNodes + line() + trailingNodes
+        }
+        else -> formatGeneric(flat, trailingSeparator)
+      }
+
+    val shouldGroup = node.children.size == flat.size
+    return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
+  }
+
+  /**
+   * Split a function call node to extract its identifier into the leading group. For example,
+   * `foo.bar(5)` becomes: leading gets `foo.bar`, rest gets `(5)`.
+   */
+  private fun splitFunctionCallNode(nodes: List<Node>): Pair<List<Node>, List<Node>> {
+    assert(nodes.isNotEmpty())
+    val lastNode = nodes.last()
+    val argListIdx = lastNode.children.indexOfFirst { it.type == NodeType.ARGUMENT_LIST }
+    val leading = nodes.subList(0, nodes.lastIndex) + lastNode.children.subList(0, argListIdx)
+    val trailing = lastNode.children.subList(argListIdx, lastNode.children.size)
+    return leading to trailing
+  }
+
+  private fun isMethodCall(node: Node): Boolean {
+    if (node.type != NodeType.UNQUALIFIED_ACCESS_EXPR) return false
+    for (child in node.children) {
+      if (child.type == NodeType.ARGUMENT_LIST) {
+        return true
+      }
+    }
+    return false
+  }
+
   private fun formatAmendsExtendsClause(node: Node): FormatNode {
-    val prefix = formatGeneric(node.children.dropLast(1), SpaceOrLine)
+    val prefix = formatGeneric(node.children.dropLast(1), spaceOrLine())
     // string constant
     val suffix = Indent(listOf(format(node.children.last())))
-    return Group(newId(), prefix + listOf(SpaceOrLine) + suffix)
+    return Group(newId(), prefix + listOf(spaceOrLine()) + suffix)
   }
 
   private fun formatImport(node: Node): FormatNode {
     return Group(
       newId(),
-      formatGenericWithGen(node.children, SpaceOrLine) { node, _ ->
+      formatGenericWithGen(node.children, spaceOrLine()) { node, _ ->
         if (node.isTerminal("import")) format(node) else indent(format(node))
       },
     )
   }
 
   private fun formatAnnotation(node: Node): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return Group(newId(), formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatTypealias(node: Node): FormatNode {
     val nodes =
-      groupNonPrefixes(node) { children -> Group(newId(), formatGeneric(children, SpaceOrLine)) }
+      groupNonPrefixes(node) { children -> Group(newId(), formatGeneric(children, spaceOrLine())) }
     return Nodes(nodes)
   }
 
@@ -270,19 +400,19 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatTypealiasBody(node: Node): FormatNode {
-    return Indent(formatGeneric(node.children, SpaceOrLine))
+    return Indent(formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatClass(node: Node): FormatNode {
-    return Nodes(formatGeneric(node.children, SpaceOrLine))
+    return Nodes(formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatClassHeader(node: Node): FormatNode {
-    return groupOnSpace(formatGeneric(node.children, SpaceOrLine))
+    return groupOnSpace(formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatClassHeaderExtends(node: Node): FormatNode {
-    return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
+    return indent(Group(newId(), formatGeneric(node.children, spaceOrLine())))
   }
 
   private fun formatClassBody(node: Node): FormatNode {
@@ -291,14 +421,14 @@ internal class Builder(sourceText: String) {
       // no members
       return Nodes(formatGeneric(children, null))
     }
-    return Group(newId(), formatGeneric(children, ForceLine))
+    return Group(newId(), formatGeneric(children, forceLine()))
   }
 
   private fun formatClassBodyElements(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
         val lineDiff = prev.linesBetween(next)
-        if (lineDiff > 1 || lineDiff == 0) TWO_NEWLINES else ForceLine
+        if (lineDiff > 1 || lineDiff == 0) TWO_NEWLINES else forceLine()
       }
     return Indent(nodes)
   }
@@ -313,8 +443,9 @@ internal class Builder(sourceText: String) {
     val nodes =
       groupNonPrefixes(node) { children ->
         val nodes =
-          formatGenericWithGen(children, { _, _ -> if (sameLine) Space else SpaceOrLine }) { node, _
-            ->
+          formatGenericWithGen(children, { _, _ -> if (sameLine) Space else spaceOrLine() }) {
+            node,
+            _ ->
             if ((node.isExpressionOrPropertyBody()) && !sameLine) {
               indent(format(node))
             } else format(node)
@@ -330,11 +461,11 @@ internal class Builder(sourceText: String) {
       type == NodeType.OBJECT_PROPERTY_BODY
 
   private fun formatClassPropertyHeader(node: Node): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return Group(newId(), formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatClassPropertyHeaderBegin(node: Node): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return Group(newId(), formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatClassPropertyBody(node: Node): FormatNode {
@@ -349,7 +480,7 @@ internal class Builder(sourceText: String) {
         val idx = node.children.indexOfFirst { it.type == NodeType.CLASS_METHOD_HEADER }
         val prefixNodes = node.children.subList(0, idx)
         prefixes += formatGeneric(prefixNodes, null)
-        prefixes += getSeparator(prefixNodes.last(), node.children[idx], ForceLine)
+        prefixes += getSeparator(prefixNodes.last(), node.children[idx], forceLine())
         node.children.subList(idx, node.children.size)
       }
 
@@ -359,7 +490,7 @@ internal class Builder(sourceText: String) {
     val headerGroupId = newId()
     val methodGroupId = newId()
     val headerNodes =
-      formatGenericWithGen(header, SpaceOrLine) { node, _ ->
+      formatGenericWithGen(header, spaceOrLine()) { node, _ ->
         if (node.type == NodeType.PARAMETER_LIST) {
           formatParameterList(node, id = headerGroupId)
         } else {
@@ -385,7 +516,7 @@ internal class Builder(sourceText: String) {
       if (isSameLineBody) {
         formatGeneric(bodyNodes, Space)
       } else {
-        formatGenericWithGen(bodyNodes, SpaceOrLine) { node, next ->
+        formatGenericWithGen(bodyNodes, spaceOrLine()) { node, next ->
           if (next == null) indent(format(node)) else format(node)
         }
       }
@@ -409,7 +540,7 @@ internal class Builder(sourceText: String) {
 
   private fun formatParameter(node: Node): FormatNode {
     if (node.children.size == 1) return format(node.children[0]) // underscore
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return Group(newId(), formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatParameterList(node: Node, id: Int? = null): FormatNode {
@@ -420,9 +551,13 @@ internal class Builder(sourceText: String) {
         if (prev.isTerminal("(") || next.isTerminal(")")) {
           if (next.isTerminal(")")) {
             // trailing comma
-            IfWrap(groupId, nodes(Text(","), Line), Line)
-          } else Line
-        } else SpaceOrLine
+            if (grammarVersion == GrammarVersion.V1) {
+              line()
+            } else {
+              ifWrap(groupId, nodes(Text(","), line()), line())
+            }
+          } else line()
+        } else spaceOrLine()
       }
     return if (id != null) Nodes(nodes) else Group(groupId, nodes)
   }
@@ -436,12 +571,16 @@ internal class Builder(sourceText: String) {
         node.children,
         { prev, next ->
           if (prev.isTerminal("(") || next.isTerminal(")")) {
-            val node = if (hasTrailingLambda) Empty else Line
+            val node = if (hasTrailingLambda) Empty else line()
             if (next.isTerminal(")") && !hasTrailingLambda) {
               // trailing comma
-              IfWrap(groupId, nodes(Text(","), node), node)
+              if (grammarVersion == GrammarVersion.V1) {
+                node
+              } else {
+                ifWrap(groupId, nodes(Text(","), node), node)
+              }
             } else node
-          } else SpaceOrLine
+          } else spaceOrLine()
         },
       ) { node, _ ->
         if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
@@ -457,52 +596,89 @@ internal class Builder(sourceText: String) {
     twoBy2: Boolean = false,
   ): FormatNode {
     val children = node.children
+    val shouldMultiline = shouldMultilineNodes(node) { it.isTerminal(",") }
+    val sep: (Node, Node) -> FormatNode = { _, _ ->
+      if (shouldMultiline) forceSpaceyLine() else spaceOrLine()
+    }
     return if (twoBy2) {
       val pairs = pairArguments(children)
       val nodes =
-        formatGenericWithGen(pairs, SpaceOrLine) { node, _ ->
+        formatGenericWithGen(pairs, sep) { node, _ ->
           if (node.type == NodeType.ARGUMENT_LIST_ELEMENTS) {
-            Group(newId(), formatGeneric(node.children, SpaceOrLine))
+            Group(newId(), formatGeneric(node.children, spaceOrLine()))
           } else {
             format(node)
           }
         }
       Indent(nodes)
     } else if (hasTrailingLambda) {
-      // if the args have a trailing expression (lambda, new, amends) group them differently
+      // if the args have a trailing lambda, group them differently
       val splitIndex = children.indexOfLast { it.type in SAME_LINE_EXPRS }
       val normalParams = children.subList(0, splitIndex)
       val lastParam = children.subList(splitIndex, children.size)
-      val trailingNode = if (endsWithClosingBracket(children[splitIndex])) Empty else Line
-      val lastNodes = formatGeneric(lastParam, SpaceOrLine)
+      val trailingNode = if (endsWithClosingCurlyBrace(lastParam.last())) Empty else line()
+      val lastNodes = formatGenericWithGen(lastParam, sep, null)
       if (normalParams.isEmpty()) {
-        nodes(Group(newId(), lastNodes), trailingNode)
+        val lastNodes = formatGenericWithGen(lastParam, sep, null)
+        group(Group(newId(), lastNodes), trailingNode)
       } else {
         val separator = getSeparator(normalParams.last(), lastParam[0], Space)
-        val paramNodes = formatGeneric(normalParams, SpaceOrLine)
-        nodes(Group(newId(), paramNodes), separator, Group(newId(), lastNodes), trailingNode)
+        val paramNodes = formatGenericWithGen(normalParams, sep, null)
+        group(Group(newId(), paramNodes), separator, Group(newId(), lastNodes), trailingNode)
       }
     } else {
-      Indent(formatGeneric(children, SpaceOrLine))
+      Indent(formatGeneric(children, sep))
     }
   }
 
-  private tailrec fun endsWithClosingBracket(node: Node): Boolean {
+  private fun shouldMultilineNodes(node: Node, predicate: (Node) -> Boolean): Boolean {
+    for (idx in 0..<node.children.lastIndex) {
+      val prev = node.children[idx]
+      val next = node.children[idx + 1]
+      if ((predicate(prev) || predicate(next)) && prev.linesBetween(next) > 0) {
+        return true
+      }
+    }
+    return false
+  }
+
+  private tailrec fun endsWithClosingCurlyBrace(node: Node): Boolean {
     return if (node.children.isNotEmpty()) {
-      endsWithClosingBracket(node.children.last())
+      endsWithClosingCurlyBrace(node.children.last())
     } else {
       node.isTerminal("}")
     }
   }
 
+  /**
+   * Tells if an argument list has a trailing lambda, new expr, or amends expr.
+   *
+   * Only considered trailing lamdba if:
+   * 1. There is only one lambda/new expr/amends expr in the list. E.g. avoid formatting `toMap()`
+   *    weirdly: ``` foo.toMap( (it) -> makeSomeKey(it), (it) -> makeSomeValue(it), ) ```
+   * 2. The lambda does not have leading or trailing line comment.
+   */
   private fun hasTrailingLambda(argList: Node): Boolean {
     val children = argList.firstProperChild()?.children ?: return false
+    var seenLambda = false
+    if (children.last().type == NodeType.LINE_COMMENT) {
+      return false
+    }
     for (i in children.lastIndex downTo 0) {
       val child = children[i]
       if (!child.isProper()) continue
-      return child.type in SAME_LINE_EXPRS
+      if (!seenLambda) {
+        if (child.type !in SAME_LINE_EXPRS) {
+          return false
+        }
+        // preceded by line comment
+        if (children.getOrNull(i - 1)?.type == NodeType.LINE_COMMENT) return false
+        seenLambda = true
+      } else if (child.type in SAME_LINE_EXPRS) {
+        return false
+      }
     }
-    return false
+    return true
   }
 
   private fun pairArguments(nodes: List<Node>): List<Node> {
@@ -513,13 +689,24 @@ internal class Builder(sourceText: String) {
       if (node.isTerminal(",")) {
         commas++
         if (commas == 2) {
+          val suffixes = mutableListOf<Node>()
+          while (tmp.isNotEmpty() && tmp.last().type.isAffix) {
+            // trailing comments should not be paired
+            suffixes += tmp.removeLast()
+          }
           res += Node(NodeType.ARGUMENT_LIST_ELEMENTS, tmp)
+          while (suffixes.isNotEmpty()) {
+            res += suffixes.removeFirst()
+          }
           res += node
           commas = 0
           tmp = mutableListOf()
         } else {
           tmp += node
         }
+      } else if (tmp.isEmpty() && node.type.isAffix) {
+        // leading comments should not be paired
+        res += node
       } else {
         tmp += node
       }
@@ -531,7 +718,7 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatParameterListElements(node: Node): FormatNode {
-    return Indent(formatGeneric(node.children, SpaceOrLine))
+    return Indent(formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatTypeParameterList(node: Node): FormatNode {
@@ -542,9 +729,13 @@ internal class Builder(sourceText: String) {
         if (prev.isTerminal("<") || next.isTerminal(">")) {
           if (next.isTerminal(">")) {
             // trailing comma
-            IfWrap(id, nodes(Text(","), Line), Line)
-          } else Line
-        } else SpaceOrLine
+            if (grammarVersion == GrammarVersion.V1) {
+              Line
+            } else {
+              ifWrap(id, nodes(Text(","), line()), line())
+            }
+          } else line()
+        } else spaceOrLine()
       }
     return Group(id, nodes)
   }
@@ -552,10 +743,10 @@ internal class Builder(sourceText: String) {
   private fun formatObjectParameterList(node: Node): FormatNode {
     // object param lists don't have trailing commas, as they have a trailing ->
     val groupId = newId()
-    val nonWrappingNodes = Nodes(formatGeneric(node.children, SpaceOrLine))
+    val nonWrappingNodes = Nodes(formatGeneric(node.children, spaceOrLine()))
     // double indent the params if they wrap
-    val wrappingNodes = indent(Indent(listOf(Line) + nonWrappingNodes))
-    return Group(groupId, listOf(IfWrap(groupId, wrappingNodes, nodes(Space, nonWrappingNodes))))
+    val wrappingNodes = indent(Indent(listOf(line()) + nonWrappingNodes))
+    return Group(groupId, listOf(ifWrap(groupId, wrappingNodes, nodes(Space, nonWrappingNodes))))
   }
 
   private fun formatObjectBody(node: Node): FormatNode {
@@ -568,8 +759,8 @@ internal class Builder(sourceText: String) {
           if (next.type == NodeType.OBJECT_PARAMETER_LIST) Empty
           else if (prev.isTerminal("{") || next.isTerminal("}")) {
             val lines = prev.linesBetween(next)
-            if (lines == 0) SpaceOrLine else ForceLine
-          } else SpaceOrLine
+            if (lines == 0) spaceOrLine() else forceSpaceyLine()
+          } else spaceOrLine()
         },
       ) { node, _ ->
         if (node.type == NodeType.OBJECT_MEMBER_LIST) {
@@ -584,8 +775,8 @@ internal class Builder(sourceText: String) {
       formatGeneric(node.children) { prev, next ->
         val lines = prev.linesBetween(next)
         when (lines) {
-          0 -> IfWrap(groupId, Line, Text("; "))
-          1 -> ForceLine
+          0 -> ifWrap(groupId, line(), Text("; "))
+          1 -> forceLine()
           else -> TWO_NEWLINES
         }
       }
@@ -593,7 +784,7 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatObjectEntryHeader(node: Node): FormatNode {
-    return Group(newId(), formatGeneric(node.children, SpaceOrLine))
+    return Group(newId(), formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatForGenerator(node: Node): FormatNode {
@@ -603,7 +794,7 @@ internal class Builder(sourceText: String) {
           prev.type == NodeType.FOR_GENERATOR_HEADER || next.type == NodeType.FOR_GENERATOR_HEADER
         ) {
           Space
-        } else SpaceOrLine
+        } else spaceOrLine()
       }
     return Group(newId(), nodes)
   }
@@ -611,7 +802,7 @@ internal class Builder(sourceText: String) {
   private fun formatForGeneratorHeader(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else null
+        if (prev.isTerminal("(") || next.isTerminal(")")) line() else null
       }
     return Group(newId(), nodes)
   }
@@ -620,7 +811,7 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { _, next -> if (next.type in SAME_LINE_EXPRS) Space else SpaceOrLine },
+        { _, next -> if (next.type in SAME_LINE_EXPRS) Space else spaceOrLine() },
       ) { node, _ ->
         if (node.type.isExpression && node.type !in SAME_LINE_EXPRS) indent(format(node))
         else format(node)
@@ -629,7 +820,7 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatForGeneratorHeaderDefinitionHeader(node: Node): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
+    val nodes = formatGeneric(node.children, spaceOrLine())
     return Group(newId(), nodes)
   }
 
@@ -643,7 +834,7 @@ internal class Builder(sourceText: String) {
         ) {
           Space
         } else {
-          SpaceOrLine
+          spaceOrLine()
         }
       }
     return Group(newId(), nodes)
@@ -653,7 +844,9 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+        { prev, next ->
+          if (prev.isTerminal("(") || next.isTerminal(")")) line() else spaceOrLine()
+        },
       ) { node, _ ->
         if (!node.type.isAffix && node.type != NodeType.TERMINAL) {
           indent(format(node))
@@ -664,7 +857,7 @@ internal class Builder(sourceText: String) {
 
   private fun formatMemberPredicate(node: Node): FormatNode {
     val nodes =
-      formatGenericWithGen(node.children, SpaceOrLine) { node, next ->
+      formatGenericWithGen(node.children, spaceOrLine()) { node, next ->
         if (next == null && node.type != NodeType.OBJECT_BODY) {
           indent(format(node))
         } else format(node)
@@ -672,17 +865,52 @@ internal class Builder(sourceText: String) {
     return Group(newId(), nodes)
   }
 
+  private fun formatStringParts(nodes: List<Node>): List<FormatNode> {
+    return buildList {
+      var isInStringInterpolation = false
+      val cursor = nodes.iterator().peekable()
+      var prev: Node? = null
+      while (cursor.hasNext()) {
+        if (isInStringInterpolation) {
+          val prevNoNewlines = noNewlines
+          val elems = cursor.takeUntilBefore { it.isTerminal(")") }
+          noNewlines = !elems.isMultiline()
+          getBaseSeparator(prev!!, elems.first())?.let { add(it) }
+          val formatted = formatGeneric(elems, null)
+          addAll(formatted)
+          getBaseSeparator(elems.last(), cursor.peek())?.let { add(it) }
+          noNewlines = prevNoNewlines
+          isInStringInterpolation = false
+          continue
+        }
+        val elem = cursor.next()
+        if (elem.type == NodeType.TERMINAL && elem.text().endsWith("(")) {
+          isInStringInterpolation = true
+        }
+        add(format(elem))
+        prev = elem
+      }
+    }
+  }
+
+  private fun formatSingleLineString(node: Node): FormatNode {
+    return Group(newId(), formatStringParts(node.children))
+  }
+
   private fun formatMultilineString(node: Node): FormatNode {
-    val nodes = formatGeneric(node.children, null)
+    val nodes = formatStringParts(node.children)
     return MultilineStringGroup(node.children.last().span.colBegin, nodes)
   }
 
   private fun formatIf(node: Node): FormatNode {
+    val separator = if (node.isMultiline()) forceSpaceyLine() else spaceOrLine()
     val nodes =
       formatGeneric(node.children) { _, next ->
-        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) {
-          Space
-        } else SpaceOrLine
+        // produce `else if` in the case of nested if.
+        // note: don't need to handle if `next.children[0]` is an affix because that can't be
+        // emitted as `else if` anyway.
+        if (next.type == NodeType.IF_ELSE_EXPR && next.children[0].type == NodeType.IF_EXPR) Space
+        else separator
       }
     return Group(newId(), nodes)
   }
@@ -690,7 +918,7 @@ internal class Builder(sourceText: String) {
   private fun formatIfHeader(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { _, next ->
-        if (next.type == NodeType.IF_CONDITION) Space else SpaceOrLine
+        if (next.type == NodeType.IF_CONDITION) Space else spaceOrLine()
       }
     return Group(newId(), nodes)
   }
@@ -698,7 +926,7 @@ internal class Builder(sourceText: String) {
   private fun formatIfCondition(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+        if (prev.isTerminal("(") || next.isTerminal(")")) line() else spaceOrLine()
       }
     return Group(newId(), nodes)
   }
@@ -723,12 +951,12 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatNewExpr(node: Node): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
+    val nodes = formatGeneric(node.children, spaceOrLine())
     return Group(newId(), nodes)
   }
 
   private fun formatNewHeader(node: Node): FormatNode {
-    val nodes = formatGeneric(node.children, SpaceOrLine)
+    val nodes = formatGeneric(node.children, spaceOrLine())
     return Group(newId(), nodes)
   }
 
@@ -737,7 +965,9 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+        { prev, next ->
+          if (prev.isTerminal("(") || next.isTerminal(")")) line() else spaceOrLine()
+        },
       ) { node, _ ->
         if (node.type.isExpression) indent(format(node)) else format(node)
       }
@@ -757,7 +987,7 @@ internal class Builder(sourceText: String) {
           val expr = body.children.find { it.type.isExpression }!!
           isSameLineExpr(expr)
         }
-    val sep = if (sameLine) Space else SpaceOrLine
+    val sep = if (sameLine) Space else spaceOrLine()
     val bodySep = getSeparator(params.last(), rest.first(), sep)
 
     val nodes = formatGeneric(params, sep)
@@ -772,18 +1002,23 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatLetExpr(node: Node): FormatNode {
+    val separator = if (node.isMultiline()) forceSpaceyLine() else spaceOrLine()
+    val endsWithLet = node.children.last().type == NodeType.LET_EXPR
     val nodes =
       formatGenericWithGen(
         node.children,
-        { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else SpaceOrLine },
-      ) { node, next ->
-        if (next == null) {
-          if (node.type == NodeType.LET_EXPR) {
+        { _, next -> if (next.type == NodeType.LET_PARAMETER_DEFINITION) Space else separator },
+      ) { node, _ ->
+        when {
+          node.type == NodeType.LET_EXPR -> {
             // unpack the lets
             val group = formatLetExpr(node) as Group
             Nodes(group.nodes)
-          } else indent(format(node))
-        } else format(node)
+          }
+          endsWithLet -> format(node)
+          node.type.isExpression || node.type.isAffix -> indent(format(node))
+          else -> format(node)
+        }
       }
     return Group(newId(), nodes)
   }
@@ -791,7 +1026,7 @@ internal class Builder(sourceText: String) {
   private fun formatLetParameterDefinition(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(")) null else if (next.isTerminal(")")) Line else SpaceOrLine
+        if (prev.isTerminal("(") || next.isTerminal(")")) line() else spaceOrLine()
       }
     return Group(newId(), nodes)
   }
@@ -802,26 +1037,23 @@ internal class Builder(sourceText: String) {
 
   private fun formatBinaryOpExpr(node: Node): FormatNode {
     val flat = flattenBinaryOperatorExprs(node)
-    val callChainSize = flat.count { it.isOperator(".", "?.") }
-    val hasMultipleLambdas = callChainSize > 1 && flat.hasMoreThan(1) { hasFunctionLiteral(it, 2) }
+    val shouldMultiline = shouldMultilineNodes(node) { it.type == NodeType.OPERATOR }
     val nodes =
       formatGeneric(flat) { prev, next ->
+        val sep = if (shouldMultiline) forceSpaceyLine() else spaceOrLine()
         if (prev.type == NodeType.OPERATOR) {
           when (prev.text()) {
-            ".",
-            "?." -> null
-            "-" -> SpaceOrLine
+            "-" -> sep
             else -> Space
           }
         } else if (next.type == NodeType.OPERATOR) {
           when (next.text()) {
-            ".",
-            "?." -> if (hasMultipleLambdas) ForceLine else Line
             "-" -> Space
-            else -> SpaceOrLine
+            else -> sep
           }
-        } else SpaceOrLine
+        } else sep
       }
+
     val shouldGroup = node.children.size == flat.size
     return Group(newId(), indentAfterFirstNewline(nodes, shouldGroup))
   }
@@ -843,7 +1075,7 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else null },
+        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) line() else null },
       ) { node, _ ->
         if (node.type.isExpression) indent(format(node)) else format(node)
       }
@@ -851,13 +1083,13 @@ internal class Builder(sourceText: String) {
   }
 
   private fun formatDeclaredType(node: Node): FormatNode {
-    return Nodes(formatGeneric(node.children, SpaceOrLine))
+    return Nodes(formatGeneric(node.children, spaceOrLine()))
   }
 
   private fun formatConstrainedType(node: Node): FormatNode {
     val nodes =
       formatGeneric(node.children) { _, next ->
-        if (next.type == NodeType.CONSTRAINED_TYPE_CONSTRAINT) null else SpaceOrLine
+        if (next.type == NodeType.CONSTRAINED_TYPE_CONSTRAINT) null else spaceOrLine()
       }
     return Group(newId(), nodes)
   }
@@ -866,7 +1098,7 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGeneric(node.children) { prev, next ->
         when {
-          next.isTerminal("|") -> SpaceOrLine
+          next.isTerminal("|") -> spaceOrLine()
           prev.isTerminal("|") -> Space
           else -> null
         }
@@ -878,7 +1110,9 @@ internal class Builder(sourceText: String) {
     val nodes =
       formatGenericWithGen(
         node.children,
-        { prev, next -> if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine },
+        { prev, next ->
+          if (prev.isTerminal("(") || next.isTerminal(")")) line() else spaceOrLine()
+        },
       ) { node, next ->
         if (next == null) indent(format(node)) else format(node)
       }
@@ -890,13 +1124,13 @@ internal class Builder(sourceText: String) {
     val groupId = newId()
     val nodes =
       formatGeneric(node.children) { prev, next ->
-        if (prev.isTerminal("(") || next.isTerminal(")")) Line else SpaceOrLine
+        if (prev.isTerminal("(") || next.isTerminal(")")) line() else spaceOrLine()
       }
     return Group(groupId, nodes)
   }
 
   private fun formatParenthesizedTypeElements(node: Node): FormatNode {
-    return indent(Group(newId(), formatGeneric(node.children, SpaceOrLine)))
+    return indent(Group(newId(), formatGeneric(node.children, spaceOrLine())))
   }
 
   private fun formatTypeAnnotation(node: Node): FormatNode {
@@ -907,23 +1141,66 @@ internal class Builder(sourceText: String) {
     val nodes = mutableListOf<FormatNode>()
     val children = node.children.groupBy { it.type.isAffix }
     if (children[true] != null) {
-      nodes += formatGeneric(children[true]!!, SpaceOrLine)
+      nodes += formatGeneric(children[true]!!, spaceOrLine())
     }
     val modifiers = children[false]!!.sortedBy(::modifierPrecedence)
     nodes += formatGeneric(modifiers, Space)
     return Nodes(nodes)
   }
 
+  private data class ImportWithComments(
+    val leadingAffixes: List<Node>,
+    val import: Node,
+    val trailingAffixes: List<Node>,
+  )
+
+  private fun buildImportsWithComments(children: List<Node>): List<ImportWithComments> {
+    val result = mutableListOf<ImportWithComments>()
+    var pendingAffixes = mutableListOf<Node>()
+    var lastImport: Node? = null
+    var lastTrailing = mutableListOf<Node>()
+    var lastLeading = mutableListOf<Node>()
+
+    for (child in children) {
+      if (child.type.isAffix) {
+        if (lastImport != null && lastImport.span.lineEnd == child.span.lineBegin) {
+          // trailing comment on the same line as the preceding import
+          lastTrailing.add(child)
+        } else {
+          // leading comment for the next import
+          // first, flush the previous import
+          if (lastImport != null) {
+            result.add(ImportWithComments(lastLeading, lastImport, lastTrailing))
+            lastImport = null
+            lastTrailing = mutableListOf()
+            lastLeading = mutableListOf()
+          }
+          pendingAffixes.add(child)
+        }
+      } else {
+        // import node
+        if (lastImport != null) {
+          result.add(ImportWithComments(lastLeading, lastImport, lastTrailing))
+          lastTrailing = mutableListOf()
+        }
+        lastLeading = pendingAffixes
+        pendingAffixes = mutableListOf()
+        lastImport = child
+      }
+    }
+    // flush the last import
+    if (lastImport != null) {
+      result.add(ImportWithComments(lastLeading, lastImport, lastTrailing))
+    }
+    return result
+  }
+
   private fun formatImportList(node: Node): FormatNode {
     val nodes = mutableListOf<FormatNode>()
-    val children = node.children.groupBy { it.type.isAffix }
-    if (children[true] != null) {
-      nodes += formatGeneric(children[true]!!, SpaceOrLine)
-      nodes += ForceLine
-    }
 
-    val allImports = children[false]!!
-    val imports = allImports.groupBy { it.findChildByType(NodeType.TERMINAL)?.text(source) }
+    val allImportsWithComments = buildImportsWithComments(node.children)
+    val imports =
+      allImportsWithComments.groupBy { it.import.findChildByType(NodeType.TERMINAL)?.text(source) }
     if (imports["import"] != null) {
       formatImportListHelper(imports["import"]!!, nodes)
       if (imports["import*"] != null) nodes += TWO_NEWLINES
@@ -935,45 +1212,61 @@ internal class Builder(sourceText: String) {
     return Nodes(nodes)
   }
 
-  private fun formatImportListHelper(allImports: List<Node>, nodes: MutableList<FormatNode>) {
+  private fun formatImportWithComments(entry: ImportWithComments, nodes: MutableList<FormatNode>) {
+    if (entry.leadingAffixes.isNotEmpty()) {
+      nodes += formatGeneric(entry.leadingAffixes, spaceOrLine())
+      nodes += forceLine()
+    }
+    nodes += format(entry.import)
+    for (affix in entry.trailingAffixes) {
+      nodes += Space
+      nodes += format(affix)
+    }
+  }
+
+  private fun formatImportListHelper(
+    allImports: List<ImportWithComments>,
+    nodes: MutableList<FormatNode>,
+  ) {
+    val comparator = ImportComparator(source)
     val imports =
-      allImports.groupBy { imp ->
-        val url = getImportUrl(imp)
+      allImports.groupBy { entry ->
+        val url = getImportUrl(entry.import)
         when {
           ABSOLUTE_URL_REGEX.matches(url) -> 0
           url.startsWith('@') -> 1
           else -> 2
         }
       }
-    val absolute = imports[0]?.sortedWith(ImportComparator(source))
-    val projects = imports[1]?.sortedWith(ImportComparator(source))
-    val relatives = imports[2]?.sortedWith(ImportComparator(source))
+    val absolute = imports[0]?.sortedWith(compareBy(comparator) { it.import })
+    val projects = imports[1]?.sortedWith(compareBy(comparator) { it.import })
+    val relatives = imports[2]?.sortedWith(compareBy(comparator) { it.import })
     var shouldNewline = false
 
     if (absolute != null) {
       for ((i, imp) in absolute.withIndex()) {
-        if (i > 0) nodes += ForceLine
-        nodes += format(imp)
+        if (i > 0) nodes += forceLine()
+        formatImportWithComments(imp, nodes)
       }
-      if (projects != null || relatives != null) nodes += ForceLine
+      if (projects != null || relatives != null) nodes += forceLine()
       shouldNewline = true
     }
 
     if (projects != null) {
-      if (shouldNewline) nodes += ForceLine
+      if (shouldNewline) nodes += forceLine()
       for ((i, imp) in projects.withIndex()) {
-        if (i > 0) nodes += ForceLine
-        nodes += format(imp)
+        if (i > 0) nodes += forceLine()
+        formatImportWithComments(imp, nodes)
       }
-      if (relatives != null) nodes += ForceLine
+      if (relatives != null) nodes += forceLine()
       shouldNewline = true
     }
 
     if (relatives != null) {
-      if (shouldNewline) nodes += ForceLine
+      if (shouldNewline) nodes += forceLine()
       for ((i, imp) in relatives.withIndex()) {
-        if (i > 0) nodes += ForceLine
-        nodes += format(imp)
+        if (i > 0) nodes += forceLine()
+        formatImportWithComments(imp, nodes)
       }
     }
   }
@@ -1005,7 +1298,7 @@ internal class Builder(sourceText: String) {
     // skip semicolons
     val children = children.filter { !it.isSemicolon() }
     // short circuit
-    if (children.isEmpty()) return listOf(SpaceOrLine)
+    if (children.isEmpty()) return emptyList()
     if (children.size == 1) return listOf(format(children[0]))
 
     val nodes = mutableListOf<FormatNode>()
@@ -1046,21 +1339,17 @@ internal class Builder(sourceText: String) {
     val prefixes = children.subList(0, index)
     val nodes = children.subList(index, children.size)
     val res = mutableListOf<FormatNode>()
-    res += formatGeneric(prefixes, SpaceOrLine)
-    res += getSeparator(prefixes.last(), nodes.first())
+    res += formatGeneric(prefixes, spaceOrLine())
+    res += getSeparator(prefixes.last(), nodes.first(), spaceOrLine())
     res += groupFn(nodes)
     return res
   }
 
   private fun getImportUrl(node: Node): String =
-    node.findChildByType(NodeType.STRING_CONSTANT)!!.text().drop(1).dropLast(1)
+    node.findChildByType(NodeType.STRING_CHARS)!!.text().drop(1).dropLast(1)
 
-  private fun getSeparator(
-    prev: Node,
-    next: Node,
-    separator: FormatNode = SpaceOrLine,
-  ): FormatNode {
-    return getSeparator(prev, next) { _, _ -> separator }!!
+  private fun getSeparator(prev: Node, next: Node, separator: FormatNode): FormatNode {
+    return getBaseSeparator(prev, next) ?: separator
   }
 
   private fun getSeparator(
@@ -1068,38 +1357,85 @@ internal class Builder(sourceText: String) {
     next: Node,
     separatorFn: (Node, Node) -> FormatNode?,
   ): FormatNode? {
+    return getBaseSeparator(prev, next) ?: separatorFn(prev, next)
+  }
+
+  private fun getBaseSeparator(prev: Node, next: Node): FormatNode? {
     return when {
-      prevNode?.type == NodeType.LINE_COMMENT -> {
+      endsInLineComment(prev) -> {
         if (prev.linesBetween(next) > 1) {
           TWO_NEWLINES
         } else {
-          ForceLine
+          mustForceLine()
         }
       }
+
       hasTrailingAffix(prev, next) -> Space
-      prev.type == NodeType.DOC_COMMENT || prev.type == NodeType.ANNOTATION -> ForceLine
+      prev.type == NodeType.DOC_COMMENT -> mustForceLine()
+      prev.type == NodeType.ANNOTATION -> forceLine()
       prev.type in FORCE_LINE_AFFIXES || next.type.isAffix -> {
         if (prev.linesBetween(next) > 1) {
           TWO_NEWLINES
         } else {
-          ForceLine
+          mustForceLine()
         }
       }
-      prev.type == NodeType.BLOCK_COMMENT -> if (prev.linesBetween(next) > 0) ForceLine else Space
+
+      prev.type == NodeType.BLOCK_COMMENT ->
+        if (prev.linesBetween(next) > 0) forceSpaceyLine() else Space
+
       next.type in EMPTY_SUFFIXES ||
         prev.isTerminal("[", "!", "@", "[[") ||
-        next.isTerminal("]", "?", ",") -> null
+        next.isTerminal("]", "?", ",") -> Empty
+
       prev.isTerminal("class", "function", "new") ||
         next.isTerminal("=", "{", "->", "class", "function") ||
         next.type == NodeType.OBJECT_BODY ||
         prev.type == NodeType.MODIFIER_LIST -> Space
+
       next.type == NodeType.DOC_COMMENT -> TWO_NEWLINES
-      else -> separatorFn(prev, next)
+      else -> null
     }
   }
 
+  private tailrec fun endsInLineComment(node: Node): Boolean {
+    return when {
+      node.type == NodeType.LINE_COMMENT -> true
+      node.children.isEmpty() -> false
+      else -> endsInLineComment(node.children.last())
+    }
+  }
+
+  private fun line(): FormatNode {
+    return if (noNewlines) Empty else Line
+  }
+
+  private fun spaceOrLine(): FormatNode {
+    return if (noNewlines) Space else SpaceOrLine
+  }
+
+  private fun mustForceLine(): FormatNode {
+    if (noNewlines) {
+      // should never happen; we do not set `noNewlines` for interpolation blocks that span multiple
+      // lines
+      throw RuntimeException("Tried to render Pkl code as single line")
+    }
+    return ForceLine
+  }
+
+  private fun forceLine(): FormatNode {
+    return if (noNewlines) Empty else ForceLine
+  }
+
+  private fun forceSpaceyLine(): FormatNode {
+    return if (noNewlines) Space else ForceLine
+  }
+
+  private fun ifWrap(id: Int, ifWrap: FormatNode, ifNotWrap: FormatNode): FormatNode {
+    return if (noNewlines) ifNotWrap else IfWrap(id, ifWrap, ifNotWrap)
+  }
+
   private fun hasTrailingAffix(node: Node, next: Node): Boolean {
-    if (node.span.lineEnd < next.span.lineBegin) return false
     var n: Node? = next
     while (n != null) {
       if (n.type.isAffix && node.span.lineEnd == n.span.lineBegin) return true
@@ -1168,15 +1504,15 @@ internal class Builder(sourceText: String) {
   private fun flattenBinaryOperatorExprs(node: Node, prec: Int): List<Node> {
     val actualOp = node.children.first { it.type == NodeType.OPERATOR }.text()
     if (prec != Operator.byName(actualOp).prec) return listOf(node)
-    val res = mutableListOf<Node>()
-    for (child in node.children) {
-      if (child.type == NodeType.BINARY_OP_EXPR) {
-        res += flattenBinaryOperatorExprs(child, prec)
-      } else {
-        res += child
+    return buildList {
+      for (child in node.children) {
+        if (child.type == NodeType.BINARY_OP_EXPR) {
+          addAll(flattenBinaryOperatorExprs(child, prec))
+        } else {
+          add(child)
+        }
       }
     }
-    return res
   }
 
   private fun Node.linesBetween(next: Node): Int = next.span.lineBegin - span.lineEnd
@@ -1185,9 +1521,6 @@ internal class Builder(sourceText: String) {
 
   private fun Node.isTerminal(vararg texts: String): Boolean =
     type == NodeType.TERMINAL && text(source) in texts
-
-  private fun Node.isOperator(vararg texts: String): Boolean =
-    type == NodeType.OPERATOR && text(source) in texts
 
   private fun newId(): Int {
     return id++
@@ -1201,8 +1534,8 @@ internal class Builder(sourceText: String) {
 
   private class ImportComparator(private val source: CharArray) : Comparator<Node> {
     override fun compare(o1: Node, o2: Node): Int {
-      val import1 = o1.findChildByType(NodeType.STRING_CONSTANT)?.text(source)
-      val import2 = o2.findChildByType(NodeType.STRING_CONSTANT)?.text(source)
+      val import1 = o1.findChildByType(NodeType.STRING_CHARS)?.text(source)
+      val import2 = o2.findChildByType(NodeType.STRING_CHARS)?.text(source)
       if (import1 == null || import2 == null) {
         // should never happen
         throw RuntimeException("ImportComparator: not an import")
@@ -1219,10 +1552,22 @@ internal class Builder(sourceText: String) {
     return null
   }
 
+  private fun List<Node>.lastProperNode(): Node? {
+    for (i in lastIndex downTo 0) {
+      if (this[i].isProper()) return this[i]
+    }
+    return null
+  }
+
   // returns true if this node is not an affix or terminal
   private fun Node.isProper(): Boolean = !type.isAffix && type != NodeType.TERMINAL
 
-  private fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
+  private fun Node.isMultiline(): Boolean = span.lineBegin < span.lineEnd
+
+  private fun List<Node>.isMultiline(): Boolean =
+    if (isEmpty()) false else first().span.lineBegin < last().span.lineEnd
+
+  private inline fun <T> List<T>.splitOn(pred: (T) -> Boolean): Pair<List<T>, List<T>> {
     val index = indexOfFirst { pred(it) }
     return if (index == -1) {
       Pair(this, emptyList())
@@ -1231,16 +1576,50 @@ internal class Builder(sourceText: String) {
     }
   }
 
-  private inline fun <T> Iterable<T>.hasMoreThan(num: Int, predicate: (T) -> Boolean): Boolean {
-    if (this is Collection && isEmpty()) return false
-    var count = 0
-    for (element in this) {
-      if (predicate(element)) count++
-      if (count > num) {
-        return true
+  class PeekableIterator<T>(private val iterator: Iterator<T>) : Iterator<T> {
+    private var peek: T? = null
+
+    private var hasPeek = false
+
+    override fun next(): T {
+      return if (hasPeek) {
+        hasPeek = false
+        peek!!
+      } else {
+        iterator.next()
       }
     }
-    return false
+
+    override fun hasNext(): Boolean {
+      return if (hasPeek) true else iterator.hasNext()
+    }
+
+    fun peek(): T {
+      if (!hasNext()) {
+        throw NoSuchElementException()
+      }
+      if (hasPeek) {
+        return peek!!
+      }
+      peek = iterator.next()
+      hasPeek = true
+      return peek!!
+    }
+
+    inline fun takeUntilBefore(predicate: (T) -> Boolean): List<T> {
+      return buildList {
+        while (true) {
+          if (!hasNext() || predicate(peek())) {
+            return@buildList
+          }
+          add(next())
+        }
+      }
+    }
+  }
+
+  private fun <T> Iterator<T>.peekable(): PeekableIterator<T> {
+    return PeekableIterator(this)
   }
 
   companion object {

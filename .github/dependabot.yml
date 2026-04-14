@@ -1,0 +1,10 @@
+version: 2
+updates:
+- package-ecosystem: github-actions
+  directory: /
+  ignore:
+  - dependency-name: '*'
+    update-types:
+    - version-update:semver-major
+  schedule:
+    interval: weekly

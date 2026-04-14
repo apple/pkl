@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class ClassBody extends AbstractNode {
+public final class ClassBody extends AbstractNode {
 
   public ClassBody(List<Node> nodes, Span span) {
     super(span, nodes);
@@ -34,7 +34,6 @@ public class ClassBody extends AbstractNode {
 
   public List<ClassProperty> getProperties() {
     var props = new ArrayList<ClassProperty>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof ClassProperty prop) {
         props.add(prop);
@@ -45,7 +44,6 @@ public class ClassBody extends AbstractNode {
 
   public List<ClassMethod> getMethods() {
     var methods = new ArrayList<ClassMethod>();
-    assert children != null;
     for (var child : children) {
       if (child instanceof ClassMethod method) {
         methods.add(method);

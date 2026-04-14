@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import java.net.MalformedURLException
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
+import java.util.regex.Pattern
 import kotlin.io.path.createFile
 import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
@@ -28,6 +29,7 @@ import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
+import org.pkl.core.SecurityManagerException
 import org.pkl.core.SecurityManagers
 
 class ModuleKeysTest {
@@ -205,6 +207,27 @@ class ModuleKeysTest {
   fun `package - missing path`() {
     val e = assertThrows<URISyntaxException> { ModuleKeys.pkg(URI("package://example.com")) }
     assertThat(e).hasMessageContaining("Package URIs must have a path component")
+  }
+
+  @Test
+  fun `http - resolve obeys allowed modules`() {
+    val uri = URI("https://apple.com/some/foo.pkl")
+    val key = ModuleKeys.genericUrl(uri)
+
+    assertThat(key.uri).isEqualTo(uri)
+    assertThat(key.isCached).isTrue
+
+    assertThat(ModuleKeys.isStdLibModule(key)).isFalse
+    assertThat(ModuleKeys.isBaseModule(key)).isFalse
+
+    assertThrows<SecurityManagerException> {
+      key.resolve(
+        with(SecurityManagers.standardBuilder()) {
+          setAllowedModules(listOf(Pattern.compile("repl:"), Pattern.compile("file:")))
+          build()
+        }
+      )
+    }
   }
 
   @Test

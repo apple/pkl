@@ -107,7 +107,7 @@ class DocGenerator(
     }
 
     /**
-     * The default exeuctor when running the doc generator.
+     * The default executor when running the doc generator.
      *
      * Uses [Executors.newVirtualThreadPerTaskExecutor] if available (JDK 21). Otherwise, uses
      * [Executors.newFixedThreadPool] with 64 threads, or the number of available processors

@@ -1,0 +1,67 @@
+–– Pkl Error ––
+Type constraint `IntSeq(num, 5).toList().contains(this)
+    || Map(num, 2, 3, 4).values.contains(this)
+    || List(num, 2, 3, 4).contains(this)
+    || Set(num, 2, 3, 4).contains(this)
+    || Pair(num, 2).second == this
+    || Bytes(num, 2, 3, 4).toList().contains(this)
+    || Regex("\(num)234").toString().length == this` violated.
+Value: 10
+
+    IntSeq(num, 5).toList().contains(this)
+    │      │       │        │        │
+    │      1       │        false    10
+    IntSeq(1, 5)   List(1, 2, 3, 4, 5)
+
+    || Map(num, 2, 3, 4).values.contains(this)
+    │  │   │             │      │        │
+    │  │   1             │      false    10
+    │  Map(1, 2, 3, 4)   List(2, 4)
+    false
+
+    || List(num, 2, 3, 4).contains(this)
+    │  │    │             │        │
+    │  │    1             false    10
+    │  List(1, 2, 3, 4)
+    false
+
+    || Set(num, 2, 3, 4).contains(this)
+    │  │   │             │        │
+    │  │   1             false    10
+    │  Set(1, 2, 3, 4)
+    false
+
+    || Pair(num, 2).second == this
+    │  │    │       │      │  │
+    │  │    1       2      │  10
+    │  Pair(1, 2)          false
+    false
+
+    || Bytes(num, 2, 3, 4).toList().contains(this)
+    │  │     │             │        │        │
+    │  │     1             │        false    10
+    │  Bytes(1, 2, 3, 4)   List(1, 2, 3, 4)
+    false
+
+    || Regex("\(num)234").toString().length == this
+    │  │     │  │         │          │      │  │
+    │  │     │  1         │          13     │  10
+    │  │     "1234"       │                 false
+    │  Regex("1234")      "Regex(\"1234\")"
+    false
+
+x | IntSeq(num, 5).toList().contains(this)
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at typeConstraints9a#foo (file:///$snippetsDir/input/errors/power/typeConstraints9a.pkl)
+
+xx | ) = 10
+         ^^
+at typeConstraints9a#foo (file:///$snippetsDir/input/errors/power/typeConstraints9a.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

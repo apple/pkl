@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -34,8 +34,13 @@ public final class VmValueRenderer {
   private final String interiorNewline;
   private final String indent;
   private String currIndent = "";
+  private static final VmValueRenderer maxSingleLine =
+      new VmValueRenderer(Integer.MAX_VALUE, " ", "; ", "");
 
   public static VmValueRenderer singleLine(int lengthLimit) {
+    if (lengthLimit == Integer.MAX_VALUE) {
+      return maxSingleLine;
+    }
     return new VmValueRenderer(lengthLimit, " ", "; ", "");
   }
 

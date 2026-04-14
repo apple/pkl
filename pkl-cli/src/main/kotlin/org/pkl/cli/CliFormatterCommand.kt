@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,46 +15,146 @@
  */
 package org.pkl.cli
 
+import java.io.IOException
 import java.io.Writer
+import java.nio.file.Files
 import java.nio.file.Path
-import kotlin.io.path.ExperimentalPathApi
+import java.util.stream.Stream
 import kotlin.io.path.extension
 import kotlin.io.path.isDirectory
 import kotlin.io.path.name
-import kotlin.io.path.walk
+import kotlin.io.path.writeText
+import kotlin.math.max
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliCommand
+import org.pkl.commons.cli.CliException
+import org.pkl.commons.cli.CliTestException
+import org.pkl.core.util.IoUtils
 import org.pkl.formatter.Formatter
+import org.pkl.formatter.GrammarVersion
 import org.pkl.parser.GenericParserError
+import org.pkl.parser.ParserError
 
-abstract class CliFormatterCommand
+class CliFormatterCommand
 @JvmOverloads
 constructor(
-  options: CliBaseOptions,
-  protected val paths: List<Path>,
-  protected val consoleWriter: Writer = System.out.writer(),
-) : CliCommand(options) {
-  protected fun format(file: Path, contents: String): Pair<String, Int> {
-    try {
-      return Formatter().format(contents) to 0
-    } catch (pe: GenericParserError) {
-      consoleWriter.write("Could not format `$file`: $pe")
-      consoleWriter.appendLine()
-      consoleWriter.flush()
-      return "" to 1
+  private val paths: List<Path>,
+  private val grammarVersion: GrammarVersion,
+  private val overwrite: Boolean,
+  private val diffNameOnly: Boolean,
+  private val silent: Boolean,
+  private val consoleWriter: Writer = System.out.writer(),
+  private val errWriter: Writer = System.err.writer(),
+) : CliCommand(CliBaseOptions()) {
+  private fun format(contents: String): String {
+    return Formatter(grammarVersion).format(contents)
+  }
+
+  private fun writeErrLine(error: String) {
+    errWriter.write(error)
+    errWriter.appendLine()
+    errWriter.flush()
+  }
+
+  private fun writeLine(message: String) {
+    if (silent) return
+    consoleWriter.write(message)
+    consoleWriter.appendLine()
+    consoleWriter.flush()
+  }
+
+  private fun allPaths(): Stream<Path> {
+    return paths.distinct().stream().flatMap { path ->
+      when {
+        path.toString() == "-" -> Stream.of(path)
+        path.isDirectory() ->
+          Files.walk(path)
+            .filter { it.extension == "pkl" || it.name == "PklProject" }
+            .map { it.normalize() }
+        else -> Stream.of(path.normalize())
+      }
     }
   }
 
-  @OptIn(ExperimentalPathApi::class)
-  protected fun paths(): Set<Path> {
-    val allPaths = mutableSetOf<Path>()
-    for (path in paths) {
-      if (path.isDirectory()) {
-        allPaths.addAll(path.walk().filter { it.extension == "pkl" || it.name == "PklProject" })
-      } else {
-        allPaths.add(path)
+  override fun doRun() {
+    val status = Status(SUCCESS)
+
+    handlePaths(status)
+
+    when (status.status) {
+      FORMATTING_VIOLATION -> {
+        // using CliTestException instead of CliException because we want full control on how to
+        // print errors
+        throw CliTestException("", status.status)
+      }
+      ERROR -> {
+        if (!silent) {
+          writeErrLine("An error occurred during formatting.")
+        }
+        throw CliTestException("", status.status)
       }
     }
-    return allPaths
+  }
+
+  private fun handlePaths(status: Status) {
+    for (path in allPaths()) {
+      val pathStr = path.toString()
+      try {
+        val contents =
+          when {
+            pathStr == "-" -> IoUtils.readString(System.`in`)
+            else -> Files.readString(path)
+          }
+        if (pathStr == "-" && overwrite) {
+          throw CliException("Cannot write to stdin", ERROR)
+        }
+
+        val formatted = format(contents)
+        if (contents != formatted) {
+          if (diffNameOnly || overwrite) {
+            // if `--diff-name-only` or `-w` is specified, only write file names
+            writeLine(pathStr)
+          }
+
+          if (overwrite) {
+            path.writeText(formatted, Charsets.UTF_8)
+          } else {
+            // only exit on violation for "check" operations, not when overwriting
+            status.update(FORMATTING_VIOLATION)
+          }
+        }
+
+        if (!diffNameOnly && !overwrite) {
+          consoleWriter.write(formatted)
+          consoleWriter.flush()
+        }
+      } catch (pe: ParserError) { // thrown by the lexer
+        writeErrLine("Could not format `$pathStr`: $pe")
+        status.update(ERROR)
+      } catch (pe: GenericParserError) { // thrown by the generic parser
+        writeErrLine("Could not format `$pathStr`: $pe")
+        status.update(ERROR)
+      } catch (e: IOException) {
+        writeErrLine("IO error while reading `$pathStr`: ${e.message}")
+        status.update(ERROR)
+      }
+    }
+  }
+
+  companion object {
+    private const val SUCCESS = 0
+    private const val FORMATTING_VIOLATION = 11
+    private const val ERROR = 1
+
+    private class Status(var status: Int) {
+      fun update(newStatus: Int) {
+        status =
+          when {
+            status == ERROR -> status
+            newStatus == ERROR -> newStatus
+            else -> max(status, newStatus)
+          }
+      }
+    }
   }
 }

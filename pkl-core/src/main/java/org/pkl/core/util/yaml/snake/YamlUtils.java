@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,6 +33,9 @@ public final class YamlUtils {
   @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
   private static final Optional<String> STRING_TAG = Optional.of(Tag.STR.toString());
 
+  @SuppressWarnings("OptionalUsedAsFieldOrParameterType")
+  private static final Optional<String> BINARY_TAG = Optional.of(Tag.BINARY.toString());
+
   private static final ImplicitTuple TUPLE = new ImplicitTuple(true, true);
 
   private YamlUtils() {}
@@ -54,6 +57,13 @@ public final class YamlUtils {
     var inferredTag = resolver.resolve(value, true);
     var tuple = new ImplicitTuple(Tag.STR.equals(inferredTag), true);
     return new ScalarEvent(Optional.empty(), STRING_TAG, tuple, value, scalarStyle);
+  }
+
+  /** Constructs a {@link ScalarEvent} for emitting the given value as YAML binary. */
+  public static ScalarEvent bytesScalar(byte[] value) {
+    var encoded = Base64.getEncoder().encodeToString(value);
+    return new ScalarEvent(
+        Optional.empty(), BINARY_TAG, new ImplicitTuple(false, false), encoded, ScalarStyle.PLAIN);
   }
 
   /** Constructs a {@link ScalarEvent} for emitting the given value in plain style. */

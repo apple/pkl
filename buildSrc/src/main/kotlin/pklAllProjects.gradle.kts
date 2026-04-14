@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,14 +65,14 @@ configurations.all {
 }
 
 plugins.withType(JavaPlugin::class).configureEach {
-  tasks.withType<JavaCompile>().configureEach { options.release = 17 }
+  tasks.withType<JavaCompile>().configureEach { options.release = buildInfo.jvmTarget }
 }
 
 tasks.withType<KotlinJvmCompile>().configureEach {
   compilerOptions {
-    jvmTarget = JvmTarget.JVM_17
+    jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
     freeCompilerArgs.addAll("-Xjsr305=strict", "-Xjvm-default=all")
-    freeCompilerArgs.add("-Xjdk-release=17")
+    freeCompilerArgs.add("-Xjdk-release=${buildInfo.jvmTarget}")
   }
 }
 
@@ -123,7 +123,6 @@ tasks.withType(Test::class).configureEach {
   }
   debugOptions {
     enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
-    @Suppress("UnstableApiUsage")
     host = "*"
     port = 5005
     suspend = true
@@ -134,7 +133,6 @@ tasks.withType(Test::class).configureEach {
 tasks.withType(JavaExec::class).configureEach {
   debugOptions {
     enabled = System.getProperty("jvmdebug")?.toBoolean() ?: false
-    @Suppress("UnstableApiUsage")
     host = "*"
     port = 5005
     suspend = true
@@ -155,9 +153,17 @@ private fun KotlinGradleExtension.configureFormatter() {
 }
 
 val originalRemoteName = System.getenv("PKL_ORIGINAL_REMOTE_NAME") ?: "origin"
+// if we're running against a release branch (or a PR targeted at one), use that branch for
+// ratcheting
+// these env vars are set by GitHub actions:
+// https://docs.github.com/en/actions/reference/workflows-and-actions/variables#default-environment-variables
+val ratchetBranchName =
+  (System.getenv("GITHUB_BASE_REF") ?: System.getenv("GITHUB_REF_NAME"))?.let {
+    if (it.startsWith("release/")) it else null
+  } ?: "main"
 
 spotless {
-  ratchetFrom = "$originalRemoteName/main"
+  ratchetFrom = "$originalRemoteName/$ratchetBranchName"
 
   // When building root project, format buildSrc files too.
   // We need this because buildSrc is not a subproject of the root project, so a top-level

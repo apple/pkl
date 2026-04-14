@@ -1,0 +1,34 @@
+open module Foo
+
+prop: String
+
+myself: module?
+
+class Bar extends module {
+  prop2: Int
+}
+
+class Baz extends module {
+  prop2: String
+}
+
+output {
+  value = new Dynamic {
+    bar = new Bar {
+      prop = "hi"
+      prop2 = 15
+      myself {
+        prop = "hi again"
+        prop2 = 15
+      }
+    }
+    baz = new Baz {
+      prop = "hi"
+      prop2 = "hihi"
+      myself {
+        prop = "hihihi"
+        prop2 = "hihihihi"
+      }
+    }
+  }
+}

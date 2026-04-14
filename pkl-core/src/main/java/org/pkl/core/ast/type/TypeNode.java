@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,8 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.pkl.core.PType;
@@ -40,6 +42,7 @@ import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
+import org.pkl.core.ast.internal.SyntheticNode;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -53,6 +56,10 @@ import org.pkl.core.util.Nonnull;
 import org.pkl.core.util.Nullable;
 
 public abstract class TypeNode extends PklNode {
+
+  public interface ClassTypeNode {
+    VmClass getVmClass();
+  }
 
   protected TypeNode(SourceSection sourceSection) {
     super(sourceSection);
@@ -116,6 +123,7 @@ public abstract class TypeNode extends PklNode {
 
   // method arguments are used when default value contains a root node
   public @Nullable Object createDefaultValue(
+      VirtualFrame frame,
       VmLanguage language,
       // header section of the property or method that carries the type annotation
       SourceSection headerSection,
@@ -124,11 +132,31 @@ public abstract class TypeNode extends PklNode {
     return null;
   }
 
-  /**
-   * Visit child type nodes; but not parameterized types (does not visit {@code String} in {@code
-   * Listing<String>}).
-   */
-  protected abstract boolean acceptTypeNode(TypeNodeConsumer consumer);
+  public final boolean isFinalType() {
+    var ret = new MutableBoolean(true);
+    acceptTypeNode(
+        true,
+        typeNode -> {
+          // assumption: don't need to worry about `NonFinalClassTypeNode`
+          if (typeNode instanceof NonFinalModuleTypeNode) {
+            ret.set(false);
+            return false;
+          }
+          return true;
+        });
+    return ret.get();
+  }
+
+  /** Visit child type nodes of this type. */
+  protected abstract boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer);
+
+  protected VmTypeMismatchException constraintException(Object value, SourceSection sourceSection) {
+    throw new VmTypeMismatchException.Constraint(
+        sourceSection,
+        value,
+        sourceSection,
+        Map.of(new SyntheticNode(sourceSection), List.of(false)));
+  }
 
   public static TypeNode forClass(SourceSection sourceSection, VmClass clazz) {
     return clazz.isClosed()
@@ -216,7 +244,6 @@ public abstract class TypeNode extends PklNode {
     public TypeNode initWriteSlotNode(int slot) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       this.slot = slot;
-      //noinspection DataFlowIssue
       writeFrameSlotNode = WriteFrameSlotNodeGen.create(sourceSection, slot, null);
       return this;
     }
@@ -321,7 +348,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -373,13 +400,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
 
   /** The `module` type for a final module. */
-  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     private final VmClass moduleClass;
 
     public FinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
@@ -418,13 +446,23 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      return TypeNode.createDefaultValue(moduleClass);
     }
   }
 
   /** The `module` type for an open module. */
-  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode {
+  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     private final VmClass moduleClass; // only used by getVmClass()
     @Child private ExpressionNode getModuleNode;
 
@@ -470,8 +508,18 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
+      return TypeNode.createDefaultValue(moduleClass);
     }
   }
 
@@ -504,7 +552,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return literal;
     }
@@ -520,7 +571,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -548,7 +599,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -572,7 +623,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmDynamic.empty();
     }
@@ -583,7 +637,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -593,7 +647,7 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only `VmValue`s can possibly pass its type
    * check.
    */
-  public static final class FinalClassTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalClassTypeNode extends ObjectSlotTypeNode implements ClassTypeNode {
     private final VmClass clazz;
 
     public FinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -622,7 +676,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return TypeNode.createDefaultValue(clazz);
     }
@@ -636,16 +693,18 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
 
   /**
-   * An `open` or `abstract` class type. Since this node is not used for String/Boolean/Int/Float
-   * and their supertypes, only `VmValue`s can possibly pass its type check.
+   * An {@code open} or {@code abstract} class type. Since this node is not used for
+   * String/Boolean/Int/Float and their supertypes, only {@link VmValue}s can possibly pass its type
+   * check.
    */
-  public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode {
+  public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
     protected final VmClass clazz;
 
     public NonFinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -691,7 +750,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return TypeNode.createDefaultValue(clazz);
     }
@@ -705,7 +767,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -734,10 +796,13 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmNull.withDefault(
-          elementTypeNode.createDefaultValue(language, headerSection, qualifiedName));
+          elementTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName));
     }
 
     @Override
@@ -772,11 +837,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
-      if (!consumer.accept(this)) {
-        return false;
-      }
-      return elementTypeNode.acceptTypeNode(consumer);
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this) && elementTypeNode.acceptTypeNode(visitTypeArguments, consumer);
     }
   }
 
@@ -817,12 +879,15 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return defaultIndex == -1
           ? null
           : elementTypeNodes[defaultIndex].createDefaultValue(
-              language, headerSection, qualifiedName);
+              frame, language, headerSection, qualifiedName);
     }
 
     @Override
@@ -861,7 +926,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (!consumer.accept(this)) {
         return false;
       }
@@ -872,7 +937,7 @@ public abstract class TypeNode extends PklNode {
         if (!ret) {
           continue;
         }
-        if (!elementTypeNodes[i].acceptTypeNode(consumer)) {
+        if (!elementTypeNodes[i].acceptTypeNode(visitTypeArguments, consumer)) {
           ret = false;
         }
       }
@@ -892,6 +957,7 @@ public abstract class TypeNode extends PklNode {
       var seenParameterizedClasses = EconomicSets.<VmClass>create();
       var ret = new MutableBoolean(false);
       this.acceptTypeNode(
+          false,
           (typeNode) -> {
             if (!typeNode.isParametric()) {
               return true;
@@ -919,6 +985,11 @@ public abstract class TypeNode extends PklNode {
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
+      // disallow power assertions from triggering in case one union member checks successfully
+      var localContext = VmLanguage.get(this).localContext.get();
+      var wasInTypeTest = localContext.isInTypeTest();
+      localContext.setInTypeTest(true);
+
       // Do eager checks (shallow-force) if there are two listings or two mappings represented.
       // (we can't know that `new Listing { 0; "hi" }[0]` fails for `Listing<Int>|Listing<String>`
       // without checking both index 0 and index 1).
@@ -926,15 +997,36 @@ public abstract class TypeNode extends PklNode {
       for (var i = 0; i < elementTypeNodes.length; i++) {
         var elementTypeNode = elementTypeNodes[i];
         try {
-          if (shouldEagerCheck) {
-            return elementTypeNode.executeEagerly(frame, value);
-          } else {
-            return elementTypeNode.executeLazily(frame, value);
-          }
+          var result =
+              shouldEagerCheck
+                  ? elementTypeNode.executeEagerly(frame, value)
+                  : elementTypeNode.executeLazily(frame, value);
+          localContext.setInTypeTest(wasInTypeTest);
+          return result;
         } catch (VmTypeMismatchException e) {
           typeMismatches[i] = e;
         }
       }
+
+      // all members failed to type check
+      // if enabled, re-execute type checks to generate power assertions
+      localContext.setInTypeTest(wasInTypeTest);
+      if (VmContext.get(this).getPowerAssertionsEnabled()
+          && (!wasInTypeTest || localContext.hasActiveTracker())) {
+        for (var i = 0; i < elementTypeNodes.length; i++) {
+          var elementTypeNode = elementTypeNodes[i];
+          try {
+            if (shouldEagerCheck) {
+              elementTypeNode.executeEagerly(frame, value);
+            } else {
+              elementTypeNode.executeLazily(frame, value);
+            }
+          } catch (VmTypeMismatchException e) {
+            typeMismatches[i] = e;
+          }
+        }
+      }
+
       throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
     }
 
@@ -945,14 +1037,36 @@ public abstract class TypeNode extends PklNode {
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
+      // disallow power assertions from triggering in case one union member checks successfully
+      var localContext = VmLanguage.get(this).localContext.get();
+      var wasInTypeTest = localContext.isInTypeTest();
+      localContext.setInTypeTest(true);
+
       for (var i = 0; i < elementTypeNodes.length; i++) {
         // eager checks
         try {
-          return elementTypeNodes[i].executeEagerly(frame, value);
+          var result = elementTypeNodes[i].executeEagerly(frame, value);
+          localContext.setInTypeTest(wasInTypeTest);
+          return result;
         } catch (VmTypeMismatchException e) {
           typeMismatches[i] = e;
         }
       }
+
+      // all members failed to type check
+      // if enabled, re-execute type checks to generate power assertions
+      localContext.setInTypeTest(wasInTypeTest);
+      if (VmContext.get(this).getPowerAssertionsEnabled()
+          && (!wasInTypeTest || localContext.hasActiveTracker())) {
+        for (var i = 0; i < elementTypeNodes.length; i++) {
+          try {
+            elementTypeNodes[i].executeEagerly(frame, value);
+          } catch (VmTypeMismatchException e) {
+            typeMismatches[i] = e;
+          }
+        }
+      }
+
       throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
     }
   }
@@ -1016,15 +1130,25 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
     @Override
-    @TruffleBoundary
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
+      return unionDefault;
+    }
+
+    public Set<String> getStringLiterals() {
+      return stringLiterals;
+    }
+
+    public @Nullable String getUnionDefault() {
       return unionDefault;
     }
   }
@@ -1063,7 +1187,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmList.EMPTY;
     }
@@ -1089,7 +1216,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1146,13 +1273,19 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmList.EMPTY;
     }
@@ -1240,7 +1373,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public final Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmSet.EMPTY;
     }
@@ -1273,7 +1409,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
@@ -1332,7 +1471,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       return VmMap.EMPTY;
     }
@@ -1340,6 +1482,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmClass getVmClass() {
       return BaseModule.getMapClass();
+    }
+
+    public TypeNode getKeyTypeNode() {
+      return keyTypeNode;
     }
 
     public TypeNode getValueTypeNode() {
@@ -1367,7 +1513,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this)
+            && keyTypeNode.acceptTypeNode(true, consumer)
+            && valueTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
@@ -1462,7 +1613,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && valueTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
   }
@@ -1535,7 +1689,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        assert keyTypeNode != null;
+        return consumer.accept(this) && valueTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
   }
@@ -1586,70 +1744,24 @@ public abstract class TypeNode extends PklNode {
       return valueTypeCastNode;
     }
 
-    // either (if defaultMemberValue != null):
-    // x: Listing<Foo> // = new Listing {
-    //   default = name -> new Foo {}
-    // }
-    // or (if defaultMemberValue == null):
-    // x: Listing<Int> // = new Listing {
-    //   default = Undefined()
-    // }
-    @Override
     @TruffleBoundary
-    public final Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
-
-      if (valueTypeNode instanceof UnknownTypeNode) {
-        if (isListing()) {
-          return new VmListing(
-              VmUtils.createEmptyMaterializedFrame(),
-              BaseModule.getListingClass().getPrototype(),
-              EconomicMaps.create(),
-              0);
-        }
-
-        return new VmMapping(
+    private Object newEmptyListingOrMapping() {
+      if (isListing()) {
+        return new VmListing(
             VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getMappingClass().getPrototype(),
-            EconomicMaps.create());
+            BaseModule.getListingClass().getPrototype(),
+            EconomicMaps.create(),
+            0);
       }
 
-      var defaultMember =
-          new ObjectMember(
-              headerSection,
-              headerSection,
-              VmModifier.HIDDEN,
-              Identifier.DEFAULT,
-              qualifiedName + ".default");
+      return new VmMapping(
+          VmUtils.createEmptyMaterializedFrame(),
+          BaseModule.getMappingClass().getPrototype(),
+          EconomicMaps.create());
+    }
 
-      var defaultMemberValue =
-          valueTypeNode.createDefaultValue(language, headerSection, qualifiedName);
-
-      if (defaultMemberValue == null) {
-        defaultMember.initMemberNode(
-            new UntypedObjectMemberNode(
-                language,
-                new FrameDescriptor(),
-                defaultMember,
-                new DefaultPropertyBodyNode(headerSection, Identifier.DEFAULT, null)));
-      } else {
-        //noinspection ConstantConditions
-        defaultMember.initConstantValue(
-            new VmFunction(
-                VmUtils.createEmptyMaterializedFrame(),
-                // Assumption: don't need to set the correct `thisValue`
-                // because it is guaranteed to be never accessed.
-                null,
-                1,
-                new SimpleRootNode(
-                    language,
-                    new FrameDescriptor(),
-                    headerSection,
-                    defaultMember.getQualifiedName() + ".<function>",
-                    new ConstantValueNode(defaultMemberValue)),
-                null));
-      }
-
+    @TruffleBoundary
+    private Object newEmptyListingOrMapping(ObjectMember defaultMember) {
       if (isListing()) {
         return new VmListing(
             VmUtils.createEmptyMaterializedFrame(),
@@ -1662,6 +1774,70 @@ public abstract class TypeNode extends PklNode {
           VmUtils.createEmptyMaterializedFrame(),
           BaseModule.getMappingClass().getPrototype(),
           EconomicMaps.of(Identifier.DEFAULT, defaultMember));
+    }
+
+    @TruffleBoundary
+    private ObjectMember createDefaultMember(
+        SourceSection headerSection, String qualifiedName, @Nullable Object defaultMemberValue) {
+      var defaultMember =
+          new ObjectMember(
+              headerSection,
+              headerSection,
+              VmModifier.HIDDEN,
+              Identifier.DEFAULT,
+              VmUtils.concat(qualifiedName, ".default"));
+      if (defaultMemberValue == null) {
+        defaultMember.initMemberNode(
+            new UntypedObjectMemberNode(
+                language,
+                new FrameDescriptor(),
+                defaultMember,
+                new DefaultPropertyBodyNode(headerSection, Identifier.DEFAULT, null)));
+      } else {
+        //noinspection ConstantConditions
+        defaultMember.initConstantValue(
+            new VmFunction(
+                // Assumption: don't need to set the correct `thisValue`
+                // because it is guaranteed to be never accessed.
+                VmUtils.createEmptyMaterializedFrame(),
+                null,
+                1,
+                new SimpleRootNode(
+                    language,
+                    new FrameDescriptor(),
+                    headerSection,
+                    VmUtils.concat(defaultMember.getQualifiedName(), ".<function>"),
+                    new ConstantValueNode(defaultMemberValue)),
+                null));
+      }
+      return defaultMember;
+    }
+
+    // either (if defaultMemberValue != null):
+    // x: Listing<Foo> // = new Listing {
+    //   default = name -> new Foo {}
+    // }
+    // or (if defaultMemberValue == null):
+    // x: Listing<Int> // = new Listing {
+    //   default = Undefined()
+    // }
+    @Override
+    public final Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+
+      if (valueTypeNode instanceof UnknownTypeNode) {
+        return newEmptyListingOrMapping();
+      }
+
+      var defaultMemberValue =
+          valueTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+
+      var defaultMember = createDefaultMember(headerSection, qualifiedName, defaultMemberValue);
+
+      return newEmptyListingOrMapping(defaultMember);
     }
 
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
@@ -1790,7 +1966,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1861,7 +2037,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1938,7 +2114,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -2009,13 +2185,26 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this)
+            && firstTypeNode.acceptTypeNode(true, consumer)
+            && secondTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
     @Override
     protected boolean isParametric() {
       return true;
+    }
+
+    public TypeNode getFirstTypeNode() {
+      return firstTypeNode;
+    }
+
+    public TypeNode getSecondTypeNode() {
+      return secondTypeNode;
     }
   }
 
@@ -2030,7 +2219,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -2059,7 +2251,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -2113,7 +2305,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2126,8 +2318,8 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmNull) {
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getNonNullTypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw constraintException(value, BaseModule.getNonNullTypeAlias().getConstraintSection());
       }
       return value;
     }
@@ -2148,7 +2340,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2168,7 +2360,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if ((l & mask) == l) return value;
 
-        throw new VmTypeMismatchException.Constraint(typealias.getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var sourceSection = typealias.getConstraintSection();
+        throw constraintException(value, sourceSection);
       }
 
       throw new VmTypeMismatchException.Simple(
@@ -2191,8 +2385,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected final boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    public long getMask() {
+      return mask;
     }
   }
 
@@ -2231,8 +2429,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.byteValue()) return value;
 
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getInt8TypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var sourceSection = BaseModule.getInt8TypeAlias().getConstraintSection();
+        throw constraintException(value, sourceSection);
       }
 
       throw new VmTypeMismatchException.Simple(
@@ -2260,7 +2459,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2275,8 +2474,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.shortValue()) return value;
 
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getInt16TypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        var sourceSection = BaseModule.getInt16TypeAlias().getConstraintSection();
+        throw constraintException(value, sourceSection);
       }
 
       throw new VmTypeMismatchException.Simple(
@@ -2304,7 +2504,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2319,10 +2519,11 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.intValue()) return value;
 
-        throw new VmTypeMismatchException.Constraint(
-            BaseModule.getInt32TypeAlias().getConstraintSection(), value);
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+        throw constraintException(value, BaseModule.getInt32TypeAlias().getConstraintSection());
       }
 
+      CompilerDirectives.transferToInterpreterAndInvalidate();
       throw new VmTypeMismatchException.Simple(
           BaseModule.getInt32TypeAlias().getBaseTypeSection(), value, BaseModule.getIntClass());
     }
@@ -2348,7 +2549,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2381,6 +2582,10 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+    }
+
+    public TypeNode getAliasedTypeNode() {
+      return aliasedTypeNode;
     }
 
     @Override
@@ -2441,34 +2646,41 @@ public abstract class TypeNode extends PklNode {
       }
     }
 
-    @Override
     @TruffleBoundary
+    private VmFunction newMixin(VmLanguage language, String qualifiedName) {
+      //noinspection ConstantConditions
+      return new VmFunction(
+          VmUtils.createEmptyMaterializedFrame(),
+          // Assumption: don't need to set the correct `thisValue`
+          // because it is guaranteed to be never accessed.
+          null,
+          1,
+          new IdentityMixinNode(
+              language,
+              new FrameDescriptor(),
+              getSourceSection(),
+              qualifiedName,
+              typeArgumentNodes.length == 1
+                  ?
+                  // shouldn't need to deepCopy() this node because it isn't used as @Child
+                  // anywhere else
+                  typeArgumentNodes[0]
+                  : null),
+          null);
+    }
+
+    @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
       if (typeAlias == BaseModule.getMixinTypeAlias()) {
-        //noinspection ConstantConditions
-        return new VmFunction(
-            VmUtils.createEmptyMaterializedFrame(),
-            // Assumption: don't need to set the correct `thisValue`
-            // because it is guaranteed to be never accessed.
-            null,
-            1,
-            new IdentityMixinNode(
-                language,
-                new FrameDescriptor(),
-                getSourceSection(),
-                qualifiedName,
-                typeArgumentNodes.length == 1
-                    ?
-                    // shouldn't need to deepCopy() this node because it isn't used as @Child
-                    // anywhere else
-                    typeArgumentNodes[0]
-                    : null),
-            null);
+        return newMixin(language, qualifiedName);
       }
 
-      return aliasedTypeNode.createDefaultValue(language, headerSection, qualifiedName);
+      return aliasedTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
     }
 
     @Override
@@ -2498,11 +2710,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
-      if (!consumer.accept(this)) {
-        return false;
-      }
-      return aliasedTypeNode.acceptTypeNode(consumer);
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this) && aliasedTypeNode.acceptTypeNode(visitTypeArguments, consumer);
     }
 
     @Override
@@ -2542,6 +2751,10 @@ public abstract class TypeNode extends PklNode {
       this.language = language;
       this.childNode = childNode;
       this.constraintNodes = constraintNodes;
+    }
+
+    public TypeNode getChildTypeNode() {
+      return childNode;
     }
 
     @Override
@@ -2593,9 +2806,12 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public @Nullable Object createDefaultValue(
-        VmLanguage language, SourceSection headerSection, String qualifiedName) {
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
 
-      return childNode.createDefaultValue(language, headerSection, qualifiedName);
+      return childNode.createDefaultValue(frame, language, headerSection, qualifiedName);
     }
 
     public SourceSection getBaseTypeSection() {
@@ -2622,11 +2838,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (!consumer.accept(this)) {
         return false;
       }
-      return childNode.acceptTypeNode(consumer);
+      return childNode.acceptTypeNode(visitTypeArguments, consumer);
     }
 
     public VmTyped getMirror() {
@@ -2662,7 +2878,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2690,7 +2906,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2749,7 +2965,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2777,7 +2993,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2817,7 +3033,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2857,7 +3073,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }

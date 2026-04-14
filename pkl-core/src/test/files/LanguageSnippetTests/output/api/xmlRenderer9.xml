@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<root>
+  <FOO>a</FOO>
+  <bar>b<!-- bar --></bar>
+  <baz>
+    <qux>c<!-- qux --></qux>
+    <quux>c</quux>
+  </baz>
+</root>

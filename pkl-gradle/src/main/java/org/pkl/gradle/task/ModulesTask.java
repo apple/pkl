@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,16 +30,20 @@ import org.gradle.api.file.FileCollection;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.provider.Provider;
+import org.gradle.api.tasks.CacheableTask;
 import org.gradle.api.tasks.Input;
 import org.gradle.api.tasks.InputFiles;
 import org.gradle.api.tasks.Internal;
 import org.gradle.api.tasks.Optional;
+import org.gradle.api.tasks.PathSensitive;
+import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.core.util.Pair;
 import org.pkl.gradle.utils.PluginUtils;
 
+@CacheableTask
 public abstract class ModulesTask extends BasePklTask {
   // We expose the contents of this property as task inputs via the sourceModuleFiles
   // and sourceModuleUris properties. We cannot use two separate properties because
@@ -49,6 +53,7 @@ public abstract class ModulesTask extends BasePklTask {
   public abstract ListProperty<Object> getSourceModules();
 
   @InputFiles
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   public abstract ListProperty<File> getTransitiveModules();
 
   private final Map<List<Object>, Pair<List<File>, List<URI>>> parsedSourceModulesCache =
@@ -63,6 +68,7 @@ public abstract class ModulesTask extends BasePklTask {
 
   // We use @InputFiles and FileCollection here to ensure that file contents are tracked.
   @InputFiles
+  @PathSensitive(PathSensitivity.ABSOLUTE)
   public FileCollection getSourceModuleFiles() {
     return getProject().files(getParsedSourceModules().map(it -> it.first));
   }
@@ -166,7 +172,8 @@ public abstract class ModulesTask extends BasePklTask {
               getHttpRewrites().getOrNull(),
               Map.of(),
               Map.of(),
-              null);
+              null,
+              getPowerAssertions().getOrElse(false));
     }
     return cachedOptions;
   }

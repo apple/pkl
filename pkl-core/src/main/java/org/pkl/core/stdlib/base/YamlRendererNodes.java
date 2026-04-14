@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.MutableBoolean;
@@ -69,13 +69,16 @@ public final class YamlRendererNodes {
     var indentWidth = ((Long) VmUtils.readMember(self, Identifier.INDENT_WIDTH)).intValue();
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
     var isStream = (boolean) VmUtils.readMember(self, Identifier.IS_STREAM);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
     return new YamlRenderer(
-        builder, " ".repeat(indentWidth), converter, omitNullProperties, mode, isStream);
+        builder,
+        " ".repeat(indentWidth),
+        PklConverter.fromRenderer(self),
+        omitNullProperties,
+        mode,
+        isStream);
   }
 
-  private static final class YamlRenderer extends AbstractRenderer {
+  private static final class YamlRenderer extends AbstractStringRenderer {
     private final boolean isStream;
     private final YamlEmitter emitter;
     private final String elementIndent;
@@ -180,7 +183,8 @@ public final class YamlRendererNodes {
 
     @Override
     public void visitBytes(VmBytes value) {
-      cannotRenderTypeAddConverter(value);
+      if (!builder.isEmpty()) builder.append(' ');
+      emitter.emit(value.getBytes(), currIndent, false);
     }
 
     @Override
@@ -306,7 +310,7 @@ public final class YamlRendererNodes {
         return;
       }
 
-      if (VmUtils.isRenderDirective(key)) {
+      if (isRenderDirective(key)) {
         visitRenderDirective((VmTyped) key);
         builder.append(':');
         return;

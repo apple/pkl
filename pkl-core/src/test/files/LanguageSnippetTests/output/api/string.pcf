@@ -3,7 +3,17 @@ facts {
     true
     true
   }
+  ["isNotEmpty"] {
+    true
+    true
+  }
   ["isBlank"] {
+    true
+    true
+    true
+    true
+  }
+  ["isNotBlank"] {
     true
     true
     true

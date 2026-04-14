@@ -1,0 +1,10 @@
+class Bird {
+  name: String?
+}
+
+// this will create `NullPropagatingOperationNode` and `InvokeVirtualMethodNode` for
+// `name?.contains("Bob")`.
+// this tests that we don't have two duplicate values in the diagram.
+p: Bird(name?.contains("Bob") ?? false) = new {
+  name = "Pigeon"
+}

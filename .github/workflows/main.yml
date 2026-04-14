@@ -1,0 +1,913 @@
+# Generated from Workflow.pkl. DO NOT EDIT.
+name: Build (main)
+'on':
+  push:
+    branches:
+    - main
+    tags-ignore:
+    - '**'
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: false
+permissions:
+  contents: read
+jobs:
+  gradle-check:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: check
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-gradle-check
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-gradle-check
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  gradle-check-windows:
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: check
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-gradle-check-windows
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-gradle-check-windows
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  bench:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: bench:jmh
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true bench:jmh
+  gradle-compatibility:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-gradle-compatibility
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-gradle-compatibility
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  java-executables-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+        fetch-depth: 0
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - name: gradle build java executables
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-java
+        path: '*/build/executable/**/*'
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-java-executables-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-java-executables-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-cli-macOS-amd64-snapshot:
+    if: github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-macOS-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-macOS-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-macOS-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-cli-linux-amd64-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-linux-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-linux-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-linux-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  pkl-cli-macOS-aarch64-snapshot:
+    if: github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-macOS-aarch64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-macOS-aarch64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-macOS-aarch64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-cli-linux-aarch64-snapshot:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-linux-aarch64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-linux-aarch64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-linux-aarch64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  pkl-cli-alpine-linux-amd64-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Install musl and zlib
+      run: |
+        set -e
+        mkdir -p ~/staticdeps/
+
+        ZLIB_VERSION="1.2.13"
+        MUSL_VERSION="1.2.5"
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          # Download zlib tarball and signature
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" -o /tmp/zlib.tar.gz
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc" -o /tmp/zlib.tar.gz.asc
+
+          # Import zlib GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA
+
+          # Verify GPG signature
+          echo "Verifying zlib GPG signature..."
+          gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz
+
+          mkdir -p "/tmp/dep_zlib-${ZLIB_VERSION}"
+          cd "/tmp/dep_zlib-${ZLIB_VERSION}"
+          # shellcheck disable=SC2002
+          cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "zlib-${ZLIB_VERSION}: configure..." 
+          ./configure --static --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "zlib-${ZLIB_VERSION}: make..." 
+          make -s -j4
+
+          echo "zlib-${ZLIB_VERSION}: make install..." 
+          make -s install
+
+          rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          # Download musl tarball and signature
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
+
+          # Import musl GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
+
+          # Verify GPG signature
+          echo "Verifying musl GPG signature..."
+          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
+
+          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
+          cd "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # shellcheck disable=SC2002
+          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "musl-${MUSL_VERSION}: configure..." 
+          ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "musl-${MUSL_VERSION}: make..." 
+          make -s -j4
+
+          echo "musl-${MUSL_VERSION}: make install..." 
+          make -s install
+
+          rm -rf "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+
+        echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-alpine-linux-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-alpine-linux-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-alpine-linux-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-cli-windows-amd64-snapshot:
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-windows-amd64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-windows-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-windows-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-doc-macOS-amd64-snapshot:
+    if: github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-macOS-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-macOS-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-macOS-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-doc-linux-amd64-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-linux-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-linux-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-linux-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  pkl-doc-macOS-aarch64-snapshot:
+    if: github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-macOS-aarch64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-macOS-aarch64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-macOS-aarch64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-doc-linux-aarch64-snapshot:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-linux-aarch64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-linux-aarch64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-linux-aarch64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  pkl-doc-alpine-linux-amd64-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Install musl and zlib
+      run: |
+        set -e
+        mkdir -p ~/staticdeps/
+
+        ZLIB_VERSION="1.2.13"
+        MUSL_VERSION="1.2.5"
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          # Download zlib tarball and signature
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" -o /tmp/zlib.tar.gz
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc" -o /tmp/zlib.tar.gz.asc
+
+          # Import zlib GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA
+
+          # Verify GPG signature
+          echo "Verifying zlib GPG signature..."
+          gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz
+
+          mkdir -p "/tmp/dep_zlib-${ZLIB_VERSION}"
+          cd "/tmp/dep_zlib-${ZLIB_VERSION}"
+          # shellcheck disable=SC2002
+          cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "zlib-${ZLIB_VERSION}: configure..." 
+          ./configure --static --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "zlib-${ZLIB_VERSION}: make..." 
+          make -s -j4
+
+          echo "zlib-${ZLIB_VERSION}: make install..." 
+          make -s install
+
+          rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          # Download musl tarball and signature
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
+
+          # Import musl GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
+
+          # Verify GPG signature
+          echo "Verifying musl GPG signature..."
+          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
+
+          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
+          cd "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # shellcheck disable=SC2002
+          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "musl-${MUSL_VERSION}: configure..." 
+          ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "musl-${MUSL_VERSION}: make..." 
+          make -s -j4
+
+          echo "musl-${MUSL_VERSION}: make install..." 
+          make -s install
+
+          rm -rf "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+
+        echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-alpine-linux-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-alpine-linux-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-alpine-linux-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  pkl-doc-windows-amd64-snapshot:
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-windows-amd64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-windows-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-windows-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  deploy-snapshot:
+    needs:
+    - gradle-check
+    - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - java-executables-snapshot
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-alpine-linux-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-alpine-linux-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    environment: maven-release
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '21'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+      with:
+        pattern: executable-**
+        merge-multiple: true
+    - env:
+        ORG_GRADLE_PROJECT_signingKeyId: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEYID }}
+        ORG_GRADLE_PROJECT_signingKey: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGKEY }}
+        ORG_GRADLE_PROJECT_signingPassword: ${{ secrets.ORG_GRADLE_PROJECT_SIGNINGPASSWORD }}
+        ORG_GRADLE_PROJECT_sonatypePassword: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEPASSWORD }}
+        ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
+      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true --no-parallel publishToSonatype
+  publish-test-results:
+    if: '!cancelled()'
+    needs:
+    - gradle-check
+    - gradle-check-windows
+    - gradle-compatibility
+    - java-executables-snapshot
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-alpine-linux-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-alpine-linux-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
+    permissions:
+      checks: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+      with:
+        pattern: test-results-xml-*
+    - name: Publish test results
+      if: '!cancelled()'
+      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
+      with:
+        comment_mode: 'off'
+        files: test-results-xml-*/**/*.xml
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-publish-test-results
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  trigger-downstream-builds:
+    if: github.repository_owner == 'apple'
+    needs:
+    - gradle-check
+    - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - java-executables-snapshot
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-alpine-linux-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-alpine-linux-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
+    - deploy-snapshot
+    - publish-test-results
+    runs-on: ubuntu-latest
+    steps:
+    - name: Create app token
+      id: app-token
+      uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+      with:
+        app-id: ${{ secrets.PKL_CI_CLIENT_ID }}
+        private-key: ${{ secrets.PKL_CI }}
+        owner: ${{ github.repository_owner }}
+    - name: Trigger pkl-lang.org build
+      env:
+        GH_TOKEN: ${{ steps.app-token.outputs.token }}
+        SOURCE_RUN: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+      run: |-
+        gh workflow run \
+          --repo apple/pkl-lang.org \
+          --ref main \
+          --field source_run="${SOURCE_RUN}" \
+          main.yml

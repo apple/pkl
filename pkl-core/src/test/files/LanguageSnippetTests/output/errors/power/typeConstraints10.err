@@ -1,0 +1,26 @@
+–– Pkl Error ––
+Type constraint `this == new Dynamic { ...list }` violated.
+Value: new Dynamic {}
+
+    this == new Dynamic { ...list }
+    │    │  │                │
+    │    │  │                List(1, 2, 3)
+    │    │  new Dynamic { 1; 2; 3 }
+    │    false
+    new Dynamic {}
+
+x | foo: Dynamic(this == new Dynamic { ...list })
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at typeConstraints10#foo (file:///$snippetsDir/input/errors/power/typeConstraints10.pkl)
+
+x | foo: Dynamic(this == new Dynamic { ...list })
+    ^^^
+at typeConstraints10#foo (file:///$snippetsDir/input/errors/power/typeConstraints10.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

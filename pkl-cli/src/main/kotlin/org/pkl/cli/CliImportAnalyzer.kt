@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -66,7 +66,7 @@ constructor(
     try {
       return builder
         .apply {
-          for ((idx, sourceModule) in options.base.normalizedSourceModules.withIndex()) {
+          for ((idx, sourceModule) in resolvedSourceModules.withIndex()) {
             addExternalProperty("pkl.analyzeImports.$idx", sourceModule.toString())
           }
         }

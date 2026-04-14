@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,7 +63,7 @@ import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
@@ -135,12 +135,11 @@ public final class RendererNodes {
   @TruffleBoundary
   private static ProtobufRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
 
-    return new ProtobufRenderer(builder, indent, new PklConverter(converters));
+    return new ProtobufRenderer(builder, indent, PklConverter.fromRenderer(self));
   }
 
-  private static final class ProtobufRenderer extends AbstractRenderer {
+  private static final class ProtobufRenderer extends AbstractStringRenderer {
     private final Deque<Identifier> propertyPath = new ArrayDeque<>();
     private final Deque<Boolean> wrapperRequirement = new ArrayDeque<>();
     private final JsonEscaper jsonEscaper = new JsonEscaper(false);
@@ -306,7 +305,7 @@ public final class RendererNodes {
 
     @Override
     protected void visitEntryKey(Object key, boolean isFirst) {
-      var isDirective = VmUtils.isRenderDirective(key);
+      var isDirective = isRenderDirective(key);
       var isValidKey =
           isDirective || key instanceof Long || key instanceof Boolean || key instanceof String;
       if (!isValidKey) {

@@ -118,3 +118,13 @@ The left-hand side describes the source prefix, and the right-hand describes the
 This option is commonly used to enable package mirroring.
 The above example will rewrite URL `\https://pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0` to `\https://my.internal.mirror/pkl-k8s/k8s@1.0.0`.
 ====
+
+.powerAssertions: Property<Boolean>
+[%collapsible]
+====
+Default: `false` (except for test tasks, which default to `true`) +
+Example: `powerAssertions = true` +
+Enable power assertions for detailed assertion failure messages.
+When enabled, type constraint failures will show intermediate values in the assertion expression.
+This option has a performance impact when constraint failures occur.
+====

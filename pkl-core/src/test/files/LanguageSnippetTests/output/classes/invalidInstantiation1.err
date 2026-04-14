@@ -10,10 +10,10 @@ Examples:
 * `123` uses literal syntax to create an instance of class `Int`.
 * `Pair(1, 2)` uses the `Pair()` constructor method to create an instance of class `Pair`.
 
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
 
-xxx | bytes = text.encodeToBytes("UTF-8")
-              ^^^^
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
 at pkl.base#Module.output.bytes (pkl:base)

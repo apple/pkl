@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -35,7 +35,7 @@ internal abstract class PageGenerator<out S>(
   consoleOut: OutputStream,
 ) : AbstractGenerator(consoleOut) where S : PageScope {
   companion object {
-    private val json = Json {}
+    private val json = Json
   }
 
   private val markdownInlineParserFactory = MarkdownParserFactory(pageScope)
@@ -181,7 +181,7 @@ internal abstract class PageGenerator<out S>(
             } else {
               "Click or press 'S' to search this package"
             }
-          autoComplete = false
+          autoComplete = "off"
           if (packageName != null) {
             require(packageVersion != null)
             attributes["data-package-name"] = packageName

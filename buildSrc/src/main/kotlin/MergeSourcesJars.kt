@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,7 @@ open class MergeSourcesJars : DefaultTask() {
     // a word or a period character. should catch most cases.
     val importPattern =
       Pattern.compile(
-        "(?<!(\\w|\\.))(" + relocatedPkgs.keys.joinToString("|") { it.replace(".", "\\.") } + ")"
+        "(?<!([\\w.]))(" + relocatedPkgs.keys.joinToString("|") { it.replace(".", "\\.") } + ")"
       )
 
     val sourceFileExts = sourceFileExtensions.get()

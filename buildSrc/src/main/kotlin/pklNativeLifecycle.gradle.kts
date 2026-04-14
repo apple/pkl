@@ -69,13 +69,12 @@ val assembleNative by
       buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
         wraps(assembleNativeWindowsAmd64)
       }
-      buildInfo.musl -> {
-        throw GradleException("Building musl on ${buildInfo.os} is not supported")
-      }
       else -> {
-        throw GradleException(
-          "Unsupported os/arch pair: ${buildInfo.os.name}/${buildInfo.targetArch}"
-        )
+        doLast {
+          throw GradleException(
+            "Cannot build targeting ${buildInfo.os.name}/${buildInfo.targetArch} with musl=${buildInfo.musl}"
+          )
+        }
       }
     }
   }
@@ -83,6 +82,7 @@ val assembleNative by
 val testNative by
   tasks.registering {
     group = "verification"
+    dependsOn(assembleNative)
 
     if (!buildInfo.isCrossArchSupported && buildInfo.isCrossArch) {
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
@@ -105,13 +105,12 @@ val testNative by
       buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
         dependsOn(testNativeWindowsAmd64)
       }
-      buildInfo.musl -> {
-        throw GradleException("Building musl on ${buildInfo.os} is not supported")
-      }
       else -> {
-        throw GradleException(
-          "Unsupported os/arch pair: ${buildInfo.os.name}/${buildInfo.targetArch}"
-        )
+        doLast {
+          throw GradleException(
+            "Cannot build targeting ${buildInfo.os.name}/${buildInfo.targetArch} with musl=${buildInfo.musl}"
+          )
+        }
       }
     }
   }
@@ -125,5 +124,5 @@ val checkNative by
 val buildNative by
   tasks.registering {
     group = "build"
-    dependsOn(assembleNative, checkNative)
+    dependsOn(checkNative)
   }

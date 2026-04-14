@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -195,6 +195,10 @@ public final class BaseModule extends StdLibModule {
     return AnnotationClass.instance;
   }
 
+  public static VmClass getConvertPropertyClass() {
+    return ConvertPropertyClass.instance;
+  }
+
   public static VmClass getDeprecatedClass() {
     return DeprecatedClass.instance;
   }
@@ -223,8 +227,24 @@ public final class BaseModule extends StdLibModule {
     return MixinTypeAlias.instance;
   }
 
+  public static VmTypeAlias getUIntTypeAlias() {
+    return UIntTypeAlias.instance;
+  }
+
   public static VmTypeAlias getUInt8TypeAlias() {
     return UInt8TypeAlias.instance;
+  }
+
+  public static VmTypeAlias getUInt16TypeAlias() {
+    return UInt16TypeAlias.instance;
+  }
+
+  public static VmTypeAlias getUInt32TypeAlias() {
+    return UInt32TypeAlias.instance;
+  }
+
+  public static VmTypeAlias getCharTypeAlias() {
+    return CharTypeAlias.instance;
   }
 
   private static final class AnyClass {
@@ -343,6 +363,10 @@ public final class BaseModule extends StdLibModule {
     static final VmClass instance = loadClass("Annotation");
   }
 
+  private static final class ConvertPropertyClass {
+    static final VmClass instance = loadClass("ConvertProperty");
+  }
+
   private static final class DeprecatedClass {
     static final VmClass instance = loadClass("Deprecated");
   }
@@ -395,8 +419,24 @@ public final class BaseModule extends StdLibModule {
     static final VmTypeAlias instance = loadTypeAlias("Int32");
   }
 
+  private static final class UIntTypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt");
+  }
+
   private static final class UInt8TypeAlias {
     static final VmTypeAlias instance = loadTypeAlias("UInt8");
+  }
+
+  private static final class UInt16TypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt16");
+  }
+
+  private static final class UInt32TypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("UInt32");
+  }
+
+  private static final class CharTypeAlias {
+    static final VmTypeAlias instance = loadTypeAlias("Char");
   }
 
   private static final class MixinTypeAlias {

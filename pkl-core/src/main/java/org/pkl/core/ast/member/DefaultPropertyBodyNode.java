@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -38,14 +38,14 @@ public final class DefaultPropertyBodyNode extends ExpressionNode {
     this.typeNode = typeNode;
   }
 
-  public boolean isUndefined() {
-    return typeNode == null || typeNode.getDefaultValue() == null;
+  public boolean isUndefined(VirtualFrame frame) {
+    return typeNode == null || typeNode.getDefaultValue(frame) == null;
   }
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     if (typeNode != null) {
-      var defaultValue = typeNode.getDefaultValue();
+      var defaultValue = typeNode.getDefaultValue(frame);
       if (defaultValue != null) return defaultValue;
     }
 

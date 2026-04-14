@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -355,7 +355,7 @@ open class BuildInfo(private val project: Project) {
   }
 
   val hasMuslToolchain: Boolean by lazy {
-    // see "install musl" in .circleci/jobs/BuildNativeJob.pkl
+    // see .github/scripts/install_musl.sh
     File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
   }
 
@@ -368,7 +368,7 @@ open class BuildInfo(private val project: Project) {
     // allow -DcommitId=abc123 for build environments that don't have git.
     System.getProperty("commitId").let { if (it != null) return@lazy it }
     // only run command once per build invocation
-    if (project === project.rootProject) {
+    if (project.path == project.rootProject.path) {
       val process =
         ProcessBuilder()
           .command("git", "rev-parse", "--short", "HEAD")

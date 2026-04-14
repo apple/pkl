@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.VmPair;
 import org.pkl.core.stdlib.ExternalPropertyNode;
+import org.pkl.core.stdlib.PklName;
 
 public final class PairNodes {
   private PairNodes() {}
@@ -43,7 +44,8 @@ public final class PairNodes {
     }
   }
 
-  public abstract static class value extends ExternalPropertyNode {
+  @PklName("value")
+  public abstract static class valueProperty extends ExternalPropertyNode {
     @Specialization
     protected Object eval(VmPair self) {
       return self.getSecond();

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,13 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
 import org.pkl.core.PModule;
 import org.pkl.core.PObject;
+import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
@@ -103,9 +105,11 @@ public final class VmTyped extends VmObject {
       if (member.isImport()) {
         var memberNode = member.getMemberNode();
         assert memberNode != null; // import is never a constant
-        builder.add(
-            member.getName().toString(),
-            ((ImportNode) memberNode.getBodyNode()).getImportUri().toString());
+        var bodyNode = memberNode.getBodyNode();
+        if (bodyNode instanceof WrapperNode wrapper) {
+          bodyNode = (ExpressionNode) wrapper.getDelegateNode();
+        }
+        builder.add(member.getName().toString(), ((ImportNode) bodyNode).getImportUri().toString());
       }
     }
     return builder.build();

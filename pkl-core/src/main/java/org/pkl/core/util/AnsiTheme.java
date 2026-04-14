@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.pkl.core.util;
 
 import java.util.EnumSet;
-import java.util.Set;
 import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 
 public final class AnsiTheme {
@@ -24,7 +23,7 @@ public final class AnsiTheme {
 
   public static final AnsiCode ERROR_MESSAGE_HINT = AnsiCode.YELLOW;
   public static final AnsiCode ERROR_HEADER = AnsiCode.RED;
-  public static final Set<AnsiCode> ERROR_MESSAGE = EnumSet.of(AnsiCode.RED, AnsiCode.BOLD);
+  public static final EnumSet<AnsiCode> ERROR_MESSAGE = EnumSet.of(AnsiCode.RED, AnsiCode.BOLD);
 
   public static final AnsiCode STACK_FRAME = AnsiCode.FAINT;
   public static final AnsiCode STACK_TRACE_MARGIN = AnsiCode.YELLOW;
@@ -37,5 +36,15 @@ public final class AnsiTheme {
   public static final AnsiCode TEST_NAME = AnsiCode.FAINT;
   public static final AnsiCode TEST_FACT_SOURCE = AnsiCode.RED;
   public static final AnsiCode TEST_FAILURE_MESSAGE = AnsiCode.RED;
-  public static final Set<AnsiCode> TEST_EXAMPLE_OUTPUT = EnumSet.of(AnsiCode.RED, AnsiCode.BOLD);
+  public static final EnumSet<AnsiCode> TEST_EXAMPLE_OUTPUT =
+      EnumSet.of(AnsiCode.RED, AnsiCode.BOLD);
+
+  public static final AnsiCode SYNTAX_KEYWORD = AnsiCode.BLUE;
+  public static final AnsiCode SYNTAX_NUMBER = AnsiCode.GREEN;
+  public static final AnsiCode SYNTAX_STRING = AnsiCode.YELLOW;
+  public static final AnsiCode SYNTAX_STRING_ESCAPE = AnsiCode.BRIGHT_YELLOW;
+  public static final AnsiCode SYNTAX_COMMENT = AnsiCode.FAINT;
+  public static final AnsiCode SYNTAX_OPERATOR = AnsiCode.RESET;
+  public static final AnsiCode SYNTAX_CONTROL = AnsiCode.BLUE;
+  public static final AnsiCode SYNTAX_CONSTANT = AnsiCode.CYAN;
 }

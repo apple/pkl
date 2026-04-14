@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,6 +30,7 @@ import org.junit.platform.engine.support.descriptor.EngineDescriptor
 import org.pkl.commons.test.Executables
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.InputOutputTestEngine
+import org.pkl.commons.test.MessagePackDebugRenderer
 import org.pkl.commons.test.PackageServer
 import org.pkl.core.http.HttpClient
 import org.pkl.core.project.Project
@@ -49,7 +50,10 @@ private fun exclusionsForThisJvm(): List<Regex> =
 
 abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
   private val lineNumberRegex = Regex("(?m)^(( ║ )*)(\\d+) \\|")
+  private val locationLineNumberRegex = Regex("#L(\\d+)")
+  private val reflectedDeclarationLineNumberRegex = Regex("line = (\\d+)")
   private val hiddenExtensionRegex = Regex(".*[.]([^.]*)[.]pkl")
+  private val msgpackExtensionRegex = Regex(".*[.]msgpack[.]yaml[.]pkl")
 
   private val snippetsDir: Path =
     rootProjectDir.resolve("pkl-core/src/test/files/LanguageSnippetTests")
@@ -107,14 +111,24 @@ abstract class AbstractLanguageSnippetTestsEngine : InputOutputTestEngine() {
     if (snippetsDir.root.toString() != "/") "\$snippetsDir" else "/\$snippetsDir"
   }
 
+  protected fun ByteArray.decodeOutput(inputFile: Path): String =
+    if (inputFile.toString().matches(msgpackExtensionRegex)) MessagePackDebugRenderer(this).output
+    else toString(StandardCharsets.UTF_8)
+
   protected fun String.stripFilePaths(): String =
     replace(IoUtils.toNormalizedPathString(snippetsDir), replacement)
 
   protected fun String.stripLineNumbers(): String =
     replace(lineNumberRegex) { result ->
-      // replace line number with equivalent number of 'x' characters to keep formatting intact
-      (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
-    }
+        // replace line number with equivalent number of 'x' characters to keep formatting intact
+        (result.groups[1]!!.value) + "x".repeat(result.groups[3]!!.value.length) + " |"
+      }
+      .replace(locationLineNumberRegex) { result ->
+        "#L" + "X".repeat(result.groups[1]!!.value.length)
+      }
+      .replace(reflectedDeclarationLineNumberRegex) { result ->
+        "line = " + "X".repeat(result.groups[1]!!.value.length)
+      }
 
   protected fun String.stripWebsite(): String =
     replace(Release.current().documentation().homepage(), "https://\$pklWebsite/")
@@ -164,6 +178,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
           .addCertificates(FileTestUtils.selfSignedCertificate)
           .buildLazily()
       )
+      .setPowerAssertionsEnabled(true)
   }
 
   override val testClass: KClass<*> = LanguageSnippetTests::class
@@ -186,6 +201,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
                     null,
                     StackFrameTransformers.empty,
                     mapOf(),
+                    true, // enable power assertions for tests
                   )
                 securityManager = null
                 applyFromProject(project)
@@ -194,7 +210,10 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
             .build()
         evaluator.use { ev ->
           true to
-            ev.evaluateOutputBytes(ModuleSource.path(inputFile)).toString(StandardCharsets.UTF_8)
+            ev
+              .evaluateOutputBytes(ModuleSource.path(inputFile))
+              .decodeOutput(inputFile)
+              .stripLineNumbers()
         }
       } catch (e: PklBugException) {
         false to e.stackTraceToString()
@@ -279,10 +298,9 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
 
     val process = builder.start()
     return try {
-      val (out, err) =
-        listOf(process.inputStream, process.errorStream).map {
-          it.reader().readText().withUnixLineEndings()
-        }
+      val out = process.inputStream.readAllBytes().decodeOutput(inputFile).withUnixLineEndings()
+      val err =
+        process.errorStream.readAllBytes().toString(StandardCharsets.UTF_8).withUnixLineEndings()
       val success = process.waitFor() == 0 && err.isBlank()
       success to
         (out + err)

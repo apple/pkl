@@ -12,7 +12,7 @@
 :uri-installation: https://pkl-lang.org/main/current/pkl-cli/index.html#installation
 :uri-lang-reference: https://pkl-lang.org/main/current/language-reference/index.html
 :uri-ci-artifacts: https://s01.oss.sonatype.org/content/groups/public/org/pkl-lang/
-:uri-ci-pipeline: https://app.circleci.com/pipelines/github/apple/pkl
+:uri-ci-pipeline: https://github.com/apple/pkl/actions
 
 A configuration as code language with rich validation and tooling.
 
@@ -37,7 +37,10 @@ We'd love to hear from you!
 * Create an {uri-github-issue}[issue]
 * Ask a question on {uri-github-discussions}[GitHub Discussions]
 
-== Development image:https://circleci.com/gh/apple/pkl.svg?style=svg["Apple", link="https://app.circleci.com/pipelines/github/apple/pkl"]
+== Development
+
+image:https://github.com/apple/pkl/actions/workflows/main.yml/badge.svg?style=svg["Build (main)", link="https://github.com/apple/pkl/actions/workflows/main.yml"]
+
 * link:CONTRIBUTING.adoc[] for tips on pull requests and filing issues
 * link:DEVELOPMENT.adoc[] for build instructions
 * {uri-ci-artifacts}[Sonatype Repository] for the artifacts/binaries built by our {uri-ci-pipeline}[CI pipelines] (and those of our other tools and packages repositories).
@@ -60,6 +63,9 @@ We'd love to hear from you!
 |https://github.com/apple/pkl-go-examples[`apple/pkl-go-examples`]
 |Examples for using Pkl within Go applications
 
+|https://github.com/apple/highlightjs-pkl[`apple/highlightjs-pkl`]
+|Highlight.js syntax highlighting for Pkl
+
 |https://github.com/apple/pkl-intellij[`apple/pkl-intellij`]
 |JetBrains editor plugins providing Pkl language support
 
@@ -76,7 +82,7 @@ We'd love to hear from you!
 |The pkl-lang.org website
 
 |https://github.com/apple/pkl-lsp[`apple/pkl-lsp`]
-| Language server for Pkl, implementing the server-side of the Language Server Protocol
+|Language server for Pkl, implementing the server-side of the Language Server Protocol
 
 |https://github.com/apple/pkl-neovim[`apple/pkl-neovim`]
 |Pkl language support for Neovim
@@ -89,6 +95,9 @@ We'd love to hear from you!
 
 |https://github.com/apple/pkl-project-commons[`apple/pkl-project-commons`]
 |Utility libraries for Pkl
+
+|https://github.com/apple/pkl-readers[`apple/pkl-readers`]
+|Shared Pkl https://pkl-lang.org/main/current/language-reference/index.html#external-readers[external reader] tools
 
 |https://github.com/apple/pkl-spring[`apple/pkl-spring`]
 |Spring Boot extension for configuring Boot apps with Pkl
@@ -105,9 +114,9 @@ We'd love to hear from you!
 |https://github.com/apple/pkl.tmbundle[`apple/pkl.tmbundle`]
 |TextMate bundle for Pkl
 
-|https://github.com/apple/rules_pkl[`apple/rules_pkl`]
-| Bazel build rules for Pkl
-
 |https://github.com/apple/tree-sitter-pkl[`apple/tree-sitter-pkl`]
 |Tree-sitter parser for Pkl
+
+|https://github.com/apple/rules_pkl[`apple/rules_pkl`]
+|Bazel build rules for Pkl
 |===

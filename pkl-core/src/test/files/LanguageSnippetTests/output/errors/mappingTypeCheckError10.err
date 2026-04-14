@@ -10,10 +10,10 @@ x | foo: Mapping = new { ["foo"] = 1; ["bar"] = 2 }
                                    ^
 at mappingTypeCheckError10#foo["foo"] (file:///$snippetsDir/input/errors/mappingTypeCheckError10.pkl)
 
-xxx | text = renderer.renderDocument(value)
-             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
 
-xxx | bytes = text.encodeToBytes("UTF-8")
-              ^^^^
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
 at pkl.base#Module.output.bytes (pkl:base)

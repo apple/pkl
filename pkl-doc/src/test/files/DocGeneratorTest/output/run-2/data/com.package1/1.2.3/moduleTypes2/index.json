@@ -1,1 +1,8 @@
-{}
+{
+  "knownUsages": [
+    {
+      "text": "Foo",
+      "href": "Foo.html"
+    }
+  ]
+}

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.*;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
@@ -48,13 +48,11 @@ public final class PListRendererNodes {
 
   private static PListRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
-    return new PListRenderer(builder, indent, converter);
+    return new PListRenderer(builder, indent, PklConverter.fromRenderer(self));
   }
 
   // keep in sync with org.pkl.core.PListRenderer
-  private static final class PListRenderer extends AbstractRenderer {
+  private static final class PListRenderer extends AbstractStringRenderer {
 
     // it's safe (though not required) to escape all the following characters in XML text nodes
     private static final ArrayCharEscaper charEscaper =
@@ -241,7 +239,7 @@ public final class PListRendererNodes {
         builder.append("<dict>").append(LINE_BREAK);
       }
 
-      if (VmUtils.isRenderDirective(key)) {
+      if (isRenderDirective(key)) {
         key = VmUtils.readTextProperty(key);
       }
 

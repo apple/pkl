@@ -1,0 +1,34 @@
+#file: noinspection MandatoryParamsAbsent,UndefinedAction
+# This is a fake workflow that never runs.
+# It's used to pin actions to specific git SHAs when generating actual workflows.
+# It also gets updated by dependabot (see .github/dependabot.yml).
+# Generated from Workflow.pkl. DO NOT EDIT.
+name: __lockfile__
+'on':
+  push:
+    branches-ignore:
+    - '**'
+    tags-ignore:
+    - '**'
+permissions: {}
+jobs:
+  locks:
+    if: 'false'
+    runs-on: nothing
+    steps:
+    - name: EnricoMi/publish-unit-test-result-action@v2
+      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
+    - name: actions/checkout@v6
+      uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+    - name: actions/create-github-app-token@v2
+      uses: actions/create-github-app-token@fee1f7d63c2ff003460e3d139729b119787bc349 # v2
+    - name: actions/download-artifact@v6
+      uses: actions/download-artifact@018cc2cf5baa6db3ef3c5f8a56943fffe632ef53 # v6
+    - name: actions/setup-java@v5
+      uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+    - name: actions/upload-artifact@v5
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+    - name: dawidd6/action-download-artifact@v11
+      uses: dawidd6/action-download-artifact@ac66b43f0e6a346234dd65d4d0c8fbb31cb316e5 # v11
+    - name: gradle/actions/setup-gradle@v5
+      uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5

@@ -97,7 +97,10 @@ examples {
     "2001-12-15T02:59:43.1Z"
   }
   ["binary"] {
-    "dGhlIHF1aWNrIGJyb3duIGZveCBqdW1wcyBvdmVyIHRoZSBsYXp5IGRvZw=="
+    Bytes(1, 2, 3)
+    Bytes(1, 2, 3)
+    Bytes(1, 2, 3)
+    Bytes(1, 2, 3, 1, 2, 3, 1, 2, 3)
   }
   ["string"] {
     null
@@ -190,6 +193,7 @@ examples {
       }
       tax = 251.42
       total = 4443.52
+      logo = Bytes(1, 2, 3)
       comments = "Late afternoon is best. Backup contact is Nancy Billsmer @ 338-4338."
     }
   }

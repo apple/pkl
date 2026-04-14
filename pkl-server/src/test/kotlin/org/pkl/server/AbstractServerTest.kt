@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,14 @@
  */
 package org.pkl.server
 
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
 import java.net.URI
 import java.nio.file.Path
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
 import kotlin.io.path.writeText
@@ -308,13 +312,13 @@ abstract class AbstractServerTest {
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result?.debugYaml)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
       - 6
       - 
-        - bird:/foo.txt
-        - bird:/subdir/bar.txt
+        - 'bird:/foo.txt'
+        - 'bird:/subdir/bar.txt'
     """
           .trimIndent()
       )
@@ -346,7 +350,7 @@ abstract class AbstractServerTest {
       )
     )
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.result?.debugYaml)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
         - 6
@@ -547,11 +551,11 @@ abstract class AbstractServerTest {
         """
       - 6
       - 
-        - bird:/Person.pkl
-        - bird:/birds/parrot.pkl
-        - bird:/birds/pigeon.pkl
-        - bird:/majesticBirds/barnOwl.pkl
-        - bird:/majesticBirds/elfOwl.pkl
+        - 'bird:/Person.pkl'
+        - 'bird:/birds/parrot.pkl'
+        - 'bird:/birds/pigeon.pkl'
+        - 'bird:/majesticBirds/barnOwl.pkl'
+        - 'bird:/majesticBirds/elfOwl.pkl'
     """
           .trimIndent()
       )
@@ -643,7 +647,7 @@ abstract class AbstractServerTest {
     val response = client.receive<EvaluateResponse>()
     assertThat(response.error).isNull()
     val tripleQuote = "\"\"\""
-    assertThat(response.result?.debugYaml)
+    assertThat(response.result?.debugRendering)
       .isEqualTo(
         """
       |
@@ -666,6 +670,7 @@ abstract class AbstractServerTest {
         res3 {
           ressy = "the module2 output"
         }
+
     """
           .trimIndent()
       )
@@ -713,7 +718,7 @@ abstract class AbstractServerTest {
     )
 
     val evaluatorResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluatorResponse.result?.debugYaml).isEqualTo("1")
+    assertThat(evaluatorResponse.result?.debugRendering).isEqualTo("1")
   }
 
   @Test
@@ -753,13 +758,14 @@ abstract class AbstractServerTest {
 
     val evaluateResponse = client.receive<EvaluateResponse>()
     assertThat(evaluateResponse.result).isNotNull
-    assertThat(evaluateResponse.result?.debugYaml)
+    assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
         |
           firstName = "Pigeon"
           lastName = "Bird"
           fullName = "Pigeon Bird"
+
       """
           .trimIndent()
       )
@@ -793,13 +799,14 @@ abstract class AbstractServerTest {
 
     val response12 = client.receive<EvaluateResponse>()
     assertThat(response12.result).isNotNull
-    assertThat(response12.result?.debugYaml)
+    assertThat(response12.result?.debugRendering)
       .isEqualTo(
         """
         |
           firstName = "Pigeon"
           lastName = "Bird"
           fullName = "Pigeon Bird"
+
       """
           .trimIndent()
       )
@@ -823,16 +830,113 @@ abstract class AbstractServerTest {
 
     val response22 = client.receive<EvaluateResponse>()
     assertThat(response22.result).isNotNull
-    assertThat(response22.result?.debugYaml)
+    assertThat(response22.result?.debugRendering)
       .isEqualTo(
         """
         |
           firstName = "Parrot"
           lastName = "Bird"
           fullName = "Parrot Bird"
+
       """
           .trimIndent()
       )
+  }
+
+  /**
+   * Regression test for concurrent message encoding.
+   *
+   * The pkl server's main thread sends [CreateEvaluatorResponse] while the executor thread sends
+   * [EvaluateResponse]. Without synchronization on the encoder, these writes interleave on the
+   * output stream, corrupting the MessagePack framing.
+   *
+   * This test exercises the race directly: two threads write different message types through the
+   * same [ServerMessagePackEncoder] into a pipe, and a reader thread decodes every message. Any
+   * interleaved write produces a decode error.
+   *
+   * Only meaningful with `USE_DIRECT_TRANSPORT = false` (the default).
+   */
+  @Test
+  @Disabled
+  // TODO re-enable this; disabled due to flakiness (see https://github.com/apple/pkl/issues/1493)
+  fun `concurrent encoding -- multiple evaluators with module reads`() {
+    if (USE_DIRECT_TRANSPORT) return
+
+    val pipeIn = PipedInputStream(1 shl 20) // 1 MB buffer
+    val pipeOut = PipedOutputStream(pipeIn)
+    val encoder = ServerMessagePackEncoder(pipeOut)
+    val decoder = ServerMessagePackDecoder(pipeIn)
+
+    val iterations = 2000
+    val padding = ByteArray(8192) // large payload to widen the race window
+    val errors = mutableListOf<Throwable>()
+    val decoded = AtomicInteger(0)
+    val done = CountDownLatch(2)
+
+    // Writer A: CreateEvaluatorResponse (small messages)
+    val writerA = Thread {
+      try {
+        for (i in 0 until iterations) {
+          encoder.encode(CreateEvaluatorResponse(i.toLong(), i.toLong(), null))
+        }
+      } catch (e: Exception) {
+        synchronized(errors) { errors.add(e) }
+      } finally {
+        done.countDown()
+      }
+    }
+
+    // Writer B: EvaluateResponse (large messages with 8 KB payload)
+    val writerB = Thread {
+      try {
+        for (i in 0 until iterations) {
+          encoder.encode(EvaluateResponse(i.toLong() + iterations, i.toLong(), padding, null))
+        }
+      } catch (e: Exception) {
+        synchronized(errors) { errors.add(e) }
+      } finally {
+        done.countDown()
+      }
+    }
+
+    // Reader: decode all messages, check each is well-formed.
+    val reader = Thread {
+      try {
+        while (decoded.get() < iterations * 2) {
+          val msg = decoder.decode() ?: break
+          decoded.incrementAndGet()
+          when (msg) {
+            is CreateEvaluatorResponse -> {}
+            is EvaluateResponse -> {}
+            else ->
+              synchronized(errors) {
+                errors.add(AssertionError("Wrong message type: ${msg.javaClass.simpleName}"))
+              }
+          }
+        }
+      } catch (e: Exception) {
+        synchronized(errors) { errors.add(e) }
+      }
+    }
+
+    reader.start()
+    writerA.start()
+    writerB.start()
+
+    done.await(30, java.util.concurrent.TimeUnit.SECONDS)
+    pipeOut.close()
+    reader.join(10_000)
+
+    synchronized(errors) {
+      if (errors.isNotEmpty()) {
+        throw AssertionError(
+          "${errors.size} encoding errors (decoded ${decoded.get()}/${iterations * 2}): " +
+            errors.first().message,
+          errors.first(),
+        )
+      }
+    }
+    assertThat(decoded.get()).isEqualTo(iterations * 2)
   }
 
   @Test
@@ -995,9 +1099,6 @@ abstract class AbstractServerTest {
     assertThat(response.error)
       .contains("Rewrite rule must end with '/', but was 'https://example.com'")
   }
-
-  private val ByteArray.debugYaml
-    get() = MessagePackDebugRenderer(this).output.trimIndent()
 
   private fun TestTransport.sendCreateEvaluatorRequest(
     requestId: Long = 123,

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -111,12 +111,11 @@ constructor(
   }
 
   private fun resolveOutputPaths(pathStr: String): Map<URI, Path> {
-    val moduleUris = options.base.normalizedSourceModules
     val workingDir = options.base.normalizedWorkingDir
     // used just to resolve the `%{moduleName}` placeholder
     val moduleResolver = ModuleResolver(moduleKeyFactories(ModulePathResolver.empty()))
 
-    return moduleUris.associateWith { uri ->
+    return resolvedSourceModules.associateWith { uri ->
       val moduleDir: String? =
         IoUtils.toPath(uri)?.let {
           IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
@@ -141,17 +140,6 @@ constructor(
       val absolutePath = workingDir.resolve(substituted).normalize()
       absolutePath
     }
-  }
-
-  private fun Evaluator.writeOutput(moduleSource: ModuleSource, writeTo: Path): Boolean {
-    if (options.expression == null) {
-      val bytes = evaluateOutputBytes(moduleSource)
-      writeTo.writeBytes(bytes)
-      return bytes.isNotEmpty()
-    }
-    val text = evaluateExpressionString(moduleSource, options.expression)
-    writeTo.writeString(text)
-    return text.isNotEmpty()
   }
 
   private fun Evaluator.evalOutput(moduleSource: ModuleSource): ByteArray {
@@ -203,7 +191,7 @@ constructor(
         }
       } else {
         var outputWritten = false
-        for (moduleUri in options.base.normalizedSourceModules) {
+        for (moduleUri in resolvedSourceModules) {
           val moduleSource = toModuleSource(moduleUri, inputStream)
           if (options.expression != null) {
             val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
@@ -227,27 +215,12 @@ constructor(
     }
   }
 
-  private fun OutputStream.writeText(text: String) = write(text.toByteArray())
-
-  private fun OutputStream.writeLine(text: String) {
-    writeText(text)
-    writeText("\n")
-  }
-
   private fun toModuleSource(uri: URI, reader: InputStream) =
     if (uri == VmUtils.REPL_TEXT_URI) {
       ModuleSource.create(uri, reader.readAllBytes().toString(StandardCharsets.UTF_8))
     } else {
       ModuleSource.uri(uri)
     }
-
-  private fun checkPathSpec(pathSpec: String) {
-    val illegal = pathSpec.indexOfFirst { IoUtils.isReservedFilenameChar(it) && it != '/' }
-    if (illegal == -1) {
-      return
-    }
-    throw CliException("Path spec `$pathSpec` contains illegal character `${pathSpec[illegal]}`.")
-  }
 
   /**
    * Renders each module's `output.files`, writing each entry as a file into the specified output
@@ -263,13 +236,14 @@ constructor(
       }
       val moduleSource = toModuleSource(moduleUri, inputStream)
       val output = evaluator.evaluateOutputFiles(moduleSource)
+      val realOutputDir = if (outputDir.exists()) outputDir.toRealPath() else outputDir
+
       for ((pathSpec, fileOutput) in output) {
         checkPathSpec(pathSpec)
-        val resolvedPath = outputDir.resolve(pathSpec).normalize()
-        val realPath = if (resolvedPath.exists()) resolvedPath.toRealPath() else resolvedPath
-        if (!realPath.startsWith(outputDir)) {
+        val (realPath, resolvedPath) = realOutputDir.resolveRealPath(Path.of(pathSpec))
+        if (!realPath.startsWith(realOutputDir)) {
           throw CliException(
-            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$outputDir`."
+            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
           )
         }
         val previousOutput = writtenFiles[realPath]
@@ -293,5 +267,23 @@ constructor(
         outputStream.flush()
       }
     }
+  }
+
+  /**
+   * Resolves [rel] against this Path name-by-name. At each step, the real path is resolved if the
+   * file exists. The normalized real path and normalized resolved path are returned. This has a
+   * similar effect to `this.resolve(rel).toRealPath().normalize()`, but the real paths account for
+   * symlinks in the middle of the relative path so the full path need not exist.
+   */
+  private fun Path.resolveRealPath(rel: Path): Pair<Path, Path> {
+    assert(!rel.isAbsolute)
+    var resolved = this
+    var real = this
+    for (name in rel) {
+      resolved = resolved.resolve(name)
+      real = real.resolve(name)
+      if (real.exists()) real = real.toRealPath()
+    }
+    return real.normalize() to resolved.normalize()
   }
 }

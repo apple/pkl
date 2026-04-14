@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,14 +17,11 @@ package org.pkl.core.parser
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.pkl.core.Evaluator
 import org.pkl.parser.Parser
 
 // tests type argument and parameter parsing with trailing commas that cannot be tested with
 // snippets because these constructs are currently only allowed in the stdlib
 class TrailingCommasTest {
-  private val evaluator = Evaluator.preconfigured()
-
   @Test
   fun `class type parameter lists parse correctly`() {
     val module =

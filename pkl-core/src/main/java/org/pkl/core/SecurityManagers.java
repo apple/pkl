@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 /** A provider for {@link SecurityManager}s. */
@@ -171,6 +172,25 @@ public final class SecurityManagers {
       }
     }
 
+    @Override
+    public @Nullable Path resolveSecurePath(URI uri, boolean isResource)
+        throws SecurityManagerException, IOException {
+      if (rootDir == null
+          || !uri.isAbsolute()
+          || !uri.getScheme().equals("file")
+          || (uri.getAuthority() != null && !uri.getAuthority().isEmpty())) {
+        return null;
+      }
+      var path = Path.of(uri);
+      var realPath = path.toRealPath();
+      if (!realPath.startsWith(rootDir)) {
+        var errorMessageKey = isResource ? "resourcePastRootDir" : "modulePastRootDir";
+        var message = ErrorMessages.create(errorMessageKey, uri, rootDir);
+        throw new SecurityManagerException(message);
+      }
+      return realPath;
+    }
+
     private @Nullable Path normalizePath(@Nullable Path path) {
       if (path == null) {
         return null;
@@ -200,13 +220,27 @@ public final class SecurityManagers {
     }
 
     private void checkIsUnderRootDir(URI uri, boolean isResource) throws SecurityManagerException {
-      if (!uri.isAbsolute()) {
-        throw new AssertionError("Expected absolute URI but got: " + uri);
+      // handle jar:file: URIs correctly:
+      var checkUri =
+          uri.getScheme().equals("jar") ? IoUtils.createUri(uri.getSchemeSpecificPart()) : uri;
+
+      if (!checkUri.isAbsolute()) {
+        throw new AssertionError("Expected absolute URI but got: " + checkUri);
       }
 
-      if (rootDir == null || !uri.getScheme().equals("file")) return;
+      if (rootDir == null || !checkUri.getScheme().equals("file")) return;
 
-      var path = Path.of(uri);
+      var path = Path.of(checkUri);
+
+      // uri represents a UNC path if authority is non-null
+      // so treat this like a potentially redirected HTTP read:
+      // check if both the given and real paths are under rootDir
+      if (checkUri.getAuthority() != null && !checkUri.getAuthority().isEmpty()) {
+        doCheckIsUnderRootDir(path.normalize(), uri, isResource);
+      }
+      // if given path is under rootDir, do I/O to determine if the real path is under the root dir
+      // this can result in a nasty timeout (~20s) in Files.exists if the server doesn't respond :(
+
       if (Files.exists(path)) {
         try {
           path = path.toRealPath();
@@ -219,6 +253,12 @@ public final class SecurityManagers {
         path = path.normalize();
       }
 
+      doCheckIsUnderRootDir(path, uri, isResource);
+    }
+
+    private void doCheckIsUnderRootDir(Path path, URI uri, boolean isResource)
+        throws SecurityManagerException {
+      assert rootDir != null;
       if (!path.startsWith(rootDir)) {
         var errorMessageKey = isResource ? "resourcePastRootDir" : "modulePastRootDir";
         var message = ErrorMessages.create(errorMessageKey, uri, rootDir);

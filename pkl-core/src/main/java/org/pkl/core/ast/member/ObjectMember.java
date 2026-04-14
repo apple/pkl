@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.MemberNode;
@@ -102,14 +103,14 @@ public final class ObjectMember extends Member {
     return callTarget;
   }
 
-  public boolean isUndefined() {
-    return getMemberNode() != null && getMemberNode().isUndefined();
+  public boolean isUndefined(VirtualFrame frame) {
+    return getMemberNode() != null && getMemberNode().isUndefined(frame);
   }
 
-  public @Nullable Object getLocalPropertyDefaultValue() {
+  public @Nullable Object getLocalPropertyDefaultValue(VirtualFrame frame) {
     assert isProp() && isLocal();
     return getMemberNode() instanceof LocalTypedPropertyNode propertyNode
-        ? propertyNode.getDefaultValue()
+        ? propertyNode.getDefaultValue(frame)
         : VmDynamic.empty();
   }
 

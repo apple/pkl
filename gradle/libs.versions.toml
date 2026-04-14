@@ -4,54 +4,62 @@ checksumPlugin = "1.4.0"
 clikt = "5.+"
 commonMark = "0.+"
 diffx = "0.9.0"
-downloadTaskPlugin = "5.6.0"
+downloadTaskPlugin = "5.7.0"
 geantyref = "1.+"
-googleJavaFormat = "1.25.2"
+#noinspection UnusedVersionCatalogEntry
+googleJavaFormat = "1.35.0"
 # must not use `+` because used in download URL
-# 23.1.x requires JDK 20+
-graalVm = "25.0.0"
-graalVmJdkVersion = "25.0.0"
+# 25.0.2 no longer supports macos-x64
+graalVm = "25.0.1"
+#noinspection UnusedVersionCatalogEntry
+graalVmJdkVersion = "25.0.1"
 # slightly hacky but convenient place so we remember to update the checksum
-graalVmSha256-macos-x64 = "04278cf867d040e29dc71dd7727793f0ea67eb72adce8a35d04b87b57906778d"
-graalVmSha256-macos-aarch64 = "c446d5aaeda98660a4c14049d299e9fba72105a007df89f19d27cf3979d37158"
-graalVmSha256-linux-x64 = "1862f2ce97387a303cae4c512cb21baf36fafd2457c3cbbc10d87db94b89d3dd"
-graalVmSha256-linux-aarch64 = "6c3c8b7617006c5d174d9cf7d357ccfb4bae77a4df1294ee28084fcb6eea8921"
-graalVmSha256-windows-x64 = "33ef1d186b5c1e95465fcc97e637bc26e72d5f2250a8615b9c5d667ed5c17fd0"
-ideaExtPlugin = "1.1.9"
+#noinspection UnusedVersionCatalogEntry
+graalVmSha256-macos-x64 = "a3d895b4cd1c783badbd277ec70409806bd4102fca0d2a60dbaeb0bab41aec30"
+#noinspection UnusedVersionCatalogEntry
+graalVmSha256-macos-aarch64 = "066339f24a8ab5c161548491a9400f7344e7761a1e46f8979e76c7ef11d5bc76"
+#noinspection UnusedVersionCatalogEntry
+graalVmSha256-linux-x64 = "01e39fe1a87f28b842a3e4e3b77be9b544dca3a58fa6e93b924a6106c8bac7fb"
+#noinspection UnusedVersionCatalogEntry
+graalVmSha256-linux-aarch64 = "7aa0b9935a80e67f37c6025678393dbd123bb6f2226811decbc1a13093fc8ae2"
+#noinspection UnusedVersionCatalogEntry
+graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4ce442e344ca27"
+ideaExtPlugin = "1.4.1"
 javaPoet = "0.+"
 javaxInject = "1"
-jansi = "2.+"
 jimfs = "1.+"
-# later versions don't work with native image
-# (at least not without additional configuration; tested with 3.25.1 and 3.27.1)
-jline = "3.23.0"
+jline = "4.+"
 jmh = "1.+"
-jmhPlugin = "0.7.2"
+jmhPlugin = "0.7.3"
 jsr305 = "3.+"
-junit = "5.+"
-junitPlatform = "1.+"
-kotlin = "2.2.20"
+junit = "6.+"
+kotlin = "2.2.21"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
-kotlinxHtml = "0.11.0"
-kotlinxSerialization = "1.8.0"
+kotlinxHtml = "0.12.0"
+# 1.8.1 is the last version that supports Kotlin 2.1,
+# which is the language level currently set in pklKotlinLibrary.
+kotlinxSerialization = "1.8.1"
 kotlinxCoroutines = "1.+"
-ktfmt = "0.53"
+# 0.62 might require a higher Kotlin version; fails with:
+# ktfmt(java.lang.NoClassDefFoundError)
+# Could not initialize class com.facebook.ktfmt.util.CompatibilityUtilsKt
+ktfmt = "0.61"
 # replaces nuValidator's log4j dependency
-# something related to log4j-1.2-api is apparently broken in 2.17.2
+# 2.17.1 is the last version compatible with nuValidator
 log4j = "2.17.1"
-msgpack = "0.9.8"
+msgpack = "0.9.11"
 nexusPublishPlugin = "2.0.0"
-nuValidator = "20.+"
+nuValidator = "26.+"
 paguro = "3.+"
 scala = "2.13.17"
 scalafmt = "3.10.0"
 scalaTest = "3.2.19"
 scalaTestPlusJunit = "3.2.19.0"
 shadowPlugin = "9.+"
-slf4j = "1.+"
+slf4j = "2.+"
 snakeYaml = "2.+"
-spotlessPlugin = "6.25.0"
+spotlessPlugin = "8.4.0"
 wiremock = "3.+"
 
 [libraries] # ordered alphabetically
@@ -68,17 +76,16 @@ graalSdk = { group = "org.graalvm.sdk", name = "graal-sdk", version.ref = "graal
 graalJs = { group = "org.graalvm.js", name = "js", version.ref = "graalVm" }
 javaPoet = { group = "com.palantir.javapoet", name = "javapoet", version.ref = "javaPoet" }
 javaxInject = { group = "javax.inject", name = "javax.inject", version.ref = "javaxInject" }
-jansi = { group = "org.fusesource.jansi", name = "jansi", version.ref = "jansi" }
 jimfs = { group = "com.google.jimfs", name = "jimfs", version.ref = "jimfs" }
 jlineReader = { group = "org.jline", name = "jline-reader", version.ref = "jline" }
 jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "jline" }
-jlineTerminalJansi = { group = "org.jline", name = "jline-terminal-jansi", version.ref = "jline" }
+jlineTerminalJni = { group = "org.jline", name = "jline-terminal-jni", version.ref = "jline" }
 jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
-junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junitPlatform" }
-kotlinCompilerEmbeddable = { group = "org.jetbrains.kotlin", name = "kotlin-compiler-embeddable", version.ref = "kotlin" }
+#noinspection UnusedVersionCatalogEntry
+junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
 kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
@@ -87,8 +94,10 @@ kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", ve
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
+#noinspection UnusedVersionCatalogEntry
 log4j12Api = { group = "org.apache.logging.log4j", name = "log4j-1.2-api", version.ref = "log4j" }
 msgpack = { group = "org.msgpack", name = "msgpack-core", version.ref = "msgpack" }
+#noinspection UnusedVersionCatalogEntry
 nuValidator = { group = "nu.validator", name = "validator", version.ref = "nuValidator" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }

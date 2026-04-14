@@ -111,12 +111,14 @@ data class SnippetOutcome(val expectedOutFile: Path, val actual: String, val suc
     }
   }
 
-  private fun failWithDiff(message: String): Nothing =
-    if (System.getProperty("sun.java.command", "").contains("intellij")) {
-      // IntelliJ only shows diffs for AssertionFailedError
-      throw AssertionFailedError(message, expected, actual)
-    } else {
-      // Gradle test logging/report only shows diffs for PklAssertionFailedError
-      throw PklAssertionFailedError(message, expected, actual)
-    }
+  private fun failWithDiff(message: String): Nothing = failWithDiff(message, expected, actual)
 }
+
+fun failWithDiff(message: String, expected: String, actual: String): Nothing =
+  if (System.getProperty("sun.java.command", "").contains("intellij")) {
+    // IntelliJ only shows diffs for AssertionFailedError
+    throw AssertionFailedError(message, expected, actual)
+  } else {
+    // Gradle test logging/report only shows diffs for PklAssertionFailedError
+    throw PklAssertionFailedError(message, expected, actual)
+  }

@@ -1,0 +1,18 @@
+- 1
+- 'pair.msgpack.yaml'
+- 'file:///$snippetsDir/input/pklbinary/pair.msgpack.yaml.pkl'
+- 
+  - 
+    - 16
+    - 'res1'
+    - 
+      - 9
+      - 1
+      - 2
+  - 
+    - 16
+    - 'res2'
+    - 
+      - 9
+      - 'foo'
+      - 'bar'

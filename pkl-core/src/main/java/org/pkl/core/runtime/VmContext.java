@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,8 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.TruffleLanguage.ContextReference;
+import com.oracle.truffle.api.TruffleLanguage.Env;
+import com.oracle.truffle.api.instrumentation.Instrumenter;
 import com.oracle.truffle.api.nodes.Node;
 import java.nio.file.Path;
 import java.util.HashMap;
@@ -33,6 +35,12 @@ import org.pkl.core.util.Nullable;
 public final class VmContext {
   private static final ContextReference<VmContext> REFERENCE =
       ContextReference.create(VmLanguage.class);
+  private final VmValueTrackerFactory valueTrackerFactory;
+
+  public VmContext(VmLanguage vmLanguage, Env env) {
+    this.valueTrackerFactory =
+        new VmValueTrackerFactory(env.lookup(Instrumenter.class), vmLanguage);
+  }
 
   @LateInit private Holder holder;
 
@@ -52,6 +60,7 @@ public final class VmContext {
     private final @Nullable PackageResolver packageResolver;
     private final @Nullable ProjectDependenciesManager projectDependenciesManager;
     private final TraceMode traceMode;
+    private final boolean powerAssertions;
 
     public Holder(
         StackFrameTransformer frameTransformer,
@@ -66,7 +75,8 @@ public final class VmContext {
         @Nullable String outputFormat,
         @Nullable PackageResolver packageResolver,
         @Nullable ProjectDependenciesManager projectDependenciesManager,
-        TraceMode traceMode) {
+        TraceMode traceMode,
+        boolean powerAssertions) {
 
       this.frameTransformer = frameTransformer;
       this.securityManager = securityManager;
@@ -88,6 +98,7 @@ public final class VmContext {
       this.packageResolver = packageResolver;
       this.projectDependenciesManager = projectDependenciesManager;
       this.traceMode = traceMode;
+      this.powerAssertions = powerAssertions;
     }
   }
 
@@ -150,5 +161,13 @@ public final class VmContext {
 
   public TraceMode getTraceMode() {
     return holder.traceMode;
+  }
+
+  public boolean getPowerAssertionsEnabled() {
+    return holder.powerAssertions;
+  }
+
+  public VmValueTrackerFactory getValueTrackerFactory() {
+    return valueTrackerFactory;
   }
 }

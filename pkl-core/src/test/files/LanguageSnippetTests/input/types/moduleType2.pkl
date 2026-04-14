@@ -1,0 +1,20 @@
+open module Foo
+
+prop: String
+
+myself: module?
+
+class Bar extends module {
+  prop2: Int
+}
+
+output {
+  value = new Bar {
+    prop = "hi"
+    prop2 = 15
+    myself {
+      prop = "hi again"
+      prop2 = 15
+    }
+  }
+}

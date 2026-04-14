@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,7 +18,7 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.*;
-import org.pkl.core.stdlib.AbstractRenderer;
+import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.json.JsonEscaper;
@@ -52,12 +52,10 @@ public final class JsonRendererNodes {
   private static JsonRenderer createRenderer(VmTyped self, StringBuilder builder) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
     var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    var converters = (VmMapping) VmUtils.readMember(self, Identifier.CONVERTERS);
-    var converter = new PklConverter(converters);
-    return new JsonRenderer(builder, indent, converter, omitNullProperties);
+    return new JsonRenderer(builder, indent, PklConverter.fromRenderer(self), omitNullProperties);
   }
 
-  private static final class JsonRenderer extends AbstractRenderer {
+  private static final class JsonRenderer extends AbstractStringRenderer {
     private final String separator;
 
     private final JsonEscaper escaper = new JsonEscaper(false);
@@ -212,7 +210,7 @@ public final class JsonRendererNodes {
         return;
       }
 
-      if (VmUtils.isRenderDirective(key)) {
+      if (isRenderDirective(key)) {
         visitRenderDirective((VmTyped) key);
         builder.append(separator);
         return;

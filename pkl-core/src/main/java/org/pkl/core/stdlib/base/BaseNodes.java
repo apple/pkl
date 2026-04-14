@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,14 +52,14 @@ public final class BaseNodes {
 
   public abstract static class NaN extends ExternalPropertyNode {
     @Specialization
-    protected double eval(VmTyped self) {
+    protected double eval(VmTyped ignored) {
       return Double.NaN;
     }
   }
 
   public abstract static class Infinity extends ExternalPropertyNode {
     @Specialization
-    protected double eval(VmTyped self) {
+    protected double eval(VmTyped ignored) {
       return Double.POSITIVE_INFINITY;
     }
   }

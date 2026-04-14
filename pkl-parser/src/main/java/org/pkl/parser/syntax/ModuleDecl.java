@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,41 +36,34 @@ public final class ModuleDecl extends AbstractNode {
   }
 
   public @Nullable DocComment getDocComment() {
-    assert children != null;
     return (DocComment) children.get(0);
   }
 
   @SuppressWarnings("unchecked")
   public List<Annotation> getAnnotations() {
-    assert children != null;
     return (List<Annotation>) children.subList(1, modifiersOffset);
   }
 
   @SuppressWarnings("unchecked")
   public List<Modifier> getModifiers() {
-    assert children != null;
     return (List<Modifier>) children.subList(modifiersOffset, nameOffset);
   }
 
   public @Nullable Keyword getModuleKeyword() {
-    assert children != null;
     return (Keyword) children.get(nameOffset);
   }
 
   public @Nullable QualifiedIdentifier getName() {
-    assert children != null;
     return (QualifiedIdentifier) children.get(nameOffset + 1);
   }
 
   public @Nullable ExtendsOrAmendsClause getExtendsOrAmendsDecl() {
-    assert children != null;
     return (ExtendsOrAmendsClause) children.get(nameOffset + 2);
   }
 
   @SuppressWarnings("DuplicatedCode")
   public Span headerSpan() {
     Span start = null;
-    assert children != null;
     for (var i = modifiersOffset; i < children.size(); i++) {
       var child = children.get(i);
       if (child != null) {
@@ -83,6 +76,8 @@ public final class ModuleDecl extends AbstractNode {
     if (extendsOrAmends != null) {
       return start.endWith(extendsOrAmends.span());
     }
-    return start.endWith(children.get(nameOffset + 1).span());
+    var end = children.get(nameOffset + 1);
+    assert end != null;
+    return start.endWith(end.span());
   }
 }

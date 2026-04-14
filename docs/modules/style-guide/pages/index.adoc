@@ -98,13 +98,15 @@ A module that doesn't add new properties shouldn't use the `extends` clause.
 ==== Imports
 
 Sort imports sections using https://en.wikipedia.org/wiki/Natural_sort_order[natural sorting] by their module URI.
-Relative path imports should be in their own section, separated by a newline.
+Relative path and package imports should be in their own section, separated by a newline.
 There should be no unused imports.
 
 [source%parsed,{pkl}]
 ----
 import "modulepath:/foo.pkl"
 import "package://example.com/mypackage@1.0.0#/foo.pkl"
+
+import "@mypackage/baz.pkl"
 
 import ".../my/file/bar2.pkl"
 import ".../my/file/bar11.pkl"
@@ -266,7 +268,6 @@ Use line comments or block comments to convey implementation concerns to authors
 
 Doc comments should start with a one sentence summary paragraph, followed by additional paragraphs if necessary.
 Start new sentences on their own line.
-Add a single space after `///`.
 
 [source%parsed,{pkl}]
 ----
@@ -335,7 +336,6 @@ class ZebraParty {}
 [source%tested,{pkl}]
 ----
 class zebraParty {}
-class zebraparty {}
 ----
 
 == Strings
@@ -470,13 +470,6 @@ else
 [source%parsed,{pkl-expr}]
 ----
 if (bar) bar else foo
-----
-
-.good.pkl
-[source%parsed,{pkl-expr}]
-----
-if (bar) bar
-else foo
 ----
 
 .good.pkl
@@ -624,19 +617,15 @@ res2 = 1 + 2 // <3>
 res3 = res2 as Number // <3>
 res4 = List(1, 2, 3) // <4>
 res5 = if (foo) bar else baz // <5>
+
+typealias Foo = "foo" | "bar" | "baz" // <6>
 ----
 <1> After keywords
 <2> Before and after braces
 <3> Around infix operators
 <4> After a comma
 <5> Before opening parentheses in control operators (`if`, `for`, `when` are control operators)
-
-NOTE: No spaces are added around the pipe symbol (`|`) in union types.
-
-[source%tested,{pkl}]
-----
-typealias Foo = "foo"|"bar"|"baz"
-----
+<6> Before and after the pipe symbol (`|`)
 
 === Object bodies
 

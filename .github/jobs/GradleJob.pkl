@@ -1,0 +1,102 @@
+abstract module GradleJob
+
+extends "PklJob.pkl"
+
+import "@gha/Workflow.pkl"
+import "@pkl.impl.ghactions/catalog.pkl"
+
+/// Whether this is a release build or not.
+isRelease: Boolean = false
+
+/// The architecture to use
+arch: "amd64" | "aarch64" = "amd64"
+
+/// The OS to run on.
+os: "macOS" | "linux" | "windows" = "linux"
+
+// TODO flip this to `true` when nightly macOS is available
+/// Whether to run on nightly macOS.
+nightlyMacOS: Boolean(implies(os == "macOS")) = false
+
+extraGradleArgs: Listing<String>
+
+steps: Listing<Workflow.Step>
+
+preSteps: Listing<Workflow.Step>
+
+/// The fetch depth to use when doing a git checkout.
+fetchDepth: Int?
+
+fixed gradleArgs =
+  new Listing {
+    "--info"
+    "--stacktrace"
+    "--no-daemon"
+    "-DpklMultiJdkTesting=true"
+    when (isRelease) {
+      "-DreleaseBuild=true"
+    }
+    ...extraGradleArgs
+  }.join(" ")
+
+fixed job {
+  env {
+    ["LANG"] = "en_US.UTF-8"
+    when (os == "windows") {
+      ["JAVA_HOME"] = "/jdk"
+    }
+  }
+  when (os == "macOS") {
+    `if` =
+      let (cond = "github.repository_owner == 'apple'")
+        if (super.`if` != null)
+          "(\(super.`if`)) && \(cond)"
+        else
+          cond
+  }
+  `runs-on` =
+    if (os == "linux" && arch == "amd64")
+      "ubuntu-latest"
+    else if (os == "linux" && arch == "aarch64")
+      "ubuntu-24.04-arm"
+    else if (os == "windows")
+      "windows-latest"
+    else
+      new Listing {
+        "self-hosted"
+        "macos"
+        when (nightlyMacOS) {
+          "nightly"
+        }
+      }
+  steps {
+    ...preSteps
+    // full checkout (needed for spotless)
+    (catalog.`actions/checkout@v6`) {
+      when (fetchDepth != null) {
+        with {
+          `fetch-depth` = fetchDepth
+        }
+      }
+    }
+    (catalog.`actions/setup-java@v5`) {
+      with {
+        `java-version` = "21"
+        distribution = "temurin"
+        architecture =
+          if (arch == "amd64")
+            "x64"
+          else
+            "aarch64"
+      }
+    }
+    (catalog.`gradle/actions/setup-gradle@v5`) {
+      when (isRelease) {
+        with {
+          `cache-disabled` = true
+        }
+      }
+    }
+    ...module.steps
+  }
+}

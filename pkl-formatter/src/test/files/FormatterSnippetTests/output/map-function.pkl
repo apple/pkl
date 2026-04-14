@@ -12,3 +12,15 @@ incorrect =
     "of parameters", 30000000,
     "passed to Map",
   )
+
+bar =
+  Map(
+    // leading
+    1, 2,
+    // between
+    3, 4, // trailing
+    5, 6,
+    7, // mid
+    8,
+    9, 10,
+  )

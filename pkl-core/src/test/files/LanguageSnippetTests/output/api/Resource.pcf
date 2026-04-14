@@ -36,4 +36,7 @@ examples {
     "AQIDBA=="
     Bytes(1, 2, 3, 4)
   }
+  ["absolute URI scheme with plus"] {
+    "Cannot find resource `foo+bar///?baz=buz`."
+  }
 }

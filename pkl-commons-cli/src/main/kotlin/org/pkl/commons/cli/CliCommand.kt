@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.commons.cli
 
+import com.github.ajalt.clikt.core.CliktError
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -46,6 +47,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       proxyAddress?.let(IoUtils::setSystemProxy)
       doRun()
     } catch (e: PklException) {
+      if (e.cause is CliktError) throw e.cause!!
       throw CliException(e.message!!)
     } catch (e: CliException) {
       throw e
@@ -84,6 +86,36 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     }
   }
 
+  protected fun resolveModuleUri(uri: URI): URI =
+    if (uri.isAbsolute) uri
+    else { // must be @dep/mod.pkl notation!!
+      if (!uri.path.startsWith('@'))
+        throw CliBugException(
+          RuntimeException("tried to resolve project URI `$uri` with no @ prefix")
+        )
+      if (project == null)
+        throw CliBugException(
+          RuntimeException("tried to resolve project URI `$uri` with no project present")
+        )
+      val dep = uri.path.substringBefore('/').drop(1)
+      val path = uri.path.dropWhile { it != '/' }
+      if (path.isEmpty()) throw CliException("Invalid project dependency URI `$uri`.")
+
+      val remoteDep =
+        project!!.dependencies.remoteDependencies()[dep]
+          ?: if (project!!.dependencies.localDependencies().containsKey(dep))
+            throw CliException(
+              "Only remote project dependencies may be referenced using @-notation. Dependency `@$dep` is a local dependency."
+            )
+          else throw CliException("Project does not contain dependency `@$dep`.")
+      remoteDep.packageUri.toPackageAssetUri(path).uri
+    }
+
+  protected val resolvedSourceModules: List<URI> by lazy {
+    if (project == null) cliOptions.normalizedSourceModules
+    else cliOptions.normalizedSourceModules.map(::resolveModuleUri)
+  }
+
   protected fun loadProject(projectFile: Path): Project {
     val securityManager =
       SecurityManagers.standard(
@@ -102,10 +134,12 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       cliOptions.timeout,
       stackFrameTransformer,
       envVars,
+      cliOptions.powerAssertionsEnabled,
     )
   }
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {
+    @Suppress("PklCliDirectProjectEvaluatorSettingsAccess")
     if (cliOptions.omitProjectSettings) null else project?.evaluatorSettings
   }
 
@@ -166,34 +200,30 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     )
   }
 
-  protected val useColor: Boolean by lazy { cliOptions.color?.hasColor() ?: false }
-
-  private val proxyAddress: URI? by lazy {
-    cliOptions.httpProxy
-      ?: project?.evaluatorSettings?.http?.proxy?.address
-      ?: settings.http?.proxy?.address
+  protected val useColor: Boolean by lazy {
+    cliOptions.color?.hasColor() ?: evaluatorSettings?.color?.hasColor() ?: false
   }
 
-  private val noProxy: List<String>? by lazy {
+  protected val proxyAddress: URI? by lazy {
+    cliOptions.httpProxy ?: evaluatorSettings?.http?.proxy?.address ?: settings.http?.proxy?.address
+  }
+
+  protected val noProxy: List<String>? by lazy {
     cliOptions.httpNoProxy
-      ?: project?.evaluatorSettings?.http?.proxy?.noProxy
+      ?: evaluatorSettings?.http?.proxy?.noProxy
       ?: settings.http?.proxy?.noProxy
   }
 
-  private val httpRewrites: Map<URI, URI>? by lazy {
-    cliOptions.httpRewrites
-      ?: project?.evaluatorSettings?.http?.rewrites
-      ?: settings.http?.rewrites()
+  protected val httpRewrites: Map<URI, URI>? by lazy {
+    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites()
   }
 
-  private val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (project?.evaluatorSettings?.externalModuleReaders ?: emptyMap()) +
-      cliOptions.externalModuleReaders
+  protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+    (evaluatorSettings?.externalModuleReaders ?: emptyMap()) + cliOptions.externalModuleReaders
   }
 
-  private val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
-    (project?.evaluatorSettings?.externalResourceReaders ?: emptyMap()) +
-      cliOptions.externalResourceReaders
+  protected val externalResourceReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {
+    (evaluatorSettings?.externalResourceReaders ?: emptyMap()) + cliOptions.externalResourceReaders
   }
 
   private val externalProcesses:
@@ -207,7 +237,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private val traceMode: TraceMode by lazy {
-    cliOptions.traceMode ?: project?.evaluatorSettings?.traceMode ?: TraceMode.COMPACT
+    cliOptions.traceMode ?: evaluatorSettings?.traceMode ?: TraceMode.COMPACT
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
@@ -308,5 +338,6 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)
       .setTraceMode(traceMode)
+      .setPowerAssertionsEnabled(cliOptions.powerAssertionsEnabled)
   }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.pkl.doc
 
 import java.io.OutputStream
-import java.io.StringWriter
 import kotlinx.html.*
 import org.pkl.core.Member
 import org.pkl.core.PClass
@@ -24,11 +23,9 @@ import org.pkl.core.PClass.ClassMember
 import org.pkl.core.PClass.Method
 import org.pkl.core.TypeParameter
 import org.pkl.core.TypeParameter.Variance
-import org.pkl.core.ValueRenderers
 
 internal abstract class ModuleOrClassPageGenerator<S>(
   docsiteInfo: DocsiteInfo,
-  private val docModule: DocModule,
   protected val clazz: PClass,
   scope: S,
   private val isTestMode: Boolean,
@@ -139,12 +136,6 @@ internal abstract class ModuleOrClassPageGenerator<S>(
       renderModuleName(member.moduleName)
       +")"
     }
-  }
-
-  private fun renderExportedValue(value: Any): String {
-    val writer = StringWriter()
-    ValueRenderers.pcf(writer, "  ", false, false).renderValue(value)
-    return writer.toString()
   }
 
   protected fun HtmlBlockTag.renderMethods() {

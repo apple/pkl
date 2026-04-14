@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,7 @@ import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 import org.pkl.parser.util.Nullable;
 
-public class ArgumentList extends AbstractNode {
+public final class ArgumentList extends AbstractNode {
 
   public ArgumentList(List<Expr> arguments, Span span) {
     super(span, arguments);
@@ -33,7 +33,6 @@ public class ArgumentList extends AbstractNode {
 
   @SuppressWarnings("unchecked")
   public List<Expr> getArguments() {
-    assert children != null;
     return (List<Expr>) children;
   }
 }

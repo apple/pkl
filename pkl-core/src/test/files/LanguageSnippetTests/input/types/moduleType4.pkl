@@ -1,0 +1,18 @@
+open module TheModule
+
+mod: module? = Null(new module {})
+
+class Bar extends module {
+  num: Int
+}
+
+output {
+  value = new Dynamic {
+    bar = new Bar {
+      num = 5
+      mod {
+        num = 6
+      }
+    }
+  }
+}

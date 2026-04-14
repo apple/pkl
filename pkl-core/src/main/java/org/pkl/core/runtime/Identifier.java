@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -50,7 +50,7 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.base#Listing and pkl.base#Mapping
   public static final Identifier DEFAULT = get("default");
 
-  // members of pkl.base#ValueRenderer subclasses
+  // members of pkl.base#BaseValueRenderer subclasses
   public static final Identifier MODE = get("mode");
   public static final Identifier INDENT = get("indent");
   public static final Identifier INDENT_WIDTH = get("indentWidth");
@@ -62,7 +62,11 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier ROOT_ELEMENT_NAME = get("rootElementName");
   public static final Identifier ROOT_ELEMENT_ATTRIBUTES = get("rootElementAttributes");
   public static final Identifier CONVERTERS = get("converters");
+  public static final Identifier CONVERT_PROPERTY_TRANSFORMERS = get("convertPropertyTransformers");
   public static final Identifier USE_MAPPING = get("useMapping");
+
+  // members of pkl.base#ConvertProperty
+  public static final Identifier RENDER = get("render");
 
   // members of pkl.base#RegexMatch
   public static final Identifier VALUE = get("value");
@@ -142,6 +146,22 @@ public final class Identifier implements Comparable<Identifier> {
 
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
+
+  // members of pkl.Command
+  public static final Identifier OPTIONS = get("options");
+  public static final Identifier PARENT = get("parent");
+  public static final Identifier COMMAND = get("command");
+  public static final Identifier DESCRIPTION = get("description");
+  public static final Identifier HIDE = get("hide");
+  public static final Identifier NOOP = get("noOp");
+  public static final Identifier SUBCOMMANDS = get("subcommands");
+  public static final Identifier SHORT_NAME = get("shortName");
+  public static final Identifier METAVAR = get("metavar");
+  public static final Identifier MULTIPLE = get("multiple");
+  public static final Identifier CONVERT = get("convert");
+  public static final Identifier TRANSFORM_ALL = get("transformAll");
+  public static final Identifier GLOB = get("glob");
+  public static final Identifier COMPLETION_CANDIDATES = get("completionCandidates");
 
   // common in lambdas etc
   public static final Identifier IT = get("it");

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,13 +24,13 @@ import org.pkl.parser.util.Nullable;
 
 public abstract sealed class Type extends AbstractNode {
 
-  public Type(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public Type(Span span, List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
   public static final class UnknownType extends Type {
     public UnknownType(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -41,7 +41,7 @@ public abstract sealed class Type extends AbstractNode {
 
   public static final class NothingType extends Type {
     public NothingType(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -52,7 +52,7 @@ public abstract sealed class Type extends AbstractNode {
 
   public static final class ModuleType extends Type {
     public ModuleType(Span span) {
-      super(span, null);
+      super(span, List.of());
     }
 
     @Override
@@ -72,8 +72,9 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     public StringConstant getStr() {
-      assert children != null;
-      return (StringConstant) children.get(0);
+      var ret = (StringConstant) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 
@@ -88,12 +89,12 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     public QualifiedIdentifier getName() {
-      assert children != null;
-      return (QualifiedIdentifier) children.get(0);
+      var ret = (QualifiedIdentifier) children.get(0);
+      assert ret != null;
+      return ret;
     }
 
     public @Nullable TypeArgumentList getArgs() {
-      assert children != null;
       return (TypeArgumentList) children.get(1);
     }
   }
@@ -109,8 +110,9 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     public Type getType() {
-      assert children != null;
-      return (Type) children.get(0);
+      var ret = (Type) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 
@@ -125,8 +127,9 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     public Type getType() {
-      assert children != null;
-      return (Type) children.get(0);
+      var ret = (Type) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 
@@ -141,13 +144,13 @@ public abstract sealed class Type extends AbstractNode {
     }
 
     public Type getType() {
-      assert children != null;
-      return (Type) children.get(0);
+      var ret = (Type) children.get(0);
+      assert ret != null;
+      return ret;
     }
 
     @SuppressWarnings("unchecked")
     public List<Expr> getExprs() {
-      assert children != null;
       return (List<Expr>) children.subList(1, children.size());
     }
   }
@@ -167,7 +170,6 @@ public abstract sealed class Type extends AbstractNode {
 
     @SuppressWarnings("unchecked")
     public List<Type> getTypes() {
-      assert children != null;
       return (List<Type>) children;
     }
 
@@ -190,11 +192,11 @@ public abstract sealed class Type extends AbstractNode {
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
       if (o == null || getClass() != o.getClass()) {
         return false;
+      }
+      if (this == o) {
+        return true;
       }
       if (!super.equals(o)) {
         return false;
@@ -221,13 +223,13 @@ public abstract sealed class Type extends AbstractNode {
 
     @SuppressWarnings("unchecked")
     public List<Type> getArgs() {
-      assert children != null;
       return (List<Type>) children.subList(0, children.size() - 1);
     }
 
     public Type getRet() {
-      assert children != null;
-      return (Type) children.get(children.size() - 1);
+      var ret = (Type) children.get(children.size() - 1);
+      assert ret != null;
+      return ret;
     }
   }
 }

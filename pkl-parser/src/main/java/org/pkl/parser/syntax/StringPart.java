@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.pkl.parser.util.Nullable;
 
 public abstract sealed class StringPart extends AbstractNode {
 
-  public StringPart(Span span, @Nullable List<? extends @Nullable Node> children) {
+  public StringPart(Span span, List<? extends @Nullable Node> children) {
     super(span, children);
   }
 
@@ -36,7 +36,7 @@ public abstract sealed class StringPart extends AbstractNode {
     private final String string;
 
     public StringChars(String string, Span span) {
-      super(span, null);
+      super(span, List.of());
       this.string = string;
     }
 
@@ -52,11 +52,11 @@ public abstract sealed class StringPart extends AbstractNode {
     @SuppressWarnings("ConstantValue")
     @Override
     public boolean equals(Object o) {
-      if (this == o) {
-        return true;
-      }
       if (o == null || getClass() != o.getClass()) {
         return false;
+      }
+      if (this == o) {
+        return true;
       }
       if (!super.equals(o)) {
         return false;
@@ -77,8 +77,9 @@ public abstract sealed class StringPart extends AbstractNode {
     }
 
     public Expr getExpr() {
-      assert children != null;
-      return (Expr) children.get(0);
+      var ret = (Expr) children.get(0);
+      assert ret != null;
+      return ret;
     }
   }
 }

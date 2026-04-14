@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Type constraint `fold(0, (a, b) -> a + b) == 5` violated.
+Value: List(1, 2, 3)
+
+    fold(0, (a, b) -> a + b) == 5
+    │                        │
+    6                        false
+
+x | foo: List(fold(0, (a, b) -> a + b) == 5) = myList
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at typeConstraints4#foo (file:///$snippetsDir/input/errors/power/typeConstraints4.pkl)
+
+x | foo: List(fold(0, (a, b) -> a + b) == 5) = myList
+                                               ^^^^^^
+at typeConstraints4#foo (file:///$snippetsDir/input/errors/power/typeConstraints4.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -15,8 +15,18 @@
 //===----------------------------------------------------------------------===//
 
 /// A YAML 1.2 compliant YAML parser.
-@ModuleInfo { minPklVersion = "0.30.0" }
+@ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.yaml
+
+/// Annotate properties of classes and modules with this class to override how a [YamlRenderer]
+/// interprets a property's name.
+@Since { version = "0.31.0" }
+class Property extends ConvertProperty {
+  /// The new name to use for the annotated property when rendered by [YamlRenderer].
+  name: String
+
+  render = (prop, renderer) -> if (renderer is YamlRenderer) Pair(name, prop.value) else prop
+}
 
 /// A YAML parser.
 ///
@@ -32,7 +42,7 @@ module pkl.yaml
 /// | !!seq       | [Listing]                                               |
 /// | !!set       | [Listing]                                               |
 /// | !!map       | [Dynamic] or [Mapping] depending on [Parser.useMapping] |
-/// | !!binary    | [String]                                                |
+/// | !!binary    | [Bytes]                                                 |
 /// | !!timestamp | [String]                                                |
 ///
 /// The element order of YAML sequences, sets, and mappings is maintained.
@@ -88,4 +98,4 @@ class Parser {
 }
 
 /// Pkl representation of a YAML value.
-typealias Value = Null | Boolean | Number | String | Listing | Dynamic | Mapping
+typealias Value = Null | Boolean | Number | String | Bytes | Listing | Dynamic | Mapping

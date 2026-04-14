@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
@@ -23,6 +24,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import org.pkl.core.BufferedLogger;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.TestResults;
@@ -39,14 +41,16 @@ import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
+import org.pkl.core.util.Nullable;
 
 /** Runs test results examples and facts. */
 public final class TestRunner {
-  private static final PklConverter converter = new PklConverter(VmMapping.empty());
+  private static final PklConverter converter = PklConverter.NOOP;
   private final BufferedLogger logger;
   private final StackFrameTransformer stackFrameTransformer;
   private final boolean overwrite;
   private final boolean useColor;
+  private final VmValueTrackerFactory valueTrackerFactory;
 
   public TestRunner(
       BufferedLogger logger,
@@ -57,6 +61,7 @@ public final class TestRunner {
     this.stackFrameTransformer = stackFrameTransformer;
     this.overwrite = overwrite;
     this.useColor = useColor;
+    this.valueTrackerFactory = VmContext.get(null).getValueTrackerFactory();
   }
 
   public TestResults run(VmTyped testModule) {
@@ -64,7 +69,7 @@ public final class TestRunner {
     var resultsBuilder = new TestResults.Builder(info.getModuleName(), getDisplayUri(info));
 
     try {
-      checkAmendsPklTest(testModule);
+      VmUtils.checkAmends(testModule, TestModule.getModule().getVmClass());
     } catch (VmException v) {
       var error =
           new TestResults.Error(v.getMessage(), v.toPklException(stackFrameTransformer, useColor));
@@ -76,17 +81,6 @@ public final class TestRunner {
 
     resultsBuilder.setStdErr(logger.getLogs());
     return resultsBuilder.build();
-  }
-
-  private void checkAmendsPklTest(VmTyped value) {
-    var testModuleClass = TestModule.getModule().getVmClass();
-    var moduleClass = value.getVmClass();
-    while (moduleClass != testModuleClass) {
-      moduleClass = moduleClass.getSuperclass();
-      if (moduleClass == null) {
-        throw new VmExceptionBuilder().typeMismatch(value, testModuleClass).build();
-      }
-    }
   }
 
   private TestSectionResults runFacts(VmTyped testModule) {
@@ -108,8 +102,22 @@ public final class TestRunner {
                 try {
                   var factValue = VmUtils.readMember(listing, idx);
                   if (factValue == Boolean.FALSE) {
-                    var failure = factFailure(member.getSourceSection(), getDisplayUri(member));
-                    resultBuilder.addFailure(failure);
+                    if (PowerAssertions.isEnabled()) {
+                      try (var valueTracker = valueTrackerFactory.create()) {
+                        listing.cachedValues.clear();
+                        VmUtils.readMember(listing, idx);
+                        var failure =
+                            factFailure(
+                                member.getSourceSection(),
+                                getDisplayUri(member),
+                                valueTracker.values());
+                        resultBuilder.addFailure(failure);
+                      }
+                    } else {
+                      var failure =
+                          factFailure(member.getSourceSection(), getDisplayUri(member), null);
+                      resultBuilder.addFailure(failure);
+                    }
                   } else {
                     resultBuilder.addSuccess();
                   }
@@ -395,10 +403,26 @@ public final class TestRunner {
         moduleInfo.getModuleKey().getUri(), VmContext.get(null).getFrameTransformer());
   }
 
-  private Failure factFailure(SourceSection sourceSection, String location) {
+  private Failure factFailure(
+      SourceSection sourceSection,
+      String location,
+      @Nullable Map<Node, List<Object>> trackedValues) {
     var sb = new AnsiStringBuilder(useColor);
-    sb.append(AnsiTheme.TEST_FACT_SOURCE, sourceSection.getCharacters().toString()).append(" ");
-    appendLocation(sb, location);
+    if (trackedValues != null) {
+      PowerAssertions.render(
+          sb,
+          "",
+          sourceSection,
+          trackedValues,
+          (it) -> {
+            it.append(" ");
+            appendLocation(it, location);
+          });
+    } else {
+      sb.append(sourceSection.getCharacters());
+      sb.append(" ");
+      appendLocation(sb, location);
+    }
     return new Failure("Fact Failure", sb.toString());
   }
 

@@ -30,14 +30,14 @@ sealed interface FormatNode {
       is Nodes -> nodes.sumOf { it.width(wrapped) }
       is Group -> nodes.sumOf { it.width(wrapped) }
       is Indent -> nodes.sumOf { it.width(wrapped) }
-      is ForceWrap -> nodes.sumOf { it.width(wrapped + id) }
       is IfWrap -> if (id in wrapped) ifWrap.width(wrapped) else ifNotWrap.width(wrapped)
       is Text -> text.length
-      is SpaceOrLine,
-      is Space -> 1
-      is ForceLine,
+      SpaceOrLine,
+      Space -> 1
+      ForceLine,
       is MultilineStringGroup -> Generator.MAX
-      else -> 0
+      Empty -> 0
+      Line -> 0
     }
 }
 
@@ -58,8 +58,6 @@ data class Indent(val nodes: List<FormatNode>) : FormatNode
 data class Nodes(val nodes: List<FormatNode>) : FormatNode
 
 data class Group(val id: Int, val nodes: List<FormatNode>) : FormatNode
-
-data class ForceWrap(val id: Int, val nodes: List<FormatNode>) : FormatNode
 
 data class MultilineStringGroup(val endQuoteCol: Int, val nodes: List<FormatNode>) : FormatNode
 

@@ -1,0 +1,7 @@
+bar {
+  mod {
+    mod = null
+    num = 6
+  }
+  num = 5
+}
