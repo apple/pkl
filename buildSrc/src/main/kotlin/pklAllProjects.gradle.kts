@@ -152,22 +152,28 @@ val ratchetBranchName =
 spotless {
   ratchetFrom = "$originalRemoteName/$ratchetBranchName"
 
+  val revertYearOnlyChangesStep =
+    RevertYearOnlyChangesStep(rootProject.rootDir, ratchetFrom!!).create()
+
   // When building root project, format buildSrc files too.
   // We need this because buildSrc is not a subproject of the root project, so a top-level
   // `spotlessApply` will not trigger `buildSrc:spotlessApply`.
   if (project === rootProject) {
     kotlinGradle {
       configureFormatter()
+      addStep(revertYearOnlyChangesStep)
       target("*.kts", "buildSrc/*.kts", "buildSrc/src/*/kotlin/**/*.kts")
     }
     kotlin {
       ktfmt(libs.versions.ktfmt.get()).googleStyle()
       target("buildSrc/src/*/kotlin/**/*.kt")
       licenseHeaderFile(licenseHeaderFile)
+      addStep(revertYearOnlyChangesStep)
     }
   } else {
     kotlinGradle {
       configureFormatter()
+      addStep(revertYearOnlyChangesStep)
       target("*.kts")
     }
   }
