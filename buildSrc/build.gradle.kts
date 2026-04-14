@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,8 +20,11 @@ plugins {
   `jvm-toolchains`
 }
 
-// Keep this in sync with the constants in `BuildInfo.kt` (those are not addressable here).
-val toolchainVersion = 21
+/**
+ * To avoid the provisioning of multiple JDKs and other build issues, keep this value in sync with
+ * the JVM toolchain versions in `BuildInfo.kt` and `gradle-daemon-jvm.properties`.
+ */
+val toolchainVersion = 25
 
 dependencies {
   implementation(libs.downloadTaskPlugin)

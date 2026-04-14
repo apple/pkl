@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.doc
 
 import java.io.IOException
 import java.io.OutputStream
+import java.lang.reflect.InvocationTargetException
 import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
@@ -121,7 +122,8 @@ class DocGenerator(
         } catch (e: Throwable) {
           when (e) {
             is NoSuchMethodException,
-            is IllegalAccessException ->
+            is IllegalAccessException,
+            is InvocationTargetException ->
               return Executors.newFixedThreadPool(
                 64.coerceAtLeast(Runtime.getRuntime().availableProcessors())
               )
@@ -287,8 +289,9 @@ internal class DocPackage(val docPackageInfo: DocPackageInfo, val modules: List<
   }
 
   val docModules: List<DocModule> by lazy {
-    val regularModules =
-      modules.filter { mod -> !mod.annotations.any { it.classInfo == PClassInfo.DocExample } }
+    val regularModules = modules.filter { mod ->
+      !mod.annotations.any { it.classInfo == PClassInfo.DocExample }
+    }
     regularModules.map { mod ->
       DocModule(
         this,

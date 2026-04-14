@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.pkl.core.util.pklbinary.PklBinaryCode
 class PklBinaryDecoderTest {
   @Test
   fun `decoding succeeds`() {
-    val moduleUri = URI.create("file:///\$snippetsDir/input/api/encoding1.msgpack.yaml.pkl")
+    val moduleUri = URI.create($$"file:///$snippetsDir/input/api/encoding1.msgpack.yaml.pkl")
     // based on pkl-core/src/test/files/LanguageSnippetTests/input/api/encoding1.msgpack.yaml.pkl
     // but Class, TypeAlias, and IntSeq values are nil'd
     // and any module URIs are normalized to use $snippetsDir instead of an absoulute path
@@ -63,7 +63,7 @@ class PklBinaryDecoderTest {
             PObject(
               PClassInfo.get("pkl.base", "PcfRenderer", PClassInfo.pklBaseUri),
               mapOf(
-                "converters" to emptyMap<Object, Object>(),
+                "converters" to emptyMap<Any, Any>(),
                 "extension" to "pcf",
                 "indent" to "  ",
                 "omitNullProperties" to false,

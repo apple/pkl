@@ -31,7 +31,7 @@ import org.gradle.process.CommandLineArgumentProvider
 
 /**
  * JVM bytecode target; this is pinned at a reasonable version, because downstream JVM projects
- * which consume Pkl will need a minimum Bytecode level at or above this one.
+ * which consume Pkl will need a minimum bytecode level at or above this one.
  *
  * Kotlin and Java need matching bytecode targets, so this is expressed as a build setting and
  * constant default. To override, pass `-DpklJdkToolchain=X` to the Gradle command line, where X is
@@ -40,10 +40,13 @@ import org.gradle.process.CommandLineArgumentProvider
 const val PKL_JVM_TARGET_DEFAULT_MAXIMUM = 17
 
 /**
- * The Pkl build requires JDK 21+ to build, because JDK 17 is no longer within the default set of
- * supported JDKs for GraalVM. This is a build-time requirement, not a runtime requirement.
+ * The Pkl build requires JDK 25+; otherwise, NullAway will not work correctly.
+ *
+ * This is a build-time requirement, not a runtime requirement. To avoid the provisioning of
+ * multiple JDKs and other build issues, keep this value in sync with the JVM toolchain versions in
+ * `buildSrc/build.gradle.kts` and `gradle-daemon-jvm.properties`.
  */
-const val PKL_JDK_VERSION_MIN = 21
+const val PKL_JDK_VERSION_MIN = 25
 
 /**
  * The JDK minimum is set to match the bytecode minimum, to guarantee that fat JARs work against the
@@ -52,14 +55,15 @@ const val PKL_JDK_VERSION_MIN = 21
 const val PKL_TEST_JDK_MINIMUM = PKL_JVM_TARGET_DEFAULT_MAXIMUM
 
 /**
- * Maximum JDK version which Pkl is tested with; this should be bumped when new JDK stable releases
- * are issued. At the time of this writing, JDK 23 is the latest available release.
+ * Maximum JDK version which Pkl is tested with; this should be bumped when new JDK releases are
+ * issued.
  */
-const val PKL_TEST_JDK_MAXIMUM = 23
+const val PKL_TEST_JDK_MAXIMUM = 26
 
 /**
- * Test the full suite of JDKs between [PKL_TEST_JDK_MINIMUM] and [PKL_TEST_JDK_MAXIMUM]; if this is
- * set to `false` (or overridden on the command line), only LTS releases are tested by default.
+ * If `true`, all JDK releases between [PKL_TEST_JDK_MINIMUM] and [PKL_TEST_JDK_MAXIMUM] are tested.
+ * If `false`, only LTS releases within that range are tested. To override, pass
+ * `-DpklTestAllJdks=true` on the Gradle command line.
  */
 const val PKL_TEST_ALL_JDKS = false
 
@@ -197,8 +201,8 @@ open class BuildInfo(private val project: Project) {
   }
 
   val testJdkVendors: Sequence<JvmVendorSpec> by lazy {
-    // By default, only OpenJDK is tested during multi-JDK testing. Flip `-DpklTestAllVendors=true`
-    // to additionally test against a suite of JDK vendors, including Azul, Oracle, and GraalVM.
+    // By default, only Adoptium is tested during multi-JDK testing. Flip `-DpklTestAllVendors=true`
+    // to additionally test against GraalVM and Oracle.
     when (System.getProperty("pklTestAllVendors")?.toBoolean()) {
       true -> sequenceOf(JvmVendorSpec.ADOPTIUM, JvmVendorSpec.GRAAL_VM, JvmVendorSpec.ORACLE)
       else -> sequenceOf(JvmVendorSpec.ADOPTIUM)
@@ -278,8 +282,9 @@ open class BuildInfo(private val project: Project) {
       val namer = testNamer(baseNameProvider)
       val applyConfig: MultiJdkTestConfigurator = { (version, jdk) ->
         // 1) copy configurations from the template task
-        dependsOn(templateTask)
         templateTask.get().let { template ->
+          // copy explicit dependencies not inferred from task inputs
+          dependsOn(template.dependsOn)
           classpath = template.classpath
           testClassesDirs = template.testClassesDirs
           jvmArgs.addAll(template.jvmArgs)
@@ -305,8 +310,8 @@ open class BuildInfo(private val project: Project) {
             // multiply out by jdk vendor
             testJdkVendors.map { vendor -> (targetVersion to vendor) }
           }
-          .map { (jdkTarget, vendor) ->
-            if (jdkToolchainVersion == jdkTarget)
+          .mapNotNull { (jdkTarget, vendor) ->
+            if (jdkToolchainVersion == jdkTarget) {
               tasks.register(namer(jdkTarget, vendor)) {
                 // alias to `test`
                 dependsOn(templateTask)
@@ -314,20 +319,24 @@ open class BuildInfo(private val project: Project) {
                 description =
                   "Alias for regular '${baseNameProvider()}' task, on JDK ${jdkTarget.asInt()}"
               }
-            else
-              tasks.register(namer(jdkTarget, vendor.takeIf { isMultiVendor }), Test::class) {
-                enabled = jdkTarget.isEnabled
-                group = Category.VERIFICATION
-                description = "Run tests against JDK ${jdkTarget.asInt()}"
-                applyConfig(jdkTarget to toolchains.launcherFor { languageVersion = jdkTarget })
-                // fix: on jdk17, we must force the polyglot module on to the modulepath
-                if (jdkTarget.asInt() == 17)
-                  jvmArgumentProviders.add(
-                    CommandLineArgumentProvider {
-                      buildList { listOf("--add-modules=org.graalvm.polyglot") }
-                    }
-                  )
-              }
+            } else {
+              // Always register and enable the task so it can be run explicitly,
+              // but only return it if it should be included in "check".
+              val task =
+                tasks.register(namer(jdkTarget, vendor.takeIf { isMultiVendor }), Test::class) {
+                  group = Category.VERIFICATION
+                  description = "Run tests against JDK ${jdkTarget.asInt()}"
+                  applyConfig(jdkTarget to toolchains.launcherFor { languageVersion = jdkTarget })
+                  // fix: on jdk17, we must force the polyglot module on to the modulepath
+                  if (jdkTarget.asInt() == 17)
+                    jvmArgumentProviders.add(
+                      CommandLineArgumentProvider {
+                        buildList { listOf("--add-modules=org.graalvm.polyglot") }
+                      }
+                    )
+                }
+              task.takeIf { jdkTarget.isEnabled }
+            }
           }
           .toList()
       }

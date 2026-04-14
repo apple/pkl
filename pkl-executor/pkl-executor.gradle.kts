@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,7 +20,6 @@ plugins {
   pklAllProjects
   pklJavaLibrary
   pklPublishLibrary
-  pklKotlinTest
 }
 
 val pklDistributionCurrent: Configuration by configurations.creating
@@ -55,7 +54,7 @@ publishing {
         description.set(
           """
           Library for executing Pkl code in a sandboxed environment.
-        """
+          """
             .trimIndent()
         )
       }
@@ -65,37 +64,37 @@ publishing {
 
 sourceSets { main { java { srcDir("src/main/java") } } }
 
-val prepareHistoricalDistributions by
-  tasks.registering {
-    val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
-    inputs.files(pklHistoricalDistributions.files)
-    outputs.dir(outputDir)
-    doLast {
-      val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
-      for (file in pklHistoricalDistributions.files) {
-        val target = distributionDir.resolve(file.name)
-        // Create normal files on Windows, symlink on macOS/linux (need admin privileges to create
-        // symlinks on Windows)
-        if (buildInfo.os.isWindows) {
-          if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
-            if (Files.exists(target)) {
-              Files.delete(target)
-            }
-            Files.copy(file.toPath(), target)
+val prepareHistoricalDistributions by tasks.registering {
+  val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
+  inputs.files(pklHistoricalDistributions.files)
+  outputs.dir(outputDir)
+  doLast {
+    val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
+    for (file in pklHistoricalDistributions.files) {
+      val target = distributionDir.resolve(file.name)
+      // Create normal files on Windows, symlink on macOS/linux (need admin privileges to create
+      // symlinks on Windows)
+      if (buildInfo.os.isWindows) {
+        if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
+          if (Files.exists(target)) {
+            Files.delete(target)
           }
-        } else {
-          if (!Files.isSymbolicLink(target)) {
-            if (Files.exists(target)) {
-              Files.delete(target)
-            }
-            Files.createSymbolicLink(target, file.toPath())
+          Files.copy(file.toPath(), target)
+        }
+      } else {
+        if (!Files.isSymbolicLink(target)) {
+          if (Files.exists(target)) {
+            Files.delete(target)
           }
+          Files.createSymbolicLink(target, file.toPath())
         }
       }
     }
   }
+}
 
-val prepareTest by
-  tasks.registering { dependsOn(pklDistributionCurrent, prepareHistoricalDistributions) }
+val prepareTest by tasks.registering {
+  dependsOn(pklDistributionCurrent, prepareHistoricalDistributions)
+}
 
 tasks.test { dependsOn(prepareTest) }

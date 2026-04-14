@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,7 +19,7 @@ import org.gradle.api.tasks.testing.logging.TestExceptionFormat
 
 plugins {
   `jvm-test-suite`
-  kotlin("jvm")
+  id("pklKotlinBase")
 }
 
 val buildInfo = project.extensions.getByType<BuildInfo>()
@@ -27,10 +27,11 @@ val buildInfo = project.extensions.getByType<BuildInfo>()
 val libs = the<LibrariesForLibs>()
 
 dependencies {
+  testImplementation(libs.kotlinStdLib)
+
   testImplementation(libs.assertj)
   testImplementation(libs.junitApi)
   testImplementation(libs.junitParams)
-  testImplementation(libs.kotlinStdLib)
 
   testRuntimeOnly(libs.junitEngine)
   testRuntimeOnly(libs.junitLauncher)
@@ -44,7 +45,7 @@ tasks.withType<Test>().configureEach {
   // enable checking of stdlib return types
   systemProperty("org.pkl.testMode", "true")
 
-  reports.named("html") { enabled = true }
+  reports.named("html") { required = true }
 
   testLogging { exceptionFormat = TestExceptionFormat.FULL }
 

@@ -23,6 +23,9 @@ graalVmSha256-linux-x64 = "01e39fe1a87f28b842a3e4e3b77be9b544dca3a58fa6e93b924a6
 graalVmSha256-linux-aarch64 = "7aa0b9935a80e67f37c6025678393dbd123bb6f2226811decbc1a13093fc8ae2"
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4ce442e344ca27"
+# pklGraalVm.gradle.kts assumes this entry exists
+#noinspection UnusedVersionCatalogEntry
+graalVmSha256-windows-aarch64 = "unavailable"
 ideaExtPlugin = "1.4.1"
 javaPoet = "0.+"
 javaxInject = "1"
@@ -32,7 +35,10 @@ jmh = "1.+"
 jmhPlugin = "0.7.3"
 jsr305 = "3.+"
 junit = "6.+"
-kotlin = "2.2.21"
+kotlinBom = "2.2.21"
+#noinspection UnusedVersionCatalogEntry
+kotlinTarget = "2.2"
+kotlinToolchain = "2.3.20"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.+"
 kotlinxHtml = "0.12.0"
@@ -40,10 +46,8 @@ kotlinxHtml = "0.12.0"
 # which is the language level currently set in pklKotlinLibrary.
 kotlinxSerialization = "1.8.1"
 kotlinxCoroutines = "1.+"
-# 0.62 might require a higher Kotlin version; fails with:
-# ktfmt(java.lang.NoClassDefFoundError)
-# Could not initialize class com.facebook.ktfmt.util.CompatibilityUtilsKt
-ktfmt = "0.61"
+#noinspection UnusedVersionCatalogEntry
+ktfmt = "0.62"
 # replaces nuValidator's log4j dependency
 # 2.17.1 is the last version compatible with nuValidator
 log4j = "2.17.1"
@@ -80,11 +84,13 @@ junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", vers
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
 #noinspection UnusedVersionCatalogEntry
 junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
-kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlin" }
+#noinspection UnusedVersionCatalogEntry
+kotlinBom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlinBom" }
+kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlinToolchain" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
-kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlin" }
-kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlin" }
-kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlin" }
+kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlinBom" }
+kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlinBom" }
+kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlinBom" }
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
@@ -112,6 +118,6 @@ wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock"
 checksum = { id = "org.gradle.crypto.checksum", version.ref = "checksumPlugin" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtPlugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
-kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlin" }
+kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinToolchain" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }

@@ -58,16 +58,7 @@ spotless {
     target("src/*/java/**/*.java")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
-
-  kotlin {
-    addStep(revertYearOnlyChanges)
-    ktfmt(libs.versions.ktfmt.get()).googleStyle()
-    target("src/*/kotlin/**/*.kt")
-    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
-  }
 }
-
-tasks.compileKotlin { enabled = false }
 
 tasks.jar {
   manifest {
@@ -86,19 +77,6 @@ tasks.javadoc {
   (options as StandardJavadocDocletOptions).addStringOption("Xdoclint:none", "-quiet")
 }
 
-val workAroundKotlinGradlePluginBug by
-  tasks.registering {
-    doLast {
-      // Works around this problem, which sporadically appears and disappears in different
-      // subprojects:
-      // A problem was found with the configuration of task ':pkl-executor:compileJava' (type
-      // 'JavaCompile').
-      // > Directory '[...]/pkl/pkl-executor/build/classes/kotlin/main'
-      // specified for property 'compileKotlinOutputClasses' does not exist.
-      layout.buildDirectory.dir("classes/kotlin/main").get().asFile.mkdirs()
-    }
-  }
-
 val truffleJavacArgs =
   listOf(
     // TODO: determine correct limits for Truffle specializations
@@ -108,7 +86,6 @@ val truffleJavacArgs =
 
 tasks.compileJava {
   javaCompiler = info.javaCompiler
-  dependsOn(workAroundKotlinGradlePluginBug)
   options.compilerArgs.addAll(truffleJavacArgs + info.jpmsAddModulesFlags)
 }
 
