@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -57,7 +57,6 @@ dependencies {
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
-  add("generatorImplementation", libs.kotlinStdLib)
 
   javaExecutableConfiguration(project(":pkl-cli", "javaExecutable"))
 }
@@ -72,7 +71,7 @@ publishing {
           Core implementation of the Pkl configuration language.
           Includes Java APIs for embedding the language into JVM applications,
           and for building libraries and tools on top of the language.
-        """
+          """
             .trimIndent()
         )
       }

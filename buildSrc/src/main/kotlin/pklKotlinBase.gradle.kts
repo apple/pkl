@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 import org.gradle.accessors.dm.LibrariesForLibs
+import org.gradle.api.GradleException
 import org.gradle.kotlin.dsl.getByType
 import org.gradle.kotlin.dsl.kotlin
 import org.gradle.kotlin.dsl.the
@@ -30,23 +31,16 @@ val buildInfo = project.extensions.getByType<BuildInfo>()
 
 val libs = the<LibrariesForLibs>()
 
-dependencies {
-  // Align versions of Kotlin modules during dependency resolution.
-  // Do NOT align "api", as this would affect consumers' builds.
-  implementation(platform(libs.kotlinBom))
-  testImplementation(platform(libs.kotlinBom))
-}
-
 kotlin {
+  jvmToolchain {
+    languageVersion.set(buildInfo.jdkToolchainVersion)
+    vendor.set(buildInfo.jdkVendor)
+  }
   compilerOptions {
     val kotlinTarget = KotlinVersion.fromVersion(libs.versions.kotlinTarget.get())
     languageVersion.set(kotlinTarget)
     apiVersion.set(kotlinTarget)
     jvmTarget = JvmTarget.fromTarget(buildInfo.jvmTarget.toString())
-    jvmToolchain {
-      languageVersion.set(buildInfo.jdkToolchainVersion)
-      vendor.set(buildInfo.jdkVendor)
-    }
     freeCompilerArgs.addAll(
       "-jvm-default=no-compatibility", // was: -Xjvm-default=all
       "-Xjdk-release=${buildInfo.jvmTarget}",
@@ -64,4 +58,56 @@ spotless {
     target("src/*/kotlin/**/*.kt")
     licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
   }
+}
+
+/**
+ * Kotlin modules to guard: fail the build if any dependency resolves to a version higher than
+ * `libs.versions.kotlinTarget`. This includes versions introduced via direct declarations, BOMs,
+ * version catalogs, or constraints.
+ */
+val guardedKotlinModules = setOf(libs.kotlinStdLib.get().module, libs.kotlinReflect.get().module)
+
+/**
+ * Classpath configurations where the above rule applies. Kept narrow to avoid interfering with
+ * Gradle/Kotlin plugin internal configurations.
+ */
+val guardedConfigurations =
+  setOf(
+    configurations.compileClasspath,
+    configurations.runtimeClasspath,
+    configurations.testCompileClasspath,
+    configurations.testRuntimeClasspath,
+  )
+
+guardedConfigurations.forEach { configuration ->
+  configuration.configure {
+    incoming.afterResolve {
+      resolutionResult.allComponents.forEach { component ->
+        val moduleVersion = component.moduleVersion ?: return@forEach
+        if (
+          moduleVersion.module in guardedKotlinModules &&
+            moduleVersion.version.exceedsKotlinTarget()
+        ) {
+          throw GradleException(
+            "Resolved ${moduleVersion.module}:${moduleVersion.version} on configuration $name, " +
+              "which exceeds the allowed Kotlin version ($kotlinTargetVersion)"
+          )
+        }
+      }
+    }
+  }
+}
+
+// also works for version ranges like: [2.3.0,)
+val kotlinVersionRegex = Regex("""(\d+)\.(\d+)(?:\.\d+)?""")
+val kotlinTargetVersion = libs.versions.kotlinTarget.get()
+val targetMajor = kotlinTargetVersion.substringBefore('.').toInt()
+val targetMinor = kotlinTargetVersion.substringAfter('.').toInt()
+
+fun String.exceedsKotlinTarget(): Boolean {
+  val version =
+    kotlinVersionRegex.find(this) ?: throw GradleException("Could not parse Kotlin version: $this")
+  val major = version.groupValues[1].toInt()
+  val minor = version.groupValues[2].toInt()
+  return major > targetMajor || (major == targetMajor && minor > targetMinor)
 }

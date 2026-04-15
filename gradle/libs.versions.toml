@@ -1,7 +1,8 @@
 [versions] # ordered alphabetically
 assertj = "3.+"
 checksumPlugin = "1.4.0"
-clikt = "5.+"
+# 5.0.3 is the last version compatible with Kotlin 2.2
+clikt = "5.0.3"
 commonMark = "0.+"
 downloadTaskPlugin = "5.7.0"
 errorProne = "2.48.0"
@@ -38,16 +39,15 @@ jmhPlugin = "0.7.3"
 jspecify = "1.0.0"
 jsr305 = "3.+"
 junit = "6.+"
-kotlinBom = "2.2.21"
+# 1.7+ generates much more verbose code
+kotlinPoet = "1.6.+"
+kotlinStdLib = "2.2.21"
 #noinspection UnusedVersionCatalogEntry
 kotlinTarget = "2.2"
 kotlinToolchain = "2.3.20"
-# 1.7+ generates much more verbose code
-kotlinPoet = "1.6.+"
 kotlinxHtml = "0.12.0"
-# 1.8.1 is the last version that supports Kotlin 2.1,
-# which is the language level currently set in pklKotlinLibrary.
-kotlinxSerialization = "1.8.1"
+# 1.9.0 is the last version compatible with Kotlin 2.2
+kotlinxSerialization = "1.9.0"
 kotlinxCoroutines = "1.+"
 #noinspection UnusedVersionCatalogEntry
 ktfmt = "0.62"
@@ -94,13 +94,12 @@ junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", vers
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }
 #noinspection UnusedVersionCatalogEntry
 junitLauncher = { group = "org.junit.platform", name = "junit-platform-launcher", version.ref = "junit" }
-#noinspection UnusedVersionCatalogEntry
-kotlinBom = { group = "org.jetbrains.kotlin", name = "kotlin-bom", version.ref = "kotlinBom" }
 kotlinPlugin = { group = "org.jetbrains.kotlin", name = "kotlin-gradle-plugin", version.ref = "kotlinToolchain" }
 kotlinPoet = { group = "com.squareup", name = "kotlinpoet", version.ref = "kotlinPoet" }
-kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlinBom" }
-kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlinBom" }
-kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib-jdk8", version.ref = "kotlinBom" }
+kotlinReflect = { group = "org.jetbrains.kotlin", name = "kotlin-reflect", version.ref = "kotlinStdLib" }
+kotlinScripting = { group = "org.jetbrains.kotlin", name = "kotlin-scripting-jsr223", version.ref = "kotlinStdLib" }
+#noinspection UnusedVersionCatalogEntry
+kotlinStdLib = { group = "org.jetbrains.kotlin", name = "kotlin-stdlib", version.ref = "kotlinStdLib" }
 kotlinxHtml = { group = "org.jetbrains.kotlinx", name = "kotlinx-html-jvm", version.ref = "kotlinxHtml" }
 kotlinxSerializationJson = { group = "org.jetbrains.kotlinx", name = "kotlinx-serialization-json", version.ref = "kotlinxSerialization" }
 kotlinxCoroutinesCore = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-core", version.ref = "kotlinxCoroutines" }
