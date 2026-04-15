@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,20 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmObject;
 import org.pkl.core.runtime.VmUtils;
 
-/** Reads a local non-constant property that is known to exist in the lexical scope of this node. */
+/**
+ * Reads a local non-constant property that is known to exist in the lexical scope of this node.
+ *
+ * <p>Local property values are cached using the ObjectMember as the key (identity-based) rather
+ * than the property name. This is necessary because the same property name can exist at different
+ * declaration sites in an amends chain, and we need to distinguish between them for correct
+ * late-binding semantics.
+ *
+ * <p>The cache is stored in a separate IdentityHashMap in VmObject (not in the DynamicObject
+ * storage) to avoid shape transitions that would destroy cache locality.
+ */
 public final class ReadLocalPropertyNode extends ExpressionNode {
   private final ObjectMember property;
   private final int levelsUp;
@@ -63,15 +73,17 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
       owner = owner.getEnclosingOwner();
     }
 
-    assert receiver instanceof VmObjectLike
+    assert receiver instanceof VmObject
         : "Assumption: This node isn't used in Truffle ASTs of `external` pkl.base classes whose values aren't VmObject's.";
 
-    var objReceiver = (VmObjectLike) receiver;
-    var result = objReceiver.getCachedValue(property);
+    // Use the local property cache instead of DynamicObject storage
+    // to avoid shape transitions from ObjectMember keys
+    var objReceiver = (VmObject) receiver;
+    var result = objReceiver.getLocalCachedValue(property);
 
     if (result == null) {
       result = callNode.call(objReceiver, owner, property.getName());
-      objReceiver.setCachedValue(property, result);
+      objReceiver.setLocalCachedValue(property, result);
     }
 
     return result;

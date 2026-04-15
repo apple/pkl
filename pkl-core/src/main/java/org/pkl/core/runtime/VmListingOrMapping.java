@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.Nullable;
 
 public abstract class VmListingOrMapping extends VmObject {
@@ -32,24 +31,24 @@ public abstract class VmListingOrMapping extends VmObject {
   private final @Nullable Object typeCheckReceiver;
   private final @Nullable VmObjectLike typeCheckOwner;
 
-  public VmListingOrMapping(
+  protected VmListingOrMapping(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    super(enclosingFrame, parent, members);
+    super(PklShape.getRootShape(), enclosingFrame, parent, members);
     typeCastNode = null;
     typeCheckReceiver = null;
     typeCheckOwner = null;
   }
 
-  public VmListingOrMapping(
+  protected VmListingOrMapping(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,
       Object typeCheckReceiver,
       VmObjectLike typeCheckOwner) {
-    super(enclosingFrame, parent, members);
+    super(PklShape.getRootShape(), enclosingFrame, parent, members);
     this.typeCastNode = typeCastNode;
     this.typeCheckReceiver = typeCheckReceiver;
     this.typeCheckOwner = typeCheckOwner;
@@ -88,7 +87,7 @@ public abstract class VmListingOrMapping extends VmObject {
   @Override
   @TruffleBoundary
   public final @Nullable Object getCachedValue(Object key) {
-    var result = EconomicMaps.get(cachedValues, key);
+    var result = super.getCachedValue(key);
     // if this object has members, `this[key]` may differ from `parent[key]`, so stop the search
     if (result != null || !members.isEmpty()) return result;
 

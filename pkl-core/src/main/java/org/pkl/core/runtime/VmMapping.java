@@ -93,7 +93,7 @@ public final class VmMapping extends VmListingOrMapping {
   @Override
   @TruffleBoundary
   public Map<Object, Object> export() {
-    var properties = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var properties = CollectionUtils.newLinkedHashMap(getCachedValueCount());
 
     iterateMemberValues(
         (key, prop, value) -> {
@@ -128,7 +128,7 @@ public final class VmMapping extends VmListingOrMapping {
     other.force(false);
     if (getLength() != other.getLength()) return false;
 
-    var cursor = cachedValues.getEntries();
+    var cursor = getCachedValueEntries();
     while (cursor.advance()) {
       Object key = cursor.getKey();
       if (key instanceof Identifier) continue;
@@ -149,7 +149,7 @@ public final class VmMapping extends VmListingOrMapping {
 
     force(false);
     var result = 0;
-    var cursor = cachedValues.getEntries();
+    var cursor = getCachedValueEntries();
 
     while (cursor.advance()) {
       var key = cursor.getKey();

@@ -19,6 +19,9 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.Shape;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.Composite;
@@ -34,14 +37,99 @@ import org.pkl.core.util.Nullable;
 public final class VmTyped extends VmObject {
   @CompilationFinal @LateInit private VmClass clazz;
 
+  /**
+   * Creates a new VmTyped with the class's instance shape.
+   *
+   * @param enclosingFrame the frame that was active when this object was instantiated
+   * @param parent the parent in the prototype chain, or null
+   * @param clazz the class of this object, or null if it will be late-initialized
+   * @param members the declared members of this object
+   */
   public VmTyped(
       MaterializedFrame enclosingFrame,
       @Nullable VmTyped parent,
       // null -> will be initialized using lateInitVmClass() later
       @Nullable VmClass clazz,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    super(enclosingFrame, parent, members);
+    this(enclosingFrame, parent, clazz, members, getShapeForClass(clazz));
+  }
+
+  /**
+   * Creates a new VmTyped with a custom shape.
+   *
+   * <p>This constructor is used when a specific shape is needed, such as when amending an object
+   * where the shape may differ from the class's base instance shape.
+   *
+   * @param enclosingFrame the frame that was active when this object was instantiated
+   * @param parent the parent in the prototype chain, or null
+   * @param clazz the class of this object, or null if it will be late-initialized
+   * @param members the declared members of this object
+   * @param shape the Truffle shape for this object's cached value storage
+   */
+  public VmTyped(
+      MaterializedFrame enclosingFrame,
+      @Nullable VmTyped parent,
+      @Nullable VmClass clazz,
+      UnmodifiableEconomicMap<Object, ObjectMember> members,
+      Shape shape) {
+    super(shape, enclosingFrame, parent, members);
     this.clazz = clazz;
+    // pre-allocate cache slots for all members to stabilize the shape
+    preallocateCacheSlots(members);
+  }
+
+  /**
+   * Pre-allocates cache slots for all members by putting null values. This creates shape
+   * transitions upfront so all instances share the same final shape.
+   */
+  private void preallocateCacheSlots(UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    var library = DynamicObjectLibrary.getUncached();
+    var cursor = members.getEntries();
+    while (cursor.advance()) {
+      library.put(this, cursor.getKey(), null);
+    }
+  }
+
+  private static Shape getShapeForClass(@Nullable VmClass clazz) {
+    return clazz != null ? clazz.getInstanceShape() : PklShape.getRootShape();
+  }
+
+  /** Returns this object for cached value storage. */
+  public DynamicObject getCachedValuesStorage() {
+    return this;
+  }
+
+  /**
+   * Gets a cached value using the provided library for PE-optimized access.
+   *
+   * @param key the property key
+   * @param library the DynamicObjectLibrary to use (should be cached via @CachedLibrary)
+   * @return the cached value, or null if not present
+   */
+  public @Nullable Object getCachedValue(Object key, DynamicObjectLibrary library) {
+    return library.getOrDefault(this, key, null);
+  }
+
+  /**
+   * Sets a cached value using the provided library for PE-optimized access.
+   *
+   * @param key the property key
+   * @param value the value to cache
+   * @param library the DynamicObjectLibrary to use (should be cached via @CachedLibrary)
+   */
+  public void setCachedValue(Object key, Object value, DynamicObjectLibrary library) {
+    library.put(this, key, value);
+  }
+
+  /**
+   * Checks if a cached value exists using the provided library for PE-optimized access.
+   *
+   * @param key the property key
+   * @param library the DynamicObjectLibrary to use (should be cached via @CachedLibrary)
+   * @return true if a value is cached for this key
+   */
+  public boolean hasCachedValue(Object key, DynamicObjectLibrary library) {
+    return library.containsKey(this, key);
   }
 
   public void lateInitVmClass(VmClass clazz) {

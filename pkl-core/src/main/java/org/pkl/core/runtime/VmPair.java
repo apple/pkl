@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,7 @@ import org.pkl.core.Pair;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final class VmPair extends VmValue implements Iterable<Object> {
+public final class VmPair implements VmValue, Iterable<Object> {
   private final Object first;
   private final Object second;
 

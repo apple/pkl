@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.pkl.core.util.DurationUtils;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final class VmDuration extends VmValue implements Comparable<VmDuration> {
+public final class VmDuration implements VmValue, Comparable<VmDuration> {
   private static final Map<Identifier, DurationUnit> UNITS =
       Map.of(
           Identifier.NS, DurationUnit.NANOS,

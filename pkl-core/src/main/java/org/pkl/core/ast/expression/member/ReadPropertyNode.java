@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,12 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.*;
+import com.oracle.truffle.api.dsl.Cached.Shared;
+import com.oracle.truffle.api.library.CachedLibrary;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
@@ -61,6 +64,27 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     this(sourceSection, propertyName, MemberLookupMode.EXPLICIT_RECEIVER, false);
   }
 
+  // Optimized specialization for VmTyped using DynamicObjectLibrary
+  @Specialization
+  protected Object evalTyped(
+      VmTyped receiver,
+      @CachedLibrary(limit = "3") DynamicObjectLibrary objectLibrary,
+      @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
+
+    checkConst(receiver);
+
+    // fast path: check cache using optimized library access
+    var result = receiver.getCachedValue(propertyName, objectLibrary);
+    if (result != null) return result;
+
+    // slow path: look up member in prototype chain and compute value
+    result = VmUtils.readMemberOrNull(receiver, propertyName, true, callNode);
+    if (result != null) return result;
+
+    CompilerDirectives.transferToInterpreter();
+    throw cannotFindProperty(receiver);
+  }
+
   // This method effectively covers `VmObject receiver` but is implemented in a more
   // efficient way. See:
   // https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces
@@ -68,7 +92,7 @@ public abstract class ReadPropertyNode extends ExpressionNode {
   protected Object evalObject(
       Object receiver,
       @Cached("getVmObjectSubclassOrNull(receiver)") Class<? extends VmObjectLike> cachedClass,
-      @Cached("create()") IndirectCallNode callNode) {
+      @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
 
     var object = cachedClass.cast(receiver);
     checkConst(object);

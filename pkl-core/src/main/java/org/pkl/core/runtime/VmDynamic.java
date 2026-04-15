@@ -28,6 +28,8 @@ import org.pkl.core.util.EconomicMaps;
 public final class VmDynamic extends VmObject {
   private int cachedRegularMemberCount = -1;
 
+  private final int length;
+
   private static final class EmptyHolder {
     private static final VmDynamic EMPTY =
         new VmDynamic(
@@ -36,8 +38,6 @@ public final class VmDynamic extends VmObject {
             EconomicMaps.create(),
             0);
   }
-
-  private final int length;
 
   public static VmDynamic empty() {
     return EmptyHolder.EMPTY;
@@ -48,7 +48,7 @@ public final class VmDynamic extends VmObject {
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {
-    super(enclosingFrame, Objects.requireNonNull(parent), members);
+    super(PklShape.getRootShape(), enclosingFrame, Objects.requireNonNull(parent), members);
     this.length = length;
   }
 
@@ -75,8 +75,7 @@ public final class VmDynamic extends VmObject {
   @Override
   @TruffleBoundary
   public PObject export() {
-    var properties =
-        CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var properties = CollectionUtils.<String, Object>newLinkedHashMap(getCachedValueCount());
 
     iterateMemberValues(
         (key, member, value) -> {
@@ -109,7 +108,7 @@ public final class VmDynamic extends VmObject {
     other.force(false);
     if (getRegularMemberCount() != other.getRegularMemberCount()) return false;
 
-    var cursor = cachedValues.getEntries();
+    var cursor = getCachedValueEntries();
     while (cursor.advance()) {
       Object key = cursor.getKey();
       if (isHiddenOrLocalProperty(key)) continue;
@@ -130,7 +129,7 @@ public final class VmDynamic extends VmObject {
 
     force(false);
     var result = 0;
-    var cursor = cachedValues.getEntries();
+    var cursor = getCachedValueEntries();
 
     while (cursor.advance()) {
       var key = cursor.getKey();
@@ -150,8 +149,9 @@ public final class VmDynamic extends VmObject {
     if (cachedRegularMemberCount != -1) return cachedRegularMemberCount;
 
     var result = 0;
-    for (var key : cachedValues.getKeys()) {
-      if (!isHiddenOrLocalProperty(key)) result += 1;
+    var cursor = getCachedValueEntries();
+    while (cursor.advance()) {
+      if (!isHiddenOrLocalProperty(cursor.getKey())) result += 1;
     }
     cachedRegularMemberCount = result;
     return result;

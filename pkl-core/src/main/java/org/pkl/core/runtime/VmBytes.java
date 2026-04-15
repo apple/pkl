@@ -29,7 +29,7 @@ import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final class VmBytes extends VmValue implements Iterable<Long> {
+public final class VmBytes implements VmValue, Iterable<Long> {
 
   private @Nullable VmList vmList;
   private @Nullable String base64;

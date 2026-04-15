@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import org.pkl.core.util.MathUtils;
 import org.pkl.core.util.Nullable;
 
 @ValueType
-public final class VmDataSize extends VmValue implements Comparable<VmDataSize> {
+public final class VmDataSize implements VmValue, Comparable<VmDataSize> {
   private static final Map<Identifier, DataSizeUnit> UNITS =
       Map.ofEntries(
           entry(Identifier.B, DataSizeUnit.BYTES),

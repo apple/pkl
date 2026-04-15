@@ -30,7 +30,7 @@ import org.pkl.core.util.paguro.RrbTree;
 import org.pkl.core.util.paguro.RrbTree.ImRrbt;
 import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
-public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, Object>> {
+public final class VmMap implements VmValue, Iterable<Map.Entry<Object, Object>> {
   public static final VmMap EMPTY = new VmMap(PersistentHashMap.empty(), RrbTree.empty());
 
   private final ImMap<Object, Object> map;

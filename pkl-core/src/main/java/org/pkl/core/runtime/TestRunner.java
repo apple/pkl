@@ -104,7 +104,7 @@ public final class TestRunner {
                   if (factValue == Boolean.FALSE) {
                     if (PowerAssertions.isEnabled()) {
                       try (var valueTracker = valueTrackerFactory.create()) {
-                        listing.cachedValues.clear();
+                        listing.cleanAllCachedValues();
                         VmUtils.readMember(listing, idx);
                         var failure =
                             factFailure(

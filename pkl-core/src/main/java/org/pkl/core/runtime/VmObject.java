@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,42 +18,69 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.object.DynamicObject;
+import com.oracle.truffle.api.object.DynamicObjectLibrary;
+import com.oracle.truffle.api.object.Shape;
 import java.util.*;
 import java.util.function.BiFunction;
-import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.CollectionUtils;
+import org.pkl.core.util.DynamicObjectMapCursor;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.MapCursor;
 import org.pkl.core.util.Nullable;
 
-/** Corresponds to `pkl.base#Object`. */
-public abstract class VmObject extends VmObjectLike {
+/**
+ * Corresponds to `pkl.base#Object`.
+ *
+ * <p>Extends {@link DynamicObject} to leverage Truffle's object storage and inline caching
+ * capabilities. Cached property values are stored directly in this object using the Dynamic Object
+ * Model.
+ */
+public abstract class VmObject extends DynamicObject implements VmObjectLike {
+  // moved from VmObjectLike
+  protected final MaterializedFrame enclosingFrame;
+  protected @Nullable Object extraStorage;
+
   @CompilationFinal protected @Nullable VmObject parent;
   protected final UnmodifiableEconomicMap<Object, ObjectMember> members;
-  protected final EconomicMap<Object, Object> cachedValues;
 
   protected int cachedHash;
   private boolean forced;
 
-  public VmObject(
-      MaterializedFrame enclosingFrame,
-      @Nullable VmObject parent,
-      UnmodifiableEconomicMap<Object, ObjectMember> members,
-      EconomicMap<Object, Object> cachedValues) {
-    super(enclosingFrame);
-    this.parent = parent;
-    this.members = members;
-    this.cachedValues = cachedValues;
+  /**
+   * Separate cache for local property values.
+   *
+   * <p>This is kept separate from the DynamicObject storage to avoid shape transitions.
+   */
+  private @Nullable IdentityHashMap<ObjectMember, Object> localPropertyCache;
 
-    assert parent != this;
-  }
-
-  public VmObject(
+  protected VmObject(
+      Shape shape,
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    this(enclosingFrame, parent, members, EconomicMaps.create());
+    super(shape);
+    this.enclosingFrame = enclosingFrame;
+    this.parent = parent;
+    this.members = members;
+    assert parent != this;
+  }
+
+  @Override
+  public final MaterializedFrame getEnclosingFrame() {
+    return enclosingFrame;
+  }
+
+  @Override
+  public final @Nullable Object getExtraStorage() {
+    return extraStorage;
+  }
+
+  @Override
+  public final void setExtraStorage(@Nullable Object extraStorage) {
+    this.extraStorage = extraStorage;
   }
 
   public final void lateInitParent(VmObject parent) {
@@ -67,11 +94,13 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   @Override
+  @TruffleBoundary
   public final boolean hasMember(Object key) {
     return EconomicMaps.containsKey(members, key);
   }
 
   @Override
+  @TruffleBoundary
   public final @Nullable ObjectMember getMember(Object key) {
     return EconomicMaps.get(members, key);
   }
@@ -82,23 +111,81 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   @Override
+  @TruffleBoundary
   public @Nullable Object getCachedValue(Object key) {
-    return EconomicMaps.get(cachedValues, key);
-  }
-
-  @Override
-  public final void setCachedValue(Object key, Object value) {
-    EconomicMaps.put(cachedValues, key, value);
-  }
-
-  @Override
-  public final boolean hasCachedValue(Object key) {
-    return EconomicMaps.containsKey(cachedValues, key);
+    return DynamicObjectLibrary.getUncached().getOrDefault(this, key, null);
   }
 
   @Override
   @TruffleBoundary
-  public final boolean iterateMemberValues(MemberValueConsumer consumer) {
+  public void setCachedValue(Object key, Object value) {
+    DynamicObjectLibrary.getUncached().put(this, key, value);
+  }
+
+  @Override
+  @TruffleBoundary
+  public boolean hasCachedValue(Object key) {
+    return DynamicObjectLibrary.getUncached().containsKey(this, key);
+  }
+
+  @Override
+  public MapCursor<Object, Object> getCachedValueEntries() {
+    return new DynamicObjectMapCursor(this);
+  }
+
+  @Override
+  @TruffleBoundary
+  public int getCachedValueCount() {
+    return DynamicObjectLibrary.getUncached().getKeyArray(this).length;
+  }
+
+  /**
+   * Clean all cached values. Local or otherwise. Resets cached values to null without removing the
+   * keys, preserving the object's shape for pre-allocated slots.
+   */
+  @TruffleBoundary
+  public void cleanAllCachedValues() {
+    if (localPropertyCache != null) {
+      localPropertyCache.clear();
+    }
+
+    var lib = DynamicObjectLibrary.getUncached();
+    Object[] keys = lib.getKeyArray(this);
+    for (Object key : keys) {
+      lib.put(this, key, null);
+    }
+
+    forced = false;
+  }
+
+  /**
+   * Gets a cached local property value.
+   *
+   * @param property the ObjectMember representing the local property declaration
+   * @return the cached value, or null if not cached
+   */
+  @TruffleBoundary
+  public @Nullable Object getLocalCachedValue(ObjectMember property) {
+    return localPropertyCache == null ? null : localPropertyCache.get(property);
+  }
+
+  /**
+   * Sets a cached local property value.
+   *
+   * @param property the ObjectMember representing the local property declaration
+   * @param value the value to cache
+   */
+  @TruffleBoundary
+  public void setLocalCachedValue(ObjectMember property, Object value) {
+    if (localPropertyCache == null) {
+      localPropertyCache = new IdentityHashMap<>(4);
+    }
+    localPropertyCache.put(property, value);
+  }
+
+  @Override
+  @TruffleBoundary
+  public final boolean iterateMemberValues(VmObjectLike.MemberValueConsumer consumer) {
     var visited = new HashSet<>();
     return iterateMembers(
         (key, member) -> {
@@ -112,14 +199,16 @@ public abstract class VmObject extends VmObjectLike {
 
   @Override
   @TruffleBoundary
-  public final boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer) {
+  public final boolean forceAndIterateMemberValues(
+      VmObjectLike.ForcedMemberValueConsumer consumer) {
     force(false, false);
     return iterateAlreadyForcedMemberValues(consumer);
   }
 
   @Override
   @TruffleBoundary
-  public final boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
+  public final boolean iterateAlreadyForcedMemberValues(
+      VmObjectLike.ForcedMemberValueConsumer consumer) {
     var visited = new HashSet<>();
     return iterateMembers(
         (key, member) -> {
@@ -158,6 +247,9 @@ public abstract class VmObject extends VmObjectLike {
 
     if (recurse) forced = true;
 
+    // use cached call node from this object's class to avoid getUncached() overhead
+    var callNode = getVmClass().getCachedCallNode();
+
     try {
       for (VmObjectLike owner = this; owner != null; owner = owner.getParent()) {
         var cursor = EconomicMaps.getEntries(owner.getMembers());
@@ -174,7 +266,7 @@ public abstract class VmObject extends VmObjectLike {
           var memberValue = getCachedValue(memberKey);
           if (memberValue == null) {
             try {
-              memberValue = VmUtils.doReadMember(this, owner, memberKey, member);
+              memberValue = VmUtils.doReadMember(this, owner, memberKey, member, true, callNode);
             } catch (VmUndefinedValueException e) {
               if (!allowUndefinedValues) throw e;
               continue;
@@ -208,7 +300,7 @@ public abstract class VmObject extends VmObjectLike {
    */
   @TruffleBoundary
   protected final Map<String, Object> exportMembers() {
-    var result = CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var result = CollectionUtils.<String, Object>newLinkedHashMap(getCachedValueCount());
 
     iterateMemberValues(
         (key, member, value) -> {

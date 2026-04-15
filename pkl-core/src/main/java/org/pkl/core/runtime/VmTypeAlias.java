@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 
-public final class VmTypeAlias extends VmValue {
+public final class VmTypeAlias implements VmValue {
   private final SourceSection sourceSection;
   private final SourceSection headerSection;
   private final SourceSection @Nullable [] docComment;

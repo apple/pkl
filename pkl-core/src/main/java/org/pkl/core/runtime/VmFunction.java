@@ -23,9 +23,14 @@ import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.EmptyMapCursor;
+import org.pkl.core.util.MapCursor;
 import org.pkl.core.util.Nullable;
 
-public final class VmFunction extends VmObjectLike {
+public final class VmFunction implements VmObjectLike {
+  // Own fields (VmFunction does not extend DynamicObject, so it has its own storage)
+  private final MaterializedFrame enclosingFrame;
+  private @Nullable Object extraStorage;
 
   private final Object thisValue;
   private final int paramCount;
@@ -37,10 +42,25 @@ public final class VmFunction extends VmObjectLike {
       int paramCount,
       PklRootNode rootNode,
       @Nullable Object extraStorage) {
-    super(enclosingFrame);
+    this.enclosingFrame = enclosingFrame;
     this.thisValue = thisValue;
     this.paramCount = paramCount;
     this.rootNode = rootNode;
+    this.extraStorage = extraStorage;
+  }
+
+  @Override
+  public MaterializedFrame getEnclosingFrame() {
+    return enclosingFrame;
+  }
+
+  @Override
+  public @Nullable Object getExtraStorage() {
+    return extraStorage;
+  }
+
+  @Override
+  public void setExtraStorage(@Nullable Object extraStorage) {
     this.extraStorage = extraStorage;
   }
 
@@ -123,17 +143,27 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
-  public boolean iterateMemberValues(MemberValueConsumer consumer) {
+  public MapCursor<Object, Object> getCachedValueEntries() {
+    return EmptyMapCursor.instance();
+  }
+
+  @Override
+  public int getCachedValueCount() {
+    return 0;
+  }
+
+  @Override
+  public boolean iterateMemberValues(VmObjectLike.MemberValueConsumer consumer) {
     return true;
   }
 
   @Override
-  public boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer) {
+  public boolean forceAndIterateMemberValues(VmObjectLike.ForcedMemberValueConsumer consumer) {
     return true;
   }
 
   @Override
-  public boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
+  public boolean iterateAlreadyForcedMemberValues(VmObjectLike.ForcedMemberValueConsumer consumer) {
     return true;
   }
 

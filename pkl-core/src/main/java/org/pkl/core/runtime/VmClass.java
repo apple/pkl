@@ -19,6 +19,8 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.object.Shape;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.function.*;
@@ -43,7 +45,7 @@ import org.pkl.core.util.Nullable;
 // The currently implemented (and likely insufficient) solution is to
 // * deeply force standard library modules at initialization time.
 // * ensure that any further mutation (e.g., lazy initialization in VmClass) is thread-safe.
-public final class VmClass extends VmValue {
+public final class VmClass implements VmValue {
   private final SourceSection sourceSection;
   private final SourceSection headerSection;
   private final SourceSection @Nullable [] docComment;
@@ -122,6 +124,16 @@ public final class VmClass extends VmValue {
   private EconomicMap<Object, ObjectMember> __mapToTypedMembers;
 
   private final Object mapToTypedMembersLock = new Object();
+
+  // Shape for instances of this class - used for Truffle's Dynamic Object Model
+  @LateInit
+  @GuardedBy("instanceShapeLock")
+  private Shape __instanceShape;
+
+  private final Object instanceShapeLock = new Object();
+
+  /** Cached IndirectCallNode for force() operations. */
+  private final IndirectCallNode cachedCallNode = IndirectCallNode.create();
 
   public VmClass(
       SourceSection sourceSection,
@@ -695,6 +707,41 @@ public final class VmClass extends VmValue {
       }
       return __allMethods;
     }
+  }
+
+  /**
+   * Returns the Truffle Shape for instances of this class.
+   *
+   * <p>The shape is lazily initialized from the root shape. Instance shapes are used by the Dynamic
+   * Object Model to provide optimized property storage and inline caching for cached property
+   * values.
+   */
+  public Shape getInstanceShape() {
+    synchronized (instanceShapeLock) {
+      if (__instanceShape == null) {
+        __instanceShape = buildInstanceShape();
+      }
+      return __instanceShape;
+    }
+  }
+
+  @TruffleBoundary
+  private Shape buildInstanceShape() {
+    // start with the superclass shape if available, otherwise use root shape
+    if (superclass != null) {
+      return superclass.getInstanceShape();
+    }
+    return PklShape.getRootShape();
+  }
+
+  /**
+   * Returns the cached IndirectCallNode for force() operations.
+   *
+   * <p>This node is shared by all instances of this class and avoids the overhead of {@code
+   * IndirectCallNode.getUncached()} which performs a lookup on every call.
+   */
+  public IndirectCallNode getCachedCallNode() {
+    return cachedCallNode;
   }
 
   /**

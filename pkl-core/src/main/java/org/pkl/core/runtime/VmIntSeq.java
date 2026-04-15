@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,7 +25,7 @@ import org.pkl.core.util.Nullable;
 // Some code copied from kotlin.ranges.Progressions, kotlin.ranges.ProgressionIterators,
 // kotlin.internal.ProgressionUtil (Apache 2).
 @ValueType
-public final class VmIntSeq extends VmValue implements Iterable<Long> {
+public final class VmIntSeq implements VmValue, Iterable<Long> {
   public final long start;
   public final long end;
   public final long step;
