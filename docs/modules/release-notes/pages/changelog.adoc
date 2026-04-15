@@ -4,6 +4,11 @@ include::ROOT:partial$component-attributes.adoc[]
 [[release-0.32.0]]
 == 0.32.0 (UNRELEASED)
 
+=== Fixes
+
+* Fix `import*` and `read*` silently skipping symlinked files during glob expansion
+(pr:https://github.com/apple/pkl/pull/1522[]).
+
 [[release-0.31.1]]
 == 0.31.1 (2026-03-26)
 

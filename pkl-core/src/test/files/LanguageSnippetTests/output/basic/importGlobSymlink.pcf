@@ -1,0 +1,14 @@
+examples {
+  ["symlink to file is included"] {
+    new {
+      "../../input-helper/globtest-symlink/linked.pkl"
+      "../../input-helper/globtest-symlink/real-target.pkl"
+    }
+  }
+  ["symlink target content is read through symlink"] {
+    new {
+      "real-target"
+      "real-target"
+    }
+  }
+}

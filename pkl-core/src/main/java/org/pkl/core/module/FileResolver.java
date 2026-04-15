@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,8 +37,8 @@ public final class FileResolver {
     try (var stream = Files.newDirectoryStream(path)) {
       var ret = new ArrayList<PathElement>();
       for (var entry : stream) {
-        // skip symlinks to prevent cyclical globs
-        if (Files.isSymbolicLink(entry)) {
+        // Skip symlinks to directories to prevent cyclical globs.
+        if (Files.isSymbolicLink(entry) && Files.isDirectory(entry)) {
           continue;
         }
         ret.add(new PathElement(entry.getFileName().toString(), Files.isDirectory(entry)));
