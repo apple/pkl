@@ -42,7 +42,8 @@ class PklFormatterFunc(@Transient private val configuration: Configuration) :
 
   private val classLoader by lazy {
     val urls = configuration.files.map { it.toURI().toURL() }
-    URLClassLoader(urls.toTypedArray())
+    // Use the platform classloader as parent to isolate from Gradle's classloader
+    URLClassLoader(urls.toTypedArray(), ClassLoader.getPlatformClassLoader())
   }
 
   private val formatterClass by lazy { classLoader.loadClass("org.pkl.formatter.Formatter") }
