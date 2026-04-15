@@ -41,17 +41,17 @@ import javax.lang.model.element.TypeElement;
 import javax.lang.model.type.TypeMirror;
 
 /**
- * Generates a subclass of `org.pkl.core.stdlib.registry.ExternalMemberRegistry` for each stdlib
- * module and a factory to instantiate them. Generated classes are written to
- * `generated/truffle/org/pkl/core/stdlib/registry`.
+ * Generates a subclass of {@code org.pkl.core.stdlib.registry.ExternalMemberRegistry} for each
+ * stdlib module and a factory to instantiate them. Generated classes are written to {@code
+ * generated/truffle/org/pkl/core/stdlib/registry}.
  *
  * <p>Inputs:
  *
  * <ul>
  *   <li>Generated Truffle node classes for stdlib members. These classes are located in subpackages
- *       of `org.pkl.core.stdlib` and identified via their `@GeneratedBy` annotations.
- *   <li>`@PklName` annotations on handwritten node classes from which Truffle node classes are
- *       generated.
+ *       of {@code org.pkl.core.stdlib} and identified via their {@code @GeneratedBy} annotations.
+ *   <li>{@code @PklName} annotations on handwritten node classes from which Truffle node classes
+ *       are generated.
  * </ul>
  */
 public final class MemberRegistryGenerator extends AbstractProcessor {
