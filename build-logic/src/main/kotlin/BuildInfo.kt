@@ -44,7 +44,7 @@ const val PKL_JVM_TARGET_DEFAULT_MAXIMUM = 17
  *
  * This is a build-time requirement, not a runtime requirement. To avoid the provisioning of
  * multiple JDKs and other build issues, keep this value in sync with the JVM toolchain versions in
- * `buildSrc/build.gradle.kts` and `gradle-daemon-jvm.properties`.
+ * `build-logic/build.gradle.kts` and `gradle-daemon-jvm.properties`.
  */
 const val PKL_JDK_VERSION_MIN = 25
 

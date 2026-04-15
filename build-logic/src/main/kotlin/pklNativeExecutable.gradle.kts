@@ -37,16 +37,15 @@ val stagedLinuxAarch64Executable: Configuration by configurations.creating
 val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
 val stagedWindowsAmd64Executable: Configuration by configurations.creating
 
-val nativeImageClasspath by
-  configurations.creating {
-    extendsFrom(configurations.runtimeClasspath.get())
-    // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
-    // (comes from artifact `mordant-jvm-graal-ffi`).
-    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
-    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
-    exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
-    exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
-  }
+val nativeImageClasspath by configurations.creating {
+  extendsFrom(configurations.runtimeClasspath.get())
+  // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
+  // (comes from artifact `mordant-jvm-graal-ffi`).
+  exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
+  exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
+  exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
+  exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
+}
 
 val libs = the<LibrariesForLibs>()
 
@@ -140,65 +139,63 @@ val windowsExecutableAmd64 by
 
 val assembleNative by tasks.existing
 
-val testStartNativeExecutable by
-  tasks.registering {
-    dependsOn(assembleNative)
+val testStartNativeExecutable by tasks.registering {
+  dependsOn(assembleNative)
 
-    // dummy file for up-to-date checking
-    val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
-    outputs.file(outputFile)
+  // dummy file for up-to-date checking
+  val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
+  outputs.file(outputFile)
 
-    val execOutput =
-      providers.exec { commandLine(assembleNative.get().outputs.files.singleFile, "--version") }
+  val execOutput = providers.exec {
+    commandLine(assembleNative.get().outputs.files.singleFile, "--version")
+  }
 
-    doLast {
-      val outputText = execOutput.standardOutput.asText.get()
-      if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
-        throw GradleException(
-          "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
-        )
-      }
-      outputFile.get().asFile.toPath().apply {
-        try {
-          parent.createDirectories()
-        } catch (_: java.nio.file.FileAlreadyExistsException) {}
-        writeText("OK")
-      }
+  doLast {
+    val outputText = execOutput.standardOutput.asText.get()
+    if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
+      throw GradleException(
+        "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
+      )
+    }
+    outputFile.get().asFile.toPath().apply {
+      try {
+        parent.createDirectories()
+      } catch (_: java.nio.file.FileAlreadyExistsException) {}
+      writeText("OK")
     }
   }
+}
 
 val requiredGlibcVersion: Version = Version.parse("2.17")
 
-val checkGlibc by
-  tasks.registering {
-    enabled = buildInfo.os.isLinux && !buildInfo.musl
-    dependsOn(assembleNative)
-    doLast {
-      val exec =
-        providers.exec {
-          commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
+val checkGlibc by tasks.registering {
+  enabled = buildInfo.os.isLinux && !buildInfo.musl
+  dependsOn(assembleNative)
+  doLast {
+    val exec = providers.exec {
+      commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
+    }
+    val output = exec.standardOutput.asText.get()
+    val minimumGlibcVersion =
+      output
+        .split("\n")
+        .mapNotNull { line ->
+          val match = Regex("GLIBC_([.0-9]*)").find(line)
+          match?.groups[1]?.let { Version.parse(it.value) }
         }
-      val output = exec.standardOutput.asText.get()
-      val minimumGlibcVersion =
-        output
-          .split("\n")
-          .mapNotNull { line ->
-            val match = Regex("GLIBC_([.0-9]*)").find(line)
-            match?.groups[1]?.let { Version.parse(it.value) }
-          }
-          .maxOrNull()
-      if (minimumGlibcVersion == null) {
-        throw GradleException(
-          "Could not determine glibc version from executable. objdump output: $output"
-        )
-      }
-      if (minimumGlibcVersion > requiredGlibcVersion) {
-        throw GradleException(
-          "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
-        )
-      }
+        .maxOrNull()
+    if (minimumGlibcVersion == null) {
+      throw GradleException(
+        "Could not determine glibc version from executable. objdump output: $output"
+      )
+    }
+    if (minimumGlibcVersion > requiredGlibcVersion) {
+      throw GradleException(
+        "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
+      )
     }
   }
+}
 
 // Expose underlying task's outputs
 private fun <T : Task> Task.wraps(other: TaskProvider<T>) {

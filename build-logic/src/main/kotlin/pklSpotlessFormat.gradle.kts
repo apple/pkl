@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,7 +24,7 @@ spotless {
     target("**/*.pkl")
     addStep(PklFormatterStep(pklFormatter).create())
     licenseHeaderFile(
-      rootProject.file("buildSrc/src/main/resources/license-header.line-comment.txt"),
+      rootProject.file("build-logic/src/main/resources/license-header.line-comment.txt"),
       "/// ",
     )
     // disable ratcheting for Pkl sources

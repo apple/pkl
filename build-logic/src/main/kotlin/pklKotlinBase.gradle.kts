@@ -56,7 +56,9 @@ spotless {
     addStep(revertYearOnlyChanges)
     ktfmt(libs.versions.ktfmt.get()).googleStyle()
     target("src/*/kotlin/**/*.kt")
-    licenseHeaderFile(rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt"))
+    licenseHeaderFile(
+      rootProject.file("build-logic/src/main/resources/license-header.star-block.txt")
+    )
   }
 }
 

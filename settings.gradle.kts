@@ -15,6 +15,8 @@
  */
 rootProject.name = "pkl"
 
+includeBuild("build-logic")
+
 include("bench")
 
 include("docs")

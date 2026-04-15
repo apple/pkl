@@ -19,8 +19,8 @@ import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner.PLATFORM
 import org.jetbrains.gradle.ext.ProjectSettings
 
 plugins {
-  pklAllProjects
-  pklGraalVm
+  id("pklAllProjects")
+  id("pklGraalVm")
 
   alias(libs.plugins.ideaExt)
   alias(libs.plugins.jmh) apply false

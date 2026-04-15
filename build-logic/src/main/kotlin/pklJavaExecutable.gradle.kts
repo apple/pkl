@@ -47,20 +47,19 @@ fun Task.setupTestStartJavaExecutable(launcher: Provider<JavaLauncher>? = null) 
   val outputFile = layout.buildDirectory.file("testStartJavaExecutable/$name")
   outputs.file(outputFile)
 
-  val execOutput =
-    providers.exec {
-      val executablePath = javaExecutable.get().outputs.files.singleFile
-      if (launcher?.isPresent == true) {
-        commandLine(
-          launcher.get().executablePath.asFile.absolutePath,
-          "-jar",
-          executablePath.absolutePath,
-          "--version",
-        )
-      } else {
-        commandLine(executablePath.absolutePath, "--version")
-      }
+  val execOutput = providers.exec {
+    val executablePath = javaExecutable.get().outputs.files.singleFile
+    if (launcher?.isPresent == true) {
+      commandLine(
+        launcher.get().executablePath.asFile.absolutePath,
+        "-jar",
+        executablePath.absolutePath,
+        "--version",
+      )
+    } else {
+      commandLine(executablePath.absolutePath, "--version")
     }
+  }
 
   doLast {
     val outputText = execOutput.standardOutput.asText.get()

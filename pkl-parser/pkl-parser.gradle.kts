@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklJSpecify
-  pklPublishLibrary
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklJSpecify")
+  id("pklPublishLibrary")
   idea
 }
 

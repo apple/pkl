@@ -17,9 +17,9 @@ import java.nio.file.Files
 import java.nio.file.LinkOption
 
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklPublishLibrary
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklPublishLibrary")
 }
 
 val pklDistributionCurrent: Configuration by configurations.creating
