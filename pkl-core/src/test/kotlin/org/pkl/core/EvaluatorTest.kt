@@ -24,6 +24,7 @@ import java.nio.file.Path
 import java.util.*
 import java.util.concurrent.TimeUnit
 import java.util.regex.Pattern
+import kotlin.io.encoding.Base64
 import kotlin.io.path.createParentDirectories
 import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
@@ -45,6 +46,8 @@ import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.module.ModuleKeyFactory
 import org.pkl.core.module.ResolvedModuleKey
 import org.pkl.core.project.Project
+import org.pkl.core.resource.Resource
+import org.pkl.core.resource.ResourceReader
 import org.pkl.core.util.IoUtils
 
 class EvaluatorTest {
@@ -241,9 +244,9 @@ class EvaluatorTest {
         evaluator.evaluate(
           text(
             """
-        function fib(n) = if (n < 2) 0 else fib(n - 1) + fib(n - 2)
-        x = fib(100)
-      """
+            function fib(n) = if (n < 2) 0 else fib(n - 1) + fib(n - 2)
+            x = fib(100)
+            """
               .trimIndent()
           )
         )
@@ -259,10 +262,10 @@ class EvaluatorTest {
         evaluator.evaluate(
           text(
             """
-        a = b
-        b = c
-        c = a
-      """
+            a = b
+            b = c
+            c = a
+            """
               .trimIndent()
           )
         )
@@ -376,7 +379,7 @@ class EvaluatorTest {
           }
         }
       }
-    """
+      """
         .trimIndent()
     val output = evaluator.evaluateOutputFiles(text(program))
     assertThat(output.keys).isEqualTo(setOf("foo.yml", "bar.yml", "bar/biz.yml", "bar/../bark.yml"))
@@ -398,14 +401,14 @@ class EvaluatorTest {
     assertThat(result)
       .isEqualTo(
         """
-      prop1 {
-        name = "Apple"
-      }
-      prop2 {
-        res = 1
-      }
+        prop1 {
+          name = "Apple"
+        }
+        prop2 {
+          res = 1
+        }
 
-    """
+        """
           .trimIndent()
       )
   }
@@ -434,8 +437,9 @@ class EvaluatorTest {
       }
 
     val evaluator = evaluatorBuilder.setProjectDependencies(project.dependencies).build()
-    val output =
-      evaluator.use { it.evaluateOutputText(uri("custom:/org/pkl/core/project/project5/main.pkl")) }
+    val output = evaluator.use {
+      it.evaluateOutputText(uri("custom:/org/pkl/core/project/project5/main.pkl"))
+    }
     assertThat(output)
       .isEqualTo(
         """
@@ -471,7 +475,7 @@ class EvaluatorTest {
         } else
           """
           birds = import("@birds/catalog/Ostrich.pkl")
-        """
+          """
             .trimIndent()
 
       override fun resolve(securityManager: SecurityManager): ResolvedModuleKey {
@@ -519,11 +523,11 @@ class EvaluatorTest {
         }
         .hasMessageContaining(
           """
-        Cannot resolve import in local dependency because scheme `modulepath` is not globbable.
-        
-        1 | res = import*("*.pkl")
-                  ^^^^^^^^^^^^^^^^
-      """
+          Cannot resolve import in local dependency because scheme `modulepath` is not globbable.
+
+          1 | res = import*("*.pkl")
+                    ^^^^^^^^^^^^^^^^
+          """
             .trimIndent()
         )
       assertThatCode {
@@ -533,12 +537,12 @@ class EvaluatorTest {
         }
         .hasMessageContaining(
           """
-        –– Pkl Error ––
-        Cannot resolve import in local dependency because scheme `modulepath` is not globbable.
-        
-        1 | import* "@project7/*.pkl" as proj7Files
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-      """
+          –– Pkl Error ––
+          Cannot resolve import in local dependency because scheme `modulepath` is not globbable.
+
+          1 | import* "@project7/*.pkl" as proj7Files
+              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+          """
             .trimIndent()
         )
     }
@@ -579,8 +583,8 @@ class EvaluatorTest {
         evaluator.evaluate(
           text(
             """
-    foo: String(chars.first == "a") = "boo"
-    """
+            foo: String(chars.first == "a") = "boo"
+            """
               .trimIndent()
           )
         )
@@ -600,8 +604,8 @@ class EvaluatorTest {
     evaluator.evaluate(
       text(
         """
-    foo: String(startsWith("a")) | String(startsWith("b")) | String(startsWith("c")) = "cool"
-    """
+        foo: String(startsWith("a")) | String(startsWith("b")) | String(startsWith("c")) = "cool"
+        """
           .trimIndent()
       )
     )
@@ -620,13 +624,75 @@ class EvaluatorTest {
     evaluator.evaluate(
       text(
         """
-    foo = "bar" is Int(this > 0)
-    """
+        foo = "bar" is Int(this > 0)
+        """
           .trimIndent()
       )
     )
 
     assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isFalse
+  }
+
+  @Test
+  fun `nested pkl-binary rendiring produces correct results`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        allowedResources.add(Pattern.compile("b64:"))
+        addResourceReader(
+          object : ResourceReader {
+            override fun getUriScheme() = "b64"
+
+            override fun hasHierarchicalUris() = false
+
+            override fun isGlobbable() = false
+
+            override fun read(uri: URI): Optional<in Any> {
+              val req = PklBinaryDecoder.decode(Base64.decode(uri.schemeSpecificPart)) as PObject
+              val kind = req.getProperty("kind") as String
+              return Optional.of(
+                Resource(
+                  uri,
+                  when (kind) {
+                    "enc" ->
+                      Base64.encode((req.getProperty("input") as String).encodeToByteArray())
+                        .encodeToByteArray()
+                    "dec" -> Base64.decode(req.getProperty("input") as String)
+                    else -> throw RuntimeException("unknown request kind $kind")
+                  },
+                )
+              )
+            }
+          }
+        )
+        build()
+      }
+
+    evaluator.use {
+      it.evaluate(
+        text(
+          """
+          import "pkl:pklbinary"
+          abstract class Base {
+            fixed kind: String
+            input: String
+            local encodedRequest = new pklbinary.Renderer {}.renderValue(this).base64
+            hidden fixed requestUri: String = "b64:\(encodedRequest)"
+            hidden fixed result: Resource = read(requestUri) as Resource
+          }
+          class Enc extends Base {
+            fixed kind: "enc"
+          }
+          class Dec extends Base {
+            fixed kind: "dec"
+          }
+          local enc = new Enc { input = "hello world" }
+          local dec = new Dec { input = enc.result.text }
+          valid = if (enc.input == dec.result.text) true else throw("pklbinary.Renderer reuse bug")
+          """
+            .trimIndent()
+        )
+      )
+    }
   }
 
   private fun checkModule(module: PModule) {
@@ -644,10 +710,10 @@ class EvaluatorTest {
       """
       // verify that relative import is resolved correctly
       import "../baz/module2.pkl"
-      
+
       name = module2.name
       age = module2.age
-    """
+      """
         .trimIndent()
     )
 
