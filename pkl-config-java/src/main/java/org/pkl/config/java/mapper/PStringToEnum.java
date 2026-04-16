@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,12 +46,16 @@ final class PStringToEnum implements ConverterFactory {
       if (enumType == DataSizeUnit.class) {
         for (var value : values) {
           var unit = (DataSizeUnit) value;
-          enumValuesByName.put(CodeGeneratorUtils.toEnumConstantName(unit.getSymbol()), value);
+          var name = CodeGeneratorUtils.toEnumConstantName(unit.getSymbol());
+          assert name != null;
+          enumValuesByName.put(name, value);
         }
       } else if (enumType == DurationUnit.class) {
         for (var value : values) {
           var unit = (DurationUnit) value;
-          enumValuesByName.put(CodeGeneratorUtils.toEnumConstantName(unit.getSymbol()), value);
+          var name = CodeGeneratorUtils.toEnumConstantName(unit.getSymbol());
+          assert name != null;
+          enumValuesByName.put(name, value);
         }
       } else {
         for (Enum<?> value : values) {

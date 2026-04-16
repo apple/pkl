@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.config.java;
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ConversionException;
 import org.pkl.config.java.mapper.ValueMapper;
 import org.pkl.core.Composite;
@@ -55,7 +56,7 @@ public interface Config {
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */
-  <T> T as(Class<T> type);
+  <T extends @Nullable Object> T as(Class<T> type);
 
   /**
    * Converts this node's value to the given {@link Type}.
@@ -64,14 +65,14 @@ public interface Config {
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */
-  <T> T as(Type type);
+  <T extends @Nullable Object> T as(Type type);
 
   /**
    * Converts this node's value to the given {@link JavaType}.
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */
-  <T> T as(JavaType<T> type);
+  <T extends @Nullable Object> T as(JavaType<T> type);
 
   /**
    * Decode a config from the supplied byte array.

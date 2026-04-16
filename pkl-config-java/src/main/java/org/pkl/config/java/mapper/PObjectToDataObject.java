@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,10 +22,10 @@ import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodHandles.Lookup;
 import java.lang.reflect.*;
 import java.util.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
-import org.pkl.core.util.Nullable;
 
 public class PObjectToDataObject implements ConverterFactory {
   private static final Lookup lookup = MethodHandles.lookup();
@@ -156,7 +156,7 @@ public class PObjectToDataObject implements ConverterFactory {
     private final MethodHandle constructorHandle;
     private final Collection<Tuple2<String, Type>> parameters;
     private final PClassInfo<Object>[] cachedPropertyTypes;
-    private final Converter<Object, T>[] cachedConverters;
+    private final @Nullable Converter<Object, T>[] cachedConverters;
 
     ConverterImpl(
         Type targetType,
@@ -172,7 +172,7 @@ public class PObjectToDataObject implements ConverterFactory {
       Arrays.fill(cachedPropertyTypes, PClassInfo.Unavailable);
 
       @SuppressWarnings("unchecked")
-      Converter<Object, T>[] cachedConverters = new Converter[parameters.size()];
+      @Nullable Converter<Object, T>[] cachedConverters = new Converter[parameters.size()];
       this.cachedConverters = cachedConverters;
     }
 
@@ -203,8 +203,9 @@ public class PObjectToDataObject implements ConverterFactory {
             cachedPropertyTypes[i] = cachedPropertyType;
             cachedConverters[i] = valueMapper.getConverter(cachedPropertyType, param.second);
           }
-          assert cachedConverters[i] != null;
-          args[i] = cachedConverters[i].convert(property, valueMapper);
+          var cachedConverter = cachedConverters[i];
+          assert cachedConverter != null;
+          args[i] = cachedConverter.convert(property, valueMapper);
           i += 1;
         } catch (ConversionException e) {
           throw new ConversionException(

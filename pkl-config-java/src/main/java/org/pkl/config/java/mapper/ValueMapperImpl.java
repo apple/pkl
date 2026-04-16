@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -52,9 +52,9 @@ class ValueMapperImpl implements ValueMapper {
 
   @Override
   @SuppressWarnings("unchecked")
-  public <S, T> T map(S model, Type targetType) {
-    var sourceType = PClassInfo.forValue(model);
-    return (T) getConverter(sourceType, targetType).convert(model, this);
+  public <S, T> T map(S value, Type targetType) {
+    var sourceType = PClassInfo.forValue(value);
+    return (T) getConverter(sourceType, targetType).convert(value, this);
   }
 
   private <S> Class<?> getTargetType(PClassInfo<S> sourceType, Type targetType) {

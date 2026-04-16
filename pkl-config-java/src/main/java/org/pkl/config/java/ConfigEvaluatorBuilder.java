@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ValueMapperBuilder;
 import org.pkl.core.EvaluatorBuilder;
 import org.pkl.core.SecurityManager;
@@ -28,7 +29,6 @@ import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.project.Project;
-import org.pkl.core.util.Nullable;
 
 /** A builder for {@link ConfigEvaluator}s. */
 @SuppressWarnings({"UnusedReturnValue", "unused"})

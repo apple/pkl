@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.pkl.config.java.mapper;
 
+import org.jspecify.annotations.Nullable;
+
 /**
  * Converter for a particular source and target type.
  *
@@ -22,7 +24,7 @@ package org.pkl.config.java.mapper;
  * @param <T> the converter's target type
  */
 @FunctionalInterface
-public interface Converter<S, T> {
+public interface Converter<S, T extends @Nullable Object> {
   /**
    * Converts the given value. The given {@link ValueMapper} can be used to convert nested values of
    * composite values (objects, collections, etc.).

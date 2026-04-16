@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,10 +20,10 @@ import java.io.UncheckedIOException;
 import java.util.HashSet;
 import java.util.Properties;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.InvalidMappingException;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * Describes mappings of Pkl class names to their corresponding Java classes.

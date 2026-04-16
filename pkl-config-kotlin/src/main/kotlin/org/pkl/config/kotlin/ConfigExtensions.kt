@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,10 +15,11 @@
  */
 package org.pkl.config.kotlin
 
+import kotlin.reflect.jvm.javaType
+import kotlin.reflect.typeOf
 import org.pkl.config.java.Config
 import org.pkl.config.java.ConfigEvaluator
 import org.pkl.config.java.ConfigEvaluatorBuilder
-import org.pkl.config.java.JavaType
 import org.pkl.config.java.mapper.ConversionException
 import org.pkl.config.java.mapper.ValueMapperBuilder
 import org.pkl.config.kotlin.mapper.KotlinConversions
@@ -37,16 +38,14 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
  *   `as(JavaType.listOf(String::class.java))`
  */
 inline fun <reified T> Config.to(): T {
-  val javaType = object : JavaType<T>() {}
-  // `as T?` may no longer be required after switching to JSpecify
-  val result = `as`<T>(javaType.type) as T?
+  val result = `as`<T>(typeOf<T>().javaType)
   if (result == null && null !is T) {
     throw ConversionException(
       "Expected a non-null value but got `null`. " +
         "To allow null values, convert to a nullable Kotlin type, for example `String?`."
     )
   }
-  return result as T
+  return result
 }
 
 /**
