@@ -22,6 +22,8 @@ testReports {
   excludeJobs {
     "bench"
     "github-release"
+    "dependency-submission"
+    "dependency-review"
     Regex("deploy-.*")
   }
 }
@@ -40,11 +42,15 @@ local gradleCheckWindows = (baseGradleCheck) {
   os = "windows"
 }
 
-local typealias PklJobs = Mapping<String, PklJob>
+local typealias PklJobs = Mapping<String, PklJob | *Workflow.Job>
 
 local toWorkflowJobs: (PklJobs) -> Workflow.Jobs = (it) -> new Workflow.Jobs {
   for (k, v in it) {
-    [k] = v.job
+    when (v is PklJob) {
+      [k] = v.job
+    } else {
+      [k] = v
+    }
   }
 }
 
@@ -172,6 +178,22 @@ main {
         }
       ) {
         needs = buildAndTestJobs.keys.toListing()
+      }
+      ["dependency-submission"] {
+        `runs-on` = "ubuntu-latest"
+        permissions {
+          contents = "write"
+        }
+        steps {
+          module.catalog.`actions/checkout@v6`
+          (module.catalog.`actions/setup-java@v5`) {
+            with {
+              `java-version` = "25"
+              distribution = "temurin"
+            }
+          }
+          module.catalog.`gradle/actions/dependency-submission@v6`
+        }
       }
     } |> toWorkflowJobs
 }
