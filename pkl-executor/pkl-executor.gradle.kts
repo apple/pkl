@@ -20,6 +20,7 @@ plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
   id("pklPublishLibrary")
+  id("pklJSpecify")
 }
 
 val pklDistributionCurrent: Configuration by configurations.creating
@@ -31,7 +32,7 @@ val pklHistoricalDistributions: Configuration by configurations.creating
 // (Pkl distributions used by EmbeddedExecutor are isolated via class loaders.)
 dependencies {
   pklDistributionCurrent(project(":pkl-config-java", "fatJar"))
-  @Suppress("UnstableApiUsage") pklHistoricalDistributions(libs.pklConfigJavaAll025)
+  pklHistoricalDistributions(libs.pklConfigJavaAll025)
 
   implementation(libs.slf4jApi)
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.executor.spi.v1.ExecutorSpi;
 import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.slf4j.Logger;
@@ -60,8 +61,7 @@ final class EmbeddedExecutor implements Executor {
 
     Version requestedVersion = null;
     PklDistribution distribution = null;
-    String output = null;
-    RuntimeException exception = null;
+    String output;
 
     try {
       if (!Files.isRegularFile(modulePath)) {
@@ -76,29 +76,33 @@ final class EmbeddedExecutor implements Executor {
       // (but not any modules imported by it) and only requires parsing (but not evaluating) the
       // module.
       requestedVersion = detectRequestedPklVersion(modulePath, options);
-      //noinspection resource
       distribution = findCompatibleDistribution(modulePath, requestedVersion, options);
       output = distribution.evaluatePath(modulePath, options);
     } catch (RuntimeException e) {
-      exception = e;
+      // Could log exception, but this would violate "don't log and throw",
+      // and Pkl stack trace might contain semi-sensitive information.
+      logFinished(modulePath, false, requestedVersion, distribution, startTime, System.nanoTime());
+      throw e;
     }
 
-    var endTime = System.nanoTime();
+    logFinished(modulePath, true, requestedVersion, distribution, startTime, System.nanoTime());
+    return output;
+  }
 
-    // Could log exception, but this would violate "don't log and throw",
-    // and Pkl stack trace might contain semi-sensitive information.
+  private static void logFinished(
+      Path modulePath,
+      boolean success,
+      @Nullable Version requestedVersion,
+      @Nullable PklDistribution distribution,
+      long startTime,
+      long endTime) {
     logger.info(
         "Finished evaluating Pkl module. modulePath={} outcome={} requestedVersion={} selectedVersion={} elapsedMillis={}",
         modulePath,
-        exception == null ? "success" : "failure",
+        success,
         requestedVersion == null ? "n/a" : requestedVersion.toString(),
         distribution == null ? "n/a" : distribution.getVersion().toString(),
         (endTime - startTime) / 1_000_000);
-
-    if (exception != null) throw exception;
-
-    assert output != null;
-    return output;
   }
 
   private Version detectRequestedPklVersion(Path modulePath, ExecutorOptions options) {
@@ -126,7 +130,7 @@ final class EmbeddedExecutor implements Executor {
             toDisplayPath(modulePath, options), availableVersions));
   }
 
-  /* @Nullable */ static Version extractMinPklVersion(String sourceText) {
+  static @Nullable Version extractMinPklVersion(String sourceText) {
     var matcher = MODULE_INFO_PATTERN.matcher(sourceText);
     return matcher.find() ? Version.parse(matcher.group(1)) : null;
   }
@@ -177,7 +181,7 @@ final class EmbeddedExecutor implements Executor {
 
   private static final class PklDistribution implements AutoCloseable {
     final URLClassLoader pklDistributionClassLoader;
-    final /* @Nullable */ ExecutorSpi executorSpi;
+    final ExecutorSpi executorSpi;
     final Version version;
 
     /**

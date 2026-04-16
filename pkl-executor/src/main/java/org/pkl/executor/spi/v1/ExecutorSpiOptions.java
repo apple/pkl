@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public class ExecutorSpiOptions {
   private final List<String> allowedModules;
@@ -31,13 +32,13 @@ public class ExecutorSpiOptions {
 
   private final List<Path> modulePath;
 
-  private final Path rootDir;
+  private final @Nullable Path rootDir;
 
-  private final Duration timeout;
+  private final @Nullable Duration timeout;
 
-  private final String outputFormat;
-  private final Path moduleCacheDir;
-  private final Path projectDir;
+  private final @Nullable String outputFormat;
+  private final @Nullable Path moduleCacheDir;
+  private final @Nullable Path projectDir;
 
   public ExecutorSpiOptions(
       List<String> allowedModules,
@@ -45,11 +46,11 @@ public class ExecutorSpiOptions {
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       List<Path> modulePath,
-      /* @Nullable */ Path rootDir,
-      /* @Nullable */ Duration timeout,
-      /* @Nullable */ String outputFormat,
-      /* @Nullable */ Path moduleCacheDir,
-      /* @Nullable */ Path projectDir) {
+      @Nullable Path rootDir,
+      @Nullable Duration timeout,
+      @Nullable String outputFormat,
+      @Nullable Path moduleCacheDir,
+      @Nullable Path projectDir) {
 
     this.allowedModules = allowedModules;
     this.allowedResources = allowedResources;
@@ -83,23 +84,23 @@ public class ExecutorSpiOptions {
     return modulePath;
   }
 
-  public /* @Nullable */ Path getRootDir() {
+  public @Nullable Path getRootDir() {
     return rootDir;
   }
 
-  public /* @Nullable */ Duration getTimeout() {
+  public @Nullable Duration getTimeout() {
     return timeout;
   }
 
-  public /* @Nullable */ String getOutputFormat() {
+  public @Nullable String getOutputFormat() {
     return outputFormat;
   }
 
-  public /* @Nullable */ Path getModuleCacheDir() {
+  public @Nullable Path getModuleCacheDir() {
     return moduleCacheDir;
   }
 
-  public Path getProjectDir() {
+  public @Nullable Path getProjectDir() {
     return projectDir;
   }
 }

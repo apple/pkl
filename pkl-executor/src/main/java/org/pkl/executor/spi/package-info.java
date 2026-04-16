@@ -9,4 +9,7 @@
  *   <li>X MUST only use classes from its own package and Java platform packages.
  * </ol>
  */
+@NullMarked
 package org.pkl.executor.spi;
+
+import org.jspecify.annotations.NullMarked;

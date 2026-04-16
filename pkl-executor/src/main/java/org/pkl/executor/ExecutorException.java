@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,24 +16,26 @@
 package org.pkl.executor;
 
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Indicates an {@link Executor} error. {@link #getMessage()} returns a user-facing error message.
  */
 public final class ExecutorException extends RuntimeException {
-  private final String pklVersion;
+  private final @Nullable String pklVersion;
 
   public ExecutorException(String message) {
     super(message);
     pklVersion = null;
   }
 
-  public ExecutorException(String message, Throwable cause) {
+  public ExecutorException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
     pklVersion = null;
   }
 
-  public ExecutorException(String message, Throwable cause, String version) {
+  public ExecutorException(
+      @Nullable String message, @Nullable Throwable cause, @Nullable String version) {
     super(message, cause);
     pklVersion = Objects.requireNonNull(version);
   }
@@ -43,12 +45,12 @@ public final class ExecutorException extends RuntimeException {
    *
    * <p>Returns {@code null} if this exception does not originate from an underlying Pkl evaluator.
    */
-  public String getPklVersion() {
+  public @Nullable String getPklVersion() {
     return pklVersion;
   }
 
   @Override
-  public String getMessage() {
+  public @Nullable String getMessage() {
     var message = super.getMessage();
     if (pklVersion == null) {
       return message;
