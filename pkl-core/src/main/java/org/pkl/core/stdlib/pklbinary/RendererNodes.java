@@ -24,37 +24,24 @@ import org.pkl.core.runtime.VmPklBinaryEncoder;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
-import org.pkl.core.util.Nullable;
 
 public final class RendererNodes {
 
-  private abstract static class RenderMethod extends ExternalMethod1Node {
-    private @Nullable MessageBufferPacker messagePacker;
-
-    protected MessageBufferPacker getMessagePacker() {
-      if (messagePacker == null) {
-        messagePacker = MessagePack.newDefaultBufferPacker();
-      }
-      messagePacker.clear();
-      return messagePacker;
-    }
-  }
-
-  public abstract static class renderDocument extends RenderMethod {
+  public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
     protected VmBytes eval(VmTyped self, Object value) {
-      var packer = getMessagePacker();
+      var packer = MessagePack.newDefaultBufferPacker();
       createRenderer(self, packer).renderDocument(value);
       return new VmBytes(packer.toByteArray());
     }
   }
 
-  public abstract static class renderValue extends RenderMethod {
+  public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
     protected VmBytes eval(VmTyped self, Object value) {
-      var packer = getMessagePacker();
+      var packer = MessagePack.newDefaultBufferPacker();
       createRenderer(self, packer).renderValue(value);
       return new VmBytes(packer.toByteArray());
     }
