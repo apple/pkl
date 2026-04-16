@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.executor;
 
 import java.util.*;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A <a href="https://semver.org/spec/v2.0.0.html">semantic version</a>.
@@ -54,19 +55,15 @@ final class Version implements Comparable<Version> {
   private final int major;
   private final int minor;
   private final int patch;
-  private final /*@Nullable*/ String preRelease;
-  private final /*@Nullable*/ String build;
+  private final @Nullable String preRelease;
+  private final @Nullable String build;
 
   // always access through getter
-  private volatile Identifier[] __preReleaseIdentifiers;
+  private volatile Identifier @Nullable [] __preReleaseIdentifiers;
 
   /** Constructs a semantic version. */
   public Version(
-      int major,
-      int minor,
-      int patch,
-      /*@Nullable*/ String preRelease,
-      /*@Nullable*/ String build) {
+      int major, int minor, int patch, @Nullable String preRelease, @Nullable String build) {
     this.major = major;
     this.minor = minor;
     this.patch = patch;
@@ -99,7 +96,7 @@ final class Version implements Comparable<Version> {
    * <p>Returns {@code null} if the given string could not be parsed as a semantic version number or
    * is too large to fit into a {@link Version}.
    */
-  public static /*@Nullable*/ Version parseOrNull(String version) {
+  public static @Nullable Version parseOrNull(String version) {
     var matcher = VERSION.matcher(version);
     if (!matcher.matches()) return null;
 
@@ -151,22 +148,22 @@ final class Version implements Comparable<Version> {
   }
 
   /** Returns the pre-release version (if any). */
-  public /*@Nullable*/ String getPreRelease() {
+  public @Nullable String getPreRelease() {
     return preRelease;
   }
 
   /** Returns a copy of this version with the given pre-release version. */
-  public Version withPreRelease(/*@Nullable*/ String preRelease) {
+  public Version withPreRelease(@Nullable String preRelease) {
     return new Version(major, minor, patch, preRelease, build);
   }
 
   /** Returns the build metadata (if any). */
-  public /*@Nullable*/ String getBuild() {
+  public @Nullable String getBuild() {
     return build;
   }
 
   /** Returns a copy of this version with the given build metadata. */
-  public Version withBuild(/*@Nullable*/ String build) {
+  public Version withBuild(@Nullable String build) {
     return new Version(major, minor, patch, preRelease, build);
   }
 
@@ -196,7 +193,7 @@ final class Version implements Comparable<Version> {
 
   /** Tells if this version is equal to {@code obj} according to semantic versioning rules. */
   @Override
-  public boolean equals(/* @Nullable */ Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
     if (!(obj instanceof Version other)) return false;
     return major == other.major
@@ -222,8 +219,9 @@ final class Version implements Comparable<Version> {
   }
 
   private Identifier[] getPreReleaseIdentifiers() {
-    if (__preReleaseIdentifiers == null) {
-      __preReleaseIdentifiers =
+    var result = __preReleaseIdentifiers;
+    if (result == null) {
+      result =
           preRelease == null
               ? new Identifier[0]
               : Arrays.stream(preRelease.split("\\."))
@@ -233,11 +231,12 @@ final class Version implements Comparable<Version> {
                               ? new Identifier(Long.parseLong(str), null)
                               : new Identifier(-1, str))
                   .toArray(Identifier[]::new);
+      __preReleaseIdentifiers = result;
     }
-    return __preReleaseIdentifiers;
+    return result;
   }
 
-  private record Identifier(long numericId, /*@Nullable*/ String alphanumericId)
+  private record Identifier(long numericId, @Nullable String alphanumericId)
       implements Comparable<Identifier> {
 
     @Override

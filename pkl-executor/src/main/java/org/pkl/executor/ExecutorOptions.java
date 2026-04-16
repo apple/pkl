@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.time.Duration;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
@@ -41,15 +42,15 @@ public final class ExecutorOptions {
 
   private final List<Path> modulePath;
 
-  private final /* @Nullable */ Path rootDir;
+  private final @Nullable Path rootDir;
 
-  private final /* @Nullable */ Duration timeout;
+  private final @Nullable Duration timeout;
 
-  private final /* @Nullable */ String outputFormat;
+  private final @Nullable String outputFormat;
 
-  private final /* @Nullable */ Path moduleCacheDir;
+  private final @Nullable Path moduleCacheDir;
 
-  private final /* @Nullable */ Path projectDir;
+  private final @Nullable Path projectDir;
 
   private final List<Path> certificateFiles;
 
@@ -81,11 +82,11 @@ public final class ExecutorOptions {
     private Map<String, String> environmentVariables = Map.of();
     private Map<String, String> externalProperties = Map.of();
     private List<Path> modulePath = List.of();
-    private /* @Nullable */ Path rootDir;
-    private /* @Nullable */ Duration timeout;
-    private /* @Nullable */ String outputFormat;
-    private /* @Nullable */ Path moduleCacheDir;
-    private /* @Nullable */ Path projectDir;
+    private @Nullable Path rootDir;
+    private @Nullable Duration timeout;
+    private @Nullable String outputFormat;
+    private @Nullable Path moduleCacheDir;
+    private @Nullable Path projectDir;
     private List<Path> certificateFiles = List.of();
     private List<byte[]> certificateBytes = List.of();
     private Map<URI, URI> httpRewrites = Map.of();
@@ -270,11 +271,11 @@ public final class ExecutorOptions {
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       List<Path> modulePath,
-      /* @Nullable */ Path rootDir,
-      /* @Nullable */ Duration timeout,
-      /* @Nullable */ String outputFormat,
-      /* @Nullable */ Path moduleCacheDir,
-      /* @Nullable */ Path projectDir) {
+      @Nullable Path rootDir,
+      @Nullable Duration timeout,
+      @Nullable String outputFormat,
+      @Nullable Path moduleCacheDir,
+      @Nullable Path projectDir) {
 
     this(
         allowedModules,
@@ -300,11 +301,11 @@ public final class ExecutorOptions {
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       List<Path> modulePath,
-      /* @Nullable */ Path rootDir,
-      /* @Nullable */ Duration timeout,
-      /* @Nullable */ String outputFormat,
-      /* @Nullable */ Path moduleCacheDir,
-      /* @Nullable */ Path projectDir,
+      @Nullable Path rootDir,
+      @Nullable Duration timeout,
+      @Nullable String outputFormat,
+      @Nullable Path moduleCacheDir,
+      @Nullable Path projectDir,
       List<Path> certificateFiles,
       List<byte[]> certificateBytes,
       Map<URI, URI> httpRewrites,
@@ -354,17 +355,17 @@ public final class ExecutorOptions {
   }
 
   /** API equivalent of the {@code --root-dir} CLI option. */
-  public /* @Nullable */ Path getRootDir() {
+  public @Nullable Path getRootDir() {
     return rootDir;
   }
 
   /** API equivalent of the {@code --timeout} CLI option. */
-  public Duration getTimeout() {
+  public @Nullable Duration getTimeout() {
     return timeout;
   }
 
   /** API equivalent of the {@code --format} CLI option. */
-  public /* @Nullable */ String getOutputFormat() {
+  public @Nullable String getOutputFormat() {
     return outputFormat;
   }
 
@@ -372,7 +373,7 @@ public final class ExecutorOptions {
    * API equivalent of the {@code --cache-dir} CLI option. {@code null} is equivalent to {@code
    * --no-cache}.
    */
-  public /* @Nullable */ Path getModuleCacheDir() {
+  public @Nullable Path getModuleCacheDir() {
     return moduleCacheDir;
   }
 
@@ -382,7 +383,7 @@ public final class ExecutorOptions {
    * <p>Unlike the CLI, this option only sets project dependencies. It does not set evaluator
    * settings.
    */
-  public /* @Nullable */ Path getProjectDir() {
+  public @Nullable Path getProjectDir() {
     return projectDir;
   }
 
@@ -407,11 +408,10 @@ public final class ExecutorOptions {
   }
 
   @Override
-  public boolean equals(/* @Nullable */ Object obj) {
+  public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
-    if (obj.getClass() != ExecutorOptions.class) return false;
+    if (!(obj instanceof ExecutorOptions other)) return false;
 
-    var other = (ExecutorOptions) obj;
     return allowedModules.equals(other.allowedModules)
         && allowedResources.equals(other.allowedResources)
         && environmentVariables.equals(other.environmentVariables)

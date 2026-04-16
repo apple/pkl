@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 
 public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
   private final List<Path> certificateFiles;
@@ -33,11 +34,11 @@ public class ExecutorSpiOptions2 extends ExecutorSpiOptions {
       Map<String, String> environmentVariables,
       Map<String, String> externalProperties,
       List<Path> modulePath,
-      Path rootDir,
-      Duration timeout,
-      String outputFormat,
-      Path moduleCacheDir,
-      Path projectDir,
+      @Nullable Path rootDir,
+      @Nullable Duration timeout,
+      @Nullable String outputFormat,
+      @Nullable Path moduleCacheDir,
+      @Nullable Path projectDir,
       List<Path> certificateFiles,
       List<byte[]> certificateBytes,
       int testPort) {
