@@ -18,14 +18,14 @@ import java.io.OutputStream
 import org.gradle.kotlin.dsl.support.serviceOf
 
 plugins {
-  pklAllProjects
-  pklKotlinLibrary
-  pklPublishLibrary
-  pklJavaExecutable
-  pklNativeExecutable
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
+  id("pklPublishLibrary")
+  id("pklJavaExecutable")
+  id("pklNativeExecutable")
   `maven-publish`
 
-  // already on build script class path (see buildSrc/build.gradle.kts),
+  // already on build script class path (see build-logic/build.gradle.kts),
   // hence must only specify plugin ID here
   id(libs.plugins.shadow.get().pluginId)
 

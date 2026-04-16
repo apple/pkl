@@ -55,13 +55,12 @@ abstract class NativeImageBuild : DefaultTask() {
 
   @get:Inject protected abstract val execOperations: ExecOperations
 
-  private val graalVm: Provider<BuildInfo.GraalVm> =
-    arch.map { a ->
-      when (a) {
-        Architecture.AMD64 -> buildInfo.graalVmAmd64
-        Architecture.AARCH64 -> buildInfo.graalVmAarch64
-      }
+  private val graalVm: Provider<BuildInfo.GraalVm> = arch.map { a ->
+    when (a) {
+      Architecture.AMD64 -> buildInfo.graalVmAmd64
+      Architecture.AARCH64 -> buildInfo.graalVmAarch64
     }
+  }
 
   private val buildInfo: BuildInfo = project.extensions.getByType(BuildInfo::class.java)
 
@@ -151,10 +150,9 @@ abstract class NativeImageBuild : DefaultTask() {
         }
         // native-image rejects non-existing class path entries -> filter
         add("--class-path")
-        val pathInput =
-          classpath.filter {
-            it.exists() && !exclusions.any { exclude -> it.name.contains(exclude) }
-          }
+        val pathInput = classpath.filter {
+          it.exists() && !exclusions.any { exclude -> it.name.contains(exclude) }
+        }
         add(pathInput.asPath)
         // make sure dev machine stays responsive (15% slowdown on my laptop)
         val processors =

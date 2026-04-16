@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 plugins {
-  pklAllProjects
+  id("pklAllProjects")
   `java-platform`
   `maven-publish`
   signing

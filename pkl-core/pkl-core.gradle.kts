@@ -17,10 +17,10 @@ import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
   kotlin("jvm") // for `src/generator/kotlin`
-  pklAllProjects
-  pklJavaLibrary
-  pklPublishLibrary
-  pklNativeLifecycle
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklPublishLibrary")
+  id("pklNativeLifecycle")
   idea
 }
 

@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 plugins {
-  pklAllProjects
-  pklJavaLibrary
-  pklPublishLibrary
+  id("pklAllProjects")
+  id("pklJavaLibrary")
+  id("pklPublishLibrary")
 }
 
 dependencies {

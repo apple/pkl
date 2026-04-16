@@ -14,9 +14,9 @@
  * limitations under the License.
  */
 plugins {
-  pklAllProjects
-  pklKotlinLibrary
-  pklNativeLifecycle
+  id("pklAllProjects")
+  id("pklKotlinLibrary")
+  id("pklNativeLifecycle")
 }
 
 dependencies {

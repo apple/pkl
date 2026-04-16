@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,7 +15,7 @@
  */
 @file:Suppress("UnstableApiUsage")
 
-rootProject.name = "buildSrc"
+rootProject.name = "build-logic"
 
 pluginManagement {
   repositories {
@@ -24,7 +24,7 @@ pluginManagement {
   }
 }
 
-plugins { id("org.gradle.toolchains.foojay-resolver-convention") }
+plugins { id("org.gradle.toolchains.foojay-resolver-convention") version "1.0.0" }
 
 // makes ~/.gradle/init.gradle unnecessary and ~/.gradle/gradle.properties optional
 dependencyResolutionManagement {

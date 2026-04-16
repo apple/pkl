@@ -112,7 +112,7 @@ tasks.withType(JavaExec::class).configureEach {
 private val libs = the<LibrariesForLibs>()
 
 private val licenseHeaderFile by lazy {
-  rootProject.file("buildSrc/src/main/resources/license-header.star-block.txt")
+  rootProject.file("build-logic/src/main/resources/license-header.star-block.txt")
 }
 
 private fun KotlinGradleExtension.configureFormatter() {
@@ -136,18 +136,18 @@ spotless {
   val revertYearOnlyChangesStep =
     RevertYearOnlyChangesStep(rootProject.rootDir, ratchetFrom!!).create()
 
-  // When building root project, format buildSrc files too.
-  // We need this because buildSrc is not a subproject of the root project, so a top-level
-  // `spotlessApply` will not trigger `buildSrc:spotlessApply`.
-  if (project === rootProject) {
+  // When building root project, format build-logic files too.
+  // We need this because build-logic is not a subproject of the root project, so a top-level
+  // `spotlessApply` will not trigger `build-logic:spotlessApply`.
+  if (project.path == rootProject.path) {
     kotlinGradle {
       configureFormatter()
       addStep(revertYearOnlyChangesStep)
-      target("*.kts", "buildSrc/*.kts", "buildSrc/src/*/kotlin/**/*.kts")
+      target("*.kts", "build-logic/*.kts", "build-logic/src/*/kotlin/**/*.kts")
     }
     kotlin {
       ktfmt(libs.versions.ktfmt.get()).googleStyle()
-      target("buildSrc/src/*/kotlin/**/*.kt")
+      target("build-logic/src/*/kotlin/**/*.kt")
       licenseHeaderFile(licenseHeaderFile)
       addStep(revertYearOnlyChangesStep)
     }
