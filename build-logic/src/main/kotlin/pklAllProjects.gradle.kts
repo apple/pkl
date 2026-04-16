@@ -139,7 +139,7 @@ spotless {
   // When building root project, format build-logic files too.
   // We need this because build-logic is not a subproject of the root project, so a top-level
   // `spotlessApply` will not trigger `build-logic:spotlessApply`.
-  if (project === rootProject) {
+  if (project.path == rootProject.path) {
     kotlinGradle {
       configureFormatter()
       addStep(revertYearOnlyChangesStep)
