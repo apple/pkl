@@ -37,8 +37,8 @@ final class Generator {
     node(node, Wrap.DETECT);
   }
 
-  @SuppressWarnings("StatementWithEmptyBody")
   private void node(FormatNode node, Wrap wrap) {
+    //noinspection StatementWithEmptyBody
     if (node instanceof Empty) {
       // nothing
     } else if (node instanceof Nodes n) {

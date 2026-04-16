@@ -16,6 +16,7 @@
 plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
+  id("pklJSpecify")
   id("pklPublishLibrary")
 }
 
