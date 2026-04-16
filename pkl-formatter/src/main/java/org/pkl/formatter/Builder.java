@@ -24,6 +24,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Predicate;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
@@ -274,14 +275,14 @@ final class Builder {
 
     gatherFacts(node, flat, lambdaCount, methodCallCount, indexBeforeFirstMethodCall);
 
-    BiFunction<Node, Node, FormatNode> leadingSeparator =
+    BiFunction<Node, Node, @Nullable FormatNode> leadingSeparator =
         (prev, next) -> {
           if (prev.type == NodeType.OPERATOR) return null;
           if (next.type == NodeType.OPERATOR) return line();
           return spaceOrLine();
         };
 
-    BiFunction<Node, Node, FormatNode> trailingSeparator =
+    BiFunction<Node, Node, @Nullable FormatNode> trailingSeparator =
         (prev, next) -> {
           if (prev.type == NodeType.OPERATOR) return null;
           if (next.type == NodeType.OPERATOR) return lambdaCount[0] > 1 ? forceLine() : line();
@@ -360,7 +361,7 @@ final class Builder {
     return new List[] {leading, trailing};
   }
 
-  private static boolean isMethodCall(Node node) {
+  private static boolean isMethodCall(@Nullable Node node) {
     if (node == null || node.type != NodeType.UNQUALIFIED_ACCESS_EXPR) return false;
     for (var child : node.children) {
       if (child.type == NodeType.ARGUMENT_LIST) return true;
@@ -574,7 +575,7 @@ final class Builder {
     return new Group(newId(), formatGeneric(node.children, spaceOrLine()));
   }
 
-  private FormatNode formatParameterList(Node node, Integer id) {
+  private FormatNode formatParameterList(Node node, @Nullable Integer id) {
     if (node.children.size() == 2) return new Text("()");
     var groupId = id != null ? id : newId();
     var nodes =
@@ -630,7 +631,7 @@ final class Builder {
       Node node, boolean hasTrailingLambda, boolean twoBy2) {
     var children = node.children;
     var shouldMultiline = shouldMultilineNodes(node, n -> isTerminal(n, ","));
-    BiFunction<Node, Node, FormatNode> sep =
+    BiFunction<Node, Node, @Nullable FormatNode> sep =
         (prev, next) -> shouldMultiline ? forceSpaceyLine() : spaceOrLine();
     if (twoBy2) {
       var pairs = pairArguments(children);
@@ -906,6 +907,8 @@ final class Builder {
         var prevNoNewlines = noNewlines;
         var elems = cursor.takeUntilBefore(n -> isTerminalSingle(n, ")"));
         noNewlines = !isMultilineList(elems);
+        //noinspection ConstantValue
+        assert prev != null;
         var baseSep = getBaseSeparator(prev, elems.get(0));
         if (baseSep != null) result.add(baseSep);
         result.addAll(formatGeneric(elems, (FormatNode) null));
@@ -1337,24 +1340,26 @@ final class Builder {
 
   // --- formatGeneric overloads ---
 
-  private List<FormatNode> formatGeneric(List<Node> children, FormatNode separator) {
+  private List<FormatNode> formatGeneric(List<Node> children, @Nullable FormatNode separator) {
     return formatGeneric(children, (prev, next) -> separator);
   }
 
   private List<FormatNode> formatGeneric(
-      List<Node> children, BiFunction<Node, Node, FormatNode> separatorFn) {
+      List<Node> children, BiFunction<Node, Node, @Nullable FormatNode> separatorFn) {
     return formatGenericWithGen(children, separatorFn, null);
   }
 
   private List<FormatNode> formatGenericWithGen(
-      List<Node> children, FormatNode separator, BiFunction<Node, Node, FormatNode> generatorFn) {
+      List<Node> children,
+      @Nullable FormatNode separator,
+      BiFunction<Node, @Nullable Node, FormatNode> generatorFn) {
     return formatGenericWithGen(children, (prev, next) -> separator, generatorFn);
   }
 
   private List<FormatNode> formatGenericWithGen(
       List<Node> children,
-      BiFunction<Node, Node, FormatNode> separatorFn,
-      BiFunction<Node, Node, FormatNode> generatorFn) {
+      BiFunction<Node, Node, @Nullable FormatNode> separatorFn,
+      @Nullable BiFunction<Node, @Nullable Node, FormatNode> generatorFn) {
     // skip semicolons
     var filtered = new ArrayList<Node>(children.size());
     for (var child : children) {
@@ -1423,13 +1428,13 @@ final class Builder {
     return base != null ? base : separator;
   }
 
-  private FormatNode getSeparator(
-      Node prev, Node next, BiFunction<Node, Node, FormatNode> separatorFn) {
+  private @Nullable FormatNode getSeparator(
+      Node prev, Node next, BiFunction<Node, Node, @Nullable FormatNode> separatorFn) {
     var base = getBaseSeparator(prev, next);
     return base != null ? base : separatorFn.apply(prev, next);
   }
 
-  private FormatNode getBaseSeparator(Node prev, Node next) {
+  private @Nullable FormatNode getBaseSeparator(Node prev, Node next) {
     if (endsInLineComment(prev)) {
       return linesBetween(prev, next) > 1 ? TWO_NEWLINES : mustForceLine();
     }
@@ -1637,14 +1642,14 @@ final class Builder {
     return new Indent(List.of(nodes));
   }
 
-  private static Node firstProperChild(Node node) {
+  private static @Nullable Node firstProperChild(Node node) {
     for (var child : node.children) {
       if (isProper(child)) return child;
     }
     return null;
   }
 
-  private static Node lastProperNode(List<Node> nodes) {
+  private static @Nullable Node lastProperNode(List<Node> nodes) {
     for (var i = nodes.size() - 1; i >= 0; i--) {
       if (isProper(nodes.get(i))) return nodes.get(i);
     }
@@ -1699,7 +1704,7 @@ final class Builder {
 
   static final class PeekableIterator<T> implements Iterator<T> {
     private final Iterator<T> iterator;
-    private T peeked;
+    private @Nullable T peeked;
     private boolean hasPeeked = false;
 
     PeekableIterator(Iterator<T> iterator) {
@@ -1710,6 +1715,7 @@ final class Builder {
     public T next() {
       if (hasPeeked) {
         hasPeeked = false;
+        if (peeked == null) throw new NoSuchElementException();
         return peeked;
       }
       return iterator.next();
@@ -1722,7 +1728,7 @@ final class Builder {
 
     T peek() {
       if (!hasNext()) throw new NoSuchElementException();
-      if (hasPeeked) return peeked;
+      if (hasPeeked && peeked != null) return peeked;
       peeked = iterator.next();
       hasPeeked = true;
       return peeked;
