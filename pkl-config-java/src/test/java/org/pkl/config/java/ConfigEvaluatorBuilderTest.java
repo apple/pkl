@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,7 @@ import org.junit.jupiter.api.Test;
 import org.pkl.config.java.mapper.ConverterFactories;
 import org.pkl.core.SecurityManagers;
 
-public class ConfigEvaluatorBuilderTest {
+public final class ConfigEvaluatorBuilderTest {
   @Test
   public void preconfiguredBuilderHasPreconfiguredUnderlyingBuilders() {
     var builder = ConfigEvaluatorBuilder.preconfigured();

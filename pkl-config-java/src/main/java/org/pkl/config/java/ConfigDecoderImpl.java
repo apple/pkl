@@ -15,20 +15,34 @@
  */
 package org.pkl.config.java;
 
-import java.util.Map;
+import java.io.InputStream;
 import org.pkl.config.java.mapper.ValueMapper;
-import org.pkl.core.Composite;
+import org.pkl.core.PklBinaryDecoder;
 
-final class ConfigUtils {
-  private ConfigUtils() {}
+final class ConfigDecoderImpl implements ConfigDecoder {
+  private final ValueMapper mapper;
 
-  static Config createConfig(Object value, ValueMapper mapper) {
-    if (value instanceof Composite composite) {
-      return new CompositeConfig("", mapper, composite);
-    }
-    if (value instanceof Map<?, ?> map) {
-      return new MapConfig("", mapper, map);
-    }
-    return new LeafConfig("", mapper, value);
+  ConfigDecoderImpl(ValueMapper mapper) {
+    this.mapper = mapper;
+  }
+
+  @Override
+  public ValueMapper getValueMapper() {
+    return mapper;
+  }
+
+  @Override
+  public ConfigDecoder setValueMapper(ValueMapper mapper) {
+    return new ConfigDecoderImpl(mapper);
+  }
+
+  @Override
+  public Config decode(byte[] bytes) {
+    return ConfigUtils.createConfig(PklBinaryDecoder.decode(bytes), mapper);
+  }
+
+  @Override
+  public Config decode(InputStream inputStream) {
+    return ConfigUtils.createConfig(PklBinaryDecoder.decode(inputStream), mapper);
   }
 }

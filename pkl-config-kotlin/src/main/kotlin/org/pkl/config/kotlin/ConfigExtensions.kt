@@ -18,6 +18,8 @@ package org.pkl.config.kotlin
 import kotlin.reflect.jvm.javaType
 import kotlin.reflect.typeOf
 import org.pkl.config.java.Config
+import org.pkl.config.java.ConfigDecoder
+import org.pkl.config.java.ConfigDecoderBuilder
 import org.pkl.config.java.ConfigEvaluator
 import org.pkl.config.java.ConfigEvaluatorBuilder
 import org.pkl.config.java.mapper.ConversionException
@@ -61,5 +63,20 @@ fun ValueMapperBuilder.forKotlin(): ValueMapperBuilder =
 fun ConfigEvaluatorBuilder.forKotlin(): ConfigEvaluatorBuilder =
   setValueMapperBuilder(valueMapperBuilder.forKotlin())
 
+/**
+ * Returns a new [ConfigEvaluator] with added conversions and converter factories for Kotlin types.
+ */
 fun ConfigEvaluator.forKotlin(): ConfigEvaluator =
+  setValueMapper(valueMapper.toBuilder().forKotlin().build())
+
+/**
+ * Configures this [ConfigDecoderBuilder] with conversions and converter factories for Kotlin types.
+ */
+fun ConfigDecoderBuilder.forKotlin(): ConfigDecoderBuilder =
+  setValueMapperBuilder(valueMapperBuilder.forKotlin())
+
+/**
+ * Returns a new [ConfigDecoder] with added conversions and converter factories for Kotlin types.
+ */
+fun ConfigDecoder.forKotlin(): ConfigDecoder =
   setValueMapper(valueMapper.toBuilder().forKotlin().build())

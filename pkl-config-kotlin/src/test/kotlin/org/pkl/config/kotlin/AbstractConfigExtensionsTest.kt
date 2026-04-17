@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,32 +18,30 @@ package org.pkl.config.kotlin
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pkl.config.java.ConfigEvaluator
-import org.pkl.config.java.ConfigEvaluatorBuilder
+import org.pkl.config.java.Config
 import org.pkl.config.java.mapper.ConversionException
-import org.pkl.config.kotlin.ConfigExtensionsTest.Hobby.READING
-import org.pkl.config.kotlin.ConfigExtensionsTest.Hobby.SWIMMING
-import org.pkl.core.ModuleSource.text
+import org.pkl.config.kotlin.AbstractConfigExtensionsTest.Hobby.READING
+import org.pkl.config.kotlin.AbstractConfigExtensionsTest.Hobby.SWIMMING
 
-class ConfigExtensionsTest {
-  private val evaluator = ConfigEvaluator.preconfigured().forKotlin()
+abstract class AbstractConfigExtensionsTest {
+
+  protected abstract fun loadConfig(text: String): Config
 
   @Test
   fun `convert to kotlin classes`() {
     val config =
-      evaluator.evaluate(
-        text(
-          """
-        pigeon {
-          name = "pigeon"
-          age = 30
-          hobbies = List("swimming", "reading")
-          address {
-            street = "Fuzzy St."
-          }
-        }
+      loadConfig(
         """
-        )
+        pigeon {
+              name = "pigeon"
+              age = 30
+              hobbies = List("swimming", "reading")
+              address {
+                street = "Fuzzy St."
+              }
+            }
+        """
+          .trimIndent()
       )
 
     val address = config["pigeon"]["address"].to<Address<String>>()
@@ -60,9 +58,7 @@ class ConfigExtensionsTest {
   @Test
   fun `convert to kotlin class with nullable property`() {
     // cover ConfigEvaluatorBuilder.preconfigured()
-    val evaluator = ConfigEvaluatorBuilder.preconfigured().forKotlin().build()
-
-    val config = evaluator.evaluate(text("pigeon { address = null }"))
+    val config = loadConfig("pigeon { address = null }")
 
     val pigeon = config["pigeon"].to<Person2>()
     assertThat(pigeon.address).isNull()
@@ -71,10 +67,8 @@ class ConfigExtensionsTest {
   @Test
   fun `convert to kotlin class with covariant collection property type`() {
     val config =
-      evaluator.evaluate(
-        text(
-          """pigeon { addresses = List(new Dynamic { street = "Fuzzy St." }, new Dynamic { street = "Other St." }) }"""
-        )
+      loadConfig(
+        """pigeon { addresses = List(new Dynamic { street = "Fuzzy St." }, new Dynamic { street = "Other St." }) }"""
       )
 
     config["pigeon"].to<Person3>()
@@ -82,8 +76,7 @@ class ConfigExtensionsTest {
 
   @Test
   fun `convert to nullable type`() {
-    val config =
-      evaluator.evaluate(text("""pigeon { address1 { street = "Fuzzy St." }; address2 = null }"""))
+    val config = loadConfig("""pigeon { address1 { street = "Fuzzy St." }; address2 = null }""")
 
     val address1 = config["pigeon"]["address1"].to<Address<String>?>()
     assertThat(address1).isEqualTo(Address(street = "Fuzzy St."))
@@ -102,16 +95,14 @@ class ConfigExtensionsTest {
   @Test
   fun `convert to kotlin class that has defaults for constructor args`() {
     val config =
-      evaluator.evaluate(
-        text(
-          """
+      loadConfig(
+        """
         pigeon {
           name = "Pigeon"
           age = 42
           hobbies = List()
         }
         """
-        )
       )
 
     val pigeon = config["pigeon"].to<PersonWithDefaults>()
@@ -124,16 +115,14 @@ class ConfigExtensionsTest {
   @Test
   fun `convert to java class with multiple constructors`() {
     val config =
-      evaluator.evaluate(
-        text(
-          """
+      loadConfig(
+        """
         pigeon {
           name = "Pigeon"
           age = 42
           hobbies = List()
         }
         """
-        )
       )
 
     val pigeon = config["pigeon"].to<JavaPerson>()
@@ -145,10 +134,8 @@ class ConfigExtensionsTest {
   @Test
   fun `convert list to parameterized list`() {
     val config =
-      evaluator.evaluate(
-        text(
-          """friends = List(new Dynamic { name = "lilly"}, new Dynamic {name = "bob"}, new Dynamic {name = "susan"})"""
-        )
+      loadConfig(
+        """friends = List(new Dynamic { name = "lilly"}, new Dynamic {name = "bob"}, new Dynamic {name = "susan"})"""
       )
 
     val friends = config["friends"].to<List<SimplePerson>>()
@@ -159,10 +146,8 @@ class ConfigExtensionsTest {
   @Test
   fun `convert map to parameterized map`() {
     val config =
-      evaluator.evaluate(
-        text(
-          """friends = Map("l", new Dynamic { name = "lilly"}, "b", new Dynamic { name = "bob"}, "s", new Dynamic { name = "susan"})"""
-        )
+      loadConfig(
+        """friends = Map("l", new Dynamic { name = "lilly"}, "b", new Dynamic { name = "bob"}, "s", new Dynamic { name = "susan"})"""
       )
 
     val friends = config["friends"].to<Map<String, SimplePerson>>()
@@ -179,9 +164,7 @@ class ConfigExtensionsTest {
   @Test
   fun `convert container to parameterized map`() {
     val config =
-      evaluator.evaluate(
-        text("""friends {l { name = "lilly"}; b { name = "bob"}; s { name = "susan"}}""")
-      )
+      loadConfig("""friends {l { name = "lilly"}; b { name = "bob"}; s { name = "susan"}}""")
 
     val friends = config["friends"].to<Map<String, SimplePerson>>()
     assertThat(friends)
@@ -198,14 +181,12 @@ class ConfigExtensionsTest {
   fun `convert enum with mangled names`() {
     val values = MangledNameEnum.entries.map { "\"$it\"" }
     val config =
-      evaluator.evaluate(
-        text(
-          """
+      loadConfig(
+        """
       typealias MangledNameEnum = ${values.joinToString(" | ")}
       allEnumValues: Set<MangledNameEnum> = Set(${values.joinToString(", ")})
       """
-            .trimIndent()
-        )
+          .trimIndent()
       )
     val allEnumValues = config["allEnumValues"].to<Set<MangledNameEnum>>()
     assertThat(allEnumValues).isEqualTo(MangledNameEnum.entries.toSet())

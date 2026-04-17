@@ -15,22 +15,19 @@
  */
 package org.pkl.config.java;
 
-import static org.pkl.config.java.ConfigUtils.makeConfig;
-
 import java.io.InputStream;
 import java.lang.reflect.Type;
 import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ConversionException;
 import org.pkl.config.java.mapper.ValueMapper;
 import org.pkl.core.Evaluator;
-import org.pkl.core.PklBinaryDecoder;
 
 /**
  * A root, intermediate, or leaf node in a configuration tree. Child nodes can be obtained by name
  * using {@link #get(String)}. To consume the node's composite or scalar value, convert the value to
  * the desired Java type, using one of the provided {@link #as} methods.
  */
-@SuppressWarnings("unused")
+@SuppressWarnings({"DeprecatedIsStillUsed"})
 public interface Config {
   /**
    * The dot-separated name of this node. For example, the node reached using {@code
@@ -76,39 +73,50 @@ public interface Config {
   <T extends @Nullable Object> T as(JavaType<T> type);
 
   /**
-   * Decode a config from the supplied byte array.
+   * Decodes a config from the supplied byte array.
    *
-   * @return the encoded config
+   * @return the decoded config
+   * @deprecated Use {@code ConfigDecoderBuilder...build().decode(bytes)} instead. For a direct
+   *     equivalent, use {@code ConfigDecoder.preconfigured().setValueMapper(mapper).decode(bytes)}.
    */
+  @Deprecated(forRemoval = true)
   static Config fromPklBinary(byte[] bytes, ValueMapper mapper) {
-    return makeConfig(PklBinaryDecoder.decode(bytes), mapper);
+    return ConfigDecoder.preconfigured().setValueMapper(mapper).decode(bytes);
   }
 
   /**
-   * Decode a config from the supplied byte array using a preconfigured {@link ValueMapper}.
+   * Decodes a config from the supplied byte array using a preconfigured {@link ValueMapper}.
    *
-   * @return the encoded config
+   * @return the decoded config
+   * @deprecated Use {@code ConfigDecoder.preconfigured().decode(bytes)} instead.
    */
+  @Deprecated(forRemoval = true)
   static Config fromPklBinary(byte[] bytes) {
-    return fromPklBinary(bytes, ValueMapper.preconfigured());
+    return ConfigDecoder.preconfigured().decode(bytes);
   }
 
   /**
-   * Decode a config from the supplied {@link InputStream} using a preconfigured {@link
+   * Decodes a config from the supplied {@link InputStream} using a preconfigured {@link
    * ValueMapper}.
    *
-   * @return the encoded config
+   * @return the decoded config
+   * @deprecated Use {@code ConfigDecoderBuilder...build().decode(inputStream)} instead. For a
+   *     direct equivalent, use {@code
+   *     ConfigDecoder.preconfigured().setValueMapper(mapper).decode(inputStream)}.
    */
+  @Deprecated(forRemoval = true)
   static Config fromPklBinary(InputStream inputStream, ValueMapper mapper) {
-    return makeConfig(PklBinaryDecoder.decode(inputStream), mapper);
+    return ConfigDecoder.preconfigured().setValueMapper(mapper).decode(inputStream);
   }
 
   /**
-   * Decode a config from the supplied {@link InputStream}.
+   * Decodes a config from the supplied {@link InputStream}.
    *
-   * @return the encoded config
+   * @return the decoded config
+   * @deprecated Use {@code ConfigDecoder.preconfigured().decode(inputStream)} instead.
    */
+  @Deprecated(forRemoval = true)
   static Config fromPklBinary(InputStream inputStream) {
-    return fromPklBinary(inputStream, ValueMapper.preconfigured());
+    return ConfigDecoder.preconfigured().decode(inputStream);
   }
 }

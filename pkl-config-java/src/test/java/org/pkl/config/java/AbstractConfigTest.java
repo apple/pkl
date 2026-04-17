@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,22 +26,49 @@ import org.pkl.core.PObject;
 
 public abstract class AbstractConfigTest {
 
-  private final Config pigeonConfig = getPigeonConfig();
-  private final Config pigeonModuleConfig = getPigeonModuleConfig();
-  private final Config pairConfig = getPairConfig();
-  private final Config mapConfig = getMapConfig();
+  protected static final String pigeonText =
+      """
+    pigeon {
+      age = 30
+      friends = List("john", "mary")
+      address {
+        street = "Fuzzy St."
+      }
+    }
+    """;
 
-  protected abstract Config getPigeonConfig();
+  protected abstract Config loadConfig(String text);
 
-  protected abstract Config getPigeonModuleConfig();
+  private Config loadPigeonConfig() {
+    return loadConfig(pigeonText);
+  }
 
-  protected abstract Config getPairConfig();
+  private Config loadPigeonModuleConfig() {
+    return loadConfig(
+        """
+  age = 30
+  friends = List("john", "mary")
+  address { street = "Fuzzy St." }
+  """);
+  }
 
-  protected abstract Config getMapConfig();
+  private Config loadPairConfig() {
+    return loadConfig(
+        """
+  x { first = "file/path"; second = 42 }
+  """);
+  }
+
+  private Config loadMapConfig() {
+    return loadConfig(
+        """
+  x = Map("one", 1, "two", 2)
+  """);
+  }
 
   @Test
   public void navigate() {
-    var pigeon = pigeonConfig.get("pigeon");
+    var pigeon = loadPigeonConfig().get("pigeon");
     assertThat(pigeon.getQualifiedName()).isEqualTo("pigeon");
     assertThat(pigeon.getRawValue()).isInstanceOf(PObject.class);
 
@@ -58,7 +85,7 @@ public abstract class AbstractConfigTest {
 
   @Test
   public void navigateToNonExistingObjectChild() {
-    var pigeon = pigeonConfig.get("pigeon");
+    var pigeon = loadPigeonConfig().get("pigeon");
     var t = catchThrowable(() -> pigeon.get("non-existing"));
 
     assertThat(t)
@@ -70,7 +97,7 @@ public abstract class AbstractConfigTest {
 
   @Test
   public void navigateToNonExistingMapChild() {
-    var map = mapConfig.get("x");
+    var map = loadMapConfig().get("x");
     var t = catchThrowable(() -> map.get("non-existing"));
 
     assertThat(t)
@@ -81,7 +108,7 @@ public abstract class AbstractConfigTest {
 
   @Test
   public void navigateToNonExistingLeafChild() {
-    var age = pigeonConfig.get("pigeon").get("age");
+    var age = loadPigeonConfig().get("pigeon").get("age");
     var t = catchThrowable(() -> age.get("non-existing"));
 
     assertThat(t)
@@ -92,25 +119,25 @@ public abstract class AbstractConfigTest {
 
   @Test
   public void convertObjectToPojoByType() {
-    Person pigeon = pigeonConfig.get("pigeon").as(Person.class);
+    Person pigeon = loadPigeonConfig().get("pigeon").as(Person.class);
     checkPigeon(pigeon);
   }
 
   @Test
   public void convertObjectToPojoByJavaType() {
-    var pigeon = pigeonConfig.get("pigeon").as(JavaType.of(Person.class));
+    var pigeon = loadPigeonConfig().get("pigeon").as(JavaType.of(Person.class));
     checkPigeon(pigeon);
   }
 
   @Test
   public void convertModuleToPojoByType() {
-    var pigeon = pigeonModuleConfig.as(Person.class);
+    var pigeon = loadPigeonModuleConfig().as(Person.class);
     checkPigeon(pigeon);
   }
 
   @Test
   public void convertModuleToPojoByJavaType() {
-    var pigeon = pigeonModuleConfig.as(JavaType.of(Person.class));
+    var pigeon = loadPigeonModuleConfig().as(JavaType.of(Person.class));
     checkPigeon(pigeon);
   }
 
@@ -124,13 +151,15 @@ public abstract class AbstractConfigTest {
   @Test
   public void convertToParameterizedTypeByType() {
     Pair<Path, Integer> pair =
-        pairConfig.get("x").as(Types.parameterizedType(Pair.class, Path.class, Integer.class));
+        loadPairConfig()
+            .get("x")
+            .as(Types.parameterizedType(Pair.class, Path.class, Integer.class));
     checkPair(pair);
   }
 
   @Test
   public void convertToParameterizedTypeByJavaType() {
-    var pair = pairConfig.get("x").as(new JavaType<Pair<Path, Integer>>() {});
+    var pair = loadPairConfig().get("x").as(new JavaType<Pair<Path, Integer>>() {});
     checkPair(pair);
   }
 
