@@ -28,6 +28,7 @@ import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
 import org.gradle.api.DefaultTask;
+import org.gradle.api.Transformer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.model.ObjectFactory;
@@ -45,10 +46,9 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.PathSensitive;
 import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
+import org.jspecify.annotations.Nullable;
 import org.pkl.commons.cli.CliBaseOptions;
 import org.pkl.core.evaluatorSettings.Color;
-import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 import org.pkl.gradle.utils.PluginUtils;
 
 @CacheableTask
@@ -86,27 +86,21 @@ public abstract class BasePklTask extends DefaultTask {
   @Optional
   @PathSensitive(PathSensitivity.ABSOLUTE)
   public Provider<File> getSettingsModuleFile() {
+    //noinspection RedundantCast
     return getParsedSettingsModule()
+        // NullAway needs this redundant cast
         .map(
-            it -> {
-              if (it instanceof File file) {
-                return file;
-              }
-              return null;
-            });
+            (Transformer<@Nullable File, Object>)
+                object -> object instanceof File file ? file : null);
   }
 
   @Input
   @Optional
   public Provider<URI> getSettingsModuleUri() {
+    //noinspection RedundantCast
     return getParsedSettingsModule()
-        .map(
-            it -> {
-              if (it instanceof URI uri) {
-                return uri;
-              }
-              return null;
-            });
+        // NullAway needs this redundant cast
+        .map((Transformer<@Nullable URI, Object>) object -> object instanceof URI uri ? uri : null);
   }
 
   // Exposed as a task input via evalRootDirPath, because we only need to depend
@@ -180,13 +174,13 @@ public abstract class BasePklTask extends DefaultTask {
 
   protected abstract void doRunTask();
 
-  @LateInit protected CliBaseOptions cachedOptions;
+  protected @Nullable CliBaseOptions __cachedOptions;
 
   // Must be called during task execution time only.
   @Internal
   protected CliBaseOptions getCliBaseOptions() {
-    if (cachedOptions == null) {
-      cachedOptions =
+    if (__cachedOptions == null) {
+      __cachedOptions =
           new CliBaseOptions(
               getSourceModulesAsUris(),
               patternsFromStrings(getAllowedModules().get()),
@@ -215,7 +209,7 @@ public abstract class BasePklTask extends DefaultTask {
               null,
               getPowerAssertions().getOrElse(false));
     }
-    return cachedOptions;
+    return __cachedOptions;
   }
 
   @Internal

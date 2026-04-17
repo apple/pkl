@@ -1,4 +1,4 @@
-@NonnullByDefault
+@NullMarked
 package org.pkl.gradle.spec;
 
-import org.pkl.core.util.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

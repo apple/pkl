@@ -17,7 +17,7 @@ plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
   id("pklGradlePluginTest")
-
+  id("pklJSpecify")
   `java-gradle-plugin`
   `maven-publish`
   id("pklPublishLibrary")

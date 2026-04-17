@@ -145,8 +145,8 @@ public abstract class ModulesTask extends BasePklTask {
   @Internal
   @Override
   protected CliBaseOptions getCliBaseOptions() {
-    if (cachedOptions == null) {
-      cachedOptions =
+    if (__cachedOptions == null) {
+      __cachedOptions =
           new CliBaseOptions(
               getSourceModulesAsUris(),
               patternsFromStrings(getAllowedModules().get()),
@@ -175,6 +175,6 @@ public abstract class ModulesTask extends BasePklTask {
               null,
               getPowerAssertions().getOrElse(false));
     }
-    return cachedOptions;
+    return __cachedOptions;
   }
 }
