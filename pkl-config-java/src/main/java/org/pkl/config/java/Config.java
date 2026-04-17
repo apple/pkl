@@ -15,13 +15,13 @@
  */
 package org.pkl.config.java;
 
+import static org.pkl.config.java.ConfigUtils.makeConfig;
+
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ConversionException;
 import org.pkl.config.java.mapper.ValueMapper;
-import org.pkl.core.Composite;
 import org.pkl.core.Evaluator;
 import org.pkl.core.PklBinaryDecoder;
 
@@ -30,6 +30,7 @@ import org.pkl.core.PklBinaryDecoder;
  * using {@link #get(String)}. To consume the node's composite or scalar value, convert the value to
  * the desired Java type, using one of the provided {@link #as} methods.
  */
+@SuppressWarnings("unused")
 public interface Config {
   /**
    * The dot-separated name of this node. For example, the node reached using {@code
@@ -109,15 +110,5 @@ public interface Config {
    */
   static Config fromPklBinary(InputStream inputStream) {
     return fromPklBinary(inputStream, ValueMapper.preconfigured());
-  }
-
-  static Config makeConfig(Object decoded, ValueMapper mapper) {
-    if (decoded instanceof Composite composite) {
-      return new CompositeConfig("", mapper, composite);
-    }
-    if (decoded instanceof Map<?, ?> map) {
-      return new MapConfig("", mapper, map);
-    }
-    return new LeafConfig("", mapper, decoded);
   }
 }

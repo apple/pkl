@@ -31,6 +31,12 @@ XXX
 
 Things to watch out for when upgrading.
 
+=== Removed Java APIs
+
+The following APIs have been removed without replacement.
+
+* `org.pkl.config.java.Config#makeConfig` (pr:https://github.com/apple/pkl/pull/1531[])
+
 .XXX
 [%collapsible]
 ====
