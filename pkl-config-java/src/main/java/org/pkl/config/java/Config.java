@@ -15,7 +15,7 @@
  */
 package org.pkl.config.java;
 
-import static org.pkl.config.java.Utils.makeConfig;
+import static org.pkl.config.java.ConfigUtils.makeConfig;
 
 import java.io.InputStream;
 import java.lang.reflect.Type;

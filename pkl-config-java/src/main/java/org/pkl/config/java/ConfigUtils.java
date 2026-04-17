@@ -19,8 +19,8 @@ import java.util.Map;
 import org.pkl.config.java.mapper.ValueMapper;
 import org.pkl.core.Composite;
 
-class Utils {
-  private Utils() {}
+class ConfigUtils {
+  private ConfigUtils() {}
 
   static Config makeConfig(Object decoded, ValueMapper mapper) {
     if (decoded instanceof Composite composite) {
