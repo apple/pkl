@@ -31,7 +31,7 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
  *
  * To allow `null` values, specify a nullable type, for example `to<String?>()`.
  *
- * Kotlin code should prefer this method over [Config. as] for the following reasons:
+ * Kotlin code should prefer this method over [Config.as] for the following reasons:
  * * does not clash with Kotlin's `as` keyword
  * * throws [ConversionException] if conversion to non-nullable type returns `null`
  * * easier to use with parameterized types: `to<List<String>>()` vs.
