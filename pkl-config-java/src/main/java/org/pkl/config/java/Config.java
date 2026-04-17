@@ -19,7 +19,6 @@ import static org.pkl.config.java.ConfigUtils.makeConfig;
 
 import java.io.InputStream;
 import java.lang.reflect.Type;
-import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ConversionException;
 import org.pkl.config.java.mapper.ValueMapper;
