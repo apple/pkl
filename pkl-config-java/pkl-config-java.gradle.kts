@@ -18,6 +18,7 @@ plugins {
   id("pklJavaLibrary")
   id("pklFatJar")
   id("pklPublishLibrary")
+  id("pklJSpecify")
   signing
 }
 

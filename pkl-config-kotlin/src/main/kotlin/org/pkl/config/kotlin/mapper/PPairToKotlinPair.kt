@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,16 +48,16 @@ internal class PPairToKotlinPair : ConverterFactory {
   ) : Converter<PPair<Any, Any>, Pair<F, S>> {
 
     private var firstCachedType = PClassInfo.Unavailable
-    private var firstCachedConverter: Converter<Any, F>? = null
+    private lateinit var firstCachedConverter: Converter<Any, F>
 
     private var secondCachedType = PClassInfo.Unavailable
-    private var secondCachedConverter: Converter<Any, S>? = null
+    private lateinit var secondCachedConverter: Converter<Any, S>
 
     override fun convert(value: PPair<Any, Any>, valueMapper: ValueMapper): Pair<F, S> {
       val first = value.first
       if (!firstCachedType.isExactClassOf(first)) {
         firstCachedType = PClassInfo.forValue(first)
-        firstCachedConverter = valueMapper.getConverter(firstCachedType, firstTargetType)
+        firstCachedConverter = valueMapper.getConverter<Any, F>(firstCachedType, firstTargetType)
       }
 
       val second = value.second
@@ -67,8 +67,8 @@ internal class PPairToKotlinPair : ConverterFactory {
       }
 
       return Pair(
-        firstCachedConverter!!.convert(first, valueMapper),
-        secondCachedConverter!!.convert(second, valueMapper),
+        firstCachedConverter.convert(first, valueMapper),
+        secondCachedConverter.convert(second, valueMapper),
       )
     }
   }
