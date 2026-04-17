@@ -844,7 +844,8 @@ jobs:
         java-version: '25'
         distribution: temurin
     - uses: gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
-      with: {}
+      with:
+        dependency-graph-include-configurations: .*[rR]untimeClasspath|.*[cC]ompileClasspath
   publish-test-results:
     if: '!cancelled()'
     needs:

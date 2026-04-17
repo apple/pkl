@@ -192,7 +192,13 @@ main {
               distribution = "temurin"
             }
           }
-          module.catalog.`gradle/actions/dependency-submission@v6`
+          (module.catalog.`gradle/actions/dependency-submission@v6`) {
+            with {
+              // language=regexp
+              `dependency-graph-include-configurations` =
+                ".*[rR]untimeClasspath|.*[cC]ompileClasspath"
+            }
+          }
         }
       }
     } |> toWorkflowJobs
