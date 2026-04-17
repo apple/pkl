@@ -1,0 +1,66 @@
+amends "@gha/Workflow.pkl"
+
+import "@gha/catalog.pkl"
+
+on {
+  push {
+    branches {
+      "main"
+    }
+  }
+  schedule {
+    // Run at 01:38 on Saturday
+    new { cron = "38 1 * * 6" }
+  }
+}
+
+local class CodeQLScan {
+  language: String
+
+  `build-mode`: String
+}
+
+local scans: Listing<CodeQLScan> = new {
+  new {
+    language = "actions"
+    `build-mode` = "none"
+  }
+  new {
+    language = "java-kotlin"
+    `build-mode` = "autobuild"
+  }
+  new {
+    language = "javascript-typescript"
+    `build-mode` = "none"
+  }
+}
+
+jobs {
+  for (scan in scans) {
+    ["analyze-\(scan.language)"] {
+      name = "Analyze (\(scan.language))"
+      `runs-on` = "ubuntu-latest"
+      permissions {
+        `security-events` = "write"
+      }
+      steps {
+        catalog.`actions/checkout@v6`
+        new {
+          name = "Initialize CodeQL"
+          uses = "github/codeql-action/init@v4"
+          with {
+            ["languages"] = scan.language
+            ["build-mode"] = scan.`build-mode`
+          }
+        }
+        new {
+          name = "Perform CodeQL Analysis"
+          uses = "github/codeql-action/analyze@v4"
+          with {
+            ["category"] = "/language:\(scan.language)"
+          }
+        }
+      }
+    }
+  }
+}

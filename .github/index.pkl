@@ -9,6 +9,7 @@ import "jobs/GithubRelease.pkl"
 import "jobs/GradleJob.pkl"
 import "jobs/PklJob.pkl"
 import "jobs/SimpleGradleJob.pkl"
+import "codeql.pkl"
 
 triggerDocsBuild = "both"
 
@@ -238,4 +239,9 @@ dependabot {
       directory = "/"
     }
   }
+}
+
+workflows {
+  // add codeql workflow to set of workflows
+  ["workflows/codeql.yml"] = codeql
 }

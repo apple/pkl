@@ -1,0 +1,44 @@
+# Generated from Workflow.pkl. DO NOT EDIT.
+'on':
+  push:
+    branches:
+    - main
+  schedule:
+  - cron: 38 1 * * 6
+jobs:
+  analyze-actions:
+    name: Analyze (actions)
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+      with:
+        languages: actions
+        build-mode: none
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+      with:
+        category: /language:actions
+  analyze-java-kotlin:
+    name: Analyze (java-kotlin)
+    permissions:
+      security-events: write
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - name: Initialize CodeQL
+      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+      with:
+        languages: java-kotlin
+        build-mode: autobuild
+    - name: Perform CodeQL Analysis
+      uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+      with:
+        category: /language:java-kotlin
