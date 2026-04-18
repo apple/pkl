@@ -8,6 +8,7 @@ on {
       "main"
     }
   }
+  pull_request {}
   schedule {
     // Run at 01:38 on Saturday
     new { cron = "38 1 * * 6" }

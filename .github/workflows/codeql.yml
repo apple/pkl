@@ -1,5 +1,6 @@
 # Generated from Workflow.pkl. DO NOT EDIT.
 'on':
+  pull_request: {}
   push:
     branches:
     - main
