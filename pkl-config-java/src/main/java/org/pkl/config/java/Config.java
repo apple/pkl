@@ -20,53 +20,106 @@ import java.lang.reflect.Type;
 import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ConversionException;
 import org.pkl.config.java.mapper.ValueMapper;
-import org.pkl.core.Evaluator;
 
 /**
- * A root, intermediate, or leaf node in a configuration tree. Child nodes can be obtained by name
- * using {@link #get(String)}. To consume the node's composite or scalar value, convert the value to
- * the desired Java type, using one of the provided {@link #as} methods.
+ * A root, intermediate, or leaf node in a configuration tree.
+ *
+ * <p>To navigate to a child node, use {@link #get(String)} with the child's unqualified name.
+ *
+ * <p>To retrieve this node's value, use:
+ *
+ * <ul>
+ *   <li>{@link #as(Class)} for non-null types.
+ *   <li>{@link #asNullable(Class)} for nullable types.
+ *   <li>{@link #as(JavaType)} for fully specified types, such as {@code List<@Nullable String>}.
+ * </ul>
+ *
+ * <p>Whether a method can return null depends on the method and target type used. For example,
+ * {@code asNullable(String.class)} can return {@code null}, while {@code
+ * as(JavaType.listOfNullable(String.class))} can return a {@code List<String>} with nullable
+ * elements. These nullness rules are for static analysis tools such as IntelliJ IDEA and NullAway
+ * and are not enforced at runtime.
  */
 @SuppressWarnings({"DeprecatedIsStillUsed"})
 public interface Config {
   /**
-   * The dot-separated name of this node. For example, the node reached using {@code
-   * rootNode.get("foo").get("bar")} has qualified name {@code foo.bar}. Returns the empty String
-   * for the root node itself.
+   * Returns the qualified name of this node, or the empty string if this is the root node.
+   *
+   * <p>The qualified name is formed by joining child names using {@code '.'}. For example, {@code
+   * rootNode.get("foo").get("bar").getQualifiedName()} returns {@code "foo.bar"}.
    */
   String getQualifiedName();
 
   /**
-   * The raw value of this node, as provided by {@link Evaluator}. Typically, a node's value is not
-   * consumed directly, but converted to the desired Java type using {@link #as}.
+   * Returns the underlying value of this node.
+   *
+   * <p>This value is typically accessed indirectly via {@link #as(Class)}, {@link
+   * #asNullable(Class)}, or {@link #as(JavaType)}.
    */
   Object getRawValue();
 
   /**
    * Returns the child node with the given unqualified name.
    *
+   * <p>For example, {@code get("foo").get("bar")} returns the child named {@code "bar"} of the
+   * child named {@code "foo"}. Passing a qualified name to this method, as in {@code
+   * get("foo.bar")}, is not supported.
+   *
    * @throws NoSuchChildException if a child with the given name does not exist
    */
   Config get(String childName);
 
   /**
-   * Converts this node's value to the given {@link Class}.
+   * Returns this node's value as a non-null value of the given {@link Class}.
+   *
+   * <p>If this node's value may be {@code null}, use {@link #asNullable(Class)} instead.
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */
-  <T extends @Nullable Object> T as(Class<T> type);
+  <T> T as(Class<T> type);
 
   /**
-   * Converts this node's value to the given {@link Type}.
+   * Returns this node's value as a nullable value of the given {@link Class}.
    *
-   * <p>Note that usages of this method are not type safe.
+   * <p>If this node's value cannot be {@code null}, use {@link #as(Class)} instead.
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */
-  <T extends @Nullable Object> T as(Type type);
+  default <T> @Nullable T asNullable(Class<T> type) {
+    return as(type); // currently no difference at runtime
+  }
 
   /**
-   * Converts this node's value to the given {@link JavaType}.
+   * Returns this node's value as a non-null value of the given {@link Type}.
+   *
+   * <p>If this node's value may be {@code null}, use {@link #asNullable(Type)} instead.
+   *
+   * <p>Use this method when the target type is already available as a {@link Type}; otherwise,
+   * prefer {@link #as(Class)} or {@link #as(JavaType)}.
+   *
+   * @throws ConversionException if the value cannot be converted to the given type
+   */
+  <T> T as(Type type);
+
+  /**
+   * Returns this node's value as a nullable value of the given {@link Type}.
+   *
+   * <p>If this node's value cannot be {@code null}, use {@link #as(Type)} instead.
+   *
+   * <p>Use this method when the target type is already available as a {@link Type}; otherwise,
+   * prefer {@link #asNullable(Class)} or {@link #as(JavaType)}.
+   *
+   * @throws ConversionException if the value cannot be converted to the given type
+   */
+  default <T> @Nullable T asNullable(Type type) {
+    return as(type); // currently no difference at runtime
+  }
+
+  /**
+   * Returns this node's value as the given {@link JavaType}.
+   *
+   * <p>Use this method when you need a fully specified type, such as {@code List<@Nullable
+   * String>}.
    *
    * @throws ConversionException if the value cannot be converted to the given type
    */

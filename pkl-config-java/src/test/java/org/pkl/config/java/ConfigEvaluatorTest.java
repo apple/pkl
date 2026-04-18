@@ -17,6 +17,8 @@ package org.pkl.config.java;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.lang.reflect.Type;
+import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
 import org.pkl.core.ModuleSource;
@@ -49,5 +51,32 @@ public final class ConfigEvaluatorTest extends AbstractConfigTest {
         evaluator.evaluateExpression(ModuleSource.text(pigeonText), "pigeon.address");
     var address = addressConfig.as(Address.class);
     assertThat(address.street).isEqualTo("Fuzzy St.");
+  }
+
+  @Test
+  public void asNullableWithClass() {
+    var mod = evaluator.evaluate(ModuleSource.text("nullValue = null; strValue = \"Bob\""));
+    @Nullable String nullValue = mod.get("nullValue").asNullable(String.class);
+    @Nullable String strValue = mod.get("strValue").asNullable(String.class);
+    assertThat(nullValue).isNull();
+    assertThat(strValue).isNotNull();
+  }
+
+  @Test
+  public void asNullableWithType() {
+    var mod = evaluator.evaluate(ModuleSource.text("nullValue = null; strValue = \"Bob\""));
+    @Nullable String nullValue = mod.get("nullValue").asNullable((Type) String.class);
+    @Nullable String strValue = mod.get("strValue").asNullable((Type) String.class);
+    assertThat(nullValue).isNull();
+    assertThat(strValue).isNotNull();
+  }
+
+  @Test
+  public void asNullableWithJavaType() {
+    var mod = evaluator.evaluate(ModuleSource.text("nullValue = null; strValue = \"Bob\""));
+    @Nullable String nullValue = mod.get("nullValue").as(JavaType.ofNullable(String.class));
+    @Nullable String strValue = mod.get("strValue").as(JavaType.ofNullable(String.class));
+    assertThat(nullValue).isNull();
+    assertThat(strValue).isNotNull();
   }
 }
