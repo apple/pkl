@@ -61,7 +61,7 @@ nuValidator = "26.4.2"
 paguro = "3.10.3"
 shadowPlugin = "9.4.1"
 slf4j = "2.0.17"
-snakeYaml = "2.10"
+snakeYaml = "3.0.1"
 spotlessPlugin = "8.4.0"
 wiremock = "3.13.2"
 
