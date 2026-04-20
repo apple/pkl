@@ -101,7 +101,7 @@ publishing {
             appendNode("groupId", "org.pkl-lang")
             appendNode("artifactId", "pkl-config-java-all")
             appendNode("version", project.version)
-            appendNode("scope", "runtime")
+            appendNode("scope", "compile")
           }
         }
       }
