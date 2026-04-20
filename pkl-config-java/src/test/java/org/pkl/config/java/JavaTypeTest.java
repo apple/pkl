@@ -25,7 +25,7 @@ import org.junit.jupiter.api.Test;
 import org.pkl.config.java.mapper.Reflection;
 import org.pkl.config.java.mapper.Types;
 
-public class JavaTypeTest {
+public final class JavaTypeTest {
   @Test
   public void constructOptionalType() {
     var type = JavaType.optionalOf(String.class);

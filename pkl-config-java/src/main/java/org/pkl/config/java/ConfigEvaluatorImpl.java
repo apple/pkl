@@ -15,7 +15,7 @@
  */
 package org.pkl.config.java;
 
-import static org.pkl.config.java.ConfigUtils.makeConfig;
+import static org.pkl.config.java.ConfigUtils.createConfig;
 
 import org.pkl.config.java.mapper.ValueMapper;
 import org.pkl.core.Evaluator;
@@ -39,13 +39,13 @@ final class ConfigEvaluatorImpl implements ConfigEvaluator {
   @Override
   public Config evaluateOutputValue(ModuleSource moduleSource) {
     var value = evaluator.evaluateOutputValue(moduleSource);
-    return makeConfig(value, mapper);
+    return createConfig(value, mapper);
   }
 
   @Override
   public Config evaluateExpression(ModuleSource moduleSource, String expression) {
     var value = evaluator.evaluateExpression(moduleSource, expression);
-    return makeConfig(value, mapper);
+    return createConfig(value, mapper);
   }
 
   @Override
