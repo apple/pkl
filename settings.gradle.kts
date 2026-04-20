@@ -68,13 +68,6 @@ plugins { id("org.gradle.toolchains.foojay-resolver-convention") version ("1.0.0
 
 @Suppress("UnstableApiUsage") dependencyResolutionManagement { repositories { mavenCentral() } }
 
-if (
-  gradle.startParameter.taskNames.contains("updateDependencyLocks") ||
-    gradle.startParameter.taskNames.contains("uDL")
-) {
-  gradle.startParameter.isWriteDependencyLocks = true
-}
-
 for (prj in rootProject.children) {
   prj.buildFileName = "${prj.name}.gradle.kts"
 }

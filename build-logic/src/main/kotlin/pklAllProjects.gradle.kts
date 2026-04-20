@@ -20,12 +20,14 @@ plugins { id("com.diffplug.spotless") }
 
 val buildInfo = extensions.create<BuildInfo>("buildInfo", project)
 
-dependencyLocking { lockAllConfigurations() }
-
 configurations {
   val rejectedVersionSuffix = Regex("-alpha|-beta|-eap|-m|-rc|-snapshot", RegexOption.IGNORE_CASE)
   configureEach {
     resolutionStrategy {
+      // forbid dependencies whose pom.xml's include version ranges, because this will lead to
+      // unreproducible builds.
+
+      failOnDynamicVersions()
       componentSelection {
         all {
           if (rejectedVersionSuffix.containsMatchIn(candidate.version)) {
@@ -75,12 +77,6 @@ plugins.withType(MavenPublishPlugin::class).configureEach {
       }
     }
   }
-}
-
-// settings.gradle.kts sets `--write-locks`
-// if Gradle command line contains this task name
-val updateDependencyLocks by tasks.registering {
-  doLast { configurations.filter { it.isCanBeResolved }.forEach { it.resolve() } }
 }
 
 val allDependencies by tasks.registering(DependencyReportTask::class)

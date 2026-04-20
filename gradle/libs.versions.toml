@@ -1,16 +1,15 @@
 [versions] # ordered alphabetically
-assertj = "3.+"
+assertj = "3.27.7"
 checksumPlugin = "1.4.0"
 # 5.0.3 is the last version compatible with Kotlin 2.2
 clikt = "5.0.3"
-commonMark = "0.+"
+commonMark = "0.28.0"
 downloadTaskPlugin = "5.7.0"
 errorProne = "2.48.0"
 errorPronePlugin = "5.1.0"
-geantyref = "1.+"
+geantyref = "1.3.16"
 #noinspection UnusedVersionCatalogEntry
 googleJavaFormat = "1.35.0"
-# must not use `+` because used in download URL
 # 25.0.2 no longer supports macos-x64
 graalVm = "25.0.1"
 #noinspection UnusedVersionCatalogEntry
@@ -30,17 +29,17 @@ graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-aarch64 = "unavailable"
 ideaExtPlugin = "1.4.1"
-javaPoet = "0.+"
+javaPoet = "0.14.0"
 javaxInject = "1"
-jimfs = "1.+"
-jline = "4.+"
-jmh = "1.+"
+jimfs = "1.3.1"
+jline = "4.0.11"
+jmh = "1.37"
 jmhPlugin = "0.7.3"
 jspecify = "1.0.0"
-jsr305 = "3.+"
-junit = "6.+"
+jsr305 = "3.0.2"
+junit = "6.0.3"
 # 1.7+ generates much more verbose code
-kotlinPoet = "1.6.+"
+kotlinPoet = "1.6.0"
 kotlinStdLib = "2.2.21"
 #noinspection UnusedVersionCatalogEntry
 kotlinTarget = "2.2"
@@ -48,7 +47,7 @@ kotlinToolchain = "2.3.20"
 kotlinxHtml = "0.12.0"
 # 1.9.0 is the last version compatible with Kotlin 2.2
 kotlinxSerialization = "1.9.0"
-kotlinxCoroutines = "1.+"
+kotlinxCoroutines = "1.10.2"
 #noinspection UnusedVersionCatalogEntry
 ktfmt = "0.62"
 # replaces nuValidator's log4j dependency
@@ -58,13 +57,13 @@ msgpack = "0.9.11"
 nexusPublishPlugin = "2.0.0"
 nullaway = "0.13.1"
 nullawayPlugin = "3.0.0"
-nuValidator = "26.+"
-paguro = "3.+"
-shadowPlugin = "9.+"
-slf4j = "2.+"
-snakeYaml = "2.+"
+nuValidator = "26.4.2"
+paguro = "3.10.3"
+shadowPlugin = "9.4.1"
+slf4j = "2.0.17"
+snakeYaml = "2.10"
 spotlessPlugin = "8.4.0"
-wiremock = "3.+"
+wiremock = "3.13.2"
 
 [libraries] # ordered alphabetically
 assertj = { group = "org.assertj", name = "assertj-core", version.ref = "assertj" }
