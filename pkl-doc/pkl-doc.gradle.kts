@@ -33,8 +33,10 @@ executable {
 }
 
 dependencies {
-  implementation(projects.pklCore)
-  implementation(projects.pklCommonsCli)
+  // CliDocGeneratorOptions exposes pkl-commons-cli and pkl-base
+  api(projects.pklCore)
+  api(projects.pklCommonsCli)
+
   implementation(projects.pklCommons)
   implementation(projects.pklParser)
   implementation(libs.commonMark)

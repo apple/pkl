@@ -21,11 +21,11 @@ plugins {
 }
 
 dependencies {
-  // CliJavaCodeGeneratorOptions exposes CliBaseOptions
+  // CliJavaCodeGeneratorOptions exposes pkl-commons-cli and pkl-base
   api(projects.pklCommonsCli)
+  api(projects.pklCore)
 
   implementation(projects.pklCommons)
-  implementation(projects.pklCore)
   implementation(libs.javaPoet)
 
   testImplementation(projects.pklConfigJava)
