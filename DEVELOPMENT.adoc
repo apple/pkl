@@ -74,9 +74,7 @@ gw wrapper --gradle-version [version] --gradle-distribution-sha256-sum [sha]
 
 . (optional) Update _gradle/libs.version.toml_
 based on version information from https://search.maven.org, https://plugins.gradle.org, and GitHub repos
-. Run `gw updateDependencyLocks`
 . Validate changes with `gw build buildNative`
-. Review and commit the updated dependency lock files
 
 == Code Generation
 

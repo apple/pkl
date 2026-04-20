@@ -224,3 +224,17 @@ release {
       }
     } |> toWorkflowJobs
 }
+
+dependabot {
+  updates {
+    new {
+      `package-ecosystem` = "gradle"
+      schedule {
+        interval = "weekly"
+      }
+      cooldown {
+        `default-days` = 7
+      }
+    }
+  }
+}
