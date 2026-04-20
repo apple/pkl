@@ -3,6 +3,7 @@ updates:
 - package-ecosystem: gradle
   cooldown:
     default-days: 7
+  directory: /
   schedule:
     interval: weekly
 - package-ecosystem: github-actions
