@@ -40,7 +40,7 @@ jsr305 = "3.0.2"
 junit = "6.0.3"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.0"
-kotlinStdLib = "2.2.21"
+kotlinStdLib = "2.3.20"
 #noinspection UnusedVersionCatalogEntry
 kotlinTarget = "2.2"
 kotlinToolchain = "2.3.20"
