@@ -134,6 +134,7 @@ public final class ParserNodes {
     var settings =
         LoadSettings.builder()
             .setMaxAliasesForCollections(getMaxCollectionAliases(self))
+            .setAllowNonScalarKeys(true)
             .setSchema(
                 new Schema() {
                   @Override
