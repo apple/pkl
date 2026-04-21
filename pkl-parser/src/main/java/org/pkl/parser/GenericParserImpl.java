@@ -978,6 +978,8 @@ class GenericParserImpl {
             STRING_ESCAPE_RETURN,
             STRING_ESCAPE_UNICODE ->
             children.add(make(NodeType.STRING_ESCAPE, next().span));
+        case STRING_ESCAPE_CONTINUATION ->
+            throw parserError("invalidLineContinuationEscapeSequence");
         case INTERPOLATION_START -> {
           children.add(makeTerminal(next()));
           ff(children);
@@ -1011,6 +1013,8 @@ class GenericParserImpl {
           }
         }
         case STRING_NEWLINE -> children.add(make(NodeType.STRING_NEWLINE, next().span));
+        case STRING_ESCAPE_CONTINUATION ->
+            children.add(make(NodeType.STRING_CONTINUATION, next().span));
         case STRING_ESCAPE_NEWLINE,
             STRING_ESCAPE_TAB,
             STRING_ESCAPE_QUOTE,
@@ -1060,7 +1064,8 @@ class GenericParserImpl {
           throw parserError(ErrorMessages.create("stringIndentationMustMatchLastLine"), child.span);
         }
       }
-      previousNewline = child.type == NodeType.STRING_NEWLINE;
+      previousNewline =
+          child.type == NodeType.STRING_NEWLINE || child.type == NodeType.STRING_CONTINUATION;
     }
   }
 

@@ -1131,6 +1131,8 @@ final class ParserImpl {
           end = tk.span;
           builder.append(parseUnicodeEscape(tk));
         }
+        case STRING_ESCAPE_CONTINUATION ->
+            throw parserError("invalidLineContinuationEscapeSequence");
         case INTERPOLATION_START -> {
           var istart = next().span;
           if (!builder.isEmpty()) {
@@ -1167,7 +1169,8 @@ final class ParserImpl {
             STRING_ESCAPE_QUOTE,
             STRING_ESCAPE_BACKSLASH,
             STRING_ESCAPE_RETURN,
-            STRING_ESCAPE_UNICODE ->
+            STRING_ESCAPE_UNICODE,
+            STRING_ESCAPE_CONTINUATION ->
             stringTokens.add(new TempNode(next(), null));
         case INTERPOLATION_START -> {
           var istart = next();
@@ -1236,6 +1239,7 @@ final class ParserImpl {
             builder.append('\n');
             isNewLine = true;
           }
+          case STRING_ESCAPE_CONTINUATION -> isNewLine = true;
           case STRING_PART -> {
             var text = token.text(lexer);
             if (isNewLine) {
@@ -1642,6 +1646,7 @@ final class ParserImpl {
       case STRING_ESCAPE_BACKSLASH -> "\\";
       case STRING_ESCAPE_TAB -> "\t";
       case STRING_ESCAPE_RETURN -> "\r";
+      case STRING_ESCAPE_CONTINUATION -> "";
       case STRING_ESCAPE_UNICODE -> parseUnicodeEscape(tk);
       default -> throw new RuntimeException("Unreacheable code");
     };

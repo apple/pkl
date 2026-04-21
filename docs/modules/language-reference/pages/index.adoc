@@ -255,8 +255,7 @@ String literals are enclosed in double quotes:
 "Hello, World!"
 ----
 
-TIP: Except for a few minor differences footnote:[Pkl's string literals have fewer character escape sequences,
-have stricter rules for line indentation in multiline strings, and do not have a line continuation character.],
+TIP: Except for a few minor differences footnote:[Pkl's string literals have fewer character escape sequences and stricter rules for line indentation in multiline strings.],
 String literals have the same syntax and semantics as in Swift 5. Learn one of them, know both of them!
 
 Inside a string literal, the following character escape sequences have special meaning:
@@ -360,6 +359,23 @@ str = """
      the species
        will be remembered.
   """
+----
+
+To prevent line breaks from becoming part of the string's value, use a backslash (`\`) to end those lines.
+
+[source%tested,{pkl}]
+----
+str = """
+  Although the Dodo is extinct, \
+  the species will be remembered.
+  """
+----
+
+This multiline string is equivalent to the following single-line string:
+
+[source%parsed,{pkl-expr}]
+----
+"Although the Dodo is extinct, the species will be remembered."
 ----
 
 [[custom-string-delimiters]]

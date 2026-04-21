@@ -460,6 +460,22 @@ public final class Lexer {
         yield Token.INTERPOLATION_START;
       }
       case 'u' -> lexUnicodeEscape();
+      case '\n' -> Token.STRING_ESCAPE_CONTINUATION;
+      case ' ', '\t' -> {
+        var c = cursor;
+        var next = nextChar();
+        while (next == ' ' || next == '\t') next = nextChar();
+        if (next == '\n')
+          throw lexError(
+              ErrorMessages.create("invalidLineContinuationEscapeSequenceWhitespace"),
+              c - 2,
+              cursor - c + 2);
+
+        throw lexError(
+            ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + (char) ch, "\\"),
+            c - 2,
+            2);
+      }
       default ->
           throw lexError(
               ErrorMessages.create("invalidCharacterEscapeSequence", "\\" + (char) ch, "\\"),

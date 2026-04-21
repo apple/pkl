@@ -197,6 +197,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.TERMINAL,
         NodeType.OPERATOR,
         NodeType.STRING_NEWLINE,
+        NodeType.STRING_CONTINUATION,
       )
 
     private val UNPACK_CHILDREN =

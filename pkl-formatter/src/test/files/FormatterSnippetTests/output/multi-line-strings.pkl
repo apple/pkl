@@ -52,6 +52,25 @@ quux {
   """
 }
 
+// line continuations
+corge {
+  """
+  hello \
+  world
+  """
+
+  #"""
+  hello \#
+  world
+  """#
+
+  """
+  hello \
+  \
+  world
+  """
+}
+
 obj {
   data {
     ["bar"] =

@@ -1,0 +1,7 @@
+examples {
+  ["string continuation"] {
+    "hello world"
+    "hello world"
+    "hello world"
+  }
+}
