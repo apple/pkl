@@ -20,7 +20,6 @@ import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -56,21 +55,17 @@ public abstract class ModulesTask extends BasePklTask {
   @PathSensitive(PathSensitivity.ABSOLUTE)
   public abstract ListProperty<File> getTransitiveModules();
 
-  private final Map<List<Object>, Pair<List<File>, List<URI>>> parsedSourceModulesCache =
-      new HashMap<>();
-
   // Used for input tracking purposes only.
   @Internal
   public Provider<Pair<List<File>, List<URI>>> getParsedSourceModules() {
-    return getSourceModules()
-        .map(it -> parsedSourceModulesCache.computeIfAbsent(it, this::splitFilesAndUris));
+    return getSourceModules().map(this::splitFilesAndUris);
   }
 
   // We use @InputFiles and FileCollection here to ensure that file contents are tracked.
   @InputFiles
   @PathSensitive(PathSensitivity.ABSOLUTE)
   public FileCollection getSourceModuleFiles() {
-    return getProject().files(getParsedSourceModules().map(it -> it.first));
+    return getObjects().fileCollection().from(getParsedSourceModules().map(it -> it.first));
   }
 
   // We use @Input and just a list value because we can only track the URIs themselves
@@ -144,37 +139,34 @@ public abstract class ModulesTask extends BasePklTask {
 
   @Internal
   @Override
+  // See BasePklTask.getCliBaseOptions() for why caching is intentionally omitted.
   protected CliBaseOptions getCliBaseOptions() {
-    if (__cachedOptions == null) {
-      __cachedOptions =
-          new CliBaseOptions(
-              getSourceModulesAsUris(),
-              patternsFromStrings(getAllowedModules().get()),
-              patternsFromStrings(getAllowedResources().get()),
-              getEnvironmentVariables().get(),
-              getExternalProperties().get(),
-              parseModulePath(),
-              getProject().getProjectDir().toPath(),
-              mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
-              mapAndGetOrNull(getSettingsModule(), PluginUtils::parseModuleNotationToUri),
-              getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
-              getEvalTimeout().getOrNull(),
-              mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
-              getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
-              getNoCache().getOrElse(false),
-              getOmitProjectSettings().getOrElse(false),
-              getNoProject().getOrElse(false),
-              false,
-              getTestPort().getOrElse(-1),
-              Collections.emptyList(),
-              null,
-              List.of(),
-              getHttpRewrites().getOrNull(),
-              Map.of(),
-              Map.of(),
-              null,
-              getPowerAssertions().getOrElse(false));
-    }
-    return __cachedOptions;
+    return new CliBaseOptions(
+        getSourceModulesAsUris(),
+        patternsFromStrings(getAllowedModules().get()),
+        patternsFromStrings(getAllowedResources().get()),
+        getEnvironmentVariables().get(),
+        getExternalProperties().get(),
+        parseModulePath(),
+        getWorkingDir().get().getAsFile().toPath(),
+        mapAndGetOrNull(getEvalRootDirPath(), Paths::get),
+        mapAndGetOrNull(getSettingsModule(), PluginUtils::parseModuleNotationToUri),
+        getProjectDir().isPresent() ? getProjectDir().get().getAsFile().toPath() : null,
+        getEvalTimeout().getOrNull(),
+        mapAndGetOrNull(getModuleCacheDir(), it1 -> it1.getAsFile().toPath()),
+        getColor().getOrElse(false) ? Color.ALWAYS : Color.NEVER,
+        getNoCache().getOrElse(false),
+        getOmitProjectSettings().getOrElse(false),
+        getNoProject().getOrElse(false),
+        false,
+        getTestPort().getOrElse(-1),
+        Collections.emptyList(),
+        null,
+        List.of(),
+        getHttpRewrites().getOrNull(),
+        Map.of(),
+        Map.of(),
+        null,
+        getPowerAssertions().getOrElse(false));
   }
 }

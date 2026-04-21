@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,16 @@ import java.io.File;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.net.URL;
+import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Collections;
+import java.util.List;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileSystemLocation;
+import org.gradle.api.file.RegularFile;
+import org.pkl.core.ImportGraph;
 import org.pkl.core.util.IoUtils;
 
 public class PluginUtils {
@@ -124,5 +129,35 @@ public class PluginUtils {
   public static URI parseModuleNotationToUri(Object m) {
     var parsed1 = PluginUtils.parseModuleNotation(m);
     return parsedModuleNotationToUri(parsed1);
+  }
+
+  /**
+   * Parses the list of file-scheme transitive imports from the JSON output file produced by an
+   * analyze imports task. Returns an empty list if the file does not exist. Throws a {@link
+   * RuntimeException} if the file exists but cannot be read or parsed, so that upstream errors are
+   * not silently lost.
+   *
+   * <p>The automatically-created {@code GatherImports} tasks always write JSON, so this method
+   * assumes JSON format and should only be called for those tasks.
+   *
+   * @param outputFile the output file produced by the analyze imports task
+   * @return the list of file-based transitive import paths
+   */
+  public static List<File> parseTransitiveFiles(RegularFile outputFile) {
+    if (!outputFile.getAsFile().exists()) {
+      return Collections.emptyList();
+    }
+    try {
+      var contents = Files.readString(outputFile.getAsFile().toPath());
+      var importGraph = ImportGraph.parseFromJson(contents);
+      var imports = importGraph.resolvedImports().values();
+      return imports.stream()
+          .filter(it -> it.getScheme().equalsIgnoreCase("file"))
+          .map(File::new)
+          .toList();
+    } catch (Exception e) {
+      throw new RuntimeException(
+          "Failed to parse transitive imports from " + outputFile.getAsFile(), e);
+    }
   }
 }

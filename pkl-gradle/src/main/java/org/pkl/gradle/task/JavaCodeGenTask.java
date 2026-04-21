@@ -47,7 +47,7 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
     new CliJavaCodeGenerator(
             new CliJavaCodeGeneratorOptions(
                 getCliBaseOptions(),
-                getProject().file(getOutputDir()).toPath(),
+                getOutputDir().get().getAsFile().toPath(),
                 getIndent().get(),
                 getAddGeneratedAnnotation().get(),
                 getGenerateGetters().get(),

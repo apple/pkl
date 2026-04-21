@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,12 +48,23 @@ class ProjectPackageTest : AbstractTest() {
       """
       junitReportsDir.set(file("test-reports"))
       skipPublishCheck.set(true)
-    """
+      """
         .trimIndent()
     )
     writeProjectContent()
     runTask("createMyPackages")
     assertThat(testProjectDir.resolve("test-reports")).isNotEmptyDirectory()
+  }
+
+  @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile("skipPublishCheck.set(true)")
+    writeProjectContent()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("createMyPackages")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
   }
 
   private fun writeBuildFile(additionalContents: String = "") {
@@ -84,7 +95,7 @@ class ProjectPackageTest : AbstractTest() {
       "proj1/PklProject",
       """
       amends "pkl:Project"
-      
+
       package {
         name = "proj1"
         baseUri = "package://localhost:0/proj1"
@@ -94,7 +105,7 @@ class ProjectPackageTest : AbstractTest() {
           "tests.pkl"
         }
       }
-    """
+      """
         .trimIndent(),
     )
     writeFile(
@@ -104,29 +115,29 @@ class ProjectPackageTest : AbstractTest() {
         "schemaVersion": 1,
         "dependencies": {}
       }
-    """
+      """
         .trimIndent(),
     )
     writeFile(
       "proj1/foo.pkl",
       """
       module proj1.foo
-      
+
       bar: String
-    """
+      """
         .trimIndent(),
     )
     writeFile(
       "proj1/tests.pkl",
       """
       amends "pkl:test"
-      
+
       facts {
         ["it works"] {
           1 == 1
         }
       }
-    """
+      """
         .trimIndent(),
     )
     writeFile("foo.txt", "The contents of foo.txt")

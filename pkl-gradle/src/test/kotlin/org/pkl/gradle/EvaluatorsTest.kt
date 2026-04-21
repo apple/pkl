@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,7 @@ class EvaluatorsTest : AbstractTest() {
         name = "Pigeon"
         age = 30
       }
-    """
+      """
         .trimIndent(),
     )
   }
@@ -61,7 +61,7 @@ class EvaluatorsTest : AbstractTest() {
       person:
         name: Pigeon
         age: 30
-    """
+      """
         .trimIndent(),
     )
   }
@@ -84,7 +84,7 @@ class EvaluatorsTest : AbstractTest() {
           "age": 30
         }
       }
-    """
+      """
         .trimIndent(),
     )
   }
@@ -114,7 +114,7 @@ class EvaluatorsTest : AbstractTest() {
         </dict>
       </dict>
       </plist>
-    """
+      """
         .trimIndent(),
     )
   }
@@ -125,7 +125,7 @@ class EvaluatorsTest : AbstractTest() {
       "pcf",
       """
       externalProperties = [prop1: "value1", prop2: "value2"]
-    """
+      """
         .trimIndent(),
     )
 
@@ -134,7 +134,7 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = read("prop:prop1")
       prop2 = read("prop:prop2")
       other = read?("prop:other")
-    """
+      """
         .trimIndent()
     )
 
@@ -147,7 +147,7 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = "value1"
       prop2 = "value2"
       other = null
-    """
+      """
         .trimIndent(),
     )
   }
@@ -161,7 +161,7 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = read?("env:USER")
       prop2 = read?("env:PATH")
       prop3 = read?("env:JAVA_HOME")
-    """
+      """
         .trimIndent()
     )
 
@@ -174,7 +174,7 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = null
       prop2 = null
       prop3 = null
-    """
+      """
         .trimIndent(),
     )
   }
@@ -185,7 +185,7 @@ class EvaluatorsTest : AbstractTest() {
       "pcf",
       """
       environmentVariables = [VAR1: "value1", VAR2: "value2"]
-    """
+      """
         .trimIndent(),
     )
 
@@ -194,7 +194,7 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = read("env:VAR1")
       prop2 = read("env:VAR2")
       other = read?("env:OTHER")
-    """
+      """
         .trimIndent()
     )
 
@@ -207,7 +207,7 @@ class EvaluatorsTest : AbstractTest() {
       prop1 = "value1"
       prop2 = "value2"
       other = null
-    """
+      """
         .trimIndent(),
     )
   }
@@ -277,7 +277,7 @@ class EvaluatorsTest : AbstractTest() {
         name = "Pigeon"
         age = 30
       }
-    """
+      """
         .trimIndent(),
     )
   }
@@ -363,7 +363,7 @@ class EvaluatorsTest : AbstractTest() {
       foo = 1
       // hello
       bar = 2
-    """
+      """
         .trimIndent(),
     )
   }
@@ -378,7 +378,7 @@ class EvaluatorsTest : AbstractTest() {
       output {
         text = reflect.Module(module).uri
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -395,22 +395,22 @@ class EvaluatorsTest : AbstractTest() {
       "pcf",
       """
       multipleFileOutputDir = layout.projectDirectory.dir("my-output")
-    """
+      """
         .trimIndent(),
     )
     writeFile(
       "test.pkl",
       """
-        output {
-          files {
-            ["output-1.txt"] {
-              text = "My output 1"
-            }
-            ["output-2.txt"] {
-              text = "My output 2"
-            }
+      output {
+        files {
+          ["output-1.txt"] {
+            text = "My output 1"
+          }
+          ["output-2.txt"] {
+            text = "My output 2"
           }
         }
+      }
       """
         .trimIndent(),
     )
@@ -426,15 +426,15 @@ class EvaluatorsTest : AbstractTest() {
       """
       expression = "metadata.name"
       outputFile = layout.projectDirectory.file("output.txt")
-    """
+      """
         .trimIndent(),
     )
     writeFile(
       "test.pkl",
       """
-        metadata {
-          name = "Uni"
-        }
+      metadata {
+        name = "Uni"
+      }
       """
         .trimIndent(),
     )
@@ -454,9 +454,9 @@ class EvaluatorsTest : AbstractTest() {
     writeFile(
       "test.pkl",
       """
-        import "package://localhost:0/birds@0.5.0#/Bird.pkl"
-        
-        res = new Bird { name = "Wally"; favoriteFruit { name = "bananas" } }
+      import "package://localhost:0/birds@0.5.0#/Bird.pkl"
+
+      res = new Bird { name = "Wally"; favoriteFruit { name = "bananas" } }
       """
         .trimIndent(),
     )
@@ -472,18 +472,18 @@ class EvaluatorsTest : AbstractTest() {
       "proj1/PklProject",
       """
       amends "pkl:Project"
-      
+
       dependencies {
         ["proj2"] = import("../proj2/PklProject")
       }
-      
+
       package {
         name = "proj1"
         baseUri = "package://localhost:0/\(name)"
         version = "1.0.0"
         packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -491,14 +491,14 @@ class EvaluatorsTest : AbstractTest() {
       "proj2/PklProject",
       """
       amends "pkl:Project"
-      
+
       package {
         name = "proj2"
         baseUri = "package://localhost:0/\(name)"
         version = "1.0.0"
         packageZipUrl = "https://localhost:0/\(name)@\(version).zip"
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -515,7 +515,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -526,7 +526,7 @@ class EvaluatorsTest : AbstractTest() {
         "schemaVersion": 1,
         "resolvedDependencies": {}
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -534,9 +534,9 @@ class EvaluatorsTest : AbstractTest() {
       "proj1/foo.pkl",
       """
       module proj1.foo
-      
+
       bar: String = import("@proj2/baz.pkl").qux
-    """
+      """
         .trimIndent(),
     )
 
@@ -544,7 +544,7 @@ class EvaluatorsTest : AbstractTest() {
       "proj2/baz.pkl",
       """
       qux: String = "Contents of @proj2/qux"
-    """
+      """
         .trimIndent(),
     )
 
@@ -595,7 +595,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -607,15 +607,15 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result1.output)
       .containsIgnoringNewLines(
         """
-      evalCounter.txt
-      doEval executed
-      
-      file1.yaml
-      foo: 1
+        evalCounter.txt
+        doEval executed
 
-      file2.yaml
-      bar: 1
-      """
+        file1.yaml
+        foo: 1
+
+        file2.yaml
+        bar: 1
+        """
           .trimIndent()
       )
 
@@ -628,15 +628,15 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result2.output)
       .containsIgnoringNewLines(
         """
-      evalCounter.txt
-      doEval executed
-      
-      file1.yaml
-      foo: 1
+        evalCounter.txt
+        doEval executed
 
-      file2.yaml
-      bar: 1
-      """
+        file1.yaml
+        foo: 1
+
+        file2.yaml
+        bar: 1
+        """
           .trimIndent()
       )
 
@@ -652,16 +652,16 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result3.output)
       .containsIgnoringNewLines(
         """
-      evalCounter.txt
-      doEval executed
-      doEval executed
-      
-      file1.yaml
-      foo: 7
+        evalCounter.txt
+        doEval executed
+        doEval executed
 
-      file2.yaml
-      bar: 1
-      """
+        file1.yaml
+        foo: 7
+
+        file2.yaml
+        bar: 1
+        """
           .trimIndent()
       )
   }
@@ -674,12 +674,12 @@ class EvaluatorsTest : AbstractTest() {
         name = "Pigeon"
         diet = "Seeds"
       }
-      
+
       parrot {
         name = "Parrot"
         diet = "Seeds"
       }
-      
+
       output {
         files {
           ["birds/pigeon.json"] {
@@ -692,7 +692,7 @@ class EvaluatorsTest : AbstractTest() {
           }
         }
       }
-    """
+      """
         .trimIndent()
     )
 
@@ -701,7 +701,7 @@ class EvaluatorsTest : AbstractTest() {
       additionalContents =
         """
         multipleFileOutputDir = layout.projectDirectory.dir("%{moduleDir}/%{moduleName}-%{outputFormat}")
-      """
+        """
           .trimIndent(),
       additionalBuildScript =
         """
@@ -710,12 +710,12 @@ class EvaluatorsTest : AbstractTest() {
             file("evalCounter.txt").append("evalTest executed\n")
           }
         }
-        
+
         abstract class PrintTask extends DefaultTask {
           @InputFiles
           public abstract ConfigurableFileCollection getInputDirs();
         }
-        
+
         // ensure that iteration order is the same across environments
         def sortByTypeThenName = { a, b ->
             a.isFile() != b.isFile() ? a.isFile() <=> b.isFile() : a.name <=> b.name
@@ -741,7 +741,7 @@ class EvaluatorsTest : AbstractTest() {
             }
           }
         }
-      """
+        """
           .trimIndent(),
     )
 
@@ -757,23 +757,23 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result1.output)
       .containsIgnoringNewLines(
         """
-      evalCounter.txt
-      evalTest executed
-      
-      test-yaml/birds/
-      
-      test-yaml/birds/parrot.pcf
-      name = "Parrot"
-      diet = "Seeds"
-      
-      test-yaml/birds/pigeon.json
-      {
-        "name": "Pigeon",
-        "diet": "Seeds"
-      }
-      
-      test-yaml/
-      """
+        evalCounter.txt
+        evalTest executed
+
+        test-yaml/birds/
+
+        test-yaml/birds/parrot.pcf
+        name = "Parrot"
+        diet = "Seeds"
+
+        test-yaml/birds/pigeon.json
+        {
+          "name": "Pigeon",
+          "diet": "Seeds"
+        }
+
+        test-yaml/
+        """
           .trimIndent()
       )
 
@@ -786,23 +786,23 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result2.output)
       .containsIgnoringNewLines(
         """
-      evalCounter.txt
-      evalTest executed
-      
-      test-yaml/birds/
-      
-      test-yaml/birds/parrot.pcf
-      name = "Parrot"
-      diet = "Seeds"
-      
-      test-yaml/birds/pigeon.json
-      {
-        "name": "Pigeon",
-        "diet": "Seeds"
-      }
-      
-      test-yaml/
-      """
+        evalCounter.txt
+        evalTest executed
+
+        test-yaml/birds/
+
+        test-yaml/birds/parrot.pcf
+        name = "Parrot"
+        diet = "Seeds"
+
+        test-yaml/birds/pigeon.json
+        {
+          "name": "Pigeon",
+          "diet": "Seeds"
+        }
+
+        test-yaml/
+        """
           .trimIndent()
       )
 
@@ -818,24 +818,24 @@ class EvaluatorsTest : AbstractTest() {
     assertThat(result3.output)
       .containsIgnoringNewLines(
         """
-      evalCounter.txt
-      evalTest executed
-      evalTest executed
-      
-      test-yaml/birds/
-      
-      test-yaml/birds/parrot.pcf
-      name = "Macaw"
-      diet = "Seeds"
-      
-      test-yaml/birds/pigeon.json
-      {
-        "name": "Pigeon",
-        "diet": "Seeds"
-      }
-      
-      test-yaml/
-      """
+        evalCounter.txt
+        evalTest executed
+        evalTest executed
+
+        test-yaml/birds/
+
+        test-yaml/birds/parrot.pcf
+        name = "Macaw"
+        diet = "Seeds"
+
+        test-yaml/birds/pigeon.json
+        {
+          "name": "Pigeon",
+          "diet": "Seeds"
+        }
+
+        test-yaml/
+        """
           .trimIndent()
       )
   }
@@ -874,8 +874,8 @@ class EvaluatorsTest : AbstractTest() {
       "json",
       additionalContents =
         """
-      transitiveModules.from(files("shared2.pkl"))
-    """
+        transitiveModules.from(files("shared2.pkl"))
+        """
           .trimIndent(),
     )
     val result1 = runTask("evalTest")
@@ -894,6 +894,17 @@ class EvaluatorsTest : AbstractTest() {
 
     // the "GatherImports" task did not run
     assertThat(result5.task(":evalTestGatherImports")).isNull()
+  }
+
+  @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile("yaml")
+    writePklFile()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("evalTest")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
   }
 
   private fun writeBuildFile(

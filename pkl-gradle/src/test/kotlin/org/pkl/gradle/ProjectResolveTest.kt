@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,13 +27,24 @@ class ProjectResolveTest : AbstractTest() {
     assertThat(testProjectDir.resolve("proj1/PklProject.deps.json"))
       .hasContent(
         """
-      {
-        "schemaVersion": 1,
-        "resolvedDependencies": {}
-      }
-    """
+        {
+          "schemaVersion": 1,
+          "resolvedDependencies": {}
+        }
+        """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile()
+    writeProjectContent()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("resolveMyProj")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
   }
 
   private fun writeBuildFile(additionalContents: String = "") {
@@ -64,7 +75,7 @@ class ProjectResolveTest : AbstractTest() {
       "proj1/PklProject",
       """
       amends "pkl:Project"
-    """
+      """
         .trimIndent(),
     )
   }

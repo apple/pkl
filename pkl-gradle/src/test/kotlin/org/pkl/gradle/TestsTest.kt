@@ -40,11 +40,11 @@ class TestsTest : AbstractTest() {
     writePklFile(
       additionalFacts =
         """
-      ["should fail"] {
-        1 == 3
-        "foo" == "bar"
-      }
-    """
+        ["should fail"] {
+          1 == 3
+          "foo" == "bar"
+        }
+        """
           .trimIndent()
     )
 
@@ -61,10 +61,10 @@ class TestsTest : AbstractTest() {
     writePklFile(
       additionalFacts =
         """
-      ["error"] {
-        throw("exception")
-      }
-    """
+        ["error"] {
+          throw("exception")
+        }
+        """
           .trimIndent()
     )
 
@@ -78,20 +78,20 @@ class TestsTest : AbstractTest() {
     assertThat(output)
       .containsIgnoringNewLines(
         """
-      > Task :evalTest FAILED
-      module test
-        facts
-          ✔ should pass
-          ✘ error
-             –– Pkl Error ––
-             exception
+        > Task :evalTest FAILED
+        module test
+          facts
+            ✔ should pass
+            ✘ error
+               –– Pkl Error ––
+               exception
 
-             9 | throw("exception")
-                 ^^^^^^^^^^^^^^^^^^
-             at test#facts["error"][#1] (file:///file, line x)
+               9 | throw("exception")
+                   ^^^^^^^^^^^^^^^^^^
+               at test#facts["error"][#1] (file:///file, line x)
 
-      50.0% tests pass [1/2 failed], 66.6% asserts pass [1/3 failed]
-      """
+        50.0% tests pass [1/2 failed], 66.6% asserts pass [1/3 failed]
+        """
           .trimIndent()
       )
   }
@@ -169,10 +169,10 @@ class TestsTest : AbstractTest() {
     writePklFile(
       additionalFacts =
         """
-      ["error"] {
-        throw("exception")
-      }
-    """
+        ["error"] {
+          throw("exception")
+        }
+        """
           .trimIndent(),
       additionalExamples = examples,
     )
@@ -189,7 +189,7 @@ class TestsTest : AbstractTest() {
       .startsWith(
         """
         > Task :evalTestGatherImports
-        
+
         > Task :evalTest FAILED
         module test
           facts
@@ -197,7 +197,7 @@ class TestsTest : AbstractTest() {
             ✘ error
                –– Pkl Error ––
                exception
-        
+
                9 | throw("exception")
                    ^^^^^^^^^^^^^^^^^^
                at test#facts["error"][#1] (file:///file, line x)
@@ -280,10 +280,10 @@ class TestsTest : AbstractTest() {
       writePklFile(
         additionalFacts =
           """
-      ["error"] {
-        throw("exception")
-      }
-    """
+          ["error"] {
+            throw("exception")
+          }
+          """
             .trimIndent(),
         additionalExamples = examples,
       )
@@ -305,7 +305,7 @@ class TestsTest : AbstractTest() {
             <testcase classname="test.facts" name="error">
                 <error message="exception">–– Pkl Error ––
         exception
-        
+
         9 | throw(&quot;exception&quot;)
             ^^^^^^^^^^^^^^^^^^
         at test#facts[&quot;error&quot;][#1] (file:///file, line x)
@@ -334,23 +334,23 @@ class TestsTest : AbstractTest() {
 
   private val examples =
     """
-      ["user 0"] {
-        new {
-          name = "Cool"
-          age = 11
-        }
+    ["user 0"] {
+      new {
+        name = "Cool"
+        age = 11
       }
-      ["user 1"] {
-        new {
-          name = "Pigeon"
-          age = 40
-        }
-        new {
-          name = "Welma"
-          age = 35
-        }
+    }
+    ["user 1"] {
+      new {
+        name = "Pigeon"
+        age = 40
       }
-  """
+      new {
+        name = "Welma"
+        age = 35
+      }
+    }
+    """
       .trimIndent()
 
   private val bigTest =
@@ -400,8 +400,19 @@ class TestsTest : AbstractTest() {
         }
       }
     }
-  """
+    """
       .trimIndent()
+
+  @Test
+  fun `is configuration cache compatible`() {
+    writeBuildFile()
+    writePklFile()
+
+    val (firstRun, secondRun) = runTaskWithConfigurationCache("evalTest")
+
+    assertThat(firstRun.output).contains(CONFIG_CACHE_STORED)
+    assertThat(secondRun.output).contains(CONFIG_CACHE_REUSED)
+  }
 
   private fun writeBuildFile(additionalContents: String = "") {
     writeFile(
