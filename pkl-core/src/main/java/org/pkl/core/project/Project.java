@@ -89,8 +89,10 @@ public final class Project {
             .setStackFrameTransformer(stackFrameTransformer)
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
+            .addModuleKeyFactory(ModuleKeyFactories.pkg)
             .addResourceReader(ResourceReaders.environmentVariable())
             .addResourceReader(ResourceReaders.file())
+            .addResourceReader(ResourceReaders.pkg())
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .setPowerAssertionsEnabled(powerAssertionsEnabled)
@@ -238,9 +240,11 @@ public final class Project {
         .setStackFrameTransformer(StackFrameTransformers.defaultTransformer)
         .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
         .addModuleKeyFactory(ModuleKeyFactories.file)
+        .addModuleKeyFactory(ModuleKeyFactories.pkg)
         .addModuleKeyFactory(ModuleKeyFactories.classPath(Project.class.getClassLoader()))
         .addResourceReader(ResourceReaders.environmentVariable())
-        .addResourceReader(ResourceReaders.file());
+        .addResourceReader(ResourceReaders.file())
+        .addResourceReader(ResourceReaders.pkg());
   }
 
   private static DeclaredDependencies parseDependencies(
