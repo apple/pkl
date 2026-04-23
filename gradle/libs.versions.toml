@@ -2,7 +2,7 @@
 assertj = "3.27.7"
 checksumPlugin = "1.4.0"
 # 5.0.3 is the last version compatible with Kotlin 2.2
-clikt = "5.0.3"
+clikt = "5.1.0"
 commonMark = "0.28.0"
 downloadTaskPlugin = "5.7.0"
 errorProne = "2.48.0"
