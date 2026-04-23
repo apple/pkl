@@ -1,11 +1,13 @@
 # Generated from Workflow.pkl. DO NOT EDIT.
 'on':
-  pull_request: {}
+  pull_request:
+    branches:
+    - main
   push:
     branches:
     - main
   schedule:
-  - cron: 38 1 * * 6
+  - cron: 29 17 * * 4
 jobs:
   analyze-actions:
     name: Analyze (actions)
@@ -16,8 +18,7 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         persist-credentials: false
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+    - uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
       with:
         languages: actions
         build-mode: none
@@ -34,8 +35,7 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         persist-credentials: false
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+    - uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
       with:
         languages: java-kotlin
         build-mode: autobuild
@@ -52,8 +52,7 @@ jobs:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         persist-credentials: false
-    - name: Initialize CodeQL
-      uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
+    - uses: github/codeql-action/init@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
       with:
         languages: javascript-typescript
         build-mode: none
