@@ -39,6 +39,7 @@ jobs:
       with:
         languages: java-kotlin
         build-mode: autobuild
+        queries: +./.github/codeql-queries/cli-project-evaluator-settings.ql
     - name: Perform CodeQL Analysis
       uses: github/codeql-action/analyze@95e58e9a2cdfd71adc6e0353d5c52f41a045d225 # v4
       with:

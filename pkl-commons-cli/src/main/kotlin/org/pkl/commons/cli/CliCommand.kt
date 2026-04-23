@@ -166,7 +166,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   protected val externalProperties: Map<String, String> by lazy {
-    cliOptions.externalProperties ?: evaluatorSettings?.externalProperties ?: emptyMap()
+    cliOptions.externalProperties ?: project?.evaluatorSettings?.externalProperties ?: emptyMap()
   }
 
   protected val moduleCacheDir: Path? by lazy {
