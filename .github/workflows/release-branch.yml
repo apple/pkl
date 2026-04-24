@@ -16,7 +16,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -29,6 +28,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: check
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true check
@@ -50,7 +57,6 @@ jobs:
     env:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -63,6 +69,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: check
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true check
@@ -83,7 +97,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -95,6 +108,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: bench:jmh
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true bench:jmh
@@ -102,7 +123,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -115,6 +135,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
@@ -135,7 +163,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -148,6 +175,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
         persist-credentials: false
@@ -179,7 +214,6 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -191,6 +225,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-cli:buildNative
@@ -216,7 +258,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -230,6 +271,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
@@ -262,7 +311,6 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -274,6 +322,14 @@ jobs:
         architecture: aarch64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -299,7 +355,6 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -313,6 +368,14 @@ jobs:
         architecture: aarch64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
@@ -342,7 +405,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -354,6 +416,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: Install musl and zlib
       run: |
         set -e
@@ -453,7 +523,6 @@ jobs:
     env:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -465,6 +534,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -493,7 +570,6 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -505,6 +581,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-doc:buildNative
@@ -530,7 +614,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -544,6 +627,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
@@ -576,7 +667,6 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -588,6 +678,14 @@ jobs:
         architecture: aarch64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -613,7 +711,6 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -627,6 +724,14 @@ jobs:
         architecture: aarch64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
@@ -656,7 +761,6 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -668,6 +772,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: Install musl and zlib
       run: |
         set -e
@@ -767,7 +879,6 @@ jobs:
     env:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
-      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -779,6 +890,14 @@ jobs:
         architecture: x64
     - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
       with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
