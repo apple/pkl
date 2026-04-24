@@ -29,8 +29,7 @@ fetchDepth: Int?
 
 fixed gradleArgs =
   new Listing {
-    "--info"
-    "--stacktrace"
+    "$DEBUG_ARGS"
     "--no-daemon"
     "-DpklMultiJdkTesting=true"
     when (isRelease) {
@@ -45,6 +44,9 @@ fixed job {
     when (os == "windows") {
       ["JAVA_HOME"] = "/jdk"
     }
+    ["DEBUG_ARGS"] =
+    // language=GithubExpressionLanguage
+      "${{ case(runner.debug == '1', '--info --stacktrace', '') }}"
   }
   when (os == "macOS") {
     `if` =

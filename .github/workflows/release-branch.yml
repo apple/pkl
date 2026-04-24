@@ -16,6 +16,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -30,7 +31,7 @@ jobs:
       with: {}
     - name: check
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true check
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -49,6 +50,7 @@ jobs:
     env:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -63,7 +65,7 @@ jobs:
       with: {}
     - name: check
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true check
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true check
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -81,6 +83,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -94,11 +97,12 @@ jobs:
       with: {}
     - name: bench:jmh
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true bench:jmh
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true bench:jmh
   gradle-compatibility:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -113,7 +117,7 @@ jobs:
       with: {}
     - name: :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true :pkl-gradle:build :pkl-gradle:compatibilityTestReleases
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -131,6 +135,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -148,7 +153,7 @@ jobs:
         persist-credentials: false
     - name: gradle build java executables
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:build pkl-cli:build pkl-codegen-java:build pkl-codegen-kotlin:build
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -174,6 +179,7 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -187,7 +193,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-cli:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -210,6 +216,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -227,7 +234,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -255,6 +262,7 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -268,7 +276,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -291,6 +299,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -308,7 +317,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -333,6 +342,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -419,7 +429,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -443,6 +453,7 @@ jobs:
     env:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -456,7 +467,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -482,6 +493,7 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -495,7 +507,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-doc:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -518,6 +530,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -535,7 +548,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -563,6 +576,7 @@ jobs:
     - macos
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -576,7 +590,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -599,6 +613,7 @@ jobs:
     runs-on: ubuntu-24.04-arm
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - name: Install deps
       run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
@@ -616,7 +631,7 @@ jobs:
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -641,6 +656,7 @@ jobs:
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -727,7 +743,7 @@ jobs:
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
@@ -751,6 +767,7 @@ jobs:
     env:
       LANG: en_US.UTF-8
       JAVA_HOME: /jdk
+      DEBUG_ARGS: ${{ case(runner.debug == '1', '--info --stacktrace', '') }}
     steps:
     - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
       with:
@@ -764,7 +781,7 @@ jobs:
       with: {}
     - name: gradle buildNative
       shell: bash
-      run: ./gradlew --info --stacktrace --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
