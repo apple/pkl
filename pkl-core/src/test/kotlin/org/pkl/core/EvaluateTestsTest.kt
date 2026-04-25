@@ -36,15 +36,15 @@ class EvaluateTestsTest {
       evaluator.evaluateTest(
         text(
           """
-      amends "pkl:test"
+          amends "pkl:test"
 
-      facts {
-        ["should pass"] {
-          1 == 1
-          "foo" == "foo"
-        }
-      }
-    """
+          facts {
+            ["should pass"] {
+              1 == 1
+              "foo" == "foo"
+            }
+          }
+          """
             .trimIndent()
         ),
         true,
@@ -64,15 +64,15 @@ class EvaluateTestsTest {
       evaluator.evaluateTest(
         text(
           """
-        amends "pkl:test"
-  
-        facts {
-          ["should fail"] {
-            1 == 2
-            "foo" == "bar"
+          amends "pkl:test"
+
+          facts {
+            ["should fail"] {
+              1 == 2
+              "foo" == "bar"
+            }
           }
-        }
-        """
+          """
             .trimIndent()
         ),
         true,
@@ -91,10 +91,10 @@ class EvaluateTestsTest {
     assertThat(fail1.message)
       .isEqualTo(
         """
-      1 == 2 (repl:text)
-        │
-        false
-      """
+        1 == 2 (repl:text)
+          │
+          false
+        """
           .trimIndent()
       )
 
@@ -102,10 +102,10 @@ class EvaluateTestsTest {
     assertThat(fail2.message)
       .isEqualTo(
         """
-      "foo" == "bar" (repl:text)
-            │
-            false
-      """
+        "foo" == "bar" (repl:text)
+              │
+              false
+        """
           .trimIndent()
       )
   }
@@ -116,15 +116,15 @@ class EvaluateTestsTest {
       evaluator.evaluateTest(
         text(
           """
-        amends "pkl:test"
-  
-        facts {
-          ["should fail"] {
-            1 == 2
-            throw("got an error")
+          amends "pkl:test"
+
+          facts {
+            ["should fail"] {
+              1 == 2
+              throw("got an error")
+            }
           }
-        }
-        """
+          """
             .trimIndent()
         ),
         true,
@@ -144,14 +144,14 @@ class EvaluateTestsTest {
     assertThat(error.exception().message)
       .isEqualTo(
         """
-      –– Pkl Error ––
-      got an error
+        –– Pkl Error ––
+        got an error
 
-      6 | throw("got an error")
-          ^^^^^^^^^^^^^^^^^^^^^
-      at text#facts["should fail"][#2] (repl:text)
+        6 | throw("got an error")
+            ^^^^^^^^^^^^^^^^^^^^^
+        at text#facts["should fail"][#2] (repl:text)
 
-    """
+        """
           .trimIndent()
       )
   }
@@ -163,7 +163,7 @@ class EvaluateTestsTest {
       file,
       """
       amends "pkl:test"
-      
+
       examples {
         ["user"] {
           new {
@@ -172,7 +172,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -187,7 +187,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -222,7 +222,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -237,7 +237,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -275,7 +275,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -290,7 +290,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -320,7 +320,7 @@ class EvaluateTestsTest {
       file,
       """
       amends "pkl:test"
-      
+
       examples {
         ["user"] {
           new {
@@ -329,7 +329,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -344,7 +344,7 @@ class EvaluateTestsTest {
           }
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -386,13 +386,13 @@ class EvaluateTestsTest {
       file,
       """
       amends "pkl:test"
-      
+
       examples {
         ["myStr"] {
           "my \"string\""
         }
       }
-    """
+      """
         .trimIndent(),
     )
     evaluator.evaluateTest(path(file), false)
@@ -401,13 +401,13 @@ class EvaluateTestsTest {
     assertThat(expectedFile)
       .hasContent(
         """
-      examples {
-        ["myStr"] {
-          #"my "string""#
+        examples {
+          ["myStr"] {
+            #"my "string""#
+          }
         }
-      }
 
-    """
+        """
           .trimIndent()
       )
   }
@@ -420,25 +420,25 @@ class EvaluateTestsTest {
       file,
       """
       amends "pkl:test"
-      
+
       examples {
         ["myStr"] {
           "my \"string\""
         }
       }
-    """
+      """
         .trimIndent(),
     )
     createExpected(file)
       .writeString(
         """
-      examples {
-        ["myStr"] {
-          "my \"string\""
+        examples {
+          ["myStr"] {
+            "my \"string\""
+          }
         }
-      }
 
-    """
+        """
           .trimIndent()
       )
     val result = evaluator.evaluateTest(path(file), false)

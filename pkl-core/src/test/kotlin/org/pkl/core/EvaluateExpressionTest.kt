@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ class EvaluateExpressionTest {
         res3 = 3
         res4 = 4
       }
-    """
+      """
         .trimIndent()
     assertThat(evaluate(program, "res1")).isEqualTo(1L)
     val res2 = evaluate(program, "res2")
@@ -59,10 +59,10 @@ class EvaluateExpressionTest {
     val resp =
       evaluate(
         """
-      foo {
-        bar = 2
-      }
-    """
+        foo {
+          bar = 2
+        }
+        """
           .trimIndent(),
         "foo.bar",
       )
@@ -75,14 +75,14 @@ class EvaluateExpressionTest {
     val result =
       evaluate(
         """
-      foo {
-        bar = 2
-      }
-      
-      output {
-        renderer = new YamlRenderer {}
-      }
-    """
+        foo {
+          bar = 2
+        }
+
+        output {
+          renderer = new YamlRenderer {}
+        }
+        """
           .trimIndent(),
         "output.text",
       )
@@ -90,10 +90,10 @@ class EvaluateExpressionTest {
     assertThat(result)
       .isEqualTo(
         """
-      foo:
-        bar: 2
+        foo:
+          bar: 2
 
-    """
+        """
           .trimIndent()
       )
   }

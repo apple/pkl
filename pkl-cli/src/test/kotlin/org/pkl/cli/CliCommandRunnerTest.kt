@@ -44,14 +44,14 @@ import org.pkl.commons.writeString
 class CliCommandRunnerTest {
   private val renderOptions =
     """
-      extends "pkl:Command"
-      
-      options: Options
-      
-      output {
-        value = options
-      }
-      
+    extends "pkl:Command"
+
+    options: Options
+
+    output {
+      value = options
+    }
+
     """
       .trimIndent()
 
@@ -104,10 +104,10 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: String
-      }
-    """
+          class Options {
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -125,48 +125,48 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        `number-as-int`: Number
-        `number-as-float`: Number
-        `number-nullable`: Number?
-        `number-default`: Number = 100.0
-        `number-default-overridden`: Number = 100.0
-        
-        float: Float
-        `float-without-decimals`: Float
-        `float-nullable`: Float?
-        `float-default`: Float = 100.0
-        `float-default-overridden`: Float = 100.0
-        
-        int: Int
-        `int-nullable`: Int?
-        `int-default`: Int = 100
-        `int-default-overridden`: Int = 100
-        
-        int8: Int8
-        int16: Int16
-        int32: Int32
-        uint: UInt
-        uint8: UInt8
-        uint16: UInt16
-        uint32: UInt32
-        
-        boolean: Boolean
-        `boolean-nullable`: Boolean?
-        `boolean-default`: Boolean = true
-        `boolean-default-overridden`: Boolean = false
-        
-        string: String
-        `string-nullable`: String?
-        `string-default`: String = "default"
-        `string-default-overridden`: String = "default"
-        
-        char: Char
-        `char-nullable`: Char?
-        `char-default`: Char = "a"
-        `char-default-overridden`: Char = "b"
-      }
-    """
+          class Options {
+            `number-as-int`: Number
+            `number-as-float`: Number
+            `number-nullable`: Number?
+            `number-default`: Number = 100.0
+            `number-default-overridden`: Number = 100.0
+            
+            float: Float
+            `float-without-decimals`: Float
+            `float-nullable`: Float?
+            `float-default`: Float = 100.0
+            `float-default-overridden`: Float = 100.0
+            
+            int: Int
+            `int-nullable`: Int?
+            `int-default`: Int = 100
+            `int-default-overridden`: Int = 100
+            
+            int8: Int8
+            int16: Int16
+            int32: Int32
+            uint: UInt
+            uint8: UInt8
+            uint16: UInt16
+            uint32: UInt32
+            
+            boolean: Boolean
+            `boolean-nullable`: Boolean?
+            `boolean-default`: Boolean = true
+            `boolean-default-overridden`: Boolean = false
+            
+            string: String
+            `string-nullable`: String?
+            `string-default`: String = "default"
+            `string-default-overridden`: String = "default"
+            
+            char: Char
+            `char-nullable`: Char?
+            `char-default`: Char = "a"
+            `char-default-overridden`: Char = "b"
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -232,7 +232,7 @@ class CliCommandRunnerTest {
         `char-nullable` = null
         `char-default` = "a"
         `char-default-overridden` = "c"
-        
+
         """
           .trimIndent()
       )
@@ -245,45 +245,45 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        `number-as-int`: Number
-        @Argument
-        `number-as-float`: Number
-        
-        @Argument
-        float: Float
-        @Argument
-        `float-without-decimals`: Float
-        
-        @Argument
-        int: Int
-        
-        @Argument
-        int8: Int8
-        @Argument
-        int16: Int16
-        @Argument
-        int32: Int32
-        @Argument
-        uint: UInt
-        @Argument
-        uint8: UInt8
-        @Argument
-        uint16: UInt16
-        @Argument
-        uint32: UInt32
-        
-        @Argument
-        boolean: Boolean
-        
-        @Argument
-        string: String
-        
-        @Argument
-        char: Char
-      }
-    """
+          class Options {
+            @Argument
+            `number-as-int`: Number
+            @Argument
+            `number-as-float`: Number
+            
+            @Argument
+            float: Float
+            @Argument
+            `float-without-decimals`: Float
+            
+            @Argument
+            int: Int
+            
+            @Argument
+            int8: Int8
+            @Argument
+            int16: Int16
+            @Argument
+            int32: Int32
+            @Argument
+            uint: UInt
+            @Argument
+            uint8: UInt8
+            @Argument
+            uint16: UInt16
+            @Argument
+            uint32: UInt32
+            
+            @Argument
+            boolean: Boolean
+            
+            @Argument
+            string: String
+            
+            @Argument
+            char: Char
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -325,7 +325,7 @@ class CliCommandRunnerTest {
         boolean = false
         string = "foobar"
         char = "X"
-        
+
         """
           .trimIndent()
       )
@@ -338,21 +338,21 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      typealias MyEnum = "d" | "e" | *"f"
-      class Options {
-        enum: "a" | "b" | "c"
-        `enum-default`: "a" | *"b" | "c"
-        `enum-explicit-default`: "a" | "b" | "c" = "c"
-        `enum-alias-default`: MyEnum
-        `enum-alias-explicit-default`: MyEnum = "e"
-        `enum-alias-default-overridden`: MyEnum
-        
-        `enum-single`: "x"
-        `enum-single-nullable`: "x"?
-        `enum-single-explicit-default`: "x" = "x"
-        `enum-single-overridden`: "x"
-      }
-    """
+          typealias MyEnum = "d" | "e" | *"f"
+          class Options {
+            enum: "a" | "b" | "c"
+            `enum-default`: "a" | *"b" | "c"
+            `enum-explicit-default`: "a" | "b" | "c" = "c"
+            `enum-alias-default`: MyEnum
+            `enum-alias-explicit-default`: MyEnum = "e"
+            `enum-alias-default-overridden`: MyEnum
+            
+            `enum-single`: "x"
+            `enum-single-nullable`: "x"?
+            `enum-single-explicit-default`: "x" = "x"
+            `enum-single-overridden`: "x"
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -386,16 +386,16 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      typealias MyEnum = "d" | "e" | *"f"
-      class Options {
-        @Argument
-        enum: "a" | "b" | "c"
-        @Argument
-        `enum-default`: "a" | *"b" | "c"
-        @Argument
-        `enum-alias-default`: MyEnum
-      }
-    """
+          typealias MyEnum = "d" | "e" | *"f"
+          class Options {
+            @Argument
+            enum: "a" | "b" | "c"
+            @Argument
+            `enum-default`: "a" | *"b" | "c"
+            @Argument
+            `enum-alias-default`: MyEnum
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -406,7 +406,7 @@ class CliCommandRunnerTest {
         enum = "a"
         `enum-default` = "c"
         `enum-alias-default` = "d"
-        
+
         """
           .trimIndent()
       )
@@ -419,18 +419,18 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        list: List<Number>
-        `list-nullable`: List<Number>?
-        `list-default`: List<Number> = List(1, 2, 300.0)
-        set: Set<Number>
-        `set-nullable`: Set<Number>?
-        `set-default`: Set<Number> = Set(1, 2, 300.0, 2)
-        
-        `enum-list`: List<"a" | "b" | *"c">
-        `enum-set`: Set<"a" | "b" | *"c">
-      }
-    """
+          class Options {
+            list: List<Number>
+            `list-nullable`: List<Number>?
+            `list-default`: List<Number> = List(1, 2, 300.0)
+            set: Set<Number>
+            `set-nullable`: Set<Number>?
+            `set-default`: Set<Number> = Set(1, 2, 300.0, 2)
+            
+            `enum-list`: List<"a" | "b" | *"c">
+            `enum-set`: Set<"a" | "b" | *"c">
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -464,7 +464,7 @@ class CliCommandRunnerTest {
         `set-default` = Set(1, 2, 300.0)
         `enum-list` = List("a", "a", "b")
         `enum-set` = Set("a", "b")
-        
+
         """
           .trimIndent()
       )
@@ -477,11 +477,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        list: List<Number>
-      }
-    """
+          class Options {
+            @Argument
+            list: List<Number>
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -490,7 +490,7 @@ class CliCommandRunnerTest {
       .isEqualTo(
         """
         list = List(1, 0, 0.0, 1)
-        
+
         """
           .trimIndent()
       )
@@ -500,11 +500,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        set: Set<Number>
-      }
-    """
+          class Options {
+            @Argument
+            set: Set<Number>
+          }
+          """
             .trimIndent(),
       )
     val output2 =
@@ -513,7 +513,7 @@ class CliCommandRunnerTest {
       .isEqualTo(
         """
         set = Set(1, 0, 0.0)
-        
+
         """
           .trimIndent()
       )
@@ -523,11 +523,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        listing: Listing<Number>
-      }
-    """
+          class Options {
+            @Argument
+            listing: Listing<Number>
+          }
+          """
             .trimIndent(),
       )
     val output3 =
@@ -541,7 +541,7 @@ class CliCommandRunnerTest {
           0.0
           1
         }
-        
+
         """
           .trimIndent()
       )
@@ -554,11 +554,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        map: Map<Number, Number>
-      }
-    """
+          class Options {
+            @Argument
+            map: Map<Number, Number>
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -567,7 +567,7 @@ class CliCommandRunnerTest {
       .isEqualTo(
         """
         map = Map(1, 0, 0.0, 1)
-        
+
         """
           .trimIndent()
       )
@@ -577,11 +577,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        mapping: Mapping<Number, Number>
-      }
-    """
+          class Options {
+            @Argument
+            mapping: Mapping<Number, Number>
+          }
+          """
             .trimIndent(),
       )
     val output2 =
@@ -593,7 +593,7 @@ class CliCommandRunnerTest {
           [1] = 0
           [0.0] = 1
         }
-        
+
         """
           .trimIndent()
       )
@@ -603,11 +603,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        pair: Pair<Number, Number>
-      }
-    """
+          class Options {
+            @Argument
+            pair: Pair<Number, Number>
+          }
+          """
             .trimIndent(),
       )
     val output3 = runToStdout(CliBaseOptions(sourceModules = listOf(moduleUri3)), listOf("1=0.0"))
@@ -615,7 +615,7 @@ class CliCommandRunnerTest {
       .isEqualTo(
         """
         pair = Pair(1, 0.0)
-        
+
         """
           .trimIndent()
       )
@@ -628,15 +628,15 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      typealias MyEnum = "a" | "b" | *"c"
-      class Options {
-        map: Map<Char, Number>
-        `map-nullable`: Map<Char, Number>?
-        `map-default`: Map<Char, Number> = Map("x", 123, "y", 456.789)
-        
-        `enum-map`: Map<MyEnum, MyEnum>
-      }
-    """
+          typealias MyEnum = "a" | "b" | *"c"
+          class Options {
+            map: Map<Char, Number>
+            `map-nullable`: Map<Char, Number>?
+            `map-default`: Map<Char, Number> = Map("x", 123, "y", 456.789)
+            
+            `enum-map`: Map<MyEnum, MyEnum>
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -651,7 +651,7 @@ class CliCommandRunnerTest {
         `map-nullable` = null
         `map-default` = Map("x", 123, "y", 456.789)
         `enum-map` = Map("a", "b", "b", "c")
-        
+
         """
           .trimIndent()
       )
@@ -664,15 +664,15 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      typealias MyEnum = "a" | "b" | *"c"
-      class Options {
-        mapping: Mapping<Char, Number>
-        `mapping-nullable`: Mapping<Char, Number>?
-        `mapping-default`: Mapping<Char, Number> = new { ["x"] = 123; ["y"] = 456.789 }
-        
-        `enum-mapping`: Mapping<MyEnum, MyEnum>
-      }
-    """
+          typealias MyEnum = "a" | "b" | *"c"
+          class Options {
+            mapping: Mapping<Char, Number>
+            `mapping-nullable`: Mapping<Char, Number>?
+            `mapping-default`: Mapping<Char, Number> = new { ["x"] = 123; ["y"] = 456.789 }
+            
+            `enum-mapping`: Mapping<MyEnum, MyEnum>
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -696,7 +696,7 @@ class CliCommandRunnerTest {
           ["a"] = "b"
           ["b"] = "c"
         }
-        
+
         """
           .trimIndent()
       )
@@ -709,15 +709,15 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      typealias MyEnum = "a" | "b" | *"c"
-      class Options {
-        pair: Pair<Char, Number>
-        `pair-nullable`: Pair<Char, Number>?
-        `pair-default`: Pair<Char, Number> = Pair("x", 123)
-        
-        `enum-pair`: Pair<MyEnum, MyEnum>
-      }
-    """
+          typealias MyEnum = "a" | "b" | *"c"
+          class Options {
+            pair: Pair<Char, Number>
+            `pair-nullable`: Pair<Char, Number>?
+            `pair-default`: Pair<Char, Number> = Pair("x", 123)
+            
+            `enum-pair`: Pair<MyEnum, MyEnum>
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -732,7 +732,7 @@ class CliCommandRunnerTest {
         `pair-nullable` = null
         `pair-default` = Pair("x", 123)
         `enum-pair` = Pair("a", "b")
-        
+
         """
           .trimIndent()
       )
@@ -745,17 +745,17 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument { convert = module.convertDuration }
-        a: Duration
-        @Argument { convert = module.convertDuration }
-        b: Duration
-        @Argument { convert = module.convertDuration }
-        c: Duration
-        @Argument { convert = module.convertDuration }
-        d: Duration
-      }
-    """
+          class Options {
+            @Argument { convert = module.convertDuration }
+            a: Duration
+            @Argument { convert = module.convertDuration }
+            b: Duration
+            @Argument { convert = module.convertDuration }
+            c: Duration
+            @Argument { convert = module.convertDuration }
+            d: Duration
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -770,7 +770,7 @@ class CliCommandRunnerTest {
         b = 10.h
         c = 10.5.ms
         d = 10.5.d
-        
+
         """
           .trimIndent()
       )
@@ -783,17 +783,17 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument { convert = module.convertDataSize }
-        a: DataSize
-        @Argument { convert = module.convertDataSize }
-        b: DataSize
-        @Argument { convert = module.convertDataSize }
-        c: DataSize
-        @Argument { convert = module.convertDataSize }
-        d: DataSize
-      }
-    """
+          class Options {
+            @Argument { convert = module.convertDataSize }
+            a: DataSize
+            @Argument { convert = module.convertDataSize }
+            b: DataSize
+            @Argument { convert = module.convertDataSize }
+            c: DataSize
+            @Argument { convert = module.convertDataSize }
+            d: DataSize
+          }
+          """
             .trimIndent(),
       )
     val output =
@@ -808,7 +808,7 @@ class CliCommandRunnerTest {
         b = 10.gb
         c = 10.5.mb
         d = 10.5.tib
-        
+
         """
           .trimIndent()
       )
@@ -820,23 +820,23 @@ class CliCommandRunnerTest {
       writePklFile(
         "cmd.pkl",
         """
-      extends "pkl:Command"
-      
-      options: Options
-      
-      output {
-        value = (options) {
-          fromImport {
-           baz = true // assert that imported modules are not forced
+        extends "pkl:Command"
+
+        options: Options
+
+        output {
+          value = (options) {
+            fromImport {
+             baz = true // assert that imported modules are not forced
+            }
           }
         }
-      }
-      
-      class Options {
-        @Argument { convert = (it) -> new Import{ uri = it } }
-        fromImport: Module
-      }
-    """
+
+        class Options {
+          @Argument { convert = (it) -> new Import{ uri = it } }
+          fromImport: Module
+        }
+        """
           .trimIndent(),
       )
 
@@ -844,10 +844,10 @@ class CliCommandRunnerTest {
       writePklFile(
         "import.pkl",
         """
-      foo = 1
-      bar = "baz"
-      baz: Boolean
-    """
+        foo = 1
+        bar = "baz"
+        baz: Boolean
+        """
           .trimIndent(),
       )
 
@@ -861,7 +861,7 @@ class CliCommandRunnerTest {
           bar = "baz"
           baz = true
         }
-        
+
         """
           .trimIndent()
       )
@@ -873,26 +873,26 @@ class CliCommandRunnerTest {
       writePklFile(
         "cmd.pkl",
         """
-      extends "pkl:Command"
-      
-      options: Options
-      
-      output {
-        value = (options) {
-          fromImport {
-           baz = true // assert that imported modules are not forced
+        extends "pkl:Command"
+
+        options: Options
+
+        output {
+          value = (options) {
+            fromImport {
+             baz = true // assert that imported modules are not forced
+            }
           }
         }
-      }
-      
-      class Options {
-        @Flag {
-          convert = (it) -> new Import{ uri = it }
-          transformAll = (values) -> values.firstOrNull ?? new Import { uri = "./default.pkl" }
+
+        class Options {
+          @Flag {
+            convert = (it) -> new Import{ uri = it }
+            transformAll = (values) -> values.firstOrNull ?? new Import { uri = "./default.pkl" }
+          }
+          fromImport: Module
         }
-        fromImport: Module
-      }
-    """
+        """
           .trimIndent(),
       )
 
@@ -900,10 +900,10 @@ class CliCommandRunnerTest {
       writePklFile(
         "default.pkl",
         """
-      foo = 1
-      bar = "baz"
-      baz: Boolean
-    """
+        foo = 1
+        bar = "baz"
+        baz: Boolean
+        """
           .trimIndent(),
       )
 
@@ -920,7 +920,7 @@ class CliCommandRunnerTest {
           bar = "baz"
           baz = true
         }
-        
+
         """
           .trimIndent()
       )
@@ -932,26 +932,26 @@ class CliCommandRunnerTest {
       writePklFile(
         "cmd.pkl",
         """
-      extends "pkl:Command"
-      import "base.pkl"
-      
-      options: Options
-      
-      output {
-        value = (options) {
-          fromGlobImport {
-            [[true]] {
-              baz = true // assert that imported modules are not forced
+        extends "pkl:Command"
+        import "base.pkl"
+
+        options: Options
+
+        output {
+          value = (options) {
+            fromGlobImport {
+              [[true]] {
+                baz = true // assert that imported modules are not forced
+              }
             }
           }
         }
-      }
-      
-      class Options {
-        @Argument { convert = (it) -> new Import { uri = it; glob = true }; multiple = false }
-        fromGlobImport: Mapping<String, base>
-      }
-    """
+
+        class Options {
+          @Argument { convert = (it) -> new Import { uri = it; glob = true }; multiple = false }
+          fromGlobImport: Mapping<String, base>
+        }
+        """
           .trimIndent(),
       )
 
@@ -959,10 +959,10 @@ class CliCommandRunnerTest {
       writePklFile(
         "base.pkl",
         """
-      foo: Int
-      bar: String
-      baz: Boolean
-    """
+        foo: Int
+        bar: String
+        baz: Boolean
+        """
           .trimIndent(),
       )
     writePklFile(
@@ -971,7 +971,7 @@ class CliCommandRunnerTest {
       amends "base.pkl"
       foo = 1
       bar = "baz"
-    """
+      """
         .trimIndent(),
     )
     writePklFile(
@@ -980,7 +980,7 @@ class CliCommandRunnerTest {
       amends "base.pkl"
       foo = 2
       bar = "qux"
-    """
+      """
         .trimIndent(),
     )
 
@@ -1006,7 +1006,7 @@ class CliCommandRunnerTest {
             baz = true
           }
         }
-        
+
         """
           .trimIndent()
       )
@@ -1019,11 +1019,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument { convert = (it) -> throw("oops!") }
-        foo: String
-      }
-    """
+          class Options {
+            @Argument { convert = (it) -> throw("oops!") }
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -1041,11 +1041,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument { convert = (it) -> it.noSuchMethod() }
-        foo: String
-      }
-    """
+          class Options {
+            @Argument { convert = (it) -> it.noSuchMethod() }
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -1063,12 +1063,12 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      const function overflow(it) = overflow(it)
-      class Options {
-        @Argument { convert = (it) -> overflow(it) }
-        foo: String
-      }
-    """
+          const function overflow(it) = overflow(it)
+          class Options {
+            @Argument { convert = (it) -> overflow(it) }
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -1086,19 +1086,19 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @BooleanFlag
-        `bool-true`: Boolean
-        @BooleanFlag
-        `bool-false`: Boolean
-        @BooleanFlag
-        `bool-nullable`: Boolean?
-        @BooleanFlag
-        `bool-default-true`: Boolean = true
-        @BooleanFlag
-        `bool-default-false`: Boolean = false
-      }
-    """
+          class Options {
+            @BooleanFlag
+            `bool-true`: Boolean
+            @BooleanFlag
+            `bool-false`: Boolean
+            @BooleanFlag
+            `bool-nullable`: Boolean?
+            @BooleanFlag
+            `bool-default-true`: Boolean = true
+            @BooleanFlag
+            `bool-default-false`: Boolean = false
+          }
+          """
             .trimIndent(),
       )
 
@@ -1115,7 +1115,7 @@ class CliCommandRunnerTest {
         `bool-nullable` = null
         `bool-default-true` = true
         `bool-default-false` = false
-        
+
         """
           .trimIndent()
       )
@@ -1128,11 +1128,11 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @BooleanFlag
-        foo: String
-      }
-    """
+          class Options {
+            @BooleanFlag
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -1151,25 +1151,25 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @CountedFlag { shortName = "a" }
-        int: Int
-        @CountedFlag { shortName = "b" }
-        int8: Int8
-        @CountedFlag { shortName = "c" }
-        int16: Int16
-        @CountedFlag { shortName = "d" }
-        int32: Int32
-        @CountedFlag { shortName = "x" }
-        uint: UInt
-        @CountedFlag { shortName = "y" }
-        uint8: UInt8
-        @CountedFlag { shortName = "g" }
-        uint16: UInt16
-        @CountedFlag { shortName = "i" }
-        uint32: UInt32
-      }
-    """
+          class Options {
+            @CountedFlag { shortName = "a" }
+            int: Int
+            @CountedFlag { shortName = "b" }
+            int8: Int8
+            @CountedFlag { shortName = "c" }
+            int16: Int16
+            @CountedFlag { shortName = "d" }
+            int32: Int32
+            @CountedFlag { shortName = "x" }
+            uint: UInt
+            @CountedFlag { shortName = "y" }
+            uint8: UInt8
+            @CountedFlag { shortName = "g" }
+            uint16: UInt16
+            @CountedFlag { shortName = "i" }
+            uint32: UInt32
+          }
+          """
             .trimIndent(),
       )
 
@@ -1189,7 +1189,7 @@ class CliCommandRunnerTest {
         uint8 = 6
         uint16 = 7
         uint32 = 8
-        
+
         """
           .trimIndent()
       )
@@ -1202,14 +1202,14 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Flag {
-          multiple = true
-          transformAll = (values) -> values.fold(0, (res, acc) -> res + acc)
-        }
-        foo: Int
-      }
-    """
+          class Options {
+            @Flag {
+              multiple = true
+              transformAll = (values) -> values.fold(0, (res, acc) -> res + acc)
+            }
+            foo: Int
+          }
+          """
             .trimIndent(),
       )
 
@@ -1222,7 +1222,7 @@ class CliCommandRunnerTest {
       .isEqualTo(
         """
         foo = 14
-        
+
         """
           .trimIndent()
       )
@@ -1235,21 +1235,21 @@ class CliCommandRunnerTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        none: String?
-        enum: *"a" | "b" | "c"
-        @Flag { completionCandidates = "paths" }
-        path: String?
-        @Flag { completionCandidates { "foo"; "bar"; "baz" } }
-        explicit: String?
-        @Argument
-        enumArg: *"a" | "b" | "c"
-        @Argument { completionCandidates = "paths" }
-        pathArg: String
-        @Argument { completionCandidates { "foo"; "bar"; "baz" } }
-        explicitArg: String
-      }
-    """
+          class Options {
+            none: String?
+            enum: *"a" | "b" | "c"
+            @Flag { completionCandidates = "paths" }
+            path: String?
+            @Flag { completionCandidates { "foo"; "bar"; "baz" } }
+            explicit: String?
+            @Argument
+            enumArg: *"a" | "b" | "c"
+            @Argument { completionCandidates = "paths" }
+            pathArg: String
+            @Argument { completionCandidates { "foo"; "bar"; "baz" } }
+            explicitArg: String
+          }
+          """
             .trimIndent(),
       )
     val exc =

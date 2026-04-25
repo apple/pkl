@@ -58,7 +58,7 @@ class CliEvaluatorTest {
         name = "pigeon"
         age = 20 + 10
       }
-    """
+      """
         .trimIndent()
 
     private val packageServer = PackageServer()
@@ -243,12 +243,12 @@ person:
       .resolve("test2.pkl")
       .writeString(
         """
-      amends "test.pkl"
-      
-      person {
-        name = "barn owl"
-      }
-      """
+        amends "test.pkl"
+
+        person {
+          name = "barn owl"
+        }
+        """
           .trimIndent()
       )
 
@@ -655,9 +655,9 @@ result = someLib.x
       "output.pcf",
       """
       x = 1
-      
+
       y = 2
-      
+
       z = 3
       """
         .trimIndent(),
@@ -739,7 +739,7 @@ result = someLib.x
               }
             } 
           }
-        """
+          """
             .trimIndent(),
         )
       )
@@ -815,31 +815,31 @@ result = someLib.x
         writePklFile(
           "test0.pkl",
           """
-        output {
-          files {
-            ["foo.pcf"] {
-              value = new Dynamic {
-                ["bar"] = "baz"
+          output {
+            files {
+              ["foo.pcf"] {
+                value = new Dynamic {
+                  ["bar"] = "baz"
+                }
               }
             }
           }
-        }
-        """
+          """
             .trimIndent(),
         ),
         writePklFile(
           "test1.pkl",
           """
-        output {
-          files {
-            ["bar.pcf"] {
-              value = new Dynamic {
-                ["bar"] = "baz"
+          output {
+            files {
+              ["bar.pcf"] {
+                value = new Dynamic {
+                  ["bar"] = "baz"
+                }
               }
             }
           }
-        }
-        """
+          """
             .trimIndent(),
         ),
       )
@@ -860,27 +860,27 @@ result = someLib.x
         writePklFile(
           "bar.pkl",
           """
-        output {
-          files {
-            ["foo.pcf"] {
-              text = "myBar"
+          output {
+            files {
+              ["foo.pcf"] {
+                text = "myBar"
+              }
             }
           }
-        }
-      """
+          """
             .trimIndent(),
         ),
         writePklFile(
           "foo.pkl",
           """
-        output {
-          files {
-            ["foo.pcf"] {
-              text = "myFoo"
+          output {
+            files {
+              ["foo.pcf"] {
+                text = "myFoo"
+              }
             }
           }
-        }
-      """
+          """
             .trimIndent(),
         ),
       )
@@ -918,7 +918,7 @@ result = someLib.x
             }
           }
         }
-      """
+        """
           .trimIndent(),
       )
     val options =
@@ -949,7 +949,7 @@ result = someLib.x
             }
           }
         }
-      """
+        """
           .trimIndent(),
       )
     val options =
@@ -970,23 +970,23 @@ result = someLib.x
         writePklFile(
           "test1.pkl",
           """
-        output {
-          files {
-            ["."] { text = "bar" }
+          output {
+            files {
+              ["."] { text = "bar" }
+            }
           }
-        }
-      """
+          """
             .trimIndent(),
         ),
         writePklFile(
           "test2.pkl",
           """
-        output {
-          files {
-            ["myDir"] { text = "bar" }
+          output {
+            files {
+              ["myDir"] { text = "bar" }
+            }
           }
-        }
-      """
+          """
             .trimIndent(),
         ),
       )
@@ -1009,23 +1009,23 @@ result = someLib.x
         writePklFile(
           "test1.pkl",
           """
-        output {
-          files {
-            ["foo.txt"] { text = "bar" }
+          output {
+            files {
+              ["foo.txt"] { text = "bar" }
+            }
           }
-        }
-      """
+          """
             .trimIndent(),
         ),
         writePklFile(
           "test2.pkl",
           """
-        output {
-          files {
-            ["foo.txt"] { text = "bar" }
+          output {
+            files {
+              ["foo.txt"] { text = "bar" }
+            }
           }
-        }
-      """
+          """
             .trimIndent(),
         ),
       )
@@ -1045,13 +1045,13 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      output {
-        files {
-          ["foo.txt"] { text = "bar" }
-          ["./foo.txt"] { text = "bar" }
+        output {
+          files {
+            ["foo.txt"] { text = "bar" }
+            ["./foo.txt"] { text = "bar" }
+          }
         }
-      }
-    """
+        """
           .trimIndent(),
       )
     val options =
@@ -1071,12 +1071,12 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      output {
-        files {
-          ["foo:bar"] { text = "bar" }
+        output {
+          files {
+            ["foo:bar"] { text = "bar" }
+          }
         }
-      }
-    """
+        """
           .trimIndent(),
       )
 
@@ -1096,12 +1096,12 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      output {
-        files {
-          ["foo\\bar"] { text = "bar" }
+        output {
+          files {
+            ["foo\\bar"] { text = "bar" }
+          }
         }
-      }
-    """
+        """
           .trimIndent(),
       )
 
@@ -1120,10 +1120,10 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      foo {
-        bar = 1
-      }
-    """
+        foo {
+          bar = 1
+        }
+        """
           .trimIndent(),
       )
     val options =
@@ -1136,8 +1136,8 @@ result = someLib.x
     assertThat(buffer.toString(StandardCharsets.UTF_8))
       .isEqualTo(
         """
-      new Dynamic { bar = 1 }
-    """
+        new Dynamic { bar = 1 }
+        """
           .trimIndent()
       )
   }
@@ -1148,13 +1148,13 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      class Person {
-        name: String
+        class Person {
+          name: String
 
-        function toString() = "Person(\(name))"
-      }
-      person: Person = new { name = "Frodo" }
-    """
+          function toString() = "Person(\(name))"
+        }
+        person: Person = new { name = "Frodo" }
+        """
           .trimIndent(),
       )
     val options =
@@ -1173,10 +1173,10 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      person {
-        friend { name = "Bilbo" }
-      }
-    """
+        person {
+          friend { name = "Bilbo" }
+        }
+        """
           .trimIndent(),
       )
     val options =
@@ -1196,17 +1196,17 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      res = 1
-    """
+        res = 1
+        """
           .trimIndent(),
       )
     writePklFile(
       "PklProject",
       """
       amends "pkl:Project"
-      
+
       package = throw("invalid project package")
-    """
+      """
         .trimIndent(),
     )
     val options =
@@ -1225,8 +1225,8 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      res = read*("env:**")
-    """
+        res = read*("env:**")
+        """
           .trimIndent(),
       )
     writePklFile(
@@ -1234,14 +1234,14 @@ result = someLib.x
       // language=Pkl
       """
       amends "pkl:Project"
-      
+
       evaluatorSettings {
         env {
           ["foo"] = "foo"
           ["bar"] = "bar"
         }
       }
-    """
+      """
         .trimIndent(),
     )
     val options =
@@ -1251,12 +1251,12 @@ result = someLib.x
     assertThat(buffer.toString(StandardCharsets.UTF_8))
       .isEqualTo(
         """
-      res {
-        ["env:bar"] = "bar"
-        ["env:foo"] = "foo"
-      }
-      
-    """
+        res {
+          ["env:bar"] = "bar"
+          ["env:foo"] = "foo"
+        }
+
+        """
           .trimIndent()
       )
   }
@@ -1353,10 +1353,10 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-      import "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
-      
-      res = Swallow
-    """
+        import "package://localhost:0/birds@0.5.0#/catalog/Swallow.pkl"
+
+        res = Swallow
+        """
           .trimIndent(),
       )
     val buffer = ByteArrayOutputStream()
@@ -1375,14 +1375,14 @@ result = someLib.x
     assertThat(buffer.toString(StandardCharsets.UTF_8))
       .isEqualTo(
         """
-      res {
-        name = "Swallow"
-        favoriteFruit {
-          name = "Apple"
+        res {
+          name = "Swallow"
+          favoriteFruit {
+            name = "Apple"
+          }
         }
-      }
-      
-    """
+
+        """
           .trimIndent()
       )
     assertThat(tempDir.resolve("package-2")).doesNotExist()
@@ -1481,13 +1481,13 @@ result = someLib.x
     assertThat(output)
       .isEqualTo(
         """
-      name = "Ostrich"
+        name = "Ostrich"
 
-      favoriteFruit {
-        name = "Orange"
-      }
+        favoriteFruit {
+          name = "Orange"
+        }
 
-    """
+        """
           .trimIndent()
       )
     verify(getRequestedFor(urlEqualTo("birds@0.5.0")))
@@ -1590,13 +1590,13 @@ result = someLib.x
     homeDir.writeFile(
       "settings.pkl",
       """
-        amends "pkl:settings"
+      amends "pkl:settings"
 
-        http {
-          proxy {
-            address = "http://invalid.proxy.address"
-          }
+      http {
+        proxy {
+          address = "http://invalid.proxy.address"
         }
+      }
       """
         .trimIndent(),
     )
@@ -1677,26 +1677,26 @@ result = someLib.x
       writePklFile(
         "test.pkl",
         """
-          pigeon {
-            name = "Pigeon"
-            diet = "Seeds"
-          }
-          parrot {
-            name = "Parrot"
-            diet = "Seeds"
-          }
-          output {
-            files {
-              ["pigeon.json"] {
-                value = pigeon
-                renderer = new JsonRenderer {}
-              }
-              ["birds/parrot.yaml"] {
-                value = parrot
-                renderer = new YamlRenderer {}
-              }
+        pigeon {
+          name = "Pigeon"
+          diet = "Seeds"
+        }
+        parrot {
+          name = "Parrot"
+          diet = "Seeds"
+        }
+        output {
+          files {
+            ["pigeon.json"] {
+              value = pigeon
+              renderer = new JsonRenderer {}
+            }
+            ["birds/parrot.yaml"] {
+              value = parrot
+              renderer = new YamlRenderer {}
             }
           }
+        }
         """
           .trimIndent(),
       )
@@ -1713,10 +1713,10 @@ result = someLib.x
       realOutputDir.resolve("pigeon.json"),
       "pigeon.json",
       """
-        {
-          "name": "Pigeon",
-          "diet": "Seeds"
-        }
+      {
+        "name": "Pigeon",
+        "diet": "Seeds"
+      }
       """
         .trimIndent(),
     )
@@ -1725,8 +1725,8 @@ result = someLib.x
       realOutputDir.resolve("birds/parrot.yaml"),
       "parrot.yaml",
       """
-        name: Parrot
-        diet: Seeds
+      name: Parrot
+      diet: Seeds
       """
         .trimIndent(),
     )
@@ -1735,10 +1735,10 @@ result = someLib.x
       symlinkOutputDir.resolve("pigeon.json"),
       "pigeon.json",
       """
-        {
-          "name": "Pigeon",
-          "diet": "Seeds"
-        }
+      {
+        "name": "Pigeon",
+        "diet": "Seeds"
+      }
       """
         .trimIndent(),
     )
@@ -1747,8 +1747,8 @@ result = someLib.x
       symlinkOutputDir.resolve("birds/parrot.yaml"),
       "parrot.yaml",
       """
-        name: Parrot
-        diet: Seeds
+      name: Parrot
+      diet: Seeds
       """
         .trimIndent(),
     )

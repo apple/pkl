@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,10 +96,10 @@ class DocMigratorTest {
       tempDir.resolve("index.js").also { f ->
         f.writeText(
           """
-        runtimeData.links('known-versions','[{"text":"1.2.3","classes":"current-version"}]');
-        runtimeData.links('known-usages','[{"text":"Foo","href":"../moduleTypes2/Foo.html"},{"text":"moduleTypes2","href":"../moduleTypes2/index.html"}]');
-        runtimeData.links('known-subtypes','[{"text":"Foo","href":"../moduleTypes2/Foo.html"}]');
-      """
+          runtimeData.links('known-versions','[{"text":"1.2.3","classes":"current-version"}]');
+          runtimeData.links('known-usages','[{"text":"Foo","href":"../moduleTypes2/Foo.html"},{"text":"moduleTypes2","href":"../moduleTypes2/index.html"}]');
+          runtimeData.links('known-subtypes','[{"text":"Foo","href":"../moduleTypes2/Foo.html"}]');
+          """
             .trimIndent()
         )
       }

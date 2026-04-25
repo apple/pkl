@@ -1,3 +1,22 @@
+/*
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     https://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+import java.nio.file.Files
+import kotlin.io.path.isDirectory
+import kotlin.io.path.isRegularFile
+import kotlin.io.path.useDirectoryEntries
 import org.junit.platform.commons.annotation.Testable
 import org.junit.platform.engine.*
 import org.junit.platform.engine.TestDescriptor.Type
@@ -16,23 +35,18 @@ import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
 import org.pkl.core.evaluatorSettings.TraceMode
+import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKeyFactories
 import org.pkl.core.repl.ReplRequest
 import org.pkl.core.repl.ReplResponse
 import org.pkl.core.repl.ReplServer
+import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.util.IoUtils
-import org.pkl.core.http.HttpClient
 import org.pkl.parser.Parser
 import org.pkl.parser.ParserError
 import org.pkl.parser.syntax.ClassProperty
-import org.pkl.core.resource.ResourceReaders
-import java.nio.file.Files
-import kotlin.io.path.isDirectory
-import kotlin.io.path.isRegularFile
-import kotlin.io.path.useDirectoryEntries
 
-@Testable
-class DocSnippetTests
+@Testable class DocSnippetTests
 
 class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.ExecutionContext>() {
   private val projectDir = rootProjectDir.resolve("docs")
@@ -41,7 +55,8 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
   private companion object {
     val headingRegex = Regex("""(?u)^\s*(=++)\s*(.+)""")
     val collapsibleBlockRegex = Regex("""(?u)^\s*\[%collapsible""")
-    val codeBlockRegex = Regex("""(?u)^\s*\[source(?:%(tested|parsed)(%error)?)?(?:,\{?([a-zA-Z-_]+)}?)?""")
+    val codeBlockRegex =
+      Regex("""(?u)^\s*\[source(?:%(tested|parsed)(%error)?)?(?:,\{?([a-zA-Z-_]+)}?)?""")
     val codeBlockNameRegex = Regex("""(?u)^\s*\.(.+)""")
     val codeBlockDelimiterRegex = Regex("""(?u)^\s*----""")
     val graphicsRegex = Regex("\\[small]#.+#")
@@ -51,7 +66,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
 
   override fun discover(
     discoveryRequest: EngineDiscoveryRequest,
-    uniqueId: UniqueId
+    uniqueId: UniqueId,
   ): TestDescriptor {
     val packageSelectors = discoveryRequest.getSelectorsByType(PackageSelector::class.java)
     val classSelectors = discoveryRequest.getSelectorsByType(ClassSelector::class.java)
@@ -62,12 +77,14 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
     val packageName = testClass.`package`.name
     val className = testClass.name
 
-    if (methodSelectors.isEmpty()
-      && (packageSelectors.isEmpty() || packageSelectors.any { it.packageName == packageName })
-      && (classSelectors.isEmpty() || classSelectors.any { it.className == className })
+    if (
+      methodSelectors.isEmpty() &&
+        (packageSelectors.isEmpty() || packageSelectors.any { it.packageName == packageName }) &&
+        (classSelectors.isEmpty() || classSelectors.any { it.className == className })
     ) {
 
-      val rootDescriptor = Descriptor.Path(uniqueId, docsDir.fileName.toString(), ClassSource.from(testClass), docsDir)
+      val rootDescriptor =
+        Descriptor.Path(uniqueId, docsDir.fileName.toString(), ClassSource.from(testClass), docsDir)
       doDiscover(rootDescriptor, uniqueIdSelectors)
       return rootDescriptor
     }
@@ -77,36 +94,34 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
   }
 
   override fun createExecutionContext(request: ExecutionRequest): ExecutionContext {
-    val replServer = ReplServer(
-      SecurityManagers.defaultManager,
-      HttpClient.dummyClient(),
-      Loggers.stdErr(),
-      listOf(
-        ModuleKeyFactories.standardLibrary,
-        ModuleKeyFactories.classPath(DocSnippetTests::class.java.classLoader),
-        ModuleKeyFactories.file
-      ),
-      listOf(
-        ResourceReaders.environmentVariable(),
-        ResourceReaders.externalProperty()
-      ),
-      System.getenv(),
-      emptyMap(),
-      null,
-      null,
-      null,
-      IoUtils.getCurrentWorkingDir(),
-      StackFrameTransformers.defaultTransformer,
-      false,
-      TraceMode.COMPACT,
-    )
+    val replServer =
+      ReplServer(
+        SecurityManagers.defaultManager,
+        HttpClient.dummyClient(),
+        Loggers.stdErr(),
+        listOf(
+          ModuleKeyFactories.standardLibrary,
+          ModuleKeyFactories.classPath(DocSnippetTests::class.java.classLoader),
+          ModuleKeyFactories.file,
+        ),
+        listOf(ResourceReaders.environmentVariable(), ResourceReaders.externalProperty()),
+        System.getenv(),
+        emptyMap(),
+        null,
+        null,
+        null,
+        IoUtils.getCurrentWorkingDir(),
+        StackFrameTransformers.defaultTransformer,
+        false,
+        TraceMode.COMPACT,
+      )
     return ExecutionContext(replServer)
   }
 
   private fun doDiscover(rootDescriptor: TestDescriptor, selectors: List<UniqueIdSelector>) {
-    fun isMatch(other: UniqueId) = selectors.isEmpty() || selectors.any {
-      it.uniqueId.hasPrefix(other) || other.hasPrefix(it.uniqueId)
-    }
+    fun isMatch(other: UniqueId) =
+      selectors.isEmpty() ||
+        selectors.any { it.uniqueId.hasPrefix(other) || other.hasPrefix(it.uniqueId) }
 
     docsDir.useDirectoryEntries { docsDirEntries ->
       for (docsDirEntry in docsDirEntries) {
@@ -116,12 +131,13 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
         val docsDirEntryId = rootDescriptor.uniqueId.append("dir", docsDirEntryName)
         if (!isMatch(docsDirEntryId)) continue
 
-        val docsDirEntryDescriptor = Descriptor.Path(
-          docsDirEntryId,
-          docsDirEntryName,
-          DirectorySource.from(docsDirEntry.toFile()),
-          docsDirEntry
-        )
+        val docsDirEntryDescriptor =
+          Descriptor.Path(
+            docsDirEntryId,
+            docsDirEntryName,
+            DirectorySource.from(docsDirEntry.toFile()),
+            docsDirEntry,
+          )
         rootDescriptor.addChild(docsDirEntryDescriptor)
 
         val pagesDir = docsDirEntry.resolve("pages")
@@ -131,17 +147,20 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           for (pagesDirEntry in pagesDirEntries) {
             val pagesDirEntryName = pagesDirEntry.fileName.toString()
             val pagesDirEntryId = docsDirEntryId.append("file", pagesDirEntryName)
-            if (!pagesDirEntry.isRegularFile() ||
-              !pagesDirEntryName.endsWith(".adoc") ||
-              !isMatch(pagesDirEntryId)
-            ) continue
-
-            val pagesDirEntryDescriptor = Descriptor.Path(
-              pagesDirEntryId,
-              pagesDirEntryName,
-              FileSource.from(pagesDirEntry.toFile()),
-              pagesDirEntry
+            if (
+              !pagesDirEntry.isRegularFile() ||
+                !pagesDirEntryName.endsWith(".adoc") ||
+                !isMatch(pagesDirEntryId)
             )
+              continue
+
+            val pagesDirEntryDescriptor =
+              Descriptor.Path(
+                pagesDirEntryId,
+                pagesDirEntryName,
+                FileSource.from(pagesDirEntry.toFile()),
+                pagesDirEntry,
+              )
             docsDirEntryDescriptor.addChild(pagesDirEntryDescriptor)
 
             parseAsciidoc(pagesDirEntryDescriptor, selectors)
@@ -174,17 +193,15 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
         }
 
         val parent = sections.firstOrNull() ?: docDescriptor
-        val normalizedTitle = title
-          .replace("<code>", "")
-          .replace("</code>", "")
-          .replace(graphicsRegex, "")
-          .trim()
-        val childSection = Descriptor.Section(
-          parent.uniqueId.append("section", normalizedTitle),
-          normalizedTitle,
-          FileSource.from(docDescriptor.path.toFile(), FilePosition.from(lineNum)),
-          newLevel
-        )
+        val normalizedTitle =
+          title.replace("<code>", "").replace("</code>", "").replace(graphicsRegex, "").trim()
+        val childSection =
+          Descriptor.Section(
+            parent.uniqueId.append("section", normalizedTitle),
+            normalizedTitle,
+            FileSource.from(docDescriptor.path.toFile(), FilePosition.from(lineNum)),
+            newLevel,
+          )
 
         sections.addFirst(childSection)
         parent.addChild(childSection)
@@ -217,7 +234,8 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
           codeBlockNum += 1
           val (testMode, error, language) = codeBlockMatch.destructured
           if (testMode.isNotEmpty()) {
-            val blockName = codeBlockNameRegex.find(prevLine)?.groupValues?.get(1) ?: "snippet$codeBlockNum"
+            val blockName =
+              codeBlockNameRegex.find(prevLine)?.groupValues?.get(1) ?: "snippet$codeBlockNum"
             while (linesIterator.hasNext()) {
               advance()
               val startDelimiterMatch = codeBlockDelimiterRegex.find(line)
@@ -236,10 +254,13 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
                           snippetId,
                           blockName,
                           language,
-                          FileSource.from(docDescriptor.path.toFile(), FilePosition.from(jumpToLineNum)),
+                          FileSource.from(
+                            docDescriptor.path.toFile(),
+                            FilePosition.from(jumpToLineNum),
+                          ),
                           builder.toString(),
                           testMode == "parsed",
-                          error.isNotEmpty()
+                          error.isNotEmpty(),
                         )
                       )
                     }
@@ -261,28 +282,21 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
     }
   }
 
-  private sealed class Descriptor(
-    uniqueId: UniqueId,
-    displayName: String,
-    source: TestSource
-  ) : AbstractTestDescriptor(uniqueId, displayName, source), Node<ExecutionContext> {
+  private sealed class Descriptor(uniqueId: UniqueId, displayName: String, source: TestSource) :
+    AbstractTestDescriptor(uniqueId, displayName, source), Node<ExecutionContext> {
 
     class Path(
       uniqueId: UniqueId,
       displayName: String,
       source: TestSource,
-      val path: java.nio.file.Path
+      val path: java.nio.file.Path,
     ) : Descriptor(uniqueId, displayName, source) {
 
       override fun getType() = Type.CONTAINER
     }
 
-    class Section(
-      uniqueId: UniqueId,
-      displayName: String,
-      source: TestSource,
-      val level: Int
-    ) : Descriptor(uniqueId, displayName, source) {
+    class Section(uniqueId: UniqueId, displayName: String, source: TestSource, val level: Int) :
+      Descriptor(uniqueId, displayName, source) {
 
       override fun getType() = Type.CONTAINER
 
@@ -299,7 +313,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
       source: TestSource,
       private val code: String,
       private val parseOnly: Boolean,
-      private val expectError: Boolean
+      private val expectError: Boolean,
     ) : Descriptor(uniqueId, displayName, source) {
 
       override fun getType() = Type.TEST
@@ -308,11 +322,14 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
         when (language) {
           "pkl" -> Parser().parseModule(code)
           "pkl-expr" -> Parser().parseExpressionInput(code)
-          else -> throw(Exception("Unrecognized language: $language"))
+          else -> throw (Exception("Unrecognized language: $language"))
         }
       }
 
-      override fun execute(context: ExecutionContext, executor: DynamicTestExecutor): ExecutionContext {
+      override fun execute(
+        context: ExecutionContext,
+        executor: DynamicTestExecutor,
+      ): ExecutionContext {
         if (parseOnly) {
           try {
             parsed
@@ -328,12 +345,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
         }
 
         context.replServer.handleRequest(
-          ReplRequest.Eval(
-            "snippet",
-            code,
-            !expectError,
-            !expectError
-          )
+          ReplRequest.Eval("snippet", code, !expectError, !expectError)
         )
 
         val properties = parsed.children()?.filterIsInstance<ClassProperty>() ?: emptyList()
@@ -342,21 +354,21 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
 
         // force each property
         for (prop in properties) {
-          responses.addAll(context.replServer.handleRequest(
-            ReplRequest.Eval(
-              "snippet",
-              prop.name.value,
-              false,
-              true
+          responses.addAll(
+            context.replServer.handleRequest(
+              ReplRequest.Eval("snippet", prop.name.value, false, true)
             )
-          ))
+          )
         }
         if (expectError) {
-          if (responses.dropLast(1).any { it !is ReplResponse.EvalSuccess } ||
-            responses.last() !is ReplResponse.EvalError) {
+          if (
+            responses.dropLast(1).any { it !is ReplResponse.EvalSuccess } ||
+              responses.last() !is ReplResponse.EvalError
+          ) {
             throw AssertionError(
               "Expected %error snippet to fail at the end, but got the following REPL responses:\n\n" +
-                  responses.joinToString("\n\n") { it.message })
+                responses.joinToString("\n\n") { it.message }
+            )
           }
 
           return context

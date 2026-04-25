@@ -192,10 +192,9 @@ data class CliBaseOptions(
       // sort modules to make cli output independent of source module order
       .sorted()
 
-  val normalizedSettingsModule: URI? =
-    settings?.let { uri ->
-      if (uri.isAbsolute) uri else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
-    }
+  val normalizedSettingsModule: URI? = settings?.let { uri ->
+    if (uri.isAbsolute) uri else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
+  }
 
   /** [modulePath] after normalization. */
   val normalizedModulePath: List<Path>? = modulePath?.map(normalizedWorkingDir::resolve)

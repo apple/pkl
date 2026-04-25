@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,25 +47,25 @@ class YamlRendererTest {
       evaluator.evaluate(
         ModuleSource.text(
           """
-        stream = new Listing {
-          new Dynamic {
-            name = "Pigeon"
-            age = 42
+          stream = new Listing {
+            new Dynamic {
+              name = "Pigeon"
+              age = 42
+            }
+            new Listing {
+              "one"
+              "two"
+              "three"
+            }
+            new Mapping {
+              ["one"] = 1
+              ["two"] = 2
+              ["three"] = 3
+            }
+            "Blue Rock Ltd."
+            12345
           }
-          new Listing {
-            "one"
-            "two"
-            "three"
-          }
-          new Mapping {
-            ["one"] = 1
-            ["two"] = 2
-            ["three"] = 3
-          }
-          "Blue Rock Ltd."
-          12345
-        }
-        """
+          """
             .trimIndent()
         )
       )
@@ -79,19 +79,19 @@ class YamlRendererTest {
     assertThat(output.trim())
       .isEqualTo(
         """
-      name: Pigeon
-      age: 42
-      ---
-      - one
-      - two
-      - three
-      ---
-      one: 1
-      two: 2
-      three: 3
-      --- Blue Rock Ltd.
-      --- 12345
-    """
+        name: Pigeon
+        age: 42
+        ---
+        - one
+        - two
+        - three
+        ---
+        one: 1
+        two: 2
+        three: 3
+        --- Blue Rock Ltd.
+        --- 12345
+        """
           .trimIndent()
       )
   }
@@ -116,13 +116,13 @@ class YamlRendererTest {
       evaluator.evaluate(
         ModuleSource.text(
           """
-        num1 = "50"
-        num2 = "50.123"
-        `60.123` = "60.123"
-        yes = "yes"
-        truth = "true"
-        octalNumber = "0777"
-        """
+          num1 = "50"
+          num2 = "50.123"
+          `60.123` = "60.123"
+          yes = "yes"
+          truth = "true"
+          octalNumber = "0777"
+          """
             .trimIndent()
         )
       )
@@ -136,13 +136,13 @@ class YamlRendererTest {
     assertThat(output.trim())
       .isEqualTo(
         """
-      num1: '50'
-      num2: '50.123'
-      '60.123': '60.123'
-      'yes': 'yes'
-      truth: 'true'
-      octalNumber: '0777'
-    """
+        num1: '50'
+        num2: '50.123'
+        '60.123': '60.123'
+        'yes': 'yes'
+        truth: 'true'
+        octalNumber: '0777'
+        """
           .trimIndent()
       )
   }
@@ -154,10 +154,10 @@ class YamlRendererTest {
       evaluator.evaluate(
         ModuleSource.text(
           """
-        res1 = Bytes()
-        res2 = Bytes(1, 2, 3)
-        res3 = IntSeq(0, 127).toList().toBytes()
-        """
+          res1 = Bytes()
+          res2 = Bytes(1, 2, 3)
+          res3 = IntSeq(0, 127).toList().toBytes()
+          """
             .trimIndent()
         )
       )
@@ -171,10 +171,10 @@ class YamlRendererTest {
     assertThat(output.trim())
       .isEqualTo(
         """
-      res1: !!binary ''
-      res2: !!binary 'AQID'
-      res3: !!binary 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8='
-    """
+        res1: !!binary ''
+        res2: !!binary 'AQID'
+        res3: !!binary 'AAECAwQFBgcICQoLDA0ODxAREhMUFRYXGBkaGxwdHh8gISIjJCUmJygpKissLS4vMDEyMzQ1Njc4OTo7PD0+P0BBQkNERUZHSElKS0xNTk9QUVJTVFVWV1hZWltcXV5fYGFiY2RlZmdoaWprbG1ub3BxcnN0dXZ3eHl6e3x9fn8='
+        """
           .trimIndent()
       )
   }

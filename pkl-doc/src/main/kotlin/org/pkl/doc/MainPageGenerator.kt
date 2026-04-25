@@ -69,13 +69,12 @@ internal class MainPageGenerator(
   private fun HtmlBlockTag.renderPackages() {
     if (packagesData.isEmpty()) return
 
-    val sortedPackages =
-      packagesData.sortedWith { pkg1, pkg2 ->
-        when {
-          pkg1.ref.pkg == "pkl" -> -1 // always sort the stdlib first
-          else -> pkg1.ref.pkg.compareTo(pkg2.ref.pkg)
-        }
+    val sortedPackages = packagesData.sortedWith { pkg1, pkg2 ->
+      when {
+        pkg1.ref.pkg == "pkl" -> -1 // always sort the stdlib first
+        else -> pkg1.ref.pkg.compareTo(pkg2.ref.pkg)
       }
+    }
 
     div {
       classes = setOf("member-group")

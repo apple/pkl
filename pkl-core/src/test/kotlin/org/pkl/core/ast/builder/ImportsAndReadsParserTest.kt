@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -46,7 +46,7 @@ class ImportsAndReadsParserTest {
           }
         }
       }
-    """
+      """
         .trimIndent()
     val moduleKey = ModuleKeys.synthetic(URI("repl:text"), moduleText)
     val imports =
@@ -70,7 +70,7 @@ class ImportsAndReadsParserTest {
   fun `invalid syntax`() {
     val moduleText =
       """
-        not valid Pkl syntax
+      not valid Pkl syntax
       """
         .trimIndent()
     val moduleKey = ModuleKeys.synthetic(URI("repl:text"), moduleText)
@@ -81,12 +81,12 @@ class ImportsAndReadsParserTest {
     assertThat(err.toPklException(StackFrameTransformers.defaultTransformer, false))
       .hasMessage(
         """
-          –– Pkl Error ––
-          Invalid property definition. Expected a type annotation, `=` or `{`.
-          
-          1 | not valid Pkl syntax
-              ^^^
-          at text (repl:text)
+        –– Pkl Error ––
+        Invalid property definition. Expected a type annotation, `=` or `{`.
+
+        1 | not valid Pkl syntax
+            ^^^
+        at text (repl:text)
 
         """
           .trimIndent()

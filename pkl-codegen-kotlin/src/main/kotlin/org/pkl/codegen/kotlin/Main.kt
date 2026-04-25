@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -91,10 +91,10 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", help
         metavar = "old_name=new_name",
         help =
           """
-            Replace a prefix in the names of the generated Kotlin classes (repeatable).
-            By default, the names of generated classes are derived from the Pkl module names.
-            With this option, you can override or modify the default names, renaming entire
-            classes or just their packages.
+          Replace a prefix in the names of the generated Kotlin classes (repeatable).
+          By default, the names of generated classes are derived from the Pkl module names.
+          With this option, you can override or modify the default names, renaming entire
+          classes or just their packages.
           """
             .trimIndent(),
       )

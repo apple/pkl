@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -47,7 +47,7 @@ internal object ReplMessages {
     * Incomplete input will be continued on the next line.
     * Multi-line programs can be copy-pasted into the REPL.
 
-  """
+    """
       .trimIndent()
 
   val examples: String =

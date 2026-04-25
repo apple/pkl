@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,19 +36,19 @@ internal fun AutoCloseable.closeQuietly() {
   }
 }
 
-internal val threadLocalBufferPacker: ThreadLocal<MessageBufferPacker> =
-  ThreadLocal.withInitial { MessagePack.newDefaultBufferPacker() }
+internal val threadLocalBufferPacker: ThreadLocal<MessageBufferPacker> = ThreadLocal.withInitial {
+  MessagePack.newDefaultBufferPacker()
+}
 
-private val threadLocalEncoder: ThreadLocal<(Message) -> ByteArray> =
-  ThreadLocal.withInitial {
-    val packer = threadLocalBufferPacker.get()
-    val encoder = ServerMessagePackEncoder(packer);
-    { message: Message ->
-      packer.clear()
-      encoder.encode(message)
-      packer.toByteArray()
-    }
+private val threadLocalEncoder: ThreadLocal<(Message) -> ByteArray> = ThreadLocal.withInitial {
+  val packer = threadLocalBufferPacker.get()
+  val encoder = ServerMessagePackEncoder(packer);
+  { message: Message ->
+    packer.clear()
+    encoder.encode(message)
+    packer.toByteArray()
   }
+}
 
 @Suppress("unused")
 internal fun encode(message: Message): ByteArray {

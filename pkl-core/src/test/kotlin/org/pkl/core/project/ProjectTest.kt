@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,9 +51,9 @@ class ProjectTest {
         "MIT",
         """
         # Some License text
-        
+
         This is my license text
-      """
+        """
           .trimIndent(),
         URI("https://example.com/my/issues"),
         listOf(Path.of("apiTest1.pkl"), Path.of("apiTest2.pkl")),
@@ -143,12 +143,12 @@ class ProjectTest {
         exclude { "*.exe" }
         issueTracker = "https://example.com/my/issues"
       }
-      
+
       tests {
         "test1.pkl"
         "test2.pkl"
       }
-    """
+      """
         .trimIndent()
     )
     val project = Project.loadFromPath(projectPath)
@@ -167,7 +167,7 @@ class ProjectTest {
       module com.apple.Foo
 
       foo = 1
-    """
+      """
         .trimIndent()
     )
     assertThatCode { Project.loadFromPath(projectPath, SecurityManagers.defaultManager, null) }
@@ -218,7 +218,7 @@ class ProjectTest {
         """
         –– Pkl Error ––
         Local project dependencies cannot be circular.
-        
+
         Cycle:
         ┌─>
         │  file:///org/pkl/core/project/projectCycle2/PklProject
@@ -240,23 +240,23 @@ class ProjectTest {
         """
         –– Pkl Error ––
         Local project dependencies cannot be circular.
-        
+
         The following circular imports were found.
         Not all of them are necessarily problematic.
         The problematic cycles are those declared as local dependencies.
-        
+
         Cycle 1:
         ┌─>
         │  file:///org/pkl/core/project/projectCycle2/PklProject
         │
         │  file:///org/pkl/core/project/projectCycle3/PklProject
         └─
-        
+
         Cycle 2:
         ┌─>
         │  file:///org/pkl/core/project/projectCycle4/PklProject
         └─
-        
+
         """
           .trimIndent()
       )

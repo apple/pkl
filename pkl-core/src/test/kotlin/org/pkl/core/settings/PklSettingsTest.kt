@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -128,15 +128,15 @@ class PklSettingsTest {
       evaluator.evaluate(
         ModuleSource.text(
           """
-        import "pkl:settings"
-  
-        system = settings.System
-        idea = settings.Idea
-        textMate = settings.TextMate
-        sublime = settings.Sublime
-        atom = settings.Atom
-        vsCode = settings.VsCode
-        """
+          import "pkl:settings"
+
+          system = settings.System
+          idea = settings.Idea
+          textMate = settings.TextMate
+          sublime = settings.Sublime
+          atom = settings.Atom
+          vsCode = settings.VsCode
+          """
             .trimIndent()
         )
       )

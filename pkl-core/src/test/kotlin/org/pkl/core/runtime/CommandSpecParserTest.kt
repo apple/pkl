@@ -35,14 +35,14 @@ class CommandSpecParserTest {
       """
       extends "pkl:Command"
       import "pkl:Command"
-      
+
       options: Options
-      
+
       output {
         value = options
       }
-      
-    """
+
+      """
         .trimIndent()
 
     private val evaluator = Evaluator.preconfigured()
@@ -75,8 +75,8 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          options = new {}
+        extends "pkl:Command"
+        options = new {}
         """
           .trimIndent(),
       )
@@ -92,8 +92,8 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          options {}
+        extends "pkl:Command"
+        options {}
         """
           .trimIndent(),
       )
@@ -109,8 +109,8 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          parent = new {}
+        extends "pkl:Command"
+        parent = new {}
         """
           .trimIndent(),
       )
@@ -126,8 +126,8 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          parent {}
+        extends "pkl:Command"
+        parent {}
         """
           .trimIndent(),
       )
@@ -143,8 +143,8 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          options: "nope" | "try again"
+        extends "pkl:Command"
+        options: "nope" | "try again"
         """
           .trimIndent(),
       )
@@ -163,9 +163,9 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          options: Options
-          abstract class Options {}
+        extends "pkl:Command"
+        options: Options
+        abstract class Options {}
         """
           .trimIndent(),
       )
@@ -181,9 +181,9 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-          extends "pkl:Command"
-          command = new Foo {}
-          class Foo
+        extends "pkl:Command"
+        command = new Foo {}
+        class Foo
         """
           .trimIndent(),
       )
@@ -220,7 +220,7 @@ class CommandSpecParserTest {
             @CountedFlag { shortName = "z" }
             baz: Int
           }
-        """
+          """
             .trimIndent(),
       )
 
@@ -258,12 +258,12 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Flag
-        @Argument
-        foo: String
-      }
-    """
+          class Options {
+            @Flag
+            @Argument
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -280,10 +280,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo = "bar"
-      }
-    """
+          class Options {
+            foo = "bar"
+          }
+          """
             .trimIndent(),
       )
 
@@ -299,10 +299,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: "oops" | String
-      }
-    """
+          class Options {
+            foo: "oops" | String
+          }
+          """
             .trimIndent(),
       )
 
@@ -319,11 +319,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        foo: String = "bar"
-      }
-    """
+          class Options {
+            @Argument
+            foo: String = "bar"
+          }
+          """
             .trimIndent(),
       )
 
@@ -339,11 +339,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        foo: String?
-      }
-    """
+          class Options {
+            @Argument
+            foo: String?
+          }
+          """
             .trimIndent(),
       )
 
@@ -367,7 +367,7 @@ class CommandSpecParserTest {
             qux: Map<String, String> = baz
             quux: Int = 5
           }
-        """
+          """
             .trimIndent(),
       )
 
@@ -411,10 +411,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        help: Boolean
-      }
-    """
+          class Options {
+            help: Boolean
+          }
+          """
             .trimIndent(),
       )
 
@@ -430,11 +430,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Flag { shortName = "h" }
-        showHelp: Boolean
-      }
-    """
+          class Options {
+            @Flag { shortName = "h" }
+            showHelp: Boolean
+          }
+          """
             .trimIndent(),
       )
 
@@ -451,10 +451,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        `root-dir`: String
-      }
-    """
+          class Options {
+            `root-dir`: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -471,13 +471,13 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Argument
-        list: List<String>
-        @Argument
-        set: Set<String>
-      }
-    """
+          class Options {
+            @Argument
+            list: List<String>
+            @Argument
+            set: Set<String>
+          }
+          """
             .trimIndent(),
       )
 
@@ -495,10 +495,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: List<List<"a" | "b">>
-      }
-    """
+          class Options {
+            foo: List<List<"a" | "b">>
+          }
+          """
             .trimIndent(),
       )
 
@@ -515,10 +515,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: List<Map<String, "a" | "b">>
-      }
-    """
+          class Options {
+            foo: List<Map<String, "a" | "b">>
+          }
+          """
             .trimIndent(),
       )
 
@@ -537,10 +537,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: Map<String, List<"a" | "b">>
-      }
-    """
+          class Options {
+            foo: Map<String, List<"a" | "b">>
+          }
+          """
             .trimIndent(),
       )
 
@@ -557,10 +557,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: Map<String, Map<String, "a" | "b">>
-      }
-    """
+          class Options {
+            foo: Map<String, Map<String, "a" | "b">>
+          }
+          """
             .trimIndent(),
       )
 
@@ -579,10 +579,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: Map<Map<String, "a" | "b">, String>
-      }
-    """
+          class Options {
+            foo: Map<Map<String, "a" | "b">, String>
+          }
+          """
             .trimIndent(),
       )
 
@@ -601,10 +601,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: Map<Map<String, "a" | "b">, String>
-      }
-    """
+          class Options {
+            foo: Map<Map<String, "a" | "b">, String>
+          }
+          """
             .trimIndent(),
       )
 
@@ -623,11 +623,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @Flag { convert = (it) -> Pair("foo", "a") }
-        foo: Map<Map<String, "a" | "b">, String>
-      }
-    """
+          class Options {
+            @Flag { convert = (it) -> Pair("foo", "a") }
+            foo: Map<Map<String, "a" | "b">, String>
+          }
+          """
             .trimIndent(),
       )
 
@@ -641,11 +641,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: Foo
-      }
-      class Foo
-    """
+          class Options {
+            foo: Foo
+          }
+          class Foo
+          """
             .trimIndent(),
       )
 
@@ -661,16 +661,16 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        a: String(true)
-        b: String?(true)
-        c: String(true)?
-        d: List<String(true)>
-        e: List<String(true)>(true)
-        f: List<String(true)>(true)?(true)
-        g: (Map<String(true), String(true)>(true)?(true))(true)
-      }
-    """
+          class Options {
+            a: String(true)
+            b: String?(true)
+            c: String(true)?
+            d: List<String(true)>
+            e: List<String(true)>(true)
+            f: List<String(true)>(true)?(true)
+            g: (Map<String(true), String(true)>(true)?(true))(true)
+          }
+          """
             .trimIndent(),
       )
 
@@ -683,17 +683,17 @@ class CommandSpecParserTest {
       writePklFile(
         "cmd.pkl",
         """
-      extends "pkl:Command"
-      import "pkl:Command"
-      command {
-        subcommands {
-          new Sub { command { name = "foo" } }
-          new Sub { command { name = "foo" } }
+        extends "pkl:Command"
+        import "pkl:Command"
+        command {
+          subcommands {
+            new Sub { command { name = "foo" } }
+            new Sub { command { name = "foo" } }
+          }
         }
-      }
-      
-      class Sub extends Command
-    """
+
+        class Sub extends Command
+        """
           .trimIndent(),
       )
 
@@ -731,10 +731,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        foo: Map
-      }
-    """
+          class Options {
+            foo: Map
+          }
+          """
             .trimIndent(),
       )
 
@@ -751,11 +751,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @BooleanFlag
-        foo: String
-      }
-    """
+          class Options {
+            @BooleanFlag
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -773,11 +773,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        @CountedFlag
-        foo: String
-      }
-    """
+          class Options {
+            @CountedFlag
+            foo: String
+          }
+          """
             .trimIndent(),
       )
 
@@ -795,10 +795,10 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      class Options {
-        format: "json" | "yaml" | "toml"
-      }
-    """
+          class Options {
+            format: "json" | "yaml" | "toml"
+          }
+          """
             .trimIndent(),
       )
 
@@ -822,11 +822,11 @@ class CommandSpecParserTest {
         "cmd.pkl",
         renderOptions +
           """
-      typealias OptionalString = String?
-      class Options {
-        foo: OptionalString
-      }
-    """
+          typealias OptionalString = String?
+          class Options {
+            foo: OptionalString
+          }
+          """
             .trimIndent(),
       )
 

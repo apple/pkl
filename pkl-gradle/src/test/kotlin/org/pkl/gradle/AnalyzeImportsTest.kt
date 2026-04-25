@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,19 +25,19 @@ class AnalyzeImportsTest : AbstractTest() {
     writeFile(
       "build.gradle",
       """
-        plugins {
-          id "org.pkl-lang"
-        }
+      plugins {
+        id "org.pkl-lang"
+      }
 
-        pkl {
-          analyzers {
-            imports {
-              analyzeMyImports {
-                sourceModules = ["input.pkl"]
-              }
+      pkl {
+        analyzers {
+          imports {
+            analyzeMyImports {
+              sourceModules = ["input.pkl"]
             }
           }
         }
+      }
       """
         .trimIndent(),
     )
@@ -51,20 +51,20 @@ class AnalyzeImportsTest : AbstractTest() {
     writeFile(
       "build.gradle",
       """
-        plugins {
-          id "org.pkl-lang"
-        }
+      plugins {
+        id "org.pkl-lang"
+      }
 
-        pkl {
-          analyzers {
-            imports {
-              analyzeMyImports {
-                sourceModules = ["input.pkl"]
-                outputFile = file("myFile.pcf")
-              }
+      pkl {
+        analyzers {
+          imports {
+            analyzeMyImports {
+              sourceModules = ["input.pkl"]
+              outputFile = file("myFile.pcf")
             }
           }
         }
+      }
       """
         .trimIndent(),
     )
@@ -78,20 +78,20 @@ class AnalyzeImportsTest : AbstractTest() {
     writeFile(
       "build.gradle",
       """
-        plugins {
-          id "org.pkl-lang"
-        }
+      plugins {
+        id "org.pkl-lang"
+      }
 
-        pkl {
-          analyzers {
-            imports {
-              analyzeMyImports {
-                sourceModules = ["input.pkl"]
-                outputFormat = "json"
-              }
+      pkl {
+        analyzers {
+          imports {
+            analyzeMyImports {
+              sourceModules = ["input.pkl"]
+              outputFormat = "json"
             }
           }
         }
+      }
       """
         .trimIndent(),
     )
@@ -99,8 +99,8 @@ class AnalyzeImportsTest : AbstractTest() {
     assertThat(result.output)
       .contains(
         """
-          {
-            "imports": {
+        {
+          "imports": {
         """
           .trimIndent()
       )

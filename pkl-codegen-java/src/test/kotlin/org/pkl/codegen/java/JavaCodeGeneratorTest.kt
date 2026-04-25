@@ -41,13 +41,13 @@ class JavaCodeGeneratorTest {
     private val simpleClass: Class<*> by lazy {
       generateJavaCode(
           """
-        module my.mod
+          module my.mod
 
-        class Simple {
-          str: String
-          list: List<Int>
-        }
-      """
+          class Simple {
+            str: String
+            list: List<Int>
+          }
+          """
             .trimIndent()
         )
         .compile()
@@ -205,7 +205,7 @@ class JavaCodeGeneratorTest {
           _enum = north
           bytes = [1, 2, 3, 4]
         }
-      """
+        """
           .trimIndent()
       )
   }
@@ -215,11 +215,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      class ClassWithDeprecatedProperty {
-         @Deprecated { message = "property deprecation message" } 
-         deprecatedProperty: Int = 1337
-      }
-    """
+        class ClassWithDeprecatedProperty {
+           @Deprecated { message = "property deprecation message" } 
+           deprecatedProperty: Int = 1337
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateJavadoc = true),
       )
@@ -232,7 +232,7 @@ class JavaCodeGeneratorTest {
         |     */
         |    @Deprecated
         |    public final long deprecatedProperty;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -244,7 +244,7 @@ class JavaCodeGeneratorTest {
         |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
-      """
+        """
           .trimMargin()
       )
   }
@@ -254,11 +254,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      class ClassWithDeprecatedProperty {
-         @Deprecated { message = "property deprecation message" } 
-         deprecatedProperty: Int = 1337
-      }
-    """
+        class ClassWithDeprecatedProperty {
+           @Deprecated { message = "property deprecation message" } 
+           deprecatedProperty: Int = 1337
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true),
       )
@@ -267,7 +267,7 @@ class JavaCodeGeneratorTest {
         """
         |  public static final class ClassWithDeprecatedProperty {
         |    private final long deprecatedProperty;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -279,7 +279,7 @@ class JavaCodeGeneratorTest {
         |    public long getDeprecatedProperty() {
         |      return deprecatedProperty;
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -291,7 +291,7 @@ class JavaCodeGeneratorTest {
         |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
-      """
+        """
           .trimMargin()
       )
   }
@@ -301,23 +301,23 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      @Deprecated { message = "class deprecation message" }
-      class DeprecatedClass {
-        propertyOfDeprecatedClass: Int = 42
-      }
-    """
+        @Deprecated { message = "class deprecation message" }
+        class DeprecatedClass {
+          propertyOfDeprecatedClass: Int = 42
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateJavadoc = true),
       )
     assertThat(javaCode)
       .contains(
         """
-      |  /**
-      |   * @deprecated class deprecation message
-      |   */
-      |  @Deprecated
-      |  public static final class DeprecatedClass {
-    """
+        |  /**
+        |   * @deprecated class deprecation message
+        |   */
+        |  @Deprecated
+        |  public static final class DeprecatedClass {
+        """
           .trimMargin()
       )
   }
@@ -328,11 +328,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      @Deprecated{ message = "module class deprecation message" }
-      module DeprecatedModule
-      
-      propertyInDeprecatedModuleClass : Int = 42
-    """
+        @Deprecated{ message = "module class deprecation message" }
+        module DeprecatedModule
+
+        propertyInDeprecatedModuleClass : Int = 42
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc),
       )
@@ -340,9 +340,9 @@ class JavaCodeGeneratorTest {
     assertThat(javaCode)
       .contains(
         """
-      |@Deprecated
-      |public final class DeprecatedModule {
-    """
+        |@Deprecated
+        |public final class DeprecatedModule {
+        """
           .trimMargin()
       )
 
@@ -350,10 +350,10 @@ class JavaCodeGeneratorTest {
       assertThat(javaCode)
         .contains(
           """
-        |/**
-        | * @deprecated module class deprecation message
-        | */
-      """
+          |/**
+          | * @deprecated module class deprecation message
+          | */
+          """
             .trimMargin()
         )
     } else {
@@ -367,11 +367,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      class ClassWithDeprecatedProperty {
-         @Deprecated
-         deprecatedProperty: Int = 1337
-      }
-    """
+        class ClassWithDeprecatedProperty {
+           @Deprecated
+           deprecatedProperty: Int = 1337
+        }
+        """
           .trimIndent(),
         // no message, so no Javadoc, regardless of flag
         JavaCodeGeneratorOptions(generateJavadoc = generateJavadoc),
@@ -383,7 +383,7 @@ class JavaCodeGeneratorTest {
         |  public static final class ClassWithDeprecatedProperty {
         |    @Deprecated
         |    public final long deprecatedProperty;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -392,7 +392,7 @@ class JavaCodeGeneratorTest {
         |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -407,7 +407,7 @@ class JavaCodeGeneratorTest {
            @Deprecated
            deprecatedProperty: Int = 1337
         }
-      """
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateGetters = true),
       )
@@ -417,7 +417,7 @@ class JavaCodeGeneratorTest {
         """
         |  public static final class ClassWithDeprecatedProperty {
         |    private final long deprecatedProperty;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -426,7 +426,7 @@ class JavaCodeGeneratorTest {
         |    public long getDeprecatedProperty() {
         |      return deprecatedProperty;
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -435,7 +435,7 @@ class JavaCodeGeneratorTest {
         |    public ClassWithDeprecatedProperty withDeprecatedProperty(long deprecatedProperty) {
         |      return new ClassWithDeprecatedProperty(deprecatedProperty);
         |    }
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -446,11 +446,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      @Deprecated
-      class DeprecatedClass {
-        propertyOfDeprecatedClass: Int = 42
-      }
-    """
+        @Deprecated
+        class DeprecatedClass {
+          propertyOfDeprecatedClass: Int = 42
+        }
+        """
           .trimIndent()
       )
 
@@ -459,7 +459,7 @@ class JavaCodeGeneratorTest {
         """
         |  @Deprecated
         |  public static final class DeprecatedClass {
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -470,11 +470,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      @Deprecated
-      module DeprecatedModule
-      
-      propertyInDeprecatedModuleClass : Int = 42
-    """
+        @Deprecated
+        module DeprecatedModule
+
+        propertyInDeprecatedModuleClass : Int = 42
+        """
           .trimIndent()
       )
 
@@ -483,7 +483,7 @@ class JavaCodeGeneratorTest {
         """
         |@Deprecated
         |public final class DeprecatedModule {
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("* @deprecated")
@@ -511,7 +511,7 @@ class JavaCodeGeneratorTest {
         |   */
         |  @Deprecated
         |  public final long deprecatedProperty;
-      """
+        """
           .trimMargin()
       )
   }
@@ -606,9 +606,9 @@ class JavaCodeGeneratorTest {
       assertThrows<JavaCodeGeneratorException> {
         generateJavaCode(
           """
-        module my.mod
-        typealias MyTypeAlias = "foo-bar" | "foo bar"
-      """
+          module my.mod
+          typealias MyTypeAlias = "foo-bar" | "foo bar"
+          """
             .trimIndent()
         )
       }
@@ -623,9 +623,9 @@ class JavaCodeGeneratorTest {
       assertThrows<JavaCodeGeneratorException> {
         generateJavaCode(
           """
-        module my.mod
-        typealias MyTypeAlias = "foo" | "" | "bar"
-      """
+          module my.mod
+          typealias MyTypeAlias = "foo" | "" | "bar"
+          """
             .trimIndent()
         )
       }
@@ -639,9 +639,9 @@ class JavaCodeGeneratorTest {
       assertThrows<JavaCodeGeneratorException> {
         generateJavaCode(
           """
-        module my.mod
-        typealias MyTypeAlias = "foo" | "✅" | "bar"
-      """
+          module my.mod
+          typealias MyTypeAlias = "foo" | "✅" | "bar"
+          """
             .trimIndent()
         )
       }
@@ -653,17 +653,17 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      class Foo {
-        other: Int
-        bar: Bar
-      }
-      class Bar {
-        foo: Foo
-        other: String
-      }
-    """
+        class Foo {
+          other: Int
+          bar: Bar
+        }
+        class Bar {
+          foo: Foo
+          other: String
+        }
+        """
           .trimIndent()
       )
 
@@ -680,7 +680,7 @@ class JavaCodeGeneratorTest {
         |      this.other = other;
         |      this.bar = bar;
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -694,7 +694,7 @@ class JavaCodeGeneratorTest {
         |      this.foo = foo;
         |      this.other = other;
         |    }
-      """
+        """
           .trimMargin()
       )
   }
@@ -704,19 +704,19 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      abstract class Foo {
-        one: Int
-      }
-      open class None extends Foo {}
-      open class Bar extends None {
-        two: String?
-      }
-      class Baz extends Bar {
-        three: Duration
-      }
-    """
+        abstract class Foo {
+          one: Int
+        }
+        open class None extends Foo {}
+        open class Bar extends None {
+          two: String?
+        }
+        class Baz extends Bar {
+          three: Duration
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateGetters = true),
       )
@@ -731,7 +731,7 @@ class JavaCodeGeneratorTest {
         |    protected Foo(@Named("one") long one) {
         |      this.one = one;
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -740,7 +740,7 @@ class JavaCodeGeneratorTest {
         |    public None(@Named("one") long one) {
         |      super(one);
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -752,7 +752,7 @@ class JavaCodeGeneratorTest {
         |      super(one);
         |      this.two = two;
         |    }
-      """
+        """
           .trimMargin()
       )
       .isEqualToResourceFile("Inheritance.jva")
@@ -763,12 +763,12 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      class Foo
-      abstract class Bar
-      class Baz extends Bar
-    """
+        class Foo
+        abstract class Bar
+        class Baz extends Bar
+        """
           .trimIndent()
       )
 
@@ -778,7 +778,7 @@ class JavaCodeGeneratorTest {
         |  public static final class Foo {
         |    public Foo() {
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -786,7 +786,7 @@ class JavaCodeGeneratorTest {
         |  public abstract static class Bar {
         |    protected Bar() {
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -794,7 +794,7 @@ class JavaCodeGeneratorTest {
         |  public static final class Baz extends Bar {
         |    public Baz() {
         |    }
-      """
+        """
           .trimMargin()
       )
   }
@@ -808,7 +808,7 @@ class JavaCodeGeneratorTest {
         |public final class Mod {
         |  private Mod() {
         |  }
-      """
+        """
           .trimMargin()
       )
 
@@ -816,10 +816,10 @@ class JavaCodeGeneratorTest {
     assertThat(javaCode)
       .contains(
         """
-      |public abstract class Mod {
-      |  protected Mod() {
-      |  }
-    """
+        |public abstract class Mod {
+        |  protected Mod() {
+        |  }
+        """
           .trimMargin()
       )
 
@@ -827,10 +827,10 @@ class JavaCodeGeneratorTest {
     assertThat(javaCode)
       .contains(
         """
-      |public class Mod {
-      |  public Mod() {
-      |  }
-    """
+        |public class Mod {
+        |  public Mod() {
+        |  }
+        """
           .trimMargin()
       )
   }
@@ -861,12 +861,12 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      class GeneratedAnnotation {
-        test: Boolean = true
-      }
-    """
+        class GeneratedAnnotation {
+          test: Boolean = true
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(addGeneratedAnnotation = true),
       )
@@ -879,16 +879,16 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      class GenerateGetters {
-        urgent: Boolean = true
-        url: String = "https://apple.com"
-        diskSize: DataSize = 4.mb
-        ETA: Duration = 3.s
-        package: String
-      }
-    """
+        class GenerateGetters {
+          urgent: Boolean = true
+          url: String = "https://apple.com"
+          diskSize: DataSize = 4.mb
+          ETA: Duration = 3.s
+          package: String
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateGetters = true),
       )
@@ -919,7 +919,7 @@ class JavaCodeGeneratorTest {
         |    public Bar withX(long x) {
         |      return new Bar(x, y);
         |    }
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -927,7 +927,7 @@ class JavaCodeGeneratorTest {
         |    public Bar withY(@NonNull String y) {
         |      return new Bar(x, y);
         |    }
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("public Foo withX") // because `Foo` is abstract
@@ -938,22 +938,22 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
-      
-      pigeon: String
-      parrot: String
-    """
+        module my.mod
+
+        pigeon: String
+        parrot: String
+        """
           .trimIndent()
       )
 
     assertThat(javaCode)
       .contains(
         """
-      |public final class Mod {
-      |  public final @NonNull String pigeon;
-      |
-      |  public final @NonNull String parrot;
-    """
+        |public final class Mod {
+        |  public final @NonNull String pigeon;
+        |
+        |  public final @NonNull String parrot;
+        """
           .trimMargin()
       )
   }
@@ -963,14 +963,14 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      hidden pigeon1: String
-      parrot1: String
+        hidden pigeon1: String
+        parrot1: String
 
-      class Persons {
-        hidden pigeon2: String
-        parrot2: String
-      }
-    """
+        class Persons {
+          hidden pigeon2: String
+          parrot2: String
+        }
+        """
           .trimIndent()
       )
 
@@ -986,22 +986,22 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      /// module comment.
-      /// *emphasized* `code`.
-      module my.mod
-
-      /// module property comment.
-      /// *emphasized* `code`.
-      pigeon: Person
-
-      /// class comment.
-      /// *emphasized* `code`.
-      class Person {
-        /// class property comment.
+        /// module comment.
         /// *emphasized* `code`.
-        name: String
-      }
-    """
+        module my.mod
+
+        /// module property comment.
+        /// *emphasized* `code`.
+        pigeon: Person
+
+        /// class comment.
+        /// *emphasized* `code`.
+        class Person {
+          /// class property comment.
+          /// *emphasized* `code`.
+          name: String
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateJavadoc = true),
       )
@@ -1014,18 +1014,18 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      /// module property comment.
-      /// can contain /* and */ characters.
-      pigeon: Person
-
-      class Person {
-        /// class property comment.
+        /// module property comment.
         /// can contain /* and */ characters.
-        name: String
-      }
-    """
+        pigeon: Person
+
+        class Person {
+          /// class property comment.
+          /// can contain /* and */ characters.
+          name: String
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateGetters = true, generateJavadoc = true),
       )
@@ -1039,7 +1039,7 @@ class JavaCodeGeneratorTest {
         |   * can contain /* and *&#47; characters.
         |   */
         |  public @NonNull Person getPigeon() {
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1049,7 +1049,7 @@ class JavaCodeGeneratorTest {
         |     * can contain /* and *&#47; characters.
         |     */
         |    public @NonNull String getName() {
-      """
+        """
           .trimMargin()
       )
   }
@@ -1059,26 +1059,8 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module mod
+        module mod
 
-      uint8: UInt8
-      uint16: UInt16
-      uint32: UInt32
-      uint: UInt
-      int8: Int8
-      int16: Int16
-      int32: Int32
-      uri: Uri
-
-      pair: Pair<UInt8, UInt16>
-      list: List<UInt32>
-      set: Set<UInt>
-      map: Map<Int8, Int16>
-      listing: Listing<Int32>
-      mapping: Mapping<Uri, UInt8>
-      nullable: UInt16?
-
-      class Foo {
         uint8: UInt8
         uint16: UInt16
         uint32: UInt32
@@ -1087,9 +1069,27 @@ class JavaCodeGeneratorTest {
         int16: Int16
         int32: Int32
         uri: Uri
-        list: List<UInt>
-      }
-    """
+
+        pair: Pair<UInt8, UInt16>
+        list: List<UInt32>
+        set: Set<UInt>
+        map: Map<Int8, Int16>
+        listing: Listing<Int32>
+        mapping: Mapping<Uri, UInt8>
+        nullable: UInt16?
+
+        class Foo {
+          uint8: UInt8
+          uint16: UInt16
+          uint32: UInt32
+          uint: UInt
+          int8: Int8
+          int16: Int16
+          int32: Int32
+          uri: Uri
+          list: List<UInt>
+        }
+        """
           .trimIndent()
       )
 
@@ -1113,7 +1113,7 @@ class JavaCodeGeneratorTest {
         |  public final int int32;
         |
         |  public final @NonNull URI uri;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1131,7 +1131,7 @@ class JavaCodeGeneratorTest {
         |  public final @NonNull Map<@NonNull URI, @NonNull Short> mapping;
         |
         |  public final Integer nullable;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1154,7 +1154,7 @@ class JavaCodeGeneratorTest {
         |    public final @NonNull URI uri;
         |
         |    public final @NonNull List<@NonNull Long> list;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1164,10 +1164,10 @@ class JavaCodeGeneratorTest {
     var javaCode =
       generateJavaCode(
         """
-      module mod
-      
-      foo: String
-    """
+        module mod
+
+        foo: String
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(nonNullAnnotation = "com.example.Annotations\$NonNull"),
       )
@@ -1179,40 +1179,40 @@ class JavaCodeGeneratorTest {
     javaCode =
       generateJavaCode(
         """
-      module mod
-      
-      foo: Int
-      bar: Int?
-      baz: Any
-      qux: String
-      foo2: List<String>?
-      bar2: List<String?>
-      baz2: List<String>
-      qux2: List<Int>
-    """
+        module mod
+
+        foo: Int
+        bar: Int?
+        baz: Any
+        qux: String
+        foo2: List<String>?
+        bar2: List<String?>
+        baz2: List<String>
+        qux2: List<Int>
+        """
           .trimIndent()
       )
 
     assertThat(javaCode)
       .contains(
         """
-      |public final class Mod {
-      |  public final long foo;
-      |
-      |  public final Long bar;
-      |
-      |  public final Object baz;
-      |
-      |  public final @NonNull String qux;
-      |
-      |  public final List<@NonNull String> foo2;
-      |
-      |  public final @NonNull List<String> bar2;
-      |
-      |  public final @NonNull List<@NonNull String> baz2;
-      |
-      |  public final @NonNull List<@NonNull Long> qux2;
-    """
+        |public final class Mod {
+        |  public final long foo;
+        |
+        |  public final Long bar;
+        |
+        |  public final Object baz;
+        |
+        |  public final @NonNull String qux;
+        |
+        |  public final List<@NonNull String> foo2;
+        |
+        |  public final @NonNull List<String> bar2;
+        |
+        |  public final @NonNull List<@NonNull String> baz2;
+        |
+        |  public final @NonNull List<@NonNull Long> qux2;
+        """
           .trimMargin()
       )
   }
@@ -1260,7 +1260,7 @@ class JavaCodeGeneratorTest {
         |  public final @NonNull List<@NonNull Long> recursive1;
         |
         |  public final @NonNull List<@NonNull String> recursive2;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1275,7 +1275,7 @@ class JavaCodeGeneratorTest {
         |    public final @NonNull List<@NonNull Long> recursive1;
         |
         |    public final @NonNull List<@NonNull String> recursive2;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1285,27 +1285,15 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module mod
+        module mod
 
-      class Person { name: String }
+        class Person { name: String }
 
-      typealias List2<E> = List<E>
-      typealias Map2<V, K> = Map<K, V>
-      typealias StringMap<V> = Map<String, V>
-      typealias MMap<X> = Map<X, X>
+        typealias List2<E> = List<E>
+        typealias Map2<V, K> = Map<K, V>
+        typealias StringMap<V> = Map<String, V>
+        typealias MMap<X> = Map<X, X>
 
-      res1: List2<Int>
-      res2: List2<List2<String>>
-      res3: Map2<String, Int>
-      res4: StringMap<Duration>
-      res5: MMap<Person?>
-
-      res6: List2
-      res7: Map2
-      res8: StringMap
-      res9: MMap
-
-      class Foo {
         res1: List2<Int>
         res2: List2<List2<String>>
         res3: Map2<String, Int>
@@ -1316,8 +1304,20 @@ class JavaCodeGeneratorTest {
         res7: Map2
         res8: StringMap
         res9: MMap
-      }
-    """
+
+        class Foo {
+          res1: List2<Int>
+          res2: List2<List2<String>>
+          res3: Map2<String, Int>
+          res4: StringMap<Duration>
+          res5: MMap<Person?>
+
+          res6: List2
+          res7: Map2
+          res8: StringMap
+          res9: MMap
+        }
+        """
           .trimIndent()
       )
 
@@ -1343,7 +1343,7 @@ class JavaCodeGeneratorTest {
         |  public final @NonNull Map<@NonNull String, @NonNull Object> res8;
         |
         |  public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1366,7 +1366,7 @@ class JavaCodeGeneratorTest {
         |    public final @NonNull Map<@NonNull String, @NonNull Object> res8;
         |
         |    public final @NonNull Map<@NonNull Object, @NonNull Object> res9;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1376,10 +1376,10 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module mod
+        module mod
 
-      x: "Pigeon"|"Barn Owl"|"Parrot"
-    """
+        x: "Pigeon"|"Barn Owl"|"Parrot"
+        """
           .trimIndent()
       )
 
@@ -1392,10 +1392,10 @@ class JavaCodeGeneratorTest {
       assertThrows<JavaCodeGeneratorException> {
         generateJavaCode(
           """
-        module mod
+          module mod
 
-        x: "Pigeon"|Int|"Parrot"
-      """
+          x: "Pigeon"|Int|"Parrot"
+          """
             .trimIndent()
         )
       }
@@ -1407,17 +1407,17 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module mod
+        module mod
 
-      v1: "RELEASE"
-      v2: "RELEASE"|String
-      v3: String|"RELEASE"
-      v4: "RELEASE"|String|"LATEST"
-      v5: Version|String|"LATEST"
-      v6: (Version|String)|("LATEST"|String)
-      
-      typealias Version = "RELEASE"|String|"LATEST"
-    """
+        v1: "RELEASE"
+        v2: "RELEASE"|String
+        v3: String|"RELEASE"
+        v4: "RELEASE"|String|"LATEST"
+        v5: Version|String|"LATEST"
+        v6: (Version|String)|("LATEST"|String)
+
+        typealias Version = "RELEASE"|String|"LATEST"
+        """
           .trimIndent()
       )
 
@@ -1435,22 +1435,22 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module mod
+        module mod
 
-      typealias Version1 = "RELEASE"|String
-      typealias Version2 = String|"RELEASE"
-      typealias Version3 = "RELEASE"|String|"LATEST"
-      typealias Version4 = Version3|String|"LATEST"
-      typealias Version5 = (Version4|String)|("LATEST"|String)
-      typealias Version6 = Version5
-      
-      v1: Version1
-      v2: Version2
-      v3: Version3
-      v4: Version4
-      v5: Version5
-      v6: Version6
-    """
+        typealias Version1 = "RELEASE"|String
+        typealias Version2 = String|"RELEASE"
+        typealias Version3 = "RELEASE"|String|"LATEST"
+        typealias Version4 = Version3|String|"LATEST"
+        typealias Version5 = (Version4|String)|("LATEST"|String)
+        typealias Version6 = Version5
+
+        v1: Version1
+        v2: Version2
+        v3: Version3
+        v4: Version4
+        v5: Version5
+        v6: Version6
+        """
           .trimIndent()
       )
 
@@ -1468,10 +1468,10 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      name: String
-    """
+        name: String
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(paramsAnnotation = "org.project.MyAnnotation"),
       )
@@ -1486,10 +1486,10 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      name: String
-    """
+        name: String
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(paramsAnnotation = null),
       )
@@ -1502,15 +1502,15 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      server: Server
+        server: Server
 
-      class Server {
-        port: Int
-        urls: Listing<Uri>
-      }
-    """
+        class Server {
+          port: Int
+          urls: Listing<Uri>
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateSpringBootConfig = true),
       )
@@ -1520,20 +1520,20 @@ class JavaCodeGeneratorTest {
         """
         |@ConfigurationProperties
         |public final class Mod {
-      """
+        """
           .trimMargin()
       )
       .contains(
         """
         |  public final @NonNull Server server;
-      """
+        """
           .trimMargin()
       )
       .contains(
         """
         |  @ConfigurationProperties("server")
         |  public static final class Server {
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1541,7 +1541,7 @@ class JavaCodeGeneratorTest {
         |    public final long port;
         |
         |    public final @NonNull List<@NonNull URI> urls;
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("@ConstructorBinding")
@@ -1549,8 +1549,9 @@ class JavaCodeGeneratorTest {
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
-    val javaCodeWithoutSpringAnnotations =
-      javaCode.deleteLines { it.contains("ConfigurationProperties") }
+    val javaCodeWithoutSpringAnnotations = javaCode.deleteLines {
+      it.contains("ConfigurationProperties")
+    }
     assertThat(javaCodeWithoutSpringAnnotations).compilesSuccessfully()
   }
 
@@ -1560,11 +1561,11 @@ class JavaCodeGeneratorTest {
       PklModule(
         "library",
         """
-          module library
+        module library
 
-          class Person { name: String; age: Int }
-          
-          pigeon: Person
+        class Person { name: String; age: Int }
+
+        pigeon: Person
         """
           .trimIndent(),
       )
@@ -1573,13 +1574,13 @@ class JavaCodeGeneratorTest {
       PklModule(
         "client",
         """
-          module client
-          
-          import "library.pkl"
-          
-          lib: library
-          
-          parrot: library.Person
+        module client
+
+        import "library.pkl"
+
+        lib: library
+
+        parrot: library.Person
         """
           .trimIndent(),
       )
@@ -1596,7 +1597,7 @@ class JavaCodeGeneratorTest {
         |  public final @NonNull Library lib;
         |
         |  public final Library. @NonNull Person parrot;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1607,11 +1608,11 @@ class JavaCodeGeneratorTest {
       PklModule(
         "base",
         """
-          open module base
-        
-          open class Person { name: String }
-        
-          pigeon: Person
+        open module base
+
+        open class Person { name: String }
+
+        pigeon: Person
         """
           .trimIndent(),
       )
@@ -1620,13 +1621,13 @@ class JavaCodeGeneratorTest {
       PklModule(
         "derived",
         """
-          module derived
-          extends "base.pkl"
-          
-          class Person2 extends Person { age: Int }
-          
-          person1: Person
-          person2: Person2
+        module derived
+        extends "base.pkl"
+
+        class Person2 extends Person { age: Int }
+
+        person1: Person
+        person2: Person2
         """
           .trimIndent(),
       )
@@ -1643,7 +1644,7 @@ class JavaCodeGeneratorTest {
         |  public final Base. @NonNull Person person1;
         |
         |  public final @NonNull Person2 person2;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1660,9 +1661,9 @@ class JavaCodeGeneratorTest {
       PklModule(
         "base",
         """
-          abstract module base
-    
-          typealias Version = "LATEST"|String
+        abstract module base
+
+        typealias Version = "LATEST"|String
         """
           .trimIndent(),
       )
@@ -1671,11 +1672,11 @@ class JavaCodeGeneratorTest {
       PklModule(
         "derived",
         """
-          module derived
-          
-          extends "base.pkl"
-          
-          v: Version = "1.2.3"
+        module derived
+
+        extends "base.pkl"
+
+        v: Version = "1.2.3"
         """
           .trimIndent(),
       )
@@ -1690,7 +1691,7 @@ class JavaCodeGeneratorTest {
         """
         |public final class Derived extends Base {
         |  public final @NonNull String v;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1701,19 +1702,19 @@ class JavaCodeGeneratorTest {
       PklModule(
         "Mod.pkl",
         """
-          module org.pkl.Mod
-    
-          foo: Foo
-    
-          bar: Bar
-    
-          class Foo {
-            prop: String
-          }
-    
-          class Bar {
-            prop: Int
-          }
+        module org.pkl.Mod
+
+        foo: Foo
+
+        bar: Bar
+
+        class Foo {
+          prop: String
+        }
+
+        class Bar {
+          prop: Int
+        }
         """
           .trimIndent(),
       )
@@ -1734,19 +1735,19 @@ class JavaCodeGeneratorTest {
       PklModule(
         "mod.pkl",
         """
-          module my.mod
-    
-          foo: Foo
-    
-          bar: Bar
-    
-          class Foo {
-            prop: String
-          }
-    
-          class Bar {
-            prop: Int
-          }
+        module my.mod
+
+        foo: Foo
+
+        bar: Bar
+
+        class Foo {
+          prop: String
+        }
+
+        class Bar {
+          prop: Int
+        }
         """
           .trimIndent(),
       )
@@ -1766,39 +1767,39 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module mod
-  
-      class BigStruct {
-        boolean: Boolean
-        int: Int
-        float: Float
-        string: String
-        duration: Duration
-        dataSize: DataSize
-        pair: Pair
-        pair2: Pair<String, SmallStruct>
-        coll: Collection
-        coll2: Collection<SmallStruct>
-        list: List
-        list2: List<SmallStruct>
-        set: Set
-        set2: Set<SmallStruct>
-        map: Map
-        map2: Map<String, SmallStruct>
-        container: Mapping
-        container2: Mapping<String, SmallStruct>
-        other: SmallStruct
-        regex: Regex
-        nonNull: NonNull
-        enum: Direction
-      }
-  
-      class SmallStruct {
-        name: String
-      }
-  
-      typealias Direction = "north"|"east"|"south"|"west"
-    """
+        module mod
+
+        class BigStruct {
+          boolean: Boolean
+          int: Int
+          float: Float
+          string: String
+          duration: Duration
+          dataSize: DataSize
+          pair: Pair
+          pair2: Pair<String, SmallStruct>
+          coll: Collection
+          coll2: Collection<SmallStruct>
+          list: List
+          list2: List<SmallStruct>
+          set: Set
+          set2: Set<SmallStruct>
+          map: Map
+          map2: Map<String, SmallStruct>
+          container: Mapping
+          container2: Mapping<String, SmallStruct>
+          other: SmallStruct
+          regex: Regex
+          nonNull: NonNull
+          enum: Direction
+        }
+
+        class SmallStruct {
+          name: String
+        }
+
+        typealias Direction = "north"|"east"|"south"|"west"
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(implementSerializable = true),
       )
@@ -1877,9 +1878,9 @@ class JavaCodeGeneratorTest {
     var javaCode =
       generateJavaCode(
         """
-      module my.mod
-      abstract class Foo { str: String }
-    """
+        module my.mod
+        abstract class Foo { str: String }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(implementSerializable = true),
       )
@@ -1889,8 +1890,8 @@ class JavaCodeGeneratorTest {
     javaCode =
       generateJavaCode(
         """
-      module my.mod
-    """
+        module my.mod
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(implementSerializable = true),
       )
@@ -1903,11 +1904,11 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module Person
-      name: String
-      address: Address
-      class Address { city: String }
-    """
+        module Person
+        name: String
+        address: Address
+        class Address { city: String }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(implementSerializable = true),
       )
@@ -1917,14 +1918,14 @@ class JavaCodeGeneratorTest {
         """
         |public final class Person implements Serializable {
         |  private static final long serialVersionUID = 0L;
-      """
+        """
           .trimMargin()
       )
       .contains(
         """
         |  public static final class Address implements Serializable {
         |    private static final long serialVersionUID = 0L;
-      """
+        """
           .trimMargin()
       )
   }
@@ -1934,22 +1935,22 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo
+        open class Foo
 
-      class TheFoo extends Foo {
-        fooProp: String
-      }
+        class TheFoo extends Foo {
+          fooProp: String
+        }
 
-      open class OpenClass {
-        prop: Foo
-      }
+        open class OpenClass {
+          prop: Foo
+        }
 
-      class TheClass extends OpenClass {
-        prop: TheFoo
-      }
-    """
+        class TheClass extends OpenClass {
+          prop: TheFoo
+        }
+        """
           .trimIndent()
       )
 
@@ -1968,7 +1969,7 @@ class JavaCodeGeneratorTest {
         |    public TheClass withProp(@NonNull TheFoo prop) {
         |      return new TheClass(prop);
         |    }
-      """
+        """
           .trimMargin()
       )
   }
@@ -1978,22 +1979,22 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo
+        open class Foo
 
-      class TheFoo extends Foo {
-        fooProp: String
-      }
+        class TheFoo extends Foo {
+          fooProp: String
+        }
 
-      open class OpenClass {
-        prop: Foo
-      }
+        open class OpenClass {
+          prop: Foo
+        }
 
-      class TheClass extends OpenClass {
-        prop: TheFoo
-      }
-    """
+        class TheClass extends OpenClass {
+          prop: TheFoo
+        }
+        """
           .trimIndent(),
         JavaCodeGeneratorOptions(generateGetters = true),
       )
@@ -2014,7 +2015,7 @@ class JavaCodeGeneratorTest {
         |    public @NonNull TheFoo getProp() {
         |      return prop;
         |    }
-      """
+        """
           .trimMargin()
       )
   }
@@ -2028,16 +2029,16 @@ class JavaCodeGeneratorTest {
         .generateFiles(
           "MyModule.pkl" to
             """
-              module a.b.c.MyModule
-              
-              foo: String = "abc"
+            module a.b.c.MyModule
+
+            foo: String = "abc"
             """
               .trimIndent(),
           "AnotherModule.pkl" to
             """
-              module d.e.f.AnotherModule
-              
-              bar: Int = 123
+            module d.e.f.AnotherModule
+
+            bar: Int = 123
             """
               .trimIndent(),
         )
@@ -2064,23 +2065,23 @@ class JavaCodeGeneratorTest {
         .generateFiles(
           "com/foo/bar/Module1" to
             """
-              module com.foo.bar.Module1
-              
-              bar: String
+            module com.foo.bar.Module1
+
+            bar: String
             """
               .trimIndent(),
           "com/Module2" to
             """
-              module com.Module2
-              
-              com: String
+            module com.Module2
+
+            com: String
             """
               .trimIndent(),
           "org/baz/Module3" to
             """
-              module org.baz.Module3
-              
-              baz: String
+            module org.baz.Module3
+
+            baz: String
             """
               .trimIndent(),
         )
@@ -2114,34 +2115,34 @@ class JavaCodeGeneratorTest {
         .generateFiles(
           "org/foo/Module1" to
             """
-              module org.foo.Module1
-              
-              class Person {
-                name: String
-              }
+            module org.foo.Module1
+
+            class Person {
+              name: String
+            }
             """
               .trimIndent(),
           "org/bar/Module2" to
             """
-              module org.bar.Module2
-              
-              import "../../org/foo/Module1.pkl"
+            module org.bar.Module2
 
-              class Group {
-                owner: Module1.Person
-                name: String
-              }
+            import "../../org/foo/Module1.pkl"
+
+            class Group {
+              owner: Module1.Person
+              name: String
+            }
             """
               .trimIndent(),
           "org/baz/Module3" to
             """
-              module org.baz.Module3
-              
-              import "../../org/bar/Module2.pkl"
+            module org.baz.Module3
 
-              class Supergroup {
-                owner: Module2.Group
-              }
+            import "../../org/bar/Module2.pkl"
+
+            class Supergroup {
+              owner: Module2.Group
+            }
             """
               .trimIndent(),
         )
@@ -2191,16 +2192,16 @@ class JavaCodeGeneratorTest {
         .generateFiles(
           "MyModule.pkl" to
             """
-              module a.b.c.MyModule
-              
-              foo: String = "abc"
+            module a.b.c.MyModule
+
+            foo: String = "abc"
             """
               .trimIndent(),
           "lower_module.pkl" to
             """
-              module d.e.f.lower_module 
-              
-              bar: Int = 123
+            module d.e.f.lower_module 
+
+            bar: Int = 123
             """
               .trimIndent(),
         )
@@ -2223,14 +2224,14 @@ class JavaCodeGeneratorTest {
     val javaCode =
       generateJavaCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo {
-        name: String
-      }
-      
-      class Bar extends Foo {}
-    """
+        open class Foo {
+          name: String
+        }
+
+        class Bar extends Foo {}
+        """
           .trimIndent()
       )
 
@@ -2255,7 +2256,7 @@ class JavaCodeGeneratorTest {
         Bar {
           name = name1
         }
-      """
+        """
           .trimIndent()
       )
   }

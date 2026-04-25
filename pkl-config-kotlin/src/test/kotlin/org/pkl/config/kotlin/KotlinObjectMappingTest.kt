@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,34 +62,34 @@ class KotlinObjectMappingTest {
     val code =
       """
       module KotlinGenericTypesTest
-      
+
       class Foo {
         value: Int
       }
-      
+
       // Sets
       stringSet: Set<String> = Set("in set")
       intSet: Set<Int> = Set(1,2,4,8,16,32)
       booleanSetSet: Set<Set<Boolean>> = Set(Set(false), Set(true), Set(true, false))
-      
+
       // Lists
       stringList: List<String> = List("in list")
       intList: List<Int> = List(1,2,3,5,7,11)
       booleanListList: List<List<Boolean>> = List(List(false), List(true), List(true, false))
-      
+
       // Maps
       intStringMap: Map<Int, String> = Map(0, "in map")
       booleanIntStringMapMap: Map<Boolean, Map<Int, String>> = Map(false, Map(0, "in map in map"))
       booleanIntMapStringMap: Map<Map<Boolean, Int>, String> = Map(Map(true, 42), "in map with map keys")
-      
+
       // Listings
       stringSetListing: Listing<Set<String>> = new { Set("in set in listing") }
       intListingListing: Listing<Listing<Int>> = new { new { 1337 } new { 100 } }
-      
+
       // Mappings
       intStringMapping: Mapping<Int, String> = new { [42] = "in map" }
       stringStringSetMapping: Mapping<String, Set<String>> = new { ["key"] = Set("in set in map") }
-      
+
       // Map & Mappings with structured keys
       intSetListStringMap: Map<List<Set<Int>>, String> = Map(List(Set(27)), "in map with structured key")
       typedStringMap: Map<Foo, String> = Map(
@@ -98,7 +98,7 @@ class KotlinObjectMappingTest {
       dynamicStringMap: Map<Dynamic, String> = Map(
         new Dynamic { value = 42 }, "using Dynamics",
         new Dynamic { hello = "world" }, "also works")
-      
+
       intListingStringMapping: Mapping<Listing<Int>, String> = new {
         [new Listing { 42 1337 }] = "structured key works"
       }
@@ -109,7 +109,7 @@ class KotlinObjectMappingTest {
       thisOneGoesToEleven: Mapping<List<Set<Int>>, Map<Listing<Int>, Mapping<Int, String>>> = new {
         [List(Set(0), Set(0), Set(7))] = Map(intListing, intStringMapping)
       }
-    """
+      """
         .trimIndent()
     val result = ConfigEvaluator.preconfigured().forKotlin().evaluate(text(code))
     assertDoesNotThrow { result.to<KotlinGenericTypesTest>() }
