@@ -3,6 +3,7 @@ abstract module GradleJob
 extends "PklJob.pkl"
 
 import "@gha/Workflow.pkl"
+import "@gha/context.pkl"
 import "@pkl.impl.ghactions/catalog.pkl"
 
 /// Whether this is a release build or not.
@@ -44,9 +45,6 @@ fixed job {
     when (os == "windows") {
       ["JAVA_HOME"] = "/jdk"
     }
-    ["DEBUG_ARGS"] =
-    // language=GithubExpressionLanguage
-      "${{ case(runner.debug == '1', '--info --stacktrace', '') }}"
   }
   when (os == "macOS") {
     `if` =
@@ -98,6 +96,20 @@ fixed job {
           `cache-disabled` = true
         }
       }
+    }
+    new {
+      name = "Set DEBUG_ARGS env var"
+      env {
+        ["RUNNER_DEBUG"] = context.runner.debug
+      }
+      shell = "bash"
+      // language=bash
+      run =
+        """
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+        """
     }
     ...module.steps
   }
