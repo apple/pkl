@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -102,10 +102,10 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
       names = arrayOf("--non-null-annotation"),
       help =
         """
-      Fully qualified name of the annotation type to use for annotating non-null types.
-      The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
-      or the generated code may not compile.
-    """
+        Fully qualified name of the annotation type to use for annotating non-null types.
+        The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+        or the generated code may not compile.
+        """
           .trimIndent(),
     )
 
@@ -122,10 +122,10 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
         metavar = "old_name=new_name",
         help =
           """
-            Replace a prefix in the names of the generated Java classes (repeatable).
-            By default, the names of generated classes are derived from the Pkl module names.
-            With this option, you can override or modify the default names, renaming entire
-            classes or just their packages.
+          Replace a prefix in the names of the generated Java classes (repeatable).
+          By default, the names of generated classes are derived from the Pkl module names.
+          With this option, you can override or modify the default names, renaming entire
+          classes or just their packages.
           """
             .trimIndent(),
       )

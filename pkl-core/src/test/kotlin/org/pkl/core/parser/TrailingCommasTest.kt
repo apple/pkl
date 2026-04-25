@@ -28,19 +28,19 @@ class TrailingCommasTest {
       Parser()
         .parseModule(
           """
-        class Foo<
-          Key,
-          Value,
-        >
-        
-        class Bar<
-          Key,
-          Value,
-        > {
-          baz: Key
-          buzz: Value
-        }
-      """
+          class Foo<
+            Key,
+            Value,
+          >
+
+          class Bar<
+            Key,
+            Value,
+          > {
+            baz: Key
+            buzz: Value
+          }
+          """
             .trimIndent()
         )
 
@@ -63,11 +63,11 @@ class TrailingCommasTest {
       Parser()
         .parseModule(
           """
-        function foo<
-          A,
-          B,
-        >(a: A, b: B,): Value? = "\(a):\(b)"
-      """
+          function foo<
+            A,
+            B,
+          >(a: A, b: B,): Value? = "\(a):\(b)"
+          """
             .trimIndent()
         )
 

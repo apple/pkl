@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,25 +27,25 @@ import org.pkl.core.util.EconomicMaps
 class ProjectDepsTest {
   private val projectDepsStr =
     """
-        {
-          "schemaVersion": 1,
-          "resolvedDependencies": {
-            "package://localhost:0/birds@0": {
-              "type": "remote",
-              "uri": "package://localhost:0/birds@0.5.0",
-              "checksums": {
-                "sha256": "abc123"
-              }
-            },
-            "package://localhost:0/fruit@1": {
-              "type": "local",
-              "uri": "package://localhost:0/fruit@1.1.0",
-              "path": "../fruit"
-            }
+    {
+      "schemaVersion": 1,
+      "resolvedDependencies": {
+        "package://localhost:0/birds@0": {
+          "type": "remote",
+          "uri": "package://localhost:0/birds@0.5.0",
+          "checksums": {
+            "sha256": "abc123"
           }
+        },
+        "package://localhost:0/fruit@1": {
+          "type": "local",
+          "uri": "package://localhost:0/fruit@1.1.0",
+          "path": "../fruit"
         }
-        
-      """
+      }
+    }
+
+    """
       .trimIndent()
 
   private val projectDeps = let {

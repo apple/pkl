@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -70,11 +70,11 @@ class CliPackageDownloaderTest {
       "PklProject",
       """
       amends "pkl:Project"
-      
+
       evaluatorSettings {
         moduleCacheDir = ".my-cache"
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -210,7 +210,7 @@ class CliPackageDownloaderTest {
         Exception when making request `GET https://bogus.domain/notAPackage@1.0.0`:
         Error connecting to host `bogus.domain`.
 
-      """
+        """
           .trimIndent()
       )
   }

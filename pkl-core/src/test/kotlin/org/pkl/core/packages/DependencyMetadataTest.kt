@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -69,110 +69,110 @@ class DependencyMetadataTest {
     )
   private val dependencyMetadataStr =
     """
-     {
-       "name": "my-proj-name",
-       "packageUri": "package://example.com/my-proj-name@0.10.0",
-       "version": "0.10.0",
-       "packageZipUrl": "https://example.com/foo/bar@0.5.3.zip",
-       "packageZipChecksums": {
-         "sha256": "abc123"
-       },
-       "dependencies": {
-         "foo": {
-           "uri": "package://example.com/foo@0.5.3",
-           "checksums": {
-             "sha256": "abc123"
-           }
-         }
-       },
-       "sourceCodeUrlScheme": "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
-       "sourceCode": "https://example.com/my/source",
-       "documentation": "https://example.com/my/docs",
-       "license": "MIT",
-       "licenseText": "The MIT License, you know it",
-       "authors": [
-         "birdy@bird.com"
-       ],
-       "issueTracker": "https://example.com/issues",
-       "description": "Some package description",
-       "annotations": [
-         {
-           "type": "PObject",
-           "classInfo": {
-             "moduleName": "pkl.base",
-             "class": "Unlisted",
-             "moduleUri": "pkl:base"
-           },
-           "properties": {}
-         },
-         {
-           "type": "PObject",
-           "classInfo": {
-             "moduleName": "pkl.base",
-             "class": "Deprecated",
-             "moduleUri": "pkl:base"
-           },
-           "properties": {
-             "since": "0.26.1",
-             "message": "don't use"
-           }
-         },
-         {
-           "type": "PObject",
-           "classInfo": {
-             "moduleName": "myModule",
-             "class": "MyAnnotation",
-             "moduleUri": "pkl:fake"
-           },
-           "properties": {
-             "string": "bar",
-             "boolean": true,
-             "long": 1,
-             "double": 1.66,
-             "null": null,
-             "list": [
-               "a",
-               "b"
-             ],
-             "set": {
-               "type": "Set",
-               "value": [
-                 "a",
-                 "b"
-               ]
-             },
-             "map": {
-               "type": "Map",
-               "value": [
-                 {
-                   "key": true,
-                   "value": "t"
-                 },
-                 {
-                   "key": false,
-                   "value": "f"
-                 }
-               ]
-             },
-             "dataSize": {
-               "type": "DataSize",
-               "unit": "gb",
-               "value": 1.5
-             },
-             "duration": {
-               "type": "Duration",
-               "unit": "h",
-               "value": 2.9
-             },
-             "pair": {
-               "type": "Pair",
-               "first": 1,
-               "second": "1"
-             }
-           }
-         }
-       ]
-     }
+    {
+      "name": "my-proj-name",
+      "packageUri": "package://example.com/my-proj-name@0.10.0",
+      "version": "0.10.0",
+      "packageZipUrl": "https://example.com/foo/bar@0.5.3.zip",
+      "packageZipChecksums": {
+        "sha256": "abc123"
+      },
+      "dependencies": {
+        "foo": {
+          "uri": "package://example.com/foo@0.5.3",
+          "checksums": {
+            "sha256": "abc123"
+          }
+        }
+      },
+      "sourceCodeUrlScheme": "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
+      "sourceCode": "https://example.com/my/source",
+      "documentation": "https://example.com/my/docs",
+      "license": "MIT",
+      "licenseText": "The MIT License, you know it",
+      "authors": [
+        "birdy@bird.com"
+      ],
+      "issueTracker": "https://example.com/issues",
+      "description": "Some package description",
+      "annotations": [
+        {
+          "type": "PObject",
+          "classInfo": {
+            "moduleName": "pkl.base",
+            "class": "Unlisted",
+            "moduleUri": "pkl:base"
+          },
+          "properties": {}
+        },
+        {
+          "type": "PObject",
+          "classInfo": {
+            "moduleName": "pkl.base",
+            "class": "Deprecated",
+            "moduleUri": "pkl:base"
+          },
+          "properties": {
+            "since": "0.26.1",
+            "message": "don't use"
+          }
+        },
+        {
+          "type": "PObject",
+          "classInfo": {
+            "moduleName": "myModule",
+            "class": "MyAnnotation",
+            "moduleUri": "pkl:fake"
+          },
+          "properties": {
+            "string": "bar",
+            "boolean": true,
+            "long": 1,
+            "double": 1.66,
+            "null": null,
+            "list": [
+              "a",
+              "b"
+            ],
+            "set": {
+              "type": "Set",
+              "value": [
+                "a",
+                "b"
+              ]
+            },
+            "map": {
+              "type": "Map",
+              "value": [
+                {
+                  "key": true,
+                  "value": "t"
+                },
+                {
+                  "key": false,
+                  "value": "f"
+                }
+              ]
+            },
+            "dataSize": {
+              "type": "DataSize",
+              "unit": "gb",
+              "value": 1.5
+            },
+            "duration": {
+              "type": "Duration",
+              "unit": "h",
+              "value": 2.9
+            },
+            "pair": {
+              "type": "Pair",
+              "first": 1,
+              "second": "1"
+            }
+          }
+        }
+      ]
+    }
     """
       .trimIndent()
 
@@ -210,43 +210,43 @@ class DependencyMetadataTest {
       )
     val dependencyMetadataStr =
       """
-     {
-       "name": "my-proj-name",
-       "packageUri": "package://example.com/my-proj-name@0.10.0",
-       "version": "0.10.0",
-       "packageZipUrl": "https://example.com/foo/bar@0.5.3.zip",
-       "packageZipChecksums": {
-         "sha256": "abc123"
-       },
-       "dependencies": {},
-       "sourceCodeUrlScheme": "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
-       "sourceCode": "https://example.com/my/source",
-       "documentation": "https://example.com/my/docs",
-       "license": "MIT",
-       "licenseText": "The MIT License, you know it",
-       "authors": [
-         "birdy@bird.com"
-       ],
-       "issueTracker": "https://example.com/issues",
-       "description": "Some package description",
-       "annotations": [
-         {
-           "type": "PObject",
-           "classInfo": {
-             "moduleName": "myModule",
-             "class": "MyAnnotation",
-             "moduleUri": "pkl:fake"
-           },
-           "properties": {
-             "pattern": {
-               "type": "Pattern",
-               "value": ".*"
-             }
-           }
-         }
-       ]
-     }
-    """
+      {
+        "name": "my-proj-name",
+        "packageUri": "package://example.com/my-proj-name@0.10.0",
+        "version": "0.10.0",
+        "packageZipUrl": "https://example.com/foo/bar@0.5.3.zip",
+        "packageZipChecksums": {
+          "sha256": "abc123"
+        },
+        "dependencies": {},
+        "sourceCodeUrlScheme": "https://example.com/my/source/0.5.3/blob%{path}#L%{line}-L%{endLine}",
+        "sourceCode": "https://example.com/my/source",
+        "documentation": "https://example.com/my/docs",
+        "license": "MIT",
+        "licenseText": "The MIT License, you know it",
+        "authors": [
+          "birdy@bird.com"
+        ],
+        "issueTracker": "https://example.com/issues",
+        "description": "Some package description",
+        "annotations": [
+          {
+            "type": "PObject",
+            "classInfo": {
+              "moduleName": "myModule",
+              "class": "MyAnnotation",
+              "moduleUri": "pkl:fake"
+            },
+            "properties": {
+              "pattern": {
+                "type": "Pattern",
+                "value": ".*"
+              }
+            }
+          }
+        ]
+      }
+      """
         .trimIndent()
 
     val parsed = DependencyMetadata.parse(dependencyMetadataStr)

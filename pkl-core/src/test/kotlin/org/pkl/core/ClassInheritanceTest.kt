@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,14 +27,14 @@ class ClassInheritanceTest {
       evaluator.evaluateSchema(
         ModuleSource.text(
           """
-        class Thing
-        open class Base {
-          hidden thing: Thing
-        }
-        class Derived extends Base {
-          thing {}
-        }
-        """
+          class Thing
+          open class Base {
+            hidden thing: Thing
+          }
+          class Derived extends Base {
+            thing {}
+          }
+          """
             .trimIndent()
         )
       )
@@ -54,14 +54,14 @@ class ClassInheritanceTest {
       evaluator.evaluateSchema(
         ModuleSource.text(
           """
-        class Thing
-        open class Base {
-          hidden thing: Thing
-        }
-        class Derived extends Base {
-          thing: Thing = new {}
-        }
-        """
+          class Thing
+          open class Base {
+            hidden thing: Thing
+          }
+          class Derived extends Base {
+            thing: Thing = new {}
+          }
+          """
             .trimIndent()
         )
       )

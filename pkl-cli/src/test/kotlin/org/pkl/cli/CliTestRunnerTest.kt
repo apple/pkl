@@ -47,7 +47,7 @@ class CliTestRunnerTest {
           3 == 3
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
@@ -65,13 +65,13 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      module test
-        facts
-          ✔ succeed
-      
-      100.0% tests pass [1 passed], 100.0% asserts pass [2 passed]
+        module test
+          facts
+            ✔ succeed
 
-    """
+        100.0% tests pass [1 passed], 100.0% asserts pass [2 passed]
+
+        """
           .trimIndent()
       )
     assertThat(err.toString()).isEqualTo("")
@@ -89,7 +89,7 @@ class CliTestRunnerTest {
           1 == 5
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
@@ -136,7 +136,7 @@ class CliTestRunnerTest {
           throw("uh oh")
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
@@ -154,19 +154,19 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualToNormalizingNewlines(
         """
-      module test
-        facts
-          ✘ fail
-             –– Pkl Error ––
-             uh oh
+        module test
+          facts
+            ✘ fail
+               –– Pkl Error ––
+               uh oh
 
-             5 | throw("uh oh")
-                 ^^^^^^^^^^^^^^
-             at test#facts["fail"][#1] (/tempDir/test.pkl, line xx)
+               5 | throw("uh oh")
+                   ^^^^^^^^^^^^^^
+               at test#facts["fail"][#1] (/tempDir/test.pkl, line xx)
 
-      0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+        0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
-    """
+        """
           .trimIndent()
       )
     assertThat(err.toString()).isEqualTo("")
@@ -183,7 +183,7 @@ class CliTestRunnerTest {
           throw("uh oh")
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
@@ -201,19 +201,19 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualTo(
         """
-      module test
-        examples
-          ✘ fail
-             –– Pkl Error ––
-             uh oh
+        module test
+          examples
+            ✘ fail
+               –– Pkl Error ––
+               uh oh
 
-             5 | throw("uh oh")
-                 ^^^^^^^^^^^^^^
-             at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
+               5 | throw("uh oh")
+                   ^^^^^^^^^^^^^^
+               at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
 
-      0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+        0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
 
-    """
+        """
           .trimIndent()
       )
     assertThat(err.toString()).isEqualTo("")
@@ -232,19 +232,19 @@ class CliTestRunnerTest {
           throw("uh oh")
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     tempDir
       .resolve("test.pkl-expected.pcf")
       .writeString(
         """
-      examples {
-        ["fail"] {
-          "never compared to"
+        examples {
+          ["fail"] {
+            "never compared to"
+          }
         }
-      }
-    """
+        """
           .trimIndent()
       )
     val out = StringWriter()
@@ -262,19 +262,19 @@ class CliTestRunnerTest {
     assertThat(out.toString().stripFileAndLines(tempDir))
       .isEqualToNormalizingNewlines(
         """
-      module test
-        examples
-          ✘ fail
-             –– Pkl Error ––
-             uh oh
-      
-             5 | throw("uh oh")
-                 ^^^^^^^^^^^^^^
-             at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
+        module test
+          examples
+            ✘ fail
+               –– Pkl Error ––
+               uh oh
 
-      0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+               5 | throw("uh oh")
+                   ^^^^^^^^^^^^^^
+               at test#examples["fail"][#1] (/tempDir/test.pkl, line xx)
 
-    """
+        0.0% tests pass [1/1 failed], 0.0% asserts pass [1/1 failed]
+
+        """
           .trimIndent()
       )
     assertThat(err.toString()).isEqualTo("")
@@ -296,7 +296,7 @@ class CliTestRunnerTest {
           5 == 9
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val noopWriter = noopWriter()
@@ -314,19 +314,19 @@ class CliTestRunnerTest {
     assertThat(junitReport)
       .isEqualTo(
         """
-      <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="2" failures="1">
-          <testcase classname="test.facts" name="foo"></testcase>
-          <testcase classname="test.facts" name="bar">
-              <failure message="Fact Failure">5 == 9 (/tempDir/test.pkl, line xx)
-        │
-        false</failure>
-          </testcase>
-          <system-err><![CDATA[9 = 9
-      ]]></system-err>
-      </testsuite>
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuite name="test" tests="2" failures="1">
+            <testcase classname="test.facts" name="foo"></testcase>
+            <testcase classname="test.facts" name="bar">
+                <failure message="Fact Failure">5 == 9 (/tempDir/test.pkl, line xx)
+          │
+          false</failure>
+            </testcase>
+            <system-err><![CDATA[9 = 9
+        ]]></system-err>
+        </testsuite>
 
-    """
+        """
           .trimIndent()
       )
   }
@@ -346,7 +346,7 @@ class CliTestRunnerTest {
           throw("uh oh")
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val noopWriter = noopWriter()
@@ -364,23 +364,23 @@ class CliTestRunnerTest {
     assertThat(junitReport)
       .isEqualTo(
         """
-      <?xml version="1.0" encoding="UTF-8"?>
-      <testsuite name="test" tests="2" failures="1">
-          <testcase classname="test.facts" name="foo"></testcase>
-          <testcase classname="test.facts" name="fail">
-              <error message="uh oh">–– Pkl Error ––
-      uh oh
-      
-      9 | throw(&quot;uh oh&quot;)
-          ^^^^^^^^^^^^^^
-      at test#facts[&quot;fail&quot;][#1] (/tempDir/test.pkl, line xx)
-      </error>
-          </testcase>
-          <system-err><![CDATA[9 = 9
-      ]]></system-err>
-      </testsuite>
-      
-    """
+        <?xml version="1.0" encoding="UTF-8"?>
+        <testsuite name="test" tests="2" failures="1">
+            <testcase classname="test.facts" name="foo"></testcase>
+            <testcase classname="test.facts" name="fail">
+                <error message="uh oh">–– Pkl Error ––
+        uh oh
+
+        9 | throw(&quot;uh oh&quot;)
+            ^^^^^^^^^^^^^^
+        at test#facts[&quot;fail&quot;][#1] (/tempDir/test.pkl, line xx)
+        </error>
+            </testcase>
+            <system-err><![CDATA[9 = 9
+        ]]></system-err>
+        </testsuite>
+
+        """
           .trimIndent()
       )
   }
@@ -390,7 +390,7 @@ class CliTestRunnerTest {
     val foo =
       """
       module foo
-      
+
       amends "pkl:test"
 
       facts {
@@ -398,13 +398,13 @@ class CliTestRunnerTest {
           1 == 1
         }
       }
-    """
+      """
         .trimIndent()
 
     val bar =
       """
       module foo
-      
+
       amends "pkl:test"
 
       facts {
@@ -412,7 +412,7 @@ class CliTestRunnerTest {
           1 == 1
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(foo).toString()
     val input2 = tempDir.resolve("test.pkl").writeString(bar).toString()
@@ -438,7 +438,7 @@ class CliTestRunnerTest {
           true
         }
       }
-    """
+      """
         .trimIndent()
 
     val code2 =
@@ -450,7 +450,7 @@ class CliTestRunnerTest {
           true
         }
       }
-    """
+      """
         .trimIndent()
     val input1 = tempDir.resolve("test1.pkl").writeString(code1).toString()
     val input2 = tempDir.resolve("test2.pkl").writeString(code2).toString()
@@ -482,7 +482,7 @@ class CliTestRunnerTest {
           5 == 9
         }
       }
-    """
+      """
         .trimIndent()
 
     val code2 =
@@ -500,7 +500,7 @@ class CliTestRunnerTest {
           true
         }
       }
-    """
+      """
         .trimIndent()
     val input1 = tempDir.resolve("test1.pkl").writeString(code1).toString()
     val input2 = tempDir.resolve("test2.pkl").writeString(code2).toString()
@@ -547,7 +547,7 @@ class CliTestRunnerTest {
             </testsuite>
         </testsuites>
 
-      """
+        """
           .trimIndent()
       )
   }
@@ -563,7 +563,7 @@ class CliTestRunnerTest {
           true
         }
       }
-    """
+      """
         .trimIndent()
 
     val code2 =
@@ -575,7 +575,7 @@ class CliTestRunnerTest {
           true
         }
       }
-    """
+      """
         .trimIndent()
     val input1 = tempDir.resolve("test1.pkl").writeString(code1).toString()
     val input2 = tempDir.resolve("test2.pkl").writeString(code2).toString()
@@ -620,19 +620,19 @@ class CliTestRunnerTest {
           2
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     tempDir
       .resolve("test.pkl-expected.pcf")
       .writeString(
         """
-      examples {
-        ["nums"] {
-          1
+        examples {
+          ["nums"] {
+            1
+          }
         }
-      }
-    """
+        """
           .trimIndent()
       )
     val out = StringWriter()
@@ -676,7 +676,7 @@ class CliTestRunnerTest {
           2
         }
       }
-    """
+      """
         .trimIndent()
     val input = tempDir.resolve("test.pkl").writeString(code).toString()
     val out = StringWriter()
@@ -694,13 +694,13 @@ class CliTestRunnerTest {
     assertThat(out.toString())
       .isEqualTo(
         """
-          module test
-            examples
-              ✍️ nums
+        module test
+          examples
+            ✍️ nums
 
-          1 examples written
-          
-          """
+        1 examples written
+
+        """
           .trimIndent()
       )
   }
@@ -738,13 +738,13 @@ class CliTestRunnerTest {
       assertThat(out.toString().stripFileAndLines(tempDir))
         .isEqualTo(
           """
-            module test
-              facts
-                ✔ localeTest
+          module test
+            facts
+              ✔ localeTest
 
-            100.0% tests pass [1 passed], 100.0% asserts pass [1 passed]
+          100.0% tests pass [1 passed], 100.0% asserts pass [1 passed]
 
-            """
+          """
             .trimIndent()
         )
       assertThat(err.toString()).isEqualTo("")

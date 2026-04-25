@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -77,7 +77,7 @@ class CliKotlinCodeGeneratorTest {
       open class Mod1(
         open val pigeon: Person
       ) {
-    """
+      """
         .trimIndent(),
       module1KotlinFile.readString(),
     )
@@ -88,7 +88,7 @@ class CliKotlinCodeGeneratorTest {
         pigeon: Mod1.Person,
         val parrot: Mod1.Person
       ) : Mod1(pigeon) {
-    """
+      """
         .trimIndent(),
       module2KotlinFile.readString(),
     )

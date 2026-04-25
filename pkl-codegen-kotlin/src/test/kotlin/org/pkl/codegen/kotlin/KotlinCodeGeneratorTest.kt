@@ -74,13 +74,13 @@ class KotlinCodeGeneratorTest {
     private val simpleClass: KClass<*> by lazy {
       generateKotlinCode(
           """
-        module my.mod
+          module my.mod
 
-        open class Simple {
-          str: String
-          list: List<Int>
-        }
-      """
+          open class Simple {
+            str: String
+            list: List<Int>
+          }
+          """
             .trimIndent()
         )
         .compile()
@@ -128,7 +128,7 @@ class KotlinCodeGeneratorTest {
         }
 
         typealias Direction = "north"|"east"|"south"|"west"
-      """
+        """
           .trimIndent()
       )
     }
@@ -214,10 +214,10 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      open class `A Person` {
-        `first name`: String
-      }
-    """
+        open class `A Person` {
+          `first name`: String
+        }
+        """
           .trimIndent()
       )
 
@@ -228,18 +228,18 @@ class KotlinCodeGeneratorTest {
         |  open class `A Person`(
         |    open val `first name`: String
         |  )
-      """
-          .trimMargin()
-      )
-      .contains(
-        """
-          |  override fun toString(): String = ""${'"'}A Person(first name=${'$'}`first name`)""${'"'}
         """
           .trimMargin()
       )
       .contains(
         """
-          |  open fun copy(`first name`: String = this.`first name`): `A Person` = `A Person`(`first name`)
+        |  override fun toString(): String = ""${'"'}A Person(first name=${'$'}`first name`)""${'"'}
+        """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  open fun copy(`first name`: String = this.`first name`): `A Person` = `A Person`(`first name`)
         """
           .trimMargin()
       )
@@ -250,21 +250,21 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      class ClassWithDeprecatedProperty {
-        @Deprecated { message = "property deprecation message" } 
-        deprecatedProperty: Int = 1337
-      }
-    """
+        class ClassWithDeprecatedProperty {
+          @Deprecated { message = "property deprecation message" } 
+          deprecatedProperty: Int = 1337
+        }
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |  data class ClassWithDeprecatedProperty(
-      |    @Deprecated(message = "property deprecation message")
-      |    val deprecatedProperty: Long
-    """
+        |  data class ClassWithDeprecatedProperty(
+        |    @Deprecated(message = "property deprecation message")
+        |    val deprecatedProperty: Long
+        """
           .trimMargin()
       )
   }
@@ -274,20 +274,20 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      @Deprecated { message = "class deprecation message" }
-      class DeprecatedClass {
-        propertyOfDeprecatedClass: Int = 42
-      }
-    """
+        @Deprecated { message = "class deprecation message" }
+        class DeprecatedClass {
+          propertyOfDeprecatedClass: Int = 42
+        }
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |  @Deprecated(message = "class deprecation message")
-      |  data class DeprecatedClass(
-    """
+        |  @Deprecated(message = "class deprecation message")
+        |  data class DeprecatedClass(
+        """
           .trimMargin()
       )
   }
@@ -297,20 +297,20 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      @Deprecated{ message = "module class deprecation message" }
-      module DeprecatedModule
-      
-      propertyInDeprecatedModuleClass : Int = 42
-    """
+        @Deprecated{ message = "module class deprecation message" }
+        module DeprecatedModule
+
+        propertyInDeprecatedModuleClass : Int = 42
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |@Deprecated(message = "module class deprecation message")
-      |data class DeprecatedModule(
-    """
+        |@Deprecated(message = "module class deprecation message")
+        |data class DeprecatedModule(
+        """
           .trimMargin()
       )
   }
@@ -320,21 +320,21 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      class ClassWithDeprecatedProperty {
-         @Deprecated
-         deprecatedProperty: Int = 1337
-      }
-    """
+        class ClassWithDeprecatedProperty {
+           @Deprecated
+           deprecatedProperty: Int = 1337
+        }
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |  data class ClassWithDeprecatedProperty(
-      |    @Deprecated
-      |    val deprecatedProperty: Long
-    """
+        |  data class ClassWithDeprecatedProperty(
+        |    @Deprecated
+        |    val deprecatedProperty: Long
+        """
           .trimMargin()
       )
   }
@@ -344,20 +344,20 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      @Deprecated
-      class DeprecatedClass {
-        propertyOfDeprecatedClass: Int = 42
-      }
-    """
+        @Deprecated
+        class DeprecatedClass {
+          propertyOfDeprecatedClass: Int = 42
+        }
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |  @Deprecated
-      |  data class DeprecatedClass(
-    """
+        |  @Deprecated
+        |  data class DeprecatedClass(
+        """
           .trimMargin()
       )
   }
@@ -367,20 +367,20 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      @Deprecated
-      module DeprecatedModule
-      
-      propertyInDeprecatedModuleClass : Int = 42
-    """
+        @Deprecated
+        module DeprecatedModule
+
+        propertyInDeprecatedModuleClass : Int = 42
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |@Deprecated
-      |data class DeprecatedModule(
-    """
+        |@Deprecated
+        |data class DeprecatedModule(
+        """
           .trimMargin()
       )
   }
@@ -469,9 +469,9 @@ class KotlinCodeGeneratorTest {
       assertThrows<KotlinCodeGeneratorException> {
         generateKotlinCode(
           """
-        module my.mod
-        typealias MyTypeAlias = "foo-bar" | "foo bar"
-      """
+          module my.mod
+          typealias MyTypeAlias = "foo-bar" | "foo bar"
+          """
             .trimIndent()
         )
       }
@@ -485,9 +485,9 @@ class KotlinCodeGeneratorTest {
       assertThrows<KotlinCodeGeneratorException> {
         generateKotlinCode(
           """
-        module my.mod
-        typealias MyTypeAlias = "foo" | "" | "bar"
-      """
+          module my.mod
+          typealias MyTypeAlias = "foo" | "" | "bar"
+          """
             .trimIndent()
         )
       }
@@ -500,9 +500,9 @@ class KotlinCodeGeneratorTest {
       assertThrows<KotlinCodeGeneratorException> {
         generateKotlinCode(
           """
-        module my.mod
-        typealias MyTypeAlias = "foo" | "✅" | "bar"
-      """
+          module my.mod
+          typealias MyTypeAlias = "foo" | "✅" | "bar"
+          """
             .trimIndent()
         )
       }
@@ -514,16 +514,16 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      class Person {
-        name: String
-        age: Int
-        hobbies: List<String>
-        friends: Map<String, Person>
-        sibling: Person?
-      }
-    """
+        class Person {
+          name: String
+          age: Int
+          hobbies: List<String>
+          friends: Map<String, Person>
+          sibling: Person?
+        }
+        """
           .trimIndent()
       )
 
@@ -532,12 +532,12 @@ class KotlinCodeGeneratorTest {
       .isEqualTo(
         """
         package my
-  
+
         import kotlin.Long
         import kotlin.String
         import kotlin.collections.List
         import kotlin.collections.Map
-  
+
         object Mod {
           data class Person(
             val name: String,
@@ -547,8 +547,8 @@ class KotlinCodeGeneratorTest {
             val sibling: Person?
           )
         }
-        
-      """
+
+        """
           .trimIndent()
       )
   }
@@ -558,13 +558,13 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      class Person {
-        age: Int
-        name: Regex
-      }
-    """
+        class Person {
+          age: Int
+          name: Regex
+        }
+        """
           .trimIndent()
       )
 
@@ -578,12 +578,12 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      class Foo {
-        bytes: Bytes
-      }
-    """
+        class Foo {
+          bytes: Bytes
+        }
+        """
           .trimIndent()
       )
 
@@ -597,17 +597,17 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo {
-        other: Int
-        bar: Bar
-      }
-      open class Bar {
-        foo: Foo
-        other: String
-      }
-    """
+        open class Foo {
+          other: Int
+          bar: Bar
+        }
+        open class Bar {
+          foo: Foo
+          other: String
+        }
+        """
           .trimIndent()
       )
 
@@ -619,7 +619,7 @@ class KotlinCodeGeneratorTest {
         |    open val other: Long,
         |    open val bar: Bar
         |  )
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -628,7 +628,7 @@ class KotlinCodeGeneratorTest {
         |    open val foo: Foo,
         |    open val other: String
         |  )
-      """
+        """
           .trimMargin()
       )
   }
@@ -638,19 +638,19 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo {
-        one: Int
-      }
-      open class None extends Foo {}
-      open class Bar extends None {
-        two: String
-      }
-      class Baz extends Bar {
-        three: Duration
-      }
-    """
+        open class Foo {
+          one: Int
+        }
+        open class None extends Foo {}
+        open class Bar extends None {
+          two: String
+        }
+        class Baz extends Bar {
+          three: Duration
+        }
+        """
           .trimIndent()
       )
 
@@ -661,7 +661,7 @@ class KotlinCodeGeneratorTest {
         |  open class Foo(
         |    open val one: Long
         |  )
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -669,7 +669,7 @@ class KotlinCodeGeneratorTest {
         |  open class None(
         |    one: Long
         |  ) : Foo(one)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -678,7 +678,7 @@ class KotlinCodeGeneratorTest {
         |    one: Long,
         |    open val two: String
         |  ) : None(one)
-      """
+        """
           .trimMargin()
       )
       .isEqualToResourceFile("Inheritance.kotlin")
@@ -689,25 +689,25 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      class Foo
-      abstract class Bar
-      class Baz extends Bar
-    """
+        class Foo
+        abstract class Bar
+        class Baz extends Bar
+        """
           .trimIndent()
       )
 
     assertThat(kotlinCode)
       .contains(
         """
-      |  data class Foo
-      |
-      |  abstract class Bar
-      |
-      |  class Baz : Bar() {
-      |    fun copy(): Baz = Baz()
-    """
+        |  data class Foo
+        |
+        |  abstract class Bar
+        |
+        |  class Baz : Bar() {
+        |    fun copy(): Baz = Baz()
+        """
           .trimMargin()
       )
   }
@@ -718,13 +718,13 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      abstract class Foo { one: Int }
-      abstract class Bar extends Foo { two: String }
-      class Baz extends Bar { three: Duration }
-      class Qux extends Bar {}
-    """
+        abstract class Foo { one: Int }
+        abstract class Bar extends Foo { two: String }
+        class Baz extends Bar { three: Duration }
+        class Qux extends Bar {}
+        """
           .trimIndent()
       )
 
@@ -736,7 +736,7 @@ class KotlinCodeGeneratorTest {
         |  abstract class Foo(
         |    open val one: Long
         |  )
-      """
+        """
           .trimMargin()
       )
       // missing trailing `{` proves that no methods are generated
@@ -746,7 +746,7 @@ class KotlinCodeGeneratorTest {
         |    one: Long,
         |    open val two: String
         |  ) : Foo(one)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -761,7 +761,7 @@ class KotlinCodeGeneratorTest {
         |      two: String = this.two,
         |      three: Duration = this.three
         |    ): Baz = Baz(one, two, three)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -771,7 +771,7 @@ class KotlinCodeGeneratorTest {
         |    two: String
         |  ) : Bar(one, two) {
         |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
-      """
+        """
           .trimMargin()
       )
   }
@@ -782,13 +782,13 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo { one: Int }
-      abstract class Bar extends Foo { two: String }
-      class Baz extends Bar { three: Duration }
-      class Qux extends Bar {}
-    """
+        open class Foo { one: Int }
+        abstract class Bar extends Foo { two: String }
+        class Baz extends Bar { three: Duration }
+        class Qux extends Bar {}
+        """
           .trimIndent()
       )
 
@@ -800,7 +800,7 @@ class KotlinCodeGeneratorTest {
         |    open val one: Long
         |  ) {
         |    open fun copy(one: Long = this.one): Foo = Foo(one)
-      """
+        """
           .trimMargin()
       )
       // missing trailing `{` proves that no methods are generated
@@ -810,7 +810,7 @@ class KotlinCodeGeneratorTest {
         |    one: Long,
         |    open val two: String
         |  ) : Foo(one)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -827,7 +827,7 @@ class KotlinCodeGeneratorTest {
         |    ): Baz = Baz(one, two, three)
         |
         |    override fun copy(one: Long): Baz = Baz(one, two, three)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -839,7 +839,7 @@ class KotlinCodeGeneratorTest {
         |    fun copy(one: Long = this.one, two: String = this.two): Qux = Qux(one, two)
         |
         |    override fun copy(one: Long): Qux = Qux(one, two)
-      """
+        """
           .trimMargin()
       )
   }
@@ -850,13 +850,13 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      open class Foo { one: Int }
-      abstract class Bar extends Foo {}
-      class Baz extends Bar { two: Duration }
-      class Qux extends Bar {}
-    """
+        open class Foo { one: Int }
+        abstract class Bar extends Foo {}
+        class Baz extends Bar { two: Duration }
+        class Qux extends Bar {}
+        """
           .trimIndent()
       )
 
@@ -868,7 +868,7 @@ class KotlinCodeGeneratorTest {
         |    open val one: Long
         |  ) {
         |    open fun copy(one: Long = this.one): Foo = Foo(one)
-      """
+        """
           .trimMargin()
       )
       // missing trailing `{` proves that no methods are generated
@@ -877,7 +877,7 @@ class KotlinCodeGeneratorTest {
         |  abstract class Bar(
         |    one: Long
         |  ) : Foo(one)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -889,7 +889,7 @@ class KotlinCodeGeneratorTest {
         |    fun copy(one: Long = this.one, two: Duration = this.two): Baz = Baz(one, two)
         |
         |    override fun copy(one: Long): Baz = Baz(one, two)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -898,7 +898,7 @@ class KotlinCodeGeneratorTest {
         |    one: Long
         |  ) : Bar(one) {
         |    override fun copy(one: Long): Qux = Qux(one)
-      """
+        """
           .trimMargin()
       )
   }
@@ -929,15 +929,15 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      pigeon: Person
-      parrot: Person
+        pigeon: Person
+        parrot: Person
 
-      class Person {
-        name: String
-      }
-    """
+        class Person {
+          name: String
+        }
+        """
           .trimIndent()
       )
 
@@ -948,7 +948,7 @@ class KotlinCodeGeneratorTest {
         package my
 
         import kotlin.String
-  
+
         data class Mod(
           val pigeon: Person,
           val parrot: Person
@@ -957,8 +957,8 @@ class KotlinCodeGeneratorTest {
             val name: String
           )
         }
-        
-      """
+
+        """
           .trimIndent()
       )
   }
@@ -968,15 +968,15 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      pigeon: Person
-      parrot: Person
+        pigeon: Person
+        parrot: Person
 
-      class Person {
-        name: String
-      }
-    """
+        class Person {
+          name: String
+        }
+        """
           .trimIndent()
       )
 
@@ -994,8 +994,8 @@ class KotlinCodeGeneratorTest {
             val name: String
           )
         }
-        
-      """
+
+        """
           .trimIndent()
       )
   }
@@ -1005,16 +1005,16 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      hidden pigeon1: String
-      parrot1: String
+        hidden pigeon1: String
+        parrot1: String
 
-      class Persons {
-        hidden pigeon2: String
-        parrot2: String
-      }
-    """
+        class Persons {
+          hidden pigeon2: String
+          parrot2: String
+        }
+        """
           .trimIndent()
       )
 
@@ -1030,34 +1030,34 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      /// module comment.
-      /// *emphasized* `code`.
-      module my.mod
-
-      /// module property comment.
-      /// *emphasized* `code`.
-      pigeon: Person
-
-      /// class comment.
-      /// *emphasized* `code`.
-      open class Product {
-        /// class property comment.
+        /// module comment.
         /// *emphasized* `code`.
-        price: String
-      }
+        module my.mod
 
-      /// class comment.
-      /// *emphasized* `code`.
-      class Person {
-        /// class property comment.
+        /// module property comment.
         /// *emphasized* `code`.
-        name: String
-      }
+        pigeon: Person
 
-      /// type alias comment.
-      /// *emphasized* `code`.
-      typealias Email = String(contains("@"))
-    """
+        /// class comment.
+        /// *emphasized* `code`.
+        open class Product {
+          /// class property comment.
+          /// *emphasized* `code`.
+          price: String
+        }
+
+        /// class comment.
+        /// *emphasized* `code`.
+        class Person {
+          /// class property comment.
+          /// *emphasized* `code`.
+          name: String
+        }
+
+        /// type alias comment.
+        /// *emphasized* `code`.
+        typealias Email = String(contains("@"))
+        """
           .trimIndent(),
         generateKdoc = true,
       )
@@ -1070,12 +1070,12 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      /// module comment.
-      /// *emphasized* `code`.
-      module my.mod
+        /// module comment.
+        /// *emphasized* `code`.
+        module my.mod
 
-      class Product
-    """
+        class Product
+        """
           .trimIndent(),
         generateKdoc = true,
       )
@@ -1083,17 +1083,17 @@ class KotlinCodeGeneratorTest {
     assertThat(kotlinCode)
       .isEqualTo(
         """
-      package my
+        package my
 
-      /**
-       * module comment.
-       * *emphasized* `code`.
-       */
-      object Mod {
-        data class Product
-      }
-      
-    """
+        /**
+         * module comment.
+         * *emphasized* `code`.
+         */
+        object Mod {
+          data class Product
+        }
+
+        """
           .trimIndent()
       )
   }
@@ -1103,26 +1103,8 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      uint8: UInt8
-      uint16: UInt16
-      uint32: UInt32
-      uint: UInt
-      int8: Int8
-      int16: Int16
-      int32: Int32
-      uri: Uri
-
-      pair: Pair<UInt8, UInt16>
-      list: List<UInt32>
-      set: Set<UInt>
-      map: Map<Int8, Int16>
-      listing: Listing<Int32>
-      mapping: Mapping<Uri, UInt8>
-      nullable: UInt16?
-
-      class Foo {
         uint8: UInt8
         uint16: UInt16
         uint32: UInt32
@@ -1131,9 +1113,27 @@ class KotlinCodeGeneratorTest {
         int16: Int16
         int32: Int32
         uri: Uri
-        list: List<UInt>
-      }
-    """
+
+        pair: Pair<UInt8, UInt16>
+        list: List<UInt32>
+        set: Set<UInt>
+        map: Map<Int8, Int16>
+        listing: Listing<Int32>
+        mapping: Mapping<Uri, UInt8>
+        nullable: UInt16?
+
+        class Foo {
+          uint8: UInt8
+          uint16: UInt16
+          uint32: UInt32
+          uint: UInt
+          int8: Int8
+          int16: Int16
+          int32: Int32
+          uri: Uri
+          list: List<UInt>
+        }
+        """
           .trimIndent()
       )
 
@@ -1150,7 +1150,7 @@ class KotlinCodeGeneratorTest {
         import kotlin.collections.List
         import kotlin.collections.Map
         import kotlin.collections.Set
-  
+
         data class Mod(
           val uint8: Short,
           val uint16: Int,
@@ -1180,8 +1180,8 @@ class KotlinCodeGeneratorTest {
             val list: List<Long>
           )
         }
-        
-      """
+
+        """
           .trimIndent()
       )
   }
@@ -1191,28 +1191,28 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      typealias Simple = String
-      typealias Constrained = String(length >= 3)
-      typealias Parameterized = List<Int(nonZero)>
-      typealias Recursive1 = Parameterized(nonEmpty)
-      typealias Recursive2 = List<Constrained>
+        typealias Simple = String
+        typealias Constrained = String(length >= 3)
+        typealias Parameterized = List<Int(nonZero)>
+        typealias Recursive1 = Parameterized(nonEmpty)
+        typealias Recursive2 = List<Constrained>
 
-      simple: Simple
-      constrained: Constrained
-      parameterized: Parameterized
-      recursive1: Recursive1
-      recursive2: Recursive2
-
-      class Foo {
         simple: Simple
         constrained: Constrained
         parameterized: Parameterized
         recursive1: Recursive1
         recursive2: Recursive2
-      }
-    """
+
+        class Foo {
+          simple: Simple
+          constrained: Constrained
+          parameterized: Parameterized
+          recursive1: Recursive1
+          recursive2: Recursive2
+        }
+        """
           .trimIndent()
       )
 
@@ -1223,17 +1223,17 @@ class KotlinCodeGeneratorTest {
         import kotlin.Long
         import kotlin.String
         import kotlin.collections.List
-  
+
         typealias Simple = String
-  
+
         typealias Constrained = String
-  
+
         typealias Parameterized = List<Long>
-  
+
         typealias Recursive1 = Parameterized
-  
+
         typealias Recursive2 = List<Constrained>
-  
+
         data class Mod(
           val simple: Simple,
           val constrained: Constrained,
@@ -1249,8 +1249,8 @@ class KotlinCodeGeneratorTest {
             val recursive2: Recursive2
           )
         }
-        
-      """
+
+        """
           .trimIndent()
       )
   }
@@ -1260,27 +1260,15 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      class Person { name: String }
+        class Person { name: String }
 
-      typealias List2<E> = List<E>
-      typealias Map2<V, K> = Map<K, V>
-      typealias StringMap<V> = Map<String, V>
-      typealias MMap<X> = Map<X, X>
+        typealias List2<E> = List<E>
+        typealias Map2<V, K> = Map<K, V>
+        typealias StringMap<V> = Map<String, V>
+        typealias MMap<X> = Map<X, X>
 
-      res1: List2<Int>
-      res2: List2<List2<String>>
-      res3: Map2<String, Int>
-      res4: StringMap<Duration>
-      res5: MMap<Person?>
-
-      res6: List2
-      res7: Map2
-      res8: StringMap
-      res9: MMap
-
-      class Foo {
         res1: List2<Int>
         res2: List2<List2<String>>
         res3: Map2<String, Int>
@@ -1291,8 +1279,20 @@ class KotlinCodeGeneratorTest {
         res7: Map2
         res8: StringMap
         res9: MMap
-      }
-    """
+
+        class Foo {
+          res1: List2<Int>
+          res2: List2<List2<String>>
+          res3: Map2<String, Int>
+          res4: StringMap<Duration>
+          res5: MMap<Person?>
+
+          res6: List2
+          res7: Map2
+          res8: StringMap
+          res9: MMap
+        }
+        """
           .trimIndent()
       )
 
@@ -1310,7 +1310,7 @@ class KotlinCodeGeneratorTest {
         |  val res7: Map2<Any?, Any?>,
         |  val res8: StringMap<Any?>,
         |  val res9: MMap<Any?>
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1325,7 +1325,7 @@ class KotlinCodeGeneratorTest {
         |    val res7: Map2<Any?, Any?>,
         |    val res8: StringMap<Any?>,
         |    val res9: MMap<Any?>
-      """
+        """
           .trimMargin()
       )
   }
@@ -1335,10 +1335,10 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      x: "Pigeon"|"Barn Owl"|"Parrot"
-    """
+        x: "Pigeon"|"Barn Owl"|"Parrot"
+        """
           .trimIndent()
       )
 
@@ -1349,7 +1349,7 @@ class KotlinCodeGeneratorTest {
         |data class Mod(
         |  val x: String
         |)
-      """
+        """
           .trimMargin()
       )
   }
@@ -1361,9 +1361,9 @@ class KotlinCodeGeneratorTest {
         generateKotlinCode(
           """
           module mod
-  
+
           x: "Pigeon"|Int|"Parrot"
-        """
+          """
             .trimIndent()
         )
       }
@@ -1375,17 +1375,17 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      v1: "RELEASE"
-      v2: "RELEASE"|String
-      v3: String|"RELEASE"
-      v4: "RELEASE"|String|"LATEST"
-      v5: Version|String|"LATEST"
-      v6: (Version|String)|("LATEST"|String)
-      
-      typealias Version = "RELEASE"|String|"LATEST"
-    """
+        v1: "RELEASE"
+        v2: "RELEASE"|String
+        v3: String|"RELEASE"
+        v4: "RELEASE"|String|"LATEST"
+        v5: Version|String|"LATEST"
+        v6: (Version|String)|("LATEST"|String)
+
+        typealias Version = "RELEASE"|String|"LATEST"
+        """
           .trimIndent()
       )
 
@@ -1403,15 +1403,15 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      typealias Version1 = "RELEASE"|String
-      typealias Version2 = String|"RELEASE"
-      typealias Version3 = "RELEASE"|String|"LATEST"
-      typealias Version4 = Version3|String|"LATEST" // ideally wouldn't be inlined
-      typealias Version5 = (Version4|String)|("LATEST"|String)
-      typealias Version6 = Version5 // not inlined
-    """
+        typealias Version1 = "RELEASE"|String
+        typealias Version2 = String|"RELEASE"
+        typealias Version3 = "RELEASE"|String|"LATEST"
+        typealias Version4 = Version3|String|"LATEST" // ideally wouldn't be inlined
+        typealias Version5 = (Version4|String)|("LATEST"|String)
+        typealias Version6 = Version5 // not inlined
+        """
           .trimIndent()
       )
 
@@ -1429,15 +1429,15 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module my.mod
+        module my.mod
 
-      server: Server
+        server: Server
 
-      class Server {
-        port: Int
-        urls: Listing<Uri>
-      }
-    """
+        class Server {
+          port: Int
+          urls: Listing<Uri>
+        }
+        """
           .trimIndent(),
         generateSpringBootConfig = true,
       )
@@ -1448,7 +1448,7 @@ class KotlinCodeGeneratorTest {
         |@ConfigurationProperties
         |data class Mod(
         |  val server: Server
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1457,15 +1457,16 @@ class KotlinCodeGeneratorTest {
         |  data class Server(
         |    val port: Long,
         |    val urls: List<URI>
-      """
+        """
           .trimMargin()
       )
       .doesNotContain("@ConstructorBinding")
 
     // not worthwhile to add spring & spring boot dependency just so that this test can compile
     // their annotations
-    val kotlinCodeWithoutSpringAnnotations =
-      kotlinCode.deleteLines { it.contains("ConfigurationProperties") }
+    val kotlinCodeWithoutSpringAnnotations = kotlinCode.deleteLines {
+      it.contains("ConfigurationProperties")
+    }
     assertThat(kotlinCodeWithoutSpringAnnotations).compilesSuccessfully()
   }
 
@@ -1475,11 +1476,11 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "library",
         """
-          module library
-    
-          class Person { name: String; age: Int }
-          
-          pigeon: Person
+        module library
+
+        class Person { name: String; age: Int }
+
+        pigeon: Person
         """
           .trimIndent(),
       )
@@ -1488,13 +1489,13 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "client",
         """
-          module client
-          
-          import "library.pkl"
-          
-          lib: library
-          
-          parrot: library.Person
+        module client
+
+        import "library.pkl"
+
+        lib: library
+
+        parrot: library.Person
         """
           .trimIndent(),
       )
@@ -1514,7 +1515,7 @@ class KotlinCodeGeneratorTest {
         |  val lib: Library,
         |  val parrot: Library.Person
         |)
-      """
+        """
           .trimMargin()
       )
   }
@@ -1525,11 +1526,11 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "base",
         """
-          open module base
-    
-          open class Person { name: String }
-    
-          pigeon: Person
+        open module base
+
+        open class Person { name: String }
+
+        pigeon: Person
         """
           .trimIndent(),
       )
@@ -1538,13 +1539,13 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "derived",
         """
-          module derived
-          extends "base.pkl"
-          
-          class Person2 extends Person { age: Int }
-          
-          person1: Person
-          person2: Person2
+        module derived
+        extends "base.pkl"
+
+        class Person2 extends Person { age: Int }
+
+        person1: Person
+        person2: Person2
         """
           .trimIndent(),
       )
@@ -1565,7 +1566,7 @@ class KotlinCodeGeneratorTest {
         |  val person1: Base.Person,
         |  val person2: Person2
         |) : Base(pigeon)
-      """
+        """
           .trimMargin()
       )
       .contains(
@@ -1574,7 +1575,7 @@ class KotlinCodeGeneratorTest {
         |    name: String,
         |    val age: Long
         |  ) : Base.Person(name)
-      """
+        """
           .trimMargin()
       )
   }
@@ -1591,9 +1592,9 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "base",
         """
-          abstract module base
-    
-          typealias Version = "LATEST"|String
+        abstract module base
+
+        typealias Version = "LATEST"|String
         """
           .trimIndent(),
       )
@@ -1602,11 +1603,11 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "derived",
         """
-          module derived
-          
-          extends "base.pkl"
-          
-          v: Version = "1.2.3"
+        module derived
+
+        extends "base.pkl"
+
+        v: Version = "1.2.3"
         """
           .trimIndent(),
       )
@@ -1621,10 +1622,10 @@ class KotlinCodeGeneratorTest {
     assertThat(kotlinDerivedCode)
       .contains(
         """
-      |class Derived(
-      |  val v: Version
-      |) : Base()
-    """
+        |class Derived(
+        |  val v: Version
+        |) : Base()
+        """
           .trimMargin()
       )
   }
@@ -1635,19 +1636,19 @@ class KotlinCodeGeneratorTest {
       PklModule(
         "Mod.pkl",
         """
-          module org.pkl.Mod
-    
-          foo: Foo
-    
-          bar: Bar
-    
-          class Foo {
-            prop: String
-          }
-    
-          class Bar {
-            prop: Int
-          }
+        module org.pkl.Mod
+
+        foo: Foo
+
+        bar: Bar
+
+        class Foo {
+          prop: String
+        }
+
+        class Bar {
+          prop: Int
+        }
         """
           .trimIndent(),
       )
@@ -1667,41 +1668,41 @@ class KotlinCodeGeneratorTest {
     val kotlinCode =
       generateKotlinCode(
         """
-      module mod
+        module mod
 
-      class BigStruct {
-        boolean: Boolean
-        int: Int
-        float: Float
-        string: String
-        duration: Duration
-        dataSize: DataSize
-        pair: Pair
-        pair2: Pair<String, SmallStruct>
-        coll: Collection
-        coll2: Collection<SmallStruct>
-        list: List
-        list2: List<SmallStruct>
-        set: Set
-        set2: Set<SmallStruct>
-        map: Map
-        map2: Map<String, SmallStruct>
-        container: Mapping
-        container2: Mapping<String, SmallStruct>
-        other: SmallStruct
-        regex: Regex
-        nonNull: NonNull
-        enum: Direction
-      }
+        class BigStruct {
+          boolean: Boolean
+          int: Int
+          float: Float
+          string: String
+          duration: Duration
+          dataSize: DataSize
+          pair: Pair
+          pair2: Pair<String, SmallStruct>
+          coll: Collection
+          coll2: Collection<SmallStruct>
+          list: List
+          list2: List<SmallStruct>
+          set: Set
+          set2: Set<SmallStruct>
+          map: Map
+          map2: Map<String, SmallStruct>
+          container: Mapping
+          container2: Mapping<String, SmallStruct>
+          other: SmallStruct
+          regex: Regex
+          nonNull: NonNull
+          enum: Direction
+        }
 
-      class SmallStruct {
-        name: String
-      }
+        class SmallStruct {
+          name: String
+        }
 
-      typealias Direction = "north"|"east"|"south"|"west"
-      
-      abstract class NotSerializable
-    """
+        typealias Direction = "north"|"east"|"south"|"west"
+
+        abstract class NotSerializable
+        """
           .trimIndent(),
         implementSerializable = true,
       )
@@ -1794,22 +1795,22 @@ class KotlinCodeGeneratorTest {
     assertThat(kotlinCode)
       .contains(
         """
-      |data class Person(
-      |  val address: Address
-      |) : Serializable {
-      |  data class Address(
-      |    val street: String
-      |  ) : Serializable {
-      |    companion object {
-      |      private const val serialVersionUID: Long = 0L
-      |    }
-      |  }
-      |
-      |  companion object {
-      |    private const val serialVersionUID: Long = 0L
-      |  }
-      |}
-    """
+        |data class Person(
+        |  val address: Address
+        |) : Serializable {
+        |  data class Address(
+        |    val street: String
+        |  ) : Serializable {
+        |    companion object {
+        |      private const val serialVersionUID: Long = 0L
+        |    }
+        |  }
+        |
+        |  companion object {
+        |    private const val serialVersionUID: Long = 0L
+        |  }
+        |}
+        """
           .trimMargin()
       )
   }
@@ -1821,9 +1822,9 @@ class KotlinCodeGeneratorTest {
         PklModule(
           "FooBar.pkl",
           """
-            module `Foo*Bar`
-            
-            someProp: String
+          module `Foo*Bar`
+
+          someProp: String
           """
             .trimIndent(),
         )
@@ -1840,16 +1841,16 @@ class KotlinCodeGeneratorTest {
         .generateFiles(
           "MyModule.pkl" to
             """
-              module a.b.c.MyModule
-              
-              foo: String = "abc"
+            module a.b.c.MyModule
+
+            foo: String = "abc"
             """
               .trimIndent(),
           "AnotherModule.pkl" to
             """
-              module d.e.f.AnotherModule
-              
-              bar: Int = 123
+            module d.e.f.AnotherModule
+
+            bar: Int = 123
             """
               .trimIndent(),
         )
@@ -1875,23 +1876,23 @@ class KotlinCodeGeneratorTest {
         .generateFiles(
           "com/foo/bar/Module1" to
             """
-              module com.foo.bar.Module1
-              
-              bar: String
+            module com.foo.bar.Module1
+
+            bar: String
             """
               .trimIndent(),
           "com/Module2" to
             """
-              module com.Module2
-              
-              com: String
+            module com.Module2
+
+            com: String
             """
               .trimIndent(),
           "org/baz/Module3" to
             """
-              module org.baz.Module3
-              
-              baz: String
+            module org.baz.Module3
+
+            baz: String
             """
               .trimIndent(),
         )
@@ -1926,34 +1927,34 @@ class KotlinCodeGeneratorTest {
         .generateFiles(
           "org/foo/Module1" to
             """
-              module org.foo.Module1
-              
-              class Person {
-                name: String
-              }
+            module org.foo.Module1
+
+            class Person {
+              name: String
+            }
             """
               .trimIndent(),
           "org/bar/Module2" to
             """
-              module org.bar.Module2
-              
-              import "../../org/foo/Module1.pkl"
+            module org.bar.Module2
 
-              class Group {
-                owner: Module1.Person
-                name: String
-              }
+            import "../../org/foo/Module1.pkl"
+
+            class Group {
+              owner: Module1.Person
+              name: String
+            }
             """
               .trimIndent(),
           "org/baz/Module3" to
             """
-              module org.baz.Module3
-              
-              import "../../org/bar/Module2.pkl"
+            module org.baz.Module3
 
-              class Supergroup {
-                owner: Module2.Group
-              }
+            import "../../org/bar/Module2.pkl"
+
+            class Supergroup {
+              owner: Module2.Group
+            }
             """
               .trimIndent(),
         )
@@ -2004,16 +2005,16 @@ class KotlinCodeGeneratorTest {
         .generateFiles(
           "MyModule.pkl" to
             """
-              module a.b.c.MyModule
-              
-              foo: String = "abc"
+            module a.b.c.MyModule
+
+            foo: String = "abc"
             """
               .trimIndent(),
           "lower_module.pkl" to
             """
-              module d.e.f.lower_module 
-              
-              bar: Int = 123
+            module d.e.f.lower_module 
+
+            bar: Int = 123
             """
               .trimIndent(),
         )
@@ -2038,17 +2039,17 @@ class KotlinCodeGeneratorTest {
     assertThat(files["kotlin/com/example/MyModule.kt"])
       .isEqualTo(
         """
-      package com.example
+        package com.example
 
-      import kotlin.String
-      import org.pkl.config.java.Generated
+        import kotlin.String
+        import org.pkl.config.java.Generated
 
-      @Generated
-      data class MyModule(
-        val foo: String
-      )
+        @Generated
+        data class MyModule(
+          val foo: String
+        )
 
-    """
+        """
           .trimIndent()
       )
   }

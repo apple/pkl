@@ -74,13 +74,13 @@ class CliProjectResolverTest {
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
+      amends "pkl:Project"
 
-        dependencies {
-          ["birds"] {
-            uri = "package://localhost:0/birds@0.5.0"
-          }
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
         }
+      }
       """
         .trimIndent(),
     )
@@ -129,13 +129,13 @@ class CliProjectResolverTest {
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
+      amends "pkl:Project"
 
-        dependencies {
-          ["birds"] {
-            uri = "package://localhost:0/birds@0.5.0"
-          }
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
         }
+      }
       """
         .trimIndent(),
     )
@@ -185,35 +185,35 @@ class CliProjectResolverTest {
     projectDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
+      amends "pkl:Project"
 
-        dependencies {
-          ["birds"] {
-            uri = "package://localhost:0/birds@0.5.0"
-          }
-          ["project2"] = import("../project2/PklProject")
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
         }
+        ["project2"] = import("../project2/PklProject")
+      }
       """
         .trimIndent(),
     )
     projectDir.writeFile(
       "../project2/PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "project2"
-          baseUri = "package://localhost:0/package2"
-          version = "5.0.0"
-          packageZipUrl = "https://foo.com/package2.zip"
+      amends "pkl:Project"
+
+      package {
+        name = "project2"
+        baseUri = "package://localhost:0/package2"
+        version = "5.0.0"
+        packageZipUrl = "https://foo.com/package2.zip"
+      }
+
+      dependencies {
+        ["fruit"] {
+          uri = "package://localhost:0/fruit@1.0.5"
         }
-        
-        dependencies {
-          ["fruit"] {
-            uri = "package://localhost:0/fruit@1.0.5"
-          }
-          ["project3"] = import("../project3/PklProject")
-        }
+        ["project3"] = import("../project3/PklProject")
+      }
       """
         .trimIndent(),
     )
@@ -221,20 +221,20 @@ class CliProjectResolverTest {
     projectDir.writeFile(
       "../project3/PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "project3"
-          baseUri = "package://localhost:0/package3"
-          version = "5.0.0"
-          packageZipUrl = "https://foo.com/package3.zip"
+      amends "pkl:Project"
+
+      package {
+        name = "project3"
+        baseUri = "package://localhost:0/package3"
+        version = "5.0.0"
+        packageZipUrl = "https://foo.com/package3.zip"
+      }
+
+      dependencies {
+        ["fruit"] {
+          uri = "package://localhost:0/fruit@1.1.0"
         }
-        
-        dependencies {
-          ["fruit"] {
-            uri = "package://localhost:0/fruit@1.1.0"
-          }
-        }
+      }
       """
         .trimIndent(),
     )
@@ -293,28 +293,28 @@ class CliProjectResolverTest {
     projectDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
+      amends "pkl:Project"
 
-        dependencies {
-          ["birds"] {
-            uri = "package://localhost:0/birds@0.5.0"
-          }
-          ["fruit"] = import("../fruit/PklProject")
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
         }
+        ["fruit"] = import("../fruit/PklProject")
+      }
       """
         .trimIndent(),
     )
     projectDir.writeFile(
       "../fruit/PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "fruit"
-          baseUri = "package://localhost:0/fruit"
-          version = "1.0.0"
-          packageZipUrl = "https://foo.com/fruit.zip"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "fruit"
+        baseUri = "package://localhost:0/fruit"
+        version = "1.0.0"
+        packageZipUrl = "https://foo.com/fruit.zip"
+      }
       """
         .trimIndent(),
     )
@@ -375,7 +375,7 @@ class CliProjectResolverTest {
           uri = "package://localhost:0/birds@0.5.0"
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -389,7 +389,7 @@ class CliProjectResolverTest {
           uri = "package://localhost:0/fruit@1.1.0"
         }
       }
-    """
+      """
         .trimIndent(),
     )
 
@@ -469,14 +469,14 @@ class CliProjectResolverTest {
       .resolve("PklProject")
       .writeString(
         """
-      amends "pkl:Project"
+        amends "pkl:Project"
 
-      dependencies {
-        ["birds"] {
-          uri = "package://localhost:0/birds@0.5.0"
+        dependencies {
+          ["birds"] {
+            uri = "package://localhost:0/birds@0.5.0"
+          }
         }
-      }
-    """
+        """
           .trimIndent()
       )
     // coerce an IOException by making this a directory

@@ -41,8 +41,8 @@ class StackTraceRendererTest {
           evaluator.evaluate(
             ModuleSource.text(
               """
-          self: String = "Strings; if they were lazy, you could tie the knot on \(self.take(7))"
-          """
+              self: String = "Strings; if they were lazy, you could tie the knot on \(self.take(7))"
+              """
                 .trimIndent()
             )
           )
@@ -71,7 +71,7 @@ class StackTraceRendererTest {
               bar: String = "BAR:" + baz
               baz: String = "BAZ:" + qux
               qux: String = "QUX:" + foo
-            """
+              """
                 .trimIndent()
             )
           )
@@ -108,35 +108,35 @@ class StackTraceRendererTest {
   fun `reduce stack overflow from actual Pkl code`() {
     val pklCode =
       """
-        function suffix(n: UInt): UInt =
-          if (n == 0)
-            0
-          else
-            suffix(n - 1)
+      function suffix(n: UInt): UInt =
+        if (n == 0)
+          0
+        else
+          suffix(n - 1)
 
-        function loopBody4(n: UInt): UInt =
-          if (n == 0)
-            loop()
-          else
-            loopBody1(n - 1)
+      function loopBody4(n: UInt): UInt =
+        if (n == 0)
+          loop()
+        else
+          loopBody1(n - 1)
 
-        function loopBody3(n: UInt) = loopBody4(n)
-        function loopBody2(n: UInt) = loopBody3(n)
-        function loopBody1(n: UInt) = loopBody2(n)
+      function loopBody3(n: UInt) = loopBody4(n)
+      function loopBody2(n: UInt) = loopBody3(n)
+      function loopBody1(n: UInt) = loopBody2(n)
 
-        function loop(): UInt =
-          if (suffix(100) > 0)
-            1
-          else
-            loopBody1(5)
+      function loop(): UInt =
+        if (suffix(100) > 0)
+          1
+        else
+          loopBody1(5)
 
-        function prefix(n: UInt): UInt =
-          if (n == 0)
-            loop()
-          else
-            prefix(n - 1)
+      function prefix(n: UInt): UInt =
+        if (n == 0)
+          loop()
+        else
+          prefix(n - 1)
 
-        result = prefix(13)
+      result = prefix(13)
       """
         .trimIndent()
     val message =
@@ -197,27 +197,27 @@ class StackTraceRendererTest {
     assertThat(renderedFrames)
       .isEqualTo(
         """
-      1 | foo
-          ^
-      at <unknown> (file:bar)
+        1 | foo
+            ^
+        at <unknown> (file:bar)
 
-      2 | foo
-          ^
-      at <unknown> (file:baz)
+        2 | foo
+            ^
+        at <unknown> (file:baz)
 
-      1 | foo
-          ^
-      at <unknown> (file:foo)
+        1 | foo
+            ^
+        at <unknown> (file:foo)
 
-      2 | foo
-          ^
-      at <unknown> (file:foo)
+        2 | foo
+            ^
+        at <unknown> (file:foo)
 
-      3 | foo
-          ^
-      at <unknown> (file:foo)
+        3 | foo
+            ^
+        at <unknown> (file:foo)
 
-    """
+        """
           .trimIndent()
       )
   }

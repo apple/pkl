@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -48,11 +48,11 @@ class AnalyzerTest {
         .resolve("test.pkl")
         .writeString(
           """
-            amends "pkl:base"
+          amends "pkl:base"
 
-            import "pkl:json"
+          import "pkl:json"
 
-            myProp = import("pkl:xml")
+          myProp = import("pkl:xml")
           """
             .trimIndent()
         )
@@ -76,7 +76,7 @@ class AnalyzerTest {
         .resolve("file1.pkl")
         .writeString(
           """
-            import* "*.pkl"
+          import* "*.pkl"
           """
             .trimIndent()
         )
@@ -143,11 +143,11 @@ class AnalyzerTest {
       .resolve("PklProject")
       .writeString(
         """
-          amends "pkl:Project"
+        amends "pkl:Project"
 
-          dependencies {
-            ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
-          }
+        dependencies {
+          ["birds"] { uri = "package://localhost:0/birds@0.5.0" }
+        }
         """
           .trimIndent()
       )
@@ -155,25 +155,25 @@ class AnalyzerTest {
       .resolve("PklProject.deps.json")
       .writeString(
         """
-          {
-            "schemaVersion": 1,
-            "resolvedDependencies": {
-              "package://localhost:0/birds@0": {
-                "type": "remote",
-                "uri": "projectpackage://localhost:0/birds@0.5.0",
-                "checksums": {
-                  "sha256": "${'$'}skipChecksumVerification"
-                }
-              },
-              "package://localhost:0/fruit@1": {
-                "type": "remote",
-                "uri": "projectpackage://localhost:0/fruit@1.0.5",
-                "checksums": {
-                  "sha256": "${'$'}skipChecksumVerification"
-                }
+        {
+          "schemaVersion": 1,
+          "resolvedDependencies": {
+            "package://localhost:0/birds@0": {
+              "type": "remote",
+              "uri": "projectpackage://localhost:0/birds@0.5.0",
+              "checksums": {
+                "sha256": "${'$'}skipChecksumVerification"
+              }
+            },
+            "package://localhost:0/fruit@1": {
+              "type": "remote",
+              "uri": "projectpackage://localhost:0/fruit@1.0.5",
+              "checksums": {
+                "sha256": "${'$'}skipChecksumVerification"
               }
             }
           }
+        }
         """
           .trimIndent()
       )
@@ -200,7 +200,7 @@ class AnalyzerTest {
         .resolve("file1.pkl")
         .writeString(
           """
-            import "@birds/Bird.pkl"
+          import "@birds/Bird.pkl"
           """
             .trimIndent()
         )
@@ -236,11 +236,11 @@ class AnalyzerTest {
         .createParentDirectories()
         .writeString(
           """
-            amends "pkl:Project"
+          amends "pkl:Project"
 
-            dependencies {
-              ["birds"] = import("../birds/PklProject")
-            }
+          dependencies {
+            ["birds"] = import("../birds/PklProject")
+          }
           """
             .trimIndent()
         )
@@ -250,14 +250,14 @@ class AnalyzerTest {
       .createParentDirectories()
       .writeString(
         """
-          amends "pkl:Project"
+        amends "pkl:Project"
 
-          package {
-            name = "birds"
-            version = "1.0.0"
-            packageZipUrl = "https://localhost:0/foo.zip"
-            baseUri = "package://localhost:0/birds"
-          }
+        package {
+          name = "birds"
+          version = "1.0.0"
+          packageZipUrl = "https://localhost:0/foo.zip"
+          baseUri = "package://localhost:0/birds"
+        }
         """
           .trimIndent()
       )
@@ -268,16 +268,16 @@ class AnalyzerTest {
       .resolve("PklProject.deps.json")
       .writeString(
         """
-          {
-            "schemaVersion": 1,
-            "resolvedDependencies": {
-              "package://localhost:0/birds@1": {
-                "type": "local",
-                "uri": "projectpackage://localhost:0/birds@1.0.0",
-                "path": "../birds"
-              }
+        {
+          "schemaVersion": 1,
+          "resolvedDependencies": {
+            "package://localhost:0/birds@1": {
+              "type": "local",
+              "uri": "projectpackage://localhost:0/birds@1.0.0",
+              "path": "../birds"
             }
           }
+        }
         """
           .trimIndent()
       )
@@ -286,7 +286,7 @@ class AnalyzerTest {
         .resolve("main.pkl")
         .writeString(
           """
-            import "@birds/bird.pkl"
+          import "@birds/bird.pkl"
           """
             .trimIndent()
         )

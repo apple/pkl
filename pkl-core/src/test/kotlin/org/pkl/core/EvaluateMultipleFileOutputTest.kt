@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -44,7 +44,7 @@ class EvaluateMultipleFileOutputTest {
           }
         }
       }
-    """
+      """
         .trimIndent()
     val output = evaluator.evaluateOutputFiles(text(program))
     assertThat(output.keys).isEqualTo(setOf("foo.yml", "bar.yml", "bar/biz.yml", "bar/../bark.yml"))
@@ -74,18 +74,18 @@ class EvaluateMultipleFileOutputTest {
           }
         }
       }
-    """
+      """
         .trimIndent()
     val output = evaluator.evaluateOutputFiles(text(program))
     assertThat(output["foo.json"]?.text)
       .isEqualTo(
         """
-      {
-        "foo": "fooey",
-        "bar": "barrey"
-      }
-      
-    """
+        {
+          "foo": "fooey",
+          "bar": "barrey"
+        }
+
+        """
           .trimIndent()
       )
   }
@@ -106,7 +106,7 @@ class EvaluateMultipleFileOutputTest {
           }
         }
       }
-    """
+      """
         .trimIndent()
     val output = evaluator.evaluateOutputFiles(text(program))
     evaluator.close()

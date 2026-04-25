@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,7 +60,7 @@ class PcfRendererTest {
             corge = List(null, 1337, null, "Hello World")
             grault = Map("garply", null, "waldo", 42, "pigeon", null)
           }
-        """
+          """
             .trimIndent(),
         false to
           """
@@ -72,7 +72,7 @@ class PcfRendererTest {
             corge = List(null, 1337, null, "Hello World")
             grault = Map("garply", null, "waldo", 42, "pigeon", null)
           }
-        """
+          """
             .trimIndent(),
       )
 
@@ -81,24 +81,24 @@ class PcfRendererTest {
         .evaluate(
           ModuleSource.text(
             """
-        foo = null
-        bar = null
-        baz {
-          qux = 42
-          quux = null
-          corge = new Listing {
-            null
-            1337
-            null
-            "Hello World"
-          }
-          grault = new Mapping {
-            ["garply"] = null
-            ["waldo"] = 42
-            ["pigeon"] = null
-          }
-        }
-      """
+            foo = null
+            bar = null
+            baz {
+              qux = 42
+              quux = null
+              corge = new Listing {
+                null
+                1337
+                null
+                "Hello World"
+              }
+              grault = new Mapping {
+                ["garply"] = null
+                ["waldo"] = 42
+                ["pigeon"] = null
+              }
+            }
+            """
               .trimIndent()
           )
         )

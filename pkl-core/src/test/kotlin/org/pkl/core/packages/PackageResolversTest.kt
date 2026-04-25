@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -87,13 +87,13 @@ class PackageResolversTest {
       assertThat(bytes)
         .isEqualTo(
           """
-        Bird.pkl
-        allFruit.pkl
-        catalog
-        catalog.pkl
-        some
+          Bird.pkl
+          allFruit.pkl
+          catalog
+          catalog.pkl
+          some
 
-      """
+          """
             .trimIndent()
         )
     }
@@ -203,9 +203,9 @@ class PackageResolversTest {
       assertThat(error)
         .hasMessageContaining(
           """
-        Computed checksum: "a6bf858cdd1c09da475c2abe50525902580910ee5cc1ff624999170591bf8f69"
-        Expected checksum: "intentionally bogus checksum"
-      """
+          Computed checksum: "a6bf858cdd1c09da475c2abe50525902580910ee5cc1ff624999170591bf8f69"
+          Expected checksum: "intentionally bogus checksum"
+          """
             .trimIndent()
         )
     }

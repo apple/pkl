@@ -53,9 +53,9 @@ constructor(
         throw CliException(
           """
           Usage: pkl test [<options>] <modules>...
-          
+
           Error: missing argument <modules>
-        """
+          """
             .trimIndent()
         )
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -65,8 +65,8 @@ class SimpleReportTest {
 
     val expectedOutput =
       """
-            0.0% tests pass [2/2 failed], 99.9% asserts pass [2/754444 failed]
-            """
+      0.0% tests pass [2/2 failed], 99.9% asserts pass [2/754444 failed]
+      """
         .trimIndent()
 
     assertThat(writer.toString().trimIndent()).isEqualTo(expectedOutput)
