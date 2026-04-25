@@ -393,9 +393,6 @@ public final class ProjectPackager {
    */
   public void validateImportsAndReads(Project project, Path pklModulePath) {
     var imports = getImportsAndReads(pklModulePath);
-    if (imports == null) {
-      return;
-    }
     for (var importContext : imports) {
       var importStr = importContext.stringValue();
       var sourceSection = importContext.sourceSection();
@@ -420,14 +417,14 @@ public final class ProjectPackager {
             .toPklException(stackFrameTransformer, color);
       }
       var currentPath = pklModulePath.getParent();
-      var importPath = Path.of(importUri.getPath());
+      var importPath = importUri.getPath().split("/");
       // It's not good enough to just check the normalized path to see whether it exists within the
       // root dir.
       // It's possible that the import path resolves to a path outside the project dir,
       // and then back inside the project dir.
-      for (var i = 0; i < importPath.getNameCount(); i++) {
-        var segment = importPath.getName(i);
-        currentPath = currentPath.resolve(segment);
+      for (var segment : importPath) {
+        // replace any possibly reserved filename characters with underscore.
+        currentPath = currentPath.resolve(sanitizePathSegment(segment));
         var normalized = currentPath.normalize();
         if (!normalized.startsWith(project.getProjectDir())) {
           throw new VmExceptionBuilder()
@@ -438,6 +435,10 @@ public final class ProjectPackager {
         }
       }
     }
+  }
+
+  private String sanitizePathSegment(String segment) {
+    return segment.replaceAll("[\\\\<>:\"|?*]", "_");
   }
 
   private List<ImportsAndReadsParser.Entry> getImportsAndReads(Path pklModulePath) {

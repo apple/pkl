@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -85,8 +85,8 @@ class CliProjectPackagerTest {
       .resolve("PklProject")
       .writeString(
         """
-      amends "pkl:Project"
-    """
+        amends "pkl:Project"
+        """
           .trimIndent()
       )
     val packager =
@@ -108,20 +108,20 @@ class CliProjectPackagerTest {
       "myTest.pkl",
       """
       amends "pkl:test"
-      
+
       facts {
         ["1 == 2"] {
           1 == 2
         }
       }
-    """
+      """
         .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
       """
       amends "pkl:Project"
-      
+
       package {
         name = "mypackage"
         version = "1.0.0"
@@ -129,7 +129,7 @@ class CliProjectPackagerTest {
         packageZipUrl = "https://foo.com"
         apiTests { "myTest.pkl" }
       }
-    """
+      """
         .trimIndent(),
     )
     val buffer = StringWriter()
@@ -154,13 +154,13 @@ class CliProjectPackagerTest {
       .writeString(
         """
         amends "pkl:test"
-        
+
         facts {
           ["1 == 1"] {
             1 == 1
           }
         }
-      """
+        """
           .trimIndent()
       )
     tempDir
@@ -168,7 +168,7 @@ class CliProjectPackagerTest {
       .writeString(
         """
         amends "pkl:Project"
-        
+
         package {
           name = "mypackage"
           version = "1.0.0"
@@ -176,7 +176,7 @@ class CliProjectPackagerTest {
           packageZipUrl = "https://foo.com"
           apiTests { "myTest.pkl" }
         }
-      """
+        """
           .trimIndent()
       )
     val buffer = StringWriter()
@@ -203,13 +203,13 @@ class CliProjectPackagerTest {
         """
         amends "pkl:test"
         import "@birds/Bird.pkl"
-        
+
         examples {
           ["Bird"] {
             new Bird { name = "Finch"; favoriteFruit { name = "Tangerine" } }
           }
         }
-      """
+        """
           .trimIndent()
       )
     projectDir
@@ -226,8 +226,8 @@ class CliProjectPackagerTest {
             }
           }
         }
-        
-      """
+
+        """
           .trimIndent()
       )
     projectDir
@@ -235,7 +235,7 @@ class CliProjectPackagerTest {
       .writeString(
         """
         amends "pkl:Project"
-        
+
         package {
           name = "mypackage"
           version = "1.0.0"
@@ -249,7 +249,7 @@ class CliProjectPackagerTest {
             uri = "package://localhost:0/birds@0.5.0"
           }
         }
-      """
+        """
           .trimIndent()
       )
     projectDir
@@ -298,9 +298,9 @@ class CliProjectPackagerTest {
         "a/b/foo.pkl",
         """
         module foo
-        
+
         name: String
-      """
+        """
           .trimIndent(),
       )
 
@@ -311,7 +311,7 @@ class CliProjectPackagerTest {
         foo
         bar
         baz
-      """
+        """
           .trimIndent(),
       )
 
@@ -320,14 +320,14 @@ class CliProjectPackagerTest {
       .writeString(
         """
         amends "pkl:Project"
-        
+
         package {
           name = "mypackage"
           version = "1.0.0"
           baseUri = "package://example.com/mypackage"
           packageZipUrl = "https://foo.com"
         }
-      """
+        """
           .trimIndent()
       )
     val packager =
@@ -348,18 +348,18 @@ class CliProjectPackagerTest {
     assertThat(expectedMetadata)
       .hasContent(
         """
-      {
-        "name": "mypackage",
-        "packageUri": "package://example.com/mypackage@1.0.0",
-        "version": "1.0.0",
-        "packageZipUrl": "https://foo.com",
-        "packageZipChecksums": {
-          "sha256": "e83b67722ea17ba41717ce6e99ae8ee02d66df6294bd319ce403075b1071c3e0"
-        },
-        "dependencies": {},
-        "authors": []
-      }
-    """
+        {
+          "name": "mypackage",
+          "packageUri": "package://example.com/mypackage@1.0.0",
+          "version": "1.0.0",
+          "packageZipUrl": "https://foo.com",
+          "packageZipChecksums": {
+            "sha256": "e83b67722ea17ba41717ce6e99ae8ee02d66df6294bd319ce403075b1071c3e0"
+          },
+          "dependencies": {},
+          "authors": []
+        }
+        """
           .trimIndent()
       )
     assertThat(expectedArchive).exists()
@@ -395,21 +395,21 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
-          exclude {
-            "*.bin"
-            "child/main.pkl"
-            "*.test.pkl"
-            "examples/Ex1.pkl"
-            "tests/**"
-          }
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+        exclude {
+          "*.bin"
+          "child/main.pkl"
+          "*.test.pkl"
+          "examples/Ex1.pkl"
+          "tests/**"
         }
+      }
       """
         .trimIndent(),
     )
@@ -444,21 +444,21 @@ class CliProjectPackagerTest {
     projectDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
+
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
         }
-        
-        dependencies {
-          ["birds"] {
-            uri = "package://localhost:0/birds@0.5.0"
-          }
-          ["project2"] = import("../project2/PklProject")
-        }
+        ["project2"] = import("../project2/PklProject")
+      }
       """
         .trimIndent(),
     )
@@ -489,24 +489,24 @@ class CliProjectPackagerTest {
     project2Dir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "project2"
-          baseUri = "package://localhost:0/project2"
-          version = "5.0.0"
-          packageZipUrl = "https://foo.com/project2.zip"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "project2"
+        baseUri = "package://localhost:0/project2"
+        version = "5.0.0"
+        packageZipUrl = "https://foo.com/project2.zip"
+      }
       """
         .trimIndent(),
     )
     project2Dir.writeFile(
       "PklProject.deps.json",
       """
-        {
-          "schemaVersion": 1,
-          "resolvedDependencies": {}
-        }
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {}
+      }
       """
         .trimIndent(),
     )
@@ -557,18 +557,18 @@ class CliProjectPackagerTest {
     assertThat(project2Metadata.readString())
       .isEqualTo(
         """
-    {
-      "name": "project2",
-      "packageUri": "package://localhost:0/project2@5.0.0",
-      "version": "5.0.0",
-      "packageZipUrl": "https://foo.com/project2.zip",
-      "packageZipChecksums": {
-        "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
-      },
-      "dependencies": {},
-      "authors": []
-    }
-    """
+        {
+          "name": "project2",
+          "packageUri": "package://localhost:0/project2@5.0.0",
+          "version": "5.0.0",
+          "packageZipUrl": "https://foo.com/project2.zip",
+          "packageZipChecksums": {
+            "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
+          },
+          "dependencies": {},
+          "authors": []
+        }
+        """
           .trimIndent()
       )
   }
@@ -582,44 +582,44 @@ class CliProjectPackagerTest {
     projectDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
+
+      dependencies {
+        ["birds"] {
+          uri = "package://localhost:0/birds@0.5.0"
         }
-        
-        dependencies {
-          ["birds"] {
-            uri = "package://localhost:0/birds@0.5.0"
-          }
-          ["project2"] = import("../project2/PklProject")
-        }
+        ["project2"] = import("../project2/PklProject")
+      }
       """
         .trimIndent(),
     )
     projectDir.writeFile(
       "PklProject.deps.json",
       """
-        {
-          "schemaVersion": 1,
-          "resolvedDependencies": {
-            "package://localhost:0/birds@0": {
-              "type": "remote",
-              "uri": "projectpackage://localhost:0/birds@0.5.0",
-              "checksums": {
-                "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
-              }
-            },
-            "package://localhost:0/project2@5": {
-              "type": "local",
-              "uri": "projectpackage://localhost:0/project2@5.0.0",
-              "path": "../project2"
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {
+          "package://localhost:0/birds@0": {
+            "type": "remote",
+            "uri": "projectpackage://localhost:0/birds@0.5.0",
+            "checksums": {
+              "sha256": "0a5ad2dc13f06f73f96ba94e8d01d48252bc934e2de71a837620ca0fef8a7453"
             }
+          },
+          "package://localhost:0/project2@5": {
+            "type": "local",
+            "uri": "projectpackage://localhost:0/project2@5.0.0",
+            "path": "../project2"
           }
         }
+      }
       """
         .trimIndent(),
     )
@@ -627,24 +627,24 @@ class CliProjectPackagerTest {
     project2Dir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "project2"
-          baseUri = "package://localhost:0/project2"
-          version = "5.0.0"
-          packageZipUrl = "https://foo.com/project2.zip"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "project2"
+        baseUri = "package://localhost:0/project2"
+        version = "5.0.0"
+        packageZipUrl = "https://foo.com/project2.zip"
+      }
       """
         .trimIndent(),
     )
     project2Dir.writeFile(
       "PklProject.deps.json",
       """
-        {
-          "schemaVersion": 1,
-          "resolvedDependencies": {}
-        }
+      {
+        "schemaVersion": 1,
+        "resolvedDependencies": {}
+      }
       """
         .trimIndent(),
     )
@@ -667,23 +667,23 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "main.pkl",
       """
-        import "../foo.pkl"
-  
-        res = foo
+      import "../foo.pkl"
+
+      res = foo
       """
         .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -702,12 +702,12 @@ class CliProjectPackagerTest {
     assertThat(e.message)
       .startsWith(
         """
-      –– Pkl Error ––
-      Path `../foo.pkl` includes path segments that are outside the project root directory.
-      
-      1 | import "../foo.pkl"
-                 ^^^^^^^^^^^^
-    """
+        –– Pkl Error ––
+        Path `../foo.pkl` includes path segments that are outside the project root directory.
+
+        1 | import "../foo.pkl"
+                   ^^^^^^^^^^^^
+        """
           .trimIndent()
       )
   }
@@ -730,14 +730,14 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -764,6 +764,43 @@ class CliProjectPackagerTest {
   }
 
   @Test
+  fun `import path verification with glob imports`(@TempDir tempDir: Path) {
+    tempDir.writeFile(
+      "main.pkl",
+      """
+      import* "**.pkl" as foo
+
+      res = foo
+      """
+        .trimIndent(),
+    )
+    tempDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
+      """
+        .trimIndent(),
+    )
+
+    CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir),
+        listOf(tempDir),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        consoleWriter = StringWriter(),
+      )
+      .run()
+  }
+
+  @Test
   @DisabledOnOs(OS.WINDOWS)
   fun `import path verification -- absolute read from root dir`(@TempDir tempDir: Path) {
     tempDir.writeFile(
@@ -776,14 +813,14 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -814,21 +851,21 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "foo/bar.pkl",
       """
-        import "baz.pkl"
+      import "baz.pkl"
       """
         .trimIndent(),
     )
     tempDir.writeFile(
       "PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mypackage"
-          version = "1.0.0"
-          baseUri = "package://example.com/mypackage"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -849,14 +886,14 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "project1/PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "project1"
-          version = "1.0.0"
-          baseUri = "package://example.com/project1"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "project1"
+        version = "1.0.0"
+        baseUri = "package://example.com/project1"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -864,14 +901,14 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "project2/PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "project2"
-          version = "2.0.0"
-          baseUri = "package://example.com/project2"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "project2"
+        version = "2.0.0"
+        baseUri = "package://example.com/project2"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -914,14 +951,14 @@ class CliProjectPackagerTest {
       "project/PklProject",
       // intentionally conflict with localhost:0/birds@0.5.0 from our test fixtures
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "birds"
-          version = "0.5.0"
-          baseUri = "package://localhost:0/birds"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "birds"
+        version = "0.5.0"
+        baseUri = "package://localhost:0/birds"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -959,14 +996,14 @@ class CliProjectPackagerTest {
     tempDir.writeFile(
       "project/PklProject",
       """
-        amends "pkl:Project"
-        
-        package {
-          name = "mangos"
-          version = "1.0.0"
-          baseUri = "package://localhost:0/mangos"
-          packageZipUrl = "https://foo.com"
-        }
+      amends "pkl:Project"
+
+      package {
+        name = "mangos"
+        version = "1.0.0"
+        baseUri = "package://localhost:0/mangos"
+        packageZipUrl = "https://foo.com"
+      }
       """
         .trimIndent(),
     )
@@ -1008,14 +1045,14 @@ class CliProjectPackagerTest {
         @Deprecated { since = "0.26.1"; message = "do not use" }
         @ModuleInfo { minPklVersion = "0.26.0" }
         amends "pkl:Project"
-        
+
         package {
           name = "mypackage"
           version = "1.0.0"
           baseUri = "package://example.com/mypackage"
           packageZipUrl = "https://foo.com"
         }
-      """
+        """
           .trimIndent()
       )
     val packager =
@@ -1033,53 +1070,53 @@ class CliProjectPackagerTest {
     assertThat(expectedMetadata)
       .hasContent(
         """
-      {
-        "name": "mypackage",
-        "packageUri": "package://example.com/mypackage@1.0.0",
-        "version": "1.0.0",
-        "packageZipUrl": "https://foo.com",
-        "packageZipChecksums": {
-          "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
-        },
-        "dependencies": {},
-        "authors": [],
-        "annotations": [
-          {
-            "type": "PObject",
-            "classInfo": {
-              "moduleName": "pkl.base",
-              "class": "Unlisted",
-              "moduleUri": "pkl:base"
-            },
-            "properties": {}
+        {
+          "name": "mypackage",
+          "packageUri": "package://example.com/mypackage@1.0.0",
+          "version": "1.0.0",
+          "packageZipUrl": "https://foo.com",
+          "packageZipChecksums": {
+            "sha256": "8739c76e681f900923b900c9df0ef75cf421d39cabb54650c4b9ad19b6a76d85"
           },
-          {
-            "type": "PObject",
-            "classInfo": {
-              "moduleName": "pkl.base",
-              "class": "Deprecated",
-              "moduleUri": "pkl:base"
+          "dependencies": {},
+          "authors": [],
+          "annotations": [
+            {
+              "type": "PObject",
+              "classInfo": {
+                "moduleName": "pkl.base",
+                "class": "Unlisted",
+                "moduleUri": "pkl:base"
+              },
+              "properties": {}
             },
-            "properties": {
-              "since": "0.26.1",
-              "message": "do not use",
-              "replaceWith": null
-            }
-          },
-          {
-            "type": "PObject",
-            "classInfo": {
-              "moduleName": "pkl.base",
-              "class": "ModuleInfo",
-              "moduleUri": "pkl:base"
+            {
+              "type": "PObject",
+              "classInfo": {
+                "moduleName": "pkl.base",
+                "class": "Deprecated",
+                "moduleUri": "pkl:base"
+              },
+              "properties": {
+                "since": "0.26.1",
+                "message": "do not use",
+                "replaceWith": null
+              }
             },
-            "properties": {
-              "minPklVersion": "0.26.0"
+            {
+              "type": "PObject",
+              "classInfo": {
+                "moduleName": "pkl.base",
+                "class": "ModuleInfo",
+                "moduleUri": "pkl:base"
+              },
+              "properties": {
+                "minPklVersion": "0.26.0"
+              }
             }
-          }
-        ]
-      }
-    """
+          ]
+        }
+        """
           .trimIndent()
       )
   }
