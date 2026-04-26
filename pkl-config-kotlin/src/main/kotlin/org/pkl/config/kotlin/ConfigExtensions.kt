@@ -15,13 +15,12 @@
  */
 package org.pkl.config.kotlin
 
-import kotlin.reflect.jvm.javaType
-import kotlin.reflect.typeOf
 import org.pkl.config.java.Config
 import org.pkl.config.java.ConfigDecoder
 import org.pkl.config.java.ConfigDecoderBuilder
 import org.pkl.config.java.ConfigEvaluator
 import org.pkl.config.java.ConfigEvaluatorBuilder
+import org.pkl.config.java.JavaType
 import org.pkl.config.java.mapper.ConversionException
 import org.pkl.config.java.mapper.ValueMapperBuilder
 import org.pkl.config.kotlin.mapper.KotlinConversions
@@ -40,7 +39,8 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
  *   `as(JavaType.listOf(String::class.java))`
  */
 inline fun <reified T> Config.to(): T {
-  val result = `as`<T>(typeOf<T>().javaType)
+  val javaType = object : JavaType<T>() {}
+  val result = `as`(javaType)
   if (result == null && null !is T) {
     throw ConversionException(
       "Expected a non-null value but got `null`. " +

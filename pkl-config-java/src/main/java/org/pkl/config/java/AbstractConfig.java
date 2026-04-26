@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.config.java;
 
 import java.lang.reflect.Type;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ValueMapper;
 import org.pkl.core.Composite;
 
@@ -49,17 +50,22 @@ abstract class AbstractConfig implements Config {
 
   @Override
   public <T> T as(Class<T> type) {
-    return as((Type) type);
+    return trustNonNull(mapper.map(getRawValue(), type));
   }
 
   @Override
   public <T> T as(Type type) {
-    return mapper.map(getRawValue(), type);
+    return trustNonNull(mapper.map(getRawValue(), type));
   }
 
   @Override
-  public <T> T as(JavaType<T> javaType) {
-    return as(javaType.getType());
+  public <T extends @Nullable Object> T as(JavaType<T> javaType) {
+    return mapper.map(getRawValue(), javaType.getType());
+  }
+
+  @SuppressWarnings({"unchecked", "DataFlowIssue", "NullAway"})
+  private static <T> T trustNonNull(@Nullable Object value) {
+    return (T) value;
   }
 
   protected abstract Object getRawChildValue(String property);
