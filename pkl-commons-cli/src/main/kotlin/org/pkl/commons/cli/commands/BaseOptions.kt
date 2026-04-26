@@ -31,10 +31,12 @@ import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
+import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.runtime.VmUtils
+import org.pkl.core.util.GlobResolver
 import org.pkl.core.util.IoUtils
 
 @Suppress("MemberVisibilityCanBePrivate")
@@ -93,6 +95,9 @@ class BaseOptions : OptionGroup() {
         Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
       }
     }
+
+    val HEADER_NAME_REGEX = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$")
+    val HEADER_VALUE_REGEX = Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
   }
 
   private val defaults = CliBaseOptions()
@@ -285,6 +290,37 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
+  val httpHeaders: List<PPair<Pattern, List<PPair<String, String>>>> by
+    option(
+        names = arrayOf("--http-headers"),
+        metavar = "<url-pattern>=<header name>:<header value>",
+        help = "HTTP header to add to the request.",
+      )
+      .splitPair()
+      .transformAll { it ->
+        val headersMap = mutableMapOf<String, MutableList<PPair<String, String>>>()
+
+        try {
+          for ((stringPattern, header) in it) {
+            val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
+            val (headerName, headerValue) =
+              headerRegex.find(header)?.destructured
+                ?: fail("Header '$header' is not in 'name:value' format.")
+            IoUtils.validateHeaderName(headerName)
+            IoUtils.validateHeaderValue(headerValue)
+            headersMap
+              .computeIfAbsent(stringPattern) { mutableListOf() }
+              .add(PPair(headerName, headerValue))
+          }
+
+          headersMap.entries.map { PPair(GlobResolver.toRegexPattern(it.key), it.value) }
+        } catch (e: IllegalArgumentException) {
+          fail(e.message!!)
+        } catch (e: GlobResolver.InvalidGlobPatternException) {
+          fail(e.message!!)
+        }
+      }
+
   val externalModuleReaders: Map<String, ExternalReader> by
     option(
         names = arrayOf("--external-module-reader"),
@@ -351,6 +387,7 @@ class BaseOptions : OptionGroup() {
       httpProxy = proxy,
       httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
+      httpHeaders = httpHeaders.ifEmpty { null },
       externalModuleReaders = externalModuleReaders,
       externalResourceReaders = externalResourceReaders,
       traceMode = traceMode,

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,6 +51,36 @@ public final class IoUtils {
   private static final Pattern uriLike = Pattern.compile("[\\w+.-]+:[^\\\\].*");
 
   private static final Pattern windowsPathLike = Pattern.compile("\\w:\\\\.*");
+
+  private static final Pattern headerNameLike = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$");
+
+  private static final Pattern headerValueLike =
+      Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$");
+
+  private static final String[] reservedHeaderNames = {
+    "accept-charset",
+    "accept-encoding",
+    "access-control-request-headers",
+    "access-control-request-method",
+    "connection",
+    "content-length",
+    "cookie",
+    "date",
+    "dnt",
+    "expect",
+    "host",
+    "keep-alive",
+    "origin",
+    "permissions-policy",
+    "referer",
+    "te",
+    "trailer",
+    "transfer-encoding",
+    "upgrade",
+    "via"
+  };
+
+  private static final String[] reservedHeaderPrefixs = {"proxy-", "sec-", "access-control-"};
 
   private IoUtils() {}
 
@@ -852,6 +882,43 @@ public final class IoUtils {
     if (!rewrite.toString().endsWith("/")) {
       throw new IllegalArgumentException(
           "Rewrite rule must end with '/', but was '%s'".formatted(rewrite));
+    }
+  }
+
+  private static boolean isReservedHeaderName(String headerName) {
+    return Arrays.stream(reservedHeaderNames).anyMatch((reserved) -> headerName.equals(reserved));
+  }
+
+  private static boolean hasReservedHeaderPrefix(String headerName) {
+    return Arrays.stream(reservedHeaderPrefixs).anyMatch((prefix) -> headerName.startsWith(prefix));
+  }
+
+  public static void validateHeaderName(String headerName) {
+    if (!headerName.equals(headerName.toLowerCase())) {
+      throw new IllegalArgumentException(
+          "HTTP header '%s' should be all lowercase".formatted(headerName));
+    }
+
+    if (isReservedHeaderName(headerName)) {
+      throw new IllegalArgumentException(
+          "HTTP header '%s' is a reserved header".formatted(headerName));
+    }
+
+    if (hasReservedHeaderPrefix(headerName)) {
+      throw new IllegalArgumentException(
+          "HTTP header '%s' starts with a reserved header prefix".formatted(headerName));
+    }
+
+    if (!headerNameLike.matcher(headerName).matches()) {
+      throw new IllegalArgumentException(
+          "HTTP header name '%s' has an invalid syntax".formatted(headerName));
+    }
+  }
+
+  public static void validateHeaderValue(String headerValue) {
+    if (headerValueLike.matcher(headerValue).matches()) {
+      throw new IllegalArgumentException(
+          "HTTP header value '%s' has an invalid syntax".formatted(headerValue));
     }
   }
 }
