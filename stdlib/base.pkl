@@ -26,6 +26,7 @@ import "pkl:jsonnet"
 import "pkl:math"
 import "pkl:pklbinary"
 import "pkl:protobuf"
+import "pkl:starlark"
 import "pkl:xml"
 import "pkl:yaml"
 
@@ -119,13 +120,15 @@ abstract external class Module {
           new protobuf.Renderer {}
         else if (format == "xml")
           new xml.Renderer {}
+        else if (format == "starlark")
+          new starlark.Renderer {}
         else if (format == "yaml")
           new YamlRenderer {}
         else if (format == "pkl-binary")
           new pklbinary.Renderer {}
         else
           throw(
-            "Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `textproto`, `xml`, `yaml`, `pkl-binary`."
+            "Unknown output format: `\(format)`. Supported formats are `json`, `jsonnet`, `pcf`, `plist`, `properties`, `starlark`, `textproto`, `xml`, `yaml`, `pkl-binary`."
           )
     text =
       if (renderer is ValueRenderer)
