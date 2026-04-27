@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,18 +31,21 @@ import org.pkl.core.runtime.VmUtils;
 public final class InvokeMethodLexicalNode extends ExpressionNode {
   @Children private final ExpressionNode[] argumentNodes;
   private final int levelsUp;
+  private final boolean skipAmendFunctions;
 
   @Child private DirectCallNode callNode;
 
-  InvokeMethodLexicalNode(
+  public InvokeMethodLexicalNode(
       SourceSection sourceSection,
       CallTarget callTarget,
       int levelsUp,
-      ExpressionNode[] argumentNodes) {
+      ExpressionNode[] argumentNodes,
+      boolean skipAmendFunctions) {
 
     super(sourceSection);
     this.levelsUp = levelsUp;
     this.argumentNodes = argumentNodes;
+    this.skipAmendFunctions = skipAmendFunctions;
 
     callNode = DirectCallNode.create(callTarget);
   }
@@ -67,7 +70,9 @@ public final class InvokeMethodLexicalNode extends ExpressionNode {
 
     var owner = VmUtils.getOwner(frame);
     for (var i = 1; i < levelsUp; i++) {
-      owner = owner.getEnclosingOwner();
+      var next = owner.getEnclosingOwner();
+      assert next != null;
+      owner = skipAmendFunctions ? VmUtils.skipAmendFunctions(next) : next;
       assert owner != null;
     }
     return owner.getEnclosingFrame();
