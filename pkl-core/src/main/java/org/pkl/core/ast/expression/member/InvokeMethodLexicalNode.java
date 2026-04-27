@@ -31,6 +31,7 @@ import org.pkl.core.runtime.VmUtils;
 public final class InvokeMethodLexicalNode extends ExpressionNode {
   @Children private final ExpressionNode[] argumentNodes;
   private final int levelsUp;
+  private final boolean skipAmendFunctions;
 
   @Child private DirectCallNode callNode;
 
@@ -38,11 +39,13 @@ public final class InvokeMethodLexicalNode extends ExpressionNode {
       SourceSection sourceSection,
       CallTarget callTarget,
       int levelsUp,
-      ExpressionNode[] argumentNodes) {
+      ExpressionNode[] argumentNodes,
+      boolean skipAmendFunctions) {
 
     super(sourceSection);
     this.levelsUp = levelsUp;
     this.argumentNodes = argumentNodes;
+    this.skipAmendFunctions = skipAmendFunctions;
 
     callNode = DirectCallNode.create(callTarget);
   }
@@ -67,7 +70,9 @@ public final class InvokeMethodLexicalNode extends ExpressionNode {
 
     var owner = VmUtils.getOwner(frame);
     for (var i = 1; i < levelsUp; i++) {
-      owner = owner.getEnclosingOwner();
+      var next = owner.getEnclosingOwner();
+      assert next != null;
+      owner = skipAmendFunctions ? VmUtils.skipAmendFunctions(next) : next;
       assert owner != null;
     }
     return owner.getEnclosingFrame();

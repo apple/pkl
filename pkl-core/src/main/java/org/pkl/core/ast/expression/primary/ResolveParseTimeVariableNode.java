@@ -29,6 +29,7 @@ import org.pkl.core.ast.frame.ReadEnclosingFrameSlotNodeGen;
 import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
 import org.pkl.core.ast.member.Member;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
@@ -71,10 +72,6 @@ public final class ResolveParseTimeVariableNode extends ExpressionNode {
     // invalidation will be done by Node.replace() in the caller
     CompilerDirectives.transferToInterpreter();
 
-    if (pvar instanceof PartiallyResolvedVariable.ConstantVar cvar) {
-      return new ConstantValueNode(sourceSection, cvar.value());
-    }
-
     if (pvar instanceof PartiallyResolvedVariable.LocalPropertyVar lpvar) {
       var name = lpvar.name();
       var currFrame = frame;
@@ -82,25 +79,27 @@ public final class ResolveParseTimeVariableNode extends ExpressionNode {
       var levelsUp = 0;
 
       do {
-        var localMember = currOwner.getMember(name);
-        if (localMember != null) {
-          assert localMember.isLocal();
+        if (!(currOwner instanceof VmFunction fn && fn.isAmendFunction())) {
+          var localMember = currOwner.getMember(name);
+          if (localMember != null) {
+            assert localMember.isLocal();
 
-          if (!lpvar.isConst()) {
-            checkConst(currOwner, localMember, levelsUp);
+            if (!lpvar.isConst()) {
+              checkConst(currOwner, localMember, levelsUp);
+            }
+
+            var value = localMember.getConstantValue();
+            if (value != null) {
+              return new ConstantValueNode(sourceSection, value);
+            }
+
+            return new ReadLocalPropertyNode(sourceSection, name, levelsUp, true);
           }
-
-          var value = localMember.getConstantValue();
-          if (value != null) {
-            return new ConstantValueNode(sourceSection, value);
-          }
-
-          return new ReadLocalPropertyNode(sourceSection, name, levelsUp);
+          levelsUp += 1;
         }
 
         currFrame = currOwner.getEnclosingFrame();
         currOwner = VmUtils.getOwnerOrNull(currFrame);
-        levelsUp += 1;
       } while (currOwner != null);
 
       throw PklBugException.unreachableCode();
@@ -113,25 +112,29 @@ public final class ResolveParseTimeVariableNode extends ExpressionNode {
       var levelsUp = 0;
 
       do {
-        var member = currOwner.getMember(name);
-        if (member != null) {
-          assert !member.isLocal();
+        if (!(currOwner instanceof VmFunction fn && fn.isAmendFunction())) {
+          var member = currOwner.getMember(name);
+          if (member != null) {
+            assert !member.isLocal();
 
-          if (!ppvar.isConst()) {
-            checkConst(currOwner, member, levelsUp);
+            if (!ppvar.isConst()) {
+              checkConst(currOwner, member, levelsUp);
+            }
+
+            return ReadPropertyNodeGen.create(
+                sourceSection,
+                name,
+                MemberLookupMode.IMPLICIT_LEXICAL,
+                false,
+                levelsUp == 0
+                    ? new GetReceiverNode()
+                    : new GetEnclosingReceiverNode(levelsUp, true));
           }
-
-          return ReadPropertyNodeGen.create(
-              sourceSection,
-              name,
-              MemberLookupMode.IMPLICIT_LEXICAL,
-              false,
-              levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp));
+          levelsUp += 1;
         }
 
         currFrame = currOwner.getEnclosingFrame();
         currOwner = VmUtils.getOwnerOrNull(currFrame);
-        levelsUp += 1;
       } while (currOwner != null);
 
       throw PklBugException.unreachableCode();

@@ -106,6 +106,7 @@ import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
 import org.pkl.core.ast.expression.member.InvokeMethodDirectNode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
+import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNode;
@@ -281,8 +282,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private final ExternalMemberRegistry externalMemberRegistry;
   private final SymbolTable symbolTable;
   private final boolean isMethodReturnTypeChecked;
-  // we resolve variables at runtime in repl mode
-  private final boolean isReplMode;
+  // true when parse-time levelUp doesn't match the runtime owner chain
+  private boolean isLevelUpUnreliable;
 
   public AstBuilder(
       Source source,
@@ -307,7 +308,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       symbolTable = new SymbolTable(moduleInfo, module, baseModule);
     }
     isMethodReturnTypeChecked = !isStdLibModule || IoUtils.isTestMode();
-    isReplMode = !isStdLibModule && "repl".equals(moduleKey.getUri().getHost());
   }
 
   // Constructor for REPL/expression parsing where no Module syntax tree is available
@@ -663,8 +663,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     };
   }
 
-  private static final boolean shouldResolveVariables = true;
-
   @Override
   public ExpressionNode visitUnqualifiedAccessExpr(UnqualifiedAccessExpr expr) {
     var identifier = toIdentifier(expr.getIdentifier().getValue());
@@ -674,66 +672,96 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var sourceSection = createSourceSection(expr);
 
     if (argList == null) {
-      if (shouldResolveVariables && !isReplMode && !isStdLibModule) {
-        var node =
+      if (!isStdLibModule) {
+        var constLevel = scope.getConstLevel();
+        var constDepth = scope.getConstDepth();
+        var result =
             scope.resolveProperty(
                 identifier,
-                res -> {
+                (res, levelUp) -> {
                   if (res instanceof ConstantProperty c) {
-                    return new PartiallyResolvedVariable.ConstantVar(c.constant());
+                    return new ConstantValueNode(sourceSection, c.constant());
                   } else if (res instanceof LocalClassProperty p) {
-                    return new PartiallyResolvedVariable.LocalPropertyVar(p.name(), p.isConst());
+                    if (isLevelUpUnreliable) {
+                      return new PartiallyResolvedVariable.LocalPropertyVar(p.name(), p.isConst());
+                    }
+                    return new ReadLocalPropertyNode(
+                        sourceSection, p.name(), levelUp, levelUp > 0, constLevel, constDepth);
                   } else if (res instanceof NormalClassProperty p) {
-                    return new PartiallyResolvedVariable.PropertyVar(p.name(), p.isConst());
+                    var needsConst = constLevel.isConst() && !p.isConst();
+                    if (isLevelUpUnreliable || (needsConst && !p.isModuleScope())) {
+                      return new PartiallyResolvedVariable.PropertyVar(p.name(), p.isConst());
+                    }
+                    return ReadPropertyNodeGen.create(
+                        sourceSection,
+                        p.name(),
+                        MemberLookupMode.IMPLICIT_LEXICAL,
+                        needsConst,
+                        levelUp == 0
+                            ? new GetReceiverNode()
+                            : new GetEnclosingReceiverNode(levelUp, true));
                   } else if (res instanceof LetOrLambdaProperty) {
                     return new PartiallyResolvedVariable.FrameSlotVar(identifier);
                   }
                   return null;
                 });
-        if (node != null) {
+        if (result instanceof ExpressionNode n) return n;
+        if (result instanceof PartiallyResolvedVariable pvar) {
           return new ResolveParseTimeVariableNode(
-              node, sourceSection, scope.getConstLevel(), scope.getConstDepth(), identifier);
+              pvar, sourceSection, constLevel, constDepth, identifier);
         }
       }
       // fall back to resolve variable node
       return createResolveVariableNode(createSourceSection(expr), identifier);
     }
 
-    if (!isReplMode) {
-      var result =
-          scope.resolveMethod(
-              identifier,
-              res -> {
-                if (res instanceof MethodResolution.DirectMethod m) {
-                  if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.LIST) {
-                    return doVisitListLiteral(expr, argList);
-                  } else if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.SET) {
-                    return doVisitSetLiteral(expr, argList);
-                  } else if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.MAP) {
-                    return doVisitMapLiteral(expr, argList);
-                  } else if (m.isBase()
-                      && identifier == org.pkl.core.runtime.Identifier.BYTES_CONSTRUCTOR) {
-                    return doVisitBytesLiteral(expr, argList);
-                  } else {
-                    var args = visitArgumentList(argList);
-                    return new InvokeMethodDirectNode(
-                        createSourceSection(expr), m.method(), m.receiver(), args);
-                  }
-                } else if (shouldResolveVariables && !isStdLibModule) {
-                  if (res instanceof MethodResolution.LexicalMethod lm) {
-                    return new PartiallyResolvedMethod.LexicalMethodVar(identifier, lm.isConst());
-                  } else if (res instanceof MethodResolution.VirtualMethod vm) {
+    var constLevel = scope.getConstLevel();
+    var constDepth = scope.getConstDepth();
+    var result =
+        scope.resolveMethod(
+            identifier,
+            (res, levelUp) -> {
+              if (res instanceof MethodResolution.DirectMethod m) {
+                if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.LIST) {
+                  return doVisitListLiteral(expr, argList);
+                } else if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.SET) {
+                  return doVisitSetLiteral(expr, argList);
+                } else if (m.isBase() && identifier == org.pkl.core.runtime.Identifier.MAP) {
+                  return doVisitMapLiteral(expr, argList);
+                } else if (m.isBase()
+                    && identifier == org.pkl.core.runtime.Identifier.BYTES_CONSTRUCTOR) {
+                  return doVisitBytesLiteral(expr, argList);
+                } else {
+                  var args = visitArgumentList(argList);
+                  return new InvokeMethodDirectNode(
+                      createSourceSection(expr), m.method(), m.receiver(), args);
+                }
+              } else if (!isStdLibModule) {
+                if (res instanceof MethodResolution.LexicalMethod lm) {
+                  return new PartiallyResolvedMethod.LexicalMethodVar(identifier, lm.isConst());
+                } else if (res instanceof MethodResolution.VirtualMethod vm) {
+                  if (isLevelUpUnreliable || (constLevel.isConst() && !vm.isConst())) {
                     return new PartiallyResolvedMethod.VirtualMethodVar(identifier, vm.isConst());
                   }
+                  var args = visitArgumentList(argList);
+                  return InvokeMethodVirtualNodeGen.create(
+                      sourceSection,
+                      identifier,
+                      args,
+                      MemberLookupMode.IMPLICIT_LEXICAL,
+                      levelUp == 0
+                          ? new GetReceiverNode()
+                          : new GetEnclosingReceiverNode(levelUp, true),
+                      GetClassNodeGen.create(null));
                 }
-                return null;
-              });
-      if (result instanceof ExpressionNode n) return n;
-      if (result instanceof PartiallyResolvedMethod pm) {
-        var args = visitArgumentList(argList);
-        return new ResolveParseTimeMethodNode(
-            pm, sourceSection, args, scope.getConstLevel(), scope.getConstDepth(), identifier);
-      }
+              }
+              return null;
+            });
+    if (result instanceof ExpressionNode n) return n;
+    if (result instanceof PartiallyResolvedMethod pm) {
+      var args = visitArgumentList(argList);
+      return new ResolveParseTimeMethodNode(
+          pm, sourceSection, args, constLevel, constDepth, identifier);
     }
 
     // TODO: support qualified calls (e.g., `import "pkl:base"; x =
@@ -1289,7 +1317,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public GeneratorMemberNode visitObjectSpread(ObjectSpread member) {
+    var prev = isLevelUpUnreliable;
+    isLevelUpUnreliable = true;
     var expr = visitExpr(member.getExpr());
+    isLevelUpUnreliable = prev;
     return GeneratorSpreadNodeGen.create(createSourceSection(member), expr, member.isNullable());
   }
 
@@ -1303,7 +1334,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             : doVisitForWhenBody(member.getElseClause());
 
     // when predicates cannot see their direct scope
+    var prev = isLevelUpUnreliable;
+    isLevelUpUnreliable = true;
     var predicateNode = symbolTable.enterForEager((scope) -> visitExpr(member.getPredicate()));
+    isLevelUpUnreliable = prev;
     return new GeneratorWhenNode(sourceSection, predicateNode, thenNodes, elseNodes);
   }
 
@@ -1386,7 +1420,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
                 .initWriteSlotNode(valueSlot)
             : null;
+    var prev = isLevelUpUnreliable;
+    isLevelUpUnreliable = true;
     var iterableNode = symbolTable.enterForEager(scope -> visitExpr(ctx.getExpr()));
+    isLevelUpUnreliable = prev;
     var memberNodes =
         symbolTable.enterForGenerator(
             params,
@@ -2013,7 +2050,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           verifyNode);
     }
 
-    return symbolTable.enterAnnotationScope((scope) -> doVisitObjectBody(bodyCtx, verifyNode));
+    return symbolTable.enterAnnotationScope(
+        (scope) -> {
+          var prev = isLevelUpUnreliable;
+          isLevelUpUnreliable = true;
+          try {
+            return doVisitObjectBody(bodyCtx, verifyNode);
+          } finally {
+            isLevelUpUnreliable = prev;
+          }
+        });
   }
 
   private ExpressionNode[] doVisitAnnotations(List<? extends Annotation> annotations) {

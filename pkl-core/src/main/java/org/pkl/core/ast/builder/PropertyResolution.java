@@ -23,7 +23,8 @@ public sealed interface PropertyResolution {
 
   record LocalClassProperty(Identifier name, boolean isConst) implements PropertyResolution {}
 
-  record NormalClassProperty(Identifier name, boolean isConst) implements PropertyResolution {}
+  record NormalClassProperty(Identifier name, boolean isConst, boolean isModuleScope)
+      implements PropertyResolution {}
 
   record LetOrLambdaProperty(Identifier name) implements PropertyResolution {}
 }

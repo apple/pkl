@@ -28,6 +28,7 @@ import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.ast.internal.GetClassNodeGen;
 import org.pkl.core.ast.member.Member;
 import org.pkl.core.runtime.Identifier;
+import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
@@ -83,6 +84,11 @@ public final class ResolveParseTimeMethodNode extends ExpressionNode {
     var levelsUp = 0;
 
     do {
+      if (currOwner instanceof VmFunction fn && fn.isAmendFunction()) {
+        currOwner = currOwner.getEnclosingOwner();
+        continue;
+      }
+
       if (currOwner.isPrototype()) {
         var localMethod = currOwner.getVmClass().getDeclaredMethod(localMethodName);
         if (localMethod != null) {
@@ -91,7 +97,11 @@ public final class ResolveParseTimeMethodNode extends ExpressionNode {
             checkConst(currOwner, localMethod, levelsUp);
           }
           return new InvokeMethodLexicalNode(
-              sourceSection, localMethod.getCallTarget(sourceSection), levelsUp, argumentNodes);
+              sourceSection,
+              localMethod.getCallTarget(sourceSection),
+              levelsUp,
+              argumentNodes,
+              true);
         }
         var method = currOwner.getVmClass().getDeclaredMethod(methodName);
         if (method != null) {
@@ -100,7 +110,7 @@ public final class ResolveParseTimeMethodNode extends ExpressionNode {
             checkConst(currOwner, method, levelsUp);
           }
           return new InvokeMethodLexicalNode(
-              sourceSection, method.getCallTarget(sourceSection), levelsUp, argumentNodes);
+              sourceSection, method.getCallTarget(sourceSection), levelsUp, argumentNodes, true);
         }
       } else {
         var localMethod = currOwner.getMember(localMethodName);
@@ -112,7 +122,7 @@ public final class ResolveParseTimeMethodNode extends ExpressionNode {
           var methodCallTarget =
               (CallTarget) localMethod.getCallTarget().call(currOwner, currOwner);
           return new InvokeMethodLexicalNode(
-              sourceSection, methodCallTarget, levelsUp, argumentNodes);
+              sourceSection, methodCallTarget, levelsUp, argumentNodes, true);
         }
       }
 
@@ -129,6 +139,11 @@ public final class ResolveParseTimeMethodNode extends ExpressionNode {
     var levelsUp = 0;
 
     do {
+      if (currOwner instanceof VmFunction fn && fn.isAmendFunction()) {
+        currOwner = currOwner.getEnclosingOwner();
+        continue;
+      }
+
       if (currOwner.isPrototype()) {
         var method = currOwner.getVmClass().getDeclaredMethod(methodName);
         if (method != null) {
@@ -142,7 +157,7 @@ public final class ResolveParseTimeMethodNode extends ExpressionNode {
               methodName,
               argumentNodes,
               MemberLookupMode.IMPLICIT_LEXICAL,
-              levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
+              levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp, true),
               GetClassNodeGen.create(null));
         }
       }

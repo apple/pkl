@@ -23,6 +23,7 @@ import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.builder.ConstLevel;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
@@ -33,16 +34,34 @@ import org.pkl.core.util.Nullable;
 public final class ReadLocalPropertyNode extends ExpressionNode {
   private final Identifier name;
   private final int levelsUp;
+  private final boolean skipAmendFunctions;
+  private final ConstLevel constLevel;
+  private final int constDepth;
+  private boolean isConstChecked;
   private ObjectMember property;
   @Child private DirectCallNode callNode;
 
-  public ReadLocalPropertyNode(SourceSection sourceSection, Identifier name, int levelsUp) {
+  public ReadLocalPropertyNode(
+      SourceSection sourceSection, Identifier name, int levelsUp, boolean skipAmendFunctions) {
+    this(sourceSection, name, levelsUp, skipAmendFunctions, ConstLevel.NONE, -1);
+  }
+
+  public ReadLocalPropertyNode(
+      SourceSection sourceSection,
+      Identifier name,
+      int levelsUp,
+      boolean skipAmendFunctions,
+      ConstLevel constLevel,
+      int constDepth) {
 
     super(sourceSection);
     CompilerAsserts.neverPartOfCompilation();
 
     this.name = name;
     this.levelsUp = levelsUp;
+    this.skipAmendFunctions = skipAmendFunctions;
+    this.constLevel = constLevel;
+    this.constDepth = constDepth;
   }
 
   @Override
@@ -55,7 +74,10 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
       receiver = VmUtils.getReceiver(frame);
     } else {
       for (int i = 1; i < levelsUp; i++) {
-        owner = owner.getEnclosingOwner();
+        owner =
+            skipAmendFunctions
+                ? VmUtils.skipAmendFunctions(owner.getEnclosingOwner())
+                : owner.getEnclosingOwner();
         assert owner != null;
       }
 
@@ -74,6 +96,8 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
       CompilerDirectives.transferToInterpreter();
       throw new PklBugException("Couldn't find local variable `" + name + "`.");
     }
+
+    checkConst(owner, property);
 
     assert receiver instanceof VmObjectLike
         : "Assumption: This node isn't used in Truffle ASTs of `external` pkl.base classes whose values aren't VmObject's.";
@@ -115,5 +139,22 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
       currOwner = VmUtils.getOwnerOrNull(currFrame);
     } while (currOwner != null);
     return null;
+  }
+
+  private void checkConst(VmObjectLike currOwner, ObjectMember member) {
+    if (!constLevel.isConst() || isConstChecked) return;
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    var memberIsOutsideConstScope = levelsUp > constDepth;
+    var invalid =
+        switch (constLevel) {
+          case ALL -> memberIsOutsideConstScope && !member.isConst();
+          case MODULE -> currOwner.isModuleObject() && !member.isConst();
+          default -> false;
+        };
+    if (invalid) {
+      throw exceptionBuilder().evalError("propertyMustBeConst", name.toString()).build();
+    }
+    isConstChecked = true;
   }
 }

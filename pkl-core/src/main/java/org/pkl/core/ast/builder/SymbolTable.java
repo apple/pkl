@@ -18,6 +18,7 @@ package org.pkl.core.ast.builder;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
 import java.util.*;
+import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ConstantNode;
@@ -32,7 +33,6 @@ import org.pkl.core.ast.builder.PropertyResolution.LetOrLambdaProperty;
 import org.pkl.core.ast.builder.PropertyResolution.LocalClassProperty;
 import org.pkl.core.ast.builder.PropertyResolution.NormalClassProperty;
 import org.pkl.core.ast.expression.generator.GeneratorMemberNode;
-import org.pkl.core.ast.expression.primary.PartiallyResolvedVariable;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
@@ -404,12 +404,13 @@ public final class SymbolTable {
       T apply(LexicalScope scope, int levelUp);
     }
 
-    public @Nullable PartiallyResolvedVariable resolveProperty(
-        Identifier name, Function<PropertyResolution, PartiallyResolvedVariable> fun) {
+    public @Nullable Object resolveProperty(
+        Identifier name, BiFunction<PropertyResolution, Integer, Object> fun) {
       return resolve((scope, levelUp) -> scope.doResolveProperty(name, levelUp, fun));
     }
 
-    public @Nullable Object resolveMethod(Identifier name, Function<MethodResolution, Object> fun) {
+    public @Nullable Object resolveMethod(
+        Identifier name, BiFunction<MethodResolution, Integer, Object> fun) {
       return resolve((scope, levelUp) -> scope.doResolveMethod(name, levelUp, fun));
     }
 
@@ -442,14 +443,12 @@ public final class SymbolTable {
 
   protected interface LexicalScope {
     @Nullable
-    PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback);
+    Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback);
 
     @Nullable
     Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback);
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback);
   }
 
   public static class ObjectScope extends Scope implements LexicalScope {
@@ -470,10 +469,8 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       var strName = name.toString();
       // Underscore is a discard identifier and should not be resolvable
       if (strName.equals("_")) {
@@ -483,26 +480,27 @@ public final class SymbolTable {
       if (prop != null) {
         if (VmModifier.isLocal(prop)) {
           return callback.apply(
-              new LocalClassProperty(name.toLocalProperty(), VmModifier.isConst(prop)));
+              new LocalClassProperty(name.toLocalProperty(), VmModifier.isConst(prop)), levelUp);
         } else {
-          return callback.apply(new NormalClassProperty(name, VmModifier.isConst(prop)));
+          return callback.apply(
+              new NormalClassProperty(name, VmModifier.isConst(prop), false), levelUp);
         }
       }
       var paramIndex = params.get(strName);
       if (paramIndex != null) {
         // params are on a higher level than the properties
-        return callback.apply(new LetOrLambdaProperty(name));
+        return callback.apply(new LetOrLambdaProperty(name), levelUp);
       }
       return null;
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       var method = methods.get(name.toString());
       if (method != null) {
         // Object methods are always local
-        return callback.apply(new LexicalMethod(VmModifier.isConst(method)));
+        return callback.apply(new LexicalMethod(VmModifier.isConst(method)), levelUp);
       }
       return null;
     }
@@ -594,29 +592,28 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       var modifiers = properties.get(name);
       if (modifiers == null) return null;
       if (isLocal(modifiers)) {
-        return callback.apply(new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)));
+        return callback.apply(
+            new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)), levelUp);
       } else {
-        return callback.apply(new NormalClassProperty(name, isConst(modifiers)));
+        return callback.apply(new NormalClassProperty(name, isConst(modifiers), true), levelUp);
       }
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       var method = methods.get(name);
       if (method == null) return null;
       var methodIsConst = isConst(method.getModifiers());
       if (isLocal(method.getModifiers())) {
-        return callback.apply(new LexicalMethod(methodIsConst));
+        return callback.apply(new LexicalMethod(methodIsConst), levelUp);
       } else {
-        return callback.apply(new VirtualMethod(methodIsConst));
+        return callback.apply(new VirtualMethod(methodIsConst), levelUp);
       }
     }
 
@@ -663,13 +660,11 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       var cachedValue = base.getCachedValue(name);
       if (cachedValue != null) {
-        return callback.apply(new ConstantProperty(cachedValue));
+        return callback.apply(new ConstantProperty(cachedValue), levelUp);
       }
 
       var member = base.getMember(name);
@@ -678,23 +673,23 @@ public final class SymbolTable {
         var constantValue = member.getConstantValue();
         if (constantValue != null) {
           base.setCachedValue(name, constantValue);
-          return callback.apply(new ConstantProperty(constantValue));
+          return callback.apply(new ConstantProperty(constantValue), levelUp);
         }
 
         var computedValue = member.getCallTarget().call(base, base);
         base.setCachedValue(name, computedValue);
-        return callback.apply(new ConstantProperty(computedValue));
+        return callback.apply(new ConstantProperty(computedValue), levelUp);
       }
       return null;
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       var method = base.getVmClass().getDeclaredMethod(name);
       if (method != null) {
         assert !method.isLocal();
-        return callback.apply(new DirectMethod(method, new ConstantValueNode(base), true));
+        return callback.apply(new DirectMethod(method, new ConstantValueNode(base), true), levelUp);
       }
       return null;
     }
@@ -716,24 +711,22 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       var nameStr = name.toString();
       if (nameStr.equals("_")) {
         return null;
       }
       var index = bindings.indexOf(nameStr);
       if (index != -1) {
-        return callback.apply(new LetOrLambdaProperty(name));
+        return callback.apply(new LetOrLambdaProperty(name), levelUp);
       }
       return null;
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       return null;
     }
   }
@@ -754,24 +747,22 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       var nameStr = name.toString();
       if (nameStr.equals("_")) {
         return null;
       }
       var index = bindings.indexOf(nameStr);
       if (index != -1) {
-        return callback.apply(new LetOrLambdaProperty(name));
+        return callback.apply(new LetOrLambdaProperty(name), levelUp);
       }
       return null;
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       return null;
     }
   }
@@ -813,24 +804,22 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       var nameStr = name.toString();
       if (nameStr.equals("_")) {
         return null;
       }
       var index = params.indexOf(nameStr);
       if (index >= 0) {
-        return callback.apply(new LetOrLambdaProperty(name));
+        return callback.apply(new LetOrLambdaProperty(name), levelUp);
       }
       return null;
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       return null;
     }
   }
@@ -872,31 +861,30 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
 
       var modifiers = properties.get(name);
       if (modifiers == null) return null;
       if (isLocal(modifiers)) {
-        return callback.apply(new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)));
+        return callback.apply(
+            new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)), levelUp);
       } else {
-        return callback.apply(new NormalClassProperty(name, isConst(modifiers)));
+        return callback.apply(new NormalClassProperty(name, isConst(modifiers), false), levelUp);
       }
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
 
       var method = methods.get(name);
       if (method == null) return null;
       var methodIsConst = isConst(method.getModifiers());
       if (isClosed || isLocal(method.getModifiers())) {
-        return callback.apply(new LexicalMethod(methodIsConst));
+        return callback.apply(new LexicalMethod(methodIsConst), levelUp);
       } else {
-        return callback.apply(new VirtualMethod(methodIsConst));
+        return callback.apply(new VirtualMethod(methodIsConst), levelUp);
       }
     }
 
@@ -992,17 +980,15 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable PartiallyResolvedVariable doResolveProperty(
-        Identifier name,
-        int levelUp,
-        Function<PropertyResolution, PartiallyResolvedVariable> callback) {
+    public @Nullable Object doResolveProperty(
+        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
       // annotation scopes don't have variables, the inner object scope might have
       return null;
     }
 
     @Override
     public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, Function<MethodResolution, Object> callback) {
+        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
       return null;
     }
   }

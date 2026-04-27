@@ -30,6 +30,7 @@ public final class VmFunction extends VmObjectLike {
   private final Object thisValue;
   private final int paramCount;
   private final PklRootNode rootNode;
+  private final boolean isAmendFunction;
 
   public VmFunction(
       MaterializedFrame enclosingFrame,
@@ -37,11 +38,22 @@ public final class VmFunction extends VmObjectLike {
       int paramCount,
       PklRootNode rootNode,
       @Nullable Object extraStorage) {
+    this(enclosingFrame, thisValue, paramCount, rootNode, extraStorage, false);
+  }
+
+  public VmFunction(
+      MaterializedFrame enclosingFrame,
+      Object thisValue,
+      int paramCount,
+      PklRootNode rootNode,
+      @Nullable Object extraStorage,
+      boolean isAmendFunction) {
     super(enclosingFrame);
     this.thisValue = thisValue;
     this.paramCount = paramCount;
     this.rootNode = rootNode;
     this.extraStorage = extraStorage;
+    this.isAmendFunction = isAmendFunction;
   }
 
   public RootCallTarget getCallTarget() {
@@ -71,7 +83,12 @@ public final class VmFunction extends VmObjectLike {
         thisValue,
         newParamCount,
         newRootNode == null ? rootNode : newRootNode,
-        newExtraStorage);
+        newExtraStorage,
+        isAmendFunction);
+  }
+
+  public boolean isAmendFunction() {
+    return isAmendFunction;
   }
 
   public Object getThisValue() {
