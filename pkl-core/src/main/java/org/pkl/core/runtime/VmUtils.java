@@ -159,6 +159,17 @@ public final class VmUtils {
     return result;
   }
 
+  /**
+   * Skips any amending function VmFunction owners in the owner chain. They do not correspond to any
+   * parse-time scope.
+   */
+  public static @Nullable VmObjectLike skipAmendFunctions(@Nullable VmObjectLike owner) {
+    while (owner instanceof VmFunction fn && fn.isAmendFunction()) {
+      owner = owner.getEnclosingOwner();
+    }
+    return owner;
+  }
+
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */
   public static Object getMemberKey(Frame frame) {
     return frame.getArguments()[2];

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,9 +22,15 @@ import org.pkl.core.runtime.VmUtils;
 
 public final class GetEnclosingReceiverNode extends ExpressionNode {
   private final int levelsUp;
+  private final boolean skipAmendFunctions;
 
   public GetEnclosingReceiverNode(int levelsUp) {
+    this(levelsUp, false);
+  }
+
+  public GetEnclosingReceiverNode(int levelsUp, boolean skipAmendFunctions) {
     this.levelsUp = levelsUp;
+    this.skipAmendFunctions = skipAmendFunctions;
 
     assert levelsUp > 0 : "shouldn't be using GetEnclosingReceiverNode for levelsUp == 0";
   }
@@ -33,7 +39,9 @@ public final class GetEnclosingReceiverNode extends ExpressionNode {
   public Object executeGeneric(VirtualFrame frame) {
     var owner = VmUtils.getOwner(frame);
     for (var i = 1; i < levelsUp; i++) {
-      owner = owner.getEnclosingOwner();
+      var next = owner.getEnclosingOwner();
+      assert next != null;
+      owner = skipAmendFunctions ? VmUtils.skipAmendFunctions(next) : next;
       assert owner != null;
     }
     var result = owner.getEnclosingReceiver();

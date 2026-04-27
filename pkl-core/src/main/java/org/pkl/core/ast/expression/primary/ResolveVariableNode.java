@@ -91,7 +91,10 @@ public final class ResolveVariableNode extends ExpressionNode {
     var localPropertyName = variableName.toLocalProperty();
     var currFrame = frame;
     var currOwner = VmUtils.getOwner(currFrame);
+    // physical levelsUp (counts all owner levels including amend VmFunctions)
     var levelsUp = 0;
+    // logical levelsUp (skips amend VmFunction levels)
+    var logicalLevelsUp = 0;
 
     // Search lexical scope for a matching function parameter, for-generator variable, or object
     // property.
@@ -107,7 +110,7 @@ public final class ResolveVariableNode extends ExpressionNode {
       if (localMember != null) {
         assert localMember.isLocal();
 
-        checkConst(currOwner, localMember, levelsUp);
+        checkConst(currOwner, localMember, logicalLevelsUp);
 
         var value = localMember.getConstantValue();
         if (value != null) {
@@ -117,14 +120,14 @@ public final class ResolveVariableNode extends ExpressionNode {
           return new ConstantValueNode(sourceSection, value);
         }
 
-        return new ReadLocalPropertyNode(sourceSection, localPropertyName, levelsUp);
+        return new ReadLocalPropertyNode(sourceSection, localPropertyName, logicalLevelsUp, true);
       }
 
       var member = currOwner.getMember(variableName);
       if (member != null) {
         assert !member.isLocal();
 
-        checkConst(currOwner, member, levelsUp);
+        checkConst(currOwner, member, logicalLevelsUp);
 
         // Non-local properties are late-bound, which is why we can't ever return ConstantNode here.
         //
@@ -138,12 +141,17 @@ public final class ResolveVariableNode extends ExpressionNode {
             MemberLookupMode.IMPLICIT_LEXICAL,
             // we already checked for const-safety, no need to recheck
             false,
-            levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp));
+            logicalLevelsUp == 0
+                ? new GetReceiverNode()
+                : new GetEnclosingReceiverNode(logicalLevelsUp, true));
       }
 
       currFrame = currOwner.getEnclosingFrame();
       currOwner = VmUtils.getOwnerOrNull(currFrame);
       levelsUp += 1;
+      if (!(currOwner instanceof VmFunction fn && fn.isAmendFunction())) {
+        logicalLevelsUp += 1;
+      }
     } while (currOwner != null);
 
     // Search base module, unless call site is inside base module.

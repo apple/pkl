@@ -19,8 +19,6 @@ import org.pkl.core.runtime.Identifier;
 
 public sealed interface PartiallyResolvedVariable {
 
-  record ConstantVar(Object value) implements PartiallyResolvedVariable {}
-
   record LocalPropertyVar(Identifier name, boolean isConst) implements PartiallyResolvedVariable {}
 
   record PropertyVar(Identifier name, boolean isConst) implements PartiallyResolvedVariable {}
