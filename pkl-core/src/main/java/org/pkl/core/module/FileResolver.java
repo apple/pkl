@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.NoSuchFileException;
 import java.nio.file.NotDirectoryException;
 import java.nio.file.Path;
+import java.nio.file.attribute.BasicFileAttributes;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
@@ -37,11 +38,16 @@ public final class FileResolver {
     try (var stream = Files.newDirectoryStream(path)) {
       var ret = new ArrayList<PathElement>();
       for (var entry : stream) {
-        // skip symlinks to prevent cyclical globs
-        if (Files.isSymbolicLink(entry)) {
-          continue;
+        // Use readAttributes (rather than Files.isDirectory) so that errors like
+        // "Too many levels of symbolic links" surface as IOException instead of being
+        // silently swallowed. Broken symlinks still go through as non-directory entries.
+        boolean isDirectory;
+        try {
+          isDirectory = Files.readAttributes(entry, BasicFileAttributes.class).isDirectory();
+        } catch (NoSuchFileException ignored) {
+          isDirectory = false;
         }
-        ret.add(new PathElement(entry.getFileName().toString(), Files.isDirectory(entry)));
+        ret.add(new PathElement(entry.getFileName().toString(), isDirectory));
       }
       return ret;
     } catch (NotDirectoryException | NoSuchFileException ignored) {
