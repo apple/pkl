@@ -322,6 +322,15 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
+[[show-only-failed]]
+.showOnlyFailed: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `showOnlyFailed = true` +
+Only show failed test output, hiding passing tests from the report.
+====
+
 [[power-assertions-test]]
 .powerAssertions: Property<Boolean>
 [%collapsible]
@@ -675,6 +684,14 @@ Whether and where to generate JUnit XML reports.
 ====
 Default: `false` +
 Whether to ignore expected example files and generate them again.
+====
+
+.showOnlyFailed: Property<Boolean>
+[%collapsible]
+====
+Default: `false` +
+Example: `showOnlyFailed = true` +
+Only show failed test output, hiding passing tests from the report.
 ====
 
 Common properties:

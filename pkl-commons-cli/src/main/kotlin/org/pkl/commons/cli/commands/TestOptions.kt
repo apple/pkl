@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -51,7 +51,16 @@ class TestOptions : OptionGroup() {
   private val overwrite: Boolean by
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
+  private val showOnlyFailed: Boolean by
+    option(names = arrayOf("--show-only-failed"), help = "Only show failed test output.").flag()
+
   val cliTestOptions: CliTestOptions by lazy {
-    CliTestOptions(junitReportDir, overwrite, junitAggregateReports, junitAggregateSuiteName)
+    CliTestOptions(
+      junitReportDir,
+      overwrite,
+      junitAggregateReports,
+      junitAggregateSuiteName,
+      showOnlyFailed,
+    )
   }
 }

@@ -43,6 +43,10 @@ public abstract class TestTask extends ModulesTask {
   @Input
   public abstract Property<Boolean> getOverwrite();
 
+  @Input
+  @Optional
+  public abstract Property<Boolean> getShowOnlyFailed();
+
   public TestTask() {
     this.getJunitAggregateSuiteName().convention("pkl-tests");
     this.getPowerAssertions().convention(true);
@@ -56,7 +60,8 @@ public abstract class TestTask extends ModulesTask {
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
-                getJunitAggregateSuiteName().get()),
+                getJunitAggregateSuiteName().get(),
+                getShowOnlyFailed().getOrElse(false)),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

@@ -62,6 +62,10 @@ public abstract class ProjectPackageTask extends BasePklTask {
   @Optional
   public abstract Property<Boolean> getSkipPublishCheck();
 
+  @Input
+  @Optional
+  public abstract Property<Boolean> getShowOnlyFailed();
+
   public ProjectPackageTask() {
     this.getJunitAggregateSuiteName().convention("pkl-tests");
   }
@@ -83,7 +87,8 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 mapAndGetOrNull(getJunitReportsDir(), it -> it.getAsFile().toPath()),
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
-                getJunitAggregateSuiteName().get()),
+                getJunitAggregateSuiteName().get(),
+                getShowOnlyFailed().getOrElse(false)),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
             new PrintWriter(System.out),
