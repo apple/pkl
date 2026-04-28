@@ -123,13 +123,12 @@ public final class SymbolTable {
         nodeFactory);
   }
 
-  public <T> T enterForEager(Function<ForEagerScope, T> nodeFactory) {
-    return doEnter(new ForEagerScope(currentScope, currentScope.qualifiedName), nodeFactory);
+  public <T> T enterEagerGenerator(Function<EagerGeneratorScope, T> nodeFactory) {
+    return doEnter(new EagerGeneratorScope(currentScope, currentScope.qualifiedName), nodeFactory);
   }
 
   public <T> T enterForGenerator(
       List<String> params,
-      int nestLevel,
       FrameDescriptor.Builder frameDescriptorBuilder,
       FrameDescriptor.Builder memberDescriptorBuilder,
       Function<ForGeneratorScope, T> nodeFactory) {
@@ -138,7 +137,6 @@ public final class SymbolTable {
             currentScope,
             currentScope.qualifiedName,
             params,
-            nestLevel,
             frameDescriptorBuilder,
             memberDescriptorBuilder),
         nodeFactory);
@@ -419,7 +417,7 @@ public final class SymbolTable {
       var shouldSkip = false;
       for (var scope = this; scope != null; scope = scope.getParent()) {
         // for headers resolve variables one scope up
-        if (scope instanceof ForEagerScope) {
+        if (scope instanceof EagerGeneratorScope) {
           shouldSkip = true;
           continue;
         }
@@ -767,9 +765,9 @@ public final class SymbolTable {
     }
   }
 
-  // A scope used only for variable resolution
-  public static final class ForEagerScope extends Scope {
-    private ForEagerScope(@Nullable Scope parent, String qualifiedName) {
+  // A generator scope that is resolved eagerly and one level above
+  public static final class EagerGeneratorScope extends Scope {
+    private EagerGeneratorScope(@Nullable Scope parent, String qualifiedName) {
       super(parent, null, qualifiedName, ConstLevel.NONE, FrameDescriptor.newBuilder());
     }
   }
@@ -777,19 +775,16 @@ public final class SymbolTable {
   public static final class ForGeneratorScope extends Scope implements LexicalScope {
     private final FrameDescriptor.Builder memberDescriptorBuilder;
     final List<String> params;
-    private final int nestLevel;
 
     public ForGeneratorScope(
         Scope parent,
         String qualifiedName,
         List<String> params,
-        int nestLevel,
         FrameDescriptor.Builder frameDescriptorBuilder,
         FrameDescriptor.Builder memberDescriptorBuilder) {
       super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
       this.memberDescriptorBuilder = memberDescriptorBuilder;
       this.params = params;
-      this.nestLevel = nestLevel;
     }
 
     public FrameDescriptor buildMemberDescriptor() {

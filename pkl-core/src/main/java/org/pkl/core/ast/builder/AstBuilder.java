@@ -1287,7 +1287,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public GeneratorMemberNode visitMemberPredicate(MemberPredicate ctx) {
     var keyNode =
-        symbolTable.enterForEager(
+        symbolTable.enterEagerGenerator(
             (scp) -> symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred())));
     var member =
         doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
@@ -1336,7 +1336,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     // when predicates cannot see their direct scope
     var prev = isLevelUpUnreliable;
     isLevelUpUnreliable = true;
-    var predicateNode = symbolTable.enterForEager((scope) -> visitExpr(member.getPredicate()));
+    var predicateNode =
+        symbolTable.enterEagerGenerator((scope) -> visitExpr(member.getPredicate()));
     isLevelUpUnreliable = prev;
     return new GeneratorWhenNode(sourceSection, predicateNode, thenNodes, elseNodes);
   }
@@ -1389,15 +1390,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var memberDescriptorBuilder = currentScope.newForGeneratorMemberDescriptorBuilder();
     var keySlot = -1;
     var valueSlot = -1;
-    var nestLevel = -1;
     if (keyIdentifier != null) {
       keySlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
-      nestLevel = keySlot;
       memberDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
     }
     if (valueIdentifier != null) {
       valueSlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
-      if (nestLevel == -1) nestLevel = valueSlot;
       memberDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
     }
     var unresolvedKeyTypeNode =
@@ -1422,12 +1420,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             : null;
     var prev = isLevelUpUnreliable;
     isLevelUpUnreliable = true;
-    var iterableNode = symbolTable.enterForEager(scope -> visitExpr(ctx.getExpr()));
+    var iterableNode = symbolTable.enterEagerGenerator(scope -> visitExpr(ctx.getExpr()));
     isLevelUpUnreliable = prev;
     var memberNodes =
         symbolTable.enterForGenerator(
             params,
-            nestLevel,
             generatorDescriptorBuilder,
             memberDescriptorBuilder,
             scope -> doVisitForWhenBody(ctx.getBody()));
@@ -2460,7 +2457,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private Pair<ExpressionNode, ObjectMember> doVisitObjectEntry(ObjectEntry entry) {
-    var keyNode = symbolTable.enterForEager((scp) -> visitExpr(entry.getKey()));
+    var keyNode = symbolTable.enterEagerGenerator((scp) -> visitExpr(entry.getKey()));
     // var keyNode = visitExpr(entry.getKey());
 
     var member =
