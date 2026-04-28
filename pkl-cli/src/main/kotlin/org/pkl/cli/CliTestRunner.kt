@@ -29,7 +29,7 @@ import org.pkl.core.util.ErrorMessages
 class CliTestRunner
 @JvmOverloads
 constructor(
-  private val options: CliBaseOptions,
+  options: CliBaseOptions,
   private val testOptions: CliTestOptions,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
@@ -64,13 +64,11 @@ constructor(
       var failed = false
       var isExampleWrittenFailure = true
       val moduleNames = mutableSetOf<String>()
-      val reporter = SimpleReport(useColor)
+      val reporter = SimpleReport(useColor, testOptions.showOnlyFailed)
       val allTestResults = mutableListOf<TestResults>()
 
       val junitDir = testOptions.junitDir
-      if (junitDir != null) {
-        junitDir.toFile().mkdirs()
-      }
+      junitDir?.toFile()?.mkdirs()
 
       for ((idx, moduleUri) in sources.withIndex()) {
         try {
