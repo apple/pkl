@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,9 +36,11 @@ public final class SimpleReport implements TestReport {
   private static final String failingMark = "✘ ";
 
   private final boolean useColor;
+  private final boolean showOnlyFailed;
 
-  public SimpleReport(boolean useColor) {
+  public SimpleReport(boolean useColor, boolean showOnlyFailed) {
     this.useColor = useColor;
+    this.showOnlyFailed = showOnlyFailed;
   }
 
   @Override
@@ -92,10 +94,13 @@ public final class SimpleReport implements TestReport {
   }
 
   private void reportResults(TestSectionResults section, AnsiStringBuilder builder) {
-    if (!section.results().isEmpty()) {
+    var results =
+        showOnlyFailed
+            ? section.results().stream().filter(TestResult::isFailure).toList()
+            : section.results();
+    if (!results.isEmpty()) {
       builder.append("  ").append(section.name()).append('\n');
-      StringUtils.joinToStringBuilder(
-          builder, section.results(), "\n", res -> reportResult(res, builder));
+      StringUtils.joinToStringBuilder(builder, results, "\n", res -> reportResult(res, builder));
       builder.append('\n');
     }
   }
