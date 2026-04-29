@@ -52,7 +52,12 @@ class TestOptions : OptionGroup() {
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
   private val showOnlyFailed: Boolean by
-    option(names = arrayOf("--show-only-failed"), help = "Only show failed test output.").flag()
+    option(
+        names = arrayOf("--show-only-failed"),
+        help =
+          "Only show failed test output. JUnit reports are not affect by this option, only CLI.",
+      )
+      .flag()
 
   val cliTestOptions: CliTestOptions by lazy {
     CliTestOptions(
