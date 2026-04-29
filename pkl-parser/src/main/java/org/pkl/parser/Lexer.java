@@ -461,11 +461,17 @@ public final class Lexer {
       }
       case 'u' -> lexUnicodeEscape();
       case '\n' -> Token.STRING_ESCAPE_CONTINUATION;
+      case '\r' -> {
+        if (lookahead == '\n') {
+          nextChar();
+        }
+        yield Token.STRING_ESCAPE_CONTINUATION;
+      }
       case ' ', '\t' -> {
         var c = cursor;
         var next = nextChar();
         while (next == ' ' || next == '\t') next = nextChar();
-        if (next == '\n')
+        if (next == '\n' || next == '\r')
           throw lexError(
               ErrorMessages.create("invalidLineContinuationEscapeSequenceWhitespace"),
               c - 2,
