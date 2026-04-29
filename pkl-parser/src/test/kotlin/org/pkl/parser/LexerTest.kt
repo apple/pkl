@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -61,6 +61,56 @@ class LexerTest {
     assertThat(lexerFFFF.next()).isEqualTo(Token.CLASS)
     val thrown = assertThrows<ParserError> { lexerFFFF.next() }
     assertThat(thrown).hasMessageContaining("Invalid identifier")
+  }
+
+  @Test
+  fun lineContinuationWithCRLF() {
+    // \r\n line endings must be handled the same as \n for line continuations
+    val input = "x = \"\"\"\n  hello \\\r\n  world\r\n  \"\"\""
+    val lexer = Lexer(input)
+    assertThat(lexer.next()).isEqualTo(Token.IDENTIFIER) // x
+    assertThat(lexer.next()).isEqualTo(Token.ASSIGN)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_MULTI_START) // """
+    assertThat(lexer.next()).isEqualTo(Token.STRING_NEWLINE)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_PART) // "  hello "
+    assertThat(lexer.next()).isEqualTo(Token.STRING_ESCAPE_CONTINUATION) // \<CRLF> consumed
+    assertThat(lexer.next()).isEqualTo(Token.STRING_PART) // "  world"
+    assertThat(lexer.next()).isEqualTo(Token.STRING_NEWLINE)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_PART) // "  "
+    assertThat(lexer.next()).isEqualTo(Token.STRING_END) // """
+    assertThat(lexer.next()).isEqualTo(Token.EOF)
+  }
+
+  @Test
+  fun lineContinuationWithCR() {
+    // bare \r should also work as a line continuation
+    val input = "x = \"\"\"\n  hello \\\r  world\n  \"\"\""
+    val lexer = Lexer(input)
+    assertThat(lexer.next()).isEqualTo(Token.IDENTIFIER)
+    assertThat(lexer.next()).isEqualTo(Token.ASSIGN)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_MULTI_START)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_NEWLINE)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_PART)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_ESCAPE_CONTINUATION) // \<CR> consumed
+    assertThat(lexer.next()).isEqualTo(Token.STRING_PART)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_NEWLINE)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_PART)
+    assertThat(lexer.next()).isEqualTo(Token.STRING_END)
+    assertThat(lexer.next()).isEqualTo(Token.EOF)
+  }
+
+  @Test
+  fun lineContinuationWhitespaceErrorWithCRLF() {
+    // whitespace between \ and \r\n should give the same error as \ and \n
+    val input = "x = \"\"\"\n  hello \\ \r\n  world\n  \"\"\""
+    val thrown =
+      assertThrows<ParserError> {
+        val lexer = Lexer(input)
+        while (lexer.next() != Token.EOF) {
+          /* consume all tokens */
+        }
+      }
+    assertThat(thrown.message).contains("Whitespace")
   }
 
   @Test
