@@ -764,6 +764,43 @@ class CliProjectPackagerTest {
   }
 
   @Test
+  fun `import path verification with glob imports`(@TempDir tempDir: Path) {
+    tempDir.writeFile(
+      "main.pkl",
+      """
+      import* "**.pkl" as foo
+
+      res = foo
+      """
+        .trimIndent(),
+    )
+    tempDir.writeFile(
+      "PklProject",
+      """
+      amends "pkl:Project"
+
+      package {
+        name = "mypackage"
+        version = "1.0.0"
+        baseUri = "package://example.com/mypackage"
+        packageZipUrl = "https://foo.com"
+      }
+      """
+        .trimIndent(),
+    )
+
+    CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir),
+        listOf(tempDir),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        consoleWriter = StringWriter(),
+      )
+      .run()
+  }
+
+  @Test
   @DisabledOnOs(OS.WINDOWS)
   fun `import path verification -- absolute read from root dir`(@TempDir tempDir: Path) {
     tempDir.writeFile(
