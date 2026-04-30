@@ -43,7 +43,7 @@ kotlinPoet = "1.6.0"
 kotlinStdLib = "2.2.21"
 #noinspection UnusedVersionCatalogEntry
 kotlinTarget = "2.2"
-kotlinToolchain = "2.3.20"
+kotlinToolchain = "2.3.21"
 kotlinxHtml = "0.12.0"
 # 1.9.0 is the last version compatible with Kotlin 2.2
 kotlinxSerialization = "1.9.0"
