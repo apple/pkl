@@ -51,6 +51,10 @@ public final class Node {
     return text;
   }
 
+  public void setText(String text) {
+    this.text = text;
+  }
+
   /** Returns the first child of type {@code type} or {@code null}. */
   public @Nullable Node findChildByType(NodeType type) {
     for (var child : children) {

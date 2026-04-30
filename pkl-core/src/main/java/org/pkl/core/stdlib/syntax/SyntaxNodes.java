@@ -18,19 +18,34 @@ package org.pkl.core.stdlib.syntax;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.util.ArrayList;
+import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.VmObjectFactory;
+import org.pkl.formatter.Formatter;
+import org.pkl.formatter.GrammarVersion;
 import org.pkl.parser.GenericParser;
 import org.pkl.parser.GenericParserError;
 import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
+import org.pkl.parser.syntax.generic.NodeType;
 
 public final class SyntaxNodes {
   private SyntaxNodes() {}
+
+  private static final Identifier TYPE_ID = Identifier.get("type");
+  private static final Identifier CHILDREN_ID = Identifier.get("children");
+  private static final Identifier SPAN_ID = Identifier.get("span");
+  private static final Identifier LINE_START_ID = Identifier.get("lineStart");
+  private static final Identifier COL_START_ID = Identifier.get("colStart");
+  private static final Identifier LINE_END_ID = Identifier.get("lineEnd");
+  private static final Identifier COL_END_ID = Identifier.get("colEnd");
+  private static final char[] EMPTY_SOURCE = new char[0];
 
   /** Extra storage backing a Pkl {@code Node} instance. */
   static final class NodeData {
@@ -96,23 +111,20 @@ public final class SyntaxNodes {
       }
     }
 
-    @TruffleBoundary
     private static VmTyped convertNode(Node genericNode, char[] sourceChars) {
-      // Convert children recursively
+      // convert children recursively
       var childrenList = new ArrayList<VmTyped>(genericNode.children.size());
       for (var child : genericNode.children) {
         childrenList.add(convertNode(child, sourceChars));
       }
 
-      // Build NodeData
       var data = new NodeData(genericNode, sourceChars);
       data.childrenVm = VmList.create(childrenList.toArray());
       data.spanVm = spanFactory.create(genericNode.span);
 
-      // Create VmTyped node
       var result = nodeFactory.create(data);
 
-      // Set parent back-reference on each child
+      // set parent back-reference on each child
       for (var childVm : childrenList) {
         var childData = (NodeData) childVm.getExtraStorage();
         childData.parentVm = result;
@@ -120,5 +132,52 @@ public final class SyntaxNodes {
 
       return result;
     }
+  }
+
+  public abstract static class formatToString extends ExternalMethod2Node {
+    @Specialization
+    @TruffleBoundary
+    protected String eval(VmTyped self, VmTyped nodeVm, String grammarVersion) {
+      var node = convertVmToNode(nodeVm);
+      return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
+    }
+  }
+
+  private static Node convertVmToNode(VmTyped nodeVm) {
+    var typeStr = (String) VmUtils.readMember(nodeVm, TYPE_ID);
+    var nodeType = NodeType.valueOf(typeStr.toUpperCase());
+
+    var childrenVm = (VmList) VmUtils.readMember(nodeVm, CHILDREN_ID);
+    var children = new ArrayList<Node>(childrenVm.getLength());
+    for (var i = 0; i < childrenVm.getLength(); i++) {
+      children.add(convertVmToNode((VmTyped) childrenVm.get(i)));
+    }
+
+    var spanVm = (VmTyped) VmUtils.readMember(nodeVm, SPAN_ID);
+    var lineStart = ((Long) VmUtils.readMember(spanVm, LINE_START_ID)).intValue();
+    var colStart = ((Long) VmUtils.readMember(spanVm, COL_START_ID)).intValue();
+    var lineEnd = ((Long) VmUtils.readMember(spanVm, LINE_END_ID)).intValue();
+    var colEnd = ((Long) VmUtils.readMember(spanVm, COL_END_ID)).intValue();
+    var span = new FullSpan(0, 0, lineStart, colStart, lineEnd, colEnd);
+
+    Node node;
+    if (children.isEmpty()) {
+      node = new Node(nodeType, span);
+    } else {
+      node = new Node(nodeType, span, children);
+    }
+
+    var textObj = VmUtils.readMember(nodeVm, Identifier.TEXT);
+    if (textObj instanceof String text) {
+      node.setText(text);
+    } else if (nodeType == NodeType.STRING_CHARS) {
+      var sb = new StringBuilder();
+      for (var child : children) {
+        sb.append(child.text(EMPTY_SOURCE));
+      }
+      node.setText(sb.toString());
+    }
+
+    return node;
   }
 }
