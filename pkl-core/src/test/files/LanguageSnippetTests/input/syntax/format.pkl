@@ -1,0 +1,367 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function roundTrip(source: String) = syntax.format(parseNode(source))
+
+local function parseNode(source: String) = syntax.parse(source).node
+
+local function replaceLeaf(
+  node: syntax.Node,
+  targetType: syntax.NodeType,
+  oldText: String,
+  newText: String,
+): syntax.Node =
+  if (node.type == targetType && node.text == oldText)
+    (node) { text = newText }
+  else
+    (node) {
+      children = node.children.map((c) -> replaceLeaf(c, targetType, oldText, newText))
+    }
+
+local function transformFirst(
+  node: syntax.Node,
+  targetType: syntax.NodeType,
+  transform: (syntax.Node) -> syntax.Node,
+): syntax.Node =
+  if (node.type == targetType)
+    transform.apply(node)
+  else
+    (node) {
+      children = node.children.map((c) -> transformFirst(c, targetType, transform))
+    }
+
+examples {
+  ["empty module"] {
+    roundTrip("") == "\n"
+  }
+
+  ["simple property"] {
+    roundTrip("x = 1") == "x = 1\n"
+  }
+
+  ["multiple properties"] {
+    roundTrip(
+      """
+      x = 1
+      y = 2
+      """,
+    )
+      == """
+      x = 1
+      y = 2
+
+      """
+  }
+
+  ["string literals"] {
+    roundTrip(#"x = "hello""#) == #"x = "hello"\#n"#
+    roundTrip(#"x = "hello\nworld""#) == #"x = "hello\nworld"\#n"#
+    roundTrip(#"x = "hello \(name)""#) == #"x = "hello \(name)"\#n"#
+  }
+
+  ["multiline string"] {
+    roundTrip(
+      #"""
+      x = """
+        hello
+        world
+        """
+      """#,
+    )
+      == #"""
+      x =
+        """
+        hello
+        world
+        """
+
+      """#
+  }
+
+  ["comments"] {
+    roundTrip(
+      """
+      // this is a comment
+      x = 1
+      """,
+    )
+      == """
+      // this is a comment
+      x = 1
+
+      """
+  }
+
+  ["doc comments"] {
+    roundTrip(
+      """
+      /// A documented property.
+      x = 1
+      """,
+    )
+      == """
+      /// A documented property.
+      x = 1
+
+      """
+  }
+
+  ["class declaration"] {
+    roundTrip(
+      """
+      class Bird {
+        name: String
+        canFly: Boolean = true
+      }
+      """,
+    )
+      == """
+      class Bird {
+        name: String
+        canFly: Boolean = true
+      }
+
+      """
+  }
+
+  ["module declaration"] {
+    roundTrip("module my.app") == "module my.app\n"
+  }
+
+  ["imports"] {
+    roundTrip(
+      """
+      import "foo.pkl"
+      import "bar.pkl" as myBar
+      """,
+    )
+      == """
+      import "bar.pkl" as myBar
+      import "foo.pkl"
+
+      """
+  }
+
+  ["typealias"] {
+    roundTrip("typealias Positive = Int(this>0)") == "typealias Positive = Int(this > 0)\n"
+  }
+
+  ["boolean literals"] {
+    roundTrip("x = true") == "x = true\n"
+    roundTrip("x = false") == "x = false\n"
+  }
+
+  ["numeric literals"] {
+    roundTrip("x = 42") == "x = 42\n"
+    roundTrip("x = 3.14") == "x = 3.14\n"
+    roundTrip("x = 0xFF") == "x = 0xFF\n"
+  }
+
+  ["null literal"] {
+    roundTrip("x = null") == "x = null\n"
+  }
+
+  ["keyword expressions"] {
+    roundTrip("x = this") == "x = this\n"
+    roundTrip("x = outer") == "x = outer\n"
+    roundTrip("x = module") == "x = module\n"
+  }
+
+  ["binary operators"] {
+    roundTrip("x = 1 + 2") == "x = 1 + 2\n"
+    roundTrip("x = a && b") == "x = a && b\n"
+    roundTrip("x = a is String") == "x = a is String\n"
+  }
+
+  ["unary operators"] {
+    roundTrip("x = -1") == "x = -1\n"
+    roundTrip("x = !flag") == "x = !flag\n"
+    roundTrip("x = value!!") == "x = value!!\n"
+  }
+
+  ["if expression"] {
+    roundTrip("x = if(a) b else c") == "x = if (a) b else c\n"
+  }
+
+  ["function literal"] {
+    roundTrip("x = (a) -> a + 1") == "x = (a) -> a + 1\n"
+  }
+
+  ["method declaration"] {
+    roundTrip("function greet(name: String): String = name")
+      == "function greet(name: String): String = name\n"
+  }
+
+  ["modifiers"] {
+    roundTrip("hidden x = 1") == "hidden x = 1\n"
+    roundTrip("local x = 1") == "local x = 1\n"
+  }
+
+  ["object body"] {
+    roundTrip(
+      """
+      x { z ->
+        a = 1
+        b = 2
+      }
+      """,
+    )
+      == """
+      x { z ->
+        a = 1
+        b = 2
+      }
+
+      """
+  }
+
+  ["annotations"] {
+    roundTrip(
+      """
+      @Deprecated { message = "use other" }
+      x = 1
+      """,
+    )
+      == """
+      @Deprecated { message = "use other" }
+      x = 1
+
+      """
+  }
+
+  ["type annotations"] {
+    roundTrip("x: String = \"hello\"") == "x: String = \"hello\"\n"
+    roundTrip("x: Int? = null") == "x: Int? = null\n"
+    roundTrip("x: String|Int = 1") == "x: String | Int = 1\n"
+  }
+
+  ["for generator"] {
+    roundTrip(
+      """
+      x {
+        for (k, v in items) {
+          [k] = v
+        }
+      }
+      """,
+    )
+      == """
+      x {
+        for (k, v in items) {
+          [k] = v
+        }
+      }
+
+      """
+  }
+
+  ["when generator"] {
+    roundTrip(
+      """
+      x {
+        when (flag) {
+          a = 1
+        } else {
+          b = 2
+        }
+      }
+      """,
+    )
+      == """
+      x {
+        when (flag) {
+          a = 1
+        } else {
+          b = 2
+        }
+      }
+
+      """
+  }
+
+  ["let expression"] {
+    roundTrip("x = let (y = 1) y + 1") == "x = let (y = 1) y + 1\n"
+  }
+
+  ["new expression"] {
+    roundTrip(
+      """
+      x = new Dynamic {
+        a = 1
+      }
+      """,
+    )
+      == """
+      x = new Dynamic {
+        a = 1
+      }
+
+      """
+  }
+
+  ["qualified access"] {
+    roundTrip("x = foo.bar.baz") == "x = foo.bar.baz\n"
+  }
+
+  ["subscript"] {
+    roundTrip("x = list[0]") == "x = list[0]\n"
+  }
+
+  ["parenthesized expression"] {
+    roundTrip("x = (1 + 2)") == "x = (1 + 2)\n"
+  }
+
+  ["modify identifier"] {
+    local root = parseNode("x = 1")
+    local modified = replaceLeaf(root, "identifier", "x", "y")
+    syntax.format(modified) == "y = 1\n"
+  }
+
+  ["modify modifier"] {
+    local root = parseNode("hidden x = 1")
+    local modified = replaceLeaf(root, "modifier", "hidden", "local")
+    syntax.format(modified) == "local x = 1\n"
+  }
+
+  ["modify string content"] {
+    local root = parseNode(#"x = "hello""#)
+    local modified = replaceLeaf(root, "string_chars", "hello", "world")
+    syntax.format(modified) == #"x = "world"\#n"#
+  }
+
+  ["modify int literal"] {
+    local root = parseNode("x = 42")
+    local modified = replaceLeaf(root, "int_literal_expr", "42", "99")
+    syntax.format(modified) == "x = 99\n"
+  }
+
+  ["modify boolean literal"] {
+    local root = parseNode("x = true")
+    local modified = replaceLeaf(root, "bool_literal_expr", "true", "false")
+    syntax.format(modified) == "x = false\n"
+  }
+
+  ["modify float literal"] {
+    local root = parseNode("x = 3.14")
+    local modified = replaceLeaf(root, "float_literal_expr", "3.14", "2.72")
+    syntax.format(modified) == "x = 2.72\n"
+  }
+
+  ["add new modifier"] {
+    local root = parseNode("local x = 1")
+    local constModifier = new syntax.Node {
+      type = "modifier"
+      text = "const"
+    }
+    local modified =
+      transformFirst(root, "modifier_list", (n) -> (n) {
+        children = List(constModifier) + n.children
+      })
+    // modifier order is switched by the formatter
+    syntax.format(modified) == """
+      local const x = 1
+      
+      """
+  }
+}

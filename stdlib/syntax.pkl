@@ -31,20 +31,25 @@ function parseResource(resourceURI: String): ModuleNode | ParserError =
 
 external local function parseNodes(source: String): Node | ParserError
 
+/// Format a syntax node back to Pkl source code.
+function format(node: Node): String = formatToString(node, "V2")
+
+external function formatToString(node: Node, grammarVersion: "V1" | "V2"): String
+
 class Node {
   type: NodeType
   children: List<Node>
-  parent: Node?
+  hidden parent: Node?
   text: String?
   @ConvertSpan
   span: Span
 }
 
 class Span {
-  lineStart: UInt
-  colStart: UInt
-  lineEnd: UInt
-  colEnd: UInt
+  lineStart: UInt = 0
+  colStart: UInt = 0
+  lineEnd: UInt = 0
+  colEnd: UInt = 0
 }
 
 // noinspection TypeMismatch

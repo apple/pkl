@@ -1,0 +1,130 @@
+examples {
+  ["empty module"] {
+    true
+  }
+  ["simple property"] {
+    true
+  }
+  ["multiple properties"] {
+    true
+  }
+  ["string literals"] {
+    true
+    true
+    true
+  }
+  ["multiline string"] {
+    true
+  }
+  ["comments"] {
+    true
+  }
+  ["doc comments"] {
+    true
+  }
+  ["class declaration"] {
+    true
+  }
+  ["module declaration"] {
+    true
+  }
+  ["imports"] {
+    true
+  }
+  ["typealias"] {
+    true
+  }
+  ["boolean literals"] {
+    true
+    true
+  }
+  ["numeric literals"] {
+    true
+    true
+    true
+  }
+  ["null literal"] {
+    true
+  }
+  ["keyword expressions"] {
+    true
+    true
+    true
+  }
+  ["binary operators"] {
+    true
+    true
+    true
+  }
+  ["unary operators"] {
+    true
+    true
+    true
+  }
+  ["if expression"] {
+    true
+  }
+  ["function literal"] {
+    true
+  }
+  ["method declaration"] {
+    true
+  }
+  ["modifiers"] {
+    true
+    true
+  }
+  ["object body"] {
+    true
+  }
+  ["annotations"] {
+    true
+  }
+  ["type annotations"] {
+    true
+    true
+    true
+  }
+  ["for generator"] {
+    true
+  }
+  ["when generator"] {
+    true
+  }
+  ["let expression"] {
+    true
+  }
+  ["new expression"] {
+    true
+  }
+  ["qualified access"] {
+    true
+  }
+  ["subscript"] {
+    true
+  }
+  ["parenthesized expression"] {
+    true
+  }
+  ["modify identifier"] {
+    true
+  }
+  ["modify modifier"] {
+    true
+  }
+  ["modify string content"] {
+    true
+  }
+  ["modify int literal"] {
+    true
+  }
+  ["modify boolean literal"] {
+    true
+  }
+  ["modify float literal"] {
+    true
+  }
+  ["add new modifier"] {
+    true
+  }
+}
