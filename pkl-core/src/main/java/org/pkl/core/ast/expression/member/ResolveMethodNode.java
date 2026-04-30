@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -80,10 +80,13 @@ public final class ResolveMethodNode extends ExpressionNode {
     var levelsUp = 0;
     Identifier localMethodName = methodName.toLocalMethod();
 
-    // Search lexical scope.
-    for (var currOwner = initialOwner;
-        currOwner != null;
-        currOwner = currOwner.getEnclosingOwner()) {
+    // Search lexical scope. Skip amend VmFunction owners.
+    var currOwner = initialOwner;
+    while (currOwner != null) {
+      if (currOwner instanceof VmFunction fn && fn.isAmendFunction()) {
+        currOwner = currOwner.getEnclosingOwner();
+        continue;
+      }
 
       if (currOwner.isPrototype()) {
         var localMethod = currOwner.getVmClass().getDeclaredMethod(localMethodName);
@@ -91,7 +94,11 @@ public final class ResolveMethodNode extends ExpressionNode {
           assert localMethod.isLocal();
           checkConst(currOwner, localMethod, levelsUp);
           return new InvokeMethodLexicalNode(
-              sourceSection, localMethod.getCallTarget(sourceSection), levelsUp, argumentNodes);
+              sourceSection,
+              localMethod.getCallTarget(sourceSection),
+              levelsUp,
+              argumentNodes,
+              true);
         }
         var method = currOwner.getVmClass().getDeclaredMethod(methodName);
         if (method != null) {
@@ -99,7 +106,7 @@ public final class ResolveMethodNode extends ExpressionNode {
           checkConst(currOwner, method, levelsUp);
           if (method.getDeclaringClass().isClosed()) {
             return new InvokeMethodLexicalNode(
-                sourceSection, method.getCallTarget(sourceSection), levelsUp, argumentNodes);
+                sourceSection, method.getCallTarget(sourceSection), levelsUp, argumentNodes, true);
           }
 
           //noinspection ConstantConditions
@@ -108,7 +115,7 @@ public final class ResolveMethodNode extends ExpressionNode {
               methodName,
               argumentNodes,
               MemberLookupMode.IMPLICIT_LEXICAL,
-              levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
+              levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp, true),
               GetClassNodeGen.create(null));
         }
       } else {
@@ -122,11 +129,12 @@ public final class ResolveMethodNode extends ExpressionNode {
               (CallTarget) localMethod.getCallTarget().call(currOwner, currOwner);
 
           return new InvokeMethodLexicalNode(
-              sourceSection, methodCallTarget, levelsUp, argumentNodes);
+              sourceSection, methodCallTarget, levelsUp, argumentNodes, true);
         }
       }
 
       levelsUp += 1;
+      currOwner = currOwner.getEnclosingOwner();
     }
 
     // Search base module (unless call site is itself inside base module).
