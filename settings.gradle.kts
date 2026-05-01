@@ -39,6 +39,8 @@ include("pkl-config-java")
 
 include("pkl-config-kotlin")
 
+include("pkl-config-scala")
+
 include("pkl-core")
 
 include("pkl-doc")
