@@ -1,0 +1,8 @@
+amends "pkl:Project"
+
+dependencies {
+  ["birds"] {
+    uri = "package://localhost:0/birds@0.7.0"
+  }
+  ["packageWithSpaces"] = import("../packageWithSpaces/PklProject")
+}
