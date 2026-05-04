@@ -102,7 +102,7 @@ public final class TestRunner {
                 try {
                   var factValue = VmUtils.readMember(listing, idx);
                   if (factValue == Boolean.FALSE) {
-                    if (PowerAssertions.isEnabled()) {
+                    if (PowerAssertions.isEnabled() && member.getSourceSection().isAvailable()) {
                       try (var valueTracker = valueTrackerFactory.create()) {
                         listing.cachedValues.clear();
                         VmUtils.readMember(listing, idx);
