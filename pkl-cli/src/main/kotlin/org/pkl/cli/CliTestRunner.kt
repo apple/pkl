@@ -23,6 +23,7 @@ import org.pkl.core.ModuleSource.uri
 import org.pkl.core.PklException
 import org.pkl.core.TestResults
 import org.pkl.core.stdlib.test.report.JUnitReport
+import org.pkl.core.stdlib.test.report.MinimalReport
 import org.pkl.core.stdlib.test.report.SimpleReport
 import org.pkl.core.util.ErrorMessages
 
@@ -64,7 +65,11 @@ constructor(
       var failed = false
       var isExampleWrittenFailure = true
       val moduleNames = mutableSetOf<String>()
-      val reporter = SimpleReport(useColor, testOptions.showOnlyFailed)
+      val reporter =
+        when (testOptions.reporter) {
+          TestReporter.SIMPLE -> SimpleReport(useColor)
+          TestReporter.MINIMAL -> MinimalReport(useColor)
+        }
       val allTestResults = mutableListOf<TestResults>()
 
       val junitDir = testOptions.junitDir

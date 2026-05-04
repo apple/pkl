@@ -19,9 +19,11 @@ import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.commons.cli.CliTestOptions
+import org.pkl.commons.cli.TestReporter
 
 class TestOptions : OptionGroup() {
   private val junitReportDir: Path? by
@@ -51,13 +53,11 @@ class TestOptions : OptionGroup() {
   private val overwrite: Boolean by
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
-  private val showOnlyFailed: Boolean by
-    option(
-        names = arrayOf("--show-only-failed"),
-        help =
-          "Only show failed test output. JUnit reports are not affect by this option, only CLI.",
-      )
-      .flag()
+  private val reporter: TestReporter by
+    option(names = arrayOf("--reporter"), help = "Which test reporter to use for CLI output.")
+      .enum<TestReporter> { it.name.lowercase() }
+      .single()
+      .default(TestReporter.SIMPLE)
 
   val cliTestOptions: CliTestOptions by lazy {
     CliTestOptions(
@@ -65,7 +65,7 @@ class TestOptions : OptionGroup() {
       overwrite,
       junitAggregateReports,
       junitAggregateSuiteName,
-      showOnlyFailed,
+      reporter,
     )
   }
 }

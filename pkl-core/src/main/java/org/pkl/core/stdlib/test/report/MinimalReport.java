@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -30,14 +30,15 @@ import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
-public final class SimpleReport implements TestReport {
+/** Minimal reporter. Only reports failures and errors. */
+public final class MinimalReport implements TestReport {
 
   private static final String passingMark = "✔ ";
   private static final String failingMark = "✘ ";
 
   private final boolean useColor;
 
-  public SimpleReport(boolean useColor) {
+  public MinimalReport(boolean useColor) {
     this.useColor = useColor;
   }
 
@@ -45,15 +46,22 @@ public final class SimpleReport implements TestReport {
   public void report(TestResults results, Writer writer) throws IOException {
     var builder = new AnsiStringBuilder(useColor);
 
-    builder.append("module ").append(results.moduleName()).append('\n');
-
     if (results.error() != null) {
+      builder.append("module ").append(results.moduleName()).append('\n');
+
       var rendered = results.error().exception().getMessage();
       appendPadded(builder, rendered, "  ");
       builder.append('\n');
     } else {
-      reportResults(results.facts(), builder);
-      reportResults(results.examples(), builder);
+      var factFailures = results.facts().results().stream().filter(TestResult::isFailure).toList();
+      var exampleFailures =
+          results.examples().results().stream().filter(TestResult::isFailure).toList();
+      if (!factFailures.isEmpty() || !exampleFailures.isEmpty()) {
+        builder.append("module ").append(results.moduleName()).append('\n');
+
+        reportResults(results.facts(), factFailures, builder);
+        reportResults(results.examples(), exampleFailures, builder);
+      }
     }
 
     writer.append(builder.toString());
@@ -91,11 +99,11 @@ public final class SimpleReport implements TestReport {
     writer.append(builder.toString());
   }
 
-  private void reportResults(TestSectionResults section, AnsiStringBuilder builder) {
-    if (!section.results().isEmpty()) {
+  private void reportResults(
+      TestSectionResults section, List<TestResults.TestResult> results, AnsiStringBuilder builder) {
+    if (!results.isEmpty()) {
       builder.append("  ").append(section.name()).append('\n');
-      StringUtils.joinToStringBuilder(
-          builder, section.results(), "\n", res -> reportResult(res, builder));
+      StringUtils.joinToStringBuilder(builder, results, "\n", res -> reportResult(res, builder));
       builder.append('\n');
     }
   }
