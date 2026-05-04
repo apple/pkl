@@ -32,6 +32,7 @@ import org.assertj.core.api.Assertions.assertThatCode
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.Timeout
+import org.junit.jupiter.api.assertDoesNotThrow
 import org.junit.jupiter.api.assertThrows
 import org.junit.jupiter.api.condition.EnabledOnOs
 import org.junit.jupiter.api.condition.OS
@@ -691,6 +692,32 @@ class EvaluatorTest {
           """
             .trimIndent()
         )
+      )
+    }
+  }
+
+  @Test
+  fun `power assertions work with test facts with unavailable source section`() {
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        powerAssertionsEnabled = true
+        build()
+      }
+
+    assertDoesNotThrow {
+      evaluator.evaluateTest(
+        text(
+          """
+          amends "pkl:test"
+          facts {
+            ["foo"] {
+              ...List(false)
+            }
+          }
+          """
+            .trimIndent()
+        ),
+        false,
       )
     }
   }

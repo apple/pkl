@@ -30,6 +30,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Consumer;
 import java.util.stream.Collectors;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
@@ -83,6 +84,10 @@ public class PowerAssertions {
       SourceSection sourceSection,
       Map<Node, List<Object>> trackedValues,
       @Nullable Consumer<AnsiStringBuilder> firstFrameSuffix) {
+    if (!sourceSection.isAvailable()) {
+      throw new PklBugException("Power assertions require an available source section");
+    }
+
     out.appendSandboxed(
         () -> {
           var lines = lines(sourceSection);
