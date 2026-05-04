@@ -1,0 +1,8 @@
+amends "pkl:Project"
+
+package {
+  name = "packageWithSpaces"
+  baseUri = "package://localhost:0/packageWithSpaces"
+  version = "1.0.0"
+  packageZipUrl = "https://localhost:0/packageWithSpaces/packageWithSpaces-\(version).zip"
+}

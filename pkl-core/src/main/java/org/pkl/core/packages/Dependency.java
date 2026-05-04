@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,8 +16,10 @@
 package org.pkl.core.packages;
 
 import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Objects;
+import org.pkl.core.PklBugException;
 import org.pkl.core.Version;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
@@ -53,7 +55,15 @@ public abstract class Dependency {
     public URI resolveAssetUri(URI projectBaseUri, PackageAssetUri packageAssetUri) {
       // drop 1 to remove leading `/`
       var assetPath = packageAssetUri.getAssetPath().substring(1);
-      return projectBaseUri.resolve(IoUtils.toNormalizedPathString(path.resolve(assetPath)));
+      var resolvedPath = path.resolve(assetPath);
+      var normalized = IoUtils.toNormalizedPathString(resolvedPath);
+      try {
+        var relativeUri = new URI(null, null, normalized, null);
+        return projectBaseUri.resolve(relativeUri);
+      } catch (URISyntaxException e) {
+        // impossible; we started from valid URIs to begin with.
+        throw PklBugException.unreachableCode();
+      }
     }
 
     @Override

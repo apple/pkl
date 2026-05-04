@@ -1,0 +1,3 @@
+import "@packageWithSpaces/module with spaces.pkl" as mod
+
+res = mod
