@@ -28,7 +28,7 @@ class SimpleReportTest {
 
   @Test
   fun `summarize method should generate correct output`() {
-    var resultsBuilder = TestResults.Builder("module1", "module1")
+    val resultsBuilder = TestResults.Builder("module1", "module1")
     resultsBuilder.setFactsSection(
       TestSectionResults(
         TestResults.TestSectionName.FACTS,
@@ -60,7 +60,7 @@ class SimpleReportTest {
     val testResults = listOf(resultsBuilder.build())
 
     val writer = StringWriter()
-    val simpleReport = SimpleReport(false, false)
+    val simpleReport = SimpleReport(false)
     simpleReport.summarize(testResults, writer)
 
     val expectedOutput =
@@ -70,71 +70,5 @@ class SimpleReportTest {
         .trimIndent()
 
     assertThat(writer.toString().trimIndent()).isEqualTo(expectedOutput)
-  }
-
-  @Test
-  fun `report with showOnlyFailed filters out passing tests`() {
-    val resultsBuilder = TestResults.Builder("module1", "module1")
-    resultsBuilder.setFactsSection(
-      TestSectionResults(
-        TestResults.TestSectionName.FACTS,
-        listOf(
-          TestResult("passing fact", 1, emptyList(), emptyList(), false),
-          TestResult(
-            "failing fact",
-            1,
-            listOf(TestResults.Failure("Fact Failure", "failed")),
-            emptyList(),
-            false,
-          ),
-        ),
-      )
-    )
-    resultsBuilder.setExamplesSection(
-      TestSectionResults(
-        TestResults.TestSectionName.EXAMPLES,
-        listOf(TestResult("passing example", 1, emptyList(), emptyList(), false)),
-      )
-    )
-    val testResults = resultsBuilder.build()
-
-    val writer = StringWriter()
-    val simpleReport = SimpleReport(false, true)
-    simpleReport.report(testResults, writer)
-
-    val output = writer.toString()
-    assertThat(output).contains("failing fact")
-    assertThat(output).doesNotContain("passing fact")
-    assertThat(output).doesNotContain("passing example")
-    assertThat(output).doesNotContain("examples")
-  }
-
-  @Test
-  fun `report without showOnlyFailed includes all tests`() {
-    val resultsBuilder = TestResults.Builder("module1", "module1")
-    resultsBuilder.setFactsSection(
-      TestSectionResults(
-        TestResults.TestSectionName.FACTS,
-        listOf(
-          TestResult("passing fact", 1, emptyList(), emptyList(), false),
-          TestResult(
-            "failing fact",
-            1,
-            listOf(TestResults.Failure("Fact Failure", "failed")),
-            emptyList(),
-            false,
-          ),
-        ),
-      )
-    )
-    val testResults = resultsBuilder.build()
-
-    val writer = StringWriter()
-    val simpleReport = SimpleReport(false, false)
-    simpleReport.report(testResults, writer)
-
-    val output = writer.toString()
-    assertThat(output).contains("passing fact")
-    assertThat(output).contains("failing fact")
   }
 }

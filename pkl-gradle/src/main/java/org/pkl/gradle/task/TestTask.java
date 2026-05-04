@@ -26,6 +26,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.pkl.cli.CliTestRunner;
 import org.pkl.commons.cli.CliTestOptions;
+import org.pkl.commons.cli.TestReporter;
 
 @CacheableTask
 public abstract class TestTask extends ModulesTask {
@@ -45,7 +46,7 @@ public abstract class TestTask extends ModulesTask {
 
   @Input
   @Optional
-  public abstract Property<Boolean> getShowOnlyFailed();
+  public abstract Property<String> getReporter();
 
   public TestTask() {
     this.getJunitAggregateSuiteName().convention("pkl-tests");
@@ -61,7 +62,7 @@ public abstract class TestTask extends ModulesTask {
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
                 getJunitAggregateSuiteName().get(),
-                getShowOnlyFailed().getOrElse(false)),
+                TestReporter.valueOf(getReporter().getOrElse("SIMPLE").toUpperCase())),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

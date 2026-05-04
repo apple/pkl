@@ -100,7 +100,7 @@ public class PklPlugin implements Plugin<Project> {
           spec.getOutputPath()
               .convention(project.getLayout().getBuildDirectory().dir("generated/pkl/packages"));
           spec.getOverwrite().convention(false);
-          spec.getShowOnlyFailed().convention(false);
+          spec.getReporter().convention("simple");
           var packageTask = createTask(project, ProjectPackageTask.class, spec);
           packageTask.configure(
               task -> {
@@ -109,7 +109,7 @@ public class PklPlugin implements Plugin<Project> {
                 task.getSkipPublishCheck().set(spec.getSkipPublishCheck());
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
-                task.getShowOnlyFailed().set(spec.getShowOnlyFailed());
+                task.getReporter().set(spec.getReporter());
               });
           project
               .getPluginManager()
@@ -280,14 +280,14 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(project, spec);
 
           spec.getOverwrite().convention(false);
-          spec.getShowOnlyFailed().convention(false);
+          spec.getReporter().convention("simple");
 
           var testTask = createModulesTask(project, TestTask.class, spec);
           testTask.configure(
               task -> {
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
-                task.getShowOnlyFailed().set(spec.getShowOnlyFailed());
+                task.getReporter().set(spec.getReporter());
               });
 
           project

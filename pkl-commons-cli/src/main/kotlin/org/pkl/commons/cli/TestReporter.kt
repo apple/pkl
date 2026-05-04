@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,12 +15,7 @@
  */
 package org.pkl.commons.cli
 
-import java.nio.file.Path
-
-class CliTestOptions(
-  val junitDir: Path? = null,
-  val overwrite: Boolean = false,
-  val junitAggregateReports: Boolean = false,
-  val junitAggregateSuiteName: String = "pkl-tests",
-  val reporter: TestReporter = TestReporter.SIMPLE,
-)
+enum class TestReporter {
+  SIMPLE,
+  MINIMAL,
+}

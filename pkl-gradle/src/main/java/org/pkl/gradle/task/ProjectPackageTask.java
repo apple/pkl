@@ -34,6 +34,7 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.UntrackedTask;
 import org.pkl.cli.CliProjectPackager;
 import org.pkl.commons.cli.CliTestOptions;
+import org.pkl.commons.cli.TestReporter;
 
 @UntrackedTask(because = "Output names are known only after execution")
 public abstract class ProjectPackageTask extends BasePklTask {
@@ -64,7 +65,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
 
   @Input
   @Optional
-  public abstract Property<Boolean> getShowOnlyFailed();
+  public abstract Property<String> getReporter();
 
   public ProjectPackageTask() {
     this.getJunitAggregateSuiteName().convention("pkl-tests");
@@ -88,7 +89,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
                 getJunitAggregateSuiteName().get(),
-                getShowOnlyFailed().getOrElse(false)),
+                TestReporter.valueOf(getReporter().getOrElse("SIMPLE").toUpperCase())),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
             new PrintWriter(System.out),

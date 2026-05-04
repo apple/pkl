@@ -322,13 +322,13 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
-[[show-only-failed]]
-.showOnlyFailed: Property<Boolean>
+[[reporter]]
+.reporter: Property<String>
 [%collapsible]
 ====
-Default: `false` +
-Example: `showOnlyFailed = true` +
-Only show failed test output, hiding passing tests from the report.
+Default: `"simple"` +
+Example: `reporter = "minimal"` +
+Which test reporter to use for CLI output. Possible values are `"simple"` and `"minimal"`.
 ====
 
 [[power-assertions-test]]
@@ -686,12 +686,12 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
-.showOnlyFailed: Property<Boolean>
+.reporter: Property<String>
 [%collapsible]
 ====
-Default: `false` +
-Example: `showOnlyFailed = true` +
-Only show failed test output, hiding passing tests from the report.
+Default: `"simple"` +
+Example: `reporter = "minimal"` +
+Which test reporter to use for CLI output. Possible values are `"simple"` and `"minimal"`.
 ====
 
 Common properties:
