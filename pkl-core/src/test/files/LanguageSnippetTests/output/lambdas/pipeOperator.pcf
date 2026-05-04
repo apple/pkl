@@ -8,4 +8,4 @@ res7 = 22
 res8 = 44
 res9 = 44
 res10 = "Operator `|>` is not defined for operand types `Int` and `Int`. Left operand : 42 Right operand: 21"
-res11 = "Operator `|>` is not defined for operand types `Int` and `pipeOperator#Person`. Left operand : 42 Right operand: new Person {}"
+res11 = "Operator `|>` is not defined for operand types `Int` and `pipeOperator#Person`. Left operand : 42 Right operand: new pipeOperator#Person {}"
