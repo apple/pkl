@@ -1,0 +1,4 @@
+foo = "`Reference` type arguments may not include type constraints."
+bar = "`Reference` type arguments may not include type constraints."
+baz = "`Reference` type arguments may not include type constraints."
+qux = "`Reference` type arguments may not include type constraints."

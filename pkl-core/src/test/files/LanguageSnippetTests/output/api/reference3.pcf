@@ -1,0 +1,6 @@
+foo = "Expected value of type `Reference<Int>`, but got type `Reference<String>`. Value: Reference(new A { b = ? }).b"
+bar = "Expected value of type `Reference<Boolean | Int>`, but got type `Reference<String>`. Value: Reference(new A { b = ? }).b"
+baz = "Expected value of type `Reference<Listing<String>>`, but got type `Reference<String>`. Value: Reference(new A { b = ? }).b"
+qux = "Expected value of type `Reference<reference3#Alias1?>`, but got type `Reference<String>`. Value: Reference(new A { b = ? }).b"
+quux = "Cannot find property `c` in object of type `Reference<reference3#A>`."
+corge = "Operator `[]` is not defined for operand types `Reference<List>` and `String`. Left operand : Reference(List()) Right operand: \"hi\""

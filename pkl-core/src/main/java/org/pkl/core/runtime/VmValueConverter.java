@@ -85,6 +85,10 @@ public interface VmValueConverter<T> {
 
   T convertFunction(VmFunction value, Iterable<Object> path);
 
+  T convertReference(VmReference value, Iterable<Object> path);
+
+  T convertReferenceAccess(VmReference.Access value, Iterable<Object> path);
+
   /** Returns with an empty identifier if the second value is a RenderDirective */
   Pair<Identifier, T> convertProperty(ClassProperty property, Object value, Iterable<Object> path);
 

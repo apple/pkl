@@ -1,0 +1,111 @@
+import "pkl:math"
+
+abstract class Resource {
+  name: String
+}
+
+class A extends Resource {
+  id: String
+  hidden outputs: AProperties
+}
+
+/// Test doc comment
+class AProperties {
+  foo: Int
+  someMapping: Mapping<String, Int>
+  someMap: Map<Int, Int>
+  someListing: Listing<Int>
+  someList: List<Int>
+  nonInt: String
+}
+
+class B extends Resource {
+  id: String
+  hidden outputs: BProperties
+}
+
+class BProperties {
+  foo: String
+  someMapping: Mapping<String, String>
+  someMap: Map<Int, String>
+  someListing: Listing<String>
+  someList: List<String>
+  nonString: Int
+}
+
+class K {
+  aId: String | *Reference<String>?
+  bId: String | *Reference<String>?
+  aProperties: AProperties | *Reference<AProperties>?
+  bProperties: BProperties | *Reference<BProperties>?
+  aValues: Listing<Int | Reference<Int>>?
+  bValues: Listing<String | Reference<String>>?
+  splitUnion: Reference<Listing<String> | Listing<Int>>?
+}
+
+a: A = new {
+  name = "a"
+  id = "some-a-value"
+}
+
+b: B = new {
+  name = "b"
+  id = "some-b-value"
+}
+
+local aOrB: A | B = a
+aRef = Reference(a)
+bRef = Reference(b)
+unknownRef: Reference<A | B> = aRef
+unknownRef2: Reference<A> | Reference<B> = aRef
+unknownRef3: Reference<A | B> = Reference(aOrB)
+
+k: K = new {
+  aId = aRef.id
+  bId = bRef.id
+  aProperties = aRef.outputs
+  bProperties = bRef.outputs
+  aValues {
+    aRef.outputs.foo
+    aRef.outputs.someMapping["key"]
+    aRef.outputs.someMap[123]
+    aRef.outputs.someListing[0]
+    aRef.outputs.someList[math.maxInt]
+    bRef.outputs.nonString
+  }
+  bValues {
+    bRef.outputs.foo
+    bRef.outputs.someMapping["key"]
+    bRef.outputs.someMap[123]
+    bRef.outputs.someListing[0]
+    bRef.outputs.someList[math.maxInt]
+    aRef.outputs.nonInt
+  }
+}
+
+j: K = new {
+  aProperties = (unknownRef as Reference<A>).outputs
+  splitUnion = unknownRef.outputs.someListing
+}
+
+function renderReference(ref: Reference): String =
+  if (ref.getRootValue() is Resource)
+    let (resource = ref.getRootValue() as Resource)
+    let (
+      path =
+        ref
+          .getPath()
+          .toList()
+          .map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]")
+    )
+      "${\(resource.name)\(path.join(""))}"
+  else
+    throw("can only render references rooted to Resource instances")
+
+output {
+  renderer {
+    converters {
+      [Reference] = (it) -> renderReference(it)
+    }
+  }
+}

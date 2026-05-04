@@ -1,0 +1,24 @@
+// test reference errors
+
+import "pkl:test"
+
+hidden a: A
+
+class A {
+  b: String
+}
+
+// type mismatch
+foo = test.catch(() -> Reference(a).b as Reference<Int>)
+bar = test.catch(() -> Reference(a).b as Reference<Boolean | Int>)
+baz = test.catch(() -> Reference(a).b as Reference<Listing<String>>)
+qux = test.catch(() -> Reference(a).b as Reference<Alias1?>)
+
+typealias Alias1 = Int | Alias2?
+typealias Alias2 = Boolean
+
+// property not found
+quux = test.catch(() -> Reference(a).c)
+
+// incorrect subscript type
+corge = test.catch(() -> Reference(List())["hi"] as Reference<String>)
