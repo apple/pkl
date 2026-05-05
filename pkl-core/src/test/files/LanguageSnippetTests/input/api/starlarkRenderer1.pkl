@@ -1,0 +1,34 @@
+import "pkl:test"
+import "pkl:starlark"
+
+class Person {
+  name: String
+  age: Int
+}
+
+typealias Email = String
+
+local renderer = new starlark.Renderer {}
+
+res1 = renderer.renderValue(123)
+res2 = renderer.renderValue(1.23)
+res3 = renderer.renderValue(false)
+res4 = renderer.renderValue("pigeon")
+res6 = renderer.renderValue(List("pigeon", "parrot"))
+res7 = renderer.renderValue(Set("pigeon", "parrot"))
+res8 = renderer.renderValue(Map("name", "pigeon", "age", 42))
+res9 = renderer.renderValue(new Listing { "pigeon"; "parrot" })
+res10 = renderer.renderValue(new Mapping { ["name"] = "pigeon"; ["age"] = 42 })
+res11 = renderer.renderValue(new Dynamic { name = "pigeon"; age = 42 })
+res12 = renderer.renderValue(new Person { name = "pigeon"; age = 42 })
+res13 = renderer.renderValue(null)
+res15 = renderer.renderValue(Pair(1, 2))
+res16 = renderer.renderValue(Pair("pigeon", List(1, 2, 3)))
+
+res14 = test.catch(() -> renderer.renderValue(1.min))
+res17 = test.catch(() -> renderer.renderValue(1.mb))
+res18 = test.catch(() -> renderer.renderValue(Person))
+res19 = test.catch(() -> renderer.renderValue(Email))
+res20 = test.catch(() -> renderer.renderValue((x) -> x))
+res21 = test.catch(() -> new starlark.Renderer { converters { [Int] = (_) -> throw("ouch") } }.renderValue(42))
+res22 = test.catch(() -> renderer.renderValue(IntSeq(1, 4)))
