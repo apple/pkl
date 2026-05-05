@@ -28,7 +28,7 @@ class SimpleReportTest {
 
   @Test
   fun `summarize method should generate correct output`() {
-    var resultsBuilder = TestResults.Builder("module1", "module1")
+    val resultsBuilder = TestResults.Builder("module1", "module1")
     resultsBuilder.setFactsSection(
       TestSectionResults(
         TestResults.TestSectionName.FACTS,

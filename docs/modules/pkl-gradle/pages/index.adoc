@@ -322,6 +322,15 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
+[[reporter]]
+.reporter: Property<String>
+[%collapsible]
+====
+Default: `"simple"` +
+Example: `reporter = "minimal"` +
+Which test reporter to use for CLI output. Possible values are `"simple"` and `"minimal"`.
+====
+
 [[power-assertions-test]]
 .powerAssertions: Property<Boolean>
 [%collapsible]
@@ -675,6 +684,14 @@ Whether and where to generate JUnit XML reports.
 ====
 Default: `false` +
 Whether to ignore expected example files and generate them again.
+====
+
+.reporter: Property<String>
+[%collapsible]
+====
+Default: `"simple"` +
+Example: `reporter = "minimal"` +
+Which test reporter to use for CLI output. Possible values are `"simple"` and `"minimal"`.
 ====
 
 Common properties:

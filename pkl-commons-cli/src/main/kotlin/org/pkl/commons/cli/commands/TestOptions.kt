@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,9 +19,11 @@ import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.commons.cli.CliTestOptions
+import org.pkl.commons.cli.TestReporter
 
 class TestOptions : OptionGroup() {
   private val junitReportDir: Path? by
@@ -51,7 +53,19 @@ class TestOptions : OptionGroup() {
   private val overwrite: Boolean by
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
+  private val reporter: TestReporter by
+    option(names = arrayOf("--reporter"), help = "Which test reporter to use for CLI output.")
+      .enum<TestReporter> { it.name.lowercase() }
+      .single()
+      .default(TestReporter.SIMPLE)
+
   val cliTestOptions: CliTestOptions by lazy {
-    CliTestOptions(junitReportDir, overwrite, junitAggregateReports, junitAggregateSuiteName)
+    CliTestOptions(
+      junitReportDir,
+      overwrite,
+      junitAggregateReports,
+      junitAggregateSuiteName,
+      reporter,
+    )
   }
 }
