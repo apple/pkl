@@ -113,6 +113,8 @@ public final class ModuleCache {
         case "settings":
           // always needed if ~/.pkl/settings.pkl is present
           return SettingsModule.getModule();
+        case "syntax":
+          return SyntaxModule.getModule();
         case "test":
           return TestModule.getModule();
         case "xml":

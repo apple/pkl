@@ -1,0 +1,132 @@
+examples {
+  ["literals"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["strings"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["keyword expressions"] {
+    true
+    true
+    true
+  }
+  ["access expressions"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["binary operators"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["unary operators"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["if expression"] {
+    true
+    true
+    true
+    true
+  }
+  ["let expression"] {
+    true
+    true
+    true
+    true
+  }
+  ["new expression"] {
+    true
+    true
+    true
+  }
+  ["function literal"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parenthesized expression"] {
+    true
+    true
+  }
+  ["throw and trace"] {
+    true
+    true
+    true
+    true
+  }
+  ["import expression"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["read expression"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+}
