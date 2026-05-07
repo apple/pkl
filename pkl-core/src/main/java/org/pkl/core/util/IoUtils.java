@@ -56,6 +56,9 @@ public final class IoUtils {
 
   public static URL toUrl(URI uri) throws IOException {
     try {
+      if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null) {
+        throw new UnsupportedOperationException("Remote file URIs are not supported: " + uri);
+      }
       return uri.toURL();
     } catch (Error e) {
       // best we can do for now
@@ -63,7 +66,6 @@ public final class IoUtils {
       if (e.getClass().getName().equals("com.oracle.svm.core.jdk.UnsupportedFeatureError")) {
         throw new IOException("Unsupported protocol: " + uri.getScheme());
       }
-
       throw e;
     }
   }
@@ -141,6 +143,10 @@ public final class IoUtils {
   }
 
   public static byte[] readBytes(URI uri) throws IOException {
+    if ("file".equalsIgnoreCase(uri.getScheme()) && uri.getHost() != null) {
+      throw new UnsupportedOperationException("Remote file URIs are not supported: " + uri);
+    }
+
     if (HttpUtils.isHttpUrl(uri)) {
       throw new IllegalArgumentException("Should use HTTP client to GET " + uri);
     }
