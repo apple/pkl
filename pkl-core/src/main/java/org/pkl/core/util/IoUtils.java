@@ -80,7 +80,7 @@ public final class IoUtils {
     "via"
   };
 
-  private static final String[] reservedHeaderPrefixs = {"proxy-", "sec-", "access-control-"};
+  private static final String[] reservedHeaderPrefixes = {"proxy-", "sec-", "access-control-"};
 
   private IoUtils() {}
 
@@ -576,7 +576,7 @@ public final class IoUtils {
     }
 
     // don't use ServiceLoader.load(Class)
-    // because loading services from thread context class loader doesn't work inside gradle plugins
+    // because loading services from thread context class loader doesn't work inside Gradle plugins
     return ServiceLoader.load(serviceClass, IoUtils.class.getClassLoader());
   }
 
@@ -890,7 +890,7 @@ public final class IoUtils {
   }
 
   private static boolean hasReservedHeaderPrefix(String headerName) {
-    return Arrays.stream(reservedHeaderPrefixs).anyMatch((prefix) -> headerName.startsWith(prefix));
+    return Arrays.stream(reservedHeaderPrefixes).anyMatch((prefix) -> headerName.startsWith(prefix));
   }
 
   public static void validateHeaderName(String headerName) {
