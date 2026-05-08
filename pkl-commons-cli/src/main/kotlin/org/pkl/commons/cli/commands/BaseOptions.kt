@@ -95,9 +95,6 @@ class BaseOptions : OptionGroup() {
         Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
       }
     }
-
-    val HEADER_NAME_REGEX = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$")
-    val HEADER_VALUE_REGEX = Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
   }
 
   private val defaults = CliBaseOptions()
