@@ -140,15 +140,15 @@ class PklSettingsTest {
       evaluator.evaluate(
         ModuleSource.text(
           """
-        import "pkl:settings"
-  
-        system = settings.System
-        idea = settings.Idea
-        textMate = settings.TextMate
-        sublime = settings.Sublime
-        atom = settings.Atom
-        vsCode = settings.VsCode
-        """
+          import "pkl:settings"
+
+          system = settings.System
+          idea = settings.Idea
+          textMate = settings.TextMate
+          sublime = settings.Sublime
+          atom = settings.Atom
+          vsCode = settings.VsCode
+          """
             .trimIndent()
         )
       )

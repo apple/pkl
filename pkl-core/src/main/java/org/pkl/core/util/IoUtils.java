@@ -888,7 +888,8 @@ public final class IoUtils {
   }
 
   private static boolean hasReservedHeaderPrefix(String headerName) {
-    return Arrays.stream(reservedHeaderPrefixes).anyMatch((prefix) -> headerName.startsWith(prefix));
+    return Arrays.stream(reservedHeaderPrefixes)
+        .anyMatch((prefix) -> headerName.startsWith(prefix));
   }
 
   public static void validateHeaderName(String headerName) {

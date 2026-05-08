@@ -105,7 +105,7 @@ abstract class AbstractServerTest {
         foo {
           bar = "bar"
         }
-      """
+        """
           .trimIndent(),
         null,
       )
@@ -132,7 +132,7 @@ abstract class AbstractServerTest {
         URI("repl:text"),
         """
         foo = trace(1 + 2 + 3)
-      """
+        """
           .trimIndent(),
         null,
       )
@@ -159,7 +159,7 @@ abstract class AbstractServerTest {
         function foo() = 5
 
         result = foo()
-      """
+        """
           .trimIndent(),
         null,
       )
@@ -286,7 +286,7 @@ abstract class AbstractServerTest {
         URI("repl:text"),
         """
         res = read*("bird:/**.txt").keys
-      """
+        """
           .trimIndent(),
         "res",
       )
@@ -315,11 +315,11 @@ abstract class AbstractServerTest {
     assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
-      - 6
-      - 
-        - 'bird:/foo.txt'
-        - 'bird:/subdir/bar.txt'
-    """
+        - 6
+        - 
+          - 'bird:/foo.txt'
+          - 'bird:/subdir/bar.txt'
+        """
           .trimIndent()
       )
   }
@@ -335,7 +335,7 @@ abstract class AbstractServerTest {
         URI("repl:text"),
         """
         res = read*("bird:/**.txt").keys
-      """
+        """
           .trimIndent(),
         "res",
       )
@@ -371,7 +371,7 @@ abstract class AbstractServerTest {
         URI("repl:text"),
         """
         res = read*("bird:/**.txt").keys
-      """
+        """
           .trimIndent(),
         "res",
       )
@@ -390,19 +390,19 @@ abstract class AbstractServerTest {
     assertThat(evaluateResponse.error)
       .isEqualTo(
         """
-      –– Pkl Error ––
-      I/O error resolving glob pattern `bird:/**.txt`.
-      IOException: didnt work
+        –– Pkl Error ––
+        I/O error resolving glob pattern `bird:/**.txt`.
+        IOException: didnt work
 
-      1 | res = read*("bird:/**.txt").keys
-                ^^^^^^^^^^^^^^^^^^^^^
-      at text#res (repl:text)
+        1 | res = read*("bird:/**.txt").keys
+                  ^^^^^^^^^^^^^^^^^^^^^
+        at text#res (repl:text)
 
-      1 | res
-          ^^^
-      at  (repl:text)
-      
-      """
+        1 | res
+            ^^^
+        at  (repl:text)
+
+        """
           .trimIndent()
       )
   }
@@ -549,14 +549,14 @@ abstract class AbstractServerTest {
     assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
-      - 6
-      - 
-        - 'bird:/Person.pkl'
-        - 'bird:/birds/parrot.pkl'
-        - 'bird:/birds/pigeon.pkl'
-        - 'bird:/majesticBirds/barnOwl.pkl'
-        - 'bird:/majesticBirds/elfOwl.pkl'
-    """
+        - 6
+        - 
+          - 'bird:/Person.pkl'
+          - 'bird:/birds/parrot.pkl'
+          - 'bird:/birds/pigeon.pkl'
+          - 'bird:/majesticBirds/barnOwl.pkl'
+          - 'bird:/majesticBirds/elfOwl.pkl'
+        """
           .trimIndent()
       )
   }
@@ -582,9 +582,9 @@ abstract class AbstractServerTest {
     assertThat(evaluateResponse.result?.debugRendering)
       .isEqualTo(
         """
-      - 6
-      - []
-    """
+        - 6
+        - []
+        """
           .trimIndent()
       )
   }
@@ -612,19 +612,19 @@ abstract class AbstractServerTest {
     assertThat(evaluateResponse.error)
       .isEqualTo(
         """
-      –– Pkl Error ––
-      I/O error resolving glob pattern `bird:/**.pkl`.
-      IOException: nope
+        –– Pkl Error ––
+        I/O error resolving glob pattern `bird:/**.pkl`.
+        IOException: nope
 
-      1 | res = import*("bird:/**.pkl").keys
-                ^^^^^^^^^^^^^^^^^^^^^^^
-      at text#res (repl:text)
+        1 | res = import*("bird:/**.pkl").keys
+                  ^^^^^^^^^^^^^^^^^^^^^^^
+        at text#res (repl:text)
 
-      1 | res
-          ^^^
-      at  (repl:text)
-      
-      """
+        1 | res
+            ^^^
+        at  (repl:text)
+
+        """
           .trimIndent()
       )
   }
@@ -688,9 +688,9 @@ abstract class AbstractServerTest {
         URI("bird:/foo/bar/baz.pkl"),
         """
         import ".../buz.pkl"
-        
+
         res = buz.res
-      """
+        """
           .trimIndent(),
         "res",
       )
@@ -747,9 +747,9 @@ abstract class AbstractServerTest {
         readModuleRequest.requestId,
         evaluatorId,
         """
-          firstName = "Pigeon"
-          lastName = "Bird"
-          fullName = firstName + " " + lastName
+        firstName = "Pigeon"
+        lastName = "Bird"
+        fullName = firstName + " " + lastName
         """
           .trimIndent(),
         null,
@@ -766,7 +766,7 @@ abstract class AbstractServerTest {
           lastName = "Bird"
           fullName = "Pigeon Bird"
 
-      """
+        """
           .trimIndent()
       )
   }
@@ -788,9 +788,9 @@ abstract class AbstractServerTest {
         response11.requestId,
         evaluatorId,
         """
-          firstName = "Pigeon"
-          lastName = "Bird"
-          fullName = firstName + " " + lastName
+        firstName = "Pigeon"
+        lastName = "Bird"
+        fullName = firstName + " " + lastName
         """
           .trimIndent(),
         null,
@@ -807,7 +807,7 @@ abstract class AbstractServerTest {
           lastName = "Bird"
           fullName = "Pigeon Bird"
 
-      """
+        """
           .trimIndent()
       )
 
@@ -819,9 +819,9 @@ abstract class AbstractServerTest {
         response21.requestId,
         evaluatorId,
         """
-          firstName = "Parrot"
-          lastName = "Bird"
-          fullName = firstName + " " + lastName
+        firstName = "Parrot"
+        lastName = "Bird"
+        fullName = firstName + " " + lastName
         """
           .trimIndent(),
         null,
@@ -838,7 +838,7 @@ abstract class AbstractServerTest {
           lastName = "Bird"
           fullName = "Parrot Bird"
 
-      """
+        """
           .trimIndent()
       )
   }
@@ -948,23 +948,23 @@ abstract class AbstractServerTest {
       .resolve("lib.pkl")
       .writeText(
         """
-      text = "This is from lib"
-    """
+        text = "This is from lib"
+        """
           .trimIndent()
       )
     libDir
       .resolve("PklProject")
       .writeText(
         """
-      amends "pkl:Project"
-      
-      package {
-        name = "lib"
-        baseUri = "package://localhost:0/lib"
-        version = "5.0.0"
-        packageZipUrl = "https://localhost:0/lib.zip"
-      }
-    """
+        amends "pkl:Project"
+
+        package {
+          name = "lib"
+          baseUri = "package://localhost:0/lib"
+          version = "5.0.0"
+          packageZipUrl = "https://localhost:0/lib.zip"
+        }
+        """
           .trimIndent()
       )
     val projectDir = tempDir.resolve("proj/").createDirectories()
@@ -973,14 +973,14 @@ abstract class AbstractServerTest {
       """
       import "@birds/Bird.pkl"
       import "@lib/lib.pkl"
-      
+
       res: Bird = new {
         name = "Birdie"
         favoriteFruit { name = "dragonfruit" }
       }
-      
+
       libContents = lib
-    """
+      """
         .trimIndent()
     )
     val dollar = '$'

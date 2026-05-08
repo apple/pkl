@@ -723,11 +723,13 @@ internal abstract class PageGenerator<out S>(
           ?.let { markdownRenderer.render(markdownParser.parse(it)).trim().ifEmpty { null } }
       }
 
-    private val deprecatedAnnotation: PObject? =
-      annotations.find { it.classInfo == PClassInfo.Deprecated }
+    private val deprecatedAnnotation: PObject? = annotations.find {
+      it.classInfo == PClassInfo.Deprecated
+    }
 
-    private val alsoKnownAsAnnotation: PObject? =
-      annotations.find { it.classInfo == PClassInfo.AlsoKnownAs }
+    private val alsoKnownAsAnnotation: PObject? = annotations.find {
+      it.classInfo == PClassInfo.AlsoKnownAs
+    }
 
     val isDeprecatedMember: Boolean = deprecatedAnnotation != null
 
