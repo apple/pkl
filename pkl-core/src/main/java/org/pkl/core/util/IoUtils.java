@@ -892,10 +892,6 @@ public final class IoUtils {
   }
 
   public static void validateHeaderName(String headerName) {
-    if (!headerName.equals(headerName.toLowerCase())) {
-      throw new IllegalArgumentException(
-          "HTTP header '%s' should be all lowercase".formatted(headerName));
-    }
 
     if (isReservedHeaderName(headerName)) {
       throw new IllegalArgumentException(
