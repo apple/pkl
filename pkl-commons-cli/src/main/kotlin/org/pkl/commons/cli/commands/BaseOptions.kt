@@ -301,8 +301,8 @@ class BaseOptions : OptionGroup() {
         val headersMap = mutableMapOf<String, MutableList<PPair<String, String>>>()
 
         try {
+          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
           for ((stringPattern, header) in it) {
-            val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
             val (headerName, headerValue) =
               headerRegex.find(header)?.destructured
                 ?: fail("Header '$header' is not in 'name:value' format.")
