@@ -60,8 +60,6 @@ public final class IoUtils {
   private static final String[] reservedHeaderNames = {
     "accept-charset",
     "accept-encoding",
-    "access-control-request-headers",
-    "access-control-request-method",
     "connection",
     "content-length",
     "cookie",
