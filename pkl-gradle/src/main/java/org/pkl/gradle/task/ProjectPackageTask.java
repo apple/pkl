@@ -15,6 +15,8 @@
  */
 package org.pkl.gradle.task;
 
+import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+
 import java.io.PrintWriter;
 import java.nio.file.Path;
 import java.util.stream.Collectors;
