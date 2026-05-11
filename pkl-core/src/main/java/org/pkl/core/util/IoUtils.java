@@ -911,7 +911,7 @@ public final class IoUtils {
   }
 
   public static void validateHeaderValue(String headerValue) {
-    if (headerValueLike.matcher(headerValue).matches()) {
+    if (!headerValueLike.matcher(headerValue).matches()) {
       throw new IllegalArgumentException(
           "HTTP header value '%s' has an invalid syntax".formatted(headerValue));
     }
