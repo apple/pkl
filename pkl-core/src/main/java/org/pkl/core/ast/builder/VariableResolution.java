@@ -15,16 +15,25 @@
  */
 package org.pkl.core.ast.builder;
 
-import org.pkl.core.runtime.Identifier;
+import org.pkl.core.ast.VmModifier;
 
-public sealed interface PropertyResolution {
+public sealed interface VariableResolution {
 
-  record ConstantProperty(Object constant) implements PropertyResolution {}
+  record LexicalProperty(boolean isModuleScope, int modifiers, int levelsUp)
+      implements VariableResolution {
 
-  record LocalClassProperty(Identifier name, boolean isConst) implements PropertyResolution {}
+    public boolean isLocal() {
+      return VmModifier.isLocal(modifiers);
+    }
+  }
 
-  record NormalClassProperty(Identifier name, boolean isConst, boolean isModuleScope)
-      implements PropertyResolution {}
+  // let, lambda, object body param
+  record Parameter(int slot, int levelsUp) implements VariableResolution {}
 
-  record LetOrLambdaProperty(Identifier name) implements PropertyResolution {}
+  record ForGeneratorVariable(int slot, int levelsUp) implements VariableResolution {}
+
+  // Implicit base module lookup
+  record ImplicitBaseProperty() implements VariableResolution {}
+
+  record ImplicitThisProperty() implements VariableResolution {}
 }

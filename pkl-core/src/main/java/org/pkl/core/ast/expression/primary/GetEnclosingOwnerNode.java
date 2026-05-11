@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,13 +31,6 @@ public final class GetEnclosingOwnerNode extends ExpressionNode {
 
   @ExplodeLoop
   public Object executeGeneric(VirtualFrame frame) {
-    var owner = VmUtils.getOwner(frame);
-    for (var i = 1; i < levelsUp; i++) {
-      owner = owner.getEnclosingOwner();
-      assert owner != null;
-    }
-    var result = owner.getEnclosingOwner();
-    assert result != null;
-    return result;
+    return VmUtils.getOwner(frame, levelsUp);
   }
 }

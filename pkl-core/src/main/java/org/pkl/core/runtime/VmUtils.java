@@ -159,15 +159,37 @@ public final class VmUtils {
     return result;
   }
 
-  /**
-   * Skips any amending function VmFunction owners in the owner chain. They do not correspond to any
-   * parse-time scope.
-   */
-  public static @Nullable VmObjectLike skipAmendFunctions(@Nullable VmObjectLike owner) {
-    while (owner instanceof VmFunction fn && fn.isAmendFunction()) {
-      owner = owner.getEnclosingOwner();
+  public static VmObjectLike getOwner(VirtualFrame frame, int levelsUp) {
+    return getOwner(getFrame(frame, levelsUp));
+  }
+
+  public static Object getReceiver(VirtualFrame frame, int levelsUp) {
+    return getReceiver(getFrame(frame, levelsUp));
+  }
+
+  @ExplodeLoop
+  public static VirtualFrame getFrame(VirtualFrame frame, int levelsUp) {
+    if (levelsUp == 0) {
+      return skipInvisibleScopes(frame);
     }
-    return owner;
+    var owner = getOwner(frame);
+    for (var i = 0; i < levelsUp; i++) {
+      frame = owner.getEnclosingFrame();
+      owner = getOwner(frame);
+      if (owner.isParseTimeInvisibleScope()) {
+        i--;
+      }
+    }
+    return frame;
+  }
+
+  private static VirtualFrame skipInvisibleScopes(VirtualFrame frame) {
+    var owner = getOwner(frame);
+    while (owner.isParseTimeInvisibleScope()) {
+      frame = owner.getEnclosingFrame();
+      owner = getOwner(frame);
+    }
+    return frame;
   }
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */

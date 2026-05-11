@@ -30,7 +30,8 @@ public final class VmFunction extends VmObjectLike {
   private final Object thisValue;
   private final int paramCount;
   private final PklRootNode rootNode;
-  private final boolean isAmendFunction;
+  private boolean hasObjectParams;
+  private final boolean isFunctionAmend;
 
   public VmFunction(
       MaterializedFrame enclosingFrame,
@@ -38,7 +39,7 @@ public final class VmFunction extends VmObjectLike {
       int paramCount,
       PklRootNode rootNode,
       @Nullable Object extraStorage) {
-    this(enclosingFrame, thisValue, paramCount, rootNode, extraStorage, false);
+    this(enclosingFrame, thisValue, paramCount, rootNode, extraStorage, false, false);
   }
 
   public VmFunction(
@@ -47,13 +48,15 @@ public final class VmFunction extends VmObjectLike {
       int paramCount,
       PklRootNode rootNode,
       @Nullable Object extraStorage,
-      boolean isAmendFunction) {
+      boolean isFunctionAmend,
+      boolean hasObjectParams) {
     super(enclosingFrame);
     this.thisValue = thisValue;
     this.paramCount = paramCount;
     this.rootNode = rootNode;
+    this.hasObjectParams = hasObjectParams;
     this.extraStorage = extraStorage;
-    this.isAmendFunction = isAmendFunction;
+    this.isFunctionAmend = isFunctionAmend;
   }
 
   public RootCallTarget getCallTarget() {
@@ -84,11 +87,8 @@ public final class VmFunction extends VmObjectLike {
         newParamCount,
         newRootNode == null ? rootNode : newRootNode,
         newExtraStorage,
-        isAmendFunction);
-  }
-
-  public boolean isAmendFunction() {
-    return isAmendFunction;
+        isFunctionAmend,
+        hasObjectParams);
   }
 
   public Object getThisValue() {
@@ -203,5 +203,10 @@ public final class VmFunction extends VmObjectLike {
   @TruffleBoundary
   public String toString() {
     return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
+  }
+
+  @Override
+  public boolean isParseTimeInvisibleScope() {
+    return isFunctionAmend && !hasObjectParams;
   }
 }

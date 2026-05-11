@@ -15,15 +15,26 @@
  */
 package org.pkl.core.ast.builder;
 
-import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.member.ClassMethod;
+import org.pkl.core.ast.VmModifier;
 
 public sealed interface MethodResolution {
+  record ImplicitBaseMethod() implements MethodResolution {}
 
-  record DirectMethod(ClassMethod method, ExpressionNode receiver, boolean isBase)
-      implements MethodResolution {}
+  record LexicalMethod(
+      boolean isObjectMethod,
+      boolean isOnClosedClass,
+      boolean isModuleScope,
+      int modifiers,
+      int levelsUp)
+      implements MethodResolution {
+    public boolean isLocal() {
+      return VmModifier.isLocal(modifiers);
+    }
 
-  record LexicalMethod(boolean isConst) implements MethodResolution {}
+    public boolean isExternal() {
+      return VmModifier.isExternal(modifiers);
+    }
+  }
 
-  record VirtualMethod(boolean isConst) implements MethodResolution {}
+  record ImplicitThisMethod() implements MethodResolution {}
 }

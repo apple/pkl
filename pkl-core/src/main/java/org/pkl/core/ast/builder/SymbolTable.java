@@ -16,49 +16,35 @@
 package org.pkl.core.ast.builder;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
-import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
 import java.util.*;
-import java.util.function.BiFunction;
 import java.util.function.Function;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ConstantNode;
-import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.builder.MethodResolution.DirectMethod;
+import org.pkl.core.ast.builder.MethodResolution.ImplicitBaseMethod;
+import org.pkl.core.ast.builder.MethodResolution.ImplicitThisMethod;
 import org.pkl.core.ast.builder.MethodResolution.LexicalMethod;
-import org.pkl.core.ast.builder.MethodResolution.VirtualMethod;
-import org.pkl.core.ast.builder.PropertyResolution.ConstantProperty;
-import org.pkl.core.ast.builder.PropertyResolution.LetOrLambdaProperty;
-import org.pkl.core.ast.builder.PropertyResolution.LocalClassProperty;
-import org.pkl.core.ast.builder.PropertyResolution.NormalClassProperty;
-import org.pkl.core.ast.expression.generator.GeneratorMemberNode;
+import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
+import org.pkl.core.ast.builder.VariableResolution.LexicalProperty;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.BaseModuleMembers;
+import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
-import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.util.LateInit;
 import org.pkl.core.util.Nullable;
 import org.pkl.parser.Lexer;
-import org.pkl.parser.syntax.Class;
-import org.pkl.parser.syntax.ClassMethod;
-import org.pkl.parser.syntax.Modifier;
-import org.pkl.parser.syntax.Modifier.ModifierValue;
 import org.pkl.parser.syntax.ObjectBody;
-import org.pkl.parser.syntax.Parameter;
 
 public final class SymbolTable {
+
   private Scope currentScope;
 
-  public SymbolTable(ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module) {
-    currentScope = new ModuleScope(moduleInfo, module);
-  }
-
-  public SymbolTable(
-      ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module, VmTyped base) {
-    var baseScope = new BaseScope(base);
-    currentScope = new ModuleScope(moduleInfo, module, baseScope);
+  public SymbolTable(ModuleInfo moduleInfo, boolean isBaseModule) {
+    currentScope = new ModuleScope(moduleInfo, isBaseModule);
   }
 
   public Scope getCurrentScope() {
@@ -76,7 +62,7 @@ public final class SymbolTable {
 
   public ObjectMember enterClass(
       Identifier name,
-      Class clazz,
+      int modifiers,
       List<TypeParameter> typeParameters,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
@@ -84,8 +70,8 @@ public final class SymbolTable {
             currentScope,
             name,
             toQualifiedName(name),
-            clazz,
-            FrameDescriptor.newBuilder(),
+            modifiers,
+            new FrameDescriptorBuilder(),
             typeParameters),
         nodeFactory);
   }
@@ -99,7 +85,7 @@ public final class SymbolTable {
             currentScope,
             name,
             toQualifiedName(name),
-            FrameDescriptor.newBuilder(),
+            new FrameDescriptorBuilder(),
             typeParameters),
         nodeFactory);
   }
@@ -108,7 +94,7 @@ public final class SymbolTable {
       Identifier name,
       ConstLevel constLevel,
       List<String> bindings,
-      Builder frameDescriptorBuilder,
+      FrameDescriptorBuilder frameDescriptorBuilder,
       List<TypeParameter> typeParameters,
       Function<MethodScope, T> nodeFactory) {
     return doEnter(
@@ -129,23 +115,17 @@ public final class SymbolTable {
 
   public <T> T enterForGenerator(
       List<String> params,
-      FrameDescriptor.Builder frameDescriptorBuilder,
-      FrameDescriptor.Builder memberDescriptorBuilder,
+      FrameDescriptorBuilder frameDescriptorBuilder,
       Function<ForGeneratorScope, T> nodeFactory) {
     return doEnter(
         new ForGeneratorScope(
-            currentScope,
-            currentScope.qualifiedName,
-            params,
-            frameDescriptorBuilder,
-            memberDescriptorBuilder),
+            currentScope, currentScope.qualifiedName, params, frameDescriptorBuilder),
         nodeFactory);
   }
 
   public <T> T enterLambda(
       List<String> bindings,
-      int slot,
-      FrameDescriptor.Builder frameDescriptorBuilder,
+      FrameDescriptorBuilder frameDescriptorBuilder,
       Function<LambdaScope, T> nodeFactory) {
 
     // flatten names of lambdas nested inside other lambdas for presentation purposes
@@ -158,7 +138,7 @@ public final class SymbolTable {
     var qualifiedName = parentScope.qualifiedName + "." + parentScope.getNextLambdaName();
 
     return doEnter(
-        new LambdaScope(currentScope, bindings, slot, qualifiedName, frameDescriptorBuilder),
+        new LambdaScope(currentScope, bindings, qualifiedName, frameDescriptorBuilder),
         nodeFactory);
   }
 
@@ -166,7 +146,7 @@ public final class SymbolTable {
       Identifier name, ConstLevel constLevel, Function<PropertyScope, T> nodeFactory) {
     return doEnter(
         new PropertyScope(
-            currentScope, name, toQualifiedName(name), constLevel, FrameDescriptor.newBuilder()),
+            currentScope, name, toQualifiedName(name), constLevel, new FrameDescriptorBuilder()),
         nodeFactory);
   }
 
@@ -177,8 +157,8 @@ public final class SymbolTable {
     var qualifiedName = currentScope.getQualifiedName() + currentScope.getNextEntryName(keyNode);
     var builder =
         currentScope instanceof ForGeneratorScope forScope
-            ? forScope.memberDescriptorBuilder
-            : FrameDescriptor.newBuilder();
+            ? forScope.frameDescriptorBuilder
+            : new FrameDescriptorBuilder();
     return doEnter(new EntryScope(currentScope, qualifiedName, builder), nodeFactory);
   }
 
@@ -187,9 +167,15 @@ public final class SymbolTable {
         new CustomThisScope(currentScope, currentScope.frameDescriptorBuilder), nodeFactory);
   }
 
-  public <T> T enterAnnotationScope(Function<AnnotationScope, T> nodeFactory) {
+  public <T> T enterAnnotationScope(
+      @Nullable Identifier annotatedTargetName, Function<AnnotationScope, T> nodeFactory) {
+    var qualifiedName =
+        annotatedTargetName == null
+            ? currentScope.getQualifiedName()
+            : toQualifiedName(annotatedTargetName);
     return doEnter(
-        new AnnotationScope(currentScope, currentScope.frameDescriptorBuilder), nodeFactory);
+        new AnnotationScope(currentScope, qualifiedName, currentScope.frameDescriptorBuilder),
+        nodeFactory);
   }
 
   public <T> T enterObjectScope(ObjectBody body, Function<ObjectScope, T> nodeFactory) {
@@ -212,25 +198,35 @@ public final class SymbolTable {
     return currentScope.qualifiedName + separator + Lexer.maybeQuoteIdentifier(name.toString());
   }
 
+  public record Member(Identifier name, int modifiers) {}
+
   public abstract static class Scope {
     private final @Nullable Scope parent;
     private final @Nullable Identifier name;
     private final String qualifiedName;
     private int lambdaCount = 0;
     private int entryCount = 0;
-    private final FrameDescriptor.Builder frameDescriptorBuilder;
+    protected final FrameDescriptorBuilder frameDescriptorBuilder;
     private final ConstLevel constLevel;
+    protected boolean isBaseModule;
+    // The properties defined on this (lexical) scope
+    protected final Map<String, Member> properties = new HashMap<>();
+    // The methods defined on this (lexical) scope
+    protected final Map<String, Member> methods = new HashMap<>();
 
     private Scope(
         @Nullable Scope parent,
         @Nullable Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        FrameDescriptor.Builder frameDescriptorBuilder) {
+        FrameDescriptorBuilder frameDescriptorBuilder) {
       this.parent = parent;
       this.name = name;
       this.qualifiedName = qualifiedName;
       this.frameDescriptorBuilder = frameDescriptorBuilder;
+      if (parent != null) {
+        this.isBaseModule = parent.isBaseModule;
+      }
       // const level can never decrease
       this.constLevel =
           parent != null && parent.constLevel.biggerOrEquals(constLevel)
@@ -263,24 +259,8 @@ public final class SymbolTable {
      * Returns a new descriptor builder that contains the same slots as the current scope's frame
      * descriptor.
      */
-    public FrameDescriptor.Builder newFrameDescriptorBuilder() {
-      return newFrameDescriptorBuilder(buildFrameDescriptor());
-    }
-
-    /** Returns a new descriptor builder for a {@link GeneratorMemberNode} in the current scope. */
-    public FrameDescriptor.Builder newForGeneratorMemberDescriptorBuilder() {
-      return this instanceof ForGeneratorScope forScope
-          ? newFrameDescriptorBuilder(forScope.buildMemberDescriptor())
-          : FrameDescriptor.newBuilder();
-    }
-
-    private static FrameDescriptor.Builder newFrameDescriptorBuilder(FrameDescriptor descriptor) {
-      var builder = FrameDescriptor.newBuilder();
-      for (var i = 0; i < descriptor.getNumberOfSlots(); i++) {
-        builder.addSlot(
-            descriptor.getSlotKind(i), descriptor.getSlotName(i), descriptor.getSlotInfo(i));
-      }
-      return builder;
+    public FrameDescriptorBuilder newFrameDescriptorBuilder() {
+      return new FrameDescriptorBuilder(buildFrameDescriptor());
     }
 
     public @Nullable TypeParameter getTypeParameter(String name) {
@@ -396,24 +376,48 @@ public final class SymbolTable {
       return constLevel;
     }
 
+    public void addProperty(Identifier name, int modifiers) {
+      this.properties.put(name.toString(), new Member(name, modifiers));
+    }
+
+    public void addMethod(Identifier name, int modifiers) {
+      this.methods.put(name.toString(), new Member(name, modifiers));
+    }
+
+    public final VariableResolution resolveVariable(String name) {
+      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveProperty(name, levelUp));
+      if (resolved != null) {
+        return resolved;
+      }
+      if (!isBaseModule) {
+        if (BaseModuleMembers.hasProperty(name)) {
+          return new ImplicitBaseProperty();
+        }
+      }
+      return new VariableResolution.ImplicitThisProperty();
+    }
+
+    public final MethodResolution resolveMethod(String name) {
+      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveMethod(name, levelUp));
+      if (resolved != null) {
+        return resolved;
+      }
+      if (!isBaseModule) {
+        if (BaseModuleMembers.hasMethod(name)) {
+          return new ImplicitBaseMethod();
+        }
+      }
+      return new ImplicitThisMethod();
+    }
+
     @FunctionalInterface
     private interface ResolutionFunction<T> {
       @Nullable
       T apply(LexicalScope scope, int levelUp);
     }
 
-    public @Nullable Object resolveProperty(
-        Identifier name, BiFunction<PropertyResolution, Integer, Object> fun) {
-      return resolve((scope, levelUp) -> scope.doResolveProperty(name, levelUp, fun));
-    }
-
-    public @Nullable Object resolveMethod(
-        Identifier name, BiFunction<MethodResolution, Integer, Object> fun) {
-      return resolve((scope, levelUp) -> scope.doResolveMethod(name, levelUp, fun));
-    }
-
-    private <T> @Nullable T resolve(ResolutionFunction<T> fun) {
-      var levelUp = 0;
+    private @Nullable <R> R resolveLexical(ResolutionFunction<R> fun) {
+      var levelsUp = 0;
       var shouldSkip = false;
       for (var scope = this; scope != null; scope = scope.getParent()) {
         // for headers resolve variables one scope up
@@ -421,40 +425,47 @@ public final class SymbolTable {
           shouldSkip = true;
           continue;
         }
+        // annotations on class members don't level up
+        if (scope instanceof AnnotationScope && scope.getParent() instanceof ClassScope) {
+          levelsUp--;
+        }
         if (scope instanceof LexicalScope lex) {
           if (shouldSkip && !(scope instanceof ForGeneratorScope)) {
+            if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
+              levelsUp++;
+            }
             shouldSkip = false;
             continue;
           }
-          var result = fun.apply(lex, levelUp);
+          var result = fun.apply(lex, levelsUp);
           if (result != null) return result;
           if (scope instanceof MethodScope || scope instanceof ForGeneratorScope) {
             // fors and methods don't level up
             continue;
           }
-          levelUp++;
+          levelsUp++;
+          if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
+            levelsUp++;
+          }
         }
       }
       return null;
     }
   }
 
-  protected interface LexicalScope {
+  public interface LexicalScope {
     @Nullable
-    Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback);
+    VariableResolution doResolveProperty(String name, int levelsUp);
 
     @Nullable
-    Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback);
+    MethodResolution doResolveMethod(String name, int levelsUp);
   }
 
   public static class ObjectScope extends Scope implements LexicalScope {
     private final Map<String, Integer> params;
-    private final Map<String, Integer> props;
-    private final Map<String, Integer> methods;
 
-    private ObjectScope(Scope parent, ObjectBody body, Builder frameDescriptorBuilder) {
+    private ObjectScope(
+        Scope parent, ObjectBody body, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(
           parent,
           parent.getNameOrNull(),
@@ -462,43 +473,35 @@ public final class SymbolTable {
           ConstLevel.NONE,
           frameDescriptorBuilder);
       params = collectParams(body);
-      props = collectProps(body);
-      methods = collectMethods(body);
+    }
+
+    public boolean hasParams() {
+      return !params.isEmpty();
     }
 
     @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      var strName = name.toString();
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
       // Underscore is a discard identifier and should not be resolvable
-      if (strName.equals("_")) {
+      if (name.equals("_")) {
         return null;
       }
-      var prop = props.get(strName);
+      var prop = properties.get(name);
       if (prop != null) {
-        if (VmModifier.isLocal(prop)) {
-          return callback.apply(
-              new LocalClassProperty(name.toLocalProperty(), VmModifier.isConst(prop)), levelUp);
-        } else {
-          return callback.apply(
-              new NormalClassProperty(name, VmModifier.isConst(prop), false), levelUp);
-        }
+        return new VariableResolution.LexicalProperty(false, prop.modifiers, levelsUp);
       }
-      var paramIndex = params.get(strName);
+      var paramIndex = params.get(name);
       if (paramIndex != null) {
         // params are on a higher level than the properties
-        return callback.apply(new LetOrLambdaProperty(name), levelUp);
+        return new VariableResolution.Parameter(paramIndex, levelsUp + 1);
       }
       return null;
     }
 
     @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
-      var method = methods.get(name.toString());
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      var method = methods.get(name);
       if (method != null) {
-        // Object methods are always local
-        return callback.apply(new LexicalMethod(VmModifier.isConst(method)), levelUp);
+        return new LexicalMethod(true, false, false, method.modifiers, levelsUp);
       }
       return null;
     }
@@ -507,41 +510,13 @@ public final class SymbolTable {
       var params = new HashMap<String, Integer>();
       for (var i = 0; i < body.getParameters().size(); i++) {
         var param = body.getParameters().get(i);
-        if (param instanceof Parameter.TypedIdentifier ti) {
+        if (param instanceof org.pkl.parser.syntax.Parameter.TypedIdentifier ti) {
           params.put(ti.getIdentifier().getValue(), i);
         } else {
           params.put("_", i);
         }
       }
       return params;
-    }
-
-    private static Map<String, Integer> collectProps(ObjectBody body) {
-      var props = new HashMap<String, Integer>();
-      for (var member : body.getMembers()) {
-        if (member instanceof org.pkl.parser.syntax.ObjectMember.ObjectProperty prop) {
-          props.put(prop.getIdentifier().getValue(), modifiers(prop.getModifiers()));
-        }
-      }
-      return props;
-    }
-
-    private static Map<String, Integer> collectMethods(ObjectBody body) {
-      var methods = new HashMap<String, Integer>();
-      for (var member : body.getMembers()) {
-        if (member instanceof org.pkl.parser.syntax.ObjectMember.ObjectMethod method) {
-          methods.put(method.getIdentifier().getValue(), modifiers(method.getModifiers()));
-        }
-      }
-      return methods;
-    }
-
-    private static int modifiers(List<Modifier> modifiers) {
-      int res = 0;
-      for (var mod : modifiers) {
-        res += AstBuilder.toModifier(mod);
-      }
-      return res;
     }
   }
 
@@ -553,7 +528,7 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        Builder frameDescriptorBuilder,
+        FrameDescriptorBuilder frameDescriptorBuilder,
         List<TypeParameter> typeParameters) {
       super(parent, name, qualifiedName, constLevel, frameDescriptorBuilder);
       this.typeParameters = typeParameters;
@@ -569,127 +544,37 @@ public final class SymbolTable {
   }
 
   public static final class ModuleScope extends Scope implements LexicalScope {
+
     private final ModuleInfo moduleInfo;
-    private final Map<Identifier, List<Modifier>> properties;
-    private final Map<Identifier, ClassMethod> methods;
+    @LateInit private boolean isClosed;
+    private final boolean isAmend;
 
-    public ModuleScope(ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module) {
-      super(null, null, moduleInfo.getModuleName(), ConstLevel.NONE, FrameDescriptor.newBuilder());
+    public ModuleScope(ModuleInfo moduleInfo, boolean isBaseModule) {
+      super(null, null, moduleInfo.getModuleName(), ConstLevel.NONE, new FrameDescriptorBuilder());
+      this.isBaseModule = isBaseModule;
       this.moduleInfo = moduleInfo;
-      this.properties = module != null ? collectProperties(module) : Map.of();
-      this.methods = module != null ? collectMethods(module) : Map.of();
+      this.isAmend = moduleInfo.isAmend();
     }
 
-    // modules other than base have pkl:base as their parent
-    public ModuleScope(
-        ModuleInfo moduleInfo, @Nullable org.pkl.parser.syntax.Module module, BaseScope base) {
-      super(base, null, moduleInfo.getModuleName(), ConstLevel.NONE, FrameDescriptor.newBuilder());
-      this.moduleInfo = moduleInfo;
-      this.properties = module != null ? collectProperties(module) : Map.of();
-      this.methods = module != null ? collectMethods(module) : Map.of();
+    public void setModifiers(int modifiers) {
+      this.isClosed = VmModifier.isClosed(modifiers);
     }
 
     @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      var modifiers = properties.get(name);
-      if (modifiers == null) return null;
-      if (isLocal(modifiers)) {
-        return callback.apply(
-            new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)), levelUp);
-      } else {
-        return callback.apply(new NormalClassProperty(name, isConst(modifiers), true), levelUp);
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      var member = properties.get(name);
+      if (member != null) {
+        return new LexicalProperty(true, member.modifiers, levelsUp);
       }
+      return null;
     }
 
     @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
       var method = methods.get(name);
       if (method == null) return null;
-      var methodIsConst = isConst(method.getModifiers());
-      if (isLocal(method.getModifiers())) {
-        return callback.apply(new LexicalMethod(methodIsConst), levelUp);
-      } else {
-        return callback.apply(new VirtualMethod(methodIsConst), levelUp);
-      }
-    }
-
-    private static Map<Identifier, List<Modifier>> collectProperties(
-        org.pkl.parser.syntax.Module module) {
-      var map = new HashMap<Identifier, List<Modifier>>();
-      for (var prop : module.getProperties()) {
-        map.put(Identifier.get(prop.getName().getValue()), prop.getModifiers());
-      }
-      return map;
-    }
-
-    private static Map<Identifier, ClassMethod> collectMethods(
-        org.pkl.parser.syntax.Module module) {
-      var map = new HashMap<Identifier, ClassMethod>();
-      for (var method : module.getMethods()) {
-        map.put(Identifier.get(method.getName().getValue()), method);
-      }
-      return map;
-    }
-
-    private static boolean isLocal(List<Modifier> modifiers) {
-      for (var modifier : modifiers) {
-        if (modifier.getValue() == ModifierValue.LOCAL) return true;
-      }
-      return false;
-    }
-
-    private static boolean isConst(List<Modifier> modifiers) {
-      for (var modifier : modifiers) {
-        if (modifier.getValue() == ModifierValue.CONST) return true;
-      }
-      return false;
-    }
-  }
-
-  // The scope of pkl:base, implicitly imported in every file
-  public static final class BaseScope extends Scope implements LexicalScope {
-    private final VmTyped base;
-
-    public BaseScope(VmTyped base) {
-      super(null, null, "base", ConstLevel.NONE, FrameDescriptor.newBuilder());
-      this.base = base;
-    }
-
-    @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      var cachedValue = base.getCachedValue(name);
-      if (cachedValue != null) {
-        return callback.apply(new ConstantProperty(cachedValue), levelUp);
-      }
-
-      var member = base.getMember(name);
-
-      if (member != null) {
-        var constantValue = member.getConstantValue();
-        if (constantValue != null) {
-          base.setCachedValue(name, constantValue);
-          return callback.apply(new ConstantProperty(constantValue), levelUp);
-        }
-
-        var computedValue = member.getCallTarget().call(base, base);
-        base.setCachedValue(name, computedValue);
-        return callback.apply(new ConstantProperty(computedValue), levelUp);
-      }
-      return null;
-    }
-
-    @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
-      var method = base.getVmClass().getDeclaredMethod(name);
-      if (method != null) {
-        assert !method.isLocal();
-        return callback.apply(new DirectMethod(method, new ConstantValueNode(base), true), levelUp);
-      }
-      return null;
+      var isObjectMethod = isAmend && VmModifier.isLocal(method.modifiers);
+      return new LexicalMethod(isObjectMethod, isClosed, true, method.modifiers, levelsUp);
     }
   }
 
@@ -702,65 +587,42 @@ public final class SymbolTable {
         String qualifiedName,
         ConstLevel constLevel,
         List<String> bindings,
-        Builder frameDescriptorBuilder,
+        FrameDescriptorBuilder frameDescriptorBuilder,
         List<TypeParameter> typeParameters) {
       super(parent, name, qualifiedName, constLevel, frameDescriptorBuilder, typeParameters);
       this.bindings = bindings;
     }
 
     @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      var nameStr = name.toString();
-      if (nameStr.equals("_")) {
-        return null;
-      }
-      var index = bindings.indexOf(nameStr);
-      if (index != -1) {
-        return callback.apply(new LetOrLambdaProperty(name), levelUp);
-      }
-      return null;
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      return resolveParameter(name, bindings, levelsUp);
     }
 
     @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
       return null;
     }
   }
 
   public static final class LambdaScope extends Scope implements LexicalScope {
     private final List<String> bindings;
-    private final int slot;
 
     public LambdaScope(
         Scope parent,
         List<String> bindings,
-        int slot,
         String qualifiedName,
-        FrameDescriptor.Builder frameDescriptorBuilder) {
+        FrameDescriptorBuilder frameDescriptorBuilder) {
       super(parent, null, qualifiedName, parent.getConstLevel(), frameDescriptorBuilder);
       this.bindings = bindings;
-      this.slot = slot;
     }
 
     @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      var nameStr = name.toString();
-      if (nameStr.equals("_")) {
-        return null;
-      }
-      var index = bindings.indexOf(nameStr);
-      if (index != -1) {
-        return callback.apply(new LetOrLambdaProperty(name), levelUp);
-      }
-      return null;
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      return resolveParameter(name, bindings, levelsUp);
     }
 
     @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
       return null;
     }
   }
@@ -768,27 +630,20 @@ public final class SymbolTable {
   // A generator scope that is resolved eagerly and one level above
   public static final class EagerGeneratorScope extends Scope {
     private EagerGeneratorScope(@Nullable Scope parent, String qualifiedName) {
-      super(parent, null, qualifiedName, ConstLevel.NONE, FrameDescriptor.newBuilder());
+      super(parent, null, qualifiedName, ConstLevel.NONE, new FrameDescriptorBuilder());
     }
   }
 
   public static final class ForGeneratorScope extends Scope implements LexicalScope {
-    private final FrameDescriptor.Builder memberDescriptorBuilder;
     final List<String> params;
 
     public ForGeneratorScope(
         Scope parent,
         String qualifiedName,
         List<String> params,
-        FrameDescriptor.Builder frameDescriptorBuilder,
-        FrameDescriptor.Builder memberDescriptorBuilder) {
+        FrameDescriptorBuilder frameDescriptorBuilder) {
       super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
-      this.memberDescriptorBuilder = memberDescriptorBuilder;
       this.params = params;
-    }
-
-    public FrameDescriptor buildMemberDescriptor() {
-      return memberDescriptorBuilder.build();
     }
 
     @Override
@@ -799,22 +654,19 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      var nameStr = name.toString();
-      if (nameStr.equals("_")) {
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      if (!params.contains(name)) {
         return null;
       }
-      var index = params.indexOf(nameStr);
+      var index = frameDescriptorBuilder.findSlot(Identifier.get(name));
       if (index >= 0) {
-        return callback.apply(new LetOrLambdaProperty(name), levelUp);
+        return new VariableResolution.ForGeneratorVariable(index, levelsUp);
       }
       return null;
     }
 
     @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
       return null;
     }
   }
@@ -825,106 +677,46 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         ConstLevel constLevel,
-        FrameDescriptor.Builder frameDescriptorBuilder) {
+        FrameDescriptorBuilder frameDescriptorBuilder) {
       super(parent, name, qualifiedName, constLevel, frameDescriptorBuilder);
     }
   }
 
   public static final class EntryScope extends Scope {
     public EntryScope(
-        Scope parent, String qualifiedName, FrameDescriptor.Builder frameDescriptorBuilder) {
+        Scope parent, String qualifiedName, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(parent, null, qualifiedName, ConstLevel.NONE, frameDescriptorBuilder);
     }
   }
 
   public static final class ClassScope extends TypeParameterizableScope implements LexicalScope {
-    private final Map<Identifier, List<Modifier>> properties;
-    private final Map<Identifier, ClassMethod> methods;
     private final boolean isClosed;
 
     public ClassScope(
         Scope parent,
         Identifier name,
         String qualifiedName,
-        Class clazz,
-        Builder frameDescriptorBuilder,
+        int modifiers,
+        FrameDescriptorBuilder frameDescriptorBuilder,
         List<TypeParameter> typeParameters) {
       super(parent, name, qualifiedName, ConstLevel.MODULE, frameDescriptorBuilder, typeParameters);
-      properties = collectProperties(clazz);
-      methods = collectMethods(clazz);
-      isClosed = isClosed(clazz);
+      isClosed = VmModifier.isClosed(modifiers);
     }
 
     @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
 
-      var modifiers = properties.get(name);
-      if (modifiers == null) return null;
-      if (isLocal(modifiers)) {
-        return callback.apply(
-            new LocalClassProperty(name.toLocalProperty(), isConst(modifiers)), levelUp);
-      } else {
-        return callback.apply(new NormalClassProperty(name, isConst(modifiers), false), levelUp);
-      }
+      var member = properties.get(name);
+      if (member == null) return null;
+      return new LexicalProperty(false, member.modifiers, levelsUp);
     }
 
     @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
 
-      var method = methods.get(name);
-      if (method == null) return null;
-      var methodIsConst = isConst(method.getModifiers());
-      if (isClosed || isLocal(method.getModifiers())) {
-        return callback.apply(new LexicalMethod(methodIsConst), levelUp);
-      } else {
-        return callback.apply(new VirtualMethod(methodIsConst), levelUp);
-      }
-    }
-
-    private static Map<Identifier, List<Modifier>> collectProperties(Class clazz) {
-      var map = new HashMap<Identifier, List<Modifier>>();
-      var body = clazz.getBody();
-      if (body == null) return map;
-      for (var prop : body.getProperties()) {
-        map.put(Identifier.get(prop.getName().getValue()), prop.getModifiers());
-      }
-      return map;
-    }
-
-    private static Map<Identifier, ClassMethod> collectMethods(Class clazz) {
-      var map = new HashMap<Identifier, ClassMethod>();
-      var body = clazz.getBody();
-      if (body == null) return map;
-      for (var prop : body.getMethods()) {
-        map.put(Identifier.get(prop.getName().getValue()), prop);
-      }
-      return map;
-    }
-
-    private static boolean isLocal(List<Modifier> modifiers) {
-      for (var modifier : modifiers) {
-        if (modifier.getValue() == ModifierValue.LOCAL) return true;
-      }
-      return false;
-    }
-
-    private static boolean isConst(List<Modifier> modifiers) {
-      for (var modifier : modifiers) {
-        if (modifier.getValue() == ModifierValue.CONST) return true;
-      }
-      return false;
-    }
-
-    private static boolean isClosed(Class clazz) {
-      for (var modifier : clazz.getModifiers()) {
-        if (modifier.getValue() == ModifierValue.OPEN
-            || modifier.getValue() == ModifierValue.ABSTRACT) {
-          return false;
-        }
-      }
-      return true;
+      var member = methods.get(name);
+      if (member == null) return null;
+      return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);
     }
   }
 
@@ -933,7 +725,7 @@ public final class SymbolTable {
         Scope parent,
         Identifier name,
         String qualifiedName,
-        FrameDescriptor.Builder frameDescriptorBuilder,
+        FrameDescriptorBuilder frameDescriptorBuilder,
         List<TypeParameter> typeParameters) {
       super(parent, name, qualifiedName, ConstLevel.MODULE, frameDescriptorBuilder, typeParameters);
     }
@@ -954,7 +746,7 @@ public final class SymbolTable {
           }
         };
 
-    public CustomThisScope(Scope parent, FrameDescriptor.Builder frameDescriptorBuilder) {
+    public CustomThisScope(Scope parent, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(
           parent,
           parent.getNameOrNull(),
@@ -964,27 +756,23 @@ public final class SymbolTable {
     }
   }
 
-  public static final class AnnotationScope extends Scope implements LexicalScope {
-    public AnnotationScope(Scope parent, FrameDescriptor.Builder frameDescriptorBuilder) {
+  public static final class AnnotationScope extends Scope {
+    public AnnotationScope(
+        Scope parent, String qualifiedName, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(
-          parent,
-          parent.getNameOrNull(),
-          parent.getQualifiedName(),
-          ConstLevel.MODULE,
-          frameDescriptorBuilder);
+          parent, parent.getNameOrNull(), qualifiedName, ConstLevel.MODULE, frameDescriptorBuilder);
     }
+  }
 
-    @Override
-    public @Nullable Object doResolveProperty(
-        Identifier name, int levelUp, BiFunction<PropertyResolution, Integer, Object> callback) {
-      // annotation scopes don't have variables, the inner object scope might have
+  private static @Nullable VariableResolution resolveParameter(
+      String name, List<String> bindings, int levelsUp) {
+    if (name.equals("_")) {
       return null;
     }
-
-    @Override
-    public @Nullable Object doResolveMethod(
-        Identifier name, int levelUp, BiFunction<MethodResolution, Integer, Object> callback) {
-      return null;
+    var index = bindings.indexOf(name);
+    if (index != -1) {
+      return new VariableResolution.Parameter(index, levelsUp);
     }
+    return null;
   }
 }
