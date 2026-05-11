@@ -307,6 +307,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       add(ResourceReaders.modulePath(modulePathResolver))
       add(ResourceReaders.pkg())
       add(ResourceReaders.projectpackage())
+      addAll(ResourceReaders.fromServiceProviders())
       add(ResourceReaders.file())
       add(ResourceReaders.http())
       add(ResourceReaders.https())
