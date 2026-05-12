@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,9 +21,11 @@ import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
+import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
+import org.pkl.core.Pair as PPair
 
 class RequestRewritingClientTest {
   private val captured = RequestCapturingClient()
@@ -34,6 +36,7 @@ class RequestRewritingClientTest {
       -1,
       captured,
       mapOf(URI("https://foo/") to URI("https://bar/")),
+      listOf(),
     )
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
@@ -121,7 +124,8 @@ class RequestRewritingClientTest {
   @Test
   fun `rewrites port 0 if test port is set`() {
     val captured = RequestCapturingClient()
-    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf())
+    val client =
+      RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf(), listOf())
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
     client.send(request, BodyHandlers.discarding())
@@ -303,9 +307,85 @@ class RequestRewritingClientTest {
 
   private fun rewrittenRequest(uri: String, rules: Map<URI, URI>): String {
     val captured = RequestCapturingClient()
-    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules)
+    val client =
+      RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules, listOf())
     val request = HttpRequest.newBuilder(URI(uri)).build()
     client.send(request, BodyHandlers.discarding())
     return captured.request.uri().toString()
+  }
+
+  @Test
+  fun `adds configured headers for matching URI patterns`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        listOf(
+          PPair(Pattern.compile("^https://example\\.com/.*"), listOf(PPair("x-one", "one"))),
+          PPair(
+            Pattern.compile("^https://example\\.com/foo/.*"),
+            listOf(PPair("x-two", "two-a"), PPair("x-two", "two-b")),
+          ),
+        ),
+      )
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
+
+    client.send(request, BodyHandlers.discarding())
+
+    assertThatList(captured.request.headers().allValues("x-one")).containsExactly("one")
+    assertThatList(captured.request.headers().allValues("x-two")).containsExactly("two-a", "two-b")
+  }
+
+  @Test
+  fun `does not add configured headers for non-matching URI patterns`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        listOf(
+          PPair(Pattern.compile("^https://foo\\.com/.*"), listOf(PPair("x-foo", "foo"))),
+          PPair(Pattern.compile("^https://bar\\.com/.*"), listOf(PPair("x-bar", "bar"))),
+        ),
+      )
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
+
+    client.send(request, BodyHandlers.discarding())
+
+    assertThat(captured.request.headers().firstValue("x-foo")).isEmpty
+    assertThat(captured.request.headers().firstValue("x-bar")).isEmpty
+  }
+
+  @Test
+  fun `appends configured header values to existing request headers`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        listOf(
+          PPair(
+            Pattern.compile("^https://example\\.com/.*"),
+            listOf(PPair("x-foo", "rule-a"), PPair("x-foo", "rule-b")),
+          )
+        ),
+      )
+    val request =
+      HttpRequest.newBuilder(URI("https://example.com/foo/bar")).header("x-foo", "request").build()
+
+    client.send(request, BodyHandlers.discarding())
+
+    assertThatList(captured.request.headers().allValues("x-foo"))
+      .containsExactly("request", "rule-a", "rule-b")
   }
 }

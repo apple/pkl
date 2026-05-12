@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.evaluatorSettings;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
@@ -27,13 +28,17 @@ import java.util.Objects;
 import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
+import org.pkl.core.Pair;
 import org.pkl.core.PklBugException;
 import org.pkl.core.PklException;
 import org.pkl.core.Value;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.GlobResolver;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.Nullable;
 
 /** Java version of {@code pkl.EvaluatorSettings}. */
@@ -126,8 +131,11 @@ public record PklEvaluatorSettings(
         traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase()));
   }
 
-  public record Http(@Nullable Proxy proxy, @Nullable Map<URI, URI> rewrites) {
-    public static final Http DEFAULT = new Http(null, Collections.emptyMap());
+  public record Http(
+      @Nullable Proxy proxy,
+      @Nullable Map<URI, URI> rewrites,
+      @Nullable List<Pair<Pattern, List<Pair<String, String>>>> headers) {
+    public static final Http DEFAULT = new Http(null, Collections.emptyMap(), null);
 
     @SuppressWarnings("unchecked")
     public static @Nullable Http parse(@Nullable Value input) {
@@ -136,10 +144,9 @@ public record PklEvaluatorSettings(
       } else if (input instanceof PObject http) {
         var proxy = Proxy.parse((Value) http.getProperty("proxy"));
         var rewrites = http.getProperty("rewrites");
-        if (rewrites instanceof PNull) {
-          return new Http(proxy, null);
-        } else {
-          var parsedRewrites = new HashMap<URI, URI>();
+        HashMap<URI, URI> parsedRewrites = null;
+        if (!(rewrites instanceof PNull)) {
+          parsedRewrites = new HashMap<>();
           for (var entry : ((Map<String, String>) rewrites).entrySet()) {
             var key = entry.getKey();
             var value = entry.getValue();
@@ -149,8 +156,37 @@ public record PklEvaluatorSettings(
               throw new PklException(ErrorMessages.create("invalidUri", e.getInput()));
             }
           }
-          return new Http(proxy, parsedRewrites);
         }
+        var headerDefs = http.getProperty("headers");
+        List<Pair<Pattern, List<Pair<String, String>>>> parsedHeaderDefs = null;
+        if (!(headerDefs instanceof PNull)) {
+          parsedHeaderDefs = new ArrayList<>();
+          var headerDefsMap = (Map<String, Map<String, Object>>) headerDefs;
+          for (var entry : headerDefsMap.entrySet()) {
+            var stringPattern = entry.getKey();
+            var headersMap = entry.getValue();
+            try {
+              var urlPattern = GlobResolver.toRegexPattern(stringPattern);
+              var pairs =
+                  headersMap.entrySet().stream()
+                      .flatMap(
+                          header -> {
+                            var value = header.getValue();
+                            if (value instanceof List) {
+                              return ((List<String>) value)
+                                  .stream().map(v -> new Pair(header.getKey(), v));
+                            } else {
+                              return Stream.of(new Pair(header.getKey(), value));
+                            }
+                          })
+                      .toList();
+              parsedHeaderDefs.add(new Pair(urlPattern, pairs));
+            } catch (InvalidGlobPatternException e) {
+              throw new PklException(ErrorMessages.create("invalidUri", stringPattern));
+            }
+          }
+        }
+        return new Http(proxy, parsedRewrites, parsedHeaderDefs);
       } else {
         throw PklBugException.unreachableCode();
       }
