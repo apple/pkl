@@ -25,6 +25,7 @@ pkl:release
 pkl:semver
 pkl:settings
 pkl:shell
+pkl:starlark
 pkl:test
 pkl:xml
 pkl:yaml
