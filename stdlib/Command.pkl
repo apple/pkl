@@ -257,10 +257,12 @@ class Argument extends Annotation {
   completionCandidates: "paths" | *Listing<String>(isDistinct)
 }
 
-/// A value used in [Flag.convert] and [Argument.convert] to declare an option as a dynamic
-/// import.
+/// A value used in [Flag.convert], [Flag.transformAll], [Argument.convert], and
+/// [Argument.transformAll] functions to trigger a dynamic module import.
 class Import {
-  /// The absolute URI of the module to import.
+  /// The URI of the module to import.
+  ///
+  /// Relative paths are resolved relative to the current working directory.
   uri: String
 
   /// Whether [uri] should be interpreted as a glob pattern.
