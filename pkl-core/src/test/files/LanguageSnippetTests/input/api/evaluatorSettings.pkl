@@ -1,0 +1,68 @@
+amends "../snippetTest.pkl"
+
+import "pkl:EvaluatorSettings"
+
+local function force(http: EvaluatorSettings.Http) = new PcfRenderer {}.renderValue(http)
+
+examples {
+  ["http headers"] {
+    new EvaluatorSettings.Http {
+      headers {
+        ["**"] {
+          ["X-Foo"] = "Foo"
+        }
+        ["https://example.com/**"] {
+          ["X-Bar"] {
+            "bar"
+            "baz"
+          }
+        }
+      }
+    }
+  }
+
+  ["http headers -- invalid glob pattern"] {
+    module.catch(() -> force(new EvaluatorSettings.Http {
+      headers {
+        ["{{}}"] {
+          ["X-Foo"] = "Foo"
+        }
+      }
+    }))
+  }
+
+  ["http headers -- invalid header name"] {
+    module.catch(() -> force(new EvaluatorSettings.Http {
+      headers {
+        ["**"] {
+          ["Connection"] = "Foo"
+        }
+      }
+    }))
+    module.catch(() -> force(new EvaluatorSettings.Http {
+      headers {
+        ["**"] {
+          ["Sec-Foo-Bar"] = "Foo"
+        }
+      }
+    }))
+
+    module.catch(() -> force(new EvaluatorSettings.Http {
+      headers {
+        ["**"] {
+          ["Foo:Bar"] = "Foo"
+        }
+      }
+    }))
+  }
+
+  ["http headers -- invalid header value"] {
+    module.catch(() -> force(new EvaluatorSettings.Http {
+      headers {
+        ["**"] {
+          ["My-Header"] = "🙃"
+        }
+      }
+    }))
+  }
+}

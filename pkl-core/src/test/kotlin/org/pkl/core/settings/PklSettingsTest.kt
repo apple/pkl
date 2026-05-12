@@ -26,10 +26,8 @@ import org.pkl.commons.writeString
 import org.pkl.core.Evaluator
 import org.pkl.core.ModuleSource
 import org.pkl.core.PObject
-import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
 import org.pkl.core.settings.PklSettings.Editor
-import org.pkl.core.util.GlobResolver
 
 class PklSettingsTest {
   @Test
@@ -67,8 +65,14 @@ class PklSettingsTest {
           ["https://foo.com/"] = "https://bar.com/"
         }
         headers {
-          ["https://foo.com/"] {
+          ["https://foo.com/**"] {
             ["x-foo"] = "bar"
+          }
+          ["https://bar.com/**"] {
+            ["x-bar"] {
+              "bar"
+              "baz"
+            }
           }
         }
       }
@@ -84,8 +88,9 @@ class PklSettingsTest {
           listOf("example.com", "pkg.pkl-lang.org"),
         ),
         mapOf(URI("https://foo.com/") to URI("https://bar.com/")),
-        listOf(
-          PPair(GlobResolver.toRegexPattern("https://foo.com/"), listOf(PPair("x-foo", "bar")))
+        mapOf(
+          "https://foo.com/**" to mapOf("x-foo" to listOf("bar")),
+          "https://bar.com/**" to mapOf("x-bar" to listOf("bar", "baz")),
         ),
       )
 

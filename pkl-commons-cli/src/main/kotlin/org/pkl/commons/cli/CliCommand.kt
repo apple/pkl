@@ -215,11 +215,11 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   protected val httpRewrites: Map<URI, URI>? by lazy {
-    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites()
+    cliOptions.httpRewrites ?: evaluatorSettings?.http?.rewrites ?: settings.http?.rewrites
   }
 
-  private val httpHeaders: List<Pair<Pattern, List<Pair<String, String>>>>? by lazy {
-    cliOptions.httpHeaders ?: project?.evaluatorSettings?.http?.headers ?: settings.http?.headers
+  private val httpHeaders: Map<String, Map<String, List<String>>>? by lazy {
+    cliOptions.httpHeaders ?: evaluatorSettings?.http?.headers ?: settings.http?.headers
   }
 
   protected val externalModuleReaders: Map<String, PklEvaluatorSettings.ExternalReader> by lazy {

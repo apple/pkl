@@ -15,6 +15,15 @@
  */
 package org.pkl.server
 
+import com.github.tomakehurst.wiremock.client.WireMock.equalTo
+import com.github.tomakehurst.wiremock.client.WireMock.get
+import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
+import com.github.tomakehurst.wiremock.client.WireMock.ok
+import com.github.tomakehurst.wiremock.client.WireMock.stubFor
+import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
+import com.github.tomakehurst.wiremock.client.WireMock.verify
+import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
+import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.net.URI
@@ -30,6 +39,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
@@ -1065,6 +1075,7 @@ abstract class AbstractServerTest {
             caCertificates = null,
             proxy = null,
             rewrites = mapOf(URI("https://example.com/") to URI("https://example.example/")),
+            headers = null,
           )
       )
     client.send(
@@ -1092,12 +1103,44 @@ abstract class AbstractServerTest {
             caCertificates = null,
             proxy = null,
             rewrites = mapOf(URI("https://example.com") to URI("https://example.example/")),
+            headers = null,
           )
       )
     )
     val response = client.receive<CreateEvaluatorResponse>()
     assertThat(response.error)
       .contains("Rewrite rule must end with '/', but was 'https://example.com'")
+  }
+
+  @Nested
+  @WireMockTest
+  inner class HttpTests {
+    @Test
+    fun `http headers`(wwRuntimeInfo: WireMockRuntimeInfo) {
+      stubFor(get(urlEqualTo("/foo.pkl")).willReturn(ok("foo = 1")))
+      val evaluatorId =
+        client.sendCreateEvaluatorRequest(
+          http =
+            Http(
+              caCertificates = null,
+              proxy = null,
+              rewrites = null,
+              headers = mapOf("**" to mapOf("X-Foo" to listOf("Foo"))),
+            )
+        )
+      client.send(
+        EvaluateRequest(
+          1,
+          evaluatorId,
+          URI("repl:text"),
+          "res = import(\"${wwRuntimeInfo.httpBaseUrl}/foo.pkl\")",
+          "output.text",
+        )
+      )
+      val response = client.receive<EvaluateResponse>()
+      assertThat(response.error).isNull()
+      verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("X-Foo", equalTo("Foo")))
+    }
   }
 
   private fun TestTransport.sendCreateEvaluatorRequest(

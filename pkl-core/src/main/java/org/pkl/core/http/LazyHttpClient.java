@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,8 +28,9 @@ import javax.annotation.concurrent.ThreadSafe;
  * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
  * send.
  */
+// visible for testing
 @ThreadSafe
-final class LazyHttpClient implements HttpClient {
+public final class LazyHttpClient implements HttpClient {
   private final Supplier<HttpClient> supplier;
   private final Object lock = new Object();
 
@@ -54,7 +55,8 @@ final class LazyHttpClient implements HttpClient {
     getClient().ifPresent(HttpClient::close);
   }
 
-  private HttpClient getOrCreateClient() {
+  // visible for testing
+  public HttpClient getOrCreateClient() {
     synchronized (lock) {
       // only try to create client once
       if (exception != null) {

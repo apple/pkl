@@ -482,6 +482,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getHttpProxy().set(spec.getHttpProxy());
     task.getHttpNoProxy().set(spec.getHttpNoProxy());
     task.getHttpRewrites().set(spec.getHttpRewrites());
+    task.getHttpHeaders().set(spec.getHttpHeaders());
   }
 
   private <T extends ModulesTask, S extends ModulesSpec> void configureModulesTask(

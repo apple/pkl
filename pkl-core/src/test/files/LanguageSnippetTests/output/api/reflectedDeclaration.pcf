@@ -914,6 +914,27 @@ alias {
           name = "isRegex"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isGlobPattern", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this string is a valid glob pattern.
+            
+            For reference, see
+            <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
+            """
+          annotations = List(new {
+            version = "0.32.0"
+          })
+          modifiers = Set()
+          name = "isGlobPattern"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.32.0"
+          })
         }, "isBase64", new {
           location {
             line = XXXX
@@ -1258,6 +1279,27 @@ alias {
           name = "isRegex"
           allModifiers = Set()
           allAnnotations = List()
+        }, "isGlobPattern", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this string is a valid glob pattern.
+            
+            For reference, see
+            <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
+            """
+          annotations = List(new {
+            version = "0.32.0"
+          })
+          modifiers = Set()
+          name = "isGlobPattern"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.32.0"
+          })
         }, "isBase64", new {
           location {
             line = XXXX
