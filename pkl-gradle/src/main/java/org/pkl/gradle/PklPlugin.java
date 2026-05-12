@@ -487,6 +487,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getTestPort().set(spec.getTestPort());
     task.getHttpProxy().set(spec.getHttpProxy());
     task.getHttpNoProxy().set(spec.getHttpNoProxy());
+    task.getHttpHeaders().set(spec.getHttpHeaders());
     task.getHttpRewrites().set(spec.getHttpRewrites());
     task.getExternalModuleReaders()
         .set(providers.provider(() -> spec.getExternalModuleReaders().getAsMap()));

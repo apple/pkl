@@ -29,6 +29,8 @@ import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
 import org.pkl.core.util.ByteArrayUtils;
+import org.pkl.core.util.GlobResolver;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.Pair;
 import org.pkl.core.util.StringUtils;
 
@@ -160,6 +162,18 @@ public final class StringNodes {
         Pattern.compile(self, Pattern.UNICODE_CASE);
         return true;
       } catch (PatternSyntaxException e) {
+        return false;
+      }
+    }
+  }
+
+  public abstract static class isGlobPattern extends ExternalPropertyNode {
+    @Specialization
+    protected boolean eval(String self) {
+      try {
+        GlobResolver.toRegexString(self);
+        return true;
+      } catch (InvalidGlobPatternException e) {
         return false;
       }
     }

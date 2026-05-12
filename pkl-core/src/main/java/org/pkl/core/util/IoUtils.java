@@ -45,6 +45,7 @@ import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.ReaderBase;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 
 public final class IoUtils {
 
@@ -53,33 +54,36 @@ public final class IoUtils {
 
   private static final Pattern windowsPathLike = Pattern.compile("\\w:\\\\.*");
 
-  private static final Pattern headerNameLike = Pattern.compile("^[a-zA-Z0-9!#$%&'*+-.^_`|~]+$");
+  private static final Pattern headerNameLike = Pattern.compile("[a-zA-Z0-9!#$%&'*+-.^_`|~]+");
 
   private static final Pattern headerValueLike =
-      Pattern.compile("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$");
+      Pattern.compile("[\\t\\u0020-\\u007E\\u0080-\\u00FF]*");
 
+  public static final Pattern doubleStarGlob;
+
+  static {
+    try {
+      doubleStarGlob = GlobResolver.toRegexPattern("**");
+    } catch (InvalidGlobPatternException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  // keep in sync with stdlib `EvaluatorSettings.ReservedHttpHeaderName`
   private static final String[] reservedHeaderNames = {
-    "accept-charset",
-    "accept-encoding",
     "connection",
+    "keep-alive",
     "content-length",
-    "cookie",
-    "date",
-    "dnt",
     "expect",
     "host",
-    "keep-alive",
-    "origin",
-    "permissions-policy",
-    "referer",
-    "te",
-    "trailer",
-    "transfer-encoding",
     "upgrade",
-    "via"
+    "te",
+    "transfer-encoding",
+    "trailer"
   };
 
-  private static final String[] reservedHeaderPrefixes = {"proxy-", "sec-", "access-control-"};
+  // keep in sync with stdlib `EvaluatorSettings.reservedHttpHeaderPrefix`
+  private static final String[] reservedHeaderPrefixes = {"proxy-", "sec-"};
 
   private IoUtils() {}
 
@@ -885,36 +889,50 @@ public final class IoUtils {
   }
 
   private static boolean isReservedHeaderName(String headerName) {
-    return Arrays.stream(reservedHeaderNames).anyMatch((reserved) -> headerName.equals(reserved));
+    var normalizedHeader = headerName.toLowerCase();
+    for (var reservedHeader : reservedHeaderNames) {
+      if (normalizedHeader.equals(reservedHeader)) {
+        return true;
+      }
+    }
+    return false;
   }
 
   private static boolean hasReservedHeaderPrefix(String headerName) {
-    return Arrays.stream(reservedHeaderPrefixes)
-        .anyMatch((prefix) -> headerName.startsWith(prefix));
+    var normalizedHeader = headerName.toLowerCase();
+    for (var prefix : reservedHeaderPrefixes) {
+      if (normalizedHeader.startsWith(prefix)) {
+        return true;
+      }
+    }
+    return false;
   }
 
+  // keep in sync with stdlib EvaluatorSettings.HttpHeaderName
   public static void validateHeaderName(String headerName) {
-
     if (isReservedHeaderName(headerName)) {
       throw new IllegalArgumentException(
-          "HTTP header '%s' is a reserved header".formatted(headerName));
+          ErrorMessages.create("invalidHttpHeaderReserved", headerName));
     }
 
     if (hasReservedHeaderPrefix(headerName)) {
       throw new IllegalArgumentException(
-          "HTTP header '%s' starts with a reserved header prefix".formatted(headerName));
+          ErrorMessages.create("invalidHttpHeaderReservedPrefix", headerName));
     }
 
     if (!headerNameLike.matcher(headerName).matches()) {
-      throw new IllegalArgumentException(
-          "HTTP header name '%s' has an invalid syntax".formatted(headerName));
+      throw new IllegalArgumentException(ErrorMessages.create("invalidHttpHeaderName", headerName));
     }
   }
 
   public static void validateHeaderValue(String headerValue) {
     if (!headerValueLike.matcher(headerValue).matches()) {
       throw new IllegalArgumentException(
-          "HTTP header value '%s' has an invalid syntax".formatted(headerValue));
+          ErrorMessages.create("invalidHttpHeaderValue", headerValue));
+    }
+    if (headerValue.length() > 4096) {
+      throw new IllegalArgumentException(
+          ErrorMessages.create("invalidHttpHeaderValueTooLong", headerValue));
     }
   }
 }

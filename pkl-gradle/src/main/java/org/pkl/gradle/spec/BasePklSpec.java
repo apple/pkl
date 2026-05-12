@@ -17,6 +17,8 @@ package org.pkl.gradle.spec;
 
 import java.net.URI;
 import java.time.Duration;
+import java.util.List;
+import java.util.Map;
 import org.gradle.api.NamedDomainObjectContainer;
 import org.gradle.api.file.ConfigurableFileCollection;
 import org.gradle.api.file.DirectoryProperty;
@@ -60,6 +62,8 @@ public interface BasePklSpec {
   ListProperty<String> getHttpNoProxy();
 
   MapProperty<URI, URI> getHttpRewrites();
+
+  MapProperty<String, Map<String, List<String>>> getHttpHeaders();
 
   NamedDomainObjectContainer<ExternalReaderSpec> getExternalModuleReaders();
 

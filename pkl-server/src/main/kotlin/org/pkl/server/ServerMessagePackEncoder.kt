@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -36,7 +36,7 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   private fun MessagePacker.packHttp(http: Http) {
-    packMapHeader(0, http.caCertificates, http.proxy, http.rewrites)
+    packMapHeader(0, http.caCertificates, http.proxy, http.rewrites, http.headers)
     http.caCertificates?.let { packKeyValue("caCertificates", it) }
     http.proxy?.let { proxy ->
       packString("proxy")
@@ -50,6 +50,21 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
       for ((key, value) in rewrites) {
         packString(key.toString())
         packString(value.toString())
+      }
+    }
+    http.headers?.let { headers ->
+      packString("headers")
+      packMapHeader(headers.size)
+      for ((pattern, headerMap) in headers) {
+        packString(pattern)
+        packMapHeader(headerMap.size)
+        for ((headerName, headerValue) in headerMap) {
+          packString(headerName)
+          packArrayHeader(headerValue.size)
+          for (elem in headerValue) {
+            packString(elem)
+          }
+        }
       }
     }
   }

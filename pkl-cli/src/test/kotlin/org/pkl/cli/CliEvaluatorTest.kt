@@ -1615,6 +1615,24 @@ result = someLib.x
   }
 
   @Test
+  fun `eval configured http headers`(wwRuntimeInfo: WireMockRuntimeInfo) {
+    stubFor(get(anyUrl()).willReturn(ok("result = 1")))
+    val file = URI("${wwRuntimeInfo.httpBaseUrl}/foo.pkl")
+    val output =
+      evalToConsole(
+        CliEvaluatorOptions(
+          CliBaseOptions(
+            sourceModules = listOf(file),
+            httpHeaders = mapOf("**" to mapOf("X-Foo" to listOf("Foo"))),
+            allowedModules =
+              listOf(Pattern.compile("http:"), Pattern.compile("file:"), Pattern.compile("pkl:")),
+          )
+        )
+      )
+    verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("X-Foo", equalTo("Foo")))
+  }
+
+  @Test
   fun `eval file with non-ASCII name`() {
     val tempDirUri = tempDir.toUri()
     val dir = tempDir.resolve("🤬").createDirectory()

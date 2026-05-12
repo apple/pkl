@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -60,6 +60,8 @@ data class Http(
   val proxy: Proxy?,
   /** HTTP rewrites */
   val rewrites: Map<URI, URI>?,
+  /** HTTP headers */
+  val headers: Map<String, Map<String, List<String>>>?,
 ) {
   override fun equals(other: Any?): Boolean {
     if (this === other) return true
@@ -69,13 +71,16 @@ data class Http(
       if (other.caCertificates == null) return false
       if (!caCertificates.contentEquals(other.caCertificates)) return false
     } else if (other.caCertificates != null) return false
-    return Objects.equals(rewrites, other.rewrites) && Objects.equals(proxy, other.proxy)
+    return Objects.equals(rewrites, other.rewrites) &&
+      Objects.equals(proxy, other.proxy) &&
+      Objects.equals(headers, other.headers)
   }
 
   override fun hashCode(): Int {
     var result = caCertificates?.contentHashCode() ?: 0
     result = 31 * result + (proxy?.hashCode() ?: 0)
     result = 31 * result + (rewrites?.hashCode() ?: 0)
+    result = 31 * result + (headers?.hashCode() ?: 0)
     return result
   }
 }

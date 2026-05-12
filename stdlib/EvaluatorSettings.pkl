@@ -128,9 +128,6 @@ local const hasNonEmptyHostname = (it: String) ->
 @Since { version = "0.29.0" }
 typealias HttpRewrite = String(startsWith(Regex("https?://")), endsWith("/"), hasNonEmptyHostname)
 
-@Since { version = "0.32.0" }
-typealias UrlPattern = String(endsWith(Regex("[/*]")))
-
 /// Settings that control how Pkl talks to HTTP(S) servers.
 class Http {
   /// Configuration of the HTTP proxy to use.
@@ -173,9 +170,45 @@ class Http {
   @Since { version = "0.29.0" }
   rewrites: Mapping<HttpRewrite, HttpRewrite>?
 
-  /// HTTP headers to add to outbound requests targeting specified URLs.
+  /// HTTP headers to add to outbound requests.
+  ///
+  /// Each key is a glob pattern, and each value is a mapping of header name to header value(s).
+  ///
+  /// Before an HTTP request is made, each key is matched against the request URL.
+  /// If any matches are found, each of their described headers are added to the request.
+  ///
+  /// To add headers to all HTTP requests, use `**` as the glob pattern.
+  ///
+  /// Example:
+  /// ```
+  /// headers {
+  ///   // Add this user agent to all out-bound requests.
+  ///   ["**"] {
+  ///     ["User-Agent"] = "MyApp-Pkl"
+  ///   }
+  ///
+  ///   // Add an authorization header to all requests made to the
+  ///   // `https://my.internal.service` host.
+  ///   ["https://my.internal.service/**"] {
+  ///     ["Authorization"] = "Bearer abc123"
+  ///   }
+  /// }
+  /// ```
+  ///
+  /// To repeat a header multiple times, set the value to a listing:
+  ///
+  /// ```
+  /// headers {
+  ///   // Adds:
+  ///   //   My-Custom-Header: foo
+  ///   //   My-Custom-Header: bar
+  ///   ["**"] {
+  ///     ["My-Custom-Header"] { "foo"; "bar" }
+  ///   }
+  /// }
+  /// ```
   @Since { version = "0.32.0" }
-  headers: Mapping<UrlPattern, Mapping<HttpHeaderName, *Listing<HttpHeaderValue> | HttpHeaderValue>>?
+  headers: Mapping<String(isGlobPattern), HttpHeaders>?
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.
@@ -243,50 +276,63 @@ class ExternalReader {
   arguments: Listing<String>?
 }
 
-@Since { version = "0.32.0" }
-typealias ReservedHttpHeaderName =
-  "accept-charset"
-    | "accept-encoding"
-    | "connection"
+local typealias ReservedHttpHeaderName =
+  "connection"
     | "content-length"
-    | "cookie"
-    | "date"
-    | "dnt"
     | "expect"
     | "host"
     | "keep-alive"
-    | "origin"
-    | "permissions-policy"
-    | "referer"
     | "te"
     | "trailer"
     | "transfer-encoding"
     | "upgrade"
-    | "via"
 
-local const ReservedHttpHeaderPrefix = new Listing {
-  "proxy-"
-  "sec-"
-  "access-control-"
-}
+local const reservedHttpHeaderPrefix =
+  Set(
+    "proxy-",
+    "sec-",
+  )
 
-local const hasReservedHttpHeaderPrefix = (header: String) ->
-  ReservedHttpHeaderPrefix.any((it) -> header.startsWith(it))
+local const isNotReservedHeaderName = (header: String) ->
+  !(header.toLowerCase() is ReservedHttpHeaderName)
 
-local const httpHeaderNameRegex = Regex("^[a-zA-Z0-9!#\\$%&'*+-.^_`|~]+$")
-local const hasValidHttpHeaderName = (header: String) ->
-  !httpHeaderNameRegex.findMatchesIn(header).isEmpty
+local const doesNotStartWithReservedPrefix = (header: String) ->
+  !reservedHttpHeaderPrefix.any((it) -> header.toLowerCase().startsWith(it))
 
+local const hasValidHeaderNameSyntax = (header: String) ->
+  header.matches(Regex(#"[a-zA-Z0-9!#$%&'*+-.^_`|~]+"#))
+
+/// A mapping of header names to header value(s).
+///
+/// The mapping must have distinct header keys (case insensitive).
+@Since { version = "0.32.0" }
+typealias HttpHeaders =
+  Mapping<HttpHeaderName, *Listing<HttpHeaderValue> | HttpHeaderValue>(
+    keys.toList().isDistinctBy((it) -> it.toLowerCase()),
+  )
+
+/// An HTTP header name.
+///
+/// It conforms to the following rules:
+///
+/// * It is not one of "connection", "keep-alive", "content-length", "expect", "host", "upgrade",
+///   "te", "transfer-encoding", "trailer" (case insensitive).
+/// * It does not start with "proxy-" nor "sec-".
+/// * It consists of a-z, A-Z, or a character in "!#$%&'*+-.^_`|~".
+/// * It is not a blank string.
 @Since { version = "0.32.0" }
 typealias HttpHeaderName =
   String(
-    this == toLowerCase(),
-    !(this is ReservedHttpHeaderName),
-    !hasReservedHttpHeaderPrefix.apply(this),
-    hasValidHttpHeaderName,
+    isNotReservedHeaderName,
+    doesNotStartWithReservedPrefix,
+    hasValidHeaderNameSyntax,
+    isNotBlank,
   )
 
-local const httpHeaderValueRegex = Regex("^[\\t\\u0020-\\u007E\\u0080-\\u00FF]*$")
-
+/// An HTTP header value.
+///
+/// It consists of ASCII characters between the range of 0x20 - 0x7E, and 0x80 - 0xFF (all visible
+/// ASCII characters), and also the tab character.
 @Since { version = "0.32.0" }
-typealias HttpHeaderValue = String(!httpHeaderValueRegex.findMatchesIn(this).isEmpty)
+typealias HttpHeaderValue =
+  String(matches(Regex(#"[\t\u0020-\u007E\u0080-\u00FF]*"#)), length < 4096)
