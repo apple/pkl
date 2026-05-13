@@ -54,7 +54,7 @@ import org.pkl.core.ast.builder.SymbolTable.AnnotationScope;
 import org.pkl.core.ast.builder.SymbolTable.ClassScope;
 import org.pkl.core.ast.builder.SymbolTable.ModuleScope;
 import org.pkl.core.ast.builder.SymbolTable.ObjectScope;
-import org.pkl.core.ast.builder.VariableResolution.ForGeneratorVariable;
+import org.pkl.core.ast.builder.VariableResolution.ForGeneratorOrLetVariable;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitThisProperty;
 import org.pkl.core.ast.builder.VariableResolution.LexicalProperty;
@@ -67,7 +67,7 @@ import org.pkl.core.ast.expression.binary.GreaterThanNodeGen;
 import org.pkl.core.ast.expression.binary.GreaterThanOrEqualNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanOrEqualNodeGen;
-import org.pkl.core.ast.expression.binary.LetExprNode;
+import org.pkl.core.ast.expression.binary.LetExprNodeGen;
 import org.pkl.core.ast.expression.binary.LogicalAndNodeGen;
 import org.pkl.core.ast.expression.binary.LogicalOrNodeGen;
 import org.pkl.core.ast.expression.binary.MultiplicationNodeGen;
@@ -121,7 +121,6 @@ import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNode;
-import org.pkl.core.ast.expression.primary.GetEnclosingOwnerNode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
@@ -683,10 +682,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           MemberLookupMode.IMPLICIT_LEXICAL,
           needsConst,
           p.levelsUp() == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(p.levelsUp()));
-    } else if (resolution instanceof ForGeneratorVariable p) {
+    } else if (resolution instanceof ForGeneratorOrLetVariable p) {
       // Parameters can possibly write to frame slots actually in a frame that is one level
-      // higher than what we can tell at parse time. However, for generator variables always
-      // write to frame slots in the same frame.
+      // higher than what we can tell at parse time. However, let exprs and for generator variables
+      // always write to frame slots in the same frame.
       //
       // function foo(bar) = new Mixin {
       //   [bar] = 1            <--- actually 1 level, not 0
@@ -897,23 +896,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         || parent instanceof TraceExpr
         || parent instanceof LetExpr letExpr && letExpr.getExpr() == child) {
 
-      if (parent instanceof LetExpr) {
-        assert scope != null;
-        scope = scope.getParent();
-        levelsUp += 1;
-      }
       child = parent;
       parent = parent.parent();
     }
 
-    assert scope != null;
-
     if (parent instanceof ClassProperty || parent instanceof ObjectProperty) {
       inferredParentNode =
           InferParentWithinPropertyNodeGen.create(
-              createSourceSection(expr.newSpan()),
-              scope.getName(),
-              levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp));
+              createSourceSection(expr.newSpan()), scope.getName(), new GetOwnerNode());
     } else if (parent instanceof ObjectElement
         || parent instanceof ObjectEntry objectEntry && objectEntry.getValue() == child) {
       inferredParentNode =
@@ -921,7 +911,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               ReadPropertyNodeGen.create(
                   createSourceSection(expr.newSpan()),
                   org.pkl.core.runtime.Identifier.DEFAULT,
-                  levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp)),
+                  new GetReceiverNode()),
               new GetMemberKeyNode());
     } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
       var isObjectMethod =
@@ -931,15 +921,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       inferredParentNode =
           isObjectMethod
               ? new InferParentWithinObjectMethodNode(
-                  createSourceSection(expr.newSpan()),
-                  language,
-                  scopeName,
-                  levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp))
+                  createSourceSection(expr.newSpan()), language, scopeName, new GetOwnerNode())
               : new InferParentWithinMethodNode(
-                  createSourceSection(expr.newSpan()),
-                  language,
-                  scopeName,
-                  levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp));
+                  createSourceSection(expr.newSpan()), language, scopeName, new GetOwnerNode());
     } else if (parent instanceof LetExpr letExpr && letExpr.getBindingExpr() == child) {
       // TODO (unclear how to infer type now that let-expression is implemented as lambda
       // invocation)
@@ -1113,38 +1097,28 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public ExpressionNode visitLetExpr(LetExpr letExpr) {
     var sourceSection = createSourceSection(letExpr);
     var parameter = letExpr.getParameter();
-    var frameBuilder = new FrameDescriptorBuilder();
-    UnresolvedTypeNode[] typeNodes;
-    var bindings = new ArrayList<String>();
+    UnresolvedTypeNode typeNode = null;
+    String binding = null;
+    var slot = -1;
+    var frameDescriptorBuilder = symbolTable.getCurrentScope().frameDescriptorBuilder;
     if (parameter instanceof TypedIdentifier par) {
-      typeNodes = new UnresolvedTypeNode[] {visitTypeAnnotation(par.getTypeAnnotation())};
-      frameBuilder.addSlot(
-          FrameSlotKind.Illegal, toIdentifier(par.getIdentifier().getValue()), null);
-      bindings.add(par.getIdentifier().getValue());
-    } else {
-      typeNodes = new UnresolvedTypeNode[0];
+      typeNode = visitTypeAnnotation(par.getTypeAnnotation());
+      slot =
+          frameDescriptorBuilder.addSlot(
+              FrameSlotKind.Illegal, toIdentifier(par.getIdentifier().getValue()), null);
+      binding = par.getIdentifier().getValue();
     }
-
-    var isCustomThisScope = symbolTable.getCurrentScope().isCustomThisScope();
-
-    UnresolvedFunctionNode functionNode =
-        symbolTable.enterLambda(
-            bindings,
-            frameBuilder,
-            scope -> {
-              var expr = visitExpr(letExpr.getExpr());
-              return new UnresolvedFunctionNode(
-                  language,
-                  scope.buildFrameDescriptor(),
-                  new Lambda(createSourceSection(letExpr.getExpr()), scope.getQualifiedName()),
-                  1,
-                  typeNodes,
-                  null,
-                  expr);
-            });
-
-    return new LetExprNode(
-        sourceSection, functionNode, visitExpr(letExpr.getBindingExpr()), isCustomThisScope);
+    var bindingExpr = visitExpr(letExpr.getBindingExpr());
+    var t = typeNode;
+    var s = slot;
+    return symbolTable.enterLetExpression(
+        binding,
+        slot,
+        scope -> {
+          var bodyExpr = visitExpr(letExpr.getExpr());
+          return LetExprNodeGen.create(
+              sourceSection, scope.getQualifiedName(), t, bodyExpr, s, bindingExpr);
+        });
   }
 
   @Override
@@ -2157,6 +2131,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   protected Object defaultValue() {
     throw PklBugException.unreachableCode();
+  }
+
+  public FrameDescriptor buildModuleFrameDescriptor() {
+    return symbolTable.getCurrentScope().buildFrameDescriptor();
   }
 
   private ResolveDeclaredTypeNode doVisitTypeName(QualifiedIdentifier ctx) {
