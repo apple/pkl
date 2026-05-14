@@ -22,7 +22,9 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.concurrent.Executor
+import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import kotlin.io.path.*
 import kotlinx.coroutines.*
 import org.pkl.commons.copyRecursively
@@ -107,30 +109,23 @@ class DocGenerator(
         .toList()
     }
 
-    /**
-     * The default executor when running the doc generator.
-     *
-     * Uses [Executors.newVirtualThreadPerTaskExecutor] if available (JDK 21). Otherwise, uses
-     * [Executors.newFixedThreadPool] with 64 threads, or the number of available processors
-     * available to the JVM (whichever is higher).
-     */
-    internal val executor: Executor
-      get() {
-        try {
-          val method = Executors::class.java.getMethod("newVirtualThreadPerTaskExecutor")
-          return method.invoke(null) as Executor
-        } catch (e: Throwable) {
-          when (e) {
-            is NoSuchMethodException,
-            is IllegalAccessException,
-            is InvocationTargetException ->
-              return Executors.newFixedThreadPool(
-                64.coerceAtLeast(Runtime.getRuntime().availableProcessors())
-              )
-            else -> throw e
-          }
+    internal fun createDefaultExecutor(): ExecutorService {
+      try {
+        val method = Executors::class.java.getMethod("newVirtualThreadPerTaskExecutor")
+        return method.invoke(null) as ExecutorService
+      } catch (e: Throwable) {
+        when (e) {
+          is NoSuchMethodException,
+          is IllegalAccessException,
+          is InvocationTargetException ->
+            return Executors.newFixedThreadPool(
+              64.coerceAtLeast(Runtime.getRuntime().availableProcessors())
+            )
+
+          else -> throw e
         }
       }
+    }
   }
 
   private val descendingVersionComparator: Comparator<String> = versionComparator.reversed()
@@ -163,8 +158,31 @@ class DocGenerator(
     siteSearchIndex.map { async { tryLoadPackageData(it) } }.awaitAll().filterNotNull()
   }
 
-  /** Runs this documentation generator. */
-  fun run() =
+  /**
+   * Runs this documentation generator with a default executor created and closed during the run.
+   *
+   * On JDK 21+, the default executor is [Executors.newVirtualThreadPerTaskExecutor]. On earlier JDK
+   * versions, it is [Executors.newFixedThreadPool] with either 64 threads or the number of
+   * processors available to the JVM, whichever is greater.
+   */
+  fun run() {
+    val executor = createDefaultExecutor()
+    try {
+      run(executor)
+    } finally {
+      // can't use close() because we compile with --release 17
+      executor.shutdown()
+      try {
+        executor.awaitTermination(Long.MAX_VALUE, TimeUnit.NANOSECONDS)
+      } catch (e: InterruptedException) {
+        executor.shutdownNow()
+        throw e
+      }
+    }
+  }
+
+  /** Runs this documentation generator with the given executor. */
+  fun run(executor: Executor) =
     runBlocking(executor.asCoroutineDispatcher()) {
       try {
         if (!docMigrator.isUpToDate) {
@@ -230,7 +248,7 @@ class DocGenerator(
     currentPackages: List<PackageData>,
     existingCurrentPackages: List<PackageData>,
   ) {
-    val packagesToCreate = currentPackages - existingCurrentPackages
+    val packagesToCreate = currentPackages - existingCurrentPackages.toSet()
     for (packageData in packagesToCreate) {
       val basePath = outputDir.resolve(packageData.ref.pkg.pathEncoded)
       val src = basePath.resolve(packageData.ref.version)
