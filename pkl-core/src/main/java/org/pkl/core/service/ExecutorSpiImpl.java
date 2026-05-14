@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -37,6 +37,7 @@ import org.pkl.executor.spi.v1.ExecutorSpiException;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
 
 public final class ExecutorSpiImpl implements ExecutorSpi {
   private static final int MAX_HTTP_CLIENTS = 3;
@@ -140,15 +141,17 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
   }
 
   private HttpClient getOrCreateHttpClient(ExecutorSpiOptions options) {
-    List<Path> certificateFiles;
-    List<byte[]> certificateBytes;
-    Map<URI, URI> rewrites;
-    int testPort;
+    List<Path> certificateFiles = List.of();
+    List<byte[]> certificateBytes = List.of();
+    Map<URI, URI> rewrites = Map.of();
+    Map<String, Map<String, List<String>>> headers = Map.of();
+    int testPort = -1;
     try {
+      if (options instanceof ExecutorSpiOptions4 options4) {
+        headers = options4.getHttpHeaders();
+      }
       if (options instanceof ExecutorSpiOptions3 options3) {
         rewrites = options3.getHttpRewrites();
-      } else {
-        rewrites = Map.of();
       }
       if (options instanceof ExecutorSpiOptions2 options2) {
         certificateFiles = options2.getCertificateFiles();
@@ -157,17 +160,13 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
       } else {
         certificateFiles = List.of();
         certificateBytes = List.of();
-        testPort = -1;
       }
-      // host pkl-executor does not have class ExecutorOptions2/ExecutorOptions3 defined.
+      // host pkl-executor does not have class ExecutorOptions2+ defined.
       // this will happen if the pkl-executor distribution is too old.
-    } catch (NoClassDefFoundError e) {
-      certificateFiles = List.of();
-      certificateBytes = List.of();
-      rewrites = Map.of();
-      testPort = -1;
+    } catch (NoClassDefFoundError ignored) {
     }
-    var clientKey = new HttpClientKey(certificateFiles, certificateBytes, testPort, rewrites);
+    var clientKey =
+        new HttpClientKey(certificateFiles, certificateBytes, testPort, rewrites, headers);
     return httpClients.computeIfAbsent(
         clientKey,
         (key) -> {
@@ -180,6 +179,7 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
           }
           builder.setRewrites(key.rewrites);
           builder.setTestPort(key.testPort);
+          builder.setHeaders(key.headers);
           // If the above didn't add any certificates,
           // builder will use the JVM's default SSL context.
           return builder.buildLazily();
@@ -190,5 +190,6 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
       List<Path> certificateFiles,
       List<byte[]> certificateBytes,
       int testPort,
-      Map<URI, URI> rewrites) {}
+      Map<URI, URI> rewrites,
+      Map<String, Map<String, List<String>>> headers) {}
 }

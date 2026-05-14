@@ -5059,8 +5059,6 @@ in the context of that module.
 [[glob-patterns]]
 === Glob Patterns
 
-Resources and modules may be imported at the same time by globbing with the <<globbed-imports>> and <<globbed-reads>> features.
-
 Pkl's glob patterns mostly follow the rules described by link:{uri-glob-7}[glob(7)], with the following differences:
 
 * `*` includes names that start with a dot (`.`).

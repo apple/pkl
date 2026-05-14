@@ -31,7 +31,6 @@ import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
-import org.pkl.core.Pair as PPair
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
@@ -95,6 +94,8 @@ class BaseOptions : OptionGroup() {
         Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
       }
     }
+
+    private val headerRegex = Regex("""^(.+?):[ \t]*(.*)$""")
   }
 
   private val defaults = CliBaseOptions()
@@ -287,34 +288,34 @@ class BaseOptions : OptionGroup() {
       .multiple()
       .toMap()
 
-  val httpHeaders: List<PPair<Pattern, List<PPair<String, String>>>> by
+  val httpHeaders: Map<String, Map<String, List<String>>> by
     option(
-        names = arrayOf("--http-headers"),
+        names = arrayOf("--http-header"),
         metavar = "<url-pattern>=<header name>:<header value>",
         help = "HTTP header to add to the request.",
       )
       .splitPair()
-      .transformAll { it ->
-        val headersMap = mutableMapOf<String, MutableList<PPair<String, String>>>()
-
-        try {
-          val headerRegex = Regex("""^(.+?):[ \t]*(.+)$""")
-          for ((stringPattern, header) in it) {
+      .transformAll { pairs ->
+        buildMap<String, MutableMap<String, MutableList<String>>> {
+          for ((pattern, headerNameAndValue) in pairs) {
+            try {
+              GlobResolver.toRegexPattern(pattern)
+            } catch (e: GlobResolver.InvalidGlobPatternException) {
+              fail(e.message!!)
+            }
             val (headerName, headerValue) =
-              headerRegex.find(header)?.destructured
-                ?: fail("Header '$header' is not in 'name:value' format.")
-            IoUtils.validateHeaderName(headerName)
-            IoUtils.validateHeaderValue(headerValue)
-            headersMap
-              .computeIfAbsent(stringPattern) { mutableListOf() }
-              .add(PPair(headerName, headerValue))
+              headerRegex.find(headerNameAndValue)?.destructured
+                ?: fail("Header '$headerNameAndValue' is not in 'name:value' format.")
+            try {
+              IoUtils.validateHeaderName(headerName)
+              IoUtils.validateHeaderValue(headerValue)
+            } catch (e: IllegalArgumentException) {
+              fail(e.message!!)
+            }
+            getOrPut(pattern) { mutableMapOf() }
+              .getOrPut(headerName) { mutableListOf() }
+              .add(headerValue)
           }
-
-          headersMap.entries.map { PPair(GlobResolver.toRegexPattern(it.key), it.value) }
-        } catch (e: IllegalArgumentException) {
-          fail(e.message!!)
-        } catch (e: GlobResolver.InvalidGlobPatternException) {
-          fail(e.message!!)
         }
       }
 

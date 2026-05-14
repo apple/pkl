@@ -25,6 +25,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
+import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
 
 /**
  * Options for {@link Executor#evaluatePath}.
@@ -57,6 +58,8 @@ public final class ExecutorOptions {
   private final List<byte[]> certificateBytes;
 
   private final Map<URI, URI> httpRewrites;
+
+  private final Map<String, Map<String, List<String>>> httpHeaders;
 
   private final int testPort; // -1 means disabled
 
@@ -92,6 +95,7 @@ public final class ExecutorOptions {
     private Map<URI, URI> httpRewrites = Map.of();
     private int testPort = -1; // -1 means disabled
     private int spiOptionsVersion = -1; // -1 means use latest
+    private Map<String, Map<String, List<String>>> httpHeaders = Map.of();
 
     private Builder() {}
 
@@ -215,6 +219,18 @@ public final class ExecutorOptions {
       return this;
     }
 
+    /**
+     * API equivalent of the {@code --http-header} CLI option.
+     *
+     * <p>This option is ignored on Pkl 0.32 and older.
+     *
+     * @since 0.32.0
+     */
+    public Builder httpHeaders(Map<String, Map<String, List<String>>> httpHeaders) {
+      this.httpHeaders = httpHeaders;
+      return this;
+    }
+
     /** Internal test option. -1 means disabled. */
     Builder testPort(int testPort) {
       this.testPort = testPort;
@@ -242,6 +258,7 @@ public final class ExecutorOptions {
           certificateFiles,
           certificateBytes,
           httpRewrites,
+          httpHeaders,
           testPort,
           spiOptionsVersion);
     }
@@ -291,6 +308,7 @@ public final class ExecutorOptions {
         List.of(),
         List.of(),
         Map.of(),
+        Map.of(),
         -1,
         -1);
   }
@@ -309,6 +327,7 @@ public final class ExecutorOptions {
       List<Path> certificateFiles,
       List<byte[]> certificateBytes,
       Map<URI, URI> httpRewrites,
+      Map<String, Map<String, List<String>>> httpHeaders,
       int testPort,
       int spiOptionsVersion) {
 
@@ -325,6 +344,7 @@ public final class ExecutorOptions {
     this.certificateFiles = List.copyOf(certificateFiles);
     this.certificateBytes = List.copyOf(certificateBytes);
     this.httpRewrites = Map.copyOf(httpRewrites);
+    this.httpHeaders = Map.copyOf(httpHeaders);
     this.testPort = testPort;
     this.spiOptionsVersion = spiOptionsVersion;
   }
@@ -425,6 +445,7 @@ public final class ExecutorOptions {
         && Objects.equals(certificateFiles, other.certificateFiles)
         && Objects.equals(certificateBytes, other.certificateBytes)
         && Objects.equals(httpRewrites, other.httpRewrites)
+        && Objects.equals(httpHeaders, other.httpHeaders)
         && testPort == other.testPort
         && spiOptionsVersion == other.spiOptionsVersion;
   }
@@ -445,6 +466,7 @@ public final class ExecutorOptions {
         certificateFiles,
         certificateBytes,
         httpRewrites,
+        httpHeaders,
         testPort,
         spiOptionsVersion);
   }
@@ -478,6 +500,8 @@ public final class ExecutorOptions {
         + certificateBytes
         + ", httpRewrites="
         + httpRewrites
+        + ", httpHeaders="
+        + httpHeaders
         + ", testPort="
         + testPort
         + ", spiOptionsVersion="
@@ -487,7 +511,24 @@ public final class ExecutorOptions {
 
   ExecutorSpiOptions toSpiOptions() {
     return switch (spiOptionsVersion) {
-      case -1, 3 ->
+      case -1, 4 ->
+          new ExecutorSpiOptions4(
+              allowedModules,
+              allowedResources,
+              environmentVariables,
+              externalProperties,
+              modulePath,
+              rootDir,
+              timeout,
+              outputFormat,
+              moduleCacheDir,
+              projectDir,
+              certificateFiles,
+              certificateBytes,
+              testPort,
+              httpRewrites,
+              httpHeaders);
+      case 3 ->
           new ExecutorSpiOptions3(
               allowedModules,
               allowedResources,

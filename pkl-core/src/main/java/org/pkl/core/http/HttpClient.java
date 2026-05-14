@@ -23,9 +23,7 @@ import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import javax.net.ssl.SSLContext;
-import org.pkl.core.Pair;
 import org.pkl.core.util.Nullable;
 
 /**
@@ -47,6 +45,8 @@ public interface HttpClient extends AutoCloseable {
      * Sets the {@code User-Agent} header.
      *
      * <p>Defaults to {@code "Pkl/$version ($os; $flavor)"}.
+     *
+     * <p>An existing "User-Agent" from {@link Builder#setHeaders} takes precedence over this field.
      */
     Builder setUserAgent(String userAgent);
 
@@ -157,8 +157,17 @@ public interface HttpClient extends AutoCloseable {
      *
      * <p>This method clears all existing headers and replaces them with the contents of the
      * provided map.
+     *
+     * @throws IllegalArgumentException if any of the patterns in {@code headerRules} is invalid.
      */
-    Builder setHeaders(List<Pair<Pattern, List<Pair<String, String>>>> headers);
+    Builder setHeaders(Map<String, Map<String, List<String>>> headerRules);
+
+    /**
+     * Adds a header rule.
+     *
+     * @throws IllegalArgumentException if {@code globPattern} is invalid.
+     */
+    Builder addHeader(String globPattern, Map<String, List<String>> headers);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

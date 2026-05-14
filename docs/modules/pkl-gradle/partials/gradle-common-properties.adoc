@@ -119,6 +119,19 @@ This option is commonly used to enable package mirroring.
 The above example will rewrite URL `\https://pkg.pkl-lang.org/pkl-k8s/k8s@1.0.0` to `\https://my.internal.mirror/pkl-k8s/k8s@1.0.0`.
 ====
 
+.httpHeaders: MapProperty<String, Map<String, List<String>>>
+[%collapsible]
+====
+Default: `null` +
+Example: `httpHeaders = ["**": ["User-Agent": ["My User Agent"]]]` +
+Additional headers to add to outbound HTTP requests.
+The key is a glob pattern that is used to match against the URLs of outbound HTTP calls, and the value is the header name and values to add.
+Each header value becomes its own HTTP header.
+
+To describe a prefix match, the `\\**` wildcard should be added to the pattern.
+For example, `https?://example.com/**` matches against every request to host `example.com`.
+====
+
 .powerAssertions: Property<Boolean>
 [%collapsible]
 ====
