@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -54,6 +54,16 @@ public final class ResourceManager {
             .addProperty("uri", resource -> resource.uri().toString())
             .addProperty("text", Resource::getText)
             .addProperty("bytes", resource -> new VmBytes(resource.bytes()));
+  }
+
+  private ResourceManager(ResourceManager other) {
+    securityManager = other.securityManager;
+    resourceReaders.putAll(other.resourceReaders);
+    resourceFactory = other.resourceFactory;
+  }
+
+  public ResourceManager withEmptyCache() {
+    return new ResourceManager(this);
   }
 
   @TruffleBoundary

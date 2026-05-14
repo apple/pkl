@@ -134,47 +134,58 @@ public final class EvaluatorImpl implements Evaluator {
 
   @Override
   public PModule evaluate(ModuleSource moduleSource) {
-    return doEvaluate(
-        moduleSource,
-        (module) -> {
-          module.force(false);
-          return (PModule) module.export();
-        });
+    return doEvaluate(moduleSource, this::exportModule);
+  }
+
+  @Override
+  public PModule evaluate(ModuleSource moduleSource, Map<String, String> externalProperties) {
+    return doEvaluate(moduleSource, externalProperties, this::exportModule);
+  }
+
+  private PModule exportModule(VmTyped module) {
+    module.force(false);
+    return (PModule) module.export();
   }
 
   @Override
   public String evaluateOutputText(ModuleSource moduleSource) {
-    return doEvaluate(
-        moduleSource,
-        (module) -> {
-          var output = VmUtils.readModuleOutput(module);
-          return VmUtils.readTextProperty(output);
-        });
+    return doEvaluate(moduleSource, this::readModuleOutputText);
+  }
+
+  private String readModuleOutputText(VmTyped module) {
+    var output = VmUtils.readModuleOutput(module);
+    return VmUtils.readTextProperty(output);
   }
 
   public byte[] evaluateOutputBytes(ModuleSource moduleSource) {
-    return doEvaluate(
-        moduleSource,
-        (module) -> {
-          var output = VmUtils.readModuleOutput(module);
-          var vmBytes = VmUtils.readBytesProperty(output);
-          return vmBytes.export();
-        });
+    return doEvaluate(moduleSource, this::readModuleOutputBytes);
+  }
+
+  private byte[] readModuleOutputBytes(VmTyped module) {
+    var output = VmUtils.readModuleOutput(module);
+    var vmBytes = VmUtils.readBytesProperty(output);
+    return vmBytes.export();
   }
 
   @Override
   public Object evaluateOutputValue(ModuleSource moduleSource) {
-    return doEvaluate(
-        moduleSource,
-        (module) -> {
-          var output = VmUtils.readModuleOutput(module);
-          var value = VmUtils.readMember(output, Identifier.VALUE);
-          if (value instanceof VmValue vmValue) {
-            vmValue.force(false);
-            return vmValue.export();
-          }
-          return value;
-        });
+    return doEvaluate(moduleSource, this::readModuleOutputValue);
+  }
+
+  @Override
+  public Object evaluateOutputValue(
+      ModuleSource moduleSource, Map<String, String> externalProperties) {
+    return doEvaluate(moduleSource, externalProperties, this::readModuleOutputValue);
+  }
+
+  private Object readModuleOutputValue(VmTyped module) {
+    var output = VmUtils.readModuleOutput(module);
+    var value = VmUtils.readMember(output, Identifier.VALUE);
+    if (value instanceof VmValue vmValue) {
+      vmValue.force(false);
+      return vmValue.export();
+    }
+    return value;
   }
 
   @Override
@@ -190,25 +201,42 @@ public final class EvaluatorImpl implements Evaluator {
 
   @Override
   public Object evaluateExpression(ModuleSource moduleSource, String expression) {
+    return doEvaluateExpression(moduleSource, expression, null);
+  }
+
+  @Override
+  public Object evaluateExpression(
+      ModuleSource moduleSource, String expression, Map<String, String> externalProperties) {
+    return doEvaluateExpression(moduleSource, expression, externalProperties);
+  }
+
+  private Object doEvaluateExpression(
+      ModuleSource moduleSource,
+      String expression,
+      @Nullable Map<String, String> externalProperties) {
     // optimization: if the expression is `output.text`, `output.value` or `output.bytes` (the
     // common cases), read members directly instead of creating new truffle nodes.
     return switch (expression) {
-      case "output.text" -> evaluateOutputText(moduleSource);
-      case "output.value" -> evaluateOutputValue(moduleSource);
-      case "output.bytes" -> evaluateOutputBytes(moduleSource);
+      case "output.text" ->
+          doEvaluate(moduleSource, externalProperties, this::readModuleOutputText);
+      case "output.value" ->
+          doEvaluate(moduleSource, externalProperties, this::readModuleOutputValue);
+      case "output.bytes" ->
+          doEvaluate(moduleSource, externalProperties, this::readModuleOutputBytes);
       default ->
           doEvaluate(
-              moduleSource,
-              (module) -> {
-                var expressionResult =
-                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
-                if (expressionResult instanceof VmValue value) {
-                  value.force(false);
-                  return value.export();
-                }
-                return expressionResult;
-              });
+              moduleSource, externalProperties, (module) -> evaluateExpression(module, expression));
     };
+  }
+
+  private Object evaluateExpression(VmTyped module, String expression) {
+    var expressionResult =
+        VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
+    if (expressionResult instanceof VmValue value) {
+      value.force(false);
+      return value.export();
+    }
+    return expressionResult;
   }
 
   private MessageBufferPacker getMessagePacker() {
@@ -355,6 +383,10 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   private <T> T doEvaluate(Supplier<T> supplier) {
+    return doEvaluate(null, supplier);
+  }
+
+  private <T> T doEvaluate(@Nullable Map<String, String> externalProperties, Supplier<T> supplier) {
     @Nullable TimeoutTask timeoutTask = null;
     logger.clear();
     if (timeout != null) {
@@ -364,6 +396,7 @@ public final class EvaluatorImpl implements Evaluator {
     }
 
     polyglotContext.enter();
+    VmContext.@Nullable EvaluationScope evaluationScope = null;
     T evalResult;
     // There is a chance that a timeout is triggered just when evaluation completes on its own.
     // In this case, if evaluation completed normally or with an expected exception (VmException),
@@ -374,6 +407,9 @@ public final class EvaluatorImpl implements Evaluator {
     // error,
     // report that instead of the timeout so as not to swallow a fundamental problem.
     try {
+      if (externalProperties != null) {
+        evaluationScope = VmContext.get(null).enterExternalPropertiesScope(externalProperties);
+      }
       evalResult = supplier.get();
     } catch (VmStackOverflowException e) {
       if (VmUtils.isPklBug(e)) {
@@ -413,6 +449,9 @@ public final class EvaluatorImpl implements Evaluator {
         throw e;
       }
     } finally {
+      if (evaluationScope != null) {
+        evaluationScope.close();
+      }
       try {
         polyglotContext.leave();
       } catch (IllegalStateException ignored) {
@@ -425,7 +464,15 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   private <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
+    return doEvaluate(moduleSource, null, doEvaluate);
+  }
+
+  private <T> T doEvaluate(
+      ModuleSource moduleSource,
+      @Nullable Map<String, String> externalProperties,
+      Function<VmTyped, T> doEvaluate) {
     return doEvaluate(
+        externalProperties,
         () -> {
           var moduleKey = moduleResolver.resolve(moduleSource);
           var module = VmLanguage.get(null).loadModule(moduleKey);
