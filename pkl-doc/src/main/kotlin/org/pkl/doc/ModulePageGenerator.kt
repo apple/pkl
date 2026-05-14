@@ -24,6 +24,7 @@ internal class ModulePageGenerator(
   docModule: DocModule,
   pageScope: ModuleScope,
   isTestMode: Boolean,
+  isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
 ) :
   ModuleOrClassPageGenerator<ModuleScope>(
@@ -31,6 +32,7 @@ internal class ModulePageGenerator(
     docModule.schema.moduleClass,
     pageScope,
     isTestMode,
+    isSinglePackageSite,
     consoleOut,
   ) {
   private val module = docModule.schema

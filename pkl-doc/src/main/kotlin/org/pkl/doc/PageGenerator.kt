@@ -32,6 +32,7 @@ import org.pkl.core.util.IoUtils
 internal abstract class PageGenerator<out S>(
   protected val docsiteInfo: DocsiteInfo,
   protected val pageScope: S,
+  private val isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
 ) : AbstractGenerator(consoleOut) where S : PageScope {
   companion object {
@@ -203,13 +204,6 @@ internal abstract class PageGenerator<out S>(
   }
 
   protected fun HtmlBlockTag.renderParentLinks() {
-    a {
-      classes = setOf("declaration-parent-link")
-      href = pageScope.relativeSiteUrl.toString()
-
-      +(docsiteInfo.title ?: "Pkldoc")
-    }
-
     val packageScope =
       when (pageScope) {
         is ClassScope -> pageScope.parent!!.parent
@@ -217,32 +211,32 @@ internal abstract class PageGenerator<out S>(
         else -> null
       }
 
-    if (packageScope != null) {
-      +" > "
-
-      a {
-        classes = setOf("declaration-parent-link")
-        href = packageScope.urlRelativeTo(pageScope).toString()
-
-        +packageScope.name
-      }
-    }
-
     val moduleScope =
       when (pageScope) {
         is ClassScope -> pageScope.parent
         else -> null
       }
 
-    if (moduleScope != null) {
-      +" > "
+    var isFirst = true
 
+    fun renderLink(text: String, url: String) {
+      if (isFirst) isFirst = false else +" > "
       a {
         classes = setOf("declaration-parent-link")
-        href = moduleScope.urlRelativeTo(pageScope).toString()
+        href = url
 
-        +moduleScope.name
+        +text
       }
+    }
+
+    if (!isSinglePackageSite) {
+      renderLink(docsiteInfo.title ?: "Pkldoc", pageScope.relativeSiteUrl.toString())
+    }
+    if (packageScope != null) {
+      renderLink(packageScope.name, packageScope.urlRelativeTo(pageScope).toString())
+    }
+    if (moduleScope != null) {
+      renderLink(moduleScope.name, moduleScope.urlRelativeTo(pageScope).toString())
     }
   }
 

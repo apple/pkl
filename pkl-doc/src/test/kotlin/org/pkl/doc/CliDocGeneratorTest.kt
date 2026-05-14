@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -75,6 +75,8 @@ class CliDocGeneratorTest {
 
     // Run the doc generator three times; second time adds new versions for the `birds` package
     @JvmStatic private fun generateDocs(): List<String> = helper.generateDocs()
+
+    @JvmStatic private fun generateSpDocs(): List<String> = helper.generateSpDocs()
   }
 
   @Test
@@ -155,6 +157,16 @@ class CliDocGeneratorTest {
     DocTestUtils.testExpectedFile(
       helper.expectedOutputDir,
       helper.baseActualOutputDir,
+      relativeFilePath,
+    )
+  }
+
+  @ParameterizedTest
+  @MethodSource("generateSpDocs")
+  fun testSp(relativeFilePath: String) {
+    DocTestUtils.testExpectedFile(
+      helper.spExpectedOutputDir,
+      helper.spBaseActualOutputDir,
       relativeFilePath,
     )
   }
