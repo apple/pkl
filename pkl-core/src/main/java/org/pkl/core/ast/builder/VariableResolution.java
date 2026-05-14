@@ -25,6 +25,10 @@ public sealed interface VariableResolution {
     public boolean isLocal() {
       return VmModifier.isLocal(modifiers);
     }
+
+    public boolean isAmbiguousLocality() {
+      return VmModifier.isAmbiguousLocality(modifiers);
+    }
   }
 
   // let, lambda, object body param

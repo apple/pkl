@@ -143,6 +143,10 @@ public final class VmUtils {
     return (VmObjectLike) getReceiver(frame);
   }
 
+  public static VmObjectLike getObjectReceiver(VirtualFrame frame, int levelsUp) {
+    return (VmObjectLike) getReceiver(frame, levelsUp);
+  }
+
   public static VmTyped getTypedObjectReceiver(Frame frame) {
     return (VmTyped) getReceiver(frame);
   }
@@ -169,8 +173,9 @@ public final class VmUtils {
 
   @ExplodeLoop
   public static VirtualFrame getFrame(VirtualFrame frame, int levelsUp) {
+    frame = skipInvisibleScopes(frame);
     if (levelsUp == 0) {
-      return skipInvisibleScopes(frame);
+      return frame;
     }
     var owner = getOwner(frame);
     for (var i = 0; i < levelsUp; i++) {
@@ -408,6 +413,7 @@ public final class VmUtils {
       int numberOfLocalsToCopy) {
     var sourceDescriptor = sourceFrame.getFrameDescriptor();
     var targetDescriptor = targetFrame.getFrameDescriptor();
+    assert(sourceDescriptor.getNumberOfSlots() <= targetDescriptor.getNumberOfSlots());
     // Alternatively, locals could be copied with `numberOfLocalsToCopy`
     // `ReadFrameSlotNode/WriteFrameSlotNode`'s.
     for (int i = 0; i < numberOfLocalsToCopy; i++) {

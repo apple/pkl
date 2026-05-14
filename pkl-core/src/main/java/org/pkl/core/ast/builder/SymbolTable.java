@@ -377,7 +377,23 @@ public final class SymbolTable {
     }
 
     public void addProperty(Identifier name, int modifiers) {
-      this.properties.put(name.toString(), new Member(name, modifiers));
+      var prevProperty = this.properties.put(name.toString(), new Member(name, modifiers));
+      if (prevProperty != null
+          && !VmModifier.hasSameModifier(prevProperty.modifiers, modifiers, VmModifier.LOCAL)) {
+        // this can happen in when generators:
+        //
+        // ```
+        // when (cond) {
+        //   local prop = 1
+        // } else {
+        //   prop = 2
+        // }
+        // ```
+        //
+        // this can't happen with methods; object methods can only be `local`.
+        this.properties.put(
+            name.toString(), new Member(name, modifiers | VmModifier.AMBIGUOUS_LOCALITY));
+      }
     }
 
     public void addMethod(Identifier name, int modifiers) {

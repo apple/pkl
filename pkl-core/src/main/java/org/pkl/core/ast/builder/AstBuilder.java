@@ -51,6 +51,7 @@ import org.pkl.core.ast.builder.MethodResolution.LexicalMethod;
 import org.pkl.core.ast.builder.SymbolTable.AnnotationScope;
 import org.pkl.core.ast.builder.SymbolTable.ClassScope;
 import org.pkl.core.ast.builder.SymbolTable.ModuleScope;
+import org.pkl.core.ast.builder.SymbolTable.ObjectScope;
 import org.pkl.core.ast.builder.VariableResolution.ForGeneratorVariable;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitThisProperty;
@@ -113,6 +114,7 @@ import org.pkl.core.ast.expression.member.InvokeMethodDirectNode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.ast.expression.member.InvokeObjectMethodNode;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
+import org.pkl.core.ast.expression.member.ReadAmbiguousLocalityPropertyNode;
 import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
@@ -663,6 +665,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             case MODULE -> p.isModuleScope();
             case ALL -> p.levelsUp() > constDepth;
           };
+      if (p.isAmbiguousLocality()) {
+        return new ReadAmbiguousLocalityPropertyNode(
+            sourceSection, org.pkl.core.runtime.Identifier.get(name), p.levelsUp(), needsConst);
+      }
       if (p.isLocal()) {
         return new ReadLocalPropertyNode(
             sourceSection,
@@ -2202,23 +2208,33 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return parentNode;
   }
 
+  private void addObjectNamesToScope(ObjectScope scope, ObjectBody body) {
+    for (var member : body.getMembers()) {
+      if (member instanceof ObjectProperty prop) {
+        var local = hasLocalModifier(prop.getModifiers());
+        scope.addProperty(
+            org.pkl.core.runtime.Identifier.property(prop.getIdentifier().getValue(), local),
+            local ? VmModifier.LOCAL : VmModifier.NONE);
+      } else if (member instanceof ObjectMethod method) {
+        var local = hasLocalModifier(method.getModifiers());
+        scope.addMethod(
+            org.pkl.core.runtime.Identifier.method(method.getIdentifier().getValue(), local),
+            local ? VmModifier.LOCAL : VmModifier.NONE);
+      } else if (member instanceof WhenGenerator whenGenerator) {
+        addObjectNamesToScope(scope, whenGenerator.getThenClause());
+        var elseClause = whenGenerator.getElseClause();
+        if (elseClause != null) {
+          addObjectNamesToScope(scope, elseClause);
+        }
+      }
+    }
+  }
+
   private ExpressionNode doVisitObjectBody(ObjectBody body, ExpressionNode parentNode) {
     return symbolTable.enterObjectScope(
         body,
         (scope) -> {
-          for (var member : body.getMembers()) {
-            if (member instanceof ObjectProperty prop) {
-              var local = hasLocalModifier(prop.getModifiers());
-              scope.addProperty(
-                  org.pkl.core.runtime.Identifier.property(prop.getIdentifier().getValue(), local),
-                  local ? VmModifier.LOCAL : VmModifier.NONE);
-            } else if (member instanceof ObjectMethod method) {
-              var local = hasLocalModifier(method.getModifiers());
-              scope.addMethod(
-                  org.pkl.core.runtime.Identifier.method(method.getIdentifier().getValue(), local),
-                  local ? VmModifier.LOCAL : VmModifier.NONE);
-            }
-          }
+          addObjectNamesToScope(scope, body);
           var objectMembers = body.getMembers();
           if (objectMembers.isEmpty()) {
             return EmptyObjectLiteralNodeGen.create(
