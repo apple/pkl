@@ -6,3 +6,8 @@ if [[ $files =~ .github/* ]]; then
   pkl eval --project-dir .github/ -m .github .github/index.pkl
   git add .github/workflows/
 fi
+
+if [[ $files =~ \.github/ISSUE_TEMPLATE/.*\.pkl ]]; then
+  pkl eval -m .github/ISSUE_TEMPLATE{,/*.pkl}
+  git add .github/ISSUE_TEMPLATE/*.yml
+fi
