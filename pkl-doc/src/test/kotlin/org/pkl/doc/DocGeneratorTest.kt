@@ -17,22 +17,15 @@ package org.pkl.doc
 
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.condition.EnabledIf
+import org.junit.jupiter.api.condition.EnabledForJreRange
+import org.junit.jupiter.api.condition.JRE
 
 class DocGeneratorTest {
-  companion object {
-    @JvmStatic
-    fun isJdk21OrLater(): Boolean {
-      return Runtime.version().feature() >= 21
-    }
-  }
-
   @Test
-  @EnabledIf("isJdk21OrLater")
-  fun `uses virtual thread executor on JDK 21`() {
+  @EnabledForJreRange(min = JRE.JAVA_21)
+  fun `uses virtual thread executor on JDK 21+`() {
     // On older JDKs, we get a ThreadPoolExecutor.
-    // not sure if there's a better assertion to make here.
-    assertThat(DocGenerator.executor.javaClass.canonicalName)
+    assertThat(DocGenerator.createDefaultExecutor().javaClass.canonicalName)
       .isEqualTo("java.util.concurrent.ThreadPerTaskExecutor")
   }
 }
