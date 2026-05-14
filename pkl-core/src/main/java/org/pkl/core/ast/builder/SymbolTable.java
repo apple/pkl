@@ -645,8 +645,14 @@ public final class SymbolTable {
 
   // A generator scope that is resolved eagerly and one level above
   public static final class EagerGeneratorScope extends Scope {
-    private EagerGeneratorScope(@Nullable Scope parent, String qualifiedName) {
-      super(parent, null, qualifiedName, ConstLevel.NONE, new FrameDescriptorBuilder());
+    private static FrameDescriptorBuilder getFrameDescriptorBuilder(Scope parent) {
+      var grandParent = parent.parent;
+      assert grandParent != null;
+      return grandParent.frameDescriptorBuilder;
+    }
+
+    private EagerGeneratorScope(Scope parent, String qualifiedName) {
+      super(parent, null, qualifiedName, ConstLevel.NONE, getFrameDescriptorBuilder(parent));
     }
   }
 

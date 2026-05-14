@@ -413,7 +413,7 @@ public final class VmUtils {
       int numberOfLocalsToCopy) {
     var sourceDescriptor = sourceFrame.getFrameDescriptor();
     var targetDescriptor = targetFrame.getFrameDescriptor();
-    assert(sourceDescriptor.getNumberOfSlots() <= targetDescriptor.getNumberOfSlots());
+    assert sourceDescriptor.getNumberOfSlots() <= targetDescriptor.getNumberOfSlots();
     // Alternatively, locals could be copied with `numberOfLocalsToCopy`
     // `ReadFrameSlotNode/WriteFrameSlotNode`'s.
     for (int i = 0; i < numberOfLocalsToCopy; i++) {
