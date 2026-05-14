@@ -63,13 +63,59 @@ sourceSets {
   }
 }
 
+// Support for testing with a real external reader in tests - this builds an additional source set
+// into a jar with a main class which provides a simple external reader implementation.
+// Then the path to the jar file and the toolchain's `java` binary
+// are injected into tests as properties.
+
+val externalReader by sourceSets.creating {}
+
+dependencies { "externalReaderImplementation"(libs.msgpack) }
+
+val externalReaderJar by
+  tasks.registering(Jar::class) {
+    description = "Builds an external reader executable jar file"
+    archiveBaseName = "external-reader"
+    archiveVersion = ""
+
+    // Package all dependencies into the jar (shadow plugin lite).
+    from(
+      externalReader.runtimeClasspath.elements.map { locations ->
+        locations.mapNotNull { location ->
+          val f = location.asFile
+          when {
+            f.isDirectory -> f
+            f.isFile -> zipTree(f)
+            else -> null
+          }
+        }
+      }
+    )
+
+    manifest { attributes("Main-Class" to "org.pkl.gradle.test.extreader.Main") }
+  }
+
+tasks.test {
+  dependsOn(externalReaderJar)
+  // Currently the only way to inject system properties from lazy values in Gradle
+  // is via `jvmArgumentProviders`.
+  jvmArgumentProviders += CommandLineArgumentProvider {
+    listOf(
+      "-DpklGradle.externalReaderJar=" +
+        externalReaderJar.get().archiveFile.get().asFile.absolutePath,
+      "-DpklGradle.javaExecutable=" +
+        javaToolchains.launcherFor(java.toolchain).get().executablePath.asFile.absolutePath,
+    )
+  }
+}
+
 publishing {
   publications {
     withType<MavenPublication>().configureEach {
       pom {
-        name.set("pkl-gradle plugin")
-        url.set("https://github.com/apple/pkl/tree/main/pkl-gradle")
-        description.set("Gradle plugin for the Pkl configuration language.")
+        name = "pkl-gradle plugin"
+        url = "https://github.com/apple/pkl/tree/main/pkl-gradle"
+        description = "Gradle plugin for the Pkl configuration language."
       }
     }
   }

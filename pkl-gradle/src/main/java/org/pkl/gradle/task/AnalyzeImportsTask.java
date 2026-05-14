@@ -15,6 +15,8 @@
  */
 package org.pkl.gradle.task;
 
+import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+
 import java.io.File;
 import org.gradle.api.file.RegularFileProperty;
 import org.gradle.api.provider.Property;

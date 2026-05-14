@@ -15,13 +15,15 @@
  */
 package org.pkl.gradle.task;
 
+import static org.pkl.gradle.spec.ExternalReaderSpec.toExternalReaderMap;
+import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+
 import java.io.File;
 import java.net.URI;
 import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Map;
 import java.util.stream.Collectors;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.DirectoryProperty;
@@ -165,8 +167,8 @@ public abstract class ModulesTask extends BasePklTask {
         List.of(),
         getHttpRewrites().getOrNull(),
         getHttpHeaders().getOrNull(),
-        Map.of(),
-        Map.of(),
+        toExternalReaderMap(getExternalModuleReaders().get().values()),
+        toExternalReaderMap(getExternalResourceReaders().get().values()),
         null,
         getPowerAssertions().getOrElse(false));
   }
