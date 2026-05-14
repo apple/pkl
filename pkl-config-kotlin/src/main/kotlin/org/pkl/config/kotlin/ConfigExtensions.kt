@@ -40,14 +40,15 @@ import org.pkl.config.kotlin.mapper.KotlinConverterFactories
  *   `as(JavaType.listOf(String::class.java))`
  */
 inline fun <reified T> Config.to(): T {
-  val result = `as`<T>(typeOf<T>().javaType)
-  if (result == null && null !is T) {
-    throw ConversionException(
+  if (null is T) {
+    return asNullable(typeOf<T>().javaType)
+  }
+
+  return `as`(typeOf<T>().javaType)
+    ?: throw ConversionException(
       "Expected a non-null value but got `null`. " +
         "To allow null values, convert to a nullable Kotlin type, for example `String?`."
     )
-  }
-  return result
 }
 
 /**
