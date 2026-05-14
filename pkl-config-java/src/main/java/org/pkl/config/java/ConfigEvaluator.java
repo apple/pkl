@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.config.java;
 
+import java.util.Map;
 import org.pkl.config.java.mapper.ValueMapper;
 import org.pkl.core.ModuleSource;
 
@@ -41,11 +42,51 @@ public interface ConfigEvaluator extends AutoCloseable {
   /** Evaluates the given module source into a {@link Config} tree. */
   Config evaluate(ModuleSource moduleSource);
 
+  /**
+   * Evaluates the given module source into a {@link Config} tree with the given external properties
+   * overlaid onto the evaluator's configured external properties for this evaluation only.
+   *
+   * <p>To avoid stale {@code read("prop:...")} values, this evaluation does not reuse the
+   * evaluator's module and resource evaluation caches.
+   */
+  default Config evaluate(ModuleSource moduleSource, Map<String, String> externalProperties) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation external properties are not supported by this evaluator.");
+  }
+
   /** Evaluates the given module's {@code output.value} property into a {@link Config} tree. */
   Config evaluateOutputValue(ModuleSource moduleSource);
 
+  /**
+   * Evaluates the given module's {@code output.value} property into a {@link Config} tree with the
+   * given external properties overlaid onto the evaluator's configured external properties for this
+   * evaluation only.
+   *
+   * <p>To avoid stale {@code read("prop:...")} values, this evaluation does not reuse the
+   * evaluator's module and resource evaluation caches.
+   */
+  default Config evaluateOutputValue(
+      ModuleSource moduleSource, Map<String, String> externalProperties) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation external properties are not supported by this evaluator.");
+  }
+
   /** Evaluates the Pkl expression represented as {@code expression} into a {@link Config} tree. */
   Config evaluateExpression(ModuleSource moduleSource, String expression);
+
+  /**
+   * Evaluates the Pkl expression represented as {@code expression} into a {@link Config} tree with
+   * the given external properties overlaid onto the evaluator's configured external properties for
+   * this evaluation only.
+   *
+   * <p>To avoid stale {@code read("prop:...")} values, this evaluation does not reuse the
+   * evaluator's module and resource evaluation caches.
+   */
+  default Config evaluateExpression(
+      ModuleSource moduleSource, String expression, Map<String, String> externalProperties) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation external properties are not supported by this evaluator.");
+  }
 
   /**
    * Releases all resources held by this evaluator. If an {@code evaluate} method is currently

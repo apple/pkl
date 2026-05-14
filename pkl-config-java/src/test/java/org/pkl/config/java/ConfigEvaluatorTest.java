@@ -18,6 +18,8 @@ package org.pkl.config.java;
 import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Type;
+import java.net.URI;
+import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
@@ -78,5 +80,44 @@ public final class ConfigEvaluatorTest extends AbstractConfigTest {
     @Nullable String strValue = mod.get("strValue").asNullable(JavaType.of(String.class));
     assertThat(nullValue).isNull();
     assertThat(strValue).isNotNull();
+  }
+
+  @Test
+  public void evaluateWithPerEvaluationExternalProperties() {
+    var source =
+        ModuleSource.create(
+            URI.create("file:///config-evaluator-external-properties.pkl"),
+            """
+            configured = read("prop:configured")
+            request = read("prop:request")
+            output {
+              value {
+                configured = read("prop:configured")
+                request = read("prop:request")
+              }
+            }
+            """);
+
+    try (var evaluator =
+        ConfigEvaluatorBuilder.preconfigured()
+            .addExternalProperty("configured", "configured")
+            .addExternalProperty("request", "default")
+            .build()) {
+      var first = evaluator.evaluate(source, Map.of("request", "one"));
+      assertThat(first.get("configured").as(String.class)).isEqualTo("configured");
+      assertThat(first.get("request").as(String.class)).isEqualTo("one");
+
+      var second = evaluator.evaluate(source, Map.of("request", "two"));
+      assertThat(second.get("request").as(String.class)).isEqualTo("two");
+
+      var unscoped = evaluator.evaluate(source);
+      assertThat(unscoped.get("request").as(String.class)).isEqualTo("default");
+
+      var outputValue = evaluator.evaluateOutputValue(source, Map.of("request", "three"));
+      assertThat(outputValue.get("request").as(String.class)).isEqualTo("three");
+
+      var expression = evaluator.evaluateExpression(source, "request", Map.of("request", "four"));
+      assertThat(expression.as(String.class)).isEqualTo("four");
+    }
   }
 }

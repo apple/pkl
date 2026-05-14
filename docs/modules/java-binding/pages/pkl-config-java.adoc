@@ -141,6 +141,11 @@ Similar methods exist for sets, maps, and other generic types.
 
 A `ConfigEvaluator` caches module sources and evaluation results.
 To clear the cache, for example to evaluate the same module again, close the evaluator and create a new one.
+When only external properties need to vary per call, use the `evaluate`, `evaluateOutputValue`, or
+`evaluateExpression` overloads that accept a `Map<String, String>` of external properties.
+Those properties override the evaluator's configured external properties for that evaluation only,
+and the call does not reuse cached module or resource evaluation results that could contain stale
+`read("prop:...")` values.
 
 For a ready-to-go example with full source code,
 see link:{uri-config-java-example}[config-java] in the _pkl-jvm-examples_ repository.

@@ -48,6 +48,21 @@ public interface Evaluator extends AutoCloseable {
   PModule evaluate(ModuleSource moduleSource);
 
   /**
+   * Evaluates the module with the given external properties overlaid onto the evaluator's
+   * configured external properties for this evaluation only.
+   *
+   * <p>To avoid stale {@code read("prop:...")} values, this evaluation does not reuse the
+   * evaluator's module and resource evaluation caches.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  default PModule evaluate(ModuleSource moduleSource, Map<String, String> externalProperties) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation external properties are not supported by this evaluator.");
+  }
+
+  /**
    * Evaluates a module's {@code output.text} property.
    *
    * @throws PklException if an error occurs during evaluation
@@ -71,6 +86,22 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   Object evaluateOutputValue(ModuleSource moduleSource);
+
+  /**
+   * Evaluates a module's {@code output.value} property with the given external properties overlaid
+   * onto the evaluator's configured external properties for this evaluation only.
+   *
+   * <p>To avoid stale {@code read("prop:...")} values, this evaluation does not reuse the
+   * evaluator's module and resource evaluation caches.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  default Object evaluateOutputValue(
+      ModuleSource moduleSource, Map<String, String> externalProperties) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation external properties are not supported by this evaluator.");
+  }
 
   /**
    * Evaluates a module's {@code output.files} property.
@@ -173,6 +204,23 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   Object evaluateExpression(ModuleSource moduleSource, String expression);
+
+  /**
+   * Evaluates the Pkl expression represented as {@code expression} with the given external
+   * properties overlaid onto the evaluator's configured external properties for this evaluation
+   * only.
+   *
+   * <p>To avoid stale {@code read("prop:...")} values, this evaluation does not reuse the
+   * evaluator's module and resource evaluation caches.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   */
+  default Object evaluateExpression(
+      ModuleSource moduleSource, String expression, Map<String, String> externalProperties) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation external properties are not supported by this evaluator.");
+  }
 
   /**
    * Evaluates the Pkl expression represented as {@code expression}, returning a byte array of the
