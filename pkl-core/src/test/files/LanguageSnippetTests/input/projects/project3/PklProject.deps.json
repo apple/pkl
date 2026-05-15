@@ -20,9 +20,9 @@
       "uri": "projectpackage://localhost:0/project2@1.0.0",
       "path": "../project2/"
     },
-    "package://localhost:12110/project6@1": {
+    "package://localhost:0/project6@1": {
       "type": "local",
-      "uri": "projectpackage://localhost:12110/project6@1.0.0",
+      "uri": "projectpackage://localhost:0/project6@1.0.0",
       "path": "../project6/"
     },
     "package://localhost:0/badImportsWithinPackage@1": {
