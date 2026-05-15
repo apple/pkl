@@ -113,14 +113,13 @@ public final class ProjectDependenciesManager {
   private void checkProjectDependencyOutOfDate(
       URI projectFileUri, PackageUri declaredPackage, Dependency resolvedDependency) {
     // local dependencies must match up exactly (they are expected to always stay in sync).
-    if (resolvedDependency instanceof LocalDependency localDependency) {
-      if (!declaredPackage.getVersion().equals(localDependency.getVersion())) {
-        throw new PackageLoadError(
-            "projectDependenciesLocalDependencyOutOfSync",
-            projectFileUri,
-            declaredPackage.getDisplayName(),
-            resolvedDependency.getPackageUri().getDisplayName());
-      }
+    if (resolvedDependency instanceof LocalDependency localDependency
+        && !declaredPackage.getVersion().equals(localDependency.getVersion())) {
+      throw new PackageLoadError(
+          "projectDependenciesLocalDependencyOutOfSync",
+          projectFileUri,
+          declaredPackage.getDisplayName(),
+          resolvedDependency.getPackageUri().getDisplayName());
     }
     if (resolvedDependency.getVersion().compareTo(declaredPackage.getVersion()) < 0) {
       throw new PackageLoadError(
