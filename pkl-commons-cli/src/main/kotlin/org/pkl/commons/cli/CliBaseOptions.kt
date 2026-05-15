@@ -190,7 +190,7 @@ data class CliBaseOptions(
     sourceModules
       .map { uri ->
         if (uri.isAbsolute) uri
-        else if (uri.path.startsWith("@") && !noProject && normalizedProjectFile != null) uri
+        else if (uri.path.startsWith("@")) uri
         else IoUtils.resolve(normalizedWorkingDir.toUri(), uri)
       }
       // sort modules to make cli output independent of source module order

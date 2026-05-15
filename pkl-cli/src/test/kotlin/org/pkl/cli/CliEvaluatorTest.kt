@@ -1754,6 +1754,32 @@ result = someLib.x
     )
   }
 
+  @Test
+  fun `eval dependency notation source`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
+    val projectPath =
+      FileTestUtils.rootProjectDir.resolve(
+        "pkl-commons-cli/src/main/resources/org/pkl/commons/cli/project1/"
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("@fruit/catalog/apple.pkl")),
+          projectDir = projectPath,
+          moduleCacheDir = tempDir,
+        )
+      )
+    val output = evalToConsole(options)
+    assertThat(output)
+      .isEqualTo(
+        """
+        name = "Apple 🍎"
+
+        """
+          .trimIndent()
+      )
+  }
+
   private fun evalModuleThatImportsPackage(certsFile: Path?, testPort: Int = -1) {
     val moduleUri =
       writePklFile(
