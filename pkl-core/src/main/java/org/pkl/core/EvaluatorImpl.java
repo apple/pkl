@@ -16,6 +16,8 @@
 package org.pkl.core;
 
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.Collection;
@@ -33,9 +35,11 @@ import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.evaluatorSettings.TraceMode;
+import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ProjectDependenciesManager;
+import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.project.DeclaredDependencies;
 import org.pkl.core.resource.ResourceReader;
@@ -56,6 +60,7 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
 import org.pkl.core.runtime.VmValueRenderer;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Nullable;
 
 public final class EvaluatorImpl implements Evaluator {
@@ -69,6 +74,7 @@ public final class EvaluatorImpl implements Evaluator {
   private final BufferedLogger logger;
   private final PackageResolver packageResolver;
   private final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(1000);
+  private final @Nullable URI projectFileUri;
   private @Nullable MessageBufferPacker messagePacker;
 
   public EvaluatorImpl(
@@ -94,6 +100,11 @@ public final class EvaluatorImpl implements Evaluator {
     moduleResolver = new ModuleResolver(factories);
     this.logger = new BufferedLogger(logger);
     packageResolver = PackageResolver.getInstance(securityManager, httpClient, moduleCacheDir);
+    if (projectDependencies != null) {
+      this.projectFileUri = projectDependencies.projectFileUri();
+    } else {
+      this.projectFileUri = null;
+    }
     polyglotContext =
         VmUtils.createContext(
             () -> {
@@ -424,10 +435,37 @@ public final class EvaluatorImpl implements Evaluator {
     return evalResult;
   }
 
+  /** Resolve dependency notation URIs (e.g. `@foo/bar.pkl`) to its resolved absolute URI. */
+  private ModuleSource normalizeModuleSource(ModuleSource moduleSource) {
+    if (moduleSource.getContents() == null
+        && !moduleSource.getUri().isAbsolute()
+        && moduleSource.getUri().getPath().startsWith("@")) {
+      try {
+        if (projectFileUri != null) {
+          var moduleKey = moduleResolver.resolve(projectFileUri);
+          var uri = IoUtils.resolve(securityManager, moduleKey, moduleSource.getUri());
+          return ModuleSource.uri(uri);
+        } else {
+          throw new PackageLoadError("cannotResolveDependencyNoProject");
+        }
+      } catch (URISyntaxException e) {
+        // impossible condition
+        throw PklBugException.unreachableCode();
+      } catch (IOException e) {
+        throw new VmExceptionBuilder()
+            .evalError("ioErrorLoadingModule", moduleSource.getUri())
+            .build();
+      } catch (ExternalReaderProcessException | SecurityManagerException | PackageLoadError e) {
+        throw new VmExceptionBuilder().withCause(e).build();
+      }
+    }
+    return moduleSource;
+  }
+
   private <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
     return doEvaluate(
         () -> {
-          var moduleKey = moduleResolver.resolve(moduleSource);
+          var moduleKey = moduleResolver.resolve(normalizeModuleSource(moduleSource));
           var module = VmLanguage.get(null).loadModule(moduleKey);
           return doEvaluate.apply(module);
         });

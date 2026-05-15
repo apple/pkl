@@ -67,7 +67,7 @@ constructor(
     val evaluator = builder.build()
     evaluator.use {
       evaluator.evaluateCommand(
-        uri(resolvedSourceModules.first()),
+        uri(options.normalizedSourceModules.first()),
         reservedFlagNames,
         reservedFlagShortNames,
       ) { spec ->

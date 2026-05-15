@@ -507,7 +507,7 @@ class EvaluatorTest {
     val evaluator = evaluatorBuilder.setProjectDependencies(project.dependencies).build()
     assertThatCode { evaluator.use { it.evaluateOutputText(uri("foobar:baz")) } }
       .hasMessageContaining(
-        "Cannot import dependency because project URI `foobar:foo/PklProject` does not have a hierarchical path."
+        "Cannot resolve dependency because project URI `foobar:foo/PklProject` does not have a hierarchical path."
       )
   }
 
@@ -720,6 +720,34 @@ class EvaluatorTest {
         false,
       )
     }
+  }
+
+  @Test
+  fun `eval dependency notation as a module source`(@TempDir tempDir: Path) {
+    PackageServer.populateCacheDir(tempDir)
+    val project = Project.load(modulePath("org/pkl/core/project/project5/PklProject"))
+    val evaluator =
+      with(EvaluatorBuilder.preconfigured()) {
+        moduleCacheDir = tempDir
+        applyFromProject(project)
+        build()
+      }
+    val outputText = evaluator.evaluateOutputText(uri("@fruit/catalog/apple.pkl"))
+    assertThat(outputText)
+      .isEqualTo(
+        """
+        name = "Apple"
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `eval dependency notation -- no project configured`() {
+    val evaluator = Evaluator.preconfigured()
+    assertThatCode { evaluator.evaluateOutputText(uri("@fruit/catalog/apple.pkl")) }
+      .hasMessageContaining("Cannot resolve dependency because there is no project found.")
   }
 
   private fun checkModule(module: PModule) {

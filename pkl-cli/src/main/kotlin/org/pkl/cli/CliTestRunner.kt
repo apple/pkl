@@ -47,7 +47,7 @@ constructor(
 
   private fun evalTest(builder: EvaluatorBuilder) {
     val sources =
-      resolvedSourceModules.ifEmpty { project?.tests?.map { it.toUri() } }
+      options.normalizedSourceModules.ifEmpty { project?.tests?.map { it.toUri() } }
         ?:
         // keep in sync with error message thrown by clikt
         throw CliException(

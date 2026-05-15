@@ -115,7 +115,7 @@ constructor(
     // used just to resolve the `%{moduleName}` placeholder
     val moduleResolver = ModuleResolver(moduleKeyFactories(ModulePathResolver.empty()))
 
-    return resolvedSourceModules.associateWith { uri ->
+    return options.base.normalizedSourceModules.associateWith { uri ->
       val moduleDir: String? =
         IoUtils.toPath(uri)?.let {
           IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
@@ -191,7 +191,7 @@ constructor(
         }
       } else {
         var outputWritten = false
-        for (moduleUri in resolvedSourceModules) {
+        for (moduleUri in options.base.normalizedSourceModules) {
           val moduleSource = toModuleSource(moduleUri, inputStream)
           if (options.expression != null) {
             val output = evaluator.evaluateExpressionString(moduleSource, options.expression)
