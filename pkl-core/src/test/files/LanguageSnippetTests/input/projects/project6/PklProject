@@ -2,7 +2,7 @@ amends "pkl:Project"
 
 package {
   name = "project6"
-  baseUri = "package://localhost:12110/project6"
+  baseUri = "package://localhost:0/project6"
   version = "1.0.0"
-  packageZipUrl = "https://localhost:12110/project6/project6-\(version).zip"
+  packageZipUrl = "https://localhost:0/project6/project6-\(version).zip"
 }

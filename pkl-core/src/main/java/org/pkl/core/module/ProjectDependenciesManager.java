@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,6 +26,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.packages.Dependency;
+import org.pkl.core.packages.Dependency.LocalDependency;
 import org.pkl.core.packages.DependencyMetadata;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.packages.PackageUri;
@@ -111,6 +112,16 @@ public final class ProjectDependenciesManager {
 
   private void checkProjectDependencyOutOfDate(
       URI projectFileUri, PackageUri declaredPackage, Dependency resolvedDependency) {
+    // local dependencies must match up exactly (they are expected to always stay in sync).
+    if (resolvedDependency instanceof LocalDependency localDependency) {
+      if (!declaredPackage.getVersion().equals(localDependency.getVersion())) {
+        throw new PackageLoadError(
+            "projectDependenciesLocalDependencyOutOfSync",
+            projectFileUri,
+            declaredPackage.getDisplayName(),
+            resolvedDependency.getPackageUri().getDisplayName());
+      }
+    }
     if (resolvedDependency.getVersion().compareTo(declaredPackage.getVersion()) < 0) {
       throw new PackageLoadError(
           "projectDependenciesOutOfDateInProject",
