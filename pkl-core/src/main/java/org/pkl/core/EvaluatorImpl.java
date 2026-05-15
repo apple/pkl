@@ -437,29 +437,29 @@ public final class EvaluatorImpl implements Evaluator {
 
   /** Resolve dependency notation URIs (e.g. `@foo/bar.pkl`) to its resolved absolute URI. */
   private ModuleSource normalizeModuleSource(ModuleSource moduleSource) {
-    if (moduleSource.getContents() == null
-        && !moduleSource.getUri().isAbsolute()
-        && moduleSource.getUri().getPath().startsWith("@")) {
-      try {
-        if (projectFileUri != null) {
-          var moduleKey = moduleResolver.resolve(projectFileUri);
-          var uri = IoUtils.resolve(securityManager, moduleKey, moduleSource.getUri());
-          return ModuleSource.uri(uri);
-        } else {
-          throw new PackageLoadError("cannotResolveDependencyNoProject");
-        }
-      } catch (URISyntaxException e) {
-        // impossible condition
-        throw PklBugException.unreachableCode();
-      } catch (IOException e) {
-        throw new VmExceptionBuilder()
-            .evalError("ioErrorLoadingModule", moduleSource.getUri())
-            .build();
-      } catch (ExternalReaderProcessException | SecurityManagerException | PackageLoadError e) {
-        throw new VmExceptionBuilder().withCause(e).build();
-      }
+    if (moduleSource.getContents() != null
+        || moduleSource.getUri().isAbsolute()
+        || !moduleSource.getUri().getPath().startsWith("@")) {
+      return moduleSource;
     }
-    return moduleSource;
+    try {
+      if (projectFileUri != null) {
+        var moduleKey = moduleResolver.resolve(projectFileUri);
+        var uri = IoUtils.resolve(securityManager, moduleKey, moduleSource.getUri());
+        return ModuleSource.uri(uri);
+      } else {
+        throw new PackageLoadError("cannotResolveDependencyNoProject");
+      }
+    } catch (URISyntaxException e) {
+      // impossible condition
+      throw PklBugException.unreachableCode();
+    } catch (IOException e) {
+      throw new VmExceptionBuilder()
+          .evalError("ioErrorLoadingModule", moduleSource.getUri())
+          .build();
+    } catch (ExternalReaderProcessException | SecurityManagerException | PackageLoadError e) {
+      throw new VmExceptionBuilder().withCause(e).build();
+    }
   }
 
   private <T> T doEvaluate(ModuleSource moduleSource, Function<VmTyped, T> doEvaluate) {
