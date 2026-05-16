@@ -22,8 +22,15 @@ internal class PackagePageGenerator(
   docsiteInfo: DocsiteInfo,
   private val docPackage: DocPackage,
   pageScope: PackageScope,
+  isSinglePackageSite: Boolean,
   consoleOut: OutputStream,
-) : MainOrPackagePageGenerator<PackageScope>(docsiteInfo, pageScope, consoleOut) {
+) :
+  MainOrPackagePageGenerator<PackageScope>(
+    docsiteInfo,
+    pageScope,
+    isSinglePackageSite,
+    consoleOut,
+  ) {
   override val html: HTML.() -> Unit = {
     renderHtmlHead()
 

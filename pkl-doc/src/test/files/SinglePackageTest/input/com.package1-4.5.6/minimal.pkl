@@ -1,0 +1,11 @@
+/// Additional version module fixture.
+module com.package1.minimal
+
+/// Additional version class fixture.
+class Person {
+  /// The person's name.
+  name: String
+}
+
+/// A module-level property.
+greeting: String

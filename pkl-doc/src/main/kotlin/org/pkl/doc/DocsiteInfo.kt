@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,10 @@ data class DocsiteInfo(
    *
    * Uses the same Markdown format as Pkldoc comments. Unless expanded, only the first paragraph is
    * shown.
+   *
+   * If [overview] is `null` and the generated site has only one distinct package name, the main
+   * page redirects to that package page and generated breadcrumbs omit the site title segment. The
+   * structure of the generated site is unchanged.
    */
   val overview: String?,
 

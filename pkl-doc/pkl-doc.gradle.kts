@@ -69,6 +69,15 @@ publishing {
   }
 }
 
+tasks.test {
+  inputs.dir("src/test/files/DocGeneratorTest/input")
+  inputs.dir("src/test/files/DocGeneratorTest/output")
+  inputs.dir("src/test/files/DocMigratorTest/input")
+  inputs.dir("src/test/files/DocMigratorTest/output")
+  inputs.dir("src/test/files/SinglePackageTest/input")
+  inputs.dir("src/test/files/SinglePackageTest/output")
+}
+
 val testNativeExecutable by
   tasks.registering(Test::class) {
     dependsOn(tasks.assembleNative)
@@ -76,7 +85,7 @@ val testNativeExecutable by
     classpath = sourceSets.test.get().runtimeClasspath
 
     inputs.dir("src/test/files/DocGeneratorTest/input")
-    outputs.dir("src/test/files/DocGeneratorTest/output")
+    inputs.dir("src/test/files/DocGeneratorTest/output")
     systemProperty("org.pkl.doc.NativeExecutableTest", "true")
 
     filter { includeTestsMatching("org.pkl.doc.NativeExecutableTest") }
@@ -89,7 +98,7 @@ val testJavaExecutable by
 
     dependsOn(tasks.javaExecutable)
     inputs.dir("src/test/files/DocGeneratorTest/input")
-    outputs.dir("src/test/files/DocGeneratorTest/output")
+    inputs.dir("src/test/files/DocGeneratorTest/output")
     systemProperty("org.pkl.doc.JavaExecutableTest", "true")
 
     filter { includeTestsMatching("org.pkl.doc.JavaExecutableTest") }
@@ -105,4 +114,6 @@ tasks.jar { manifest { attributes += mapOf("Main-Class" to "org.pkl.doc.Main") }
 
 htmlValidator { sources = files("src/test/files/DocGeneratorTest/output") }
 
-tasks.validateHtml { mustRunAfter(testJavaExecutable) }
+// Tests usually read expected output files, but may write missing ones before failing.
+// If that happens, delay validation until after any test tasks in the graph.
+tasks.validateHtml { mustRunAfter(tasks.test, testJavaExecutable, testNativeExecutable) }

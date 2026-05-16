@@ -24,8 +24,13 @@ class DocGeneratorTest {
   @Test
   @EnabledForJreRange(min = JRE.JAVA_21)
   fun `uses virtual thread executor on JDK 21+`() {
-    // On older JDKs, we get a ThreadPoolExecutor.
-    assertThat(DocGenerator.createDefaultExecutor().javaClass.canonicalName)
-      .isEqualTo("java.util.concurrent.ThreadPerTaskExecutor")
+    val executor = DocGenerator.createDefaultExecutor()
+    try {
+      // On older JDKs, we get a ThreadPoolExecutor.
+      assertThat(executor.javaClass.canonicalName)
+        .isEqualTo("java.util.concurrent.ThreadPerTaskExecutor")
+    } finally {
+      executor.shutdown()
+    }
   }
 }

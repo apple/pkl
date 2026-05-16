@@ -190,27 +190,10 @@ class DocGenerator(
             "Docsite is not up to date. Expected: ${DocMigrator.CURRENT_VERSION}. Found: ${docMigrator.docsiteVersion}. Use DocMigrator to migrate the site."
           )
         }
-        val htmlGenerator =
-          HtmlGenerator(docsiteInfo, docPackages, importResolver, outputDir, isTestMode, consoleOut)
         val searchIndexGenerator = SearchIndexGenerator(outputDir, consoleOut)
         val packageDataGenerator = PackageDataGenerator(outputDir, consoleOut)
         val runtimeDataGenerator =
           RuntimeDataGenerator(descendingVersionComparator, outputDir, consoleOut)
-
-        coroutineScope {
-          for (docPackage in docPackages) {
-            launch {
-              docPackage.deletePackageDir()
-              coroutineScope {
-                launch { htmlGenerator.generate(docPackage) }
-                launch { searchIndexGenerator.generate(docPackage) }
-                launch { packageDataGenerator.generate(docPackage) }
-              }
-            }
-          }
-        }
-
-        writeOutputLine("Generated HTML for packages")
 
         val newlyGeneratedPackages = docPackages.map(::PackageData).sortedBy { it.ref.pkg }
         val currentSearchIndex = searchIndexGenerator.getCurrentSearchIndex()
@@ -226,6 +209,32 @@ class DocGenerator(
             newlyGeneratedPackages + existingCurrentPackages,
             descendingVersionComparator,
           )
+        val isSinglePackageSite = docsiteInfo.overview == null && currentPackages.size == 1
+        val htmlGenerator =
+          HtmlGenerator(
+            docsiteInfo,
+            docPackages,
+            importResolver,
+            outputDir,
+            isTestMode,
+            isSinglePackageSite,
+            consoleOut,
+          )
+
+        coroutineScope {
+          for (docPackage in docPackages) {
+            launch {
+              docPackage.deletePackageDir()
+              coroutineScope {
+                launch { htmlGenerator.generate(docPackage) }
+                launch { searchIndexGenerator.generate(docPackage) }
+                launch { packageDataGenerator.generate(docPackage) }
+              }
+            }
+          }
+        }
+
+        writeOutputLine("Generated HTML for packages")
 
         createCurrentDirectories(currentPackages, existingCurrentPackages)
         searchIndexGenerator.generateSiteIndex(currentPackages)
