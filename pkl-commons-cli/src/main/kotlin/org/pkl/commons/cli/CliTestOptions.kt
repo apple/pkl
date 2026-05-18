@@ -22,5 +22,5 @@ class CliTestOptions(
   val overwrite: Boolean = false,
   val junitAggregateReports: Boolean = false,
   val junitAggregateSuiteName: String = "pkl-tests",
-  val reporter: TestReporter = TestReporter.SIMPLE,
+  val reporter: TestReporters = TestReporters.SPEC,
 )

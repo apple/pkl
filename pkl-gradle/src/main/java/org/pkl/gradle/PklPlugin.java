@@ -100,7 +100,7 @@ public class PklPlugin implements Plugin<Project> {
           spec.getOutputPath()
               .convention(project.getLayout().getBuildDirectory().dir("generated/pkl/packages"));
           spec.getOverwrite().convention(false);
-          spec.getReporter().convention("simple");
+          spec.getReporter().convention("spec");
           var packageTask = createTask(project, ProjectPackageTask.class, spec);
           packageTask.configure(
               task -> {
@@ -280,7 +280,7 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(project, spec);
 
           spec.getOverwrite().convention(false);
-          spec.getReporter().convention("simple");
+          spec.getReporter().convention("spec");
 
           var testTask = createModulesTask(project, TestTask.class, spec);
           testTask.configure(

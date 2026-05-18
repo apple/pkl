@@ -16,13 +16,12 @@
 package org.pkl.core.stdlib
 
 import java.io.StringWriter
-import java.util.*
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.core.TestResults
 import org.pkl.core.TestResults.TestResult
 import org.pkl.core.TestResults.TestSectionResults
-import org.pkl.core.stdlib.test.report.SimpleReport
+import org.pkl.core.stdlib.test.report.SimpleReporter
 
 class SimpleReportTest {
 
@@ -60,7 +59,7 @@ class SimpleReportTest {
     val testResults = listOf(resultsBuilder.build())
 
     val writer = StringWriter()
-    val simpleReport = SimpleReport(false)
+    val simpleReport = SimpleReporter(false)
     simpleReport.summarize(testResults, writer)
 
     val expectedOutput =

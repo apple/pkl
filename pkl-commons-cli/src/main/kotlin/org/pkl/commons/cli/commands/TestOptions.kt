@@ -23,7 +23,7 @@ import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.commons.cli.CliTestOptions
-import org.pkl.commons.cli.TestReporter
+import org.pkl.commons.cli.TestReporters
 
 class TestOptions : OptionGroup() {
   private val junitReportDir: Path? by
@@ -53,11 +53,11 @@ class TestOptions : OptionGroup() {
   private val overwrite: Boolean by
     option(names = arrayOf("--overwrite"), help = "Force generation of expected examples.").flag()
 
-  private val reporter: TestReporter by
-    option(names = arrayOf("--reporter"), help = "Which test reporter to use for CLI output.")
-      .enum<TestReporter> { it.name.lowercase() }
+  private val reporter: TestReporters by
+    option(names = arrayOf("--test-reporter"), help = "Which test reporter to use for CLI output.")
+      .enum<TestReporters> { it.name.lowercase() }
       .single()
-      .default(TestReporter.SIMPLE)
+      .default(TestReporters.SPEC)
 
   val cliTestOptions: CliTestOptions by lazy {
     CliTestOptions(

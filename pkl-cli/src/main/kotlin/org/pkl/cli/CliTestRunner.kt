@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import java.io.StringWriter
 import java.io.Writer
 import org.pkl.commons.cli.*
 import org.pkl.core.Closeables
@@ -22,9 +23,9 @@ import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
 import org.pkl.core.PklException
 import org.pkl.core.TestResults
-import org.pkl.core.stdlib.test.report.JUnitReport
-import org.pkl.core.stdlib.test.report.MinimalReport
-import org.pkl.core.stdlib.test.report.SimpleReport
+import org.pkl.core.stdlib.test.report.JUnitReporter
+import org.pkl.core.stdlib.test.report.MinimalReporter
+import org.pkl.core.stdlib.test.report.SimpleReporter
 import org.pkl.core.util.ErrorMessages
 
 class CliTestRunner
@@ -67,8 +68,8 @@ constructor(
       val moduleNames = mutableSetOf<String>()
       val reporter =
         when (testOptions.reporter) {
-          TestReporter.SIMPLE -> SimpleReport(useColor)
-          TestReporter.MINIMAL -> MinimalReport(useColor)
+          TestReporters.SPEC -> SimpleReporter(useColor)
+          TestReporters.MINIMAL -> MinimalReporter(useColor)
         }
       val allTestResults = mutableListOf<TestResults>()
 
@@ -83,8 +84,11 @@ constructor(
             failed = results.failed()
             isExampleWrittenFailure = results.isExampleWrittenFailure.and(isExampleWrittenFailure)
           }
-          reporter.report(results, consoleWriter)
-          if (sources.size > 1 && idx != sources.size - 1) {
+          val tmpWriter = StringWriter()
+          reporter.report(results, tmpWriter)
+          val report = tmpWriter.toString()
+          consoleWriter.write(report)
+          if (report.isNotEmpty() && sources.size > 1 && idx != sources.size - 1) {
             consoleWriter.append('\n')
           }
           consoleWriter.flush()
@@ -104,7 +108,7 @@ constructor(
             moduleNames += moduleName
 
             if (!testOptions.junitAggregateReports) {
-              JUnitReport().reportToPath(results, junitDir.resolve(moduleName))
+              JUnitReporter().reportToPath(results, junitDir.resolve(moduleName))
             }
           }
         } catch (ex: Exception) {
@@ -122,7 +126,7 @@ constructor(
       }
       if (testOptions.junitAggregateReports && junitDir != null) {
         val fileName = "${testOptions.junitAggregateSuiteName}.xml"
-        JUnitReport(testOptions.junitAggregateSuiteName)
+        JUnitReporter(testOptions.junitAggregateSuiteName)
           .summarizeToPath(allTestResults, junitDir.resolve(fileName))
       }
       consoleWriter.append('\n')

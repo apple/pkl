@@ -24,47 +24,19 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.TestResult;
-import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
-/** Minimal reporter. Only reports failures and errors. */
-public final class MinimalReport implements TestReport {
+public abstract class BaseReporter implements TestReporter {
+  protected static final String passingMark = "✔ ";
+  protected static final String failingMark = "✘ ";
 
-  private static final String passingMark = "✔ ";
-  private static final String failingMark = "✘ ";
+  protected final boolean useColor;
 
-  private final boolean useColor;
-
-  public MinimalReport(boolean useColor) {
+  public BaseReporter(boolean useColor) {
     this.useColor = useColor;
-  }
-
-  @Override
-  public void report(TestResults results, Writer writer) throws IOException {
-    var builder = new AnsiStringBuilder(useColor);
-
-    if (results.error() != null) {
-      builder.append("module ").append(results.moduleName()).append('\n');
-
-      var rendered = results.error().exception().getMessage();
-      appendPadded(builder, rendered, "  ");
-      builder.append('\n');
-    } else {
-      var factFailures = results.facts().results().stream().filter(TestResult::isFailure).toList();
-      var exampleFailures =
-          results.examples().results().stream().filter(TestResult::isFailure).toList();
-      if (!factFailures.isEmpty() || !exampleFailures.isEmpty()) {
-        builder.append("module ").append(results.moduleName()).append('\n');
-
-        reportResults(results.facts(), factFailures, builder);
-        reportResults(results.examples(), exampleFailures, builder);
-      }
-    }
-
-    writer.append(builder.toString());
   }
 
   @Override
@@ -99,16 +71,7 @@ public final class MinimalReport implements TestReport {
     writer.append(builder.toString());
   }
 
-  private void reportResults(
-      TestSectionResults section, List<TestResults.TestResult> results, AnsiStringBuilder builder) {
-    if (!results.isEmpty()) {
-      builder.append("  ").append(section.name()).append('\n');
-      StringUtils.joinToStringBuilder(builder, results, "\n", res -> reportResult(res, builder));
-      builder.append('\n');
-    }
-  }
-
-  private void reportResult(TestResult result, AnsiStringBuilder builder) {
+  protected void reportResult(TestResult result, AnsiStringBuilder builder) {
     builder.append("    ");
 
     if (result.isExampleWritten()) {
@@ -137,7 +100,7 @@ public final class MinimalReport implements TestReport {
     }
   }
 
-  private static void appendPadded(AnsiStringBuilder builder, String lines, String padding) {
+  protected static void appendPadded(AnsiStringBuilder builder, String lines, String padding) {
     StringUtils.joinToStringBuilder(
         builder,
         lines.lines().collect(Collectors.toList()),

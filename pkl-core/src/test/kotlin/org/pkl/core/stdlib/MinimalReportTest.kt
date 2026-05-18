@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import org.pkl.core.TestResults
 import org.pkl.core.TestResults.TestResult
 import org.pkl.core.TestResults.TestSectionResults
-import org.pkl.core.stdlib.test.report.MinimalReport
+import org.pkl.core.stdlib.test.report.MinimalReporter
 
 class MinimalReportTest {
 
@@ -43,7 +43,7 @@ class MinimalReportTest {
     val testResults = resultsBuilder.build()
 
     val writer = StringWriter()
-    val minimalReport = MinimalReport(false)
+    val minimalReport = MinimalReporter(false)
     minimalReport.report(testResults, writer)
 
     assertThat(writer.toString()).isEmpty()
@@ -76,7 +76,7 @@ class MinimalReportTest {
     val testResults = resultsBuilder.build()
 
     val writer = StringWriter()
-    val minimalReport = MinimalReport(false)
+    val minimalReport = MinimalReporter(false)
     minimalReport.report(testResults, writer)
 
     val output = writer.toString()
@@ -102,7 +102,7 @@ class MinimalReportTest {
     val testResults = listOf(resultsBuilder.build())
 
     val writer = StringWriter()
-    val minimalReport = MinimalReport(false)
+    val minimalReport = MinimalReporter(false)
     minimalReport.summarize(testResults, writer)
 
     val output = writer.toString()
@@ -144,7 +144,7 @@ class MinimalReportTest {
     val testResults = listOf(resultsBuilder.build())
 
     val writer = StringWriter()
-    val minimalReport = MinimalReport(false)
+    val minimalReport = MinimalReporter(false)
     minimalReport.summarize(testResults, writer)
 
     val expectedOutput =

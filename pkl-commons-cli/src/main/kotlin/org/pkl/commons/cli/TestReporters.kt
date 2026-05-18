@@ -15,7 +15,7 @@
  */
 package org.pkl.commons.cli
 
-enum class TestReporter {
-  SIMPLE,
+enum class TestReporters {
+  SPEC,
   MINIMAL,
 }
