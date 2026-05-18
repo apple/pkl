@@ -60,6 +60,7 @@ public final class VmExceptionRenderer {
     // if a cause exists, it's more useful to report just that
     var exceptionToReport = exception.getCause() != null ? exception.getCause() : exception;
     var exceptionUrl = URLEncoder.encode(exceptionToReport.toString(), StandardCharsets.UTF_8);
+    System.out.println(exception.getCause().toString());
 
     out.append("An unexpected error has occurred. Would you mind filing a bug report?")
         .append('\n')

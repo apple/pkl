@@ -30,8 +30,8 @@ public class ReadAmbiguousLocalityPropertyNode extends ExpressionNode {
   private final Identifier name;
   private final int levelsUp;
   private final boolean needsConst;
-  private @Child ReadLocalPropertyNode readLocalPropertyNode;
-  private @Child ReadPropertyNode readPropertyNode;
+  private @Child ExpressionNode readLocalPropertyNode;
+  private @Child ExpressionNode readPropertyNode;
 
   public ReadAmbiguousLocalityPropertyNode(
       SourceSection sourceSection, Identifier name, int levelsUp, boolean needsConst) {
@@ -42,7 +42,7 @@ public class ReadAmbiguousLocalityPropertyNode extends ExpressionNode {
     this.needsConst = needsConst;
   }
 
-  private ReadLocalPropertyNode getReadLocalPropertyNode() {
+  private ExpressionNode getReadLocalPropertyNode() {
     if (readLocalPropertyNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       readLocalPropertyNode =
@@ -53,7 +53,7 @@ public class ReadAmbiguousLocalityPropertyNode extends ExpressionNode {
     return readLocalPropertyNode;
   }
 
-  private ReadPropertyNode getReadPropertyNode() {
+  private ExpressionNode getReadPropertyNode() {
     if (readPropertyNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       readPropertyNode =
