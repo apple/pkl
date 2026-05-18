@@ -46,7 +46,8 @@ public interface HttpClient extends AutoCloseable {
      *
      * <p>Defaults to {@code "Pkl/$version ($os; $flavor)"}.
      *
-     * <p>An existing "User-Agent" from {@link Builder#setHeaders} takes precedence over this field.
+     * <p>An existing "User-Agent" from {@link Builder#setHeaders} and {@link Builder#addHeaders}
+     * takes precedence over this field.
      */
     Builder setUserAgent(String userAgent);
 
@@ -146,7 +147,6 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Adds a rewrite rule.
      *
-     * @see Builder#setRewrites(Map)
      * @throws IllegalArgumentException if {@code sourcePrefix} or {@code targetPrefix} is invalid.
      * @since 0.29.0
      */
@@ -158,16 +158,20 @@ public interface HttpClient extends AutoCloseable {
      * <p>This method clears all existing headers and replaces them with the contents of the
      * provided map.
      *
-     * @throws IllegalArgumentException if any of the patterns in {@code headerRules} is invalid.
+     * @throws IllegalArgumentException if any of the keys are invalid glob patterns, or if any of
+     *     the header names or values are invalid.
+     * @since 0.32.0
      */
     Builder setHeaders(Map<String, Map<String, List<String>>> headerRules);
 
     /**
-     * Adds a header rule.
+     * Adds HTTP headers for URL requests that match {@code globPattern}.
      *
-     * @throws IllegalArgumentException if {@code globPattern} is invalid.
+     * @throws IllegalArgumentException if {@code globPattern} is an invalid glob pattern, or if any
+     *     of the header names or values are invalid.
+     * @since 0.32.0
      */
-    Builder addHeader(String globPattern, Map<String, List<String>> headers);
+    Builder addHeaders(String globPattern, Map<String, List<String>> headers);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

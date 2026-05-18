@@ -24,7 +24,7 @@ class HttpClientBuilderTest {
     val client =
       HttpClient.builder()
         .setHeaders(mapOf("**" to mapOf("X-Foo" to listOf("v1"))))
-        .addHeader("**", mapOf("X-Foo" to listOf("v2")))
+        .addHeaders("**", mapOf("X-Foo" to listOf("v2")))
         .build() as RequestRewritingClient
 
     val headerValues = client.headers.values.single()["X-Foo"]
@@ -35,8 +35,8 @@ class HttpClientBuilderTest {
   fun `addHeader preserves non-overlapping header names`() {
     val client =
       HttpClient.builder()
-        .addHeader("**", mapOf("X-Foo" to listOf("v1")))
-        .addHeader("**", mapOf("X-Bar" to listOf("v2")))
+        .addHeaders("**", mapOf("X-Foo" to listOf("v1")))
+        .addHeaders("**", mapOf("X-Bar" to listOf("v2")))
         .build() as RequestRewritingClient
 
     val headerMap = client.headers.values.single()

@@ -142,7 +142,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public Builder addHeader(String globPattern, Map<String, List<String>> headers) {
+  public Builder addHeaders(String globPattern, Map<String, List<String>> headers) {
     try {
       var pattern = GlobResolver.toRegexPattern(globPattern);
       var existingHeaders = this.headers.computeIfAbsent(pattern, k -> new HashMap<>());
