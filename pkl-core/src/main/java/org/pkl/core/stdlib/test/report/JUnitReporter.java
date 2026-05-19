@@ -37,15 +37,15 @@ import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.xml.RendererNodes.Renderer;
 import org.pkl.core.util.EconomicMaps;
 
-public final class JUnitReport implements TestReport {
+public final class JUnitReporter implements TestReporter {
 
   private final String aggregateSuiteName;
 
-  public JUnitReport(String aggregateSuiteName) {
+  public JUnitReporter(String aggregateSuiteName) {
     this.aggregateSuiteName = aggregateSuiteName;
   }
 
-  public JUnitReport() {
+  public JUnitReporter() {
     this("");
   }
 

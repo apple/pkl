@@ -546,6 +546,15 @@ When enabled, test failures will show intermediate values in the assertion expre
 Use `--no-power-assertions` to disable this feature if you prefer simpler output.
 ====
 
+[[test-reporter]]
+.--test-reporter
+[%collapsible]
+====
+Default: `spec` +
+Example: `--test-reporter minimal` +
+Which test reporter to use for CLI output. Possible values are `spec` and `minimal`.
+====
+
 This command also takes <<common-options, common options>>.
 
 [[command-run]]
@@ -665,6 +674,14 @@ Used in combination with `--junit-aggregate-reports` flag.
 ====
 Force generation of expected examples. +
 The old expected files will be deleted if present.
+====
+
+.--test-reporter
+[%collapsible]
+====
+Default: `spec` +
+Example: `--test-reporter minimal` +
+Which test reporter to use for CLI output. Possible values are `spec` and `minimal`.
 ====
 
 This command also takes <<common-options,common options>>.

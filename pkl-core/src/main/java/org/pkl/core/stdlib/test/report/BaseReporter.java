@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,39 +24,19 @@ import java.util.Locale;
 import java.util.stream.Collectors;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.TestResult;
-import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiStringBuilder.AnsiCode;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.StringUtils;
 
-public final class SimpleReport implements TestReport {
+public abstract class BaseReporter implements TestReporter {
+  protected static final String passingMark = "✔ ";
+  protected static final String failingMark = "✘ ";
 
-  private static final String passingMark = "✔ ";
-  private static final String failingMark = "✘ ";
+  protected final boolean useColor;
 
-  private final boolean useColor;
-
-  public SimpleReport(boolean useColor) {
+  public BaseReporter(boolean useColor) {
     this.useColor = useColor;
-  }
-
-  @Override
-  public void report(TestResults results, Writer writer) throws IOException {
-    var builder = new AnsiStringBuilder(useColor);
-
-    builder.append("module ").append(results.moduleName()).append('\n');
-
-    if (results.error() != null) {
-      var rendered = results.error().exception().getMessage();
-      appendPadded(builder, rendered, "  ");
-      builder.append('\n');
-    } else {
-      reportResults(results.facts(), builder);
-      reportResults(results.examples(), builder);
-    }
-
-    writer.append(builder.toString());
   }
 
   @Override
@@ -91,16 +71,7 @@ public final class SimpleReport implements TestReport {
     writer.append(builder.toString());
   }
 
-  private void reportResults(TestSectionResults section, AnsiStringBuilder builder) {
-    if (!section.results().isEmpty()) {
-      builder.append("  ").append(section.name()).append('\n');
-      StringUtils.joinToStringBuilder(
-          builder, section.results(), "\n", res -> reportResult(res, builder));
-      builder.append('\n');
-    }
-  }
-
-  private void reportResult(TestResult result, AnsiStringBuilder builder) {
+  protected void reportResult(TestResult result, AnsiStringBuilder builder) {
     builder.append("    ");
 
     if (result.isExampleWritten()) {
@@ -129,7 +100,7 @@ public final class SimpleReport implements TestReport {
     }
   }
 
-  private static void appendPadded(AnsiStringBuilder builder, String lines, String padding) {
+  protected static void appendPadded(AnsiStringBuilder builder, String lines, String padding) {
     StringUtils.joinToStringBuilder(
         builder,
         lines.lines().collect(Collectors.toList()),
