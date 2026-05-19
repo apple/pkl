@@ -31,7 +31,7 @@ import org.pkl.core.util.ErrorMessages
 class CliTestRunner
 @JvmOverloads
 constructor(
-  options: CliBaseOptions,
+  private val options: CliBaseOptions,
   private val testOptions: CliTestOptions,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
