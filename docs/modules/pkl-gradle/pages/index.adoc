@@ -323,7 +323,7 @@ Whether to ignore expected example files and generate them again.
 ====
 
 [[test-reporter]]
-.test-reporter: Property<String>
+.testReporter: Property<String>
 [%collapsible]
 ====
 Default: `"spec"` +
@@ -686,7 +686,7 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
-.test-reporter: Property<String>
+.testReporter: Property<String>
 [%collapsible]
 ====
 Default: `"spec"` +

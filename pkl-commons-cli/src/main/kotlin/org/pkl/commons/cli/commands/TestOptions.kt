@@ -57,7 +57,7 @@ class TestOptions : OptionGroup() {
     option(names = arrayOf("--test-reporter"), help = "Which test reporter to use for CLI output.")
       .enum<TestReporter> { it.name.lowercase() }
       .single()
-      .default(TestReporter.SPEC)
+      .default(TestReporter.default)
 
   val cliTestOptions: CliTestOptions by lazy {
     CliTestOptions(

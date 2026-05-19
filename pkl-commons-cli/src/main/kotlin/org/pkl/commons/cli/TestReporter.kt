@@ -17,5 +17,9 @@ package org.pkl.commons.cli
 
 enum class TestReporter {
   SPEC,
-  MINIMAL,
+  MINIMAL;
+
+  companion object {
+    @JvmStatic val default: TestReporter = SPEC
+  }
 }

@@ -16,6 +16,7 @@
 package org.pkl.gradle.task;
 
 import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
+import static org.pkl.gradle.utils.PluginUtils.toTestReporter;
 
 import java.io.PrintWriter;
 import java.nio.file.Path;
@@ -34,7 +35,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.UntrackedTask;
 import org.pkl.cli.CliProjectPackager;
 import org.pkl.commons.cli.CliTestOptions;
-import org.pkl.commons.cli.TestReporter;
 
 @UntrackedTask(because = "Output names are known only after execution")
 public abstract class ProjectPackageTask extends BasePklTask {
@@ -80,18 +80,6 @@ public abstract class ProjectPackageTask extends BasePklTask {
     if (projectDirectories.isEmpty()) {
       throw new InvalidUserDataException("No project directories specified.");
     }
-    TestReporter testReporter;
-    try {
-      testReporter = TestReporter.valueOf(getTestReporter().getOrElse("SPEC").toUpperCase());
-    } catch (IllegalArgumentException e) {
-      throw new InvalidUserDataException(
-          "Invalid reporter: '%s'. Valid reporter options: %s"
-              .formatted(
-                  getTestReporter().get(),
-                  TestReporter.getEntries().stream()
-                      .map(it -> it.name().toLowerCase())
-                      .collect(Collectors.joining(", "))));
-    }
 
     new CliProjectPackager(
             getCliBaseOptions(),
@@ -101,7 +89,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
                 getJunitAggregateSuiteName().get(),
-                testReporter),
+                toTestReporter(getTestReporter())),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
             new PrintWriter(System.out),
