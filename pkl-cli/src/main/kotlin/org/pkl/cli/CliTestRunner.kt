@@ -25,7 +25,7 @@ import org.pkl.core.PklException
 import org.pkl.core.TestResults
 import org.pkl.core.stdlib.test.report.JUnitReporter
 import org.pkl.core.stdlib.test.report.MinimalReporter
-import org.pkl.core.stdlib.test.report.SimpleReporter
+import org.pkl.core.stdlib.test.report.SpecReporter
 import org.pkl.core.util.ErrorMessages
 
 class CliTestRunner
@@ -68,8 +68,8 @@ constructor(
       val moduleNames = mutableSetOf<String>()
       val reporter =
         when (testOptions.reporter) {
-          TestReporters.SPEC -> SimpleReporter(useColor)
-          TestReporters.MINIMAL -> MinimalReporter(useColor)
+          TestReporter.SPEC -> SpecReporter(useColor)
+          TestReporter.MINIMAL -> MinimalReporter(useColor)
         }
       val allTestResults = mutableListOf<TestResults>()
 

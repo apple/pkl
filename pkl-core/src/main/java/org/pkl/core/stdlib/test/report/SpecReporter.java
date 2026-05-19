@@ -22,9 +22,9 @@ import org.pkl.core.TestResults.TestSectionResults;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.StringUtils;
 
-public final class SimpleReporter extends BaseReporter {
+public final class SpecReporter extends BaseReporter {
 
-  public SimpleReporter(boolean useColor) {
+  public SpecReporter(boolean useColor) {
     super(useColor);
   }
 

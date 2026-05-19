@@ -18,6 +18,8 @@ package org.pkl.gradle.task;
 import static org.pkl.gradle.utils.PluginUtils.mapAndGetOrNull;
 
 import java.io.PrintWriter;
+import java.util.stream.Collectors;
+import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.DirectoryProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.CacheableTask;
@@ -26,7 +28,7 @@ import org.gradle.api.tasks.Optional;
 import org.gradle.api.tasks.OutputDirectory;
 import org.pkl.cli.CliTestRunner;
 import org.pkl.commons.cli.CliTestOptions;
-import org.pkl.commons.cli.TestReporters;
+import org.pkl.commons.cli.TestReporter;
 
 @CacheableTask
 public abstract class TestTask extends ModulesTask {
@@ -46,7 +48,7 @@ public abstract class TestTask extends ModulesTask {
 
   @Input
   @Optional
-  public abstract Property<String> getReporter();
+  public abstract Property<String> getTestReporter();
 
   public TestTask() {
     this.getJunitAggregateSuiteName().convention("pkl-tests");
@@ -55,6 +57,18 @@ public abstract class TestTask extends ModulesTask {
 
   @Override
   protected void doRunTask() {
+    TestReporter testReporter;
+    try {
+      testReporter = TestReporter.valueOf(getTestReporter().getOrElse("SPEC").toUpperCase());
+    } catch (IllegalArgumentException e) {
+      throw new InvalidUserDataException(
+          "Invalid reporter: '%s'. Valid reporter options: %s"
+              .formatted(
+                  getTestReporter().get(),
+                  TestReporter.getEntries().stream()
+                      .map(it -> it.name().toLowerCase())
+                      .collect(Collectors.joining(", "))));
+    }
     new CliTestRunner(
             getCliBaseOptions(),
             new CliTestOptions(
@@ -62,7 +76,7 @@ public abstract class TestTask extends ModulesTask {
                 getOverwrite().get(),
                 getJunitAggregateReports().getOrElse(false),
                 getJunitAggregateSuiteName().get(),
-                TestReporters.valueOf(getReporter().getOrElse("SPEC").toUpperCase())),
+                testReporter),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

@@ -322,13 +322,13 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
-[[reporter]]
-.reporter: Property<String>
+[[test-reporter]]
+.test-reporter: Property<String>
 [%collapsible]
 ====
-Default: `"simple"` +
+Default: `"spec"` +
 Example: `reporter = "minimal"` +
-Which test reporter to use for CLI output. Possible values are `"simple"` and `"minimal"`.
+Which test reporter to use for CLI output. Possible values are `"spec"` and `"minimal"`.
 ====
 
 [[power-assertions-test]]
@@ -686,12 +686,12 @@ Default: `false` +
 Whether to ignore expected example files and generate them again.
 ====
 
-.reporter: Property<String>
+.test-reporter: Property<String>
 [%collapsible]
 ====
-Default: `"simple"` +
+Default: `"spec"` +
 Example: `reporter = "minimal"` +
-Which test reporter to use for CLI output. Possible values are `"simple"` and `"minimal"`.
+Which test reporter to use for CLI output. Possible values are `"spec"` and `"minimal"`.
 ====
 
 Common properties:

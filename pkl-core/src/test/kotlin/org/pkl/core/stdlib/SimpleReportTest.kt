@@ -21,7 +21,7 @@ import org.junit.jupiter.api.Test
 import org.pkl.core.TestResults
 import org.pkl.core.TestResults.TestResult
 import org.pkl.core.TestResults.TestSectionResults
-import org.pkl.core.stdlib.test.report.SimpleReporter
+import org.pkl.core.stdlib.test.report.SpecReporter
 
 class SimpleReportTest {
 
@@ -59,7 +59,7 @@ class SimpleReportTest {
     val testResults = listOf(resultsBuilder.build())
 
     val writer = StringWriter()
-    val simpleReport = SimpleReporter(false)
+    val simpleReport = SpecReporter(false)
     simpleReport.summarize(testResults, writer)
 
     val expectedOutput =

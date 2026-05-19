@@ -23,5 +23,5 @@ public interface TestSpec extends ModulesSpec {
 
   Property<Boolean> getOverwrite();
 
-  Property<String> getReporter();
+  Property<String> getTestReporter();
 }

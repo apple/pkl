@@ -109,7 +109,7 @@ public class PklPlugin implements Plugin<Project> {
                 task.getSkipPublishCheck().set(spec.getSkipPublishCheck());
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
-                task.getReporter().set(spec.getReporter());
+                task.getTestReporter().set(spec.getReporter());
               });
           project
               .getPluginManager()
@@ -280,14 +280,14 @@ public class PklPlugin implements Plugin<Project> {
           configureBaseSpec(project, spec);
 
           spec.getOverwrite().convention(false);
-          spec.getReporter().convention("spec");
+          spec.getTestReporter().convention("spec");
 
           var testTask = createModulesTask(project, TestTask.class, spec);
           testTask.configure(
               task -> {
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
-                task.getReporter().set(spec.getReporter());
+                task.getTestReporter().set(spec.getTestReporter());
               });
 
           project
