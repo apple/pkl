@@ -204,7 +204,7 @@ Download links:
 The Pkldoc tool is offered as Gradle plugin, Java library, and CLI.
 It can generate documentation either for modules directly, or generate documentation for _package uris_.
 
-The tool requires an argument of a module named _docsite-info.pkl_, that amends link:{uri-DocsiteInfo}[pkl.DocsiteInfo].
+The tool accepts an optional argument of a module named _docsite-info.pkl_, that amends link:{uri-DocsiteInfo}[pkl.DocsiteInfo].
 
 [discrete]
 ==== Generating documentation for modules directly
