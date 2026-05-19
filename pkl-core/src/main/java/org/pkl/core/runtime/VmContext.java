@@ -36,6 +36,10 @@ public final class VmContext {
   private static final ContextReference<VmContext> REFERENCE =
       ContextReference.create(VmLanguage.class);
   private final VmValueTrackerFactory valueTrackerFactory;
+  private final ThreadLocal<@Nullable Map<String, String>> scopedExternalProperties =
+      new ThreadLocal<>();
+  private final ThreadLocal<@Nullable ModuleCache> scopedModuleCache = new ThreadLocal<>();
+  private final ThreadLocal<@Nullable ResourceManager> scopedResourceManager = new ThreadLocal<>();
 
   public VmContext(VmLanguage vmLanguage, Env env) {
     this.valueTrackerFactory =
@@ -111,7 +115,40 @@ public final class VmContext {
     this.holder = holder;
   }
 
+  public EvaluationScope enterExternalPropertiesScope(Map<String, String> externalProperties) {
+    var previousExternalProperties = scopedExternalProperties.get();
+    var previousModuleCache = scopedModuleCache.get();
+    var previousResourceManager = scopedResourceManager.get();
+
+    var props = new HashMap<>(holder.externalProperties);
+    props.putAll(externalProperties);
+    scopedExternalProperties.set(Map.copyOf(props));
+    scopedModuleCache.set(new ModuleCache());
+    scopedResourceManager.set(holder.resourceManager.withEmptyCache());
+
+    return () -> {
+      setOrRemove(scopedExternalProperties, previousExternalProperties);
+      setOrRemove(scopedModuleCache, previousModuleCache);
+      setOrRemove(scopedResourceManager, previousResourceManager);
+    };
+  }
+
+  private static <T> void setOrRemove(ThreadLocal<@Nullable T> threadLocal, @Nullable T value) {
+    if (value == null) {
+      threadLocal.remove();
+    } else {
+      threadLocal.set(value);
+    }
+  }
+
+  public interface EvaluationScope extends AutoCloseable {
+    @Override
+    void close();
+  }
+
   public ModuleCache getModuleCache() {
+    var moduleCache = scopedModuleCache.get();
+    if (moduleCache != null) return moduleCache;
     return holder.moduleCache;
   }
 
@@ -136,6 +173,8 @@ public final class VmContext {
   }
 
   public ResourceManager getResourceManager() {
+    var resourceManager = scopedResourceManager.get();
+    if (resourceManager != null) return resourceManager;
     return holder.resourceManager;
   }
 
@@ -148,6 +187,8 @@ public final class VmContext {
   }
 
   public Map<String, String> getExternalProperties() {
+    var externalProperties = scopedExternalProperties.get();
+    if (externalProperties != null) return externalProperties;
     return holder.externalProperties;
   }
 
