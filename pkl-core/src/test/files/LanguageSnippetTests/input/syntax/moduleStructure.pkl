@@ -1,0 +1,221 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function parse(source: String) = syntax.parse(source)
+
+examples {
+  ["module declaration"] {
+    local result = parse("module my.app")
+    result is syntax.ModuleNode
+    local mod = result as syntax.ModuleNode
+    mod.declaration != null
+    mod.declaration!!.name != null
+    mod.declaration!!.name!!.identifiers.length == 2
+    mod.declaration!!.name!!.identifiers[0].value == "my"
+    mod.declaration!!.name!!.identifiers[1].value == "app"
+    mod.declaration!!.docComment == null
+    mod.declaration!!.annotations.length == 0
+    mod.declaration!!.modifiers == null
+    mod.declaration!!.amendsClause == null
+    mod.declaration!!.extendsClause == null
+  }
+
+  ["module with modifiers and doc comment"] {
+    local result = parse("""
+      /// This is my module.
+      @Deprecated { message = "use other" }
+      open module my.mod
+      """)
+    local mod = result as syntax.ModuleNode
+    mod.declaration != null
+    mod.declaration!!.docComment != null
+    mod.declaration!!.docComment!! is syntax.DocCommentNode
+    mod.declaration!!.docComment!!.lines.length == 1
+
+    mod.declaration!!.annotations.length == 1
+    mod.declaration!!.annotations.first is syntax.AnnotationNode
+    mod.declaration!!.annotations.first.type is syntax.DeclaredTypeNode
+
+    mod.declaration!!.modifiers != null
+    mod.declaration!!.modifiers!! is syntax.ModifierListNode
+    mod.declaration!!.modifiers!!.modifiers == List("open")
+  }
+
+  ["amends clause"] {
+    local result = parse(#"amends "base.pkl""#)
+    local mod = result as syntax.ModuleNode
+    mod.declaration != null
+    mod.declaration!!.amendsClause != null
+    mod.declaration!!.amendsClause!! is syntax.AmendsClauseNode
+    mod.declaration!!.amendsClause!!.uri == "base.pkl"
+    mod.declaration!!.extendsClause == null
+  }
+
+  ["extends clause"] {
+    local result = parse(#"extends "base.pkl""#)
+    local mod = result as syntax.ModuleNode
+    mod.declaration != null
+    mod.declaration!!.extendsClause != null
+    mod.declaration!!.extendsClause!! is syntax.ExtendsClauseNode
+    mod.declaration!!.extendsClause!!.uri == "base.pkl"
+    mod.declaration!!.amendsClause == null
+  }
+
+  ["imports"] {
+    local result = parse("""
+      import "foo.pkl"
+      import "bar.pkl" as myBar
+      import* "*.pkl"
+      """)
+    local mod = result as syntax.ModuleNode
+    mod.imports.length == 3
+
+    mod.imports[0] is syntax.ImportNode
+    mod.imports[0].uri == "foo.pkl"
+    mod.imports[0].isGlob == false
+    mod.imports[0].alias == null
+
+    mod.imports[1].uri == "bar.pkl"
+    mod.imports[1].alias != null
+    mod.imports[1].alias!!.value == "myBar"
+
+    mod.imports[2].uri == "*.pkl"
+    mod.imports[2].isGlob == true
+  }
+
+  ["class declaration"] {
+    local result = parse("""
+      /// A bird class.
+      abstract class Bird {
+        name: String
+        function fly(speed: Int): Boolean = true
+      }
+      """)
+    local mod = result as syntax.ModuleNode
+    mod.classes.length == 1
+    local cls = mod.classes.first
+    cls is syntax.ClassNode
+
+    cls.docComment != null
+    cls.docComment!!.lines.length == 1
+
+    cls.modifiers != null
+    cls.modifiers!!.modifiers == List("abstract")
+
+    cls.name.value == "Bird"
+
+    cls.typeParameterList == null
+    cls.extendsClause == null
+
+    cls.body != null
+    cls.body!!.properties.length == 1
+    cls.body!!.properties.first.name.value == "name"
+    cls.body!!.properties.first.typeAnnotation != null
+    cls.body!!.properties.first.typeAnnotation!!.type is syntax.DeclaredTypeNode
+    cls.body!!.properties.first.value == null
+
+    cls.body!!.methods.length == 1
+    cls.body!!.methods.first.name.value == "fly"
+    cls.body!!.methods.first.parameterList.parameters.length == 1
+    cls.body!!.methods.first.parameterList.parameters.first.identifier!!.value == "speed"
+    cls.body!!.methods.first.returnType != null
+    cls.body!!.methods.first.body != null
+    cls.body!!.methods.first.body is syntax.BoolLiteralExprNode
+  }
+
+  ["class with extends and type parameters"] {
+    local result = parse("""
+      class Container<T> extends Base {
+        item: T
+      }
+      """)
+    local mod = result as syntax.ModuleNode
+    local cls = mod.classes.first
+
+    cls.name.value == "Container"
+    cls.typeParameterList != null
+    cls.typeParameterList!!.typeParameters.length == 1
+    cls.typeParameterList!!.typeParameters.first.name.value == "T"
+    cls.typeParameterList!!.typeParameters.first.variance == null
+
+    cls.extendsClause != null
+    cls.extendsClause is syntax.DeclaredTypeNode
+  }
+
+  ["typealias"] {
+    local result = parse("typealias Positive = Int(this > 0)")
+    local mod = result as syntax.ModuleNode
+    mod.typeAliases.length == 1
+    local ta = mod.typeAliases.first
+    ta is syntax.TypeAliasNode
+    ta.name.value == "Positive"
+    ta.typeParameterList == null
+    ta.type is syntax.ConstrainedTypeNode
+  }
+
+  ["top-level properties and methods"] {
+    local result = parse("""
+      hidden name: String = "pkl"
+      local count: Int = 42
+      function greet(who: String): String = "hi"
+      """)
+    local mod = result as syntax.ModuleNode
+
+    mod.properties.length == 2
+    mod.properties[0].name.value == "name"
+    mod.properties[0].modifiers != null
+    mod.properties[0].modifiers!!.modifiers == List("hidden")
+    mod.properties[0].value is syntax.SingleLineStringLiteralExprNode
+
+    mod.properties[1].name.value == "count"
+    mod.properties[1].modifiers != null
+    mod.properties[1].modifiers!!.modifiers == List("local")
+
+    mod.methods.length == 1
+    mod.methods.first.name.value == "greet"
+    mod.methods.first.parameterList.parameters.length == 1
+    mod.methods.first.returnType != null
+    mod.methods.first.body is syntax.SingleLineStringLiteralExprNode
+  }
+
+  ["parameter variations"] {
+    local result = parse("function f(x: Int, _, y): Boolean = true")
+    local mod = result as syntax.ModuleNode
+    local params = mod.methods.first.parameterList.parameters
+
+    params.length == 3
+
+    params[0].identifier != null
+    params[0].identifier!!.value == "x"
+    params[0].typeAnnotation != null
+    params[0].isWildcard == false
+
+    params[1].identifier == null
+    params[1].isWildcard == true
+    params[1].typeAnnotation == null
+
+    params[2].identifier != null
+    params[2].identifier!!.value == "y"
+    params[2].typeAnnotation == null
+    params[2].isWildcard == false
+  }
+
+  ["parser error"] {
+    local result = parse("x = {{{")
+    result is syntax.ParserError
+    (result as syntax.ParserError).text.length > 0
+  }
+
+  ["empty module"] {
+    local result = parse("")
+    result is syntax.ModuleNode
+    local mod = result as syntax.ModuleNode
+    mod.declaration == null
+    mod.imports.length == 0
+    mod.classes.length == 0
+    mod.typeAliases.length == 0
+    mod.properties.length == 0
+    mod.methods.length == 0
+  }
+}
