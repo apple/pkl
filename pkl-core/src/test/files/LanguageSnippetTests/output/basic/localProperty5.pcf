@@ -1,0 +1,13 @@
+res1 {
+  cond = true
+  prop {
+    theBranch = "then branch"
+  }
+}
+res2 {
+  cond = false
+  prop {
+    qux = "else branch"
+    theBranch = "else branch"
+  }
+}

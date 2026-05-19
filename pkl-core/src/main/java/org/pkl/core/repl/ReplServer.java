@@ -50,6 +50,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
 import org.pkl.core.util.Nullable;
+import org.pkl.core.util.Pair;
 import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
@@ -58,9 +59,12 @@ import org.pkl.parser.syntax.ClassProperty;
 import org.pkl.parser.syntax.Expr;
 import org.pkl.parser.syntax.ImportClause;
 import org.pkl.parser.syntax.ModuleDecl;
+import org.pkl.parser.syntax.Node;
 import org.pkl.parser.syntax.ReplInput;
 
 public class ReplServer implements AutoCloseable {
+  private static final String expressionPreamble = "`THE REPL TEXT EXPR` = ";
+
   private final IndirectCallNode callNode = Truffle.getRuntime().createIndirectCallNode();
   private final Context polyglotContext;
   private final VmLanguage language;
@@ -72,6 +76,7 @@ public class ReplServer implements AutoCloseable {
   private final PackageResolver packageResolver;
   private final @Nullable ProjectDependenciesManager projectDependenciesManager;
   private final boolean color;
+  private final Parser parser = new Parser();
 
   public ReplServer(
       SecurityManager securityManager,
@@ -178,7 +183,132 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  @SuppressWarnings({"StatementWithEmptyBody"})
+  /**
+   * Create a fake module that declares all the local properties that exist in ReplState, so that
+   * AstBuilder can correctly resolve variables. Additionally, return a {@link Node} with its span
+   * calculated in terms of this fake module.
+   *
+   * <p>This created module is never executed.
+   */
+  private Pair<String, Node> buildSyntheticModuleText(Node syntaxNode, String srcText) {
+    if (syntaxNode instanceof ModuleDecl) {
+      return Pair.of(srcText, syntaxNode);
+    }
+    var sb = new StringBuilder();
+    var nodeText = syntaxNode.text(srcText.toCharArray());
+    var adjustedNode = syntaxNode;
+    if (syntaxNode instanceof Expr) {
+      sb.append(expressionPreamble).append(nodeText).append('\n');
+    } else {
+      sb.append(nodeText).append('\n');
+    }
+    var mod = parser.parseModule(sb.toString());
+    if (syntaxNode instanceof Expr) {
+      adjustedNode = mod.getProperties().get(0).getExpr();
+    } else if (syntaxNode instanceof ImportClause) {
+      adjustedNode = mod.getImports().get(0);
+    } else if (syntaxNode instanceof ClassProperty) {
+      adjustedNode = mod.getProperties().get(0);
+    } else if (syntaxNode instanceof Class) {
+      adjustedNode = mod.getClasses().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.TypeAlias) {
+      adjustedNode = mod.getTypeAliases().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.ClassMethod) {
+      adjustedNode = mod.getMethods().get(0);
+    }
+    var cursor = EconomicMaps.getEntries(replState.module.getMembers());
+    while (cursor.advance()) {
+      var key = cursor.getKey();
+      var value = cursor.getValue();
+      if (value.isLocal()) {
+        sb.append("local ").append(key).append(" = Undefined()\n\n");
+      }
+    }
+    assert adjustedNode != null;
+    return Pair.of(sb.toString(), adjustedNode);
+  }
+
+  @SuppressWarnings("StatementWithEmptyBody")
+  private void handleNode(
+      ReplState replState,
+      List<Object> results,
+      URI uri,
+      Node node,
+      String srcText,
+      boolean evalDefinitions,
+      boolean forceResults) {
+    var pair = buildSyntheticModuleText(node, srcText);
+    var syntheticModuleText = pair.first;
+    var adjustedNode = pair.second;
+    var module = ModuleKeys.synthetic(uri, workingDir.toUri(), uri, syntheticModuleText, false);
+    ResolvedModuleKey resolved;
+    try {
+      resolved = module.resolve(securityManager);
+    } catch (SecurityManagerException e) {
+      throw new VmExceptionBuilder().withCause(e).build();
+    } catch (IOException e) {
+      // resolving a synthetic module should never cause IOException
+      throw new AssertionError(e);
+    }
+    var builder =
+        new AstBuilder(
+            VmUtils.loadSource(resolved),
+            language,
+            replState.module.getModuleInfo(),
+            moduleResolver);
+    var mod = parser.parseModule(syntheticModuleText);
+    try {
+      builder.visitModule(mod);
+      if (adjustedNode instanceof Expr expr) {
+        var exprNode = builder.visitExpr(expr);
+        evaluateExpr(replState, exprNode, forceResults, results);
+      } else if (adjustedNode instanceof ImportClause importClause) {
+        addStaticModuleProperty(builder.visitImportClause(importClause));
+      } else if (adjustedNode instanceof ClassProperty classProperty) {
+        var propertyNode = builder.visitClassProperty(classProperty);
+        var property = addModuleProperty(propertyNode);
+        if (evalDefinitions) {
+          evaluateMemberDef(replState, property, forceResults, results);
+        }
+      } else if (adjustedNode instanceof Class clazz) {
+        addStaticModuleProperty(builder.visitClass(clazz));
+      } else if (adjustedNode instanceof org.pkl.parser.syntax.TypeAlias typeAlias) {
+        addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
+      } else if (adjustedNode instanceof org.pkl.parser.syntax.ClassMethod classMethod) {
+        addModuleMethodDef(builder.visitClassMethod(classMethod));
+      } else if (adjustedNode instanceof ModuleDecl) {
+        // do nothing for now
+      } else {
+        results.add(
+            new ReplResponse.InternalError(new IllegalStateException("Unexpected parse result")));
+      }
+    } catch (VmException e) {
+      // TODO: patch stack trace for constants
+      results.add(new EvalError(renderException(e)));
+    }
+  }
+
+  /**
+   * Strip out the {@code `THE REPL TEXT EXPR` = } preamble that we insert in front of expressions;
+   */
+  private String renderException(VmException e) {
+    var rendered = errorRenderer.render(e);
+    var sb = new StringBuilder();
+    var lines = rendered.split("\n");
+    for (var i = 0; i < lines.length; i++) {
+      var line = lines[i];
+      if (line.contains(expressionPreamble)) {
+        sb.append(line.replace(expressionPreamble, "")).append('\n');
+        var decoration = lines[i + 1];
+        sb.append(decoration.replace(" ".repeat(expressionPreamble.length()), "")).append('\n');
+        i++;
+      } else {
+        sb.append(line).append('\n');
+      }
+    }
+    return sb.toString();
+  }
+
   private List<Object> evaluate(
       ReplState replState,
       String requestId,
@@ -198,53 +328,9 @@ public class ReplServer implements AutoCloseable {
     }
 
     var results = new ArrayList<>();
-    var module = ModuleKeys.synthetic(uri, workingDir.toUri(), uri, text, false);
-    ResolvedModuleKey resolved;
-    try {
-      resolved = module.resolve(securityManager);
-    } catch (SecurityManagerException e) {
-      throw new VmExceptionBuilder().withCause(e).build();
-    } catch (IOException e) {
-      // resolving a synthetic module should never cause IOException
-      throw new AssertionError(e);
-    }
-
-    var builder =
-        new AstBuilder(
-            VmUtils.loadSource(resolved),
-            language,
-            replState.module.getModuleInfo(),
-            moduleResolver);
 
     for (var tree : replInputContext.getNodes()) {
-      try {
-        if (tree instanceof Expr expr) {
-          var exprNode = builder.visitExpr(expr);
-          evaluateExpr(replState, exprNode, forceResults, results);
-        } else if (tree instanceof ImportClause importClause) {
-          addStaticModuleProperty(builder.visitImportClause(importClause));
-        } else if (tree instanceof ClassProperty classProperty) {
-          var propertyNode = builder.visitClassProperty(classProperty);
-          var property = addModuleProperty(propertyNode);
-          if (evalDefinitions) {
-            evaluateMemberDef(replState, property, forceResults, results);
-          }
-        } else if (tree instanceof Class clazz) {
-          addStaticModuleProperty(builder.visitClass(clazz));
-        } else if (tree instanceof org.pkl.parser.syntax.TypeAlias typeAlias) {
-          addStaticModuleProperty(builder.visitTypeAlias(typeAlias));
-        } else if (tree instanceof org.pkl.parser.syntax.ClassMethod classMethod) {
-          addModuleMethodDef(builder.visitClassMethod(classMethod));
-        } else if (tree instanceof ModuleDecl) {
-          // do nothing for now
-        } else {
-          results.add(
-              new ReplResponse.InternalError(new IllegalStateException("Unexpected parse result")));
-        }
-      } catch (VmException e) {
-        // TODO: patch stack trace for constants
-        results.add(new EvalError(errorRenderer.render(e)));
-      }
+      handleNode(replState, results, uri, tree, text, evalDefinitions, forceResults);
     }
 
     return results;

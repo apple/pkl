@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -118,19 +118,26 @@ public abstract class ReadPropertyNode extends ExpressionNode {
         .build();
   }
 
-  // only ever need to check once per node because `needsConst` is only true in the case of implicit
-  // receivers inside class (and module) bodies, and the const-ness of a resolved property cannot be
-  // changed by subclasses.
+  // Only ever need to check once per node because `needsConst` is only true in the case of:
+  //
+  // * implicit receiver in class (and module) bodies
+  // * `local const` object members
+  //
+  // and the const-ness of a resolved property cannot be changed by subclasses / amending objects.
   private void checkConst(VmObjectLike receiver) {
     if (needsConst && !isConstChecked) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       var property = receiver.getVmClass().getProperty(propertyName);
-      if (property == null) {
+      if (property != null && !property.isConst()) {
+        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
+      }
+      var objectMember = receiver.getMember(propertyName);
+      if (objectMember != null && !objectMember.isConst()) {
+        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
+      }
+      if (property == null && objectMember == null) {
         // fall through; `cannotFindProperty` gets thrown when we attempt to read the property.
         return;
-      }
-      if (!property.isConst()) {
-        throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
       }
       isConstChecked = true;
     }

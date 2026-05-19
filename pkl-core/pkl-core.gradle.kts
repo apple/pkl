@@ -57,6 +57,7 @@ dependencies {
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
+  add("generatorImplementation", projects.pklParser)
 
   javaExecutableConfiguration(project(":pkl-cli", "javaExecutable"))
 }
@@ -123,6 +124,34 @@ tasks.test {
   // testing very large lists requires more memory than the default 512m!
   maxHeapSize = "1g"
 }
+
+val generateBaseModuleMemberRegistry by
+  tasks.registering(JavaExec::class) {
+    val outputDir = layout.buildDirectory.dir("generated/sources/baseModuleMembers")
+
+    val basePklFile = layout.projectDirectory.file("../stdlib/base.pkl")
+
+    inputs
+      .file(basePklFile)
+      .withPropertyName("basePkl")
+      .withPathSensitivity(PathSensitivity.RELATIVE)
+
+    outputs.dir(outputDir)
+
+    classpath =
+      generatorSourceSet.get().runtimeClasspath + tasks.processResources.get().outputs.files
+    mainClass = "org.pkl.core.generator.BaseModuleMemberRegistryGenerator"
+
+    argumentProviders.add(
+      CommandLineArgumentProvider {
+        listOf(basePklFile.asFile.absolutePath, outputDir.get().asFile.absolutePath)
+      }
+    )
+  }
+
+sourceSets.main { java.srcDir(layout.buildDirectory.dir("generated/sources/baseModuleMembers")) }
+
+tasks.compileJava { dependsOn(generateBaseModuleMemberRegistry) }
 
 val testJavaExecutable by
   tasks.registering(Test::class) {

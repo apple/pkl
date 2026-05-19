@@ -55,6 +55,8 @@ public final class VmModifier {
 
   public static final int GLOB = 0x1000;
 
+  public static final int AMBIGUOUS_LOCALITY = 0x10000;
+
   // modifier sets
 
   public static final int NONE = 0;
@@ -126,6 +128,10 @@ public final class VmModifier {
     return (modifiers & CONST) != 0;
   }
 
+  public static boolean isAmbiguousLocality(int modifiers) {
+    return (modifiers & AMBIGUOUS_LOCALITY) != 0;
+  }
+
   public static boolean isElement(int modifiers) {
     return (modifiers & ELEMENT) != 0;
   }
@@ -152,6 +158,10 @@ public final class VmModifier {
 
   public static boolean isConstOrFixed(int modifiers) {
     return (modifiers & (CONST | FIXED)) != 0;
+  }
+
+  public static boolean hasSameModifier(int modifiersA, int modifiersB, int modifier) {
+    return (modifiersA & modifier) == (modifiersB & modifier);
   }
 
   public static Set<Modifier> export(int modifiers, boolean isClass) {
