@@ -31,6 +31,7 @@ import org.gradle.api.file.FileSystemLocation;
 import org.gradle.api.file.RegularFile;
 import org.gradle.api.provider.Provider;
 import org.jspecify.annotations.Nullable;
+import org.pkl.commons.cli.TestReporter;
 import org.pkl.core.ImportGraph;
 import org.pkl.core.util.IoUtils;
 
@@ -174,5 +175,32 @@ public final class PluginUtils {
   public static <T, U> @Nullable U mapAndGetOrNull(Provider<T> provider, Function<T, U> f) {
     @Nullable T value = provider.getOrNull();
     return value == null ? null : f.apply(value);
+  }
+
+  public static TestReporter toTestReporter(Provider<String> input) {
+    var inputStr = input.getOrNull();
+    if (inputStr == null) {
+      return TestReporter.getDefault();
+    }
+    try {
+      return TestReporter.valueOf(inputStr.toUpperCase());
+    } catch (IllegalArgumentException e) {
+      var sb = new StringBuilder("Invalid test reporter: '");
+      sb.append(inputStr).append("'. ");
+      sb.append("Valid reporters: ");
+      var isFirst = true;
+      // `enumEntries()` is not available in Kotlin versions below 1.8
+      //noinspection EnumValuesSoftDeprecateInJava
+      for (var value : TestReporter.values()) {
+        if (isFirst) {
+          isFirst = false;
+        } else {
+          sb.append(", ");
+        }
+        sb.append('\'').append(value.toString().toLowerCase()).append('\'');
+      }
+      sb.append(".");
+      throw new InvalidUserDataException(sb.toString());
+    }
   }
 }
