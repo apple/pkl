@@ -22,10 +22,10 @@
 @ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.ref
 
-/// Creates a reference to the given value.
+/// Creates a [Reference] in [domain] to a
 external const function Reference<D, T>(
   domain: D(this is Domain),
-  clazz: Class<T>,
+  type: Class<T>,
   data: Any,
 ): Reference<D, T>
 
@@ -39,42 +39,45 @@ external const function Reference<D, T>(
 /// * Type constraints are ignored (erased) when referenced.
 /// * Properties marked `external` may not be referenced.
 external class Reference<out D, out T> {
-  // these are methods instead of properties to avoid collisions with referenced properties
-
-  /// The value from which the Reference is rooted. 
+  /// The domain the reference belongs to.
   external function getDomain(): D
 
-  /// The value from which the Reference is rooted. 
+  /// Arbitrary data attached to the reference during creation.
+  ///
+  /// Used for domain-specific purposes such as controlling how the reference is rendered. 
   external function getData(): Any
 
-  /// The path of access from [rootValue] to the referent.
+  /// The path of property and subscript access applied to the reference.
   external function getPath(): List<Access>
 
-  external function toString(): String
+  /// Render the reference to a string using its domain's ([getDomain()])
+  /// [Domain.referencetoString()] method.
+  function toString(): String = getDomain().referenceToString(getData(), getPath())
 }
 
 abstract class Domain {
-  function referenceToString(data: Any, path: List<Access>): String =
-    throw(
-      "Reference domain \(getClass()) must override referenceToString to enable Reference.toString()"
-    )
+  /// Must be overridden by domain classes to determine how [Reference] instances are transformed to
+  /// strings during rendering.
+  ///
+  /// Also applied to [Reference.toString()] and string interpolation.
+  abstract function referenceToString(data: Any, path: List<Access>): String
 }
 
 /// Represents a property or subscript access as part of a [Reference].
-external class Access {
+class Access {
   /// If the access is access to a property.
-  external isProperty: Boolean
+  fixed isProperty: Boolean = property != null
+
+  /// If the access is access via subscript.
+  fixed isSubscript: Boolean = property == null
 
   /// The property that was accessed.
   ///
   /// If non-null, this is a property access. If `null` this is a subscript access.
-  external property: String(key == null)?
-
-  /// If the access is access via subscript.
-  external isSubscript: Boolean
+  property: String(key == null)?
 
   /// The subscript key that was accessed.
   ///
   /// May be null even when [property] is null, which represents a subscript access with key `null`.
-  external key: Any
+  key: Any
 }

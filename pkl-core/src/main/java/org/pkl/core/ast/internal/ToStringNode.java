@@ -67,20 +67,9 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   }
 
   @Specialization
-  protected String evalReference(VirtualFrame frame, VmReference value) {
-    var invokeNode =
-        InvokeMethodVirtualNodeGen.create(
-            sourceSection,
-            Identifier.REFERENCE_TO_STRING,
-            new ExpressionNode[] {
-              new ConstantValueNode(value.getData()),
-              new ConstantValueNode(VmList.create(value.getPath()))
-            },
-            MemberLookupMode.EXPLICIT_RECEIVER,
-            null,
-            null);
-    return (String)
-        invokeNode.executeWith(frame, value.getDomain(), value.getDomain().getVmClass());
+  protected String evalReference(VirtualFrame frame, VmReference value, @Cached(value = "createInvokeNode()", neverDefault = true)
+  InvokeMethodVirtualNode invokeNode) {
+    return (String) invokeNode.executeWith(frame, value, value.getVmClass());
   }
 
   @Fallback

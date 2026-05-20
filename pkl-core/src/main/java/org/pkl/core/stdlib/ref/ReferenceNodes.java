@@ -16,12 +16,6 @@
 package org.pkl.core.stdlib.ref;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import org.pkl.core.ast.ConstantValueNode;
-import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberLookupMode;
-import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
-import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmReference;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -47,25 +41,6 @@ public class ReferenceNodes {
     @Specialization
     protected VmList eval(VmReference self) {
       return VmList.create(self.getPath());
-    }
-  }
-
-  public abstract static class toString extends ExternalMethod0Node {
-    @Specialization
-    protected String evalString(VirtualFrame frame, VmReference self) {
-      var invokeNode =
-          InvokeMethodVirtualNodeGen.create(
-              sourceSection,
-              Identifier.REFERENCE_TO_STRING,
-              new ExpressionNode[] {
-                new ConstantValueNode(self.getData()),
-                new ConstantValueNode(VmList.create(self.getPath()))
-              },
-              MemberLookupMode.EXPLICIT_RECEIVER,
-              null,
-              null);
-      return (String)
-          invokeNode.executeWith(frame, self.getDomain(), self.getDomain().getVmClass());
     }
   }
 }

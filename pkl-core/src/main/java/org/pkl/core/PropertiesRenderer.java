@@ -177,6 +177,13 @@ final class PropertiesRenderer implements ValueRenderer {
               "Values of type `Regex` cannot be rendered as Properties. Value: %s", value));
     }
 
+    @Override
+    public String convertReference(Reference value) {
+      throw new RendererException(
+          String.format(
+              "Values of type `Reference` cannot be rendered as Properties. Value: %s", value));
+    }
+
     private void doVisitMap(@Nullable String keyPrefix, Map<?, ?> map) {
       for (Map.Entry<?, ?> entry : map.entrySet()) {
         doVisitKeyAndValue(keyPrefix, entry.getKey(), entry.getValue());

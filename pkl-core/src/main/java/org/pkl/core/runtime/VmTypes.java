@@ -41,7 +41,6 @@ import com.oracle.truffle.api.dsl.TypeSystem;
   VmTypeAlias.class,
   VmObjectLike.class,
   VmReference.class,
-  VmReference.Access.class,
   VmValue.class,
 })
 public class VmTypes {}

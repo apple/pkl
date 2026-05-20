@@ -188,24 +188,14 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 
-|link:{uri-stdlib-Reference}[Reference]
+|link:{uri-stdlib-ref-Reference}[Reference]
 |`0x20`
+|`<value>` (Typed)
+|Domain
 |`<value>`
-|Root value
+|Data
 |link:{uri-messagepack-array}[array]
-|Array of link:{uri-stdlib-ReferenceAccess}[property access] values
-|
-|
-
-|link:{uri-stdlib-ReferenceAccess}[ReferenceAccess]
-|`0x21`
-|link:{uri-messagepack-str}[str] (when a property access) or link:{uri-messagepack-str}[nil] (when a subscript access)
-|Property name
-|`<value>` or link:{uri-messagepack-str}[nil] (when a property access)
-|Key value
-|
-|
-|===
+|Array of link:{uri-stdlib-ref-Access}[`pkl.ref#Access`] values
 
 [[type-name-encoding]]
 [NOTE]

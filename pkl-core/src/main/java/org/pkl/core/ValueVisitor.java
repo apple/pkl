@@ -93,6 +93,10 @@ public interface ValueVisitor {
     visitDefault(value);
   }
 
+  default void visitReference(Reference value) {
+    visitDefault(value);
+  }
+
   default void visit(Object value) {
     if (value instanceof Value v) {
       v.accept(this);

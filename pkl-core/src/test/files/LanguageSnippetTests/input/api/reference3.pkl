@@ -5,9 +5,13 @@ import "pkl:ref"
 
 hidden a: A
 
-class D extends ref.Domain
+class D extends ref.Domain {
+  function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+}
 local d: D = new {}
-class D2 extends ref.Domain
+class D2 extends ref.Domain {
+  function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+}
 local d2: D2 = new {}
 typealias Ref<T> = ref.Reference<D, T>
 

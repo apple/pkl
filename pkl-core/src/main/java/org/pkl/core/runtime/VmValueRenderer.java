@@ -282,21 +282,17 @@ public final class VmValueRenderer {
       visit(value.getData());
       append(")");
       for (var elem : value.getPath()) {
-        visit(elem);
+        var property = VmUtils.readMember(elem, Identifier.PROPERTY);
+        if (property instanceof String propName) {
+          append(".");
+          writeIdentifier(propName);
+        } else {
+          append("[");
+          visit(VmUtils.readMember(elem, Identifier.KEY));
+          append("]");
+        }
       }
       contexts.pop();
-    }
-
-    @Override
-    public void visitReferenceAccess(VmReference.Access value) {
-      if (value.isProperty()) {
-        append(".");
-        writeIdentifier(value.getProperty());
-      } else {
-        append("[");
-        visit(value.getKey());
-        append("]");
-      }
     }
 
     private void append(Object value) {

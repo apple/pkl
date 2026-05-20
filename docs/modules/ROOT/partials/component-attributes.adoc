@@ -69,6 +69,7 @@ endif::[]
 
 :uri-stdlib-baseModule: {uri-pkl-stdlib-docs}/base
 :uri-stdlib-CommandModule: {uri-pkl-stdlib-docs}/Command
+:uri-stdlib-refModule: {uri-pkl-stdlib-docs}/ref
 :uri-stdlib-analyzeModule: {uri-pkl-stdlib-docs}/analyze
 :uri-stdlib-jsonnetModule: {uri-pkl-stdlib-docs}/jsonnet
 :uri-stdlib-reflectModule: {uri-pkl-stdlib-docs}/reflect
@@ -150,8 +151,6 @@ endif::[]
 :uri-stdlib-Function4: {uri-stdlib-baseModule}/Function4
 :uri-stdlib-Function5: {uri-stdlib-baseModule}/Function5
 :uri-stdlib-Bytes: {uri-stdlib-baseModule}/Bytes
-:uri-stdlib-Reference: {uri-stdlib-baseModule}/Reference
-:uri-stdlib-ReferenceAccess: {uri-stdlib-baseModule}/ReferenceAccess
 :uri-stdlib-Resource: {uri-stdlib-baseModule}/Resource
 :uri-stdlib-outputFiles: {uri-stdlib-baseModule}/ModuleOutput#files
 :uri-stdlib-FileOutput: {uri-stdlib-baseModule}/FileOutput
@@ -162,6 +161,8 @@ endif::[]
 :uri-stdlib-Command-CountedFlag: {uri-stdlib-CommandModule}/CountedFlag
 :uri-stdlib-Command-Argument: {uri-stdlib-CommandModule}/Argument
 :uri-stdlib-Command-Import: {uri-stdlib-CommandModule}/Import
+:uri-stdlib-ref-Reference: {uri-stdlib-baseModule}/Reference
+:uri-stdlib-ref-Access: {uri-stdlib-baseModule}/Access
 
 :uri-messagepack: https://msgpack.org/index.html
 :uri-messagepack-spec: https://github.com/msgpack/msgpack/blob/master/spec.md
