@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -96,6 +96,20 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
       VmDynamic dynamic, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
     return readMember(dynamic, key, callNode);
+  }
+
+  @Specialization
+  protected VmReference eval(VmReference reference, Object key) {
+    var result = reference.withSubscriptAccess(key);
+    if (result != null) return result;
+
+    CompilerDirectives.transferToInterpreter();
+    throw exceptionBuilder()
+        .evalError(
+            "operatorNotDefined2", getShortName(), reference.exportType(), VmUtils.getClass(key))
+        .withProgramValue("Left operand", reference)
+        .withProgramValue("Right operand", key)
+        .build();
   }
 
   @Specialization

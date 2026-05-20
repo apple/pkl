@@ -271,6 +271,30 @@ public final class VmValueRenderer {
       append("null");
     }
 
+    @Override
+    public void visitReference(VmReference value) {
+      contexts.push(Context.EXPLICIT);
+      append("Reference(");
+      visit(value.getDomain());
+      append(", ");
+      append(value.exportReferentType());
+      append(", ");
+      visit(value.getData());
+      append(")");
+      for (var elem : value.getPath()) {
+        var property = VmUtils.readMember(elem, Identifier.PROPERTY);
+        if (property instanceof String propName) {
+          append(".");
+          writeIdentifier(propName);
+        } else {
+          append("[");
+          visit(VmUtils.readMember(elem, Identifier.KEY));
+          append("]");
+        }
+      }
+      contexts.pop();
+    }
+
     private void append(Object value) {
       builder.append(value);
       checkLengthLimit();

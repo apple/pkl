@@ -1,0 +1,7 @@
+foo = "Expected value of type `pkl.ref#Reference<reference3#D, Int>`, but got type `pkl.ref#Reference<reference3#D, String>`. Value: Reference(new D {}, String, new A { b = ? }).b"
+bar = "Expected value of type `pkl.ref#Reference<reference3#D, Boolean | Int>`, but got type `pkl.ref#Reference<reference3#D, String>`. Value: Reference(new D {}, String, new A { b = ? }).b"
+baz = "Expected value of type `pkl.ref#Reference<reference3#D, Listing<String>>`, but got type `pkl.ref#Reference<reference3#D, String>`. Value: Reference(new D {}, String, new A { b = ? }).b"
+qux = "Expected value of type `pkl.ref#Reference<reference3#D, reference3#Alias1?>`, but got type `pkl.ref#Reference<reference3#D, String>`. Value: Reference(new D {}, String, new A { b = ? }).b"
+quux = "Expected value of type `pkl.ref#Reference<reference3#D, reference3#A>`, but got type `pkl.ref#Reference<reference3#D2, String>`. Value: Reference(new D2 {}, String, new A { b = ? }).b"
+corge = "Cannot find property `c` in object of type `pkl.ref#Reference<reference3#D, String>`."
+grault = "Operator `[]` is not defined for operand types `pkl.ref#Reference<reference3#D, List>` and `String`. Left operand : Reference(new D {}, List, List()) Right operand: \"hi\""
