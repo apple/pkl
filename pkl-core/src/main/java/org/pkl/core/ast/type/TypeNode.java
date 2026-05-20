@@ -2127,7 +2127,7 @@ public abstract class TypeNode extends PklNode {
 
   @ImportStatic(RefModule.class)
   public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
-    private TypeNode domainTypeNode;
+    @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
     @Child private ExpressionNode getModuleNode;
 
@@ -2139,7 +2139,6 @@ public abstract class TypeNode extends PklNode {
       this.getModuleNode = new GetModuleNode(sourceSection);
     }
 
-    @SuppressWarnings("unused")
     @Specialization(guards = "value.getVmClass() == getReferenceClass()")
     protected Object eval(VirtualFrame frame, VmReference value) {
       // constraints may not be used in Reference type annotation referents

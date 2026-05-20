@@ -18,25 +18,23 @@ package org.pkl.core.runtime;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
-import java.util.Map;
-import java.util.Objects;
 import java.util.Set;
 import org.organicdesign.fp.collections.RrbTree;
 import org.organicdesign.fp.collections.RrbTree.ImRrbt;
 import org.pkl.core.Composite;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
-import org.pkl.core.PNull;
-import org.pkl.core.PObject;
 import org.pkl.core.PType;
+import org.pkl.core.Reference;
 import org.pkl.core.TypeAlias;
+import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.Nullable;
 
 public final class VmReference extends VmValue {
 
   private final VmTyped domain;
   private final Object data;
-  private final ImRrbt<Access> path;
+  private final ImRrbt<VmTyped> path;
   // candidate types can only be: PType.Class, PType.Alias (only preservedAliasTypes),
   // PType.StringLiteral, or PType.UNKNOWN
   private final Set<PType> candidateTypes;
@@ -44,22 +42,34 @@ public final class VmReference extends VmValue {
   private boolean forced = false;
 
   private static final PType nullType = new PType.Class(BaseModule.getNullClass().export());
-  private static final Set<TypeAlias> intAliasTypes = getIntAliasTypes();
-  private static final Set<TypeAlias> preservedAliasTypes = intAliasTypes;
+  private static final Set<TypeAlias> intAliasTypes = new HashSet<>();
+  private static final Set<TypeAlias> preservedAliasTypes = new HashSet<>();
 
-  private static Set<TypeAlias> getIntAliasTypes() {
-    var types = new HashSet<TypeAlias>();
+  static {
     for (var t : BaseModule.getIntTypeAliases()) {
-      types.add(t.export());
+      intAliasTypes.add(t.export());
+      preservedAliasTypes.add(t.export());
     }
-    return types;
+  }
+
+  private record Access(@Nullable String property, @Nullable Object key) {}
+
+  private static final VmObjectFactory<Access> accessFactory =
+      new VmObjectFactory<>(RefModule::getAccessClass);
+
+  static {
+    accessFactory
+        .addProperty(
+            "property",
+            access -> access.property == null ? VmNull.withoutDefault() : access.property)
+        .addProperty("key", access -> access.key == null ? VmNull.withoutDefault() : access.key);
   }
 
   public VmReference(VmTyped domain, VmClass clazz, Object data) {
     this(domain, data, RrbTree.empty(), Set.of(new PType.Class(clazz.export())));
   }
 
-  public VmReference(VmTyped domain, Object data, ImRrbt<Access> path, Set<PType> candidateTypes) {
+  public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, Set<PType> candidateTypes) {
     this.domain = domain;
     this.data = data;
     this.candidateTypes = candidateTypes;
@@ -78,7 +88,7 @@ public final class VmReference extends VmValue {
     return data;
   }
 
-  public List<Access> getPath() {
+  public List<VmTyped> getPath() {
     return path;
   }
 
@@ -89,40 +99,40 @@ public final class VmReference extends VmValue {
   // * flattening unions
   // * when moduleClass is supplied, replace PType.MODULE with appropriate PType.Class
   // * drop PType.NOTHING, PType.Function, and PType.TypeVariable
-  private static Set<PType> simplifyType(PType type, @Nullable PClass moduleClass) {
+  private static Set<PType> normalizeTypes(PType type, @Nullable PClass moduleClass) {
     var types = new HashSet<PType>();
-    simplifyType(type, moduleClass, types);
+    normalizeTypes(type, moduleClass, types);
     return types;
   }
 
-  private static void simplifyType(PType type, @Nullable PClass moduleClass, Set<PType> result) {
+  private static void normalizeTypes(PType type, @Nullable PClass moduleClass, Set<PType> result) {
     if (type == PType.UNKNOWN || type instanceof PType.StringLiteral) {
       result.add(type);
-    } else if (type instanceof PType.Class klass) {
-      if (klass.getTypeArguments().isEmpty()) {
-        result.add(klass);
+    } else if (type instanceof PType.Class clazz) {
+      if (clazz.getTypeArguments().isEmpty()) {
+        result.add(clazz);
       } else {
-        var typeArgs = new ArrayList<PType>(klass.getTypeArguments().size());
-        for (var arg : klass.getTypeArguments()) {
-          var tt = new ArrayList<>(simplifyType(arg, moduleClass));
+        var typeArgs = new ArrayList<PType>(clazz.getTypeArguments().size());
+        for (var arg : clazz.getTypeArguments()) {
+          var tt = new ArrayList<>(normalizeTypes(arg, moduleClass));
           typeArgs.add(tt.size() == 1 ? tt.get(0) : new PType.Union(tt));
         }
-        result.add(new PType.Class(klass.getPClass(), typeArgs));
+        result.add(new PType.Class(clazz.getPClass(), typeArgs));
       }
     } else if (type instanceof PType.Nullable nullable) {
-      simplifyType(nullable.getBaseType(), moduleClass, result);
+      normalizeTypes(nullable.getBaseType(), moduleClass, result);
       result.add(nullType);
     } else if (type instanceof PType.Constrained constrained) {
-      simplifyType(constrained.getBaseType(), moduleClass, result);
+      normalizeTypes(constrained.getBaseType(), moduleClass, result);
     } else if (type instanceof PType.Alias alias) {
       if (preservedAliasTypes.contains(alias.getTypeAlias())) {
         result.add(alias);
       } else {
-        simplifyType(alias.getAliasedType(), alias.getTypeAlias().getModuleClass(), result);
+        normalizeTypes(alias.getAliasedType(), alias.getTypeAlias().getModuleClass(), result);
       }
     } else if (type instanceof PType.Union union) {
       for (var t : union.getElementTypes()) {
-        simplifyType(t, moduleClass, result);
+        normalizeTypes(t, moduleClass, result);
       }
     } else if (type == PType.MODULE && moduleClass != null) {
       result.add(new PType.Class(moduleClass));
@@ -141,7 +151,10 @@ public final class VmReference extends VmValue {
       candidates = Set.of(PType.UNKNOWN);
     }
     return new VmReference(
-        domain, data, path.append(Access.property(property.toString())), candidates);
+        domain,
+        data,
+        path.append(accessFactory.create(new Access(property.toString(), null))),
+        candidates);
   }
 
   public @Nullable VmReference withSubscriptAccess(Object key) {
@@ -155,7 +168,8 @@ public final class VmReference extends VmValue {
       // optimization: unknown allows all references, erase all candidates to only unknown
       candidates = Set.of(PType.UNKNOWN);
     }
-    return new VmReference(domain, data, path.append(Access.subscript(key)), candidates);
+    return new VmReference(
+        domain, data, path.append(accessFactory.create(new Access(null, key))), candidates);
   }
 
   @SuppressWarnings("DuplicatedCode")
@@ -164,25 +178,25 @@ public final class VmReference extends VmValue {
       result.add(type);
       return;
     }
-    if (!(type instanceof PType.Class klass)) {
+    if (!(type instanceof PType.Class clazz)) {
       return;
     }
-    if (klass.getPClass().getInfo() == PClassInfo.Dynamic) {
+    if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
       result.add(PType.UNKNOWN);
       return;
     }
-    if (klass.getPClass().getInfo() == PClassInfo.Listing
-        || klass.getPClass().getInfo() == PClassInfo.List
-        || klass.getPClass().getInfo() == PClassInfo.Mapping
-        || klass.getPClass().getInfo() == PClassInfo.Map) {
+    if (clazz.getPClass().getInfo() == PClassInfo.Listing
+        || clazz.getPClass().getInfo() == PClassInfo.List
+        || clazz.getPClass().getInfo() == PClassInfo.Mapping
+        || clazz.getPClass().getInfo() == PClassInfo.Map) {
       return;
     }
     // Typed
-    var prop = klass.getPClass().getAllProperties().get(property);
+    var prop = clazz.getPClass().getAllProperties().get(property);
     if (prop == null || prop.isExternal()) {
       return;
     }
-    simplifyType(prop.getType(), klass.getPClass().getModuleClass(), result);
+    normalizeTypes(prop.getType(), clazz.getPClass().getModuleClass(), result);
   }
 
   @SuppressWarnings("DuplicatedCode")
@@ -191,31 +205,31 @@ public final class VmReference extends VmValue {
       result.add(type);
       return;
     }
-    if (!(type instanceof PType.Class klass)) {
+    if (!(type instanceof PType.Class clazz)) {
       return;
     }
-    if (klass.getPClass().getInfo() == PClassInfo.Dynamic) {
+    if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
       result.add(PType.UNKNOWN);
       return;
     }
-    if (klass.getPClass().getInfo() == PClassInfo.Listing
-        || klass.getPClass().getInfo() == PClassInfo.List) {
+    if (clazz.getPClass().getInfo() == PClassInfo.Listing
+        || clazz.getPClass().getInfo() == PClassInfo.List) {
       if (key instanceof Long) {
-        simplifyType(klass.getTypeArguments().get(0), klass.getPClass().getModuleClass(), result);
+        normalizeTypes(clazz.getTypeArguments().get(0), clazz.getPClass().getModuleClass(), result);
       }
       return;
     }
-    if (klass.getPClass().getInfo() == PClassInfo.Mapping
-        || klass.getPClass().getInfo() == PClassInfo.Map) {
-      var typeArgs = klass.getTypeArguments();
-      var keyTypes = simplifyType(typeArgs.get(0), klass.getPClass().getModuleClass());
+    if (clazz.getPClass().getInfo() == PClassInfo.Mapping
+        || clazz.getPClass().getInfo() == PClassInfo.Map) {
+      var typeArgs = clazz.getTypeArguments();
+      var keyTypes = normalizeTypes(typeArgs.get(0), clazz.getPClass().getModuleClass());
       for (var kt : keyTypes) {
         if (kt == PType.UNKNOWN
             || (kt instanceof PType.Class klazz
                 && klazz.getPClass().getInfo() == PClassInfo.forValue(key))
             || (kt instanceof PType.StringLiteral stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
-          simplifyType(typeArgs.get(1), klass.getPClass().getModuleClass(), result);
+          normalizeTypes(typeArgs.get(1), clazz.getPClass().getModuleClass(), result);
           return;
         }
       }
@@ -229,10 +243,12 @@ public final class VmReference extends VmValue {
       return true;
     }
 
+    var checkTypes = normalizeTypes(type, moduleClass);
+
     // all candidate types must be subtypes of at least one target type
     candidate:
     for (var c : candidateTypes) {
-      for (var t : simplifyType(type, moduleClass)) {
+      for (var t : checkTypes) {
         if (isSubtype(c, t)) break candidate;
       }
       return false;
@@ -243,8 +259,10 @@ public final class VmReference extends VmValue {
   private static boolean isSubtype(PType a, PType b) {
     // checks if A is a subtype of B
     // cases (A -> B)
+    // * A == B
     // * StringLiteral -> StringLiteral: if literals are the same
     // * StringLiteral -> Class: B is String
+    // * Char Alias -> Char Alias, StringLiteral (known single character)
     // * Int Alias -> Class: B is a subtype of Number (Int|Float|Number)
     // * Int Alias -> Alias
     //   * same alias
@@ -259,6 +277,7 @@ public final class VmReference extends VmValue {
     //     * invariant: A_i must be identical to B_i
     //     * covariant: A_i must be a subtype of B_i
     //     * contravariant: B_i must be a subtype of A_i
+    if (a == b) return true;
 
     if (a instanceof PType.StringLiteral aStr) {
       if (b instanceof PType.StringLiteral bStr) {
@@ -342,23 +361,13 @@ public final class VmReference extends VmValue {
   }
 
   @Override
-  public Composite export() {
-    var pathList = new ArrayList<>(path.size());
-    for (Access elem : path) {
+  public Reference export() {
+    var pathList = new ArrayList<Composite>(path.size());
+    for (var elem : path) {
       pathList.add(elem.export());
     }
 
-    return new PObject(
-        getVmClass().getPClassInfo(),
-        Map.of(
-            "candidateTypes",
-            candidateTypes,
-            "domain",
-            domain.export(),
-            "data",
-            VmValue.export(data),
-            "path",
-            pathList));
+    return new Reference(domain.export(), VmValue.export(data), pathList, exportReferentType());
   }
 
   public PType exportReferentType() {
@@ -385,89 +394,24 @@ public final class VmReference extends VmValue {
   }
 
   @Override
-  public boolean equals(Object obj) {
-    if (this == obj) return true;
-    if (!(obj instanceof VmReference other)) return false;
+  public boolean equals(@Nullable Object o) {
+    if (o == this) return true;
+    if (!(o instanceof VmReference that)) {
+      return false;
+    }
 
-    return domain.equals(other.getDomain())
-        && data.equals(other.getData())
-        && path.equals(other.getPath())
-        && Objects.equals(candidateTypes, other.getCandidateTypes());
+    return domain.equals(that.domain)
+        && data.equals(that.data)
+        && path.equals(that.path)
+        && candidateTypes.equals(that.candidateTypes);
   }
 
-  public static class Access extends VmValue {
-    private final @Nullable String property;
-    private final @Nullable Object key;
-
-    public static Access property(String property) {
-      return new Access(property, null);
-    }
-
-    public static Access subscript(Object key) {
-      return new Access(null, key);
-    }
-
-    private Access(@Nullable String property, @Nullable Object key) {
-      this.property = property;
-      this.key = key;
-    }
-
-    public String getProperty() {
-      assert property != null;
-      return property;
-    }
-
-    public Object getKey() {
-      assert key != null;
-      return key;
-    }
-
-    public boolean isProperty() {
-      return property != null;
-    }
-
-    public boolean isSubscript() {
-      return key != null;
-    }
-
-    @Override
-    public VmClass getVmClass() {
-      return RefModule.getAccessClass();
-    }
-
-    @Override
-    public void force(boolean allowUndefinedValues) {
-      if (key != null) {
-        VmValue.force(key, allowUndefinedValues);
-      }
-    }
-
-    @Override
-    public Object export() {
-      return new PObject(
-          getVmClass().getPClassInfo(),
-          Map.of(
-              "property",
-              property == null ? PNull.getInstance() : property,
-              "key",
-              key == null ? PNull.getInstance() : VmValue.export(key)));
-    }
-
-    @Override
-    public void accept(VmValueVisitor visitor) {
-      visitor.visitReferenceAccess(this);
-    }
-
-    @Override
-    public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
-      return converter.convertReferenceAccess(this, path);
-    }
-
-    @Override
-    public boolean equals(Object obj) {
-      if (this == obj) return true;
-      if (!(obj instanceof Access other)) return false;
-      return Objects.equals(property, other.getProperty()) && Objects.equals(key, other.getKey());
-    }
+  @Override
+  public int hashCode() {
+    int result = domain.hashCode();
+    result = 31 * result + data.hashCode();
+    result = 31 * result + path.hashCode();
+    result = 31 * result + candidateTypes.hashCode();
+    return result;
   }
 }

@@ -34,7 +34,6 @@ public enum PklBinaryCode {
   FUNCTION((byte) 0x0E),
   BYTES((byte) 0x0F),
   REFERENCE((byte) 0x20),
-  REFERENCE_ACCESS((byte) 0x21),
 
   PROPERTY((byte) 0x10),
   ENTRY((byte) 0x11),
@@ -67,6 +66,7 @@ public enum PklBinaryCode {
       case 0x0D -> PklBinaryCode.TYPEALIAS;
       case 0x0E -> PklBinaryCode.FUNCTION;
       case 0x0F -> PklBinaryCode.BYTES;
+      case 0x20 -> PklBinaryCode.REFERENCE;
 
       case 0x10 -> PklBinaryCode.PROPERTY;
       case 0x11 -> PklBinaryCode.ENTRY;

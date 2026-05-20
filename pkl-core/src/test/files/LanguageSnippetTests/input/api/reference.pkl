@@ -70,8 +70,8 @@ b: B = new {
 }
 
 aOrB: A | B = a
-aRef = a.$
-bRef = b.$
+aRef: Ref<A> = a.$
+bRef: Ref<B> = b.$
 unknownRef: Ref<A | B> = aRef
 unknownRef2: Ref<A> | Ref<B> = aRef
 unknownRef3: Ref<A | B> = aOrB.$
@@ -100,9 +100,14 @@ k: K = new {
 }
 
 j: K = new {
-  aProperties = (unknownRef as Ref<A>).outputs
+  local aRef2 = unknownRef as Ref<A>
+  aProperties = aRef2.outputs
   splitUnion = unknownRef.outputs.someListing
 }
+
+local x: UInt = 0
+local y = ref.Reference(d, UInt, x)
+local z = y
 
 refInterpolation = "\(aRef.outputs.someListing[1])"
 

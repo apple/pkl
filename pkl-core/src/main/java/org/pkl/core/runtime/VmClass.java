@@ -673,9 +673,9 @@ public final class VmClass extends VmValue {
         if (method.isLocal()) continue;
         methods.put(method.getName().toString(), method.export(__pClass));
       }
-    }
 
-    return __pClass;
+      return __pClass;
+    }
   }
 
   @Override

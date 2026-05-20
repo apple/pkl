@@ -403,11 +403,6 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     cannotRenderTypeAddConverter(value);
   }
 
-  @Override
-  public void visitReferenceAccess(VmReference.Access value) {
-    cannotRenderTypeAddConverter(value);
-  }
-
   protected void cannotRenderTypeAddConverter(VmValue value) {
     var builder =
         new VmExceptionBuilder()

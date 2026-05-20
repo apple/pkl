@@ -561,12 +561,6 @@ public final class RendererNodes {
       builder.append(value);
     }
 
-    @Override
-    public void visitReferenceAccess(VmReference.Access value) {
-      writePropertyName();
-      builder.append(value);
-    }
-
     /**
      * Resolves types for the purpose of protobuf rendering. "Sees through" nullable types and type
      * aliases, simplifies variations of {@code Int} and {@code String} types (literate string
