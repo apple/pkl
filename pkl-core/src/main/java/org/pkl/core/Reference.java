@@ -54,7 +54,7 @@ public class Reference implements Value {
   }
 
   /** Returns the referent type of this reference. */
-  public PType getReferentTypee() {
+  public PType getReferentType() {
     return referentType;
   }
 

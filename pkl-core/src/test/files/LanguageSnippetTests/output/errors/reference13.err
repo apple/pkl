@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Cannot find property `default` in object of type `pkl.ref#Reference<reference13#D, Mapping>`.
+Cannot find property `default` in object of type `pkl.ref#Reference<reference13#D, Mapping<unknown, unknown>>`.
 
 x | test = ref.Reference(d, Mapping, "").default
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

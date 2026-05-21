@@ -1,0 +1,12 @@
+import "pkl:ref"
+
+class A {
+  foo: String | Int | Boolean
+}
+
+class D extends ref.Domain {
+  function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+}
+local d: D = new {}
+
+test = ref.Reference(d, A, "").foo as ref.Reference<D, Int | Boolean> 

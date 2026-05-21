@@ -16,8 +16,10 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -33,7 +35,6 @@ import org.pkl.core.TypeAlias;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
-import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.Nullable;
 
 public final class VmReference extends VmValue {
@@ -58,21 +59,19 @@ public final class VmReference extends VmValue {
     }
   }
 
-  private record Access(@Nullable String property, @Nullable Object key) {}
-
-  private static final VmObjectFactory<Access> accessFactory =
-      new VmObjectFactory<>(RefModule::getAccessClass);
-
-  static {
-    accessFactory
-        .addProperty(
-            "property",
-            access -> access.property == null ? VmNull.withoutDefault() : access.property)
-        .addProperty("key", access -> access.key == null ? VmNull.withoutDefault() : access.key);
+  private static VmTyped newAccess(@Nullable String property, @Nullable Object key) {
+    return new VmObjectBuilder()
+        .addProperty(Identifier.PROPERTY, property == null ? VmNull.withoutDefault() : property)
+        .addProperty(Identifier.KEY, key == null ? VmNull.withoutDefault() : key)
+        .toTyped(RefModule.getAccessClass());
   }
 
   public VmReference(VmTyped domain, VmClass clazz, Object data) {
-    this(domain, data, RrbTree.empty(), Set.of(new PType.Class(clazz.export())));
+    this(
+        domain,
+        data,
+        RrbTree.empty(),
+        normalizeTypes(new PType.Class(clazz.export()), clazz.getModule().getVmClass().export()));
   }
 
   public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, Set<PType> candidateTypes) {
@@ -80,10 +79,6 @@ public final class VmReference extends VmValue {
     this.data = data;
     this.candidateTypes = candidateTypes;
     this.path = path;
-  }
-
-  public Set<PType> getCandidateTypes() {
-    return candidateTypes;
   }
 
   public VmTyped getDomain() {
@@ -105,18 +100,25 @@ public final class VmReference extends VmValue {
   // * flattening unions
   // * when moduleClass is supplied, replace PType.MODULE with appropriate PType.Class
   // * drop PType.NOTHING, PType.Function, and PType.TypeVariable
-  private static Set<PType> normalizeTypes(PType type, @Nullable PClass moduleClass) {
+  private static Set<PType> normalizeTypes(PType type, PClass moduleClass) {
     var types = new HashSet<PType>();
     normalizeTypes(type, moduleClass, types);
     return types;
   }
 
-  private static void normalizeTypes(PType type, @Nullable PClass moduleClass, Set<PType> result) {
+  private static void normalizeTypes(PType type, PClass moduleClass, Set<PType> result) {
     if (type == PType.UNKNOWN || type instanceof PType.StringLiteral) {
       result.add(type);
     } else if (type instanceof PType.Class clazz) {
       if (clazz.getTypeArguments().isEmpty()) {
-        result.add(clazz);
+        // if a generic type is used without type arguments, it needs to be normalized so all args
+        // are unknown; i.e. with bare List/Map/etc. type annotations (via FinalClassTypeNode).
+        var typeParameterCount = clazz.getPClass().getTypeParameters().size();
+        result.add(
+            typeParameterCount == 0
+                ? clazz
+                : new PType.Class(
+                    clazz.getPClass(), Collections.nCopies(typeParameterCount, PType.UNKNOWN)));
       } else {
         var typeArgs = new ArrayList<PType>(clazz.getTypeArguments().size());
         for (var arg : clazz.getTypeArguments()) {
@@ -140,7 +142,7 @@ public final class VmReference extends VmValue {
       for (var t : union.getElementTypes()) {
         normalizeTypes(t, moduleClass, result);
       }
-    } else if (type == PType.MODULE && moduleClass != null) {
+    } else if (type == PType.MODULE) {
       result.add(new PType.Class(moduleClass));
     }
   }
@@ -157,10 +159,7 @@ public final class VmReference extends VmValue {
       candidates = Set.of(PType.UNKNOWN);
     }
     return new VmReference(
-        domain,
-        data,
-        path.append(accessFactory.create(new Access(property.toString(), null))),
-        candidates);
+        domain, data, path.append(newAccess(property.toString(), null)), candidates);
   }
 
   public @Nullable VmReference withSubscriptAccess(Object key) {
@@ -174,8 +173,7 @@ public final class VmReference extends VmValue {
       // optimization: unknown allows all references, erase all candidates to only unknown
       candidates = Set.of(PType.UNKNOWN);
     }
-    return new VmReference(
-        domain, data, path.append(accessFactory.create(new Access(null, key))), candidates);
+    return new VmReference(domain, data, path.append(newAccess(null, key)), candidates);
   }
 
   @SuppressWarnings("DuplicatedCode")
@@ -251,8 +249,10 @@ public final class VmReference extends VmValue {
     }
   }
 
-  /** Checks type against ref's candidateTypes. Does not check domain. */
-  public boolean checkType(PType type, @Nullable PClass moduleClass) {
+  /**
+   * Tells if this reference's referent type is a subtype of {@code type}. Does not check domain.
+   */
+  public boolean referentTypeIsSubtypeOf(PType type, PClass moduleClass) {
     // fast path: if this could be unknown, any type is accepted
     if (candidateTypes.contains(PType.UNKNOWN)) {
       return true;
@@ -264,7 +264,7 @@ public final class VmReference extends VmValue {
     candidate:
     for (var c : candidateTypes) {
       for (var t : checkTypes) {
-        if (isSubtype(c, t)) break candidate;
+        if (isSubtype(c, t)) continue candidate;
       }
       return false;
     }
