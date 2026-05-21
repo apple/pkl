@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,20 +19,17 @@ import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.annotation.Target;
-import javax.annotation.Nonnull;
-import javax.annotation.meta.TypeQualifierNickname;
-import javax.annotation.meta.When;
+import org.jspecify.annotations.Nullable;
 
 /**
  * Indicates that the annotated field is initially {@code null} and initialized to a non-null value
  * before or upon first use. Corresponds to {@code lateinit} in Kotlin (but does not result in
- * automatic runtime non-null checks).
+ * automatic runtime non-null checks). This is not a nullness annotation; NullAway is configured to
+ * exempt fields annotated with {@code LateInit} from constructor initialization checks.
  *
  * <p>Note: Fields that are initialized late to a nullable value should only be annotated with
  * {@link Nullable} (same as in Kotlin).
  */
 @Target(ElementType.FIELD)
 @Retention(RetentionPolicy.RUNTIME)
-@Nonnull(when = When.UNKNOWN)
-@TypeQualifierNickname
 public @interface LateInit {}

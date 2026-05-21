@@ -17,12 +17,12 @@ package org.pkl.core.stdlib.xml;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.xml.XmlValidator;
 
 public final class RendererNodes {

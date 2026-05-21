@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
@@ -30,7 +31,6 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "class")
 public final class ClassNode extends ExpressionNode {
@@ -102,12 +102,8 @@ public final class ClassNode extends ExpressionNode {
       prototype.setExtraStorage(moduleInfo);
       prototype.addProperties(prototypeMembers);
     } else {
-      prototype =
-          new VmTyped(
-              frame.materialize(),
-              null, // initialized later by VmClass
-              null, // initialized later by VmClass
-              prototypeMembers);
+      // parent and clazz will be initialized later by VmClass
+      prototype = new VmTyped(frame.materialize(), null, prototypeMembers);
     }
 
     var annotations = new ArrayList<VmTyped>(annotationNodes.length);

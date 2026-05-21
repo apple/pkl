@@ -21,16 +21,16 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 
 public class VmEvalException extends VmException {
   public VmEvalException(
       @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
-      Object[] messageArguments,
+      @Nullable Object[] messageArguments,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,

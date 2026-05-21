@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.pkl.core;
 
 import java.util.ArrayList;
 import java.util.List;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * The results of testing a Pkl test module.
@@ -301,7 +301,7 @@ public record TestResults(
    * @param message The message of the underlying exception.
    * @param exception The exception thrown by Pkl
    */
-  public record Error(String message, PklException exception) {}
+  public record Error(@Nullable String message, PklException exception) {}
 
   /**
    * Indicates that an assertion failed.

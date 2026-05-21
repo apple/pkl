@@ -37,6 +37,7 @@ import java.util.regex.PatternSyntaxException;
 import java.util.stream.Collectors;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.Engine;
+import org.jspecify.annotations.Nullable;
 import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.FileOutput;
 import org.pkl.core.PClassInfo;
@@ -60,7 +61,6 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
 import org.pkl.parser.syntax.Expr;
@@ -95,12 +95,12 @@ public final class VmUtils {
   private VmUtils() {}
 
   static VmTyped createEmptyModule() {
-    return new VmTyped(createEmptyMaterializedFrame(), null, null, EconomicMaps.create());
+    return new VmTyped(createEmptyMaterializedFrame(), null, EconomicMaps.create());
   }
 
   @TruffleBoundary
   public static MaterializedFrame createEmptyMaterializedFrame() {
-    return Truffle.getRuntime().createMaterializedFrame(new Object[] {null, null});
+    return Truffle.getRuntime().createMaterializedFrame(new @Nullable Object[] {null, null});
   }
 
   public static Context createContext(Runnable initializer) {
@@ -784,7 +784,9 @@ public final class VmUtils {
   }
 
   public static TypeNode[] resolveParameterTypes(
-      VirtualFrame frame, FrameDescriptor descriptor, UnresolvedTypeNode[] parameterTypeNodes) {
+      VirtualFrame frame,
+      FrameDescriptor descriptor,
+      @Nullable UnresolvedTypeNode[] parameterTypeNodes) {
 
     var resolvedNodes = new TypeNode[parameterTypeNodes.length];
 
@@ -939,7 +941,7 @@ public final class VmUtils {
   }
 
   @TruffleBoundary
-  public static <K, V> V getMapValue(Map<K, V> map, K key) {
+  public static <K, V> @Nullable V getMapValue(Map<K, V> map, K key) {
     return map.get(key);
   }
 

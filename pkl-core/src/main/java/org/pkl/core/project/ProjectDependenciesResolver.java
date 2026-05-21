@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.io.Writer;
 import java.nio.file.Path;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.EconomicSet;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklException;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.packages.Checksums;
@@ -34,7 +35,6 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * Given a project's dependencies, build the dependency list.
@@ -131,6 +131,7 @@ public final class ProjectDependenciesResolver {
     var packageUri = declaredDependencies.myPackageUri();
     assert packageUri != null;
     var projectDir = Path.of(declaredDependencies.projectFileUri()).getParent();
+    assert projectDir != null;
     var relativePath = IoUtils.relativize(projectDir, this.project.getProjectDir());
     var localDependency = new LocalDependency(packageUri.toProjectPackageUri(), relativePath);
     updateDependency(localDependency);

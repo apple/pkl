@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,10 +16,10 @@
 package org.pkl.core.stdlib.benchmark;
 
 import java.util.function.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.DurationUnit;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.util.Nullable;
 
 final class BenchmarkUtils {
   private static final VmObjectFactory<BenchmarkResult> benchmarkResultFactory =

@@ -19,6 +19,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameDescriptor.Builder;
 import java.util.*;
 import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
@@ -28,7 +29,6 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
-import org.pkl.core.util.Nullable;
 import org.pkl.parser.Lexer;
 
 public final class SymbolTable {

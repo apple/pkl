@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.util;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ImportGraph;
 
 public class ImportGraphUtils {
@@ -42,6 +43,7 @@ public class ImportGraphUtils {
   private static @Nullable List<URI> doFindCycle(
       URI currentUri, ImportGraph importGraph, List<URI> path) {
     var imports = importGraph.imports().get(currentUri);
+    assert imports != null;
     var startingUri = path.get(0);
     for (var imprt : imports) {
       var uri = imprt.uri();

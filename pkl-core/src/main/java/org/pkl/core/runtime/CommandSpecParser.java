@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.CommandSpec;
 import org.pkl.core.CommandSpec.Argument;
 import org.pkl.core.CommandSpec.BooleanFlag;
@@ -64,7 +65,6 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
 /** Runs commands. */
@@ -460,19 +460,19 @@ public final class CommandSpecParser {
 
   private class OptionBehavior {
     private @Nullable BiFunction<String, URI, Object> each;
-    private @Nullable BiFunction<List<Object>, URI, Object> all;
+    private @Nullable BiFunction<List<Object>, URI, @Nullable Object> all;
     private @Nullable Boolean multiple;
     private @Nullable String metavar;
-    private @Nullable CommandSpec.CompletionCandidates completionCandidates;
+    private CommandSpec.@Nullable CompletionCandidates completionCandidates;
     private @Nullable Object defaultValue = null;
     private boolean isNullable = false;
 
     private OptionBehavior(
         @Nullable BiFunction<String, URI, Object> each,
-        @Nullable BiFunction<List<Object>, URI, Object> all,
+        @Nullable BiFunction<List<Object>, URI, @Nullable Object> all,
         @Nullable Boolean multiple,
         @Nullable String metavar,
-        @Nullable CommandSpec.CompletionCandidates completionCandidates) {
+        CommandSpec.@Nullable CompletionCandidates completionCandidates) {
       this.each = each;
       this.all = all;
       this.multiple = multiple;
@@ -874,7 +874,7 @@ public final class CommandSpecParser {
       };
     }
 
-    private static @Nullable CommandSpec.CompletionCandidates exportCompletionCandidates(
+    private static CommandSpec.@Nullable CompletionCandidates exportCompletionCandidates(
         VmTyped annotation) {
       var value = VmUtils.readMember(annotation, Identifier.COMPLETION_CANDIDATES);
       if (value instanceof VmNull) return null;
@@ -892,7 +892,7 @@ public final class CommandSpecParser {
       return each;
     }
 
-    public BiFunction<List<Object>, URI, Object> getAll() {
+    public BiFunction<List<Object>, URI, @Nullable Object> getAll() {
       assert all != null;
       return all;
     }
@@ -907,7 +907,7 @@ public final class CommandSpecParser {
       return metavar;
     }
 
-    public @Nullable CommandSpec.CompletionCandidates getCompletionCandidates() {
+    public CommandSpec.@Nullable CompletionCandidates getCompletionCandidates() {
       return completionCandidates;
     }
 
@@ -928,7 +928,7 @@ public final class CommandSpecParser {
    *
    * <p>Transforms List into VmList, Set into VmSet, and Map into VmMap.
    */
-  private VmTyped buildObject(VmClass clazz, Map<String, Object> properties) {
+  private VmTyped buildObject(VmClass clazz, Map<String, @Nullable Object> properties) {
     EconomicMap<Object, ObjectMember> members = EconomicMaps.create(properties.size());
     for (var prop : properties.entrySet()) {
       var key = prop.getKey();

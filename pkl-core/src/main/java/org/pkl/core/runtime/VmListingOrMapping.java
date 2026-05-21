@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,11 +20,11 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 
 public abstract class VmListingOrMapping extends VmObject {
   // reified type of listing elements and mapping values
@@ -66,12 +66,15 @@ public abstract class VmListingOrMapping extends VmObject {
       // Avoids repeating the same type cast in some cases.
       @Nullable ListingOrMappingTypeCastNode nextTypeCastNode) {
     var newNextTypeCastNode = typeCastNode != null ? typeCastNode : nextTypeCastNode;
-    @SuppressWarnings("DataFlowIssue")
-    var result =
-        this == owner
-            ? value
-            : ((VmListingOrMapping) parent)
-                .executeTypeCasts(value, owner, callNode, member, newNextTypeCastNode);
+    Object result;
+    if (this == owner) {
+      result = value;
+    } else {
+      assert parent != null;
+      result =
+          ((VmListingOrMapping) parent)
+              .executeTypeCasts(value, owner, callNode, member, newNextTypeCastNode);
+    }
     if (typeCastNode == null || typeCastNode == nextTypeCastNode) return result;
     var callTarget = typeCastNode.getCallTarget();
     try {

@@ -16,9 +16,9 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.stdlib.base.CollectionNodes.SortComparatorNode;
-import org.pkl.core.util.Nullable;
 
 final class MergeSort {
   // must be a power of two

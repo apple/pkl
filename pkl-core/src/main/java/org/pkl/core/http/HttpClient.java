@@ -25,8 +25,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.regex.Pattern;
 import javax.net.ssl.SSLContext;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Pair;
-import org.pkl.core.util.Nullable;
 
 /**
  * An HTTP client.

@@ -23,13 +23,13 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import java.util.Map;
 import java.util.function.BiConsumer;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 
 public abstract class VmException extends AbstractTruffleException {
   private final boolean isExternalMessage;
-  private final Object[] messageArguments;
+  private final @Nullable Object[] messageArguments;
   private final List<ProgramValue> programValues;
   private final @Nullable SourceSection sourceSection;
   private final @Nullable String memberName;
@@ -41,7 +41,7 @@ public abstract class VmException extends AbstractTruffleException {
       @Nullable String message,
       @Nullable Throwable cause,
       boolean isExternalMessage,
-      Object[] messageArguments,
+      @Nullable Object[] messageArguments,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> messageBuilder,
       List<ProgramValue> programValues,
       @Nullable Node location,
@@ -50,6 +50,7 @@ public abstract class VmException extends AbstractTruffleException {
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       Map<CallTarget, StackFrame> insertedStackFrames) {
     super(message, cause, UNLIMITED_STACK_TRACE, location);
+    assert message != null || messageBuilder != null;
     this.messageBuilder = messageBuilder;
     this.isExternalMessage = isExternalMessage;
     this.messageArguments = messageArguments;
@@ -64,7 +65,7 @@ public abstract class VmException extends AbstractTruffleException {
     return isExternalMessage;
   }
 
-  public final Object[] getMessageArguments() {
+  public final @Nullable Object[] getMessageArguments() {
     return messageArguments;
   }
 

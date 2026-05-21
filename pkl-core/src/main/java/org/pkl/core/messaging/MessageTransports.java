@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,6 +21,7 @@ import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.messaging.Message.OneWay;
 import org.pkl.core.messaging.Message.Response;
 import org.pkl.core.util.ErrorMessages;
@@ -49,7 +50,7 @@ public final class MessageTransports {
     return Pair.of(transport1, transport2);
   }
 
-  public static <T> T resolveFuture(Future<T> future) throws IOException {
+  public static <T extends @Nullable Object> T resolveFuture(Future<T> future) throws IOException {
     try {
       return future.get();
     } catch (ExecutionException | InterruptedException e) {
@@ -98,7 +99,7 @@ public final class MessageTransports {
 
   protected static class DirectMessageTransport extends AbstractMessageTransport {
 
-    private DirectMessageTransport other;
+    private @Nullable DirectMessageTransport other;
 
     protected DirectMessageTransport(Logger logger) {
       super(logger);
@@ -112,6 +113,8 @@ public final class MessageTransports {
 
     @Override
     protected void doSend(Message message) throws ProtocolException, IOException {
+      var other = this.other;
+      assert other != null;
       other.accept(message);
     }
 
@@ -123,8 +126,14 @@ public final class MessageTransports {
   protected abstract static class AbstractMessageTransport implements MessageTransport {
 
     private final Logger logger;
-    private MessageTransport.OneWayHandler oneWayHandler;
-    private MessageTransport.RequestHandler requestHandler;
+    private MessageTransport.OneWayHandler oneWayHandler =
+        (msg) -> {
+          throw new ProtocolException("Cannot receive one-way messages before transport start.");
+        };
+    private MessageTransport.RequestHandler requestHandler =
+        (msg) -> {
+          throw new ProtocolException("Cannot receive request messages before transport start.");
+        };
     private final Map<Long, ResponseHandler> responseHandlers = new ConcurrentHashMap<>();
 
     protected AbstractMessageTransport(Logger logger) {

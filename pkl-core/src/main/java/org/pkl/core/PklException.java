@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,16 +15,18 @@
  */
 package org.pkl.core;
 
+import org.jspecify.annotations.Nullable;
+
 public class PklException extends RuntimeException {
-  public PklException(String message, Throwable cause) {
+  public PklException(@Nullable String message, @Nullable Throwable cause) {
     super(message, cause);
   }
 
-  public PklException(String message) {
+  public PklException(@Nullable String message) {
     super(message);
   }
 
-  public PklException(Throwable cause) {
+  public PklException(@Nullable Throwable cause) {
     super(cause);
   }
 }

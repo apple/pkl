@@ -22,11 +22,11 @@ import java.util.*;
 import java.util.function.BiConsumer;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.AnsiStringBuilder;
-import org.pkl.core.util.Nullable;
 
 /**
  * Error message guidelines:
@@ -56,7 +56,7 @@ public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
   private @Nullable Map<CallTarget, StackFrame> insertedStackFrames;
-  private VmException wrappedException;
+  private @Nullable VmException wrappedException;
   private @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
 
   public static class MultilineValue {
@@ -94,7 +94,7 @@ public final class VmExceptionBuilder {
   private @Nullable Throwable cause;
   private VmException.Kind kind = VmException.Kind.EVAL_ERROR;
   private boolean isExternalMessage;
-  private Object[] messageArguments = new Object[0];
+  private @Nullable Object[] messageArguments = new Object[0];
   private final List<VmException.ProgramValue> programValues = new ArrayList<>();
   private @Nullable Node location;
   private @Nullable SourceSection sourceSection;
@@ -267,12 +267,12 @@ public final class VmExceptionBuilder {
   }
 
   // not internationalized
-  public VmExceptionBuilder bug(String message, Object... args) {
+  public VmExceptionBuilder bug(@Nullable String message, @Nullable Object... args) {
     kind = VmException.Kind.BUG;
     return withMessage(message, args);
   }
 
-  private VmExceptionBuilder withMessage(String message, Object... args) {
+  private VmExceptionBuilder withMessage(@Nullable String message, @Nullable Object... args) {
     this.message = message;
     messageArguments = args;
     isExternalMessage = false;
@@ -280,7 +280,7 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  private VmExceptionBuilder withExternalMessage(String message, Object... args) {
+  private VmExceptionBuilder withExternalMessage(String message, @Nullable Object... args) {
     this.message = message;
     messageArguments = args;
     isExternalMessage = true;
@@ -289,11 +289,11 @@ public final class VmExceptionBuilder {
   }
 
   // slow path, hence no need to cache anything (also resource bundles are cached by default)
-  public VmExceptionBuilder evalError(String messageKey, Object... args) {
+  public VmExceptionBuilder evalError(String messageKey, @Nullable Object... args) {
     return withExternalMessage(messageKey, args);
   }
 
-  public VmExceptionBuilder adhocEvalError(String message, Object... args) {
+  public VmExceptionBuilder adhocEvalError(@Nullable String message, @Nullable Object... args) {
     return withMessage(message, args);
   }
 
@@ -329,12 +329,8 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  public VmExceptionBuilder withCause(Throwable cause) {
+  public VmExceptionBuilder withCause(@Nullable Throwable cause) {
     this.cause = cause;
-    if (this.message == null) {
-      var causeMessage = cause.getMessage();
-      this.message = causeMessage == null ? "None (cause has no message)" : causeMessage;
-    }
     return this;
   }
 
@@ -364,11 +360,16 @@ public final class VmExceptionBuilder {
   }
 
   public VmException build() {
-    if (message == null && messageBuilder == null) {
-      throw new IllegalStateException("No message set.");
-    }
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
+    }
+
+    if (message == null && messageBuilder == null) {
+      if (cause == null) {
+        throw new IllegalStateException("No message set.");
+      }
+      var causeMessage = cause.getMessage();
+      message = causeMessage == null ? "None (cause has no message)" : causeMessage;
     }
 
     var effectiveInsertedStackFrames =
@@ -414,20 +415,22 @@ public final class VmExceptionBuilder {
               memberName,
               hintBuilder,
               effectiveInsertedStackFrames);
-      case WRAPPED ->
-          new VmWrappedEvalException(
-              message,
-              cause,
-              isExternalMessage,
-              messageArguments,
-              messageBuilder,
-              programValues,
-              location,
-              sourceSection,
-              memberName,
-              hintBuilder,
-              effectiveInsertedStackFrames,
-              wrappedException);
+      case WRAPPED -> {
+        assert wrappedException != null;
+        yield new VmWrappedEvalException(
+            message,
+            cause,
+            isExternalMessage,
+            messageArguments,
+            messageBuilder,
+            programValues,
+            location,
+            sourceSection,
+            memberName,
+            hintBuilder,
+            effectiveInsertedStackFrames,
+            wrappedException);
+      }
     };
   }
 

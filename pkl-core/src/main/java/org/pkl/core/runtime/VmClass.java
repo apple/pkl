@@ -24,6 +24,7 @@ import java.util.*;
 import java.util.function.*;
 import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
@@ -35,7 +36,6 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 // Most stdlib modules and their members are initialized in static initializers
 // and reused across Truffle contexts.
@@ -60,31 +60,27 @@ public final class VmClass extends VmValue {
   @CompilationFinal private @Nullable TypeNode supertypeNode;
   @CompilationFinal private @Nullable VmClass superclass;
 
-  @LateInit
   @GuardedBy("allPropertiesLock")
-  private UnmodifiableEconomicMap<Identifier, ClassProperty> __allProperties;
+  private @Nullable UnmodifiableEconomicMap<Identifier, ClassProperty> __allProperties;
 
   private final Object allPropertiesLock = new Object();
 
-  @LateInit
   @GuardedBy("allMethodsLock")
-  private UnmodifiableEconomicMap<Identifier, ClassMethod> __allMethods;
+  private @Nullable UnmodifiableEconomicMap<Identifier, ClassMethod> __allMethods;
 
   private final Object allMethodsLock = new Object();
 
   // Element type is `Object` rather than `Identifier` to enable `contains(Object)` tests
   // (see signature of `UnmodifiableEconomicSet.contains()`).
-  @LateInit
   @GuardedBy("allRegularPropertyNamesLock")
-  private UnmodifiableEconomicSet<Object> __allRegularPropertyNames;
+  private @Nullable UnmodifiableEconomicSet<Object> __allRegularPropertyNames;
 
   private final Object allRegularPropertyNamesLock = new Object();
 
   // Element type is `Object` rather than `Identifier` to enable `contains(Object)` tests
   // (see signature of `UnmodifiableEconomicSet.contains()`).
-  @LateInit
   @GuardedBy("allHiddenPropertyNamesLock")
-  private UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
+  private @Nullable UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
 
   private final Object allHiddenPropertyNamesLock = new Object();
 
@@ -240,8 +236,11 @@ public final class VmClass extends VmValue {
    * corresponding module.
    */
   public VmTyped getModule() {
-    //noinspection ConstantConditions
-    return classInfo.isModuleClass() ? prototype : (VmTyped) prototype.getEnclosingOwner();
+    if (classInfo.isModuleClass()) return prototype;
+
+    var module = prototype.getEnclosingOwner();
+    assert module != null;
+    return (VmTyped) module;
   }
 
   public VmTyped getModuleMirror() {

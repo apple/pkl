@@ -30,6 +30,7 @@ import java.util.function.Consumer;
 import java.util.function.Function;
 import java.util.function.Supplier;
 import org.graalvm.polyglot.Context;
+import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessageBufferPacker;
 import org.msgpack.core.MessagePack;
 import org.pkl.core.ast.ConstantValueNode;
@@ -61,7 +62,6 @@ import org.pkl.core.runtime.VmValue;
 import org.pkl.core.runtime.VmValueRenderer;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public final class EvaluatorImpl implements Evaluator {
   private final StackFrameTransformer frameTransformer;
@@ -307,7 +307,7 @@ public final class EvaluatorImpl implements Evaluator {
                   reservedFlagShortNames,
                   (fileOutput) -> new FileOutputImpl(this, fileOutput));
           run.accept(commandRunner.parse(module));
-          return null;
+          return true; // return value is not used; returning null would violate nullness
         });
   }
 

@@ -29,6 +29,7 @@ import java.util.function.BiFunction;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Duration;
 import org.pkl.core.PNull;
 import org.pkl.core.PObject;
@@ -39,7 +40,6 @@ import org.pkl.core.Value;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
-import org.pkl.core.util.Nullable;
 
 /** Java version of {@code pkl.EvaluatorSettings}. */
 public record PklEvaluatorSettings(

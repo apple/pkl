@@ -22,6 +22,7 @@ import java.util.Map;
 import java.util.Objects;
 import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
@@ -50,10 +51,10 @@ public final class ProjectDependenciesManager {
   private final SecurityManager securityManager;
 
   @GuardedBy("lock")
-  private ProjectDeps projectDeps;
+  private @Nullable ProjectDeps projectDeps;
 
   @GuardedBy("lock")
-  private Map<String, Dependency> myDependencies = null;
+  private @Nullable Map<String, Dependency> myDependencies;
 
   @GuardedBy("lock")
   private final EconomicMap<PackageUri, Map<String, Dependency>> localPackageDependencies =
@@ -139,8 +140,7 @@ public final class ProjectDependenciesManager {
       var localDeclaredDependencies = entry.getValue();
       var packageUri = localDeclaredDependencies.myPackageUri();
       assert packageUri != null;
-      var canonicalPackageUri =
-          CanonicalPackageUri.fromPackageUri(localDeclaredDependencies.myPackageUri());
+      var canonicalPackageUri = CanonicalPackageUri.fromPackageUri(packageUri);
       var resolvedDep = resolvedProjectDeps.get(canonicalPackageUri);
       if (resolvedDep == null) {
         throw new PackageLoadError("unresolvedProjectDependency", packageUri);
@@ -164,6 +164,7 @@ public final class ProjectDependenciesManager {
 
   public Map<String, Dependency> getDependencies() {
     ensureDependenciesInitialized();
+    assert myDependencies != null;
     return myDependencies;
   }
 
@@ -189,7 +190,7 @@ public final class ProjectDependenciesManager {
           var packageDependency = entry.getValue();
           var canonicalPackage =
               CanonicalPackageUri.fromPackageUri(packageDependency.getPackageUri());
-          var resolvedDep = projectDeps.get(canonicalPackage);
+          var resolvedDep = getProjectDeps().get(canonicalPackage);
           if (resolvedDep == null) {
             throw new PackageLoadError("unresolvedProjectDependency", packageDependency);
           }

@@ -21,7 +21,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Function;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 /**
  * A specification parsed from a valid {@code pkl:Command} submodule.
@@ -144,7 +144,7 @@ public record CommandSpec(
       @Nullable String helpText,
       boolean showAsRequired,
       BiFunction<String, URI, Object> transformEach,
-      BiFunction<List<Object>, URI, Object> transformAll,
+      BiFunction<List<Object>, URI, @Nullable Object> transformAll,
       @Nullable CompletionCandidates completionCandidates,
       @Nullable String shortName,
       String metavar,
@@ -227,7 +227,7 @@ public record CommandSpec(
       String name,
       @Nullable String helpText,
       BiFunction<String, URI, Object> transformEach,
-      BiFunction<List<Object>, URI, Object> transformAll,
+      BiFunction<List<Object>, URI, @Nullable Object> transformAll,
       @Nullable CompletionCandidates completionCandidates,
       boolean repeated)
       implements Option {
@@ -239,7 +239,7 @@ public record CommandSpec(
 
   /** A function used to transform command {@link State} as arguments are parsed. */
   public interface ApplyFunction {
-    State apply(Map<String, Object> options, @Nullable State parent);
+    State apply(Map<String, @Nullable Object> options, @Nullable State parent);
   }
 
   /**

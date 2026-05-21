@@ -22,6 +22,7 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import org.graalvm.polyglot.Context;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.http.HttpClientInitException;
@@ -36,7 +37,6 @@ import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmImportAnalyzer;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.Nullable;
 
 /** Utility library for static analysis of Pkl programs. */
 public class Analyzer {

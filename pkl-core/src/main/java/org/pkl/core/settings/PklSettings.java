@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings;
 import org.pkl.core.module.ModuleKeyFactories;
@@ -26,7 +27,6 @@ import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * Java representation of a Pkl settings file. A Pkl settings file is a Pkl module amending the
@@ -34,7 +34,7 @@ import org.pkl.core.util.Nullable;
  * {@code load} methods.
  */
 // keep in sync with stdlib/settings.pkl
-public record PklSettings(Editor editor, @Nullable PklEvaluatorSettings.Http http) {
+public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http http) {
   private static final List<Pattern> ALLOWED_MODULES =
       List.of(Pattern.compile("pkl:"), Pattern.compile("file:"));
 

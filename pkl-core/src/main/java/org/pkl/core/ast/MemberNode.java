@@ -18,10 +18,10 @@ package org.pkl.core.ast;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.util.Nullable;
 
 public abstract class MemberNode extends PklRootNode {
   @Child protected ExpressionNode bodyNode;

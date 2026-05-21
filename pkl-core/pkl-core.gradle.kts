@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import net.ltgt.gradle.errorprone.errorprone
+import net.ltgt.gradle.nullaway.nullaway
 import org.apache.tools.ant.filters.ReplaceTokens
 
 plugins {
@@ -21,6 +23,7 @@ plugins {
   id("pklJavaLibrary")
   id("pklPublishLibrary")
   id("pklNativeLifecycle")
+  id("pklJSpecify")
   idea
 }
 
@@ -57,6 +60,7 @@ dependencies {
 
   add("generatorImplementation", libs.javaPoet)
   add("generatorImplementation", libs.truffleApi)
+  add("generatorImplementation", libs.jspecify)
 
   javaExecutableConfiguration(project(":pkl-cli", "javaExecutable"))
 }
@@ -106,6 +110,18 @@ tasks.processResources {
 }
 
 tasks.compileJava { options.generatedSourceOutputDirectory.set(file("generated/truffle")) }
+
+tasks.withType<JavaCompile>().configureEach {
+  options.errorprone.nullaway {
+    // Do not require LateInit fields to be initialized at construction time.
+    // Unfortunately, IntelliJ doesn't currently understand this,
+    // and therefore emits many warnings related to LateInit.
+    excludedFieldAnnotations.add("org.pkl.core.util.LateInit")
+
+    // For now, don't analyze code that deals with Truffle ASTs.
+    unannotatedSubPackages.addAll("org.pkl.core.ast", "org.pkl.core.stdlib")
+  }
+}
 
 tasks.compileKotlin { enabled = false }
 

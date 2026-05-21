@@ -19,9 +19,9 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.util.Nullable;
 
 @NodeInfo(shortName = "is")
 public final class TypeTestNode extends ExpressionNode {

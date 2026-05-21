@@ -21,6 +21,7 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.PModule;
 import org.pkl.core.PObject;
@@ -29,7 +30,6 @@ import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 public final class VmTyped extends VmObject {
   @CompilationFinal @LateInit private VmClass clazz;
@@ -37,11 +37,18 @@ public final class VmTyped extends VmObject {
   public VmTyped(
       MaterializedFrame enclosingFrame,
       @Nullable VmTyped parent,
-      // null -> will be initialized using lateInitVmClass() later
-      @Nullable VmClass clazz,
+      VmClass clazz,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame, parent, members);
     this.clazz = clazz;
+  }
+
+  /** Constructs a VmTyped whose clazz will be initialized using lateInitVmClass() later. */
+  public VmTyped(
+      MaterializedFrame enclosingFrame,
+      @Nullable VmTyped parent,
+      UnmodifiableEconomicMap<Object, ObjectMember> members) {
+    super(enclosingFrame, parent, members);
   }
 
   public void lateInitVmClass(VmClass clazz) {

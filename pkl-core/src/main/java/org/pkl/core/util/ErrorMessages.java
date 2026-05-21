@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,11 +19,12 @@ import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.stream.*;
+import org.jspecify.annotations.Nullable;
 
 public final class ErrorMessages {
   private ErrorMessages() {}
 
-  public static String create(String messageName, Object... args) {
+  public static String create(String messageName, @Nullable Object... args) {
     var locale = Locale.getDefault();
     String errorMessage =
         ResourceBundle.getBundle("org.pkl.core.errorMessages", locale).getString(messageName);
@@ -35,7 +36,7 @@ public final class ErrorMessages {
     return formatter.format(args);
   }
 
-  public static String createIndented(String messageName, String indent, Object... args) {
+  public static String createIndented(String messageName, String indent, @Nullable Object... args) {
     return create(messageName, args)
         .lines()
         .map((msg) -> indent + msg)

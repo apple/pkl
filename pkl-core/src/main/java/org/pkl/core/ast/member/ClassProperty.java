@@ -17,11 +17,11 @@ package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 
 public final class ClassProperty extends ClassMember {
   private final @Nullable PropertyTypeNode typeNode;

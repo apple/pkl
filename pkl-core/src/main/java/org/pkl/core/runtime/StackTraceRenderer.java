@@ -19,10 +19,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.BiConsumer;
 import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.SyntaxHighlighter;
 
 public final class StackTraceRenderer {
@@ -101,6 +101,7 @@ public final class StackTraceRenderer {
     if (hint != null) {
       out.append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
     } else {
+      assert hintBuilder != null;
       out.append(AnsiTheme.ERROR_MESSAGE_HINT, () -> hintBuilder.accept(out, true));
     }
     out.append('\n');

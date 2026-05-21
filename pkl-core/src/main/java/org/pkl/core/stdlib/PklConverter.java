@@ -16,9 +16,9 @@
 package org.pkl.core.stdlib;
 
 import java.util.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 
 public final class PklConverter implements VmValueConverter<Object> {

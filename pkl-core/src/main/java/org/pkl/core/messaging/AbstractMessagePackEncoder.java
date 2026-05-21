@@ -20,9 +20,9 @@ import java.io.OutputStream;
 import java.util.Collection;
 import java.util.Map;
 import java.util.function.Function;
+import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessagePacker;
-import org.pkl.core.util.Nullable;
 
 public abstract class AbstractMessagePackEncoder implements MessageEncoder {
 
@@ -36,8 +36,7 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
     this(MessagePack.newDefaultPacker(stream));
   }
 
-  protected abstract @Nullable void encodeMessage(Message msg)
-      throws ProtocolException, IOException;
+  protected abstract void encodeMessage(Message msg) throws ProtocolException, IOException;
 
   @Override
   public final void encode(Message msg) throws IOException, ProtocolException {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,11 +17,11 @@ package org.pkl.core.runtime;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.Member;
 import org.pkl.core.runtime.MemberLookupSuggestions.Candidate.Kind;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.StringSimilarity;
 
 public final class MemberLookupSuggestions {

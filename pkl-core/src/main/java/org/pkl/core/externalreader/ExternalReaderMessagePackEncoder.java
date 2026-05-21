@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,7 +23,6 @@ import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.BaseMessagePackEncoder;
 import org.pkl.core.messaging.Message;
 import org.pkl.core.messaging.ProtocolException;
-import org.pkl.core.util.Nullable;
 
 final class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
 
@@ -36,7 +35,7 @@ final class ExternalReaderMessagePackEncoder extends BaseMessagePackEncoder {
   }
 
   @Override
-  protected @Nullable void encodeMessage(Message msg) throws ProtocolException, IOException {
+  protected void encodeMessage(Message msg) throws ProtocolException, IOException {
     switch (msg.type()) {
       case INITIALIZE_MODULE_READER_REQUEST -> {
         var m = (InitializeModuleReaderRequest) msg;

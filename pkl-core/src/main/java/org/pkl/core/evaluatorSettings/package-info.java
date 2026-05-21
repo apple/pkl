@@ -1,4 +1,4 @@
-@NonnullByDefault
+@NullMarked
 package org.pkl.core.evaluatorSettings;
 
-import org.pkl.core.util.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

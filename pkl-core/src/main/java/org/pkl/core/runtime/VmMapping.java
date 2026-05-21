@@ -32,7 +32,8 @@ public final class VmMapping extends VmListingOrMapping {
   private long cachedLength = -1;
 
   @GuardedBy("this")
-  private @LateInit VmSet __allKeys;
+  @LateInit
+  private VmSet __allKeys;
 
   private static final class EmptyHolder {
     private static final VmMapping EMPTY =

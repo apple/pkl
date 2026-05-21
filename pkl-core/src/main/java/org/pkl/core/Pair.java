@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,10 +18,12 @@ package org.pkl.core;
 import java.io.Serial;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
-import org.pkl.core.util.Nullable;
+import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 
 /** Java representation of a {@code pkl.base#Pair} value. */
-public final class Pair<F, S> implements Value, Iterable<Object> {
+public final class Pair<F extends @Nullable Object, S extends @Nullable Object>
+    implements Value, Iterable<@Nullable Object> {
   @Serial private static final long serialVersionUID = 0L;
 
   private final F first;
@@ -44,7 +46,7 @@ public final class Pair<F, S> implements Value, Iterable<Object> {
   }
 
   @Override
-  public Iterator<Object> iterator() {
+  public Iterator<@Nullable Object> iterator() {
     return new Iterator<>() {
       int pos = 0;
 
@@ -54,7 +56,7 @@ public final class Pair<F, S> implements Value, Iterable<Object> {
       }
 
       @Override
-      public Object next() {
+      public @Nullable Object next() {
         return switch (pos++) {
           case 0 -> first;
           case 1 -> second;
@@ -83,12 +85,12 @@ public final class Pair<F, S> implements Value, Iterable<Object> {
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
     if (!(obj instanceof Pair<?, ?> other)) return false;
-    return first.equals(other.first) && second.equals(other.second);
+    return Objects.equals(first, other.first) && Objects.equals(second, other.second);
   }
 
   @Override
   public int hashCode() {
-    return first.hashCode() * 31 + second.hashCode();
+    return Objects.hashCode(first) * 31 + Objects.hashCode(second);
   }
 
   @Override
