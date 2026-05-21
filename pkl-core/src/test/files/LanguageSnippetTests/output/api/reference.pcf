@@ -23,7 +23,7 @@ k {
   aValues {
     "${a.outputs.foo}"
     "${a.outputs.someMapping[key]}"
-    "${a.outputs.someMap[123]}"
+    "${a.outputs.someMap[key:123]}"
     "${a.outputs.someListing[0]}"
     "${a.outputs.someList[9223372036854775807]}"
     "${b.outputs.nonString}"
@@ -31,7 +31,7 @@ k {
   bValues {
     "${b.outputs.foo}"
     "${b.outputs.someMapping[key]}"
-    "${b.outputs.someMap[123]}"
+    "${b.outputs.someMap[key:123]}"
     "${b.outputs.someListing[0]}"
     "${b.outputs.someList[9223372036854775807]}"
     "${a.outputs.nonInt}"
@@ -48,3 +48,4 @@ j {
   splitUnion = "${a.outputs.someListing}"
 }
 refInterpolation = "${a.outputs.someListing[1]}"
+kInterpolation = "new K { aId = Reference(new D {}, String, new A { name = \"a\"; id = \"some-a-value\" }).id; bId = Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).id; aProperties = Reference(new D {}, reference#AProperties, new A { name = \"a\"; id = \"some-a-value\" }).outputs; bProperties = Reference(new D {}, reference#BProperties, new B { name = \"b\"; id = \"some-b-value\" }).outputs; aValues { Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.foo; Reference(new D {}, Null | Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someMapping[\"key\"]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someMap[new MapKey { k = 123 }]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someListing[0]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someList[9223372036854775807]; Reference(new D {}, Int, new B { name = \"b\"; id = \"some-b-value\" }).outputs.nonString }; bValues { Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.foo; Reference(new D {}, Null | String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someMapping[\"key\"]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someMap[new MapKey { k = 123 }]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someListing[0]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someList[9223372036854775807]; Reference(new D {}, String, new A { name = \"a\"; id = \"some-a-value\" }).outputs.nonInt }; splitUnion = null }"

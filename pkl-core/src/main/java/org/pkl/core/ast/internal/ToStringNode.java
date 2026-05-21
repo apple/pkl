@@ -17,11 +17,11 @@ package org.pkl.core.ast.internal;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNode;
@@ -61,14 +61,17 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   protected String evalTyped(
       VirtualFrame frame,
       VmTyped value,
-      @Cached(value = "createInvokeNode()", neverDefault = true)
+      @Shared("invokeToString") @Cached(value = "createInvokeNode()", neverDefault = true)
           InvokeMethodVirtualNode invokeNode) {
     return (String) invokeNode.executeWith(frame, value, value.getVmClass());
   }
 
   @Specialization
-  protected String evalReference(VirtualFrame frame, VmReference value, @Cached(value = "createInvokeNode()", neverDefault = true)
-  InvokeMethodVirtualNode invokeNode) {
+  protected String evalReference(
+      VirtualFrame frame,
+      VmReference value,
+      @Shared("invokeToString") @Cached(value = "createInvokeNode()", neverDefault = true)
+          InvokeMethodVirtualNode invokeNode) {
     return (String) invokeNode.executeWith(frame, value, value.getVmClass());
   }
 

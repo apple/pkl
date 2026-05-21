@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `pkl.ref#Reference<reference5#D, String>`, but got type `pkl.ref#Reference<reference5#D2, String>`.
+Value: Reference(new D2 {}, String, "")
+
+x | typealias Ref<T> = ref.Reference<D, T>
+                       ^^^^^^^^^^^^^^^^^^^
+at reference5#test (file:///$snippetsDir/input/errors/reference5.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

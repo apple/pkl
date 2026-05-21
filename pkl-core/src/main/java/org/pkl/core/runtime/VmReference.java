@@ -15,6 +15,8 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
@@ -27,6 +29,9 @@ import org.pkl.core.PClassInfo;
 import org.pkl.core.PType;
 import org.pkl.core.Reference;
 import org.pkl.core.TypeAlias;
+import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
+import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.Nullable;
 
@@ -226,7 +231,7 @@ public final class VmReference extends VmValue {
       for (var kt : keyTypes) {
         if (kt == PType.UNKNOWN
             || (kt instanceof PType.Class klazz
-                && klazz.getPClass().getInfo() == PClassInfo.forValue(key))
+                && klazz.getPClass().getInfo() == PClassInfo.forValue(VmValue.export(key)))
             || (kt instanceof PType.StringLiteral stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
           normalizeTypes(typeArgs.get(1), clazz.getPClass().getModuleClass(), result);
@@ -413,5 +418,24 @@ public final class VmReference extends VmValue {
     result = 31 * result + path.hashCode();
     result = 31 * result + candidateTypes.hashCode();
     return result;
+  }
+
+  public String toPklString(@Nullable VirtualFrame frame, @Nullable SourceSection sourceSection) {
+    if (frame == null) {
+      frame = VmUtils.createEmptyMaterializedFrame();
+    }
+    if (sourceSection == null) {
+      sourceSection = VmUtils.unavailableSourceSection();
+    }
+
+    return (String)
+        InvokeMethodVirtualNodeGen.create(
+                sourceSection,
+                Identifier.TO_STRING,
+                new ExpressionNode[] {},
+                MemberLookupMode.EXPLICIT_RECEIVER,
+                null,
+                null)
+            .executeWith(frame, this, getVmClass());
   }
 }

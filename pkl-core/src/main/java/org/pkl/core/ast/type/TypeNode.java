@@ -2140,26 +2140,11 @@ public abstract class TypeNode extends PklNode {
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
+      validateTypeArguments(sourceSection);
     }
 
     @Specialization(guards = "value.getVmClass() == getReferenceClass()")
     protected Object eval(VirtualFrame frame, VmReference value) {
-      // constraints may not be used in Reference type annotation referents
-      // walk the type and throw if any part of the referent is constrained
-      // perform this check at eval-time instead of init-time
-      // because type aliases can replace nodes between init and eval
-      referentTypeNode.acceptTypeNode(
-          true,
-          (typeNode) -> {
-            if (typeNode instanceof ConstrainedTypeNode) {
-              throw exceptionBuilder()
-                  .evalError("invalidReferenceTypeAnnotationWithConstraint")
-                  .withLocation(this)
-                  .build();
-            }
-            return true;
-          });
-
       if (referentTypeNode.isNoopTypeCheck()) {
         return value;
       }
@@ -2179,6 +2164,30 @@ public abstract class TypeNode extends PklNode {
       }
 
       throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+    }
+
+    public void validateTypeArguments(@Nullable SourceSection aliasSourceSection) {
+      // constraints may not be used in Reference type annotation referents
+      // walk the type and throw if any part of the referent is constrained
+
+      // TODO improve error message when this type node and/or referent constraint are behind type
+      // aliases
+      referentTypeNode.acceptTypeNode(
+          true,
+          (typeNode) -> {
+            if (typeNode instanceof ConstrainedTypeNode) {
+              CompilerDirectives.transferToInterpreter();
+              var err =
+                  exceptionBuilder()
+                      .evalError("invalidReferenceTypeAnnotationWithConstraint")
+                      .withLocation(this);
+              if (aliasSourceSection != null) {
+                err.withSourceSection(aliasSourceSection);
+              }
+              throw err.build();
+            }
+            return true;
+          });
     }
 
     @Fallback
@@ -2683,7 +2692,7 @@ public abstract class TypeNode extends PklNode {
 
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
-      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes, sourceSection);
     }
 
     public TypeNode getAliasedTypeNode() {

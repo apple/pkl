@@ -1,0 +1,9 @@
+import "pkl:ref"
+
+class D extends ref.Domain {
+  function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+}
+typealias Ref<T> = ref.Reference<D, T>
+local d: D = new {}
+
+test = ref.Reference(d, String, "") as Ref<String(true)>

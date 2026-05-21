@@ -16,28 +16,129 @@
 
 /// Type-safe deferred references to values not known at evaluation time.
 ///
-/// References are an advanced API design tool that allow library authors to express domain-specific
-/// references to values that may not be known during evaluation. They are particularly suited for
-/// configuring execution systems where tasks have well-typed inputs and output
+/// References are an advanced API design tool that enables library authors to express
+/// domain-specific references to values that may not be known during evaluation.
+/// They are particularly suited for configuring execution systems where tasks have well-typed
+/// inputs and output.
 @ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.ref
 
-/// Creates a [Reference] in [domain] to a
+/// Creates a deferred [Reference] to a value of type [class] in the given [domain].
+///
+/// References may only be constructed for single, non-generic class types.
+/// To create a reference to other types (generic classes, union, nullable, constrained,
+/// typealiases, etc.), it may be necessary to create a wrapper class with a property of the desired
+/// type.
+/// Example:
+/// ```
+/// referenceListingString: Reference<Domain, Listing<String>> = Reference(domain, Holder, data).$
+///
+/// class Holder {
+///   $: Listing<String>
+/// }
+/// ```
 external const function Reference<D, T>(
   domain: D(this is Domain),
-  type: Class<T>,
+  `class`: Class<T>,
   data: Any,
 ): Reference<D, T>
 
 /// A reference to a value that may not exist at evaluation time.
 ///
-/// Reference provides a type-checked way to produce references to data that is not known at time of
-/// evaluation. Different configuration domains may ascribe different meanings to references and
-/// require that textual rendering is formatted in specific ways.
+/// References are an advanced API design tool that enables library authors to express
+/// domain-specific references to values that may not be known during evaluation.
 ///
-/// Limitations:
-/// * Type constraints are ignored (erased) when referenced.
-/// * Properties marked `external` may not be referenced.
+/// Instances are created with the [Reference()] contructor method.
+/// References consist of four parts:
+/// * [Domain]: determines which references are compatible and how references are rendered
+///   as strings.
+/// * Data: an arbitrary value that may contain domain-specific information about the
+///   referenced value.
+/// * Path: a [List] of [Access] values indicating how the reference was accessed (by property or
+///   subscript).
+/// * Referent type: the type of the value that the reference refers to.
+///
+/// Every time a reference is accessed, either via qualified property access
+/// (`<reference>.<property>`) or subscript (`<reference>[<key>]`), a new reference is returned.
+/// The new reference shares the same domain and data as the original reference.
+/// The new reference's path extends the original reference's with an [Access] instance describing
+/// the accessed property name or subscript key.
+/// The new reference's referent type is the type of the accessed property or subscript value of the
+/// original referent type.
+/// Properties with the `external` modifier may not be referenced.
+/// Any type constraints within the referent type are erased and type constraints are not allowed
+/// in the referent (second) type argument of any Reference type annotations.
+///
+/// Example:
+/// ```
+/// import "pkl:ref"
+///
+/// /// Define a domain class for this configuration system:
+/// class Domain extends ref.Domain {
+///   /// Define how this domain renders references to strings:
+///   function referenceToString(data: Any, path: List<ref.Access>): String =
+///     (List(data.toString()) + path.map((it) -> it.property ?? it.key.toString())).join("/")
+/// }
+///
+/// class Resource {
+///   name: String
+///   /// Types that provide references will often vend a "root" Reference via a `fixed` property.
+///   /// Here, this references [Outputs] and the `data` identifies the enclosing [Resource]. 
+///   fixed outputs: ref.Reference<Domain, Outputs> = ref.Reference(new Domain {}, Outputs, name)
+/// }
+///
+/// class Outputs {
+///   a: String
+///   b: String(length < 5)
+///   c: Listing<String>
+///   d: Mapping<Foo, Int(isOdd)?>
+///   e: Foo | Bar
+/// }
+///
+/// class Foo {
+///   x: Int
+///
+///   function toString(): String = "foo:\(x)"
+/// }
+///
+/// class Bar {
+///   x: Float
+///
+///   function toString(): String = "bar:\(x)"
+/// }
+///
+/// local outputs: ref.Reference<Domain, Outputs> = new Resource { name = "root" }.outputs
+///
+/// /// Simple property access.
+/// /// getPath() == List(new ref.Access { property = "a" })
+/// aRef: ref.Reference<Domain, String> = outputs.a
+///
+/// /// Type constraint erasure.
+/// /// getPath() == List(new ref.Access { property = "b" })
+/// bRef: ref.Reference<Domain, String> = outputs.b
+///
+/// /// Simple subscript access.
+/// /// getPath() == List(new ref.Access { property = "c" }, new ref.Access { key = 10 })
+/// cRef: ref.Reference<Domain, String> = outputs.c[10]
+///
+/// /// Simple property access:
+/// /// getPath() == List(new ref.Access { property = "d" }, new ref.Access { key = new Foo { x = 1 } })
+/// /// The type constraint on the Mapping value type argument is also erased.
+/// dRef: ref.Reference<Domain, Int?> = outputs.d[new Foo { x = 1 }]
+///
+/// /// Simple property access:
+/// /// getPath() == List(new ref.Access { property = "e" }, new ref.Access { property = "x" })
+/// eRef: ref.Reference<Domain, Int | Float> = outputs.e.x
+/// ```
+///
+/// Output:
+/// ```
+/// aRef = "root/a"
+/// bRef = "root/b"
+/// cRef = "root/c/10"
+/// dRef = "root/d/foo:1"
+/// eRef = "root/e/x"
+/// ```
 external class Reference<out D, out T> {
   /// The domain the reference belongs to.
   external function getDomain(): D
@@ -55,6 +156,13 @@ external class Reference<out D, out T> {
   function toString(): String = getDomain().referenceToString(getData(), getPath())
 }
 
+/// Represents a configuration domain that a [Reference] may exist within.
+///
+/// Library authors supporting references should declare a subclass of [Domain] to be shared by all
+/// inter-compatible [Reference] instances.
+///
+/// A domain also determines how [Reference] values are transformed into strings; see
+/// [referenceToString()].
 abstract class Domain {
   /// Must be overridden by domain classes to determine how [Reference] instances are transformed to
   /// strings during rendering.
@@ -63,12 +171,12 @@ abstract class Domain {
   abstract function referenceToString(data: Any, path: List<Access>): String
 }
 
-/// Represents a property or subscript access as part of a [Reference].
+/// Represents a property or subscript access as part of a [Reference]'s path.
 class Access {
-  /// If the access is access to a property.
+  /// Indicates if this represents a property access.
   fixed isProperty: Boolean = property != null
 
-  /// If the access is access via subscript.
+  /// Indicates if this represents a subscript access.
   fixed isSubscript: Boolean = property == null
 
   /// The property that was accessed.

@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot find property `c` in object of type `pkl.ref#Reference<reference6#D, String>`.
+
+xx | test = ref.Reference(d, String, new A {}).c
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference6#test (file:///$snippetsDir/input/errors/reference6.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

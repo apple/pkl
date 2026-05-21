@@ -27,8 +27,8 @@ class A extends Resource {
 /// Test doc comment
 class AProperties {
   foo: Int
-  someMapping: Mapping<String, Int>
-  someMap: Map<Int, Int>
+  someMapping: Mapping<String, Int?>
+  someMap: Map<MapKey, Int>
   someListing: Listing<Int>
   someList: List<Int>
   nonInt: String
@@ -42,11 +42,17 @@ class B extends Resource {
 
 class BProperties {
   foo: String
-  someMapping: Mapping<String, String>
-  someMap: Map<Int, String>
+  someMapping: Mapping<String, String?>
+  someMap: Map<MapKey, String>
   someListing: Listing<String>
   someList: List<String>
   nonString: Int
+}
+
+class MapKey {
+  k: Int
+  
+  function toString(): String = "key:\(k)"
 }
 
 class K {
@@ -54,8 +60,8 @@ class K {
   bId: String | *Ref<String>?
   aProperties: AProperties | *Ref<AProperties>?
   bProperties: BProperties | *Ref<BProperties>?
-  aValues: Listing<Int | Ref<Int>>?
-  bValues: Listing<String | Ref<String>>?
+  aValues: Listing<Int | Ref<Int?>>?
+  bValues: Listing<String | Ref<String?>>?
   splitUnion: Ref<Listing<String> | Listing<Int>>?
 }
 
@@ -84,7 +90,7 @@ k: K = new {
   aValues {
     aRef.outputs.foo
     aRef.outputs.someMapping["key"]
-    aRef.outputs.someMap[123]
+    aRef.outputs.someMap[new MapKey { k = 123 }]
     aRef.outputs.someListing[0]
     aRef.outputs.someList[math.maxInt]
     bRef.outputs.nonString
@@ -92,7 +98,7 @@ k: K = new {
   bValues {
     bRef.outputs.foo
     bRef.outputs.someMapping["key"]
-    bRef.outputs.someMap[123]
+    bRef.outputs.someMap[new MapKey { k = 123 }]
     bRef.outputs.someListing[0]
     bRef.outputs.someList[math.maxInt]
     aRef.outputs.nonInt
@@ -105,16 +111,5 @@ j: K = new {
   splitUnion = unknownRef.outputs.someListing
 }
 
-local x: UInt = 0
-local y = ref.Reference(d, UInt, x)
-local z = y
-
 refInterpolation = "\(aRef.outputs.someListing[1])"
-
-output {
-  renderer {
-    converters {
-      [ref.Reference] = (it) -> it.toString()
-    }
-  }
-}
+kInterpolation = "\(k)"
