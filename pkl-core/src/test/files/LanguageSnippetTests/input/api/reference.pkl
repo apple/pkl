@@ -113,3 +113,4 @@ j: K = new {
 
 refInterpolation = "\(aRef.outputs.someListing[1])"
 kInterpolation = "\(k)"
+aValuesJoined = k.aValues.join("\n").replaceAll(Regex("@[a-z0-9]+"), "@<addr>")

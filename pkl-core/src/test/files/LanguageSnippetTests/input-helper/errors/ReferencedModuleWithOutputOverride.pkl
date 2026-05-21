@@ -1,0 +1,5 @@
+foo: String
+
+hidden output: ModuleOutput = new {
+  text = foo
+}

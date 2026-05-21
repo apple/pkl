@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
@@ -183,21 +184,30 @@ public final class VmReference extends VmValue {
       result.add(type);
       return;
     }
-    if (!(type instanceof PType.Class clazz)) {
-      return;
-    }
+    // restriction: only class types can have their properties referenced
+    if (!(type instanceof PType.Class clazz)) return;
+    // restriction: cannot reference properties of external classes
+    if (clazz.getPClass().isExternal()) return;
     if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
-      result.add(PType.UNKNOWN);
+      // restriction: cannot reference Dynamic.default
+      if (!property.equals("default")) result.add(PType.UNKNOWN);
       return;
     }
+    // restriction: cannot reference Listing/Mapping.default
     if (clazz.getPClass().getInfo() == PClassInfo.Listing
-        || clazz.getPClass().getInfo() == PClassInfo.List
-        || clazz.getPClass().getInfo() == PClassInfo.Mapping
-        || clazz.getPClass().getInfo() == PClassInfo.Map) {
+        || clazz.getPClass().getInfo() == PClassInfo.Mapping) {
       return;
     }
-    // Typed
+    // restriction: cannot reference Module.output.
+    //   generalized: properties originally defined in external classes; the only extant example.
+    // This is implemented specifically because this is the only case where an external class
+    //   containing a property can be subclassed.
+    // And this can't check prop.getOwner().isExternal() because fully overriding the property with
+    //   a new type annotation means the owner isn't Module.
+    if (clazz.getPClass().isModuleClass() && property.equals("output")) return;
+
     var prop = clazz.getPClass().getAllProperties().get(property);
+    // restriction: cannot reference external properties
     if (prop == null || prop.isExternal()) {
       return;
     }
@@ -376,9 +386,11 @@ public final class VmReference extends VmValue {
   }
 
   public PType exportReferentType() {
-    return candidateTypes.size() == 1
-        ? candidateTypes.iterator().next()
-        : new PType.Union(List.copyOf(candidateTypes));
+    if (candidateTypes.size() == 1) return candidateTypes.iterator().next();
+    var types = new ArrayList<>(candidateTypes);
+    // sort multiple candidate types to ensure stable output
+    types.sort(Comparator.comparing(Object::toString));
+    return new PType.Union(types);
   }
 
   public PType exportType() {
