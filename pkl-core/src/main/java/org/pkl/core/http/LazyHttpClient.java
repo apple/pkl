@@ -21,15 +21,13 @@ import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.util.Optional;
 import java.util.function.Supplier;
-import javax.annotation.concurrent.GuardedBy;
-import javax.annotation.concurrent.ThreadSafe;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.util.GuardedBy;
 
 /**
  * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
  * send.
  */
-@ThreadSafe
 final class LazyHttpClient implements HttpClient {
   private final Supplier<HttpClient> supplier;
   private final Object lock = new Object();

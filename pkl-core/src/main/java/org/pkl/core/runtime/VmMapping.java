@@ -19,12 +19,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.HashSet;
 import java.util.Map;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableLong;
 

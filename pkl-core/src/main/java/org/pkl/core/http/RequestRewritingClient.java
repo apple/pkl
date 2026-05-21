@@ -30,7 +30,6 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
-import javax.annotation.concurrent.ThreadSafe;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.util.HttpUtils;
@@ -50,7 +49,6 @@ import org.pkl.core.util.Pair;
  * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
  * HttpClient.Builder}.
  */
-@ThreadSafe
 final class RequestRewritingClient implements HttpClient {
   // non-private for testing
   final String userAgent;

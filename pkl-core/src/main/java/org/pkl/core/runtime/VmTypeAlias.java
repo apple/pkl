@@ -22,7 +22,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
-import javax.annotation.concurrent.GuardedBy;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClassInfo;
@@ -34,6 +33,7 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
+import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 
 public final class VmTypeAlias extends VmValue {

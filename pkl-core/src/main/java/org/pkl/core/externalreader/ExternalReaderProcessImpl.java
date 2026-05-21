@@ -26,7 +26,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.concurrent.GuardedBy;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
@@ -34,6 +33,7 @@ import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 
 final class ExternalReaderProcessImpl implements ExternalReaderProcess {

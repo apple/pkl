@@ -22,7 +22,6 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.function.*;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.*;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
@@ -35,6 +34,7 @@ import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 
 // Most stdlib modules and their members are initialized in static initializers

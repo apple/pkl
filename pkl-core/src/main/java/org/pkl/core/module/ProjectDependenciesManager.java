@@ -20,7 +20,6 @@ import java.net.URI;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Objects;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
@@ -37,6 +36,7 @@ import org.pkl.core.project.ProjectDeps;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.json.Json.JsonParseException;
 

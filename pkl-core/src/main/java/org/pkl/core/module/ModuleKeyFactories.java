@@ -26,13 +26,13 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import javax.annotation.concurrent.GuardedBy;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Closeables;
 import org.pkl.core.externalreader.ExternalModuleResolver;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.IoUtils;
 
 /** Utilities for obtaining and using module key factories. */
