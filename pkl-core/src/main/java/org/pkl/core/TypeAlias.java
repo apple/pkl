@@ -47,6 +47,7 @@ public final class TypeAlias extends Member implements Value {
   }
 
   public void initAliasedType(PType type) {
+    //noinspection ConstantValue
     assert aliasedType == null;
     aliasedType = type;
   }
@@ -80,6 +81,7 @@ public final class TypeAlias extends Member implements Value {
 
   /** Returns the type that this type alias stands for. */
   public PType getAliasedType() {
+    //noinspection ConstantValue
     assert aliasedType != null;
     return aliasedType;
   }

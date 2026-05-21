@@ -17,6 +17,7 @@
 import org.jetbrains.gradle.ext.ActionDelegationConfig
 import org.jetbrains.gradle.ext.ActionDelegationConfig.TestRunner.PLATFORM
 import org.jetbrains.gradle.ext.ProjectSettings
+import org.jetbrains.gradle.ext.taskTriggers
 
 plugins {
   id("pklAllProjects")
@@ -36,6 +37,8 @@ nexusPublishing {
   }
 }
 
+val configureLateInitAnnotation by tasks.registering(ConfigureLateInitAnnotation::class)
+
 idea {
   project {
     this as ExtensionAware
@@ -45,6 +48,7 @@ idea {
         delegateBuildRunToGradle = true
         testRunner = PLATFORM
       }
+      taskTriggers.afterSync(configureLateInitAnnotation)
     }
   }
 }
