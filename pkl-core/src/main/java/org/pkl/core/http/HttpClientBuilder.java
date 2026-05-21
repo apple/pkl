@@ -28,6 +28,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Supplier;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Pair;
 import org.pkl.core.Release;
 import org.pkl.core.http.HttpClient.Builder;
@@ -39,7 +40,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   private final List<Path> certificateFiles = new ArrayList<>();
   private final List<ByteBuffer> certificateBytes = new ArrayList<>();
   private int testPort = -1;
-  private ProxySelector proxySelector;
+  private @Nullable ProxySelector proxySelector;
   private Map<URI, URI> rewrites = new HashMap<>();
   private List<Pair<Pattern, List<Pair<String, String>>>> headers = new ArrayList<>();
 
@@ -90,7 +91,7 @@ final class HttpClientBuilder implements HttpClient.Builder {
   }
 
   @Override
-  public Builder setProxy(URI proxyAddress, List<String> noProxy) {
+  public Builder setProxy(@Nullable URI proxyAddress, List<String> noProxy) {
     this.proxySelector = new org.pkl.core.http.ProxySelector(proxyAddress, noProxy);
     return this;
   }

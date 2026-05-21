@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -28,10 +28,10 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.annotation.concurrent.GuardedBy;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.module.PathElement.TreePathElement;
 import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.LateInit;
 
 /**
  * Resolves {@code modulepath} URIs from ZIP or JAR files, or from directory paths.
@@ -44,17 +44,14 @@ public final class ModulePathResolver implements AutoCloseable {
 
   private final Object lock = new Object();
 
-  @LateInit
   @GuardedBy("lock")
-  private Map<String, Path> fileCache;
+  private @Nullable Map<String, Path> fileCache;
 
-  @LateInit
   @GuardedBy("lock")
-  private List<FileSystem> zipFileSystems;
+  private @Nullable List<FileSystem> zipFileSystems;
 
-  @LateInit
   @GuardedBy("lock")
-  private TreePathElement cachedPathElementRoot;
+  private @Nullable TreePathElement cachedPathElementRoot;
 
   private @GuardedBy("lock") boolean isClosed = false;
 
@@ -100,6 +97,7 @@ public final class ModulePathResolver implements AutoCloseable {
         populateCaches();
       }
 
+      assert fileCache != null;
       return fileCache;
     }
   }
@@ -127,6 +125,7 @@ public final class ModulePathResolver implements AutoCloseable {
     synchronized (lock) {
       if (isClosed || fileCache == null) return;
 
+      assert zipFileSystems != null;
       for (var fileSystem : zipFileSystems) {
         try {
           fileSystem.close();
@@ -154,7 +153,9 @@ public final class ModulePathResolver implements AutoCloseable {
       stream.forEach(
           (path) -> {
             var relativized = IoUtils.relativize(path, basePath);
+            assert fileCache != null;
             fileCache.putIfAbsent(IoUtils.toNormalizedPathString(relativized), path);
+            assert cachedPathElementRoot != null;
             var element = cachedPathElementRoot;
             for (var i = 0; i < relativized.getNameCount(); i++) {
               var name = relativized.getName(i).toString();

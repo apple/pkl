@@ -21,6 +21,7 @@ import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Deque;
 import java.util.Optional;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.DurationUnit;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.member.PropertyTypeNode;
@@ -67,7 +68,6 @@ import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.ArrayCharEscaper;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.JsonEscaper;
 
 public final class RendererNodes {

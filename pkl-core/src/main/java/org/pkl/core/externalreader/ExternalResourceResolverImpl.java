@@ -25,6 +25,7 @@ import java.util.Random;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.messaging.MessageTransport;
@@ -33,7 +34,6 @@ import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.resource.Resource;
-import org.pkl.core.util.Nullable;
 
 final class ExternalResourceResolverImpl implements ExternalResourceResolver {
   private final MessageTransport transport;

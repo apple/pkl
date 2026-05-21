@@ -22,6 +22,7 @@ import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
@@ -29,7 +30,6 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmException.ProgramValue;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 /**
  * Indicates that a type check failed. [TypeNode]s use this exception instead of [VmException] to

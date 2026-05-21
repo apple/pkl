@@ -19,13 +19,13 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.Nullable;
 
 public final class ObjectMember extends Member {
 

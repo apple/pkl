@@ -196,15 +196,15 @@ public final class ProjectPackager {
       }
     } catch (PackageLoadError e) {
       if (e.getMessageName().equals("badHttpStatusCode")) {
-        if ((int) e.getArguments()[0] == 404) {
+        var firstArg = e.getArguments()[0];
+        assert firstArg != null;
+        var statusCode = (int) firstArg;
+        if (statusCode == 404) {
           return;
         } else {
           throw new PklException(
               ErrorMessages.create(
-                  "unableToAccessPublishedPackage",
-                  pkg.name(),
-                  pkg.packageZipUrl(),
-                  e.getArguments()[0]));
+                  "unableToAccessPublishedPackage", pkg.name(), pkg.packageZipUrl(), statusCode));
         }
       }
       throw e;
@@ -417,6 +417,7 @@ public final class ProjectPackager {
             .toPklException(stackFrameTransformer, color);
       }
       var currentPath = pklModulePath.getParent();
+      assert currentPath != null;
       var importPath = importUri.getPath().split("/");
       // It's not good enough to just check the normalized path to see whether it exists within the
       // root dir.

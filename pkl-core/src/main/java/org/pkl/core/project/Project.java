@@ -26,6 +26,7 @@ import java.util.Objects;
 import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Analyzer;
 import org.pkl.core.Composite;
 import org.pkl.core.Duration;
@@ -55,7 +56,6 @@ import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ImportGraphUtils;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** Java representation of module {@code pkl.Project}. */
 public final class Project {
@@ -79,7 +79,7 @@ public final class Project {
   public static Project loadFromPath(
       Path path,
       SecurityManager securityManager,
-      @Nullable java.time.Duration timeout,
+      java.time.@Nullable Duration timeout,
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars,
       boolean powerAssertionsEnabled) {
@@ -112,7 +112,7 @@ public final class Project {
   public static Project loadFromPath(
       Path path,
       SecurityManager securityManager,
-      @Nullable java.time.Duration timeout,
+      java.time.@Nullable Duration timeout,
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars) {
     return loadFromPath(path, securityManager, timeout, stackFrameTransformer, envVars, false);
@@ -120,7 +120,7 @@ public final class Project {
 
   /** Convenience method to load a project with the default stack frame transformer. */
   public static Project loadFromPath(
-      Path path, SecurityManager securityManager, @Nullable java.time.Duration timeout) {
+      Path path, SecurityManager securityManager, java.time.@Nullable Duration timeout) {
     return loadFromPath(
         path, securityManager, timeout, StackFrameTransformers.defaultTransformer, System.getenv());
   }

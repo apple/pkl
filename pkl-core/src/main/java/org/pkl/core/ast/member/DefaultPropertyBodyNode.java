@@ -18,10 +18,10 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * Property body for properties that don't have an explicit body. Returns the default value for the

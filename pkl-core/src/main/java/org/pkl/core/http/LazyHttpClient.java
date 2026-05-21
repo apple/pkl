@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.Optional;
 import java.util.function.Supplier;
 import javax.annotation.concurrent.GuardedBy;
 import javax.annotation.concurrent.ThreadSafe;
+import org.jspecify.annotations.Nullable;
 
 /**
  * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
@@ -34,10 +35,10 @@ final class LazyHttpClient implements HttpClient {
   private final Object lock = new Object();
 
   @GuardedBy("lock")
-  private HttpClient client;
+  private @Nullable HttpClient client;
 
   @GuardedBy("lock")
-  private RuntimeException exception;
+  private @Nullable RuntimeException exception;
 
   LazyHttpClient(Supplier<HttpClient> supplier) {
     this.supplier = supplier;

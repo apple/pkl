@@ -31,10 +31,10 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Pair;
 import org.pkl.core.PklBugException;
 import org.pkl.core.util.HttpUtils;
-import org.pkl.core.util.Nullable;
 
 /**
  * An {@code HttpClient} decorator that

@@ -22,11 +22,11 @@ import java.util.Arrays;
 import java.util.Iterator;
 import java.util.NoSuchElementException;
 import java.util.PrimitiveIterator;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.DataSizeUnit;
 import org.pkl.core.ast.ByteConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.util.ByteArrayUtils;
-import org.pkl.core.util.Nullable;
 
 @ValueType
 public final class VmBytes extends VmValue implements Iterable<Long> {

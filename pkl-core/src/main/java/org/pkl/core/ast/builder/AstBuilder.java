@@ -33,6 +33,7 @@ import java.util.function.BiFunction;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManagerException;
@@ -183,7 +184,6 @@ import org.pkl.core.stdlib.registry.MemberRegistryFactory;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.Pair;
 import org.pkl.parser.Span;
 import org.pkl.parser.syntax.Annotation;
@@ -2694,7 +2694,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return builder;
   }
 
-  private @Nullable FrameDescriptor.Builder createFrameDescriptorBuilder(ObjectBody body) {
+  private FrameDescriptor.@Nullable Builder createFrameDescriptorBuilder(ObjectBody body) {
     if (body.getParameters().isEmpty()) return null;
 
     var builder = FrameDescriptor.newBuilder(body.getParameters().size());
@@ -2746,7 +2746,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         .withMemberName(symbolTable.getCurrentScope().getQualifiedName());
   }
 
-  private @Nullable SymbolTable.Scope getParentLexicalScope() {
+  private SymbolTable.@Nullable Scope getParentLexicalScope() {
     var parent = symbolTable.getCurrentScope().getLexicalScope().getParent();
     if (parent != null) return parent.getLexicalScope();
     return null;

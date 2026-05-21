@@ -27,6 +27,7 @@ import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import javax.annotation.concurrent.GuardedBy;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;
 import org.pkl.core.messaging.MessageTransport;
@@ -34,7 +35,6 @@ import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 final class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
@@ -171,7 +171,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public ModuleReaderSpec getModuleReaderSpec(String uriScheme) throws IOException {
+  public @Nullable ModuleReaderSpec getModuleReaderSpec(String uriScheme) throws IOException {
     return MessageTransports.resolveFuture(
         initializeModuleReaderResponses.computeIfAbsent(
             uriScheme,
@@ -207,7 +207,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   }
 
   @Override
-  public ResourceReaderSpec getResourceReaderSpec(String uriScheme) throws IOException {
+  public @Nullable ResourceReaderSpec getResourceReaderSpec(String uriScheme) throws IOException {
     return MessageTransports.resolveFuture(
         initializeResourceReaderResponses.computeIfAbsent(
             uriScheme,

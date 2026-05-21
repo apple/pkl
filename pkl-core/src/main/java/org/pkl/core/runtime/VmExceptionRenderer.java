@@ -19,11 +19,11 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Release;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 public final class VmExceptionRenderer {
   private final @Nullable StackTraceRenderer stackTraceRenderer;
@@ -80,35 +80,35 @@ public final class VmExceptionRenderer {
   }
 
   private void renderException(VmException exception, AnsiStringBuilder out, boolean withHeader) {
-    String message;
-    var hintBuilder = exception.getHintBuilder();
+    @Nullable String message = null;
     @Nullable String hint = null;
-    if (exception.isExternalMessage()) {
-      var totalMessage =
-          ErrorMessages.create(exception.getMessage(), exception.getMessageArguments());
-      // first paragraph is message, remainder is hint
-      var index = totalMessage.indexOf("\n\n");
-      if (index != -1) {
-        message = totalMessage.substring(0, index);
-        hint = totalMessage.substring(index + 2);
-      } else {
-        message = totalMessage;
-      }
-    } else if (exception.getMessage() != null && exception.getMessageArguments().length != 0) {
-      message = String.format(exception.getMessage(), exception.getMessageArguments());
-    } else {
-      message = exception.getMessage();
-    }
 
     if (withHeader) {
       out.append(AnsiTheme.ERROR_HEADER, "–– Pkl Error ––").append('\n');
     }
     if (exception.getMessageBuilder() != null) {
-      out.append(
-          AnsiTheme.ERROR_MESSAGE,
-          () -> exception.getMessageBuilder().accept(out, powerAssertions));
+      var messageBuilder = exception.getMessageBuilder();
+      out.append(AnsiTheme.ERROR_MESSAGE, () -> messageBuilder.accept(out, powerAssertions));
       out.append('\n');
     } else {
+      var exceptionMessage = exception.getMessage();
+      assert exceptionMessage != null; // VmException has either message builder or message
+      var messageArguments = exception.getMessageArguments();
+      if (exception.isExternalMessage()) {
+        var totalMessage = ErrorMessages.create(exceptionMessage, messageArguments);
+        // first paragraph is message, remainder is hint
+        var index = totalMessage.indexOf("\n\n");
+        if (index != -1) {
+          message = totalMessage.substring(0, index);
+          hint = totalMessage.substring(index + 2);
+        } else {
+          message = totalMessage;
+        }
+      } else if (messageArguments.length != 0) {
+        message = String.format(exceptionMessage, messageArguments);
+      } else {
+        message = exceptionMessage;
+      }
       out.append(AnsiTheme.ERROR_MESSAGE, message).append('\n');
     }
 
@@ -142,6 +142,7 @@ public final class VmExceptionRenderer {
         hint = sb.toString().lines().map((it) -> ">\t" + it).collect(Collectors.joining("\n"));
       }
 
+      var hintBuilder = exception.getHintBuilder();
       if (!frames.isEmpty()) {
         stackTraceRenderer.render(frames, hint, hintBuilder, out.append('\n'));
       } else if (hint != null) {

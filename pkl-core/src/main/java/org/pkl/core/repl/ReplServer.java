@@ -25,6 +25,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.graalvm.polyglot.Context;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.*;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.ast.*;
@@ -49,7 +50,6 @@ import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
@@ -426,12 +426,8 @@ public class ReplServer implements AutoCloseable {
             moduleKey,
             resolvedModuleKey,
             false);
-    var module =
-        new VmTyped(
-            VmUtils.createEmptyMaterializedFrame(),
-            null, // set by initSuperclass()
-            null,
-            moduleMembers);
+    // clazz will be initialized by initSuperclass() later
+    var module = new VmTyped(VmUtils.createEmptyMaterializedFrame(), null, moduleMembers);
     module.setExtraStorage(moduleInfo);
     var clazz =
         new VmClass(

@@ -20,9 +20,9 @@ import com.oracle.truffle.api.TruffleStackTraceElement;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.StackFrame;
 import org.pkl.core.ast.MemberNode;
-import org.pkl.core.util.Nullable;
 
 final class StackTraceGenerator {
   private final VmException exception;

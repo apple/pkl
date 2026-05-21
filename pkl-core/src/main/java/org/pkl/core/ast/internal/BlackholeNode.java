@@ -18,8 +18,8 @@ package org.pkl.core.ast.internal;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.util.Nullable;
 
 /** Ensures that `childNode` isn't optimized away. */
 @NodeChild(value = "childNode", type = ExpressionNode.class)

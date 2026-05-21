@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.regex.Pattern;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.properties.PropertiesUtils;
 
 // To instantiate this class, use ValueRenderers.properties().

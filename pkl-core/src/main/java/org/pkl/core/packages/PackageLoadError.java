@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,20 +15,21 @@
  */
 package org.pkl.core.packages;
 
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.ErrorMessages;
 
 public final class PackageLoadError extends RuntimeException {
 
   private final String messageName;
-  private final Object[] arguments;
+  private final @Nullable Object[] arguments;
 
-  public PackageLoadError(Throwable cause, String messageName, Object... arguments) {
+  public PackageLoadError(Throwable cause, String messageName, @Nullable Object... arguments) {
     super(ErrorMessages.create(messageName, arguments), cause);
     this.messageName = messageName;
     this.arguments = arguments;
   }
 
-  public PackageLoadError(String messageName, Object... arguments) {
+  public PackageLoadError(String messageName, @Nullable Object... arguments) {
     super(ErrorMessages.create(messageName, arguments));
     this.messageName = messageName;
     this.arguments = arguments;
@@ -38,7 +39,7 @@ public final class PackageLoadError extends RuntimeException {
     return messageName;
   }
 
-  public Object[] getArguments() {
+  public @Nullable Object[] getArguments() {
     return arguments;
   }
 }

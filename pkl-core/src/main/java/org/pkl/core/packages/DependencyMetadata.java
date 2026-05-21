@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -29,6 +29,7 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.DataSize;
 import org.pkl.core.DataSizeUnit;
 import org.pkl.core.Duration;
@@ -40,7 +41,6 @@ import org.pkl.core.Pair;
 import org.pkl.core.PklException;
 import org.pkl.core.Version;
 import org.pkl.core.packages.Dependency.RemoteDependency;
-import org.pkl.core.util.Nullable;
 import org.pkl.core.util.json.Json;
 import org.pkl.core.util.json.Json.FormatException;
 import org.pkl.core.util.json.Json.JsArray;
@@ -532,7 +532,7 @@ public final class DependencyMetadata {
         if (checksums != null) {
           jsonWriter.name("checksums");
           jsonWriter.beginObject();
-          jsonWriter.name("sha256").value(entry.getValue().getChecksums().getSha256());
+          jsonWriter.name("sha256").value(checksums.getSha256());
           jsonWriter.endObject();
         }
         jsonWriter.endObject();

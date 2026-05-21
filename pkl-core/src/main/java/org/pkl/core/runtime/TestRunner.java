@@ -25,6 +25,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.BufferedLogger;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.TestResults;
@@ -41,7 +42,6 @@ import org.pkl.core.util.AnsiTheme;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.MutableReference;
-import org.pkl.core.util.Nullable;
 
 /** Runs test results examples and facts. */
 public final class TestRunner {

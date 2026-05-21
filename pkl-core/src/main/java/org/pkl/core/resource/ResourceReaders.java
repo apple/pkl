@@ -29,6 +29,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcess;
@@ -48,7 +49,6 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** Predefined resource readers for OS environment variables and external properties. */
 public final class ResourceReaders {
@@ -654,7 +654,7 @@ public final class ResourceReaders {
     private final String scheme;
     private final ExternalReaderProcess process;
     private final long evaluatorId;
-    private ExternalResolver underlying;
+    private @Nullable ExternalResolver underlying;
 
     public ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;

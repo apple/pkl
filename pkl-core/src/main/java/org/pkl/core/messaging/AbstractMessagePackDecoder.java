@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageTypeException;
 import org.msgpack.core.MessageUnpacker;
@@ -30,7 +31,6 @@ import org.msgpack.value.Value;
 import org.msgpack.value.impl.ImmutableStringValueImpl;
 import org.pkl.core.messaging.Message.Type;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 public abstract class AbstractMessagePackDecoder implements MessageDecoder {
 

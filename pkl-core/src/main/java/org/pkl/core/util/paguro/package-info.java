@@ -24,7 +24,7 @@
  * <p>See the License for the specific language governing permissions and limitations under the
  * License.
  */
-@NonnullByDefault
+@NullMarked
 package org.pkl.core.util.paguro;
 
-import org.pkl.core.util.NonnullByDefault;
+import org.jspecify.annotations.NullMarked;

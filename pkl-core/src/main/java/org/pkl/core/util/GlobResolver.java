@@ -28,6 +28,7 @@ import java.util.Map;
 import java.util.WeakHashMap;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
@@ -534,10 +535,14 @@ public final class GlobResolver {
       var regexPattern = toRegexPattern(globPattern);
       // using "dummy" to make this a legitimate URI. The scheme specific part of the URI should be
       // ignored by the reader.
-      var globUri =
-          hasAbsoluteGlob
-              ? URI.create(globPattern)
-              : URI.create(enclosingUri.getScheme() + ":dummy");
+      URI globUri;
+      if (hasAbsoluteGlob) {
+        globUri = URI.create(globPattern);
+      } else {
+        //noinspection ConstantValue (assertion required by NullAway)
+        assert enclosingUri != null;
+        globUri = URI.create(enclosingUri.getScheme() + ":dummy");
+      }
       resolveOpaqueGlob(securityManager, reader, globUri, regexPattern, result);
     }
     return result;

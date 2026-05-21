@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,6 @@ import org.msgpack.core.MessagePacker;
 import org.pkl.core.messaging.Messages.*;
 import org.pkl.core.module.PathElement;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.Nullable;
 
 public class BaseMessagePackEncoder extends AbstractMessagePackEncoder {
 
@@ -54,7 +53,7 @@ public class BaseMessagePackEncoder extends AbstractMessagePackEncoder {
     packKeyValue("isDirectory", pathElement.isDirectory());
   }
 
-  protected @Nullable void encodeMessage(Message msg) throws ProtocolException, IOException {
+  protected void encodeMessage(Message msg) throws ProtocolException, IOException {
     switch (msg.type()) {
       case READ_RESOURCE_REQUEST -> {
         var m = (ReadResourceRequest) msg;

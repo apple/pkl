@@ -27,7 +27,7 @@ import java.util.ArrayList;
 import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
-import org.pkl.core.util.Nullable;
+import org.jspecify.annotations.Nullable;
 
 public final class VmValueTracker implements AutoCloseable {
 

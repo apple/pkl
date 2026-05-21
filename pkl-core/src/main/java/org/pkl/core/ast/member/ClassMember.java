@@ -18,10 +18,10 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.util.Nullable;
 
 public abstract class ClassMember extends Member {
   protected final SourceSection @Nullable [] docComment;

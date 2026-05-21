@@ -28,6 +28,7 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
@@ -43,7 +44,6 @@ import org.pkl.core.runtime.VmContext;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 /** Utilities for creating and using {@link ModuleKey}s. */
 public final class ModuleKeys {

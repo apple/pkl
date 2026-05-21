@@ -19,6 +19,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayDeque;
 import java.util.Deque;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
@@ -42,7 +43,6 @@ import org.pkl.core.runtime.VmValueConverter;
 import org.pkl.core.runtime.VmValueVisitor;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.Nullable;
 
 public abstract class AbstractRenderer implements VmValueVisitor {
 

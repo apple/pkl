@@ -22,6 +22,7 @@ import com.oracle.truffle.api.nodes.Node;
 import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Logger;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
@@ -30,7 +31,6 @@ import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ProjectDependenciesManager;
 import org.pkl.core.packages.PackageResolver;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 public final class VmContext {
   private static final ContextReference<VmContext> REFERENCE =
@@ -54,7 +54,7 @@ public final class VmContext {
     private final ResourceManager resourceManager;
     private final Logger logger;
     private final Map<String, String> environmentVariables;
-    private final Path moduleCacheDir;
+    private final @Nullable Path moduleCacheDir;
     private final Map<String, String> externalProperties;
     private final ModuleCache moduleCache;
     private final @Nullable PackageResolver packageResolver;

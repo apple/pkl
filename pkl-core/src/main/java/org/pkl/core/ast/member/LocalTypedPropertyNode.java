@@ -18,12 +18,12 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.util.LateInit;
-import org.pkl.core.util.Nullable;
 
 public final class LocalTypedPropertyNode extends RegularMemberNode {
   private final VmLanguage language;

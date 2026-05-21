@@ -19,10 +19,10 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Objects;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.Version;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.Nullable;
 
 public abstract class Dependency {
 

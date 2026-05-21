@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,6 +27,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
 import javax.annotation.concurrent.GuardedBy;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Closeables;
 import org.pkl.core.externalreader.ExternalModuleResolver;
 import org.pkl.core.externalreader.ExternalReaderProcess;
@@ -266,7 +267,7 @@ public final class ModuleKeyFactories {
     private final long evaluatorId;
 
     @GuardedBy("this")
-    private ExternalModuleResolver resolver;
+    private @Nullable ExternalModuleResolver resolver;
 
     ExternalProcess(String scheme, ExternalReaderProcess process, long evaluatorId) {
       this.scheme = scheme;
