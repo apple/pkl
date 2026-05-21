@@ -113,7 +113,9 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
             .asMapValue()
             .map()
             .mapKeys { it.key.asStringValue().asString() }
-            .mapValues { it.value.asArrayValue().list().map { it.asStringValue().asString() } }
+            .mapValues { value ->
+              value.value.asArrayValue().list().map { it.asStringValue().asString() }
+            }
         }
     return Http(caCertificates, proxy, rewrites, headers)
   }

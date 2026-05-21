@@ -158,6 +158,19 @@ public interface HttpClient extends AutoCloseable {
      * <p>This method clears all existing headers and replaces them with the contents of the
      * provided map.
      *
+     * <p>{@code headerRules} is a map whose keys are <a
+     * href="https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns">glob
+     * patterns</a>, and values is a map of header names and values. Multiple header values turn
+     * into multiple individual headers in the HTTP request.
+     *
+     * <p>To add headers to all requests, use {@code **} as the glob pattern.
+     *
+     * <p>To describe a prefix match, add {@code **} to the glob pattern (e.g. {@code
+     * https://example.com/**}).
+     *
+     * <p>Before an HTTP request is made, each key is matched against the request URL. If any
+     * matches are found, each of their headers are added to the request.
+     *
      * @throws IllegalArgumentException if any of the keys are invalid glob patterns, or if any of
      *     the header names or values are invalid.
      * @since 0.32.0
@@ -170,6 +183,7 @@ public interface HttpClient extends AutoCloseable {
      * @throws IllegalArgumentException if {@code globPattern} is an invalid glob pattern, or if any
      *     of the header names or values are invalid.
      * @since 0.32.0
+     * @see Builder#setHeaders
      */
     Builder addHeaders(String globPattern, Map<String, List<String>> headers);
 

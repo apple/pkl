@@ -180,6 +180,7 @@ class Http {
   /// To add headers to all HTTP requests, use `**` as the glob pattern.
   ///
   /// Example:
+  ///
   /// ```
   /// headers {
   ///   // Add this user agent to all out-bound requests.
@@ -207,6 +208,9 @@ class Http {
   ///   }
   /// }
   /// ```
+  ///
+  /// For details on glob patterns, see
+  /// <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
   @Since { version = "0.32.0" }
   headers: Mapping<String(isGlobPattern), HttpHeaders>?
 }

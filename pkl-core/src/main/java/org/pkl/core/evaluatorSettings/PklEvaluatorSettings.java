@@ -20,6 +20,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -169,11 +170,11 @@ public record PklEvaluatorSettings(
       if (headerDefs instanceof PNull) {
         return null;
       }
-      var ret = new HashMap<String, Map<String, List<String>>>();
       var defs = (Map<String, Map<String, Object>>) headerDefs;
+      var ret = new LinkedHashMap<String, Map<String, List<String>>>(defs.size());
       for (var entry : defs.entrySet()) {
         var headers = entry.getValue();
-        var map = new HashMap<String, List<String>>();
+        var map = new LinkedHashMap<String, List<String>>(headers.size());
         for (var header : headers.entrySet()) {
           var value = header.getValue();
           var headerValues =
