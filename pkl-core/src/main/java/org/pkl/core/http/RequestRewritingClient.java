@@ -50,17 +50,16 @@ import org.pkl.core.util.Pair;
  * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
  * HttpClient.Builder}.
  */
-// visible for testing
 @ThreadSafe
-public final class RequestRewritingClient implements HttpClient {
+final class RequestRewritingClient implements HttpClient {
   // non-private for testing
   final String userAgent;
   final Duration requestTimeout;
   final int testPort;
   final HttpClient delegate;
-  private final Map<URI, URI> rewritesMap;
+  final Map<URI, URI> rewritesMap;
+  final Map<Pattern, Map<String, List<String>>> headers;
   private final List<Entry<URI, URI>> rewrites;
-  private final Map<Pattern, Map<String, List<String>>> headers;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -266,15 +265,5 @@ public final class RequestRewritingClient implements HttpClient {
       throw new IllegalStateException(
           "Cannot send request " + request + " because this client has already been closed.");
     }
-  }
-
-  // visible for testing
-  public Map<URI, URI> getRewritesMap() {
-    return rewritesMap;
-  }
-
-  // visible for testing
-  public Map<Pattern, Map<String, List<String>>> getHeaders() {
-    return headers;
   }
 }
