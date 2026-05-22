@@ -423,7 +423,7 @@ For Spring Boot applications, and for users of `pkl-config-java` compiling the g
 .nonNullAnnotation: Property<String>
 [%collapsible]
 ====
-Default: `"org.pkl.config.java.mapper.NonNull"` +
+Default: `"org.jspecify.annotations.NonNull"` +
 Example: `nonNullAnnotation = "org.project.MyAnnotation"` +
 Fully qualified name of the annotation type to use for annotating non-null types. +
 The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
