@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-@file:Suppress("unused")
+@file:Suppress("unused", "CanConvertToMultiDollarString")
 
 package org.pkl.codegen.java
 
@@ -172,7 +172,7 @@ class JavaCodeGenerator(
       val annotation = codegenOptions.nonNullAnnotation
       val className =
         if (annotation == null) {
-          ClassName.get("org.pkl.config.java.mapper", "NonNull")
+          ClassName.get("org.jspecify.annotations", "NonNull")
         } else {
           toClassName(annotation)
         }

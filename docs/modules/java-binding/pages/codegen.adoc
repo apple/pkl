@@ -198,7 +198,7 @@ For Spring Boot applications, and for users of `pkl-config-java` compiling the g
 .--non-null-annotation
 [%collapsible]
 ====
-Default: `org.pkl.config.java.mapper.NonNull` +
+Default: `org.jspecify.annotations.NonNull` +
 Fully qualified name of the annotation type to use for annotating non-null types. +
 The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
 or the generated code may not compile.

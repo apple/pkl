@@ -5,8 +5,8 @@ import java.lang.Override;
 import java.lang.String;
 import java.lang.StringBuilder;
 import java.util.Objects;
+import org.jspecify.annotations.NonNull;
 import org.pkl.config.java.mapper.Named;
-import org.pkl.config.java.mapper.NonNull;
 import org.pkl.core.DataSize;
 import org.pkl.core.Duration;
 

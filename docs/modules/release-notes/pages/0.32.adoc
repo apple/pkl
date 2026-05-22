@@ -37,6 +37,10 @@ The following APIs have been removed without replacement.
 
 * `org.pkl.config.java.Config#makeConfig` (pr:https://github.com/apple/pkl/pull/1531[])
 
+The following APIs have been deprecated for removal.
+
+* `org.pkl.config.java.mapper.NonNull` (https://github.com/apple/pkl/pull/1607[#1607]).
+
 .XXX
 [%collapsible]
 ====
