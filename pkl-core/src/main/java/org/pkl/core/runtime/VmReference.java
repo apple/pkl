@@ -21,6 +21,8 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
+import java.util.function.BiConsumer;
+import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.PClass;
@@ -38,7 +40,7 @@ public final class VmReference extends VmValue {
   private final ImRrbt<VmTyped> path;
   // candidate types can only be: PType.Class, PType.Alias (only preservedAliasTypes),
   // PType.StringLiteral, or PType.UNKNOWN
-  private final Set<PType> candidateTypes;
+  private final PType referentType;
 
   private boolean forced = false;
 
@@ -69,10 +71,10 @@ public final class VmReference extends VmValue {
         normalizeTypes(new PType.Class(clazz.export()), clazz.getModule().getVmClass().export()));
   }
 
-  public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, Set<PType> candidateTypes) {
+  public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, PType referentType) {
     this.domain = domain;
     this.data = data;
-    this.candidateTypes = candidateTypes;
+    this.referentType = referentType;
     this.path = path;
   }
 
@@ -88,6 +90,10 @@ public final class VmReference extends VmValue {
     return path;
   }
 
+  public PType getReferentType() {
+    return referentType;
+  }
+
   // simplifies a type by:
   // * erasing constraints
   // * transforming T? into T|Null
@@ -95,12 +101,21 @@ public final class VmReference extends VmValue {
   // * flattening unions
   // * when moduleClass is supplied, replace PType.MODULE with appropriate PType.Class
   // * drop PType.NOTHING, PType.Function, and PType.TypeVariable
-  private static Set<PType> normalizeTypes(PType type, PClass moduleClass) {
+  private static PType normalizeTypes(PType type, PClass moduleClass) {
     var types = new HashSet<PType>();
     normalizeTypes(type, moduleClass, types);
-    if (types.contains(PType.UNKNOWN)) return Set.of(PType.UNKNOWN);
-    if (containsClass(types, anyType.getPClass())) return Set.of(anyType);
-    return types;
+    return minimizeTypes(types);
+  }
+
+  private static PType minimizeTypes(Set<PType> types) {
+    if (types.size() == 1) return types.iterator().next();
+    // optimization: unknown allows all references, erase all candidates to only unknown
+    if (types.contains(PType.UNKNOWN)) return PType.UNKNOWN;
+    // optimization: All allows all references, erase all candidates to only All
+    if (containsClass(types, anyType.getPClass())) return anyType;
+    var typesList = new ArrayList<>(types);
+    typesList.sort(Comparator.comparing(Object::toString));
+    return new PType.Union(typesList);
   }
 
   private static void normalizeTypes(PType type, PClass moduleClass, Set<PType> result) {
@@ -119,8 +134,7 @@ public final class VmReference extends VmValue {
       } else {
         var typeArgs = new ArrayList<PType>(clazz.getTypeArguments().size());
         for (var arg : clazz.getTypeArguments()) {
-          var tt = new ArrayList<>(normalizeTypes(arg, moduleClass));
-          typeArgs.add(tt.size() == 1 ? tt.get(0) : new PType.Union(tt));
+          typeArgs.add(normalizeTypes(arg, moduleClass));
         }
         result.add(new PType.Class(clazz.getPClass(), typeArgs));
       }
@@ -144,33 +158,34 @@ public final class VmReference extends VmValue {
     }
   }
 
+  private static Iterable<PType> iterateTypes(PType t) {
+    if (t instanceof PType.Union union) return union.getElementTypes();
+    return Collections.singleton(t);
+  }
+
   public @Nullable VmReference withPropertyAccess(Identifier property) {
-    Set<PType> candidates = new HashSet<>();
-    for (var t : candidateTypes) {
-      getCandidatePropertyType(t, property.toString(), candidates);
-    }
-    if (candidates.isEmpty()) {
-      return null; // no valid property found
-    } else if (candidates.contains(PType.UNKNOWN)) {
-      // optimization: unknown allows all references, erase all candidates to only unknown
-      candidates = Set.of(PType.UNKNOWN);
-    }
-    return new VmReference(
-        domain, data, path.append(newAccess(property.toString(), null)), candidates);
+    var propString = property.toString();
+    return withAccess(
+        (t, candidates) -> getCandidatePropertyType(t, propString, candidates),
+        () -> newAccess(property.toString(), null));
   }
 
   public @Nullable VmReference withSubscriptAccess(Object key) {
+    return withAccess(
+        (t, candidates) -> getCandidateSubscriptType(t, key, candidates),
+        () -> newAccess(null, key));
+  }
+
+  private @Nullable VmReference withAccess(
+      BiConsumer<PType, Set<PType>> checkCandidate, Supplier<VmTyped> makeAccess) {
     Set<PType> candidates = new HashSet<>();
-    for (var t : candidateTypes) {
-      getCandidateSubscriptType(t, key, candidates);
+    for (var t : iterateTypes(referentType)) {
+      checkCandidate.accept(t, candidates);
     }
     if (candidates.isEmpty()) {
-      return null; // no valid subscript found
-    } else if (candidates.contains(PType.UNKNOWN)) {
-      // optimization: unknown allows all references, erase all candidates to only unknown
-      candidates = Set.of(PType.UNKNOWN);
+      return null; // no valid access found
     }
-    return new VmReference(domain, data, path.append(newAccess(null, key)), candidates);
+    return new VmReference(domain, data, path.append(makeAccess.get()), minimizeTypes(candidates));
   }
 
   @SuppressWarnings("DuplicatedCode")
@@ -234,7 +249,7 @@ public final class VmReference extends VmValue {
         || clazz.getPClass().getInfo() == PClassInfo.Map) {
       var typeArgs = clazz.getTypeArguments();
       var keyTypes = normalizeTypes(typeArgs.get(0), clazz.getPClass().getModuleClass());
-      for (var kt : keyTypes) {
+      for (var kt : iterateTypes(keyTypes)) {
         if (kt == PType.UNKNOWN
             || (kt instanceof PType.Class klazz
                 && klazz.getPClass().getInfo() == PClassInfo.forValue(VmValue.export(key)))
@@ -252,36 +267,32 @@ public final class VmReference extends VmValue {
    */
   public boolean referentTypeIsSubtypeOf(PType type, PClass moduleClass) {
     // fast path: if referent is unknown it can match any type check
-    if (candidateTypes.contains(PType.UNKNOWN)) {
+    if (referentType == PType.UNKNOWN) {
       return true;
     }
 
-    var checkTypes = normalizeTypes(type, moduleClass);
+    var checkType = normalizeTypes(type, moduleClass);
     // fast path: short circuit if any referent is accepted
-    if (checkTypes.contains(PType.UNKNOWN) || containsClass(checkTypes, anyType.getPClass())) {
+    if (checkType == PType.UNKNOWN || isClass(checkType, anyType.getPClass())) {
       return true;
     }
     // fast path: short circuit if nothing is accepted
-    if (checkTypes.size() == 1 && checkTypes.contains(PType.NOTHING)) {
+    if (checkType == PType.NOTHING) {
       return false;
     }
 
-    // all candidate types must be subtypes of at least one target type
-    candidate:
-    for (var c : candidateTypes) {
-      for (var t : checkTypes) {
-        if (isSubtype(c, t)) continue candidate;
-      }
-      return false;
-    }
-    return true;
+    return isSubtype(referentType, checkType);
   }
 
   private static boolean containsClass(Set<PType> types, PClass pClass) {
     for (var t : types) {
-      if (t instanceof PType.Class clazz && clazz.getPClass() == pClass) return true;
+      if (isClass(t, pClass)) return true;
     }
     return false;
+  }
+
+  private static boolean isClass(PType t, PClass pClass) {
+    return t instanceof PType.Class clazz && clazz.getPClass() == pClass;
   }
 
   private static boolean isSubtype(PType a, PType b) {
@@ -305,6 +316,8 @@ public final class VmReference extends VmValue {
     //     * invariant: A_i must be identical to B_i
     //     * covariant: A_i must be a subtype of B_i
     //     * contravariant: B_i must be a subtype of A_i
+    // * Union -> Union: Each elem of A must be a subtype of at least one elem of B
+    // * Non-union -> Union: A must be a subtype of at least one elem of B
     if (a == b) return true;
 
     if (a instanceof PType.StringLiteral aStr) {
@@ -366,6 +379,21 @@ public final class VmReference extends VmValue {
         }
       }
       return true;
+    } else if (b instanceof PType.Union bUnion) {
+      if (a instanceof PType.Union aUnion) {
+        a:
+        for (var aElem : aUnion.getElementTypes()) {
+          for (var bElem : bUnion.getElementTypes()) {
+            if (isSubtype(aElem, bElem)) continue a;
+          }
+          return false;
+        }
+        return true;
+      } else {
+        for (var bElem : bUnion.getElementTypes()) {
+          if (isSubtype(a, bElem)) return true;
+        }
+      }
     }
     return false;
   }
@@ -395,22 +423,14 @@ public final class VmReference extends VmValue {
       pathList.add(elem.export());
     }
 
-    return new Reference(domain.export(), VmValue.export(data), pathList, exportReferentType());
-  }
-
-  public PType exportReferentType() {
-    if (candidateTypes.size() == 1) return candidateTypes.iterator().next();
-    var types = new ArrayList<>(candidateTypes);
-    // sort multiple candidate types to ensure stable output
-    types.sort(Comparator.comparing(Object::toString));
-    return new PType.Union(types);
+    return new Reference(domain.export(), VmValue.export(data), pathList, getReferentType());
   }
 
   public PType exportType() {
     return new PType.Class(
         RefModule.getReferenceClass().export(),
         new PType.Class(domain.getVmClass().export()),
-        exportReferentType());
+        getReferentType());
   }
 
   @Override
@@ -433,7 +453,7 @@ public final class VmReference extends VmValue {
     return domain.equals(that.domain)
         && data.equals(that.data)
         && path.equals(that.path)
-        && candidateTypes.equals(that.candidateTypes);
+        && referentType.equals(that.referentType);
   }
 
   @Override
@@ -441,7 +461,7 @@ public final class VmReference extends VmValue {
     int result = domain.hashCode();
     result = 31 * result + data.hashCode();
     result = 31 * result + path.hashCode();
-    result = 31 * result + candidateTypes.hashCode();
+    result = 31 * result + referentType.hashCode();
     return result;
   }
 }

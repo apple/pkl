@@ -4,16 +4,14 @@ import "pkl:ref"
 class D extends ref.Domain {
   function renderReference(reference: ref.Reference<D, Any>): String =
     let (data = reference.getData())
-      if (data is Resource)
-        let (
-          path =
-            reference
-              .getPath()
-              .map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]")
-        )
-          "${\(data.name)\(path.join(""))}"
-      else
-        throw("can only render references rooted to Resource instances")
+    let (root = if (data is Resource) data.name else data.toString())
+    let (
+      path =
+        reference
+          .getPath()
+          .map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]")
+    )
+      "${\(root)\(path.join(""))}"
 }
 
 local const d: D = new {}
@@ -86,7 +84,7 @@ aRef: Ref<A> = a.$
 bRef: Ref<B> = b.$
 unknownRef: Ref<A | B> = aRef
 unknownRef2: Ref<A> | Ref<B> = aRef
-unknownRef3: Ref<A | B> = aOrB.$
+unknownRef3: Ref<B | A> = aOrB.$
 
 k: K = new {
   aId = aRef.id
@@ -120,6 +118,12 @@ j: K = new {
 refInterpolation = "\(aRef.outputs.someListing[1])"
 kInterpolation = "\(k)"
 aValuesJoined = k.aValues.join("\n").replaceAll(Regex("@[a-z0-9]+"), "@<addr>")
+
+// ensure that type arguments that are unions are handled correctly
+typeArgs = ref.Reference(d, TypeHolder, null).prop as Ref<Listing<Number | Boolean | String>>
+class TypeHolder {
+  prop: Listing<String | Boolean | Number>
+}
 
 output {
   renderer {

@@ -57,3 +57,4 @@ aValuesJoined = """
   org.pkl.core.runtime.VmReference@<addr>
   org.pkl.core.runtime.VmReference@<addr>
   """
+typeArgs = "${null.prop}"

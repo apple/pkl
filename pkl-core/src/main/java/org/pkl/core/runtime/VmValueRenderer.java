@@ -277,7 +277,7 @@ public final class VmValueRenderer {
       append("Reference(");
       visit(value.getDomain());
       append(", ");
-      append(value.exportReferentType());
+      append(value.getReferentType());
       append(", ");
       visit(value.getData());
       append(")");
