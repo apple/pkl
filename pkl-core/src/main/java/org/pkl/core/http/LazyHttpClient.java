@@ -15,6 +15,7 @@
  */
 package org.pkl.core.http;
 
+import com.google.errorprone.annotations.ThreadSafe;
 import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.IOException;
 import java.net.http.HttpRequest;
@@ -28,6 +29,7 @@ import org.jspecify.annotations.Nullable;
  * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
  * send.
  */
+@ThreadSafe
 final class LazyHttpClient implements HttpClient {
   private final Supplier<HttpClient> supplier;
   private final Object lock = new Object();
