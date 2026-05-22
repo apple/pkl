@@ -36,7 +36,6 @@ jline = "4.0.14"
 jmh = "1.37"
 jmhPlugin = "0.7.3"
 jspecify = "1.0.0"
-jsr305 = "3.0.2"
 junit = "6.0.3"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.0"
@@ -74,6 +73,7 @@ commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 #noinspection UnusedVersionCatalogEntry
 errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
+errorProneAnnotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
 errorPronePlugin = { group = "net.ltgt.gradle", name = "gradle-errorprone-plugin", version.ref = "errorPronePlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }
@@ -87,7 +87,6 @@ jlineTerminal = { group = "org.jline", name = "jline-terminal", version.ref = "j
 jlineTerminalJni = { group = "org.jline", name = "jline-terminal-jni", version.ref = "jline" }
 #noinspection UnusedVersionCatalogEntry
 jspecify = { group = "org.jspecify", name = "jspecify", version.ref = "jspecify" }
-jsr305 = { group = "com.google.code.findbugs", name = "jsr305", version.ref = "jsr305" }
 junitApi = { group = "org.junit.jupiter", name = "junit-jupiter-api", version.ref = "junit" }
 junitEngine = { group = "org.junit.jupiter", name = "junit-jupiter-engine", version.ref = "junit" }
 junitParams = { group = "org.junit.jupiter", name = "junit-jupiter-params", version.ref = "junit" }

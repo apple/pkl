@@ -15,6 +15,7 @@
  */
 package org.pkl.core.module;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -26,7 +27,6 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 import java.util.ServiceLoader;
-import javax.annotation.concurrent.GuardedBy;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Closeables;
 import org.pkl.core.externalreader.ExternalModuleResolver;

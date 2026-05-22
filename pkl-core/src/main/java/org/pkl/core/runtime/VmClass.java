@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Idempotent;
@@ -22,7 +23,6 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
 import java.util.function.*;
-import javax.annotation.concurrent.GuardedBy;
 import org.graalvm.collections.*;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;

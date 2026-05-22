@@ -15,6 +15,7 @@
  */
 package org.pkl.core.externalreader;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.time.Duration;
@@ -26,7 +27,6 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
-import javax.annotation.concurrent.GuardedBy;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 import org.pkl.core.externalreader.ExternalReaderMessages.*;

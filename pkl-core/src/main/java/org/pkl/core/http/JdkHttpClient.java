@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -41,7 +41,6 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
-import javax.annotation.concurrent.ThreadSafe;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
@@ -50,7 +49,6 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
 /** An {@code HttpClient} implementation backed by {@link java.net.http.HttpClient}. */
-@ThreadSafe
 final class JdkHttpClient implements HttpClient {
   // non-private for testing
   final java.net.http.HttpClient underlying;

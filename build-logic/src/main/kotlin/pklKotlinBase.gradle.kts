@@ -44,7 +44,6 @@ kotlin {
     freeCompilerArgs.addAll(
       "-jvm-default=no-compatibility", // was: -Xjvm-default=all
       "-Xjdk-release=${buildInfo.jvmTarget}",
-      "-Xjsr305=strict",
     )
   }
 }
