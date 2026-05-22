@@ -169,6 +169,7 @@ public final class StringNodes {
 
   public abstract static class isGlobPattern extends ExternalPropertyNode {
     @Specialization
+    @TruffleBoundary
     protected boolean eval(String self) {
       try {
         GlobResolver.toRegexString(self);
