@@ -21,8 +21,7 @@ import java.time.Duration
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
-import org.pkl.core.http.LazyHttpClient
-import org.pkl.core.http.RequestRewritingClient
+import org.pkl.core.http.getConfiguredSettings
 import org.pkl.core.project.Project
 import org.pkl.core.resource.TestResourceReader
 import org.pkl.core.util.IoUtils
@@ -97,10 +96,10 @@ class EvaluatorBuilderTest {
       .isEqualTo(3) // two external readers, one module path
     assertThat(builder.resourceReaders.find { it.uriScheme == "scheme3" }).isNotNull
     assertThat(builder.resourceReaders.find { it.uriScheme == "scheme4" }).isNotNull
-    val client = (builder.httpClient as LazyHttpClient).orCreateClient as RequestRewritingClient
-    assertThat(client.headers)
+    val settings = builder.httpClient.getConfiguredSettings()
+    assertThat(settings.headers)
       .isEqualTo(mapOf(IoUtils.doubleStarGlob to mapOf("X-Foo" to listOf("Foo"))))
-    assertThat(client.rewritesMap)
+    assertThat(settings.rewritesMap)
       .isEqualTo(mapOf(URI("https://foo.com/") to URI("https://bar.com/")))
   }
 }

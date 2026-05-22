@@ -29,9 +29,8 @@ import org.jspecify.annotations.Nullable;
  * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
  * send.
  */
-// visible for testing
 @ThreadSafe
-public final class LazyHttpClient implements HttpClient {
+final class LazyHttpClient implements HttpClient {
   private final Supplier<HttpClient> supplier;
   private final Object lock = new Object();
 
