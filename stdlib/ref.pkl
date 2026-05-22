@@ -48,7 +48,7 @@ external const function Reference<D, T>(
 /// References are an advanced API design tool that enables library authors to express
 /// domain-specific references to values that may not be known during evaluation.
 ///
-/// Instances are created with the [Reference()] contructor method.
+/// Instances are created with the [Reference()] constructor method.
 /// References consist of four parts:
 /// * [Domain]: determines which references are compatible and how references are rendered
 ///   as strings.

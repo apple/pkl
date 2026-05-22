@@ -54,7 +54,7 @@ public abstract class AbstractStringRenderer extends AbstractRenderer {
 
   @Override
   public void visitReference(VmReference value) {
-    visitString(value.toPklString(null, currSourceSection));
+    visitString(value.toPklString());
   }
 
   // override these to mark them final

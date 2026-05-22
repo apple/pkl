@@ -17,10 +17,10 @@ package org.pkl.core.ast.internal;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
@@ -61,7 +61,7 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   protected String evalTyped(
       VirtualFrame frame,
       VmTyped value,
-      @Shared("invokeToString") @Cached(value = "createInvokeNode()", neverDefault = true)
+      @Cached(value = "createInvokeNode()", neverDefault = true)
           InvokeMethodVirtualNode invokeNode) {
     return (String) invokeNode.executeWith(frame, value, value.getVmClass());
   }
@@ -70,9 +70,9 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   protected String evalReference(
       VirtualFrame frame,
       VmReference value,
-      @Shared("invokeToString") @Cached(value = "createInvokeNode()", neverDefault = true)
-          InvokeMethodVirtualNode invokeNode) {
-    return (String) invokeNode.executeWith(frame, value, value.getVmClass());
+      @Cached(value = "createReferenceCallNode(value)", neverDefault = true)
+          DirectCallNode callNode) {
+    return (String) callNode.call(value, value.getVmClass().getPrototype());
   }
 
   @Fallback
@@ -90,5 +90,11 @@ public abstract class ToStringNode extends UnaryExpressionNode {
         MemberLookupMode.EXPLICIT_RECEIVER,
         null,
         null);
+  }
+
+  protected DirectCallNode createReferenceCallNode(VmReference reference) {
+    var toStringMethod = reference.getVmClass().getDeclaredMethod(Identifier.TO_STRING);
+    assert toStringMethod != null;
+    return DirectCallNode.create(toStringMethod.getCallTarget());
   }
 }

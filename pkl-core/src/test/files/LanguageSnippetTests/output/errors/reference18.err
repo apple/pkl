@@ -1,9 +1,8 @@
 –– Pkl Error ––
-Expected value of type `pkl.ref#Reference<reference18#D, Int | Boolean>`, but got type `pkl.ref#Reference<reference18#D, Boolean | Int | String>`.
-Value: Reference(new D {}, Boolean | Int | String, "").foo
+Cannot find property `output` in object of type `pkl.ref#Reference<reference18#D, reference18#ModuleSubclass>`.
 
-xx | test = ref.Reference(d, A, "").foo as ref.Reference<D, Int | Boolean>
-                                           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xx | test = ref.Reference(d, ModuleSubclass, "").output
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference18#test (file:///$snippetsDir/input/errors/reference18.pkl)
 
 xxx | renderer.renderDocument(value)

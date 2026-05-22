@@ -1,0 +1,15 @@
+import "pkl:ref"
+
+class A {
+  foo: String | Int | Boolean
+}
+
+class D extends ref.Domain {
+  function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+}
+local d: D = new {}
+
+local test = ref.Reference(d, A, "").foo
+testInterpolation = "test:\(test)"
+
+// this tests that the interpolation appears in the output when referenceToString throws

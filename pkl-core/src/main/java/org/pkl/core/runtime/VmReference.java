@@ -15,27 +15,22 @@
  */
 package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import org.organicdesign.fp.collections.RrbTree;
-import org.organicdesign.fp.collections.RrbTree.ImRrbt;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PType;
 import org.pkl.core.Reference;
 import org.pkl.core.TypeAlias;
-import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.MemberLookupMode;
-import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
-import org.pkl.core.util.Nullable;
+import org.pkl.core.util.paguro.RrbTree;
+import org.pkl.core.util.paguro.RrbTree.ImRrbt;
 
 public final class VmReference extends VmValue {
 
@@ -57,6 +52,14 @@ public final class VmReference extends VmValue {
       intAliasTypes.add(t.export());
       preservedAliasTypes.add(t.export());
     }
+  }
+
+  private static final DirectCallNode toStringCallNode;
+
+  static {
+    var toStringMethod = RefModule.getReferenceClass().getMethod(Identifier.TO_STRING);
+    assert toStringMethod != null;
+    toStringCallNode = DirectCallNode.create(toStringMethod.getCallTarget());
   }
 
   private static VmTyped newAccess(@Nullable String property, @Nullable Object key) {
@@ -202,7 +205,8 @@ public final class VmReference extends VmValue {
     //   containing a property can be subclassed.
     // And this can't check prop.getOwner().isExternal() because fully overriding the property with
     //   a new type annotation means the owner isn't Module.
-    if (clazz.getPClass().isModuleClass() && property.equals("output")) return;
+    if (clazz.getPClass().isSubclassOf(BaseModule.getModuleClass().export())
+        && property.equals("output")) return;
 
     var prop = clazz.getPClass().getAllProperties().get(property);
     // restriction: cannot reference external properties
@@ -432,22 +436,7 @@ public final class VmReference extends VmValue {
     return result;
   }
 
-  public String toPklString(@Nullable VirtualFrame frame, @Nullable SourceSection sourceSection) {
-    if (frame == null) {
-      frame = VmUtils.createEmptyMaterializedFrame();
-    }
-    if (sourceSection == null) {
-      sourceSection = VmUtils.unavailableSourceSection();
-    }
-
-    return (String)
-        InvokeMethodVirtualNodeGen.create(
-                sourceSection,
-                Identifier.TO_STRING,
-                new ExpressionNode[] {},
-                MemberLookupMode.EXPLICIT_RECEIVER,
-                null,
-                null)
-            .executeWith(frame, this, getVmClass());
+  public String toPklString() {
+    return (String) toStringCallNode.call(this, getVmClass().getPrototype());
   }
 }
