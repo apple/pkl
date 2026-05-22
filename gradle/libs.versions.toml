@@ -73,6 +73,7 @@ commonMarkTables = { group = "org.commonmark", name = "commonmark-ext-gfm-tables
 downloadTaskPlugin = { group = "de.undercouch", name = "gradle-download-task", version.ref = "downloadTaskPlugin" }
 #noinspection UnusedVersionCatalogEntry
 errorProne = { group = "com.google.errorprone", name = "error_prone_core", version.ref = "errorProne" }
+errorProneAnnotations = { group = "com.google.errorprone", name = "error_prone_annotations", version.ref = "errorProne" }
 errorPronePlugin = { group = "net.ltgt.gradle", name = "gradle-errorprone-plugin", version.ref = "errorPronePlugin" }
 geantyref = { group = "io.leangen.geantyref", name = "geantyref", version.ref = "geantyref" }
 graalCompiler = { group = "org.graalvm.compiler", name = "compiler", version.ref = "graalVm" }

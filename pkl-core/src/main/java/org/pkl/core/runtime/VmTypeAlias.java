@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
@@ -33,7 +34,6 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
-import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 
 public final class VmTypeAlias extends VmValue {

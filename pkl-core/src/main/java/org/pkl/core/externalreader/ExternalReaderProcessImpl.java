@@ -15,6 +15,7 @@
  */
 package org.pkl.core.externalreader;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.IOException;
 import java.lang.ProcessBuilder.Redirect;
 import java.time.Duration;
@@ -33,7 +34,6 @@ import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 
 final class ExternalReaderProcessImpl implements ExternalReaderProcess {

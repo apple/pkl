@@ -15,6 +15,7 @@
  */
 package org.pkl.core.module;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.UncheckedIOException;
@@ -30,7 +31,6 @@ import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.module.PathElement.TreePathElement;
 import org.pkl.core.runtime.FileSystemManager;
-import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.IoUtils;
 
 /**

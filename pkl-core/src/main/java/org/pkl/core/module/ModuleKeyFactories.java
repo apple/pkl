@@ -15,6 +15,7 @@
  */
 package org.pkl.core.module;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -32,7 +33,6 @@ import org.pkl.core.externalreader.ExternalModuleResolver;
 import org.pkl.core.externalreader.ExternalReaderProcess;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.IoUtils;
 
 /** Utilities for obtaining and using module key factories. */

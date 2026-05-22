@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Idempotent;
@@ -34,7 +35,6 @@ import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.LateInit;
 
 // Most stdlib modules and their members are initialized in static initializers

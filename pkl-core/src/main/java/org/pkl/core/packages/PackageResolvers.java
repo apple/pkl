@@ -15,6 +15,7 @@
  */
 package org.pkl.core.packages;
 
+import com.google.errorprone.annotations.concurrent.GuardedBy;
 import java.io.ByteArrayInputStream;
 import java.io.FileNotFoundException;
 import java.io.IOException;
@@ -54,7 +55,6 @@ import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.GuardedBy;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;

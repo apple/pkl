@@ -43,6 +43,7 @@ dependencies {
   annotationProcessor(libs.truffleDslProcessor)
   annotationProcessor(generatorSourceSet.get().runtimeClasspath)
 
+  compileOnly(libs.errorProneAnnotations)
   // pkl-core implements pkl-executor's ExecutorSpi, but the SPI doesn't ship with pkl-core
   compileOnly(projects.pklExecutor)
 
