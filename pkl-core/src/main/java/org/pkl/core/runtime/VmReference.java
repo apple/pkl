@@ -15,7 +15,6 @@
  */
 package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.nodes.DirectCallNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -43,7 +42,8 @@ public final class VmReference extends VmValue {
 
   private boolean forced = false;
 
-  private static final PType nullType = new PType.Class(BaseModule.getNullClass().export());
+  private static final PType.Class nullType = new PType.Class(BaseModule.getNullClass().export());
+  private static final PType.Class anyType = new PType.Class(BaseModule.getAnyClass().export());
   private static final Set<TypeAlias> intAliasTypes = new HashSet<>();
   private static final Set<TypeAlias> preservedAliasTypes = new HashSet<>();
 
@@ -52,14 +52,6 @@ public final class VmReference extends VmValue {
       intAliasTypes.add(t.export());
       preservedAliasTypes.add(t.export());
     }
-  }
-
-  private static final DirectCallNode toStringCallNode;
-
-  static {
-    var toStringMethod = RefModule.getReferenceClass().getMethod(Identifier.TO_STRING);
-    assert toStringMethod != null;
-    toStringCallNode = DirectCallNode.create(toStringMethod.getCallTarget());
   }
 
   private static VmTyped newAccess(@Nullable String property, @Nullable Object key) {
@@ -106,11 +98,13 @@ public final class VmReference extends VmValue {
   private static Set<PType> normalizeTypes(PType type, PClass moduleClass) {
     var types = new HashSet<PType>();
     normalizeTypes(type, moduleClass, types);
+    if (types.contains(PType.UNKNOWN)) return Set.of(PType.UNKNOWN);
+    if (containsClass(types, anyType.getPClass())) return Set.of(anyType);
     return types;
   }
 
   private static void normalizeTypes(PType type, PClass moduleClass, Set<PType> result) {
-    if (type == PType.UNKNOWN || type instanceof PType.StringLiteral) {
+    if (type == PType.UNKNOWN || type == PType.NOTHING || type instanceof PType.StringLiteral) {
       result.add(type);
     } else if (type instanceof PType.Class clazz) {
       if (clazz.getTypeArguments().isEmpty()) {
@@ -257,12 +251,20 @@ public final class VmReference extends VmValue {
    * Tells if this reference's referent type is a subtype of {@code type}. Does not check domain.
    */
   public boolean referentTypeIsSubtypeOf(PType type, PClass moduleClass) {
-    // fast path: if this could be unknown, any type is accepted
+    // fast path: if referent is unknown it can match any type check
     if (candidateTypes.contains(PType.UNKNOWN)) {
       return true;
     }
 
     var checkTypes = normalizeTypes(type, moduleClass);
+    // fast path: short circuit if any referent is accepted
+    if (checkTypes.contains(PType.UNKNOWN) || containsClass(checkTypes, anyType.getPClass())) {
+      return true;
+    }
+    // fast path: short circuit if nothing is accepted
+    if (checkTypes.size() == 1 && checkTypes.contains(PType.NOTHING)) {
+      return false;
+    }
 
     // all candidate types must be subtypes of at least one target type
     candidate:
@@ -273,6 +275,13 @@ public final class VmReference extends VmValue {
       return false;
     }
     return true;
+  }
+
+  private static boolean containsClass(Set<PType> types, PClass pClass) {
+    for (var t : types) {
+      if (t instanceof PType.Class clazz && clazz.getPClass() == pClass) return true;
+    }
+    return false;
   }
 
   private static boolean isSubtype(PType a, PType b) {
@@ -434,9 +443,5 @@ public final class VmReference extends VmValue {
     result = 31 * result + path.hashCode();
     result = 31 * result + candidateTypes.hashCode();
     return result;
-  }
-
-  public String toPklString() {
-    return (String) toStringCallNode.call(this, getVmClass().getPrototype());
   }
 }

@@ -17,7 +17,6 @@ package org.pkl.core.stdlib;
 
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmFunction;
-import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmTypeAlias;
 
 /** Base class for renderers that are part of the standard library. */
@@ -50,11 +49,6 @@ public abstract class AbstractStringRenderer extends AbstractRenderer {
 
   protected void decreaseIndent() {
     currIndent.setLength(currIndent.length() - indent.length());
-  }
-
-  @Override
-  public void visitReference(VmReference value) {
-    visitString(value.toPklString());
   }
 
   // override these to mark them final

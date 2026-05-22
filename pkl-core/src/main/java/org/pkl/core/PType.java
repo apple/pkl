@@ -125,6 +125,13 @@ public abstract class PType implements Serializable {
       }
       return result;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (this == obj) return true;
+      if (!(obj instanceof Class clazz)) return false;
+      return pClass == clazz.getPClass() && typeArguments.equals(clazz.getTypeArguments());
+    }
   }
 
   public static final class Nullable extends PType {

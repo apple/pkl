@@ -76,7 +76,7 @@ external const function Reference<D, T>(
 /// /// Define a domain class for this configuration system:
 /// class Domain extends ref.Domain {
 ///   /// Define how this domain renders references to strings:
-///   function referenceToString(data: Any, path: List<ref.Access>): String =
+///   function renderReference(reference: ref.Reference<D, Any>): String =
 ///     (List(data.toString()) + path.map((it) -> it.property ?? it.key.toString())).join("/")
 /// }
 ///
@@ -153,7 +153,7 @@ external class Reference<out D, out T> {
 
   /// Render the reference to a string using its domain's ([getDomain()])
   /// [Domain.referencetoString()] method.
-  function toString(): String = getDomain().referenceToString(getData(), getPath())
+  function toString(): String = getDomain().renderReference(this)
 }
 
 /// Represents a configuration domain that a [Reference] may exist within.
@@ -162,13 +162,11 @@ external class Reference<out D, out T> {
 /// inter-compatible [Reference] instances.
 ///
 /// A domain also determines how [Reference] values are transformed into strings; see
-/// [referenceToString()].
+/// [renderReference()].
 abstract class Domain {
   /// Must be overridden by domain classes to determine how [Reference] instances are transformed to
-  /// strings during rendering.
-  ///
-  /// Also applied to [Reference.toString()] and string interpolation.
-  abstract function referenceToString(data: Any, path: List<Access>): String
+  /// strings by [Reference.toString()] and string interpolation.
+  abstract function renderReference(refrerence: Reference<Domain, Any>): String
 }
 
 /// Represents a property or subscript access as part of a [Reference]'s path.

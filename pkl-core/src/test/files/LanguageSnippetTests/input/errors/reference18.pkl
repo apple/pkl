@@ -5,7 +5,7 @@ import ".../input-helper/errors/ReferencedModuleWithOutputOverride.pkl"
 class ModuleSubclass extends ReferencedModuleWithOutputOverride
 
 class D extends ref.Domain {
-  function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
+  function renderReference(reference: ref.Reference<D, Any>): String = throw("not supported")
 }
 local d: D = new {}
 

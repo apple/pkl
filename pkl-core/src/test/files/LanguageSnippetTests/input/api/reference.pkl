@@ -2,15 +2,21 @@ import "pkl:math"
 import "pkl:ref"
 
 class D extends ref.Domain {
-  function referenceToString(data: Any, path: List<ref.Access>): String =
-    if (data is Resource)
-      let (path = path.map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]"))
-        "${\(data.name)\(path.join(""))}"
-    else
-      throw("can only render references rooted to Resource instances")
+  function renderReference(reference: ref.Reference<D, Any>): String =
+    let (data = reference.getData())
+      if (data is Resource)
+        let (
+          path =
+            reference
+              .getPath()
+              .map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]")
+        )
+          "${\(data.name)\(path.join(""))}"
+      else
+        throw("can only render references rooted to Resource instances")
 }
 
-const local d: D = new {}
+local const d: D = new {}
 typealias Ref<T> = ref.Reference<D, T>
 
 abstract class Resource {
@@ -51,7 +57,7 @@ class BProperties {
 
 class MapKey {
   k: Int
-  
+
   function toString(): String = "key:\(k)"
 }
 
@@ -114,3 +120,11 @@ j: K = new {
 refInterpolation = "\(aRef.outputs.someListing[1])"
 kInterpolation = "\(k)"
 aValuesJoined = k.aValues.join("\n").replaceAll(Regex("@[a-z0-9]+"), "@<addr>")
+
+output {
+  renderer {
+    converters {
+      [ref.Reference] = (it) -> it.toString()
+    }
+  }
+}

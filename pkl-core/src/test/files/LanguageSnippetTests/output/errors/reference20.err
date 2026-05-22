@@ -1,12 +1,12 @@
 –– Pkl Error ––
 not supported
 
-x | function referenceToString(data: Any, path: List<ref.Access>): String = throw("not supported")
-                                                                            ^^^^^^^^^^^^^^^^^^^^^^
-at reference20#D.referenceToString (file:///$snippetsDir/input/errors/reference20.pkl)
+x | function renderReference(reference: ref.Reference<D, Any>): String = throw("not supported")
+                                                                         ^^^^^^^^^^^^^^^^^^^^^^
+at reference20#D.renderReference (file:///$snippetsDir/input/errors/reference20.pkl)
 
-xxx | function toString(): String = getDomain().referenceToString(getData(), getPath())
-                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xxx | function toString(): String = getDomain().renderReference(this)
+                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.ref#Reference.toString (pkl:ref)
 
 xx | testInterpolation = "test:\(test)"

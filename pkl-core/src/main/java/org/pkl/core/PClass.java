@@ -60,7 +60,7 @@ public final class PClass extends Member implements Value {
 
   /**
    * Returns the name of the module that this class is declared in. Note that a module name is not
-   * guaranteed to be unique, especially if it not declared but inferred from the module URI.
+   * guaranteed to be unique, especially if it is not declared but inferred from the module URI.
    */
   public String getModuleName() {
     return classInfo.getModuleName();
