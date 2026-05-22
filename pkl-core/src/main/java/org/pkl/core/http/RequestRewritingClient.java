@@ -15,6 +15,7 @@
  */
 package org.pkl.core.http;
 
+import com.google.errorprone.annotations.ThreadSafe;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -49,6 +50,7 @@ import org.pkl.core.util.Pair;
  * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
  * HttpClient.Builder}.
  */
+@ThreadSafe
 final class RequestRewritingClient implements HttpClient {
   // non-private for testing
   final String userAgent;

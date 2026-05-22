@@ -15,6 +15,7 @@
  */
 package org.pkl.core.util;
 
+import com.google.errorprone.annotations.Immutable;
 import java.util.Arrays;
 
 /**
@@ -27,6 +28,7 @@ import java.util.Arrays;
  *
  * @author Thibault Debatty
  */
+@Immutable
 public final class StringSimilarity {
   private static final double DEFAULT_THRESHOLD = 0.7;
   private static final int THREE = 3;

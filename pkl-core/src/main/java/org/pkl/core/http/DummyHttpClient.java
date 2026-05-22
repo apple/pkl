@@ -15,11 +15,13 @@
  */
 package org.pkl.core.http;
 
+import com.google.errorprone.annotations.ThreadSafe;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 
 /** An {@code HttpClient} implementation that throws {@code AssertionError} on every send. */
+@ThreadSafe
 final class DummyHttpClient implements HttpClient {
   @Override
   public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {

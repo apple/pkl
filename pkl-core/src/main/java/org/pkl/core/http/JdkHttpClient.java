@@ -15,6 +15,7 @@
  */
 package org.pkl.core.http;
 
+import com.google.errorprone.annotations.ThreadSafe;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
@@ -49,6 +50,7 @@ import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
 /** An {@code HttpClient} implementation backed by {@link java.net.http.HttpClient}. */
+@ThreadSafe
 final class JdkHttpClient implements HttpClient {
   // non-private for testing
   final java.net.http.HttpClient underlying;
