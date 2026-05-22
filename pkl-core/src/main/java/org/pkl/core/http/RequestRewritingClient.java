@@ -22,6 +22,7 @@ import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.net.http.HttpResponse.BodyHandler;
 import java.time.Duration;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -29,12 +30,12 @@ import java.util.Map.Entry;
 import java.util.Objects;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
-import java.util.stream.Stream;
 import javax.annotation.concurrent.ThreadSafe;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.Pair;
 import org.pkl.core.PklBugException;
 import org.pkl.core.util.HttpUtils;
+import org.pkl.core.util.IoUtils;
+import org.pkl.core.util.Pair;
 
 /**
  * An {@code HttpClient} decorator that
@@ -49,15 +50,17 @@ import org.pkl.core.util.HttpUtils;
  * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
  * HttpClient.Builder}.
  */
+// visible for testing
 @ThreadSafe
-final class RequestRewritingClient implements HttpClient {
+public final class RequestRewritingClient implements HttpClient {
   // non-private for testing
   final String userAgent;
   final Duration requestTimeout;
   final int testPort;
   final HttpClient delegate;
+  private final Map<URI, URI> rewritesMap;
   private final List<Entry<URI, URI>> rewrites;
-  private final List<Pair<Pattern, List<Pair<String, String>>>> headers;
+  private final Map<Pattern, Map<String, List<String>>> headers;
 
   private final AtomicBoolean closed = new AtomicBoolean();
 
@@ -67,11 +70,12 @@ final class RequestRewritingClient implements HttpClient {
       int testPort,
       HttpClient delegate,
       Map<URI, URI> rewrites,
-      List<Pair<Pattern, List<Pair<String, String>>>> headers) {
+      Map<Pattern, Map<String, List<String>>> headers) {
     this.userAgent = userAgent;
     this.requestTimeout = requestTimeout;
     this.testPort = testPort;
     this.delegate = delegate;
+    this.rewritesMap = rewrites;
     this.rewrites =
         rewrites.entrySet().stream()
             .map((it) -> Map.entry(normalizeRewrite(it.getKey()), normalizeRewrite(it.getValue())))
@@ -117,9 +121,15 @@ final class RequestRewritingClient implements HttpClient {
         .headers()
         .map()
         .forEach((name, values) -> values.forEach(value -> builder.header(name, value)));
-    builder.setHeader("User-Agent", userAgent);
+    var isUserAgentSet = false;
     for (var header : this.getHeaders(original.uri())) {
+      var headerName = header.getFirst();
+      isUserAgentSet = isUserAgentSet || headerName.equalsIgnoreCase("user-agent");
       builder.header(header.getFirst(), header.getSecond());
+    }
+
+    if (!isUserAgentSet) {
+      builder.setHeader("User-Agent", userAgent);
     }
 
     var method = original.method();
@@ -225,14 +235,30 @@ final class RequestRewritingClient implements HttpClient {
     return ret;
   }
 
+  private boolean matches(Pattern pattern, URI uri) {
+    // optimization: "**" always matches, no need to execute regex
+    // okay to use `==` here because `GlobResolver.toRegexPattern()` caches and
+    // gives the same `Pattern` instance for an existing glob pattern.
+    if (pattern == IoUtils.doubleStarGlob) {
+      return true;
+    }
+    return pattern.matcher(uri.toString()).matches();
+  }
+
   private List<Pair<String, String>> getHeaders(URI uri) {
-    return headers.stream()
-        .flatMap(
-            rule ->
-                rule.getFirst().asPredicate().test(uri.toString())
-                    ? rule.getSecond().stream()
-                    : Stream.empty())
-        .toList();
+    var result = new ArrayList<Pair<String, String>>();
+    for (var rule : headers.entrySet()) {
+      var pattern = rule.getKey();
+      if (!matches(pattern, uri)) {
+        continue;
+      }
+      for (var header : rule.getValue().entrySet()) {
+        for (var value : header.getValue()) {
+          result.add(Pair.of(header.getKey(), value));
+        }
+      }
+    }
+    return result;
   }
 
   private void checkNotClosed(HttpRequest request) {
@@ -240,5 +266,15 @@ final class RequestRewritingClient implements HttpClient {
       throw new IllegalStateException(
           "Cannot send request " + request + " because this client has already been closed.");
     }
+  }
+
+  // visible for testing
+  public Map<URI, URI> getRewritesMap() {
+    return rewritesMap;
+  }
+
+  // visible for testing
+  public Map<Pattern, Map<String, List<String>>> getHeaders() {
+    return headers;
   }
 }

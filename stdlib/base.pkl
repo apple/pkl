@@ -1323,6 +1323,13 @@ external class String extends Any {
   /// Tells if this string is a valid regular expression according to [Regex].
   external isRegex: Boolean
 
+  /// Tells if this string is a valid glob pattern.
+  ///
+  /// For reference, see
+  /// <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
+  @Since { version = "0.32.0" }
+  external isGlobPattern: Boolean
+
   /// Tells if this is a valid base64-encoded string.
   ///
   /// Facts:

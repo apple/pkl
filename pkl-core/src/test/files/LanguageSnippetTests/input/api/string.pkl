@@ -85,6 +85,12 @@ facts {
     !"(abc".isRegex
   }
 
+  ["isGlobPattern"] {
+    "**".isGlobPattern
+    "hello".isGlobPattern
+    !"{{}}".isGlobPattern
+  }
+
   ["toBoolean()"] {
     "true".toBoolean()
     "tRuE".toBoolean()

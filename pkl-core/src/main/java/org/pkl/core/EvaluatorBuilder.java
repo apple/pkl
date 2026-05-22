@@ -557,6 +557,9 @@ public final class EvaluatorBuilder {
       if (settings.http().rewrites() != null) {
         httpClientBuilder.setRewrites(settings.http().rewrites());
       }
+      if (settings.http().headers() != null) {
+        httpClientBuilder.setHeaders(settings.http().headers());
+      }
       setHttpClient(httpClientBuilder.buildLazily());
     }
 

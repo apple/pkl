@@ -25,6 +25,7 @@ dependencies {
   implementation(libs.truffleApi)
 
   testImplementation(projects.pklCommonsTest)
+  testImplementation(libs.wiremock)
 }
 
 tasks.test { exclude("**/NativeServerTest.*") }

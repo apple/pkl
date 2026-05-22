@@ -169,4 +169,60 @@ class CliMainTest {
     link.createSymbolicLinkPointingTo(dir)
     return link
   }
+
+  @Test
+  fun `invalid http header glob pattern`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(arrayOf("eval", "--http-header", "foo{{}}=bar:baz", "myModule.pkl"))
+      }
+    assertThat(ex.message)
+      .contains("Sub-patterns cannot be nested. To fix, remove or escape the inner `{` character.")
+  }
+
+  @Test
+  fun `forbidden http header name`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(arrayOf("eval", "--http-header", "**=Connection: baz", "myModule.pkl"))
+      }
+    assertThat(ex.message).contains("HTTP header `Connection` is a reserved header")
+  }
+
+  @Test
+  fun `bad http header value`() {
+    val ex =
+      assertThrows<BadParameterValue> {
+        rootCmd.parse(arrayOf("eval", "--http-header", "**=X-Foo:🙃", "myModule.pkl"))
+      }
+    assertThat(ex.message).contains("HTTP header value `🙃` has invalid syntax")
+  }
+
+  @Test
+  fun `multiple headers`() {
+    val cmd = RootCommand()
+    cmd.parse(
+      arrayOf(
+        "eval",
+        "--http-header",
+        "**=X-Foo:Foo",
+        "--http-header",
+        "**=X-Foo:Foo2",
+        "--http-header",
+        "**=X-Bar:Bar",
+        "--http-header",
+        "https://example.com/**=X-Qux:Qux",
+        "pkl:base",
+      )
+    )
+
+    val evalCmd = cmd.registeredSubcommands().filterIsInstance<EvalCommand>().first()
+    assertThat(evalCmd.baseOptions.httpHeaders)
+      .isEqualTo(
+        mapOf(
+          "**" to mapOf("X-Foo" to listOf("Foo", "Foo2"), "X-Bar" to listOf("Bar")),
+          "https://example.com/**" to mapOf("X-Qux" to listOf("Qux")),
+        )
+      )
+  }
 }

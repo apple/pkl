@@ -47,6 +47,7 @@ dependencies {
   }
 
   testImplementation(projects.pklCommonsTest)
+  testImplementation(libs.wiremock)
 }
 
 sourceSets {

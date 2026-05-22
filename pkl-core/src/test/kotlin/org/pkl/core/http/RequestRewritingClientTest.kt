@@ -21,12 +21,13 @@ import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
-import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
-import org.pkl.core.Pair as PPair
+import org.pkl.core.util.GlobResolver
+import org.pkl.core.util.IoUtils
 
+@Suppress("UastIncorrectHttpHeaderInspection")
 class RequestRewritingClientTest {
   private val captured = RequestCapturingClient()
   private val client =
@@ -36,7 +37,7 @@ class RequestRewritingClientTest {
       -1,
       captured,
       mapOf(URI("https://foo/") to URI("https://bar/")),
-      listOf(),
+      mapOf(),
     )
   private val exampleUri = URI("https://example.com/foo/bar.html")
   private val exampleRequest = HttpRequest.newBuilder(exampleUri).build()
@@ -46,6 +47,21 @@ class RequestRewritingClientTest {
     client.send(exampleRequest, BodyHandlers.discarding())
 
     assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("Pkl")
+  }
+
+  @Test
+  fun `User-Agent from configured headers takes precedence`() {
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(URI("https://foo/") to URI("https://bar/")),
+        mapOf(IoUtils.doubleStarGlob to mapOf("User-Agent" to listOf("My-User-Agent"))),
+      )
+    client.send(exampleRequest, BodyHandlers.discarding())
+    assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("My-User-Agent")
   }
 
   @Test
@@ -125,7 +141,7 @@ class RequestRewritingClientTest {
   fun `rewrites port 0 if test port is set`() {
     val captured = RequestCapturingClient()
     val client =
-      RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf(), listOf())
+      RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf(), mapOf())
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
     client.send(request, BodyHandlers.discarding())
@@ -307,8 +323,7 @@ class RequestRewritingClientTest {
 
   private fun rewrittenRequest(uri: String, rules: Map<URI, URI>): String {
     val captured = RequestCapturingClient()
-    val client =
-      RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules, listOf())
+    val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules, mapOf())
     val request = HttpRequest.newBuilder(URI(uri)).build()
     client.send(request, BodyHandlers.discarding())
     return captured.request.uri().toString()
@@ -324,12 +339,10 @@ class RequestRewritingClientTest {
         -1,
         captured,
         mapOf(),
-        listOf(
-          PPair(Pattern.compile("^https://example\\.com/.*"), listOf(PPair("x-one", "one"))),
-          PPair(
-            Pattern.compile("^https://example\\.com/foo/.*"),
-            listOf(PPair("x-two", "two-a"), PPair("x-two", "two-b")),
-          ),
+        mapOf(
+          GlobResolver.toRegexPattern("https://example.com/**") to mapOf("x-one" to listOf("one")),
+          GlobResolver.toRegexPattern("https://example.com/foo/**") to
+            mapOf("x-two" to listOf("two-a", "two-b")),
         ),
       )
     val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
@@ -350,9 +363,9 @@ class RequestRewritingClientTest {
         -1,
         captured,
         mapOf(),
-        listOf(
-          PPair(Pattern.compile("^https://foo\\.com/.*"), listOf(PPair("x-foo", "foo"))),
-          PPair(Pattern.compile("^https://bar\\.com/.*"), listOf(PPair("x-bar", "bar"))),
+        mapOf(
+          GlobResolver.toRegexPattern("https://foo.com/**") to mapOf("x-foo" to listOf("foo")),
+          GlobResolver.toRegexPattern("https://bar.com/**") to mapOf("x-bar" to listOf("bar")),
         ),
       )
     val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
@@ -373,11 +386,9 @@ class RequestRewritingClientTest {
         -1,
         captured,
         mapOf(),
-        listOf(
-          PPair(
-            Pattern.compile("^https://example\\.com/.*"),
-            listOf(PPair("x-foo", "rule-a"), PPair("x-foo", "rule-b")),
-          )
+        mapOf(
+          GlobResolver.toRegexPattern("https://example.com/**") to
+            mapOf("x-foo" to listOf("rule-a", "rule-b"))
         ),
       )
     val request =
@@ -387,5 +398,28 @@ class RequestRewritingClientTest {
 
     assertThatList(captured.request.headers().allValues("x-foo"))
       .containsExactly("request", "rule-a", "rule-b")
+  }
+
+  @Test
+  fun `configured headers wins over configured user-agent header`() {
+    val captured = RequestCapturingClient()
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        captured,
+        mapOf(),
+        mapOf(
+          GlobResolver.toRegexPattern("https://example.com/**") to
+            mapOf("user-agent" to listOf("My User Agent"))
+        ),
+      )
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
+
+    client.send(request, BodyHandlers.discarding())
+
+    assertThatList(captured.request.headers().allValues("user-agent"))
+      .containsExactly("My User Agent")
   }
 }

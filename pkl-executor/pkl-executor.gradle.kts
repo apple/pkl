@@ -39,6 +39,7 @@ dependencies {
   testImplementation(projects.pklCommonsTest)
   testImplementation(projects.pklCore)
   testImplementation(libs.slf4jSimple)
+  testImplementation(libs.wiremock)
 }
 
 // TODO why is this needed? Without this, we get error:

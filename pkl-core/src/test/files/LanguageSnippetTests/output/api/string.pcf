@@ -65,6 +65,11 @@ facts {
     true
     true
   }
+  ["isGlobPattern"] {
+    true
+    true
+    true
+  }
   ["toBoolean()"] {
     true
     true

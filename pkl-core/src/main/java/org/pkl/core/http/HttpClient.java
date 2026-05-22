@@ -23,10 +23,8 @@ import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
-import java.util.regex.Pattern;
 import javax.net.ssl.SSLContext;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.Pair;
 
 /**
  * An HTTP client.
@@ -47,6 +45,9 @@ public interface HttpClient extends AutoCloseable {
      * Sets the {@code User-Agent} header.
      *
      * <p>Defaults to {@code "Pkl/$version ($os; $flavor)"}.
+     *
+     * <p>An existing "User-Agent" from {@link Builder#setHeaders} and {@link Builder#addHeaders}
+     * takes precedence over this field.
      */
     Builder setUserAgent(String userAgent);
 
@@ -146,7 +147,6 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Adds a rewrite rule.
      *
-     * @see Builder#setRewrites(Map)
      * @throws IllegalArgumentException if {@code sourcePrefix} or {@code targetPrefix} is invalid.
      * @since 0.29.0
      */
@@ -157,8 +157,35 @@ public interface HttpClient extends AutoCloseable {
      *
      * <p>This method clears all existing headers and replaces them with the contents of the
      * provided map.
+     *
+     * <p>{@code headerRules} is a map whose keys are <a
+     * href="https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns">glob
+     * patterns</a>, and values is a map of header names and values. Multiple header values turn
+     * into multiple individual headers in the HTTP request.
+     *
+     * <p>To add headers to all requests, use {@code **} as the glob pattern.
+     *
+     * <p>To describe a prefix match, add {@code **} to the glob pattern (e.g. {@code
+     * https://example.com/**}).
+     *
+     * <p>Before an HTTP request is made, each key is matched against the request URL. If any
+     * matches are found, each of their headers are added to the request.
+     *
+     * @throws IllegalArgumentException if any of the keys are invalid glob patterns, or if any of
+     *     the header names or values are invalid.
+     * @since 0.32.0
      */
-    Builder setHeaders(List<Pair<Pattern, List<Pair<String, String>>>> headers);
+    Builder setHeaders(Map<String, Map<String, List<String>>> headerRules);
+
+    /**
+     * Adds HTTP headers for URL requests that match {@code globPattern}.
+     *
+     * @throws IllegalArgumentException if {@code globPattern} is an invalid glob pattern, or if any
+     *     of the header names or values are invalid.
+     * @since 0.32.0
+     * @see Builder#setHeaders
+     */
+    Builder addHeaders(String globPattern, Map<String, List<String>> headers);
 
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.

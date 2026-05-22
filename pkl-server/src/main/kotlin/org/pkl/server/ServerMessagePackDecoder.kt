@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,7 +103,21 @@ class ServerMessagePackDecoder(unpacker: MessageUnpacker) : BaseMessagePackDecod
         ?.map()
         ?.mapKeys { URI(it.key.asStringValue().asString()) }
         ?.mapValues { URI(it.value.asStringValue().asString()) }
-    return Http(caCertificates, proxy, rewrites)
+    val headers =
+      getNullable(httpMap, "headers")
+        ?.asMapValue()
+        ?.map()
+        ?.mapKeys { it.key.asStringValue().asString() }
+        ?.mapValues { (_, value) ->
+          value
+            .asMapValue()
+            .map()
+            .mapKeys { it.key.asStringValue().asString() }
+            .mapValues { value ->
+              value.value.asArrayValue().list().map { it.asStringValue().asString() }
+            }
+        }
+    return Http(caCertificates, proxy, rewrites, headers)
   }
 
   private fun Map<Value, Value>.unpackProxy(): Proxy? {

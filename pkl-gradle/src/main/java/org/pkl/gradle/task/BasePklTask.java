@@ -25,6 +25,7 @@ import java.nio.file.Paths;
 import java.time.Duration;
 import java.util.Collections;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
 import java.util.stream.Collectors;
 import javax.inject.Inject;
@@ -50,7 +51,6 @@ import org.gradle.api.tasks.PathSensitivity;
 import org.gradle.api.tasks.TaskAction;
 import org.jspecify.annotations.Nullable;
 import org.pkl.commons.cli.CliBaseOptions;
-import org.pkl.core.Pair;
 import org.pkl.core.evaluatorSettings.Color;
 import org.pkl.gradle.spec.ExternalReaderSpec;
 import org.pkl.gradle.utils.PluginUtils;
@@ -167,7 +167,7 @@ public abstract class BasePklTask extends DefaultTask {
 
   @Input
   @Optional
-  public abstract ListProperty<Pair<Pattern, List<Pair<String, String>>>> getHttpHeaders();
+  public abstract MapProperty<String, Map<String, List<String>>> getHttpHeaders();
 
   @Input
   @Optional

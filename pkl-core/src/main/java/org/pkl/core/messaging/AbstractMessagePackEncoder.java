@@ -63,10 +63,18 @@ public abstract class AbstractMessagePackEncoder implements MessageEncoder {
   }
 
   protected void packMapHeader(
-      int size, @Nullable Object value1, @Nullable Object value2, @Nullable Object value3)
+      int size,
+      @Nullable Object value1,
+      @Nullable Object value2,
+      @Nullable Object value3,
+      @Nullable Object value4)
       throws IOException {
     packer.packMapHeader(
-        size + (value1 != null ? 1 : 0) + (value2 != null ? 1 : 0) + (value3 != null ? 1 : 0));
+        size
+            + (value1 != null ? 1 : 0)
+            + (value2 != null ? 1 : 0)
+            + (value3 != null ? 1 : 0)
+            + (value4 != null ? 1 : 0));
   }
 
   protected void packMapHeader(
