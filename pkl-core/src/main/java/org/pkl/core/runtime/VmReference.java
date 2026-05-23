@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -44,18 +45,6 @@ public final class VmReference extends VmValue {
 
   private boolean forced = false;
 
-  private static final PType.Class nullType = new PType.Class(BaseModule.getNullClass().export());
-  private static final PType.Class anyType = new PType.Class(BaseModule.getAnyClass().export());
-  private static final Set<TypeAlias> intAliasTypes = new HashSet<>();
-  private static final Set<TypeAlias> preservedAliasTypes = new HashSet<>();
-
-  static {
-    for (var t : BaseModule.getIntTypeAliases()) {
-      intAliasTypes.add(t.export());
-      preservedAliasTypes.add(t.export());
-    }
-  }
-
   private static VmTyped newAccess(@Nullable String property, @Nullable Object key) {
     return new VmObjectBuilder()
         .addProperty(Identifier.PROPERTY, property == null ? VmNull.withoutDefault() : property)
@@ -63,6 +52,7 @@ public final class VmReference extends VmValue {
         .toTyped(RefModule.getAccessClass());
   }
 
+  @TruffleBoundary
   public VmReference(VmTyped domain, VmClass clazz, Object data) {
     this(
         domain,
@@ -112,7 +102,8 @@ public final class VmReference extends VmValue {
     // optimization: unknown allows all references, erase all candidates to only unknown
     if (types.contains(PType.UNKNOWN)) return PType.UNKNOWN;
     // optimization: All allows all references, erase all candidates to only All
-    if (containsClass(types, anyType.getPClass())) return anyType;
+    if (containsClass(types, BaseModule.getAnyClass().export()))
+      return new PType.Class(BaseModule.getAnyClass().export());
     var typesList = new ArrayList<>(types);
     typesList.sort(Comparator.comparing(Object::toString));
     return new PType.Union(typesList);
@@ -140,11 +131,11 @@ public final class VmReference extends VmValue {
       }
     } else if (type instanceof PType.Nullable nullable) {
       normalizeTypes(nullable.getBaseType(), moduleClass, result);
-      result.add(nullType);
+      result.add(new PType.Class(BaseModule.getNullClass().export()));
     } else if (type instanceof PType.Constrained constrained) {
       normalizeTypes(constrained.getBaseType(), moduleClass, result);
     } else if (type instanceof PType.Alias alias) {
-      if (preservedAliasTypes.contains(alias.getTypeAlias())) {
+      if (isPreservedTypeAlias(alias.getTypeAlias())) {
         result.add(alias);
       } else {
         normalizeTypes(alias.getAliasedType(), alias.getTypeAlias().getModuleClass(), result);
@@ -176,6 +167,7 @@ public final class VmReference extends VmValue {
         () -> newAccess(null, key));
   }
 
+  @TruffleBoundary
   private @Nullable VmReference withAccess(
       BiConsumer<PType, Set<PType>> checkCandidate, Supplier<VmTyped> makeAccess) {
     Set<PType> candidates = new HashSet<>();
@@ -273,7 +265,7 @@ public final class VmReference extends VmValue {
 
     var checkType = normalizeTypes(type, moduleClass);
     // fast path: short circuit if any referent is accepted
-    if (checkType == PType.UNKNOWN || isClass(checkType, anyType.getPClass())) {
+    if (checkType == PType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass().export())) {
       return true;
     }
     // fast path: short circuit if nothing is accepted
@@ -328,7 +320,7 @@ public final class VmReference extends VmValue {
       }
     } else if (a instanceof PType.Alias aAlias) {
       var aa = aAlias.getTypeAlias();
-      if (intAliasTypes.contains(aa)) {
+      if (isIntTypeAlias(aa)) {
         // special casing for stdlib Int typealiases
         if (b instanceof PType.Class bClass) {
           // A is an int alias, B is a Number (sub)class
@@ -396,6 +388,20 @@ public final class VmReference extends VmValue {
       }
     }
     return false;
+  }
+
+  private static boolean isIntTypeAlias(TypeAlias t) {
+    return t == BaseModule.getInt8TypeAlias().export()
+        || t == BaseModule.getInt16TypeAlias().export()
+        || t == BaseModule.getInt32TypeAlias().export()
+        || t == BaseModule.getUInt8TypeAlias().export()
+        || t == BaseModule.getUInt16TypeAlias().export()
+        || t == BaseModule.getUInt32TypeAlias().export()
+        || t == BaseModule.getUIntTypeAlias().export();
+  }
+
+  private static boolean isPreservedTypeAlias(TypeAlias t) {
+    return isIntTypeAlias(t);
   }
 
   @Override

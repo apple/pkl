@@ -2149,21 +2149,30 @@ public abstract class TypeNode extends PklNode {
         return value;
       }
 
-      var domainType = TypeNode.export(domainTypeNode);
-      var referentType = TypeNode.export(referentTypeNode);
-
       try {
         domainTypeNode.execute(frame, value.getDomain());
       } catch (VmTypeMismatchException e) {
-        throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+        CompilerDirectives.transferToInterpreter();
+        throw new VmTypeMismatchException.Reference(
+            sourceSection,
+            value,
+            TypeNode.export(domainTypeNode),
+            TypeNode.export(referentTypeNode));
       }
 
       var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      return doEval(value, module);
+    }
+
+    @TruffleBoundary
+    private Object doEval(VmReference value, VmTyped module) {
+      var referentType = TypeNode.export(referentTypeNode);
       if (value.referentTypeIsSubtypeOf(referentType, module.getVmClass().export())) {
         return value;
       }
 
-      throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+      throw new VmTypeMismatchException.Reference(
+          sourceSection, value, TypeNode.export(domainTypeNode), referentType);
     }
 
     public void validateTypeArguments(@Nullable SourceSection aliasSourceSection) {
