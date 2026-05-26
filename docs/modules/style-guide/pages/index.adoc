@@ -193,7 +193,7 @@ Too many lines separate `foo` and `baz`.
 Properties that override an existing property shouldn't have doc comments nor type annotations,
 unless the type is intentionally overridden via `extends`.
 
-[source%tested,{pkl}]
+[source%parsed,{pkl}]
 ----
 amends "myOtherModule.pkl"
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,7 +16,6 @@
 package org.pkl.core.ast.expression.primary;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmUtils;
 
@@ -29,15 +28,7 @@ public final class GetEnclosingOwnerNode extends ExpressionNode {
     assert levelsUp > 0 : "shouldn't be using GetEnclosingOwnerNode for levelsUp == 0";
   }
 
-  @ExplodeLoop
   public Object executeGeneric(VirtualFrame frame) {
-    var owner = VmUtils.getOwner(frame);
-    for (var i = 1; i < levelsUp; i++) {
-      owner = owner.getEnclosingOwner();
-      assert owner != null;
-    }
-    var result = owner.getEnclosingOwner();
-    assert result != null;
-    return result;
+    return VmUtils.getOwner(frame, levelsUp);
   }
 }

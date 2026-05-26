@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -33,14 +33,12 @@ public final class RestoreForBindingsNode extends ExpressionNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     var generatorFrame = ObjectData.getGeneratorFrame(frame);
-    var numSlots = frame.getFrameDescriptor().getNumberOfSlots();
-    // This value is constant and could be a constructor argument.
-    var startSlot = generatorFrame.getFrameDescriptor().getNumberOfSlots() - numSlots;
-    assert startSlot >= 0;
-    // Copy locals that are for-generator variables into this frame.
-    // Slots before `startSlot` (if any) are function arguments
-    // and must not be copied to preserve scoping rules.
-    VmUtils.copyLocals(generatorFrame, startSlot, frame, 0, numSlots);
+    // copying all slots includes function arguments, but the capture generator frame
+    // and the host frame are guaranteed to have the same arguments and number of slots
+    // (guaranteed by AstBuilder).
+    assert frame.getFrameDescriptor().getNumberOfSlots()
+        == generatorFrame.getFrameDescriptor().getNumberOfSlots();
+    VmUtils.copyLocals(generatorFrame, 0, frame, 0, frame.getFrameDescriptor().getNumberOfSlots());
     return child.executeGeneric(frame);
   }
 }
