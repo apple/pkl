@@ -1,0 +1,5 @@
+module foo
+
+import "pkl:json"
+
+foo: Int = 10

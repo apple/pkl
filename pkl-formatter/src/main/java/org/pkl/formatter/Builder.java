@@ -166,7 +166,13 @@ final class Builder {
     var nodes =
         formatGeneric(
             node.children,
-            (prev, next) -> linesBetween(prev, next) > 1 ? TWO_NEWLINES : forceLine());
+            (prev, next) -> {
+              var sep = linesBetween(prev, next) > 1 ? TWO_NEWLINES : forceLine();
+              if (prev.type == NodeType.MODULE_DECLARATION || prev.type == NodeType.IMPORT_LIST) {
+                sep = TWO_NEWLINES;
+              }
+              return sep;
+            });
     return new Nodes(nodes);
   }
 
