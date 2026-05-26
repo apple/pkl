@@ -703,10 +703,20 @@ final class Builder {
   /**
    * Tells if an argument list has a trailing lambda, new expr, or amends expr.
    *
-   * <p>Only considered trailing lamdba if: 1. There is only one lambda/new expr/amends expr in the
-   * list. E.g. avoid formatting `toMap()` weirdly: ``` foo.toMap( (it) -> makeSomeKey(it), (it) ->
-   * makeSomeValue(it), ) ``` 2. The lambda does not have leading or trailing line comment. 3. The
-   * user has not broken 3+ arguments across lines.
+   * <p>Only considered trailing lambda if and only if:
+   *
+   * <ol>
+   *   <li>There is only one lambda/new expr/amends expr in the list.
+   *       <p>E.g. avoid formatting {@code toMap()} weirdly:
+   *       <pre>{@code
+   * foo.toMap((it) -> makeSomeKey(it), (it) ->
+   *   makeSomevalue(it)
+   * )
+   *
+   * }</pre>
+   *   <li>The lambda does not have leading or trailing line comment.
+   *   <li>The user has not broken 3+ arguments across lines.
+   * </ol>
    */
   private boolean hasTrailingLambda(Node argList) {
     var elementsNode = firstProperChild(argList);
@@ -730,10 +740,7 @@ final class Builder {
         return false;
       }
     }
-    if (properArgCount > 2 && shouldMultilineNodes(elementsNode, n -> isTerminal(n, ","))) {
-      return false;
-    }
-    return true;
+    return properArgCount <= 2 || !shouldMultilineNodes(elementsNode, n -> isTerminal(n, ","));
   }
 
   private List<Node> pairArguments(List<Node> nodes) {
