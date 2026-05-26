@@ -48,7 +48,7 @@ public final class MicrobenchmarkNodes {
       var runIterationsNode =
           new RunIterationsNode(
               VmLanguage.get(this),
-              new FrameDescriptor(),
+              codeMemberNode.getFrameDescriptor(),
               (ExpressionNode) codeMemberNode.getBodyNode().deepCopy());
       var callTarget = runIterationsNode.getCallTarget();
       return runBenchmark(self, (iterations) -> callTarget.call(self, self, iterations));
