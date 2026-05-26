@@ -34,7 +34,6 @@ import org.pkl.core.messaging.MessageTransport;
 import org.pkl.core.messaging.MessageTransports;
 import org.pkl.core.messaging.ProtocolException;
 import org.pkl.core.util.ErrorMessages;
-import org.pkl.core.util.LateInit;
 
 final class ExternalReaderProcessImpl implements ExternalReaderProcess {
 
@@ -51,13 +50,11 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
   private final Object lock = new Object();
   private @GuardedBy("lock") boolean closed = false;
 
-  @LateInit
   @GuardedBy("lock")
-  private Process process;
+  private @Nullable Process process;
 
-  @LateInit
   @GuardedBy("lock")
-  private MessageTransport transport;
+  private @Nullable MessageTransport transport;
 
   private void log(String msg) {
     if (logPrefix != null) {
@@ -96,35 +93,40 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
               ErrorMessages.create("externalReaderAlreadyTerminated"));
         }
 
+        assert transport != null;
         return transport;
       }
+
+      // This relies on Java/OS behavior around PATH resolution, absolute/relative paths, etc.
+      var command = new ArrayList<String>();
+      command.add(spec.executable());
+      if (spec.arguments() != null) {
+        command.addAll(spec.arguments());
+      }
+
+      var builder = new ProcessBuilder(command);
+      builder.redirectError(Redirect.INHERIT); // inherit stderr from this pkl process
+      try {
+        process = builder.start();
+      } catch (IOException e) {
+        throw new ExternalReaderProcessException(e);
+      }
+      transport =
+          MessageTransports.stream(
+              new ExternalReaderMessagePackDecoder(process.getInputStream()),
+              new ExternalReaderMessagePackEncoder(process.getOutputStream()),
+              this::log);
+
+      var myTransport = transport;
+      var rxThread =
+          new Thread(
+              () -> this.runTransport(myTransport),
+              "ExternalReaderProcessImpl rxThread for " + spec);
+      rxThread.setDaemon(true);
+      rxThread.start();
+
+      return transport;
     }
-
-    // This relies on Java/OS behavior around PATH resolution, absolute/relative paths, etc.
-    var command = new ArrayList<String>();
-    command.add(spec.executable());
-    if (spec.arguments() != null) {
-      command.addAll(spec.arguments());
-    }
-
-    var builder = new ProcessBuilder(command);
-    builder.redirectError(Redirect.INHERIT); // inherit stderr from this pkl process
-    try {
-      process = builder.start();
-    } catch (IOException e) {
-      throw new ExternalReaderProcessException(e);
-    }
-    transport =
-        MessageTransports.stream(
-            new ExternalReaderMessagePackDecoder(process.getInputStream()),
-            new ExternalReaderMessagePackEncoder(process.getOutputStream()),
-            this::log);
-
-    var rxThread = new Thread(this::runTransport, "ExternalReaderProcessImpl rxThread for " + spec);
-    rxThread.setDaemon(true);
-    rxThread.start();
-
-    return transport;
   }
 
   /**
@@ -132,7 +134,7 @@ final class ExternalReaderProcessImpl implements ExternalReaderProcess {
    *
    * <p>Blocks until the underlying transport is closed.
    */
-  private void runTransport() {
+  private void runTransport(MessageTransport transport) {
     try {
       transport.start(
           (msg) -> {

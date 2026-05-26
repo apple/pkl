@@ -38,6 +38,7 @@ nullaway { onlyNullMarked = true }
 tasks.withType<JavaCompile>().configureEach {
   options.errorprone.disableAllChecks = true
   options.errorprone.check("StringCaseLocaleUsage", CheckSeverity.ERROR)
+  options.errorprone.check("GuardedBy", CheckSeverity.ERROR)
   options.errorprone.nullaway {
     error()
     onlyNullMarked = true

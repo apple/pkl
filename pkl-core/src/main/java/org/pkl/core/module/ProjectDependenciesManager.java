@@ -96,6 +96,7 @@ public final class ProjectDependenciesManager {
     }
   }
 
+  @GuardedBy("lock")
   private void ensureLocalProjectDependencyInitialized(
       DeclaredDependencies localProjectDependencies, ProjectDeps projectDeps) {
     // turn `package:` scheme into `projectpackage`: scheme
@@ -162,17 +163,23 @@ public final class ProjectDependenciesManager {
     return ret;
   }
 
+  // `ensureDependenciesInitialized` makes `myDependencies` safe to access
+  @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
   public Map<String, Dependency> getDependencies() {
     ensureDependenciesInitialized();
     assert myDependencies != null;
     return myDependencies;
   }
 
+  // `ensureDependenciesInitialized` makes `localPackageDependencies` safe to access
+  @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
   public boolean isLocalPackage(PackageUri packageUri) {
     ensureDependenciesInitialized();
     return localPackageDependencies.containsKey(packageUri);
   }
 
+  // `ensureDependenciesInitialized` makes `localPackageDependencies` safe to access
+  @SuppressWarnings({"FieldAccessNotGuarded", "GuardedBy"})
   public Map<String, Dependency> getLocalPackageDependencies(PackageUri packageUri) {
     ensureDependenciesInitialized();
     var dep = localPackageDependencies.get(packageUri);
