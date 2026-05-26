@@ -705,7 +705,8 @@ final class Builder {
    *
    * <p>Only considered trailing lamdba if: 1. There is only one lambda/new expr/amends expr in the
    * list. E.g. avoid formatting `toMap()` weirdly: ``` foo.toMap( (it) -> makeSomeKey(it), (it) ->
-   * makeSomeValue(it), ) ``` 2. The lambda does not have leading or trailing line comment.
+   * makeSomeValue(it), ) ``` 2. The lambda does not have leading or trailing line comment. 3. The
+   * user has not broken 3+ arguments across lines.
    */
   private boolean hasTrailingLambda(Node argList) {
     var elementsNode = firstProperChild(argList);
@@ -713,6 +714,10 @@ final class Builder {
     var children = elementsNode.children;
     var seenLambda = false;
     if (children.get(children.size() - 1).type == NodeType.LINE_COMMENT) return false;
+    var properArgCount = 0;
+    for (var child : children) {
+      if (isProper(child)) properArgCount++;
+    }
     for (var i = children.size() - 1; i >= 0; i--) {
       var child = children.get(i);
       if (!isProper(child)) continue;
@@ -724,6 +729,9 @@ final class Builder {
       } else if (SAME_LINE_EXPRS.contains(child.type)) {
         return false;
       }
+    }
+    if (properArgCount > 2 && shouldMultilineNodes(elementsNode, n -> isTerminal(n, ","))) {
+      return false;
     }
     return true;
   }
