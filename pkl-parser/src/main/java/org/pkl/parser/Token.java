@@ -15,6 +15,8 @@
  */
 package org.pkl.parser;
 
+import java.util.Locale;
+
 public enum Token {
   ABSTRACT,
   AMENDS,
@@ -233,6 +235,6 @@ public enum Token {
     if (this == UNDERSCORE) {
       return "_";
     }
-    return name().toLowerCase();
+    return name().toLowerCase(Locale.ROOT);
   }
 }

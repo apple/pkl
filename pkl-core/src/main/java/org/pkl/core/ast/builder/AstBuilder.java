@@ -27,6 +27,7 @@ import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -2541,7 +2542,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       int modifier = visitModifier(ctx);
       if ((modifier & validModifiers) == 0) {
         throw exceptionBuilder()
-            .evalError(errorMessage, ctx.getValue().name().toLowerCase())
+            .evalError(errorMessage, ctx.getValue().name().toLowerCase(Locale.ROOT))
             .withSourceSection(createSourceSection(ctx))
             .build();
       }

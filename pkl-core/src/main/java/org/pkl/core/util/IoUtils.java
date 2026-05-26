@@ -889,7 +889,7 @@ public final class IoUtils {
   }
 
   private static boolean isReservedHeaderName(String headerName) {
-    var normalizedHeader = headerName.toLowerCase();
+    var normalizedHeader = headerName.toLowerCase(Locale.ROOT);
     for (var reservedHeader : reservedHeaderNames) {
       if (normalizedHeader.equals(reservedHeader)) {
         return true;
@@ -899,7 +899,7 @@ public final class IoUtils {
   }
 
   private static boolean hasReservedHeaderPrefix(String headerName) {
-    var normalizedHeader = headerName.toLowerCase();
+    var normalizedHeader = headerName.toLowerCase(Locale.ROOT);
     for (var prefix : reservedHeaderPrefixes) {
       if (normalizedHeader.startsWith(prefix)) {
         return true;
