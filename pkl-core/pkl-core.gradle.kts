@@ -171,6 +171,8 @@ sourceSets.main { java.srcDir(layout.buildDirectory.dir("generated/sources/baseM
 
 tasks.compileJava { dependsOn(generateBaseModuleMembers) }
 
+tasks.sourcesJar { dependsOn(generateBaseModuleMembers) }
+
 val testJavaExecutable by
   tasks.registering(Test::class) {
     configureExecutableTest("LanguageSnippetTestsEngine")
