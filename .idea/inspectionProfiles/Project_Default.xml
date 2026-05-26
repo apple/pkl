@@ -33,6 +33,7 @@
         </list>
       </option>
     </inspection_tool>
+    <inspection_tool class="FieldAccessNotGuarded" enabled="true" level="WARNING" enabled_by_default="true" />
     <inspection_tool class="FieldMayBeFinal" enabled="true" level="INFORMATION" enabled_by_default="true">
       <scope name="AllExceptTruffleAst" level="WARNING" enabled="true" />
     </inspection_tool>

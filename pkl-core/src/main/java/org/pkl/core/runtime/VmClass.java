@@ -156,8 +156,12 @@ public final class VmClass extends VmValue {
     EconomicMaps.put(declaredProperties, property.getName(), property);
 
     if (!property.isLocal()) {
-      __allProperties = null;
-      __allHiddenPropertyNames = null;
+      synchronized (allPropertiesLock) {
+        synchronized (allHiddenPropertyNamesLock) {
+          __allProperties = null;
+          __allHiddenPropertyNames = null;
+        }
+      }
     }
   }
 
@@ -173,7 +177,9 @@ public final class VmClass extends VmValue {
     EconomicMaps.put(declaredMethods, method.getName(), method);
 
     if (!method.isLocal()) {
-      __allMethods = null;
+      synchronized (allMethodsLock) {
+        __allMethods = null;
+      }
     }
   }
 
@@ -471,6 +477,7 @@ public final class VmClass extends VmValue {
 
   public VmTyped getMirror() {
     synchronized (mirrorLock) {
+      //noinspection ConstantValue
       if (__mirror == null) {
         __mirror = MirrorFactories.classFactory.create(this);
       }
@@ -481,6 +488,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public EconomicMap<Object, ObjectMember> getTypedToDynamicMembers() {
     synchronized (typedToDynamicMembersLock) {
+      //noinspection ConstantValue
       if (__typedToDynamicMembers == null) {
         __typedToDynamicMembers =
             createDelegatingMembers(
@@ -495,6 +503,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public EconomicMap<Object, ObjectMember> getDynamicToTypedMembers() {
     synchronized (dynamicToTypedMembersLock) {
+      //noinspection ConstantValue
       if (__dynamicToTypedMembers == null) {
         __dynamicToTypedMembers =
             createDelegatingMembers(
@@ -512,6 +521,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public EconomicMap<Object, ObjectMember> getMapToTypedMembers() {
     synchronized (mapToTypedMembersLock) {
+      //noinspection ConstantValue
       if (__mapToTypedMembers == null) {
         __mapToTypedMembers =
             createDelegatingMembers(
@@ -610,6 +620,7 @@ public final class VmClass extends VmValue {
   @TruffleBoundary
   public PClass export() {
     synchronized (pClassLock) {
+      //noinspection ConstantValue
       if (__pClass == null) {
         var exportedAnnotations = new ArrayList<PObject>();
         var properties =

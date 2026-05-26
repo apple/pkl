@@ -87,6 +87,8 @@ final class PackageResolvers {
       checkNotClosed();
       synchronized (lock) {
         var metadata = cachedDependencyMetadata.get(uri);
+        // incorrect "condition is always false" inspection
+        //noinspection ConstantValue
         if (metadata == null) {
           metadata = doGetDependencyMetadata(uri, checksums);
           cachedDependencyMetadata.put(uri, metadata);
@@ -318,7 +320,10 @@ final class PackageResolvers {
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
-      var elem = cachedTreePathElementRoots.get(uri.getPackageUri()).getElement(uri.getAssetPath());
+      TreePathElement elem;
+      synchronized (lock) {
+        elem = cachedTreePathElementRoots.get(uri.getPackageUri()).getElement(uri.getAssetPath());
+      }
       if (elem == null) {
         throw new FileNotFoundException();
       } else if (elem.isDirectory()) {
@@ -332,7 +337,10 @@ final class PackageResolvers {
         }
         throw fileIsADirectory();
       }
-      var entries = cachedEntries.get(packageUri);
+      EconomicMap<String, ByteBuffer> entries;
+      synchronized (lock) {
+        entries = cachedEntries.get(packageUri);
+      }
       // need to normalize here but not in `doListElements` nor `doHasElement` because
       // `TreePathElement.getElement` does normalization already.
       var path = IoUtils.toNormalizedPathString(Path.of(uri.getAssetPath()).normalize());
@@ -344,7 +352,10 @@ final class PackageResolvers {
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
-      var element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
+      TreePathElement element;
+      synchronized (lock) {
+        element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
+      }
       if (element == null) {
         return Collections.emptyList();
       }
@@ -356,8 +367,10 @@ final class PackageResolvers {
         throws IOException, SecurityManagerException {
       var packageUri = uri.getPackageUri();
       ensurePackageDownloaded(packageUri, checksums);
-      var element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
-      return element != null;
+      synchronized (lock) {
+        var element = cachedTreePathElementRoots.get(packageUri).getElement(uri.getAssetPath());
+        return element != null;
+      }
     }
 
     @Override
@@ -570,6 +583,8 @@ final class PackageResolvers {
       var packageUri = uri.getPackageUri();
       synchronized (lock) {
         var fs = fileSystems.get(packageUri);
+        // incorrect "condition is always false" inspection
+        //noinspection ConstantValue
         if (fs == null) {
           var metadata = getDependencyMetadata(packageUri, checksums);
           var zipFilePath = getZipFilePath(packageUri, metadata);

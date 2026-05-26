@@ -65,6 +65,7 @@ public final class ModulePathResolver implements AutoCloseable {
     this.modulePath = modulePath;
   }
 
+  @GuardedBy("lock")
   private void populateCaches() throws IOException {
     fileCache = new HashMap<>();
     zipFileSystems = new ArrayList<>();
@@ -139,30 +140,29 @@ public final class ModulePathResolver implements AutoCloseable {
     }
   }
 
+  @GuardedBy("lock")
   private void populateFileCache(Path basePath) throws IOException {
     try (var stream =
         Files.find(
             basePath,
             Integer.MAX_VALUE,
             // reduce file cache size by filtering out .class files
-            // (currently `read()` only supports text resources, no known use case for accessing
-            // .class files from Pkl code)
+            // (no known use case for accessing .class files from Pkl code)
             (path, attributes) ->
                 attributes.isRegularFile() && !path.toString().endsWith(".class"))) {
       // in case of duplicate path, first entry wins (cf. class loader)
-      stream.forEach(
-          (path) -> {
-            var relativized = IoUtils.relativize(path, basePath);
-            assert fileCache != null;
-            fileCache.putIfAbsent(IoUtils.toNormalizedPathString(relativized), path);
-            assert cachedPathElementRoot != null;
-            var element = cachedPathElementRoot;
-            for (var i = 0; i < relativized.getNameCount(); i++) {
-              var name = relativized.getName(i).toString();
-              var isDirectory = i < (relativized.getNameCount() - 1);
-              element = element.putIfAbsent(name, new TreePathElement(name, isDirectory));
-            }
-          });
+      for (var path : stream.toList()) {
+        var relativized = IoUtils.relativize(path, basePath);
+        assert fileCache != null;
+        fileCache.putIfAbsent(IoUtils.toNormalizedPathString(relativized), path);
+        assert cachedPathElementRoot != null;
+        var element = cachedPathElementRoot;
+        for (var i = 0; i < relativized.getNameCount(); i++) {
+          var name = relativized.getName(i).toString();
+          var isDirectory = i < (relativized.getNameCount() - 1);
+          element = element.putIfAbsent(name, new TreePathElement(name, isDirectory));
+        }
+      }
     }
   }
 
