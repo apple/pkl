@@ -26,6 +26,7 @@ import java.time.Duration;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -205,9 +206,9 @@ final class RequestRewritingClient implements HttpClient {
   private URI normalizeRewrite(URI uri) {
     try {
       return new URI(
-          uri.getScheme().toLowerCase(),
+          uri.getScheme().toLowerCase(Locale.ROOT),
           uri.getUserInfo(),
-          uri.getHost().toLowerCase(),
+          uri.getHost().toLowerCase(Locale.ROOT),
           uri.getPort(),
           uri.getPath(),
           uri.getQuery(),

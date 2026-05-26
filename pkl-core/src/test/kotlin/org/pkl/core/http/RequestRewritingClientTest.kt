@@ -21,6 +21,7 @@ import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
 import java.net.http.HttpResponse.BodyHandlers
 import java.time.Duration
+import java.util.Locale
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
@@ -319,6 +320,24 @@ class RequestRewritingClientTest {
         )
       )
       .isEqualTo("https://bar.com/bar/baz")
+  }
+
+  @Test
+  fun `rewrites URIs - host with capital I under tr_TR locale`() {
+    // Under tr_TR, "INDEX.COM".toLowerCase() becomes "ındex.com".
+    val previous = Locale.getDefault()
+    Locale.setDefault(Locale.forLanguageTag("tr-TR"))
+    try {
+      assertThat(
+          rewrittenRequest(
+            "https://INDEX.COM/foo/bar",
+            mapOf(URI("https://index.com/") to URI("https://bar.com/")),
+          )
+        )
+        .isEqualTo("https://bar.com/foo/bar")
+    } finally {
+      Locale.setDefault(previous)
+    }
   }
 
   private fun rewrittenRequest(uri: String, rules: Map<URI, URI>): String {
