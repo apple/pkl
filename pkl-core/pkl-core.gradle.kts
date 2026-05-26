@@ -141,8 +141,10 @@ tasks.test {
   maxHeapSize = "1g"
 }
 
-val generateBaseModuleMemberRegistry by
+val generateBaseModuleMembers by
   tasks.registering(JavaExec::class) {
+    group = "build"
+
     val outputDir = layout.buildDirectory.dir("generated/sources/baseModuleMembers")
 
     val basePklFile = layout.projectDirectory.file("../stdlib/base.pkl")
@@ -156,7 +158,7 @@ val generateBaseModuleMemberRegistry by
 
     classpath =
       generatorSourceSet.get().runtimeClasspath + tasks.processResources.get().outputs.files
-    mainClass = "org.pkl.core.generator.BaseModuleMemberRegistryGenerator"
+    mainClass = "org.pkl.core.generator.BaseModuleMembersGenerator"
 
     argumentProviders.add(
       CommandLineArgumentProvider {
@@ -167,7 +169,7 @@ val generateBaseModuleMemberRegistry by
 
 sourceSets.main { java.srcDir(layout.buildDirectory.dir("generated/sources/baseModuleMembers")) }
 
-tasks.compileJava { dependsOn(generateBaseModuleMemberRegistry) }
+tasks.compileJava { dependsOn(generateBaseModuleMembers) }
 
 val testJavaExecutable by
   tasks.registering(Test::class) {
