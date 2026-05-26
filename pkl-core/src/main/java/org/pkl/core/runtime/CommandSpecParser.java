@@ -27,6 +27,7 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
 import java.util.function.BiFunction;
@@ -737,7 +738,7 @@ public final class CommandSpecParser {
         if (each == null)
           each =
               (rawValue, workingDirUri) -> {
-                var value = rawValue.toLowerCase();
+                var value = rawValue.toLowerCase(Locale.ROOT);
                 if (TRUE_VALUES.contains(value)) {
                   return true;
                 } else if (FALSE_VALUES.contains(value)) {

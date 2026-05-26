@@ -18,6 +18,7 @@ package org.pkl.gradle;
 import java.io.File;
 import java.util.LinkedHashSet;
 import java.util.List;
+import java.util.Locale;
 import java.util.Optional;
 import java.util.Set;
 import java.util.function.Function;
@@ -453,7 +454,7 @@ public class PklPlugin implements Plugin<Project> {
                         + spec.getName()
                         + "'. Either apply a JVM plugin (e.g. 'java') or set the sourceSet property explicitly.");
               }
-              if (sourceSet.getName().toLowerCase().contains("test")) {
+              if (sourceSet.getName().toLowerCase(Locale.ROOT).contains("test")) {
                 module.getTestSources().from(append(module.getTestSources().getFiles(), outputDir));
               } else {
                 module.setSourceDirs(append(module.getSourceDirs(), outputDir));

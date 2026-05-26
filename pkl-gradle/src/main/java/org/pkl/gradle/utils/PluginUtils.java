@@ -25,6 +25,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.function.Function;
 import org.gradle.api.InvalidUserDataException;
 import org.gradle.api.file.FileSystemLocation;
@@ -183,7 +184,7 @@ public final class PluginUtils {
       return TestReporter.getDefault();
     }
     try {
-      return TestReporter.valueOf(inputStr.toUpperCase());
+      return TestReporter.valueOf(inputStr.toUpperCase(Locale.ROOT));
     } catch (IllegalArgumentException e) {
       var sb = new StringBuilder("Invalid test reporter: '");
       sb.append(inputStr).append("'. ");
@@ -197,7 +198,7 @@ public final class PluginUtils {
         } else {
           sb.append(", ");
         }
-        sb.append('\'').append(value.toString().toLowerCase()).append('\'');
+        sb.append('\'').append(value.toString().toLowerCase(Locale.ROOT)).append('\'');
       }
       sb.append(".");
       throw new InvalidUserDataException(sb.toString());

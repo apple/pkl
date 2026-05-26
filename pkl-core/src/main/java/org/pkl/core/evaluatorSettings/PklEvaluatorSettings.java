@@ -22,6 +22,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.Objects;
@@ -115,7 +116,7 @@ public record PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("env"),
         allowedModules,
         allowedResources,
-        color == null ? null : Color.valueOf(color.toUpperCase()),
+        color == null ? null : Color.valueOf(color.toUpperCase(Locale.ROOT)),
         (Boolean) pSettings.get("noCache"),
         moduleCacheDir,
         modulePath,
@@ -124,7 +125,7 @@ public record PklEvaluatorSettings(
         Http.parse((Value) pSettings.get("http")),
         externalModuleReaders,
         externalResourceReaders,
-        traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase()));
+        traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase(Locale.ROOT)));
   }
 
   public record Http(

@@ -17,6 +17,7 @@ package org.pkl.gradle.test.extreader;
 
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
+import java.util.Locale;
 import org.msgpack.core.MessagePack;
 import org.msgpack.value.Value;
 import org.msgpack.value.ValueFactory;
@@ -77,7 +78,7 @@ public class Main {
 
           var colonIndex = uri.indexOf(':');
           var schemeSpecific = colonIndex >= 0 ? uri.substring(colonIndex + 1) : uri;
-          var contents = schemeSpecific.toUpperCase().getBytes(StandardCharsets.UTF_8);
+          var contents = schemeSpecific.toUpperCase(Locale.ROOT).getBytes(StandardCharsets.UTF_8);
 
           packer.packArrayHeader(2);
           packer.packInt(READ_RESOURCE_RESPONSE);

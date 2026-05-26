@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import net.ltgt.gradle.errorprone.CheckSeverity
 import net.ltgt.gradle.errorprone.errorprone
 import net.ltgt.gradle.nullaway.nullaway
 import org.gradle.accessors.dm.LibrariesForLibs
@@ -36,6 +37,7 @@ nullaway { onlyNullMarked = true }
 
 tasks.withType<JavaCompile>().configureEach {
   options.errorprone.disableAllChecks = true
+  options.errorprone.check("StringCaseLocaleUsage", CheckSeverity.ERROR)
   options.errorprone.nullaway {
     error()
     onlyNullMarked = true
