@@ -18,6 +18,8 @@ package org.pkl.core.stdlib.syntax;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.util.ArrayList;
+import java.util.Locale;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmList;
@@ -51,13 +53,15 @@ public final class SyntaxNodes {
   static final class NodeData {
     final Node node;
     final char[] source;
-    VmTyped parentVm;
+    @Nullable VmTyped parentVm;
     VmList childrenVm;
     VmTyped spanVm;
 
-    NodeData(Node node, char[] source) {
+    NodeData(Node node, char[] source, VmList childrenVm, VmTyped spanVm) {
       this.node = node;
       this.source = source;
+      this.childrenVm = childrenVm;
+      this.spanVm = spanVm;
     }
   }
 
@@ -81,7 +85,7 @@ public final class SyntaxNodes {
 
   private static final VmObjectFactory<NodeData> nodeFactory =
       new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
-          .addStringProperty("type", nd -> nd.node.type.name().toLowerCase())
+          .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
           .addListProperty("children", nd -> nd.childrenVm)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
           .addProperty(
@@ -118,9 +122,9 @@ public final class SyntaxNodes {
         childrenList.add(convertNode(child, sourceChars));
       }
 
-      var data = new NodeData(genericNode, sourceChars);
-      data.childrenVm = VmList.create(childrenList.toArray());
-      data.spanVm = spanFactory.create(genericNode.span);
+      var childrenVm = VmList.create(childrenList.toArray());
+      var spanVm = spanFactory.create(genericNode.span);
+      var data = new NodeData(genericNode, sourceChars, childrenVm, spanVm);
 
       var result = nodeFactory.create(data);
 
@@ -145,7 +149,7 @@ public final class SyntaxNodes {
 
   private static Node convertVmToNode(VmTyped nodeVm) {
     var typeStr = (String) VmUtils.readMember(nodeVm, TYPE_ID);
-    var nodeType = NodeType.valueOf(typeStr.toUpperCase());
+    var nodeType = NodeType.valueOf(typeStr.toUpperCase(Locale.ROOT));
 
     var childrenVm = (VmList) VmUtils.readMember(nodeVm, CHILDREN_ID);
     var children = new ArrayList<Node>(childrenVm.getLength());
