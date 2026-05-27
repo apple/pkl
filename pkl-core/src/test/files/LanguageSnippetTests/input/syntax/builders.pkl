@@ -664,7 +664,9 @@ examples {
       )
     }) == #"""
       module my.config
+      
       import "pkl:json"
+      
       host: String = "localhost"
       port: Int = 8080
 
