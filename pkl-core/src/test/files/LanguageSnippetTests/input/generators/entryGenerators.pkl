@@ -475,3 +475,42 @@ withinLetExpr =
         [k] = v
       }
     }
+
+// object bodies that are children of for-generators inherit the frame descriptor of the parent object
+nestedObjectInsideFor {
+  for (idx, qux in List(1, 2)) {
+    [idx] {
+      for (baz in List(1, 2)) {
+        when (baz == qux) {
+          baz
+        }
+      }
+    }
+  }
+}
+
+// object bodies inherit the frame descriptor of the parent object
+doublyNestedObjectInsideFor {
+  for (idx, qux in List(1, 2)) {
+    [idx] {
+      new Listing {
+        for (baz in List(1, 2)) {
+          when (baz == qux) {
+            baz
+          }
+        }
+      }
+    }
+  }
+}
+
+insideObjectBodyWithParam: Mapping<String, Dynamic> = new {
+  default { key ->
+    for (key, value in Map("foo", List(new Dynamic { bar = 1 }))) {
+      [key] {
+        ...value
+      }
+    }
+  }
+  ["res"] {}
+}

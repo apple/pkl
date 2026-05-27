@@ -52,9 +52,10 @@ import org.pkl.core.ast.builder.MethodResolution.ImplicitThisMethod;
 import org.pkl.core.ast.builder.MethodResolution.LexicalMethod;
 import org.pkl.core.ast.builder.SymbolTable.AnnotationScope;
 import org.pkl.core.ast.builder.SymbolTable.ClassScope;
+import org.pkl.core.ast.builder.SymbolTable.LetExpressionScope;
 import org.pkl.core.ast.builder.SymbolTable.ModuleScope;
 import org.pkl.core.ast.builder.SymbolTable.ObjectScope;
-import org.pkl.core.ast.builder.VariableResolution.ForGeneratorOrLetVariable;
+import org.pkl.core.ast.builder.VariableResolution.ForGeneratorVariableOrLetBinding;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitThisProperty;
 import org.pkl.core.ast.builder.VariableResolution.LexicalProperty;
@@ -121,6 +122,7 @@ import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNode;
+import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
@@ -179,6 +181,7 @@ import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.FrameDescriptorBuilder;
+import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.ModuleResolver;
 import org.pkl.core.runtime.VmBytes;
@@ -417,12 +420,33 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         scope -> {
           var exprs = type.getExprs();
           var constraints = new TypeConstraintNode[exprs.size()];
-          for (int i = 0; i < constraints.length; i++) {
+          for (var i = 0; i < constraints.length; i++) {
+            var currentFrameDescriptorSize = scope.frameDescriptorBuilder.getSize();
             var expr = visitExpr(exprs.get(i));
+            var writesFrameSlotVars =
+                scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
+            // if a constraint expression writes to frame slots (only known case: is a `let` expr),
+            // create a new root node and execute the constraint within this root node
+            // e.g. String(let (x = this) x.length > 5)
+            expr = getExprWithinCustomThis(scope, expr, writesFrameSlotVars);
             constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
           }
           return new Constrained(createSourceSection(type), language, childNode, constraints);
         });
+  }
+
+  private ExpressionNode getExprWithinCustomThis(
+      SymbolTable.Scope scope, ExpressionNode expr, boolean writesFrameSlotVars) {
+    if (!writesFrameSlotVars) {
+      return expr;
+    }
+    return new ExecuteCustomThisWithRootNode(
+        expr.getSourceSection(),
+        expr,
+        scope.frameDescriptorBuilder.build(),
+        scope.getQualifiedName(),
+        scope.forGeneratorSlots,
+        scope.parameterSlots);
   }
 
   @Override
@@ -682,13 +706,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           MemberLookupMode.IMPLICIT_LEXICAL,
           needsConst,
           p.levelsUp() == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(p.levelsUp()));
-    } else if (resolution instanceof ForGeneratorOrLetVariable p) {
+    } else if (resolution instanceof ForGeneratorVariableOrLetBinding p) {
       // Parameters can possibly write to frame slots actually in a frame that is one level
       // higher than what we can tell at parse time. However, let exprs and for generator variables
       // always write to frame slots in the same frame.
       //
       // function foo(bar) = new Mixin {
-      //   [bar] = 1            <--- actually 1 level, not 0
+      //   res = bar            <--- actually 1 level, not 0
       //   for (elem in qux) {
       //     elem               <--- actually 0 level
       //   }
@@ -1096,26 +1120,30 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var sourceSection = createSourceSection(letExpr);
     var parameter = letExpr.getParameter();
     UnresolvedTypeNode typeNode = null;
-    String binding = null;
-    var slot = -1;
+    @Nullable FrameSlotVariable binding = null;
     var frameDescriptorBuilder = symbolTable.getCurrentScope().frameDescriptorBuilder;
     if (parameter instanceof TypedIdentifier par) {
       typeNode = visitTypeAnnotation(par.getTypeAnnotation());
-      slot =
+      binding =
           frameDescriptorBuilder.addSlot(
-              FrameSlotKind.Illegal, toIdentifier(par.getIdentifier().getValue()), null);
-      binding = par.getIdentifier().getValue();
+              FrameSlotKind.Illegal,
+              toIdentifier(par.getIdentifier().getValue()),
+              LetExpressionScope.LET_BINDING_SLOT);
     }
     var bindingExpr = visitExpr(letExpr.getBindingExpr());
     var t = typeNode;
-    var s = slot;
+    var b = binding;
     return symbolTable.enterLetExpression(
         binding,
-        slot,
         scope -> {
           var bodyExpr = visitExpr(letExpr.getExpr());
           return LetExprNodeGen.create(
-              sourceSection, scope.getQualifiedName(), t, bodyExpr, s, bindingExpr);
+              sourceSection,
+              scope.getQualifiedName(),
+              t,
+              bodyExpr,
+              b == null ? -1 : b.slot(),
+              bindingExpr);
         });
   }
 
@@ -1123,17 +1151,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public ExpressionNode visitFunctionLiteralExpr(FunctionLiteralExpr expr) {
     var sourceSection = createSourceSection(expr);
     var params = expr.getParameterList();
-    var descriptorBuilder = createFrameDescriptorBuilder(params);
+    var descriptorBuilderAndBindings = createFrameDescriptorBuilderAndSlotVariables(params);
     var paramCount = params.getParameters().size();
-
+    var descriptorBuilder = descriptorBuilderAndBindings.first;
+    var bindings = descriptorBuilderAndBindings.second;
     if (paramCount > 5) {
       throw exceptionBuilder()
           .evalError("tooManyFunctionParameters")
           .withSourceSection(sourceSection)
           .build();
     }
-
-    var bindings = getParameterNames(params);
 
     var isCustomThisScope = symbolTable.getCurrentScope().isCustomThisScope();
 
@@ -1281,7 +1308,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public GeneratorMemberNode visitMemberPredicate(MemberPredicate ctx) {
     var keyNode =
         symbolTable.enterEagerGenerator(
-            (scp) -> symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred())));
+            (scp) ->
+                symbolTable.enterCustomThisScope(
+                    scope -> {
+                      var currentFrameDescriptorSize = scope.frameDescriptorBuilder.getSize();
+                      var expr = visitExpr(ctx.getPred());
+                      var writesFrameSlotVars =
+                          scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
+                      return getExprWithinCustomThis(scope, expr, writesFrameSlotVars);
+                    }));
     var member =
         doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
     var isFrameStored =
@@ -1339,82 +1374,81 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return doVisitGeneratorMemberNodes(body.getMembers());
   }
 
+  private @Nullable FrameSlotVariable makeBinding(
+      org.pkl.parser.syntax.@Nullable Parameter parameter) {
+    if (!(parameter instanceof TypedIdentifier typedIdentifier)) {
+      return null;
+    }
+    var name = typedIdentifier.getIdentifier().getValue();
+    return symbolTable
+        .getCurrentScope()
+        .frameDescriptorBuilder
+        .addSlot(FrameSlotKind.Illegal, toIdentifier(name), null);
+  }
+
   @Override
   public GeneratorMemberNode visitForGenerator(ForGenerator ctx) {
+
     var keyParameter = ctx.getP2() == null ? null : ctx.getP1();
     var valueParameter = ctx.getP2() == null ? ctx.getP1() : ctx.getP2();
-    TypedIdentifier keyTypedIdentifier = null;
-    if (keyParameter instanceof TypedIdentifier ti) keyTypedIdentifier = ti;
-    TypedIdentifier valueTypedIdentifier = null;
-    if (valueParameter instanceof TypedIdentifier ti) valueTypedIdentifier = ti;
-
-    var params = new ArrayList<String>();
-    if (ctx.getP1() instanceof TypedIdentifier ti) {
-      params.add(ti.getIdentifier().getValue());
-    }
-    if (ctx.getP2() != null) {
-      if (ctx.getP2() instanceof TypedIdentifier ti) {
-        params.add(ti.getIdentifier().getValue());
-      }
-    }
-
+    var keyBinding = makeBinding(keyParameter);
+    var valueBinding = makeBinding(valueParameter);
     var keyIdentifier =
-        keyTypedIdentifier == null
-            ? null
-            : toIdentifier(keyTypedIdentifier.getIdentifier().getValue());
+        keyParameter instanceof TypedIdentifier keyTypedIdentifier ? keyTypedIdentifier : null;
     var valueIdentifier =
-        valueTypedIdentifier == null
-            ? null
-            : toIdentifier(valueTypedIdentifier.getIdentifier().getValue());
-    if (valueIdentifier != null && valueIdentifier == keyIdentifier) {
+        valueParameter instanceof TypedIdentifier valueTypedIdentifier
+            ? valueTypedIdentifier
+            : null;
+    if (keyIdentifier != null
+        && valueIdentifier != null
+        && keyIdentifier
+            .getIdentifier()
+            .getValue()
+            .equals(valueIdentifier.getIdentifier().getValue())) {
       throw exceptionBuilder()
-          .evalError("duplicateDefinition", valueIdentifier)
-          .withSourceSection(createSourceSection(valueTypedIdentifier.getIdentifier()))
+          .evalError("duplicateDefinition", valueIdentifier.getIdentifier().getValue())
+          .withSourceSection(createSourceSection(valueIdentifier))
           .build();
     }
-    var currentScope = symbolTable.getCurrentScope();
-    var generatorDescriptorBuilder = currentScope.newFrameDescriptorBuilder();
-    var keySlot = -1;
-    var valueSlot = -1;
-    if (keyIdentifier != null) {
-      keySlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, keyIdentifier, null);
-    }
-    if (valueIdentifier != null) {
-      valueSlot = generatorDescriptorBuilder.addSlot(FrameSlotKind.Illegal, valueIdentifier, null);
-    }
+
     var unresolvedKeyTypeNode =
-        keyTypedIdentifier == null
-            ? null
-            : visitTypeAnnotation(keyTypedIdentifier.getTypeAnnotation());
+        keyIdentifier == null ? null : visitTypeAnnotation(keyIdentifier.getTypeAnnotation());
     var unresolvedValueTypeNode =
-        valueTypedIdentifier == null
-            ? null
-            : visitTypeAnnotation(valueTypedIdentifier.getTypeAnnotation());
+        valueIdentifier == null ? null : visitTypeAnnotation(valueIdentifier.getTypeAnnotation());
     // if possible, initialize immediately to avoid later insert
     var keyTypeNode =
-        unresolvedKeyTypeNode == null && keySlot != -1
+        unresolvedKeyTypeNode == null && keyBinding != null
             ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
-                .initWriteSlotNode(keySlot)
+                .initWriteSlotNode(keyBinding.slot())
             : null;
     // if possible, initialize immediately to avoid later insert
     var valueTypeNode =
-        unresolvedValueTypeNode == null && valueSlot != -1
+        unresolvedValueTypeNode == null && valueBinding != null
             ? new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection())
-                .initWriteSlotNode(valueSlot)
+                .initWriteSlotNode(valueBinding.slot())
             : null;
     var iterableNode = symbolTable.enterEagerGenerator(scope -> visitExpr(ctx.getExpr()));
-    var memberNodes =
-        symbolTable.enterForGenerator(
-            params, generatorDescriptorBuilder, scope -> doVisitForWhenBody(ctx.getBody()));
-    return GeneratorForNodeGen.create(
-        createSourceSection(ctx),
-        generatorDescriptorBuilder.build(),
-        iterableNode,
-        unresolvedKeyTypeNode,
-        unresolvedValueTypeNode,
-        memberNodes,
-        keyTypeNode,
-        valueTypeNode);
+    var outerScope = symbolTable.getCurrentScope();
+    return symbolTable.enterForGenerator(
+        keyBinding,
+        valueBinding,
+        symbolTable.getCurrentScope().frameDescriptorBuilder,
+        scope -> {
+          var memberNodes = doVisitForWhenBody(ctx.getBody());
+          return GeneratorForNodeGen.create(
+              createSourceSection(ctx),
+              scope.frameDescriptorBuilder.build(),
+              iterableNode,
+              unresolvedKeyTypeNode,
+              unresolvedValueTypeNode,
+              memberNodes,
+              keyTypeNode,
+              valueTypeNode,
+              keyBinding == null ? -1 : keyBinding.slot(),
+              valueBinding == null ? -1 : valueBinding.slot(),
+              outerScope.getForGeneratorSlots(),
+              scope.getParameterSlots());
+        });
   }
 
   @Override
@@ -1910,10 +1944,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var bodyContext = entry.getExpr();
     var paramListCtx = entry.getParameterList();
-    var descriptorBuilder = createFrameDescriptorBuilder(paramListCtx);
+    var descriptorBuilderAndBindings = createFrameDescriptorBuilderAndSlotVariables(paramListCtx);
     var paramCount = paramListCtx.getParameters().size();
 
-    var bindings = getParameterNames(paramListCtx);
+    var descriptorBuilder = descriptorBuilderAndBindings.first;
+    var bindings = descriptorBuilderAndBindings.second;
 
     var annotations = doVisitAnnotations(entry.getAnnotations(), methodName);
 
@@ -2194,8 +2229,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private ExpressionNode doVisitObjectBody(ObjectBody body, ExpressionNode parentNode) {
+    var parametersDescriptorAndBindings = createFrameDescriptorBuilderAndSlotVariables(body);
+    var bindings =
+        parametersDescriptorAndBindings == null
+            ? new FrameSlotVariable[0]
+            : parametersDescriptorAndBindings.second;
+
     return symbolTable.enterObjectScope(
-        body,
+        bindings,
         (scope) -> {
           addObjectNamesToScope(scope, body);
           var objectMembers = body.getMembers();
@@ -2205,7 +2246,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           }
           var sourceSection = createSourceSection(body.parent());
 
-          var parametersDescriptorBuilder = createFrameDescriptorBuilder(body);
+          var parametersDescriptor =
+              parametersDescriptorAndBindings == null
+                  ? null
+                  : parametersDescriptorAndBindings.first.build();
           var parameterTypes = doVisitParameterTypes(body);
 
           var members = EconomicMaps.<Object, ObjectMember>create();
@@ -2251,8 +2295,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           }
 
           var currentScope = symbolTable.getCurrentScope();
-          var parametersDescriptor =
-              parametersDescriptorBuilder == null ? null : parametersDescriptorBuilder.build();
           if (!elements.isEmpty()) {
             if (isConstantKeyNodes) { // true if zero key nodes
               addConstantEntries(members, keyNodes, values);
@@ -2489,8 +2531,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private ObjectMember doVisitObjectElement(ObjectElement element) {
-    var isForGeneratorScope = symbolTable.getCurrentScope().isForGeneratorScope();
-    return symbolTable.enterEntry(
+    var outerScope = symbolTable.getCurrentScope();
+    var isForGeneratorScope = outerScope.isForGeneratorScope();
+    return symbolTable.enterEntryOrElement(
         null,
         scope -> {
           var elementNode = visitExpr(element.getExpr());
@@ -2508,7 +2551,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             member.initConstantValue(constantNode);
           } else {
             if (isForGeneratorScope) {
-              elementNode = new RestoreForBindingsNode(elementNode);
+              elementNode =
+                  new RestoreForBindingsNode(
+                      elementNode, scope.getParameterSlots(), scope.getForGeneratorSlots());
             }
             member.initMemberNode(
                 ElementOrEntryNodeGen.create(
@@ -2559,9 +2604,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var methodName = org.pkl.core.runtime.Identifier.method(identifier.getValue(), true);
 
-    var frameDescriptorBuilder = createFrameDescriptorBuilder(paramList);
+    var frameDescriptorBuilderAndBindings = createFrameDescriptorBuilderAndSlotVariables(paramList);
 
-    var bindings = getParameterNames(paramList);
+    var frameDescriptorBuilder = frameDescriptorBuilderAndBindings.first;
+    var bindings = frameDescriptorBuilderAndBindings.second;
 
     return symbolTable.enterMethod(
         methodName,
@@ -2602,7 +2648,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   private GeneratorObjectLiteralNode doVisitGeneratorObjectBody(
       ObjectBody body, ExpressionNode parentNode) {
-    var parametersDescriptor = createFrameDescriptorBuilder(body);
+    var parametersDescriptorBuilderAndFrameSlotVariables =
+        createFrameDescriptorBuilderAndSlotVariables(body);
     var parameterTypes = doVisitParameterTypes(body);
     var memberNodes = doVisitGeneratorMemberNodes(body.getMembers());
     var currentScope = symbolTable.getCurrentScope();
@@ -2612,7 +2659,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         language,
         currentScope.getQualifiedName(),
         currentScope.isCustomThisScope(),
-        parametersDescriptor == null ? null : parametersDescriptor.build(),
+        parametersDescriptorBuilderAndFrameSlotVariables == null
+            ? null
+            : parametersDescriptorBuilderAndFrameSlotVariables.first.build(),
         parameterTypes,
         memberNodes,
         parentNode);
@@ -2811,8 +2860,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       ExpressionNode keyNode,
       @Nullable Expr valueCtx,
       @Nullable List<? extends ObjectBody> objectBodyCtxs) {
-    var isForGeneratorScope = symbolTable.getCurrentScope().isForGeneratorScope();
-    return symbolTable.enterEntry(
+    var outerScope = symbolTable.getCurrentScope();
+    var isForGeneratorScope = outerScope.isForGeneratorScope();
+    return symbolTable.enterEntryOrElement(
         keyNode,
         scope -> {
           var modifier = VmModifier.ENTRY;
@@ -2829,7 +2879,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               member.initConstantValue(constantNode);
             } else {
               if (isForGeneratorScope) {
-                valueNode = new RestoreForBindingsNode(valueNode);
+                valueNode =
+                    new RestoreForBindingsNode(
+                        valueNode, scope.getParameterSlots(), scope.getForGeneratorSlots());
               }
               member.initMemberNode(
                   ElementOrEntryNodeGen.create(
@@ -2842,7 +2894,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                     objectBodyCtxs,
                     new ReadSuperEntryNode(unavailableSourceSection(), new GetMemberKeyNode()));
             if (isForGeneratorScope) {
-              objectBody = new RestoreForBindingsNode(objectBody);
+              objectBody =
+                  new RestoreForBindingsNode(
+                      objectBody, scope.getParameterSlots(), scope.getForGeneratorSlots());
             }
             member.initMemberNode(
                 ElementOrEntryNodeGen.create(
@@ -2876,39 +2930,34 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return needsConst;
   }
 
-  private static List<String> getParameterNames(ParameterList parameterList) {
-    var result = new ArrayList<String>(parameterList.getParameters().size());
-    for (var param : parameterList.getParameters()) {
-      var name = param instanceof TypedIdentifier id ? id.getIdentifier().getValue() : "_";
-      result.add(name);
-    }
-    return result;
-  }
-
-  private FrameDescriptorBuilder createFrameDescriptorBuilder(ParameterList params) {
-    var builder = new FrameDescriptorBuilder(params.getParameters().size());
-    for (var param : params.getParameters()) {
-      org.pkl.core.runtime.Identifier identifier = null;
+  private FrameSlotVariable[] getSlotVariables(
+      List<org.pkl.parser.syntax.Parameter> params, FrameDescriptorBuilder frameDescriptorBuilder) {
+    var slotVariables = new FrameSlotVariable[params.size()];
+    for (var i = 0; i < params.size(); i++) {
+      var param = params.get(i);
+      org.pkl.core.runtime.Identifier identifier;
       if (param instanceof TypedIdentifier typedIdentifier) {
         identifier = toIdentifier(typedIdentifier.getIdentifier().getValue());
+      } else {
+        identifier = org.pkl.core.runtime.Identifier.ILLEGAL;
       }
-      builder.addSlot(FrameSlotKind.Illegal, identifier, null);
+      slotVariables[i] = frameDescriptorBuilder.addSlot(FrameSlotKind.Illegal, identifier, null);
     }
-    return builder;
+    return slotVariables;
   }
 
-  private FrameDescriptor.@Nullable Builder createFrameDescriptorBuilder(ObjectBody body) {
+  private Pair<FrameDescriptorBuilder, FrameSlotVariable[]>
+      createFrameDescriptorBuilderAndSlotVariables(ParameterList params) {
+    var builder = new FrameDescriptorBuilder(params.getParameters().size());
+    return Pair.of(builder, getSlotVariables(params.getParameters(), builder));
+  }
+
+  private @Nullable Pair<@Nullable FrameDescriptorBuilder, FrameSlotVariable[]>
+      createFrameDescriptorBuilderAndSlotVariables(ObjectBody body) {
     if (body.getParameters().isEmpty()) return null;
 
-    var builder = FrameDescriptor.newBuilder(body.getParameters().size());
-    for (var param : body.getParameters()) {
-      org.pkl.core.runtime.Identifier identifier = null;
-      if (param instanceof TypedIdentifier typedIdentifier) {
-        identifier = toIdentifier(typedIdentifier.getIdentifier().getValue());
-      }
-      builder.addSlot(FrameSlotKind.Illegal, identifier, null);
-    }
-    return builder;
+    var builder = new FrameDescriptorBuilder(body.getParameters().size());
+    return Pair.of(builder, getSlotVariables(body.getParameters(), builder));
   }
 
   private void checkNotInsideForGenerator(Node ctx, String errorMessageKey) {

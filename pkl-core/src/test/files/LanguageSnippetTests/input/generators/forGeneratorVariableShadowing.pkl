@@ -1,7 +1,7 @@
 examples {
   local a = List("1", "2", "3", "4")
   local b = List("a", "b", "c", "d")
-  
+
   ["shadow key variable"] {
     new {
       for (key, outerValue in a) {

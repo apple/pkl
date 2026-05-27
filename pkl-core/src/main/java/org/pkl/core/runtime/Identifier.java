@@ -163,6 +163,8 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier GLOB = get("glob");
   public static final Identifier COMPLETION_CANDIDATES = get("completionCandidates");
 
+  public static final Identifier ILLEGAL = get("`");
+
   // common in lambdas etc
   public static final Identifier IT = get("it");
 

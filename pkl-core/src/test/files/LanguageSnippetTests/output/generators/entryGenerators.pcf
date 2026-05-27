@@ -323,3 +323,32 @@ withinLetExpr {
   ["a"] = 1
   ["b"] = 2
 }
+nestedObjectInsideFor {
+  [0] {
+    1
+  }
+  [1] {
+    2
+  }
+}
+doublyNestedObjectInsideFor {
+  [0] {
+    new {
+      1
+    }
+  }
+  [1] {
+    new {
+      2
+    }
+  }
+}
+insideObjectBodyWithParam {
+  ["res"] {
+    ["foo"] {
+      new {
+        bar = 1
+      }
+    }
+  }
+}

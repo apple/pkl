@@ -401,50 +401,42 @@ public final class VmUtils {
   }
 
   /**
-   * Copies {@code numberOfLocalsToCopy} locals from {@code sourceFrame}, starting at {@code
-   * firstSourceSlot}, to {@code firstSourceSlot}, starting at {@code firstTargetSlot}.
+   * Copies the slots specified by {@code slotsToCopy} locals from {@code sourceFrame} into {@code
+   * targetFrame}.
    */
   public static void copyLocals(
-      VirtualFrame sourceFrame,
-      int firstSourceSlot,
-      VirtualFrame targetFrame,
-      int firstTargetSlot,
-      int numberOfLocalsToCopy) {
+      VirtualFrame sourceFrame, VirtualFrame targetFrame, int[] slotsToCopy) {
+    if (slotsToCopy.length == 0) return;
     var sourceDescriptor = sourceFrame.getFrameDescriptor();
     var targetDescriptor = targetFrame.getFrameDescriptor();
-    assert sourceDescriptor.getNumberOfSlots() <= targetDescriptor.getNumberOfSlots();
-    // Alternatively, locals could be copied with `numberOfLocalsToCopy`
-    // `ReadFrameSlotNode/WriteFrameSlotNode`'s.
-    for (int i = 0; i < numberOfLocalsToCopy; i++) {
-      var sourceSlot = firstSourceSlot + i;
-      var targetSlot = firstTargetSlot + i;
+    for (var slot : slotsToCopy) {
       // If, for a particular call site of this method,
       // slot kinds of `sourceDescriptor` will reach a steady state,
       // then slot kinds of `targetDescriptor` will too.
-      var slotKind = sourceDescriptor.getSlotKind(sourceSlot);
+      var slotKind = sourceDescriptor.getSlotKind(slot);
       switch (slotKind) {
         case Boolean -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Boolean);
-          targetFrame.setBoolean(targetSlot, sourceFrame.getBoolean(sourceSlot));
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Boolean);
+          targetFrame.setBoolean(slot, sourceFrame.getBoolean(slot));
         }
         case Long -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Long);
-          targetFrame.setLong(targetSlot, sourceFrame.getLong(sourceSlot));
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Long);
+          targetFrame.setLong(slot, sourceFrame.getLong(slot));
         }
         case Double -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Double);
-          targetFrame.setDouble(targetSlot, sourceFrame.getDouble(sourceSlot));
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Double);
+          targetFrame.setDouble(slot, sourceFrame.getDouble(slot));
         }
         case Object -> {
-          targetDescriptor.setSlotKind(targetSlot, FrameSlotKind.Object);
+          targetDescriptor.setSlotKind(slot, FrameSlotKind.Object);
           targetFrame.setObject(
-              targetSlot,
+              slot,
               sourceFrame instanceof MaterializedFrame
                   // Even though sourceDescriptor.getSlotKind is now Object,
                   // it may have been a primitive kind when `sourceFrame`'s local was written.
-                  // Hence we need to read the local with getValue() instead of getObject().
-                  ? sourceFrame.getValue(sourceSlot)
-                  : sourceFrame.getObject(sourceSlot));
+                  // Hence, we need to read the local with getValue() instead of getObject().
+                  ? sourceFrame.getValue(slot)
+                  : sourceFrame.getObject(slot));
         }
         default -> {
           CompilerDirectives.transferToInterpreter();
@@ -976,10 +968,9 @@ public final class VmUtils {
   }
 
   public static int findCustomThisSlot(VirtualFrame frame) {
-    return frame
-        .getFrameDescriptor()
-        .getAuxiliarySlots()
-        .getOrDefault(CustomThisScope.FRAME_SLOT_ID, -1);
+    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CustomThisScope.FRAME_SLOT_ID);
+    assert result != null;
+    return result;
   }
 
   @TruffleBoundary

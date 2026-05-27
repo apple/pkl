@@ -1,0 +1,5 @@
+res {
+  for (prefix in List("foo")) {
+    "foobar" as String(let (y = this) y.startsWith(prefix))
+  }
+}
