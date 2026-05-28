@@ -16,7 +16,13 @@
 package org.pkl.config.scala
 
 import org.pkl.config.java.mapper.ValueMapperBuilder
-import org.pkl.config.java.{Config, ConfigEvaluator, ConfigEvaluatorBuilder}
+import org.pkl.config.java.{
+  Config,
+  ConfigDecoder,
+  ConfigDecoderBuilder,
+  ConfigEvaluator,
+  ConfigEvaluatorBuilder
+}
 import org.pkl.config.scala.mapper.{ScalaConversions, ScalaConverterFactories}
 
 import scala.jdk.CollectionConverters._
@@ -93,6 +99,24 @@ package object syntax {
    */
   implicit class ConfigEvaluatorSyntaxExtension(val x: ConfigEvaluator) extends AnyVal {
     def forScala(): ConfigEvaluator = {
+      x.setValueMapper(x.getValueMapper.toBuilder.forScala().build)
+    }
+  }
+
+  /**
+   * Extension for `ConfigDecoderBuilder`, enabling Scala-specific type handling in the decoder.
+   */
+  implicit class ConfigDecoderBuilderSyntaxExtension(val x: ConfigDecoderBuilder) extends AnyVal {
+    def forScala(): ConfigDecoderBuilder = {
+      x.setValueMapperBuilder(x.getValueMapperBuilder.forScala())
+    }
+  }
+
+  /**
+   * Extension for `ConfigDecoder`, applying Scala-specific type conversions to the decoder.
+   */
+  implicit class ConfigDecoderSyntaxExtension(val x: ConfigDecoder) extends AnyVal {
+    def forScala(): ConfigDecoder = {
       x.setValueMapper(x.getValueMapper.toBuilder.forScala().build)
     }
   }

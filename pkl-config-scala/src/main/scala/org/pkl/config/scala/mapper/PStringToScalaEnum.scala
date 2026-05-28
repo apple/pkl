@@ -21,6 +21,7 @@ import org.pkl.core.util.CodeGeneratorUtils
 
 import java.lang.reflect.Type as JType
 import java.util.Optional
+import scala.collection.immutable.VectorMap
 import scala.jdk.OptionConverters.*
 import scala.util.Try
 
@@ -45,27 +46,31 @@ private[mapper] object PStringToScalaEnum extends ConverterFactory {
     }
   }
 
-  private def readEnumValues(cls: Class[?]): Option[Map[String, AnyRef]] = Try {
+  private def readEnumValues(cls: Class[?]): Option[VectorMap[String, AnyRef]] = Try {
     val moduleCls = Class.forName(cls.getName + "$", false, cls.getClassLoader)
     val module = moduleCls.getField("MODULE$").get(null)
     val values = moduleCls.getMethod("values").invoke(module).asInstanceOf[Array[?]]
-    values.iterator.collect { case v: scala.reflect.Enum =>
-      v.productPrefix -> v.asInstanceOf[AnyRef]
-    }.toMap
+    values.iterator
+      .collect { case v: scala.reflect.Enum =>
+        v.productPrefix -> v.asInstanceOf[AnyRef]
+      }
+      .to(VectorMap)
   }.toOption
 
-  private def mkConverter(cls: Class[?], byName: Map[String, AnyRef]): Converter[String, AnyRef] = {
-    (value, _) =>
-      {
-        byName
-          .get(value)
-          .orElse(Option(CodeGeneratorUtils.toEnumConstantName(value)).flatMap(byName.get))
-          .getOrElse {
-            throw new ConversionException(
-              s"Cannot convert String `$value` to Enum value of type `${cls.getTypeName}`. " +
-                s"Expected one of: ${byName.keys.mkString(", ")}."
-            )
-          }
-      }
+  private def mkConverter(
+      cls: Class[?],
+      byName: VectorMap[String, AnyRef]
+  ): Converter[String, AnyRef] = { (value, _) =>
+    {
+      byName
+        .get(value)
+        .orElse(Option(CodeGeneratorUtils.toEnumConstantName(value)).flatMap(byName.get))
+        .getOrElse {
+          throw new ConversionException(
+            s"Cannot convert String `$value` to Enum value of type `${cls.getTypeName}`. " +
+              s"Expected one of: ${byName.keys.mkString(", ")}."
+          )
+        }
+    }
   }
 }

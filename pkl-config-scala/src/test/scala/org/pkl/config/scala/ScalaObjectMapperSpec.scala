@@ -102,7 +102,23 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
     )
   }
 
-  test("unknown enum value raises ConversionException listing valid members") {
+  test("idiomatic Scala 3 enum routes through PStringToScalaEnum") {
+    val code = {
+      """
+        |module M
+        |color = "Bbb"
+        |""".stripMargin
+    }
+
+    val result = ConfigEvaluator
+      .preconfigured()
+      .forScala()
+      .evaluate(ModuleSource.text(code))
+      .to[EnumContainer]
+    assert(result.color == SimpleEnum.Bbb)
+  }
+
+  test("unknown enum value raises ConversionException listing valid members in declaration order") {
     val code = {
       """
         |module M
@@ -119,6 +135,13 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
     }
     val msg = ex.getMessage
     assert(msg.contains("Purple"), s"expected input name in message, got: $msg")
+    val aaaIdx = msg.indexOf("Aaa")
+    val bbbIdx = msg.indexOf("Bbb")
+    val cccIdx = msg.indexOf("Ccc")
+    assert(
+      aaaIdx >= 0 && bbbIdx > aaaIdx && cccIdx > bbbIdx,
+      s"expected Aaa, Bbb, Ccc in declaration order, got: $msg"
+    )
   }
 
   test("Java-compat Scala 3 enum (extends java.lang.Enum) routes through PStringToEnum") {
@@ -231,6 +254,45 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
       evaluator.close()
     }
   }
+
+  test(
+    "inherited Java conversions: BigInteger, BigDecimal, URI, URL, Path, File, Char, Bytes, DataSize, Listing, Mapping"
+  ) {
+    val code = {
+      """
+        |module M
+        |bigInt = 9007199254740993
+        |bigDec = 1.5
+        |uri = "https://example.com"
+        |url = "https://example.com/path"
+        |path = "/tmp/foo"
+        |file = "/tmp/bar"
+        |char = "A"
+        |bytes = Bytes(72, 105)
+        |dataSize: DataSize = 5.kb
+        |listing: Listing<Int> = new { 1; 2; 3 }
+        |mapping: Mapping<String, Int> = new { ["a"] = 1; ["b"] = 2 }
+        |""".stripMargin
+    }
+
+    val result = ConfigEvaluator
+      .preconfigured()
+      .forScala()
+      .evaluate(ModuleSource.text(code))
+      .to[InheritedTypesContainer]
+
+    assert(result.bigInt == new java.math.BigInteger("9007199254740993"))
+    assert(result.bigDec == java.math.BigDecimal.valueOf(1.5))
+    assert(result.uri == new java.net.URI("https://example.com"))
+    assert(result.url == new java.net.URI("https://example.com/path").toURL)
+    assert(result.path == java.nio.file.Path.of("/tmp/foo"))
+    assert(result.file == new java.io.File("/tmp/bar"))
+    assert(result.char == java.lang.Character.valueOf('A'))
+    assert(result.bytes.sameElements(Array[Byte](72, 105)))
+    assert(result.dataSize == org.pkl.core.DataSize.ofKilobytes(5))
+    assert(result.listing == Seq(1, 2, 3))
+    assert(result.mapping == Map("a" -> 1, "b" -> 2))
+  }
 }
 
 object ScalaObjectMapperSpec {
@@ -254,6 +316,22 @@ object ScalaObjectMapperSpec {
 
   case class EnumContainer(color: SimpleEnum)
   case class JavaCompatEnumContainer(color: JavaCompatEnum)
+
+  case class InheritedTypesContainer(
+      bigInt: java.math.BigInteger,
+      bigDec: java.math.BigDecimal,
+      uri: java.net.URI,
+      url: java.net.URL,
+      path: java.nio.file.Path,
+      file: java.io.File,
+      // boxed Character: Java's pStringToCharacter conversion targets java.lang.Character,
+      // not the JVM primitive `char` that Scala's `Char` becomes in case-class signatures.
+      char: java.lang.Character,
+      bytes: Array[Byte],
+      dataSize: org.pkl.core.DataSize,
+      listing: Seq[Int],
+      mapping: Map[String, Int]
+  )
 
   case class ObjectMappingTestContainer(
       // Options
