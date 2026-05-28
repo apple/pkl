@@ -46,7 +46,7 @@ kotlinToolchain = "2.3.21"
 kotlinxHtml = "0.12.0"
 # 1.9.0 is the last version compatible with Kotlin 2.2
 kotlinxSerialization = "1.9.0"
-kotlinxCoroutines = "1.10.2"
+kotlinxCoroutines = "1.11.0"
 #noinspection UnusedVersionCatalogEntry
 ktfmt = "0.62"
 # replaces nuValidator's log4j dependency
