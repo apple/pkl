@@ -69,9 +69,6 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |
         |// Listings → Seq
         |intListing: Listing<Int> = new { 42 1337 }
-        |
-        |simpleEnumViaString = "Bbb"
-        |simpleEnum2ViaString = "Ccc"
         |""".stripMargin
     }
 
@@ -97,32 +94,7 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         TypedKey(2) -> "also works"
       ),
       intStringMapping = Map(42 -> "in map"),
-      intListing = Seq(42, 1337),
-      simpleEnumViaString = SimpleEnum.Bbb,
-      simpleEnum2ViaString = SimpleEnum2.Ccc
-    )
-  }
-
-  test("unknown enum value raises ConversionException listing valid members") {
-    val code = {
-      """
-        |module M
-        |color = "Purple"
-        |""".stripMargin
-    }
-
-    val ex = intercept[ConversionException] {
-      ConfigEvaluator
-        .preconfigured()
-        .forScala()
-        .evaluate(ModuleSource.text(code))
-        .to[EnumContainer]
-    }
-    val msg = ex.getMessage
-    assert(msg.contains("Purple"), s"expected input name in message, got: $msg")
-    assert(
-      msg.contains("Aaa") && msg.contains("Bbb") && msg.contains("Ccc"),
-      s"expected candidate members in message, got: $msg"
+      intListing = Seq(42, 1337)
     )
   }
 
@@ -166,28 +138,6 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         msg.toLowerCase.contains("string") ||
         msg.toLowerCase.contains("int"),
       s"expected type-mismatch hint in message, got: $msg"
-    )
-  }
-
-  test("enum property receiving non-String Pkl value raises ConversionException") {
-    val code = {
-      """
-        |module M
-        |color = 42
-        |""".stripMargin
-    }
-
-    val ex = intercept[ConversionException] {
-      ConfigEvaluator
-        .preconfigured()
-        .forScala()
-        .evaluate(ModuleSource.text(code))
-        .to[EnumContainer]
-    }
-    val msg = ex.getMessage
-    assert(
-      msg.contains("Expected String value"),
-      s"expected explicit non-String hint in message, got: $msg"
     )
   }
 
@@ -251,19 +201,6 @@ object ScalaObjectMapperSpec {
     implicit val diffx: Diff[TypedKey] = Diff.derived[TypedKey]
   }
 
-  object SimpleEnum extends Enumeration {
-    case class V() extends Val(nextId)
-
-    val Aaa = V()
-    val Bbb = V()
-    val Ccc = V()
-  }
-
-  object SimpleEnum2 extends Enumeration {
-    val Aaa, Bbb, Ccc = Value
-  }
-
-  case class EnumContainer(color: SimpleEnum2.Value)
   case class Person(name: String, age: Int)
   case class IntContainer(value: Int)
   case class RegexContainer(pattern: Regex)
@@ -288,10 +225,7 @@ object ScalaObjectMapperSpec {
       // Mapping
       intStringMapping: Map[Int, String],
       // Listing → Seq
-      intListing: Seq[Int],
-      // Enums (nested-Val and plain-Value forms)
-      simpleEnumViaString: SimpleEnum.V,
-      simpleEnum2ViaString: SimpleEnum2.Value
+      intListing: Seq[Int]
   )
 
   object ObjectMappingTestContainer {

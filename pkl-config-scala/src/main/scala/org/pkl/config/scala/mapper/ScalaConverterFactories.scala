@@ -15,10 +15,10 @@
  */
 package org.pkl.config.scala.mapper
 
-import org.pkl.config.java.mapper.{ConverterFactory, ValueMapper}
+import org.pkl.config.java.mapper.{ConverterFactory, PObjectToDataObject, ValueMapper}
 import org.pkl.core.{PClassInfo, PNull, Pair}
 
-import java.lang.reflect.Type
+import java.lang.reflect.{Constructor, Type}
 import java.util.Optional
 import scala.collection.immutable
 import scala.jdk.CollectionConverters.*
@@ -42,7 +42,17 @@ object ScalaConverterFactories {
       ValueMapper
   ) => T
 
-  val pObjectToCaseClass: ConverterFactory = ScalaPObjectToCaseClass
+  val pObjectToCaseClass: ConverterFactory = new PObjectToDataObject {
+    override def selectConstructor(clazz: Class[?]): Optional[Constructor[?]] = {
+      clazz.getDeclaredConstructors.headOption
+        .filter(_ => {
+          // case classes all implement Product
+          clazz.getInterfaces
+            .exists(i => classOf[scala.Product].isAssignableFrom(i))
+        })
+        .toJava
+    }
+  }
 
   val pAnyToOption: ConverterFactory = {
     CachedConverterFactories.forParametrizedType1[Any, Option[?]](

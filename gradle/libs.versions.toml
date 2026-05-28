@@ -120,7 +120,6 @@ nullawayPlugin = { group = "net.ltgt.gradle", name = "gradle-nullaway-plugin", v
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
 scalaLibrary = { group = "org.scala-lang", name = "scala-library", version.ref = "scala" }
-scalaReflect = { group = "org.scala-lang", name = "scala-reflect", version.ref = "scala" }
 scalaTest = { group = "org.scalatest", name = "scalatest_2.13", version.ref = "scalaTest" }
 scalaTestPlusJunit = { group = "org.scalatestplus", name = "junit-5-12_2.13", version.ref = "scalaTestPlusJunit" }
 shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.gradle.plugin", version.ref = "shadowPlugin" }

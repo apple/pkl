@@ -19,10 +19,7 @@ plugins {
   id("pklPublishLibrary")
 }
 
-dependencies {
-  implementation(projects.pklConfigJava)
-  api(libs.scalaReflect)
-}
+dependencies { implementation(projects.pklConfigJava) }
 
 publishing {
   publications {
