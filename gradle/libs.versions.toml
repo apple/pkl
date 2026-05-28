@@ -36,7 +36,7 @@ jline = "4.0.14"
 jmh = "1.37"
 jmhPlugin = "0.7.3"
 jspecify = "1.0.0"
-junit = "6.0.3"
+junit = "6.1.0"
 # 1.7+ generates much more verbose code
 kotlinPoet = "1.6.0"
 kotlinStdLib = "2.2.21"
