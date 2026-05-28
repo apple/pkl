@@ -110,7 +110,8 @@ object ScalaConverterFactories {
     pPairToTuple,
     pMapToImmutableMap,
     pCollectionToImmutableSeq,
-    pObjectToCaseClass
+    pObjectToCaseClass,
+    PStringToScalaEnum
   )
 
   private implicit def pClassInfoToPredicate(

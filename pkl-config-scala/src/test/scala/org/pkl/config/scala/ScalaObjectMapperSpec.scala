@@ -69,6 +69,9 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |
         |// Listings → Seq
         |intListing: Listing<Int> = new { 42 1337 }
+        |
+        |// Scala 3 enum (string-literal union)
+        |simpleEnumViaString = "Bbb"
         |""".stripMargin
     }
 
@@ -94,8 +97,44 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         TypedKey(2) -> "also works"
       ),
       intStringMapping = Map(42 -> "in map"),
-      intListing = Seq(42, 1337)
+      intListing = Seq(42, 1337),
+      simpleEnumViaString = SimpleEnum.Bbb
     )
+  }
+
+  test("unknown enum value raises ConversionException listing valid members") {
+    val code = {
+      """
+        |module M
+        |color = "Purple"
+        |""".stripMargin
+    }
+
+    val ex = intercept[ConversionException] {
+      ConfigEvaluator
+        .preconfigured()
+        .forScala()
+        .evaluate(ModuleSource.text(code))
+        .to[EnumContainer]
+    }
+    val msg = ex.getMessage
+    assert(msg.contains("Purple"), s"expected input name in message, got: $msg")
+  }
+
+  test("Java-compat Scala 3 enum (extends java.lang.Enum) routes through PStringToEnum") {
+    val code = {
+      """
+        |module M
+        |color = "Yyy"
+        |""".stripMargin
+    }
+
+    val result = ConfigEvaluator
+      .preconfigured()
+      .forScala()
+      .evaluate(ModuleSource.text(code))
+      .to[JavaCompatEnumContainer]
+    assert(result.color == JavaCompatEnum.Yyy)
   }
 
   test("missing required property on case class raises ConversionException") {
@@ -205,6 +244,17 @@ object ScalaObjectMapperSpec {
   case class IntContainer(value: Int)
   case class RegexContainer(pattern: Regex)
 
+  enum SimpleEnum {
+    case Aaa, Bbb, Ccc
+  }
+
+  enum JavaCompatEnum extends java.lang.Enum[JavaCompatEnum] {
+    case Xxx, Yyy, Zzz
+  }
+
+  case class EnumContainer(color: SimpleEnum)
+  case class JavaCompatEnumContainer(color: JavaCompatEnum)
+
   case class ObjectMappingTestContainer(
       // Options
       optionalVal1: Option[String],
@@ -225,7 +275,9 @@ object ScalaObjectMapperSpec {
       // Mapping
       intStringMapping: Map[Int, String],
       // Listing → Seq
-      intListing: Seq[Int]
+      intListing: Seq[Int],
+      // Scala 3 enum
+      simpleEnumViaString: SimpleEnum
   )
 
   object ObjectMappingTestContainer {

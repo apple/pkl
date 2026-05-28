@@ -38,8 +38,7 @@ dependencies {
 scala { scalaVersion = libs.versions.scala }
 
 tasks.withType<ScalaCompile>().configureEach {
-  scalaCompileOptions.additionalParameters =
-    listOf("-Xsource:3", "-release:${buildInfo.jvmTarget}", "-target:${buildInfo.jvmTarget}")
+  scalaCompileOptions.additionalParameters = listOf("-release:${buildInfo.jvmTarget}")
 }
 
 tasks.test {
