@@ -824,6 +824,27 @@ jobs:
         name: test-results-html-pkl-doc-windows-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+  verdict:
+    if: '!cancelled() && !failure()'
+    needs:
+    - check-pkl-github-actions
+    - gradle-check
+    - gradle-check-windows
+    - pkl-cli-macOS-amd64-snapshot
+    - pkl-cli-linux-amd64-snapshot
+    - pkl-cli-macOS-aarch64-snapshot
+    - pkl-cli-linux-aarch64-snapshot
+    - pkl-cli-alpine-linux-amd64-snapshot
+    - pkl-cli-windows-amd64-snapshot
+    - pkl-doc-macOS-amd64-snapshot
+    - pkl-doc-linux-amd64-snapshot
+    - pkl-doc-macOS-aarch64-snapshot
+    - pkl-doc-linux-aarch64-snapshot
+    - pkl-doc-alpine-linux-amd64-snapshot
+    - pkl-doc-windows-amd64-snapshot
+    runs-on: ubuntu-latest
+    steps:
+    - run: 'true'
   upload-event-file:
     runs-on: ubuntu-latest
     steps:
