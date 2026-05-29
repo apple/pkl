@@ -20,6 +20,8 @@ import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.stream.*;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.runtime.VmValue;
+import org.pkl.core.runtime.VmValueRenderer;
 
 public final class ErrorMessages {
   private ErrorMessages() {}
@@ -33,7 +35,17 @@ public final class ErrorMessages {
     if (args.length == 0) return errorMessage;
 
     var formatter = new MessageFormat(errorMessage, locale);
-    return formatter.format(args);
+    var renderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
+    @Nullable Object[] actualArgs = new @Nullable Object[args.length];
+    for (var i = 0; i < args.length; i++) {
+      var arg = args[i];
+      if (arg instanceof VmValue) {
+        actualArgs[i] = renderer.render(arg);
+      } else {
+        actualArgs[i] = arg;
+      }
+    }
+    return formatter.format(actualArgs);
   }
 
   public static String createIndented(String messageName, String indent, @Nullable Object... args) {
