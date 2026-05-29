@@ -1,4 +1,5 @@
 = Language Reference
+
 include::ROOT:partial$component-attributes.adoc[]
 :uri-common-mark: https://commonmark.org/
 :uri-newspeak: https://newspeaklanguage.org
@@ -105,6 +106,7 @@ num2 = 0x012AFF // <1>
 num3 = 0b00010111 // <2>
 num4 = 0o755 // <3>
 ----
+
 <1> decimal: 76543
 <2> decimal: 23
 <3> decimal: 493
@@ -119,6 +121,7 @@ num2 = 0x0134_64DE // <2>
 num3 = 0b0001_0111 // <3>
 num4 = 0o0134_6475 // <4>
 ----
+
 <1> Equivalent to `1000000`
 <2> Equivalent to `0x013464DE`
 <3> Equivalent to `0b00010111`
@@ -149,6 +152,7 @@ num5 = 5 ~/ 2  // <5>
 num6 = 5 % 2   // <6>
 num7 = 5 ** 2  // <7>
 ----
+
 <1> addition (result: `7`)
 <2> subtraction (result: `3`)
 <3> multiplication (result: `10`)
@@ -183,6 +187,7 @@ num2 = 1.23
 num3 = 1.23e2 // <1>
 num4 = 1.23e-2 // <2>
 ----
+
 <1> result: 1.23 * 10^2^
 <2> result: 1.23 * 10^-2^
 
@@ -203,7 +208,8 @@ Floats support the same comparison and arithmetic operators as integers.
 Float literals with a fractional part of zero can be safely replaced with integer literals.
 For example, it is safe to write `1.3 * 42` instead of `1.3 * 42.0`.
 
-Floats can also include the same underscore separator as integers. For example, `1_000.4_400` is a float whose value is equivalent to `1000.4400`.
+Floats can also include the same underscore separator as integers.
+For example, `1_000.4_400` is a float whose value is equivalent to `1000.4400`.
 
 TIP: As integers are more convenient to use than floats with a fractional part of zero, we recommend requiring `x: Number` instead of `x: Float` in type annotations.
 
@@ -237,6 +243,7 @@ res3 = !false // <3>
 res4 = true.xor(false) // <4>
 res5 = true.implies(false) // <5>
 ----
+
 <1> logical conjunction (result: `false`)
 <2> logical disjunction (result: `true`)
 <3> logical negation (result: `true`)
@@ -255,8 +262,7 @@ String literals are enclosed in double quotes:
 "Hello, World!"
 ----
 
-TIP: Except for a few minor differences footnote:[Pkl's string literals have fewer character escape sequences and stricter rules for line indentation in multiline strings.],
-String literals have the same syntax and semantics as in Swift 5. Learn one of them, know both of them!
+TIP: Except for a few minor differences footnote:[Pkl's string literals have fewer character escape sequences and stricter rules for line indentation in multiline strings.], String literals have the same syntax and semantics as in Swift 5. Learn one of them, know both of them!
 
 Inside a string literal, the following character escape sequences have special meaning:
 
@@ -272,6 +278,7 @@ Unicode escape sequences have the form `\u{<codePoint>}`, where `<codePoint>` is
 ----
 "\u{26} \u{E9} \u{1F600}" // <1>
 ----
+
 <1> result: `"& é 😀"`
 
 To concatenate strings, use the `+` (plus) operator, as in `"abc" + "def" + "ghi"`.
@@ -285,6 +292,7 @@ To embed the result of expression `<expr>` in a string, use `\(<expr>)`:
 name = "Dodo"
 greeting = "Hi, \(name)!" // <1>
 ----
+
 <1> result: `"Hi, Dodo!"`
 
 Before a result is inserted, it is converted to a string:
@@ -294,6 +302,7 @@ Before a result is inserted, it is converted to a string:
 x = 42
 str = "\(x + 2) plus \(x * 2) is \(0x80)" // <1>
 ----
+
 <1> result: `"44 plus 84 is 128"`
 
 === Multiline Strings
@@ -333,8 +342,8 @@ the species will be remembered.
 """
 ----
 
-Each content line must begin with the same whitespace characters as the line containing the closing delimiter,
-which is not included in the string. Any further leading whitespace characters are preserved.
+Each content line must begin with the same whitespace characters as the line containing the closing delimiter, which is not included in the string.
+Any further leading whitespace characters are preserved.
 In other words, line indentation is controlled by indenting lines relative to the closing delimiter.
 
 In the following string, lines have no leading whitespace:
@@ -424,6 +433,7 @@ reversedStr = "dodo".reverse() // <2>
 hasAx = "dodo".contains("alive") // <3>
 trimmed = "  dodo  ".trim() // <4>
 ----
+
 <1> result: `4`
 <2> result: `"odod"`
 <3> result: `false`
@@ -477,6 +487,7 @@ res7 = 5.min ~/ 3.min // <7>
 res8 = 5.min % 3      // <8>
 res9 = 5.min ** 3     // <9>
 ----
+
 <1> result: `5.05.min`
 <2> result: `4.95.min`
 <3> result: `15.min`
@@ -496,6 +507,7 @@ xMinutes = x.min // <1>
 y = 3
 xySeconds = (x + y).s // <2>
 ----
+
 <1> result: `5.min`
 <2> result: `8.s`
 
@@ -558,6 +570,7 @@ res7 = 5.mb ~/ 3.mb // <7>
 res8 = 5.mb % 3     // <8>
 res9 = 5.mb ** 3    // <9>
 ----
+
 <1> result: `5.003072.mb`
 <2> result: `4.996928.mb`
 <3> result: `15.mb`
@@ -577,6 +590,7 @@ xMegabytes = x.mb // <1>
 y = 3
 xyKibibytes = (x + y).kib // <2>
 ----
+
 <1> result: `5.mb`
 <2> result: `8.kib`
 
@@ -588,8 +602,7 @@ An object is an ordered collection of _values_ indexed by _name_.
 An object's key-value pairs are called its _properties_.
 Property values are lazily evaluated on the first read.
 
-Because Pkl's objects differ in important ways from objects in general-purpose programming languages,
-and because they are the backbone of most data models, understanding objects is the key to understanding Pkl.
+Because Pkl's objects differ in important ways from objects in general-purpose programming languages, and because they are the backbone of most data models, understanding objects is the key to understanding Pkl.
 
 [[defining-objects]]
 === Defining Objects
@@ -603,8 +616,9 @@ dodo { // <1>
   extinct = true // <3>
 } // <4>
 ----
+
 <1> Defines a module property named `dodo`.
-    The open curly brace (`{`) indicates that the value of this property is an object.
+The open curly brace (`{`) indicates that the value of this property is an object.
 <2> Defines an object property named `name` with string value `"Dodo"`.
 <3> Defines an object property named `extinct` with boolean value `true`.
 <4> The closing curly brace indicates the end of the object definition.
@@ -628,14 +642,16 @@ dodo {
   }
 }
 ----
+
 <1> Defines an object property named `taxonomy`.
-    The open curly brace indicates that its value is another object.
+The open curly brace indicates that its value is another object.
 <2> The word `class` is a keyword of Pkl, and needs to be wrapped in backticks (```) to be used as a property.
 
 As you probably guessed, the nested property `class` can be accessed with `dodo.taxonomy.class`.
 
 Like all values, objects are _immutable_, which is just a fancy (and short!) way to say that their properties never change.
-So what happens when Dodo moves to a different street? Do we have to construct a new object from scratch?
+So what happens when Dodo moves to a different street?
+Do we have to construct a new object from scratch?
 
 [[amending-objects]]
 === Amending Objects
@@ -653,19 +669,20 @@ tortoise = (dodo) { // <1>
   }
 }
 ----
+
 <1> Defines a module property named `tortoise`.
-    Its value is an object that _amends_ `dodo`.
-    Note that the amended object must be enclosed in parentheses.
+Its value is an object that _amends_ `dodo`.
+Note that the amended object must be enclosed in parentheses.
 <2> Object property `tortoise.taxonomy` _amends_ `dodo.taxonomy`.
 <3> Object property `tortoise.taxonomy.class` _overrides_ `dodo.taxonomy.class`.
 
-As you can see, it is easy to construct a new object that overrides selected properties of an existing object,
-even if, as in our example, the overridden property is nested inside another object.
+As you can see, it is easy to construct a new object that overrides selected properties of an existing object, even if, as in our example, the overridden property is nested inside another object.
 
 NOTE: If this way of constructing new objects from existing objects reminds you of prototypical inheritance, you are spot-on:
 Pkl objects use prototypical inheritance as known from languages such as JavaScript.
 But unlike in JavaScript, their prototype chain cannot be directly accessed or even modified.
-Another difference is that in Pkl, object properties are late-bound. Read on to see what this means.
+Another difference is that in Pkl, object properties are late-bound.
+Read on to see what this means.
 
 [[amends-declaration]]
 [NOTE]
@@ -685,6 +702,7 @@ parrot = (pigeon) { // <2>
   name = "Parrot"
 }
 ----
+
 <1> Amends declaration.
 <2> Amends expression.
 
@@ -710,6 +728,7 @@ dodo = (pigeon) {
   extinct = true
 } // <2>
 ----
+
 <1> Chained amends declaration.
 <2> Chained amends expression (`(pigeon) { ... } { ... }` is the amends expression).
 ====
@@ -729,6 +748,7 @@ penguin {
 }
 adultWeightInGrams = penguin.adultWeightInGrams
 ----
+
 <1> result: `4000`
 
 We have defined a hypothetical `penguin` object whose `adultWeightInGrams` property is defined in terms of the `eggIncubation` duration.
@@ -741,6 +761,7 @@ madeUpBird = (penguin) {
 }
 adultWeightInGrams = madeUpBird.adultWeightInGrams // <1>
 ----
+
 <1> result: `1100`
 
 As you can see, ``madeUpBird``'s `adultWeightInGrams` changed along with its `eggIncubation`.
@@ -751,8 +772,7 @@ This is what we mean when we say that object properties are _late-bound_.
 ====
 A good analogy is that object properties behave like spreadsheet cells.
 When they are linked, changes to "downstream" properties automatically propagate to "upstream" properties.
-The main difference is that editing a spreadsheet cell changes the state of the spreadsheet,
-whereas "editing" a property results in a new object, leaving the original object untouched.
+The main difference is that editing a spreadsheet cell changes the state of the spreadsheet, whereas "editing" a property results in a new object, leaving the original object untouched.
 It is as if you made a copy of the entire spreadsheet whenever you edited a cell!
 ====
 
@@ -809,23 +829,23 @@ To make these boundaries clear, transitioning between _lazy_ and _eager_ data ty
 Pkl has two kinds of objects:
 
 * A link:{uri-stdlib-Dynamic}[Dynamic] object has no predefined structure.{fn-typed-objects}
-  When a dynamic object is amended, not only can existing properties be overridden or amended, but new properties can also be added.
-  So far, we have only used dynamic objects in this chapter.
+When a dynamic object is amended, not only can existing properties be overridden or amended, but new properties can also be added.
+So far, we have only used dynamic objects in this chapter.
 * A link:{uri-stdlib-Typed}[Typed] object has a fixed structure described by a class definition.
-  When a typed object is amended, its properties can be overridden or amended, but new properties cannot be added.
-  In other words, the new object has the same class as the original object.
+When a typed object is amended, its properties can be overridden or amended, but new properties cannot be added.
+In other words, the new object has the same class as the original object.
 
 [TIP]
 .When to Use Typed vs. Dynamic Objects
 ====
 * Use typed objects to build schema-backed data models that are validatedfootnote:[By "Use typed objects" we mean to define classes and build data models out of instances of these classes.].
-  This is what most templates do.
+This is what most templates do.
 * Use dynamic objects to build schema-less data models that are not validated.
-  Dynamic objects are useful for ad-hoc tasks, tasks that do not justify the effort of writing and maintaining a schema, and for representing data whose structure is unknown.
+Dynamic objects are useful for ad-hoc tasks, tasks that do not justify the effort of writing and maintaining a schema, and for representing data whose structure is unknown.
 ====
 
-Note that every <<modules,module>> is a typed object. Its properties implicitly define a class,
-and new properties cannot be added when amending the module.
+Note that every <<modules,module>> is a typed object.
+Its properties implicitly define a class, and new properties cannot be added when amending the module.
 
 A typed object is backed by a _class_.
 Let's look at an example:
@@ -844,11 +864,12 @@ pigeon = new Bird { // <2>
   migratory = false
 }
 ----
+
 <1> Defines a class named `Bird` with properties `name`, `lifespan` and `migratory`.
 <2> Defines a module property named `pigeon`.
-    Its value is a typed object constructed by instantiating class `Bird`.
-    A type only needs to be stated when the property does not have or inherit a <<type-annotations,type annotation>>.
-    Otherwise, amend syntax (`pigeon { ... }`) or shorthand instantiation syntax (`pigeon = new { ... }`) should be used.
+Its value is a typed object constructed by instantiating class `Bird`.
+A type only needs to be stated when the property does not have or inherit a <<type-annotations,type annotation>>.
+Otherwise, amend syntax (`pigeon { ... }`) or shorthand instantiation syntax (`pigeon = new { ... }`) should be used.
 
 Congratulations, you have constructed your first typed objectfootnote:[Not counting that every module is a typed object.]!
 How does it differ from a dynamic object?
@@ -919,6 +940,7 @@ pigeon = new Dynamic { // <1>
   lifespan = 8
 }.toTyped(Bird) // <2>
 ----
+
 <1> Instead of a `new Bird`, `pigeon` can be defined with a `new Dynamic`.
 <2> That `Dynamic` is then converted to a `Bird`.
 ====
@@ -955,6 +977,7 @@ favoritePigeon = (pigeon) {
 
 samePigeon = pigeon == favoritePigeon // <6>
 ----
+
 <1> Properties defined as `hidden` are accessible on any `Bird` instance, but not output by default.
 <2> Non-hidden properties can refer to hidden properties as usual.
 <3> `pigeon` is an object with _four_ properties, but is rendered with _three_ properties.
@@ -986,6 +1009,7 @@ samePigeon = true
 ----
 
 ==== Local properties
+
 A property with the modifier `local` can only be referenced in the lexical scope of its definition.
 
 [source,{pkl}]
@@ -1005,6 +1029,7 @@ pigeon = new Bird {
 pigeonInIndex = pigeon.nameAndLifespanInIndex // <3>
 pigeonSeparator = pigeon.separator // Error <4>
 ----
+
 <1> This property can only be accessed from inside this _class definition_.
 <2> Non-local properties can refer to the local property as usual.
 <3> The _value_ of `separator` occurs in `nameAndLifespanInIndex`.
@@ -1052,6 +1077,7 @@ birds { // <2>
   "Giraffe"
 }
 ----
+
 <1> Error: cannot assign to fixed property `laysEggs`
 <2> Error: cannot amend fixed property `birds`
 
@@ -1071,12 +1097,12 @@ class Penguin extends Bird {
   fixed name = "Penguin" // <2>
 }
 ----
+
 <1> Error: missing modifier `fixed`.
 <2> Error: modifier `fixed` cannot be applied to property `name`.
 
 The `fixed` modifier is useful for defining properties that are meant to be derived from other properties.
-In the following snippet, the property `wingspanWeightRatio` is not meant to be assigned to, because it is derived
-from other properties.
+In the following snippet, the property `wingspanWeightRatio` is not meant to be assigned to, because it is derived from other properties.
 
 [source%parsed,{pkl}]
 ----
@@ -1105,14 +1131,14 @@ class Osprey extends Bird {
   fixed species: "Pandion haliaetus" // <2>
 }
 ----
+
 <1> No explicit default because the property is overridden by a child class.
 <2> Overrides the type from `String` to the <<string-literal-types,string literal type>> `"Pandion haliaetus"`. +
 Assigning an explicit default would be redundant, therefore it is omitted.
 
 ==== Const properties
 
-A property with the `const` modifier behaves like the <<fixed-properties,`fixed`>> modifier,
-with the additional rule that it cannot reference non-const properties or methods.
+A property with the `const` modifier behaves like the <<fixed-properties,`fixed`>> modifier, with the additional rule that it cannot reference non-const properties or methods.
 
 .Bird.pkl
 [source%tested,{pkl}]
@@ -1145,6 +1171,7 @@ const bird: Bird = new {
   lifespan = birdLifespan(24) // <2>
 }
 ----
+
 <1> Error: cannot reference non-const property `pigeonName` from a const property.
 <2> Allowed: `birdLifespan` is const.
 
@@ -1164,6 +1191,7 @@ const bird: Bird = new {
   description = "species: \(speciesName), lifespan: \(lifespan)" // <1>
 }
 ----
+
 <1> `lifespan` is declared within property `bird`. `speciesName` resolves to `this.speciesName`, where `this` is a value within property `bird`.
 
 NOTE: Because `const` members can only reference themselves and other `const` members, they are not <<late-binding,late bound>>.
@@ -1197,13 +1225,12 @@ oldPigeonName: String
 
 typealias IsPigeonName = String(pigeonName) // <3>
 ----
+
 <1> Error: cannot reference non-const property `pigeonName` from a class.
 <2> Error: cannot reference non-const property `pigeonName` from an annotation.
 <3> Error: cannot reference non-const property `pigeonname` from a typealias.
 
-This rule exists because classes, annotations, and typealiases are not <<late-binding,late bound>>;
-it is not possible to change the definition of these members by amending the module
-where it is defined.
+This rule exists because classes, annotations, and typealiases are not <<late-binding,late bound>>; it is not possible to change the definition of these members by amending the module where it is defined.
 
 Generally, there are two strategies for referencing such properties:
 
@@ -1238,6 +1265,7 @@ This solution makes sense if `pigeonName` does not get assigned/amended when ame
 +   name: String = Birds.pigeonName
  }
 ----
+
 <1> module `Birds` imports itself
 
 This solution works because an import clause implicitly defines a `const local` property and amending this module does not affect a self-import.
@@ -1255,8 +1283,7 @@ Listings combine qualities of lists and objects:
 
 * Like lists, listings can contain arbitrary elements.
 * Like objects, listings excel at defining and amending nested literal data structures.
-* Like objects, listings can only be directly manipulated through amendment,
-  but converting them to a list (and, if necessary, back to a listing) opens the door to arbitrary transformations.
+* Like objects, listings can only be directly manipulated through amendment, but converting them to a list (and, if necessary, back to a listing) opens the door to arbitrary transformations.
 * Like object properties, listing elements are evaluated lazily, can be defined in terms of each other, and are late-bound.
 
 [TIP]
@@ -1288,12 +1315,13 @@ birds = new Listing { // <1>
   }
 }
 ----
+
 <1> Defines a module property named `birds` with a value of type `Listing`.
-    A type only needs to be stated when the property does not have or inherit a <<listing-type-annotations,type annotation>>.
-    Otherwise, amend syntax (`birds { ... }`) or shorthand instantiation syntax (`birds = new { ... }`) should be used.
+A type only needs to be stated when the property does not have or inherit a <<listing-type-annotations,type annotation>>.
+Otherwise, amend syntax (`birds { ... }`) or shorthand instantiation syntax (`birds = new { ... }`) should be used.
 <2> Defines a listing element of type `Dynamic`.
 <3> Defines another listing element of type `Dynamic`.
-    The order of definitions is relevant.
+The order of definitions is relevant.
 
 To access an element by index, use the `[]` (subscript) operator:
 
@@ -1302,6 +1330,7 @@ To access an element by index, use the `[]` (subscript) operator:
 firstBirdName = birds[0].name  // <1>
 secondBirdDiet = birds[1].diet // <2>
 ----
+
 <1> result: `"Pigeon"`
 <2> result: `"Berries"`
 
@@ -1317,6 +1346,7 @@ listing = new Listing {
   }
 }
 ----
+
 <1> Defines a listing element of type `String`.
 <2> Defines a listing element of type `Duration`.
 <3> Defines a listing element of type `Listing`.
@@ -1331,8 +1361,9 @@ listing = new Listing {
   "A " + pigeon + " is a bird" // <3>
 }
 ----
+
 <1> Defines a local property with the value `"Pigeon"`.
-    Local properties can have a type annotation, as in `pigeon: String = "Pigeon"`.
+Local properties can have a type annotation, as in `pigeon: String = "Pigeon"`.
 <2> Defines a listing element that references the local property.
 <3> Defines another listing element that references the local property.
 
@@ -1373,7 +1404,9 @@ birds2 = (birds) { // <1>
   }
 }
 ----
-<1> Defines a module property named `birds2`. Its value is a listing that amends `birds`.
+
+<1> Defines a module property named `birds2`.
+Its value is a listing that amends `birds`.
 <2> Defines a listing element of type `Dynamic`.
 <3> Amends the listing element at index 0 (whose name is `"Pigeon"`) and overrides property `diet`.
 <4> Overrides the listing element at index 1 (whose name is `"Parrot"`) with an entirely new dynamic object.
@@ -1395,6 +1428,7 @@ birds = new Listing {
   }
 }
 ----
+
 <1> Defines a listing element of type `Dynamic`.
 <2> Defines a listing element that amends the element at index 0 and overrides `name`.
 
@@ -1410,6 +1444,7 @@ newBirds = (birds) { // <1>
 
 secondBirdDiet = newBirds[1].diet // <2>
 ----
+
 <1> Amends listing `birds` and overrides property `diet` of element 0 (whose name is "Pigeon"`) to have the value `"Worms"`.
 <2> Because element 1 is defined in terms of element 0, its `diet` property also changes to `"Worms"`.
 
@@ -1483,9 +1518,11 @@ birds = new Listing {
   }
 }
 ----
+
 <1> Amends the `default` element and sets property `lifespan`.
 <2> Defines a new listing element that implicitly amends the default element.
-<3> Defines a new property called `name`. Property `lifespan` is inherited from the default element.
+<3> Defines a new property called `name`.
+Property `lifespan` is inherited from the default element.
 <4> Defines a new listing element that implicitly amends the default element.
 <5> Overrides the default for property `lifespan`.
 
@@ -1544,8 +1581,8 @@ This declaration has the following effects:
 * `x` is initialized with an empty listing.
 * If `ElementType` has a <<default-values,default value>>, that value becomes the listing's default element.
 * The first time `x` is read,
-  ** its value is checked to have type `Listing`.
-  ** the listing's elements are checked to have the type `ElementType`.
+** its value is checked to have type `Listing`.
+** the listing's elements are checked to have the type `ElementType`.
 
 Here is an example:
 
@@ -1577,9 +1614,7 @@ birds {
 }
 ----
 
-Thanks to ``birds``'s default element, which was inferred from its type,
-it is not necessary to state the type of each list element
-(`new Bird { ... }`, `new Bird { ... }`, etc.).
+Thanks to ``birds``'s default element, which was inferred from its type, it is not necessary to state the type of each list element (`new Bird { ... }`, `new Bird { ... }`, etc.).
 
 ==== Distinct Elements
 
@@ -1619,8 +1654,7 @@ Mappings combine qualities of maps and objects:
 
 * Like maps, mappings can contain arbitrary key-value pairs.
 * Like objects, mappings excel at defining and amending nested literal data structures.
-* Like objects, mappings can only be directly manipulated through amendment,
-  but converting them to a map (and, if necessary, back to a mapping) opens the door to arbitrary transformations.
+* Like objects, mappings can only be directly manipulated through amendment, but converting them to a map (and, if necessary, back to a mapping) opens the door to arbitrary transformations.
 * Like object properties, a mapping's values (but not its keys) are evaluated lazily, can be defined in terms of each other, and are late-bound.
 
 [TIP]
@@ -1652,9 +1686,10 @@ birds = new Mapping { // <1>
   }
 }
 ----
+
 <1> Defines a module property named `birds` with a value of type `Mapping`.
-    A type only needs to be stated when the property does not have or inherit a <<mapping-type-annotations,type annotation>>.
-    Otherwise, amend syntax (`birds { ... }`) or shorthand instantiation syntax (`birds = new { ... }`) should be used.
+A type only needs to be stated when the property does not have or inherit a <<mapping-type-annotations,type annotation>>.
+Otherwise, amend syntax (`birds { ... }`) or shorthand instantiation syntax (`birds = new { ... }`) should be used.
 <2> Defines a mapping entry with the key `"Pigeon"` and a value of type `Dynamic`.
 <3> Defines a mapping entry with the key `"Parrot"` and a value of type `Dynamic`.
 
@@ -1712,10 +1747,11 @@ mapping = new Mapping {
   }
 }
 ----
+
 <1> Defines a local property name `parrot` with the value `"Parrot"`.
-    Local properties can have a type annotation, as in `parrot: String = "Parrot"`.
+Local properties can have a type annotation, as in `parrot: String = "Parrot"`.
 <2> Defines a mapping entry whose value references `parrot`.
-    The local property is visible to values but not keys.
+The local property is visible to values but not keys.
 
 [[amending-mappings]]
 === Amending Mappings
@@ -1754,7 +1790,9 @@ birds2 = (birds) { // <1>
   }
 }
 ----
-<1> Defines a module property named `birds2`. Its value is a mapping that amends `birds`.
+
+<1> Defines a module property named `birds2`.
+Its value is a mapping that amends `birds`.
 <2> Defines a mapping entry with the key `"Barn owl"` and a value of type `Dynamic`.
 <3> Amends mapping entry `"Pigeon"` and overrides property `diet`.
 <4> Overrides mapping entry `"Parrot"` with an entirely new value of type `Dynamic`.
@@ -1776,6 +1814,7 @@ birds = new Mapping {
   }
 }
 ----
+
 <1> Defines a mapping entry with the key `"Pigeon"` and a value of type `Dynamic`.
 <2> Defines a mapping entry with the key `"Parrot"` and a value that amends `"Pigeon"`.
 
@@ -1791,6 +1830,7 @@ birds2 = (birds) { // <1>
 
 parrotDiet = birds2["Parrot"].diet // <2>
 ----
+
 <1> Amends mapping `birds` and overrides ``"Pigeon"``'s `diet` property to have value `"Seeds"`.
 <2> Because `"Parrot"` is defined in terms of `"Pigeon"`, its `diet` property also changes to `"Seeds"`.
 
@@ -1863,9 +1903,11 @@ birds = new Mapping {
   }
 }
 ----
+
 <1> Amends the `default` value and sets property `lifespan`.
 <2> Defines a mapping entry with the key `"Pigeon"` that implicitly amends the default value.
-<3> Defines a new property called `diet`. Property `lifespan` is inherited from the default value.
+<3> Defines a new property called `diet`.
+Property `lifespan` is inherited from the default value.
 <4> Defines a mapping entry with the key `"Parrot"` that implicitly amends the default value.
 <5> Overrides the default for property `lifespan`.
 
@@ -1922,9 +1964,9 @@ This declaration has the following effects:
 * `x` is initialized with an empty mapping.
 * If `ValueType` has a <<default-values,default value>>, that value becomes the mapping's default value.
 * The first time `x` is read,
-  ** its value is checked to have type `Mapping`.
-  ** the mapping's keys are checked to have type `KeyType`.
-  ** the mapping's values are checked to have type `ValueType`.
+** its value is checked to have type `Mapping`.
+** the mapping's keys are checked to have type `KeyType`.
+** the mapping's values are checked to have type `ValueType`.
 
 Here is an example:
 
@@ -1953,9 +1995,7 @@ birds {
 }
 ----
 
-Thanks to ``birds``'s default value, which was inferred from its type,
-it is not necessary to state the type of each mapping value
-(`["Pigeon"] = new Bird { ... }`, `["Parrot"] = new Bird { ... }`, etc.).
+Thanks to ``birds``'s default value, which was inferred from its type, it is not necessary to state the type of each mapping value (`["Pigeon"] = new Bird { ... }`, `["Parrot"] = new Bird { ... }`, etc.).
 
 [[classes]]
 == Classes
@@ -1987,7 +2027,7 @@ pigeon: Bird = new {
 pigeonClass = pigeon.getClass()
 ----
 
-Declaration of new class instances will fail when property names are misspelled: 
+Declaration of new class instances will fail when property names are misspelled:
 
 [source%tested%error,{pkl}]
 ----
@@ -2045,6 +2085,7 @@ parrot: Bird = new {
 greeting1 = pigeon.greet(parrot) // <3>
 greeting2 = greetPigeon(parrot)  // <4>
 ----
+
 <1> Instance method of class `Bird`.
 <2> Module method.
 <3> Call instance method on `pigeon`.
@@ -2116,12 +2157,14 @@ Modules are loaded from _module URIs_.
 By default, the following URI types are available for import:
 
 ==== File URI:
-Example: `+file:///path/to/my_module.pkl+` 
+
+Example: `+file:///path/to/my_module.pkl+`
 
 Represents a module located on a file system.
 
 ==== HTTP(S) URI:
-Example: `+https://example.com/my_module.pkl+` 
+
+Example: `+https://example.com/my_module.pkl+`
 
 Represents a module imported via an HTTP(S) GET request.
 
@@ -2129,6 +2172,7 @@ NOTE: Modules loaded from HTTP(S) URIs are only cached until the `pkl` command e
 
 [[module-path-uri]]
 ==== Module path URI:
+
 Example: `+modulepath:/path/to/my_module.pkl+`
 
 Module path URIs are resolved relative to the _module path_, a search path for modules similar to Java's class path (see the `--module-path` CLI option).
@@ -2143,6 +2187,7 @@ In a typical Java project, this corresponds to file path `src/main/resources/pat
 
 [[package-asset-uri]]
 ==== Package asset URI:
+
 Example: `+package://example.com/mypackage@1.0.0#/my_module.pkl+`
 
 Represent a module within a _package_.
@@ -2193,7 +2238,8 @@ with `import "parrot.pkl"` or `import "/animals/birds/parrot.pkl"`.
 ====
 Relative paths use the `/` character as the directory separator on all platforms, including Windows.
 
-Paths that contain drive letters (e.g. `C:`) must be declared as an absolute file URI, for example: `import "file:///C:/path/to/my/module.pkl"`. Otherwise, they are interpreted as a URI scheme.
+Paths that contain drive letters (e.g. `C:`) must be declared as an absolute file URI, for example: `import "file:///C:/path/to/my/module.pkl"`.
+Otherwise, they are interpreted as a URI scheme.
 ====
 
 NOTE: When importing a relative directory or file that starts with `@`, the import string must be prefixed with `./`.
@@ -2229,8 +2275,7 @@ $ pkl eval pkl:math
 [[triple-dot-module-uris]]
 ==== Triple-dot Module URIs
 
-To simplify referencing ancestor modules in a hierarchical module structure,
-relative file and module path URIs may start with `++...++/`, a generalization of `../`.
+To simplify referencing ancestor modules in a hierarchical module structure, relative file and module path URIs may start with `++...++/`, a generalization of `../`.
 Module URI `++...++/foo/bar/baz.pkl` resolves to the first existing module among
 `../foo/bar/baz.pkl`, `../../foo/bar/baz.pkl`, `../../../foo/bar/baz.pkl`, and so on.
 Furthermore, module URI `++...++` is equivalent to `++...++/<currentFileName>`.
@@ -2255,6 +2300,7 @@ parrot = (pigeon) { // <1>
   name = "Parrot"   // <2>
 }
 ----
+
 <1> Object `parrot` amends object `pigeon`, inheriting all of its members.
 <2> `parrot` overrides `name`.
 
@@ -2274,6 +2320,7 @@ amends "pigeon.pkl" // <1>
 
 name = "Parrot"     // <2>
 ----
+
 <1> Module `parrot` amends module `pigeon`, inheriting all of its members.
 <2> `parrot` overrides `name`.
 
@@ -2330,6 +2377,7 @@ class Parrot extends Pigeon {   // <2>
   function say() = "Pkl is great!"   // <6>
 }
 ----
+
 <1> Class `Pigeon` is declared as `open` for extension.
 <2> Class `Parrot` extends `Pigeon`, inheriting all of its members.
 <3> `Parrot` overrides `name`.
@@ -2347,6 +2395,7 @@ open module pigeon   // <1>
 name = "Pigeon"
 diet = "Seeds"
 ----
+
 <1> Module `pigeon` is declared as `open` for extension.
 
 .parrot.pkl
@@ -2360,6 +2409,7 @@ extinct = false         // <4>
 
 function say() = "Pkl is great!" // <5>
 ----
+
 <1> Module `parrot` extends module `pigeon`, inheriting all of its members.
 <2> `parrot` overrides `name`.
 <3> `parrot` overrides `diet`.
@@ -2419,8 +2469,7 @@ name = "Parrot"
 Multiple import clauses are permitted.
 
 A module import implicitly defines a new `const local` property through which the imported module can be accessed.
-(Remember that modules are regular objects.)
-The name of this property, called _import name_, is constructed from the module URI as follows:
+(Remember that modules are regular objects.) The name of this property, called _import name_, is constructed from the module URI as follows:
 
 . Strip the URI scheme, including the colon (`:`).
 . Strip everything up to and including the last forward slash (`/`).
@@ -2488,7 +2537,8 @@ When creating a new module, especially one intended for import into other module
 Less than six characters, not counting the `.pkl` file extension, is a good rule of thumb.
 * valid identifier
 +
-Stick to alphanumeric characters. Use an underscore (`_`) instead of a hyphen (`-`) as a name separator.
+Stick to alphanumeric characters.
+Use an underscore (`_`) instead of a hyphen (`-`) as a name separator.
 * descriptive
 +
 An import name should make sense on its own and when used in qualified member names.
@@ -2528,6 +2578,7 @@ import* "reptiles/*.pkl" <2>
 
 birds = import*("birds/*.pkl") // <3>
 ----
+
 <1> Globbed import clause
 <2> Globbed import clause without an explicit name (will import the name `*`)
 <3> Globbed import expression
@@ -2573,13 +2624,13 @@ Otherwise, characters are interpreted verbatim, and not treated as glob wildcard
 
 For details on how glob patterns work, refer to <<glob-patterns>> in the Advanced Topics section.
 
-NOTE: When globbing files, symbolic links are not followed. Additionally, the `.` and `..` entries are skipped. +
+NOTE: When globbing files, symbolic links are not followed.
+Additionally, the `.` and `..` entries are skipped. +
 This behavior is similar to the behavior of Bash with `shopt -s dotglob` enabled.
 
 === Security Checks
 
-When attempting to directly evaluate a module, as in `pkl eval myModule.pkl`,
-the following security checks are performed:
+When attempting to directly evaluate a module, as in `pkl eval myModule.pkl`, the following security checks are performed:
 
 * The module URI is checked against the module allowlist (`--allowed-modules`).
 
@@ -2587,8 +2638,7 @@ The module allowlist is a comma-separated list of regular expressions.
 For access to be granted, at least one regular expression must match a prefix of the module URI.
 For example, the allowlist `file:,https:` grants access to any module whose URI starts with `file:` or `https:`.
 
-When a module attempts to load another module (via `amends`, `extends`, or `imports`),
-the following security checks are performed:
+When a module attempts to load another module (via `amends`, `extends`, or `imports`), the following security checks are performed:
 
 * The target module URI is checked against the module allowlist (`--allowed-modules`).
 * The source and target modules' _trust levels_ are determined and compared.
@@ -2778,7 +2828,7 @@ THIS IS THE FINAL OUTPUT
 ==== Multiple File Output
 
 It is sometimes desirable for a single module to produce multiple output files.
-This is possible by configuring a module's link:{uri-stdlib-outputFiles}[`output.files`] property 
+This is possible by configuring a module's link:{uri-stdlib-outputFiles}[`output.files`] property
 // suppress inspection "AsciiDocLinkResolve"
 and specifying the xref:pkl-cli:index.adoc#multiple-file-output-path[`--multiple-file-output-path`]
 (or `-m` for short) CLI option.
@@ -2828,11 +2878,8 @@ name: Parrot
 diet: Berries
 ----
 
-Within `output.files`, 
-a key determines a file's path relative to `--multiple-file-output-path`, 
-and a value determines the file's contents.
-If a file's path resolves to a location outside `--multiple-file-output-path`, 
-evaluation fails with an error.
+Within `output.files`, a key determines a file's path relative to `--multiple-file-output-path`, and a value determines the file's contents.
+If a file's path resolves to a location outside `--multiple-file-output-path`, evaluation fails with an error.
 Non-existing parent directories are created.
 
 [[aggregating-module-outputs]]
@@ -2878,8 +2925,7 @@ output {
 
 [TIP]
 ====
-When aggregating module outputs,
-the appropriate file extensions can be obtained programmatically:
+When aggregating module outputs, the appropriate file extensions can be obtained programmatically:
 
 .birds.pkl
 [source%parsed,{pkl}]
@@ -2915,6 +2961,7 @@ nameNonNull = name!!  // <1>
 name2 = null
 name2NonNull = name2!! // <2>
 ----
+
 <1> result: `"Pigeon"`
 <2> result: _Error: Expected a non-null value, but got `null`._
 
@@ -2938,6 +2985,7 @@ nameOrParrot = name ?? "Parrot"  // <1>
 name2 = null
 name2OrParrot = name2 ?? "Parrot" // <2>
 ----
+
 <1> result: `"Pigeon"`
 <2> result: `"Parrot"`
 
@@ -2947,13 +2995,10 @@ name2OrParrot = name2 ?? "Parrot" // <2>
 Many languages allow `null` for (almost) every type, but Pkl does not.
 Any type can be extended to include `null` by appending `?` to the type.
 
-For example, `parrot: Bird` will always be non-null, but `pigeon: Bird?` could be `null` - and _is_ by default,
-if `pigeon` is never amended. This means if you try to coalesce a (non-nullable) typed variable,
-the result is always that variable’s value.
+For example, `parrot: Bird` will always be non-null, but `pigeon: Bird?` could be `null` - and _is_ by default, if `pigeon` is never amended.
+This means if you try to coalesce a (non-nullable) typed variable, the result is always that variable’s value.
 
-As per our example `parrot ?? pigeon == parrot` always holds,
-but `pigeon ?? parrot` could either be `pigeon` or `parrot`,
-depending on whether `pigeon` was ever amended with a non-null value.
+As per our example `parrot ?? pigeon == parrot` always holds, but `pigeon ?? parrot` could either be `pigeon` or `parrot`, depending on whether `pigeon` was ever amended with a non-null value.
 ====
 
 [[null-propagation]]
@@ -2979,6 +3024,7 @@ name2 = null
 name2Length = name2?.length        // <3>
 name2Upper = name2?.toUpperCase()  // <4>
 ----
+
 <1> result: `6`
 <2> result: `"PIGEON"`
 <3> result: `null`
@@ -2991,6 +3037,7 @@ The `?.` operator is often combined with `??`:
 name = null
 nameLength = name?.length ?? 0 // <1>
 ----
+
 <1> result: `0`
 
 === ifNonNull Method
@@ -3013,6 +3060,7 @@ nameWithTitle = name.ifNonNull((it) -> "Dr." + it)  // <1>
 name2 = null
 name2WithTitle = name2.ifNonNull((it) -> "Dr." + it) // <2>
 ----
+
 <1> result: `"Dr. Pigeon"`
 <2> result: `null`
 
@@ -3035,6 +3083,7 @@ Every `if` expression must have an `else` branch.
 ----
 num = if (2 + 2 == 5) 1984 else 42 // <1>
 ----
+
 <1> result: `42`
 
 [[resources]]
@@ -3062,7 +3111,9 @@ Result type is link:{uri-stdlib-Resource}[Resource].
 modulepath: :: Reads a resource from the module path (`--module-path`) or JVM class path.
 Result type is link:{uri-stdlib-Resource}[Resource].
 See <<module-path-uri,Module Path URI>> for further information.
-package: :: Reads a resource from a _package_. Result type is link:{uri-stdlib-Resource}[Resource]. See <<package-asset-uri>> for further information.
+package: :: Reads a resource from a _package_.
+Result type is link:{uri-stdlib-Resource}[Resource].
+See <<package-asset-uri>> for further information.
 
 Relative resource URIs are resolved against the enclosing module's URI.
 
@@ -3073,8 +3124,7 @@ Therefore, subsequent reads are guaranteed to return the same result.
 === Nullable Reads
 
 If a resource does not exist or cannot be read, `read()` fails with an error.
-To recover from the absence of a resource, use `read?()` instead,
-which returns `null` for absent resources:
+To recover from the absence of a resource, use `read?()` instead, which returns `null` for absent resources:
 
 [source%parsed,{pkl}]
 ----
@@ -3129,7 +3179,8 @@ Globbing other resources results in an error.
 
 For details on how glob patterns work, reference <<glob-patterns>> in the Advanced Topics section.
 
-NOTE: When globbing files, symbolic links are not followed. Additionally, the `.` and `..` entries are skipped. +
+NOTE: When globbing files, symbolic links are not followed.
+Additionally, the `.` and `..` entries are skipped. +
 This behavior is similar to the behavior of Bash with `shopt -s dotglob` enabled.
 
 [NOTE]
@@ -3171,6 +3222,7 @@ To raise an error, use a `throw` expression:
 ----
 myValue = throw("You won't be able to recover from this one!") // <1>
 ----
+
 <1> `myValue` never receives a value because the program exits.
 
 The error message is printed to the console and the program exits.
@@ -3229,7 +3281,8 @@ This section discusses language features that are generally more relevant to tem
 <<blank-identifiers,Blank Identifiers>> +
 <<projects,Projects>> +
 <<external-readers,External Readers>> +
-<<mirroring_packages,Mirroring packages>>
+<<mirroring_packages,Mirroring packages>> +
+<<references,References>>
 
 [[meaning-of-new]]
 === Meaning of `new`
@@ -3259,6 +3312,7 @@ bird: Bird // <1>
 birdListing: Listing<Bird> // <2>
 birdMapping: Mapping<String, Bird> // <3> 
 ----
+
 <1> Without an explicit default value, this property has default value `new Bird { name = "polly" }`
 <2> With an explicit element type argument, this property's default value is equivalent to `new Listing<Bird> { default = (_) -> new Bird { name = "polly" } }`
 <3> With an explicit value type argument, this property's default value is equivalent to `new Mapping<String, Bird> { default = (_) -> new Bird { name = "polly" } }`
@@ -3300,6 +3354,7 @@ someMapping = new Mapping<String, Bird> {
   }
 }
 ----
+
 <1> Assigning a `new` explicitly-typed value to a property.
 <2> Adding an `new` explicitly-typed `Listing` element.
 The value will not have property `isPredatory = true` as the `default` property of the `Listing` is not used.
@@ -3378,6 +3433,7 @@ aviary: Aviary = new {
 
 swiftHatchlings = typedProperty.listHatchlings(new { "Poppy"; "Chirpy" }) // <8>
 ----
+
 <1> Assignment to a property with an explicitly declared type, amending `new Bird {}`.
 <2> Assignment to an undeclared property in module context, amending `new Dynamic {}`.
 <3> `Listing` element creation, amending implicit `default`, `new Bird {}`.
@@ -3412,6 +3468,7 @@ birdDiets =
   let (diets = List("Seeds", "Berries", "Mice"))
     List(diets[2], diets[0]) // <1>
 ----
+
 <1> result: `birdDiets = List("Mice", "Seeds")`
 
 `let` expressions serve two purposes:
@@ -3427,6 +3484,7 @@ birdDiets =
   let (diets: List<String> = List("Seeds", "Berries", "Mice"))
     diets[2] + diets[0] // <1>
 ----
+
 <1> result: `birdDiets = List("Mice", "Seeds")`
 
 `let` expressions can be stacked:
@@ -3438,6 +3496,7 @@ birdDiets =
   let (diet = List("Seeds", "Mice", "Berries"))
     birds.zip(diet) // <1>
 ----
+
 <1> result: `birdDiets = List(Pair("Pigeon", "Seeds"), Pair("Barn owl", "Mice"), Pair("Parrot", "Berries"))`
 
 [[type-tests]]
@@ -3478,6 +3537,7 @@ test1 = email is String(contains("@")) // <1>
 test2 = map is Map<Int, Base> // <2>
 test3 = name is "Pigeon"|"Barn owl"|"Parrot" // <3>
 ----
+
 <1> `email` is tested for being a string that contains a `@` sign
 <2> `map` is tested for being a map from `Int` to `Base` values
 <3> `name` is tested for being one of `"Pigeon"`, `"Barn owl"`, or `"Parrot"`
@@ -3525,6 +3585,7 @@ list1 = List() // <1>
 list2 = List(1, 2, 3) // <2>
 list3 = List(1, "x", 5.min, List(1, 2, 3)) // <3>
 ----
+
 <1> result: empty list
 <2> result: list of length 3
 <3> result: heterogeneous list whose last element is another list
@@ -3543,6 +3604,7 @@ To access a list element by index, use the `[]` (subscript) operator:
 list = List(1, 2, 3, 4)
 listElement = list[2] // <1>
 ----
+
 <1> result: `3`
 
 Class `List` offers a link:{uri-stdlib-List}[rich API].
@@ -3558,6 +3620,7 @@ res4 = list.reverse() // <4>
 res5 = list.drop(1).take(2) // <5>
 res6 = list.map((n) -> n * 3) // <6>
 ----
+
 <1> result: `true`
 <2> result: `1`
 <3> result: `List(2, 3, 4)`
@@ -3579,6 +3642,7 @@ res2 = Set(1, 2, 3) // <2>
 res3 = Set(1, 2, 3, 1) // <3>
 res4 = Set(1, "x", 5.min, List(1, 2, 3)) // <4>
 ----
+
 <1> result: empty set
 <2> result: set of length 3
 <3> result: same set of length 3
@@ -3594,6 +3658,7 @@ res2 = res1.first // <1>
 res3 = res1.toListing() // <2>
 res4 = Set(2, 3, 4) == res1 // <3>
 ----
+
 <1> result: `4`
 <2> result: `new Listing { 4; 3; 2 }`
 <3> result: `true`
@@ -3604,6 +3669,7 @@ To compute the union of sets, use the `+` operator:
 ----
 Set(1, 2) + Set(2, 3) + Set(5, 3) // <1>
 ----
+
 <1> result: `Set(1, 2, 3, 5)`
 
 Class `Set` offers a link:{uri-stdlib-Set}[rich API].
@@ -3617,6 +3683,7 @@ res2 = set.drop(1).take(2) // <2>
 res3 = set.map((n) -> n * 3) // <3>
 res4 = set.intersect(Set(3, 9, 2)) // <4>
 ----
+
 <1> result: `true`
 <2> result: `Set(2, 3)`
 <3> result: `Set(3, 6, 9, 12)`
@@ -3649,6 +3716,7 @@ map1 = Map() // <1>
 map2 = Map(1, "one", 2, "two", 3, "three") // <2>
 map3 = Map(1, "x", 2, 5.min, 3, Map(1, 2)) // <3>
 ----
+
 <1> result: empty map
 <2> result: set of length 3
 <3> result: heterogeneous map whose last value is another map
@@ -3670,6 +3738,7 @@ res2 = res1.entries.first // <1>
 res3 = res1.toMapping() // <2>
 res4 = res1 == Map(1, "world", 2, "hello") // <3>
 ----
+
 <1> result: `Pair(2, "hello")`
 <2> result: `new Mapping { [2] = "hello"; [1] = "world" }`
 <3> result: `true`
@@ -3680,6 +3749,7 @@ To merge maps, use the `+` operator:
 ----
 combinedMaps = Map(1, "one") + Map(2, "two", 1, "three") + Map(4, "four") // <1>
 ----
+
 <1> result: `Map(1, "three", 2, "two", 4, "four")`
 
 To access a value by key, use the `[]` (subscript) operator:
@@ -3689,6 +3759,7 @@ To access a value by key, use the `[]` (subscript) operator:
 map = Map("Pigeon", 5.gb, "Parrot", 10.gb)
 parrotValue = map["Parrot"] // <1>
 ----
+
 <1> result: `10.gb`
 
 Class `Map` offers a link:{uri-stdlib-Map}[rich API].
@@ -3703,6 +3774,7 @@ res3 = map.isEmpty // <3>
 res4 = map.length // <4>
 res5 = map.getOrNull("Falcon") // <5>
 ----
+
 <1> result: `true`
 <2> result: `false`
 <3> result: `false`
@@ -3721,6 +3793,7 @@ A value of type `Bytes` is a sequence of `UInt8` elements.
 bytes1 = Bytes(0xff, 0x00, 0x3f) // <1>
 bytes2 = Bytes() // <2>
 ----
+
 <1> Result: a `Bytes` with 3 elements
 <2> Result: an empty `Bytes`
 
@@ -3730,6 +3803,7 @@ bytes2 = Bytes() // <2>
 ----
 bytes3 = "cGFycm90".base64DecodedBytes // <1>
 ----
+
 <1> Result: `Bytes(112, 97, 114, 114, 111, 116)`
 
 ==== `Bytes` vs `List<UInt8>`
@@ -3786,6 +3860,7 @@ list1 = matches.drop(1).map((it) -> it.start) // <1>
 list2 = matches.drop(1).map((it) -> it.value) // <2>
 list3 = matches.drop(1).map((it) -> it.groups[1].value) // <3>
 ----
+
 <1> result: `List(0, 19, 40)` (the entire match, `matches[0]`, was dropped)
 <2> result: `List("pigeon@example.com", "falcon@example.com", "parrot@example.com")`
 <3> result: `List("pigeon, falcon, parrot")`
@@ -3879,8 +3954,7 @@ port: Int(isBetween(0, 1023)) = 443
 NOTE: Remember that numbers are always instances of `Int` or `Float`.
 Type aliases such as `UInt16` only check that numbers are within a certain range.
 
-The xref:java-binding:codegen.adoc[Java] and xref:kotlin-binding:codegen.adoc[Kotlin] code generators
-map predefined type aliases to the most suitable Java and Kotlin types.
+The xref:java-binding:codegen.adoc[Java] and xref:kotlin-binding:codegen.adoc[Kotlin] code generators map predefined type aliases to the most suitable Java and Kotlin types.
 For example, `UInt8` is mapped to `java.lang.Byte` and `kotlin.Byte`, and `Uri` is mapped to `java.net.URI`.
 
 [[type-annotations]]
@@ -3889,20 +3963,16 @@ For example, `UInt8` is mapped to `java.lang.Byte` and `kotlin.Byte`, and `Uri` 
 Property and method definitions may optionally contain type annotations.
 Type annotations serve the following purposes:
 
-* Documentation
-+ Type annotations help to document data models. They are included in any generated documentation.
+* Documentation + Type annotations help to document data models.
+They are included in any generated documentation.
 
-* Validation
-+ Type annotations are validated at runtime.
+* Validation + Type annotations are validated at runtime.
 
-* Defaults
-+ Type-annotated properties have <<default-values,Default Values>>.
+* Defaults + Type-annotated properties have <<default-values,Default Values>>.
 
-* Code Generation
-+ Type annotations enable statically typed access to configuration data through code generation.
+* Code Generation + Type annotations enable statically typed access to configuration data through code generation.
 
-* Tooling
-+ Type annotations enable advanced tooling features such as code completion in editors.
+* Tooling + Type annotations enable advanced tooling features such as code completion in editors.
 
 ==== Class Types
 
@@ -3915,6 +3985,7 @@ class Bird {
 }
 bird: Bird // <2>
 ----
+
 <1> Declares an instance property of type `String`.
 <2> Declares a module property of type `Bird`.
 
@@ -3937,6 +4008,7 @@ import "bird.pkl"
 pigeon: bird  // <1>
 parrot: bird // <1>
 ----
+
 <1> Guaranteed to amend _bird.pkl_.
 
 As a special case, the `module` keyword denotes the _enclosing_ module's type:
@@ -3960,6 +4032,7 @@ friends {
   import("falcon.pkl") // <1>
 }
 ----
+
 <1> _falcon.pkl_ (not shown here) is guaranteed to amend _bird.pkl_.
 
 ==== Type Aliases
@@ -3974,6 +4047,7 @@ email: EmailAddress // <1>
 
 emailList: List<EmailAddress> // <2>
 ----
+
 <1> equivalent to `email: String(contains("@"))` for type checking purposes
 <2> equivalent to `emailList: List<String(contains("@"))>` for type checking purposes
 
@@ -3988,6 +4062,7 @@ To turn them into _nullable types_, append a question mark (`?`):
 bird: Bird = null   // <1>
 bird2: Bird? = null // <2>
 ----
+
 <1> throws `Type mismatch: Expected a value of type Bird, but got null`
 <2> succeeds
 
@@ -4048,8 +4123,7 @@ mapping: Mapping    // equivalent to `Mapping<unknown, unknown>`
 ----
 
 The `unknown` type is both a top and a bottom type.
-When a static type analyzer encounters an expression of `unknown` type,
-it backs off and trusts the user that they know what they are doing.
+When a static type analyzer encounters an expression of `unknown` type, it backs off and trusts the user that they know what they are doing.
 
 [[union-types]]
 ==== Union Types
@@ -4072,6 +4146,7 @@ foo: List<Boolean|Number|String>|Bird
 ----
 
 Union types have no implicit default values, but an explicit type can be chosen using a `*` marker:
+
 [source%parsed,{pkl}]
 ----
 foo: "a"|"b"       // undefined. Will throw an error if not amended
@@ -4092,8 +4167,7 @@ A string literal type admits a single string value:
 diet: "Seeds"
 ----
 
-While occasionally useful on their own,
-string literal types are often combined with <<Union Types>> to form enumerated types:
+While occasionally useful on their own, string literal types are often combined with <<Union Types>> to form enumerated types:
 
 [source%parsed,{pkl}]
 ----
@@ -4135,8 +4209,7 @@ A `nothing` return type indicates that a method never returns normally but alway
 The `unknown` type footnote:[Also known as _dynamic type_. We do not use that term to avoid confusion with `Dynamic`, Pkl's dynamic object type.] is ``nothing``'s even stranger cousin: it is both a top and bottom type!
 This makes `unknown` assignment-compatible with every other type, and every other type assignment-compatible with `unknown`.
 
-When a static type analyzer encounters a value of `unknown` type,
-it backs off and trusts the code's author to know what they are doing -- for example, whether a method called on the value exists.
+When a static type analyzer encounters a value of `unknown` type, it backs off and trusts the code's author to know what they are doing -- for example, whether a method called on the value exists.
 
 ==== Progressive Disclosure
 
@@ -4149,8 +4222,9 @@ lifespan = 42 // <1>
 map: Map // <2>
 function say(name) = name // <3>
 ----
+
 <1> shorthand for `lifespan: unknown = 42`
-    (As a dynamically typed language, Pkl does not try to statically infer types.)
+(As a dynamically typed language, Pkl does not try to statically infer types.)
 <2> shorthand for `map: Map<unknown, unknown> = Map()`
 <3> shorthand for `function say(name: unknown): unknown = name`
 
@@ -4184,7 +4258,8 @@ nullish: Null                  // = null <11>
 <6> Properties of type `Mapping<X, Y>` default to an empty mapping whose default value is the default for `Y`.
 <7> Properties of non-external class type `X` default to `new X {}`.
 <8> Properties of type `X?` default to `Null(x)` where `x` is the default for `X`.
-<9> Properties with a union type have no default value. By prefixing one of the types in a union with a `*`, the default of that type is chosen as the default for the union.
+<9> Properties with a union type have no default value.
+By prefixing one of the types in a union with a `*`, the default of that type is chosen as the default for the union.
 <10> Properties with a string literal type default to the type's only value.
 <11> Properties of type `Null` default to `null`.
 
@@ -4230,9 +4305,11 @@ pigeon: Bird = new {
   parent = "Pigeon Sr." // <3>
 }
 ----
+
 <1> Restricts `name` to have at least three characters.
 <2> The name of the bird (`this`) should not be the same as the name of the `parent`.
-<3> Note how `parent` is different from `name`. If they were the same, we would be thrown a constraint error.
+<3> Note how `parent` is different from `name`.
+If they were the same, we would be thrown a constraint error.
 
 In the following example, we define a `Bird` with a name of only two characters.
 
@@ -4293,8 +4370,7 @@ project: Project = new {
 
 An _anonymous function_ is a function without a name.
 
-Most modern general-purpose programming languages support anonymous functions,
-under names such as _lamba expressions_, _arrow functions_, _function literals_, _closures_, or _procs_.
+Most modern general-purpose programming languages support anonymous functions, under names such as _lamba expressions_, _arrow functions_, _function literals_, _closures_, or _procs_.
 
 Anonymous functions have their own literal syntax:
 
@@ -4304,6 +4380,7 @@ Anonymous functions have their own literal syntax:
 (param) -> expr // <2>
 (param1, param2, ..., paramN) -> expr // <3>
 ----
+
 <1> Zero-parameter lambda expression
 <2> Single-parameter lambda expression
 <3> Multi-parameter lambda expression
@@ -4374,8 +4451,7 @@ addToA = (b: Number) -> a + b
 list = List(1, 2, 3).map(addToA) // List(43, 44, 45)
 ----
 
-Single-parameter anonymous functions can also be applied with the `|>` (pipe) operator,
-which expects a function argument to the left and an anonymous function to the right.
+Single-parameter anonymous functions can also be applied with the `|>` (pipe) operator, which expects a function argument to the left and an anonymous function to the right.
 The pipe operator works especially well for chaining multiple functions:
 
 [source%tested,{pkl}]
@@ -4388,6 +4464,7 @@ num = 4
   |> add2
   |> mul3 // <1>
 ----
+
 <1> result: `42`
 
 Like methods, anonymous functions can be recursive:
@@ -4397,6 +4474,7 @@ Like methods, anonymous functions can be recursive:
 factor = (n: Number(isPositive)) -> if (n < 2) n else n * factor.apply(n - 1)
 num = factor.apply(5) // <1>
 ----
+
 <1> result: `120`
 
 [[mixins]]
@@ -4449,6 +4527,7 @@ barnOwlWithDiet = barnOwl |> withDiet
 ----
 
 `withDiet` can be generalized by turning it into a factory method for mixins:
+
 [source%tested,{pkl}]
 ----
 function withDiet(_diet: String) = new Mixin {
@@ -4464,13 +4543,11 @@ Mixins can themselves be modified with <<function-amending,function amending>>.
 ==== Function Amending
 
 An anonymous function that returns an object can be amended with the same syntax as that object.
-The result is a new function that accepts the same number of parameters as the original function,
-applies the original function to them, and amends the returned object.
+The result is a new function that accepts the same number of parameters as the original function, applies the original function to them, and amends the returned object.
 
 Function amending is a special form of function composition.
 Thanks to function amending, link:{uri-stdlib-Listing-default}[Listing.default]
-and link:{uri-stdlib-Mapping-default}[Mapping.default] can be treated as if they were objects,
-only gradually revealing their true (single-parameter function) nature:
+and link:{uri-stdlib-Mapping-default}[Mapping.default] can be treated as if they were objects, only gradually revealing their true (single-parameter function) nature:
 
 [source%tested,{pkl}]
 ----
@@ -4483,13 +4560,13 @@ birds = new Mapping {
   }
 }
 ----
+
 <1> Amends the `default` function, which returns a default mapping value given a mapping key, and sets property `diet`.
 <2> Implicitly applies the amended `default` function and amends the returned object with property `lifespan`.
 
 The result is a mapping whose entry `"Pigeon"` has both `diet` and `lifespan` set.
 
-When amending an anonymous function, it is possible to access its parameters
-by declaring a comma-separated, arrow (`->`) terminated parameter list after the opening curly brace (`{`).
+When amending an anonymous function, it is possible to access its parameters by declaring a comma-separated, arrow (`->`) terminated parameter list after the opening curly brace (`{`).
 
 Once again, this is especially useful to configure a listing's or mapping's `default` function:
 
@@ -4503,9 +4580,10 @@ birds = new Mapping {
   ["Barn owl"] {} // <3>
 }
 ----
+
 <1> Amends the `default` function and sets the `name` property to the mapping entry's key.
-    To access the `default` function's key parameter, it is declared with `key ->`.
-    (Any other parameter name could be chosen, but `key` is customary for default functions.)
+To access the `default` function's key parameter, it is declared with `key ->`.
+(Any other parameter name could be chosen, but `key` is customary for default functions.)
 <2> Defines a mapping entry with key `"Pigeon"`
 <3> Defines a mapping entry with key `"Barn owl"`
 
@@ -4614,6 +4692,7 @@ They come in two variants:
 . `when (<condition>) { <members> } else { <members> }`
 
 The following code conditionally generates properties `hobby` and `idol`:
+
 [source%tested,{pkl}]
 ----
 isSinger = true
@@ -4665,6 +4744,7 @@ abilitiesByBird {
   ["Parrot"] = "whistling"
 }
 ----
+
 <1> conditional element
 <2> conditional entry
 
@@ -4795,6 +4875,7 @@ properties2 {
   ...properties1 // <3>
 }
 ----
+
 <1> Spreads entries `["Pigeon"] = "Piggy the Pigeon"` and `["Barn owl"] = "Barney the Barn owl"`
 <2> Spreads elements `1` and `2`
 <3> Spreads properties `name = "Pigeon"` and `diet = "Seeds"`
@@ -4824,7 +4905,8 @@ The following table describes how different iterables turn into object members:
 These types can only be spread into enclosing objects that support that member type.
 For example, a `List` can be spread into a `Listing`, but cannot be spread into a `Mapping`.
 
-In some ways, spread syntax can be thought of as a shorthand for a xref:for-generators[for generator]. One key difference is that spread syntax can generate properties, which is not possible with a for generator.
+In some ways, spread syntax can be thought of as a shorthand for a xref:for-generators[for generator].
+One key difference is that spread syntax can generate properties, which is not possible with a for generator.
 
 [NOTE]
 ====
@@ -4845,6 +4927,7 @@ newPets {
   ["Pigeon"] = "Toby the Pigeon" // <1>
 }
 ----
+
 <1> Error: Duplicate definition of member `"Pigeon"`.
 ====
 
@@ -4892,6 +4975,7 @@ updated = (environmentVariables) {
   }
 }
 ----
+
 <1> a listing of environment variables
 <2> amend element(s) whose name equals "PARROT" +
 (`name` is shorthand for `this.name`)
@@ -4907,6 +4991,7 @@ Matching members are amended (`{ ... }`) or overridden (`= <new-value>`).
 Normally, the `this` keyword references the enclosing object's receiver.
 
 Example:
+
 [source,pkl]
 ----
 bird {
@@ -4917,6 +5002,7 @@ bird {
 When used inside a <<type-constraints,type constraint>>, `this` refers to the value being tested.
 
 Example:
+
 [source,pkl]
 ----
 port: UInt16(this > 1000)
@@ -4925,6 +5011,7 @@ port: UInt16(this > 1000)
 When used inside a <<member-predicates,member predicate>>, `this` refers to the value being matched against.
 
 Example:
+
 [source,pkl]
 ----
 animals {
@@ -4941,6 +5028,7 @@ The receiver is the bottom-most object in the <<prototype-chain>>.
 That means that, within the context of an amending object, the receiver is the amending object.
 
 Example:
+
 [source,pkl]
 ----
 hidden lawyerBird {
@@ -4951,6 +5039,7 @@ polly = (lawyerBird) {
   name = "Polly" // <1>
 }
 ----
+
 <1> Polly has title `"Polly, Esq."`.
 
 [[outer-keyword]]
@@ -4961,6 +5050,7 @@ The `outer` keyword references the <<receiver,receiver>> of the immediately oute
 It can be useful to disambiguate a lookup that might otherwise resolve elsewhere.
 
 Example:
+
 [source%tested,pkl]
 ----
 foo {
@@ -4970,6 +5060,7 @@ foo {
   }
 }
 ----
+
 <1> References `bar` one level higher.
 
 Note that `outer` cannot be chained.
@@ -4998,6 +5089,7 @@ When used within a class, it refers to the superclass's prototype.
 When used within an object, it refers to the parent object in the amends chain.
 
 Example:
+
 [source%tested,pkl]
 ----
 bird = new { name = "Quail" }
@@ -5015,6 +5107,7 @@ class InsectavorousBird extends Bird {
     super.canEat(food) || food == "insect" // <2>
 }
 ----
+
 <1> Result: `"Ms. Quail"`
 <2> Calls parent class method `canEat()`
 
@@ -5040,6 +5133,7 @@ some {
   }
 }
 ----
+
 <1> Resolves to `"Quail"`
 
 When used as a type, it is the module's class.
@@ -5050,11 +5144,11 @@ module Bird
 
 friend: module // <1>
 ----
+
 <1> Is class `Bird`
 
 The `module` type is a _self type_.
-If the module is extended by another module, the `module` type refers to the extending module when
-in the context of that module.
+If the module is extended by another module, the `module` type refers to the extending module when in the context of that module.
 
 [[glob-patterns]]
 === Glob Patterns
@@ -5096,8 +5190,7 @@ NOTE: Unlike globs within shells, the `*` wildcard includes names that start wit
 [[character-classes]]
 ==== Character Classes
 
-Character classes are sequences delimited by the `[` and `]` characters, and represent a single
-character as described by the sequence within the enclosed brackets.
+Character classes are sequences delimited by the `[` and `]` characters, and represent a single character as described by the sequence within the enclosed brackets.
 For example, the pattern `[abc]` means "a single character that is a, b, or c".
 
 Character classes may be negated using `!`.
@@ -5119,11 +5212,13 @@ For example, the glob pattern `[]abc]` matches a single character that is either
 Sub-patterns are glob patterns delimited by the `{` and `}` characters, and separated by the `,` character.
 For example, the pattern `{pigeon,parrot}` will match either `pigeon` or `parrot`.
 
-Sub-patterns cannot be nested. The pattern `{foo,{bar,baz}}` is not a valid glob pattern, and an error will be thrown during evaluation.
+Sub-patterns cannot be nested.
+The pattern `{foo,{bar,baz}}` is not a valid glob pattern, and an error will be thrown during evaluation.
 
 ==== Escapes
 
-The escape character (`\`) can be used to remove the special meaning of a character. The following escapes are valid:
+The escape character (`\`) can be used to remove the special meaning of a character.
+The following escapes are valid:
 
 * `\[`
 * `\*`
@@ -5133,9 +5228,12 @@ The escape character (`\`) can be used to remove the special meaning of a charac
 
 All other escapes are considered a syntax error and an error is thrown.
 
-TIP: If incorporating escape characters into a glob pattern, use <<custom-string-delimiters,custom string delimiters>> to express the glob pattern. For example, `+++import*(#"\{foo.pkl"#)+++`. This way, the backslash is interpreted as a backslash and not a string escape.
+TIP: If incorporating escape characters into a glob pattern, use <<custom-string-delimiters,custom string delimiters>> to express the glob pattern.
+For example, `+++import*(#"\{foo.pkl"#)+++`.
+This way, the backslash is interpreted as a backslash and not a string escape.
 
 ==== Examples
+
 [cols="1,2"]
 |===
 |Pattern |Description
@@ -5144,7 +5242,7 @@ TIP: If incorporating escape characters into a glob pattern, use <<custom-string
 |Anything suffixed by `.pkl`, or `.pkg`.
 
 |`**.y{a,}ml`
-|Anything suffixed by either `yml` or `yaml`, crossing directory boundaries. 
+|Anything suffixed by either `yml` or `yaml`, crossing directory boundaries.
 
 |`birds/{\*.yml,*.json}`
 |Anything within the `birds` subdirectory that ends in `.yml` or `.json`. This pattern is equivalent to `birds/*.{yml,json}`.
@@ -5184,6 +5282,7 @@ Backticks are not part of a quoted identifier's name, and surrounding an already
 res1 = `number` // <2>
 res2 = number // <3>
 ----
+
 <1> Equivalent to `number = 42`
 <2> References property `{backtick}number{backtick}`
 <3> Also references property `{backtick}number{backtick}`
@@ -5231,8 +5330,7 @@ They are programmatically accessible via the link:{uri-stdlib-reflectModule}/[pk
 * Start each sentence on a new line and capitalize the first letter.
 * End each sentence with a punctuation mark.
 * The first paragraph of a doc comment is its _summary_.
-  Keep the summary short (a single sentence is common)
-  and insert an empty line (`///`) before the next paragraph.
+Keep the summary short (a single sentence is common) and insert an empty line (`///`) before the next paragraph.
 ====
 
 Doc comments can be attached to module, class, type alias, property, and method declarations.
@@ -5378,8 +5476,7 @@ The most common use cases for annotations are to add metadata to influence behav
 
 Annotations are regular Pkl objects whose class extends link:{uri-stdlib-Annotation}[`Annotation`].
 Annotation instances are defined similarly to regular <<classes, class instances>>, but instead of using the `new` keyword the class name is prefixed with `@`.
-The object body may be omitted if an annotation's class has no properties or the declared annotation does not override any of the class's default values
-Multiple annotations may be defined on a member.
+The object body may be omitted if an annotation's class has no properties or the declared annotation does not override any of the class's default values Multiple annotations may be defined on a member.
 If the annotated member has a <<doc-comments,doc comment>>, the annotation is defined between the comment and the member.
 
 [source%tested,{pkl}]
@@ -5403,11 +5500,17 @@ class Bird {
   function greet(greeting: String): String = "\(greeting), \(name)!"
 }
 ----
-<1> An annotation applied to a module. The annotation(s) must precede the `module` clause and follow the doc comment. The object body is omitted.
+
+<1> An annotation applied to a module.
+The annotation(s) must precede the `module` clause and follow the doc comment.
+The object body is omitted.
 <2> The definition of an annotation class.
-<3> An annotation appied to a class. The object body is omitted.
-<4> An annotation applied to a property. The object body is included because the `description` property is overridden.
-<5> An annotation applied to a method. The object body is included because the `description` property is overridden.
+<3> An annotation appied to a class.
+The object body is omitted.
+<4> An annotation applied to a property.
+The object body is included because the `description` property is overridden.
+<5> An annotation applied to a method.
+The object body is included because the `description` property is overridden.
 <6> A second annotation applied to the same method.
 
 [[name-resolution]]
@@ -5421,25 +5524,22 @@ a = x + 1
 ----
 
 The call site's "variable" syntax reveals that `x` refers to a _LAMP_
-(let binding, anonymous function parameter, method parameter, or property) definition. But which one?
+(let binding, anonymous function parameter, method parameter, or property) definition.
+But which one?
 
 To answer this question, Pkl follows these steps:
 
-. Search the lexically enclosing scopes of `x`,
-  starting with the scope in which `x` occurs and continuing outwards
-  up to and including the enclosing module's top-level scope, for a LAMP definition named `x`.
-  If a match is found, this is the answer.
+. Search the lexically enclosing scopes of `x`, starting with the scope in which `x` occurs and continuing outwards up to and including the enclosing module's top-level scope, for a LAMP definition named `x`.
+If a match is found, this is the answer.
 . Search the `pkl.base` module for a top-level definition of property `x`.
-  If a match is found, this is the answer.
+If a match is found, this is the answer.
 . Search the <<prototype-chain,prototype chain>> of `this`, from bottom to top, for a definition of property `x`.
-  If a match is found, this is the answer.
+If a match is found, this is the answer.
 . Throw a "name `x` not found" error.
 
 NOTE: Pkl's LAMP name resolution is inspired by link:{uri-newspeak}[Newspeak].
 The goal is for name resolution to be stable with regard to changes in external modules.
-This is why lexically enclosing scopes are searched before the prototype chain of `this`,
-and why the prototype chains of lexically enclosing scopes are not searched,
-which sometimes requires the use of `outer.` or `module.`.
+This is why lexically enclosing scopes are searched before the prototype chain of `this`, and why the prototype chains of lexically enclosing scopes are not searched, which sometimes requires the use of `outer.` or `module.`.
 For name resolution to fully stabilize, the list of top-level properties defined in `pkl.base` needs to be freezed.
 This is tentatively planned for Pkl 1.0.
 
@@ -5450,19 +5550,18 @@ Consider this snippet of code buried deep inside a config file:
 a = x("foo") + 1
 ----
 
-The call site's method call syntax reveals that `x` refers to a method definition. But which one?
+The call site's method call syntax reveals that `x` refers to a method definition.
+But which one?
 
 To answer this question, Pkl follows these steps:
 
-. Search the call sites' lexically enclosing scopes,
-  starting with the scope in which the call site occurs and continuing outwards
-  up to and including the enclosing module's top-level scope, for a definition of method `x`.
-  If a match is found, this is the answer.
+. Search the call sites' lexically enclosing scopes, starting with the scope in which the call site occurs and continuing outwards up to and including the enclosing module's top-level scope, for a definition of method `x`.
+If a match is found, this is the answer.
 . Search the `pkl.base` module for a top-level definition of method `x`.
-  If a match is found, this is the answer.
+If a match is found, this is the answer.
 . Search the class inheritance chain of `this`, starting with the class of `this`
-  and continuing upwards until and including class `Any`, for a method named `x.`
-  If a match is found, this is the answer.
+and continuing upwards until and including class `Any`, for a method named `x.`
+If a match is found, this is the answer.
 . Throw a "method `x` not found" error.
 
 NOTE: Pkl does not support arity or type-based method overloading.
@@ -5475,10 +5574,10 @@ Pkl's object model is based on link:{uri-prototypical-inheritance}[prototypical 
 The prototype chain of objectfootnote:[An instance of `Listing`, `Mapping`, `Dynamic`, or (a subclass of) `Typed`.] `x` contains, from bottom to top:
 
 1. The chain of objects amended to create `x`, ending in `x` itself, in reverse order.footnote:[All objects in this chain are instances of the same class,
-   except when a direct conversion between listing, mapping, dynamic, and typed object has occurred.
-   For example, `Typed.toDynamic()` returns a dynamic object that amends a typed object.]
+ except when a direct conversion between listing, mapping, dynamic, and typed object has occurred.
+ For example, `Typed.toDynamic()` returns a dynamic object that amends a typed object.]
 2. The prototype of the class of the top object in (1).
-   If no amending took place, this is the class of `x`.
+If no amending took place, this is the class of `x`.
 3. The prototypes of the superclasses of (2).
 
 The prototype of class `X` is an instance of `X` that defines the defaults for properties defined in `X`.
@@ -5562,8 +5661,8 @@ For a complete list of keywords, consult field `Lexer.KEYWORDS` in {uri-github-P
 === Blank Identifiers
 
 Blank identifiers can be used in many places to ignore parameters and variables. +
-`_` is not a valid identifier. To use it as a parameter or variable name,
-it needs to be enclosed in backticks: +`_`+.
+`_` is not a valid identifier.
+To use it as a parameter or variable name, it needs to be enclosed in backticks: +`_`+.
 
 ==== Functions and methods
 
@@ -5640,6 +5739,7 @@ dependencies {
   }
 }
 ----
+
 <1> Declare dependency on `package://example.com/birds@1.0.0` with simple name "birds".
 
 These dependencies can then be imported by their simple name.
@@ -5655,6 +5755,7 @@ pigeon: Bird = new {
   name = "Pigeon"
 }
 ----
+
 <1> Dependency notation; imports path `/Bird.pkl` within dependency `package://example.com/birds@1.0.0`
 
 NOTE: Internally, Pkl assigns URI scheme `projectpackage` to project dependencies imported using dependency notation.
@@ -5697,6 +5798,7 @@ package {
   packageZipUrl = "https://example.com/\(name)/\(name)@\(version).zip" // <4>
 }
 ----
+
 <1> The display name of the package.For display purposes only.
 <2> The package URI, without the version part.
 <3> The version of the package.
@@ -5735,6 +5837,7 @@ package {
   packageZipUrl = "https://example.com/birds@\(version).zip"
 }
 ----
+
 <1> Specify relative project `../fruit` as a dependency.
 
 .fruit/PklProject
@@ -5773,6 +5876,7 @@ $ pkl eval <module> --external-resource-reader <scheme>=<executable> --external-
 ----
 
 External readers may also be configured in a <<projects, Project's>> `PklProject` file.
+
 [source,{pkl}]
 ----
 evaluatorSettings {
@@ -5816,6 +5920,7 @@ email = "pigeon@example.com"
 
 In this example, the external reader may provide both `ldap:` and `ldaps:` schemes.
 To support both schemes during evaluation, both would need to be registered explicitly:
+
 [source,text]
 ----
 $ pkl eval <module> --external-resource-reader ldap=pkl-ldap --external-resource-reader ldaps=pkl-ldap
@@ -5842,3 +5947,167 @@ NOTE: To effectively mirror packages from pkg.pkl-lang.org, there must be two re
 
 NOTE: Pkl does not provide any tooling to run a mirror server.
 To fully set up mirroring, an HTTP(s) server will need be running, and which mirrors the same assets byte-for-byte.
+
+[[references]]
+=== References
+
+pkldoc:Reference[pkl:ref]s (provided by the `pkl.ref` module) are an advanced API design tool that serves use cases where configuration must refer to values that are not known at evaluation time.
+This is common in task-based execution systems like CI platforms and Infrastructure as Code (IaC) tools.
+Today, many such systems encode this kind of reference using strings containing an expression language; this approach makes it difficult to write and debug such references, as target systems may not know where in the Pkl source an error occurred.
+`Reference` provides this functionality in-language, so users benefit from evaluation-time type checking with accurate error messages and editor support for code completion. 
+
+IMPORTANT: In general, a library that makes use of references should handle all creation of references as part of its API; end-users of the library should not create references directly.
+In most cases, end users should never need to import the `pkl:ref` module.
+
+An instance of `Reference<D, T>` consist of four parts:
+
+* Domain - An instance of a subclass of `pkl.ref#Domain`, corresponding to the `D` type argument.
+A domain determines which `Reference` instances are compatible and how they are rendered as strings.
+The domain of a `Reference` may be retrieved using its `getDomain()` method.
+* Data - An arbitrary value that may contain domain-specific information about the referenced value.
+The data of a `Reference` may be retrieved using its `getData()` method.
+* Path - A `List` of `ref.Access` values indicating how the reference was accessed (by property or subscript).
+The path of a `Reference` may be retrieved using its `getPath()` method.
+* Referent type - The type of the value that the reference refers to, corresponding to the `T` type argument.
+
+The key feature of a `Reference` is that it inherits properties and subscript behavior from its referent type.
+When a reference is accessed, either via qualified property access (`<reference>.<property>`) or subscript (`<reference>[<key>]`), a new reference is returned:
+
+* The new reference shares its domain and data with the original reference.
+* The new reference's path extends the original reference's path, adding a new `ref.Access` instance describing the accessed property name or subscript key.
+* The new reference's referent type is the type of the accessed property or subscript value of the original referent type.
+Any type constraints within the new referent type are erased and type constraints are not allowed in the referent (second) type argument of any Reference type annotations.
+
+There are some restrictions on properties that may be referenced; attempting to reference these properties will fail:
+
+* Properties marked `external` or `local`
+* All properties of `external` classes
+* The `default` property of `Listing`, `Mapping`, and `Dynamic`
+* Properties originally defined in `external` classes (this only includes `Module.output`)
+
+pkldoc:Reference[pkl:ref] instances are created using the constructor method pkldoc:#Reference()[pkl:ref].
+This method accepts three parameters:
+
+* `domain` - An instance of a `ref.Domain` subclass; its type becomes the `D` type argument of the resulting `Reference` instance.
+* `class` - A `Class` instance that will be the referent type of the returned `Reference`; it is the `T` type argument of the resulting instance.
+* `data` - A domain-specific value used to identify the root or context of the reference.
+
+[NOTE]
+====
+It is only possible to construct new references with a referent type that is a simple (non-generic) class type.
+To obtain a reference to values of other types (generic, typealias, nullable, union, etc.), libraries must wrap those types in a class:
+
+[source,{pkl}%parsed]
+----
+import "pkl:ref"
+
+class TypeHolder {
+  $: *Listing<String>? | Mapping<UInt, String> // <1>
+}
+
+local r: ref.Reference<MyDomain, Listing<String>? | Mapping<UInt, String>> =
+  ref.Reference(myDomain, TypeHolder, null).$ // <2>
+----
+<1> Define a "holder" class with a property of the desired type.
+<2> Access the `$` property of the reference to get a reference to the desired non-class type.
+====
+
+Here's a realistic example of how references might be used:
+
+[source,pkl]
+.Workflow.pkl
+----
+import "pkl:ref"
+
+class Domain extends ref.Domain { // <1>
+  function renderReference(reference: ref.Reference<Domain, Any>): String =
+    if (reference.getData() is Task)
+      let (path = reference.getPath().map((access) -> access.property ?? access.key.toString()))
+        "${\(reference.getData().name)/\(path.join("/"))}"
+    else
+      throw("Domain can only render Reference(getData() is Task) value")
+}
+
+typealias Ref<T> = ref.Reference<Domain, T> // <2>
+
+abstract class Task { // <3>
+  name: String
+}
+
+class TaskA extends Task {
+  input1: String | Ref<String> // <4>
+  input2: Int | Ref<Int>
+
+  hidden fixed outputs: Ref<TaskAOutputs> = ref.Reference(new Domain {}, TaskAOutputs, this) // <5>
+}
+
+abstract class TaskAOutputs { // <6>
+  foo: String
+  bar: Int
+}
+
+class TaskB extends Task {
+  inputX: String | Ref<String>
+  inputY: Int | Ref<Int>
+}
+
+tasks: Listing<Task>(isDistinctBy((it) -> it.name)) // <7>
+
+output {
+  renderer {
+    converters {
+      [ref.Reference] = (it) -> it.toString() // <8>
+    }
+  }
+}
+----
+<1> Define a `ref.Domain` subclass that determines how `Reference` instances are rendered as strings.
+<2> For convenience, create a type alias for references of this domain.
+<3> Create a new base class that can be referenced. `Task` instances will be identified by their `name` value.
+<4> In a specific `Task` subclass, input values accept both literal values and references to the same type.
+<5> `Task` subclasses that provide output values define an `outputs` property where the referent type is `TaskAOutputs`.
+<6> The `TaskAOutputs` class defines the possible runtime outputs of `TaskA` tasks. It is `abstract` and never instantiated, only used for producing references.
+<7> Users provide `Task` instances with unique `name` values.
+<8> Delegate to `Domain` for rendering `Reference` values.
+
+[source,pkl]
+.myWorkflow.pkl
+----
+amends "Workflow.pkl"
+
+local doA: TaskA = new { // <1>
+  name = "doA"
+  input1 = "hi"
+  input2 = 123
+}
+
+local doB: TaskB = new {
+  name = "doB"
+  inputX = doA.outputs.foo // <2>
+  inputY = doA.outputs.bar
+}
+
+tasks {
+  doA
+  doB
+}
+----
+<1> Instantiate a `TaskA` instance with only concrete values as inputs.
+<2> Instantiate a `TaskB` instance with both inputs derived from the outputs of `doA`.
+
+The result of evaluating `myWorkflow.pkl` is
+[source,pkl]
+----
+tasks {
+  new {
+    name = "doA"
+    input1 = "hi"
+    input2 = 123
+  }
+  new {
+    name = "doB"
+    inputX = "${doA/foo}"
+    inputY = "${doA/bar}"
+  }
+}
+----

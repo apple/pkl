@@ -166,7 +166,7 @@ external class Reference<out D, out T> {
 abstract class Domain {
   /// Must be overridden by domain classes to determine how [Reference] instances are transformed to
   /// strings by [Reference.toString()] and string interpolation.
-  abstract function renderReference(refrerence: Reference<Domain, Any>): String
+  abstract function renderReference(reference: Reference<Domain, Any>): String
 }
 
 /// Represents a property or subscript access as part of a [Reference]'s path.

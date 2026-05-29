@@ -642,25 +642,25 @@ public final class VmClass extends VmValue {
 
       var exportedAnnotations = new ArrayList<PObject>();
       var properties =
-        CollectionUtils.<String, PClass.Property>newLinkedHashMap(
-          EconomicMaps.size(declaredProperties));
+          CollectionUtils.<String, PClass.Property>newLinkedHashMap(
+              EconomicMaps.size(declaredProperties));
       var methods =
-        CollectionUtils.<String, PClass.Method>newLinkedHashMap(
-          EconomicMaps.size(declaredMethods));
+          CollectionUtils.<String, PClass.Method>newLinkedHashMap(
+              EconomicMaps.size(declaredMethods));
 
       // set pClass before exporting class members to prevent
       // infinite recursion in case of cyclic references
       __pClass =
-        new PClass(
-          VmUtils.exportDocComment(docComment),
-          new SourceLocation(headerSection.getStartLine(), sourceSection.getEndLine()),
-          VmModifier.export(modifiers, true),
-          exportedAnnotations,
-          classInfo,
-          typeParameters,
-          properties,
-          methods,
-          moduleClass);
+          new PClass(
+              VmUtils.exportDocComment(docComment),
+              new SourceLocation(headerSection.getStartLine(), sourceSection.getEndLine()),
+              VmModifier.export(modifiers, true),
+              exportedAnnotations,
+              classInfo,
+              typeParameters,
+              properties,
+              methods,
+              moduleClass);
 
       for (var parameter : typeParameters) {
         parameter.initOwner(__pClass);
@@ -680,8 +680,7 @@ public final class VmClass extends VmValue {
       }
 
       for (var method : EconomicMaps.getValues(declaredMethods)) {
-        if (method.isLocal())
-          continue;
+        if (method.isLocal()) continue;
         methods.put(method.getName().toString(), method.export(__pClass));
       }
 
