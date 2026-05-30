@@ -32,6 +32,7 @@ import scala.language.implicitConversions
  * hand-author Scala classes with other collection shapes (Set, Vector, mutable collections, etc.)
  * can register their own converter factories.
  */
+//noinspection ScalaWeakerAccess
 object ScalaConverterFactories {
 
   private type Conv1[S, T] = Type => (S, CachedSourceTypeInfo, ValueMapper) => T

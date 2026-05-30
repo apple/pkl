@@ -28,6 +28,7 @@ import scala.util.matching.Regex
  * Provides conversions between Java types backing PKL and Scala types, enabling seamless
  * interoperability for configuration values within PKL.
  */
+//noinspection ScalaWeakerAccess
 object ScalaConversions {
 
   val pStringToInstant: Conversion[String, Instant] = {
