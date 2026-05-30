@@ -22,7 +22,6 @@ import java.lang.reflect.{Constructor, Type}
 import java.util.Optional
 import scala.collection.immutable
 import scala.jdk.CollectionConverters.*
-import scala.jdk.OptionConverters.*
 import scala.language.implicitConversions
 
 /**
@@ -45,13 +44,11 @@ object ScalaConverterFactories {
 
   val pObjectToCaseClass: ConverterFactory = new PObjectToDataObject {
     override def selectConstructor(clazz: Class[?]): Optional[Constructor[?]] = {
-      clazz.getDeclaredConstructors.headOption
-        .filter(_ => {
-          // case classes all implement Product
-          clazz.getInterfaces
-            .exists(i => classOf[scala.Product].isAssignableFrom(i))
-        })
-        .toJava
+      // case classes all implement Product
+      if (!clazz.getInterfaces.exists(i => classOf[scala.Product].isAssignableFrom(i))) {
+        return Optional.empty()
+      }
+      super.selectConstructor(clazz)
     }
   }
 
