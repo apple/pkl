@@ -15,7 +15,12 @@
  */
 package org.pkl.config.scala.mapper
 
-import org.pkl.config.java.mapper.{ConverterFactory, PObjectToDataObject, ValueMapper}
+import org.pkl.config.java.mapper.{
+  ConversionException,
+  ConverterFactory,
+  PObjectToDataObject,
+  ValueMapper
+}
 import org.pkl.core.{PClassInfo, PNull, Pair}
 
 import java.lang.reflect.{Constructor, Type}
@@ -100,12 +105,38 @@ object ScalaConverterFactories {
       t1 => (value, cache, vm) => value.asScala.iterator.map(cache.updateAndGet(_, t1, vm)).toSeq
     )
 
+  val pCollectionToImmutableSet: ConverterFactory = CachedConverterFactories
+    .forParametrizedType1[java.util.Collection[?], immutable.Set[?]](
+      x => x == PClassInfo.Collection || x == PClassInfo.Set || x == PClassInfo.List,
+      t1 => (value, cache, vm) => value.asScala.iterator.map(cache.updateAndGet(_, t1, vm)).toSet
+    )
+
+  /**
+   * Direct Either dispatch. Tries Left first, falls back to Right if Left's converter rejects the
+   * source. Useful when targeting `Either[A, B]` directly via `Config.to[T]`; the case-class field
+   * path uses constructor reflection and never reaches this factory.
+   */
+  val pAnyToScalaEither: ConverterFactory = CachedConverterFactories
+    .forParametrizedType2[Any, Either[?, ?]](
+      _ => true,
+      (leftT, rightT) => { (value, cc, vm) =>
+        val (s1, s2) = cc
+        try Left(s1.updateAndGet(value, leftT, vm))
+        catch {
+          case _: ConversionException | _: IllegalArgumentException =>
+            Right(s2.updateAndGet(value, rightT, vm))
+        }
+      }
+    )
+
   // Do not shuffle converter factories within this list. Order matters.
   // As a general rule, try to keep more generic types lower and more specific higher
   val all: List[ConverterFactory] = List(
     pAnyToOption,
     pPairToTuple,
+    pAnyToScalaEither,
     pMapToImmutableMap,
+    pCollectionToImmutableSet,
     pCollectionToImmutableSeq,
     pObjectToCaseClass,
     PStringToScalaEnum

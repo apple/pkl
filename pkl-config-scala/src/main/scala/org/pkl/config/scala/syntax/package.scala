@@ -15,6 +15,7 @@
  */
 package org.pkl.config.scala
 
+import izumi.reflect.Tag
 import org.pkl.config.java.mapper.ValueMapperBuilder
 import org.pkl.config.java.{
   Config,
@@ -23,10 +24,9 @@ import org.pkl.config.java.{
   ConfigEvaluator,
   ConfigEvaluatorBuilder
 }
-import org.pkl.config.scala.mapper.{ScalaConversions, ScalaConverterFactories}
+import org.pkl.config.scala.mapper.{ScalaConversions, ScalaConverterFactories, ScalaTypeReifier}
 
 import scala.jdk.CollectionConverters._
-import scala.reflect.ClassTag
 
 /**
  * Entry point for Scala-specific extensions to PKL configuration, enabling type conversions and
@@ -125,11 +125,13 @@ package object syntax {
    * Extension for `Config`, adding a type-safe `to` method to retrieve values as Scala types.
    *
    * The `to[T]` method provides an intuitive way to retrieve values from a PKL `Config` as specific
-   * Scala types. For nullable PKL values, declare the target as `Option[T]`; otherwise a
-   * `ConversionException` propagates from the underlying `ValueMapper`.
+   * Scala types. The implicit `Tag[T]` (from izumi-reflect) carries the full reified type at the
+   * call site, so generic arguments, Scala 3 union components, and singleton-literal types are
+   * preserved instead of being erased to a raw `Class`. For nullable PKL values, declare the target
+   * as `Option[T]`; otherwise a `ConversionException` propagates from the underlying `ValueMapper`.
    *
-   * @param ct
-   *   Implicit `ClassTag` of the target type `T`.
+   * @param tag
+   *   Implicit `Tag` of the target type `T` (auto-derived).
    *
    * @throws ConversionException
    *   if the value cannot be converted to the specified type `T`.
@@ -139,9 +141,10 @@ package object syntax {
    *   {{{
    * val myPklConfig: Config = // load or build a PKL config
    * val config: MyCaseClass = myPklConfig.to[MyCaseClass]
+   * val ints:   Seq[Int]    = myPklConfig.get("xs").to[Seq[Int]]
    *   }}}
    */
   implicit class ConfigSyntaxExtension(val x: Config) extends AnyVal {
-    def to[T](implicit ct: ClassTag[T]): T = x.as[T](ct.runtimeClass)
+    def to[T](implicit tag: Tag[T]): T = ScalaTypeReifier.convert[T](x)
   }
 }
