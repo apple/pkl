@@ -15,34 +15,37 @@
  */
 package org.pkl.config.scala.mapper
 
-import org.pkl.config.java.mapper.{Types, ValueMapperBuilder}
-import org.pkl.core.{Duration, Evaluator, PClassInfo, PObject}
+import org.pkl.config.java.mapper.{Types, ValueMapper, ValueMapperBuilder}
+import org.pkl.core.{Duration, Evaluator, PModule, PObject}
 import org.pkl.core.ModuleSource.modulePath
-import org.scalatest.BeforeAndAfterAll
-import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.Outcome
+import org.scalatest.funsuite.FixtureAnyFunSuite
 import org.scalatest.matchers.should.Matchers.*
 import org.pkl.config.scala.syntax.*
 
 import scala.jdk.CollectionConverters.*
 
-class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
+class PPairToScalaTupleSpec extends FixtureAnyFunSuite {
   import PPairToScalaTupleSpec.*
 
-  private val evaluator = Evaluator.preconfigured()
+  case class TestFixture(module: PModule, mapper: ValueMapper)
 
-  private val module = {
-    evaluator.evaluate(
-      modulePath("org/pkl/config/scala/mapper/PPairToScalaTuple.pkl")
-    )
+  type FixtureParam = TestFixture
+
+  override def withFixture(test: OneArgTest): Outcome = {
+    val evaluator = Evaluator.preconfigured()
+    try {
+      val module = evaluator.evaluate(
+        modulePath("org/pkl/config/scala/mapper/PPairToScalaTuple.pkl")
+      )
+      val mapper = ValueMapperBuilder.preconfigured().forScala().build()
+      withFixture(test.toNoArgTest(TestFixture(module, mapper)))
+    } finally {
+      evaluator.close()
+    }
   }
 
-  private val mapper = ValueMapperBuilder.preconfigured().forScala().build()
-
-  override def afterAll(): Unit = {
-    evaluator.close()
-  }
-
-  test("Pair or scalar values") {
+  test("Pair or scalar values") { case TestFixture(module, mapper) =>
     val ex1 = module.getProperty("ex1")
     val mapped: (Int, Duration) = {
       mapper.map(
@@ -58,7 +61,7 @@ class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
     mapped shouldBe (1, Duration.ofSeconds(3))
   }
 
-  test("Pair of PObject") {
+  test("Pair of PObject") { case TestFixture(module, mapper) =>
     val ex2 = module.getProperty("ex2")
     val mapped: (PObject, PObject) = {
       mapper.map(
@@ -82,7 +85,7 @@ class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
     )
   }
 
-  test("Pair of case class") {
+  test("Pair of case class") { case TestFixture(module, mapper) =>
     val ex2 = module.getProperty("ex2")
     val mapped: (Animal, Animal) = {
       mapper.map(

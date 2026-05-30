@@ -17,21 +17,31 @@ package org.pkl.config.scala
 
 import com.softwaremill.diffx.*
 import com.softwaremill.diffx.scalatest.DiffShouldMatcher.*
-import org.pkl.config.java.ConfigEvaluator
+import org.pkl.config.java.{ConfigEvaluator, ConfigEvaluatorBuilder}
 import org.pkl.config.java.mapper.ConversionException
 import org.pkl.config.scala.syntax.*
 import org.pkl.core.{Duration => PDuration, ModuleSource}
-import org.scalatest.funsuite.AnyFunSuite
+import org.scalatest.Outcome
+import org.scalatest.funsuite.FixtureAnyFunSuite
 
 import java.time.Instant
 import java.util.concurrent.TimeUnit
 import scala.concurrent.duration.{Duration, FiniteDuration}
+import scala.util.Using
 import scala.util.matching.Regex
 
-class ScalaObjectMapperSpec extends AnyFunSuite {
+class ScalaObjectMapperSpec extends FixtureAnyFunSuite {
   import ScalaObjectMapperSpec.*
 
-  test("evaluate scala types") {
+  type FixtureParam = ConfigEvaluator
+
+  override def withFixture(test: OneArgTest): Outcome = {
+    val evaluator = ConfigEvaluator.preconfigured().forScala()
+    try withFixture(test.toNoArgTest(evaluator))
+    finally evaluator.close()
+  }
+
+  test("evaluate scala types") { evaluator =>
 
     val code = {
       """
@@ -75,11 +85,7 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |""".stripMargin
     }
 
-    val result = ConfigEvaluator
-      .preconfigured()
-      .forScala()
-      .evaluate(ModuleSource.text(code))
-      .to[ObjectMappingTestContainer]
+    val result = evaluator.evaluate(ModuleSource.text(code)).to[ObjectMappingTestContainer]
 
     result shouldMatchTo ObjectMappingTestContainer(
       optionalVal1 = None,
@@ -102,7 +108,7 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
     )
   }
 
-  test("idiomatic Scala 3 enum routes through PStringToScalaEnum") {
+  test("idiomatic Scala 3 enum routes through PStringToScalaEnum") { evaluator =>
     val code = {
       """
         |module M
@@ -110,57 +116,47 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |""".stripMargin
     }
 
-    val result = ConfigEvaluator
-      .preconfigured()
-      .forScala()
-      .evaluate(ModuleSource.text(code))
-      .to[EnumContainer]
+    val result = evaluator.evaluate(ModuleSource.text(code)).to[EnumContainer]
     assert(result.color == SimpleEnum.Bbb)
   }
 
   test("unknown enum value raises ConversionException listing valid members in declaration order") {
-    val code = {
-      """
-        |module M
-        |color = "Purple"
-        |""".stripMargin
-    }
+    evaluator =>
+      val code = {
+        """
+          |module M
+          |color = "Purple"
+          |""".stripMargin
+      }
 
-    val ex = intercept[ConversionException] {
-      ConfigEvaluator
-        .preconfigured()
-        .forScala()
-        .evaluate(ModuleSource.text(code))
-        .to[EnumContainer]
-    }
-    val msg = ex.getMessage
-    assert(msg.contains("Purple"), s"expected input name in message, got: $msg")
-    val aaaIdx = msg.indexOf("Aaa")
-    val bbbIdx = msg.indexOf("Bbb")
-    val cccIdx = msg.indexOf("Ccc")
-    assert(
-      aaaIdx >= 0 && bbbIdx > aaaIdx && cccIdx > bbbIdx,
-      s"expected Aaa, Bbb, Ccc in declaration order, got: $msg"
-    )
+      val ex = intercept[ConversionException] {
+        evaluator.evaluate(ModuleSource.text(code)).to[EnumContainer]
+      }
+      val msg = ex.getMessage
+      assert(msg.contains("Purple"), s"expected input name in message, got: $msg")
+      val aaaIdx = msg.indexOf("Aaa")
+      val bbbIdx = msg.indexOf("Bbb")
+      val cccIdx = msg.indexOf("Ccc")
+      assert(
+        aaaIdx >= 0 && bbbIdx > aaaIdx && cccIdx > bbbIdx,
+        s"expected Aaa, Bbb, Ccc in declaration order, got: $msg"
+      )
   }
 
   test("Java-compat Scala 3 enum (extends java.lang.Enum) routes through PStringToEnum") {
-    val code = {
-      """
-        |module M
-        |color = "Yyy"
-        |""".stripMargin
-    }
+    evaluator =>
+      val code = {
+        """
+          |module M
+          |color = "Yyy"
+          |""".stripMargin
+      }
 
-    val result = ConfigEvaluator
-      .preconfigured()
-      .forScala()
-      .evaluate(ModuleSource.text(code))
-      .to[JavaCompatEnumContainer]
-    assert(result.color == JavaCompatEnum.Yyy)
+      val result = evaluator.evaluate(ModuleSource.text(code)).to[JavaCompatEnumContainer]
+      assert(result.color == JavaCompatEnum.Yyy)
   }
 
-  test("missing required property on case class raises ConversionException") {
+  test("missing required property on case class raises ConversionException") { evaluator =>
     val code = {
       """
         |module M
@@ -169,41 +165,34 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
     }
 
     val ex = intercept[ConversionException] {
-      ConfigEvaluator
-        .preconfigured()
-        .forScala()
-        .evaluate(ModuleSource.text(code))
-        .to[Person]
+      evaluator.evaluate(ModuleSource.text(code)).to[Person]
     }
     val msg = ex.getMessage
     assert(msg.contains("age"), s"expected missing property name in message, got: $msg")
   }
 
   test("type mismatch between Pkl value and case class field raises ConversionException") {
-    val code = {
-      """
-        |module M
-        |value = "not an int"
-        |""".stripMargin
-    }
+    evaluator =>
+      val code = {
+        """
+          |module M
+          |value = "not an int"
+          |""".stripMargin
+      }
 
-    val ex = intercept[ConversionException] {
-      ConfigEvaluator
-        .preconfigured()
-        .forScala()
-        .evaluate(ModuleSource.text(code))
-        .to[IntContainer]
-    }
-    val msg = ex.getMessage
-    assert(
-      msg.toLowerCase.contains("cannot convert") ||
-        msg.toLowerCase.contains("string") ||
-        msg.toLowerCase.contains("int"),
-      s"expected type-mismatch hint in message, got: $msg"
-    )
+      val ex = intercept[ConversionException] {
+        evaluator.evaluate(ModuleSource.text(code)).to[IntContainer]
+      }
+      val msg = ex.getMessage
+      assert(
+        msg.toLowerCase.contains("cannot convert") ||
+          msg.toLowerCase.contains("string") ||
+          msg.toLowerCase.contains("int"),
+        s"expected type-mismatch hint in message, got: $msg"
+      )
   }
 
-  test("pStringToScalaRegex converts Pkl String to Scala Regex") {
+  test("pStringToScalaRegex converts Pkl String to Scala Regex") { evaluator =>
     val code = {
       """
         |module M
@@ -211,15 +200,11 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |""".stripMargin
     }
 
-    val result = ConfigEvaluator
-      .preconfigured()
-      .forScala()
-      .evaluate(ModuleSource.text(code))
-      .to[RegexContainer]
+    val result = evaluator.evaluate(ModuleSource.text(code)).to[RegexContainer]
     assert(result.pattern.pattern.pattern() == "^[0-9]+$")
   }
 
-  test("pRegexToScalaRegex converts Pkl Regex to Scala Regex") {
+  test("pRegexToScalaRegex converts Pkl Regex to Scala Regex") { evaluator =>
     val code = {
       """
         |module M
@@ -227,17 +212,11 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |""".stripMargin
     }
 
-    val result = ConfigEvaluator
-      .preconfigured()
-      .forScala()
-      .evaluate(ModuleSource.text(code))
-      .to[RegexContainer]
+    val result = evaluator.evaluate(ModuleSource.text(code)).to[RegexContainer]
     assert(result.pattern.pattern.pattern() == "^[a-z]+$")
   }
 
-  test("forScala extension on ConfigEvaluatorBuilder wires Scala converters") {
-    import org.pkl.config.java.ConfigEvaluatorBuilder
-
+  test("forScala extension on ConfigEvaluatorBuilder wires Scala converters") { _ =>
     val code = {
       """
         |module M
@@ -246,18 +225,15 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |""".stripMargin
     }
 
-    val evaluator = ConfigEvaluatorBuilder.preconfigured().forScala().build()
-    try {
+    Using.resource(ConfigEvaluatorBuilder.preconfigured().forScala().build()) { evaluator =>
       val result = evaluator.evaluate(ModuleSource.text(code)).to[Person]
       assert(result == Person("via-builder", 7))
-    } finally {
-      evaluator.close()
     }
   }
 
   test(
     "inherited Java conversions: BigInteger, BigDecimal, URI, URL, Path, File, Char, Bytes, DataSize, Listing, Mapping"
-  ) {
+  ) { evaluator =>
     val code = {
       """
         |module M
@@ -275,11 +251,7 @@ class ScalaObjectMapperSpec extends AnyFunSuite {
         |""".stripMargin
     }
 
-    val result = ConfigEvaluator
-      .preconfigured()
-      .forScala()
-      .evaluate(ModuleSource.text(code))
-      .to[InheritedTypesContainer]
+    val result = evaluator.evaluate(ModuleSource.text(code)).to[InheritedTypesContainer]
 
     assert(result.bigInt == new java.math.BigInteger("9007199254740993"))
     assert(result.bigDec == java.math.BigDecimal.valueOf(1.5))
