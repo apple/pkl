@@ -22,8 +22,6 @@ import org.pkl.core.util.CodeGeneratorUtils
 import java.lang.reflect.Type as JType
 import java.util.Optional
 import scala.collection.immutable.VectorMap
-import scala.jdk.OptionConverters.*
-import scala.util.Try
 
 /**
  * Converter from Pkl `String` to Scala 3 `enum` cases.
@@ -41,22 +39,30 @@ private[mapper] object PStringToScalaEnum extends ConverterFactory {
     (sourceType, Reflection.toRawType(targetType)) match {
       case (PClassInfo.String, cls)
           if !cls.isEnum && classOf[scala.reflect.Enum].isAssignableFrom(cls) =>
-        readEnumValues(cls).map(mkConverter(cls, _)).toJava
+        Optional.of(mkConverter(cls, readEnumValues(cls)))
       case _ =>
         Optional.empty()
     }
   }
 
-  private def readEnumValues(cls: Class[?]): Option[VectorMap[String, AnyRef]] = Try {
-    val moduleCls = Class.forName(cls.getName + "$", false, cls.getClassLoader)
-    val module = moduleCls.getField("MODULE$").get(null)
-    val values = moduleCls.getMethod("values").invoke(module).asInstanceOf[Array[?]]
-    values.iterator
-      .collect { case v: scala.reflect.Enum =>
-        v.productPrefix -> v.asInstanceOf[AnyRef]
-      }
-      .to(VectorMap)
-  }.toOption
+  private def readEnumValues(cls: Class[?]): VectorMap[String, AnyRef] = {
+    try {
+      val moduleCls = Class.forName(cls.getName + "$", false, cls.getClassLoader)
+      val module = moduleCls.getField("MODULE$").get(null)
+      val values = moduleCls.getMethod("values").invoke(module).asInstanceOf[Array[?]]
+      values.iterator
+        .collect { case v: scala.reflect.Enum =>
+          v.productPrefix -> v.asInstanceOf[AnyRef]
+        }
+        .to(VectorMap)
+    } catch {
+      case e: ReflectiveOperationException =>
+        throw new ConversionException(
+          s"Failed to introspect Scala 3 enum companion for `${cls.getTypeName}`.",
+          e
+        )
+    }
+  }
 
   private def mkConverter(
       cls: Class[?],
