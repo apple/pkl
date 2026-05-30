@@ -30,9 +30,10 @@ import scala.util.Try
  *
  * Scala 3 enum cases implement `scala.reflect.Enum`. When the enum also extends `java.lang.Enum`
  * (the opt-in Java-compat form), `Class.isEnum` returns true and `pkl-config-java`'s
- * `PStringToEnum` already handles them; this factory defers in that case. For the plain
- * `enum Foo { case A, B }` form, `isEnum` is false and this factory looks up the case via the
- * companion module's synthetic `values()` method.
+ * `PStringToEnum` already handles them; this factory returns `Optional.empty()` in that case so
+ * the chain falls through to `PStringToEnum`. For the plain `enum Foo { case A, B }` form,
+ * `isEnum` is false and this factory looks up the case via the companion module's synthetic
+ * `values()` method.
  */
 private[mapper] object PStringToScalaEnum extends ConverterFactory {
 
