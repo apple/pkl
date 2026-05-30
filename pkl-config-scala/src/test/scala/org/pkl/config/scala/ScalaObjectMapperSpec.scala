@@ -15,11 +15,11 @@
  */
 package org.pkl.config.scala
 
-import com.softwaremill.diffx._
-import com.softwaremill.diffx.scalatest.DiffShouldMatcher._
+import com.softwaremill.diffx.*
+import com.softwaremill.diffx.scalatest.DiffShouldMatcher.*
 import org.pkl.config.java.ConfigEvaluator
 import org.pkl.config.java.mapper.ConversionException
-import org.pkl.config.scala.syntax._
+import org.pkl.config.scala.syntax.*
 import org.pkl.core.{Duration => PDuration, ModuleSource}
 import org.scalatest.funsuite.AnyFunSuite
 
@@ -29,7 +29,7 @@ import scala.concurrent.duration.{Duration, FiniteDuration}
 import scala.util.matching.Regex
 
 class ScalaObjectMapperSpec extends AnyFunSuite {
-  import ScalaObjectMapperSpec._
+  import ScalaObjectMapperSpec.*
 
   test("evaluate scala types") {
 

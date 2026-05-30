@@ -20,13 +20,13 @@ import org.pkl.core.{Duration, Evaluator, PClassInfo, PObject}
 import org.pkl.core.ModuleSource.modulePath
 import org.scalatest.BeforeAndAfterAll
 import org.scalatest.funsuite.AnyFunSuite
-import org.scalatest.matchers.should.Matchers._
-import org.pkl.config.scala.syntax._
+import org.scalatest.matchers.should.Matchers.*
+import org.pkl.config.scala.syntax.*
 
-import scala.jdk.CollectionConverters._
+import scala.jdk.CollectionConverters.*
 
 class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
-  import PPairToScalaTupleSpec._
+  import PPairToScalaTupleSpec.*
 
   private val evaluator = Evaluator.preconfigured()
 
@@ -48,7 +48,7 @@ class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
       mapper.map(
         ex1,
         Types.parameterizedType(
-          classOf[Tuple2[_, _]],
+          classOf[Tuple2[?, ?]],
           classOf[Integer],
           classOf[Duration]
         )
@@ -64,7 +64,7 @@ class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
       mapper.map(
         ex2,
         Types.parameterizedType(
-          classOf[Tuple2[_, _]],
+          classOf[Tuple2[?, ?]],
           classOf[PObject],
           classOf[PObject]
         )
@@ -88,7 +88,7 @@ class PPairToScalaTupleSpec extends AnyFunSuite with BeforeAndAfterAll {
       mapper.map(
         ex2,
         Types.parameterizedType(
-          classOf[Tuple2[_, _]],
+          classOf[Tuple2[?, ?]],
           classOf[Animal],
           classOf[Animal]
         )
