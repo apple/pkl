@@ -26,7 +26,7 @@ publishing {
     named<MavenPublication>("library") {
       pom {
         url.set("https://github.com/apple/pkl/tree/main/pkl-config-scala")
-        description.set("Scala extensions for pkl-config-java, a Java config library based on the Pkl config language.")
+        description.set("Scala config library based on the Pkl config language.")
       }
     }
   }
