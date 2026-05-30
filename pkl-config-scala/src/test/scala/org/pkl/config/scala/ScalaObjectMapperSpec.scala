@@ -42,7 +42,6 @@ class ScalaObjectMapperSpec extends FixtureAnyFunSuite {
   }
 
   test("evaluate scala types") { evaluator =>
-
     val code = {
       """
         |module ObjectMappingTestContainer
