@@ -51,7 +51,7 @@ object ScalaConversions {
     Conversion.of(
       PClassInfo.Duration,
       classOf[Duration],
-      (v: PDuration, _) => Duration.fromNanos(v.inNanos()).toCoarsest
+      (v: PDuration, _) => asFiniteDuration(v)
     )
   }
 
@@ -59,8 +59,16 @@ object ScalaConversions {
     Conversion.of(
       PClassInfo.Duration,
       classOf[FiniteDuration],
-      (v: PDuration, _) => FiniteDuration(v.inWholeNanos(), TimeUnit.NANOSECONDS).toCoarsest
+      (v: PDuration, _) => asFiniteDuration(v)
     )
+  }
+
+  private def asFiniteDuration(v: PDuration): FiniteDuration = {
+    val unit = v.getUnit.toTimeUnit
+    val value = v.getValue
+    val l = value.toLong
+    if (l.toDouble == value) FiniteDuration(l, unit)
+    else FiniteDuration(v.inWholeNanos(), TimeUnit.NANOSECONDS).toCoarsest
   }
 
   val pStringToScalaRegex: Conversion[String, Regex] = {

@@ -46,9 +46,10 @@ object ScalaConverterFactories {
     override def selectConstructor(clazz: Class[?]): Optional[Constructor[?]] = {
       // case classes all implement Product
       if (!clazz.getInterfaces.exists(i => classOf[scala.Product].isAssignableFrom(i))) {
-        return Optional.empty()
+        Optional.empty()
+      } else {
+        super.selectConstructor(clazz)
       }
-      super.selectConstructor(clazz)
     }
   }
 
