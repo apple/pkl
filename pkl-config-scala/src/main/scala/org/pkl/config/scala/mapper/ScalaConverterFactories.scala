@@ -62,9 +62,7 @@ object ScalaConverterFactories {
         {
           value match {
             case _: PNull | null => None
-            case v: Option[_]    => v.map(s1.updateAndGet(_, t1, vm))
-            case v: Optional[_]  => v.toScala.map(s1.updateAndGet(_, t1, vm))
-            case v               => Option(s1.updateAndGet(v, t1, vm))
+            case v               => Some(s1.updateAndGet(v, t1, vm))
           }
         }
       }
