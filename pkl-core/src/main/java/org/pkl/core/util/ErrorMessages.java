@@ -35,6 +35,8 @@ public final class ErrorMessages {
     if (args.length == 0) return errorMessage;
 
     var formatter = new MessageFormat(errorMessage, locale);
+    // TODO: we render VmValues here with VmValueRenderer, but that's not enough to properly
+    //       render all kinds of values, like Pkl Strings, for example
     var renderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
     @Nullable Object[] actualArgs = new @Nullable Object[args.length];
     for (var i = 0; i < args.length; i++) {
