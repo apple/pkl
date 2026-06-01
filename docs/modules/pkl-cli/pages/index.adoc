@@ -450,6 +450,24 @@ When enabled, type constraint failures will show intermediate values in the asse
 Use `--no-power-assertions` to disable this feature if you prefer simpler output or better performance.
 ====
 
+[[profile-cpu-output]]
+.--profile-cpu-output
+[%collapsible]
+====
+Default: (none) +
+The file to write profiler output to. Omitting this option disables CPU profiling entirely. +
+
+The CPU profiler writes output in https://github.com/google/pprof[pprof] format.
+====
+
+[[profile-cpu-sample-period]]
+.--profile-cpu-sample-period
+[%collapsible]
+====
+Default: 10 +
+The sampling duration for the CPU sampler, in milliseconds.
+====
+
 This command also takes <<common-options, common options>>.
 
 [[command-server]]

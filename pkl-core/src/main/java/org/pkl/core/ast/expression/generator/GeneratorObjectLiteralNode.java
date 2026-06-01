@@ -17,6 +17,7 @@ package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Idempotent;
@@ -216,6 +217,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
   private ObjectData executeChildren(VirtualFrame frame, Object parent, int parentLength) {
     var data = new ObjectData(parentLength);
     for (var memberNode : memberNodes) {
+      TruffleSafepoint.poll(this);
       memberNode.execute(frame, parent, data);
     }
     return data;

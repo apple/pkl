@@ -61,10 +61,13 @@ dependencies {
   implementation(libs.jlineTerminalJni)
   implementation(projects.pklServer)
   implementation(projects.pklFormatter)
+  implementation(projects.pklProfiler)
+  implementation(libs.truffleProfiler)
   implementation(libs.clikt)
 
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.wiremock)
+  testImplementation(libs.protobuf)
 }
 
 tasks.jar {
@@ -73,6 +76,9 @@ tasks.jar {
 }
 
 tasks.javadoc { enabled = false }
+
+// has its own dedicated task; see `testProfilerOutput` below
+tasks.test { exclude("**/ProfilerOutputTest.class") }
 
 tasks.shadowJar {
   archiveFileName.set("jpkl")
@@ -96,6 +102,8 @@ val testJavaExecutable =
         // executable;
         // to verify that, we don't want to include them here)
         (configurations.testRuntimeClasspath.get() - configurations.runtimeClasspath.get())
+    // has its own dedicated task; see `testProfilerOutput` below
+    exclude("**/ProfilerOutputTest.class")
   }
 
 // Setup `testJavaExecutable` tasks for multi-JDK testing.
@@ -153,12 +161,77 @@ val testEvalJavaExecutableOnOtherJdks =
     }
   }
 
+val generateReachabilityMetadata =
+  tasks.register<JavaExec>("generateReachabilityMetadata") {
+    dependsOn(tasks.javaExecutable)
+
+    // The native-image-agent requires GraalVM's java, not a regular JDK.
+    val graalVm =
+      if (buildInfo.arch == Target.Arch.AMD64) buildInfo.graalVmAmd64 else buildInfo.graalVmAarch64
+    dependsOn(
+      if (buildInfo.arch == Target.Arch.AMD64) ":installGraalVmAmd64" else ":installGraalVmAarch64"
+    )
+
+    executable(
+      File(graalVm.baseDir)
+        .resolve("bin")
+        .resolve(if (buildInfo.os.isWindows) "java.exe" else "java")
+        .absolutePath
+    )
+
+    val outputDir = layout.buildDirectory.dir("generated-reachability-metadata")
+    val outputFile = outputDir.map {
+      it.asFile.resolve("META-INF/native-image/org.pkl-lang/pkl-cli/reachability-metadata.json")
+    }
+    val profilerOutput = layout.buildDirectory.file("tmp/profile.pb.gz")
+    outputs.file(outputFile)
+
+    classpath = tasks.javaExecutable.get().outputs.files
+
+    // invoke the profiler to include metadata for protobuf serdes
+    args("eval", "--profile-cpu-output", profilerOutput.get().asFile.absolutePath, "pkl:settings")
+    setStandardOutput(OutputStream.nullOutputStream())
+
+    jvmArgumentProviders.add(
+      CommandLineArgumentProvider {
+        buildList {
+          add("-agentlib:native-image-agent=config-output-dir=${outputFile.get().parent}")
+        }
+      }
+    )
+
+    doLast {
+      if (!outputFile.get().exists()) {
+        throw GradleException("Did not create expected file: ${outputFile.get()}")
+      }
+    }
+  }
+
+val testProfilerOutput =
+  tasks.register<Test>("testProfilerOutput") {
+    group = "verification"
+    dependsOn(tasks.javaExecutable)
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    include("**/ProfilerOutputTest.class")
+    systemProperty(
+      "org.pkl.cli.testJar",
+      tasks.javaExecutable.get().outputs.files.singleFile.absolutePath,
+    )
+  }
+
+tasks.withType<NativeImageBuild>().configureEach {
+  dependsOn(generateReachabilityMetadata)
+  classpath.from(layout.buildDirectory.dir("generated-reachability-metadata"))
+}
+
 tasks.check {
   dependsOn(
     testJavaExecutable,
     testJavaExecutableOnOtherJdks,
     testEvalJavaExecutable,
     testEvalJavaExecutableOnOtherJdks,
+    testProfilerOutput,
   )
 }
 

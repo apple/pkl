@@ -17,6 +17,7 @@ package org.pkl.core.ast.expression.generator;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.Truffle;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -164,6 +165,7 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   private void executeIteration(
       VirtualFrame frame, Object parent, ObjectData data, Object key, Object value) {
 
+    TruffleSafepoint.poll(this);
     // GraalJS uses the same implementation technique here:
     // https://github.com/oracle/graaljs/blob/44a11ce6e87/graal-js/src/com.oracle.truffle.js/src/com/oracle/truffle/js/nodes/function/IterationScopeNode.java#L86-L88
     var newFrame =
