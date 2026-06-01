@@ -11,7 +11,7 @@ res10 = "Cannot render value of type `Map` as Properties. Value: Map(\"name\", \
 res11 = "Cannot render value of type `Listing` as Properties. Value: new Listing { \"pigeon\"; \"parrot\" }"
 res12 = "Cannot render value of type `Mapping` as Properties. Value: new Mapping { [\"name\"] = ?; [\"age\"] = ? }"
 res13 = "Cannot render value of type `Dynamic` as Properties. Value: new Dynamic { name = ?; age = ? }"
-res14 = "Cannot render value of type `propertiesRenderer4#Person` as Properties. Value: new Person { name = ?; age = ? }"
+res14 = "Cannot render value of type `propertiesRenderer4#Person` as Properties. Value: new propertiesRenderer4#Person { name = ?; age = ? }"
 res15 = "Cannot render value of type `Pair` as Properties. Value: Pair(1, 2)"
 res16 = "Cannot render value of type `Class` as Properties. Value: propertiesRenderer4#Person"
 res17 = "Cannot render value of type `TypeAlias` as Properties. Value: propertiesRenderer4#Email"

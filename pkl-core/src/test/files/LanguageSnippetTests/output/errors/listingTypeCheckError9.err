@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Expected value of type `listingTypeCheckError9#Bar`, but got type `listingTypeCheckError9#Foo`.
-Value: new Foo {}
+Value: new listingTypeCheckError9#Foo {}
 
 x | local c = b as Listing<Bar>
                            ^^^

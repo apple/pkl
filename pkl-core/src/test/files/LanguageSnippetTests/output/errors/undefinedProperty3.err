@@ -5,7 +5,7 @@ xx | theNumber : Int
      ^^^^^^^^^
 at undefinedProperty3#C.theNumber (file:///$snippetsDir/input/errors/undefinedProperty3.pkl)
 
-The above error occurred when rendering path `a.b[new D { dProperty = "dProperty" }].`bar-baz`.theNumber` of module `file:///$snippetsDir/input/errors/undefinedProperty3.pkl`.
+The above error occurred when rendering path `a.b[new undefinedProperty3#D { dProperty = "dProperty" }].`bar-baz`.theNumber` of module `file:///$snippetsDir/input/errors/undefinedProperty3.pkl`.
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
