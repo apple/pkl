@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -25,6 +25,7 @@ import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmListing;
+import org.pkl.core.runtime.VmUtils;
 
 @ImportStatic(BaseModule.class)
 public abstract class GeneratorElementNode extends GeneratorMemberNode {
@@ -63,6 +64,7 @@ public abstract class GeneratorElementNode extends GeneratorMemberNode {
   @SuppressWarnings("unused")
   void fallback(VirtualFrame frame, Object parent, ObjectData data) {
     CompilerDirectives.transferToInterpreter();
-    throw exceptionBuilder().evalError("objectCannotHaveElement", parent).build();
+    var parentClass = parent instanceof VmClass ? (VmClass) parent : VmUtils.getClass(parent);
+    throw exceptionBuilder().evalError("objectCannotHaveElement", parentClass).build();
   }
 }
