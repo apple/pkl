@@ -26,6 +26,8 @@ import org.pkl.core.runtime.VmValueRenderer;
 public final class ErrorMessages {
   private ErrorMessages() {}
 
+  private static final VmValueRenderer renderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
+
   public static String create(String messageName, @Nullable Object... args) {
     var locale = Locale.getDefault();
     String errorMessage =
@@ -37,7 +39,6 @@ public final class ErrorMessages {
     var formatter = new MessageFormat(errorMessage, locale);
     // TODO: we render VmValues here with VmValueRenderer, but that's not enough to properly
     //       render all kinds of values, like Pkl Strings, for example
-    var renderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
     @Nullable Object[] actualArgs = new @Nullable Object[args.length];
     for (var i = 0; i < args.length; i++) {
       var arg = args[i];
