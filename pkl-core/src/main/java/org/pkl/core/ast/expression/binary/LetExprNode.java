@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,60 +16,68 @@
 package org.pkl.core.ast.expression.binary;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.member.FunctionNode;
-import org.pkl.core.ast.member.UnresolvedFunctionNode;
-import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.LateInit;
 
-public final class LetExprNode extends ExpressionNode {
-  private @Child UnresolvedFunctionNode unresolvedFunctionNode;
-  private @Child ExpressionNode valueNode;
-  private final boolean isCustomThisScope;
+@NodeChild(value = "bindingNode", type = ExpressionNode.class)
+public abstract class LetExprNode extends ExpressionNode {
 
-  @CompilationFinal @LateInit private FunctionNode functionNode;
-  @Child @LateInit private DirectCallNode callNode;
-  @CompilationFinal private int customThisSlot = -1;
+  private final String qualifiedName;
+  private @Child @Nullable UnresolvedTypeNode unresolvedTypeNode;
+  private @Child ExpressionNode bodyNode;
+  private @Child @Nullable TypeNode typeNode;
+  private final int slot;
 
-  public LetExprNode(
+  protected LetExprNode(
       SourceSection sourceSection,
-      UnresolvedFunctionNode functionNode,
-      ExpressionNode valueNode,
-      boolean isCustomThisScope) {
-
+      String qualifiedName,
+      @Nullable UnresolvedTypeNode unresolvedTypeNode,
+      ExpressionNode bodyNode,
+      int slot) {
     super(sourceSection);
-    this.unresolvedFunctionNode = functionNode;
-    this.valueNode = valueNode;
-    this.isCustomThisScope = isCustomThisScope;
+    this.qualifiedName = qualifiedName;
+    this.unresolvedTypeNode = unresolvedTypeNode;
+    this.bodyNode = bodyNode;
+    this.slot = slot;
   }
 
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    if (functionNode == null) {
+  private TypeNode getTypeNode(VirtualFrame frame) {
+    if (typeNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      functionNode = unresolvedFunctionNode.execute(frame);
-      callNode = insert(DirectCallNode.create(functionNode.getCallTarget()));
-      if (isCustomThisScope) {
-        // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
-        customThisSlot = VmUtils.findCustomThisSlot(frame);
+      if (unresolvedTypeNode != null) {
+        typeNode = unresolvedTypeNode.execute(frame);
+      } else {
+        typeNode = new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
       }
+      typeNode.initWriteSlotNode(slot);
+      insert(typeNode);
     }
+    assert typeNode != null;
+    return typeNode;
+  }
 
-    var function =
-        new VmFunction(
-            frame.materialize(),
-            isCustomThisScope ? frame.getAuxiliarySlot(customThisSlot) : VmUtils.getReceiver(frame),
-            1,
-            functionNode,
-            null);
-
-    var value = valueNode.executeGeneric(frame);
-
-    return callNode.call(function.getThisValue(), function, value);
+  @Specialization
+  protected Object eval(VirtualFrame frame, Object value) {
+    if (slot != -1) {
+      getTypeNode(frame).executeAndSet(frame, value);
+    }
+    try {
+      return bodyNode.executeGeneric(frame);
+    } catch (VmException e) {
+      CompilerDirectives.transferToInterpreter();
+      e.getInsertedStackFrames()
+          .put(
+              getRootNode().getCallTarget(),
+              VmUtils.createStackFrame(getSourceSection(), qualifiedName));
+      throw e;
+    }
   }
 }

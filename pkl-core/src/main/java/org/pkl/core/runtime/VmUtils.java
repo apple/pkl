@@ -961,12 +961,16 @@ public final class VmUtils {
             resolvedModule,
             false);
     var language = VmLanguage.get(null);
-    var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
     var parsedExpression = parseExpressionNode(expression, source);
+    var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
     var exprNode = builder.visitExpr(parsedExpression);
     var rootNode =
         new SimpleRootNode(
-            language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
+            language,
+            builder.buildModuleFrameDescriptor(),
+            exprNode.getSourceSection(),
+            "",
+            exprNode);
     var callNode = Truffle.getRuntime().createIndirectCallNode();
     return callNode.call(rootNode.getCallTarget(), module, module);
   }

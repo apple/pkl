@@ -10,24 +10,25 @@ res2 =
 
 res3 =
   let (x = 1)
-    let (y = 2)
-      x + y + x
+  let (y = 2)
+    x + y + x
 
 res4 =
   let (x = 1)
-    let (x = 2)
-      x + x
+  let (x = 2)
+    x + x
 
 res5 =
-  let (price = 500) new {
-    lowestPrice = price - 100
-    averagePrice = new {
-      price
+  let (price = 500)
+    new {
+      lowestPrice = price - 100
+      averagePrice = new {
+        price
+      }
+      highestPrice = new {
+        ["price"] = price + 100
+      }
     }
-    highestPrice = new {
-      ["price"] = price + 100
-    }
-  }
 
 res6 =
   let (str = "Pigeon".reverse())
@@ -51,8 +52,9 @@ local g = (a) ->
 
 res9 = g.apply(3)
 
-local h = let (b = 2)
-  (a) -> a + b
+local h =
+  let (b = 2)
+    (a) -> a + b
 
 res10 = h.apply(3)
 
@@ -71,9 +73,9 @@ res12 = new Lets {
 
 res13 =
   let (x = 1)
-    let (y = x)
-      let (z = y)
-        x + y + z
+  let (y = x)
+  let (z = y)
+    x + y + z
 
 // x can't access y
 res14 = test.catch(() -> let (x = y) let (y = 2) x + y)

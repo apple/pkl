@@ -26,6 +26,7 @@ import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.MethodResolution.ImplicitBaseMethod;
 import org.pkl.core.ast.builder.MethodResolution.ImplicitThisMethod;
 import org.pkl.core.ast.builder.MethodResolution.LexicalMethod;
+import org.pkl.core.ast.builder.VariableResolution.ForGeneratorOrLetVariable;
 import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
 import org.pkl.core.ast.builder.VariableResolution.LexicalProperty;
 import org.pkl.core.ast.member.ObjectMember;
@@ -140,6 +141,20 @@ public final class SymbolTable {
     return doEnter(
         new LambdaScope(currentScope, bindings, qualifiedName, frameDescriptorBuilder),
         nodeFactory);
+  }
+
+  public <T> T enterLetExpression(
+      @Nullable String binding, int slot, Function<LetExpressionScope, T> nodeFactory) {
+
+    // flatten names of let exprs inside other let exprs for presentation purposes
+    var parentScope = currentScope;
+    while (parentScope instanceof LetExpressionScope) {
+      parentScope = parentScope.getParent();
+    }
+
+    assert parentScope != null;
+    var qualifiedName = parentScope.qualifiedName + "." + "<let expr>";
+    return doEnter(new LetExpressionScope(currentScope, binding, slot, qualifiedName), nodeFactory);
   }
 
   public <T> T enterProperty(
@@ -339,6 +354,19 @@ public final class SymbolTable {
       return curr;
     }
 
+    public final Scope skipLambdaAndLetScopes() {
+      var curr = this;
+      while (curr.isLambdaScope() || curr.isLetScope()) {
+        curr = curr.getParent();
+        assert curr != null : "Lambda scope always has a parent";
+      }
+      return curr;
+    }
+
+    public final boolean isLetScope() {
+      return this instanceof LetExpressionScope;
+    }
+
     public final boolean isModuleScope() {
       return this instanceof ModuleScope;
     }
@@ -348,7 +376,7 @@ public final class SymbolTable {
     }
 
     public final boolean isClassMemberScope() {
-      var effectiveScope = skipLambdaScopes();
+      var effectiveScope = skipLambdaAndLetScopes();
       var parent = effectiveScope.parent;
       if (parent == null) return false;
 
@@ -454,8 +482,10 @@ public final class SymbolTable {
           }
           var result = fun.apply(lex, levelsUp);
           if (result != null) return result;
-          if (scope instanceof MethodScope || scope instanceof ForGeneratorScope) {
-            // fors and methods don't level up
+          if (scope instanceof MethodScope
+              || scope instanceof ForGeneratorScope
+              || scope instanceof LetExpressionScope) {
+            // fors, methods, and let exprs don't level up
             continue;
           }
           levelsUp++;
@@ -640,6 +670,46 @@ public final class SymbolTable {
     }
   }
 
+  public static final class LetExpressionScope extends Scope implements LexicalScope {
+    private final @Nullable String binding;
+    private final int slot;
+
+    private static @Nullable Identifier getParentName(Scope parent) {
+      while (parent != null && parent.name == null) {
+        parent = parent.getParent();
+      }
+      return parent == null ? null : parent.name;
+    }
+
+    public LetExpressionScope(
+        Scope parent, @Nullable String binding, int slot, String qualifiedName) {
+      super(
+          parent,
+          getParentName(parent),
+          qualifiedName,
+          parent.getConstLevel(),
+          parent.frameDescriptorBuilder);
+      this.binding = binding;
+      this.slot = slot;
+    }
+
+    @Override
+    public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
+      if (name.equals("_")) {
+        return null;
+      }
+      if (name.equals(binding)) {
+        return new ForGeneratorOrLetVariable(slot, levelsUp);
+      }
+      return null;
+    }
+
+    @Override
+    public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
+      return null;
+    }
+  }
+
   // A generator scope that is resolved eagerly and one level above
   public static final class EagerGeneratorScope extends Scope {
     private static FrameDescriptorBuilder getFrameDescriptorBuilder(Scope parent) {
@@ -679,7 +749,7 @@ public final class SymbolTable {
       }
       var index = frameDescriptorBuilder.findSlot(Identifier.get(name));
       if (index >= 0) {
-        return new VariableResolution.ForGeneratorVariable(index, levelsUp);
+        return new ForGeneratorOrLetVariable(index, levelsUp);
       }
       return null;
     }
