@@ -34,6 +34,7 @@ import org.gradle.api.tasks.OutputDirectories;
 import org.gradle.api.tasks.OutputFiles;
 import org.pkl.cli.CliEvaluator;
 import org.pkl.cli.CliEvaluatorOptions;
+import org.pkl.core.ProfilerOptions;
 
 @CacheableTask
 public abstract class EvalTask extends ModulesTask {
@@ -66,7 +67,8 @@ public abstract class EvalTask extends ModulesTask {
             getOutputFormat().get(),
             getModuleOutputSeparator().get(),
             mapAndGetOrNull(getMultipleFileOutputDir(), it -> it.getAsFile().getAbsolutePath()),
-            getExpression().getOrNull()));
+            getExpression().getOrNull(),
+            ProfilerOptions.DEFAULT));
   }
 
   @SuppressWarnings("unused")

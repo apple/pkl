@@ -74,7 +74,7 @@ public abstract class AmendModuleNode extends SpecializedObjectLiteralNode {
     module.addProperties(members);
 
     module.setExtraStorage(moduleInfo);
-    moduleInfo.initAnnotations(VmUtils.evaluateAnnotations(frame, annotationNodes));
+    moduleInfo.initAnnotations(VmUtils.evaluateAnnotations(frame, this, annotationNodes));
 
     return module;
   }

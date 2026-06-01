@@ -87,7 +87,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
   public ClassMethod execute(VirtualFrame frame, VmClass clazz) {
     CompilerDirectives.transferToInterpreter();
 
-    var annotations = VmUtils.evaluateAnnotations(frame, annotationNodes);
+    var annotations = VmUtils.evaluateAnnotations(frame, this, annotationNodes);
     var parameterTypeNodes =
         VmUtils.resolveParameterTypes(frame, descriptor, unresolvedParameterTypeNodes);
     var returnTypeNode =

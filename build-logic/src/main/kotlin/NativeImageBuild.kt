@@ -217,6 +217,10 @@ abstract class NativeImageBuild : DefaultTask() {
         add("--initialize-at-run-time=org.pkl.core.util.DebugLogger")
         // needed for jline-terminal-jni
         add("--initialize-at-run-time=org.jline.nativ,org.jline.terminal.impl.jni")
+        // needed for protobuf-java
+        add("--initialize-at-run-time=com.google.protobuf.UnsafeUtil")
+        // needed because we can't statically initialize PKL_ENGINE
+        add("--initialize-at-run-time=org.pkl.core.runtime.VmUtils")
         add("--no-fallback")
         add("-H:IncludeResources=org/pkl/core/stdlib/.*\\.pkl")
         add("-H:IncludeResources=org/jline/utils/.*")

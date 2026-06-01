@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.literal;
 
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo;
@@ -38,6 +39,7 @@ public final class MapLiteralNode extends ExpressionNode {
 
     var builder = VmMap.builder();
     for (var i = 0; i < keysAndValues.length; i += 2) {
+      TruffleSafepoint.poll(this);
       var key = keysAndValues[i].executeGeneric(frame);
       var value = keysAndValues[i + 1].executeGeneric(frame);
       builder.add(key, value);

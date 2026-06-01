@@ -88,7 +88,7 @@ public final class TypeAliasNode extends ExpressionNode {
             typeParameters,
             frame.materialize());
 
-    VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
+    VmUtils.evaluateAnnotations(frame, this, annotationNodes, annotations);
     initTypeAliasModule(typeAnnotationNode, module);
     var bodyTypeNode = typeAnnotationNode.execute(frame);
     cachedTypeAlias.initTypeCheckNode(bodyTypeNode);
