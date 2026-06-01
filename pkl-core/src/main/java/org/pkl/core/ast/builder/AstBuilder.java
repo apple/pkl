@@ -890,7 +890,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     Node child = expr;
     var parent = expr.parent();
     var scope = symbolTable.getCurrentScope();
-    var levelsUp = 0;
 
     while (parent instanceof IfExpr
         || parent instanceof TraceExpr
@@ -925,8 +924,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               : new InferParentWithinMethodNode(
                   createSourceSection(expr.newSpan()), language, scopeName, new GetOwnerNode());
     } else if (parent instanceof LetExpr letExpr && letExpr.getBindingExpr() == child) {
-      // TODO (unclear how to infer type now that let-expression is implemented as lambda
-      // invocation)
+      // TODO correctly infer parent, e.g. `let (x: Person = new {}) ...`
       throw exceptionBuilder()
           .evalError("cannotInferParent")
           .withSourceSection(createSourceSection(expr.newSpan()))
