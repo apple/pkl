@@ -1,13 +1,17 @@
 extends "GradleJob.pkl"
 
 import "@gha/catalog.pkl"
-import "@gha/context.pkl"
 
 /// Whether to link to musl. Otherwise, links to glibc.
 musl: Boolean(implies(module.os == "linux")) = false
 
 /// The Gradle project under which to generate the executable
 project: String
+
+/// Path pattern for artifact uploads (glob passed to actions/upload-artifact)
+buildDir: String = "\(project)*/build/executable/**/*"
+
+local needsCCompiler = project == "libpkl"
 
 extraGradleArgs {
   when (musl) {
@@ -40,22 +44,28 @@ steps {
       run = #"git status || git config --system --add safe.directory "$GITHUB_WORKSPACE""#
     }
   }
+  when (needsCCompiler && os == "windows") {
+    new {
+      name = "Set up MSVC"
+      uses = "ilammy/msvc-dev-cmd@v1"
+    }
+  }
   new {
     name = "gradle buildNative"
     shell = "bash"
     run = "./gradlew \(module.gradleArgs) \(project):buildNative"
   }
   (catalog.`actions/upload-artifact@v5`) {
-    name = "Upload executable artifacts"
+    name = "Upload built artifacts"
     with {
       name =
         if (musl)
-          "executable-\(project)-alpine-\(module.os)-\(module.arch)"
+          "artifacts-\(project)-alpine-\(module.os)-\(module.arch)"
         else
-          "executable-\(project)-\(module.os)-\(module.arch)"
+          "artifacts-\(project)-\(module.os)-\(module.arch)"
       // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
       // See https://github.com/actions/upload-artifact/issues/206
-      path = "\(project)*/build/executable/**/*"
+      path = module.buildDir
     }
   }
 }
