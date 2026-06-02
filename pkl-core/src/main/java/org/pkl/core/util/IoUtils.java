@@ -16,6 +16,7 @@
 package org.pkl.core.util;
 
 import com.oracle.truffle.api.TruffleOptions;
+import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
@@ -52,7 +53,7 @@ public final class IoUtils {
   // Don't match paths like `C:\`, which are drive letters on Windows.
   private static final Pattern uriLike = Pattern.compile("[\\w+.-]+:[^\\\\].*");
 
-  private static final Pattern windowsPathLike = Pattern.compile("\\w:\\\\.*");
+  public static final Pattern windowsDriveLetterLike = Pattern.compile("[a-zA-Z]:.*");
 
   private static final Pattern headerNameLike = Pattern.compile("[a-zA-Z0-9!#$%&'*+-.^_`|~]+");
 
@@ -107,8 +108,7 @@ public final class IoUtils {
   }
 
   public static boolean isWindowsAbsolutePath(String str) {
-    if (!isWindows()) return false;
-    return windowsPathLike.matcher(str).matches();
+    return windowsDriveLetterLike.matcher(str).matches();
   }
 
   /**
@@ -934,5 +934,45 @@ public final class IoUtils {
       throw new IllegalArgumentException(
           ErrorMessages.create("invalidHttpHeaderValueTooLong", headerValue));
     }
+  }
+
+  private static @Nullable String getFilenameExtension(String fileName) {
+    var dotIndex = fileName.lastIndexOf('.');
+    // 0 if hidden file (e.g. `.gitignore`); not an extension
+    if (dotIndex == -1 || dotIndex == 0) {
+      return null;
+    }
+    return fileName.substring(dotIndex + 1);
+  }
+
+  public static @Nullable Path findExecutableOnPath(String executable) {
+    var pathEnvVar = System.getenv("PATH");
+    if (pathEnvVar == null) {
+      return null;
+    }
+    var executableExtension = getFilenameExtension(executable);
+    List<String> extensions;
+    if (executableExtension != null || !isWindows()) {
+      extensions = List.of("");
+    } else {
+      extensions = List.of(".exe", ".cmd", ".bat", ".com");
+    }
+    var pathDirs = pathEnvVar.split(File.pathSeparator);
+    for (var dir : pathDirs) {
+      for (var extension : extensions) {
+        var candidate = Path.of(dir, executable + extension);
+        if (Files.exists(candidate) && Files.isExecutable(candidate)) {
+          return candidate;
+        }
+      }
+    }
+    return null;
+  }
+
+  public static URI fixFileUri(URI uri) {
+    if ("file".equals(uri.getScheme()) && !uri.getSchemeSpecificPart().startsWith("//")) {
+      return URI.create("file://" + uri.getSchemeSpecificPart());
+    }
+    return uri;
   }
 }

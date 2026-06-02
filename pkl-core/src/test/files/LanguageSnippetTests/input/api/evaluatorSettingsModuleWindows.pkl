@@ -1,0 +1,243 @@
+amends "../snippetTest.pkl"
+
+import "pkl:EvaluatorSettings"
+import "pkl:platform"
+
+local windows = new platform.OperatingSystem { name = "Windows" }
+
+local function resolve(base: String, path: String) =
+  new EvaluatorSettings { rootDir = path }
+    .resolveForOs(base, windows)
+    .rootDir
+
+examples {
+  ["resolve()"] {
+    local settings: EvaluatorSettings = new {
+      modulePath {
+        "first/module/path"
+        "second/module/path"
+      }
+      moduleCacheDir = "my/cache/dir"
+      rootDir = "my/root/dir"
+      externalModuleReaders {
+        ["foo"] {
+          executable = "path/to/my/executable"
+        }
+      }
+      externalResourceReaders {
+        ["foo"] {
+          executable = "path/to/my/executable"
+        }
+      }
+    }
+    settings.resolveForOs("file:///C:/path/to/dir/PklProject", windows)
+  }
+
+  ["relative path"] {
+    resolve("file:///C:/path/to/dir/PklProject", "foo\\bar")
+  }
+
+  ["relative path 2"] {
+    resolve("file:///C:/path/to/dir/PklProject", "foo/bar")
+  }
+
+  ["absolute path"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"\foo\bar"#)
+  }
+
+  ["absolute path with drive letter"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"C:\foo\bar"#)
+  }
+
+  ["absolute path with drive letter 2"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"C:/foo/bar"#)
+  }
+
+  ["absolute path with drive letter 3"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"C:/"#)
+  }
+
+  ["absolute path with drive letter 4"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"C:"#)
+  }
+
+  ["absolute path with drive letter 5"] {
+    resolve("file:///C:", #"\path\to\foo"#)
+  }
+
+  ["base path with drive letter"] {
+    resolve("file:///C:", #"path\to\foo"#)
+  }
+
+  ["enclosing URI has spaces"] {
+    resolve("file:///C:/path/to/dir%20with%20spaces/PklProject", "foo/bar")
+  }
+
+  ["relative path with dot segments"] {
+    resolve("file:///C:/path/to/dir/PklProject", "../my/module/path")
+  }
+
+  ["relative path with dot segments 2"] {
+    resolve("file:///C:/path/to/dir/PklProject", "../../my/module/path")
+  }
+
+  ["relative path with dot segments 3"] {
+    resolve("file:///C:/path/to/dir/PklProject", ".")
+  }
+
+  ["relative path with dot segments 4"] {
+    resolve("file:///C:/path/to/dir/PklProject", "./")
+  }
+
+  ["relative path with dot segments 5"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"..\..\..\..\..\..\..\..\"#)
+  }
+
+  ["file URI with no drive"] {
+    resolve("file:///path/to/dir/PklProject", "foo\\bar")
+  }
+
+  ["executable with simple name is not resolved"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          executable = "my-reader"
+        }
+      }
+    }
+    settings
+      .resolveForOs("file:///C:/path/to/dir/PklProject", windows)
+      .externalModuleReaders!!["foo"].executable
+  }
+
+  ["executable with path segments is resolved against enclosingUri"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          executable = "path/to/reader"
+        }
+      }
+    }
+    settings
+      .resolveForOs("file:///C:/path/to/dir/PklProject", windows)
+      .externalModuleReaders!!["foo"].executable
+  }
+
+  ["workingDir defaults to enclosingUri"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          workingDir = null
+        }
+      }
+    }
+    settings
+      .resolveForOs("file:///C:/path/to/dir/PklProject", windows)
+      .externalModuleReaders!!["foo"].workingDir
+  }
+
+  ["workingDir with relative path"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          workingDir = "."
+        }
+      }
+    }
+    settings
+      .resolveForOs("file:///C:/path/to/dir/PklProject", windows)
+      .externalModuleReaders!!["foo"].workingDir
+  }
+
+  ["workingDir with absolute path"] {
+    local settings: EvaluatorSettings = new {
+      externalModuleReaders {
+        ["foo"] {
+          workingDir = "/foo/bar"
+        }
+      }
+    }
+    settings
+      .resolveForOs("file:///C:/path/to/dir/PklProject", windows)
+      .externalModuleReaders!!["foo"].workingDir
+  }
+
+  ["UNC path"] {
+    resolve("file:///path/to/foo", #"\\server\share\path\to\foo"#)
+  }
+
+  ["UNC path 2"] {
+    resolve(#"file://server/share/path/to/foo"#, #"\new\path"#)
+  }
+
+  ["empty path"] {
+    resolve("file:///C:/path/to/dir/PklProject", "")
+  }
+
+  ["multiple consecutive slashes"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"my\\\\path"#)
+  }
+
+  ["different drive letter"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"D:\my\path"#)
+  }
+
+  ["UNC path as base with relative path"] {
+    resolve(#"file://server/share/dir/PklProject"#, #"my\path"#)
+  }
+
+  ["UNC path as base with .."] {
+    resolve(#"file://server/share/dir/sub/PklProject"#, #"..\my\path"#)
+  }
+
+  ["UNC path as base with ."] {
+    resolve(#"file://server/share/dir/PklProject"#, ".")
+  }
+
+  ["UNC path as base, cannot remove root"] {
+    resolve(#"file://server/share/PklProject"#, #"..\..\..\"#)
+  }
+
+  ["UNC path as base, cannot remove root 2"] {
+    resolve(#"file://server/share/dir/PklProject"#, #"../../.."#)
+  }
+
+  ["UNC path as base with drive letter path"] {
+    resolve(#"file://server/share/dir/PklProject"#, #"C:\local\path"#)
+  }
+
+  ["UNC path as base with no drive"] {
+    resolve(#"file://server/"#, #"/my/path"#)
+  }
+
+  ["trailing separator preserved"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"my\path\"#)
+  }
+
+  ["trailing separator preserved with normalization"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"..\my\path\"#)
+  }
+
+  ["no trailing separator"] {
+    resolve("file:///C:/path/to/dir/PklProject", #"my\path"#)
+  }
+
+  ["complex normalization"] {
+    resolve("file:///C:/path/to/dir/PklProject", #".\foo\..\bar\.\baz"#)
+  }
+
+  ["UNC with forward slashes"] {
+    resolve(#"file://server/share/dir/PklProject"#, "my/path")
+  }
+
+  ["absolute path with different drive and forward slashes"] {
+    resolve("file:///C:/path/to/dir/PklProject", "D:/my/path")
+  }
+}
+
+output {
+  renderer = new PcfRenderer {
+    useCustomStringDelimiters = true
+    omitNullProperties = true
+  }
+}

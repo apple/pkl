@@ -19,6 +19,11 @@
 @Since { version = "0.26.0" }
 module pkl.EvaluatorSettings
 
+import "pkl:EvaluatorSettings"
+import "pkl:platform"
+// used by doc comments
+import "pkl:Project"
+
 /// The external properties available to Pkl, read using the `prop:` scheme.
 externalProperties: Mapping<String, String>?
 
@@ -117,6 +122,89 @@ externalResourceReaders: Mapping<String, ExternalReader>?
 /// - `"pretty"`: All structures passed to trace() will be indented and emitted across multiple lines.
 @Since { version = "0.30.0" }
 traceMode: ("compact" | "pretty")?
+
+/// These evaluator settings, whose settings are resolved against [enclosingUri] using OS rules for
+/// [os].
+@Since { version = "0.32.0" }
+function resolveForOs(enclosingUri: Uri, os: platform.OperatingSystem): EvaluatorSettings = (module) {
+  local forWindows = os.name == "Windows"
+
+  when (module.modulePath != null) {
+    modulePath = new {
+      for (path in module.modulePath!!) {
+        resolvePath(enclosingUri, path, forWindows)
+      }
+    }
+  }
+
+  when (module.moduleCacheDir != null) {
+    moduleCacheDir = resolvePath(enclosingUri, module.moduleCacheDir!!, forWindows)
+  }
+
+  when (module.rootDir != null) {
+    rootDir = resolvePath(enclosingUri, module.rootDir!!, forWindows)
+  }
+
+  when (module.externalResourceReaders != null) {
+    externalResourceReaders {
+      [[true]] {
+        executable = resolveExecutable(enclosingUri, super.executable, forWindows)
+        workingDir = resolvePath(enclosingUri, super.workingDir ?? "./", forWindows)
+      }
+    }
+  }
+
+  when (module.externalModuleReaders != null) {
+    externalModuleReaders {
+      for (readerName, reader in module.externalModuleReaders!!) {
+        [readerName] {
+          executable = resolveExecutable(enclosingUri, reader.executable, forWindows)
+          workingDir =
+            if (reader.workingDir == null)
+              resolvePath(enclosingUri, "./", forWindows)
+            else
+              resolvePath(enclosingUri, reader.workingDir!!, forWindows)
+        }
+      }
+    }
+  }
+}
+
+/// These evaluator settings, whose settings are resolved to URIs against [enclosingUri].
+///
+/// The following settings are resolved:
+///
+///   * [modulePath]
+///   * [rootDir]
+///   * [moduleCacheDir]
+///   * [ExternalReader.executable]
+///   * [ExternalReader.workingDir]
+///
+/// Returns file paths based on the host OS filesystem.
+///
+/// If [ExternalReader.workingDir] is `null`, it resolves to the `./` path off of
+/// [enclosingUri].
+///
+/// On POSIX-based systems (like macOS and linux), this resolves to paths such as `/path/to/dir`.
+///
+/// On Windows, this resolves to drive letter paths such as `C:\path\to\dir`, or UNC paths such as 
+/// `\\network\share\path\to\dir`. 
+@Since { version = "0.32.0" }
+function resolve(enclosingUri: Uri): EvaluatorSettings =
+  resolveForOs(
+    enclosingUri,
+    platform.current.operatingSystem,
+  )
+
+local function resolveExecutable(base: String, path: String, forWindows: Boolean) =
+  let (hasSep = if (forWindows) path.contains(Regex(#"[/\\]"#)) else path.contains("/"))
+    if (hasSep) resolvePath(base, path, forWindows) else path
+
+external local function resolvePath(
+  baseUri: String(startsWith("file:/")),
+  path: String,
+  forWindows: Boolean,
+): String
 
 local const hostnameRegex = Regex(#"https?://([^/?#]*)"#)
 
@@ -268,16 +356,25 @@ class ExternalReader {
   /// The external reader executable.
   ///
   /// Will be spawned with the same environment variables and working directory as the Pkl process.
-  /// Executable is resolved according to the operating system's process spawning rules.
-  /// On macOS, Linux, and Windows platforms, this may be:
   ///
-  ///   * An absolute path
-  ///   * A relative path (to the current working directory)
-  ///   * The name of the executable, to be resolved against the `PATH` environment variable 
+  /// This may be:
+  ///
+  ///   * An absolute or relative path.
+  ///   * The name of the executable, to be resolved against the `PATH` environment variable. 
+  ///
+  /// When declared inside a [Project], relative paths are resolved against
+  /// [Project.projectFileUri].
   executable: String
 
   /// Additional command line arguments passed to the external reader process.
   arguments: Listing<String>?
+
+  /// The working directory used to spawn [executable].
+  ///
+  /// When declared inside a [Project], relative paths are resolved against
+  /// [Project.projectFileUri].
+  @Since { version = "0.32.0" }
+  workingDir: String?
 }
 
 local typealias ReservedHttpHeaderName =

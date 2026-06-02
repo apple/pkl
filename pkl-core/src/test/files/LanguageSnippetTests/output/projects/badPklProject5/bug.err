@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Type constraint `(externalModuleReaders != null).implies(isFileBasedProject)` violated.
+Value: new ModuleClass { externalProperties = ?; env = ?; allowedModules = ?; allowe...
+
+    (externalModuleReaders != null).implies(isFileBasedProject)
+     │                     │        │       │
+     │                     true     false   false
+     new Mapping { ["foo"] { executable = ?; arguments = ?; workingDir = ? } }
+
+xxx | (externalModuleReaders != null).implies(isFileBasedProject),
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.Project#evaluatorSettings (pkl:Project)
+
+x | evaluatorSettings {
+    ^^^^^^^^^^^^^^^^^^^
+at PklProject#evaluatorSettings (file:///$snippetsDir/input/projects/badPklProject5/PklProject)

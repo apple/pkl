@@ -1160,7 +1160,7 @@ public final class CommandSpecParser {
       var uri =
           IoUtils.isUriLike(moduleName)
               ? new URI(moduleName)
-              : IoUtils.isWindowsAbsolutePath(moduleName)
+              : IoUtils.isWindows() && IoUtils.isWindowsAbsolutePath(moduleName)
                   ? Path.of(moduleName).toUri()
                   : new URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null);
       uriString =

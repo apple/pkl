@@ -55,7 +55,8 @@ class BaseOptions : OptionGroup() {
             if (IoUtils.isUriLike(moduleName)) URI(moduleName)
             // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
             // into `URI("C", null, "/foo/bar", null)`.
-            else if (IoUtils.isWindowsAbsolutePath(moduleName)) Path.of(moduleName).toUri()
+            else if (IoUtils.isWindows() && IoUtils.isWindowsAbsolutePath(moduleName))
+              Path.of(moduleName).toUri()
             else URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null)
           } catch (e: URISyntaxException) {
             val message = buildString {
@@ -91,7 +92,7 @@ class BaseOptions : OptionGroup() {
     > {
       return splitPair(delimiter).convert {
         val cmd = shlex(it.second)
-        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1)))
+        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1), null))
       }
     }
 
@@ -386,8 +387,8 @@ class BaseOptions : OptionGroup() {
       httpNoProxy = noProxy,
       httpRewrites = httpRewrites.ifEmpty { null },
       httpHeaders = httpHeaders.ifEmpty { null },
-      externalModuleReaders = externalModuleReaders,
-      externalResourceReaders = externalResourceReaders,
+      externalModuleReaders = externalModuleReaders.ifEmpty { null },
+      externalResourceReaders = externalResourceReaders.ifEmpty { null },
       traceMode = traceMode,
       powerAssertionsEnabled = powerAssertionsEnabled,
     )

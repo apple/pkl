@@ -21,17 +21,31 @@ XXX
 
 Ready when you need them.
 
-.XXX
-[%collapsible]
-====
-XXX
-====
+=== Standard Library Changes
+
+==== `pkl:EvaluatorSettings`
+
+**Additions**
+
+* New method: link:{uri-stdlib-evaluatorSettingsModule}#resolve()[`EvaluatorSettings.resolve()`]
+* New method: link:{uri-stdlib-evaluatorSettingsModule}#resolveForOs()[`EvaluatorSettings.resolveForOs()`]
+* New property: link:{uri-stdlib-evaluatorSettingsExternalReaderClass}#workingDir[`EvaluatorSettings#ExternalReader.workingDir`]
+
+==== `pkl:Project`
+
+**Additions**
+
+* New property: link:{uri-stdlib-projectModule}#resolvedEvaluatorSettings[`Project.resolvedEvaluatorSettings`]
 
 == Breaking Changes [small]#💔#
 
 Things to watch out for when upgrading.
 
-=== Removed Java APIs
+=== Java API changes
+
+Changes have been made to the Java API.
+
+==== Removals and deprecations
 
 The following APIs have been removed without replacement.
 
@@ -41,11 +55,26 @@ The following APIs have been deprecated for removal.
 
 * `org.pkl.config.java.mapper.NonNull` (https://github.com/apple/pkl/pull/1607[#1607]).
 
-.XXX
-[%collapsible]
-====
-XXX
-====
+==== Changes
+
+* `org.pkl.core.evaluatorSettings.PklEvaluatorSettings.parse` no longer accepts a `pathNormalizer` argument.
+
+=== Loading rule changes in `pkl:EvaluatorSettings`
+
+Breaking changes have been made to how evaluator settings are loaded (https://github.com/apple/pkl/pull/1394[#1394]).
+
+==== Loading rule changes for the external reader executable
+
+The following changes have been made for the `executable` property in an external reader:
+
+* If the executable does not contain a slash (`/` on POSIX, `\` on Windows) character, it is always resolved against the `PATH` environment variable.
+* If it does contain a slash, it is resolved relative to the enclosing PklProject directory, instead of the current working directory.
+
+=== Changes to `--external-module-reader` and `--external-resource-reader` CLI flags 
+
+The `--external-module-reader` and `--external-resource-reader` CLI flags will _replace_ any external readers otherwise configured within a PklProject, instead of add to it (https://github.com/apple/pkl/pull/1394[#1394]).
+
+This makes this behavior consistent with how other settings work.
 
 == Work In Progress [small]#🚆#
 

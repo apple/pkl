@@ -49,7 +49,11 @@ data class CreateEvaluatorRequest(
   override fun requestId(): Long = requestId
 }
 
-data class ExternalReader(val executable: String, val arguments: List<String>?)
+data class ExternalReader(
+  val executable: String,
+  val arguments: List<String>?,
+  val workingDir: String?,
+)
 
 data class Proxy(val address: URI?, val noProxy: List<String>?)
 

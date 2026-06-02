@@ -27,6 +27,12 @@
                   <option name="searchContext" value="ANY" />
                   <option name="replacement" value="evaluatorSettings" />
                 </InspectionPattern>
+                <InspectionPattern>
+                  <option name="regExp" value="project\?\.resolvedEvaluatorSettings" />
+                  <option name="_fileType" value="Kotlin" />
+                  <option name="searchContext" value="ANY" />
+                  <option name="replacement" value="evaluatorSettings" />
+                </InspectionPattern>
               </list>
             </option>
           </RegExpInspectionConfiguration>

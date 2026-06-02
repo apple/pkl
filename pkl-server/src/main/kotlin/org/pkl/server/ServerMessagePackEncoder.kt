@@ -99,9 +99,10 @@ class ServerMessagePackEncoder(packer: MessagePacker) : BaseMessagePackEncoder(p
   }
 
   private fun packExternalReader(spec: ExternalReader) {
-    packMapHeader(1, spec.arguments)
+    packMapHeader(1, spec.arguments, spec.workingDir)
     packKeyValue("executable", spec.executable)
     spec.arguments?.let { packKeyValue("arguments", it) }
+    spec.workingDir?.let { packKeyValue("workingDir", it) }
   }
 
   override fun encodeMessage(msg: Message) {

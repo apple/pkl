@@ -23,6 +23,7 @@ import org.gradle.api.Named;
 import org.gradle.api.provider.ListProperty;
 import org.gradle.api.provider.Property;
 import org.gradle.api.tasks.Input;
+import org.gradle.api.tasks.Optional;
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader;
 
 public abstract class ExternalReaderSpec implements Named {
@@ -45,8 +46,13 @@ public abstract class ExternalReaderSpec implements Named {
   @Input
   public abstract ListProperty<String> getArguments();
 
+  @Input
+  @Optional
+  public abstract Property<String> getWorkingDir();
+
   public ExternalReader toExternalReader() {
-    return new ExternalReader(getExecutable().get(), getArguments().get());
+    return new ExternalReader(
+        getExecutable().get(), getArguments().get(), getWorkingDir().getOrNull());
   }
 
   public static Map<String, ExternalReader> toExternalReaderMap(
