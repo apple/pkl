@@ -201,7 +201,9 @@ final class PackageResolvers {
       var request = HttpRequest.newBuilder(uri).build();
       HttpResponse<InputStream> response;
       try {
-        response = httpClient.send(request, BodyHandlers.ofInputStream());
+        response =
+            httpClient.send(
+                request, BodyHandlers.ofInputStream(), securityManager::checkReadResource);
       } catch (IOException e) {
         throw new PackageLoadError(e, "ioErrorMakingHttpGet", uri, e.getMessage());
       }

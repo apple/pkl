@@ -519,13 +519,13 @@ public final class ModuleKeys {
     @Override
     public ResolvedModuleKey resolve(SecurityManager securityManager)
         throws IOException, SecurityManagerException {
-      securityManager.checkResolveModule(uri);
       var httpClient = VmContext.get(null).getHttpClient();
       var request = HttpRequest.newBuilder(uri).build();
-      var response = httpClient.send(request, BodyHandlers.ofInputStream());
+      var response =
+          httpClient.send(
+              request, BodyHandlers.ofInputStream(), securityManager::checkResolveModule);
       try (var body = response.body()) {
         HttpUtils.checkHasStatusCode200(response);
-        securityManager.checkResolveModule(response.uri());
         String text = IoUtils.readString(body);
         // intentionally use uri instead of response.uri()
         return ResolvedModuleKeys.virtual(this, uri, text, true);

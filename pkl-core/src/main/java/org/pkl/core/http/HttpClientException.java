@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,19 +16,19 @@
 package org.pkl.core.http;
 
 /**
- * Indicates that an error occurred while initializing an HTTP client. A common example is an error
- * reading or parsing a certificate.
+ * Indicates that an error occurred while initializing an HTTP client, or when making an HTTP call.
+ * The error messages are user-presentable.
  */
-public final class HttpClientInitException extends RuntimeException {
-  public HttpClientInitException(String message) {
+public final class HttpClientException extends RuntimeException {
+  public HttpClientException(String message) {
     super(message);
   }
 
-  public HttpClientInitException(Throwable cause) {
+  public HttpClientException(Throwable cause) {
     super(cause);
   }
 
-  public HttpClientInitException(String message, Throwable cause) {
+  public HttpClientException(String message, Throwable cause) {
     super(message, cause);
   }
 }

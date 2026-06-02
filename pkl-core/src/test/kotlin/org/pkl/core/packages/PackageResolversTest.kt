@@ -49,7 +49,7 @@ class PackageResolversTest {
 
     val httpClient: HttpClient by lazy {
       HttpClient.builder()
-        .addCertificates(FileTestUtils.selfSignedCertificate)
+        .addCertificates(FileTestUtils.selfSignedCertificatePem)
         .setTestPort(packageServer.port)
         .build()
     }

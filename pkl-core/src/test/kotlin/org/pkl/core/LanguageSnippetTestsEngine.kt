@@ -175,7 +175,7 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
       .setHttpClient(
         HttpClient.builder()
           .setTestPort(packageServer.port)
-          .addCertificates(FileTestUtils.selfSignedCertificate)
+          .addCertificates(FileTestUtils.selfSignedCertificatePem)
           .buildLazily()
       )
       .setPowerAssertionsEnabled(true)
@@ -287,7 +287,7 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
       add("--settings")
       add("pkl:settings")
       add("--ca-certificates")
-      add(FileTestUtils.selfSignedCertificate.toString())
+      add(FileTestUtils.selfSignedCertificatePem.toString())
       add("--test-mode")
       add("--test-port")
       add(packageServer.port.toString())

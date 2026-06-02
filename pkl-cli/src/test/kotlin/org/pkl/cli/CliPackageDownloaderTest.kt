@@ -44,7 +44,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris =
@@ -83,7 +83,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             workingDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),
@@ -103,7 +103,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris =
@@ -124,7 +124,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris =
@@ -165,7 +165,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris = listOf(PackageUri("package://localhost:0/badChecksum@1.0.0")),
@@ -184,7 +184,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris =
@@ -221,7 +221,7 @@ class CliPackageDownloaderTest {
         baseOptions =
           CliBaseOptions(
             moduleCacheDir = tempDir,
-            caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+            caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
             testPort = server.port,
           ),
         packageUris = listOf(PackageUri("package://localhost:0/birds@0.5.0")),

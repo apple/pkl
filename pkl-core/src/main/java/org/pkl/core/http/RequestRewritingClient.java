@@ -34,6 +34,8 @@ import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
+import org.pkl.core.SecurityManagerException;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
@@ -42,13 +44,15 @@ import org.pkl.core.util.Pair;
  * An {@code HttpClient} decorator that
  *
  * <ul>
- *   <li>overrides the {@code User-Agent} header of {@code HttpRequest}s
+ *   <li>overrides the headers of {@code HttpRequest}s
  *   <li>sets a request timeout if none is present
  *   <li>ensures that {@link #close()} is idempotent.
  *   <li>rewrites outbound URI prefixes with another prefix.
+ *   <li>handles redirects, rewriting URLs after each redirect and checking against {@link
+ *       org.pkl.core.http.HttpClient.HttpRequestChecker}.
  * </ul>
  *
- * <p>Both {@code User-Agent} header and default request timeout are configurable through {@link
+ * <p>The headers, default request timeout, and URI rewrites are configurable through {@link
  * HttpClient.Builder}.
  */
 @ThreadSafe
@@ -63,6 +67,15 @@ final class RequestRewritingClient implements HttpClient {
   private final List<Entry<URI, URI>> rewrites;
 
   private final AtomicBoolean closed = new AtomicBoolean();
+
+  private static final int MAX_HTTP_REDIRECTS;
+
+  static {
+    // allow Java users to configure max redirects the same way they would Java's default HTTP
+    // client.
+    var maxRedirectProp = System.getProperty("http.maxRedirects");
+    MAX_HTTP_REDIRECTS = maxRedirectProp != null ? Integer.parseInt(maxRedirectProp) : 20;
+  }
 
   RequestRewritingClient(
       String userAgent,
@@ -84,12 +97,56 @@ final class RequestRewritingClient implements HttpClient {
     this.headers = headers;
   }
 
+  private <T> HttpResponse<T> doSend(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws SecurityManagerException, IOException {
+    var redirectCount = 0;
+    var currentRequestUri = rewriteUri(request.uri());
+    var currentRequest = rewriteRequest(request, currentRequestUri);
+    while (true) {
+      httpRequestChecker.check(currentRequestUri);
+      var response = delegate.send(currentRequest, responseBodyHandler, httpRequestChecker);
+      if (HttpUtils.isRedirectStatusCode(response.statusCode())) {
+        if (redirectCount > MAX_HTTP_REDIRECTS) {
+          throw new HttpClientException(ErrorMessages.create("httpTooManyRedirects"));
+        }
+        var location =
+            response
+                .headers()
+                .firstValue("Location")
+                .orElseThrow(
+                    () -> new HttpClientException(ErrorMessages.create("httpRedirectNoLocation")));
+        URI redirectUri;
+        try {
+          redirectUri = currentRequestUri.resolve(location);
+        } catch (IllegalArgumentException e) {
+          throw new HttpClientException(ErrorMessages.create("httpRedirectInvalidUri", location));
+        }
+        if (currentRequestUri.getScheme().equals("https")
+            && redirectUri.getScheme().equals("http")) {
+          throw new HttpClientException(
+              ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
+        }
+        currentRequestUri = rewriteUri(redirectUri);
+        currentRequest = rewriteRequest(currentRequest, currentRequestUri);
+        redirectCount++;
+      } else {
+        return response;
+      }
+    }
+  }
+
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
-      throws IOException {
+  public <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws IOException, SecurityManagerException {
     checkNotClosed(request);
     try {
-      return delegate.send(rewriteRequest(request), responseBodyHandler);
+      return doSend(request, responseBodyHandler, httpRequestChecker);
     } catch (IOException e) {
       var rewrittenUri = rewriteUri(request.uri());
       if (rewrittenUri != request.uri()) {
@@ -108,11 +165,11 @@ final class RequestRewritingClient implements HttpClient {
   }
 
   // Based on JDK 17's implementation of HttpRequest.newBuilder(HttpRequest, filter).
-  private HttpRequest rewriteRequest(HttpRequest original) {
+  private HttpRequest rewriteRequest(HttpRequest original, URI newUri) {
     HttpRequest.Builder builder = HttpRequest.newBuilder();
 
     builder
-        .uri(rewriteUri(original.uri()))
+        .uri(newUri)
         .expectContinue(original.expectContinue())
         .timeout(original.timeout().orElse(requestTimeout))
         .version(original.version().orElse(java.net.http.HttpClient.Version.HTTP_2));

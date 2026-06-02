@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -24,6 +24,17 @@ import org.pkl.core.PklBugException;
 
 public final class HttpUtils {
   private HttpUtils() {}
+
+  public static boolean isRedirectStatusCode(int statusCode) {
+    return switch (statusCode) {
+      // We can handle each of these status codes exactly the same because:
+      //
+      // 1. We don't implement any cacheing for HTTPS requests.
+      // 2. Pkl only makes GET requests.
+      case 301, 302, 303, 307, 308 -> true;
+      default -> false;
+    };
+  }
 
   public static boolean isHttpUrl(URL url) {
     var protocol = url.getProtocol();

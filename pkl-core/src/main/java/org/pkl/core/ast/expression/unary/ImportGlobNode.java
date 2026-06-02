@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,7 +26,7 @@ import java.net.URI;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.VmContext;
@@ -96,7 +96,7 @@ public class ImportGlobNode extends AbstractImportNode {
       return cachedResult;
     } catch (IOException e) {
       throw exceptionBuilder().evalError("ioErrorResolvingGlob", importUri).withCause(e).build();
-    } catch (SecurityManagerException | HttpClientInitException e) {
+    } catch (SecurityManagerException | HttpClientException e) {
       throw exceptionBuilder().withCause(e).build();
     } catch (PackageLoadError e) {
       throw exceptionBuilder().adhocEvalError(e.getMessage()).build();

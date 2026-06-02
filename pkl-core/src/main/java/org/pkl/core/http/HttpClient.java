@@ -19,12 +19,14 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
+import java.net.http.HttpResponse.BodyHandler;
 import java.net.http.HttpTimeoutException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import javax.net.ssl.SSLContext;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.SecurityManagerException;
 
 /**
  * An HTTP client.
@@ -190,7 +192,7 @@ public interface HttpClient extends AutoCloseable {
     /**
      * Creates a new {@code HttpClient} from the current state of this builder.
      *
-     * @throws HttpClientInitException if an error occurs while initializing the client
+     * @throws HttpClientException if an error occurs while initializing the client
      */
     HttpClient build();
 
@@ -242,11 +244,14 @@ public interface HttpClient extends AutoCloseable {
    * java.net.http.HttpClient#send}.
    *
    * @throws IOException if an I/O error occurs when sending or receiving
-   * @throws HttpClientInitException if an error occurs while initializing a {@linkplain
-   *     Builder#buildLazily lazy} client
+   * @throws HttpClientException if a known (user-presentable) error occurs.
+   * @throws SecurityManagerException based on {@code httpRequestChecker}
    */
-  <T> HttpResponse<T> send(HttpRequest request, HttpResponse.BodyHandler<T> responseBodyHandler)
-      throws IOException;
+  <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws IOException, SecurityManagerException;
 
   /**
    * Closes this client.
@@ -258,4 +263,9 @@ public interface HttpClient extends AutoCloseable {
    * {@link IllegalStateException}.
    */
   void close();
+
+  @FunctionalInterface
+  interface HttpRequestChecker {
+    void check(URI uri) throws SecurityManagerException;
+  }
 }

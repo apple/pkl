@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
-import org.pkl.core.http.HttpClientInitException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
@@ -86,7 +86,7 @@ public final class ResourceManager {
           .build();
     } catch (SecurityManagerException
         | PackageLoadError
-        | HttpClientInitException
+        | HttpClientException
         | ExternalReaderProcessException e) {
       throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
     }
