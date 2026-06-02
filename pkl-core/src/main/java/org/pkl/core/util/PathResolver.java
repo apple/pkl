@@ -15,6 +15,7 @@
  */
 package org.pkl.core.util;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.regex.Pattern;
@@ -82,13 +83,14 @@ public abstract sealed class PathResolver {
   }
 
   static final class WindowsPathResolver extends PathResolver {
+    @TruffleBoundary
     @Override
     protected String uriToPath(URI uri) {
       var host = uri.getHost();
       var path = uri.getPath();
       if (host != null) {
         // UNC path: \\server\share\path
-        return "\\\\%s%s".formatted(host, path.replace('/', '\\'));
+        return "\\\\" + host + path.replace('/', '\\');
       }
       var ret = path.matches("/[A-Z]:/.*") ? path.substring(1) : path;
       return ret.replace('/', '\\');
@@ -164,6 +166,7 @@ public abstract sealed class PathResolver {
   }
 
   static final class PosixPathResolver extends PathResolver {
+    @TruffleBoundary
     @Override
     protected String uriToPath(URI uri) {
       return uri.getPath();
