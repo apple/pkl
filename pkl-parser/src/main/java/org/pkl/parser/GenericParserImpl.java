@@ -888,7 +888,7 @@ class GenericParserImpl {
             expect(Token.RPAREN, paramDef, "unexpectedToken", ")");
             children.add(new Node(NodeType.LET_PARAMETER_DEFINITION, paramDef));
             ff(children);
-            children.add(parseExpr(expectation));
+            children.add(parseExpr());
             yield new Node(NodeType.LET_EXPR, children);
           }
           case TRUE, FALSE -> new Node(NodeType.BOOL_LITERAL_EXPR, next().span);

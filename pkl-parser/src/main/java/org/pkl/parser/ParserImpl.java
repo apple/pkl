@@ -1009,7 +1009,7 @@ final class ParserImpl {
             expect(Token.ASSIGN, "unexpectedToken", "=");
             var bindExpr = parseExpr(")");
             expect(Token.RPAREN, "unexpectedToken", ")");
-            var exp = parseExpr(expectation);
+            var exp = parseExpr();
             yield new LetExpr(param, bindExpr, exp, start.endWith(exp.span()));
           }
           case TRUE -> new BoolLiteralExpr(true, next().span);
