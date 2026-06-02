@@ -21,6 +21,8 @@ include("bench")
 
 include("docs")
 
+include("libpkl")
+
 include("pkl-bom")
 
 include("pkl-cli")

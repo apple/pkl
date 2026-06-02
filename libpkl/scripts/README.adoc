@@ -1,0 +1,7 @@
+These files within `include/` are copy/pasted from the result of a native-image build.
+
+`libpkl_internal.h` needs to be kept up to date with `LibPklInternal.java`.
+
+To regenerate, run `./gradlew libpkl:assembleNative` and look for the files within `build/tmp/native-libs/<os-arch>/`.
+
+These are placed here for expedience; otherwise we'd have to run `native-image` twice; once to simply generate the headers, and once to build our library.

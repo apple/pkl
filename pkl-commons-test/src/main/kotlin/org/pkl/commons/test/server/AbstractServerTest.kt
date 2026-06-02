@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.commons.test.server
 
 import com.github.tomakehurst.wiremock.client.WireMock.equalTo
 import com.github.tomakehurst.wiremock.client.WireMock.get
@@ -28,9 +28,11 @@ import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.net.URI
 import java.nio.file.Path
+import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
@@ -44,15 +46,43 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.test.debugRendering
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
+import org.pkl.server.*
 
+@Suppress("FunctionName")
 abstract class AbstractServerTest {
 
   companion object {
-    /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
-    internal const val USE_DIRECT_TRANSPORT = false
+    /** Set to `true` to bypass messagepack serialization when running JvmServerTest. */
+    const val USE_DIRECT_TRANSPORT = false
     lateinit var executor: ExecutorService
+
+    fun createDirectExecutor(): ExecutorService =
+      object : AbstractExecutorService() {
+        override fun execute(command: Runnable) {
+          command.run()
+        }
+
+        override fun shutdown() {}
+
+        override fun shutdownNow(): MutableList<Runnable> {
+          throw UnsupportedOperationException("shutdownNow")
+        }
+
+        override fun isShutdown(): Boolean {
+          throw UnsupportedOperationException("isShutdown")
+        }
+
+        override fun isTerminated(): Boolean {
+          throw UnsupportedOperationException("isTerminated")
+        }
+
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+          throw UnsupportedOperationException("awaitTermination")
+        }
+      }
 
     @BeforeAll
     @JvmStatic
@@ -643,7 +673,8 @@ abstract class AbstractServerTest {
   fun `read and evaluate module path from jar`(@TempDir tempDir: Path) {
     val jarFile = tempDir.resolve("resource1.jar")
     jarFile.outputStream().use { outStream ->
-      javaClass.getResourceAsStream("resource1.jar")!!.use { inStream ->
+      javaClass.getResourceAsStream("/org/pkl/commons/test/server/resource1.jar")!!.use { inStream
+        ->
         inStream.copyTo(outStream)
       }
     }
