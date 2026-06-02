@@ -43,6 +43,7 @@ public class EvaluatorSettingsNodes {
       return forWindows ? PathResolvers.forWindows() : PathResolvers.forPosix();
     }
 
+    @TruffleBoundary
     @Specialization
     protected String eval(VmTyped ignored, String uriStr, String path, boolean forWindows) {
       var uri = toUri(uriStr);
