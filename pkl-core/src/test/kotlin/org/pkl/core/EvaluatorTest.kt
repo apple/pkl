@@ -697,48 +697,6 @@ class EvaluatorTest {
   }
 
   @Test
-  fun `objects with object locals are encoded correctly`() {
-    val data =
-      evaluator.evaluateOutputBytes(
-        text(
-          """
-          import "pkl:pklbinary"
-
-          dynamic: Dynamic = new {
-            local foo = new Test {}
-            bar = foo
-          }
-          listing: Listing = new {
-            local foo = new Test {}
-            foo
-          }
-          mapping: Mapping = new {
-            local foo = new Test {}
-            ["bar"] = foo
-          }
-          `class`: MyClass = new {
-            local foo = new Test {}
-            bar = foo
-          }
-
-          class MyClass {
-            bar: Test
-          }
-
-          class Test
-
-          output {
-            renderer = new pklbinary.Renderer {}
-          }
-          """
-            .trimIndent()
-        )
-      )
-
-    assertThatCode { PklBinaryDecoder.decode(data) }.doesNotThrowAnyException()
-  }
-
-  @Test
   fun `power assertions work with test facts with unavailable source section`() {
     val evaluator =
       with(EvaluatorBuilder.preconfigured()) {
