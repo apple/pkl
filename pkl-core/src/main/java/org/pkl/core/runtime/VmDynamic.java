@@ -158,8 +158,12 @@ public final class VmDynamic extends VmObject {
   }
 
   private boolean isHiddenOrLocalProperty(Object key) {
-    return key instanceof ObjectMember member && member.isLocal()
-        || key instanceof Identifier identifier
-            && (key == Identifier.DEFAULT || identifier.isLocalProp());
+    // only local members have the entire `ObjectMember` stored as a key in cachedValues
+    if (key instanceof ObjectMember member) {
+      assert member.isLocal();
+      return true;
+    }
+    return key instanceof Identifier identifier
+        && (key == Identifier.DEFAULT || identifier.isLocalProp());
   }
 }
