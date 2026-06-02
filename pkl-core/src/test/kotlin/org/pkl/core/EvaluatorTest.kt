@@ -635,7 +635,7 @@ class EvaluatorTest {
   }
 
   @Test
-  fun `nested pkl-binary rendiring produces correct results`() {
+  fun `nested pkl-binary rendering produces correct results`() {
     val evaluator =
       with(EvaluatorBuilder.preconfigured()) {
         allowedResources.add(Pattern.compile("b64:"))
@@ -694,6 +694,48 @@ class EvaluatorTest {
         )
       )
     }
+  }
+
+  @Test
+  fun `objects with object locals are encoded correctly`() {
+    val data =
+      evaluator.evaluateOutputBytes(
+        text(
+          """
+          import "pkl:pklbinary"
+
+          dynamic: Dynamic = new {
+            local foo = new Test {}
+            bar = foo
+          }
+          listing: Listing = new {
+            local foo = new Test {}
+            foo
+          }
+          mapping: Mapping = new {
+            local foo = new Test {}
+            ["bar"] = foo
+          }
+          `class`: MyClass = new {
+            local foo = new Test {}
+            bar = foo
+          }
+
+          class MyClass {
+            bar: Test
+          }
+
+          class Test
+
+          output {
+            renderer = new pklbinary.Renderer {}
+          }
+          """
+            .trimIndent()
+        )
+      )
+
+    assertThatCode { PklBinaryDecoder.decode(data) }.doesNotThrowAnyException()
   }
 
   @Test
