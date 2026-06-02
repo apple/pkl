@@ -4,6 +4,7 @@ dynamic: Dynamic = new {
   local foo = new Test {}
   bar = foo
 }
+
 listing: Listing = new {
   local foo = new Test {}
   foo
