@@ -184,7 +184,7 @@ class HttpClientTest {
     @Test
     fun `respects configured rewrites across redirects`() {
       stubFor(get(urlEqualTo("/foo.pkl")).willReturn(permanentRedirect("/orig/bar.pkl")))
-      stubFor(get(urlEqualTo("/rewritten/baz.pkl")).willReturn(ok()))
+      stubFor(get(urlEqualTo("/rewritten/bar.pkl")).willReturn(ok()))
 
       val client =
         HttpClient.builder()

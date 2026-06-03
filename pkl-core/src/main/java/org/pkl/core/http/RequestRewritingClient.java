@@ -74,7 +74,14 @@ final class RequestRewritingClient implements HttpClient {
     // allow Java users to configure max redirects the same way they would Java's default HTTP
     // client.
     var maxRedirectProp = System.getProperty("http.maxRedirects");
-    MAX_HTTP_REDIRECTS = maxRedirectProp != null ? Integer.parseInt(maxRedirectProp) : 20;
+    var maxRedirects = 20;
+    if (maxRedirectProp != null) {
+      try {
+        maxRedirects = Integer.parseInt(maxRedirectProp);
+      } catch (NumberFormatException ignored) {
+      }
+    }
+    MAX_HTTP_REDIRECTS = maxRedirects;
   }
 
   RequestRewritingClient(
@@ -109,7 +116,7 @@ final class RequestRewritingClient implements HttpClient {
       httpRequestChecker.check(currentRequestUri);
       var response = delegate.send(currentRequest, responseBodyHandler, httpRequestChecker);
       if (HttpUtils.isRedirectStatusCode(response.statusCode())) {
-        if (redirectCount > MAX_HTTP_REDIRECTS) {
+        if (redirectCount >= MAX_HTTP_REDIRECTS) {
           throw new HttpClientException(ErrorMessages.create("httpTooManyRedirects"));
         }
         var location =
@@ -179,7 +186,7 @@ final class RequestRewritingClient implements HttpClient {
         .map()
         .forEach((name, values) -> values.forEach(value -> builder.header(name, value)));
     var isUserAgentSet = false;
-    for (var header : this.getHeaders(original.uri())) {
+    for (var header : this.getHeaders(newUri)) {
       var headerName = header.getFirst();
       isUserAgentSet = isUserAgentSet || headerName.equalsIgnoreCase("user-agent");
       builder.header(header.getFirst(), header.getSecond());
