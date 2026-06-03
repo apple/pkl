@@ -140,9 +140,9 @@ class HttpClientTest {
     @Suppress("JUnitMalformedDeclaration")
     @RegisterExtension
     val wireMock: WireMockExtension =
-      WireMockExtension.newInstance()
-        .configureStaticDsl(true)
-        .options(
+      with(WireMockExtension.newInstance()) {
+        configureStaticDsl(true)
+        options(
           wireMockConfig().apply {
             dynamicPort()
             dynamicHttpsPort()
@@ -151,7 +151,8 @@ class HttpClientTest {
             keystoreType("PKCS12")
           }
         )
-        .build()
+        build()
+      }
 
     @Test
     fun `follows redirects`() {
@@ -219,6 +220,25 @@ class HttpClientTest {
     }
 
     @Test
+    fun `can upgrade HTTP to HTTPS`() {
+      stubFor(
+        get(urlEqualTo("/foo.pkl"))
+          .willReturn(permanentRedirect("${wireMock.runtimeInfo.httpsBaseUrl}/bar.pkl"))
+      )
+      stubFor(get(urlEqualTo("/bar.pkl")).willReturn(ok("hello")))
+
+      val client =
+        HttpClient.builder()
+          .addCertificates(FileTestUtils.selfSignedCertificatePem)
+          .addHeaders("**", mapOf("x-foo" to listOf("foo value")))
+          .build()
+      val request =
+        HttpRequest.newBuilder(URI("${wireMock.runtimeInfo.httpBaseUrl}/foo.pkl")).build()
+      val response = client.send(request, HttpResponse.BodyHandlers.ofString(), NoopChecker)
+      assertThat(response.body()).isEqualTo("hello")
+    }
+
+    @Test
     fun `infinite redirects fail with VmException`() {
       stubFor(get(urlEqualTo("/foo.pkl")).willReturn(permanentRedirect("/bar.pkl")))
       stubFor(get(urlEqualTo("/bar.pkl")).willReturn(permanentRedirect("/foo.pkl")))
@@ -268,6 +288,24 @@ class HttpClientTest {
             URI("${wireMock.runtimeInfo.httpBaseUrl}/qux.pkl"),
           )
         )
+    }
+
+    @Test
+    fun `redirects only carry their specifically configured headers`() {
+      stubFor(get(urlEqualTo("/foo.pkl")).willReturn(permanentRedirect("/bar.pkl")))
+      stubFor(get(urlEqualTo("/bar.pkl")).willReturn(ok()))
+      val request =
+        HttpRequest.newBuilder(URI("${wireMock.runtimeInfo.httpBaseUrl}/foo.pkl")).build()
+      val client =
+        with(HttpClient.builder()) {
+          addHeaders("**/foo.pkl", mapOf("x-foo" to listOf("foo value")))
+          addHeaders("**/bar.pkl", mapOf("x-bar" to listOf("bar value")))
+          build()
+        }
+      client.send(request, HttpResponse.BodyHandlers.discarding(), NoopChecker)
+      verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("x-foo", matching("foo value")))
+      verify(getRequestedFor(urlEqualTo("/bar.pkl")).withoutHeader("x-foo"))
+      verify(getRequestedFor(urlEqualTo("/bar.pkl")).withHeader("x-bar", matching("bar value")))
     }
   }
 }

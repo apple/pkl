@@ -137,7 +137,7 @@ final class RequestRewritingClient implements HttpClient {
               ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
         }
         currentRequestUri = rewriteUri(redirectUri);
-        currentRequest = rewriteRequest(currentRequest, currentRequestUri);
+        currentRequest = rewriteRequest(request, currentRequestUri);
         redirectCount++;
       } else {
         return response;
