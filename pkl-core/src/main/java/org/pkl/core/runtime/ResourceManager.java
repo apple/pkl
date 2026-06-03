@@ -102,7 +102,8 @@ public final class ResourceManager {
           var reader = getResourceReader(uri);
           // hack: we don't want to call `checkReadResource` here for these resources because those
           // readers defer to HttpClient to do the actual checks.
-          if (!(reader instanceof ResourceReaders.HttpResource) && !(reader instanceof ResourceReaders.HttpsResource)) {
+          if (!(reader instanceof ResourceReaders.HttpResource)
+              && !(reader instanceof ResourceReaders.HttpsResource)) {
             try {
               securityManager.checkReadResource(uri);
             } catch (SecurityManagerException e) {
