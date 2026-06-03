@@ -5951,6 +5951,14 @@ To fully set up mirroring, an HTTP(s) server will need be running, and which mir
 [[references]]
 === References
 
+[WARNING]
+.Experimenal Feature
+====
+The API and semantics of references are subject to change in a future release.
+The Pkl team is soliciting feedback from authors of libraries considering adopting references.
+For questions and feedback, please reach out via https://github.com/apple/pkl/discussions[GitHub Discussions] or https://github.com/apple/pkl/issues/new[create an issue]. 
+====
+
 pkldoc:Reference[pkl:ref]s (provided by the `pkl.ref` module) are an advanced API design tool that serves use cases where configuration must refer to values that are not known at evaluation time.
 This is common in task-based execution systems like CI platforms and Infrastructure as Code (IaC) tools.
 Today, many such systems encode this kind of reference using strings containing an expression language; this approach makes it difficult to write and debug such references, as target systems may not know where in the Pkl source an error occurred.

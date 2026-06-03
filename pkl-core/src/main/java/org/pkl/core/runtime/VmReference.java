@@ -40,7 +40,7 @@ public final class VmReference extends VmValue {
   private final Object data;
   private final ImRrbt<VmTyped> path;
   // candidate types can only be: PType.Class, PType.Alias (only preservedAliasTypes),
-  // PType.StringLiteral, or PType.UNKNOWN
+  // PType.StringLiteral, PType.UNKNOWN, or PType.Union (containing only the previous; flattened)
   private final PType referentType;
 
   private boolean forced = false;

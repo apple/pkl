@@ -20,7 +20,6 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
-import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
@@ -2128,7 +2127,6 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  @ImportStatic(RefModule.class)
   public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
@@ -2143,7 +2141,7 @@ public abstract class TypeNode extends PklNode {
       validateTypeArguments(sourceSection);
     }
 
-    @Specialization(guards = "value.getVmClass() == getReferenceClass()")
+    @Specialization
     protected Object eval(VirtualFrame frame, VmReference value) {
       if (domainTypeNode.isNoopTypeCheck() && referentTypeNode.isNoopTypeCheck()) {
         return value;

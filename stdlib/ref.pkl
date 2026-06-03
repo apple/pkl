@@ -20,6 +20,12 @@
 /// domain-specific references to values that may not be known during evaluation.
 /// They are particularly suited for configuring execution systems where tasks have well-typed
 /// inputs and output.
+///
+/// WARNING: The API and semantics of references are subject to change in a future release.
+/// The Pkl team is soliciting feedback from authors of libraries considering adopting references.
+/// For questions and feedback, please reach out via
+/// [GitHub Discussions](https://github.com/apple/pkl/discussions) or
+/// [create an issue](https://github.com/apple/pkl/issues/new).
 @ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.ref
 
@@ -76,8 +82,11 @@ external const function Reference<D, T>(
 /// /// Define a domain class for this configuration system:
 /// class Domain extends ref.Domain {
 ///   /// Define how this domain renders references to strings:
-///   function renderReference(reference: ref.Reference<D, Any>): String =
-///     (List(data.toString()) + path.map((it) -> it.property ?? it.key.toString())).join("/")
+///   function renderReference(reference: ref.Reference<Domain, Any>): String =
+///     (
+///       List(reference.getData().toString())
+///       + reference.getPath().map((it) -> it.property ?? it.key.toString())
+///     ).join("/")
 /// }
 ///
 /// class Resource {
@@ -129,6 +138,15 @@ external const function Reference<D, T>(
 /// /// Simple property access:
 /// /// getPath() == List(new ref.Access { property = "e" }, new ref.Access { property = "x" })
 /// eRef: ref.Reference<Domain, Int | Float> = outputs.e.x
+///
+/// // Render references as strings:
+/// output {
+///   renderer {
+///     converters {
+///       [ref.Reference] = (it) -> it.toString()
+///     }
+///   }
+/// }
 /// ```
 ///
 /// Output:
