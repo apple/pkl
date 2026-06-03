@@ -32,6 +32,7 @@ import org.pkl.core.http.HttpClientException;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.resource.Resource;
 import org.pkl.core.resource.ResourceReader;
+import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.stdlib.VmObjectFactory;
 
 public final class ResourceManager {
@@ -98,12 +99,16 @@ public final class ResourceManager {
     return resources.computeIfAbsent(
         resourceUri.normalize(),
         (uri) -> {
-          try {
-            securityManager.checkReadResource(uri);
-          } catch (SecurityManagerException e) {
-            throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
-          }
           var reader = getResourceReader(uri);
+          // hack: we don't want to call `checkReadResource` here for these resources because those
+          // readers defer to HttpClient to do the actual checks.
+          if (!(reader instanceof ResourceReaders.HttpResource) && !(reader instanceof ResourceReaders.HttpsResource)) {
+            try {
+              securityManager.checkReadResource(uri);
+            } catch (SecurityManagerException e) {
+              throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
+            }
+          }
           if (reader == null) {
             throw new VmExceptionBuilder()
                 .withOptionalLocation(readNode)

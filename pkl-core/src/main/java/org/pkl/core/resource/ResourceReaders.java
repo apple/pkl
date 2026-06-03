@@ -308,7 +308,7 @@ public final class ResourceReaders {
     }
   }
 
-  private static final class HttpResource extends UrlResource {
+  public static final class HttpResource extends UrlResource {
     static final ResourceReader INSTANCE = new HttpResource();
 
     @Override
@@ -327,7 +327,7 @@ public final class ResourceReaders {
     }
   }
 
-  private static final class HttpsResource extends UrlResource {
+  public static final class HttpsResource extends UrlResource {
     static final ResourceReader INSTANCE = new HttpsResource();
 
     @Override
