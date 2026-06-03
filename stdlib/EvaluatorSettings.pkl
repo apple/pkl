@@ -149,7 +149,7 @@ class Http {
   /// In the following example, an original request for `https://pkg.pkl-lang.org/my/pkg@1.0.0` is
   /// replaced with `https://my.internal.mirror/my/pkg@1.0.0`.
   ///
-  /// This does not affect `3XX` status code redirect following.
+  /// This also affects `3XX` status code redirect following.
   ///
   /// Example:
   ///

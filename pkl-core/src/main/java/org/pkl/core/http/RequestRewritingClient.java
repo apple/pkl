@@ -115,33 +115,32 @@ final class RequestRewritingClient implements HttpClient {
     while (true) {
       httpRequestChecker.check(currentRequestUri);
       var response = delegate.send(currentRequest, responseBodyHandler, httpRequestChecker);
-      if (HttpUtils.isRedirectStatusCode(response.statusCode())) {
-        if (redirectCount >= MAX_HTTP_REDIRECTS) {
-          throw new HttpClientException(ErrorMessages.create("httpTooManyRedirects"));
-        }
-        var location =
-            response
-                .headers()
-                .firstValue("Location")
-                .orElseThrow(
-                    () -> new HttpClientException(ErrorMessages.create("httpRedirectNoLocation")));
-        URI redirectUri;
-        try {
-          redirectUri = currentRequestUri.resolve(location);
-        } catch (IllegalArgumentException e) {
-          throw new HttpClientException(ErrorMessages.create("httpRedirectInvalidUri", location));
-        }
-        if (currentRequestUri.getScheme().equals("https")
-            && redirectUri.getScheme().equals("http")) {
-          throw new HttpClientException(
-              ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
-        }
-        currentRequestUri = rewriteUri(redirectUri);
-        currentRequest = rewriteRequest(request, currentRequestUri);
-        redirectCount++;
-      } else {
+      if (!HttpUtils.isRedirectStatusCode(response.statusCode())) {
         return response;
       }
+      if (redirectCount >= MAX_HTTP_REDIRECTS) {
+        throw new HttpClientException(
+            ErrorMessages.create("httpTooManyRedirects", MAX_HTTP_REDIRECTS));
+      }
+      var location = response.headers().firstValue("Location");
+      if (location.isEmpty()) {
+        throw new HttpClientException(
+            ErrorMessages.create("httpRedirectNoLocation", currentRequestUri));
+      }
+      URI redirectUri;
+      try {
+        redirectUri = currentRequestUri.resolve(location.get());
+      } catch (IllegalArgumentException e) {
+        throw new HttpClientException(
+            ErrorMessages.create("httpRedirectInvalidUri", currentRequestUri, location.get()));
+      }
+      if (currentRequestUri.getScheme().equals("https") && redirectUri.getScheme().equals("http")) {
+        throw new HttpClientException(
+            ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
+      }
+      currentRequestUri = rewriteUri(redirectUri);
+      currentRequest = rewriteRequest(request, currentRequestUri);
+      redirectCount++;
     }
   }
 
