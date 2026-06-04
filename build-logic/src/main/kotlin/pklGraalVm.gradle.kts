@@ -63,7 +63,7 @@ fun Verify.configureVerifyGraalVm(graalvm: BuildInfo.GraalVm) {
 }
 
 // incorrect diagnostic
-@Suppress("UnusedReceiverParameter") 
+@Suppress("UnusedReceiverParameter")
 fun InstallGraalVm.configureInstallGraalVm(graalVm: BuildInfo.GraalVm) {
   homeDir = graalVm.homeDir
   downloadFile = graalVm.downloadFile
