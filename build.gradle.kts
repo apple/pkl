@@ -54,8 +54,8 @@ idea {
 }
 
 val clean by tasks.existing {
-  val buildDirectory = layout.buildDirectory
-  doLast { delete(buildDirectory) }
+  val buildDirectory = layout.buildDirectory.map { it.asFile }
+  doLast { buildDirectory.get().delete() }
 }
 
 val printVersion by tasks.registering {
