@@ -33,10 +33,11 @@ val generateTestConfigClasses by
 
     classpath = pklCodegenJava
     mainClass.set("org.pkl.codegen.java.Main")
+    val codegenSources = fileTree("src/test/resources/codegenPkl")
     argumentProviders.add(
       CommandLineArgumentProvider {
         listOf("--output-dir", outputDir.get().asFile.path, "--generate-javadoc") +
-          fileTree("src/test/resources/codegenPkl").map { it.path }
+          codegenSources.map { it.path }
       }
     )
   }

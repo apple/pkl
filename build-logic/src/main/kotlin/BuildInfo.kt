@@ -372,35 +372,33 @@ open class BuildInfo(private val project: Project) {
     org.gradle.internal.os.OperatingSystem.current()
   }
 
-  // could be `commitId: Provider<String> = project.provider { ... }`
-  val commitId: String by lazy {
-    // allow -DcommitId=abc123 for build environments that don't have git.
-    System.getProperty("commitId").let { if (it != null) return@lazy it }
+  private val computedCommitId: Provider<String> =
     // only run command once per build invocation
     if (project.path == project.rootProject.path) {
-      val process =
-        ProcessBuilder()
-          .command("git", "rev-parse", "--short", "HEAD")
-          .directory(project.rootDir)
-          .start()
-      process.waitFor().also { exitCode ->
-        if (exitCode == -1) throw RuntimeException(process.errorStream.reader().readText())
-      }
-      process.inputStream.reader().readText().trim()
+      project.providers
+        .exec { commandLine("git", "rev-parse", "--short", "HEAD") }
+        .standardOutput
+        .asText
+        .map { it.trim() }
     } else {
       project.rootProject.extensions.getByType(BuildInfo::class.java).commitId
     }
-  }
 
-  val commitish: String by lazy { if (isReleaseBuild) project.version.toString() else commitId }
+  val commitId: Provider<String> =
+    // allow -DcommitId=abc123 for build environments that don't have git.
+    System.getProperty("commitId")?.let { project.providers.provider { it } } ?: computedCommitId
 
-  val pklVersion: String by lazy {
+  val commitish: Provider<String> =
+    if (isReleaseBuild) project.providers.provider { project.version.toString() } else commitId
+
+  val pklVersion: Provider<String> =
     if (isReleaseBuild) {
-      project.version.toString()
+      project.providers.provider { project.version.toString() }
     } else {
-      project.version.toString().replace("-SNAPSHOT", "-dev+$commitId")
+      project.providers
+        .provider { project.version.toString() }
+        .zip(commitId) { version, id -> version.replace("-SNAPSHOT", "-dev+$id") }
     }
-  }
 
   val pklVersionNonUnique: String by lazy {
     if (isReleaseBuild) {

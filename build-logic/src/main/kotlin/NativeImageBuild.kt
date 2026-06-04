@@ -16,18 +16,18 @@
 import javax.inject.Inject
 import org.gradle.api.DefaultTask
 import org.gradle.api.file.ConfigurableFileCollection
+import org.gradle.api.file.ProjectLayout
 import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.Property
-import org.gradle.api.provider.Provider
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
+import org.gradle.api.services.ServiceReference
 import org.gradle.api.tasks.ClasspathNormalizer
 import org.gradle.api.tasks.Input
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
-import org.gradle.kotlin.dsl.registerIfAbsent
 import org.gradle.kotlin.dsl.withNormalizer
 import org.gradle.process.ExecOperations
 
@@ -49,25 +49,31 @@ abstract class NativeImageBuild : DefaultTask() {
 
   @get:InputFiles abstract val classpath: ConfigurableFileCollection
 
-  private val outputDir = project.layout.buildDirectory.dir("executable")
+  /** Path to the `native-image` binary (e.g. `<graalVmBaseDir>/bin/native-image`). */
+  @get:Input abstract val nativeImageExecutable: Property<String>
 
-  @get:OutputFile val outputFile = outputDir.flatMap { it.file(imageName) }
+  @get:Input abstract val graalSdkLibraryName: Property<String>
+
+  @get:Input abstract val releaseBuild: Property<Boolean>
+
+  @get:Input abstract val nativeArch: Property<Boolean>
+
+  /** Divisor applied to `availableProcessors` to throttle native-image CPU usage. */
+  @get:Input abstract val processorDivisor: Property<Int>
 
   @get:Inject protected abstract val execOperations: ExecOperations
 
-  private val graalVm: Provider<BuildInfo.GraalVm> = arch.map { a ->
-    when (a) {
-      Architecture.AMD64 -> buildInfo.graalVmAmd64
-      Architecture.AARCH64 -> buildInfo.graalVmAarch64
-    }
-  }
+  @get:Inject protected abstract val layout: ProjectLayout
 
-  private val buildInfo: BuildInfo = project.extensions.getByType(BuildInfo::class.java)
+  private val outputDir
+    get() = layout.buildDirectory.dir("executable")
 
-  private val nativeImageCommandName =
-    if (buildInfo.os.isWindows) "native-image.cmd" else "native-image"
+  @get:OutputFile
+  val outputFile
+    get() = outputDir.flatMap { it.file(imageName) }
 
-  private val nativeImageExecutable = graalVm.map { "${it.baseDir}/bin/$nativeImageCommandName" }
+  @get:ServiceReference("nativeImageBuildService")
+  abstract val buildService: Property<NativeImageBuildService>
 
   private val extraArgsFromProperties by lazy {
     System.getProperties()
@@ -75,19 +81,7 @@ abstract class NativeImageBuild : DefaultTask() {
       .map { "${it.key}=${it.value}".substring("pkl.native".length) }
   }
 
-  private val buildService =
-    project.gradle.sharedServices.registerIfAbsent(
-      "nativeImageBuildService",
-      NativeImageBuildService::class,
-    ) {
-      maxParallelUsages.set(1)
-    }
-
   init {
-    // ensure native-image builds run in serial (prevent `gw buildNative` from consuming all host
-    // CPU resources).
-    usesService(buildService)
-
     group = "build"
 
     inputs
@@ -104,8 +98,7 @@ abstract class NativeImageBuild : DefaultTask() {
   @Suppress("unused")
   protected fun run() {
     execOperations.exec {
-      val exclusions =
-        listOf(buildInfo.libs.findLibrary("graalSdk").get()).map { it.get().module.name }
+      val exclusions = listOf(graalSdkLibraryName.get())
 
       executable = nativeImageExecutable.get()
       workingDir(outputDir)
@@ -140,10 +133,10 @@ abstract class NativeImageBuild : DefaultTask() {
         add("-H:-ParseRuntimeOptions")
         // quick build mode: 40% faster compilation, 20% smaller (but presumably also slower)
         // executable
-        if (!buildInfo.isReleaseBuild) {
+        if (!releaseBuild.get()) {
           add("-Ob")
         }
-        if (buildInfo.isNativeArch) {
+        if (nativeArch.get()) {
           add("-march=native")
         } else {
           add("-march=compatibility")
@@ -155,9 +148,7 @@ abstract class NativeImageBuild : DefaultTask() {
         }
         add(pathInput.asPath)
         // make sure dev machine stays responsive (15% slowdown on my laptop)
-        val processors =
-          Runtime.getRuntime().availableProcessors() /
-            if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1
+        val processors = Runtime.getRuntime().availableProcessors() / processorDivisor.get()
         add("-J-XX:ActiveProcessorCount=${processors}")
         // Pass through all `HOMEBREW_` prefixed environment variables to allow build with shimmed
         // tools.

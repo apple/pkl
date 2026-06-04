@@ -13,6 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import org.gradle.api.file.ArchiveOperations
+import org.gradle.kotlin.dsl.support.serviceOf
+
 plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
@@ -80,13 +83,14 @@ val externalReaderJar by
     archiveVersion = ""
 
     // Package all dependencies into the jar (shadow plugin lite).
+    val archiveOps = serviceOf<ArchiveOperations>()
     from(
       externalReader.runtimeClasspath.elements.map { locations ->
         locations.mapNotNull { location ->
           val f = location.asFile
           when {
             f.isDirectory -> f
-            f.isFile -> zipTree(f)
+            f.isFile -> archiveOps.zipTree(f)
             else -> null
           }
         }
@@ -100,12 +104,13 @@ tasks.test {
   dependsOn(externalReaderJar)
   // Currently the only way to inject system properties from lazy values in Gradle
   // is via `jvmArgumentProviders`.
+  val externalReaderJarFile = externalReaderJar.flatMap { it.archiveFile }
+  val javaExecutablePath =
+    javaToolchains.launcherFor(java.toolchain).map { it.executablePath.asFile.absolutePath }
   jvmArgumentProviders += CommandLineArgumentProvider {
     listOf(
-      "-DpklGradle.externalReaderJar=" +
-        externalReaderJar.get().archiveFile.get().asFile.absolutePath,
-      "-DpklGradle.javaExecutable=" +
-        javaToolchains.launcherFor(java.toolchain).get().executablePath.asFile.absolutePath,
+      "-DpklGradle.externalReaderJar=" + externalReaderJarFile.get().asFile.absolutePath,
+      "-DpklGradle.javaExecutable=" + javaExecutablePath.get(),
     )
   }
 }
