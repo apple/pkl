@@ -61,7 +61,7 @@ paguro = "3.10.3"
 shadowPlugin = "9.4.1"
 slf4j = "2.0.18"
 snakeYaml = "3.0.1"
-spotlessPlugin = "8.5.1"
+spotlessPlugin = "8.6.0"
 wiremock = "3.13.2"
 
 [libraries] # ordered alphabetically
