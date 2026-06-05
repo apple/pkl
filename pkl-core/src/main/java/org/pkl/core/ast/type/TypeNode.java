@@ -1543,7 +1543,7 @@ public abstract class TypeNode extends PklNode {
       if (skipEntryTypeChecks) return value;
       for (var entry : value) {
         keyTypeNode.executeEagerly(frame, VmUtils.getKey(entry));
-        valueTypeNode.executeLazily(frame, VmUtils.getValue(entry));
+        valueTypeNode.executeEagerly(frame, VmUtils.getValue(entry));
       }
 
       LoopNode.reportLoopCount(this, value.getLength());
