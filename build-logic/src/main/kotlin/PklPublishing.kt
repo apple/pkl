@@ -46,7 +46,7 @@ fun Project.configurePklPomMetadata() {
           connection.set("scm:git:git://github.com/apple/pkl.git")
           developerConnection.set("scm:git:ssh://github.com/apple/pkl.git")
           val buildInfo = extensions.getByType<BuildInfo>()
-          url.set(buildInfo.commitish.map { "https://github.com/apple/pkl/tree/$it" })
+          url.set("https://github.com/apple/pkl/tree/${buildInfo.commitish}")
         }
         issueManagement {
           system.set("GitHub Issues")

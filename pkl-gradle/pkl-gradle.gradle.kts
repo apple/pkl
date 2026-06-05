@@ -13,9 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import org.gradle.api.file.ArchiveOperations
-import org.gradle.kotlin.dsl.support.serviceOf
-
 plugins {
   id("pklAllProjects")
   id("pklJavaLibrary")
@@ -83,14 +80,13 @@ val externalReaderJar by
     archiveVersion = ""
 
     // Package all dependencies into the jar (shadow plugin lite).
-    val archiveOps = serviceOf<ArchiveOperations>()
     from(
       externalReader.runtimeClasspath.elements.map { locations ->
         locations.mapNotNull { location ->
           val f = location.asFile
           when {
             f.isDirectory -> f
-            f.isFile -> archiveOps.zipTree(f)
+            f.isFile -> zipTree(f)
             else -> null
           }
         }
@@ -100,32 +96,18 @@ val externalReaderJar by
     manifest { attributes("Main-Class" to "org.pkl.gradle.test.extreader.Main") }
   }
 
-// Named class avoids the anonymous inner-class `this$0` field that Gradle's configuration
-// cache cannot serialize when a SAM lambda is created inside a lambda-with-receiver.
-class ExternalReaderArgProvider(
-  private val jarFile: Provider<RegularFile>,
-  private val javaExecutable: Provider<String>,
-) : CommandLineArgumentProvider {
-  override fun asArguments() =
-    listOf(
-      "-DpklGradle.externalReaderJar=${jarFile.get().asFile.absolutePath}",
-      "-DpklGradle.javaExecutable=${javaExecutable.get()}",
-    )
-}
-
-val externalReaderJarFile = externalReaderJar.flatMap { it.archiveFile }
-
-val javaExecutablePath =
-  javaToolchains.launcherFor(java.toolchain).map { it.executablePath.asFile.absolutePath }
-
-// Apply to all Test tasks (not just `test`) so that testJdk* tasks also receive the
-// external-reader system properties without relying on jvmArgumentProviders being copied
-// across tasks (which breaks the configuration cache via stale task references).
-tasks.withType<Test>().configureEach {
+tasks.test {
   dependsOn(externalReaderJar)
   // Currently the only way to inject system properties from lazy values in Gradle
   // is via `jvmArgumentProviders`.
-  jvmArgumentProviders += ExternalReaderArgProvider(externalReaderJarFile, javaExecutablePath)
+  jvmArgumentProviders += CommandLineArgumentProvider {
+    listOf(
+      "-DpklGradle.externalReaderJar=" +
+        externalReaderJar.get().archiveFile.get().asFile.absolutePath,
+      "-DpklGradle.javaExecutable=" +
+        javaToolchains.launcherFor(java.toolchain).get().executablePath.asFile.absolutePath,
+    )
+  }
 }
 
 publishing {

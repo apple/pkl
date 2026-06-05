@@ -288,12 +288,7 @@ open class BuildInfo(private val project: Project) {
           classpath = template.classpath
           testClassesDirs = template.testClassesDirs
           jvmArgs.addAll(template.jvmArgs)
-          // jvmArgumentProviders are NOT copied: providers added by plugins (e.g.
-          // java-gradle-plugin's GradleJvmCommandLineArgumentProvider) hold a direct
-          // reference to the task they were registered on. Copying them to derived tasks
-          // causes those tasks to capture a foreign task reference, which the
-          // configuration cache cannot serialize. Each derived task receives its own
-          // providers via withType<Test>().configureEach in the subproject.
+          jvmArgumentProviders.addAll(template.jvmArgumentProviders)
           forkEvery = template.forkEvery
           maxParallelForks = template.maxParallelForks
           minHeapSize = template.minHeapSize
@@ -377,33 +372,35 @@ open class BuildInfo(private val project: Project) {
     org.gradle.internal.os.OperatingSystem.current()
   }
 
-  private val computedCommitId: Provider<String> =
+  // could be `commitId: Provider<String> = project.provider { ... }`
+  val commitId: String by lazy {
+    // allow -DcommitId=abc123 for build environments that don't have git.
+    System.getProperty("commitId").let { if (it != null) return@lazy it }
     // only run command once per build invocation
     if (project.path == project.rootProject.path) {
-      project.providers
-        .exec { commandLine("git", "rev-parse", "--short", "HEAD") }
-        .standardOutput
-        .asText
-        .map { it.trim() }
+      val process =
+        ProcessBuilder()
+          .command("git", "rev-parse", "--short", "HEAD")
+          .directory(project.rootDir)
+          .start()
+      process.waitFor().also { exitCode ->
+        if (exitCode == -1) throw RuntimeException(process.errorStream.reader().readText())
+      }
+      process.inputStream.reader().readText().trim()
     } else {
       project.rootProject.extensions.getByType(BuildInfo::class.java).commitId
     }
+  }
 
-  val commitId: Provider<String> =
-    // allow -DcommitId=abc123 for build environments that don't have git.
-    System.getProperty("commitId")?.let { project.providers.provider { it } } ?: computedCommitId
+  val commitish: String by lazy { if (isReleaseBuild) project.version.toString() else commitId }
 
-  val commitish: Provider<String> =
-    if (isReleaseBuild) project.providers.provider { project.version.toString() } else commitId
-
-  val pklVersion: Provider<String> =
+  val pklVersion: String by lazy {
     if (isReleaseBuild) {
-      project.providers.provider { project.version.toString() }
+      project.version.toString()
     } else {
-      project.providers
-        .provider { project.version.toString() }
-        .zip(commitId) { version, id -> version.replace("-SNAPSHOT", "-dev+$id") }
+      project.version.toString().replace("-SNAPSHOT", "-dev+$commitId")
     }
+  }
 
   val pklVersionNonUnique: String by lazy {
     if (isReleaseBuild) {

@@ -98,22 +98,20 @@ tasks.processResources {
   inputs.property("version", buildInfo.pklVersion)
   inputs.property("commitId", buildInfo.commitId)
 
-  val pklVersion = buildInfo.pklVersion
-  val commitId = buildInfo.commitId
-  val stdlibModules =
-    fileTree("$rootDir/stdlib") {
-        include("*.pkl")
-        exclude("doc-package-info.pkl")
-      }
-      .map { "pkl:" + it.nameWithoutExtension }
-      .sortedBy { it.lowercase() }
-
   filesMatching("org/pkl/core/Release.properties") {
+    val stdlibModules =
+      fileTree("$rootDir/stdlib") {
+          include("*.pkl")
+          exclude("doc-package-info.pkl")
+        }
+        .map { "pkl:" + it.nameWithoutExtension }
+        .sortedBy { it.lowercase() }
+
     filter<ReplaceTokens>(
       "tokens" to
         mapOf(
-          "version" to pklVersion.get(),
-          "commitId" to commitId.get(),
+          "version" to buildInfo.pklVersion,
+          "commitId" to buildInfo.commitId,
           "stdlibModules" to stdlibModules.joinToString(","),
         )
     )
@@ -142,15 +140,13 @@ val externalReaderFixture by tasks.registering {
   group = "build"
   dependsOn(tasks.named("compileExternalReaderFixtureJava"))
   inputs.files(externalReaderFixtureSourceSet.map { it.output })
-  val isWindows = buildInfo.os.isWindows
-  val fileName = if (isWindows) "externalreader.bat" else "externalreader"
+  val fileName = if (buildInfo.os.isWindows) "externalreader.bat" else "externalreader"
   val outputFile = layout.buildDirectory.file("fixtures/$fileName")
   outputs.file(outputFile)
-  val runtimeClasspath = externalReaderFixtureSourceSet.map { it.runtimeClasspath }
   doLast {
-    val classpath = runtimeClasspath.get().asPath
+    val classpath = externalReaderFixtureSourceSet.get().runtimeClasspath.asPath
     val scriptContent =
-      if (isWindows) {
+      if (buildInfo.os.isWindows) {
         """
           @echo off
           java -cp $classpath org.pkl.core.externalreaderfixture.Main
