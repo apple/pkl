@@ -57,11 +57,10 @@ val generateTestConfigClasses by
 
     classpath = pklCodegenKotlin
     mainClass.set("org.pkl.codegen.kotlin.Main")
-    val codegenSources = fileTree("src/test/resources/codegenPkl")
     argumentProviders.add(
       CommandLineArgumentProvider {
         listOf("--output-dir", outputDir.get().asFile.absolutePath) +
-          codegenSources.map { it.absolutePath }
+          fileTree("src/test/resources/codegenPkl").map { it.absolutePath }
       }
     )
   }

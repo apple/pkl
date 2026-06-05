@@ -81,14 +81,13 @@ private fun Exec.configureTestStartFatJar(launcher: Provider<JavaLauncher>) {
 
   inputs.files(tasks.shadowJar)
   executable = launcher.get().executablePath.asFile.absolutePath
-  doFirst { standardOutput = OutputStream.nullOutputStream() }
+  standardOutput = OutputStream.nullOutputStream()
 
-  val shadowJarFile = tasks.shadowJar.flatMap { it.archiveFile }
   argumentProviders.add(
     CommandLineArgumentProvider {
       buildList {
         add("-cp")
-        add(shadowJarFile.get().asFile.absolutePath)
+        add(tasks.shadowJar.get().outputs.files.singleFile.absolutePath)
         add("org.pkl.cli.Main")
         add("eval")
         add("-x")
@@ -164,7 +163,7 @@ publishing {
           connection.set("scm:git:git://github.com/apple/pkl.git")
           developerConnection.set("scm:git:ssh://github.com/apple/pkl.git")
           val buildInfo = project.extensions.getByType<BuildInfo>()
-          url.set(buildInfo.commitish.map { "https://github.com/apple/pkl/tree/$it" })
+          url.set("https://github.com/apple/pkl/tree/${buildInfo.commitish}")
         }
         issueManagement {
           system.set("GitHub Issues")

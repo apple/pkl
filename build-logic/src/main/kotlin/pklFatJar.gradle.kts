@@ -15,12 +15,10 @@
  */
 import org.gradle.api.GradleException
 import org.gradle.api.artifacts.Configuration
-import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.publish.maven.MavenPublication
 import org.gradle.api.tasks.bundling.Jar
 import org.gradle.api.tasks.testing.Test
 import org.gradle.kotlin.dsl.*
-import org.gradle.kotlin.dsl.support.serviceOf
 
 plugins {
   `java-library`
@@ -152,19 +150,17 @@ tasks.check { dependsOn(testFatJar) }
 
 val validateFatJar by tasks.registering {
   val outputFile = layout.buildDirectory.file("validateFatJar/result.txt")
-  val shadowJarFile = tasks.shadowJar.flatMap { it.archiveFile }
-  val archiveOps = serviceOf<ArchiveOperations>()
-  inputs.file(shadowJarFile)
+  inputs.files(tasks.shadowJar)
   inputs.property("nonRelocations", nonRelocations)
   outputs.file(outputFile)
-  val nonRelocations = nonRelocations
 
   doLast {
     val unshadowedFiles = mutableListOf<String>()
-    archiveOps.zipTree(shadowJarFile.get().asFile).visit {
-      val path = relativePath.pathString
+    zipTree(tasks.shadowJar.get().outputs.files.singleFile).visit {
+      val fileDetails = this
+      val path = fileDetails.relativePath.pathString
       if (
-        !(isDirectory ||
+        !(fileDetails.isDirectory ||
           path.startsWith("org/pkl/") ||
           path.startsWith("META-INF/") ||
           nonRelocations.any { path.startsWith(it) })

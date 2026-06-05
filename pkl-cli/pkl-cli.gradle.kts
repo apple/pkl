@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.io.ByteArrayOutputStream
 import java.io.OutputStream
 import org.gradle.kotlin.dsl.support.serviceOf
 
@@ -117,15 +118,9 @@ private fun setupJavaExecutableRun(
         null -> "java"
         else -> launcher.get().executablePath.asFile.absolutePath
       }
+    standardOutput = OutputStream.nullOutputStream()
 
-    doFirst { standardOutput = OutputStream.nullOutputStream() }
-
-    val javaExecutableFile = tasks.javaExecutable.map { it.outputs.files.singleFile }
-    argumentProviders.add(
-      CommandLineArgumentProvider {
-        listOf("-jar", javaExecutableFile.get().absolutePath) + args.toList()
-      }
-    )
+    args("-jar", tasks.javaExecutable.get().outputs.files.singleFile.toString(), *args)
 
     doFirst { outputFile.get().asFile.delete() }
 
@@ -138,10 +133,7 @@ val evalTestFlags = arrayOf("eval", "-x", "1 + 1", "pkl:base")
 
 fun Exec.useRootDirAndSuppressOutput() {
   workingDir = rootProject.layout.projectDirectory.asFile
-  doFirst {
-    // we only care that this exec doesn't fail
-    standardOutput = OutputStream.nullOutputStream()
-  }
+  standardOutput = ByteArrayOutputStream() // we only care that this exec doesn't fail
 }
 
 // 0.28 Preparing for JDK21 toolchains revealed that `testStartJavaExecutable` may pass, even though

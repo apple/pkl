@@ -68,7 +68,7 @@ val validateHtml by
     // write a basic result file s.t. gradle can consider task up-to-date
     // writing a result file in case validation fails is not easily possible with JavaExec, but also
     // not strictly necessary
-    doFirst { resultFile.get().asFile.delete() }
+    doFirst { project.delete(resultFile) }
     doLast { resultFile.get().asFile.writeText("Success.") }
   }
 
