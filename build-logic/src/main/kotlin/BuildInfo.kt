@@ -288,7 +288,12 @@ open class BuildInfo(private val project: Project) {
           classpath = template.classpath
           testClassesDirs = template.testClassesDirs
           jvmArgs.addAll(template.jvmArgs)
-          jvmArgumentProviders.addAll(template.jvmArgumentProviders)
+          // jvmArgumentProviders are NOT copied: providers added by plugins (e.g.
+          // java-gradle-plugin's GradleJvmCommandLineArgumentProvider) hold a direct
+          // reference to the task they were registered on. Copying them to derived tasks
+          // causes those tasks to capture a foreign task reference, which the
+          // configuration cache cannot serialize. Each derived task receives its own
+          // providers via withType<Test>().configureEach in the subproject.
           forkEvery = template.forkEvery
           maxParallelForks = template.maxParallelForks
           minHeapSize = template.minHeapSize

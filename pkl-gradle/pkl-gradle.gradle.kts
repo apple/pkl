@@ -100,21 +100,32 @@ val externalReaderJar by
     manifest { attributes("Main-Class" to "org.pkl.gradle.test.extreader.Main") }
   }
 
+// Named class avoids the anonymous inner-class `this$0` field that Gradle's configuration
+// cache cannot serialize when a SAM lambda is created inside a lambda-with-receiver.
+class ExternalReaderArgProvider(
+  private val jarFile: Provider<RegularFile>,
+  private val javaExecutable: Provider<String>,
+) : CommandLineArgumentProvider {
+  override fun asArguments() =
+    listOf(
+      "-DpklGradle.externalReaderJar=${jarFile.get().asFile.absolutePath}",
+      "-DpklGradle.javaExecutable=${javaExecutable.get()}",
+    )
+}
+
 val externalReaderJarFile = externalReaderJar.flatMap { it.archiveFile }
 
 val javaExecutablePath =
   javaToolchains.launcherFor(java.toolchain).map { it.executablePath.asFile.absolutePath }
 
-tasks.test {
+// Apply to all Test tasks (not just `test`) so that testJdk* tasks also receive the
+// external-reader system properties without relying on jvmArgumentProviders being copied
+// across tasks (which breaks the configuration cache via stale task references).
+tasks.withType<Test>().configureEach {
   dependsOn(externalReaderJar)
   // Currently the only way to inject system properties from lazy values in Gradle
   // is via `jvmArgumentProviders`.
-  jvmArgumentProviders += CommandLineArgumentProvider {
-    listOf(
-      "-DpklGradle.externalReaderJar=" + externalReaderJarFile.get().asFile.absolutePath,
-      "-DpklGradle.javaExecutable=" + javaExecutablePath.get(),
-    )
-  }
+  jvmArgumentProviders += ExternalReaderArgProvider(externalReaderJarFile, javaExecutablePath)
 }
 
 publishing {
