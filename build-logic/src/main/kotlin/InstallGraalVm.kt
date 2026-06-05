@@ -20,9 +20,13 @@ import java.util.*
 import javax.inject.Inject
 import kotlin.io.path.createDirectories
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.DirectoryProperty
+import org.gradle.api.file.RegularFileProperty
 import org.gradle.api.internal.file.FileOperations
 import org.gradle.api.provider.Property
 import org.gradle.api.tasks.Input
+import org.gradle.api.tasks.InputFile
+import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
 import org.gradle.process.ExecOperations
 
@@ -32,25 +36,32 @@ constructor(
   private val fileOperations: FileOperations,
   private val execOperations: ExecOperations,
 ) : DefaultTask() {
-  @get:Input abstract val graalVm: Property<BuildInfo.GraalVm>
+  @get:Input abstract val homeDir: Property<String>
+
+  @get:InputFile abstract val downloadFile: RegularFileProperty
+
+  @get:Input abstract val version: Property<String>
+
+  @get:Input abstract val graalVmJdkVersion: Property<String>
+
+  @get:Internal abstract val installDir: DirectoryProperty
 
   init {
-    @Suppress("LeakingThis") onlyIf("GraalVM not installed") { !graalVm.get().installDir.exists() }
+    @Suppress("LeakingThis") onlyIf("GraalVM not installed") { !installDir.get().asFile.exists() }
   }
 
   @TaskAction
   @Suppress("unused")
   fun run() {
-    // minimize chance of corruption by extract-to-random-dir-and-flip-symlink
-    val distroDir = Paths.get(graalVm.get().homeDir, UUID.randomUUID().toString())
+    val distroDir = Paths.get(homeDir.get(), UUID.randomUUID().toString())
     try {
       distroDir.createDirectories()
-      println("Extracting ${graalVm.get().downloadFile} into $distroDir")
+      println("Extracting ${downloadFile.get().asFile} into $distroDir")
       // faster and more reliable than Gradle's `copy { from tarTree() }`
       execOperations.exec {
         workingDir = distroDir.toFile()
         executable = "tar"
-        args("--strip-components=1", "-xzf", graalVm.get().downloadFile)
+        args("--strip-components=1", "-xzf", downloadFile.get().asFile)
       }
 
       val os = org.gradle.internal.os.OperatingSystem.current()
@@ -59,8 +70,8 @@ constructor(
 
       println("Installing native-image into $distroDir")
       val gvmVersionMajor =
-        requireNotNull(graalVm.get().version.split(".").first().toIntOrNull()) {
-          "Invalid GraalVM JDK version: ${graalVm.get().graalVmJdkVersion}"
+        requireNotNull(version.get().split(".").first().toIntOrNull()) {
+          "Invalid GraalVM JDK version: ${graalVmJdkVersion.get()}"
         }
       if (gvmVersionMajor < 24) {
         execOperations.exec {
@@ -70,11 +81,11 @@ constructor(
         }
       }
 
-      println("Creating symlink ${graalVm.get().installDir} for $distroDir")
-      val tempLink = Paths.get(graalVm.get().homeDir, UUID.randomUUID().toString())
+      println("Creating symlink ${installDir.get().asFile} for $distroDir")
+      val tempLink = Paths.get(homeDir.get(), UUID.randomUUID().toString())
       Files.createSymbolicLink(tempLink, distroDir)
       try {
-        Files.move(tempLink, graalVm.get().installDir.toPath(), StandardCopyOption.ATOMIC_MOVE)
+        Files.move(tempLink, installDir.get().asFile.toPath(), StandardCopyOption.ATOMIC_MOVE)
       } catch (e: Exception) {
         try {
           fileOperations.delete(tempLink.toFile())

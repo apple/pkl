@@ -53,27 +53,47 @@ idea {
   }
 }
 
-val clean by tasks.existing { delete(layout.buildDirectory) }
+val clean by tasks.existing {
+  val buildDirectory = layout.buildDirectory.map { it.asFile }
+  doLast { buildDirectory.get().delete() }
+}
 
-val printVersion by tasks.registering { doFirst { println(buildInfo.pklVersion) } }
+val printVersion by tasks.registering {
+  val pklVersion = buildInfo.pklVersion
+  doFirst { println(pklVersion.get()) }
+}
 
-val message =
-  """
-====
-Gradle version : ${gradle.gradleVersion}
-Java version   : ${System.getProperty("java.version")}
-isParallel     : ${gradle.startParameter.isParallelProjectExecutionEnabled}
-maxWorkerCount : ${gradle.startParameter.maxWorkerCount}
-Architecture   : ${buildInfo.arch}
+val printInfo by tasks.registering {
+  val arch = buildInfo.arch
+  val pklVersion = buildInfo.pklVersion
+  val pklVersionNonUnique = buildInfo.pklVersionNonUnique
+  val commitId = buildInfo.commitId
+  val gradleVerison = gradle.gradleVersion
+  val javaVersion = System.getProperty("java.version")
+  val isParallel = gradle.startParameter.isParallelProjectExecutionEnabled
+  val maxWorkerCount = gradle.startParameter.maxWorkerCount
+  val projectVersion = project.version
+  doFirst {
+    val message =
+      """
+      ====
+      Gradle version : $gradleVerison
+      Java version   : $javaVersion
+      isParallel     : $isParallel
+      maxWorkerCount : $maxWorkerCount
+      Architecture   : $arch
 
-Project Version        : ${project.version}
-Pkl Version            : ${buildInfo.pklVersion}
-Pkl Non-Unique Version : ${buildInfo.pklVersionNonUnique}
-Git Commit ID          : ${buildInfo.commitId}
-====
-"""
+      Project Version        : $projectVersion
+      Pkl Version            : ${pklVersion.get()}
+      Pkl Non-Unique Version : $pklVersionNonUnique
+      Git Commit ID          : ${commitId.get()}
+      ====
+      """
+        .trimIndent()
 
-val formattedMessage =
-  message.replace("\n====", "\n" + "=".repeat(message.lines().maxByOrNull { it.length }!!.length))
+    val formattedMessage =
+      message.replace("====", "=".repeat(message.lines().maxByOrNull { it.length }!!.length))
 
-logger.info(formattedMessage)
+    println(formattedMessage)
+  }
+}

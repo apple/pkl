@@ -67,13 +67,35 @@ dependencies {
   stagedWindowsAmd64Executable(executableFile("windows-amd64.exe"))
 }
 
+val nativeImageBuildService =
+  gradle.sharedServices.registerIfAbsent(
+    "nativeImageBuildService",
+    NativeImageBuildService::class,
+  ) {
+    maxParallelUsages = 1
+  }
+
+private val nativeImageCommandName =
+  if (buildInfo.os.isWindows) "native-image.cmd" else "native-image"
+
+private fun NativeImageBuild.configure() {
+  graalSdkLibraryName = buildInfo.libs.findLibrary("graalSdk").get().map { it.module.name }
+  releaseBuild = buildInfo.isReleaseBuild
+  nativeArch = buildInfo.isNativeArch
+  processorDivisor = if (buildInfo.os.isMacOsX && !buildInfo.isCiBuild) 4 else 1
+  buildService = nativeImageBuildService
+  usesService(nativeImageBuildService)
+}
+
 private fun NativeImageBuild.amd64() {
   arch = Architecture.AMD64
+  nativeImageExecutable = "${buildInfo.graalVmAmd64.baseDir}/bin/$nativeImageCommandName"
   dependsOn(":installGraalVmAmd64")
 }
 
 private fun NativeImageBuild.aarch64() {
   arch = Architecture.AARCH64
+  nativeImageExecutable = "${buildInfo.graalVmAarch64.baseDir}/bin/$nativeImageCommandName"
   dependsOn(":installGraalVmAarch64")
 }
 
@@ -91,6 +113,7 @@ val macExecutableAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
+    configure()
   }
 
 val macExecutableAarch64 by
@@ -99,6 +122,7 @@ val macExecutableAarch64 by
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
+    configure()
   }
 
 val linuxExecutableAmd64 by
@@ -107,6 +131,7 @@ val linuxExecutableAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
+    configure()
   }
 
 val linuxExecutableAarch64 by
@@ -115,6 +140,7 @@ val linuxExecutableAarch64 by
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
+    configure()
     // Ensure compatibility for kernels with page size set to 4k, 16k and 64k
     // (e.g. Raspberry Pi 5, Asahi Linux)
     extraNativeImageArgs.add("-H:PageSize=65536")
@@ -126,6 +152,7 @@ val alpineExecutableAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
+    configure()
     extraNativeImageArgs.addAll(listOf("--static", "--libc=musl"))
   }
 
@@ -135,6 +162,7 @@ val windowsExecutableAmd64 by
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
+    configure()
   }
 
 val assembleNative by tasks.existing
@@ -143,18 +171,18 @@ val testStartNativeExecutable by tasks.registering {
   dependsOn(assembleNative)
 
   // dummy file for up-to-date checking
-  val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
+  val outputFile = layout.buildDirectory.file("testStartNativeExecutable/output.txt")
   outputs.file(outputFile)
 
-  val execOutput = providers.exec {
-    commandLine(assembleNative.get().outputs.files.singleFile, "--version")
-  }
+  val nativeExecutableFile = assembleNative.map { it.outputs.files.singleFile }
+  val execOutput = providers.exec { commandLine(nativeExecutableFile.get(), "--version") }
+  val pklVersion = buildInfo.pklVersionNonUnique
 
   doLast {
     val outputText = execOutput.standardOutput.asText.get()
-    if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
+    if (!outputText.contains(pklVersion)) {
       throw GradleException(
-        "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
+        "Expected version output to contain current version ($pklVersion), but got '$outputText'"
       )
     }
     outputFile.get().asFile.toPath().apply {
@@ -171,10 +199,10 @@ val requiredGlibcVersion: Version = Version.parse("2.17")
 val checkGlibc by tasks.registering {
   enabled = buildInfo.os.isLinux && !buildInfo.musl
   dependsOn(assembleNative)
+  val nativeExecutableFile = assembleNative.map { it.outputs.files.singleFile }
+  val requiredGlibcVersion = requiredGlibcVersion
+  val exec = providers.exec { commandLine("objdump", "-T", nativeExecutableFile.get()) }
   doLast {
-    val exec = providers.exec {
-      commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
-    }
     val output = exec.standardOutput.asText.get()
     val minimumGlibcVersion =
       output

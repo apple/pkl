@@ -68,15 +68,16 @@ sourceSets { main { java { srcDir("src/main/java") } } }
 
 val prepareHistoricalDistributions by tasks.registering {
   val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
-  inputs.files(pklHistoricalDistributions.files)
+  inputs.files(pklHistoricalDistributions)
   outputs.dir(outputDir)
+  val isWindows = buildInfo.os.isWindows
   doLast {
     val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
-    for (file in pklHistoricalDistributions.files) {
+    for (file in inputs.files) {
       val target = distributionDir.resolve(file.name)
       // Create normal files on Windows, symlink on macOS/linux (need admin privileges to create
       // symlinks on Windows)
-      if (buildInfo.os.isWindows) {
+      if (isWindows) {
         if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
           if (Files.exists(target)) {
             Files.delete(target)

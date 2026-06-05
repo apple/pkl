@@ -70,17 +70,26 @@ for (packageDir in file("src/main/files/packages").listFiles()!!) {
       into(destinationDir)
       val shasumFile = destinationDir.map { it.file("${packageDir.name}.json.sha256") }
       outputs.file(shasumFile)
-      filter { line ->
-        line.replaceFirst("\$computedChecksum", archiveFile.get().asFile.computeChecksum())
-      }
+      val isWindows = buildInfo.os.isWindows
       doLast {
         val outputFile = destinationDir.get().asFile.resolve("${packageDir.name}.json")
-        if (buildInfo.os.isWindows) {
-          val contents = outputFile.readText()
-          // workaround for https://github.com/gradle/gradle/issues/1151
-          outputFile.writeText(contents.replace("\r\n", "\n"))
+        fun sha256Hex(file: File): String {
+          val hash = MessageDigest.getInstance("SHA-256").digest(file.readBytes())
+          return buildString(hash.size * 2) {
+            for (b in hash) {
+              append("0123456789abcdef"[b.toInt() shr 4 and 0xF])
+              append("0123456789abcdef"[b.toInt() and 0xF])
+            }
+          }
         }
-        shasumFile.get().asFile.writeText(outputFile.computeChecksum())
+        var contents =
+          outputFile.readText().replace("\$computedChecksum", sha256Hex(archiveFile.get().asFile))
+        if (isWindows) {
+          // workaround for https://github.com/gradle/gradle/issues/1151
+          contents = contents.replace("\r\n", "\n")
+        }
+        outputFile.writeText(contents)
+        shasumFile.get().asFile.writeText(sha256Hex(outputFile))
       }
     }
 
@@ -111,6 +120,9 @@ val generateKeys by
         "CN=localhost",
       )
     workingDir(keystoreDir)
+    // capture keystoreFile inside closure so we don't reference `this$0`; which breaks Gradle
+    // configuration cache
+    val keystoreFile = keystoreFile
     doFirst {
       workingDir.mkdirs()
       keystoreFile.get().asFile.delete()
@@ -143,20 +155,3 @@ val exportCerts by
       outputFile.get().asFile.delete()
     }
   }
-
-fun toHex(hash: ByteArray): String {
-  val hexDigitTable =
-    charArrayOf('0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f')
-  return buildString(hash.size * 2) {
-    for (b in hash) {
-      append(hexDigitTable[b.toInt() shr 4 and 0xF])
-      append(hexDigitTable[b.toInt() and 0xF])
-    }
-  }
-}
-
-fun File.computeChecksum(): String {
-  val md = MessageDigest.getInstance("SHA-256")
-  val hash = md.digest(readBytes())
-  return toHex(hash)
-}

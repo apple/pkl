@@ -47,8 +47,10 @@ fun Task.setupTestStartJavaExecutable(launcher: Provider<JavaLauncher>? = null) 
   val outputFile = layout.buildDirectory.file("testStartJavaExecutable/$name")
   outputs.file(outputFile)
 
+  val executableFile = javaExecutable.flatMap { it.outJar }
+  val pklVersion = buildInfo.pklVersionNonUnique
   val execOutput = providers.exec {
-    val executablePath = javaExecutable.get().outputs.files.singleFile
+    val executablePath = executableFile.get().asFile
     if (launcher?.isPresent == true) {
       commandLine(
         launcher.get().executablePath.asFile.absolutePath,
@@ -63,9 +65,9 @@ fun Task.setupTestStartJavaExecutable(launcher: Provider<JavaLauncher>? = null) 
 
   doLast {
     val outputText = execOutput.standardOutput.asText.get()
-    if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
+    if (!outputText.contains(pklVersion)) {
       throw GradleException(
-        "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
+        "Expected version output to contain current version ($pklVersion), but got '$outputText'"
       )
     }
     outputFile.get().asFile.toPath().apply {

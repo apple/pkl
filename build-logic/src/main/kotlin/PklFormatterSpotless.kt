@@ -15,8 +15,10 @@
  */
 import com.diffplug.spotless.FormatterFunc
 import com.diffplug.spotless.FormatterStep
+import java.io.File
 import java.io.Serial
 import java.io.Serializable
+import java.lang.reflect.Method
 import java.net.URLClassLoader
 import org.gradle.api.artifacts.Configuration
 
@@ -26,31 +28,45 @@ class PklFormatterStep(@Transient private val configuration: Configuration) : Se
   }
 
   fun create(): FormatterStep {
+    val files = configuration.files.toList()
     return FormatterStep.createLazy(
       "pkl",
-      { PklFormatterStep(configuration) },
-      { PklFormatterFunc(configuration) },
+      { PklFormatterState(files) },
+      { PklFormatterFunc(it.files) },
     )
   }
 }
 
-class PklFormatterFunc(@Transient private val configuration: Configuration) :
-  FormatterFunc, Serializable {
+data class PklFormatterState(val files: List<File>) : Serializable {
+  companion object {
+    @Serial private const val serialVersionUID: Long = 1L
+  }
+}
+
+class PklFormatterFunc(private val files: List<File>) : FormatterFunc, Serializable {
   companion object {
     @Serial private const val serialVersionUID: Long = 1L
   }
 
-  private val classLoader by lazy {
-    val urls = configuration.files.map { it.toURI().toURL() }
+  @delegate:Transient
+  private val classLoader: URLClassLoader by lazy {
+    val urls = files.map { it.toURI().toURL() }
     // Use the platform classloader as parent to isolate from Gradle's classloader
     URLClassLoader(urls.toTypedArray(), ClassLoader.getPlatformClassLoader())
   }
 
-  private val formatterClass by lazy { classLoader.loadClass("org.pkl.formatter.Formatter") }
+  @delegate:Transient
+  private val formatterClass: Class<*> by lazy {
+    classLoader.loadClass("org.pkl.formatter.Formatter")
+  }
 
-  private val formatMethod by lazy { formatterClass.getMethod("format", String::class.java) }
+  @delegate:Transient
+  private val formatMethod: Method by lazy {
+    formatterClass.getMethod("format", String::class.java)
+  }
 
-  private val formatterInstance by lazy { formatterClass.getConstructor().newInstance() }
+  @delegate:Transient
+  private val formatterInstance: Any by lazy { formatterClass.getConstructor().newInstance() }
 
   override fun apply(input: String): String {
     return formatMethod(formatterInstance, input) as String

@@ -28,11 +28,13 @@ val downloadGraalVmAmd64 by
   tasks.registering(Download::class) { configureDownloadGraalVm(buildInfo.graalVmAmd64) }
 
 fun Download.configureDownloadGraalVm(graalvm: BuildInfo.GraalVm) {
-  onlyIf { !graalvm.installDir.exists() }
-  doLast { println("Downloaded GraalVm to ${graalvm.downloadFile}") }
+  val installDir = graalvm.installDir
+  val downloadFile = graalvm.downloadFile
+  onlyIf { !installDir.exists() }
+  doLast { println("Downloaded GraalVm to $downloadFile") }
 
   src(graalvm.downloadUrl)
-  dest(graalvm.downloadFile)
+  dest(downloadFile)
   overwrite(false)
   tempAndMove(true)
 }
@@ -50,7 +52,8 @@ val verifyGraalVmAmd64 by
   }
 
 fun Verify.configureVerifyGraalVm(graalvm: BuildInfo.GraalVm) {
-  onlyIf { !graalvm.installDir.exists() }
+  val installDir = graalvm.installDir
+  onlyIf { !installDir.exists() }
 
   src(graalvm.downloadFile)
   checksum(
@@ -59,16 +62,26 @@ fun Verify.configureVerifyGraalVm(graalvm: BuildInfo.GraalVm) {
   algorithm("SHA-256")
 }
 
+// incorrect diagnostic
+@Suppress("UnusedReceiverParameter")
+fun InstallGraalVm.configureInstallGraalVm(graalVm: BuildInfo.GraalVm) {
+  homeDir = graalVm.homeDir
+  downloadFile = graalVm.downloadFile
+  version = graalVm.version
+  graalVmJdkVersion = graalVm.graalVmJdkVersion
+  installDir = graalVm.installDir
+}
+
 @Suppress("unused")
 val installGraalVmAarch64 by
   tasks.registering(InstallGraalVm::class) {
     dependsOn(verifyGraalVmAarch64)
-    graalVm = buildInfo.graalVmAarch64
+    configureInstallGraalVm(buildInfo.graalVmAarch64)
   }
 
 @Suppress("unused")
 val installGraalVmAmd64 by
   tasks.registering(InstallGraalVm::class) {
     dependsOn(verifyGraalVmAmd64)
-    graalVm = buildInfo.graalVmAmd64
+    configureInstallGraalVm(buildInfo.graalVmAmd64)
   }
