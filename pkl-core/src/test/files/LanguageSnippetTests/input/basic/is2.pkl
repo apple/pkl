@@ -1,5 +1,9 @@
 amends "../snippetTest.pkl"
 
+local class Animal
+
+local class Person
+
 facts {
   ["List"] {
     List(1, 2, 3) is List<Int>
@@ -16,6 +20,7 @@ facts {
   ["Map"] {
     Map("Pigeon", 42, "Barn Owl", 21) is Map<String, Int>
     !(Map("Pigeon", 42, "Barn Owl", 21) is Map<Int, String>)
+    !(Map("bob", new Listing { new Animal {} }) is Map<String, Listing<Person>>)
   }
 
   ["Listing"] {

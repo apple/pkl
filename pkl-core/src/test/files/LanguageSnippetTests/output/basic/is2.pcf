@@ -12,6 +12,7 @@ facts {
   ["Map"] {
     true
     true
+    true
   }
   ["Listing"] {
     true
