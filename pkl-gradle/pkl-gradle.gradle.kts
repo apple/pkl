@@ -100,13 +100,15 @@ val externalReaderJar by
     manifest { attributes("Main-Class" to "org.pkl.gradle.test.extreader.Main") }
   }
 
+val externalReaderJarFile = externalReaderJar.flatMap { it.archiveFile }
+
+val javaExecutablePath =
+  javaToolchains.launcherFor(java.toolchain).map { it.executablePath.asFile.absolutePath }
+
 tasks.test {
   dependsOn(externalReaderJar)
   // Currently the only way to inject system properties from lazy values in Gradle
   // is via `jvmArgumentProviders`.
-  val externalReaderJarFile = externalReaderJar.flatMap { it.archiveFile }
-  val javaExecutablePath =
-    javaToolchains.launcherFor(java.toolchain).map { it.executablePath.asFile.absolutePath }
   jvmArgumentProviders += CommandLineArgumentProvider {
     listOf(
       "-DpklGradle.externalReaderJar=" + externalReaderJarFile.get().asFile.absolutePath,
