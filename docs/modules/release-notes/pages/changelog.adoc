@@ -4,6 +4,10 @@ include::ROOT:partial$component-attributes.adoc[]
 [[release-0.32.0]]
 == 0.32.0 (UNRELEASED)
 
+=== Fixes
+
+* Fixes an issue where a non-abstract class or module could declare `abstract` members (https://github.com/apple/pkl/issues/1614[#1614]).
+
 [[release-0.31.1]]
 == 0.31.1 (2026-03-26)
 

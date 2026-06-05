@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Cannot define an abstract member in a non-abstract class.
+
+x | abstract function bar(): Int
+    ^^^^^^^^
+at abstractMethodInNonAbstractClass#Foo (file:///$snippetsDir/input/errors/abstractMethodInNonAbstractClass.pkl)
+
+A member can only be `abstract` if its enclosing class is also `abstract`.
