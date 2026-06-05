@@ -165,7 +165,7 @@ class Flag extends BaseFlag {
   /// | [Listing], [List], [Set]   | Element values are parsed based on the above primitive types |
   /// | [Mapping], [Map], [Pair]   | Value is split into a [Pair] on the first `"="` and each substring is parsed based on the above primitive types |
   /// | Other types                | An error is thrown; `convert` should be defined explicitly |
-  convert: ((String) -> Any)?
+  hidden convert: ((String) -> Any)?
 
   /// Specifies whether the flag may be specified more than once.
   ///
@@ -188,7 +188,7 @@ class Flag extends BaseFlag {
   /// | [Listing], [List] | Result is all option values in the order specified |
   /// | [Set]             | Result is all unique option values |
   /// | Other types       | Result is the last value specified option value |
-  transformAll: ((List<Any>) -> Any)?
+  hidden transformAll: ((List<Any>) -> Any)?
 
   /// Specify how this flag should be completed in generated shell completions.
   ///
@@ -226,7 +226,7 @@ class Argument extends Annotation {
   ///
   /// If no value is provided, each option value is transformed using the same rules as
   /// [Flag.convert].
-  convert: ((String) -> Any)?
+  hidden convert: ((String) -> Any)?
 
   /// Specifies whether the argument may be specified more than once.
   ///
@@ -245,7 +245,7 @@ class Argument extends Annotation {
   ///
   /// If no value is provided, all option values are transformed using the same rules as
   /// [Flag.transformAll].
-  transformAll: ((List<Any>) -> Any)?
+  hidden transformAll: ((List<Any>) -> Any)?
 
   /// Specify how this flag should be completed in generated shell completions.
   ///

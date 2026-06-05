@@ -750,6 +750,28 @@ class EvaluatorTest {
       .hasMessageContaining("Cannot resolve dependency because there is no project found.")
   }
 
+  @Test
+  fun `eval schema when property has a ConvertProperty annotation`() {
+    // this fails when `ConvertProperty.render` is not hidden
+    // because module schema generation exports all annotations
+    // and this annotation has a Function2 property that is not exportable
+    val evaluator = Evaluator.preconfigured()
+    assertThatCode {
+        evaluator.evaluateSchema(
+          text(
+            """
+            @ConvertProperty {
+              render = (prop, ) -> prop
+            }
+            foo: String
+            """
+              .trimIndent()
+          )
+        )
+      }
+      .doesNotThrowAnyException()
+  }
+
   private fun checkModule(module: PModule) {
     assertThat(module.properties.size).isEqualTo(2)
     assertThat(module.getProperty("name")).isEqualTo("pigeon")
