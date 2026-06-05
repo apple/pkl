@@ -93,21 +93,29 @@ fun createCompatibilityTestTask(versionInfo: GradleVersionInfo): TaskProvider<Te
   createCompatibilityTestTask(versionInfo.version, versionInfo.downloadUrl)
 
 fun createCompatibilityTestTask(version: String, downloadUrl: String): TaskProvider<Test> {
+  val currentGradleVersion = gradle.gradleVersion
   return tasks.register("compatibilityTest$version", Test::class.java) {
     mustRunAfter(tasks.test)
 
-    maxHeapSize = tasks.test.get().maxHeapSize
-    jvmArgs = tasks.test.get().jvmArgs
-    classpath = tasks.test.get().classpath
+    val myMaxHeapSize = tasks.test.map { it.maxHeapSize }
+    val myJvmArgs = tasks.test.map { it.jvmArgs }
+    val myClasspath = tasks.test.map { it.classpath }
+
     systemProperty("testGradleVersion", version)
     systemProperty("testGradleDistributionUrl", downloadUrl)
 
     doFirst {
-      if (version == gradle.gradleVersion && gradle.taskGraph.hasTask(tasks.test.get())) {
+      if (
+        version == currentGradleVersion &&
+          project.gradle.taskGraph.hasTask(project.tasks.getByName("test"))
+      ) {
         // don't test same version twice
         println("This version has already been tested by the `test` task.")
         throw StopExecutionException()
       }
+      maxHeapSize = myMaxHeapSize.get()
+      jvmArgs = myJvmArgs.get()
+      classpath = myClasspath.get()
     }
   }
 }
