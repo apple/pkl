@@ -414,7 +414,7 @@ abstract class BaseValueRenderer {
 open class ConvertProperty extends Annotation {
   /// Function called by [BaseValueRenderer] types during rendering to transform property
   /// names and values.
-  render: (Pair<String, Any>, BaseValueRenderer) -> Pair<String, Any>
+  hidden render: (Pair<String, Any>, BaseValueRenderer) -> Pair<String, Any>
 }
 
 /// Base class for rendering Pkl values in some textual output format.

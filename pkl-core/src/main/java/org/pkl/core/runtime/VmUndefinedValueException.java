@@ -74,7 +74,7 @@ public final class VmUndefinedValueException extends VmEvalException {
     if (topLevelValue instanceof VmTyped typed && typed.isModuleObject()) {
       builder
           .append(" of module `")
-          .append(typed.getModuleInfo().getModuleSchema(typed).getModuleUri())
+          .append(typed.getModuleInfo().getModuleKey().getUri())
           .append('`');
     }
     builder.append('.');
