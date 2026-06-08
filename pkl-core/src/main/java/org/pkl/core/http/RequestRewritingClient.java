@@ -134,7 +134,8 @@ final class RequestRewritingClient implements HttpClient {
         throw new HttpClientException(
             ErrorMessages.create("httpRedirectInvalidUri", currentRequestUri, location.get()));
       }
-      if (currentRequestUri.getScheme().equalsIgnoreCase("https") && redirectUri.getScheme().equalsIgnoreCase("http")) {
+      if (currentRequestUri.getScheme().equalsIgnoreCase("https")
+          && redirectUri.getScheme().equalsIgnoreCase("http")) {
         throw new HttpClientException(
             ErrorMessages.create("httpRedirectCannotDowngrade", currentRequestUri, redirectUri));
       }
