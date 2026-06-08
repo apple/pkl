@@ -77,7 +77,7 @@ final class RequestRewritingClient implements HttpClient {
     var maxRedirects = 20;
     if (maxRedirectProp != null) {
       try {
-        maxRedirects = Integer.parseInt(maxRedirectProp);
+        maxRedirects = Math.max(0, Integer.parseInt(maxRedirectProp));
       } catch (NumberFormatException ignored) {
       }
     }
