@@ -260,7 +260,7 @@ class HttpClientTest {
       assertThatCode { client.send(request, HttpResponse.BodyHandlers.ofString(), NoopChecker) }
         .hasMessageContaining(
           """
-          Cannot follow HTTP redirect because the response Location header has a malformed URI.
+          Cannot follow HTTP redirect because the response 'Location' header has a malformed URI.
           """
             .trimIndent()
         )
