@@ -825,7 +825,7 @@ jobs:
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
   verdict:
-    if: '!cancelled() && !failure()'
+    if: always()
     needs:
     - check-pkl-github-actions
     - gradle-check
@@ -844,7 +844,11 @@ jobs:
     - pkl-doc-windows-amd64-snapshot
     runs-on: ubuntu-latest
     steps:
-    - run: 'true'
+    - name: Failure verdict
+      if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+      run: |-
+        echo "Some of the required jobs are either failing or were cancelled"
+        exit 1
   upload-event-file:
     runs-on: ubuntu-latest
     steps:
