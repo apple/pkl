@@ -29,7 +29,7 @@ public final class HttpUtils {
     return switch (statusCode) {
       // We can handle each of these status codes exactly the same because:
       //
-      // 1. We don't implement any cacheing for HTTPS requests.
+      // 1. We don't implement any caching for HTTPS requests.
       // 2. Pkl only makes GET requests.
       case 301, 302, 303, 307, 308 -> true;
       default -> false;
