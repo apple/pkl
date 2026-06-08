@@ -1295,7 +1295,7 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
         )
       )
     val buffer = ByteArrayOutputStream()
@@ -1337,7 +1337,7 @@ result = someLib.x
         CliBaseOptions(
           sourceModules = listOf(moduleUri),
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           settings = settingsFile,
         )
       )
@@ -1367,7 +1367,7 @@ result = someLib.x
           workingDir = tempDir,
           moduleCacheDir = tempDir,
           noCache = true,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
         )
       )
@@ -1473,7 +1473,7 @@ result = someLib.x
           sourceModules = listOf(URI("package://localhost:1/birds@0.5.0#/catalog/Ostrich.pkl")),
           noCache = true,
           httpProxy = URI(wwRuntimeInfo.httpBaseUrl),
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           allowedModules = SecurityManagers.defaultAllowedModules + Pattern.compile("http:"),
         )
       )

@@ -967,7 +967,7 @@ class CliProjectPackagerTest {
         CliProjectPackager(
             CliBaseOptions(
               workingDir = tempDir,
-              caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+              caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
               testPort = packageServer.port,
             ),
             listOf(tempDir.resolve("project")),
@@ -1011,7 +1011,7 @@ class CliProjectPackagerTest {
     CliProjectPackager(
         CliBaseOptions(
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
         ),
         listOf(tempDir.resolve("project")),

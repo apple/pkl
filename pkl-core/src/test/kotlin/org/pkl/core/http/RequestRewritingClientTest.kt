@@ -45,7 +45,7 @@ class RequestRewritingClientTest {
 
   @Test
   fun `fills in missing User-Agent header`() {
-    client.send(exampleRequest, BodyHandlers.discarding())
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
 
     assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("Pkl")
   }
@@ -61,7 +61,7 @@ class RequestRewritingClientTest {
         mapOf(URI("https://foo/") to URI("https://bar/")),
         mapOf(IoUtils.doubleStarGlob to mapOf("User-Agent" to listOf("My-User-Agent"))),
       )
-    client.send(exampleRequest, BodyHandlers.discarding())
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
     assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("My-User-Agent")
   }
 
@@ -73,14 +73,14 @@ class RequestRewritingClientTest {
         .header("User-Agent", "Agent 2")
         .build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThatList(captured.request.headers().allValues("User-Agent")).containsOnly("Pkl")
   }
 
   @Test
   fun `fills in missing request timeout`() {
-    client.send(exampleRequest, BodyHandlers.discarding())
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.timeout()).hasValue(Duration.ofSeconds(42))
   }
@@ -89,14 +89,14 @@ class RequestRewritingClientTest {
   fun `leaves existing request timeout intact`() {
     val request = HttpRequest.newBuilder(exampleUri).timeout(Duration.ofMinutes(33)).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.timeout()).hasValue(Duration.ofMinutes(33))
   }
 
   @Test
   fun `fills in missing HTTP version`() {
-    client.send(exampleRequest, BodyHandlers.discarding())
+    client.send(exampleRequest, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.version()).hasValue(JdkHttpClient.Version.HTTP_2)
   }
@@ -105,7 +105,7 @@ class RequestRewritingClientTest {
   fun `leaves existing HTTP version intact`() {
     val request = HttpRequest.newBuilder(exampleUri).version(JdkHttpClient.Version.HTTP_1_1).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.version()).hasValue(JdkHttpClient.Version.HTTP_1_1)
   }
@@ -114,7 +114,7 @@ class RequestRewritingClientTest {
   fun `leaves default method intact`() {
     val request = HttpRequest.newBuilder(exampleUri).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.method()).isEqualTo("GET")
   }
@@ -123,7 +123,7 @@ class RequestRewritingClientTest {
   fun `leaves explicit method intact`() {
     val request = HttpRequest.newBuilder(exampleUri).DELETE().build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.method()).isEqualTo("DELETE")
   }
@@ -133,7 +133,7 @@ class RequestRewritingClientTest {
     val publisher = BodyPublishers.ofString("body")
     val request = HttpRequest.newBuilder(exampleUri).PUT(publisher).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.bodyPublisher().get()).isSameAs(publisher)
   }
@@ -145,7 +145,7 @@ class RequestRewritingClientTest {
       RequestRewritingClient("Pkl", Duration.ofSeconds(42), 5000, captured, mapOf(), mapOf())
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.uri().port).isEqualTo(5000)
   }
@@ -154,7 +154,7 @@ class RequestRewritingClientTest {
   fun `leaves port 0 intact if no test port is set`() {
     val request = HttpRequest.newBuilder(URI("https://example.com:0")).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.uri().port).isEqualTo(0)
   }
@@ -344,7 +344,7 @@ class RequestRewritingClientTest {
     val captured = RequestCapturingClient()
     val client = RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, captured, rules, mapOf())
     val request = HttpRequest.newBuilder(URI(uri)).build()
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
     return captured.request.uri().toString()
   }
 
@@ -366,7 +366,7 @@ class RequestRewritingClientTest {
       )
     val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThatList(captured.request.headers().allValues("x-one")).containsExactly("one")
     assertThatList(captured.request.headers().allValues("x-two")).containsExactly("two-a", "two-b")
@@ -389,7 +389,7 @@ class RequestRewritingClientTest {
       )
     val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThat(captured.request.headers().firstValue("x-foo")).isEmpty
     assertThat(captured.request.headers().firstValue("x-bar")).isEmpty
@@ -413,7 +413,7 @@ class RequestRewritingClientTest {
     val request =
       HttpRequest.newBuilder(URI("https://example.com/foo/bar")).header("x-foo", "request").build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThatList(captured.request.headers().allValues("x-foo"))
       .containsExactly("request", "rule-a", "rule-b")
@@ -436,7 +436,7 @@ class RequestRewritingClientTest {
       )
     val request = HttpRequest.newBuilder(URI("https://example.com/foo/bar")).build()
 
-    client.send(request, BodyHandlers.discarding())
+    client.send(request, BodyHandlers.discarding(), NoopChecker)
 
     assertThatList(captured.request.headers().allValues("user-agent"))
       .containsExactly("My User Agent")

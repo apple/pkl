@@ -24,6 +24,7 @@ import java.net.http.HttpResponse.BodyHandler;
 import java.util.Optional;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.SecurityManagerException;
 
 /**
  * An {@code HttpClient} decorator that defers creating the underlying HTTP client until the first
@@ -45,9 +46,12 @@ final class LazyHttpClient implements HttpClient {
   }
 
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
-      throws IOException {
-    return getOrCreateClient().send(request, responseBodyHandler);
+  public <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws IOException, SecurityManagerException {
+    return getOrCreateClient().send(request, responseBodyHandler, httpRequestChecker);
   }
 
   @Override

@@ -46,6 +46,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
+import org.pkl.core.SecurityManagerException;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
@@ -83,13 +84,16 @@ final class JdkHttpClient implements HttpClient {
             .sslContext(createSslContext(certificateFiles, certificateBytes))
             .connectTimeout(connectTimeout)
             .proxy(proxySelector)
-            .followRedirects(Redirect.NORMAL)
+            .followRedirects(Redirect.NEVER)
             .build();
   }
 
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler)
-      throws IOException {
+  public <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker)
+      throws IOException, SecurityManagerException {
     try {
       return underlying.send(request, responseBodyHandler);
     } catch (ConnectException e) {
@@ -144,7 +148,7 @@ final class JdkHttpClient implements HttpClient {
 
       return sslContext;
     } catch (GeneralSecurityException | IOException e) {
-      throw new HttpClientInitException(
+      throw new HttpClientException(
           ErrorMessages.create("cannotInitHttpClient", Exceptions.getRootReason(e)), e);
     }
   }
@@ -156,9 +160,9 @@ final class JdkHttpClient implements HttpClient {
       try (var stream = Files.newInputStream(file)) {
         collectCertificates(certificates, factory, stream, file);
       } catch (NoSuchFileException e) {
-        throw new HttpClientInitException(ErrorMessages.create("cannotFindCertFile", file));
+        throw new HttpClientException(ErrorMessages.create("cannotFindCertFile", file));
       } catch (IOException e) {
-        throw new HttpClientInitException(
+        throw new HttpClientException(
             ErrorMessages.create("cannotReadCertFile", Exceptions.getRootReason(e)));
       }
     }
@@ -179,11 +183,11 @@ final class JdkHttpClient implements HttpClient {
       //noinspection unchecked
       certificates = (Collection<X509Certificate>) factory.generateCertificates(stream);
     } catch (CertificateException e) {
-      throw new HttpClientInitException(
+      throw new HttpClientException(
           ErrorMessages.create("cannotParseCertFile", source, Exceptions.getRootReason(e)));
     }
     if (certificates.isEmpty()) {
-      throw new HttpClientInitException(ErrorMessages.create("emptyCertFile", source));
+      throw new HttpClientException(ErrorMessages.create("emptyCertFile", source));
     }
     anchors.addAll(certificates);
   }

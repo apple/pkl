@@ -24,7 +24,10 @@ import java.net.http.HttpResponse.BodyHandler;
 @ThreadSafe
 final class DummyHttpClient implements HttpClient {
   @Override
-  public <T> HttpResponse<T> send(HttpRequest request, BodyHandler<T> responseBodyHandler) {
+  public <T> HttpResponse<T> send(
+      HttpRequest request,
+      BodyHandler<T> responseBodyHandler,
+      HttpRequestChecker httpRequestChecker) {
     throw new AssertionError("Dummy HTTP client cannot send request: " + request);
   }
 

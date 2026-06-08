@@ -87,7 +87,7 @@ class CliProjectResolverTest {
     CliProjectResolver(
         CliBaseOptions(
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
           noCache = true,
         ),
@@ -142,7 +142,7 @@ class CliProjectResolverTest {
     CliProjectResolver(
         CliBaseOptions(
           workingDir = tempDir,
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
           noCache = true,
         ),
@@ -240,7 +240,7 @@ class CliProjectResolverTest {
     )
     CliProjectResolver(
         CliBaseOptions(
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
           noCache = true,
         ),
@@ -322,7 +322,7 @@ class CliProjectResolverTest {
     val errOut = StringWriter()
     CliProjectResolver(
         CliBaseOptions(
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
           noCache = true,
         ),
@@ -397,7 +397,7 @@ class CliProjectResolverTest {
     val errOut = StringWriter()
     CliProjectResolver(
         CliBaseOptions(
-          caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+          caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
           testPort = packageServer.port,
           noCache = true,
         ),
@@ -484,7 +484,7 @@ class CliProjectResolverTest {
     assertThatCode {
         CliProjectResolver(
             CliBaseOptions(
-              caCertificates = listOf(FileTestUtils.selfSignedCertificate),
+              caCertificates = listOf(FileTestUtils.selfSignedCertificatePem),
               testPort = packageServer.port,
               noCache = true,
             ),

@@ -28,3 +28,7 @@ fun HttpClient.getConfiguredSettings(): HttpSettings {
   val requestRewritingClient = this.orCreateClient as RequestRewritingClient
   return HttpSettings(requestRewritingClient.headers, requestRewritingClient.rewritesMap)
 }
+
+object NoopChecker : HttpClient.HttpRequestChecker {
+  override fun check(uri: URI) {}
+}
