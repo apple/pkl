@@ -452,6 +452,9 @@ examples {
     str1.padStart(10, " ")
     module.catch(() -> str1.padStart(10, ""))
     module.catch(() -> str1.padStart(10, "aa"))
+    "🙃".padStart(5, "h")
+    "🙃".padStart(5, "🏀")
+    "hi".padStart(5, "🏀")
   }
 
   ["padEnd()"] {
@@ -463,6 +466,9 @@ examples {
     str1.padEnd(10, " ")
     module.catch(() -> str1.padEnd(10, ""))
     module.catch(() -> str1.padEnd(10, "aa"))
+    "🙃".padEnd(5, "h")
+    "🙃".padEnd(5, "🏀")
+    "hi".padEnd(5, "🏀")
   }
 
   ["toBooleanOrNull()"] {

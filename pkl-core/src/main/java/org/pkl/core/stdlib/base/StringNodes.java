@@ -745,13 +745,12 @@ public final class StringNodes {
     @TruffleBoundary
     @Specialization
     protected String eval(String self, long width, String ch) {
-      var length = self.length();
+      var length = self.codePointCount(0, self.length());
       if (length >= width) return self;
 
       var result = new StringBuilder(VmSafeMath.toInt32(width));
-      var c = ch.charAt(0);
       for (var i = 0; i < width - length; i++) {
-        result.append(c);
+        result.append(ch);
       }
       result.append(self);
       return result.toString();
@@ -762,14 +761,13 @@ public final class StringNodes {
     @TruffleBoundary
     @Specialization
     protected String eval(String self, long width, String ch) {
-      var length = self.length();
+      var length = self.codePointCount(0, self.length());
       if (length >= width) return self;
 
       var result = new StringBuilder(VmSafeMath.toInt32(width));
       result.append(self);
-      var c = ch.charAt(0);
       for (var i = 0; i < width - length; i++) {
-        result.append(c);
+        result.append(ch);
       }
       return result.toString();
     }

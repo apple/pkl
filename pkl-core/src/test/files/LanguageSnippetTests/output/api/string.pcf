@@ -386,6 +386,9 @@ examples {
     "   abcdefg"
     "Type constraint `length == 1` violated. Value: \"\""
     "Type constraint `length == 1` violated. Value: \"aa\""
+    "hhhh🙃"
+    "🏀🏀🏀🏀🙃"
+    "🏀🏀🏀hi"
   }
   ["padEnd()"] {
     ""
@@ -396,6 +399,9 @@ examples {
     "abcdefg   "
     "Type constraint `length == 1` violated. Value: \"\""
     "Type constraint `length == 1` violated. Value: \"aa\""
+    "🙃hhhh"
+    "🙃🏀🏀🏀🏀"
+    "hi🏀🏀🏀"
   }
   ["toBooleanOrNull()"] {
     true
