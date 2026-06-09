@@ -77,8 +77,9 @@ data class CliBaseOptions(
 
   /**
    * The Pkl settings file to use. A settings file is a Pkl module amending the `pkl.settings`
-   * standard library module. If `null`, `~/.pkl/settings.pkl` (if present) or the defaults
-   * specified in the `pkl:settings` standard library module are used.
+   * standard library module. If `null`, `~/.config/pkl/settings.pkl` (or the legacy
+   * `~/.pkl/settings.pkl`) if present, or the defaults specified in the `pkl:settings` standard
+   * library module are used.
    */
   private val settings: URI? = null,
 

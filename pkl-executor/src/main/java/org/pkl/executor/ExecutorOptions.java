@@ -16,6 +16,7 @@
 package org.pkl.executor;
 
 import java.net.URI;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -67,7 +68,16 @@ public final class ExecutorOptions {
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
-    return Path.of(System.getProperty("user.home"), ".pkl", "cache");
+    // Keep in sync with org.pkl.core.util.IoUtils.getDefaultModuleCacheDir (pkl-executor cannot
+    // depend on pkl-core). Prefer the XDG-style `~/.cache/pkl`, but keep using a pre-existing
+    // legacy `~/.pkl/cache` so that already-populated caches aren't orphaned.
+    var home = System.getProperty("user.home");
+    var xdgLocation = Path.of(home, ".cache", "pkl");
+    var legacyLocation = Path.of(home, ".pkl", "cache");
+    if (!Files.exists(xdgLocation) && Files.exists(legacyLocation)) {
+      return legacyLocation;
+    }
+    return xdgLocation;
   }
 
   public static Builder builder() {

@@ -36,7 +36,7 @@ Possible values:
 .--cache-dir
 [%collapsible]
 ====
-Default: `~/.pkl/cache` +
+Default: `~/.cache/pkl` (or the legacy `~/.pkl/cache` if it already exists) +
 Example: `/path/to/module/cache/` +
 The cache directory for storing packages.
 ====
@@ -97,7 +97,7 @@ Any symlinks are resolved before this check is performed.
 Default: (none) +
 Example: `mySettings.pkl` +
 File path of the Pkl settings file to use.
-If not set, `~/.pkl/settings.pkl` or defaults specified in the `pkl.settings` standard library module are used.
+If not set, `~/.config/pkl/settings.pkl` (or the legacy `~/.pkl/settings.pkl`), or defaults specified in the `pkl.settings` standard library module are used.
 ====
 
 .-t, --timeout

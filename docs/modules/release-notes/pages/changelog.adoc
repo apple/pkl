@@ -4,6 +4,11 @@ include::ROOT:partial$component-attributes.adoc[]
 [[release-0.32.0]]
 == 0.32.0 (UNRELEASED)
 
+=== Changes
+
+* Default the module cache and settings file to XDG-style locations (`~/.cache/pkl` and `~/.config/pkl/settings.pkl`) instead of `~/.pkl`.
+The legacy `~/.pkl` locations are still used when they already exist, so existing setups keep working without migration.
+
 [[release-0.31.1]]
 == 0.31.1 (2026-03-26)
 

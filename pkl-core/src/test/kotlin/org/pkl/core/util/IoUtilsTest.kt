@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,7 @@ import java.io.FileNotFoundException
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
+import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
@@ -408,5 +409,28 @@ class IoUtilsTest {
     assertThat(IoUtils.encodePath("(")).isEqualTo("((")
     assertThat(IoUtils.encodePath("3a)")).isEqualTo("3a)")
     assertThat(IoUtils.encodePath("foo/bar/baz")).isEqualTo("foo/bar/baz")
+  }
+
+  @Test
+  fun `preferXdgLocation() prefers the XDG location when it exists`(@TempDir tempDir: Path) {
+    val xdg = tempDir.resolve("xdg").createDirectories()
+    val legacy = tempDir.resolve("legacy").createDirectories()
+    assertThat(IoUtils.preferXdgLocation(xdg, legacy)).isEqualTo(xdg)
+  }
+
+  @Test
+  fun `preferXdgLocation() falls back to legacy when only the legacy location exists`(
+    @TempDir tempDir: Path
+  ) {
+    val xdg = tempDir.resolve("xdg")
+    val legacy = tempDir.resolve("legacy").createDirectories()
+    assertThat(IoUtils.preferXdgLocation(xdg, legacy)).isEqualTo(legacy)
+  }
+
+  @Test
+  fun `preferXdgLocation() prefers the XDG location when neither exists`(@TempDir tempDir: Path) {
+    val xdg = tempDir.resolve("xdg")
+    val legacy = tempDir.resolve("legacy")
+    assertThat(IoUtils.preferXdgLocation(xdg, legacy)).isEqualTo(xdg)
   }
 }

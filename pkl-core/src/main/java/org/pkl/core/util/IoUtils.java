@@ -234,7 +234,32 @@ public final class IoUtils {
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultModuleCacheDir() {
-    return getPklHomeDir().resolve("cache");
+    // Prefer the XDG-style `~/.cache/pkl`, but keep using a pre-existing legacy `~/.pkl/cache` so
+    // that already-populated caches aren't orphaned (which would force a re-download).
+    return preferXdgLocation(
+        Path.of(System.getProperty("user.home"), ".cache", "pkl"),
+        getPklHomeDir().resolve("cache"));
+  }
+
+  // not stored to avoid build-time initialization by native-image
+  public static Path getDefaultSettingsFile() {
+    // Prefer the XDG-style `~/.config/pkl/settings.pkl`, falling back to legacy
+    // `~/.pkl/settings.pkl`.
+    return preferXdgLocation(
+        Path.of(System.getProperty("user.home"), ".config", "pkl", "settings.pkl"),
+        getPklHomeDir().resolve("settings.pkl"));
+  }
+
+  /**
+   * Returns {@code xdgLocation}, unless it does not exist and the legacy {@code ~/.pkl} location
+   * does, in which case {@code legacyLocation} is returned. New setups therefore use the XDG-style
+   * location while existing {@code ~/.pkl} setups keep working without migration.
+   */
+  static Path preferXdgLocation(Path xdgLocation, Path legacyLocation) {
+    if (!Files.exists(xdgLocation) && Files.exists(legacyLocation)) {
+      return legacyLocation;
+    }
+    return xdgLocation;
   }
 
   // not stored to avoid build-time initialization by native-image

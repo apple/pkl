@@ -37,6 +37,15 @@ Ready when you need them.
 
 * New property: link:{uri-stdlib-projectModule}#resolvedEvaluatorSettings[`Project.resolvedEvaluatorSettings`]
 
+=== CLI Changes
+
+==== Default cache and settings locations
+
+The CLI now stores its package cache in `~/.cache/pkl` and reads its settings file from `~/.config/pkl/settings.pkl` by default, instead of placing both under `~/.pkl`.
+These are fixed defaults; no environment variables (such as `XDG_CACHE_HOME` or `XDG_CONFIG_HOME`) are read.
+
+Existing setups keep working without migration: a pre-existing `~/.pkl/cache` is still used (so packages aren't re-downloaded), and `~/.pkl/settings.pkl` is still read when `~/.config/pkl/settings.pkl` is absent.
+
 == Breaking Changes [small]#💔#
 
 Things to watch out for when upgrading.

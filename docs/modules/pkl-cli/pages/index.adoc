@@ -1385,14 +1385,14 @@ it works as follows:
 The Pkl settings file allows to customize the CLI experience.
 
 A settings file is a Pkl module amending the `pkl.settings` standard library module.
-Its default location is `~/.pkl/settings.pkl`.
+Its default location is `~/.config/pkl/settings.pkl`, falling back to the legacy `~/.pkl/settings.pkl` if that exists.
 To use a different settings file, set the `--settings` command line option, for example `--settings mysettings.pkl`.
 To enforce default settings, use `--settings pkl:settings`.
 The settings file is also honored by (and configurable through) the Gradle plugin and `CliEvaluator` API.
 
 Here is a typical settings file:
 
-.~/.pkl/settings.pkl
+.~/.config/pkl/settings.pkl
 [source%parsed,{pkl}]
 ----
 amends "pkl:settings" // <1>
