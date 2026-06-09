@@ -42,7 +42,7 @@ class PklSettingsTest {
         .trimIndent()
     )
 
-    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val settings = PklSettings.loadFromSettingsDir(tempDir)
     assertThat(settings).isEqualTo(PklSettings(Editor.SUBLIME, null))
   }
 
@@ -80,7 +80,7 @@ class PklSettingsTest {
         .trimIndent()
     )
 
-    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val settings = PklSettings.loadFromSettingsDir(tempDir)
     val expectedHttp =
       PklEvaluatorSettings.Http(
         PklEvaluatorSettings.Proxy(
@@ -113,7 +113,7 @@ class PklSettingsTest {
         .trimIndent()
     )
 
-    val settings = PklSettings.loadFromPklHomeDir(tempDir)
+    val settings = PklSettings.loadFromSettingsDir(tempDir)
     val expectedHttp =
       PklEvaluatorSettings.Http(
         PklEvaluatorSettings.Proxy(URI("http://localhost:8080"), listOf()),
@@ -169,7 +169,7 @@ class PklSettingsTest {
   @Test
   fun `invalid settings file`(@TempDir tempDir: Path) {
     val settingsFile = tempDir.resolve("settings.pkl").apply { writeString("foo = 1") }
-    assertThatCode { PklSettings.loadFromPklHomeDir(tempDir) }
+    assertThatCode { PklSettings.loadFromSettingsDir(tempDir) }
       .hasMessageContaining(
         "Expected `output.value` of module `${settingsFile.toUri()}` to be of type `pkl.settings`, but got type `settings`."
       )

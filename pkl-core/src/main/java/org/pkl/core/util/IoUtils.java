@@ -234,49 +234,86 @@ public final class IoUtils {
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultModuleCacheDir() {
+    return getDefaultModuleCacheDir(getUserHomeDir());
+  }
+
+  static Path getDefaultModuleCacheDir(Path homeDir) {
     // Prefer the XDG-style `~/.cache/pkl`, but keep using a pre-existing legacy `~/.pkl/cache` so
     // that already-populated caches aren't orphaned (which would force a re-download).
     return preferXdgLocation(
-        Path.of(System.getProperty("user.home"), ".cache", "pkl"),
-        getPklHomeDir().resolve("cache"));
+        homeDir.resolve(".cache").resolve("pkl"), homeDir.resolve(".pkl").resolve("cache"));
   }
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultSettingsFile() {
+    return getDefaultSettingsFile(getUserHomeDir());
+  }
+
+  static Path getDefaultSettingsFile(Path homeDir) {
     // Prefer the XDG-style `~/.config/pkl/settings.pkl`, falling back to legacy
     // `~/.pkl/settings.pkl`.
     return preferXdgLocation(
-        Path.of(System.getProperty("user.home"), ".config", "pkl", "settings.pkl"),
-        getPklHomeDir().resolve("settings.pkl"));
+        homeDir.resolve(".config").resolve("pkl").resolve("settings.pkl"),
+        homeDir.resolve(".pkl").resolve("settings.pkl"));
   }
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultCaCertsDir() {
-    // Prefer the XDG-style `~/.config/pkl/cacerts`, falling back to legacy `~/.pkl/cacerts`.
-    return preferXdgLocation(
-        Path.of(System.getProperty("user.home"), ".config", "pkl", "cacerts"),
-        getPklHomeDir().resolve("cacerts"));
+    return getDefaultCaCertsDir(getUserHomeDir());
+  }
+
+  static Path getDefaultCaCertsDir(Path homeDir) {
+    // Prefer the XDG-style `~/.config/pkl/cacerts`, falling back to legacy `~/.pkl/cacerts`. A
+    // directory with no certificate files counts as absent, so an empty `~/.config/pkl/cacerts`
+    // doesn't shadow a populated legacy `~/.pkl/cacerts`.
+    var xdg = homeDir.resolve(".config").resolve("pkl").resolve("cacerts");
+    if (containsRegularFile(xdg)) {
+      return xdg;
+    }
+    var legacy = homeDir.resolve(".pkl").resolve("cacerts");
+    return containsRegularFile(legacy) ? legacy : xdg;
   }
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultReplHistoryFile() {
+    return getDefaultReplHistoryFile(getUserHomeDir());
+  }
+
+  static Path getDefaultReplHistoryFile(Path homeDir) {
     // REPL history is state, so prefer the XDG state dir `~/.local/state/pkl/repl-history`, falling
     // back to legacy `~/.pkl/repl-history`.
     return preferXdgLocation(
-        Path.of(System.getProperty("user.home"), ".local", "state", "pkl", "repl-history"),
-        getPklHomeDir().resolve("repl-history"));
+        homeDir.resolve(".local").resolve("state").resolve("pkl").resolve("repl-history"),
+        homeDir.resolve(".pkl").resolve("repl-history"));
+  }
+
+  // not stored to avoid build-time initialization by native-image
+  private static Path getUserHomeDir() {
+    return Path.of(System.getProperty("user.home"));
   }
 
   /**
-   * Returns {@code xdgLocation}, unless it does not exist and the legacy {@code ~/.pkl} location
-   * does, in which case {@code legacyLocation} is returned. New setups therefore use the XDG-style
-   * location while existing {@code ~/.pkl} setups keep working without migration.
+   * Returns {@code xdgLocation}, unless it does not exist and {@code legacyLocation} does, in which
+   * case {@code legacyLocation} is returned. New setups therefore use the XDG-style location while
+   * existing setups keep working without migration. Package-private to allow direct testing.
    */
   static Path preferXdgLocation(Path xdgLocation, Path legacyLocation) {
     if (!Files.exists(xdgLocation) && Files.exists(legacyLocation)) {
       return legacyLocation;
     }
     return xdgLocation;
+  }
+
+  /** Whether {@code dir} is a directory containing at least one regular file. */
+  private static boolean containsRegularFile(Path dir) {
+    if (!Files.isDirectory(dir)) {
+      return false;
+    }
+    try (var entries = Files.list(dir)) {
+      return entries.anyMatch(Files::isRegularFile);
+    } catch (IOException e) {
+      return false;
+    }
   }
 
   // not stored to avoid build-time initialization by native-image

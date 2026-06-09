@@ -111,7 +111,7 @@ public final class ModuleCache {
         case "semver":
           return SemVerModule.getModule();
         case "settings":
-          // always needed if ~/.pkl/settings.pkl is present
+          // always needed if ~/.config/pkl/settings.pkl is present
           return SettingsModule.getModule();
         case "test":
           return TestModule.getModule();

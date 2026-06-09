@@ -53,17 +53,17 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
   /**
    * Loads the user settings file.
    *
-   * @deprecated Renamed to {@link #loadFromDefaultLocation()}, which now prefers {@literal
-   *     ~/.config/pkl/settings.pkl} over the legacy {@literal ~/.pkl/settings.pkl}.
+   * @deprecated As of 0.32.0, renamed to {@link #loadFromDefaultLocation()}, which now prefers
+   *     {@literal ~/.config/pkl/settings.pkl} over the legacy {@literal ~/.pkl/settings.pkl}.
    */
-  @Deprecated(forRemoval = true)
+  @Deprecated(since = "0.32.0", forRemoval = true)
   public static PklSettings loadFromPklHomeDir() throws VmEvalException {
     return loadFromDefaultLocation();
   }
 
   /** For testing only. */
-  static PklSettings loadFromPklHomeDir(Path pklHomeDir) throws VmEvalException {
-    return loadFromSettingsFile(pklHomeDir.resolve("settings.pkl"));
+  static PklSettings loadFromSettingsDir(Path settingsDir) throws VmEvalException {
+    return loadFromSettingsFile(settingsDir.resolve("settings.pkl"));
   }
 
   private static PklSettings loadFromSettingsFile(Path path) throws VmEvalException {

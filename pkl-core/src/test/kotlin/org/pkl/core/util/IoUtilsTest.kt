@@ -433,4 +433,60 @@ class IoUtilsTest {
     val legacy = tempDir.resolve("legacy")
     assertThat(IoUtils.preferXdgLocation(xdg, legacy)).isEqualTo(xdg)
   }
+
+  @Test
+  fun `preferXdgLocation() prefers the XDG location when only it exists`(@TempDir tempDir: Path) {
+    val xdg = tempDir.resolve("xdg").createDirectories()
+    val legacy = tempDir.resolve("legacy")
+    assertThat(IoUtils.preferXdgLocation(xdg, legacy)).isEqualTo(xdg)
+  }
+
+  @Test
+  fun `getDefaultModuleCacheDir() prefers XDG and falls back to legacy`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultModuleCacheDir(home))
+      .isEqualTo(home.resolve(".cache").resolve("pkl"))
+    home.resolve(".pkl").resolve("cache").createDirectories()
+    assertThat(IoUtils.getDefaultModuleCacheDir(home))
+      .isEqualTo(home.resolve(".pkl").resolve("cache"))
+  }
+
+  @Test
+  fun `getDefaultSettingsFile() prefers XDG and falls back to legacy`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultSettingsFile(home))
+      .isEqualTo(home.resolve(".config").resolve("pkl").resolve("settings.pkl"))
+    home.resolve(".pkl").resolve("settings.pkl").createParentDirectories().createFile()
+    assertThat(IoUtils.getDefaultSettingsFile(home))
+      .isEqualTo(home.resolve(".pkl").resolve("settings.pkl"))
+  }
+
+  @Test
+  fun `getDefaultReplHistoryFile() prefers XDG state dir and falls back to legacy`(
+    @TempDir home: Path
+  ) {
+    assertThat(IoUtils.getDefaultReplHistoryFile(home))
+      .isEqualTo(home.resolve(".local").resolve("state").resolve("pkl").resolve("repl-history"))
+    home.resolve(".pkl").resolve("repl-history").createParentDirectories().createFile()
+    assertThat(IoUtils.getDefaultReplHistoryFile(home))
+      .isEqualTo(home.resolve(".pkl").resolve("repl-history"))
+  }
+
+  @Test
+  fun `getDefaultCaCertsDir() prefers XDG when nothing exists`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultCaCertsDir(home))
+      .isEqualTo(home.resolve(".config").resolve("pkl").resolve("cacerts"))
+  }
+
+  @Test
+  fun `getDefaultCaCertsDir() does not let an empty XDG dir shadow a populated legacy dir`(
+    @TempDir home: Path
+  ) {
+    val legacy = home.resolve(".pkl").resolve("cacerts").createDirectories()
+    legacy.resolve("ca.pem").createFile()
+    // an empty XDG cacerts dir must not shadow the populated legacy dir
+    val xdg = home.resolve(".config").resolve("pkl").resolve("cacerts").createDirectories()
+    assertThat(IoUtils.getDefaultCaCertsDir(home)).isEqualTo(legacy)
+    // once the XDG dir holds a cert, it wins
+    xdg.resolve("ca.pem").createFile()
+    assertThat(IoUtils.getDefaultCaCertsDir(home)).isEqualTo(xdg)
+  }
 }

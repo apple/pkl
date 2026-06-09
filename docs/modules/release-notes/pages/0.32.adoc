@@ -41,7 +41,7 @@ Ready when you need them.
 
 ==== Default file locations
 
-By default, the CLI no longer stores anything under `~/.pkl`. It now uses XDG-style locations:
+For new setups, the CLI no longer stores anything under `~/.pkl`. It uses XDG-style locations:
 
 * Package cache: `~/.cache/pkl` (was `~/.pkl/cache`)
 * Settings file: `~/.config/pkl/settings.pkl` (was `~/.pkl/settings.pkl`)
@@ -51,7 +51,7 @@ By default, the CLI no longer stores anything under `~/.pkl`. It now uses XDG-st
 These are fixed defaults; no environment variables (such as `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`, or `XDG_STATE_HOME`) are read.
 On Windows, these paths are used literally under the user home directory (`~/.cache/pkl`, etc.); they are not mapped to Known Folder locations.
 
-Existing setups keep working without migration: each legacy `~/.pkl` location is still used when it already exists. In particular, a pre-existing `~/.pkl/cache` is still used, so packages aren't re-downloaded.
+Existing setups keep working without migration: each legacy `~/.pkl` location is still used when it already exists. In particular, a pre-existing `~/.pkl/cache` keeps being used as long as `~/.cache/pkl` does not exist, so packages aren't re-downloaded.
 
 == Breaking Changes [small]#💔#
 
