@@ -229,42 +229,43 @@ constructor(
   private fun writeMultipleFileOutput(builder: EvaluatorBuilder) {
     val outputDirs = directoryOutputPaths!!
     val writtenFiles = mutableMapOf<Path, OutputFile>()
-    for ((moduleUri, outputDir) in outputDirs) {
-      val evaluator = builder.setOutputFormat(options.outputFormat).build()
-      if (outputDir.exists() && !outputDir.isDirectory()) {
-        throw CliException("Output path `$outputDir` exists and is not a directory.")
-      }
-      val moduleSource = toModuleSource(moduleUri, inputStream)
-      val output = evaluator.evaluateOutputFiles(moduleSource)
-      val realOutputDir = if (outputDir.exists()) outputDir.toRealPath() else outputDir
+    builder.setOutputFormat(options.outputFormat).build().use { evaluator ->
+      for ((moduleUri, outputDir) in outputDirs) {
+        if (outputDir.exists() && !outputDir.isDirectory()) {
+          throw CliException("Output path `$outputDir` exists and is not a directory.")
+        }
+        val moduleSource = toModuleSource(moduleUri, inputStream)
+        val output = evaluator.evaluateOutputFiles(moduleSource)
+        val realOutputDir = if (outputDir.exists()) outputDir.toRealPath() else outputDir
 
-      for ((pathSpec, fileOutput) in output) {
-        checkPathSpec(pathSpec)
-        val (realPath, resolvedPath) = realOutputDir.resolveRealPath(Path.of(pathSpec))
-        if (!realPath.startsWith(realOutputDir)) {
-          throw CliException(
-            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
+        for ((pathSpec, fileOutput) in output) {
+          checkPathSpec(pathSpec)
+          val (realPath, resolvedPath) = realOutputDir.resolveRealPath(Path.of(pathSpec))
+          if (!realPath.startsWith(realOutputDir)) {
+            throw CliException(
+              "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is outside output directory `$realOutputDir`."
+            )
+          }
+          val previousOutput = writtenFiles[realPath]
+          if (previousOutput != null) {
+            throw CliException(
+              "Output file conflict: `output.files` entries `\"${previousOutput.pathSpec}\"` in module `${previousOutput.moduleUri}` and `\"$pathSpec\"` in module `$moduleUri` resolve to the same file path `$realPath`."
+            )
+          }
+          if (realPath.isDirectory()) {
+            throw CliException(
+              "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is a directory."
+            )
+          }
+          writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
+          realPath.createParentDirectories()
+          realPath.writeBytes(fileOutput.bytes)
+          outputStream.writeText(
+            IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
+              IoUtils.getLineSeparator()
           )
+          outputStream.flush()
         }
-        val previousOutput = writtenFiles[realPath]
-        if (previousOutput != null) {
-          throw CliException(
-            "Output file conflict: `output.files` entries `\"${previousOutput.pathSpec}\"` in module `${previousOutput.moduleUri}` and `\"$pathSpec\"` in module `$moduleUri` resolve to the same file path `$realPath`."
-          )
-        }
-        if (realPath.isDirectory()) {
-          throw CliException(
-            "Output file conflict: `output.files` entry `\"$pathSpec\"` in module `$moduleUri` resolves to file path `$realPath`, which is a directory."
-          )
-        }
-        writtenFiles[realPath] = OutputFile(pathSpec, moduleUri)
-        realPath.createParentDirectories()
-        realPath.writeBytes(fileOutput.bytes)
-        outputStream.writeText(
-          IoUtils.relativize(resolvedPath, currentWorkingDir).toString() +
-            IoUtils.getLineSeparator()
-        )
-        outputStream.flush()
       }
     }
   }
