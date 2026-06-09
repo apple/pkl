@@ -1414,10 +1414,10 @@ When making TLS requests, Pkl comes with its own set of {uri-certificates}[CA ce
 These certificates can be overridden via either of the two options:
 
 - Set them directly via the CLI option `--ca-certificates <path>`.
-- Add them to a directory at path `~/.pkl/cacerts/`.
+- Add them to a directory at path `~/.config/pkl/cacerts/` (or the legacy `~/.pkl/cacerts/`).
 
 Both these options will *replace* the default CA certificates bundled with Pkl. +
-The CLI option takes precedence over the certificates in `~/.pkl/cacerts/`. +
+The CLI option takes precedence over the certificates in `~/.config/pkl/cacerts/`. +
 Certificates need to be X.509 certificates in PEM format.
 
 [[http-proxy]]

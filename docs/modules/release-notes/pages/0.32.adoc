@@ -39,12 +39,18 @@ Ready when you need them.
 
 === CLI Changes
 
-==== Default cache and settings locations
+==== Default file locations
 
-The CLI now stores its package cache in `~/.cache/pkl` and reads its settings file from `~/.config/pkl/settings.pkl` by default, instead of placing both under `~/.pkl`.
-These are fixed defaults; no environment variables (such as `XDG_CACHE_HOME` or `XDG_CONFIG_HOME`) are read.
+By default, the CLI no longer stores anything under `~/.pkl`. It now uses XDG-style locations:
 
-Existing setups keep working without migration: a pre-existing `~/.pkl/cache` is still used (so packages aren't re-downloaded), and `~/.pkl/settings.pkl` is still read when `~/.config/pkl/settings.pkl` is absent.
+* Package cache: `~/.cache/pkl` (was `~/.pkl/cache`)
+* Settings file: `~/.config/pkl/settings.pkl` (was `~/.pkl/settings.pkl`)
+* CA certificates: `~/.config/pkl/cacerts` (was `~/.pkl/cacerts`)
+* REPL history: `~/.local/state/pkl/repl-history` (was `~/.pkl/repl-history`)
+
+These are fixed defaults; no environment variables (such as `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`, or `XDG_STATE_HOME`) are read.
+
+Existing setups keep working without migration: each legacy `~/.pkl` location is still used when it already exists. In particular, a pre-existing `~/.pkl/cache` is still used, so packages aren't re-downloaded.
 
 == Breaking Changes [small]#💔#
 

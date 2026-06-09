@@ -131,8 +131,9 @@ data class CliBaseOptions(
    * The given files must contain [X.509](https://en.wikipedia.org/wiki/X.509) certificates in PEM
    * format.
    *
-   * If [caCertificates] is the empty list, the certificate files in `~/.pkl/cacerts/` are used. If
-   * `~/.pkl/cacerts/` does not exist or is empty, Pkl's built-in CA certificates are used.
+   * If [caCertificates] is the empty list, the certificate files in `~/.config/pkl/cacerts/` (or
+   * the legacy `~/.pkl/cacerts/`) are used. If that directory does not exist or is empty, Pkl's
+   * built-in CA certificates are used.
    */
   val caCertificates: List<Path> = listOf(),
 

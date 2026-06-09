@@ -250,6 +250,23 @@ public final class IoUtils {
         getPklHomeDir().resolve("settings.pkl"));
   }
 
+  // not stored to avoid build-time initialization by native-image
+  public static Path getDefaultCaCertsDir() {
+    // Prefer the XDG-style `~/.config/pkl/cacerts`, falling back to legacy `~/.pkl/cacerts`.
+    return preferXdgLocation(
+        Path.of(System.getProperty("user.home"), ".config", "pkl", "cacerts"),
+        getPklHomeDir().resolve("cacerts"));
+  }
+
+  // not stored to avoid build-time initialization by native-image
+  public static Path getDefaultReplHistoryFile() {
+    // REPL history is state, so prefer the XDG state dir `~/.local/state/pkl/repl-history`, falling
+    // back to legacy `~/.pkl/repl-history`.
+    return preferXdgLocation(
+        Path.of(System.getProperty("user.home"), ".local", "state", "pkl", "repl-history"),
+        getPklHomeDir().resolve("repl-history"));
+  }
+
   /**
    * Returns {@code xdgLocation}, unless it does not exist and the legacy {@code ~/.pkl} location
    * does, in which case {@code legacyLocation} is returned. New setups therefore use the XDG-style

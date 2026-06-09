@@ -215,7 +215,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
-    val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
+    val caCertsDir = IoUtils.getDefaultCaCertsDir()
     var certsAdded = false
     if (Files.isDirectory(caCertsDir)) {
       Files.list(caCertsDir)
