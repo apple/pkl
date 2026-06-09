@@ -41,7 +41,7 @@ Ready when you need them.
 
 ==== Default file locations
 
-For new setups, the CLI no longer stores anything under `~/.pkl`. It uses XDG-style locations:
+For new setups, the CLI no longer stores anything under `~/.pkl` (https://github.com/apple/pkl/pull/1674[#1674]). It uses XDG-style locations:
 
 * Package cache: `~/.cache/pkl` (was `~/.pkl/cache`)
 * Settings file: `~/.config/pkl/settings.pkl` (was `~/.pkl/settings.pkl`)
@@ -70,7 +70,7 @@ The following APIs have been removed without replacement.
 The following APIs have been deprecated for removal.
 
 * `org.pkl.config.java.mapper.NonNull` (https://github.com/apple/pkl/pull/1607[#1607]).
-* `org.pkl.core.settings.PklSettings.loadFromPklHomeDir()` – renamed to `PklSettings.loadFromDefaultLocation()`, which now prefers `~/.config/pkl/settings.pkl` over the legacy `~/.pkl/settings.pkl`.
+* `org.pkl.core.settings.PklSettings.loadFromPklHomeDir()` – renamed to `PklSettings.loadFromDefaultLocation()`, which now prefers `~/.config/pkl/settings.pkl` over the legacy `~/.pkl/settings.pkl` (https://github.com/apple/pkl/pull/1674[#1674]).
 
 ==== Changes
 
