@@ -49,7 +49,6 @@ import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 
 public final class IoUtils {
-
   // Don't match paths like `C:\`, which are drive letters on Windows.
   private static final Pattern uriLike = Pattern.compile("[\\w+.-]+:[^\\\\].*");
 
@@ -228,13 +227,33 @@ public final class IoUtils {
   }
 
   // not stored to avoid build-time initialization by native-image
-  public static Path getPklHomeDir() {
+  public static Path getLegacyPklHomeDir() {
     return Path.of(System.getProperty("user.home"), ".pkl");
   }
 
+  public static @Nullable Path getSystemModuleCacheDir() {
+    return BaseDirectories.cache.resolveHome("");
+  }
+
+  public static Path getSystemSettingsFile() {
+    var path = BaseDirectories.config.firstExistingPath("settings.pkl");
+    if (path == null) {
+      return getLegacyPklHomeDir().resolve("settings.pkl");
+    }
+    return path;
+  }
+
+  public static Path getSystemCaCertsDir() {
+    var path = BaseDirectories.config.firstExistingPath("cacerts");
+    if (path == null) {
+      return getLegacyPklHomeDir().resolve("cacerts");
+    }
+    return path;
+  }
+
   // not stored to avoid build-time initialization by native-image
-  public static Path getDefaultModuleCacheDir() {
-    return getPklHomeDir().resolve("cache");
+  public static @Nullable Path getReplHistoryFile() {
+    return BaseDirectories.state.resolveHome("repl-history");
   }
 
   // not stored to avoid build-time initialization by native-image

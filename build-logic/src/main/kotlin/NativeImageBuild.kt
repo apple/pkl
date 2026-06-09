@@ -210,6 +210,9 @@ abstract class NativeImageBuild : DefaultTask() {
         add("--initialize-at-build-time=")
         // needed for messagepack-java (see https://github.com/msgpack/msgpack-java/issues/600)
         add("--initialize-at-run-time=org.msgpack.core.buffer.DirectBufferAccess")
+        // prevent storing `homeDir` in native image
+        add("--initialize-at-run-time=org.pkl.core.util.BaseDirectory")
+        add("--initialize-at-run-time=org.pkl.core.util.BaseDirectories")
         // needed for jline-terminal-jni
         add("--initialize-at-run-time=org.jline.nativ,org.jline.terminal.impl.jni")
         add("--no-fallback")

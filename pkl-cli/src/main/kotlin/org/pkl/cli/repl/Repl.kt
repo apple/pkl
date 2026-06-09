@@ -63,7 +63,10 @@ internal class Repl(workingDir: Path, private val server: ReplServer, private va
         }
         completer(AggregateCompleter(CommandCompleter, FileCompleter(workingDir)))
         option(Option.DISABLE_EVENT_EXPANSION, true)
-        variable(LineReader.HISTORY_FILE, (IoUtils.getPklHomeDir().resolve("repl-history")))
+        // will be null if `$HOME` is not set. if so, don't bother writing repl history.
+        IoUtils.getReplHistoryFile()?.let { historyFile ->
+          variable(LineReader.HISTORY_FILE, historyFile)
+        }
       }
       .build()
 
@@ -80,7 +83,7 @@ internal class Repl(workingDir: Path, private val server: ReplServer, private va
 
   fun run() {
     // JLine 2 history file is incompatible with JLine 3
-    IoUtils.getPklHomeDir().resolve("repl-history.bin").deleteIfExists()
+    IoUtils.getLegacyPklHomeDir().resolve("repl-history.bin").deleteIfExists()
 
     println(ReplMessages.welcome)
     println()
