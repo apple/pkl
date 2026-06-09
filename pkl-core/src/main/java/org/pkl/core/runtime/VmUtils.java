@@ -675,13 +675,14 @@ public final class VmUtils {
     var charOffset = startIndex;
 
     while (charOffset < length && codePointOffset > 0) {
-      if (Character.isHighSurrogate(string.charAt(charOffset++))
+      var ch = string.charAt(charOffset);
+      charOffset++;
+      if (Character.isHighSurrogate(ch)
           && charOffset < length
-          && !Character.isLowSurrogate(string.charAt(charOffset++))) {
-        codePointOffset -= 2;
-      } else {
-        codePointOffset -= 1;
+          && Character.isLowSurrogate(string.charAt(charOffset))) {
+        charOffset++;
       }
+      codePointOffset--;
     }
 
     return codePointOffset != 0 ? -1 : charOffset;
@@ -692,13 +693,14 @@ public final class VmUtils {
     var charOffset = string.length();
 
     while (charOffset > 0 && codePointOffset > 0) {
-      if (Character.isLowSurrogate(string.charAt(--charOffset))
+      charOffset--;
+      char ch = string.charAt(charOffset);
+      if (Character.isLowSurrogate(ch)
           && charOffset > 0
-          && !Character.isHighSurrogate(string.charAt(--charOffset))) {
-        codePointOffset -= 2;
-      } else {
-        codePointOffset -= 1;
+          && Character.isHighSurrogate(string.charAt(charOffset - 1))) {
+        charOffset--;
       }
+      codePointOffset--;
     }
 
     return codePointOffset != 0 ? -1 : charOffset;

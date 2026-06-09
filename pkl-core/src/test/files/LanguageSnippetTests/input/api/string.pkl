@@ -415,6 +415,7 @@ examples {
     str1.substring(2, 3)
     str1.substring(2, 4)
     str1.substring(0, 7)
+    "\u{D800}hello".substring(0, 2)
     module.catch(() -> str1.substring(-1, 4))
     module.catch(() -> str1.substring(1, 8))
     module.catch(() -> str1.substring(3, 2))
@@ -436,6 +437,15 @@ examples {
     str1.getOrNull(3)
     str1.getOrNull(6)
     str1.getOrNull(7)
+    "🏀".getOrNull(0)
+    "🏀".getOrNull(1)
+    "\u{D800}".getOrNull(0)
+    "\u{D800}".getOrNull(1)
+    "\u{D800}h".getOrNull(0)
+    "\u{D800}h".getOrNull(1)
+    "\u{D800}h".getOrNull(2)
+    "h\u{D800}".getOrNull(0)
+    "h\u{D800}".getOrNull(1)
   }
 
   ["toCodePoints()"] {

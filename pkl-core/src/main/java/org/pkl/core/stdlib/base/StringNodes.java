@@ -220,7 +220,9 @@ public final class StringNodes {
       var charIndex = VmUtils.codePointOffsetToCharOffset(self, index);
       if (charIndex == -1 || charIndex == self.length()) return VmNull.withoutDefault();
 
-      if (Character.isHighSurrogate(self.charAt(charIndex))) {
+      if (Character.isHighSurrogate(self.charAt(charIndex))
+          && charIndex < self.length() - 1
+          && Character.isLowSurrogate(self.charAt(charIndex + 1))) {
         return self.substring(charIndex, charIndex + 2);
       }
       return self.substring(charIndex, charIndex + 1);
