@@ -46,8 +46,19 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
    * the legacy {@literal ~/.pkl/settings.pkl}. If neither file exists, returns default settings
    * defined by module {@literal pkl.settings}.
    */
-  public static PklSettings loadFromPklHomeDir() throws VmEvalException {
+  public static PklSettings loadFromDefaultLocation() throws VmEvalException {
     return loadFromSettingsFile(IoUtils.getDefaultSettingsFile());
+  }
+
+  /**
+   * Loads the user settings file.
+   *
+   * @deprecated Renamed to {@link #loadFromDefaultLocation()}, which now prefers {@literal
+   *     ~/.config/pkl/settings.pkl} over the legacy {@literal ~/.pkl/settings.pkl}.
+   */
+  @Deprecated(forRemoval = true)
+  public static PklSettings loadFromPklHomeDir() throws VmEvalException {
+    return loadFromDefaultLocation();
   }
 
   /** For testing only. */

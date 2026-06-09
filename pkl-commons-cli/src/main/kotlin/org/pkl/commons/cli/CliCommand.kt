@@ -69,7 +69,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if (cliOptions.normalizedSettingsModule != null) {
         PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule))
       } else {
-        PklSettings.loadFromPklHomeDir()
+        PklSettings.loadFromDefaultLocation()
       }
     } catch (e: PklException) {
       // do not use `errorRenderer` because it depends on `settings`
