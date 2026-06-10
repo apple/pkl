@@ -50,6 +50,7 @@ public final class VmIntSeq extends VmValue implements Iterable<Long> {
   }
 
   public long getLength() {
+    if (isEmpty()) return 0;
     return (Math.abs((end - start) / step)) + 1;
   }
 
