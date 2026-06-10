@@ -353,6 +353,7 @@ examples {
     "c"
     "cd"
     "abcdefg"
+    "?h"
     "Character index `-1` is out of range `0`..`7`. String: \"abcdefg\""
     "Character index `8` is out of range `1`..`7`. String: \"abcdefg\""
     "Character index `2` is out of range `3`..`7`. String: \"abcdefg\""
@@ -372,6 +373,15 @@ examples {
     "d"
     "g"
     null
+    "🏀"
+    null
+    "?"
+    null
+    "?"
+    "h"
+    null
+    "h"
+    "?"
   }
   ["toCodePoints()"] {
     List(97, 98, 99, 100, 101, 102, 103)

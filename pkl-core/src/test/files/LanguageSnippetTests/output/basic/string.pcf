@@ -51,6 +51,12 @@ examples {
     "i"
     "Character index `-1` is out of range `0`..`3`. String: \"this\""
     "Character index `4` is out of range `0`..`3`. String: \"this\""
+    "🏀"
+    "?"
+    "?"
+    "h"
+    "h"
+    "?"
   }
   ["dollar sign has no special meaning"] {
     "123$"
