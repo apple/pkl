@@ -1217,6 +1217,9 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
+      }
       return consumer.accept(this);
     }
 
