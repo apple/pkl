@@ -1441,6 +1441,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var scope = (ModuleScope) symbolTable.getCurrentScope();
     scope.setModifiers(modifiers);
 
+    checkAbstractMembersAllowed(modifiers, mod.getProperties(), mod.getMethods());
+
     // visit imports first so that we already have the object member name available
     var imports = mod.getImports();
     var importMembers = new ObjectMember[imports.size()];
@@ -1685,6 +1687,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           List<ClassProperty> properties = bodyNode != null ? bodyNode.getProperties() : List.of();
           List<ClassMethod> methods = bodyNode != null ? bodyNode.getMethods() : List.of();
           registerClassScopeNames(scope, properties, methods);
+          checkAbstractMembersAllowed(modifiers, properties, methods);
 
           var supertypeCtx = clazz.getSuperClass();
 
@@ -1773,6 +1776,30 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       case FIXED -> VmModifier.FIXED;
       case CONST -> VmModifier.CONST;
     };
+  }
+
+  private void checkAbstractMembersAllowed(
+      int enclosingModifiers, List<ClassProperty> properties, List<ClassMethod> methods) {
+    if (VmModifier.isAbstract(enclosingModifiers)) {
+      return;
+    }
+    for (var property : properties) {
+      checkMemberNotAbstract(property.getModifiers());
+    }
+    for (var method : methods) {
+      checkMemberNotAbstract(method.getModifiers());
+    }
+  }
+
+  private void checkMemberNotAbstract(List<Modifier> modifiers) {
+    for (var modifier : modifiers) {
+      if (modifier.getValue() == ModifierValue.ABSTRACT) {
+        throw exceptionBuilder()
+            .evalError("abstractMemberInNonAbstractClass")
+            .withSourceSection(createSourceSection(modifier.span()))
+            .build();
+      }
+    }
   }
 
   private UnresolvedPropertyNode[] doVisitClassProperties(

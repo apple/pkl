@@ -1,5 +1,5 @@
 /// Module methods with different modifiers.
-module com.package1.moduleMethodModifiers
+abstract module com.package1.moduleMethodModifiers
 
 /// Method with `abstract` modifier.
 abstract function method1(arg: String): Boolean

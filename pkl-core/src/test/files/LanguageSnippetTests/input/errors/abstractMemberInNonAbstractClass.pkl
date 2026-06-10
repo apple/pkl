@@ -1,0 +1,5 @@
+class Foo {
+  abstract bar: Int
+}
+
+res = new Foo { bar = 5 }
