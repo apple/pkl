@@ -109,6 +109,8 @@ final class JsonRenderer implements ValueRenderer {
               "Values of type `Bytes` cannot be rendered as JSON. Value: %s", (Object) value));
     }
 
+    // Pair coming from the runtime can never admit null (in-language null is represented as PNull)
+    @SuppressWarnings("DataFlowIssue")
     @Override
     public void visitPair(Pair<?, ?> value) {
       try {

@@ -103,7 +103,7 @@ final class ExternalResourceResolverImpl implements ExternalResourceResolver {
         readResponses.computeIfAbsent(
             baseUri,
             (uri) -> {
-              var future = new CompletableFuture<byte[]>();
+              var future = new CompletableFuture<byte @Nullable []>();
               var request =
                   new ReadResourceRequest(requestIdGenerator.nextLong(), evaluatorId, uri);
               try {

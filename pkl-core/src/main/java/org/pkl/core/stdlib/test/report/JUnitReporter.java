@@ -21,6 +21,7 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Error;
 import org.pkl.core.TestResults.TestResult;
@@ -58,8 +59,6 @@ public final class JUnitReporter implements TestReporter {
   public void summarize(List<TestResults> allTestResults, Writer writer) throws IOException {
     var totalTests = allTestResults.stream().mapToLong(TestResults::totalTests).sum();
     var totalFailures = allTestResults.stream().mapToLong(TestResults::totalFailures).sum();
-
-    assert aggregateSuiteName != null;
 
     var attrs =
         buildAttributes(
@@ -206,12 +205,15 @@ public final class JUnitReporter implements TestReporter {
         members.size() - 4);
   }
 
-  private VmMapping buildAttributes(Object... attributes) {
+  private VmMapping buildAttributes(@Nullable Object... attributes) {
     EconomicMap<Object, ObjectMember> attrs = EconomicMaps.create(attributes.length);
-    for (int i = 0; i < attributes.length; i += 2) {
-      attrs.put(
-          attributes[i],
-          VmUtils.createSyntheticObjectEntry(attributes[i].toString(), attributes[i + 1]));
+    for (var i = 0; i < attributes.length; i += 2) {
+      var key = attributes[i];
+      var value = attributes[i + 1];
+      if (key == null || value == null) {
+        continue;
+      }
+      attrs.put(key, VmUtils.createSyntheticObjectEntry(key.toString(), value));
     }
     return new VmMapping(
         VmUtils.createEmptyMaterializedFrame(), BaseModule.getMappingClass().getPrototype(), attrs);

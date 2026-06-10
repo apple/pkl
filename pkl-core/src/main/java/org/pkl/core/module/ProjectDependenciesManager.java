@@ -183,6 +183,7 @@ public final class ProjectDependenciesManager {
   public Map<String, Dependency> getLocalPackageDependencies(PackageUri packageUri) {
     ensureDependenciesInitialized();
     var dep = localPackageDependencies.get(packageUri);
+    //noinspection ConstantValue
     assert dep != null;
     return dep;
   }

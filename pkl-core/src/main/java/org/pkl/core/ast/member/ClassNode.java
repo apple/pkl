@@ -84,6 +84,7 @@ public final class ClassNode extends ExpressionNode {
     // Caching of classes also guarantees that classes are singletons and can be compared by
     // identity,
     // which improves efficiency and performance (for example in shape checks).
+    //noinspection ConstantValue
     if (cachedClass != null) return cachedClass;
 
     CompilerDirectives.transferToInterpreter();

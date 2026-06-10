@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,19 +20,19 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.UInt8TypeAliasTypeNode;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "Bytes()")
 public final class BytesLiteralNode extends ExpressionNode {
   @Children private final ExpressionNode[] elements;
 
-  @Child @LateInit private TypeNode typeNode;
+  @Child private @Nullable TypeNode typeNode;
 
   public BytesLiteralNode(SourceSection sourceSection, ExpressionNode[] elements) {
     super(sourceSection);

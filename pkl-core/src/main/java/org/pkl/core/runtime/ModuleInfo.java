@@ -40,10 +40,10 @@ public final class ModuleInfo {
 
   @LateInit private List<VmTyped> annotations;
 
-  @LateInit private VmTyped __mirror;
+  private @Nullable VmTyped __mirror;
   private final Object mirrorLock = new Object();
 
-  @LateInit private ModuleSchema __moduleSchema;
+  private @Nullable ModuleSchema __moduleSchema;
   private final Object moduleSchemaLock = new Object();
 
   public ModuleInfo(
@@ -65,12 +65,12 @@ public final class ModuleInfo {
   }
 
   public void initAnnotations(List<VmTyped> annotations) {
+    //noinspection ConstantValue
     assert this.annotations == null;
     this.annotations = annotations;
   }
 
   public List<VmTyped> getAnnotations() {
-    assert annotations != null;
     return annotations;
   }
 

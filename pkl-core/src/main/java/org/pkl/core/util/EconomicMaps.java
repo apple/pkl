@@ -81,11 +81,13 @@ public final class EconomicMaps {
     return result;
   }
 
+  @SuppressWarnings("DataFlowIssue")
   @TruffleBoundary
   public static <K, V> @Nullable V get(UnmodifiableEconomicMap<K, V> self, K key) {
     return self.get(key);
   }
 
+  @SuppressWarnings("DataFlowIssue")
   @TruffleBoundary
   public static <K, V> @Nullable V get(UnmodifiableEconomicMap<K, V> self, K key, V defaultValue) {
     return self.get(key, defaultValue);

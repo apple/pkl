@@ -617,7 +617,7 @@ public final class RendererNodes {
         // - All element types are resolved also.
         // - All string literal types are combined into a single String case.
         var hasString = false;
-        var elements = new ArrayList<TypeNode>();
+        var elements = new ArrayList<@Nullable TypeNode>();
         for (var t : ((UnionTypeNode) type).getElementTypeNodes()) {
           var resolved = resolveType(t);
           if (resolved instanceof StringLiteralTypeNode || resolved instanceof StringTypeNode) {

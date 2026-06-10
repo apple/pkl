@@ -54,6 +54,9 @@ final class PropertiesRenderer implements ValueRenderer {
       } else if (value instanceof Map<?, ?> map) {
         doVisitMap(null, map);
       } else if (value instanceof Pair<?, ?> pair) {
+        // Pair coming from the runtime can never admit null (in-language null is represented as
+        // PNull)
+        //noinspection DataFlowIssue
         doVisitKeyAndValue(null, pair.getFirst(), pair.getSecond());
       } else {
         throw new RendererException(

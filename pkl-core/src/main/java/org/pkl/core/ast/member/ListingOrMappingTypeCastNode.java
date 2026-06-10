@@ -18,7 +18,6 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
@@ -46,7 +45,7 @@ public final class ListingOrMappingTypeCastNode extends PklRootNode {
   }
 
   @Override
-  public @Nullable String getName() {
+  public String getName() {
     return qualifiedName;
   }
 

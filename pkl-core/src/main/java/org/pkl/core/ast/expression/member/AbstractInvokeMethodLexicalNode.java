@@ -22,6 +22,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
@@ -34,7 +35,7 @@ public abstract sealed class AbstractInvokeMethodLexicalNode extends ExpressionN
   protected final int levelsUp;
   private final boolean needsConst;
   @Children private ExpressionNode[] argumentNodes;
-  @Child private DirectCallNode callNode;
+  @Child private @Nullable DirectCallNode callNode;
   @CompilationFinal protected boolean isConstChecked;
 
   protected AbstractInvokeMethodLexicalNode(
@@ -90,6 +91,7 @@ public abstract sealed class AbstractInvokeMethodLexicalNode extends ExpressionN
       callNode = DirectCallNode.create(getCallTarget(owner));
       insert(callNode);
     }
+    assert callNode != null;
     return callNode;
   }
 }

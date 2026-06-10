@@ -93,12 +93,14 @@ public class PathElement {
     }
 
     /** Returns the element at path {@code basePath}, given a {@link Path}. */
+    @SuppressWarnings("DataFlowIssue") // incorrect analysis; this can return null.
     public @Nullable TreePathElement getElement(Path basePath) {
       var path = basePath.normalize();
       var element = this;
       for (var i = 0; i < path.getNameCount(); i++) {
         var part = path.getName(i).toString();
         element = element.getChildren().get(part);
+        //noinspection ConstantValue
         if (element == null) {
           return null;
         }

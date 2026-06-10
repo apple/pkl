@@ -87,13 +87,15 @@ public final class VmListing extends VmListingOrMapping {
   @Override
   @TruffleBoundary
   public List<Object> export() {
+    assert forced : "Value was not forced prior to export";
+
     var properties = new ArrayList<>(EconomicMaps.size(cachedValues));
 
-    iterateMemberValues(
+    iterateAlreadyForcedMemberValues(
         (key, prop, value) -> {
           if (isDefaultProperty(key)) return true;
 
-          properties.add(VmValue.exportNullable(value));
+          properties.add(VmValue.export(value));
           return true;
         });
 
@@ -127,6 +129,7 @@ public final class VmListing extends VmListingOrMapping {
       if (key instanceof Identifier) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
@@ -149,6 +152,7 @@ public final class VmListing extends VmListingOrMapping {
       if (key instanceof Identifier) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       result = 31 * result + value.hashCode();
     }
