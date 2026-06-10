@@ -34,7 +34,7 @@ public abstract class VmObject extends VmObjectLike {
   protected final EconomicMap<Object, Object> cachedValues;
 
   protected int cachedHash;
-  private boolean forced;
+  protected boolean forced;
 
   public VmObject(
       MaterializedFrame enclosingFrame,
@@ -204,17 +204,20 @@ public abstract class VmObject extends VmObjectLike {
 
   /**
    * Exports this object's members. Skips local members, hidden members, class definitions, and type
-   * aliases. Members that haven't been forced have a `null` value.
+   * aliases.
+   *
+   * <p>Assumes that this object has already been forced.
    */
   @TruffleBoundary
   protected final Map<String, Object> exportMembers() {
-    var result = CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
+    Map<String, Object> result = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    assert forced : "Value was not forced prior to export";
 
-    iterateMemberValues(
+    iterateAlreadyForcedMemberValues(
         (key, member, value) -> {
           if (member.isClass() || member.isTypeAlias()) return true;
 
-          result.put(key.toString(), VmValue.exportNullable(value));
+          result.put(key.toString(), VmValue.export(value));
           return true;
         });
 

@@ -21,19 +21,18 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.HashSet;
 import java.util.Map;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableLong;
 
 public final class VmMapping extends VmListingOrMapping {
   private long cachedLength = -1;
 
   @GuardedBy("this")
-  @LateInit
-  private VmSet __allKeys;
+  private @Nullable VmSet __allKeys;
 
   private static final class EmptyHolder {
     private static final VmMapping EMPTY =
@@ -94,13 +93,15 @@ public final class VmMapping extends VmListingOrMapping {
   @Override
   @TruffleBoundary
   public Map<Object, Object> export() {
+    assert forced : "Value was not forced prior to export";
+
     var properties = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
 
-    iterateMemberValues(
+    iterateAlreadyForcedMemberValues(
         (key, prop, value) -> {
           if (isDefaultProperty(key)) return true;
 
-          properties.put(VmValue.export(key), VmValue.exportNullable(value));
+          properties.put(VmValue.export(key), VmValue.export(value));
           return true;
         });
 
@@ -119,9 +120,8 @@ public final class VmMapping extends VmListingOrMapping {
 
   @Override
   @TruffleBoundary
-  public boolean equals(Object obj) {
-    if (this == obj) // noinspection Contract
-    return true;
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) return true;
     if (!(obj instanceof VmMapping other)) return false;
 
     // could use shallow force, but deep force is cached
@@ -135,6 +135,7 @@ public final class VmMapping extends VmListingOrMapping {
       if (key instanceof Identifier) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
@@ -157,6 +158,7 @@ public final class VmMapping extends VmListingOrMapping {
       if (key instanceof Identifier) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       result += key.hashCode() ^ value.hashCode();
     }

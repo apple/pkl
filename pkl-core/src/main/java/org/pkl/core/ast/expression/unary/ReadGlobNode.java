@@ -24,6 +24,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
 import java.net.URISyntaxException;
 import org.graalvm.collections.EconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
@@ -36,12 +37,11 @@ import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
-import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "read*")
 public abstract class ReadGlobNode extends AbstractReadNode {
   private final EconomicMap<String, VmMapping> cachedResults = EconomicMap.create();
-  @Child @LateInit private SharedMemberNode memberNode;
+  @Child private @Nullable SharedMemberNode memberNode;
 
   protected ReadGlobNode(SourceSection sourceSection, ModuleKey currentModule) {
     super(sourceSection, currentModule);
@@ -67,6 +67,7 @@ public abstract class ReadGlobNode extends AbstractReadNode {
   @TruffleBoundary
   public Object read(String globPattern) {
     var cachedResult = cachedResults.get(globPattern);
+    //noinspection ConstantValue
     if (cachedResult != null) return cachedResult;
 
     // use same check as for globbed imports (see AstBuilder)

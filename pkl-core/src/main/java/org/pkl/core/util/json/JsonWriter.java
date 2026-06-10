@@ -25,7 +25,7 @@ import org.jspecify.annotations.Nullable;
 /**
  * Writes a JSON (<a href="http://www.ietf.org/rfc/rfc7159.txt">RFC 7159</a>) encoded value to a
  * stream, one token at a time. The stream includes both literal values (strings, numbers, booleans
- * and nulls) as well as the begin and end delimiters of objects and arrays.
+ * and nulls) as well as the beginning and ending delimiters of objects and arrays.
  *
  * <h3>Encoding JSON</h3>
  *
@@ -195,7 +195,7 @@ public final class JsonWriter implements Closeable, Flushable {
 
   /**
    * Sets the indentation string to be repeated for each level of indentation in the encoded
-   * document. If {@code indent.isEmpty()} the encoded document will be compact. Otherwise the
+   * document. If {@code indent.isEmpty()} the encoded document will be compact. Otherwise, the
    * encoded document will be more human-readable.
    *
    * @param indent a string containing only whitespace.
@@ -418,6 +418,8 @@ public final class JsonWriter implements Closeable, Flushable {
   public JsonWriter value(boolean value) throws IOException {
     writeDeferredName();
     beforeValue();
+    // avoid method dispatch
+    //noinspection SimplifiableConditionalExpression
     out.write(value ? "true" : "false");
     return this;
   }
@@ -433,6 +435,8 @@ public final class JsonWriter implements Closeable, Flushable {
     }
     writeDeferredName();
     beforeValue();
+    // avoid method dispatch
+    //noinspection SimplifiableConditionalExpression
     out.write(value ? "true" : "false");
     return this;
   }

@@ -239,7 +239,7 @@ public abstract class TypeNode extends PklNode {
   public abstract static class FrameSlotTypeNode extends TypeNode {
     @CompilationFinal protected int slot = -1;
 
-    @CompilationFinal @Child protected WriteFrameSlotNode writeFrameSlotNode;
+    @CompilationFinal @Child protected @Nullable WriteFrameSlotNode writeFrameSlotNode;
 
     protected FrameSlotTypeNode(SourceSection sourceSection) {
       super(sourceSection);

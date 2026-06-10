@@ -141,6 +141,7 @@ public final class ProjectDependenciesResolver {
   private void updateDependency(Dependency dependency) {
     var canonicalPackageUri = CanonicalPackageUri.fromPackageUri(dependency.getPackageUri());
     var currentDependency = resolvedDependencies.get(canonicalPackageUri);
+    //noinspection ConstantValue
     if (currentDependency == null
         || currentDependency.getVersion().compareTo(dependency.getVersion()) < 0) {
       EconomicMaps.put(resolvedDependencies, canonicalPackageUri, dependency);

@@ -922,7 +922,10 @@ public abstract class RrbTree<E> implements BaseList<E>, Indented {
   /** {@inheritDoc} */
   @SuppressWarnings("unchecked")
   @Override
-  public boolean equals(Object other) {
+  public boolean equals(@Nullable Object other) {
+    if (other == null) {
+      return false;
+    }
     if (this == other) {
       return true;
     }

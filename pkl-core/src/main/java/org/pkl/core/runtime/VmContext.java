@@ -107,6 +107,7 @@ public final class VmContext {
   }
 
   public void initialize(Holder holder) {
+    //noinspection ConstantValue
     assert this.holder == null;
     this.holder = holder;
   }

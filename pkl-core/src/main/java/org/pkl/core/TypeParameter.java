@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,7 +17,7 @@ package org.pkl.core;
 
 import java.io.Serial;
 import java.io.Serializable;
-import org.pkl.core.util.LateInit;
+import org.jspecify.annotations.Nullable;
 
 /** A type parameter of a generic class, type alias, or method. */
 public final class TypeParameter implements Serializable {
@@ -27,7 +27,7 @@ public final class TypeParameter implements Serializable {
   private final String name;
   private final int index;
 
-  @LateInit private volatile Member owner;
+  private volatile @Nullable Member owner;
 
   public TypeParameter(Variance variance, String name, int index) {
     this.variance = variance;
@@ -48,6 +48,7 @@ public final class TypeParameter implements Serializable {
   /** Returns the generic class, type alias, or method that this type parameter belongs to. */
   public Member getOwner() {
     assert owner != null;
+    //noinspection DataFlowIssue
     return owner;
   }
 
