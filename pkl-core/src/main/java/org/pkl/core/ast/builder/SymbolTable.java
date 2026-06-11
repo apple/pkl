@@ -236,7 +236,7 @@ public final class SymbolTable {
     protected boolean isBaseModule;
     // all for-generator slots in this scope (excludes args and let bindings).
     protected final int[] forGeneratorSlots;
-    // all paramter slots in this scope; includes let bindings, function params, method params,
+    // all parameter slots in this scope; includes let bindings, function params, method params,
     // but excludes object body params (they are written one level higher)
     protected final int[] parameterSlots;
     // The properties defined on this (lexical) scope
@@ -296,6 +296,11 @@ public final class SymbolTable {
       return qualifiedName;
     }
 
+    /**
+     * Returns the frame slots inhabited by for-generator variables in this scope.
+     *
+     * <p>Includes outer for-generator variables.
+     */
     public int[] getForGeneratorSlots() {
       return forGeneratorSlots;
     }
@@ -550,7 +555,7 @@ public final class SymbolTable {
     private final FrameSlotVariable[] bindings;
 
     /**
-     * NOTE: object body params desguar to wrapping this object with a lambda call.
+     * NOTE: object body params desugar to wrapping this object with a lambda call.
      *
      * <p>So, the object itself does not contribute to parameter slots in the object's frame
      * descriptor.
@@ -771,7 +776,7 @@ public final class SymbolTable {
       if (binding == null) {
         return parentSlots;
       }
-      return ArrayUtils.plus(parentSlots, binding.slot());
+      return ArrayUtils.append(parentSlots, binding.slot());
     }
 
     public LetExpressionScope(
@@ -846,13 +851,13 @@ public final class SymbolTable {
         @Nullable FrameSlotVariable valueBinding) {
       var slots = parentScope.forGeneratorSlots;
       if (keyBinding != null && valueBinding != null) {
-        return ArrayUtils.plus(slots, keyBinding.slot(), valueBinding.slot());
+        return ArrayUtils.append(slots, keyBinding.slot(), valueBinding.slot());
       }
       if (keyBinding != null) {
-        return ArrayUtils.plus(slots, keyBinding.slot());
+        return ArrayUtils.append(slots, keyBinding.slot());
       }
       if (valueBinding != null) {
-        return ArrayUtils.plus(slots, valueBinding.slot());
+        return ArrayUtils.append(slots, valueBinding.slot());
       }
       return slots;
     }

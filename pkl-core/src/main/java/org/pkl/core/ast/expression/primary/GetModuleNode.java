@@ -32,8 +32,8 @@ public final class GetModuleNode extends ExpressionNode {
   public Object executeGeneric(VirtualFrame frame) {
     CompilerDirectives.transferToInterpreter();
 
-    var levelsUp = 0;
-    for (var current = VmUtils.getOwner(frame).getEnclosingOwner();
+    var levelsUp = -1;
+    for (var current = VmUtils.getOwner(frame);
         current != null;
         current = current.getEnclosingOwner()) {
       if (!current.isParseTimeInvisibleScope()) {

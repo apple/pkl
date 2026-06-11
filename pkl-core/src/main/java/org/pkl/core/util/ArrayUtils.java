@@ -22,7 +22,7 @@ public final class ArrayUtils {
 
   public static final int[] EMPTY_INT_ARRAY = new int[0];
 
-  public static int[] plus(int[] array, int elem) {
+  public static int[] append(int[] array, int elem) {
     if (array.length == 0) {
       return new int[] {elem};
     }
@@ -31,7 +31,7 @@ public final class ArrayUtils {
     return ret;
   }
 
-  public static int[] plus(int[] array, int elem1, int elem2) {
+  public static int[] append(int[] array, int elem1, int elem2) {
     if (array.length == 0) {
       return new int[] {elem1, elem2};
     }

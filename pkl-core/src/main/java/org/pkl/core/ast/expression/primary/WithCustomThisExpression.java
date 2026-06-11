@@ -22,6 +22,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.ArrayUtils;
 
+/** Entrypoint node of {@link ExecuteCustomThisWithRootNode}. */
 public final class WithCustomThisExpression extends ExpressionNode {
 
   private @Child ExpressionNode expressionNode;

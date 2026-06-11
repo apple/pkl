@@ -428,18 +428,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             // if a constraint expression writes to frame slots (only known case: is a `let` expr),
             // create a new root node and execute the constraint within this root node
             // e.g. String(let (x = this) x.length > 5)
-            expr = getExprWithinCustomThis(scope, expr, writesFrameSlotVars);
+            if (writesFrameSlotVars) {
+              expr = getExprWithinCustomThis(scope, expr);
+            }
             constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
           }
           return new Constrained(createSourceSection(type), language, childNode, constraints);
         });
   }
 
-  private ExpressionNode getExprWithinCustomThis(
-      SymbolTable.Scope scope, ExpressionNode expr, boolean writesFrameSlotVars) {
-    if (!writesFrameSlotVars) {
-      return expr;
-    }
+  private ExpressionNode getExprWithinCustomThis(SymbolTable.Scope scope, ExpressionNode expr) {
     return new ExecuteCustomThisWithRootNode(
         expr.getSourceSection(),
         expr,
@@ -1315,7 +1313,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                       var expr = visitExpr(ctx.getPred());
                       var writesFrameSlotVars =
                           scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
-                      return getExprWithinCustomThis(scope, expr, writesFrameSlotVars);
+                      if (writesFrameSlotVars) {
+                        return getExprWithinCustomThis(scope, expr);
+                      }
+                      return expr;
                     }));
     var member =
         doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
