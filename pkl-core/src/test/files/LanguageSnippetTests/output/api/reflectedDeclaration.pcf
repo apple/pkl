@@ -889,7 +889,7 @@ alias {
             ```
             !"".isNotBlank
             !"   ".isNotBlank
-            "\\t\\n\\r".isNotBlank
+            !"\\t\\n\\r".isNotBlank
             "abc".isNotBlank
             ```
             """
@@ -1254,7 +1254,7 @@ alias {
             ```
             !"".isNotBlank
             !"   ".isNotBlank
-            "\\t\\n\\r".isNotBlank
+            !"\\t\\n\\r".isNotBlank
             "abc".isNotBlank
             ```
             """
