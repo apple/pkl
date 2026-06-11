@@ -335,3 +335,15 @@ whenWithElse {
   20
   40
 }
+nestedForsWithinLambda {
+  "hi"
+  new {
+    2
+    3
+  }
+  "hi"
+  new {
+    3
+    4
+  }
+}

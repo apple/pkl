@@ -34,7 +34,7 @@ public sealed interface VariableResolution {
   // method, lambda, object body param
   record Parameter(int slot, int levelsUp) implements VariableResolution {}
 
-  record ForGeneratorOrLetVariable(int slot, int levelsUp) implements VariableResolution {}
+  record ForGeneratorVariableOrLetBinding(int slot, int levelsUp) implements VariableResolution {}
 
   // Implicit base module lookup
   record ImplicitBaseProperty() implements VariableResolution {}

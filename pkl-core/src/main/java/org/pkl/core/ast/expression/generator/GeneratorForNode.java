@@ -28,6 +28,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.ArrayUtils;
 
 public abstract class GeneratorForNode extends GeneratorMemberNode {
   private final FrameDescriptor generatorDescriptor;
@@ -37,6 +38,9 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   @Children private final GeneratorMemberNode[] childNodes;
   @Child private @Nullable TypeNode keyTypeNode;
   @Child private @Nullable TypeNode valueTypeNode;
+  private final int keySlot;
+  private final int valueSlot;
+  private final int[] slotsToCopy;
 
   public GeneratorForNode(
       SourceSection sourceSection,
@@ -52,7 +56,11 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
       @Nullable TypeNode keyTypeNode,
       // If this node can be constructed at parse time,
       // it should be passed instead of `unresolvedValueTypeNode`.
-      @Nullable TypeNode valueTypeNode) {
+      @Nullable TypeNode valueTypeNode,
+      int keySlot,
+      int valueSlot,
+      int[] outerForGeneratorSlots,
+      int[] parameterSlots) {
     super(sourceSection, false);
     this.generatorDescriptor = generatorDescriptor;
     this.iterableNode = iterableNode;
@@ -61,6 +69,9 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
     this.childNodes = childNodes;
     this.keyTypeNode = keyTypeNode;
     this.valueTypeNode = valueTypeNode;
+    this.keySlot = keySlot;
+    this.valueSlot = valueSlot;
+    this.slotsToCopy = ArrayUtils.concat(parameterSlots, outerForGeneratorSlots);
   }
 
   protected abstract void executeWithIterable(
@@ -154,12 +165,10 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
       VirtualFrame frame, Object parent, ObjectData data, Object key, Object value) {
 
     // GraalJS uses the same implementation technique here:
-    // https://github.com/oracle/graaljs/blob/44a11ce6e87/graal-js/src/com.oracle.truffle.js/
-    // src/com/oracle/truffle/js/nodes/function/IterationScopeNode.java#L86-L88
+    // https://github.com/oracle/graaljs/blob/44a11ce6e87/graal-js/src/com.oracle.truffle.js/src/com/oracle/truffle/js/nodes/function/IterationScopeNode.java#L86-L88
     var newFrame =
         Truffle.getRuntime().createVirtualFrame(frame.getArguments(), generatorDescriptor);
-    // the locals in `frame` (if any) are function arguments and/or outer for-generator bindings
-    VmUtils.copyLocals(frame, 0, newFrame, 0, frame.getFrameDescriptor().getNumberOfSlots());
+    VmUtils.copyLocals(frame, newFrame, slotsToCopy);
     if (keyTypeNode != null) {
       keyTypeNode.executeAndSet(newFrame, key);
     }
@@ -175,14 +184,12 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   private void initialize(VirtualFrame frame) {
     if (unresolvedKeyTypeNode != null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      var keySlot = frame.getFrameDescriptor().getNumberOfSlots();
       keyTypeNode = insert(unresolvedKeyTypeNode.execute(frame)).initWriteSlotNode(keySlot);
       generatorDescriptor.setSlotKind(keySlot, keyTypeNode.getFrameSlotKind());
       unresolvedKeyTypeNode = null;
     }
     if (unresolvedValueTypeNode != null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      var valueSlot = frame.getFrameDescriptor().getNumberOfSlots() + (keyTypeNode != null ? 1 : 0);
       valueTypeNode = insert(unresolvedValueTypeNode.execute(frame)).initWriteSlotNode(valueSlot);
       generatorDescriptor.setSlotKind(valueSlot, valueTypeNode.getFrameSlotKind());
       unresolvedValueTypeNode = null;

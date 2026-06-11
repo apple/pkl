@@ -58,6 +58,7 @@ public abstract class LetExprNode extends ExpressionNode {
         typeNode = new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
       }
       typeNode.initWriteSlotNode(slot);
+      frame.getFrameDescriptor().setSlotKind(slot, typeNode.getFrameSlotKind());
       insert(typeNode);
     }
     assert typeNode != null;

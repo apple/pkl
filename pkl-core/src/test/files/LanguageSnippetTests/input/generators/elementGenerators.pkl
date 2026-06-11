@@ -480,3 +480,16 @@ whenWithElse = new Dynamic {
     }
   }
 }
+
+local func = (it) -> new Listing {
+  for (elem1 in List(1, 2)) {
+    it
+    new Listing {
+      for (elem2 in List(1, 2)) {
+        elem1 + elem2
+      }
+    }
+  }
+}
+
+nestedForsWithinLambda = func.apply("hi")

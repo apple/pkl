@@ -1,0 +1,6 @@
+prop = "qux"
+res {
+  ["bar"] {
+    myProp = "qux"
+  }
+}

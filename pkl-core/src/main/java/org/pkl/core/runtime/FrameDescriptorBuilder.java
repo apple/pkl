@@ -20,10 +20,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import java.util.Arrays;
 import org.jspecify.annotations.Nullable;
 
-/**
- * A wrapper for Truffle's {@link FrameDescriptor.Builder}, but also lets us find the slot of a
- * given {@link Identifier}.
- */
+/** A wrapper for Truffle's {@link FrameDescriptor.Builder}, but also gives us the current size. */
 public class FrameDescriptorBuilder {
 
   private @Nullable Identifier[] names;
@@ -42,16 +39,6 @@ public class FrameDescriptorBuilder {
     this.names = new Identifier[capacity];
   }
 
-  public FrameDescriptorBuilder(FrameDescriptor descriptor) {
-    this(descriptor.getNumberOfSlots());
-    for (var i = 0; i < descriptor.getNumberOfSlots(); i++) {
-      addSlot(
-          descriptor.getSlotKind(i),
-          (Identifier) descriptor.getSlotName(i),
-          descriptor.getSlotInfo(i));
-    }
-  }
-
   private void ensureCapacity(int count) {
     if (names.length < size + count) {
       var newLength = Math.max(size + count, size * 2);
@@ -59,26 +46,19 @@ public class FrameDescriptorBuilder {
     }
   }
 
-  public int addSlot(FrameSlotKind kind, @Nullable Identifier name, @Nullable Object info) {
+  public FrameSlotVariable addSlot(FrameSlotKind kind, Identifier name, @Nullable Object info) {
     ensureCapacity(1);
     names[size] = name;
     size++;
-    return underlying.addSlot(kind, name, info);
-  }
-
-  public int findSlot(Identifier identifier) {
-    // go backwards to account for shadowed variables
-    // (this happens in the case of nested for generators).
-    for (var i = size - 1; i >= 0; i--) {
-      var name = names[i];
-      if (name != null && name.equals(identifier)) {
-        return i;
-      }
-    }
-    return -1;
+    var slot = underlying.addSlot(kind, name, info);
+    return new FrameSlotVariable(name.toString(), slot);
   }
 
   public FrameDescriptor build() {
     return underlying.build();
+  }
+
+  public int getSize() {
+    return size;
   }
 }

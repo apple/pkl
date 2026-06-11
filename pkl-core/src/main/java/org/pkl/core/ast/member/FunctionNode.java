@@ -148,8 +148,7 @@ public final class FunctionNode extends RegularMemberNode {
     var parameters = CollectionUtils.<String, PType>newLinkedHashMap(paramCount);
     for (var i = 0; i < paramCount; i++) {
       var slotName = getFrameDescriptor().getSlotName(i);
-      // Ignored parameters (`_`) have no name
-      var paramName = slotName == null ? "_#" + i : slotName.toString();
+      var paramName = slotName == Identifier.ILLEGAL ? "_#" + i : slotName.toString();
       parameters.put(paramName, TypeNode.export(parameterTypeNodes[i]));
     }
 
