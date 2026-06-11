@@ -32,3 +32,15 @@ res19 = test.catch(() -> renderer.renderValue(Email))
 res20 = test.catch(() -> renderer.renderValue((x) -> x))
 res21 = test.catch(() -> new starlark.Renderer { converters { [Int] = (_) -> throw("ouch") } }.renderValue(42))
 res22 = test.catch(() -> renderer.renderValue(IntSeq(1, 4)))
+
+res23 = renderer.renderDocument(new Dynamic {
+  ["_load"] = new RenderDirective { text = "load(\"@rules_cc//cc:defs.bzl\", \"cc_library\")" }
+  ["lib"] = new starlark.Commented {
+    comment = "A commented rule.\n\nSecond paragraph."
+    value = new Person { name = "pigeon"; age = 42 }
+  }
+  ["VERSIONS"] = new starlark.Commented {
+    comment = "A commented assignment."
+    value = List("1.0", "1.1")
+  }
+})

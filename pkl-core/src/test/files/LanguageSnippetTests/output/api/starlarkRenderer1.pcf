@@ -60,3 +60,21 @@ res19 = "Cannot render value of type `TypeAlias` as Starlark. Value: starlarkRen
 res20 = "Cannot render value of type `Function1` as Starlark. Value: new Function1 {}"
 res21 = "ouch"
 res22 = "Cannot render value of type `IntSeq` as Starlark. Value: IntSeq(1, 4)"
+res23 = """
+  load("@rules_cc//cc:defs.bzl", "cc_library")
+  
+  # A commented rule.
+  #
+  # Second paragraph.
+  Person(
+      name = "lib",
+      age = 42,
+  )
+  
+  # A commented assignment.
+  VERSIONS = [
+      "1.0",
+      "1.1",
+  ]
+  
+  """

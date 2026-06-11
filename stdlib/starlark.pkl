@@ -273,10 +273,21 @@ class Renderer extends ValueRenderer {
         .join("\n")
 
   local function renderTopLevelStatement(name: String, value: Any): String =
-    if (value is Typed && !(value is RenderDirective))
+    if (value is Commented)
+      "\(renderCommentLines(value.comment))\n\(renderStatement(name, applyConverters(value.value)))"
+    else
+      renderStatement(name, value)
+
+  local function renderStatement(name: String, value: Any): String =
+    if (value is RenderDirective)
+      "\(value.text)\n"
+    else if (value is Typed)
       renderRuleCall(name, value)
     else
       "\(name) = \(renderConverted(value, 0))\n"
+
+  local function renderCommentLines(comment: String): String =
+    comment.split("\n").map((line) -> if (line.isEmpty) "#" else "# \(line)").join("\n")
 
   local function renderRuleCall(name: String, value: Typed): String =
     let (props = value.toMap())
@@ -300,4 +311,19 @@ class Renderer extends ValueRenderer {
               }.toList()
         )
           "\(value.getClass().simpleName)(\n\(lines.join(",\n")),\n)\n"
+}
+
+/// A top-level statement with attached comment lines.
+///
+/// When rendered as part of a module or document, [comment] is emitted as `#`-prefixed lines
+/// directly above [value]. Useful for attaching documentation to generated rule instantiations.
+///
+/// Only meaningful at the top level of a module or document; in nested value positions,
+/// instances render like any other [Typed] value.
+class Commented {
+  /// The comment text, without the leading `# `.
+  comment: String
+
+  /// The annotated value.
+  value: Any
 }
