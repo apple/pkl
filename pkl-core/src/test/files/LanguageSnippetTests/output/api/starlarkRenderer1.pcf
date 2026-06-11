@@ -97,3 +97,29 @@ res24 = """
   )
   
   """
+res25 = """
+  load("@rules_cc//cc:defs.bzl", "cc_library")
+  load("//:root.bzl", "my_root_rule")
+  load("//tools:tools.bzl", "my_tool_rule")
+  load(":local_rules.bzl", "my_local_rule")
+  
+  cc_library(
+      name = "lib",
+      srcs = [
+          "foo.cc",
+      ],
+  )
+  
+  my_local_rule(
+      name = "local",
+  )
+  
+  my_root_rule(
+      name = "root",
+  )
+  
+  my_tool_rule(
+      name = "tool",
+  )
+  
+  """

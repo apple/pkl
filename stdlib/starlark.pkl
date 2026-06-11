@@ -304,13 +304,74 @@ class Renderer extends ValueRenderer {
       else
         Map()
 
+  // Parses a load label into repository, package, and target, mirroring buildtools'
+  // `labels.ParseRelative`. Relative labels get a pseudo-package that sorts after all real
+  // package names so that they go last.
+  local function parseLoadLabel(label: String): Dynamic =
+    if (!label.startsWith("@") && !label.startsWith("//"))
+      new Dynamic {
+        repository = ""
+        packagePath = "\u{7F}"
+        target = label.replaceFirst(Regex("^:+"), "")
+      }
+    else if (label.startsWith("@") && !label.replaceFirst(Regex("^@+"), "").contains("/"))
+      // "@foo" refers to "@foo//:foo".
+      let (repo = label.replaceFirst(Regex("^@+"), ""))
+        new Dynamic { repository = repo; packagePath = ""; target = repo }
+    else
+      let (repo = if (label.startsWith("@")) label.replaceFirst(Regex("^@+"), "").splitLimit("/", 2).first else "")
+      let (rest = if (label.startsWith("@")) "/" + label.replaceFirst(Regex("^@+"), "").splitLimit("/", 2)[1] else label)
+      let (parts = rest.splitLimit(":", 2))
+      let (pkg = parts.first.replaceFirst(Regex("^//"), ""))
+        if (parts.length == 2 && !parts[1].isEmpty)
+          new Dynamic { repository = repo; packagePath = pkg; target = parts[1] }
+        else if (!rest.startsWith("//"))
+          // Maybe not really a label; store everything in the target.
+          new Dynamic { repository = repo; packagePath = ""; target = rest }
+        else
+          new Dynamic { repository = repo; packagePath = pkg; target = pkg.split("/").last }
+
+  // Mirrors buildtools' `comparePaths`: compares paths segment by segment, case-insensitively,
+  // falling back to a case-sensitive comparison for determinism.
+  local function comparePaths(path1: String, path2: String): Boolean =
+    if (path1 == path2)
+      false
+    else
+      let (chunks1 = path1.split("/").map((c) -> c.toLowerCase()))
+      let (chunks2 = path2.split("/").map((c) -> c.toLowerCase()))
+      let (firstDiff = chunks1.zip(chunks2).findOrNull((p) -> p.first != p.second))
+        if (firstDiff != null)
+          firstDiff.first < firstDiff.second
+        else if (chunks1.length > chunks2.length)
+          false
+        else
+          path1 <= path2
+
+  // Mirrors buildifier's `compareLoadLabels`: labels with an explicit repository go first;
+  // ties are broken by repository, then package (empty goes first, relative goes last),
+  // then file name.
+  local function compareLoadLabels(label1: String, label2: String): Boolean =
+    if (label1.startsWith("@") != label2.startsWith("@"))
+      label1.startsWith("@")
+    else
+      let (parsed1 = parseLoadLabel(label1))
+      let (parsed2 = parseLoadLabel(label2))
+        if (parsed1.repository != parsed2.repository)
+          parsed1.repository < parsed2.repository
+        else if (parsed1.packagePath.isEmpty != parsed2.packagePath.isEmpty)
+          parsed1.packagePath.isEmpty
+        else if (parsed1.packagePath != parsed2.packagePath)
+          comparePaths(parsed1.packagePath, parsed2.packagePath)
+        else
+          comparePaths(parsed1.target, parsed2.target)
+
   local function renderLoadStatements(value: Any): String =
     let (loads = collectLoads(value))
       if (loads.isEmpty)
         ""
       else
         loads.entries
-          .sortBy((e) -> e.first)
+          .sortWith((a, b) -> compareLoadLabels(a.first, b.first))
           .map((e) ->
             "load(\(renderString(e.first)), \(e.second.toList().sort().map((s) -> renderString(s)).join(", ")))"
           )
@@ -385,8 +446,9 @@ class Commented {
 /// available in a BUILD file.
 ///
 /// When rendering a document, [Renderer] collects this annotation from the classes of all
-/// rendered [Typed] values and emits the deduplicated `load()` statements, sorted by label,
-/// at the top of the document. The loaded symbol is the annotated class's simple name.
+/// rendered [Typed] values and emits the deduplicated `load()` statements at the top of the
+/// document, ordered the same way `buildifier` sorts them. The loaded symbol is the annotated
+/// class's simple name.
 ///
 /// Example:
 /// ```

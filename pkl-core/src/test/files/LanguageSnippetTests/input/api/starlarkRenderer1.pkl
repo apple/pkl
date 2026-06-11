@@ -57,3 +57,19 @@ res24 = renderer.renderDocument(new Dynamic {
     value = new cc_library { srcs { "bar.cc" } }
   }
 })
+
+@starlark.Load { label = ":local_rules.bzl" }
+class my_local_rule {}
+
+@starlark.Load { label = "//:root.bzl" }
+class my_root_rule {}
+
+@starlark.Load { label = "//tools:tools.bzl" }
+class my_tool_rule {}
+
+res25 = renderer.renderDocument(new Dynamic {
+  ["lib"] = new cc_library { srcs { "foo.cc" } }
+  ["local"] = new my_local_rule {}
+  ["root"] = new my_root_rule {}
+  ["tool"] = new my_tool_rule {}
+})
