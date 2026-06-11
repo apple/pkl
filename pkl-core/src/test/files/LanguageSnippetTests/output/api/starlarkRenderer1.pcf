@@ -78,3 +78,22 @@ res23 = """
   ]
   
   """
+res24 = """
+  load("@rules_cc//cc:defs.bzl", "cc_library")
+  
+  cc_library(
+      name = "lib",
+      srcs = [
+          "foo.cc",
+      ],
+  )
+  
+  # Another library.
+  cc_library(
+      name = "lib2",
+      srcs = [
+          "bar.cc",
+      ],
+  )
+  
+  """

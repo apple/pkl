@@ -18,6 +18,8 @@
 @ModuleInfo { minPklVersion = "0.31.0" }
 module pkl.starlark
 
+import "pkl:reflect"
+
 /// Renders values as [Starlark](https://github.com/bazelbuild/starlark/blob/master/spec.md).
 ///
 /// Pkl values are mapped to Starlark values as follows:
@@ -92,10 +94,11 @@ class Renderer extends ValueRenderer {
   /// If [value] is a [Typed] or [Dynamic] object, its properties are rendered
   /// as top-level Starlark statements. Otherwise, the value is rendered directly.
   function renderDocument(value: Any): String =
-    if (value is Typed | Dynamic)
-      renderModuleObject(value)
-    else
-      renderValue(value)
+    renderLoadStatements(value) +
+      (if (value is Typed | Dynamic)
+        renderModuleObject(value)
+      else
+        renderValue(value))
 
   function renderValue(value: Any): String = renderAny(value, 0)
 
@@ -263,6 +266,56 @@ class Renderer extends ValueRenderer {
         )
           "\(callName)(\n\(lines.join(",\n")),\n\(indentStr(depth)))"
 
+  // --- load() statement collection ---
+
+  local function loadLabelOf(clazz: Class): String? =
+    let (annotation = reflect.Class(clazz).annotations.findOrNull((it) -> it is Load))
+      if (annotation is Load) annotation.label else null
+
+  local function mergeLoads(
+    a: Map<String, Set<String>>,
+    b: Map<String, Set<String>>
+  ): Map<String, Set<String>> =
+    b.entries.fold(a, (acc, e) -> acc.put(e.first, (acc.getOrNull(e.first) ?? Set()) + e.second))
+
+  // Collects the labels and symbols declared via [Load] annotations on the classes of all
+  // [Typed] values rendered as part of [value].
+  local function collectLoads(value: Any): Map<String, Set<String>> =
+    let (v = applyConverters(value))
+      if (v is RenderDirective)
+        Map()
+      else if (v is Commented)
+        collectLoads(v.value)
+      else if (v is Typed)
+        v.toMap().values.fold(
+          let (label = loadLabelOf(v.getClass()))
+            if (label == null) Map() else Map(label, Set(v.getClass().simpleName)),
+          (acc, elem) -> mergeLoads(acc, collectLoads(elem))
+        )
+      else if (v is Dynamic)
+        (v.toMap().values + v.toList()).fold(Map(), (acc, elem) -> mergeLoads(acc, collectLoads(elem)))
+      else if (v is List | Listing | Set)
+        (if (v is Set) v.toList() else toListValue(v))
+          .fold(Map(), (acc, elem) -> mergeLoads(acc, collectLoads(elem)))
+      else if (v is Map | Mapping)
+        toMapValue(v).values.fold(Map(), (acc, elem) -> mergeLoads(acc, collectLoads(elem)))
+      else if (v is Pair)
+        mergeLoads(collectLoads(v.first), collectLoads(v.second))
+      else
+        Map()
+
+  local function renderLoadStatements(value: Any): String =
+    let (loads = collectLoads(value))
+      if (loads.isEmpty)
+        ""
+      else
+        loads.entries
+          .sortBy((e) -> e.first)
+          .map((e) ->
+            "load(\(renderString(e.first)), \(e.second.toList().sort().map((s) -> renderString(s)).join(", ")))"
+          )
+          .join("\n") + "\n\n"
+
   // --- Module-level / document-level rendering ---
 
   local function renderModuleObject(value: Typed | Dynamic): String =
@@ -326,4 +379,23 @@ class Commented {
 
   /// The annotated value.
   value: Any
+}
+
+/// Declares the Bazel `load()` statement that makes the annotated class's rule or macro
+/// available in a BUILD file.
+///
+/// When rendering a document, [Renderer] collects this annotation from the classes of all
+/// rendered [Typed] values and emits the deduplicated `load()` statements, sorted by label,
+/// at the top of the document. The loaded symbol is the annotated class's simple name.
+///
+/// Example:
+/// ```
+/// @starlark.Load { label = "@rules_cc//cc:defs.bzl" }
+/// class cc_library {
+///   srcs: Listing<String>
+/// }
+/// ```
+class Load extends Annotation {
+  /// The label of the `.bzl` file that declares the symbol.
+  label: String
 }

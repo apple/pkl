@@ -44,3 +44,16 @@ res23 = renderer.renderDocument(new Dynamic {
     value = List("1.0", "1.1")
   }
 })
+
+@starlark.Load { label = "@rules_cc//cc:defs.bzl" }
+class cc_library {
+  srcs: Listing<String>
+}
+
+res24 = renderer.renderDocument(new Dynamic {
+  ["lib"] = new cc_library { srcs { "foo.cc" } }
+  ["lib2"] = new starlark.Commented {
+    comment = "Another library."
+    value = new cc_library { srcs { "bar.cc" } }
+  }
+})
