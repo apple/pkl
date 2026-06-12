@@ -22,6 +22,7 @@ import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import org.graalvm.collections.*;
 import org.jspecify.annotations.Nullable;
@@ -33,6 +34,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.runtime.VmExceptionBuilder.MultilineValue;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
@@ -83,6 +85,13 @@ public final class VmClass extends VmValue {
   private @Nullable UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
 
   private final Object allHiddenPropertyNamesLock = new Object();
+
+  @GuardedBy("finalizersLock")
+  private @Nullable List<Runnable> __finalizers = null;
+
+  private final Object finalizersLock = new Object();
+
+  private final AtomicInteger uninitializedSuperclassCount = new AtomicInteger(0);
 
   // Helps to overcome recursive initialization issues
   // between classes and annotations in pkl.base.
@@ -151,6 +160,56 @@ public final class VmClass extends VmValue {
   }
 
   @TruffleBoundary
+  private void checkAbstractMembers() {
+    if (this.isAbstract()) return;
+    // minimize allocations in the non-error case
+    if (!hasAbstractMethod()) return;
+    var abstractMethods = getAbstractMethods();
+    if (abstractMethods.size() == 1) {
+      throw new VmExceptionBuilder()
+          .evalError(
+              "noImplementationForAbstractMethod",
+              getDisplayName(),
+              abstractMethods.get(0).getName().toString())
+          .withSourceSection(getHeaderSection())
+          .build();
+    }
+    var methodList = new ArrayList<String>(abstractMethods.size());
+    for (var method : abstractMethods) {
+      methodList.add(method.getCallSignature());
+    }
+    throw new VmExceptionBuilder()
+        .evalError(
+            "noImplementationForAbstractMethods", getDisplayName(), MultilineValue.of(methodList))
+        .withSourceSection(getHeaderSection())
+        .build();
+  }
+
+  private boolean hasAbstractMethod() {
+    var methodCursor = getAllMethods().getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isAbstract()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private List<ClassMethod> getAbstractMethods() {
+    assert this.superclass != null;
+    var result = new ArrayList<ClassMethod>();
+    var methodCursor = getAllMethods().getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isAbstract()) {
+        result.add(method);
+      }
+    }
+    return result;
+  }
+
+  @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
     EconomicMaps.put(declaredProperties, property.getName(), property);
@@ -190,8 +249,46 @@ public final class VmClass extends VmValue {
     }
   }
 
+  private void onInitialized(Runnable runnable) {
+    synchronized (finalizersLock) {
+      if (this.__finalizers == null) {
+        this.__finalizers = new ArrayList<>();
+      }
+      this.__finalizers.add(runnable);
+    }
+  }
+
   // Note: Superclasses may not have finished their initialization when this method is called.
   public void notifyInitialized() {
+    var sc = superclass;
+    var isAllInitialized = true;
+    var uninitializedCount = 0;
+    while (sc != null) {
+      if (!sc.isInitialized) {
+        sc.onInitialized(
+            () -> {
+              var count = uninitializedSuperclassCount.decrementAndGet();
+              if (count == 0) {
+                checkAbstractMembers();
+              }
+            });
+        uninitializedCount++;
+        isAllInitialized = false;
+      }
+      sc = sc.superclass;
+    }
+    uninitializedSuperclassCount.set(uninitializedCount);
+    if (isAllInitialized) {
+      checkAbstractMembers();
+    }
+    lock:
+    synchronized (finalizersLock) {
+      if (__finalizers == null) break lock;
+      for (var finalizer : __finalizers) {
+        finalizer.run();
+      }
+      this.__finalizers = null;
+    }
     isInitialized = true;
   }
 
