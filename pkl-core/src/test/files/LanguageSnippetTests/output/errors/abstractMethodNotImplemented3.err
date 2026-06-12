@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Class `abstractMethodNotImplemented3` should either be declared `abstract`, or should implement method `bar`.
+
+x | extends "../../input-helper/classes/AbstractModule.pkl"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at abstractMethodNotImplemented3 (file:///$snippetsDir/input/errors/abstractMethodNotImplemented3.pkl)

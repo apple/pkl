@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Class `abstractMethodNotImplemented1#MyClass` should either be declared `abstract`, or should implement method `foo`.
+
+x | class MyClass extends AbstractMethod {
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at abstractMethodNotImplemented1#MyClass (file:///$snippetsDir/input/errors/abstractMethodNotImplemented1.pkl)
+
+x | foo: MyClass
+         ^^^^^^^
+at abstractMethodNotImplemented1 (file:///$snippetsDir/input/errors/abstractMethodNotImplemented1.pkl)
