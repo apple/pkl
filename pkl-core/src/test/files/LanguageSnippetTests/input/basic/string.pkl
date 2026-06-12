@@ -81,5 +81,5 @@ local class Person { name: String; age: Int }
 local class Person2 {
   name: String
   age: Int
-  function toString() = "My name is \(name) and I'm \(age) years old."
+  override function toString() = "My name is \(name) and I'm \(age) years old."
 }

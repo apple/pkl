@@ -1,7 +1,7 @@
 module com.example.OverriddenProperty
 
 abstract class BaseClass {
-  fixed bar: Listing<BaseBar> = new {
+  open fixed bar: Listing<BaseBar> = new {
     new {
       prop1 = "hello"
     }
@@ -11,7 +11,7 @@ abstract class BaseClass {
 theClass: TheClass
 
 class TheClass extends BaseClass {
-  fixed bar: Listing<Bar> = new {
+  override fixed bar: Listing<Bar> = new {
     new {
       prop1 = "hello"
       prop2 = "hello again"

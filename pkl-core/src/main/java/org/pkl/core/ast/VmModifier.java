@@ -41,6 +41,8 @@ public final class VmModifier {
 
   public static final int CONST = 0x40;
 
+  public static final int OVERRIDE = 0x2000;
+
   // internal modifiers
 
   public static final int IMPORT = 0x80;
@@ -69,11 +71,12 @@ public final class VmModifier {
 
   public static final int VALID_TYPE_ALIAS_MODIFIERS = LOCAL | EXTERNAL;
 
-  public static final int VALID_METHOD_MODIFIERS = ABSTRACT | LOCAL | EXTERNAL | CONST;
+  public static final int VALID_METHOD_MODIFIERS =
+      ABSTRACT | LOCAL | EXTERNAL | CONST | OPEN | OVERRIDE;
 
   // for compat, properties may be parsed with abstract modifier but this is ignored
   public static final int VALID_PROPERTY_MODIFIERS =
-      ABSTRACT | LOCAL | HIDDEN | EXTERNAL | FIXED | CONST;
+      ABSTRACT | LOCAL | HIDDEN | EXTERNAL | FIXED | CONST | OPEN | OVERRIDE;
 
   public static final int VALID_OBJECT_MEMBER_MODIFIERS = LOCAL | CONST;
 
@@ -127,6 +130,10 @@ public final class VmModifier {
 
   public static boolean isConst(int modifiers) {
     return (modifiers & CONST) != 0;
+  }
+
+  public static boolean isOverride(int modifiers) {
+    return (modifiers & OVERRIDE) != 0;
   }
 
   public static boolean isAmbiguousLocality(int modifiers) {
@@ -186,6 +193,7 @@ public final class VmModifier {
       case EXTERNAL -> "external";
       case FIXED -> "fixed";
       case CONST -> "const";
+      case OVERRIDE -> "override";
       default ->
           throw new VmExceptionBuilder()
               .bug("Cannot convert internal modifier `%s` to a string.", toString(modifier))
@@ -203,6 +211,7 @@ public final class VmModifier {
     if (isExternal(modifiers) && isClass) builder.add(toString(EXTERNAL));
     if (isFixed(modifiers)) builder.add(toString(FIXED));
     if (isConst(modifiers)) builder.add(toString(CONST));
+    if (isOverride(modifiers)) builder.add(toString(OVERRIDE));
 
     return builder.build();
   }

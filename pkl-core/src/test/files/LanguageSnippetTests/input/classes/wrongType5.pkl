@@ -1,11 +1,11 @@
 import "pkl:test"
 
 open class Person {
-  name: String
+  open name: String
 }
 
 class Person2 extends Person {
-  name: Int // currently allowed
+  override name: Int // currently allowed
 }
 
 class Person3 extends Person {

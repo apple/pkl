@@ -189,7 +189,7 @@ class Version {
   /// Strips [preRelease] and [build] from this version.
   function toNormal(): Version = (this) { preRelease = null; build = null }
 
-  function toString() =
+  override function toString() =
     "\(major).\(minor).\(patch)\(if (preRelease != null) "-\(preRelease)" else "")\(if (build != null) "+\(build)" else "")"
 
   local function isPreReleaseLessThan(other: Version): Boolean =

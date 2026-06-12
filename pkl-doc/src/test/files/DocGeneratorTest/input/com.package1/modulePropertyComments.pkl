@@ -12,7 +12,7 @@ property1: Float = 3.14159265359
 property2: Float = 3.14159265359
 
 /// Property with single-line doc comment.
-property3: Float = 3.14159265359
+open property3: Float = 3.14159265359
 
 /// Property with
 /// multi-line

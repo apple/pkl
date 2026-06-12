@@ -17,8 +17,8 @@ function methodb2(str: String(!isEmpty, startsWith("a"))): Int(isPositive) =
 
 /// comment
 class Classb1 extends Classa1 {
-  name: String
-  age: Int
+  override name: String
+  override age: Int
 }
 
 propertyb3 = (_, _) -> 3

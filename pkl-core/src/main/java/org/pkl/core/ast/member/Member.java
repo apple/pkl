@@ -130,4 +130,12 @@ public abstract class Member {
   public final boolean isLocalOrExternalOrAbstract() {
     return VmModifier.isLocalOrExternalOrAbstract(modifiers);
   }
+
+  public final boolean isClosed() {
+    return VmModifier.isClosed(modifiers);
+  }
+
+  public final boolean isOverride() {
+    return VmModifier.isOverride(modifiers);
+  }
 }

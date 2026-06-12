@@ -1944,11 +1944,11 @@ class JavaCodeGeneratorTest {
         }
 
         open class OpenClass {
-          prop: Foo
+          open prop: Foo
         }
 
         class TheClass extends OpenClass {
-          prop: TheFoo
+          override prop: TheFoo
         }
         """
           .trimIndent()
@@ -1988,11 +1988,11 @@ class JavaCodeGeneratorTest {
         }
 
         open class OpenClass {
-          prop: Foo
+          open prop: Foo
         }
 
         class TheClass extends OpenClass {
-          prop: TheFoo
+          override prop: TheFoo
         }
         """
           .trimIndent(),

@@ -67,6 +67,7 @@ public final class Modifier extends AbstractNode {
     LOCAL,
     HIDDEN,
     FIXED,
-    CONST
+    CONST,
+    OVERRIDE
   }
 }

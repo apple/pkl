@@ -8,7 +8,7 @@ hidden pigeonBarnOwl = super.pigeon + super.barnOwl()
 function barnOwlPigeon() = super.barnOwl() + super.pigeon
 hidden parrot = super.say("Parrot")
 function other() = super.other()
-function sameMethod() = 3 + super.sameMethod()
+override function sameMethod() = 3 + super.sameMethod()
 sameProp = super.sameProp + "c"
 
 prefix = "Oh "

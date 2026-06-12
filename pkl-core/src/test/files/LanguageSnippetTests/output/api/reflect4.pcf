@@ -13,24 +13,39 @@ examples {
         name = "overriddenInBFromA"
         annotations {}
         allAnnotations {}
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "Int"
       }
       ["overriddenInCFromA"] {
         name = "overriddenInCFromA"
         annotations {}
         allAnnotations {}
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "Int"
       }
       ["overriddenInBCFromA"] {
         name = "overriddenInBCFromA"
         annotations {}
         allAnnotations {}
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "Boolean"
       }
       ["modA"] {
@@ -52,10 +67,13 @@ examples {
         modifiers {
           "hidden"
           "fixed"
+          "override"
         }
         allModifiers {
+          "open"
           "hidden"
           "fixed"
+          "override"
         }
         type = "Int"
       }
@@ -66,10 +84,13 @@ examples {
         modifiers {
           "hidden"
           "fixed"
+          "override"
         }
         allModifiers {
+          "open"
           "hidden"
           "fixed"
+          "override"
         }
         type = "Int"
       }
@@ -79,10 +100,13 @@ examples {
         allAnnotations {}
         modifiers {
           "fixed"
+          "override"
         }
         allModifiers {
+          "open"
           "hidden"
           "fixed"
+          "override"
         }
         type = "Boolean"
       }
@@ -93,10 +117,13 @@ examples {
         modifiers {
           "hidden"
           "fixed"
+          "override"
         }
         allModifiers {
+          "open"
           "hidden"
           "fixed"
+          "override"
         }
         type = "Boolean"
       }
@@ -121,8 +148,13 @@ examples {
           "new MyAnn {}"
           "new Unlisted {}"
         }
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "String"
       }
       ["annAOverrideC"] {
@@ -134,8 +166,13 @@ examples {
           "new MyAnn {}"
           "new Unlisted {}"
         }
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "String"
       }
       ["annAOverrideBC"] {
@@ -148,8 +185,13 @@ examples {
           "new MyAnn {}"
           "new Unlisted {}"
         }
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "String"
       }
       ["inheritedFromB"] {
@@ -164,8 +206,13 @@ examples {
         name = "overriddenInCFromB"
         annotations {}
         allAnnotations {}
-        modifiers {}
-        allModifiers {}
+        modifiers {
+          "override"
+        }
+        allModifiers {
+          "open"
+          "override"
+        }
         type = "Int"
       }
       ["modB"] {

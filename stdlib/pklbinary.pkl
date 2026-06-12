@@ -39,12 +39,12 @@ module pkl.pklbinary
 /// [Renderer.convertPropertyTransformers].
 class Renderer extends BytesRenderer {
   /// Renders [value] as `pkl-binary`.
-  external function renderValue(value: Any): Bytes
+  override external function renderValue(value: Any): Bytes
 
   /// Renders [value] as `pkl-binary`.
   ///
   /// Every `pkl-binary` value is also a valid document.
-  external function renderDocument(value: Any): Bytes
+  override external function renderDocument(value: Any): Bytes
 
   convertPropertyTransformers {
     // disable all property conversions by default
