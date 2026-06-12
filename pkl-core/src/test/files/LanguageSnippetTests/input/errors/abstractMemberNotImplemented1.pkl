@@ -1,0 +1,19 @@
+abstract class AbstractProperty {
+  abstract foo: Int
+}
+
+abstract class AbstractMethod {
+  abstract function foo(): Int
+}
+
+abstract class AbstractPropertiesAndMethods {
+  abstract foo: Int
+  abstract bar: Int
+  abstract function foo(): Int
+  abstract function bar(): Int
+}
+
+class MyClass extends AbstractProperty {
+}
+
+foo: MyClass
