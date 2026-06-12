@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Class `abstractMethodsNotImplemented#MyClass` either needs to be abstract, or should implement property `foo`.
+
+x | class MyClass extends MyAbstractClass {
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at abstractMethodsNotImplemented#MyClass (file:///$snippetsDir/input/errors/abstractMethodsNotImplemented.pkl)
+
+x | foo: MyClass
+         ^^^^^^^
+at abstractMethodsNotImplemented (file:///$snippetsDir/input/errors/abstractMethodsNotImplemented.pkl)
