@@ -20,8 +20,10 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
@@ -68,16 +70,37 @@ public final class ExecutorOptions {
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
+    return defaultModuleCacheDir(
+        Path.of(System.getProperty("user.home")), isWindowsOs(), System::getenv);
+  }
+
+  // Package-private; injectable so tests can exercise the Windows code path on a Unix CI box.
+  static Path defaultModuleCacheDir(
+      Path home, boolean isWindows, Function<String, @Nullable String> envLookup) {
     // Keep in sync with org.pkl.core.util.IoUtils.getDefaultModuleCacheDir (pkl-executor cannot
-    // depend on pkl-core). Prefer the XDG-style `~/.cache/pkl`, but keep using a pre-existing
-    // legacy `~/.pkl/cache` so that already-populated caches aren't orphaned.
-    var home = System.getProperty("user.home");
-    var xdgLocation = Path.of(home, ".cache", "pkl");
-    var legacyLocation = Path.of(home, ".pkl", "cache");
-    if (!Files.exists(xdgLocation) && Files.exists(legacyLocation)) {
+    // depend on pkl-core). On Unix prefer the XDG-style `~/.cache/pkl`; on Windows prefer
+    // `%LOCALAPPDATA%/pkl/cache`. Keep using a pre-existing legacy `~/.pkl/cache` so that
+    // already-populated caches aren't orphaned.
+    Path preferred = null;
+    if (isWindows) {
+      var localAppData = envLookup.apply("LOCALAPPDATA");
+      if (localAppData != null && !localAppData.isEmpty()) {
+        preferred = Path.of(localAppData, "pkl", "cache");
+      }
+    }
+    if (preferred == null) {
+      preferred = home.resolve(".cache").resolve("pkl");
+    }
+    var legacyLocation = home.resolve(".pkl").resolve("cache");
+    if (!Files.exists(preferred) && Files.exists(legacyLocation)) {
       return legacyLocation;
     }
-    return xdgLocation;
+    return preferred;
+  }
+
+  private static boolean isWindowsOs() {
+    var osName = System.getProperty("os.name");
+    return osName != null && osName.toLowerCase(Locale.ROOT).contains("windows");
   }
 
   public static Builder builder() {

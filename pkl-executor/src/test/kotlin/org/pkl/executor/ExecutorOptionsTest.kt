@@ -16,6 +16,7 @@
 package org.pkl.executor
 
 import java.nio.file.Path
+import java.util.function.Function
 import kotlin.io.path.createDirectories
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
@@ -46,5 +47,53 @@ class ExecutorOptionsTest {
     } finally {
       System.setProperty("user.home", original)
     }
+  }
+
+  private fun env(vararg entries: Pair<String, String?>): Function<String, String?> {
+    val map = entries.toMap()
+    return Function { name -> map[name] }
+  }
+
+  @Test
+  fun `defaultModuleCacheDir on Windows uses LOCALAPPDATA when set`(@TempDir home: Path) {
+    val localAppData = home.resolve("LocalAppData").createDirectories()
+    assertThat(
+        ExecutorOptions.defaultModuleCacheDir(
+          home,
+          true,
+          env("LOCALAPPDATA" to localAppData.toString()),
+        )
+      )
+      .isEqualTo(localAppData.resolve("pkl").resolve("cache"))
+  }
+
+  @Test
+  fun `defaultModuleCacheDir on Windows falls back to Unix layout when LOCALAPPDATA is unset`(
+    @TempDir home: Path
+  ) {
+    assertThat(ExecutorOptions.defaultModuleCacheDir(home, true, env()))
+      .isEqualTo(home.resolve(".cache").resolve("pkl"))
+  }
+
+  @Test
+  fun `defaultModuleCacheDir on Windows treats empty LOCALAPPDATA like unset`(@TempDir home: Path) {
+    assertThat(ExecutorOptions.defaultModuleCacheDir(home, true, env("LOCALAPPDATA" to "")))
+      .isEqualTo(home.resolve(".cache").resolve("pkl"))
+  }
+
+  @Test
+  fun `defaultModuleCacheDir on Windows still falls back to legacy ~_pkl_cache`(
+    @TempDir home: Path
+  ) {
+    val localAppData = home.resolve("LocalAppData").createDirectories()
+    home.resolve(".pkl").resolve("cache").createDirectories()
+    assertThat(
+        ExecutorOptions.defaultModuleCacheDir(
+          home,
+          true,
+          env("LOCALAPPDATA" to localAppData.toString()),
+        )
+      )
+      .isEqualTo(home.resolve(".pkl").resolve("cache"))
   }
 }

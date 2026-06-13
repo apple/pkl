@@ -41,17 +41,36 @@ Ready when you need them.
 
 ==== Default file locations
 
-For new setups, the CLI no longer stores anything under `~/.pkl` (https://github.com/apple/pkl/pull/1674[#1674]). It uses XDG-style locations:
+For new setups, the CLI no longer stores anything under `~/.pkl` (https://github.com/apple/pkl/pull/1674[#1674]). It uses XDG-style locations on Unix and Known Folder locations on Windows:
 
-* Package cache: `~/.cache/pkl` (was `~/.pkl/cache`)
-* Settings file: `~/.config/pkl/settings.pkl` (was `~/.pkl/settings.pkl`)
-* CA certificates: `~/.config/pkl/cacerts` (was `~/.pkl/cacerts`)
-* REPL history: `~/.local/state/pkl/repl-history` (was `~/.pkl/repl-history`)
+[cols="1,2,2,2",options="header"]
+|===
+| Concern | Unix (Linux/macOS) | Windows | Legacy fallback
 
-These are fixed defaults; no environment variables (such as `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`, or `XDG_STATE_HOME`) are read.
-On Windows, these paths are used literally under the user home directory (`~/.cache/pkl`, etc.); they are not mapped to Known Folder locations.
+| Package cache
+| `~/.cache/pkl`
+| `%LOCALAPPDATA%/pkl/cache`
+| `~/.pkl/cache`
 
-Existing setups keep working without migration: each legacy `~/.pkl` location is still used when it already exists. In particular, a pre-existing `~/.pkl/cache` keeps being used as long as `~/.cache/pkl` does not exist, so packages aren't re-downloaded.
+| Settings file
+| `~/.config/pkl/settings.pkl`
+| `%APPDATA%/pkl/settings.pkl`
+| `~/.pkl/settings.pkl`
+
+| CA certificates
+| `~/.config/pkl/cacerts`
+| `%APPDATA%/pkl/cacerts`
+| `~/.pkl/cacerts`
+
+| REPL history
+| `~/.local/state/pkl/repl-history`
+| `%LOCALAPPDATA%/pkl/repl-history`
+| `~/.pkl/repl-history`
+|===
+
+No Pkl-specific environment variables (such as `XDG_CACHE_HOME`, `XDG_CONFIG_HOME`, `XDG_STATE_HOME`, or `PKL_HOME`) are read. On Windows, the standard `APPDATA` and `LOCALAPPDATA` paths are honoured because that is how Windows itself exposes the Known Folders – they are not Pkl-specific knobs. If `APPDATA` or `LOCALAPPDATA` is unset, the Unix layout is used as a fallback so a misconfigured environment doesn't crash.
+
+Existing setups keep working without migration: each legacy `~/.pkl` location is still used when it already exists. In particular, a pre-existing `~/.pkl/cache` keeps being used as long as the new location does not exist, so packages aren't re-downloaded. If you have manually created an empty `~/.cache/pkl` (or the Windows equivalent), remove it before upgrading, or move your `~/.pkl/cache` contents over.
 
 == Breaking Changes [small]#💔#
 

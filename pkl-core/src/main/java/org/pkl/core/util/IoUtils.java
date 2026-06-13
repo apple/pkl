@@ -32,6 +32,7 @@ import java.nio.file.Path;
 import java.nio.file.SimpleFileVisitor;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.function.Function;
 import java.util.regex.Pattern;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
@@ -234,56 +235,78 @@ public final class IoUtils {
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultModuleCacheDir() {
-    return getDefaultModuleCacheDir(getUserHomeDir());
+    return getDefaultModuleCacheDir(getUserHomeDir(), isWindows(), System::getenv);
   }
 
+  // Package-private; the older `(homeDir)` overload retains its Unix-only behaviour so existing
+  // tests don't have to thread the OS / env-var arguments through.
   static Path getDefaultModuleCacheDir(Path homeDir) {
-    // Prefer the XDG-style `~/.cache/pkl`, but keep using a pre-existing legacy `~/.pkl/cache` so
-    // that already-populated caches aren't orphaned (which would force a re-download).
-    return preferXdgLocation(
-        homeDir.resolve(".cache").resolve("pkl"), homeDir.resolve(".pkl").resolve("cache"));
+    return getDefaultModuleCacheDir(homeDir, false, name -> null);
+  }
+
+  static Path getDefaultModuleCacheDir(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    // Prefer the new XDG-style / Known Folder location, but keep using a pre-existing legacy
+    // `~/.pkl/cache` so that already-populated caches aren't orphaned (which would force a
+    // re-download).
+    return preferNewLocation(
+        getPklCacheDir(homeDir, isWindows, envLookup), homeDir.resolve(".pkl").resolve("cache"));
   }
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultSettingsFile() {
-    return getDefaultSettingsFile(getUserHomeDir());
+    return getDefaultSettingsFile(getUserHomeDir(), isWindows(), System::getenv);
   }
 
   static Path getDefaultSettingsFile(Path homeDir) {
-    // Prefer the XDG-style `~/.config/pkl/settings.pkl`, falling back to legacy
-    // `~/.pkl/settings.pkl`.
-    return preferXdgLocation(
-        homeDir.resolve(".config").resolve("pkl").resolve("settings.pkl"),
+    return getDefaultSettingsFile(homeDir, false, name -> null);
+  }
+
+  static Path getDefaultSettingsFile(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    // Prefer the new config-dir location, falling back to legacy `~/.pkl/settings.pkl`.
+    return preferNewLocation(
+        getPklConfigDir(homeDir, isWindows, envLookup).resolve("settings.pkl"),
         homeDir.resolve(".pkl").resolve("settings.pkl"));
   }
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultCaCertsDir() {
-    return getDefaultCaCertsDir(getUserHomeDir());
+    return getDefaultCaCertsDir(getUserHomeDir(), isWindows(), System::getenv);
   }
 
   static Path getDefaultCaCertsDir(Path homeDir) {
-    // Prefer the XDG-style `~/.config/pkl/cacerts`, falling back to legacy `~/.pkl/cacerts`. A
-    // directory with no certificate files counts as absent, so an empty `~/.config/pkl/cacerts`
-    // doesn't shadow a populated legacy `~/.pkl/cacerts`.
-    var xdg = homeDir.resolve(".config").resolve("pkl").resolve("cacerts");
-    if (containsRegularFile(xdg)) {
-      return xdg;
+    return getDefaultCaCertsDir(homeDir, false, name -> null);
+  }
+
+  static Path getDefaultCaCertsDir(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    // Prefer the new config-dir location, falling back to legacy `~/.pkl/cacerts`. A directory with
+    // no certificate files counts as absent, so an empty config-dir `cacerts` doesn't shadow a
+    // populated legacy `~/.pkl/cacerts`.
+    var preferred = getPklConfigDir(homeDir, isWindows, envLookup).resolve("cacerts");
+    if (containsRegularFile(preferred)) {
+      return preferred;
     }
     var legacy = homeDir.resolve(".pkl").resolve("cacerts");
-    return containsRegularFile(legacy) ? legacy : xdg;
+    return containsRegularFile(legacy) ? legacy : preferred;
   }
 
   // not stored to avoid build-time initialization by native-image
   public static Path getDefaultReplHistoryFile() {
-    return getDefaultReplHistoryFile(getUserHomeDir());
+    return getDefaultReplHistoryFile(getUserHomeDir(), isWindows(), System::getenv);
   }
 
   static Path getDefaultReplHistoryFile(Path homeDir) {
-    // REPL history is state, so prefer the XDG state dir `~/.local/state/pkl/repl-history`, falling
-    // back to legacy `~/.pkl/repl-history`.
-    return preferXdgLocation(
-        homeDir.resolve(".local").resolve("state").resolve("pkl").resolve("repl-history"),
+    return getDefaultReplHistoryFile(homeDir, false, name -> null);
+  }
+
+  static Path getDefaultReplHistoryFile(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    // REPL history is state; prefer the new state-dir location, falling back to legacy
+    // `~/.pkl/repl-history`.
+    return preferNewLocation(
+        getPklStateDir(homeDir, isWindows, envLookup).resolve("repl-history"),
         homeDir.resolve(".pkl").resolve("repl-history"));
   }
 
@@ -293,15 +316,67 @@ public final class IoUtils {
   }
 
   /**
-   * Returns {@code xdgLocation}, unless it does not exist and {@code legacyLocation} does, in which
-   * case {@code legacyLocation} is returned. New setups therefore use the XDG-style location while
-   * existing setups keep working without migration. Package-private to allow direct testing.
+   * Returns Pkl's user-scoped config directory. On Unix this is {@code ~/.config/pkl} (under {@code
+   * XDG_CONFIG_HOME}); on Windows this is {@code %APPDATA%/pkl} (under the roaming application data
+   * Known Folder). If {@code %APPDATA%} is unset or empty, falls through to the Unix layout so a
+   * misconfigured environment doesn't crash.
    */
-  static Path preferXdgLocation(Path xdgLocation, Path legacyLocation) {
-    if (!Files.exists(xdgLocation) && Files.exists(legacyLocation)) {
+  private static Path getPklConfigDir(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    if (isWindows) {
+      var appData = envLookup.apply("APPDATA");
+      if (appData != null && !appData.isEmpty()) {
+        return Path.of(appData).resolve("pkl");
+      }
+    }
+    return homeDir.resolve(".config").resolve("pkl");
+  }
+
+  /**
+   * Returns Pkl's user-scoped cache directory. On Unix this is {@code ~/.cache/pkl} (under {@code
+   * XDG_CACHE_HOME}); on Windows this is {@code %LOCALAPPDATA%/pkl/cache} (under the machine-local
+   * application data Known Folder, with an explicit {@code cache} category segment matching the
+   * standard Windows app layout). If {@code %LOCALAPPDATA%} is unset or empty, falls through to the
+   * Unix layout.
+   */
+  private static Path getPklCacheDir(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    if (isWindows) {
+      var localAppData = envLookup.apply("LOCALAPPDATA");
+      if (localAppData != null && !localAppData.isEmpty()) {
+        return Path.of(localAppData).resolve("pkl").resolve("cache");
+      }
+    }
+    return homeDir.resolve(".cache").resolve("pkl");
+  }
+
+  /**
+   * Returns Pkl's user-scoped state directory. On Unix this is {@code ~/.local/state/pkl} (under
+   * {@code XDG_STATE_HOME}); on Windows this is {@code %LOCALAPPDATA%/pkl}. If {@code
+   * %LOCALAPPDATA%} is unset or empty, falls through to the Unix layout.
+   */
+  private static Path getPklStateDir(
+      Path homeDir, boolean isWindows, Function<String, @Nullable String> envLookup) {
+    if (isWindows) {
+      var localAppData = envLookup.apply("LOCALAPPDATA");
+      if (localAppData != null && !localAppData.isEmpty()) {
+        return Path.of(localAppData).resolve("pkl");
+      }
+    }
+    return homeDir.resolve(".local").resolve("state").resolve("pkl");
+  }
+
+  /**
+   * Returns {@code newLocation}, unless it does not exist and {@code legacyLocation} does, in which
+   * case {@code legacyLocation} is returned. New setups therefore use the OS-appropriate location
+   * (XDG-style on Unix, Known Folders on Windows) while existing setups keep working without
+   * migration. Package-private to allow direct testing.
+   */
+  static Path preferNewLocation(Path newLocation, Path legacyLocation) {
+    if (!Files.exists(newLocation) && Files.exists(legacyLocation)) {
       return legacyLocation;
     }
-    return xdgLocation;
+    return newLocation;
   }
 
   /** Whether {@code dir} is a directory containing at least one regular file. */
