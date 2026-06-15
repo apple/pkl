@@ -55,6 +55,7 @@ import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
@@ -456,10 +457,18 @@ final class PackageResolvers {
     }
 
     private Path getRelativePath(PackageUri uri) {
-      return Path.of(
-          CACHE_DIR_PREFIX,
-          IoUtils.encodePath(uri.getUri().getAuthority()),
-          getEffectivePackageUriPath(uri));
+      var relativePath =
+          Path.of(
+              CACHE_DIR_PREFIX,
+              IoUtils.encodePath(uri.getUri().getAuthority()),
+              getEffectivePackageUriPath(uri));
+      // ensure the derived path cannot escape the cache directory
+      var resolved = cacheDir.resolve(relativePath).normalize();
+      if (!resolved.startsWith(cacheDir.normalize())) {
+        throw new SecurityException(
+            ErrorMessages.create("packageUriEscapesCacheDir", uri.getUri()));
+      }
+      return relativePath;
     }
 
     private String getLastSegmentName(PackageUri packageUri) {
