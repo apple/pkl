@@ -2547,36 +2547,6 @@ abstract external class Collection<out Element> extends Any {
     predicate: (Element) -> Boolean,
   ): Pair<Collection<Element>, Collection<Element>>
 
-  /// The zero-based index of the first occurrence of [element] in this collection.
-  ///
-  /// Throws if this collection does not contains [element].
-  ///
-  /// Facts:
-  /// ```
-  /// List(1, 2, 3).indexOf(2) == 1
-  /// List(1, 2, 2).indexOf(2) == 1
-  /// import("pkl:test").catch(() -> List(1, 2, 3).indexOf(4))
-  /// ```
-  abstract function indexOf(element: Any): Int
-
-  /// Same as [indexOf()] but returns [null] if this collection does not contain [element].
-  abstract function indexOfOrNull(element: Any): Int?
-
-  /// The zero-based index of the last occurrence of [element] in this collection.
-  ///
-  /// Throws if this collection does not contain [element].
-  ///
-  /// Facts:
-  /// ```
-  /// List(1, 2, 3).lastIndexOf(2) == 1
-  /// List(1, 2, 2).lastIndexOf(2) == 2
-  /// import("pkl:test").catch(() -> List(1, 2, 3).lastIndexOf(4))
-  /// ```
-  abstract function lastIndexOf(element: Any): Int
-
-  /// Same as [lastIndexOf()] but returns [null] if this collection does not contain [element].
-  abstract function lastIndexOfOrNull(element: Any): Int?
-
   /// The first element for which [predicate] returns [true].
   ///
   /// Throws if [predicate] does not hold for any element in this collection.
@@ -2608,42 +2578,6 @@ abstract external class Collection<out Element> extends Any {
   /// Same as [findLast()] but returns [null] if [predicate] does not hold for any element in this
   /// collection.
   abstract function findLastOrNull(predicate: (Element) -> Boolean): Element?
-
-  /// The index of the first element for which [predicate] returns [true].
-  ///
-  /// Throws  if [predicate] does not hold for any element in this collection.
-  ///
-  /// Facts:
-  /// ```
-  /// List(5, 6, 7).findIndex((n) -> n.isEven) == 1
-  /// List(4, 6, 8).findIndex((n) -> n.isEven) == 0
-  /// import("pkl:test").catch(() -> List(5, 7, 9).findLast((n) -> n.isEven))
-  /// ```
-  @AlsoKnownAs { names { "indexWhere" } }
-  abstract function findIndex(predicate: (Element) -> Boolean): Int
-
-  /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this
-  /// collection.
-  @AlsoKnownAs { names { "indexWhere" } }
-  abstract function findIndexOrNull(predicate: (Element) -> Boolean): Int?
-
-  /// The index of the last element for which [predicate] returns [true].
-  ///
-  /// Throws if [predicate] does not hold for any element in this collection.
-  ///
-  /// Facts:
-  /// ```
-  /// List(5, 6, 7).findLastIndex((n) -> n.isEven) == 1
-  /// List(4, 6, 8).findLastIndex((n) -> n.isEven) == 2
-  /// import("pkl:test").catch(() -> List(5, 7, 9).findLastIndex((n) -> n.isEven))
-  /// ```
-  @AlsoKnownAs { names { "lastIndexWhere" } }
-  abstract function findLastIndex(predicate: (Element) -> Boolean): Int
-
-  /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in
-  /// this collection.
-  @AlsoKnownAs { names { "lastIndexWhere" } }
-  abstract function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
 
   /// The number of elements for which [predicate] returns [true].
   ///
@@ -3317,16 +3251,70 @@ external class List<out Element> extends Collection<Element> {
   external function findLast(predicate: (Element) -> Boolean): Element
   external function findLastOrNull(predicate: (Element) -> Boolean): Element?
 
+  /// The index of the first element for which [predicate] returns [true].
+  ///
+  /// Throws  if [predicate] does not hold for any element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(5, 6, 7).findIndex((n) -> n.isEven) == 1
+  /// List(4, 6, 8).findIndex((n) -> n.isEven) == 0
+  /// import("pkl:test").catch(() -> List(5, 7, 9).findLast((n) -> n.isEven))
+  /// ```
+  @AlsoKnownAs { names { "indexWhere" } }
   external function findIndex(predicate: (Element) -> Boolean): Int
+
+  /// Same as [findIndex()] but returns [null] if [predicate] does not hold for any element in this
+  /// collection.
+  @AlsoKnownAs { names { "indexWhere" } }
   external function findIndexOrNull(predicate: (Element) -> Boolean): Int?
 
+  /// The index of the last element for which [predicate] returns [true].
+  ///
+  /// Throws if [predicate] does not hold for any element in this collection.
+  ///
+  /// Facts:
+  /// ```
+  /// List(5, 6, 7).findLastIndex((n) -> n.isEven) == 1
+  /// List(4, 6, 8).findLastIndex((n) -> n.isEven) == 2
+  /// import("pkl:test").catch(() -> List(5, 7, 9).findLastIndex((n) -> n.isEven))
+  /// ```
+  @AlsoKnownAs { names { "lastIndexWhere" } }
   external function findLastIndex(predicate: (Element) -> Boolean): Int
+
+  /// Same as [findLastIndex()] but returns [null] if [predicate] does not hold for any element in
+  /// this collection.
+  @AlsoKnownAs { names { "lastIndexWhere" } }
   external function findLastIndexOrNull(predicate: (Element) -> Boolean): Int?
 
+  /// The zero-based index of the first occurrence of [element] in this collection.
+  ///
+  /// Throws if this collection does not contains [element].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).indexOf(2) == 1
+  /// List(1, 2, 2).indexOf(2) == 1
+  /// import("pkl:test").catch(() -> List(1, 2, 3).indexOf(4))
+  /// ```
   external function indexOf(element: Any): Int
+
+  /// Same as [indexOf()] but returns [null] if this collection does not contain [element].
   external function indexOfOrNull(element: Any): Int?
 
+  /// The zero-based index of the last occurrence of [element] in this collection.
+  ///
+  /// Throws if this collection does not contain [element].
+  ///
+  /// Facts:
+  /// ```
+  /// List(1, 2, 3).lastIndexOf(2) == 1
+  /// List(1, 2, 2).lastIndexOf(2) == 2
+  /// import("pkl:test").catch(() -> List(1, 2, 3).lastIndexOf(4))
+  /// ```
   external function lastIndexOf(element: Any): Int
+
+  /// Same as [lastIndexOf()] but returns [null] if this collection does not contain [element].
   external function lastIndexOfOrNull(element: Any): Int?
 
   external function count(predicate: (Element) -> Boolean): Int
