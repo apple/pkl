@@ -65,7 +65,7 @@ public final class PackageUri {
     for (var segment : path.split("/", -1)) {
       if (segment.equals("..")) {
         throw new URISyntaxException(
-            uri.toString(), ErrorMessages.create("invalidRelativePathInPackageUri", uri));
+            uri.toString(), ErrorMessages.create("invalidRelativePathInPackageUri"));
       }
     }
     var versionIdx = path.lastIndexOf('@');
