@@ -45,6 +45,7 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipInputStream;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClient;
@@ -55,7 +56,6 @@ import org.pkl.core.runtime.FileSystemManager;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.HttpUtils;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
@@ -465,8 +465,7 @@ final class PackageResolvers {
       // ensure the derived path cannot escape the cache directory
       var resolved = cacheDir.resolve(relativePath).normalize();
       if (!resolved.startsWith(cacheDir.normalize())) {
-        throw new SecurityException(
-            ErrorMessages.create("packageUriEscapesCacheDir", uri.getUri()));
+        throw new PklBugException("Package URI escapes the cache directory");
       }
       return relativePath;
     }
