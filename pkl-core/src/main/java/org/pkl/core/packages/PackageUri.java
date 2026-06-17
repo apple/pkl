@@ -61,6 +61,13 @@ public final class PackageUri {
       throw new URISyntaxException(
           uri.toString(), ErrorMessages.create("missingPathInPackageUri", uri));
     }
+    // reject `..` segments, percent-encoded or not
+    for (var segment : path.split("/", -1)) {
+      if (segment.equals("..")) {
+        throw new URISyntaxException(
+            uri.toString(), ErrorMessages.create("invalidRelativePathInPackageUri"));
+      }
+    }
     var versionIdx = path.lastIndexOf('@');
     if (versionIdx == -1) {
       throw new URISyntaxException(

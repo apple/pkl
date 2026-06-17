@@ -45,6 +45,7 @@ import java.util.stream.StreamSupport;
 import java.util.zip.ZipInputStream;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.http.HttpClient;
@@ -456,10 +457,17 @@ final class PackageResolvers {
     }
 
     private Path getRelativePath(PackageUri uri) {
-      return Path.of(
-          CACHE_DIR_PREFIX,
-          IoUtils.encodePath(uri.getUri().getAuthority()),
-          getEffectivePackageUriPath(uri));
+      var relativePath =
+          Path.of(
+              CACHE_DIR_PREFIX,
+              IoUtils.encodePath(uri.getUri().getAuthority()),
+              getEffectivePackageUriPath(uri));
+      // ensure the derived path cannot escape the cache directory
+      var resolved = cacheDir.resolve(relativePath).normalize();
+      if (!resolved.startsWith(cacheDir.normalize())) {
+        throw new PklBugException("Package URI escapes the cache directory");
+      }
+      return relativePath;
     }
 
     private String getLastSegmentName(PackageUri packageUri) {
