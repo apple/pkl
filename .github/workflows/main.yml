@@ -919,6 +919,362 @@ jobs:
         name: test-results-html-pkl-doc-windows-amd64-snapshot
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
+  libpkl-macOS-amd64-snapshot:
+    if: github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" libpkl:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-libpkl-macOS-amd64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-libpkl-macOS-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-libpkl-macOS-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  libpkl-linux-amd64-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-libpkl-linux-amd64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-libpkl-linux-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-libpkl-linux-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  libpkl-macOS-aarch64-snapshot:
+    if: github.repository_owner == 'apple'
+    runs-on:
+    - self-hosted
+    - macos
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-libpkl-macOS-aarch64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-libpkl-macOS-aarch64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-libpkl-macOS-aarch64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  libpkl-linux-aarch64-snapshot:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-libpkl-linux-aarch64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-libpkl-linux-aarch64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-libpkl-linux-aarch64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  libpkl-alpine-linux-amd64-snapshot:
+    runs-on: ubuntu-latest
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: Install musl and zlib
+      run: |
+        set -e
+        mkdir -p ~/staticdeps/
+
+        ZLIB_VERSION="1.2.13"
+        MUSL_VERSION="1.2.5"
+
+        # install zlib
+        if [[ ! -f ~/staticdeps/include/zlib.h ]]; then
+          # Download zlib tarball and signature
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz" -o /tmp/zlib.tar.gz
+          curl -Lf "https://github.com/madler/zlib/releases/download/v${ZLIB_VERSION}/zlib-${ZLIB_VERSION}.tar.gz.asc" -o /tmp/zlib.tar.gz.asc
+
+          # Import zlib GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 5ED46A6721D365587791E2AA783FCD8E58BCAFBA
+
+          # Verify GPG signature
+          echo "Verifying zlib GPG signature..."
+          gpg --verify /tmp/zlib.tar.gz.asc /tmp/zlib.tar.gz
+
+          mkdir -p "/tmp/dep_zlib-${ZLIB_VERSION}"
+          cd "/tmp/dep_zlib-${ZLIB_VERSION}"
+          # shellcheck disable=SC2002
+          cat /tmp/zlib.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "zlib-${ZLIB_VERSION}: configure..." 
+          ./configure --static --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "zlib-${ZLIB_VERSION}: make..." 
+          make -s -j4
+
+          echo "zlib-${ZLIB_VERSION}: make install..." 
+          make -s install
+
+          rm -rf /tmp/dep_zlib-${ZLIB_VERSION}
+        fi
+
+        # install musl
+        if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
+          # Download musl tarball and signature
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
+          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
+
+          # Import musl GPG key
+          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
+
+          # Verify GPG signature
+          echo "Verifying musl GPG signature..."
+          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
+
+          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
+          cd "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # shellcheck disable=SC2002
+          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
+
+          echo "musl-${MUSL_VERSION}: configure..." 
+          ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
+
+          echo "musl-${MUSL_VERSION}: make..." 
+          make -s -j4
+
+          echo "musl-${MUSL_VERSION}: make install..." 
+          make -s install
+
+          rm -rf "/tmp/dep_musl-${MUSL_VERSION}"
+
+          # native-image expects to find an executable at this path.
+          ln -s ~/staticdeps/bin/musl-gcc ~/staticdeps/bin/x86_64-linux-musl-gcc
+        fi
+
+        echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true libpkl:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-libpkl-alpine-linux-amd64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-libpkl-alpine-linux-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-libpkl-alpine-linux-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+  libpkl-windows-amd64-snapshot:
+    runs-on: windows-latest
+    env:
+      LANG: en_US.UTF-8
+      JAVA_HOME: /jdk
+    steps:
+    - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@be666c2fcd27ec809703dec50e508c2fdc7f6654 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: x64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with: {}
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-libpkl-windows-amd64
+        path: libpkl/build/native-libs/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-libpkl-windows-amd64-snapshot
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-libpkl-windows-amd64-snapshot
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
   deploy-snapshot:
     needs:
     - gradle-check
@@ -938,6 +1294,12 @@ jobs:
     - pkl-doc-linux-aarch64-snapshot
     - pkl-doc-alpine-linux-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
+    - libpkl-macOS-amd64-snapshot
+    - libpkl-linux-amd64-snapshot
+    - libpkl-macOS-aarch64-snapshot
+    - libpkl-linux-aarch64-snapshot
+    - libpkl-alpine-linux-amd64-snapshot
+    - libpkl-windows-amd64-snapshot
     runs-on: ubuntu-latest
     env:
       LANG: en_US.UTF-8
@@ -1009,6 +1371,12 @@ jobs:
     - pkl-doc-linux-aarch64-snapshot
     - pkl-doc-alpine-linux-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
+    - libpkl-macOS-amd64-snapshot
+    - libpkl-linux-amd64-snapshot
+    - libpkl-macOS-aarch64-snapshot
+    - libpkl-linux-aarch64-snapshot
+    - libpkl-alpine-linux-amd64-snapshot
+    - libpkl-windows-amd64-snapshot
     permissions:
       checks: write
     runs-on: ubuntu-latest
@@ -1049,6 +1417,12 @@ jobs:
     - pkl-doc-linux-aarch64-snapshot
     - pkl-doc-alpine-linux-amd64-snapshot
     - pkl-doc-windows-amd64-snapshot
+    - libpkl-macOS-amd64-snapshot
+    - libpkl-linux-amd64-snapshot
+    - libpkl-macOS-aarch64-snapshot
+    - libpkl-linux-aarch64-snapshot
+    - libpkl-alpine-linux-amd64-snapshot
+    - libpkl-windows-amd64-snapshot
     - deploy-snapshot
     - dependency-submission
     - publish-test-results

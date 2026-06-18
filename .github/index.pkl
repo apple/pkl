@@ -61,7 +61,7 @@ local gradleCheckJobs: PklJobs = new {
 
 local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
   for (_dist in List("release", "snapshot")) {
-    for (_project in List("pkl-cli", "pkl-doc")) {
+    for (_project in List("pkl-cli", "pkl-doc", "libpkl")) {
       for (_arch in List("amd64", "aarch64")) {
         for (_os in List("macOS", "linux")) {
           ["\(_project)-\(_os)-\(_arch)-\(_dist)"] {
@@ -69,6 +69,7 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
             os = _os
             isRelease = _dist == "release"
             project = _project
+            buildDir = if (_project == "libpkl") "libpkl/build/native-libs/**/*" else "\(_project)*/build/executable/**/*"
           }
         }
       }
@@ -78,12 +79,14 @@ local buildNativeJobs: Mapping<String, BuildNativeJob> = new {
         musl = true
         isRelease = _dist == "release"
         project = _project
+        buildDir = if (_project == "libpkl") "libpkl/build/native-libs/**/*" else "\(_project)*/build/executable/**/*"
       }
       ["\(_project)-windows-amd64-\(_dist)"] {
         arch = "amd64"
         os = "windows"
         isRelease = _dist == "release"
         project = _project
+        buildDir = if (_project == "libpkl") "libpkl/build/native-libs/**/*" else "\(_project)*/build/executable/**/*"
       }
     }
   }

@@ -9,6 +9,9 @@ musl: Boolean(implies(module.os == "linux")) = false
 /// The Gradle project under which to generate the executable
 project: String
 
+/// Path pattern for artifact uploads (glob passed to actions/upload-artifact)
+buildDir: String = "\(project)*/build/executable/**/*"
+
 extraGradleArgs {
   when (os == "macOS" && arch == "amd64") {
     "-Dpkl.targetArch=\(module.arch)"
@@ -59,7 +62,7 @@ steps {
           "executable-\(project)-\(module.os)-\(module.arch)"
       // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
       // See https://github.com/actions/upload-artifact/issues/206
-      path = "\(project)*/build/executable/**/*"
+      path = module.buildDir
     }
   }
 }
