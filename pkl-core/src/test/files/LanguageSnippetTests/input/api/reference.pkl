@@ -117,7 +117,7 @@ j: K = new {
 
 refInterpolation = "\(aRef.outputs.someListing[1])"
 kInterpolation = "\(k)"
-aValuesJoined = k.aValues.join("\n").replaceAll(Regex("@[a-z0-9]+"), "@<addr>")
+aValuesJoined = k.aValues.join("\n")
 
 // ensure that type arguments that are unions are handled correctly
 typeArgs = ref.Reference(d, TypeHolder, null).prop as Ref<Listing<Number | Boolean | String>>
