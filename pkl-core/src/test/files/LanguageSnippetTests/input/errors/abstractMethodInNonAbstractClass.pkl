@@ -1,5 +1,0 @@
-class Foo {
-  abstract function bar(): Int
-}
-
-res = new Foo {}
