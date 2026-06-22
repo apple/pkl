@@ -25,7 +25,7 @@ public abstract class Member {
 
   protected final SourceSection headerSection;
 
-  protected final int modifiers;
+  protected int modifiers;
 
   protected final @Nullable Identifier name;
 

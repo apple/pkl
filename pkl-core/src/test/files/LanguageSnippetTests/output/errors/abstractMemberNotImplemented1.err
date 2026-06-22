@@ -1,0 +1,10 @@
+–– Pkl Error ––
+Class `abstractMemberNotImplemented1#MyClass` should either be declared `abstract`, or should implement property `foo`.
+
+xx | class MyClass extends AbstractProperty {
+     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at abstractMemberNotImplemented1#MyClass (file:///$snippetsDir/input/errors/abstractMemberNotImplemented1.pkl)
+
+xx | foo: MyClass
+          ^^^^^^^
+at abstractMemberNotImplemented1 (file:///$snippetsDir/input/errors/abstractMemberNotImplemented1.pkl)

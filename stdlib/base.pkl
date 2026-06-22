@@ -3550,6 +3550,18 @@ external class Set<out Element> extends Collection<Element> {
 
   /// The difference of this set and [other].
   external function difference(other: Set): Set<Element>
+
+  function indexOf(_): Int = throw("Set does not implement `indexOf`")
+  function indexOfOrNull(_): Int? = throw("Set does not implement `indexOfOrNull`")
+
+  function lastIndexOf(_): Int = throw("Set does not implement `lastIndexOf`")
+  function lastIndexOfOrNull(_): Int? = throw("Set does not implement `lastIndexOfOrNull`")
+
+  function findIndex(_): Int = throw("Set does not implement `findIndex`")
+  function findIndexOrNull(_): Int? = throw("Set does not implement `findIndexOrNull`")
+
+  function findLastIndex(_): Int = throw("Set does not implement `findLastIndex`")
+  function findLastIndexOrNull(_): Int? = throw("Set does not implement `findLastIndexOrNull`")
 }
 
 /// Creates a map containing the given alternating [keysAndValues].
