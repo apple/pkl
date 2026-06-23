@@ -16,6 +16,7 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -469,5 +470,15 @@ public final class VmReference extends VmValue {
     result = 31 * result + path.hashCode();
     result = 31 * result + referentType.hashCode();
     return result;
+  }
+
+  // in-language calls _should_ all go through `ToStringNode`.
+  // however, some calls escape through to here currently (e.g. `Listing.join`).
+  @Override
+  public String toString() {
+    var toStringMethod = getVmClass().getDeclaredMethod(Identifier.TO_STRING);
+    assert toStringMethod != null;
+    var callNode = DirectCallNode.create(toStringMethod.getCallTarget());
+    return (String) callNode.call(this, getVmClass().getPrototype());
   }
 }
