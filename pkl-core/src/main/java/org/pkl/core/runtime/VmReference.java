@@ -90,7 +90,7 @@ public final class VmReference extends VmValue {
   // * dereferencing aliases (except for well-known stdlib alias types)
   // * flattening unions
   // * when moduleClass is supplied, replace PType.MODULE with appropriate PType.Class
-  // * drop PType.NOTHING, PType.Function, and PType.TypeVariable
+  // * drop PType.Function and PType.TypeVariable
   private static PType normalizeTypes(PType type, PClass moduleClass) {
     var types = new HashSet<PType>();
     normalizeTypes(type, moduleClass, types);
