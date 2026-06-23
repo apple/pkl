@@ -80,6 +80,17 @@ public abstract class PType implements Serializable {
     public String toString() {
       return ValueFormatter.basic().formatStringValue(literal, "");
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof StringLiteral that && literal.equals(that.literal);
+    }
+
+    @Override
+    public int hashCode() {
+      return literal.hashCode();
+    }
   }
 
   public static final class Class extends PType {
@@ -125,6 +136,19 @@ public abstract class PType implements Serializable {
       }
       return result;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof Class that
+          && pClass.equals(that.pClass)
+          && typeArguments.equals(that.typeArguments);
+    }
+
+    @Override
+    public int hashCode() {
+      return 31 * pClass.hashCode() + typeArguments.hashCode();
+    }
   }
 
   public static final class Nullable extends PType {
@@ -145,6 +169,17 @@ public abstract class PType implements Serializable {
       return baseType instanceof Function || baseType instanceof Union
           ? "(" + baseType + ")?"
           : baseType + "?";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof Nullable that && baseType.equals(that.baseType);
+    }
+
+    @Override
+    public int hashCode() {
+      return baseType.hashCode();
     }
   }
 
@@ -175,6 +210,19 @@ public abstract class PType implements Serializable {
           + "("
           + String.join(", ", constraints)
           + ")";
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof Constrained that
+          && baseType.equals(that.baseType)
+          && constraints.equals(that.constraints);
+    }
+
+    @Override
+    public int hashCode() {
+      return 31 * baseType.hashCode() + constraints.hashCode();
     }
   }
 
@@ -223,6 +271,19 @@ public abstract class PType implements Serializable {
       }
       return result;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof Alias that
+          && typeAlias.equals(that.typeAlias)
+          && typeArguments.equals(that.typeArguments);
+    }
+
+    @Override
+    public int hashCode() {
+      return 31 * typeAlias.hashCode() + typeArguments.hashCode();
+    }
   }
 
   public static final class Function extends PType {
@@ -251,6 +312,19 @@ public abstract class PType implements Serializable {
           + ") -> "
           + returnType;
     }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof Function that
+          && parameterTypes.equals(that.parameterTypes)
+          && returnType.equals(that.returnType);
+    }
+
+    @Override
+    public int hashCode() {
+      return 31 * parameterTypes.hashCode() + returnType.hashCode();
+    }
   }
 
   public static final class Union extends PType {
@@ -269,6 +343,17 @@ public abstract class PType implements Serializable {
     @Override
     public String toString() {
       return elementTypes.stream().map(Object::toString).collect(Collectors.joining(" | "));
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof Union that && elementTypes.equals(that.elementTypes);
+    }
+
+    @Override
+    public int hashCode() {
+      return elementTypes.hashCode();
     }
   }
 
@@ -292,6 +377,17 @@ public abstract class PType implements Serializable {
     @Override
     public String toString() {
       return typeParameter.getName();
+    }
+
+    @Override
+    public boolean equals(Object obj) {
+      if (obj == this) return true;
+      return obj instanceof TypeVariable that && typeParameter.equals(that.typeParameter);
+    }
+
+    @Override
+    public int hashCode() {
+      return typeParameter.hashCode();
     }
   }
 }
