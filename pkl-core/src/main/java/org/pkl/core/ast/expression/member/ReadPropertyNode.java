@@ -61,6 +61,18 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     this(sourceSection, propertyName, MemberLookupMode.EXPLICIT_RECEIVER, false);
   }
 
+  @Specialization
+  protected VmReference evalReference(VmReference receiver) {
+    assert lookupMode == MemberLookupMode.EXPLICIT_RECEIVER;
+    var result = receiver.withPropertyAccess(propertyName);
+    if (result != null) return result;
+
+    CompilerDirectives.transferToInterpreter();
+    throw exceptionBuilder()
+        .evalError("cannotFindPropertyInReference", propertyName, receiver.exportType())
+        .build();
+  }
+
   // This method effectively covers `VmObject receiver` but is implemented in a more
   // efficient way. See:
   // https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces

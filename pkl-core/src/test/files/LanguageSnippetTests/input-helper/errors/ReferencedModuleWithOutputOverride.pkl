@@ -1,0 +1,7 @@
+open module ReferencedModuleWithOutputOverride
+
+foo: String
+
+hidden output: ModuleOutput = new {
+  text = foo
+}

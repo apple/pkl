@@ -1,0 +1,8 @@
+import "pkl:ref"
+
+class D extends ref.Domain {
+  function renderReference(reference: ref.Reference<D, Any>): String = throw("not supported")
+}
+local d: D = new {}
+
+test = ref.Reference(d, Listing, "").default

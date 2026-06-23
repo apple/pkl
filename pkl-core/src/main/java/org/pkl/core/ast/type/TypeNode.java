@@ -2127,6 +2127,125 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
+  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
+    @Child private TypeNode domainTypeNode;
+    @Child private TypeNode referentTypeNode;
+    @Child private ExpressionNode getModuleNode;
+
+    public ReferenceTypeNode(
+        SourceSection sourceSection, TypeNode domainTypeNode, TypeNode referentTypeNode) {
+      super(sourceSection);
+      this.domainTypeNode = domainTypeNode;
+      this.referentTypeNode = referentTypeNode;
+      this.getModuleNode = new GetModuleNode(sourceSection);
+      validateTypeArguments(sourceSection);
+    }
+
+    @Specialization
+    protected Object eval(VirtualFrame frame, VmReference value) {
+      if (domainTypeNode.isNoopTypeCheck() && referentTypeNode.isNoopTypeCheck()) {
+        return value;
+      }
+
+      try {
+        domainTypeNode.execute(frame, value.getDomain());
+      } catch (VmTypeMismatchException e) {
+        CompilerDirectives.transferToInterpreter();
+        throw new VmTypeMismatchException.Reference(
+            sourceSection,
+            value,
+            TypeNode.export(domainTypeNode),
+            TypeNode.export(referentTypeNode));
+      }
+
+      var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      return doEval(value, module);
+    }
+
+    @TruffleBoundary
+    private Object doEval(VmReference value, VmTyped module) {
+      var referentType = TypeNode.export(referentTypeNode);
+      if (value.referentTypeIsSubtypeOf(referentType, module.getVmClass().export())) {
+        return value;
+      }
+
+      throw new VmTypeMismatchException.Reference(
+          sourceSection, value, TypeNode.export(domainTypeNode), referentType);
+    }
+
+    public void validateTypeArguments(@Nullable SourceSection aliasSourceSection) {
+      // constraints may not be used in Reference type annotation referents
+      // walk the type and throw if any part of the referent is constrained
+
+      // TODO improve error message when this type node and/or referent constraint are behind type
+      // aliases
+      referentTypeNode.acceptTypeNode(
+          true,
+          (typeNode) -> {
+            if (typeNode instanceof ConstrainedTypeNode) {
+              CompilerDirectives.transferToInterpreter();
+              var err =
+                  exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint");
+              if (aliasSourceSection != null) {
+                err.withSourceSection(aliasSourceSection);
+              }
+              throw err.build();
+            }
+            return true;
+          });
+    }
+
+    @Fallback
+    protected Object fallback(Object value) {
+      throw typeMismatch(value, RefModule.getReferenceClass());
+    }
+
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments)
+        return consumer.accept(this)
+            && consumer.accept(domainTypeNode)
+            && consumer.accept(referentTypeNode);
+      return consumer.accept(this);
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return RefModule.getReferenceClass();
+    }
+
+    @Override
+    public VmList getTypeArgumentMirrors() {
+      return VmList.of(domainTypeNode.getMirror(), referentTypeNode.getMirror());
+    }
+
+    @Override
+    protected boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof ReferenceTypeNode referenceTypeNode)) {
+        return false;
+      }
+      return referentTypeNode.isEquivalentTo(referenceTypeNode.referentTypeNode);
+    }
+
+    @Override
+    public boolean isNoopTypeCheck() {
+      return domainTypeNode.isNoopTypeCheck() && referentTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected PType doExport() {
+      return new PType.Class(
+          RefModule.getReferenceClass().export(),
+          domainTypeNode.doExport(),
+          referentTypeNode.doExport());
+    }
+
+    @Override
+    protected boolean isParametric() {
+      return true;
+    }
+  }
+
   public static final class PairTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode firstTypeNode;
     @Child private TypeNode secondTypeNode;
@@ -2584,7 +2703,7 @@ public abstract class TypeNode extends PklNode {
 
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
-      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes, sourceSection);
     }
 
     public TypeNode getAliasedTypeNode() {

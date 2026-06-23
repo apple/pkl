@@ -325,6 +325,22 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
   }
 
   @Override
+  public void visitReference(VmReference value) {
+    try {
+      packer.packArrayHeader(4);
+      packCode(PklBinaryCode.REFERENCE);
+      visit(value.getDomain());
+      visit(value.getData());
+      packer.packArrayHeader(value.getPath().size());
+      for (var access : value.getPath()) {
+        visit(access);
+      }
+    } catch (IOException e) {
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  @Override
   protected void visitEntryKey(Object key, boolean isFirst) {
     visit(key);
   }

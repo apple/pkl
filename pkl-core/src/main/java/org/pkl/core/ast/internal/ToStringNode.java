@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -20,6 +20,7 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
@@ -62,8 +63,16 @@ public abstract class ToStringNode extends UnaryExpressionNode {
       VmTyped value,
       @Cached(value = "createInvokeNode()", neverDefault = true)
           InvokeMethodVirtualNode invokeNode) {
-
     return (String) invokeNode.executeWith(frame, value, value.getVmClass());
+  }
+
+  @Specialization
+  protected String evalReference(
+      VirtualFrame frame,
+      VmReference value,
+      @Cached(value = "createReferenceCallNode(value)", neverDefault = true)
+          DirectCallNode callNode) {
+    return (String) callNode.call(value, value.getVmClass().getPrototype());
   }
 
   @Fallback
@@ -74,7 +83,6 @@ public abstract class ToStringNode extends UnaryExpressionNode {
   }
 
   protected InvokeMethodVirtualNode createInvokeNode() {
-    //noinspection ConstantConditions
     return InvokeMethodVirtualNodeGen.create(
         sourceSection,
         Identifier.TO_STRING,
@@ -82,5 +90,11 @@ public abstract class ToStringNode extends UnaryExpressionNode {
         MemberLookupMode.EXPLICIT_RECEIVER,
         null,
         null);
+  }
+
+  protected DirectCallNode createReferenceCallNode(VmReference reference) {
+    var toStringMethod = reference.getVmClass().getDeclaredMethod(Identifier.TO_STRING);
+    assert toStringMethod != null;
+    return DirectCallNode.create(toStringMethod.getCallTarget());
   }
 }

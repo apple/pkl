@@ -1,0 +1,14 @@
+–– Pkl Error ––
+`Reference` referent type argument may not include type constraints.
+
+x | typealias RefAlias1 = ref.Reference<D, Alias1?>
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference12#RefAlias1 (file:///$snippetsDir/input/errors/reference12.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
