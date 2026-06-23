@@ -1,0 +1,11 @@
+rootEq = true
+classEq = true
+stringLiteralEq = true
+aliasEq = true
+nullableUnionEq = true
+subscriptEq = true
+unionEq = true
+classSetSize = 1
+unionSetSize = 1
+differentReferent = false
+mixedSetSize = 2
