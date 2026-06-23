@@ -13,10 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.nio.file.AtomicMoveNotSupportedException
 import java.nio.file.Files
+import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
 import java.util.*
+import java.util.zip.ZipInputStream
 import javax.inject.Inject
 import kotlin.io.path.createDirectories
 import org.gradle.api.DefaultTask
@@ -41,19 +44,14 @@ constructor(
   @TaskAction
   @Suppress("unused")
   fun run() {
-    // minimize chance of corruption by extract-to-random-dir-and-flip-symlink
+    // minimize chance of corruption by extract-to-random-dir-and-publish
     val distroDir = Paths.get(graalVm.get().homeDir, UUID.randomUUID().toString())
     try {
       distroDir.createDirectories()
       println("Extracting ${graalVm.get().downloadFile} into $distroDir")
-      // faster and more reliable than Gradle's `copy { from tarTree() }`
-      execOperations.exec {
-        workingDir = distroDir.toFile()
-        executable = "tar"
-        args("--strip-components=1", "-xzf", graalVm.get().downloadFile)
-      }
-
       val os = org.gradle.internal.os.OperatingSystem.current()
+      if (os.isWindows) extractZip(distroDir) else extractTarGz(distroDir)
+
       val distroBinDir =
         if (os.isMacOsX) distroDir.resolve("Contents/Home/bin") else distroDir.resolve("bin")
 
@@ -70,22 +68,83 @@ constructor(
         }
       }
 
-      println("Creating symlink ${graalVm.get().installDir} for $distroDir")
-      val tempLink = Paths.get(graalVm.get().homeDir, UUID.randomUUID().toString())
-      Files.createSymbolicLink(tempLink, distroDir)
-      try {
-        Files.move(tempLink, graalVm.get().installDir.toPath(), StandardCopyOption.ATOMIC_MOVE)
-      } catch (e: Exception) {
-        try {
-          fileOperations.delete(tempLink.toFile())
-        } catch (ignored: Exception) {}
-        throw e
-      }
+      publishInstallDir(distroDir, os)
     } catch (e: Exception) {
       try {
         fileOperations.delete(distroDir)
       } catch (ignored: Exception) {}
       throw e
+    }
+  }
+
+  private fun extractTarGz(distroDir: Path) {
+    // faster and more reliable than Gradle's `copy { from tarTree() }`
+    execOperations.exec {
+      workingDir = distroDir.toFile()
+      executable = "tar"
+      args("--strip-components=1", "-xzf", graalVm.get().downloadFile)
+    }
+  }
+
+  private fun extractZip(distroDir: Path) {
+    val targetDir = distroDir.toAbsolutePath().normalize()
+    ZipInputStream(graalVm.get().downloadFile.inputStream().buffered()).use { zipInput ->
+      var entry = zipInput.nextEntry
+      while (entry != null) {
+        try {
+          val strippedPath = stripFirstPathComponent(entry.name)
+          if (strippedPath != null) {
+            val target = targetDir.resolve(strippedPath).normalize()
+            require(target.startsWith(targetDir)) {
+              "GraalVM archive entry escapes destination directory: ${entry.name}"
+            }
+            if (entry.isDirectory) {
+              target.createDirectories()
+            } else {
+              target.parent?.createDirectories()
+              Files.copy(zipInput, target)
+            }
+          }
+        } finally {
+          zipInput.closeEntry()
+        }
+        entry = zipInput.nextEntry
+      }
+    }
+  }
+
+  private fun stripFirstPathComponent(path: String): String? {
+    val normalizedPath = path.replace('\\', '/').trimStart('/')
+    val separatorIndex = normalizedPath.indexOf('/')
+    if (separatorIndex == -1) return null
+    return normalizedPath.substring(separatorIndex + 1).takeIf { it.isNotEmpty() }
+  }
+
+  private fun publishInstallDir(distroDir: Path, os: org.gradle.internal.os.OperatingSystem) {
+    if (os.isWindows) {
+      println("Installing ${graalVm.get().installDir} from $distroDir")
+      moveAtomicallyOrRegularly(distroDir, graalVm.get().installDir.toPath())
+      return
+    }
+
+    println("Creating symlink ${graalVm.get().installDir} for $distroDir")
+    val tempLink = Paths.get(graalVm.get().homeDir, UUID.randomUUID().toString())
+    Files.createSymbolicLink(tempLink, distroDir)
+    try {
+      moveAtomicallyOrRegularly(tempLink, graalVm.get().installDir.toPath())
+    } catch (e: Exception) {
+      try {
+        fileOperations.delete(tempLink.toFile())
+      } catch (ignored: Exception) {}
+      throw e
+    }
+  }
+
+  private fun moveAtomicallyOrRegularly(source: Path, target: Path) {
+    try {
+      Files.move(source, target, StandardCopyOption.ATOMIC_MOVE)
+    } catch (e: AtomicMoveNotSupportedException) {
+      Files.move(source, target)
     }
   }
 }
