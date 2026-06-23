@@ -120,10 +120,7 @@ constructor(
     return normalizedPath.substring(separatorIndex + 1).takeIf { it.isNotEmpty() }
   }
 
-  private fun publishInstallDir(
-    distroDir: Path,
-    os: org.gradle.internal.os.OperatingSystem,
-  ) {
+  private fun publishInstallDir(distroDir: Path, os: org.gradle.internal.os.OperatingSystem) {
     if (os.isWindows) {
       println("Installing ${graalVm.get().installDir} from $distroDir")
       moveAtomicallyOrRegularly(distroDir, graalVm.get().installDir.toPath())
