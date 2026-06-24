@@ -1,0 +1,3 @@
+module classType
+
+class Foo

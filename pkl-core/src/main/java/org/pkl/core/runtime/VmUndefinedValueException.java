@@ -43,7 +43,8 @@ public final class VmUndefinedValueException extends VmEvalException {
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       @Nullable Object receiver,
-      @Nullable Map<CallTarget, StackFrame> insertedStackFrames) {
+      @Nullable Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames) {
 
     super(
         message,
@@ -56,7 +57,8 @@ public final class VmUndefinedValueException extends VmEvalException {
         sourceSection,
         memberName,
         hintBuilder,
-        insertedStackFrames == null ? Collections.emptyMap() : insertedStackFrames);
+        insertedStackFrames == null ? Collections.emptyMap() : insertedStackFrames,
+        leadingStackFrames);
 
     this.receiver = receiver;
   }

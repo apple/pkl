@@ -37,7 +37,8 @@ public class VmEvalException extends VmException {
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
-      Map<CallTarget, StackFrame> insertedStackFrames) {
+      Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames) {
 
     super(
         message,
@@ -50,6 +51,7 @@ public class VmEvalException extends VmException {
         sourceSection,
         memberName,
         hintBuilder,
-        insertedStackFrames);
+        insertedStackFrames,
+        leadingStackFrames);
   }
 }

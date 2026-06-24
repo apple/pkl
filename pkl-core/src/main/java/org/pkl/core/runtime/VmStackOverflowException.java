@@ -32,6 +32,7 @@ public final class VmStackOverflowException extends VmException {
         null,
         null,
         null,
-        new HashMap<>());
+        new HashMap<>(),
+        List.of());
   }
 }

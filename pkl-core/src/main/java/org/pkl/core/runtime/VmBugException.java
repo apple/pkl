@@ -38,7 +38,8 @@ public final class VmBugException extends VmException {
       @Nullable SourceSection sourceSection,
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
-      Map<CallTarget, StackFrame> insertedStackFrames) {
+      Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames) {
 
     super(
         message,
@@ -51,7 +52,8 @@ public final class VmBugException extends VmException {
         sourceSection,
         memberName,
         hintBuilder,
-        insertedStackFrames);
+        insertedStackFrames,
+        leadingStackFrames);
   }
 
   @Override
