@@ -58,6 +58,7 @@ import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ModuleNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeNode.UserClassTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKeys;
@@ -173,7 +174,7 @@ public final class CommandSpecParser {
     if (optionsTypeNode instanceof TypeNode.TypedTypeNode) {
       return BaseModule.getTypedClass();
     }
-    if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
+    if (!(optionsTypeNode instanceof UserClassTypeNode node)) {
       throw exceptionBuilder()
           .withSourceSection(optionsTypeNode.getSourceSection())
           .evalError(

@@ -1,0 +1,22 @@
+–– Pkl Error ––
+`Class` type arguments may only be class types, module types, `unknown`, or `module`.
+
+xx | typealias F<T> = List<Class<T>>
+                           ^^^^^^^^
+at classType#F (file:///$snippetsDir/input/types/classType.pkl)
+
+x | typealias G<T> = F<T>
+                     ^^^^
+at classTypeErr12#G (file:///$snippetsDir/input/types/classTypeErr12.pkl)
+
+x | res21 = List(A, C) is G<A | B>
+                          ^^^^^^^^
+at classTypeErr12#res21 (file:///$snippetsDir/input/types/classTypeErr12.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
