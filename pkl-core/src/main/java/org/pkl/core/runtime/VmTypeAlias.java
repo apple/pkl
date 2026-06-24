@@ -178,8 +178,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @TruffleBoundary
-  public TypeNode instantiate(
-      TypeNode[] typeArgumentNodes, SourceSection typeAliasTypeNodeSourceSection) {
+  public TypeNode instantiate(TypeNode[] typeArgumentNodes) {
     // Cloning the type node means that the entire type check remains within a single root node,
     // which should be good for interpreted and compiled performance alike:
     // * Fewer root nodes to call
@@ -204,7 +203,12 @@ public final class VmTypeAlias extends VmValue {
     clone.accept(
         node -> {
           if (node instanceof ReferenceTypeNode referenceTypeNode) {
-            referenceTypeNode.validateTypeArguments(typeAliasTypeNodeSourceSection);
+            // A type argument supplied at the alias usage site introduced a constraint into this
+            // `Reference`'s referent.
+            if (referenceTypeNode.findReferentConstraint() != null) {
+              throw new ReferenceTypeNode.ReferentConstraintException(
+                  referenceTypeNode.getSourceSection());
+            }
           }
           return true;
         });

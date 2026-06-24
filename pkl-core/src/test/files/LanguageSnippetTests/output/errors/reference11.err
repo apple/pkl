@@ -1,6 +1,10 @@
 –– Pkl Error ––
 `Reference` referent type argument may not include type constraints.
 
+x | typealias Ref<T> = ref.Reference<D, T>
+                       ^^^^^^^^^^^^^^^^^^^
+at reference11#test (file:///$snippetsDir/input/errors/reference11.pkl)
+
 x | test = ref.Reference(d, String, "") as Ref<Alias1?>
                                            ^^^^^^^^^^^^
 at reference11#test (file:///$snippetsDir/input/errors/reference11.pkl)

@@ -2138,7 +2138,13 @@ public abstract class TypeNode extends PklNode {
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
-      validateTypeArguments(sourceSection);
+      // A constraint written directly in this annotation's referent is reported against this
+      // annotation. Constraints introduced through a generic type alias's type argument are caught
+      // later.
+      if (findReferentConstraint() != null) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint").build();
+      }
     }
 
     @Specialization
@@ -2173,26 +2179,41 @@ public abstract class TypeNode extends PklNode {
           sourceSection, value, TypeNode.export(domainTypeNode), referentType);
     }
 
-    public void validateTypeArguments(@Nullable SourceSection aliasSourceSection) {
-      // constraints may not be used in Reference type annotation referents
-      // walk the type and throw if any part of the referent is constrained
-
-      // TODO improve error message when this type node and/or referent constraint are behind type
-      // aliases
+    /**
+     * Type constraints may not appear in a {@code Reference}'s referent type argument. Walks the
+     * referent type and returns the source section of the first offending constraint, or {@code
+     * null} if the referent is constraint-free.
+     */
+    public @Nullable SourceSection findReferentConstraint() {
+      var found = new SourceSection[1];
       referentTypeNode.acceptTypeNode(
           true,
           (typeNode) -> {
             if (typeNode instanceof ConstrainedTypeNode) {
-              CompilerDirectives.transferToInterpreter();
-              var err =
-                  exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint");
-              if (aliasSourceSection != null) {
-                err.withSourceSection(aliasSourceSection);
-              }
-              throw err.build();
+              found[0] = typeNode.getSourceSection();
+              return false;
             }
             return true;
           });
+      return found[0];
+    }
+
+    /**
+     * Signals that a {@code Reference} annotation reached through a generic type alias has a
+     * constrained referent.
+     */
+    public static final class ReferentConstraintException extends RuntimeException {
+      private final SourceSection referenceTypeSection;
+
+      public ReferentConstraintException(SourceSection referenceTypeSection) {
+        super(null, null, false, false);
+        this.referenceTypeSection = referenceTypeSection;
+      }
+
+      /** The source section of the {@code Reference} annotation. */
+      public SourceSection getReferenceTypeSection() {
+        return referenceTypeSection;
+      }
     }
 
     @Fallback
@@ -2703,7 +2724,7 @@ public abstract class TypeNode extends PklNode {
 
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
-      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes, sourceSection);
+      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
     }
 
     public TypeNode getAliasedTypeNode() {
