@@ -173,7 +173,7 @@ public final class CommandSpecParser {
     if (optionsTypeNode instanceof TypeNode.TypedTypeNode) {
       return BaseModule.getTypedClass();
     }
-    if (!(optionsTypeNode instanceof TypeNode.ClassTypeNode node)) {
+    if (!(optionsTypeNode instanceof TypeNode.UserClassTypeNode node)) {
       throw exceptionBuilder()
           .withSourceSection(optionsTypeNode.getSourceSection())
           .evalError(
