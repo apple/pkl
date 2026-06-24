@@ -42,6 +42,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
@@ -520,6 +521,69 @@ public abstract class TypeNode extends PklNode {
         String qualifiedName) {
       var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
       return TypeNode.createDefaultValue(moduleClass);
+    }
+  }
+
+  /** The `this` type for an open class. */
+  public static final class NonFinalThisTypeNode extends ObjectSlotTypeNode
+      implements ClassTypeNode {
+    private final VmClass receiverClass; // only used by getVmClass()
+    @Child private ExpressionNode getRecieverNode;
+
+    public NonFinalThisTypeNode(SourceSection sourceSection, VmClass receiverClass) {
+      super(sourceSection);
+      this.receiverClass = receiverClass;
+      getRecieverNode = new GetReceiverNode();
+    }
+
+    @Override
+    protected Object executeLazily(VirtualFrame frame, Object value) {
+      var receiverClass = ((VmObjectLike) getRecieverNode.executeGeneric(frame)).getVmClass();
+
+      if (value instanceof VmTyped typed) {
+        var valueClass = typed.getVmClass();
+        if (receiverClass.isSuperclassOf(valueClass)) return value;
+      }
+
+      throw typeMismatch(value, receiverClass);
+    }
+
+    @Override
+    public VmTyped getMirror() {
+      return MirrorFactories.thisTypeFactory.create(null);
+    }
+
+    @Override
+    public boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof NonFinalThisTypeNode nonFinalThisTypeNode)) {
+        return false;
+      }
+      return receiverClass.equals(nonFinalThisTypeNode.receiverClass);
+    }
+
+    @Override
+    protected PType doExport() {
+      return PType.THIS;
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return receiverClass;
+    }
+
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this);
+    }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      var receiverClass = ((VmTyped) getRecieverNode.executeGeneric(frame)).getVmClass();
+      return TypeNode.createDefaultValue(receiverClass);
     }
   }
 

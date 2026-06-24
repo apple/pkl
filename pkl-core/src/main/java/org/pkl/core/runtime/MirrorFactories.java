@@ -97,6 +97,9 @@ public final class MirrorFactories {
   public static final VmObjectFactory<Void> moduleTypeFactory =
       new VmObjectFactory<>(ReflectModule::getModuleTypeClass);
 
+  public static final VmObjectFactory<Void> thisTypeFactory =
+      new VmObjectFactory<>(ReflectModule::getThisTypeClass);
+
   public static final VmObjectFactory<Void> unknownTypeFactory =
       new VmObjectFactory<>(ReflectModule::getUnknownTypeClass);
 

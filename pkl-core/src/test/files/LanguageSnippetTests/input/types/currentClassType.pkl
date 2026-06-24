@@ -1,0 +1,87 @@
+open module currentModuleType2
+
+import "pkl:test"
+
+x: Int = 1
+
+res1: this = module
+
+res2: this = this
+
+res3: this = (this) { x = super.x + 1 }
+
+res4: this? = null
+
+res5: List<this> = List(this, (this) { x = super.x + 2 })
+
+res6: List<this> = fun(this)
+
+res6a: this = res6[0]
+
+res6b: this = fun(new Good { x = 3 })[0]
+
+function fun(m: this): List<this> =
+  let (_x = x)
+    List((m) { x = super.x + _x })
+
+class Bad {
+  res7: this = "abc"
+
+  res8: this = new Person {}
+
+  res9: this? = new Person {}
+
+  res10: List<this> = List(new Person {})
+}
+
+class Person
+
+res7 = test.catch(() -> new Bad {}.res7)
+
+res8 = test.catch(() -> new Bad {}.res8)
+
+res9 = test.catch(() -> new Bad {}.res9)
+
+res10 = test.catch(() -> new Bad {}.res10)
+
+class Good extends module {
+  x = 2
+}
+
+res11 = new Good {}
+
+res12 = test.catch(() -> res11.fun(module)[0].x)
+
+// this type not affected by custom this scope:
+res13: List(this is List<this>) = List(module)
+
+output {
+  // force eval but don't render to prevent recursion
+  value =
+    let (_ = res1)
+    let (_ = res2)
+    let (_ = res3)
+    let (_ = res4)
+    let (_ = res5)
+    let (_ = res6)
+    let (_ = res6a)
+    let (_ = res6b)
+    let (_ = res7)
+    let (_ = res8)
+    let (_ = res9)
+    let (_ = res10)
+    let (_ = res11)
+    let (_ = res13)
+      new Dynamic { 
+        result = "ok"
+        res1a = res1.res2.x
+        res1b = res1.res3.x
+        res1c = res1.res5[1].x
+        res1d = res1.res6a.x
+        res11a = res11.res2.x
+        res11b = res11.res3.x
+        res11c = res11.res5[1].x
+        res11d = res11.res6a.x
+        res12 = module.res12
+      }
+}

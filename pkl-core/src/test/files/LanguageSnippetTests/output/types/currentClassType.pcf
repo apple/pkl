@@ -1,0 +1,10 @@
+result = "ok"
+res1a = 1
+res1b = 2
+res1c = 3
+res1d = 2
+res11a = 2
+res11b = 3
+res11c = 4
+res11d = 4
+res12 = "Expected value of type `currentModuleType2#Good`, but got type `currentModuleType2`. Value: new ModuleClass { x = 1; res1 { x = 1; res1 { x = 1; res1 { x = 1; res1 { x =..."
