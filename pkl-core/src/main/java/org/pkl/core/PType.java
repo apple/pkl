@@ -82,7 +82,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof StringLiteral that && literal.equals(that.literal);
     }
@@ -138,7 +138,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof Class that
           && pClass.equals(that.pClass)
@@ -172,7 +172,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof Nullable that && baseType.equals(that.baseType);
     }
@@ -213,7 +213,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof Constrained that
           && baseType.equals(that.baseType)
@@ -273,7 +273,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof Alias that
           && typeAlias.equals(that.typeAlias)
@@ -314,7 +314,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof Function that
           && parameterTypes.equals(that.parameterTypes)
@@ -346,7 +346,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof Union that && elementTypes.equals(that.elementTypes);
     }
@@ -380,7 +380,7 @@ public abstract class PType implements Serializable {
     }
 
     @Override
-    public boolean equals(Object obj) {
+    public boolean equals(@org.jspecify.annotations.Nullable Object obj) {
       if (obj == this) return true;
       return obj instanceof TypeVariable that && typeParameter.equals(that.typeParameter);
     }

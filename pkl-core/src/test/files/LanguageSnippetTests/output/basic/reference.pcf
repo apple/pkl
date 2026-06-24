@@ -1,0 +1,19 @@
+facts {
+  ["equality"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["inequality"] {
+    true
+  }
+  ["set deduplication"] {
+    true
+    true
+    true
+  }
+}
