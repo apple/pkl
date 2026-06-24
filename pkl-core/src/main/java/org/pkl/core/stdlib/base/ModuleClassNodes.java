@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.net.URI;
@@ -30,15 +31,16 @@ public final class ModuleClassNodes {
     @Specialization
     @TruffleBoundary
     protected VmList eval(VmObjectLike self, VmObjectLike other) {
+      if (!self.isModuleObject()) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("expectedModuleAsReceiver").build();
+      }
+      if (!other.isModuleObject()) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("expectedModuleAsArgument").build();
+      }
       var selfKey = VmUtils.getModuleInfo(self).getModuleKey();
       var selfUri = selfKey.getUri();
-
-      if (!other.isModuleObject()) {
-        throw exceptionBuilder()
-            .evalError("expectedModule")
-            // No meaningful SourceSection available, in this case.
-            .build();
-      }
       var otherKey = VmUtils.getModuleInfo(other).getModuleKey();
       var otherUri = otherKey.getUri();
 
