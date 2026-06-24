@@ -57,6 +57,17 @@ public abstract class PType implements Serializable {
         }
       };
 
+  /** The type of the enclosing owner. */
+  public static final PType THIS =
+      new PType() {
+        @Serial private static final long serialVersionUID = 0L;
+
+        @Override
+        public String toString() {
+          return "this";
+        }
+      };
+
   private PType() {}
 
   public List<PType> getTypeArguments() {

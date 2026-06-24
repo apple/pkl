@@ -1,0 +1,1 @@
+typealias MyList<T> = List<T>

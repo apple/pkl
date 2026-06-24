@@ -1,0 +1,120 @@
+open module currentClassType
+
+import "pkl:test"
+
+x: Int = 1
+
+res1: this = module
+
+res2: this = this
+
+res3: this = (this) { x = super.x + 1 }
+
+res4: this? = null
+
+res5: List<this> = List(this, (this) { x = super.x + 2 })
+
+res6: List<this> = fun(this)
+
+res6a: this = res6[0]
+
+res6b: this = fun(new Good { x = 3 })[0]
+
+function fun(m: this): List<this> =
+  let (_x = x)
+    List((m) { x = super.x + _x })
+
+typealias Foo<T> = T
+
+function fun2(m: Foo<this>): List<this> =
+  let (_x = x)
+    List((m) { x = super.x + _x + 1 })
+
+class Bad {
+  res7: this = "abc"
+
+  res8: this = new Person {}
+
+  res9: this? = new Person {}
+
+  res10: List<this> = List(new Person {})
+}
+
+class Person
+
+res7 = test.catch(() -> new Bad {}.res7)
+
+res8 = test.catch(() -> new Bad {}.res8)
+
+res9 = test.catch(() -> new Bad {}.res9)
+
+res10 = test.catch(() -> new Bad {}.res10)
+
+class Good extends module {
+  x = 2
+}
+
+res11 = new Good {}
+
+res12 = test.catch(() -> res11.fun(module)[0].x)
+
+// this type not affected by custom this scope:
+res13: List(this is List<this>) = List(module)
+
+// test generic typealias through inheritence from module
+res14 = fun2(this)
+res14a = test.catch(() -> res11.fun2(this))
+res14b = res11.fun2(res11)
+
+// test generic typealias without inheritence from module
+open class A {
+  x: Int = 1
+  function fun2(m: Foo<this>): List<this> =
+    let (_x = x)
+      List((m) { x = super.x + _x + 1 })
+}
+class B extends A
+
+local a = new A {}
+local b = new B {}
+res15 = a.fun2(a)
+res15a = test.catch(() -> b.fun2(a))
+res15b = b.fun2(b)
+
+output {
+  // force eval but don't render to prevent recursion
+  value =
+    let (_ = res1)
+    let (_ = res2)
+    let (_ = res3)
+    let (_ = res4)
+    let (_ = res5)
+    let (_ = res6)
+    let (_ = res6a)
+    let (_ = res6b)
+    let (_ = res7)
+    let (_ = res8)
+    let (_ = res9)
+    let (_ = res10)
+    let (_ = res11)
+    let (_ = res13)
+    let (_ = res14)
+    let (_ = res14a)
+    let (_ = res14b)
+    let (_ = res15)
+    let (_ = res15a)
+    let (_ = res15b)
+      new Dynamic { 
+        result = "ok"
+        res1a = res1.res2.x
+        res1b = res1.res3.x
+        res1c = res1.res5[1].x
+        res1d = res1.res6a.x
+        res11a = res11.res2.x
+        res11b = res11.res3.x
+        res11c = res11.res5[1].x
+        res11d = res11.res6a.x
+        res12 = module.res12
+        res14a = module.res14a
+      }
+}

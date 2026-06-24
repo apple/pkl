@@ -2,7 +2,7 @@ import "pkl:math"
 import "pkl:ref"
 
 class D extends ref.Domain {
-  function renderReference(reference: ref.Reference<D, Any>): String =
+  function renderReference(reference: ref.Reference<this, Any>): String =
     let (data = reference.getData())
     let (root = if (data is Resource) data.name else data.toString())
     let (
@@ -19,13 +19,12 @@ typealias Ref<T> = ref.Reference<D, T>
 
 abstract class Resource {
   name: String
-  hidden fixed $: Ref<Resource>
+  hidden fixed $: Ref<this> = ref.Reference(d, getClass(), this)
 }
 
 class A extends Resource {
   id: String
   hidden outputs: AProperties
-  hidden fixed $: Ref<A> = ref.Reference(d, A, this)
 }
 
 /// Test doc comment
@@ -41,7 +40,6 @@ class AProperties {
 class B extends Resource {
   id: String
   hidden outputs: BProperties
-  hidden fixed $: Ref<B> = ref.Reference(d, B, this)
 }
 
 class BProperties {

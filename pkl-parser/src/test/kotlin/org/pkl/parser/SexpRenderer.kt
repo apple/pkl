@@ -773,6 +773,10 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(moduleType)")
       }
+      is ThisType -> {
+        buf.append(tab)
+        buf.append("(thisType)")
+      }
       is StringConstantType -> renderStringConstantType(type)
       is DeclaredType -> renderDeclaredType(type)
       is ParenthesizedType -> renderParenthesizedType(type)

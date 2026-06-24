@@ -1,0 +1,21 @@
+import "pkl:test"
+
+import ".../input-helper/types/moduleTypeProperty.pkl"
+
+class ModuleSubclass extends moduleTypeProperty {
+  x = 2
+  hidden mod2: module
+  mod2x = mod2.x
+}
+
+x = -1
+
+res1 = new moduleTypeProperty {}
+res2 = new moduleTypeProperty {
+  mod = new ModuleSubclass {}
+}
+res3 = new ModuleSubclass {}
+res4 =
+  test.catch(() -> new ModuleSubclass {
+    mod = new moduleTypeProperty {}
+  }.output.text)

@@ -18,15 +18,23 @@ package org.pkl.core.ast.type;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Set;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetReceiverNode;
+import org.pkl.core.ast.member.ClassNode;
+import org.pkl.core.ast.member.ModuleNode;
+import org.pkl.core.ast.member.TypeAliasNode;
+import org.pkl.core.ast.member.UnresolvedMethodNode;
+import org.pkl.core.ast.member.UnresolvedPropertyNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.ErrorMessages;
 
 public abstract class UnresolvedTypeNode extends PklNode {
   protected UnresolvedTypeNode(SourceSection sourceSection) {
@@ -99,12 +107,90 @@ public abstract class UnresolvedTypeNode extends PklNode {
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
+      checkValidUsage();
 
       var module = (VmTyped) getModuleNode.executeGeneric(frame);
       var moduleClass = module.getVmClass();
       return moduleClass.isClosed()
           ? new FinalModuleTypeNode(sourceSection, moduleClass)
           : new NonFinalModuleTypeNode(sourceSection, moduleClass);
+    }
+
+    @SuppressWarnings("ConstantValue")
+    private void checkValidUsage() {
+      var isInAlias = false;
+      var isInClass = false;
+      var classNode = NodeUtil.findParent(this, ClassNode.class);
+      if (classNode != null
+          && !(classNode.getParent() instanceof ModuleNode)
+          && getParent() != classNode) {
+        // if the ClassNode is NOT in a ModuleNode and
+        // the direct parent isn't the ClassNode (where this == classNode.unresolvedSupertypeNode)
+        isInClass = true;
+      } else {
+        isInAlias = NodeUtil.findParent(this, TypeAliasNode.class) != null;
+      }
+
+      if (isInClass || isInAlias) {
+        VmContext.get(this)
+            .getLogger()
+            .warn(
+                ErrorMessages.create(
+                        "invalidSelfTypeUsage", "module", isInClass ? "class" : "type alias")
+                    + " This will be an error in a future release",
+                VmUtils.createStackFrame(sourceSection, null));
+      }
+    }
+  }
+
+  /** The `this` type. */
+  public static final class This extends UnresolvedTypeNode {
+    @Child private ExpressionNode getReceiverNode;
+
+    public This(SourceSection sourceSection) {
+      super(sourceSection);
+      getReceiverNode = new GetReceiverNode();
+    }
+
+    @Override
+    public TypeNode execute(VirtualFrame frame) {
+      CompilerDirectives.transferToInterpreter();
+      checkValidUsage();
+
+      var receiverClass = getReceiverClass(frame);
+      return receiverClass.isClosed()
+          ? new FinalThisTypeNode(sourceSection, receiverClass)
+          : new NonFinalThisTypeNode(sourceSection, receiverClass);
+    }
+
+    @SuppressWarnings("ConstantValue")
+    private void checkValidUsage() {
+      if (NodeUtil.findParent(this, TypeAliasNode.class) != null) {
+        throw exceptionBuilder().evalError("invalidSelfTypeUsage", "this", "type alias").build();
+      }
+    }
+
+    // attempt to locate the correct class when we're inside a type annotation in a method/prop def
+    // inside a class
+    @SuppressWarnings("ConstantValue")
+    private VmClass getReceiverClass(VirtualFrame frame) {
+      var parentMethod = NodeUtil.findParent(this, UnresolvedMethodNode.class);
+      if (parentMethod != null) {
+        var parentClass = NodeUtil.findParent(parentMethod, ClassNode.class);
+        if (parentClass != null) {
+          return parentClass.executeGeneric(frame);
+        }
+      }
+
+      var parentProperty = NodeUtil.findParent(this, UnresolvedPropertyNode.class);
+      if (parentProperty != null) {
+        var parentClass = NodeUtil.findParent(parentProperty, ClassNode.class);
+        if (parentClass != null) {
+          return parentClass.executeGeneric(frame);
+        }
+      }
+
+      return VmUtils.getClass(getReceiverNode.executeGeneric(frame));
     }
   }
 

@@ -56,11 +56,7 @@ public final class VmReference extends VmValue {
 
   @TruffleBoundary
   public VmReference(VmTyped domain, VmClass clazz, Object data) {
-    this(
-        domain,
-        data,
-        RrbTree.empty(),
-        normalizeTypes(new PType.Class(clazz.export()), clazz.getModule().getVmClass().export()));
+    this(domain, data, RrbTree.empty(), normalizeTypes(new PType.Class(clazz.export())));
   }
 
   public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, PType referentType) {
@@ -91,11 +87,10 @@ public final class VmReference extends VmValue {
   // * transforming T? into T|Null
   // * dereferencing aliases (except for well-known stdlib alias types)
   // * flattening unions
-  // * when moduleClass is supplied, replace PType.MODULE with appropriate PType.Class
   // * drop PType.Function and PType.TypeVariable
-  private static PType normalizeTypes(PType type, PClass moduleClass) {
+  private static PType normalizeTypes(PType type) {
     var types = new HashSet<PType>();
-    normalizeTypes(type, moduleClass, types);
+    normalizeTypes(type, types);
     return minimizeTypes(types);
   }
 
@@ -111,7 +106,7 @@ public final class VmReference extends VmValue {
     return new PType.Union(typesList);
   }
 
-  private static void normalizeTypes(PType type, PClass moduleClass, Set<PType> result) {
+  private static void normalizeTypes(PType type, Set<PType> result) {
     if (type == PType.UNKNOWN || type == PType.NOTHING || type instanceof PType.StringLiteral) {
       result.add(type);
     } else if (type instanceof PType.Class clazz) {
@@ -127,27 +122,25 @@ public final class VmReference extends VmValue {
       } else {
         var typeArgs = new ArrayList<PType>(clazz.getTypeArguments().size());
         for (var arg : clazz.getTypeArguments()) {
-          typeArgs.add(normalizeTypes(arg, moduleClass));
+          typeArgs.add(normalizeTypes(arg));
         }
         result.add(new PType.Class(clazz.getPClass(), typeArgs));
       }
     } else if (type instanceof PType.Nullable nullable) {
-      normalizeTypes(nullable.getBaseType(), moduleClass, result);
+      normalizeTypes(nullable.getBaseType(), result);
       result.add(new PType.Class(BaseModule.getNullClass().export()));
     } else if (type instanceof PType.Constrained constrained) {
-      normalizeTypes(constrained.getBaseType(), moduleClass, result);
+      normalizeTypes(constrained.getBaseType(), result);
     } else if (type instanceof PType.Alias alias) {
       if (isPreservedTypeAlias(alias.getTypeAlias())) {
         result.add(alias);
       } else {
-        normalizeTypes(alias.getAliasedType(), alias.getTypeAlias().getModuleClass(), result);
+        normalizeTypes(alias.getAliasedType(), result);
       }
     } else if (type instanceof PType.Union union) {
       for (var t : union.getElementTypes()) {
-        normalizeTypes(t, moduleClass, result);
+        normalizeTypes(t, result);
       }
-    } else if (type == PType.MODULE) {
-      result.add(new PType.Class(moduleClass));
     }
   }
 
@@ -216,7 +209,7 @@ public final class VmReference extends VmValue {
     if (prop == null || prop.isExternal()) {
       return;
     }
-    normalizeTypes(prop.getType(), clazz.getPClass().getModuleClass(), result);
+    normalizeTypes(prop.getType(), result);
   }
 
   private static PClassInfo<?> getClassInfo(Object value) {
@@ -244,20 +237,20 @@ public final class VmReference extends VmValue {
     if (clazz.getPClass().getInfo() == PClassInfo.Listing
         || clazz.getPClass().getInfo() == PClassInfo.List) {
       if (key instanceof Long) {
-        normalizeTypes(clazz.getTypeArguments().get(0), clazz.getPClass().getModuleClass(), result);
+        normalizeTypes(clazz.getTypeArguments().get(0), result);
       }
       return;
     }
     if (clazz.getPClass().getInfo() == PClassInfo.Mapping
         || clazz.getPClass().getInfo() == PClassInfo.Map) {
       var typeArgs = clazz.getTypeArguments();
-      var keyTypes = normalizeTypes(typeArgs.get(0), clazz.getPClass().getModuleClass());
+      var keyTypes = normalizeTypes(typeArgs.get(0));
       for (var kt : iterateTypes(keyTypes)) {
         if (kt == PType.UNKNOWN
             || (kt instanceof PType.Class klazz && klazz.getPClass().getInfo() == getClassInfo(key))
             || (kt instanceof PType.StringLiteral stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
-          normalizeTypes(typeArgs.get(1), clazz.getPClass().getModuleClass(), result);
+          normalizeTypes(typeArgs.get(1), result);
           return;
         }
       }
@@ -267,13 +260,13 @@ public final class VmReference extends VmValue {
   /**
    * Tells if this reference's referent type is a subtype of {@code type}. Does not check domain.
    */
-  public boolean referentTypeIsSubtypeOf(PType type, PClass moduleClass) {
+  public boolean referentTypeIsSubtypeOf(PType type) {
     // fast path: if referent is unknown it can match any type check
     if (referentType == PType.UNKNOWN) {
       return true;
     }
 
-    var checkType = normalizeTypes(type, moduleClass);
+    var checkType = normalizeTypes(type);
     // fast path: short circuit if any referent is accepted
     if (checkType == PType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass().export())) {
       return true;

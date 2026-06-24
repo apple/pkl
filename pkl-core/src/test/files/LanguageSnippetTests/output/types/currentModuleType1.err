@@ -1,0 +1,5 @@
+result = "ok"
+pkl: WARN: `module` type annotations are not allowed in class bodies. This will be an error in a future release (file:///$snippetsDir/input/types/currentModuleType1.pkl)
+pkl: WARN: `module` type annotations are not allowed in class bodies. This will be an error in a future release (file:///$snippetsDir/input/types/currentModuleType1.pkl)
+pkl: WARN: `module` type annotations are not allowed in class bodies. This will be an error in a future release (file:///$snippetsDir/input/types/currentModuleType1.pkl)
+pkl: WARN: `module` type annotations are not allowed in class bodies. This will be an error in a future release (file:///$snippetsDir/input/types/currentModuleType1.pkl)

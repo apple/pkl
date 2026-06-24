@@ -47,7 +47,7 @@ import "pkl:yaml"
 /// ```
 abstract external class Any {
   /// Returns the class of [this].
-  external function getClass(): Class
+  external function getClass(): Class<this>
 
   /// Returns a string representation of [this].
   ///
