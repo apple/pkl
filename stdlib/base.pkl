@@ -361,7 +361,7 @@ abstract class BaseValueRenderer {
   ///
   /// See [ConvertProperty] for detailed information.
   @Since { version = "0.31.0" }
-  convertPropertyTransformers: Mapping<Class, Mixin<ConvertProperty>>
+  convertPropertyTransformers: Mapping<Class<ConvertProperty>, Mixin<ConvertProperty>>
 
   /// The file extension associated with this output format,
   /// or [null] if this format does not have an extension.

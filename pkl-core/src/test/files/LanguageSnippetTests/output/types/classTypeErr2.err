@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Module version conflict: Expected value of type `Class<classType>` defined by module `file:///$snippetsDir/input-helper/types/classTypeB.pkl`, but got type `Class<classType>` defined by module `file:///$snippetsDir/input-helper/types/classTypeA.pkl`.
+
+
+x | res6 = classTypeA.getClass() as Class<classTypeB>
+                                    ^^^^^^^^^^^^^^^^^
+at classTypeErr2#res6 (file:///$snippetsDir/input/types/classTypeErr2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
