@@ -1,0 +1,55 @@
+amends "../snippetTest.pkl"
+
+import "pkl:ref"
+
+local class D extends ref.Domain {
+  function renderReference(reference: ref.Reference<D, Any>): String = reference.getData().toString()
+}
+
+local const d: D = new {}
+local typealias Ref<T> = ref.Reference<D, T>
+
+local class Holder {
+  num: Int
+  text: String
+  lit: "literal"
+  small: Int8
+  optional: Mapping<String, Int?>
+  listing: Listing<Int>
+  union: Listing<String> | Listing<Int>
+}
+
+local const h: Holder = new {
+  num = 1
+  text = "t"
+  lit = "literal"
+  small = 8
+  optional { ["k"] = 5 }
+  listing { 1; 2 }
+  union = new Listing<Int> { 1 }
+}
+
+local hRef1: Ref<Holder> = ref.Reference(d, Holder, h)
+local hRef2: Ref<Holder> = ref.Reference(d, Holder, h)
+
+facts {
+  ["equality"] {
+    hRef1 == hRef2
+    hRef1.num == hRef2.num
+    hRef1.lit == hRef2.lit
+    hRef1.small == hRef2.small
+    hRef1.optional["k"] == hRef2.optional["k"]
+    hRef1.listing[0] == hRef2.listing[0]
+    hRef1.union == hRef2.union
+  }
+
+  ["inequality"] {
+    hRef1.num != hRef2.text
+  }
+
+  ["set deduplication"] {
+    Set(hRef1.num, hRef2.num).length == 1
+    Set(hRef1.union, hRef2.union).length == 1
+    Set(hRef1.num, hRef2.text).length == 2
+  }
+}
