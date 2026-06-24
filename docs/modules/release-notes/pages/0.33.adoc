@@ -23,6 +23,16 @@ Native `pkl` and `pkldoc` binaries for Intel Mac systems are no longer published
 
 To continue running new Pkl releases on these systems, use an appropriate Java runtime and the `jpkl` and `jpkldoc` Java executables.
 
+=== Type check changes for `Class<T>`
+
+In prior versions of Pkl, type arguments to the `Class` type were erased.
+Any `Class` value would typecheck against `Class<T>` for any value of `T`.
+
+In Pkl 0.33, this erasure has been removed.
+A `Class` value typechecked against `Class<T>` must be a subclass of `T`.
+
+If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
+
 === XXX
 
 == Bug Fixes [small]#🐜#

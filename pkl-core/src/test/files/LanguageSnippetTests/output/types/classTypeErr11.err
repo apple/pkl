@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Expected value of type `Class<classType#A | classType#B>`, but got type `Class<classType#A>`.
+
+xx | typealias F<T> = List<Class<T>>
+                           ^^^^^^^^
+at classTypeErr11#res22 (file:///$snippetsDir/input/types/classType.pkl)
+
+A `Class` type check can only succeed when its type argument is an un-parameterized class, a module, `unknown`, `module`, or an alias to one of those types.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
