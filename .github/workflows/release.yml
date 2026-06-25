@@ -1043,7 +1043,7 @@ jobs:
         pattern: test-results-xml-*
     - name: Publish test results
       if: '!cancelled()'
-      uses: EnricoMi/publish-unit-test-result-action@c950f6fb443cb5af20a377fd0dfaa78838901040 # v2
+      uses: EnricoMi/publish-unit-test-result-action@d0a4676d0e0b938bc201470d88276b7c74c712b3 # v2
       with:
         comment_mode: 'off'
         files: test-results-xml-*/**/*.xml
