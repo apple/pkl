@@ -76,7 +76,7 @@ external const function Reference<D, T>(
 ///   3. [path][getPath()]: a `List<Access>` of values indicating how the reference was accessed
 ///      (by property or subscript).
 ///   4. Referent type: the type of the value that the reference refers to.
-///      This type is internally held, and not exposed as an in-language value. 
+///      This type is internally held, and not exposed as an in-language value.
 ///
 /// ## Member access
 ///
