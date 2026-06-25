@@ -28,6 +28,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -38,6 +39,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PType.StringLiteral;
 import org.pkl.core.PklBugException;
+import org.pkl.core.StackFrame;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
@@ -2199,20 +2201,47 @@ public abstract class TypeNode extends PklNode {
     }
 
     /**
-     * Signals that a {@code Reference} annotation reached through a generic type alias has a
+     * Builds the chain of stack frames that lead a type constraint into this {@code Reference}'s
+     * referent through one or more generic type aliases.
+     */
+    public List<StackFrame> buildReferentConstraintStackFrames(VmTypeAlias outermostAlias) {
+      var aliasLayers = new ArrayList<TypeAliasTypeNode>();
+      for (var node = getParent(); node != null; node = node.getParent()) {
+        if (node instanceof TypeAliasTypeNode aliasNode) {
+          aliasLayers.add(aliasNode);
+        }
+      }
+
+      var frames = new ArrayList<StackFrame>(aliasLayers.size() + 1);
+      var annotationOwner =
+          aliasLayers.isEmpty() ? outermostAlias : aliasLayers.get(0).getTypeAlias();
+      frames.add(VmUtils.createStackFrame(getSourceSection(), annotationOwner.getQualifiedName()));
+
+      for (var i = 0; i < aliasLayers.size(); i++) {
+        var owner =
+            i + 1 < aliasLayers.size() ? aliasLayers.get(i + 1).getTypeAlias() : outermostAlias;
+        frames.add(
+            VmUtils.createStackFrame(
+                aliasLayers.get(i).getSourceSection(), owner.getQualifiedName()));
+      }
+      return frames;
+    }
+
+    /**
+     * Signals that a {@code Reference} reached through one or more generic type aliases has a
      * constrained referent.
      */
     public static final class ReferentConstraintException extends RuntimeException {
-      private final SourceSection referenceTypeSection;
+      private final List<StackFrame> leadingStackFrames;
 
-      public ReferentConstraintException(SourceSection referenceTypeSection) {
+      public ReferentConstraintException(List<StackFrame> leadingStackFrames) {
         super(null, null, false, false);
-        this.referenceTypeSection = referenceTypeSection;
+        this.leadingStackFrames = leadingStackFrames;
       }
 
-      /** The source section of the {@code Reference} annotation. */
-      public SourceSection getReferenceTypeSection() {
-        return referenceTypeSection;
+      /** Frames for the {@code Reference} annotation and each enclosing type alias layer. */
+      public List<StackFrame> getLeadingStackFrames() {
+        return leadingStackFrames;
       }
     }
 
@@ -2729,6 +2758,10 @@ public abstract class TypeNode extends PklNode {
 
     public TypeNode getAliasedTypeNode() {
       return aliasedTypeNode;
+    }
+
+    public VmTypeAlias getTypeAlias() {
+      return typeAlias;
     }
 
     @Override

@@ -3,7 +3,7 @@
 
 x | typealias Ref<T> = ref.Reference<D, T>
                        ^^^^^^^^^^^^^^^^^^^
-at reference9#test (file:///$snippetsDir/input/errors/reference9.pkl)
+at reference9#Ref (file:///$snippetsDir/input/errors/reference9.pkl)
 
 x | test = ref.Reference(d, String, "") as Ref<String(true) | Int>
                                            ^^^^^^^^^^^^^^^^^^^^^^^

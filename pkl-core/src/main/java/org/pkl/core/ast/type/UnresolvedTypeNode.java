@@ -311,18 +311,8 @@ public abstract class UnresolvedTypeNode extends PklNode {
         } catch (ReferenceTypeNode.ReferentConstraintException e) {
           // a constraint reached a `Reference` referent through this generic alias.
           var exception =
-              exceptionBuilder()
-                  .evalError("invalidReferenceTypeAnnotationWithConstraint")
-                  .withSourceSection(e.getReferenceTypeSection())
-                  .build();
-          var rootNode = getRootNode();
-          if (rootNode != null) {
-            exception
-                .getInsertedStackFrames()
-                .putIfAbsent(
-                    rootNode.getCallTarget(),
-                    VmUtils.createStackFrame(sourceSection, rootNode.getName()));
-          }
+              exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint").build();
+          exception.setLeadingStackFrames(e.getLeadingStackFrames());
           throw exception;
         }
       }

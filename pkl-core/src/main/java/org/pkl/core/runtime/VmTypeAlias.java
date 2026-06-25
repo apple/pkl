@@ -202,13 +202,12 @@ public final class VmTypeAlias extends VmValue {
         });
     clone.accept(
         node -> {
-          if (node instanceof ReferenceTypeNode referenceTypeNode) {
+          if (node instanceof ReferenceTypeNode referenceTypeNode
+              && referenceTypeNode.findReferentConstraint() != null) {
             // A type argument supplied at the alias usage site introduced a constraint into this
             // `Reference`'s referent.
-            if (referenceTypeNode.findReferentConstraint() != null) {
-              throw new ReferenceTypeNode.ReferentConstraintException(
-                  referenceTypeNode.getSourceSection());
-            }
+            throw new ReferenceTypeNode.ReferentConstraintException(
+                referenceTypeNode.buildReferentConstraintStackFrames(this));
           }
           return true;
         });
