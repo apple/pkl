@@ -491,11 +491,11 @@ public final class TestRunner {
           sb.append("\n  Expected: ");
           appendLocation(sb, expectedLocation);
           sb.append("\n  ");
-          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replaceAll("\n", "\n  "));
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, expectedValue.replace("\n", "\n  "));
           sb.append("\n  Actual: ");
           appendLocation(sb, actualLocation);
           sb.append("\n  ");
-          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, actualValue.replaceAll("\n", "\n  "));
+          sb.append(AnsiTheme.TEST_EXAMPLE_OUTPUT, actualValue.replace("\n", "\n  "));
         });
     return new Failure("Example Failure", sb.toString());
   }

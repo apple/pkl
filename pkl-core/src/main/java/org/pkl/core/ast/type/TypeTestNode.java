@@ -26,7 +26,7 @@ import org.pkl.core.runtime.VmLanguage;
 @NodeInfo(shortName = "is")
 public final class TypeTestNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
   @Child private @Nullable TypeNode typeNode;
 
   public TypeTestNode(
@@ -49,6 +49,7 @@ public final class TypeTestNode extends ExpressionNode {
       // don't compile unresolvedTypeNode.execute()
       // invalidation is done by insert()
       CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }

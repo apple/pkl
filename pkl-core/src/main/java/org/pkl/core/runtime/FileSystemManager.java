@@ -51,6 +51,8 @@ public final class FileSystemManager {
 
   public static synchronized FileSystem getFileSystem(URI uri) throws IOException {
     var fs = fileSystems.get(uri);
+    // incorrect nullability for `org.graalvm.collections.UnmodifiableEconomicMap`
+    //noinspection ConstantValue
     if (fs != null) {
       var count = counts.get(fs);
       assert count != null;

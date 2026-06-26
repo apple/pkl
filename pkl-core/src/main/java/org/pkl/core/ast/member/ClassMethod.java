@@ -26,6 +26,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.LateInit;
 
 public final class ClassMethod extends ClassMember {
   private final List<TypeParameter> typeParameters;
@@ -33,7 +34,7 @@ public final class ClassMethod extends ClassMember {
   // null = not deprecated, "" = no/empty message in the @Deprecated body
   private final @Nullable String deprecation;
 
-  @CompilationFinal private FunctionNode functionNode;
+  @CompilationFinal @LateInit private FunctionNode functionNode;
 
   public ClassMethod(
       SourceSection sourceSection,
@@ -61,6 +62,7 @@ public final class ClassMethod extends ClassMember {
   }
 
   public void initFunctionNode(FunctionNode functionNode) {
+    //noinspection ConstantValue
     assert this.functionNode == null;
     this.functionNode = functionNode;
   }

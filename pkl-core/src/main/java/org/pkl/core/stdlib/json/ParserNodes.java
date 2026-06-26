@@ -28,6 +28,7 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.LateInit;
 import org.pkl.core.util.json.JsonHandler;
 import org.pkl.core.util.json.JsonParser;
 import org.pkl.core.util.json.ParseException;
@@ -71,14 +72,14 @@ public final class ParserNodes {
 
     private final Deque<Object> currPath = new ArrayDeque<>();
 
+    @LateInit private Object value;
+
     public Handler(PklConverter converter, boolean useMapping) {
       this.converter = converter;
       this.useMapping = useMapping;
 
       currPath.push(VmValueConverter.TOP_LEVEL_VALUE);
     }
-
-    private Object value;
 
     @Override
     public void endNull() {

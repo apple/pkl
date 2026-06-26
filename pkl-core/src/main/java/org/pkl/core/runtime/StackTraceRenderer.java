@@ -101,8 +101,14 @@ public final class StackTraceRenderer {
     if (hint != null) {
       out.append(AnsiTheme.ERROR_MESSAGE_HINT, hint);
     } else {
-      assert hintBuilder != null;
-      out.append(AnsiTheme.ERROR_MESSAGE_HINT, () -> hintBuilder.accept(out, true));
+      out.append(
+          AnsiTheme.ERROR_MESSAGE_HINT,
+          () -> {
+            // nullaway needs this assertion
+            //noinspection ConstantValue
+            assert hintBuilder != null;
+            hintBuilder.accept(out, true);
+          });
     }
     out.append('\n');
   }

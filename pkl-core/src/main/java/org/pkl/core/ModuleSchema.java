@@ -18,7 +18,6 @@ package org.pkl.core;
 import java.net.URI;
 import java.util.*;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.util.LateInit;
 
 /** Describes the property, method and class members of a module. */
 public final class ModuleSchema {
@@ -33,8 +32,8 @@ public final class ModuleSchema {
   private final Map<String, TypeAlias> typeAliases;
   private final Map<String, URI> imports;
 
-  @LateInit private Map<String, PClass> __allClasses;
-  @LateInit private Map<String, TypeAlias> __allTypeAliases;
+  private @Nullable Map<String, PClass> __allClasses;
+  private @Nullable Map<String, TypeAlias> __allTypeAliases;
 
   /** Constructs a {@code ModuleSchema} instance. */
   public ModuleSchema(

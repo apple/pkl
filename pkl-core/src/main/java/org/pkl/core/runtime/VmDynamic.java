@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.Objects;
 import org.graalvm.collections.UnmodifiableEconomicMap;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.member.ObjectMember;
@@ -75,12 +76,14 @@ public final class VmDynamic extends VmObject {
   @Override
   @TruffleBoundary
   public PObject export() {
+    assert forced : "Value was not forced prior to export";
+
     var properties =
         CollectionUtils.<String, Object>newLinkedHashMap(EconomicMaps.size(cachedValues));
 
-    iterateMemberValues(
+    iterateAlreadyForcedMemberValues(
         (key, member, value) -> {
-          properties.put(key.toString(), VmValue.exportNullable(value));
+          properties.put(key.toString(), VmValue.export(value));
           return true;
         });
 
@@ -99,9 +102,8 @@ public final class VmDynamic extends VmObject {
 
   @Override
   @TruffleBoundary
-  public boolean equals(Object obj) {
-    if (this == obj) // noinspection Contract
-    return true;
+  public boolean equals(@Nullable Object obj) {
+    if (this == obj) return true;
     if (!(obj instanceof VmDynamic other)) return false;
 
     // could use shallow force, but deep force is cached
@@ -115,6 +117,7 @@ public final class VmDynamic extends VmObject {
       if (isHiddenOrLocalProperty(key)) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
       if (!value.equals(otherValue)) return false;
@@ -137,6 +140,7 @@ public final class VmDynamic extends VmObject {
       if (isHiddenOrLocalProperty(key)) continue;
 
       var value = cursor.getValue();
+      //noinspection ConstantValue
       assert value != null;
       result += key.hashCode() ^ value.hashCode();
     }

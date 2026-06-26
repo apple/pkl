@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
@@ -49,8 +50,8 @@ public final class ReadAmbiguousLocalityPropertyNode extends ExpressionNode {
   private final Identifier name;
   private final int levelsUp;
   private final boolean needsConst;
-  private @Child ExpressionNode readLocalPropertyNode;
-  private @Child ExpressionNode readPropertyNode;
+  @Child private @Nullable ExpressionNode readLocalPropertyNode;
+  @Child private @Nullable ExpressionNode readPropertyNode;
 
   public ReadAmbiguousLocalityPropertyNode(
       SourceSection sourceSection, Identifier name, int levelsUp, boolean needsConst) {
