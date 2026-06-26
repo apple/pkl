@@ -1,0 +1,226 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function parse(source: String) = syntax.parse(source)
+
+local function expr(source: String) =
+  let (result = parse("x = \(source)"))
+    (result as syntax.ModuleNode).properties.first.value
+
+examples {
+  ["literals"] {
+    local boolTrue = expr("true")
+    boolTrue is syntax.BoolLiteralExprNode
+    (boolTrue as syntax.BoolLiteralExprNode).value == true
+
+    local boolFalse = expr("false")
+    boolFalse is syntax.BoolLiteralExprNode
+    (boolFalse as syntax.BoolLiteralExprNode).value == false
+
+    local intLit = expr("42")
+    intLit is syntax.IntLiteralExprNode
+    (intLit as syntax.IntLiteralExprNode).text == "42"
+
+    local hexLit = expr("0xFF")
+    hexLit is syntax.IntLiteralExprNode
+    (hexLit as syntax.IntLiteralExprNode).text == "0xFF"
+
+    local floatLit = expr("3.14")
+    floatLit is syntax.FloatLiteralExprNode
+    (floatLit as syntax.FloatLiteralExprNode).text == "3.14"
+
+    local nullLit = expr("null")
+    nullLit is syntax.NullLiteralExprNode
+  }
+
+  ["strings"] {
+    local simple = expr(#""hello""#)
+    simple is syntax.SingleLineStringLiteralExprNode
+    (simple as syntax.SingleLineStringLiteralExprNode).parts.length == 1
+    (simple as syntax.SingleLineStringLiteralExprNode).parts.first is syntax.StringCharsNode
+    ((simple as syntax.SingleLineStringLiteralExprNode).parts.first as syntax.StringCharsNode).value == "hello"
+
+    local withEscape = expr(#""hello\nworld""#)
+    withEscape is syntax.SingleLineStringLiteralExprNode
+    local escapeParts = (withEscape as syntax.SingleLineStringLiteralExprNode).parts
+    escapeParts.length == 3
+    escapeParts[0] is syntax.StringCharsNode
+    escapeParts[1] is syntax.StringEscapeNode
+    (escapeParts[1] as syntax.StringEscapeNode).value == #"\n"#
+
+    local withInterp = expr(#""hello \(name)""#)
+    withInterp is syntax.SingleLineStringLiteralExprNode
+    local interpParts = (withInterp as syntax.SingleLineStringLiteralExprNode).parts
+    interpParts.length == 2
+    interpParts[0] is syntax.StringCharsNode
+    interpParts[1] is syntax.StringInterpolationNode
+    (interpParts[1] as syntax.StringInterpolationNode).expression is syntax.UnqualifiedAccessExprNode
+
+    local multiLine = expr(#"""
+      """
+      hello
+      """
+      """#)
+    multiLine is syntax.MultiLineStringLiteralExprNode
+    local mlParts = (multiLine as syntax.MultiLineStringLiteralExprNode).parts
+    mlParts.length >= 1
+  }
+
+  ["keyword expressions"] {
+    local thisExpr = expr("this")
+    thisExpr is syntax.ThisExprNode
+
+    local outerExpr = expr("outer")
+    outerExpr is syntax.OuterExprNode
+
+    local moduleExpr = expr("module")
+    moduleExpr is syntax.ModuleExprNode
+  }
+
+  ["access expressions"] {
+    local unqual = expr("foo")
+    unqual is syntax.UnqualifiedAccessExprNode
+    (unqual as syntax.UnqualifiedAccessExprNode).identifier.value == "foo"
+    (unqual as syntax.UnqualifiedAccessExprNode).argumentList == null
+
+    local withArgs = expr("foo(1, 2)")
+    withArgs is syntax.UnqualifiedAccessExprNode
+    (withArgs as syntax.UnqualifiedAccessExprNode).identifier.value == "foo"
+    (withArgs as syntax.UnqualifiedAccessExprNode).argumentList != null
+    (withArgs as syntax.UnqualifiedAccessExprNode).argumentList!!.arguments.length == 2
+
+    local qual = expr("foo.bar")
+    qual is syntax.QualifiedAccessExprNode
+    (qual as syntax.QualifiedAccessExprNode).receiver is syntax.UnqualifiedAccessExprNode
+    (qual as syntax.QualifiedAccessExprNode).isNullSafe == false
+    (qual as syntax.QualifiedAccessExprNode).member.identifier.value == "bar"
+
+    local nullSafe = expr("foo?.bar")
+    nullSafe is syntax.QualifiedAccessExprNode
+    (nullSafe as syntax.QualifiedAccessExprNode).isNullSafe == true
+
+    local subscript = expr("foo[0]")
+    subscript is syntax.SubscriptExprNode
+    (subscript as syntax.SubscriptExprNode).receiver is syntax.UnqualifiedAccessExprNode
+    (subscript as syntax.SubscriptExprNode).index is syntax.IntLiteralExprNode
+  }
+
+  ["binary operators"] {
+    local add = expr("1 + 2")
+    add is syntax.BinaryOpExprNode
+    (add as syntax.BinaryOpExprNode).operator == "+"
+    (add as syntax.BinaryOpExprNode).leftExpr is syntax.IntLiteralExprNode
+    (add as syntax.BinaryOpExprNode).rightExpr is syntax.IntLiteralExprNode
+
+    local eq = expr("a == b")
+    eq is syntax.BinaryOpExprNode
+    (eq as syntax.BinaryOpExprNode).operator == "=="
+
+    local pipeline = expr("a |> b")
+    pipeline is syntax.BinaryOpExprNode
+    (pipeline as syntax.BinaryOpExprNode).operator == "|>"
+
+    local nullCoalesce = expr("a ?? b")
+    nullCoalesce is syntax.BinaryOpExprNode
+    (nullCoalesce as syntax.BinaryOpExprNode).operator == "??"
+
+    local isOp = expr("a is String")
+    isOp is syntax.BinaryOpExprNode
+    (isOp as syntax.BinaryOpExprNode).operator == "is"
+    (isOp as syntax.BinaryOpExprNode).rightType is syntax.DeclaredTypeNode
+
+    local asOp = expr("a as String")
+    asOp is syntax.BinaryOpExprNode
+    (asOp as syntax.BinaryOpExprNode).operator == "as"
+    (asOp as syntax.BinaryOpExprNode).rightType is syntax.DeclaredTypeNode
+  }
+
+  ["unary operators"] {
+    local neg = expr("-42")
+    neg is syntax.UnaryMinusExprNode
+    (neg as syntax.UnaryMinusExprNode).operand is syntax.IntLiteralExprNode
+
+    local notExpr = expr("!flag")
+    notExpr is syntax.LogicalNotExprNode
+    (notExpr as syntax.LogicalNotExprNode).operand is syntax.UnqualifiedAccessExprNode
+
+    local nonNull = expr("x!!")
+    nonNull is syntax.NonNullExprNode
+    (nonNull as syntax.NonNullExprNode).operand is syntax.UnqualifiedAccessExprNode
+  }
+
+  ["if expression"] {
+    local ifExpr = expr("if (x) 1 else 2")
+    ifExpr is syntax.IfExprNode
+    (ifExpr as syntax.IfExprNode).condition is syntax.UnqualifiedAccessExprNode
+    (ifExpr as syntax.IfExprNode).thenExpr is syntax.IntLiteralExprNode
+    (ifExpr as syntax.IfExprNode).elseExpr is syntax.IntLiteralExprNode
+  }
+
+  ["let expression"] {
+    local letExpr = expr("let (y = 1) y + 1")
+    letExpr is syntax.LetExprNode
+    (letExpr as syntax.LetExprNode).parameter.identifier!!.value == "y"
+    (letExpr as syntax.LetExprNode).bindingValue is syntax.IntLiteralExprNode
+    (letExpr as syntax.LetExprNode).bodyExpr is syntax.BinaryOpExprNode
+  }
+
+  ["new expression"] {
+    local newExpr = expr("new Mapping { [\"a\"] = 1 }")
+    newExpr is syntax.NewExprNode
+    (newExpr as syntax.NewExprNode).type is syntax.DeclaredTypeNode
+    (newExpr as syntax.NewExprNode).body is syntax.ObjectBodyNode
+  }
+
+  ["function literal"] {
+    local fn = expr("(x, y) -> x + y")
+    fn is syntax.FunctionLiteralExprNode
+    (fn as syntax.FunctionLiteralExprNode).parameterList.parameters.length == 2
+    (fn as syntax.FunctionLiteralExprNode).parameterList.parameters[0].identifier!!.value == "x"
+    (fn as syntax.FunctionLiteralExprNode).parameterList.parameters[1].identifier!!.value == "y"
+    (fn as syntax.FunctionLiteralExprNode).body is syntax.BinaryOpExprNode
+  }
+
+  ["parenthesized expression"] {
+    local paren = expr("(1 + 2)")
+    paren is syntax.ParenthesizedExprNode
+    (paren as syntax.ParenthesizedExprNode).expression is syntax.BinaryOpExprNode
+  }
+
+  ["throw and trace"] {
+    local throwExpr = expr(#"throw("error")"#)
+    throwExpr is syntax.ThrowExprNode
+    (throwExpr as syntax.ThrowExprNode).expression is syntax.SingleLineStringLiteralExprNode
+
+    local traceExpr = expr("trace(42)")
+    traceExpr is syntax.TraceExprNode
+    (traceExpr as syntax.TraceExprNode).expression is syntax.IntLiteralExprNode
+  }
+
+  ["import expression"] {
+    local impExpr = expr(#"import("foo.pkl")"#)
+    impExpr is syntax.ImportExprNode
+    (impExpr as syntax.ImportExprNode).isGlob == false
+    (impExpr as syntax.ImportExprNode).uri == "foo.pkl"
+
+    local impGlob = expr(#"import*("*.pkl")"#)
+    impGlob is syntax.ImportExprNode
+    (impGlob as syntax.ImportExprNode).isGlob == true
+    (impGlob as syntax.ImportExprNode).uri == "*.pkl"
+  }
+
+  ["read expression"] {
+    local readExpr = expr(#"read("file.txt")"#)
+    readExpr is syntax.ReadExprNode
+    (readExpr as syntax.ReadExprNode).keyword == "read"
+
+    local readOpt = expr(#"read?("file.txt")"#)
+    readOpt is syntax.ReadExprNode
+    (readOpt as syntax.ReadExprNode).keyword == "read?"
+
+    local readGlob = expr(#"read*("*.txt")"#)
+    readGlob is syntax.ReadExprNode
+    (readGlob as syntax.ReadExprNode).keyword == "read*"
+  }
+}
