@@ -64,7 +64,7 @@ Default: `null` +
 Example 1: `moduleCacheDir = layout.buildDirectory.dir("pkl-module-cache")` +
 Example 2: `moduleCacheDir.fileValue file("/absolute/path/to/cache")` +
 The cache directory for storing packages.
-If `null`, defaults to `~/.pkl/cache`.
+If `null`, defaults to `~/.cache/pkl` on Unix or `%LOCALAPPDATA%/pkl/cache` on Windows (or the legacy `~/.pkl/cache` if it already exists).
 ====
 
 .color: Property<Boolean>

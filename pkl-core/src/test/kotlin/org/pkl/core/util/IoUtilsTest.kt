@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -19,6 +19,8 @@ import java.io.FileNotFoundException
 import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
+import java.util.function.Function
+import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
 import kotlin.io.path.createParentDirectories
 import org.assertj.core.api.Assertions.assertThat
@@ -408,5 +410,194 @@ class IoUtilsTest {
     assertThat(IoUtils.encodePath("(")).isEqualTo("((")
     assertThat(IoUtils.encodePath("3a)")).isEqualTo("3a)")
     assertThat(IoUtils.encodePath("foo/bar/baz")).isEqualTo("foo/bar/baz")
+  }
+
+  @Test
+  fun `preferNewLocation() prefers the XDG location when it exists`(@TempDir tempDir: Path) {
+    val xdg = tempDir.resolve("xdg").createDirectories()
+    val legacy = tempDir.resolve("legacy").createDirectories()
+    assertThat(IoUtils.preferNewLocation(xdg, legacy)).isEqualTo(xdg)
+  }
+
+  @Test
+  fun `preferNewLocation() falls back to legacy when only the legacy location exists`(
+    @TempDir tempDir: Path
+  ) {
+    val xdg = tempDir.resolve("xdg")
+    val legacy = tempDir.resolve("legacy").createDirectories()
+    assertThat(IoUtils.preferNewLocation(xdg, legacy)).isEqualTo(legacy)
+  }
+
+  @Test
+  fun `preferNewLocation() prefers the XDG location when neither exists`(@TempDir tempDir: Path) {
+    val xdg = tempDir.resolve("xdg")
+    val legacy = tempDir.resolve("legacy")
+    assertThat(IoUtils.preferNewLocation(xdg, legacy)).isEqualTo(xdg)
+  }
+
+  @Test
+  fun `preferNewLocation() prefers the XDG location when only it exists`(@TempDir tempDir: Path) {
+    val xdg = tempDir.resolve("xdg").createDirectories()
+    val legacy = tempDir.resolve("legacy")
+    assertThat(IoUtils.preferNewLocation(xdg, legacy)).isEqualTo(xdg)
+  }
+
+  @Test
+  fun `getDefaultModuleCacheDir() prefers XDG and falls back to legacy`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultModuleCacheDir(home))
+      .isEqualTo(home.resolve(".cache").resolve("pkl"))
+    home.resolve(".pkl").resolve("cache").createDirectories()
+    assertThat(IoUtils.getDefaultModuleCacheDir(home))
+      .isEqualTo(home.resolve(".pkl").resolve("cache"))
+  }
+
+  @Test
+  fun `getDefaultSettingsFile() prefers XDG and falls back to legacy`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultSettingsFile(home))
+      .isEqualTo(home.resolve(".config").resolve("pkl").resolve("settings.pkl"))
+    home.resolve(".pkl").resolve("settings.pkl").createParentDirectories().createFile()
+    assertThat(IoUtils.getDefaultSettingsFile(home))
+      .isEqualTo(home.resolve(".pkl").resolve("settings.pkl"))
+  }
+
+  @Test
+  fun `getDefaultReplHistoryFile() prefers XDG state dir and falls back to legacy`(
+    @TempDir home: Path
+  ) {
+    assertThat(IoUtils.getDefaultReplHistoryFile(home))
+      .isEqualTo(home.resolve(".local").resolve("state").resolve("pkl").resolve("repl-history"))
+    home.resolve(".pkl").resolve("repl-history").createParentDirectories().createFile()
+    assertThat(IoUtils.getDefaultReplHistoryFile(home))
+      .isEqualTo(home.resolve(".pkl").resolve("repl-history"))
+  }
+
+  @Test
+  fun `getDefaultCaCertsDir() prefers XDG when nothing exists`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultCaCertsDir(home))
+      .isEqualTo(home.resolve(".config").resolve("pkl").resolve("cacerts"))
+  }
+
+  @Test
+  fun `getDefaultCaCertsDir() does not let an empty XDG dir shadow a populated legacy dir`(
+    @TempDir home: Path
+  ) {
+    val legacy = home.resolve(".pkl").resolve("cacerts").createDirectories()
+    legacy.resolve("ca.pem").createFile()
+    // an empty XDG cacerts dir must not shadow the populated legacy dir
+    val xdg = home.resolve(".config").resolve("pkl").resolve("cacerts").createDirectories()
+    assertThat(IoUtils.getDefaultCaCertsDir(home)).isEqualTo(legacy)
+    // once the XDG dir holds a cert, it wins
+    xdg.resolve("ca.pem").createFile()
+    assertThat(IoUtils.getDefaultCaCertsDir(home)).isEqualTo(xdg)
+  }
+
+  // ---- Windows Known Folder behaviour ---------------------------------------
+  //
+  // The `(homeDir, isWindows, envLookup)` overloads let us exercise the Windows code path on a Unix
+  // CI box. The env lookup is a `Function<String, String?>` so tests can inject `LOCALAPPDATA` /
+  // `APPDATA` without touching the JVM environment (which the JDK doesn't allow on Unix).
+
+  private fun env(vararg entries: kotlin.Pair<String, String?>): Function<String, String?> {
+    val map: Map<String, String?> = entries.toMap()
+    return Function { name -> map[name] }
+  }
+
+  @Test
+  fun `getDefaultModuleCacheDir() on Windows uses LOCALAPPDATA when set`(@TempDir home: Path) {
+    val localAppData = home.resolve("LocalAppData").createDirectories()
+    assertThat(
+        IoUtils.getDefaultModuleCacheDir(home, true, env("LOCALAPPDATA" to localAppData.toString()))
+      )
+      .isEqualTo(localAppData.resolve("pkl").resolve("cache"))
+  }
+
+  @Test
+  fun `getDefaultModuleCacheDir() on Windows falls back to Unix layout when LOCALAPPDATA is unset`(
+    @TempDir home: Path
+  ) {
+    assertThat(IoUtils.getDefaultModuleCacheDir(home, true, env()))
+      .isEqualTo(home.resolve(".cache").resolve("pkl"))
+  }
+
+  @Test
+  fun `getDefaultModuleCacheDir() on Windows treats empty LOCALAPPDATA like unset`(
+    @TempDir home: Path
+  ) {
+    assertThat(IoUtils.getDefaultModuleCacheDir(home, true, env("LOCALAPPDATA" to "")))
+      .isEqualTo(home.resolve(".cache").resolve("pkl"))
+  }
+
+  @Test
+  fun `getDefaultModuleCacheDir() on Windows still falls back to legacy ~_pkl_cache`(
+    @TempDir home: Path
+  ) {
+    val localAppData = home.resolve("LocalAppData").createDirectories()
+    home.resolve(".pkl").resolve("cache").createDirectories()
+    assertThat(
+        IoUtils.getDefaultModuleCacheDir(home, true, env("LOCALAPPDATA" to localAppData.toString()))
+      )
+      .isEqualTo(home.resolve(".pkl").resolve("cache"))
+  }
+
+  @Test
+  fun `getDefaultSettingsFile() on Windows uses APPDATA when set`(@TempDir home: Path) {
+    val appData = home.resolve("AppData").createDirectories()
+    assertThat(IoUtils.getDefaultSettingsFile(home, true, env("APPDATA" to appData.toString())))
+      .isEqualTo(appData.resolve("pkl").resolve("settings.pkl"))
+  }
+
+  @Test
+  fun `getDefaultSettingsFile() on Windows falls back to Unix layout when APPDATA is unset`(
+    @TempDir home: Path
+  ) {
+    assertThat(IoUtils.getDefaultSettingsFile(home, true, env()))
+      .isEqualTo(home.resolve(".config").resolve("pkl").resolve("settings.pkl"))
+  }
+
+  @Test
+  fun `getDefaultSettingsFile() on Windows treats empty APPDATA like unset`(@TempDir home: Path) {
+    assertThat(IoUtils.getDefaultSettingsFile(home, true, env("APPDATA" to "")))
+      .isEqualTo(home.resolve(".config").resolve("pkl").resolve("settings.pkl"))
+  }
+
+  @Test
+  fun `getDefaultCaCertsDir() on Windows uses APPDATA when set`(@TempDir home: Path) {
+    val appData = home.resolve("AppData").createDirectories()
+    assertThat(IoUtils.getDefaultCaCertsDir(home, true, env("APPDATA" to appData.toString())))
+      .isEqualTo(appData.resolve("pkl").resolve("cacerts"))
+  }
+
+  @Test
+  fun `getDefaultCaCertsDir() on Windows preserves the empty-dir shadow rule`(@TempDir home: Path) {
+    val appData = home.resolve("AppData").createDirectories()
+    val legacy = home.resolve(".pkl").resolve("cacerts").createDirectories()
+    legacy.resolve("ca.pem").createFile()
+    val preferred = appData.resolve("pkl").resolve("cacerts").createDirectories()
+    assertThat(IoUtils.getDefaultCaCertsDir(home, true, env("APPDATA" to appData.toString())))
+      .isEqualTo(legacy)
+    preferred.resolve("ca.pem").createFile()
+    assertThat(IoUtils.getDefaultCaCertsDir(home, true, env("APPDATA" to appData.toString())))
+      .isEqualTo(preferred)
+  }
+
+  @Test
+  fun `getDefaultReplHistoryFile() on Windows uses LOCALAPPDATA when set`(@TempDir home: Path) {
+    val localAppData = home.resolve("LocalAppData").createDirectories()
+    assertThat(
+        IoUtils.getDefaultReplHistoryFile(
+          home,
+          true,
+          env("LOCALAPPDATA" to localAppData.toString()),
+        )
+      )
+      .isEqualTo(localAppData.resolve("pkl").resolve("repl-history"))
+  }
+
+  @Test
+  fun `getDefaultReplHistoryFile() on Windows falls back to Unix layout when LOCALAPPDATA is unset`(
+    @TempDir home: Path
+  ) {
+    assertThat(IoUtils.getDefaultReplHistoryFile(home, true, env()))
+      .isEqualTo(home.resolve(".local").resolve("state").resolve("pkl").resolve("repl-history"))
   }
 }

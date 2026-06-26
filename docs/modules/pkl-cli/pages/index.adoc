@@ -1385,14 +1385,14 @@ it works as follows:
 The Pkl settings file allows to customize the CLI experience.
 
 A settings file is a Pkl module amending the `pkl.settings` standard library module.
-Its default location is `~/.pkl/settings.pkl`.
+Its default location is `~/.config/pkl/settings.pkl` on Unix or `%APPDATA%/pkl/settings.pkl` on Windows, falling back to the legacy `~/.pkl/settings.pkl` if that exists.
 To use a different settings file, set the `--settings` command line option, for example `--settings mysettings.pkl`.
 To enforce default settings, use `--settings pkl:settings`.
 The settings file is also honored by (and configurable through) the Gradle plugin and `CliEvaluator` API.
 
 Here is a typical settings file:
 
-.~/.pkl/settings.pkl
+.~/.config/pkl/settings.pkl
 [source%parsed,{pkl}]
 ----
 amends "pkl:settings" // <1>
@@ -1414,10 +1414,10 @@ When making TLS requests, Pkl comes with its own set of {uri-certificates}[CA ce
 These certificates can be overridden via either of the two options:
 
 - Set them directly via the CLI option `--ca-certificates <path>`.
-- Add them to a directory at path `~/.pkl/cacerts/`.
+- Add them to a directory at path `~/.config/pkl/cacerts/` on Unix or `%APPDATA%/pkl/cacerts/` on Windows (or the legacy `~/.pkl/cacerts/`).
 
 Both these options will *replace* the default CA certificates bundled with Pkl. +
-The CLI option takes precedence over the certificates in `~/.pkl/cacerts/`. +
+The CLI option takes precedence over the certificates in the cacerts directory. +
 Certificates need to be X.509 certificates in PEM format.
 
 [[http-proxy]]
