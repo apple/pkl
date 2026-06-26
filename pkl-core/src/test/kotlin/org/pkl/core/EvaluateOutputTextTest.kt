@@ -42,6 +42,11 @@ class EvaluateOutputTextTest {
     checkRenderedOutput(OutputFormat.PLIST)
   }
 
+  @Test
+  fun `render Starlark`() {
+    checkRenderedOutput(OutputFormat.STARLARK)
+  }
+
   private fun checkRenderedOutput(format: OutputFormat) {
     val evaluator = EvaluatorBuilder.preconfigured().setOutputFormat(format).build()
 
