@@ -1,0 +1,15 @@
+class Foo {
+  prop: String?
+}
+
+local foos: Mapping<String, Mixin<Foo>> = new Mapping<String, Mixin<Foo>> {
+  for (key, value in Map("foo", Map("key", "value"))) {
+    [key] = new {
+      when (value.keys.contains("key")) {
+        prop = value["key"]
+      }
+    }
+  }
+}
+
+res = foos["foo"].apply(new Foo {})

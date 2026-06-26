@@ -509,6 +509,7 @@ public final class SymbolTable {
     private @Nullable <R> R resolveLexical(ResolutionFunction<R> fun) {
       var levelsUp = 0;
       var shouldSkip = false;
+      var skippedObjectScope = false;
       for (var scope = this; scope != null; scope = scope.getParent()) {
         // for headers resolve variables one scope up
         if (scope instanceof EagerGeneratorScope) {
@@ -524,11 +525,24 @@ public final class SymbolTable {
             if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
               levelsUp++;
             }
+            // An EagerGeneratorScope (for `when` predicates) skipped an ObjectScope.
+            // The ObjectScope may become a parse-time-invisible amend function at runtime,
+            // so for-gen variables at levelsUp == 0 need ReadFrameSlotNode
+            // (which calls skipInvisibleScopes) rather than ReadExactFrameSlotNode.
+            if (scope instanceof ObjectScope) {
+              skippedObjectScope = true;
+            }
             shouldSkip = false;
             continue;
           }
           var result = fun.apply(lex, levelsUp);
-          if (result != null) return result;
+          if (result != null) {
+            if (result instanceof ForGeneratorVariableOrLetBinding p && skippedObjectScope) {
+              //noinspection unchecked
+              return (R) new ForGeneratorVariableOrLetBinding(p.slot(), p.levelsUp(), true);
+            }
+            return result;
+          }
           if (scope instanceof MethodScope
               || scope instanceof ForGeneratorScope
               || scope instanceof LetExpressionScope) {
@@ -798,7 +812,7 @@ public final class SymbolTable {
         return null;
       }
       if (name.equals(binding.name())) {
-        return new ForGeneratorVariableOrLetBinding(binding.slot(), levelsUp);
+        return new ForGeneratorVariableOrLetBinding(binding.slot(), levelsUp, false);
       }
       return null;
     }
@@ -910,10 +924,10 @@ public final class SymbolTable {
     @Override
     public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
       if (keyBinding != null && keyBinding.name().equals(name)) {
-        return new ForGeneratorVariableOrLetBinding(keyBinding.slot(), levelsUp);
+        return new ForGeneratorVariableOrLetBinding(keyBinding.slot(), levelsUp, false);
       }
       if (valueBinding != null && valueBinding.name().equals(name)) {
-        return new ForGeneratorVariableOrLetBinding(valueBinding.slot(), levelsUp);
+        return new ForGeneratorVariableOrLetBinding(valueBinding.slot(), levelsUp, false);
       }
       return null;
     }
