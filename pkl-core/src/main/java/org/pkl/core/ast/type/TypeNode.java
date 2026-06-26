@@ -2147,11 +2147,11 @@ public abstract class TypeNode extends PklNode {
       var constraint = findReferentConstraint();
       if (constraint != null) {
         CompilerDirectives.transferToInterpreter();
-        var exception =
-            exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint").build();
-        exception.setLeadingStackFrames(
-            buildReferentConstraintFrames(constraint, getSourceSection(), null));
-        throw exception;
+        throw exceptionBuilder()
+            .evalError("invalidReferenceTypeAnnotationWithConstraint")
+            .withLeadingStackFrames(
+                buildReferentConstraintFrames(constraint, getSourceSection(), null))
+            .build();
       }
     }
 
@@ -2774,14 +2774,12 @@ public abstract class TypeNode extends PklNode {
               var constraint = referenceTypeNode.findReferentConstraint();
               if (constraint != null) {
                 CompilerDirectives.transferToInterpreter();
-                var exception =
-                    exceptionBuilder()
-                        .evalError("invalidReferenceTypeAnnotationWithConstraint")
-                        .build();
-                exception.setLeadingStackFrames(
-                    ReferenceTypeNode.buildReferentConstraintFrames(
-                        constraint, getSourceSection(), outermostAlias));
-                throw exception;
+                throw exceptionBuilder()
+                    .evalError("invalidReferenceTypeAnnotationWithConstraint")
+                    .withLeadingStackFrames(
+                        ReferenceTypeNode.buildReferentConstraintFrames(
+                            constraint, getSourceSection(), outermostAlias))
+                    .build();
               }
             }
             return true;
