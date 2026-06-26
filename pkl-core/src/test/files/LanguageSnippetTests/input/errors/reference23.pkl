@@ -1,0 +1,7 @@
+
+import "pkl:ref"
+
+typealias Foo1 = Foo2
+typealias Foo2 = String(isEmpty)
+
+foo: ref.Reference<ref.Domain, Foo1>

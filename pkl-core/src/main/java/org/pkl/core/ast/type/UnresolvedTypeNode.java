@@ -306,15 +306,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
         for (var i = 0; i < argLength; i++) {
           resolvedTypeArgumentNodes[i] = typeArgumentNodes[i].execute(frame);
         }
-        try {
-          return new TypeAliasTypeNode(sourceSection, typeAlias, resolvedTypeArgumentNodes);
-        } catch (ReferenceTypeNode.ReferentConstraintException e) {
-          // a constraint reached a `Reference` referent through this generic alias.
-          var exception =
-              exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint").build();
-          exception.setLeadingStackFrames(e.getLeadingStackFrames());
-          throw exception;
-        }
+        return new TypeAliasTypeNode(sourceSection, typeAlias, resolvedTypeArgumentNodes);
       }
 
       var module = (VmTyped) baseType;

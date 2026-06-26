@@ -27,6 +27,7 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -56,6 +57,7 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
+import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
 
@@ -2140,12 +2142,16 @@ public abstract class TypeNode extends PklNode {
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
-      // A constraint written directly in this annotation's referent is reported against this
-      // annotation. Constraints introduced through a generic type alias's type argument are caught
-      // later.
-      if (findReferentConstraint() != null) {
+      // A type constraint anywhere in the referent is forbidden, including one reached through a
+      // type alias used in the referent.
+      var constraint = findReferentConstraint();
+      if (constraint != null) {
         CompilerDirectives.transferToInterpreter();
-        throw exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint").build();
+        var exception =
+            exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint").build();
+        exception.setLeadingStackFrames(
+            buildReferentConstraintFrames(constraint, getSourceSection(), null));
+        throw exception;
       }
     }
 
@@ -2182,67 +2188,66 @@ public abstract class TypeNode extends PklNode {
     }
 
     /**
-     * Type constraints may not appear in a {@code Reference}'s referent type argument. Walks the
-     * referent type and returns the source section of the first offending constraint, or {@code
-     * null} if the referent is constraint-free.
+     * Type constraints may not appear anywhere in a {@code Reference}'s referent type argument.
+     * Walks the referent type and returns the first offending {@link ConstrainedTypeNode} , or
+     * {@code null} if the referent is constraint-free.
      */
-    public @Nullable SourceSection findReferentConstraint() {
-      var found = new SourceSection[1];
+    public @Nullable ConstrainedTypeNode findReferentConstraint() {
+      var found = new MutableReference<@Nullable ConstrainedTypeNode>(null);
       referentTypeNode.acceptTypeNode(
           true,
           (typeNode) -> {
-            if (typeNode instanceof ConstrainedTypeNode) {
-              found[0] = typeNode.getSourceSection();
+            if (typeNode instanceof ConstrainedTypeNode constrainedTypeNode) {
+              found.set(constrainedTypeNode);
               return false;
             }
             return true;
           });
-      return found[0];
+      return found.getOrNull();
     }
 
-    /**
-     * Builds the chain of stack frames that lead a type constraint into this {@code Reference}'s
-     * referent through one or more generic type aliases.
-     */
-    public List<StackFrame> buildReferentConstraintStackFrames(VmTypeAlias outermostAlias) {
-      var aliasLayers = new ArrayList<TypeAliasTypeNode>();
-      for (var node = getParent(); node != null; node = node.getParent()) {
-        if (node instanceof TypeAliasTypeNode aliasNode) {
-          aliasLayers.add(aliasNode);
+    /** Builds the frames to show ahead of an "invalid referent constraint" error. */
+    public static List<StackFrame> buildReferentConstraintFrames(
+        ConstrainedTypeNode constraintNode,
+        SourceSection usageSection,
+        @Nullable VmTypeAlias outermostAlias) {
+      var frames = new ArrayList<StackFrame>();
+      for (Node node = constraintNode; node != null; node = node.getParent()) {
+        if (!(node instanceof ConstrainedTypeNode
+            || node instanceof TypeAliasTypeNode
+            || node instanceof ReferenceTypeNode)) {
+          continue;
         }
-      }
-
-      var frames = new ArrayList<StackFrame>(aliasLayers.size() + 1);
-      var annotationOwner =
-          aliasLayers.isEmpty() ? outermostAlias : aliasLayers.get(0).getTypeAlias();
-      frames.add(VmUtils.createStackFrame(getSourceSection(), annotationOwner.getQualifiedName()));
-
-      for (var i = 0; i < aliasLayers.size(); i++) {
-        var owner =
-            i + 1 < aliasLayers.size() ? aliasLayers.get(i + 1).getTypeAlias() : outermostAlias;
-        frames.add(
-            VmUtils.createStackFrame(
-                aliasLayers.get(i).getSourceSection(), owner.getQualifiedName()));
+        var section = node.getSourceSection();
+        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
+          continue;
+        }
+        var owner = ownerAlias(node, outermostAlias);
+        if (owner != null) {
+          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
+        }
       }
       return frames;
     }
 
     /**
-     * Signals that a {@code Reference} reached through one or more generic type aliases has a
-     * constrained referent.
+     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
+     * outermost alias being instantiated (which is {@code null} for a directly-used Reference).
      */
-    public static final class ReferentConstraintException extends RuntimeException {
-      private final List<StackFrame> leadingStackFrames;
-
-      public ReferentConstraintException(List<StackFrame> leadingStackFrames) {
-        super(null, null, false, false);
-        this.leadingStackFrames = leadingStackFrames;
+    private static @Nullable VmTypeAlias ownerAlias(
+        Node node, @Nullable VmTypeAlias outermostAlias) {
+      for (var parent = node.getParent(); parent != null; parent = parent.getParent()) {
+        if (parent instanceof TypeAliasTypeNode aliasNode) {
+          return aliasNode.getTypeAlias();
+        }
       }
+      return outermostAlias;
+    }
 
-      /** Frames for the {@code Reference} annotation and each enclosing type alias layer. */
-      public List<StackFrame> getLeadingStackFrames() {
-        return leadingStackFrames;
-      }
+    private static boolean isWithin(SourceSection outer, SourceSection inner) {
+      return inner.getSource().equals(outer.getSource())
+          && inner.getCharIndex() >= outer.getCharIndex()
+          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
 
     @Fallback
@@ -2754,6 +2759,33 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+      checkReferentConstraints(typeAlias);
+    }
+
+    /**
+     * Reports a forbidden type constraint that a type argument introduced into a {@code
+     * Reference}'s referent through this (generic) alias. The error is reported at this usage type
+     * expression, with leading frames for the constraint and every alias layer it passed through.
+     */
+    private void checkReferentConstraints(VmTypeAlias outermostAlias) {
+      aliasedTypeNode.accept(
+          node -> {
+            if (node instanceof ReferenceTypeNode referenceTypeNode) {
+              var constraint = referenceTypeNode.findReferentConstraint();
+              if (constraint != null) {
+                CompilerDirectives.transferToInterpreter();
+                var exception =
+                    exceptionBuilder()
+                        .evalError("invalidReferenceTypeAnnotationWithConstraint")
+                        .build();
+                exception.setLeadingStackFrames(
+                    ReferenceTypeNode.buildReferentConstraintFrames(
+                        constraint, getSourceSection(), outermostAlias));
+                throw exception;
+              }
+            }
+            return true;
+          });
     }
 
     public TypeNode getAliasedTypeNode() {

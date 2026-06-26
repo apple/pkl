@@ -32,7 +32,6 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
-import org.pkl.core.ast.type.TypeNode.ReferenceTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.util.LateInit;
@@ -197,17 +196,6 @@ public final class VmTypeAlias extends VmValue {
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
                     : typeArgumentNodes[index]);
-          }
-          return true;
-        });
-    clone.accept(
-        node -> {
-          if (node instanceof ReferenceTypeNode referenceTypeNode
-              && referenceTypeNode.findReferentConstraint() != null) {
-            // A type argument supplied at the alias usage site introduced a constraint into this
-            // `Reference`'s referent.
-            throw new ReferenceTypeNode.ReferentConstraintException(
-                referenceTypeNode.buildReferentConstraintStackFrames(this));
           }
           return true;
         });
