@@ -99,6 +99,7 @@ public final class VmExceptionBuilder {
   private @Nullable Node location;
   private @Nullable SourceSection sourceSection;
   private @Nullable String memberName;
+  private List<StackFrame> leadingStackFrames = List.of();
 
   public VmExceptionBuilder typeMismatch(Object value, VmClass expectedType) {
     if (value instanceof VmNull) {
@@ -359,6 +360,15 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  /**
+   * Frames to show ahead of the captured stack trace (see {@link
+   * VmException#getLeadingStackFrames()}).
+   */
+  public VmExceptionBuilder withLeadingStackFrames(List<StackFrame> leadingStackFrames) {
+    this.leadingStackFrames = leadingStackFrames;
+    return this;
+  }
+
   public VmException build() {
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
@@ -374,64 +384,67 @@ public final class VmExceptionBuilder {
 
     var effectiveInsertedStackFrames =
         insertedStackFrames == null ? new HashMap<CallTarget, StackFrame>() : insertedStackFrames;
-    return switch (kind) {
-      case EVAL_ERROR ->
-          new VmEvalException(
-              message,
-              cause,
-              isExternalMessage,
-              messageArguments,
-              messageBuilder,
-              programValues,
-              location,
-              sourceSection,
-              memberName,
-              hintBuilder,
-              effectiveInsertedStackFrames);
-      case UNDEFINED_VALUE ->
-          new VmUndefinedValueException(
-              message,
-              cause,
-              isExternalMessage,
-              messageArguments,
-              messageBuilder,
-              programValues,
-              location,
-              sourceSection,
-              memberName,
-              hintBuilder,
-              receiver,
-              effectiveInsertedStackFrames);
-      case BUG ->
-          new VmBugException(
-              message,
-              cause,
-              isExternalMessage,
-              messageArguments,
-              messageBuilder,
-              programValues,
-              location,
-              sourceSection,
-              memberName,
-              hintBuilder,
-              effectiveInsertedStackFrames);
-      case WRAPPED -> {
-        assert wrappedException != null;
-        yield new VmWrappedEvalException(
-            message,
-            cause,
-            isExternalMessage,
-            messageArguments,
-            messageBuilder,
-            programValues,
-            location,
-            sourceSection,
-            memberName,
-            hintBuilder,
-            effectiveInsertedStackFrames,
-            wrappedException);
-      }
-    };
+    var exception =
+        switch (kind) {
+          case EVAL_ERROR ->
+              new VmEvalException(
+                  message,
+                  cause,
+                  isExternalMessage,
+                  messageArguments,
+                  messageBuilder,
+                  programValues,
+                  location,
+                  sourceSection,
+                  memberName,
+                  hintBuilder,
+                  effectiveInsertedStackFrames);
+          case UNDEFINED_VALUE ->
+              new VmUndefinedValueException(
+                  message,
+                  cause,
+                  isExternalMessage,
+                  messageArguments,
+                  messageBuilder,
+                  programValues,
+                  location,
+                  sourceSection,
+                  memberName,
+                  hintBuilder,
+                  receiver,
+                  effectiveInsertedStackFrames);
+          case BUG ->
+              new VmBugException(
+                  message,
+                  cause,
+                  isExternalMessage,
+                  messageArguments,
+                  messageBuilder,
+                  programValues,
+                  location,
+                  sourceSection,
+                  memberName,
+                  hintBuilder,
+                  effectiveInsertedStackFrames);
+          case WRAPPED -> {
+            assert wrappedException != null;
+            yield new VmWrappedEvalException(
+                message,
+                cause,
+                isExternalMessage,
+                messageArguments,
+                messageBuilder,
+                programValues,
+                location,
+                sourceSection,
+                memberName,
+                hintBuilder,
+                effectiveInsertedStackFrames,
+                wrappedException);
+          }
+        };
+    exception.setLeadingStackFrames(leadingStackFrames);
+    return exception;
   }
 
   private List<Identifier> collectPropertyNames(VmObjectLike object, boolean isRead) {

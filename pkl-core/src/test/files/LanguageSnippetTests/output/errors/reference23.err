@@ -1,0 +1,10 @@
+–– Pkl Error ––
+`Reference` referent type argument may not include type constraints.
+
+x | typealias Foo2 = String(isEmpty)
+                     ^^^^^^^^^^^^^^^
+at reference23#Foo2 (file:///$snippetsDir/input/errors/reference23.pkl)
+
+x | foo: ref.Reference<ref.Domain, Foo1>
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference23 (file:///$snippetsDir/input/errors/reference23.pkl)

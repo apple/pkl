@@ -32,7 +32,6 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
-import org.pkl.core.ast.type.TypeNode.ReferenceTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.util.LateInit;
@@ -178,8 +177,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @TruffleBoundary
-  public TypeNode instantiate(
-      TypeNode[] typeArgumentNodes, SourceSection typeAliasTypeNodeSourceSection) {
+  public TypeNode instantiate(TypeNode[] typeArgumentNodes) {
     // Cloning the type node means that the entire type check remains within a single root node,
     // which should be good for interpreted and compiled performance alike:
     // * Fewer root nodes to call
@@ -198,13 +196,6 @@ public final class VmTypeAlias extends VmValue {
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
                     : typeArgumentNodes[index]);
-          }
-          return true;
-        });
-    clone.accept(
-        node -> {
-          if (node instanceof ReferenceTypeNode referenceTypeNode) {
-            referenceTypeNode.validateTypeArguments(typeAliasTypeNodeSourceSection);
           }
           return true;
         });

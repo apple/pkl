@@ -34,6 +34,7 @@ public abstract class VmException extends AbstractTruffleException {
   private final @Nullable SourceSection sourceSection;
   private final @Nullable String memberName;
   private final Map<CallTarget, StackFrame> insertedStackFrames;
+  private List<StackFrame> leadingStackFrames = List.of();
   @Nullable private final BiConsumer<AnsiStringBuilder, Boolean> messageBuilder;
   @Nullable protected BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
 
@@ -87,6 +88,18 @@ public abstract class VmException extends AbstractTruffleException {
    */
   public final Map<CallTarget, StackFrame> getInsertedStackFrames() {
     return insertedStackFrames;
+  }
+
+  /**
+   * Stack frames to prepend to the rendered stack trace, ahead of the captured frames. Used to show
+   * source locations that aren't part of the runtime call stack.
+   */
+  public final List<StackFrame> getLeadingStackFrames() {
+    return leadingStackFrames;
+  }
+
+  public final void setLeadingStackFrames(List<StackFrame> leadingStackFrames) {
+    this.leadingStackFrames = leadingStackFrames;
   }
 
   public @Nullable BiConsumer<AnsiStringBuilder, Boolean> getMessageBuilder() {
