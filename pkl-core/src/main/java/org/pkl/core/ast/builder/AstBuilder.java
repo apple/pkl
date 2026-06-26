@@ -724,7 +724,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       //     elem
       //   }
       // }
-      return p.levelsUp() == 0
+      return p.levelsUp() == 0 && !p.needsFrameSkip()
           ? ReadExactFrameSlotNodeGen.create(sourceSection, p.slot())
           : ReadFrameSlotNodeGen.create(
               sourceSection, p.slot(), new GetEnclosingFrameNode(p.levelsUp()));
