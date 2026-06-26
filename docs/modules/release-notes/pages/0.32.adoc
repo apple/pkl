@@ -11,11 +11,9 @@ NOTE: This is the final release that distributes binaries for macOS/amd64.
 
 == Highlights [small]#💖#
 
-News you don't want to miss.
-
 === New data type: `Reference`
 
-This release introduces a new data type called `Reference` (https://github.com/apple/pkl/pull/1354[#1354], https://github.com/apple/pkl/pull/1691[#1691], https://github.com/apple/pkl/pull/1692[#1692], https://github.com/apple/pkl/pull/1693[#1693]).
+This release introduces a new data type called `Reference` (https://github.com/apple/pkl/pull/1354[#1354], https://github.com/apple/pkl/pull/1691[#1691], https://github.com/apple/pkl/pull/1692[#1692], https://github.com/apple/pkl/pull/1693[#1693], https://github.com/apple/pkl/pull/1695[#1695]).
 
 WARNING: This API is experimental. We are looking for feedback, and will aim to make this ready for production use in the next release.
 
@@ -168,8 +166,6 @@ To learn more, consult https://github.com/apple/pkl-evolution/blob/main/spices/S
 
 == Noteworthy [small]#🎶#
 
-Ready when you need them.
-
 === Resolved evaluator settings
 
 PklProject files now resolve evaluator settings that are file paths (https://github.com/apple/pkl/pull/1394[#1394]).
@@ -215,7 +211,7 @@ To read more about this design, consult https://github.com/apple/pkl-evolution/b
 [[parse-time-variable-resolution]]
 === Parse-time variable resolution
 
-Pkl now resolves variables at parse time (https://github.com/apple/pkl/pull/1429[#1429], https://github.com/apple/pkl/pull/1622[#1622], https://github.com/apple/pkl/pull/1634[#1634]).
+Pkl now resolves variables at parse time (https://github.com/apple/pkl/pull/1429[#1429], https://github.com/apple/pkl/pull/1622[#1622], https://github.com/apple/pkl/pull/1634[#1634], https://github.com/apple/pkl/pull/1706[#1706]).
 
 Currently, Pkl defers the resolution of variable names to when the node is executed.
 In Pkl 0.32, these are resolved when the file is parsed.
@@ -439,8 +435,6 @@ Thanks to https://github.com/ffluk3[@ffluk3] for their contributions to this fea
 
 == Breaking Changes [small]#💔#
 
-Things to watch out for when upgrading.
-
 === Name resolution changes
 
 Variables are now <<parse-time-variable-resolution,resolved at parse time>>.
@@ -540,7 +534,6 @@ The following bugs have been fixed.
 * Cached packages can be written outside the cache dir (https://github.com/apple/pkl/pull/1683[#1683])
 * pkl-gradle throws exception when a Pkl task can't create an evaluator during configuration time (https://github.com/apple/pkl/pull/1684[#1684])
 * Unrelated exception gets thrown when validating elements/entries in objects (https://github.com/apple/pkl/issues/1697[#1697])
-
 
 == Contributors [small]#🙏#
 
