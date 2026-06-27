@@ -429,11 +429,37 @@ public abstract class UnresolvedTypeNode extends PklNode {
       this.typeParameter = typeParameter;
     }
 
+    public int getTypeParameterIndex() {
+      return typeParameter.getIndex();
+    }
+
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
       return new TypeVariableNode(sourceSection, typeParameter);
+    }
+  }
+
+  /**
+   * An unresolved type node that is pre-resolved to a concrete type node.
+   * Used during type alias instantiation to replace type variable references
+   * inside constraint expressions (e.g., {@code every((it) -> it is T)})
+   * with the corresponding concrete type argument.
+   */
+  public static final class Resolved extends UnresolvedTypeNode {
+    private final TypeNode typeNode;
+
+    public Resolved(SourceSection sourceSection, TypeNode typeNode) {
+      super(sourceSection);
+      this.typeNode = typeNode;
+    }
+
+    @Override
+    public TypeNode execute(VirtualFrame frame) {
+      CompilerDirectives.transferToInterpreter();
+
+      return typeNode;
     }
   }
 }
