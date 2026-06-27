@@ -274,6 +274,7 @@ import org.pkl.parser.syntax.Type.NothingType;
 import org.pkl.parser.syntax.Type.NullableType;
 import org.pkl.parser.syntax.Type.ParenthesizedType;
 import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.ThisType;
 import org.pkl.parser.syntax.Type.UnionType;
 import org.pkl.parser.syntax.Type.UnknownType;
 import org.pkl.parser.syntax.TypeAlias;
@@ -366,6 +367,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitModuleType(ModuleType type) {
     return new UnresolvedTypeNode.Module(createSourceSection(type));
+  }
+
+  @Override
+  public UnresolvedTypeNode visitThisType(ThisType type) {
+    return new UnresolvedTypeNode.This(createSourceSection(type));
   }
 
   @Override

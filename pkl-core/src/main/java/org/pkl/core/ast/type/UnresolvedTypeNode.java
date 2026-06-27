@@ -24,6 +24,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
@@ -105,6 +106,32 @@ public abstract class UnresolvedTypeNode extends PklNode {
       return moduleClass.isClosed()
           ? new FinalModuleTypeNode(sourceSection, moduleClass)
           : new NonFinalModuleTypeNode(sourceSection, moduleClass);
+    }
+  }
+
+  /** The `this` type. */
+  public static final class This extends UnresolvedTypeNode {
+    @Child private ExpressionNode getReceiverNode;
+
+    public This(SourceSection sourceSection) {
+      super(sourceSection);
+      getReceiverNode = new GetReceiverNode();
+    }
+
+    @Override
+    public TypeNode execute(VirtualFrame frame) {
+      CompilerDirectives.transferToInterpreter();
+
+      var receiverClass = VmUtils.getClass(getReceiverNode.executeGeneric(frame));
+      if (receiverClass.isModuleClass()) {
+        return receiverClass.isClosed()
+            ? new FinalModuleTypeNode(sourceSection, receiverClass)
+            : new NonFinalModuleTypeNode(sourceSection, receiverClass);
+      } else {
+        return receiverClass.isClosed()
+            ? new FinalClassTypeNode(sourceSection, receiverClass)
+            : new NonFinalThisTypeNode(sourceSection, receiverClass);
+      }
     }
   }
 

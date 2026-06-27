@@ -1391,6 +1391,7 @@ final class ParserImpl {
       case UNKNOWN -> typ = new Type.UnknownType(next().span);
       case NOTHING -> typ = new Type.NothingType(next().span);
       case MODULE -> typ = new Type.ModuleType(next().span);
+      case THIS -> typ = new Type.ThisType(next().span);
       case LPAREN -> {
         var tk = next();
         var children = new ArrayList<Node>();
