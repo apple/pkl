@@ -56,6 +56,7 @@ public final class VmExceptionBuilder {
 
   private @Nullable Object receiver;
   private @Nullable Map<CallTarget, StackFrame> insertedStackFrames;
+  private List<StackFrame> leadingStackFrames = List.of();
   private @Nullable VmException wrappedException;
   private @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
 
@@ -288,7 +289,6 @@ public final class VmExceptionBuilder {
     return this;
   }
 
-  // slow path, hence no need to cache anything (also resource bundles are cached by default)
   public VmExceptionBuilder evalError(String messageKey, @Nullable Object... args) {
     return withExternalMessage(messageKey, args);
   }
@@ -359,6 +359,11 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  public VmExceptionBuilder withLeadingStackFrames(List<StackFrame> leadingStackFrames) {
+    this.leadingStackFrames = leadingStackFrames;
+    return this;
+  }
+
   public VmException build() {
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
@@ -387,7 +392,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hintBuilder,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case UNDEFINED_VALUE ->
           new VmUndefinedValueException(
               message,
@@ -401,7 +407,8 @@ public final class VmExceptionBuilder {
               memberName,
               hintBuilder,
               receiver,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case BUG ->
           new VmBugException(
               message,
@@ -414,7 +421,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hintBuilder,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case WRAPPED -> {
         assert wrappedException != null;
         yield new VmWrappedEvalException(
@@ -429,6 +437,7 @@ public final class VmExceptionBuilder {
             memberName,
             hintBuilder,
             effectiveInsertedStackFrames,
+            leadingStackFrames,
             wrappedException);
       }
     };

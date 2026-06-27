@@ -1,6 +1,18 @@
 –– Pkl Error ––
 `Reference` referent type argument may not include type constraints.
 
+xx | typealias Alias2 = String(length < 5)
+                        ^^^^^^^^^^^^^^^^^^
+at reference11#Alias2 (file:///$snippetsDir/input/errors/reference11.pkl)
+
+xx | typealias Alias1 = Int | Alias2?
+                              ^^^^^^
+at reference11#Alias1 (file:///$snippetsDir/input/errors/reference11.pkl)
+
+x | typealias Ref<T> = ref.Reference<D, T>
+                       ^^^^^^^^^^^^^^^^^^^
+at reference11#Ref (file:///$snippetsDir/input/errors/reference11.pkl)
+
 x | test = ref.Reference(d, String, "") as Ref<Alias1?>
                                            ^^^^^^^^^^^^
 at reference11#test (file:///$snippetsDir/input/errors/reference11.pkl)

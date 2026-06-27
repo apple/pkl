@@ -27,10 +27,14 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
@@ -38,6 +42,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PType.StringLiteral;
 import org.pkl.core.PklBugException;
+import org.pkl.core.StackFrame;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
@@ -54,12 +59,21 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
+import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
 
-  public interface ClassTypeNode {
+  /**
+   * Type node that corresponds to a simple, unparameterized {@link VmClass}.
+   *
+   * <p>This includes generic classes written without any type arguments like {@code List}.
+   */
+  public interface SimpleClassTypeNode {
     VmClass getVmClass();
   }
+
+  /** Type node that corresponds to a user-defined class (or module class). */
+  public interface UserClassTypeNode extends SimpleClassTypeNode {}
 
   protected TypeNode(SourceSection sourceSection) {
     super(sourceSection);
@@ -407,7 +421,7 @@ public abstract class TypeNode extends PklNode {
 
   /** The `module` type for a final module. */
   public static final class FinalModuleTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
+      implements UserClassTypeNode {
     private final VmClass moduleClass;
 
     public FinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
@@ -462,7 +476,7 @@ public abstract class TypeNode extends PklNode {
 
   /** The `module` type for an open module. */
   public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
+      implements UserClassTypeNode {
     private final VmClass moduleClass; // only used by getVmClass()
     @Child private ExpressionNode getModuleNode;
 
@@ -576,7 +590,8 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class TypedTypeNode extends ObjectSlotTypeNode {
+  public static final class TypedTypeNode extends ObjectSlotTypeNode
+      implements SimpleClassTypeNode {
     public TypedTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -604,7 +619,8 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class DynamicTypeNode extends ObjectSlotTypeNode {
+  public static final class DynamicTypeNode extends ObjectSlotTypeNode
+      implements SimpleClassTypeNode {
     public DynamicTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -647,7 +663,8 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only `VmValue`s can possibly pass its type
    * check.
    */
-  public static final class FinalClassTypeNode extends ObjectSlotTypeNode implements ClassTypeNode {
+  public static final class FinalClassTypeNode extends ObjectSlotTypeNode
+      implements UserClassTypeNode {
     private final VmClass clazz;
 
     public FinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -704,7 +721,7 @@ public abstract class TypeNode extends PklNode {
    * check.
    */
   public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
+      implements UserClassTypeNode {
     protected final VmClass clazz;
 
     public NonFinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -2127,7 +2144,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
+  public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
     @Child private ExpressionNode getModuleNode;
@@ -2138,7 +2155,34 @@ public abstract class TypeNode extends PklNode {
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
-      validateTypeArguments(sourceSection);
+      validate();
+    }
+
+    @Override
+    public String getValidationErrorKey() {
+      return "invalidReferenceTypeAnnotationWithConstraint";
+    }
+
+    @Override
+    protected @Nullable Node getViolatingNode() {
+      // constraints may not be used in Reference type annotation referents
+      // walk the type and throw if any part of the referent is constrained
+      var violation = new MutableReference<Node>(null);
+      referentTypeNode.acceptTypeNode(
+          true,
+          (typeNode) -> {
+            if (typeNode instanceof ConstrainedTypeNode) {
+              violation.set(typeNode);
+              return false;
+            }
+            return true;
+          });
+      return violation.getOrNull();
+    }
+
+    @Override
+    protected boolean isIncludedInTrace(Node node) {
+      return node instanceof ReferenceTypeNode || node instanceof ConstrainedTypeNode;
     }
 
     @Specialization
@@ -2171,28 +2215,6 @@ public abstract class TypeNode extends PklNode {
 
       throw new VmTypeMismatchException.Reference(
           sourceSection, value, TypeNode.export(domainTypeNode), referentType);
-    }
-
-    public void validateTypeArguments(@Nullable SourceSection aliasSourceSection) {
-      // constraints may not be used in Reference type annotation referents
-      // walk the type and throw if any part of the referent is constrained
-
-      // TODO improve error message when this type node and/or referent constraint are behind type
-      // aliases
-      referentTypeNode.acceptTypeNode(
-          true,
-          (typeNode) -> {
-            if (typeNode instanceof ConstrainedTypeNode) {
-              CompilerDirectives.transferToInterpreter();
-              var err =
-                  exceptionBuilder().evalError("invalidReferenceTypeAnnotationWithConstraint");
-              if (aliasSourceSection != null) {
-                err.withSourceSection(aliasSourceSection);
-              }
-              throw err.build();
-            }
-            return true;
-          });
     }
 
     @Fallback
@@ -2703,11 +2725,22 @@ public abstract class TypeNode extends PklNode {
 
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
-      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes, sourceSection);
+      aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+      aliasedTypeNode.accept(
+          node -> {
+            if (node instanceof ValidatingObjectSlotTypeNode typeNode) {
+              typeNode.validate(this);
+            }
+            return true;
+          });
     }
 
     public TypeNode getAliasedTypeNode() {
       return aliasedTypeNode;
+    }
+
+    public VmTypeAlias getTypeAlias() {
+      return typeAlias;
     }
 
     @Override
@@ -2973,7 +3006,8 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class AnyTypeNode extends WriteFrameSlotTypeNode {
+  public static final class AnyTypeNode extends WriteFrameSlotTypeNode
+      implements SimpleClassTypeNode {
     public AnyTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3005,7 +3039,8 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class StringTypeNode extends ObjectSlotTypeNode {
+  public static final class StringTypeNode extends ObjectSlotTypeNode
+      implements SimpleClassTypeNode {
     public StringTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3033,7 +3068,8 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class NumberTypeNode extends FrameSlotTypeNode {
+  public static final class NumberTypeNode extends FrameSlotTypeNode
+      implements SimpleClassTypeNode {
     public NumberTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3092,7 +3128,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class IntTypeNode extends IntSlotTypeNode {
+  public static final class IntTypeNode extends IntSlotTypeNode implements SimpleClassTypeNode {
     public IntTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3120,7 +3156,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class FloatTypeNode extends FrameSlotTypeNode {
+  public static final class FloatTypeNode extends FrameSlotTypeNode implements SimpleClassTypeNode {
     public FloatTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3160,7 +3196,8 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class BooleanTypeNode extends FrameSlotTypeNode {
+  public static final class BooleanTypeNode extends FrameSlotTypeNode
+      implements SimpleClassTypeNode {
     public BooleanTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3197,6 +3234,161 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+  }
+
+  public abstract static class ClassClassTypeNode extends ValidatingObjectSlotTypeNode {
+
+    @Child private TypeNode typeNode;
+    private @Nullable VmClass clazz;
+
+    public ClassClassTypeNode(SourceSection sourceSection, TypeNode typeNode) {
+      super(sourceSection);
+      this.typeNode = typeNode;
+      validate();
+    }
+
+    @Override
+    public String getValidationErrorKey() {
+      return "notAClassType";
+    }
+
+    @Override
+    public @Nullable Node getViolatingNode() {
+      if (typeNode instanceof SimpleClassTypeNode simpleClassTypeNode) {
+        clazz = simpleClassTypeNode.getVmClass();
+        return null;
+      }
+      if (typeNode instanceof UnknownTypeNode || typeNode instanceof TypeVariableNode) {
+        clazz = null;
+        return null;
+      }
+      return typeNode;
+    }
+
+    @Override
+    protected boolean isIncludedInTrace(Node node) {
+      return node instanceof ClassClassTypeNode;
+    }
+
+    public @Nullable VmClass getClazz() {
+      return clazz;
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return BaseModule.getClassClass();
+    }
+
+    @Specialization
+    protected Object eval(VmClass value) {
+      // clazz will be null iff the type arg is a type variable.
+      // in this case, skip the subclass check and behave like a bare `Class` type annotation.
+      if (clazz == null) {
+        return value;
+      }
+
+      if (!value.isSubclassOf(clazz)) {
+        throw new VmTypeMismatchException.Class(sourceSection, value, clazz);
+      }
+
+      return value;
+    }
+
+    @Fallback
+    protected Object fallback(Object value) {
+      throw typeMismatch(value, BaseModule.getClassClass());
+    }
+
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this);
+    }
+
+    @Override
+    protected boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof ClassClassTypeNode classClassTypeNode)) {
+        return false;
+      }
+
+      return Objects.equals(clazz, classClassTypeNode.getClazz());
+    }
+
+    @Override
+    public VmList getTypeArgumentMirrors() {
+      return VmList.of(typeNode.getMirror());
+    }
+  }
+
+  public abstract static class ValidatingObjectSlotTypeNode extends ObjectSlotTypeNode {
+
+    protected ValidatingObjectSlotTypeNode(SourceSection sourceSection) {
+      super(sourceSection);
+    }
+
+    protected abstract String getValidationErrorKey();
+
+    protected abstract @Nullable Node getViolatingNode();
+
+    protected final void validate() {
+      var violation = getViolatingNode();
+      if (violation == null) return;
+      throw exceptionBuilder()
+          .evalError(getValidationErrorKey())
+          .withLeadingStackFrames(buildLeadingFrames(violation, getSourceSection(), null))
+          .build();
+    }
+
+    public final void validate(TypeAliasTypeNode outermostAliasNode) {
+      var violation = getViolatingNode();
+      if (violation == null) return;
+
+      throw exceptionBuilder()
+          .withLocation(outermostAliasNode)
+          .evalError(getValidationErrorKey())
+          .withLeadingStackFrames(
+              buildLeadingFrames(
+                  violation,
+                  outermostAliasNode.getSourceSection(),
+                  outermostAliasNode.getTypeAlias()))
+          .build();
+    }
+
+    protected abstract boolean isIncludedInTrace(Node node);
+
+    private List<StackFrame> buildLeadingFrames(
+        Node violatingNode, SourceSection usageSection, @Nullable VmTypeAlias outermostAlias) {
+      var frames = new ArrayList<StackFrame>();
+      for (var node = violatingNode; node != null; node = node.getParent()) {
+        if (!(node instanceof TypeAliasTypeNode || isIncludedInTrace(node))) continue;
+        var section = node.getSourceSection();
+        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
+          continue;
+        }
+        var owner = ownerAlias(node, outermostAlias);
+        if (owner != null) {
+          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
+        }
+      }
+      return frames;
+    }
+
+    /**
+     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
+     * outermost alias being instantiated (which is {@code null} for a directly-used Reference).
+     */
+    @SuppressWarnings("DataFlowIssue")
+    private static @Nullable VmTypeAlias ownerAlias(
+        Node node, @Nullable VmTypeAlias outermostAlias) {
+      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
+      //noinspection ConstantValue
+      return parent != null ? parent.getTypeAlias() : outermostAlias;
+    }
+
+    private static boolean isWithin(SourceSection outer, SourceSection inner) {
+      return inner.getSource().equals(outer.getSource())
+          && inner.getCharIndex() >= outer.getCharIndex()
+          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
   }
 
