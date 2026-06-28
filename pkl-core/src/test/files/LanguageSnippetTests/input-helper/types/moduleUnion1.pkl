@@ -1,0 +1,5 @@
+open module moduleUnion1
+
+import "moduleUnion2.pkl"
+
+typealias ModuleUnion<T> = moduleUnion2.ModuleUnion<T, module>

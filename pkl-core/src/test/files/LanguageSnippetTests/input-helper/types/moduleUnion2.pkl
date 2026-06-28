@@ -1,0 +1,3 @@
+open module moduleUnion2
+
+typealias ModuleUnion<T, U> = T | U | module

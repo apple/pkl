@@ -1,0 +1,12 @@
+open module currentModuleType4
+
+import ".../input-helper/types/moduleUnion1.pkl"
+import ".../input-helper/types/moduleUnion2.pkl"
+
+// test that `module` type resolves to the module where it's used
+
+typealias ModuleUnion = moduleUnion1.ModuleUnion<module>
+
+res1 = (module as ModuleUnion).res2
+res2 = moduleUnion1 as ModuleUnion
+res3 = moduleUnion2 as ModuleUnion

@@ -15,6 +15,9 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
+import org.jspecify.annotations.Nullable;
+
 /** A per-context thread-local value that can be used to influence execution. */
 public class VmLocalContext {
   private boolean shouldEagerTypecheck = false;
@@ -29,6 +32,8 @@ public class VmLocalContext {
   private int activeTrackerDepth = 0;
 
   private boolean instrumentationEverUsed = false;
+
+  private @Nullable VirtualFrame realTypeAliasFrame = null;
 
   public VmLocalContext() {}
 
@@ -63,5 +68,13 @@ public class VmLocalContext {
 
   public boolean isInstrumentationEverUsed() {
     return instrumentationEverUsed;
+  }
+
+  public @Nullable VirtualFrame getRealTypeAliasFrame() {
+    return realTypeAliasFrame;
+  }
+
+  public void setRealTypeAliasFrame(@Nullable VirtualFrame realTypeAliasFrame) {
+    this.realTypeAliasFrame = realTypeAliasFrame;
   }
 }

@@ -24,6 +24,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -469,9 +470,20 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
+  private abstract static class SelfTypeNode extends ObjectSlotTypeNode {
+    public SelfTypeNode(SourceSection sourceSection) {
+      super(sourceSection);
+    }
+
+    protected final VirtualFrame getEffectiveFrame(VirtualFrame frame) {
+      var localContext = VmLanguage.get(this).localContext.get();
+      var realFrame = localContext.getRealTypeAliasFrame();
+      return realFrame != null ? realFrame : frame;
+    }
+  }
+
   /** The `module` type for an open module. */
-  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
+  public static final class NonFinalModuleTypeNode extends SelfTypeNode implements ClassTypeNode {
     private final VmClass moduleClass; // only used by getVmClass()
     @Child private ExpressionNode getModuleNode;
 
@@ -483,7 +495,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
+      var moduleClass =
+          ((VmTyped) getModuleNode.executeGeneric(getEffectiveFrame(frame))).getVmClass();
 
       if (value instanceof VmTyped typed) {
         var valueClass = typed.getVmClass();
@@ -527,7 +540,8 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName) {
-      var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
+      var moduleClass =
+          ((VmTyped) getModuleNode.executeGeneric(getEffectiveFrame(frame))).getVmClass();
       return TypeNode.createDefaultValue(moduleClass);
     }
   }
@@ -2897,16 +2911,44 @@ public abstract class TypeNode extends PklNode {
     /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
     @Override
     public Object executeAndSet(VirtualFrame frame, Object value) {
+      var localContext = VmLanguage.get(this).localContext.get();
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
+      var prevRealFrame = localContext.getRealTypeAliasFrame();
       setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+      localContext.setRealTypeAliasFrame(new FakeFrame(prevReceiver, prevOwner));
 
       try {
         return aliasedTypeNode.executeAndSet(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
+        localContext.setRealTypeAliasFrame(prevRealFrame);
+      }
+    }
+
+    private static final class FakeFrame implements VirtualFrame, MaterializedFrame {
+
+      private final Object[] args;
+
+      public FakeFrame(Object receiver, Object owner) {
+        this.args = new Object[] {receiver, owner};
+      }
+
+      @Override
+      public FrameDescriptor getFrameDescriptor() {
+        throw PklBugException.unreachableCode();
+      }
+
+      @Override
+      public Object[] getArguments() {
+        return args;
+      }
+
+      @Override
+      public MaterializedFrame materialize() {
+        return this;
       }
     }
 

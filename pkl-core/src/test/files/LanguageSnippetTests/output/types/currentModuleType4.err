@@ -1,0 +1,15 @@
+–– Pkl Error ––
+Expected value of type `T | U | module`, but got type `currentModuleType4`.
+Value: new ModuleClass { res1 = ?; res2 = ?; res3 = ? }
+
+x | typealias ModuleUnion<T, U> = T | U | module
+                                  ^^^^^^^^^^^^^^
+at currentModuleType4#res1 (file:///$snippetsDir/input-helper/types/moduleUnion2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
