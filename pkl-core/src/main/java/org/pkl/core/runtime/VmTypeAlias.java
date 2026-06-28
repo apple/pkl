@@ -182,10 +182,18 @@ public final class VmTypeAlias extends VmValue {
     // which should be good for interpreted and compiled performance alike:
     // * Fewer root nodes to call
     // * ControlFlowException used to implement union types doesn't escape root node
+
+    if (typeParameters.isEmpty()) return (TypeNode) typeNode.deepCopy();
+
+    // handle if alias root is itself a type variable (https://github.com/apple/pkl/issues/1711)
+    if (typeNode instanceof TypeVariableNode typeVarNode) {
+      // no need to run validation since the arg itself has already been checked
+      return typeArgumentNodes.length == 0
+          ? new UnknownTypeNode(sourceSection)
+          : typeArgumentNodes[typeVarNode.getTypeParameterIndex()];
+    }
+
     var clone = (TypeNode) typeNode.deepCopy();
-
-    if (typeParameters.isEmpty()) return clone;
-
     clone.accept(
         node -> {
           if (node instanceof TypeVariableNode typeVarNode) {
