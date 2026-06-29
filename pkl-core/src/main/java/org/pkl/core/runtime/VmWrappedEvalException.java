@@ -41,6 +41,7 @@ public class VmWrappedEvalException extends VmEvalException {
       @Nullable String memberName,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       Map<CallTarget, StackFrame> insertedStackFrames,
+      List<StackFrame> leadingStackFrames,
       VmException wrappedException) {
     super(
         message,
@@ -53,7 +54,8 @@ public class VmWrappedEvalException extends VmEvalException {
         sourceSection,
         memberName,
         hintBuilder,
-        insertedStackFrames);
+        insertedStackFrames,
+        leadingStackFrames);
     this.wrappedException = wrappedException;
   }
 

@@ -38,6 +38,10 @@ final class StackTraceGenerator {
   }
 
   private List<StackFrame> capture() {
+    // frames that aren't part of the runtime call stack are
+    // shown ahead of the captured frames.
+    frames.addAll(exception.getLeadingStackFrames());
+
     var truffleElements = TruffleStackTrace.getStackTrace(exception);
     if (truffleElements.isEmpty()) {
       addFrame(exception.getSourceSection(), exception.getMemberName());

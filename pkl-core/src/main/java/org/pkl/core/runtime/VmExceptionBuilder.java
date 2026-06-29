@@ -99,6 +99,7 @@ public final class VmExceptionBuilder {
   private @Nullable Node location;
   private @Nullable SourceSection sourceSection;
   private @Nullable String memberName;
+  private List<StackFrame> leadingStackFrames = List.of();
 
   public VmExceptionBuilder typeMismatch(Object value, VmClass expectedType) {
     if (value instanceof VmNull) {
@@ -359,6 +360,15 @@ public final class VmExceptionBuilder {
     return this;
   }
 
+  /**
+   * Frames to show ahead of the captured stack trace (see {@link
+   * VmException#getLeadingStackFrames()}).
+   */
+  public VmExceptionBuilder withLeadingStackFrames(List<StackFrame> leadingStackFrames) {
+    this.leadingStackFrames = leadingStackFrames;
+    return this;
+  }
+
   public VmException build() {
     if (message != null && messageBuilder != null) {
       throw new IllegalStateException("Both message and messageBuilder are set");
@@ -387,7 +397,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hintBuilder,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case UNDEFINED_VALUE ->
           new VmUndefinedValueException(
               message,
@@ -401,7 +412,8 @@ public final class VmExceptionBuilder {
               memberName,
               hintBuilder,
               receiver,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case BUG ->
           new VmBugException(
               message,
@@ -414,7 +426,8 @@ public final class VmExceptionBuilder {
               sourceSection,
               memberName,
               hintBuilder,
-              effectiveInsertedStackFrames);
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
       case WRAPPED -> {
         assert wrappedException != null;
         yield new VmWrappedEvalException(
@@ -429,6 +442,7 @@ public final class VmExceptionBuilder {
             memberName,
             hintBuilder,
             effectiveInsertedStackFrames,
+            leadingStackFrames,
             wrappedException);
       }
     };
