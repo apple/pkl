@@ -384,67 +384,68 @@ public final class VmExceptionBuilder {
 
     var effectiveInsertedStackFrames =
         insertedStackFrames == null ? new HashMap<CallTarget, StackFrame>() : insertedStackFrames;
-    var exception =
-        switch (kind) {
-          case EVAL_ERROR ->
-              new VmEvalException(
-                  message,
-                  cause,
-                  isExternalMessage,
-                  messageArguments,
-                  messageBuilder,
-                  programValues,
-                  location,
-                  sourceSection,
-                  memberName,
-                  hintBuilder,
-                  effectiveInsertedStackFrames);
-          case UNDEFINED_VALUE ->
-              new VmUndefinedValueException(
-                  message,
-                  cause,
-                  isExternalMessage,
-                  messageArguments,
-                  messageBuilder,
-                  programValues,
-                  location,
-                  sourceSection,
-                  memberName,
-                  hintBuilder,
-                  receiver,
-                  effectiveInsertedStackFrames);
-          case BUG ->
-              new VmBugException(
-                  message,
-                  cause,
-                  isExternalMessage,
-                  messageArguments,
-                  messageBuilder,
-                  programValues,
-                  location,
-                  sourceSection,
-                  memberName,
-                  hintBuilder,
-                  effectiveInsertedStackFrames);
-          case WRAPPED -> {
-            assert wrappedException != null;
-            yield new VmWrappedEvalException(
-                message,
-                cause,
-                isExternalMessage,
-                messageArguments,
-                messageBuilder,
-                programValues,
-                location,
-                sourceSection,
-                memberName,
-                hintBuilder,
-                effectiveInsertedStackFrames,
-                wrappedException);
-          }
-        };
-    exception.setLeadingStackFrames(leadingStackFrames);
-    return exception;
+    return switch (kind) {
+      case EVAL_ERROR ->
+          new VmEvalException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              messageBuilder,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hintBuilder,
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
+      case UNDEFINED_VALUE ->
+          new VmUndefinedValueException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              messageBuilder,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hintBuilder,
+              receiver,
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
+      case BUG ->
+          new VmBugException(
+              message,
+              cause,
+              isExternalMessage,
+              messageArguments,
+              messageBuilder,
+              programValues,
+              location,
+              sourceSection,
+              memberName,
+              hintBuilder,
+              effectiveInsertedStackFrames,
+              leadingStackFrames);
+      case WRAPPED -> {
+        assert wrappedException != null;
+        yield new VmWrappedEvalException(
+            message,
+            cause,
+            isExternalMessage,
+            messageArguments,
+            messageBuilder,
+            programValues,
+            location,
+            sourceSection,
+            memberName,
+            hintBuilder,
+            effectiveInsertedStackFrames,
+            leadingStackFrames,
+            wrappedException);
+      }
+    };
   }
 
   private List<Identifier> collectPropertyNames(VmObjectLike object, boolean isRead) {

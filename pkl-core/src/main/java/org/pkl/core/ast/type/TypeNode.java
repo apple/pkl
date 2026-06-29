@@ -28,6 +28,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -2219,6 +2220,7 @@ public abstract class TypeNode extends PklNode {
           continue;
         }
         var section = node.getSourceSection();
+        //noinspection ConstantValue
         if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
           continue;
         }
@@ -2234,12 +2236,13 @@ public abstract class TypeNode extends PklNode {
      * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
      * outermost alias being instantiated (which is {@code null} for a directly-used Reference).
      */
+    @SuppressWarnings("DataFlowIssue")
     private static @Nullable VmTypeAlias ownerAlias(
         Node node, @Nullable VmTypeAlias outermostAlias) {
-      for (var parent = node.getParent(); parent != null; parent = parent.getParent()) {
-        if (parent instanceof TypeAliasTypeNode aliasNode) {
-          return aliasNode.getTypeAlias();
-        }
+      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
+      //noinspection ConstantValue
+      if (parent != null) {
+        return parent.typeAlias;
       }
       return outermostAlias;
     }
