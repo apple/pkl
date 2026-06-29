@@ -5,6 +5,8 @@ x | test = ref.Reference(d, Dynamic, "").default
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference15#test (file:///$snippetsDir/input/errors/reference15.pkl)
 
+Cannot reference property `default` in class `Dynamic`.
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

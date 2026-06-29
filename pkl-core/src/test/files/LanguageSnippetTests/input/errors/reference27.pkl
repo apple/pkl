@@ -1,0 +1,6 @@
+import "pkl:ref"
+
+typealias MyRef = ref.Reference<ref.Domain, String?>
+
+myRef: MyRef
+

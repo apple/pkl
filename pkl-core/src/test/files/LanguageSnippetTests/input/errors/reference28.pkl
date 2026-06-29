@@ -1,0 +1,5 @@
+import "pkl:ref"
+
+typealias MyRef<T> = ref.Reference<ref.Domain, Mapping<String, T?>>
+
+myRef: MyRef<String>

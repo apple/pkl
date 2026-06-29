@@ -7,6 +7,8 @@ x | test = ref.Reference(d, List, List())["hi"]
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference7#test (file:///$snippetsDir/input/errors/reference7.pkl)
 
+Operator `[]` is not defined for operand types `List<unknown>` and `String`.
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

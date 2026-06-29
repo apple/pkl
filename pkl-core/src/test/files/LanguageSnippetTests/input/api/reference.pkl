@@ -64,8 +64,8 @@ class K {
   bId: String | *Ref<String>?
   aProperties: AProperties | *Ref<AProperties>?
   bProperties: BProperties | *Ref<BProperties>?
-  aValues: Listing<Int | Ref<Int?>>?
-  bValues: Listing<String | Ref<String?>>?
+  aValues: Listing<Int | Ref<Int>>?
+  bValues: Listing<String | Ref<String>>?
   splitUnion: Ref<Listing<String> | Listing<Int>>?
 }
 

@@ -17,39 +17,44 @@ local class Holder {
   optional: Mapping<String, Int?>
   listing: Listing<Int>
   union: Listing<String> | Listing<Int>
+  constrainedType: String(isEmpty)
 }
 
-local const h: Holder = new {
-  num = 1
-  text = "t"
-  lit = "literal"
-  small = 8
-  optional { ["k"] = 5 }
-  listing { 1; 2 }
-  union = new Listing<Int> { 1 }
+local class OtherHolder {
+  num: Int?
+  constrainedType: String(isEmpty)
 }
 
-local hRef1: Ref<Holder> = ref.Reference(d, Holder, h)
-local hRef2: Ref<Holder> = ref.Reference(d, Holder, h)
+local holderRef: Ref<Holder> = ref.Reference(d, Holder, null)
+local holderRef2: Ref<Holder> = ref.Reference(d, Holder, null)
+local otherHolderRef: Ref<OtherHolder> = ref.Reference(d, OtherHolder, null)
 
 facts {
   ["equality"] {
-    hRef1 == hRef2
-    hRef1.num == hRef2.num
-    hRef1.lit == hRef2.lit
-    hRef1.small == hRef2.small
-    hRef1.optional["k"] == hRef2.optional["k"]
-    hRef1.listing[0] == hRef2.listing[0]
-    hRef1.union == hRef2.union
+    holderRef == holderRef2
+    holderRef.num == holderRef2.num
+    holderRef.lit == holderRef2.lit
+    holderRef.small == holderRef2.small
+    holderRef.optional["k"] == holderRef2.optional["k"]
+    holderRef.listing[0] == holderRef2.listing[0]
+    holderRef.union == holderRef2.union
+  }
+
+  ["equality -- nullable gets erased"] {
+    holderRef.num == otherHolderRef.num
+  }
+
+  ["equality -- constraint gets erased"] {
+    holderRef.constrainedType == otherHolderRef.constrainedType
   }
 
   ["inequality"] {
-    hRef1.num != hRef2.text
+    holderRef.num != holderRef2.text
   }
 
   ["set deduplication"] {
-    Set(hRef1.num, hRef2.num).length == 1
-    Set(hRef1.union, hRef2.union).length == 1
-    Set(hRef1.num, hRef2.text).length == 2
+    Set(holderRef.num, holderRef2.num).length == 1
+    Set(holderRef.union, holderRef2.union).length == 1
+    Set(holderRef.num, holderRef2.text).length == 2
   }
 }

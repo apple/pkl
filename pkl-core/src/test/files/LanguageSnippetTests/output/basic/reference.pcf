@@ -8,6 +8,12 @@ facts {
     true
     true
   }
+  ["equality -- nullable gets erased"] {
+    true
+  }
+  ["equality -- constraint gets erased"] {
+    true
+  }
   ["inequality"] {
     true
   }

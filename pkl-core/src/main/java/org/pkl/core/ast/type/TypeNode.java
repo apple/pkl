@@ -2145,13 +2145,17 @@ public abstract class TypeNode extends PklNode {
       this.getModuleNode = new GetModuleNode(sourceSection);
       // A type constraint anywhere in the referent is forbidden, including one reached through a
       // type alias used in the referent.
-      var constraint = findReferentConstraint();
-      if (constraint != null) {
+      var invalidType = findInvalidReferentType();
+      if (invalidType != null) {
         CompilerDirectives.transferToInterpreter();
+        var error =
+            invalidType instanceof ConstrainedTypeNode
+                ? "invalidReferenceTypeAnnotationWithConstraint"
+                : "invalidReferenceTypeAnnotationWithNullableType";
         throw exceptionBuilder()
-            .evalError("invalidReferenceTypeAnnotationWithConstraint")
+            .evalError(error)
             .withLeadingStackFrames(
-                buildReferentConstraintFrames(constraint, getSourceSection(), null))
+                buildInvalidReferentFrames(invalidType, getSourceSection(), null))
             .build();
       }
     }
@@ -2193,13 +2197,17 @@ public abstract class TypeNode extends PklNode {
      * Walks the referent type and returns the first offending {@link ConstrainedTypeNode} , or
      * {@code null} if the referent is constraint-free.
      */
-    public @Nullable ConstrainedTypeNode findReferentConstraint() {
-      var found = new MutableReference<@Nullable ConstrainedTypeNode>(null);
+    public @Nullable TypeNode findInvalidReferentType() {
+      var found = new MutableReference<@Nullable TypeNode>(null);
       referentTypeNode.acceptTypeNode(
           true,
           (typeNode) -> {
             if (typeNode instanceof ConstrainedTypeNode constrainedTypeNode) {
               found.set(constrainedTypeNode);
+              return false;
+            }
+            if (typeNode instanceof NullableTypeNode nullableTypeNode) {
+              found.set(nullableTypeNode);
               return false;
             }
             return true;
@@ -2208,13 +2216,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     /** Builds the frames to show ahead of an "invalid referent constraint" error. */
-    public static List<StackFrame> buildReferentConstraintFrames(
-        ConstrainedTypeNode constraintNode,
-        SourceSection usageSection,
-        @Nullable VmTypeAlias outermostAlias) {
+    public static List<StackFrame> buildInvalidReferentFrames(
+        TypeNode startingNode, SourceSection usageSection, @Nullable VmTypeAlias outermostAlias) {
       var frames = new ArrayList<StackFrame>();
-      for (Node node = constraintNode; node != null; node = node.getParent()) {
+      for (Node node = startingNode; node != null; node = node.getParent()) {
         if (!(node instanceof ConstrainedTypeNode
+            || node instanceof NullableTypeNode
             || node instanceof TypeAliasTypeNode
             || node instanceof ReferenceTypeNode)) {
           continue;
@@ -2762,7 +2769,7 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
-      checkReferentConstraints(typeAlias);
+      checkReferentType(typeAlias);
     }
 
     /**
@@ -2770,18 +2777,22 @@ public abstract class TypeNode extends PklNode {
      * Reference}'s referent through this (generic) alias. The error is reported at this usage type
      * expression, with leading frames for the constraint and every alias layer it passed through.
      */
-    private void checkReferentConstraints(VmTypeAlias outermostAlias) {
+    private void checkReferentType(VmTypeAlias outermostAlias) {
       aliasedTypeNode.accept(
           node -> {
             if (node instanceof ReferenceTypeNode referenceTypeNode) {
-              var constraint = referenceTypeNode.findReferentConstraint();
-              if (constraint != null) {
+              var invalidType = referenceTypeNode.findInvalidReferentType();
+              if (invalidType != null) {
                 CompilerDirectives.transferToInterpreter();
+                var error =
+                    invalidType instanceof ConstrainedTypeNode
+                        ? "invalidReferenceTypeAnnotationWithConstraint"
+                        : "invalidReferenceTypeAnnotationWithNullableType";
                 throw exceptionBuilder()
-                    .evalError("invalidReferenceTypeAnnotationWithConstraint")
+                    .evalError(error)
                     .withLeadingStackFrames(
-                        ReferenceTypeNode.buildReferentConstraintFrames(
-                            constraint, getSourceSection(), outermostAlias))
+                        ReferenceTypeNode.buildInvalidReferentFrames(
+                            invalidType, getSourceSection(), outermostAlias))
                     .build();
               }
             }

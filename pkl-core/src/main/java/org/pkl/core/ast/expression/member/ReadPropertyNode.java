@@ -24,10 +24,13 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.PType;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmReference.VmReferenceAccessError;
+import org.pkl.core.util.ErrorMessages;
 
 @NodeInfo(shortName = ".")
 @ImportStatic(BaseModule.class)
@@ -61,16 +64,38 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     this(sourceSection, propertyName, MemberLookupMode.EXPLICIT_RECEIVER, false);
   }
 
+  protected String getReferenceErrorHint(VmReference reference, VmReferenceAccessError err) {
+    var myType = reference.getReferentType();
+    return switch (err.getErrorType()) {
+      case CANNOT_FIND_MEMBER ->
+          err.getType().equals(myType)
+              ? ErrorMessages.create("cannotFindPropertyInType", propertyName, myType)
+              : ErrorMessages.create(
+                  "cannotFindPropertyInType2", propertyName, myType, err.getType());
+      case EXTERNAL_MEMBER ->
+          ErrorMessages.create("cannotReferenceExternalProperty", propertyName, err.getType());
+      case DEFAULT_MEMBER ->
+          ErrorMessages.create(
+              "cannotReferenceDefaultProperty",
+              ((PType.Class) err.getType()).getPClass().getSimpleName());
+      case EXTERNAL_CLASS ->
+          ErrorMessages.create(
+              "cannotReferencePropertyInExternalClass", propertyName, err.getType());
+    };
+  }
+
   @Specialization
   protected VmReference evalReference(VmReference receiver) {
     assert lookupMode == MemberLookupMode.EXPLICIT_RECEIVER;
-    var result = receiver.withPropertyAccess(propertyName);
-    if (result != null) return result;
-
-    CompilerDirectives.transferToInterpreter();
-    throw exceptionBuilder()
-        .evalError("cannotFindPropertyInReference", propertyName, receiver.exportType())
-        .build();
+    try {
+      return receiver.withPropertyAccess(propertyName);
+    } catch (VmReferenceAccessError err) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError("cannotFindPropertyInObjectNoHint", propertyName, receiver.exportType())
+          .withHint(getReferenceErrorHint(receiver, err))
+          .build();
+    }
   }
 
   // This method effectively covers `VmObject receiver` but is implemented in a more
