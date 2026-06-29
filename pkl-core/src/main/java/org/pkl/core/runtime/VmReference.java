@@ -30,6 +30,7 @@ import org.pkl.core.Composite;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PType;
+import org.pkl.core.PklBugException;
 import org.pkl.core.Reference;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.util.paguro.RrbTree;
@@ -218,6 +219,15 @@ public final class VmReference extends VmValue {
     normalizeTypes(prop.getType(), clazz.getPClass().getModuleClass(), result);
   }
 
+  private static PClassInfo<?> getClassInfo(Object value) {
+    if (value instanceof VmValue vmValue) return vmValue.getVmClass().getPClassInfo();
+    if (value instanceof String) return PClassInfo.String;
+    if (value instanceof Boolean) return PClassInfo.Boolean;
+    if (value instanceof Long) return PClassInfo.Int;
+    if (value instanceof Double) return PClassInfo.Float;
+    throw new PklBugException("Not a Pkl value: " + value.getClass());
+  }
+
   @SuppressWarnings("DuplicatedCode")
   private static void getCandidateSubscriptType(PType type, Object key, Set<PType> result) {
     if (type == PType.UNKNOWN) {
@@ -244,8 +254,7 @@ public final class VmReference extends VmValue {
       var keyTypes = normalizeTypes(typeArgs.get(0), clazz.getPClass().getModuleClass());
       for (var kt : iterateTypes(keyTypes)) {
         if (kt == PType.UNKNOWN
-            || (kt instanceof PType.Class klazz
-                && klazz.getPClass().getInfo() == PClassInfo.forValue(VmValue.export(key)))
+            || (kt instanceof PType.Class klazz && klazz.getPClass().getInfo() == getClassInfo(key))
             || (kt instanceof PType.StringLiteral stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
           normalizeTypes(typeArgs.get(1), clazz.getPClass().getModuleClass(), result);

@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMethodNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
@@ -26,14 +27,13 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
-import org.pkl.core.util.LateInit;
 
 /** Infers the parent to amend in `obj { local function createPerson(): Person = new { ... } }`. */
 public final class InferParentWithinObjectMethodNode extends ExpressionNode {
   private final VmLanguage language;
   private final Identifier localMethodName;
-  @Child private ExpressionNode ownerNode;
-  @CompilationFinal @LateInit private Object inferredParent;
+  @Child private @Nullable ExpressionNode ownerNode;
+  @CompilationFinal private @Nullable Object inferredParent;
 
   public InferParentWithinObjectMethodNode(
       SourceSection sourceSection,
@@ -58,6 +58,7 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
 
     CompilerDirectives.transferToInterpreter();
 
+    assert ownerNode != null;
     var owner = (VmObjectLike) ownerNode.executeGeneric(frame);
 
     var member = owner.getMember(localMethodName);

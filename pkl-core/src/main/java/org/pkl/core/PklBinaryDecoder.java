@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -21,7 +21,9 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.regex.Pattern;
+import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.runtime.BaseModule;
@@ -111,7 +113,7 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
 
   @Override
   protected Object doDecodeMap(MapDecodeIterator iter) {
-    var map = CollectionUtils.newLinkedHashMap(iter.getSize());
+    Map<@Nullable Object, @Nullable Object> map = CollectionUtils.newLinkedHashMap(iter.getSize());
     while (iter.hasNext()) {
       var entry = iter.next();
       map.put(entry.getFirst(), entry.getSecond());

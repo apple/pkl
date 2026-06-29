@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.util;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.*;
 import java.util.concurrent.ConcurrentHashMap;
+import org.jspecify.annotations.Nullable;
 
 public final class CollectionUtils {
   private static final float LOAD_FACTOR = 0.75f;
@@ -45,7 +46,8 @@ public final class CollectionUtils {
   }
 
   @TruffleBoundary
-  public static <K, V> LinkedHashMap<K, V> newLinkedHashMap(int expectedSize) {
+  public static <K extends @Nullable Object, V extends @Nullable Object>
+      LinkedHashMap<K, V> newLinkedHashMap(int expectedSize) {
     return new LinkedHashMap<>((int) (expectedSize / LOAD_FACTOR) + 1, LOAD_FACTOR);
   }
 

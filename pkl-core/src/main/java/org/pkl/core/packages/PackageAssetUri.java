@@ -18,6 +18,7 @@ package org.pkl.core.packages;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.Version;
 import org.pkl.core.util.ErrorMessages;
@@ -98,7 +99,7 @@ public final class PackageAssetUri {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

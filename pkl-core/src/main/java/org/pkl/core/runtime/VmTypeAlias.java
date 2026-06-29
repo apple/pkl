@@ -34,7 +34,6 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
-import org.pkl.core.util.LateInit;
 
 public final class VmTypeAlias extends VmValue {
   private final SourceSection sourceSection;
@@ -48,17 +47,15 @@ public final class VmTypeAlias extends VmValue {
   private final List<TypeParameter> typeParameters;
   private final MaterializedFrame enclosingFrame;
 
-  @LateInit private TypeNode typeNode;
+  private @Nullable TypeNode typeNode;
 
-  @LateInit
   @GuardedBy("pTypeAliasLock")
-  private TypeAlias __pTypeAlias;
+  private @Nullable TypeAlias __pTypeAlias;
 
   private final Object pTypeAliasLock = new Object();
 
-  @LateInit
   @GuardedBy("mirrorLock")
-  private VmTyped __mirror;
+  private @Nullable VmTyped __mirror;
 
   private final Object mirrorLock = new Object();
 
@@ -86,7 +83,6 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public void initTypeCheckNode(TypeNode typeNode) {
-    assert this.typeNode == null;
     this.typeNode = typeNode;
   }
 
@@ -100,6 +96,7 @@ public final class VmTypeAlias extends VmValue {
    */
   @TruffleBoundary
   public SourceSection getBaseTypeSection() {
+    assert typeNode != null;
     if (typeNode instanceof ConstrainedTypeNode constrainedTypeNode) {
       return constrainedTypeNode.getBaseTypeSection();
     }
@@ -116,6 +113,7 @@ public final class VmTypeAlias extends VmValue {
    */
   @TruffleBoundary
   public SourceSection getConstraintSection() {
+    assert typeNode != null;
     if (typeNode instanceof ConstrainedTypeNode) {
       return ((ConstrainedTypeNode) typeNode).getFirstConstraintSection();
     }
@@ -169,6 +167,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public TypeNode getTypeNode() {
+    assert typeNode != null;
     return typeNode;
   }
 
@@ -178,6 +177,7 @@ public final class VmTypeAlias extends VmValue {
 
   @TruffleBoundary
   public TypeNode instantiate(TypeNode[] typeArgumentNodes) {
+    assert typeNode != null;
     // Cloning the type node means that the entire type check remains within a single root node,
     // which should be good for interpreted and compiled performance alike:
     // * Fewer root nodes to call
@@ -265,6 +265,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public VmTyped getTypeMirror() {
+    assert typeNode != null;
     return typeNode.getMirror();
   }
 

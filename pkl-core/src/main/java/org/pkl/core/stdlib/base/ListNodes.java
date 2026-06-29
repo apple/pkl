@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
@@ -33,7 +34,6 @@ import org.pkl.core.stdlib.base.CollectionNodes.CompareByNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareNode;
 import org.pkl.core.stdlib.base.CollectionNodes.CompareWithNode;
 import org.pkl.core.util.EconomicSets;
-import org.pkl.core.util.LateInit;
 
 // duplication between ListNodes and SetNodes is "intentional"
 // (sharing nodes between VmCollection subtypes results in
@@ -1336,7 +1336,7 @@ public final class ListNodes {
 
   public abstract static class toBytes extends ExternalMethod0Node {
 
-    @Child @LateInit private TypeNode typeNode;
+    @Child private @Nullable TypeNode typeNode;
 
     private TypeNode getTypeNode() {
       if (typeNode == null) {

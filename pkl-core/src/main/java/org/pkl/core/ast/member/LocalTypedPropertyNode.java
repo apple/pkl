@@ -23,12 +23,11 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.util.LateInit;
 
 public final class LocalTypedPropertyNode extends RegularMemberNode {
   private final VmLanguage language;
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
-  @Child @LateInit private TypeNode typeNode;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable TypeNode typeNode;
   private @Nullable Object defaultValue;
   private boolean defaultValueInitialized;
 
@@ -47,6 +46,7 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
 
   public @Nullable Object getDefaultValue(VirtualFrame frame) {
     if (!defaultValueInitialized) {
+      assert typeNode != null;
       defaultValue =
           typeNode.createDefaultValue(
               frame, language, member.getHeaderSection(), member.getQualifiedName());
@@ -59,6 +59,7 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
   protected Object executeImpl(VirtualFrame frame) {
     if (typeNode == null) {
       CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }

@@ -46,7 +46,7 @@ import org.pkl.core.stdlib.ExternalPropertyNode;
  * CLI args) would lead to incorrect behavior, as a single base module instance is shared across all
  * language contexts, and properties (whether external or not) are evaluated just once.
  */
-@SuppressWarnings("UnusedParameters")
+@SuppressWarnings("unused")
 public final class BaseNodes {
   private BaseNodes() {}
 
@@ -64,6 +64,7 @@ public final class BaseNodes {
     }
   }
 
+  @SuppressWarnings("unused")
   public abstract static class Regex extends ExternalMethod1Node {
     // cache Regex object to avoid repeated java.util.Pattern.compile()
     @Specialization(guards = "pattern.equals(cachedPattern)")

@@ -147,6 +147,7 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
 
     for (var key : other.keyOrder) {
       var value = other.map.get(key);
+      assert value != null;
 
       if (!map.containsKey(key)) {
         keyOrderBuilder.append(key);

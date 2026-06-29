@@ -94,6 +94,7 @@ public final class VmObjectFactory<E> {
             ? TypeCheckedPropertyNodeGen.create(null, new FrameDescriptor(), member, bodyNode)
             : new UntypedObjectMemberNode(null, new FrameDescriptor(), member, bodyNode);
     member.initMemberNode(node);
+    //noinspection ConstantValue
     if (members.put(identifier, member) != null) {
       throw new VmExceptionBuilder()
           .bug(
@@ -110,7 +111,6 @@ public final class VmObjectFactory<E> {
   @TruffleBoundary
   public VmTyped create(@Nullable E extraStorage) {
     var clazz = classSupplier.get();
-    assert clazz != null;
 
     var result =
         new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);

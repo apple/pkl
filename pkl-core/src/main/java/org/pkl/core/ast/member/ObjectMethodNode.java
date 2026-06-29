@@ -25,7 +25,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.LateInit;
 
 public final class ObjectMethodNode extends RegularMemberNode {
   private final VmLanguage language;
@@ -33,7 +32,7 @@ public final class ObjectMethodNode extends RegularMemberNode {
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
 
-  @CompilationFinal @LateInit private FunctionNode functionNode;
+  @CompilationFinal private @Nullable FunctionNode functionNode;
 
   public ObjectMethodNode(
       VmLanguage language,

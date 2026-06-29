@@ -18,7 +18,6 @@ package org.pkl.core;
 import java.util.*;
 import java.util.regex.*;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.util.LateInit;
 
 /**
  * A <a href="https://semver.org/spec/v2.0.0.html">semantic version</a>.
@@ -59,7 +58,7 @@ public final class Version implements Comparable<Version> {
   private final @Nullable String preRelease;
   private final @Nullable String build;
 
-  @LateInit private volatile Identifier[] __preReleaseIdentifiers;
+  private volatile Identifier @Nullable [] __preReleaseIdentifiers;
 
   /** Constructs a semantic version. */
   public Version(
@@ -230,6 +229,7 @@ public final class Version implements Comparable<Version> {
                               : new Identifier(-1, str))
                   .toArray(Identifier[]::new);
     }
+    //noinspection DataFlowIssue
     return __preReleaseIdentifiers;
   }
 

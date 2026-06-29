@@ -29,10 +29,9 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.LateInit;
 
 public final class VmTyped extends VmObject {
-  @CompilationFinal @LateInit private VmClass clazz;
+  @CompilationFinal private @Nullable VmClass clazz;
 
   public VmTyped(
       MaterializedFrame enclosingFrame,
@@ -162,6 +161,8 @@ public final class VmTyped extends VmObject {
   @Override
   @TruffleBoundary
   public Composite export() {
+    assert forced : "Value was not forced prior to export";
+    assert clazz != null;
     if (!isModuleObject()) {
       return new PObject(clazz.getPClassInfo(), exportMembers());
     }
@@ -190,6 +191,7 @@ public final class VmTyped extends VmObject {
     if (this == obj) return true;
     if (!(obj instanceof VmTyped other)) return false;
 
+    assert clazz != null;
     if (clazz != other.clazz) return false;
     // could use shallow force, but deep force is cached
     force(false);
@@ -210,6 +212,7 @@ public final class VmTyped extends VmObject {
   public int hashCode() {
     if (cachedHash != 0) return cachedHash;
 
+    assert clazz != null;
     force(false);
     var result = 0;
 

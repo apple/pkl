@@ -23,6 +23,7 @@ import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.io.IOException;
 import java.net.URI;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.ast.member.SharedMemberNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
@@ -35,13 +36,12 @@ import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
-import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "import*")
 public class ImportGlobNode extends AbstractImportNode {
   private final String globPattern;
-  @Child @LateInit private SharedMemberNode memberNode;
-  @CompilationFinal @LateInit private VmMapping cachedResult;
+  @Child private @Nullable SharedMemberNode memberNode;
+  @CompilationFinal private @Nullable VmMapping cachedResult;
 
   public ImportGlobNode(
       SourceSection sourceSection,

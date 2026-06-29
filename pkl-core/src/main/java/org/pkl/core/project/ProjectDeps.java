@@ -135,6 +135,7 @@ public final class ProjectDeps {
   }
 
   /** Given a declared dependency, return the resolved dependency. */
+  @SuppressWarnings("DataFlowIssue") // incorrect analysis
   public @Nullable Dependency get(CanonicalPackageUri canonicalPackageUri) {
     return resolvedDependencies.get(canonicalPackageUri);
   }
@@ -150,7 +151,7 @@ public final class ProjectDeps {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }

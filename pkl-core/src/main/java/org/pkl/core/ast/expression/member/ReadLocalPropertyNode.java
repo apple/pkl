@@ -22,6 +22,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMember;
@@ -34,8 +35,8 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
   private final Identifier name;
   private final int levelsUp;
   private final boolean needsConst;
-  @Child private DirectCallNode callNode;
-  @CompilationFinal private ObjectMember property;
+  @Child private @Nullable DirectCallNode callNode;
+  @CompilationFinal @Nullable private ObjectMember property;
 
   public ReadLocalPropertyNode(
       SourceSection sourceSection, Identifier name, int levelsUp, boolean needsConst) {
@@ -91,6 +92,7 @@ public final class ReadLocalPropertyNode extends ExpressionNode {
       callNode = DirectCallNode.create(property.getCallTarget());
       insert(callNode);
     }
+    assert callNode != null;
     return callNode;
   }
 }

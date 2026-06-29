@@ -199,7 +199,7 @@ public final class Project {
         sb.append("\n│");
       }
       sb.append("\n│  ");
-      sb.append(uri.toString());
+      sb.append(uri);
     }
     sb.append("\n└─");
   }
@@ -477,7 +477,7 @@ public final class Project {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -611,7 +611,7 @@ public final class Project {
     }
 
     @Override
-    public boolean equals(Object o) {
+    public boolean equals(@Nullable Object o) {
       if (this == o) {
         return true;
       }

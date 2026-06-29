@@ -46,7 +46,6 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
 import javax.net.ssl.TrustManagerFactory;
-import org.pkl.core.SecurityManagerException;
 import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.Exceptions;
 
@@ -93,7 +92,7 @@ final class JdkHttpClient implements HttpClient {
       HttpRequest request,
       BodyHandler<T> responseBodyHandler,
       HttpRequestChecker httpRequestChecker)
-      throws IOException, SecurityManagerException {
+      throws IOException {
     try {
       return underlying.send(request, responseBodyHandler);
     } catch (ConnectException e) {

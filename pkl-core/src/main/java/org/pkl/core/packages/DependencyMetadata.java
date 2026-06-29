@@ -217,6 +217,7 @@ public final class DependencyMetadata {
           var map = new HashMap<>();
           for (var kv : value) {
             var kvObj = (JsObject) kv;
+            assert kvObj != null;
             map.put(parsePObject(kvObj.get("key")), parsePObject(kvObj.get("value")));
           }
           return map;
@@ -294,7 +295,7 @@ public final class DependencyMetadata {
     var ret = new ArrayList<String>(arr.size());
     for (var elem : arr) {
       if (!(elem instanceof String string)) {
-        throw new FormatException("string", elem.getClass());
+        throw new FormatException("string", elem != null ? elem.getClass() : Void.class);
       }
       ret.add(string);
     }
@@ -414,7 +415,7 @@ public final class DependencyMetadata {
   }
 
   @Override
-  public boolean equals(Object o) {
+  public boolean equals(@Nullable Object o) {
     if (this == o) {
       return true;
     }
@@ -624,8 +625,8 @@ public final class DependencyMetadata {
       jsonWriter.endObject();
     }
 
-    private void writeGenericObject(Object value) throws IOException {
-      if (value instanceof PNull) {
+    private void writeGenericObject(@Nullable Object value) throws IOException {
+      if (value == null || value instanceof PNull) {
         jsonWriter.nullValue();
       } else if (value instanceof PObject pObject) {
         writePObject(pObject);
