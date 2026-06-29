@@ -1,0 +1,10 @@
+–– Pkl Error ––
+`Reference` referent type argument may not include nullable types.
+
+x | typealias MyRef = ref.Reference<ref.Domain, String?>
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference27#MyRef (file:///$snippetsDir/input/errors/reference27.pkl)
+
+x | myRef: MyRef
+           ^^^^^
+at reference27 (file:///$snippetsDir/input/errors/reference27.pkl)

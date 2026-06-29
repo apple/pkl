@@ -131,9 +131,10 @@ public final class VmReference extends VmValue {
         }
         result.add(new PType.Class(clazz.getPClass(), typeArgs));
       }
-    } else if (type instanceof PType.Nullable nullable) {
+    }
+    // both nullable and constrained types erase to just their base type
+    else if (type instanceof PType.Nullable nullable) {
       normalizeTypes(nullable.getBaseType(), moduleClass, result);
-      result.add(new PType.Class(BaseModule.getNullClass().export()));
     } else if (type instanceof PType.Constrained constrained) {
       normalizeTypes(constrained.getBaseType(), moduleClass, result);
     } else if (type instanceof PType.Alias alias) {
@@ -148,6 +149,11 @@ public final class VmReference extends VmValue {
       }
     } else if (type == PType.MODULE) {
       result.add(new PType.Class(moduleClass));
+    } else {
+      // remaining types: PType.Function, PType.TypeVariable. no normalizing needed; TypeVariable
+      // gets replaced upon instantiation, and Function can bubble up to users as a reference error
+      // if accessed.
+      result.add(type);
     }
   }
 
@@ -156,28 +162,25 @@ public final class VmReference extends VmValue {
     return Collections.singleton(t);
   }
 
-  public @Nullable VmReference withPropertyAccess(Identifier property) {
+  public VmReference withPropertyAccess(Identifier property) {
     var propString = property.toString();
     return withAccess(
         (t, candidates) -> getCandidatePropertyType(t, propString, candidates),
         () -> newAccess(property.toString(), null));
   }
 
-  public @Nullable VmReference withSubscriptAccess(Object key) {
+  public VmReference withSubscriptAccess(Object key) {
     return withAccess(
         (t, candidates) -> getCandidateSubscriptType(t, key, candidates),
         () -> newAccess(null, key));
   }
 
   @TruffleBoundary
-  private @Nullable VmReference withAccess(
+  private VmReference withAccess(
       BiConsumer<PType, Set<PType>> checkCandidate, Supplier<VmTyped> makeAccess) {
     Set<PType> candidates = new HashSet<>();
     for (var t : iterateTypes(referentType)) {
       checkCandidate.accept(t, candidates);
-    }
-    if (candidates.isEmpty()) {
-      return null; // no valid access found
     }
     return new VmReference(domain, data, path.append(makeAccess.get()), minimizeTypes(candidates));
   }
@@ -189,32 +192,45 @@ public final class VmReference extends VmValue {
       return;
     }
     // restriction: only class types can have their properties referenced
-    if (!(type instanceof PType.Class clazz)) return;
-    // restriction: cannot reference properties of external classes
-    if (clazz.getPClass().isExternal()) return;
+    if (!(type instanceof PType.Class clazz)) {
+      throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
+    }
     if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
-      // restriction: cannot reference Dynamic.default
-      if (!property.equals("default")) result.add(PType.UNKNOWN);
+      if (property.equals("default")) {
+        // restriction: cannot reference Dynamic.default
+        throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.DEFAULT_MEMBER);
+      }
+      result.add(PType.UNKNOWN);
       return;
     }
     // restriction: cannot reference Listing/Mapping.default
     if (clazz.getPClass().getInfo() == PClassInfo.Listing
         || clazz.getPClass().getInfo() == PClassInfo.Mapping) {
-      return;
+      var errorType =
+          property.equals("default")
+              ? VmReferenceAccessErrorType.DEFAULT_MEMBER
+              : VmReferenceAccessErrorType.CANNOT_FIND_MEMBER;
+      throw new VmReferenceAccessError(type, errorType);
     }
+    var baseModule = BaseModule.getModuleClass().export();
     // restriction: cannot reference Module.output.
     //   generalized: properties originally defined in external classes; the only extant example.
     // This is implemented specifically because this is the only case where an external class
     //   containing a property can be subclassed.
     // And this can't check prop.getOwner().isExternal() because fully overriding the property with
     //   a new type annotation means the owner isn't Module.
-    if (clazz.getPClass().isSubclassOf(BaseModule.getModuleClass().export())
-        && property.equals("output")) return;
+    if (clazz.getPClass().isSubclassOf(baseModule) && property.equals("output")) {
+      throw new VmReferenceAccessError(
+          new PType.Class(baseModule), VmReferenceAccessErrorType.EXTERNAL_CLASS);
+    }
 
     var prop = clazz.getPClass().getAllProperties().get(property);
+    if (prop == null) {
+      throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
+    }
     // restriction: cannot reference external properties
-    if (prop == null || prop.isExternal()) {
-      return;
+    if (prop.isExternal()) {
+      throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.EXTERNAL_MEMBER);
     }
     normalizeTypes(prop.getType(), clazz.getPClass().getModuleClass(), result);
   }
@@ -235,7 +251,7 @@ public final class VmReference extends VmValue {
       return;
     }
     if (!(type instanceof PType.Class clazz)) {
-      return;
+      throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
     }
     if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
       result.add(PType.UNKNOWN);
@@ -243,9 +259,10 @@ public final class VmReference extends VmValue {
     }
     if (clazz.getPClass().getInfo() == PClassInfo.Listing
         || clazz.getPClass().getInfo() == PClassInfo.List) {
-      if (key instanceof Long) {
-        normalizeTypes(clazz.getTypeArguments().get(0), clazz.getPClass().getModuleClass(), result);
+      if (!(key instanceof Long)) {
+        throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
       }
+      normalizeTypes(clazz.getTypeArguments().get(0), clazz.getPClass().getModuleClass(), result);
       return;
     }
     if (clazz.getPClass().getInfo() == PClassInfo.Mapping
@@ -262,6 +279,7 @@ public final class VmReference extends VmValue {
         }
       }
     }
+    throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
   }
 
   /**
@@ -489,5 +507,30 @@ public final class VmReference extends VmValue {
     assert toStringMethod != null;
     var callNode = DirectCallNode.create(toStringMethod.getCallTarget());
     return (String) callNode.call(this, getVmClass().getPrototype());
+  }
+
+  public enum VmReferenceAccessErrorType {
+    CANNOT_FIND_MEMBER,
+    EXTERNAL_MEMBER,
+    DEFAULT_MEMBER,
+    EXTERNAL_CLASS
+  }
+
+  public static final class VmReferenceAccessError extends RuntimeException {
+    private final PType type;
+    private final VmReferenceAccessErrorType errorType;
+
+    public VmReferenceAccessError(PType type, VmReferenceAccessErrorType errorType) {
+      this.type = type;
+      this.errorType = errorType;
+    }
+
+    public PType getType() {
+      return type;
+    }
+
+    public VmReferenceAccessErrorType getErrorType() {
+      return errorType;
+    }
   }
 }

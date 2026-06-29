@@ -5,6 +5,8 @@ xx | test = ref.Reference(d, ReferencedModule.getClass(), "").output
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference16#test (file:///$snippetsDir/input/errors/reference16.pkl)
 
+Cannot reference property `output` because it is defined inside external class `Module`.
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

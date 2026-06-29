@@ -5,8 +5,8 @@ xx | typealias Alias2 = String(length < 5)
                         ^^^^^^^^^^^^^^^^^^
 at reference12#Alias2 (file:///$snippetsDir/input/errors/reference12.pkl)
 
-x | typealias RefAlias1 = ref.Reference<D, Alias1?>
-                          ^^^^^^^^^^^^^^^^^^^^^^^^^
+x | typealias RefAlias1 = ref.Reference<D, Alias1>
+                          ^^^^^^^^^^^^^^^^^^^^^^^^
 at reference12#RefAlias1 (file:///$snippetsDir/input/errors/reference12.pkl)
 
 xxx | renderer.renderDocument(value)

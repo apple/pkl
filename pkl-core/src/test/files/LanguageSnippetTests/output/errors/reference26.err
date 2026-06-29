@@ -1,0 +1,6 @@
+–– Pkl Error ––
+`Reference` referent type argument may not include nullable types.
+
+x | myRef: ref.Reference<ref.Domain, String?>
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference26 (file:///$snippetsDir/input/errors/reference26.pkl)
