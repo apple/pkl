@@ -70,6 +70,16 @@ public abstract class TypeNode extends PklNode {
     super(sourceSection);
   }
 
+  /**
+   * Invalidate any cached state and recalculate it.
+   *
+   * <p>Subclasses should override this and call invalidate on each child before invalidating its
+   * own state.
+   */
+  protected void invalidate() {
+    // noop by default
+  }
+
   public boolean isNoopTypeCheck() {
     return false;
   }
@@ -811,6 +821,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    protected final void invalidate() {
+      elementTypeNode.invalidate();
+    }
+
+    @Override
     protected final PType doExport() {
       return new PType.Nullable(elementTypeNode.doExport());
     }
@@ -849,7 +864,7 @@ public abstract class TypeNode extends PklNode {
 
   public static class UnionTypeNode extends WriteFrameSlotTypeNode {
     @Children final TypeNode[] elementTypeNodes;
-    private final boolean skipElementTypeChecks;
+    private boolean skipElementTypeChecks;
     private final int defaultIndex;
 
     public UnionTypeNode(
@@ -861,6 +876,16 @@ public abstract class TypeNode extends PklNode {
       assert elementTypeNodes.length > 0;
       this.elementTypeNodes = elementTypeNodes;
       this.defaultIndex = defaultIndex;
+      this.skipElementTypeChecks = skipElementTypeChecks;
+    }
+
+    @Override
+    protected final void invalidate() {
+      var skipElementTypeChecks = true;
+      for (var elementTypeNode : elementTypeNodes) {
+        elementTypeNode.invalidate();
+        skipElementTypeChecks &= elementTypeNode.isNoopTypeCheck();
+      }
       this.skipElementTypeChecks = skipElementTypeChecks;
     }
 
@@ -1162,7 +1187,6 @@ public abstract class TypeNode extends PklNode {
     @Child private TypeNode elementTypeNode;
 
     public CollectionTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
-
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
     }
@@ -1198,6 +1222,11 @@ public abstract class TypeNode extends PklNode {
         String qualifiedName) {
 
       return VmList.EMPTY;
+    }
+
+    @Override
+    protected final void invalidate() {
+      elementTypeNode.invalidate();
     }
 
     @Override
@@ -1272,11 +1301,17 @@ public abstract class TypeNode extends PklNode {
 
   public static final class ListTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
-    private final boolean skipElementTypeChecks;
+    private boolean skipElementTypeChecks;
 
     public ListTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
+      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected final void invalidate() {
+      elementTypeNode.invalidate();
       skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
@@ -1371,11 +1406,17 @@ public abstract class TypeNode extends PklNode {
 
   public abstract static class SetTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
-    private final boolean skipElementTypeChecks;
+    private boolean skipElementTypeChecks;
 
     protected SetTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
+      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected final void invalidate() {
+      elementTypeNode.invalidate();
       skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
@@ -1451,13 +1492,19 @@ public abstract class TypeNode extends PklNode {
   public static final class MapTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode keyTypeNode;
     @Child private TypeNode valueTypeNode;
-    private final boolean skipEntryTypeChecks;
+    private boolean skipEntryTypeChecks;
 
     public MapTypeNode(SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
-
       super(sourceSection);
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
+      skipEntryTypeChecks = keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected final void invalidate() {
+      keyTypeNode.invalidate();
+      valueTypeNode.invalidate();
       skipEntryTypeChecks = keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck();
     }
 
@@ -1712,8 +1759,8 @@ public abstract class TypeNode extends PklNode {
     @Child protected TypeNode valueTypeNode;
     @Child @Nullable protected ListingOrMappingTypeCastNode valueTypeCastNode;
 
-    private final boolean skipKeyTypeChecks;
-    private final boolean skipValueTypeChecks;
+    private boolean skipKeyTypeChecks;
+    private boolean skipValueTypeChecks;
 
     protected ListingOrMappingTypeNode(
         SourceSection sourceSection,
@@ -1726,6 +1773,14 @@ public abstract class TypeNode extends PklNode {
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
 
+      skipKeyTypeChecks = keyTypeNode == null || keyTypeNode.isNoopTypeCheck();
+      skipValueTypeChecks = valueTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    protected final void invalidate() {
+      if (keyTypeNode != null) keyTypeNode.invalidate();
+      valueTypeNode.invalidate();
       skipKeyTypeChecks = keyTypeNode == null || keyTypeNode.isNoopTypeCheck();
       skipValueTypeChecks = valueTypeNode.isNoopTypeCheck();
     }
@@ -1921,6 +1976,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    protected final void invalidate() {
+      returnTypeNode.invalidate();
+      for (var node : parameterTypeNodes) {
+        node.invalidate();
+      }
+    }
+
+    @Override
     public final VmClass getVmClass() {
       return getFunctionNClass();
     }
@@ -2011,6 +2074,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    protected final void invalidate() {
+      typeArgumentNode.invalidate();
+    }
+
+    @Override
     public final VmClass getVmClass() {
       return BaseModule.getFunctionClass();
     }
@@ -2062,6 +2130,13 @@ public abstract class TypeNode extends PklNode {
     protected FunctionNClassTypeNode(SourceSection sourceSection, TypeNode[] typeArgumentNodes) {
       super(sourceSection);
       this.typeArgumentNodes = typeArgumentNodes;
+    }
+
+    @Override
+    protected final void invalidate() {
+      for (var node : typeArgumentNodes) {
+        node.invalidate();
+      }
     }
 
     @Override
@@ -2144,6 +2219,12 @@ public abstract class TypeNode extends PklNode {
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
       validate();
+    }
+
+    @Override
+    protected final void invalidate() {
+      domainTypeNode.invalidate();
+      referentTypeNode.invalidate();
     }
 
     @Override
@@ -2269,6 +2350,12 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    protected final void invalidate() {
+      firstTypeNode.invalidate();
+      secondTypeNode.invalidate();
+    }
+
+    @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmPair vmPair) {
         var first = firstTypeNode.executeLazily(frame, vmPair.getFirst());
@@ -2347,6 +2434,11 @@ public abstract class TypeNode extends PklNode {
 
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
+    }
+
+    @Override
+    protected final void invalidate() {
+      throw exceptionBuilder().evalError("internalStdLibClass", "VarArgs").build();
     }
 
     @Override
@@ -2714,6 +2806,9 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+      // invalidate runs leaf-first
+      // and does not recurse into constraint expressions as those are still unresolved
+      aliasedTypeNode.invalidate();
       aliasedTypeNode.accept(
           node -> {
             if (node instanceof ValidatingObjectSlotTypeNode typeNode) {
@@ -2721,6 +2816,11 @@ public abstract class TypeNode extends PklNode {
             }
             return true;
           });
+    }
+
+    @Override
+    protected void invalidate() {
+      aliasedTypeNode.invalidate();
     }
 
     public TypeNode getAliasedTypeNode() {
@@ -2767,6 +2867,21 @@ public abstract class TypeNode extends PklNode {
 
       try {
         return aliasedTypeNode.executeLazily(frame, value);
+      } finally {
+        setOwner(frame, prevOwner);
+        setReceiver(frame, prevReceiver);
+      }
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      var prevOwner = VmUtils.getOwner(frame);
+      var prevReceiver = VmUtils.getReceiver(frame);
+      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+
+      try {
+        return aliasedTypeNode.executeEagerly(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
@@ -2894,6 +3009,11 @@ public abstract class TypeNode extends PklNode {
       this.language = language;
       this.childNode = childNode;
       this.constraintNodes = constraintNodes;
+    }
+
+    @Override
+    protected void invalidate() {
+      childNode.invalidate();
     }
 
     public TypeNode getChildTypeNode() {
