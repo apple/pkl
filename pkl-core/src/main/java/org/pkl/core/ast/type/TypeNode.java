@@ -66,6 +66,10 @@ public abstract class TypeNode extends PklNode {
     VmClass getVmClass();
   }
 
+  private interface StatefulTypeNode {
+    void invalidate();
+  }
+
   protected TypeNode(SourceSection sourceSection) {
     super(sourceSection);
   }
@@ -847,9 +851,9 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static class UnionTypeNode extends WriteFrameSlotTypeNode {
+  public static class UnionTypeNode extends WriteFrameSlotTypeNode implements StatefulTypeNode {
     @Children final TypeNode[] elementTypeNodes;
-    private final boolean skipElementTypeChecks;
+    private boolean skipElementTypeChecks;
     private final int defaultIndex;
 
     public UnionTypeNode(
@@ -861,6 +865,15 @@ public abstract class TypeNode extends PklNode {
       assert elementTypeNodes.length > 0;
       this.elementTypeNodes = elementTypeNodes;
       this.defaultIndex = defaultIndex;
+      this.skipElementTypeChecks = skipElementTypeChecks;
+    }
+
+    @Override
+    public void invalidate() {
+      var skipElementTypeChecks = true;
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        skipElementTypeChecks &= elementTypeNodes[i].isNoopTypeCheck();
+      }
       this.skipElementTypeChecks = skipElementTypeChecks;
     }
 
@@ -1162,7 +1175,6 @@ public abstract class TypeNode extends PklNode {
     @Child private TypeNode elementTypeNode;
 
     public CollectionTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
-
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
     }
@@ -1270,13 +1282,18 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class ListTypeNode extends ObjectSlotTypeNode {
+  public static final class ListTypeNode extends ObjectSlotTypeNode implements StatefulTypeNode {
     @Child private TypeNode elementTypeNode;
-    private final boolean skipElementTypeChecks;
+    private boolean skipElementTypeChecks;
 
     public ListTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
+      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    public void invalidate() {
       skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
@@ -1369,13 +1386,18 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class SetTypeNode extends ObjectSlotTypeNode {
+  public abstract static class SetTypeNode extends ObjectSlotTypeNode implements StatefulTypeNode {
     @Child private TypeNode elementTypeNode;
-    private final boolean skipElementTypeChecks;
+    private boolean skipElementTypeChecks;
 
     protected SetTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
+      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    public void invalidate() {
       skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
@@ -1448,16 +1470,20 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class MapTypeNode extends ObjectSlotTypeNode {
+  public static final class MapTypeNode extends ObjectSlotTypeNode implements StatefulTypeNode {
     @Child private TypeNode keyTypeNode;
     @Child private TypeNode valueTypeNode;
-    private final boolean skipEntryTypeChecks;
+    private boolean skipEntryTypeChecks;
 
     public MapTypeNode(SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
-
       super(sourceSection);
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
+      skipEntryTypeChecks = keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    public void invalidate() {
       skipEntryTypeChecks = keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck();
     }
 
@@ -1706,14 +1732,15 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class ListingOrMappingTypeNode extends ObjectSlotTypeNode {
+  public abstract static class ListingOrMappingTypeNode extends ObjectSlotTypeNode
+      implements StatefulTypeNode {
     private final VmLanguage language;
     @Child protected @Nullable TypeNode keyTypeNode;
     @Child protected TypeNode valueTypeNode;
     @Child @Nullable protected ListingOrMappingTypeCastNode valueTypeCastNode;
 
-    private final boolean skipKeyTypeChecks;
-    private final boolean skipValueTypeChecks;
+    private boolean skipKeyTypeChecks;
+    private boolean skipValueTypeChecks;
 
     protected ListingOrMappingTypeNode(
         SourceSection sourceSection,
@@ -1726,6 +1753,12 @@ public abstract class TypeNode extends PklNode {
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
 
+      skipKeyTypeChecks = keyTypeNode == null || keyTypeNode.isNoopTypeCheck();
+      skipValueTypeChecks = valueTypeNode.isNoopTypeCheck();
+    }
+
+    @Override
+    public void invalidate() {
       skipKeyTypeChecks = keyTypeNode == null || keyTypeNode.isNoopTypeCheck();
       skipValueTypeChecks = valueTypeNode.isNoopTypeCheck();
     }
@@ -2762,6 +2795,13 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
+      aliasedTypeNode.accept(
+          node -> {
+            if (node instanceof StatefulTypeNode typeNode) {
+              typeNode.invalidate();
+            }
+            return true;
+          });
       checkReferentConstraints(typeAlias);
     }
 
@@ -2833,6 +2873,21 @@ public abstract class TypeNode extends PklNode {
 
       try {
         return aliasedTypeNode.executeLazily(frame, value);
+      } finally {
+        setOwner(frame, prevOwner);
+        setReceiver(frame, prevReceiver);
+      }
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      var prevOwner = VmUtils.getOwner(frame);
+      var prevReceiver = VmUtils.getReceiver(frame);
+      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+
+      try {
+        return aliasedTypeNode.executeEagerly(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
