@@ -534,12 +534,15 @@ The following bugs have been fixed.
 * Cached packages can be written outside the cache dir (https://github.com/apple/pkl/pull/1683[#1683])
 * pkl-gradle throws exception when a Pkl task can't create an evaluator during configuration time (https://github.com/apple/pkl/pull/1684[#1684])
 * Unrelated exception gets thrown when validating elements/entries in objects (https://github.com/apple/pkl/issues/1697[#1697])
+* Type argument is lost in constraint expressions within generic typealiases (https://github.com/apple/pkl/issues/1705[#1705])
+* Typealiases with type var as root are broken (https://github.com/apple/pkl/issues/1711[#1711])
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
 * https://github.com/04cb[@04cb]
+* https://github.com/adityabagchi24[@adityabagchi24]
 * https://github.com/adityasingh2400[@adityasingh2400]
 * https://github.com/bioball[@bioball]
 * https://github.com/fallintoplace[@fallintoplace]
