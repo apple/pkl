@@ -209,7 +209,7 @@ public final class VmTypeAlias extends VmValue {
             // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
             // are still unresolved at instantiation time. Replace them with a resolved
             // unresolved type node that returns the concrete type argument.
-            int index = unresolvedTypeVar.getTypeParameterIndex();
+            var index = unresolvedTypeVar.getTypeParameterIndex();
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnresolvedTypeNode.Unknown(sourceSection)
