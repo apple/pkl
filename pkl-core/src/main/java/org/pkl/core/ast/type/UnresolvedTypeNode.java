@@ -442,10 +442,9 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   /**
-   * An unresolved type node that is pre-resolved to a concrete type node.
-   * Used during type alias instantiation to replace type variable references
-   * inside constraint expressions (e.g., {@code every((it) -> it is T)})
-   * with the corresponding concrete type argument.
+   * An unresolved type node that is pre-resolved to a concrete type node. Used during type alias
+   * instantiation to replace type variable references inside constraint expressions (e.g., {@code
+   * every((it) -> it is T)}) with the corresponding concrete type argument.
    */
   public static final class Resolved extends UnresolvedTypeNode {
     @Child private TypeNode typeNode;
