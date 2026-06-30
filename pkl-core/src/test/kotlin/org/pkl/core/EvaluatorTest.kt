@@ -772,6 +772,23 @@ class EvaluatorTest {
       .doesNotThrowAnyException()
   }
 
+  @Test
+  fun `concurrent evals`() {
+    val exceptions = mutableListOf<Throwable>()
+    val threads =
+      (0..10).map {
+        Thread { Evaluator.preconfigured().use { ev -> ev.evaluateOutputText(text("foo = 1")) } }
+          .also { t ->
+            t.uncaughtExceptionHandler = Thread.UncaughtExceptionHandler { _, e ->
+              synchronized(exceptions) { exceptions.add(e) }
+            }
+            t.start()
+          }
+      }
+    for (t in threads) t.join()
+    exceptions.firstOrNull()?.let { throw it }
+  }
+
   private fun checkModule(module: PModule) {
     assertThat(module.properties.size).isEqualTo(2)
     assertThat(module.getProperty("name")).isEqualTo("pigeon")
