@@ -5,6 +5,8 @@ x | test = ref.Reference(d, Mapping, "").default
            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference13#test (file:///$snippetsDir/input/errors/reference13.pkl)
 
+Cannot reference property `default` in class `Mapping`.
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

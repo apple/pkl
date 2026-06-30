@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Operator `[]` is not defined for operand types `pkl.ref#Reference<reference25#D, Duration | Listing<String>>` and `Int`.
+Left operand : Reference(new D {}, Duration | Listing<String>, null).$
+Right operand: 0
+
+xx | res = myRef[0]
+           ^^^^^^^^
+at reference25#res (file:///$snippetsDir/input/errors/reference25.pkl)
+
+Operator `[]` is not defined for operand types `Duration | Listing<String>` and `Int`.
+	└─ Operator `[]` is not defined for operand types `Duration` and `Int`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

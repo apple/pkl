@@ -1,11 +1,12 @@
 –– Pkl Error ––
-Cannot find property `default` in object of type `pkl.ref#Reference<reference14#D, Listing<unknown>>`.
+Cannot find property `name` in object of type `pkl.ref#Reference<reference24#D, Int | reference24#Bird>`.
 
-x | test = ref.Reference(d, Listing, "").default
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at reference14#test (file:///$snippetsDir/input/errors/reference14.pkl)
+xx | res = myRef.name
+           ^^^^^^^^^^
+at reference24#res (file:///$snippetsDir/input/errors/reference24.pkl)
 
-Cannot reference property `default` in class `Listing`.
+Cannot find property `name` in type `Int | reference24#Bird`.
+	└─ Cannot find property `name` in type `Int`.
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

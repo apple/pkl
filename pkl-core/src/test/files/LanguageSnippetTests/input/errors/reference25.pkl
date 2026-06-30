@@ -1,0 +1,13 @@
+import "pkl:ref"
+
+class D extends ref.Domain {
+  function renderReference(_): String = throw("not implemented")
+}
+
+class Holder {
+  $: Duration | Listing<String>
+}
+
+local myRef = ref.Reference(new D {}, Holder, null).$
+
+res = myRef[0]
