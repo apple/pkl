@@ -448,7 +448,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
    * with the corresponding concrete type argument.
    */
   public static final class Resolved extends UnresolvedTypeNode {
-    private final TypeNode typeNode;
+    @Child private TypeNode typeNode;
 
     public Resolved(SourceSection sourceSection, TypeNode typeNode) {
       super(sourceSection);
