@@ -470,15 +470,37 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  private abstract static class SelfTypeNode extends ObjectSlotTypeNode {
+  public abstract static class SelfTypeNode extends ObjectSlotTypeNode {
+    private @Nullable VmTypeAlias originalAnchor;
+
     public SelfTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
 
+    public void setOriginalAnchor(VmTypeAlias originalAnchor) {
+      if (this.originalAnchor == null) {
+        this.originalAnchor = originalAnchor;
+      }
+    }
+
     protected final VirtualFrame getEffectiveFrame(VirtualFrame frame) {
+      if (originalAnchor == null) return frame;
+
+      var levelsUp = -1;
+      for (var node = getParent(); node != null; node = node.getParent()) {
+        if (node instanceof TypeAliasTypeNode typeAliasTypeNode) {
+          levelsUp++;
+          if (typeAliasTypeNode.getTypeAlias() == originalAnchor) {
+            break;
+          }
+        }
+      }
+      if (levelsUp == -1) {
+        return frame;
+      }
+
       var localContext = VmLanguage.get(this).localContext.get();
-      var realFrame = localContext.getRealTypeAliasFrame();
-      return realFrame != null ? realFrame : frame;
+      return localContext.getRealTypeAliasFrame(levelsUp);
     }
   }
 
@@ -2880,31 +2902,37 @@ public abstract class TypeNode extends PklNode {
      * where the typealias was declared, so that we preserve its original scope.
      */
     protected Object executeLazily(VirtualFrame frame, Object value) {
+      var localContext = VmLanguage.get(this).localContext.get();
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
       setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+      localContext.pushRealTypeAliasFrame(new FakeFrame(prevReceiver, prevOwner));
 
       try {
         return aliasedTypeNode.executeLazily(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
+        localContext.popRealTypeAliasFrame();
       }
     }
 
     @Override
     public Object executeEagerly(VirtualFrame frame, Object value) {
+      var localContext = VmLanguage.get(this).localContext.get();
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
       setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+      localContext.pushRealTypeAliasFrame(new FakeFrame(prevReceiver, prevOwner));
 
       try {
         return aliasedTypeNode.executeEagerly(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
+        localContext.popRealTypeAliasFrame();
       }
     }
 
@@ -2914,17 +2942,16 @@ public abstract class TypeNode extends PklNode {
       var localContext = VmLanguage.get(this).localContext.get();
       var prevOwner = VmUtils.getOwner(frame);
       var prevReceiver = VmUtils.getReceiver(frame);
-      var prevRealFrame = localContext.getRealTypeAliasFrame();
       setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
       setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
-      localContext.setRealTypeAliasFrame(new FakeFrame(prevReceiver, prevOwner));
+      localContext.pushRealTypeAliasFrame(new FakeFrame(prevReceiver, prevOwner));
 
       try {
         return aliasedTypeNode.executeAndSet(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
-        localContext.setRealTypeAliasFrame(prevRealFrame);
+        localContext.popRealTypeAliasFrame();
       }
     }
 

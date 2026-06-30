@@ -7,6 +7,7 @@ import ".../input-helper/types/moduleUnion2.pkl"
 
 typealias ModuleUnion = moduleUnion1.ModuleUnion<module>
 
-res1 = (module as ModuleUnion).res2
+x = 1
+res1 = (module as ModuleUnion).x
 res2 = moduleUnion1 as ModuleUnion
 res3 = moduleUnion2 as ModuleUnion

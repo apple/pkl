@@ -32,6 +32,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
+import org.pkl.core.ast.type.TypeNode.SelfTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 
@@ -192,10 +193,18 @@ public final class VmTypeAlias extends VmValue {
             int index = typeVarNode.getTypeParameterIndex();
             // should not need to clone type argument node because it is not used by its original
             // root node
-            node.replace(
-                typeArgumentNodes.length == 0
-                    ? new UnknownTypeNode(sourceSection)
-                    : typeArgumentNodes[index]);
+            if (typeArgumentNodes.length == 0) {
+              node.replace(new UnknownTypeNode(sourceSection));
+            } else {
+              node.replace(typeArgumentNodes[index])
+                  .accept(
+                      n -> {
+                        if (n instanceof SelfTypeNode selfTypeNode) {
+                          selfTypeNode.setOriginalAnchor(this);
+                        }
+                        return true;
+                      });
+            }
           }
           return true;
         });
