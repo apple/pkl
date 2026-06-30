@@ -1,0 +1,2 @@
+typealias Id<T> = T
+foo: Id<Int> = "oops"

@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `Int`, but got type `String`.
+Value: "oops"
+
+x | foo: Id<Int> = "oops"
+            ^^^
+at typeAlias3a#foo (file:///$snippetsDir/input/types/typeAlias3a.pkl)
+
+x | foo: Id<Int> = "oops"
+                   ^^^^^^
+at typeAlias3a#foo (file:///$snippetsDir/input/types/typeAlias3a.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
