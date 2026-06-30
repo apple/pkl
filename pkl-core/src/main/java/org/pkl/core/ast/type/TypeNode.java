@@ -2132,7 +2132,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
+  public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
     @Child private ExpressionNode getModuleNode;
@@ -2143,17 +2143,34 @@ public abstract class TypeNode extends PklNode {
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
-      // A type constraint anywhere in the referent is forbidden, including one reached through a
-      // type alias used in the referent.
-      var constraint = findReferentConstraint();
-      if (constraint != null) {
-        CompilerDirectives.transferToInterpreter();
-        throw exceptionBuilder()
-            .evalError("invalidReferenceTypeAnnotationWithConstraint")
-            .withLeadingStackFrames(
-                buildReferentConstraintFrames(constraint, getSourceSection(), null))
-            .build();
-      }
+      validate();
+    }
+
+    @Override
+    public final String getValidationErrorKey() {
+      return "invalidReferenceTypeAnnotationWithConstraint";
+    }
+
+    @Override
+    protected final @Nullable Node getViolatingNode() {
+      // constraints may not be used in Reference type annotation referents
+      // walk the type and throw if any part of the referent is constrained
+      var violation = new MutableReference<Node>(null);
+      referentTypeNode.acceptTypeNode(
+          true,
+          (typeNode) -> {
+            if (typeNode instanceof ConstrainedTypeNode) {
+              violation.set(typeNode);
+              return false;
+            }
+            return true;
+          });
+      return violation.getOrNull();
+    }
+
+    @Override
+    protected final boolean isIncludedInTrace(Node node) {
+      return node instanceof ReferenceTypeNode || node instanceof ConstrainedTypeNode;
     }
 
     @Specialization
@@ -2186,71 +2203,6 @@ public abstract class TypeNode extends PklNode {
 
       throw new VmTypeMismatchException.Reference(
           sourceSection, value, TypeNode.export(domainTypeNode), referentType);
-    }
-
-    /**
-     * Type constraints may not appear anywhere in a {@code Reference}'s referent type argument.
-     * Walks the referent type and returns the first offending {@link ConstrainedTypeNode} , or
-     * {@code null} if the referent is constraint-free.
-     */
-    public @Nullable ConstrainedTypeNode findReferentConstraint() {
-      var found = new MutableReference<@Nullable ConstrainedTypeNode>(null);
-      referentTypeNode.acceptTypeNode(
-          true,
-          (typeNode) -> {
-            if (typeNode instanceof ConstrainedTypeNode constrainedTypeNode) {
-              found.set(constrainedTypeNode);
-              return false;
-            }
-            return true;
-          });
-      return found.getOrNull();
-    }
-
-    /** Builds the frames to show ahead of an "invalid referent constraint" error. */
-    public static List<StackFrame> buildReferentConstraintFrames(
-        ConstrainedTypeNode constraintNode,
-        SourceSection usageSection,
-        @Nullable VmTypeAlias outermostAlias) {
-      var frames = new ArrayList<StackFrame>();
-      for (Node node = constraintNode; node != null; node = node.getParent()) {
-        if (!(node instanceof ConstrainedTypeNode
-            || node instanceof TypeAliasTypeNode
-            || node instanceof ReferenceTypeNode)) {
-          continue;
-        }
-        var section = node.getSourceSection();
-        //noinspection ConstantValue
-        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
-          continue;
-        }
-        var owner = ownerAlias(node, outermostAlias);
-        if (owner != null) {
-          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
-        }
-      }
-      return frames;
-    }
-
-    /**
-     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
-     * outermost alias being instantiated (which is {@code null} for a directly-used Reference).
-     */
-    @SuppressWarnings("DataFlowIssue")
-    private static @Nullable VmTypeAlias ownerAlias(
-        Node node, @Nullable VmTypeAlias outermostAlias) {
-      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
-      //noinspection ConstantValue
-      if (parent != null) {
-        return parent.typeAlias;
-      }
-      return outermostAlias;
-    }
-
-    private static boolean isWithin(SourceSection outer, SourceSection inner) {
-      return inner.getSource().equals(outer.getSource())
-          && inner.getCharIndex() >= outer.getCharIndex()
-          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
 
     @Fallback
@@ -2762,28 +2714,10 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
-      checkReferentConstraints(typeAlias);
-    }
-
-    /**
-     * Reports a forbidden type constraint that a type argument introduced into a {@code
-     * Reference}'s referent through this (generic) alias. The error is reported at this usage type
-     * expression, with leading frames for the constraint and every alias layer it passed through.
-     */
-    private void checkReferentConstraints(VmTypeAlias outermostAlias) {
       aliasedTypeNode.accept(
           node -> {
-            if (node instanceof ReferenceTypeNode referenceTypeNode) {
-              var constraint = referenceTypeNode.findReferentConstraint();
-              if (constraint != null) {
-                CompilerDirectives.transferToInterpreter();
-                throw exceptionBuilder()
-                    .evalError("invalidReferenceTypeAnnotationWithConstraint")
-                    .withLeadingStackFrames(
-                        ReferenceTypeNode.buildReferentConstraintFrames(
-                            constraint, getSourceSection(), outermostAlias))
-                    .build();
-              }
+            if (node instanceof ValidatingObjectSlotTypeNode typeNode) {
+              typeNode.validate(this);
             }
             return true;
           });
@@ -3284,6 +3218,78 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+  }
+
+  public abstract static class ValidatingObjectSlotTypeNode extends ObjectSlotTypeNode {
+
+    protected ValidatingObjectSlotTypeNode(SourceSection sourceSection) {
+      super(sourceSection);
+    }
+
+    protected abstract String getValidationErrorKey();
+
+    protected abstract @Nullable Node getViolatingNode();
+
+    protected final void validate() {
+      var violation = getViolatingNode();
+      if (violation == null) return;
+      throw exceptionBuilder()
+          .evalError(getValidationErrorKey())
+          .withLeadingStackFrames(buildLeadingFrames(violation, getSourceSection(), null))
+          .build();
+    }
+
+    public final void validate(TypeAliasTypeNode outermostAliasNode) {
+      var violation = getViolatingNode();
+      if (violation == null) return;
+
+      throw exceptionBuilder()
+          .withLocation(outermostAliasNode)
+          .evalError(getValidationErrorKey())
+          .withLeadingStackFrames(
+              buildLeadingFrames(
+                  violation,
+                  outermostAliasNode.getSourceSection(),
+                  outermostAliasNode.getTypeAlias()))
+          .build();
+    }
+
+    protected abstract boolean isIncludedInTrace(Node node);
+
+    private List<StackFrame> buildLeadingFrames(
+        Node violatingNode, SourceSection usageSection, @Nullable VmTypeAlias outermostAlias) {
+      var frames = new ArrayList<StackFrame>();
+      for (var node = violatingNode; node != null; node = node.getParent()) {
+        if (!(node instanceof TypeAliasTypeNode || isIncludedInTrace(node))) continue;
+        var section = node.getSourceSection();
+        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
+          continue;
+        }
+        var owner = ownerAlias(node, outermostAlias);
+        if (owner != null) {
+          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
+        }
+      }
+      return frames;
+    }
+
+    /**
+     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
+     * outermost alias being instantiated (which is {@code null} when no alias is used).
+     */
+    @SuppressWarnings("DataFlowIssue")
+    private static @Nullable VmTypeAlias ownerAlias(
+        Node node, @Nullable VmTypeAlias outermostAlias) {
+      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
+      //noinspection ConstantValue
+      return parent != null ? parent.getTypeAlias() : outermostAlias;
+    }
+
+    private static boolean isWithin(SourceSection outer, SourceSection inner) {
+      return inner.getSource().equals(outer.getSource())
+          && inner.getCharIndex() >= outer.getCharIndex()
+          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
   }
 
