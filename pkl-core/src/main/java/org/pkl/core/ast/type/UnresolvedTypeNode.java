@@ -39,7 +39,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
     private final VmLanguage language;
     @Child UnresolvedTypeNode childNode;
-    TypeConstraintNode[] constraintCheckNodes;
+    @Children TypeConstraintNode[] constraintCheckNodes;
 
     public Constrained(
         SourceSection sourceSection,
@@ -438,25 +438,6 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       return new TypeVariableNode(sourceSection, typeParameter);
-    }
-  }
-
-  /**
-   * An unresolved type node that is pre-resolved to a concrete type node. Used during type alias
-   * instantiation to replace type variable references inside constraint expressions (e.g., {@code
-   * every((it) -> it is T)}) with the corresponding concrete type argument.
-   */
-  public static final class Resolved extends UnresolvedTypeNode {
-    @Child private TypeNode typeNode;
-
-    public Resolved(SourceSection sourceSection, TypeNode typeNode) {
-      super(sourceSection);
-      this.typeNode = typeNode;
-    }
-
-    @Override
-    public TypeNode execute(VirtualFrame frame) {
-      return typeNode;
     }
   }
 }

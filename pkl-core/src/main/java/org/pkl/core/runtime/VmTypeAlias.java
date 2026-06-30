@@ -30,11 +30,11 @@ import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.type.TypeExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
-import org.pkl.core.ast.type.UnresolvedTypeNode;
 
 public final class VmTypeAlias extends VmValue {
   private final SourceSection sourceSection;
@@ -205,15 +205,15 @@ public final class VmTypeAlias extends VmValue {
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
                     : typeArgumentNodes[index]);
-          } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
+          } else if (node instanceof TypeExpressionNode typeExpressionNode) {
             // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
-            // are still unresolved at instantiation time. Replace them with a resolved
-            // unresolved type node that returns the concrete type argument.
-            var index = unresolvedTypeVar.getTypeParameterIndex();
-            node.replace(
+            // need to be handled separately; uninitialized expressions contain UnresolvedTypeNode.
+            var index = typeExpressionNode.getTypeParameterIndex();
+            if (index == -1) return true;
+            typeExpressionNode.insertTypeNode(
                 typeArgumentNodes.length == 0
-                    ? new UnresolvedTypeNode.Unknown(sourceSection)
-                    : new UnresolvedTypeNode.Resolved(sourceSection, typeArgumentNodes[index]));
+                    ? new UnknownTypeNode(sourceSection)
+                    : typeArgumentNodes[index]);
           }
           return true;
         });

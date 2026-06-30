@@ -1,0 +1,4 @@
+res = "Type constraint `this[0] is T` violated. Value: List(\"uh oh\")"
+res2 = "Expected value of type `Int`, but got type `String`. Value: \"uh oh\""
+res3 = "Type constraint `this[0] is Any(this is T)` violated. Value: \"u\""
+res4 = "Type constraint `this[0] is T(!(this is T))` violated. Value: \"u\""

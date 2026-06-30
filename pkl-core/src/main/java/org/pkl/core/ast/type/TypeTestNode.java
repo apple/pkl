@@ -19,23 +19,19 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmLanguage;
 
 @NodeInfo(shortName = "is")
-public final class TypeTestNode extends ExpressionNode {
+public final class TypeTestNode extends TypeExpressionNode {
   @Child private ExpressionNode valueNode;
-  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
-  @Child private @Nullable TypeNode typeNode;
 
   public TypeTestNode(
       SourceSection sourceSection,
       ExpressionNode valueNode,
       UnresolvedTypeNode unresolvedTypeNode) {
-    super(sourceSection);
+    super(sourceSection, unresolvedTypeNode);
     this.valueNode = valueNode;
-    this.unresolvedTypeNode = unresolvedTypeNode;
   }
 
   @Override
@@ -47,11 +43,10 @@ public final class TypeTestNode extends ExpressionNode {
   public boolean executeBoolean(VirtualFrame frame) {
     if (typeNode == null) {
       // don't compile unresolvedTypeNode.execute()
-      // invalidation is done by insert()
+      // invalidation is done by insertTypeNode()
       CompilerDirectives.transferToInterpreter();
       assert unresolvedTypeNode != null;
-      typeNode = insert(unresolvedTypeNode.execute(frame));
-      unresolvedTypeNode = null;
+      insertTypeNode(unresolvedTypeNode.execute(frame));
     }
 
     // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
