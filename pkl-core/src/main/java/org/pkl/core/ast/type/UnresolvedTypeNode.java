@@ -457,8 +457,6 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
-      CompilerDirectives.transferToInterpreter();
-
       return typeNode;
     }
   }
