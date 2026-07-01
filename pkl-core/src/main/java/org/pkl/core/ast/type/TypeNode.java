@@ -70,16 +70,6 @@ public abstract class TypeNode extends PklNode {
     super(sourceSection);
   }
 
-  /**
-   * Invalidate any cached state and recalculate it.
-   *
-   * <p>Subclasses should override this and call invalidate on each child before invalidating its
-   * own state.
-   */
-  protected void invalidate() {
-    // noop by default
-  }
-
   public boolean isNoopTypeCheck() {
     return false;
   }
@@ -821,11 +811,6 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final void invalidate() {
-      elementTypeNode.invalidate();
-    }
-
-    @Override
     protected final PType doExport() {
       return new PType.Nullable(elementTypeNode.doExport());
     }
@@ -864,29 +849,14 @@ public abstract class TypeNode extends PklNode {
 
   public static class UnionTypeNode extends WriteFrameSlotTypeNode {
     @Children final TypeNode[] elementTypeNodes;
-    private boolean skipElementTypeChecks;
     private final int defaultIndex;
 
     public UnionTypeNode(
-        SourceSection sourceSection,
-        int defaultIndex,
-        TypeNode[] elementTypeNodes,
-        boolean skipElementTypeChecks) {
+        SourceSection sourceSection, int defaultIndex, TypeNode[] elementTypeNodes) {
       super(sourceSection);
       assert elementTypeNodes.length > 0;
       this.elementTypeNodes = elementTypeNodes;
       this.defaultIndex = defaultIndex;
-      this.skipElementTypeChecks = skipElementTypeChecks;
-    }
-
-    @Override
-    protected final void invalidate() {
-      var skipElementTypeChecks = true;
-      for (var elementTypeNode : elementTypeNodes) {
-        elementTypeNode.invalidate();
-        skipElementTypeChecks &= elementTypeNode.isNoopTypeCheck();
-      }
-      this.skipElementTypeChecks = skipElementTypeChecks;
     }
 
     @Override
@@ -904,7 +874,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isNoopTypeCheck() {
-      return skipElementTypeChecks;
+      for (var element : elementTypeNodes) {
+        if (!element.isNoopTypeCheck()) return false;
+      }
+      return true;
     }
 
     @Override
@@ -1010,8 +983,6 @@ public abstract class TypeNode extends PklNode {
     @Fallback
     @ExplodeLoop
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      if (skipElementTypeChecks) return value;
-
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
@@ -1062,8 +1033,6 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public Object executeEagerly(VirtualFrame frame, Object value) {
-      if (skipElementTypeChecks) return value;
-
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
@@ -1225,11 +1194,6 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final void invalidate() {
-      elementTypeNode.invalidate();
-    }
-
-    @Override
     public VmClass getVmClass() {
       return BaseModule.getCollectionClass();
     }
@@ -1301,18 +1265,10 @@ public abstract class TypeNode extends PklNode {
 
   public static final class ListTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
-    private boolean skipElementTypeChecks;
 
     public ListTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
-      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
-    }
-
-    @Override
-    protected final void invalidate() {
-      elementTypeNode.invalidate();
-      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
     @Override
@@ -1357,7 +1313,7 @@ public abstract class TypeNode extends PklNode {
       if (!(value instanceof VmList vmList)) {
         throw typeMismatch(value, BaseModule.getListClass());
       }
-      if (skipElementTypeChecks) return vmList;
+      if (elementTypeNode.isNoopTypeCheck()) return vmList;
 
       for (var elem : vmList) {
         elementTypeNode.executeEagerly(frame, elem);
@@ -1374,7 +1330,7 @@ public abstract class TypeNode extends PklNode {
       if (!(value instanceof VmList vmList)) {
         throw typeMismatch(value, BaseModule.getListClass());
       }
-      if (skipElementTypeChecks) return vmList;
+      if (elementTypeNode.isNoopTypeCheck()) return vmList;
       var ret = vmList;
       var idx = 0;
 
@@ -1406,18 +1362,10 @@ public abstract class TypeNode extends PklNode {
 
   public abstract static class SetTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
-    private boolean skipElementTypeChecks;
 
     protected SetTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
-      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
-    }
-
-    @Override
-    protected final void invalidate() {
-      elementTypeNode.invalidate();
-      skipElementTypeChecks = elementTypeNode.isNoopTypeCheck();
     }
 
     @Override
@@ -1467,7 +1415,7 @@ public abstract class TypeNode extends PklNode {
 
     @Specialization
     protected Object eval(VirtualFrame frame, VmSet value) {
-      if (skipElementTypeChecks) return value;
+      if (elementTypeNode.isNoopTypeCheck()) return value;
       for (var elem : value) {
         // no point doing a lazy check because set members have their hash code computed, which
         // necessarily deep-forces them.
@@ -1492,20 +1440,11 @@ public abstract class TypeNode extends PklNode {
   public static final class MapTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode keyTypeNode;
     @Child private TypeNode valueTypeNode;
-    private boolean skipEntryTypeChecks;
 
     public MapTypeNode(SourceSection sourceSection, TypeNode keyTypeNode, TypeNode valueTypeNode) {
       super(sourceSection);
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
-      skipEntryTypeChecks = keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck();
-    }
-
-    @Override
-    protected final void invalidate() {
-      keyTypeNode.invalidate();
-      valueTypeNode.invalidate();
-      skipEntryTypeChecks = keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck();
     }
 
     @Override
@@ -1578,7 +1517,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     private Object eval(VirtualFrame frame, VmMap value) {
-      if (skipEntryTypeChecks) return value;
+      if (keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck()) return value;
       var ret = value;
 
       for (var entry : value) {
@@ -1595,7 +1534,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     private Object evalEager(VirtualFrame frame, VmMap value) {
-      if (skipEntryTypeChecks) return value;
+      if (keyTypeNode.isNoopTypeCheck() && valueTypeNode.isNoopTypeCheck()) return value;
       for (var entry : value) {
         keyTypeNode.executeEagerly(frame, VmUtils.getKey(entry));
         valueTypeNode.executeEagerly(frame, VmUtils.getValue(entry));
@@ -1759,9 +1698,6 @@ public abstract class TypeNode extends PklNode {
     @Child protected TypeNode valueTypeNode;
     @Child @Nullable protected ListingOrMappingTypeCastNode valueTypeCastNode;
 
-    private boolean skipKeyTypeChecks;
-    private boolean skipValueTypeChecks;
-
     protected ListingOrMappingTypeNode(
         SourceSection sourceSection,
         VmLanguage language,
@@ -1772,17 +1708,6 @@ public abstract class TypeNode extends PklNode {
       this.language = language;
       this.keyTypeNode = keyTypeNode;
       this.valueTypeNode = valueTypeNode;
-
-      skipKeyTypeChecks = keyTypeNode == null || keyTypeNode.isNoopTypeCheck();
-      skipValueTypeChecks = valueTypeNode.isNoopTypeCheck();
-    }
-
-    @Override
-    protected final void invalidate() {
-      if (keyTypeNode != null) keyTypeNode.invalidate();
-      valueTypeNode.invalidate();
-      skipKeyTypeChecks = keyTypeNode == null || keyTypeNode.isNoopTypeCheck();
-      skipValueTypeChecks = valueTypeNode.isNoopTypeCheck();
     }
 
     private boolean isListing() {
@@ -1904,7 +1829,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     protected void doEagerCheck(VirtualFrame frame, VmObject object) {
-      doEagerCheck(frame, object, skipKeyTypeChecks, skipValueTypeChecks);
+      doEagerCheck(
+          frame,
+          object,
+          keyTypeNode == null || keyTypeNode.isNoopTypeCheck(),
+          valueTypeNode.isNoopTypeCheck());
     }
 
     protected void doEagerCheck(
@@ -1973,14 +1902,6 @@ public abstract class TypeNode extends PklNode {
       super(sourceSection);
       this.parameterTypeNodes = parameterTypeNodes;
       this.returnTypeNode = returnTypeNode;
-    }
-
-    @Override
-    protected final void invalidate() {
-      returnTypeNode.invalidate();
-      for (var node : parameterTypeNodes) {
-        node.invalidate();
-      }
     }
 
     @Override
@@ -2074,11 +1995,6 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final void invalidate() {
-      typeArgumentNode.invalidate();
-    }
-
-    @Override
     public final VmClass getVmClass() {
       return BaseModule.getFunctionClass();
     }
@@ -2130,13 +2046,6 @@ public abstract class TypeNode extends PklNode {
     protected FunctionNClassTypeNode(SourceSection sourceSection, TypeNode[] typeArgumentNodes) {
       super(sourceSection);
       this.typeArgumentNodes = typeArgumentNodes;
-    }
-
-    @Override
-    protected final void invalidate() {
-      for (var node : typeArgumentNodes) {
-        node.invalidate();
-      }
     }
 
     @Override
@@ -2219,12 +2128,6 @@ public abstract class TypeNode extends PklNode {
       this.referentTypeNode = referentTypeNode;
       this.getModuleNode = new GetModuleNode(sourceSection);
       validate();
-    }
-
-    @Override
-    protected final void invalidate() {
-      domainTypeNode.invalidate();
-      referentTypeNode.invalidate();
     }
 
     @Override
@@ -2343,16 +2246,9 @@ public abstract class TypeNode extends PklNode {
 
     public PairTypeNode(
         SourceSection sourceSection, TypeNode firstTypeNode, TypeNode secondTypeNode) {
-
       super(sourceSection);
       this.firstTypeNode = firstTypeNode;
       this.secondTypeNode = secondTypeNode;
-    }
-
-    @Override
-    protected final void invalidate() {
-      firstTypeNode.invalidate();
-      secondTypeNode.invalidate();
     }
 
     @Override
@@ -2434,11 +2330,6 @@ public abstract class TypeNode extends PklNode {
 
       super(sourceSection);
       this.elementTypeNode = elementTypeNode;
-    }
-
-    @Override
-    protected final void invalidate() {
-      throw exceptionBuilder().evalError("internalStdLibClass", "VarArgs").build();
     }
 
     @Override
@@ -2806,9 +2697,6 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
-      // invalidate runs leaf-first
-      // and does not recurse into constraint expressions as those are still unresolved
-      aliasedTypeNode.invalidate();
       aliasedTypeNode.accept(
           node -> {
             if (node instanceof ValidatingObjectSlotTypeNode typeNode) {
@@ -2816,11 +2704,6 @@ public abstract class TypeNode extends PklNode {
             }
             return true;
           });
-    }
-
-    @Override
-    protected void invalidate() {
-      aliasedTypeNode.invalidate();
     }
 
     public TypeNode getAliasedTypeNode() {
@@ -3009,11 +2892,6 @@ public abstract class TypeNode extends PklNode {
       this.language = language;
       this.childNode = childNode;
       this.constraintNodes = constraintNodes;
-    }
-
-    @Override
-    protected void invalidate() {
-      childNode.invalidate();
     }
 
     public TypeNode getChildTypeNode() {

@@ -361,16 +361,13 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       var elementTypeNodes = new TypeNode[unresolvedElementTypeNodes.length];
-      var skipElementTypeChecks = true;
 
       for (var i = 0; i < elementTypeNodes.length; i++) {
         var elementTypeNode = unresolvedElementTypeNodes[i].execute(frame);
         elementTypeNodes[i] = elementTypeNode;
-        skipElementTypeChecks &= elementTypeNode.isNoopTypeCheck();
       }
 
-      return new UnionTypeNode(
-          sourceSection, defaultIndex, elementTypeNodes, skipElementTypeChecks);
+      return new UnionTypeNode(sourceSection, defaultIndex, elementTypeNodes);
     }
   }
 
