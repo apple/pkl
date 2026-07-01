@@ -21,7 +21,6 @@ module pkl.EvaluatorSettings
 
 import "pkl:EvaluatorSettings"
 import "pkl:platform"
-// used by doc comments
 import "pkl:Project"
 
 /// The external properties available to Pkl, read using the `prop:` scheme.

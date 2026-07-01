@@ -73,7 +73,7 @@ class Parser {
 
   /// Value converters to apply to parsed values.
   ///
-  /// For further information see [PcfRenderer.converters].
+  /// For further information see [BaseValueRenderer.converters].
   converters: Mapping<Class | String(!isEmpty), (unknown) -> unknown>
 
   /// The maximum number of aliases for collection nodes.

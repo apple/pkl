@@ -16,7 +16,7 @@
 
 /// Defines inputs and outputs for CLI commands implemented in Pkl.
 ///
-/// Modules extending `pkl:Command` may configure [ModuleOutput.text], [ModuleOutput.bytes], and/or
+/// Modules extending `pkl:Command` may configure [FileOutput.text], [FileOutput.bytes], and/or
 /// [ModuleOutput.files] of [output] to influence the effect of the command.
 ///
 /// Command modules should override [options] and provide their own class declaring options:

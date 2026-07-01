@@ -77,7 +77,7 @@ class Property extends ConvertProperty {
 /// Use this method to directly define an XML element
 /// instead of relying on the default rendering of Pkl values.
 ///
-/// To define the XML element's attributes, set the [attributes] property of the `Element` object:
+/// To define the XML element's attributes, set the `attributes` property of the `Element` object:
 /// ```
 /// order = xml.Element("order") {
 ///   attributes {

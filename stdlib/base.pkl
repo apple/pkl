@@ -20,7 +20,6 @@
 @ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.base
 
-// json, math, and yaml imports used for doc comments
 import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
@@ -3227,16 +3226,16 @@ external class List<out Element> extends Collection<Element> {
   /// Returns [null] if [index] is outside the bounds of this list.
   external function replaceOrNull<Other>(index: Int, replacement: Other): List<Element | Other>?
 
-  /// Replaces the elements between indices [range] and [exclusiveEnd] with [replacement].
+  /// Replaces the elements between indices [start] and [exclusiveEnd] with [replacement].
   ///
-  /// Throws if [range] or [exclusiveEnd] is outside the bounds of this list.
+  /// Throws if [start] or [exclusiveEnd] is outside the bounds of this list.
   external function replaceRange<Other>(
     start: Int,
     exclusiveEnd: Int,
     replacement: Collection<Other>,
   ): List<Element | Other>
 
-  /// Replaces the elements between indices [range] and [exclusiveEnd] with [replacement].
+  /// Replaces the elements between indices [start] and [exclusiveEnd] with [replacement].
   ///
   /// Returns [null] if [range] or [exclusiveEnd] is outside the bounds of this list.
   external function replaceRangeOrNull<Other>(

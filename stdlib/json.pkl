@@ -54,7 +54,7 @@ class Parser {
 
   /// Value converters to apply to parsed values.
   ///
-  /// For further information see [PcfRenderer.converters].
+  /// For further information see [BaseValueRenderer.converters].
   converters: Mapping<Class | String(!isEmpty), (unknown) -> unknown>
 
   /// Parses [source] as a JSON document.
