@@ -1,0 +1,24 @@
+typealias MyList<T> = List<T>
+res1 = List(new Dynamic {}) is MyList<module>
+
+typealias MyList2<T> = List(any((it) -> it is T))
+res1a = List(new Dynamic {}) is MyList<module>
+res1b = List(this) is MyList<module>
+
+typealias MySet<T> = Set<T>
+res2 = Set(new Dynamic {}) is MySet<module>
+
+typealias MyMap<T> = Map<Any, T>
+res3 = Map("foo", new Dynamic {}) is MyMap<module>
+
+typealias MyListing<T> = Listing<T>
+res4 = new Listing { new Dynamic {} } is MyListing<module>
+
+typealias MyMapping<K, V> = Mapping<K, V>
+res5 = new Mapping { ["foo"] = new Dynamic {} } is MyMapping<String, module>
+
+typealias MyUnion<A, B> = A | B
+res6 = new Dynamic {} is MyUnion<module, module>
+
+typealias NestedUnion<A, B> = (A | A) | (B | B)
+res7 = new Dynamic {} is NestedUnion<module, module>
