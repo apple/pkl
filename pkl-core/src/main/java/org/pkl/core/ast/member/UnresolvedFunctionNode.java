@@ -31,7 +31,7 @@ public final class UnresolvedFunctionNode extends PklNode {
   private final int parameterCount;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
-  private final ExpressionNode bodyNode;
+  @Child private ExpressionNode bodyNode;
 
   public UnresolvedFunctionNode(
       VmLanguage language,

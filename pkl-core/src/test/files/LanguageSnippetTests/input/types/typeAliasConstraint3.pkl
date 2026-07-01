@@ -1,0 +1,3 @@
+typealias MyList<T> = List(this[0] is T)
+
+foo: MyList<Int> = List("uh oh")

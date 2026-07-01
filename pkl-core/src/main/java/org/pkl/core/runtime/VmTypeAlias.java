@@ -34,6 +34,7 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 
 public final class VmTypeAlias extends VmValue {
   private final SourceSection sourceSection;
@@ -204,6 +205,15 @@ public final class VmTypeAlias extends VmValue {
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
                     : typeArgumentNodes[index]);
+          } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
+            // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
+            // are still unresolved at instantiation time. Replace them with a resolved
+            // unresolved type node that returns the concrete type argument.
+            var index = unresolvedTypeVar.getTypeParameterIndex();
+            node.replace(
+                typeArgumentNodes.length == 0
+                    ? new UnresolvedTypeNode.Unknown(sourceSection)
+                    : new UnresolvedTypeNode.Resolved(sourceSection, typeArgumentNodes[index]));
           }
           return true;
         });
