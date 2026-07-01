@@ -1,0 +1,5 @@
+extends "classType.pkl"
+
+typealias G<T> = F<T | B>
+
+res21 = List(A, C) is G<A>

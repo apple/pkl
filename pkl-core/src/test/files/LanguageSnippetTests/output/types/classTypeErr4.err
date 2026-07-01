@@ -1,0 +1,14 @@
+–– Pkl Error ––
+`Class` type arguments may only be class types, module types, `unknown`, or `module`.
+
+x | res8 = C as Class<A | B>
+                ^^^^^^^^^^^^
+at classTypeErr4#res8 (file:///$snippetsDir/input/types/classTypeErr4.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

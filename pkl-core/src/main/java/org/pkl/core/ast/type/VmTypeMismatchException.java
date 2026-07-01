@@ -169,6 +169,54 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
   }
 
+  public static final class Class extends VmTypeMismatchException {
+
+    private final VmClass expectedClass;
+
+    public Class(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
+      super(sourceSection, actualClass);
+      this.expectedClass = expectedClass;
+    }
+
+    @Override
+    @TruffleBoundary
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      var actualClass = (VmClass) actualValue;
+      var renderedExpectedClass = "Class<" + expectedClass + ">";
+      var renderedActualClass = "Class<" + actualClass + ">";
+
+      // give better error than "expected Class<foo.Bar>, but got Class<foo.Bar>" in case of naming
+      // conflict
+      if (actualClass.getQualifiedName().equals(expectedClass.getQualifiedName())) {
+        var actualModuleUri = actualClass.getModule().getModuleInfo().getModuleKey().getUri();
+        var expectedModuleUri = expectedClass.getModule().getModuleInfo().getModuleKey().getUri();
+
+        builder
+            .append(
+                ErrorMessages.createIndented(
+                    actualClass.getPClassInfo().isModuleClass()
+                        ? "typeMismatchVersionConflict1"
+                        : "typeMismatchVersionConflict2",
+                    indent,
+                    renderedExpectedClass,
+                    expectedModuleUri,
+                    actualModuleUri))
+            .append("\n");
+        return;
+      }
+
+      builder.append(
+          ErrorMessages.createIndented(
+              "typeMismatch", indent, renderedExpectedClass, renderedActualClass));
+    }
+
+    @Override
+    protected Boolean hasHint() {
+      return false;
+    }
+  }
+
   public static final class Constraint extends VmTypeMismatchException {
 
     private final SourceSection constraintBodySourceSection;

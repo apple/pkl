@@ -1,0 +1,27 @@
+open module classType
+
+import ".../input-helper/types/classTypeA.pkl"
+import ".../input-helper/types/classTypeB.pkl"
+
+open class A
+open class B
+class C extends A
+class D extends module
+typealias E = A
+
+res0 = C is Class<C>
+res1 = C is Class<A>
+
+res3 = C is Class
+res4 = C is Class<unknown>
+res5 = C is Class<Any>
+
+res15 = D is Class<module>
+res16 = D is Class<Object>
+res17 = D is Class<Typed>
+res18 = D is Class<Dynamic>
+res19 = D is Class<Int>
+
+typealias F<T> = List<Class<T>>
+res20 = List(A, C) is F<A>
+res21 = List(new A {}, new B {}, new C {}).filterIsInstance(A).length
