@@ -18,12 +18,14 @@ package org.pkl.core.ast.type;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Set;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.member.TypeAliasNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
@@ -437,7 +439,9 @@ public abstract class UnresolvedTypeNode extends PklNode {
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new TypeVariableNode(sourceSection, typeParameter);
+      //noinspection ConstantValue
+      return new TypeVariableNode(
+          sourceSection, typeParameter, NodeUtil.findParent(this, TypeAliasNode.class) != null);
     }
   }
 

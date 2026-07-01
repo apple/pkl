@@ -2395,11 +2395,13 @@ public abstract class TypeNode extends PklNode {
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
     private final TypeParameter typeParameter;
+    private final boolean isInTypeAlias;
 
-    public TypeVariableNode(SourceSection sourceSection, TypeParameter typeParameter) {
-
+    public TypeVariableNode(
+        SourceSection sourceSection, TypeParameter typeParameter, boolean isInTypeAlias) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.isInTypeAlias = isInTypeAlias;
     }
 
     public int getTypeParameterIndex() {
@@ -2408,7 +2410,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isNoopTypeCheck() {
-      return true;
+      // if in a type alias, this node will be replaced by another TypeNode that may not be a noop
+      // so we return false so that containing TypeNodes don't skip checks erroneously
+      // this is slightly less efficient if the replacement _is_ a noop, but only inside typealiases
+      return !isInTypeAlias;
     }
 
     @Override
@@ -2783,6 +2788,22 @@ public abstract class TypeNode extends PklNode {
 
       try {
         return aliasedTypeNode.executeAndSet(frame, value);
+      } finally {
+        setOwner(frame, prevOwner);
+        setReceiver(frame, prevReceiver);
+      }
+    }
+
+    /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      var prevOwner = VmUtils.getOwner(frame);
+      var prevReceiver = VmUtils.getReceiver(frame);
+      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
+      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
+
+      try {
+        return aliasedTypeNode.executeEagerly(frame, value);
       } finally {
         setOwner(frame, prevOwner);
         setReceiver(frame, prevReceiver);
