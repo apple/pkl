@@ -4,6 +4,11 @@ include::ROOT:partial$component-attributes.adoc[]
 [[release-0.32.0]]
 == 0.32.0 (UNRELEASED)
 
+=== Fixes
+
+* Follow symbolic links during `import*` and `read*` glob expansion; symlink cycles now surface as a clear I/O error
+(pr:https://github.com/apple/pkl/pull/XXXX[]).
+
 [[release-0.31.1]]
 == 0.31.1 (2026-03-26)
 
