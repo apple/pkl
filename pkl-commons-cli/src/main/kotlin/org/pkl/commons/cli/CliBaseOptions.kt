@@ -77,8 +77,9 @@ data class CliBaseOptions(
 
   /**
    * The Pkl settings file to use. A settings file is a Pkl module amending the `pkl.settings`
-   * standard library module. If `null`, `~/.pkl/settings.pkl` (if present) or the defaults
-   * specified in the `pkl:settings` standard library module are used.
+   * standard library module. If `null`, `~/.config/pkl/settings.pkl` (falling back to the legacy
+   * `~/.pkl/settings.pkl`), or the defaults specified in the `pkl:settings` standard library
+   * module, are used.
    */
   private val settings: URI? = null,
 
@@ -130,8 +131,9 @@ data class CliBaseOptions(
    * The given files must contain [X.509](https://en.wikipedia.org/wiki/X.509) certificates in PEM
    * format.
    *
-   * If [caCertificates] is the empty list, the certificate files in `~/.pkl/cacerts/` are used. If
-   * `~/.pkl/cacerts/` does not exist or is empty, Pkl's built-in CA certificates are used.
+   * If [caCertificates] is the empty list, the certificate files in `~/.config/pkl/cacerts/` (or
+   * the legacy `~/.pkl/cacerts/`) are used. If that directory does not exist or is empty, Pkl's
+   * built-in CA certificates are used.
    */
   val caCertificates: List<Path> = listOf(),
 

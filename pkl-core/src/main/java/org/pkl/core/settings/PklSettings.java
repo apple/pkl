@@ -42,16 +42,31 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
       List.of(Pattern.compile("env:"), Pattern.compile("file:"));
 
   /**
-   * Loads the user settings file ({@literal ~/.pkl/settings.pkl}). If this file does not exist,
-   * returns default settings defined by module {@literal pkl.settings}.
+   * Loads the user settings file. Prefers {@literal ~/.config/pkl/settings.pkl}, falling back to
+   * the legacy {@literal ~/.pkl/settings.pkl}. If neither file exists, returns default settings
+   * defined by module {@literal pkl.settings}.
    */
+  public static PklSettings loadFromDefaultLocation() throws VmEvalException {
+    return loadFromSettingsFile(IoUtils.getDefaultSettingsFile());
+  }
+
+  /**
+   * Loads the user settings file.
+   *
+   * @deprecated As of 0.32.0, renamed to {@link #loadFromDefaultLocation()}, which now prefers
+   *     {@literal ~/.config/pkl/settings.pkl} over the legacy {@literal ~/.pkl/settings.pkl}.
+   */
+  @Deprecated(since = "0.32.0", forRemoval = true)
   public static PklSettings loadFromPklHomeDir() throws VmEvalException {
-    return loadFromPklHomeDir(IoUtils.getPklHomeDir());
+    return loadFromDefaultLocation();
   }
 
   /** For testing only. */
-  static PklSettings loadFromPklHomeDir(Path pklHomeDir) throws VmEvalException {
-    var path = pklHomeDir.resolve("settings.pkl");
+  static PklSettings loadFromSettingsDir(Path settingsDir) throws VmEvalException {
+    return loadFromSettingsFile(settingsDir.resolve("settings.pkl"));
+  }
+
+  private static PklSettings loadFromSettingsFile(Path path) throws VmEvalException {
     return Files.exists(path)
         ? load(ModuleSource.path(path))
         : new PklSettings(Editor.SYSTEM, null);
