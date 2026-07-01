@@ -1,0 +1,14 @@
+–– Pkl Error ––
+`this` type annotations are not allowed in type alias bodies.
+
+x | typealias Foo = this
+                    ^^^^
+at currentClassType2#Foo (file:///$snippetsDir/input/types/currentClassType2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

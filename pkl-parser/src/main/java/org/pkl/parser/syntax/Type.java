@@ -61,6 +61,17 @@ public abstract sealed class Type extends AbstractNode {
     }
   }
 
+  public static final class ThisType extends Type {
+    public ThisType(Span span) {
+      super(span, List.of());
+    }
+
+    @Override
+    public <T> T accept(ParserVisitor<T> visitor) {
+      return visitor.visitThisType(this);
+    }
+  }
+
   public static final class StringConstantType extends Type {
     public StringConstantType(StringConstant str, Span span) {
       super(span, List.of(str));

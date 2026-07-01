@@ -1,0 +1,2 @@
+pkl: WARN: `module` type annotations are not allowed in class bodies. This will be an error in a future release (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: `module` type annotations are not allowed in type alias bodies. This will be an error in a future release (file:///$snippetsDir/input/types/currentModuleType4.pkl)
