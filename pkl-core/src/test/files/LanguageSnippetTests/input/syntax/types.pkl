@@ -1,0 +1,104 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function parse(source: String) = syntax.parse(source)
+
+local function typeOf(typeSource: String) =
+  let (result = parse("x: \(typeSource) = 0"))
+    (result as syntax.ModuleNode).properties.first.typeAnnotation!!.type
+
+examples {
+  ["simple types"] {
+    local unknownT = typeOf("unknown")
+    unknownT is syntax.UnknownTypeNode
+
+    local nothingT = typeOf("nothing")
+    nothingT is syntax.NothingTypeNode
+
+    local moduleT = typeOf("module")
+    moduleT is syntax.ModuleTypeNode
+  }
+
+  ["declared type"] {
+    local simple = typeOf("String")
+    simple is syntax.DeclaredTypeNode
+    (simple as syntax.DeclaredTypeNode).name.identifiers.length == 1
+    (simple as syntax.DeclaredTypeNode).name.identifiers.first.value == "String"
+    (simple as syntax.DeclaredTypeNode).typeArgumentList == null
+
+    local withArgs = typeOf("List<Int>")
+    withArgs is syntax.DeclaredTypeNode
+    (withArgs as syntax.DeclaredTypeNode).name.identifiers.first.value == "List"
+    (withArgs as syntax.DeclaredTypeNode).typeArgumentList != null
+    (withArgs as syntax.DeclaredTypeNode).typeArgumentList!!.typeArguments.length == 1
+    (withArgs as syntax.DeclaredTypeNode).typeArgumentList!!.typeArguments.first is syntax.DeclaredTypeNode
+
+    local multiArgs = typeOf("Map<String, Int>")
+    multiArgs is syntax.DeclaredTypeNode
+    (multiArgs as syntax.DeclaredTypeNode).typeArgumentList!!.typeArguments.length == 2
+  }
+
+  ["nullable type"] {
+    local nullable = typeOf("String?")
+    nullable is syntax.NullableTypeNode
+    (nullable as syntax.NullableTypeNode).baseType is syntax.DeclaredTypeNode
+  }
+
+  ["union type"] {
+    local union = typeOf("String|Int|Boolean")
+    union is syntax.UnionTypeNode
+    (union as syntax.UnionTypeNode).members.length == 3
+    (union as syntax.UnionTypeNode).members[0] is syntax.DeclaredTypeNode
+    (union as syntax.UnionTypeNode).members[1] is syntax.DeclaredTypeNode
+    (union as syntax.UnionTypeNode).members[2] is syntax.DeclaredTypeNode
+  }
+
+  ["function type"] {
+    local fnType = typeOf("(Int, String) -> Boolean")
+    fnType is syntax.FunctionTypeNode
+    (fnType as syntax.FunctionTypeNode).parameterTypes.length == 2
+    (fnType as syntax.FunctionTypeNode).parameterTypes[0] is syntax.DeclaredTypeNode
+    (fnType as syntax.FunctionTypeNode).parameterTypes[1] is syntax.DeclaredTypeNode
+    (fnType as syntax.FunctionTypeNode).returnType is syntax.DeclaredTypeNode
+
+    local noParams = typeOf("() -> String")
+    noParams is syntax.FunctionTypeNode
+    (noParams as syntax.FunctionTypeNode).parameterTypes.length == 0
+    (noParams as syntax.FunctionTypeNode).returnType is syntax.DeclaredTypeNode
+  }
+
+  ["constrained type"] {
+    local constrained = typeOf("Int(this >= 0)")
+    constrained is syntax.ConstrainedTypeNode
+    (constrained as syntax.ConstrainedTypeNode).baseType is syntax.DeclaredTypeNode
+    (constrained as syntax.ConstrainedTypeNode).constraints.length == 1
+    (constrained as syntax.ConstrainedTypeNode).constraints.first is syntax.BinaryOpExprNode
+  }
+
+  ["parenthesized type"] {
+    local paren = typeOf("(String)")
+    paren is syntax.ParenthesizedTypeNode
+    (paren as syntax.ParenthesizedTypeNode).type is syntax.DeclaredTypeNode
+  }
+
+  ["string constant type"] {
+    local result = parse(#"typealias Foo = "bar"|"baz""#)
+    local ta = (result as syntax.ModuleNode).typeAliases.first
+    ta.type is syntax.UnionTypeNode
+    local members = (ta.type as syntax.UnionTypeNode).members
+    members.length == 2
+    members[0] is syntax.StringConstantTypeNode
+    (members[0] as syntax.StringConstantTypeNode).value == "bar"
+    members[1] is syntax.StringConstantTypeNode
+    (members[1] as syntax.StringConstantTypeNode).value == "baz"
+  }
+
+  ["type annotation"] {
+    local result = parse("x: String = \"hello\"")
+    local prop = (result as syntax.ModuleNode).properties.first
+    prop.typeAnnotation != null
+    prop.typeAnnotation!! is syntax.TypeAnnotationNode
+    prop.typeAnnotation!!.type is syntax.DeclaredTypeNode
+  }
+}

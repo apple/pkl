@@ -1,0 +1,244 @@
+examples {
+  ["int literal"] {
+    true
+    true
+  }
+  ["float literal"] {
+    true
+  }
+  ["bool literal"] {
+    true
+    true
+  }
+  ["null literal"] {
+    true
+  }
+  ["this expr"] {
+    true
+  }
+  ["outer expr"] {
+    true
+  }
+  ["module expr"] {
+    true
+  }
+  ["identifier expr"] {
+    true
+  }
+  ["string literal"] {
+    true
+  }
+  ["unary minus"] {
+    true
+  }
+  ["logical not"] {
+    true
+  }
+  ["non-null"] {
+    true
+  }
+  ["throw"] {
+    true
+  }
+  ["trace"] {
+    true
+  }
+  ["parenthesized"] {
+    true
+  }
+  ["binary op"] {
+    true
+    true
+  }
+  ["is expr"] {
+    true
+  }
+  ["if expr"] {
+    true
+  }
+  ["import expr"] {
+    true
+  }
+  ["read expr"] {
+    true
+  }
+  ["let expr"] {
+    true
+    true
+  }
+  ["function literal"] {
+    true
+    true
+    true
+  }
+  ["function call"] {
+    true
+    true
+  }
+  ["qualified access"] {
+    true
+    true
+    true
+  }
+  ["subscript"] {
+    true
+  }
+  ["unknown type"] {
+    true
+  }
+  ["nothing type"] {
+    true
+  }
+  ["module type"] {
+    true
+  }
+  ["declared type"] {
+    true
+    true
+    true
+  }
+  ["nullable type"] {
+    true
+  }
+  ["union type"] {
+    true
+    true
+  }
+  ["function type"] {
+    true
+    true
+    true
+  }
+  ["constrained type"] {
+    true
+  }
+  ["parenthesized type"] {
+    true
+  }
+  ["string constant type"] {
+    true
+  }
+  ["empty body"] {
+    true
+  }
+  ["object element"] {
+    true
+  }
+  ["object spread"] {
+    true
+    true
+  }
+  ["object property"] {
+    true
+    true
+    true
+    true
+  }
+  ["object method"] {
+    true
+    true
+  }
+  ["object entry"] {
+    true
+    true
+  }
+  ["member predicate"] {
+    true
+  }
+  ["for generator"] {
+    true
+    true
+  }
+  ["when generator"] {
+    true
+    true
+  }
+  ["body with parameters"] {
+    true
+  }
+  ["new expr"] {
+    true
+    true
+  }
+  ["amends expr"] {
+    true
+  }
+  ["doc comment"] {
+    true
+  }
+  ["annotation"] {
+    true
+    true
+  }
+  ["import"] {
+    true
+    true
+    true
+  }
+  ["class property (top-level)"] {
+    true
+    true
+  }
+  ["class method (top-level)"] {
+    true
+    true
+  }
+  ["typealias"] {
+    true
+    true
+  }
+  ["class"] {
+    true
+    true
+  }
+  ["module declaration"] {
+    true
+    true
+    true
+  }
+  ["module"] {
+    true
+  }
+  ["round-trip: simple property"] {
+    true
+  }
+  ["round-trip: typed property"] {
+    true
+  }
+  ["round-trip: if expression"] {
+    true
+  }
+  ["round-trip: function call"] {
+    true
+  }
+  ["round-trip: qualified access"] {
+    true
+  }
+  ["round-trip: union type"] {
+    true
+  }
+  ["round-trip: class with body"] {
+    true
+  }
+  ["round-trip: amend modifies value"] {
+    true
+  }
+  ["multi-line string"] {
+    true
+  }
+  ["multi-line string with interpolation"] {
+    true
+  }
+  ["round-trip: multi-line string with interpolation"] {
+    true
+  }
+  ["string literal with interpolation"] {
+    true
+  }
+  ["string literal with escape"] {
+    true
+  }
+  ["round-trip: single-line string with interpolation"] {
+    true
+  }
+}
