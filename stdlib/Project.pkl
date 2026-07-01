@@ -16,8 +16,8 @@
 
 /// A manifest that defines the presence of a project.
 ///
-/// A project is useful for defining [dependencies], and also for defining common evaluator
-/// [settings].
+/// A project is useful for defining [dependencies], and also for 
+/// [common evaluator settings][evaluatorSettings].
 ///
 /// A project is a directory that contains a project file at its root.
 /// The project file is a file named `PklProject` exactly, that amends or embeds `"pkl:Project"`.
@@ -26,8 +26,8 @@
 /// `--project-dir` flag, or is determined implicitly by walking up the working directory, looking
 /// for a directory containing a `PklProject` file.
 ///
-/// When using the API libraries (e.g. _pkl-swift_, _pkl-go_ or _pkl-config-java_), the project must be
-/// explicitly stated via the evaluator builder.
+/// When using the API libraries (e.g. _pkl-swift_, _pkl-go_ or _pkl-config-java_), the project must
+/// be explicitly stated via the evaluator builder.
 ///
 /// ## Embedding [Project]
 ///
@@ -193,11 +193,11 @@ local isFileBasedProject = projectFileUri.startsWith("file:")
 ///
 /// The following values can only be set if this is a file-based project:
 ///
-///  - [modulePath][EvaluatorSettings.modulePath]
-///  - [rootDir][EvaluatorSettings.rootDir]
-///  - [moduleCacheDir][EvaluatorSettings.moduleCacheDir]
-///  - [externalModuleReaders][EvaluatorSettings.externalModuleReaders]
-///  - [externalResourceReaders][EvaluatorSettings.externalResourceReaders]
+///  - [modulePath][EvaluatorSettingsModule.modulePath]
+///  - [rootDir][EvaluatorSettingsModule.rootDir]
+///  - [moduleCacheDir][EvaluatorSettingsModule.moduleCacheDir]
+///  - [externalModuleReaders][EvaluatorSettingsModule.externalModuleReaders]
+///  - [externalResourceReaders][EvaluatorSettingsModule.externalResourceReaders]
 evaluatorSettings: EvaluatorSettingsModule(
   (modulePath != null).implies(isFileBasedProject),
   (rootDir != null).implies(isFileBasedProject),

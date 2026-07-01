@@ -63,101 +63,70 @@ external maxUInt32: UInt32
 
 /// The minimum finite [Float] value: `-1.7976931348623157e308`.
 ///
-/// Operations whose value is less than [minFiniteFloat] return -[infinity].
+/// Operations whose value is less than [minFiniteFloat] return -[Infinity].
 external minFiniteFloat: Float
 
 /// The maximum finite [Float] value: `1.7976931348623157e308`.
 ///
-/// Operations whose value is greater than [maxFiniteFloat] return [infinity].
+/// Operations whose value is greater than [maxFiniteFloat] return [Infinity].
 external maxFiniteFloat: Float
 
 /// The minimum positive [Float] value that is greater than zero: `4.9e-324`.
 external minPositiveFloat: Float
 
-/// The number [e][1].
-///
-/// [1]: https://en.wikipedia.org/wiki/E_(mathematical_constant)
+/// The number [e](https://en.wikipedia.org/wiki/E_(mathematical_constant)).
 external e: Float
 
-/// The number [π][1].
-///
-/// [1]: https://en.wikipedia.org/wiki/Pi
+/// The number [π](https://en.wikipedia.org/wiki/Pi).
 external pi: Float
 
-/// Returns e raised to the power of [exponent].
-///
-/// [1]: https://en.wikipedia.org/wiki/Exponential_function
+/// Returns e [raised to the power](https://en.wikipedia.org/wiki/Exponential_function) of
+/// [exponent].
 external function exp(exponent: Number): Float
 
-/// Returns the [square root][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Square_root
+/// Returns the [square root](https://en.wikipedia.org/wiki/Square_root) of [x].
 external function sqrt(x: Number): Float
 
-/// Returns the [cube root][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Cube_root
+/// Returns the [cube root](https://en.wikipedia.org/wiki/Cube_root) of [x].
 external function cbrt(x: Number): Float
 
-/// Returns the [natural logarithm][1] (base e logarithm) of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Natural_logarithm
+/// Returns the [natural logarithm](https://en.wikipedia.org/wiki/Natural_logarithm) (base e logarithm) of [x].
 external function log(x: Number): Float
 
-/// Returns the [base 2 logarithm][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Binary_logarithm
+/// Returns the [base 2 logarithm](https://en.wikipedia.org/wiki/Binary_logarithm) of [x].
 external function log2(x: Number): Float
 
-/// Returns the [base 10 logarithm][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Common_logarithm
+/// Returns the [base 10 logarithm](https://en.wikipedia.org/wiki/Common_logarithm) of [x].
 external function log10(x: Number): Float
 
-/// Returns the [sine][1] of [angle] given in radians.
-///
-/// [1]: https://en.wikipedia.org/wiki/Sine
+/// Returns the [sine](https://en.wikipedia.org/wiki/Sine_and_cosine) of [angle] given in radians.
 external function sin(angle: Number): Float
 
-/// Returns the [cosine][1] of [angle] given in radians.
-///
-/// [1]: https://en.wikipedia.org/wiki/Trigonometric_functions///cosine
+/// Returns the [cosine](https://en.wikipedia.org/wiki/Sine_and_cosine) of [angle] given in radians.
 external function cos(angle: Number): Float
 
-/// Returns the [tangent][1] of [angle] given in radians.
-///
-/// [1]: https://en.wikipedia.org/wiki/Tangent
+/// Returns the [tangent](https://en.wikipedia.org/wiki/Tangent) of [angle] given in radians.
 external function tan(angle: Number): Float
 
-/// Returns the [arcsine][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+/// Returns the [arcsine](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) of [x].
 external function asin(x: Number): Float
 
-/// Returns the [arccosine][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+/// Returns the [arccosine](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) of [x].
 external function acos(x: Number): Float
 
-/// Returns the [arctangent][1] of [x].
-///
-/// [1]: https://en.wikipedia.org/wiki/Inverse_trigonometric_functions
+/// Returns the [arctangent](https://en.wikipedia.org/wiki/Inverse_trigonometric_functions) of [x].
 external function atan(x: Number): Float
 
-/// Returns the [2-argument arctangent][1] of [x] and [y].
-///
-/// [1]: https://en.wikipedia.org/wiki/Atan2
+/// Returns the [2-argument arctangent](https://en.wikipedia.org/wiki/Atan2) of [x] and [y].
 @Since { version = "0.28.0" }
 external function atan2(x: Number, y: Number): Float
 
-/// Returns the [greatest common divisor][1] of [x] and [y].
-///
-/// [1]: https://en.wikipedia.org/wiki/Greatest_common_divisor
+/// Returns the [greatest common divisor](https://en.wikipedia.org/wiki/Greatest_common_divisor) of
+/// [x] and [y].
 external function gcd(x: Int, y: Int): Int
 
-/// Returns the [least common multiple][1] of [x] and [y].
-///
-/// [1]: https://en.wikipedia.org/wiki/Least_common_multiple
+/// Returns the [least common multiple](https://en.wikipedia.org/wiki/Least_common_multiple) of [x]
+/// and [y].
 external function lcm(x: Int, y: Int): Int
 
 /// Returns `true` if [x] is a power of two.
