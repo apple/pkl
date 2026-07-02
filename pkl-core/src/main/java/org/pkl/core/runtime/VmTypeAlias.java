@@ -30,11 +30,11 @@ import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.type.TypeExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
-import org.pkl.core.ast.type.UnresolvedTypeNode;
 
 public final class VmTypeAlias extends VmValue {
   private final SourceSection sourceSection;
@@ -191,7 +191,7 @@ public final class VmTypeAlias extends VmValue {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameterIndex()];
+          : deepCopy(typeArgumentNodes[typeVarNode.getTypeParameterIndex()]);
     }
 
     var clone = (TypeNode) typeNode.deepCopy();
@@ -204,21 +204,25 @@ public final class VmTypeAlias extends VmValue {
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
-                    : typeArgumentNodes[index]);
-          } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
+                    : deepCopy(typeArgumentNodes[index]));
+          } else if (node instanceof TypeExpressionNode typeExpressionNode) {
             // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
-            // are still unresolved at instantiation time. Replace them with a resolved
-            // unresolved type node that returns the concrete type argument.
-            var index = unresolvedTypeVar.getTypeParameterIndex();
-            node.replace(
+            // need to be handled separately; uninitialized expressions contain UnresolvedTypeNode.
+            var index = typeExpressionNode.getTypeParameterIndex();
+            if (index == -1) return true;
+            typeExpressionNode.insertTypeNode(
                 typeArgumentNodes.length == 0
-                    ? new UnresolvedTypeNode.Unknown(sourceSection)
-                    : new UnresolvedTypeNode.Resolved(sourceSection, typeArgumentNodes[index]));
+                    ? new UnknownTypeNode(sourceSection)
+                    : deepCopy(typeArgumentNodes[index]));
           }
           return true;
         });
 
     return clone;
+  }
+
+  private static TypeNode deepCopy(TypeNode typeArgumentNode) {
+    return (TypeNode) typeArgumentNode.deepCopy();
   }
 
   @Override

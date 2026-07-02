@@ -19,33 +19,28 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 
 @NodeInfo(shortName = "as")
-public final class TypeCastNode extends ExpressionNode {
+public final class TypeCastNode extends TypeExpressionNode {
   @Child private ExpressionNode valueNode;
-  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
-  @Child private @Nullable TypeNode typeNode;
 
   public TypeCastNode(
       SourceSection sourceSection,
       ExpressionNode valueNode,
       UnresolvedTypeNode unresolvedTypeNode) {
-    super(sourceSection);
+    super(sourceSection, unresolvedTypeNode);
     this.valueNode = valueNode;
-    this.unresolvedTypeNode = unresolvedTypeNode;
   }
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     if (typeNode == null) {
       // don't compile unresolvedTypeNode.execute()
-      // invalidation is done by insert()
+      // invalidation is done by insertTypeNode()
       CompilerDirectives.transferToInterpreter();
       assert unresolvedTypeNode != null;
-      typeNode = insert(unresolvedTypeNode.execute(frame));
-      unresolvedTypeNode = null;
+      insertTypeNode(unresolvedTypeNode.execute(frame));
     }
 
     var value = valueNode.executeGeneric(frame);
