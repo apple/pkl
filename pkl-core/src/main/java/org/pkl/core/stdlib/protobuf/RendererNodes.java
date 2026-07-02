@@ -645,10 +645,7 @@ public final class RendererNodes {
             hasString && elements.size() == 1
                 ? elements.get(0)
                 : new UnionTypeNode(
-                    VmUtils.unavailableSourceSection(),
-                    -1,
-                    elements.toArray(new TypeNode[0]),
-                    false);
+                    VmUtils.unavailableSourceSection(), -1, elements.toArray(new TypeNode[0]));
         return type;
       }
       return type;
