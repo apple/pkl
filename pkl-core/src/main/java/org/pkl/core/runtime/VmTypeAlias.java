@@ -191,7 +191,7 @@ public final class VmTypeAlias extends VmValue {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameterIndex()];
+          : deepCopy(typeArgumentNodes[typeVarNode.getTypeParameterIndex()]);
     }
 
     var clone = (TypeNode) typeNode.deepCopy();
@@ -204,7 +204,7 @@ public final class VmTypeAlias extends VmValue {
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
-                    : typeArgumentNodes[index]);
+                    : deepCopy(typeArgumentNodes[index]));
           } else if (node instanceof TypeExpressionNode typeExpressionNode) {
             // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
             // need to be handled separately; uninitialized expressions contain UnresolvedTypeNode.
@@ -213,12 +213,16 @@ public final class VmTypeAlias extends VmValue {
             typeExpressionNode.insertTypeNode(
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
-                    : typeArgumentNodes[index]);
+                    : deepCopy(typeArgumentNodes[index]));
           }
           return true;
         });
 
     return clone;
+  }
+
+  private static TypeNode deepCopy(TypeNode typeArgumentNode) {
+    return (TypeNode) typeArgumentNode.deepCopy();
   }
 
   @Override
