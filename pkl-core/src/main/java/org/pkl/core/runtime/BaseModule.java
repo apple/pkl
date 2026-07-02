@@ -15,6 +15,8 @@
  */
 package org.pkl.core.runtime;
 
+import static org.pkl.core.PClassInfo.pklBaseUri;
+
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 
@@ -22,7 +24,7 @@ public final class BaseModule extends StdLibModule {
   static final VmTyped instance = VmUtils.createEmptyModule();
 
   static {
-    loadBaseModule(instance);
+    loadModule(pklBaseUri, instance);
   }
 
   public static VmTyped getModule() {

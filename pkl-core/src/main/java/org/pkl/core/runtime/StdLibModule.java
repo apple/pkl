@@ -29,40 +29,33 @@ import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.resource.ResourceReaders;
 
 public abstract class StdLibModule {
   @TruffleBoundary
   protected static void loadModule(URI uri, VmTyped instance) {
-    assert !uri.equals(pklBaseUri) : "pkl:base should be loaded with `loadBaseModule`";
-    doLoad(uri, instance, false);
+    doLoad(uri, instance);
   }
 
-  @TruffleBoundary
-  protected static void loadBaseModule(VmTyped instance) {
-    doLoad(
-        pklBaseUri,
-        instance,
-        // seed base module's `output` members; `output` contains truffle nodes that
-        // need to be initialized statically (e.g. LetExprNode, TypeTestNode).
-        // additionally, its `cachedMembers` is not thread-safe and needs to be initialized
-        // statically.
-        true);
-  }
-
-  private static void doLoad(URI uri, VmTyped instance, boolean forceOutput) {
+  private static void doLoad(URI uri, VmTyped instance) {
     VmUtils.createContext(
             () -> {
               var vmContext = VmContext.get(null);
+              var isPklBaseModule = uri.equals(pklBaseUri);
+              var resourceReaders =
+                  isPklBaseModule
+                      // needed when initializing `pkl:base` because of
+                      // `read("prop:pkl.outputFormat")`
+                      ? List.of(ResourceReaders.externalProperty())
+                      : List.<ResourceReader>of();
               vmContext.initialize(
                   new VmContext.Holder(
                       StackFrameTransformers.defaultTransformer,
                       SecurityManagers.defaultManager,
                       HttpClient.dummyClient(),
                       new ModuleResolver(List.of(ModuleKeyFactories.standardLibrary)),
-                      new ResourceManager(
-                          SecurityManagers.defaultManager,
-                          List.of(ResourceReaders.externalProperty())),
+                      new ResourceManager(SecurityManagers.defaultManager, resourceReaders),
                       Loggers.noop(),
                       Map.of(),
                       Map.of(),
@@ -86,7 +79,12 @@ public abstract class StdLibModule {
               // (stdlib module objects are statically shared singletons when running on JVM)
               // and ensure compile-time evaluation in AOT mode
               instance.force(false, true);
-              if (forceOutput) {
+
+              // seed base module's `output` members; `output` contains truffle nodes that
+              // need to be initialized statically (e.g. LetExprNode, TypeTestNode).
+              // additionally, its `cachedMembers` is not thread-safe and needs to be initialized
+              // statically.
+              if (isPklBaseModule) {
                 var output = VmUtils.readModuleOutput(instance);
                 output.force(false, true);
               }
