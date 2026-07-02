@@ -44,7 +44,7 @@ function ExtVar(_name: String): ExtVar = new { name = _name }
 /// | [Typed]        | object          |
 ///
 /// Some Pkl types, such as [Duration] and [DataSize], don't have a Jsonnet equivalent.
-/// To render values of such types, define _output converters_ (see [Renderer.converters]).
+/// To render values of such types, define _output converters_ (see [BaseValueRenderer.converters]).
 ///
 /// The output is formatted according to _jsonnetfmt_.
 /// To render an `importstr` construct, use [ImportStr()].

@@ -31,7 +31,7 @@
 @Since { version = "0.32.0" }
 module pkl.ref
 
-/// Creates a deferred [Reference] to a value of type [class] in the given [domain] and [data].
+/// Creates a deferred [Reference] to a value of type [`class`] in the given [domain] and [data].
 ///
 /// References may only be constructed for single, non-generic class types.
 /// To create a reference to other types (generic classes, union, nullable, constrained,
