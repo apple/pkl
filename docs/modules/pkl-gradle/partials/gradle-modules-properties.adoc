@@ -69,7 +69,7 @@ Example: `settingsModule = layout.projectDirectory.file("mySettings.pkl")` +
 The Pkl settings module to use.
 This property accepts the same input types as the `sourceModules` property.
 
-If `null`, `~/.pkl/settings.pkl` or defaults specified in the `pkl.settings` standard library module are used.
+If `null`, `~/.config/pkl/settings.pkl` on Unix or `%APPDATA%/pkl/settings.pkl` on Windows (or the legacy `~/.pkl/settings.pkl`), or defaults specified in the `pkl.settings` standard library module are used.
 ====
 
 include::../partials/gradle-common-properties.adoc[]

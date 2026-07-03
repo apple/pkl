@@ -69,7 +69,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if (cliOptions.normalizedSettingsModule != null) {
         PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule))
       } else {
-        PklSettings.loadFromPklHomeDir()
+        PklSettings.loadFromDefaultLocation()
       }
     } catch (e: PklException) {
       // do not use `errorRenderer` because it depends on `settings`
@@ -215,7 +215,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
-    val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
+    val caCertsDir = IoUtils.getDefaultCaCertsDir()
     var certsAdded = false
     if (Files.isDirectory(caCertsDir)) {
       Files.list(caCertsDir)

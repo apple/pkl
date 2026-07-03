@@ -63,7 +63,7 @@ internal class Repl(workingDir: Path, private val server: ReplServer, private va
         }
         completer(AggregateCompleter(CommandCompleter, FileCompleter(workingDir)))
         option(Option.DISABLE_EVENT_EXPANSION, true)
-        variable(LineReader.HISTORY_FILE, (IoUtils.getPklHomeDir().resolve("repl-history")))
+        variable(LineReader.HISTORY_FILE, IoUtils.getDefaultReplHistoryFile())
       }
       .build()
 
