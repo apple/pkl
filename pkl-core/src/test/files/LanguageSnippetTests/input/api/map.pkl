@@ -137,8 +137,10 @@ examples {
     module.catch(() -> Map("name", "Pigeon").toTyped(Person).age)
     module.catch(() -> Map().toTyped(Int))
     module.catch(() -> Map().toTyped(Abstract))
+    Map("name", "Pigeon", "id", 99).toTyped(FixedPerson)
   }
 }
 
 local class Person { name: String = "Default"; age: Int }
 local abstract class Abstract
+local class FixedPerson { name: String = "Default"; fixed id: Int = 1 }
