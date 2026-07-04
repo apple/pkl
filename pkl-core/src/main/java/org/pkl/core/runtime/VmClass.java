@@ -497,6 +497,7 @@ public final class VmClass extends VmValue {
       if (__typedToDynamicMembers == null) {
         __typedToDynamicMembers =
             createDelegatingMembers(
+                false,
                 (member) ->
                     new UntypedObjectMemberNode(
                         null, new FrameDescriptor(), member, new DelegateToExtraStorageObjNode()));
@@ -512,6 +513,7 @@ public final class VmClass extends VmValue {
       if (__dynamicToTypedMembers == null) {
         __dynamicToTypedMembers =
             createDelegatingMembers(
+                true,
                 (member) ->
                     TypeCheckedPropertyNodeGen.create(
                         null,
@@ -530,6 +532,7 @@ public final class VmClass extends VmValue {
       if (__mapToTypedMembers == null) {
         __mapToTypedMembers =
             createDelegatingMembers(
+                true,
                 (member) ->
                     TypeCheckedPropertyNodeGen.create(
                         null,
@@ -542,7 +545,7 @@ public final class VmClass extends VmValue {
   }
 
   private EconomicMap<Object, ObjectMember> createDelegatingMembers(
-      Function<ObjectMember, MemberNode> memberNodeFactory) {
+      boolean isConversionToTyped, Function<ObjectMember, MemberNode> memberNodeFactory) {
     var result = EconomicMaps.<Object, ObjectMember>create();
     for (var cursor = getAllProperties().getEntries(); cursor.advance(); ) {
       var property = cursor.getValue();
@@ -550,6 +553,9 @@ public final class VmClass extends VmValue {
       // Dynamic/Map->Typed conversion: Overall it seems more useful for the typed object
       // to inherit its prototype's value for the hidden property (e.g., Module.output).
       if (property.isHidden()) continue;
+      // Dynamic/Map->Typed conversion: a `fixed` property's value is fixed by its declaration,
+      // so it must not be overridden by whatever value happens to be in the source Dynamic/Map.
+      if (isConversionToTyped && property.isFixed()) continue;
 
       var name = cursor.getKey();
       var member =
