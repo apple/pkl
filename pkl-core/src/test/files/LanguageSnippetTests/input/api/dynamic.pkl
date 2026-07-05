@@ -58,6 +58,7 @@ examples {
     module.catch(() -> obj.toTyped(Pair)) // Pair is not a Typed
     module.catch(() -> obj.toTyped(ValueRenderer)) // ValueRenderer is abstract
     (new Dynamic { name = "Pigeon"; id = 99 }).toTyped(FixedPerson)
+    (new Dynamic { name = "Pigeon"; id = 99 }).toTyped(ConstPerson)
   }
 }
 
@@ -94,4 +95,9 @@ local class Person {
 local class FixedPerson {
   name: String = "Default"
   fixed id: Int = 1
+}
+
+local class ConstPerson {
+  name: String = "Default"
+  const id: Int = 1
 }

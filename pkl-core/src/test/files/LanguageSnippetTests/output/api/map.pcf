@@ -133,5 +133,9 @@ examples {
       name = "Pigeon"
       id = 1
     }
+    new {
+      name = "Pigeon"
+      id = 1
+    }
   }
 }

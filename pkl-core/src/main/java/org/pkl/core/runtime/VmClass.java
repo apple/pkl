@@ -553,9 +553,10 @@ public final class VmClass extends VmValue {
       // Dynamic/Map->Typed conversion: Overall it seems more useful for the typed object
       // to inherit its prototype's value for the hidden property (e.g., Module.output).
       if (property.isHidden()) continue;
-      // Dynamic/Map->Typed conversion: a `fixed` property's value is fixed by its declaration,
-      // so it must not be overridden by whatever value happens to be in the source Dynamic/Map.
-      if (isConversionToTyped && property.isFixed()) continue;
+      // Dynamic/Map->Typed conversion: a `fixed` or `const` property's value is fixed by its
+      // declaration, so it must not be overridden by whatever value happens to be in the source
+      // Dynamic/Map.
+      if (isConversionToTyped && property.isConstOrFixed()) continue;
 
       var name = cursor.getKey();
       var member =
