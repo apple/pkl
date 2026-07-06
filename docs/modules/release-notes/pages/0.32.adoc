@@ -541,6 +541,7 @@ The following bugs have been fixed.
 * Type checks through aliases are always run lazily even when they should be eager (https://github.com/apple/pkl/issues/1716[#1716])
 * Improve thread safety when evaluating `pkl:base` (https://github.com/apple/pkl/pull/1719[#1719])
 * Incorrect member links in doc comments (https://github.com/apple/pkl/pull/1723[#1723])
+* pkl-gradle plugin does not allow `projectpackage:` reads by default (https://github.com/apple/pkl/issues/1734[#1734])
 
 == Contributors [small]#🙏#
 
