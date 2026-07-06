@@ -42,9 +42,9 @@ public final class VmReference extends VmValue {
   private final Object data;
   private final ImRrbt<VmTyped> path;
   // candidate types can only be: PType.Class, PType.Alias (only preservedAliasTypes),
-  // PType.StringLiteral, PType.UNKNOWN, or PType.Union (containing only the previous; flattened)
+  // PType.StringLiteral, PType.UNKNOWN, PType.Function, PType.TypeVariable, or PType.Union
+  // (containing only the previous; flattened)
   private final PType referentType;
-  private static final PType nullType = new PType.Class(BaseModule.getNullClass().export());
 
   private boolean forced = false;
 
@@ -136,7 +136,7 @@ public final class VmReference extends VmValue {
     // normalize `T?` to `T | Null`
     else if (type instanceof PType.Nullable nullable) {
       normalizeTypes(nullable.getBaseType(), moduleClass, result);
-      result.add(nullType);
+      result.add(new PType.Class(BaseModule.getNullClass().export()));
       // erase `T(someConstraint)` to `T`
     } else if (type instanceof PType.Constrained constrained) {
       normalizeTypes(constrained.getBaseType(), moduleClass, result);
