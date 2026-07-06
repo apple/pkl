@@ -309,7 +309,9 @@ public class PklPlugin implements Plugin<Project> {
                 "repl:", "file:", "modulepath:", "https:", "pkl:", "package:", "projectpackage:"));
 
     spec.getAllowedResources()
-        .convention(List.of("env:", "prop:", "file:", "modulepath:", "https:", "package:"));
+        .convention(
+            List.of(
+                "env:", "prop:", "file:", "modulepath:", "https:", "package:", "projectpackage:"));
 
     spec.getEvalRootDir().convention(project.getRootProject().getLayout().getProjectDirectory());
 
