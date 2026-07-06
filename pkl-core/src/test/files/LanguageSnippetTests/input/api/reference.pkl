@@ -36,6 +36,7 @@ class AProperties {
   someListing: Listing<Int>
   someList: List<Int>
   nonInt: String
+  nullProp: Null
 }
 
 class B extends Resource {
@@ -64,8 +65,9 @@ class K {
   bId: String | *Ref<String>?
   aProperties: AProperties | *Ref<AProperties>?
   bProperties: BProperties | *Ref<BProperties>?
-  aValues: Listing<Int | Ref<Int>>?
-  bValues: Listing<String | Ref<String>>?
+  nullProp: Ref<Null>?
+  aValues: Listing<Int | Ref<Int?>>?
+  bValues: Listing<String | Ref<String?>>?
   splitUnion: Ref<Listing<String> | Listing<Int>>?
 }
 
@@ -91,6 +93,7 @@ k: K = new {
   bId = bRef.id
   aProperties = aRef.outputs
   bProperties = bRef.outputs
+  nullProp = aRef.outputs.nullProp.prop1.prop2["foo"].prop3
   aValues {
     aRef.outputs.foo
     aRef.outputs.someMapping["key"]

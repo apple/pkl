@@ -40,10 +40,6 @@ facts {
     holderRef.union == holderRef2.union
   }
 
-  ["equality -- nullable gets erased"] {
-    holderRef.num == otherHolderRef.num
-  }
-
   ["equality -- constraint gets erased"] {
     holderRef.constrainedType == otherHolderRef.constrainedType
   }

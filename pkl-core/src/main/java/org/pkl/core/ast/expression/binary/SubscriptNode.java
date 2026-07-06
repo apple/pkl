@@ -122,20 +122,13 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
       return reference.withSubscriptAccess(key);
     } catch (VmReferenceAccessError err) {
       CompilerDirectives.transferToInterpreter();
-      var e =
-          exceptionBuilder()
-              .evalError(
-                  "operatorNotDefined2",
-                  getShortName(),
-                  reference.exportType(),
-                  VmUtils.getClass(key))
-              .withProgramValue("Left operand", reference)
-              .withProgramValue("Right operand", key);
-      var hint = getReferenceHint(reference, err, key);
-      if (hint != null) {
-        e.withHint(hint);
-      }
-      throw e.build();
+      throw exceptionBuilder()
+          .evalError(
+              "operatorNotDefined2", getShortName(), reference.exportType(), VmUtils.getClass(key))
+          .withProgramValue("Left operand", reference)
+          .withProgramValue("Right operand", key)
+          .withHint(getReferenceHint(reference, err, key))
+          .build();
     }
   }
 

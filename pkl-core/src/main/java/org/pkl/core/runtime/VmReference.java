@@ -44,6 +44,7 @@ public final class VmReference extends VmValue {
   // candidate types can only be: PType.Class, PType.Alias (only preservedAliasTypes),
   // PType.StringLiteral, PType.UNKNOWN, or PType.Union (containing only the previous; flattened)
   private final PType referentType;
+  private static final PType nullType = new PType.Class(BaseModule.getNullClass().export());
 
   private boolean forced = false;
 
@@ -132,9 +133,11 @@ public final class VmReference extends VmValue {
         result.add(new PType.Class(clazz.getPClass(), typeArgs));
       }
     }
-    // both nullable and constrained types erase to just their base type
+    // normalize `T?` to `T | Null`
     else if (type instanceof PType.Nullable nullable) {
       normalizeTypes(nullable.getBaseType(), moduleClass, result);
+      result.add(nullType);
+      // erase `T(someConstraint)` to `T`
     } else if (type instanceof PType.Constrained constrained) {
       normalizeTypes(constrained.getBaseType(), moduleClass, result);
     } else if (type instanceof PType.Alias alias) {
@@ -224,14 +227,22 @@ public final class VmReference extends VmValue {
           new PType.Class(baseModule), VmReferenceAccessErrorType.EXTERNAL_CLASS);
     }
 
+    // dot access on `Reference<D, Null>` gives `Reference<D, Null>`
+    if (clazz.getPClass().getInfo() == PClassInfo.Null) {
+      result.add(clazz);
+      return;
+    }
+
     var prop = clazz.getPClass().getAllProperties().get(property);
     if (prop == null) {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
     }
+
     // restriction: cannot reference external properties
     if (prop.isExternal()) {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.EXTERNAL_MEMBER);
     }
+
     normalizeTypes(prop.getType(), clazz.getPClass().getModuleClass(), result);
   }
 
@@ -279,6 +290,13 @@ public final class VmReference extends VmValue {
         }
       }
     }
+
+    // subscript access on `Reference<D, Null>` gives `Reference<D, Null>`
+    if (clazz.getPClass().getInfo() == PClassInfo.Null) {
+      result.add(clazz);
+      return;
+    }
+
     throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
   }
 

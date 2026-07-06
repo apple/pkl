@@ -1,6 +1,16 @@
 –– Pkl Error ––
-`Reference` referent type argument may not include nullable types.
+Cannot find property `name` in object of type `pkl.ref#Reference<reference26#D, Listing<unknown>>`.
 
-x | myRef: ref.Reference<ref.Domain, String?>
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at reference26 (file:///$snippetsDir/input/errors/reference26.pkl)
+x | res = myRef.name
+          ^^^^^^^^^^
+at reference26#res (file:///$snippetsDir/input/errors/reference26.pkl)
+
+Cannot find property `name` in type `Listing<unknown>`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
