@@ -536,6 +536,11 @@ The following bugs have been fixed.
 * Unrelated exception gets thrown when validating elements/entries in objects (https://github.com/apple/pkl/issues/1697[#1697])
 * Type argument is lost in constraint expressions within generic typealiases (https://github.com/apple/pkl/issues/1705[#1705])
 * Typealiases with type var as root are broken (https://github.com/apple/pkl/issues/1711[#1711])
+* Incorrect `List`/`Set`/`Map`/`Listing`/`Mapping`/union type check behavior through typealiases (https://github.com/apple/pkl/issues/1710[#1710])
+* Type aliases with type var as root are broken (https://github.com/apple/pkl/issues/1711[#1711])
+* Type checks through aliases are always run lazily even when they should be eager (https://github.com/apple/pkl/issues/1716[#1716])
+* Improve thread safety when evaluating `pkl:base` (https://github.com/apple/pkl/pull/1719[#1719])
+* Incorrect member links in doc comments (https://github.com/apple/pkl/pull/1723[#1723])
 
 == Contributors [small]#🙏#
 
