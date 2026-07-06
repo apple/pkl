@@ -1,3 +1,17 @@
-typealias MyList<T> = List(this[0] is T)
+import "pkl:test"
 
-foo: MyList<Int> = List("uh oh")
+typealias MyList<T> = List(this[0] is T)
+typealias MyList2<T> = List((this[0] as T) != null)
+typealias MyList3<T> = List((this[0] is Any(this is T)))
+typealias MyList4<T> = List((this[0] is T(!(this is T))))
+typealias MyList5<T> = List((this[0] is T(true)))
+typealias MyList6<T> = List(this[0] is T?)
+
+local foo = List("uh oh")
+
+res = test.catch(() -> foo as MyList<Int>)
+res2 = test.catch(() -> foo as MyList2<Int>)
+res3 = test.catch(() -> foo as MyList3<Int>)
+res4 = test.catch(() -> foo as MyList4<String>)
+res5 = test.catch(() -> foo as MyList5<Int>)
+res6 = test.catch(() -> foo as MyList6<Int>)

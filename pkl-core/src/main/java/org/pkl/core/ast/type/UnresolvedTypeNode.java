@@ -39,7 +39,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
     private final VmLanguage language;
     @Child UnresolvedTypeNode childNode;
-    TypeConstraintNode[] constraintCheckNodes;
+    @Children TypeConstraintNode[] constraintCheckNodes;
 
     public Constrained(
         SourceSection sourceSection,

@@ -184,7 +184,7 @@ public final class VmTypeAlias extends VmValue {
     // * Fewer root nodes to call
     // * ControlFlowException used to implement union types doesn't escape root node
 
-    if (typeParameters.isEmpty()) return (TypeNode) typeNode.deepCopy();
+    if (typeParameters.isEmpty()) return deepCopy(typeNode);
 
     // handle if alias root is itself a type variable (https://github.com/apple/pkl/issues/1711)
     if (typeNode instanceof TypeVariableNode typeVarNode) {
@@ -198,13 +198,11 @@ public final class VmTypeAlias extends VmValue {
     clone.accept(
         node -> {
           if (node instanceof TypeVariableNode typeVarNode) {
-            int index = typeVarNode.getTypeParameterIndex();
-            // should not need to clone type argument node because it is not used by its original
-            // root node
+            var index = typeVarNode.getTypeParameterIndex();
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
-                    : typeArgumentNodes[index]);
+                    : deepCopy(typeArgumentNodes[index]));
           } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
             // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
             // are still unresolved at instantiation time. Replace them with a resolved
@@ -213,7 +211,8 @@ public final class VmTypeAlias extends VmValue {
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnresolvedTypeNode.Unknown(sourceSection)
-                    : new UnresolvedTypeNode.Resolved(sourceSection, typeArgumentNodes[index]));
+                    : new UnresolvedTypeNode.Resolved(
+                        sourceSection, deepCopy(typeArgumentNodes[index])));
           }
           return true;
         });
@@ -310,5 +309,9 @@ public final class VmTypeAlias extends VmValue {
   @Override
   public String toString() {
     return qualifiedName.startsWith("pkl.base#") ? simpleName : qualifiedName;
+  }
+
+  private static TypeNode deepCopy(TypeNode typeArgumentNode) {
+    return (TypeNode) typeArgumentNode.deepCopy();
   }
 }
