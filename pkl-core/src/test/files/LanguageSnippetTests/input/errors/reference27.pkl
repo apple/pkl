@@ -1,0 +1,13 @@
+import "pkl:ref"
+
+class D extends ref.Domain {
+  function renderReference(_): String = throw("not implemented")
+}
+
+class Holder {
+  func: (Int) -> Boolean
+}
+
+local myRef = ref.Reference(new D {}, Holder, null).func
+
+res = myRef.name

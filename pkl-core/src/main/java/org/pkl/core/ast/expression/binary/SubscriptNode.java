@@ -23,7 +23,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmReference.VmReferenceAccessError;
+import org.pkl.core.runtime.VmReference.VmReferenceAccessErrorType;
+import org.pkl.core.util.ErrorMessages;
 
 @NodeInfo(shortName = "[]")
 public abstract class SubscriptNode extends BinaryExpressionNode {
@@ -100,18 +104,32 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
     return readMember(dynamic, key, callNode);
   }
 
+  private @Nullable String getReferenceHint(
+      VmReference reference, VmReferenceAccessError err, Object key) {
+    var myType = reference.getReferentType();
+    if (err.getErrorType() != VmReferenceAccessErrorType.CANNOT_FIND_MEMBER) {
+      return null;
+    }
+    return err.getType().equals(myType)
+        ? ErrorMessages.create("operatorNotDefined2", getShortName(), myType, VmUtils.getClass(key))
+        : ErrorMessages.create(
+            "operatorNotDefined3", getShortName(), myType, err.getType(), VmUtils.getClass(key));
+  }
+
   @Specialization
   protected VmReference eval(VmReference reference, Object key) {
-    var result = reference.withSubscriptAccess(key);
-    if (result != null) return result;
-
-    CompilerDirectives.transferToInterpreter();
-    throw exceptionBuilder()
-        .evalError(
-            "operatorNotDefined2", getShortName(), reference.exportType(), VmUtils.getClass(key))
-        .withProgramValue("Left operand", reference)
-        .withProgramValue("Right operand", key)
-        .build();
+    try {
+      return reference.withSubscriptAccess(key);
+    } catch (VmReferenceAccessError err) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError(
+              "operatorNotDefined2", getShortName(), reference.exportType(), VmUtils.getClass(key))
+          .withProgramValue("Left operand", reference)
+          .withProgramValue("Right operand", key)
+          .withHint(getReferenceHint(reference, err, key))
+          .build();
+    }
   }
 
   @Specialization

@@ -8,6 +8,9 @@ facts {
     true
     true
   }
+  ["equality -- constraint gets erased"] {
+    true
+  }
   ["inequality"] {
     true
   }

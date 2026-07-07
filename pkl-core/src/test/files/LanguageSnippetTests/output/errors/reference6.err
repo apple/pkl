@@ -5,6 +5,8 @@ xx | test = ref.Reference(d, String, new A {}).c
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference6#test (file:///$snippetsDir/input/errors/reference6.pkl)
 
+Cannot find property `c` in type `String`.
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)
