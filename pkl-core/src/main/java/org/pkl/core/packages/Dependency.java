@@ -53,9 +53,11 @@ public abstract class Dependency {
     }
 
     public URI resolveAssetUri(URI projectBaseUri, PackageAssetUri packageAssetUri) {
-      // drop 1 to remove leading `/`
-      var assetPath = packageAssetUri.getAssetPath().substring(1);
-      var resolvedPath = path.resolve(assetPath);
+      // copy how remote dependencies work; the `..` segment at the root just normalizes to the
+      // root.
+      var assetPath = Path.of(packageAssetUri.getAssetPath()).normalize();
+      var relativePath = Path.of("/").relativize(assetPath);
+      var resolvedPath = path.resolve(relativePath);
       var normalized = IoUtils.toNormalizedPathString(resolvedPath);
       try {
         var relativeUri = new URI(null, null, normalized, null);

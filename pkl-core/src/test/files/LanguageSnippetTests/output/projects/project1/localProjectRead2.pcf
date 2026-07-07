@@ -1,0 +1,8 @@
+res1 = Set("@project2/../PklProject", "@project2/../PklProject.deps.json", "@project2/../penguin.pkl")
+res2 = Set("@project2/../../PklProject", "@project2/../../PklProject.deps.json", "@project2/../../penguin.pkl")
+res3 = """
+  penguin.pkl
+  PklProject
+  PklProject.deps.json
+  
+  """
