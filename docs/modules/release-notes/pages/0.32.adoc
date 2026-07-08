@@ -441,7 +441,6 @@ Variables are now <<parse-time-variable-resolution,resolved at parse time>>.
 
 As part of this change, some names are resolved differently.
 
-
 Take the following code:
 
 [source,pkl]
