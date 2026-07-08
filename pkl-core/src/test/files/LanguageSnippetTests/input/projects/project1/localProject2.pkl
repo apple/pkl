@@ -1,0 +1,3 @@
+// `..` at the package root stays in the package root
+res1 = import("@project2/../penguin.pkl")
+res2 = import("@project2/foo/../../penguin.pkl")
