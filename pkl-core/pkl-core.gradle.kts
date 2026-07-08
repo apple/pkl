@@ -35,9 +35,10 @@ val externalReaderFixtureSourceSet: NamedDomainObjectProvider<SourceSet> =
     runtimeClasspath += sourceSets.test.get().output + sourceSets.test.get().runtimeClasspath
   }
 
-val externalReaderFixtureImplementation: Configuration by configurations.getting {
-  extendsFrom(configurations.testImplementation.get())
-}
+val externalReaderFixtureImplementation: Configuration =
+  configurations.getByName("externalReaderFixtureImplementation") {
+    extendsFrom(configurations.testImplementation.get())
+  }
 
 idea {
   module {

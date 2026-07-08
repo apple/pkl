@@ -78,8 +78,8 @@ tasks.test {
   inputs.dir("src/test/files/SinglePackageTest/output")
 }
 
-val testNativeExecutable by
-  tasks.registering(Test::class) {
+val testNativeExecutable =
+  tasks.register<Test>("testNativeExecutable") {
     dependsOn(tasks.assembleNative)
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
@@ -91,8 +91,8 @@ val testNativeExecutable by
     filter { includeTestsMatching("org.pkl.doc.NativeExecutableTest") }
   }
 
-val testJavaExecutable by
-  tasks.registering(Test::class) {
+val testJavaExecutable =
+  tasks.register<Test>("testJavaExecutable") {
     testClassesDirs = sourceSets.test.get().output.classesDirs
     classpath = sourceSets.test.get().runtimeClasspath
 

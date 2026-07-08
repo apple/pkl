@@ -79,7 +79,7 @@ plugins.withType(MavenPublishPlugin::class).configureEach {
   }
 }
 
-val allDependencies by tasks.registering(DependencyReportTask::class)
+val allDependencies = tasks.register<DependencyReportTask>("allDependencies")
 
 tasks.withType(Test::class).configureEach {
   System.getProperty("testReportsDir")?.let { reportsDir ->

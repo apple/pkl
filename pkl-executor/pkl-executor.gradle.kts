@@ -23,8 +23,8 @@ plugins {
   id("pklJSpecify")
 }
 
-val pklDistributionCurrent: Configuration by configurations.creating
-val pklHistoricalDistributions: Configuration by configurations.creating
+val pklDistributionCurrent: Configuration = configurations.create("pklDistributionCurrent")
+val pklHistoricalDistributions: Configuration = configurations.create("pklHistoricalDistributions")
 
 // Because pkl-executor doesn't depend on other Pkl modules
 // (nor has overlapping dependencies that could cause a version conflict),
@@ -66,37 +66,39 @@ publishing {
 
 sourceSets { main { java { srcDir("src/main/java") } } }
 
-val prepareHistoricalDistributions by tasks.registering {
-  val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
-  inputs.files(pklHistoricalDistributions.files)
-  outputs.dir(outputDir)
-  doLast {
-    val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
-    for (file in pklHistoricalDistributions.files) {
-      val target = distributionDir.resolve(file.name)
-      // Create normal files on Windows, symlink on macOS/linux (need admin privileges to create
-      // symlinks on Windows)
-      if (buildInfo.os.isWindows) {
-        if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
-          if (Files.exists(target)) {
-            Files.delete(target)
+val prepareHistoricalDistributions =
+  tasks.register("prepareHistoricalDistributions") {
+    val outputDir = layout.buildDirectory.dir("pklHistoricalDistributions")
+    inputs.files(pklHistoricalDistributions.files)
+    outputs.dir(outputDir)
+    doLast {
+      val distributionDir = outputDir.get().asFile.toPath().also(Files::createDirectories)
+      for (file in pklHistoricalDistributions.files) {
+        val target = distributionDir.resolve(file.name)
+        // Create normal files on Windows, symlink on macOS/linux (need admin privileges to create
+        // symlinks on Windows)
+        if (buildInfo.os.isWindows) {
+          if (!Files.isRegularFile(target, LinkOption.NOFOLLOW_LINKS)) {
+            if (Files.exists(target)) {
+              Files.delete(target)
+            }
+            Files.copy(file.toPath(), target)
           }
-          Files.copy(file.toPath(), target)
-        }
-      } else {
-        if (!Files.isSymbolicLink(target)) {
-          if (Files.exists(target)) {
-            Files.delete(target)
+        } else {
+          if (!Files.isSymbolicLink(target)) {
+            if (Files.exists(target)) {
+              Files.delete(target)
+            }
+            Files.createSymbolicLink(target, file.toPath())
           }
-          Files.createSymbolicLink(target, file.toPath())
         }
       }
     }
   }
-}
 
-val prepareTest by tasks.registering {
-  dependsOn(pklDistributionCurrent, prepareHistoricalDistributions)
-}
+val prepareTest =
+  tasks.register("prepareTest") {
+    dependsOn(pklDistributionCurrent, prepareHistoricalDistributions)
+  }
 
 tasks.test { dependsOn(prepareTest) }

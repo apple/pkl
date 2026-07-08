@@ -69,12 +69,12 @@ sourceSets {
 // Then the path to the jar file and the toolchain's `java` binary
 // are injected into tests as properties.
 
-val externalReader by sourceSets.creating {}
+val externalReader = sourceSets.create("externalReader") {}
 
 dependencies { "externalReaderImplementation"(libs.msgpack) }
 
-val externalReaderJar by
-  tasks.registering(Jar::class) {
+val externalReaderJar =
+  tasks.register<Jar>("externalReaderJar") {
     description = "Builds an external reader executable jar file"
     archiveBaseName = "external-reader"
     archiveVersion = ""

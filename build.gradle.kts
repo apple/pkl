@@ -37,7 +37,8 @@ nexusPublishing {
   }
 }
 
-val configureLateInitAnnotation by tasks.registering(ConfigureLateInitAnnotation::class)
+val configureLateInitAnnotation =
+  tasks.register<ConfigureLateInitAnnotation>("configureLateInitAnnotation")
 
 idea {
   project {
@@ -53,9 +54,9 @@ idea {
   }
 }
 
-val clean by tasks.existing { delete(layout.buildDirectory) }
+val clean = tasks.named("clean") { delete(layout.buildDirectory) }
 
-val printVersion by tasks.registering { doFirst { println(buildInfo.pklVersion) } }
+val printVersion = tasks.register("printVersion") { doFirst { println(buildInfo.pklVersion) } }
 
 val message =
   """
