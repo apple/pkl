@@ -1,7 +1,7 @@
 = Pkl 0.32 Release Notes
 :version: 0.32
 :version-minor: 0.32.0
-:release-date: TBD
+:release-date: July 8th, 2026
 :version-next: 0.33
 :version-next-date: October 2026
 
@@ -505,6 +505,10 @@ The `--external-module-reader` and `--external-resource-reader` CLI flags will _
 
 This makes this behavior consistent with how other settings work.
 
+=== IntSeq iteration fix
+
+A 
+
 == Bug Fixes [small]#🐜#
 
 The following bugs have been fixed.
@@ -542,6 +546,8 @@ The following bugs have been fixed.
 * Improve thread safety when evaluating `pkl:base` (https://github.com/apple/pkl/pull/1719[#1719])
 * Incorrect member links in doc comments (https://github.com/apple/pkl/pull/1723[#1723])
 * pkl-gradle plugin does not allow `projectpackage:` reads by default (https://github.com/apple/pkl/issues/1734[#1734])
+* Dependency notation allow path traversal past package root for local dependencies (https://github.com/apple/pkl/pull/1737([#1737])
+* `IntSeq` incorrectly emits on empty ``IntSeq``s (https://github.com/apple/pkl/issues/1738[#1738])
 
 == Contributors [small]#🙏#
 
