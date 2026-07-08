@@ -47,8 +47,8 @@ dependencies {
   }
 }
 
-val validateHtml by
-  tasks.registering(JavaExec::class) {
+val validateHtml =
+  tasks.register<JavaExec>("validateHtml") {
     val resultFile = layout.buildDirectory.file("validateHtml/result.txt")
     inputs.files(htmlValidator.sources)
     outputs.file(resultFile)

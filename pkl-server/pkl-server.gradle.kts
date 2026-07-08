@@ -36,38 +36,38 @@ private fun Test.configureNativeTest() {
   include("**/NativeServerTest.*")
 }
 
-val testMacExecutableAarch64 by
-  tasks.registering(Test::class) {
+val testMacExecutableAarch64 =
+  tasks.register<Test>("testMacExecutableAarch64") {
     dependsOn(":pkl-cli:macExecutableAarch64")
     configureNativeTest()
   }
 
-val testMacExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testMacExecutableAmd64 =
+  tasks.register<Test>("testMacExecutableAmd64") {
     dependsOn(":pkl-cli:macExecutableAmd64")
     configureNativeTest()
   }
 
-val testLinuxExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testLinuxExecutableAmd64 =
+  tasks.register<Test>("testLinuxExecutableAmd64") {
     dependsOn(":pkl-cli:linuxExecutableAmd64")
     configureNativeTest()
   }
 
-val testLinuxExecutableAarch64 by
-  tasks.registering(Test::class) {
+val testLinuxExecutableAarch64 =
+  tasks.register<Test>("testLinuxExecutableAarch64") {
     dependsOn(":pkl-cli:linuxExecutableAarch64")
     configureNativeTest()
   }
 
-val testAlpineExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testAlpineExecutableAmd64 =
+  tasks.register<Test>("testAlpineExecutableAmd64") {
     dependsOn(":pkl-cli:alpineExecutableAmd64")
     configureNativeTest()
   }
 
-val testWindowsExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testWindowsExecutableAmd64 =
+  tasks.register<Test>("testWindowsExecutableAmd64") {
     dependsOn(":pkl-cli:windowsExecutableAmd64")
     configureNativeTest()
   }

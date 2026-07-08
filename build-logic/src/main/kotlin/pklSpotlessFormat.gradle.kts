@@ -15,7 +15,7 @@
  */
 plugins { id("com.diffplug.spotless") }
 
-val pklFormatter by configurations.creating
+val pklFormatter = configurations.create("pklFormatter")
 
 dependencies { pklFormatter(rootProject.project("pkl-formatter")) }
 

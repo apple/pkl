@@ -83,8 +83,8 @@ tasks.shadowJar {
   exclude("module-info.*")
 }
 
-val testJavaExecutable by
-  tasks.registering(Test::class) {
+val testJavaExecutable =
+  tasks.register<Test>("testJavaExecutable") {
     testClassesDirs = tasks.test.get().testClassesDirs
     classpath =
       // compiled test classes
@@ -138,7 +138,7 @@ fun Exec.useRootDirAndSuppressOutput() {
 
 // 0.28 Preparing for JDK21 toolchains revealed that `testStartJavaExecutable` may pass, even though
 // the evaluator fails. To catch this, we eval a simple expression using the fat jar.
-val testEvalJavaExecutable by
+val testEvalJavaExecutable =
   setupJavaExecutableRun("testEvalJavaExecutable", evalTestFlags) { useRootDirAndSuppressOutput() }
 
 // Run the same evaluator tests on all configured JDK test versions.

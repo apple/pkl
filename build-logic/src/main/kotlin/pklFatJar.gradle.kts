@@ -132,8 +132,8 @@ tasks.shadowJar {
 
 shadow { addShadowVariantIntoJavaComponent = false }
 
-val testFatJar by
-  tasks.registering(Test::class) {
+val testFatJar =
+  tasks.register<Test>("testFatJar") {
     testClassesDirs = files(tasks.test.get().testClassesDirs)
     classpath =
       // compiled test classes
@@ -148,47 +148,48 @@ val testFatJar by
 
 tasks.check { dependsOn(testFatJar) }
 
-val validateFatJar by tasks.registering {
-  val outputFile = layout.buildDirectory.file("validateFatJar/result.txt")
-  inputs.files(tasks.shadowJar)
-  inputs.property("nonRelocations", nonRelocations)
-  outputs.file(outputFile)
+val validateFatJar =
+  tasks.register("validateFatJar") {
+    val outputFile = layout.buildDirectory.file("validateFatJar/result.txt")
+    inputs.files(tasks.shadowJar)
+    inputs.property("nonRelocations", nonRelocations)
+    outputs.file(outputFile)
 
-  doLast {
-    val unshadowedFiles = mutableListOf<String>()
-    zipTree(tasks.shadowJar.get().outputs.files.singleFile).visit {
-      val fileDetails = this
-      val path = fileDetails.relativePath.pathString
-      if (
-        !(fileDetails.isDirectory ||
-          path.startsWith("org/pkl/") ||
-          path.startsWith("META-INF/") ||
-          nonRelocations.any { path.startsWith(it) })
-      ) {
-        // don't throw exception inside `visit`
-        // as this gives a misleading "Could not expand ZIP" error message
-        unshadowedFiles.add(path)
+    doLast {
+      val unshadowedFiles = mutableListOf<String>()
+      zipTree(tasks.shadowJar.get().outputs.files.singleFile).visit {
+        val fileDetails = this
+        val path = fileDetails.relativePath.pathString
+        if (
+          !(fileDetails.isDirectory ||
+            path.startsWith("org/pkl/") ||
+            path.startsWith("META-INF/") ||
+            nonRelocations.any { path.startsWith(it) })
+        ) {
+          // don't throw exception inside `visit`
+          // as this gives a misleading "Could not expand ZIP" error message
+          unshadowedFiles.add(path)
+        }
+      }
+      if (unshadowedFiles.isEmpty()) {
+        outputFile.get().asFile.writeText("SUCCESS")
+      } else {
+        outputFile.get().asFile.writeText("FAILURE")
+        throw GradleException("Found unshadowed files:\n" + unshadowedFiles.joinToString("\n"))
       }
     }
-    if (unshadowedFiles.isEmpty()) {
-      outputFile.get().asFile.writeText("SUCCESS")
-    } else {
-      outputFile.get().asFile.writeText("FAILURE")
-      throw GradleException("Found unshadowed files:\n" + unshadowedFiles.joinToString("\n"))
-    }
   }
-}
 
 tasks.check { dependsOn(validateFatJar) }
 
-val resolveSourcesJars by
-  tasks.registering(ResolveSourcesJars::class) {
+val resolveSourcesJars =
+  tasks.register<ResolveSourcesJars>("resolveSourcesJars") {
     configuration.set(configurations.runtimeClasspath)
     outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
   }
 
-val fatSourcesJar by
-  tasks.registering(MergeSourcesJars::class) {
+val fatSourcesJar =
+  tasks.register<MergeSourcesJars>("fatSourcesJar") {
     plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
     inputJars.from(firstPartySourcesJarsConfiguration)
     inputJars.from(resolveSourcesJars.map { fileTree(it.outputDir) })
@@ -213,7 +214,7 @@ publishing {
       artifact(fatSourcesJar.flatMap { it.outputJar.asFile }) { classifier = "sources" }
 
       plugins.withId("pklJavaLibrary") {
-        val javadocJar by tasks.existing(Jar::class)
+        val javadocJar = tasks.named<Jar>("javadocJar")
         // Javadoc Jar is not fat (didn't invest effort)
         artifact(javadocJar.flatMap { it.archiveFile }) { classifier = "javadoc" }
       }
