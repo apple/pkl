@@ -1,67 +1,495 @@
-= Pkl 0.32.0 Release Notes
+= Pkl 0.32 Release Notes
 :version: 0.32
 :version-minor: 0.32.0
-:release-date: TBD
+:release-date: July 8th, 2026
 :version-next: 0.33
-:version-next-date: TBD
+:version-next-date: October 2026
 
 include::partial$intro.adoc[]
 
+NOTE: This is the final release that distributes binaries for macOS/amd64.
+
 == Highlights [small]#💖#
 
-News you don't want to miss.
+=== New data type: `Reference`
 
-.XXX
-[%collapsible]
+This release introduces a new data type called `Reference` (https://github.com/apple/pkl/pull/1354[#1354], https://github.com/apple/pkl/pull/1691[#1691], https://github.com/apple/pkl/pull/1692[#1692], https://github.com/apple/pkl/pull/1693[#1693], https://github.com/apple/pkl/pull/1695[#1695]).
+
+WARNING: This API is experimental. We are looking for feedback, and will aim to make this ready for production use in the next release.
+
+A reference represents something whose actual value is unknown to Pkl, but nevertheless its type is checked.
+The purpose of this data type is to improve how Pkl can be used to configure systems like GitHub Actions, Pulumi, Terraform, and more.
+
+For example, let's assume that some system accepts YAML configuration that looks like so:
+
+[source,yaml]
+----
+taskA:
+  uses: some-task
+
+taskB:
+  uses: some-other-task
+  input: '${ taskA.output.number }'
+----
+
+In terms of YAML, `'${ taskA.output.number }'` is just a string.
+However, semantically, it is an _expression_ in this target system, where `taskA.output.number` conveys some type.
+
+Today, the only way to treat these values in Pkl is to also describe these as strings.
+This introduces many shortcomings:
+
+1. It leaves users vulnerable to syntax errors in this system.
+2. It's hard to validate these beyond that they are a string.
+3. Pkl has no understanding of the relationship between `taskA` and `taskB`.
+
+With references, the above can be modeled in Pkl also as plain lookups:
+
+[source,pkl]
+----
+taskA {
+  uses = "some-task"
+}
+
+taskB {
+  name = "some-other-task"
+  input = taskA.output.number
+}
+----
+
+Library authors describe types as `ref.Reference<D, T>`, where `D` is the _domain_, and `T` is the _referent type_.
+
+[source,pkl]
+----
+import "pkl:ref"
+
+class MyDomain extends ref.Domain { // <1>
+  function renderReference(ref: ref.Reference<MyDomain, Any>): String =
+    "${ " + ref.getData() + "." + ref.getPath().join(".") + " }"
+}
+
+typealias MyReference<T> = ref.Reference<MyDomain, T> // <2>
+
+class MyTask {
+  input: MyReference<Number>  
+}
+----
+<1> References exist inside a domain. The domain defines how these references should be stringified.
+<2> A typealias can be used to improve ergonomics when declaring references that share the same domain.
+
+Pkl will check that type arguments match up:
+
+* The referent type must line up.
++
+`MyReference<Int>` is not assignable to `MyReference<String>`.
+* The domain must line up.
++
+`ref.Reference<MyDomain, Int>` is not assignable to `ref.Reference<OtherDomain, Int>`.
+
+Additionally, references give you synthetic members.
+
+[source,pkl]
+----
+class Bird {
+  name: String
+}
+
+bird: MyReference<Bird>
+
+birdName = bird.name // <1>
+----
+<1> Gives a `MyReference<String>`, because `class Bird` has property `name: String`
+
+The synthetic member contains metadata about the path that was used to access it (`.name` in this
+case).
+This can be used to stringify this reference in that target domain.
+
+To read more about references, consult the xref:language-reference:index.adoc#references[language reference].
+To read through the design decisions made, consult the https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0020-type-safe-deferred-references.adoc[SPICE].
+
+=== Custom HTTP Headers
+
+Pkl can now attach custom HTTP headers to outbound requests, making it possible to access private or authenticated resources (https://github.com/apple/pkl/pull/1196[#1196], https://github.com/apple/pkl/pull/1584[#1584]).
+
+For example, a CLI user can add an `Authorization` header either in settings.pkl, or the PklProject file:
+
+[tabs]
 ====
-XXX
+~/.pkl/settings.pkl::
++
+[source,pkl]
+----
+amends "pkl:settings"
+
+http {
+  headers {
+    ["https://my.private.server/**"] {
+      ["Authorization"] = "Bearer my-secret-token"
+    }
+  }
+}
+----
+
+PklProject::
++
+[source,pkl]
+----
+amends "pkl:Project"
+
+evaluatorSettings {
+  http {
+    headers {
+      ["https://my.private.server/**"] {
+        ["Authorization"] = "Bearer my-secret-token"
+      }
+    }
+  }
+}
+----
 ====
+
+Each key in `headers` is a glob pattern matched against the request URL.
+When a request is made, every matching pattern's headers are added to the request.
+
+Headers can also be configured in other ways:
+
+* In the pkl-gradle plugin
+* As a CLI flag
+* In the Java/Swift/Go/Kotlin evaluator APIs
+* In the pkl-executor API
+
+Header names must conform to RFC 7230 token syntax.
+Certain reserved names (e.g. `host`, `connection`, `content-length`) and prefixes (`proxy-`, `sec-`) are forbidden.
+
+Thank you to https://github.com/kyokuping[@kyokuping] for their contributions to this feature!
+
+To learn more, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0022-http-headers.adoc[SPICE-0022].
 
 == Noteworthy [small]#🎶#
 
-Ready when you need them.
+=== Resolved evaluator settings
+
+PklProject files now resolve evaluator settings that are file paths (https://github.com/apple/pkl/pull/1394[#1394]).
+
+Some of the settings within `pkl:EvaluatorSettings` represent file paths.
+However, these paths are resolved inconsistently:
+
+* Pkl is inconsistent about what relative paths mean. `rootDir`, `moduleCacheDir`, and `modulePath` are relative to the project dir, while `ExternalReader.executable` is relative to the PWD. 
+* External readers defined in a PklProject have different behavior depending on the PWD.
+* The logic for resolving these paths is dependent on the caller, rather than Pkl.
+
+For CLI users, this means that the current working directory can affect how evaluator settings are loaded.
+
+In Pkl 0.32, these paths are resolved entirely within Pkl, and resolved against the enclosing directory.
+
+A new method `resolve()` is added to `pkl:EvaluatorSettings`, and a new property `resolvedEvaluatorSettings` is added to `pkl:Project`.
+Language bindings are expected to use `resolvedEvaluatorSettings` when configuring the evaluator.
+
+To read more about this change, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0027-resolved-paths-in-pkl-evaluatorsettings.adoc[SPICE-0027].
+
+=== Line continuations in multiline strings
+
+When authoring multiline strings, it is now possible to use a _line continuation_ to break a single line's value over multiple lines (https://github.com/apple/pkl/pull/1507[#1507], https://github.com/apple/pkl/pull/1564[#1564]).
+
+These two string snippets are logically identical:
+
+[source,pkl]
+----
+str =
+  """
+  Although the Dodo is extinct, \
+  the species will be remembered.
+  """
+----
+
+[source%parsed,pkl]
+----
+str = "Although the Dodo is extinct, the species will be remembered."
+----
+
+To read more about this design, consult https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0028-multiline-string-continuation.adoc[SPICE-0028].
+
+[[parse-time-variable-resolution]]
+=== Parse-time variable resolution
+
+Pkl now resolves variables at parse time (https://github.com/apple/pkl/pull/1429[#1429], https://github.com/apple/pkl/pull/1622[#1622], https://github.com/apple/pkl/pull/1634[#1634], https://github.com/apple/pkl/pull/1706[#1706]).
+
+Currently, Pkl defers the resolution of variable names to when the node is executed.
+In Pkl 0.32, these are resolved when the file is parsed.
+
+This is a pre-requisite feature for many upcoming features, such as flat member syntax and method varargs.
+
+Additionally, this enables some runtime optimizations, including let expressions.
+
+[[let-expression-improvements]]
+=== Let expression performance improvements
+
+Performance improvements were made to the handling of xref:language-reference:index.adoc#let-expressions[let expressions] (https://github.com/apple/pkl/pull/1622[#1622], https://github.com/apple/pkl/pull/1634[#1634]).
+
+Here is a sample benchmark:
+
+[source,pkl]
+----
+amends "pkl:Benchmark"
+
+microbenchmarks {
+  ["let"] {
+    expression =
+      let (a = 1)
+      let (b = 2)
+      let (c = 3)
+      let (d = 4)
+      let (e = 1)
+      let (f = 2)
+      let (g = 3)
+      let (h = 4)
+      let (i = 1)
+      let (j = 2)
+      let (k = 3)
+      let (l = 4)
+      let (m = 1)
+      let (n = 2)
+      let (o = 3)
+      let (p = 4)
+      let (q = 1)
+      let (r = 2)
+      let (s = 3)
+      let (t = 4)
+        a + b + c + d + e + f + g + h + i + j + k + l + m + n + o + p + q + r + s + t
+  }
+}
+
+output {
+  renderer {
+    converters {
+      [Duration] = (it: Duration) -> super[Duration].apply(it.toUnit("ns"))
+    }
+  }
+}
+----
+
+And here are the results when run on a MacBook Pro M4 Max machine: `jpkl` is about 12x faster, while native `pkl` is about 4000x faster:
+
+|===
+|Variant |Results (mean)
+
+|jpkl
+|1208.06.ns -> 97.76.ns
+
+|pkl
+|1275.96.ns -> 0.32.ns
+|===
+
+=== Test reporter
+
+A test reporter option is added when running tests (https://github.com/apple/pkl/pull/1563[#1563], https://github.com/apple/pkl/pull/1597[#1597]).
+
+A new CLI flag, `--test-reporter`, is now available to the `pkl test` and `pkl project package` commands.
+This flag accepts the name of a test reporter to be used to format test result output.
+
+There are two possible reporters:
+
+* `spec` (default) - the current reporter
+* `minimal` - a reporter that only emits failing tests
+
+This option is also available to pkl-gradle users.
+
+=== Dependency notation improvements
+
+Pkl's evaluator now accepts https://pkl-lang.org/main/current/language-reference/index.html#dependency-notation[dependency notation URIs] as source modules (https://github.com/apple/pkl/pull/1595[#1595]).
+
+In Pkl 0.31, we introduced xref:0.31.adoc#cli-dependency-notation[CLI support for dependency notation].
+Now, this support has been extended to the evaluator itself.
+This means that users of Pkl's various language bindings can also use dependency notation.
+
+Additionally, the limitation on local dependencies has been dropped.
+
+=== pkldoc supports single-package docsites
+
+pkldoc has improved support for single-package documentation websites (https://github.com/apple/pkl/pull/1592[#1592]).
+
+When a docsite has only one package name, and also no overview from a `docsite-info.pkl`, the resulting docsite does not have a top-level package index page.
+Instead, it redirects to the package page, and omits the site-level element from the breadcrumb.
+
+=== Allowed package imports in `PklProject`
+
+PklProject files can now import xref:language-reference:index.adoc#package-asset-uri[package asset URIs] (https://github.com/apple/pkl/pull/1547[#1547]).
+
+This means that it is now possible to centralize and share common configurations across multiple projects.
+
+=== Java Library Changes
+
+==== Switch to JSpecify annotations
+
+Pkl has switched to using https://jspecify.dev[JSpecify] for annotating nullability (https://github.com/apple/pkl/pull/1515[#1515], https://github.com/apple/pkl/pull/1527[#1527], https://github.com/apple/pkl/pull/1528[#1528], https://github.com/apple/pkl/pull/1530[#1530], https://github.com/apple/pkl/pull/1544[#1544], https://github.com/apple/pkl/pull/1601[#1601], https://github.com/apple/pkl/pull/1607[#1607]).
+
+Currently, Pkl uses annotations from the `com.google.code.findbugs:jsr305` library.
+This suffers from some issues:
+
+* The https://jcp.org/en/jsr/detail?id=305[JSR-305 proposal] itself is dormant and unlikely to be adopted.
+* The `com.google.code.findbugs:jsr305` library contributes packages to `javax`, which violates the https://www.oracle.com/downloads/licenses/binary-code-license.html[Oracle Binary Code License Agreement].
+
+In contrast, JSpecify is widely seen as the standard for nullability annotations, and is already understood by most tools.
+
+This impacts Pkl's Java APIs; methods previously annotated using JSR-305 nullability annotations now use JSpecify. 
+Additionally, the Java code generator now emits JSpecify annotations by default.
+
+==== New API: `org.pkl.config.java.ConfigDecoder`
+
+A new API is introduced called `org.pkl.config.java.ConfigDecoder` (https://github.com/apple/pkl/pull/1533[#1533]).
+
+Currently, the `org.pkl.config.java.Config` interface mixes configuration representation with decoding logic.
+To better separate these concerns, a new API is introduced for decoding.
+
+Example:
+
+[source,java]
+----
+class Main {
+  Config getConfig() {
+    var decoder = new ConfigDecoderBuilder().preconfigured().build();
+    return decoder.decode(bytes);
+  }
+}
+----
+
+==== New `asNullable` methods in `pkl.config.java`
+
+New methods are added for decoding into nullable types (https://github.com/apple/pkl/pull/1544[#1544]).
+
+The following methods are introduced:
+
+* `org.pkl.config.java.Config.asNullable`
+* `org.pkl.config.java.JavaType.pairOfNullableFirst`
+* `org.pkl.config.java.JavaType.pairOfNullableSecond`
+* `org.pkl.config.java.JavaType.pairOfNullableFirstAndSecond`
+* `org.pkl.config.java.JavaType.arrayOfNullable`
+* `org.pkl.config.java.JavaType.iterableOfNullable`
+* `org.pkl.config.java.JavaType.collectionOfNullable`
+* `org.pkl.config.java.JavaType.listOfNullable`
+* `org.pkl.config.java.JavaType.setOfNullable`
+* `org.pkl.config.java.JavaType.mapOfNullableKeys`
+* `org.pkl.config.java.JavaType.mapOfNullableValues`
+* `org.pkl.config.java.JavaType.mapOfNullableKeysAndValues`
+
+NOTE: `org.pkl.config.java.Config.as` can also return a `null` value. In a future release, this method will have a runtime non-null assertion.
+
+==== `pkl-formatter` migrated to Java
+
+The `pkl-formatter` library has been migrated from Kotlin to Java (https://github.com/apple/pkl/pull/1514[#1514]).
+
+Therefore, its Kotlin dependency is dropped.
 
 === Standard Library Changes
 
 ==== `pkl:EvaluatorSettings`
 
-**Additions**
-
 * New method: link:{uri-stdlib-evaluatorSettingsModule}#resolve()[`EvaluatorSettings.resolve()`]
 * New method: link:{uri-stdlib-evaluatorSettingsModule}#resolveForOs()[`EvaluatorSettings.resolveForOs()`]
 * New property: link:{uri-stdlib-evaluatorSettingsExternalReaderClass}#workingDir[`EvaluatorSettings#ExternalReader.workingDir`]
+* New property: link:{uri-stdlib-evaluatorSettingsHttpClass}#headers[`EvaluatorSettings#Http.headers`]
+* New typealias: link:{uri-stdlib-evaluatorSettingsModule}#HttpHeaders[`EvaluatorSettings.HttpHeaders`]
+* New typealias: link:{uri-stdlib-evaluatorSettingsModule}#HttpHeaderName[`EvaluatorSettings.HttpHeaderName`]
+* New typealias: link:{uri-stdlib-evaluatorSettingsModule}#HttpHeaderValue[`EvaluatorSettings.HttpHeaderValue`]
+
+==== `pkl:base`
+
+* New property: link:{uri-stdlib-baseModule}/String#isGlobPattern[`String.isGlobPattern`]
 
 ==== `pkl:Project`
 
-**Additions**
-
 * New property: link:{uri-stdlib-projectModule}#resolvedEvaluatorSettings[`Project.resolvedEvaluatorSettings`]
+
+==== `pkl:ref`
+
+* New module introduced.
+
+=== pkl-gradle changes
+
+The following changes have been made to pkl-gradle.
+
+==== Support for external readers
+
+External readers can now be configured when configuring evaluators (https://github.com/apple/pkl/pull/1578[#1578]).
+
+For example:
+
+[source,kotlin]
+----
+val myPklTask by pkl.evaluators.creating {
+  val foo by externalModuleReaders.creating {
+    executable = "pkl-foo-reader"
+    arguments = listOf("--bar", "baz")
+  }
+}
+----
+
+==== Support for module/resource readers from SPI
+
+Gradle users can now add module/resource readers by registering a service via the Java SPI mechanism (https://github.com/apple/pkl/pull/1581[#1581]).
+
+==== Support for Gradle configuration cache
+
+The plugin now supports the Gradle configuration cache feature (https://github.com/apple/pkl/issues/1425[#1425]).
+
+Thanks to https://github.com/ffluk3[@ffluk3] for their contributions to this feature!
 
 == Breaking Changes [small]#💔#
 
-Things to watch out for when upgrading.
+=== Name resolution changes
+
+Variables are now <<parse-time-variable-resolution,resolved at parse time>>.
+
+As part of this change, some names are resolved differently.
+
+Take the following code:
+
+[source,pkl]
+----
+qux = "outer"
+
+foo {
+  when (cond) {
+    qux = "inner"
+  }
+  res = qux
+}
+----
+
+Currently, `res = qux` will eval to either `res = "outer"` or `res = "inner"` depending on whether `cond` evals to `true` or not.
+This is a lexical lookup that is either one level up, or zero levels up, depending on the result of code execution.
+
+This type of resolution is not possible at parse time, because we do not know what `cond` executes to.
+In Pkl 0.32, `res` will always resolve to the inner `qux`, and this snippet will throw if the when generator does not fire.
 
 === Java API changes
 
-Changes have been made to the Java API.
+The following breaking changes have been made to the Java API.
 
-==== Removals and deprecations
+* `org.pkl.config.java.Config#makeConfig`
++
+Removed without replacement
 
-The following APIs have been removed without replacement.
+* `org.pkl.config.java.Config.fromPklBinary`
++
+Deprecated, replaced with `org.pkl.config.java.ConfigDecoder`
 
-* `org.pkl.config.java.Config#makeConfig` (pr:https://github.com/apple/pkl/pull/1531[])
+* `org.pkl.config.java.mapper.NonNull`
++
+Deprecated, replaced with `org.jspecify.annotations.NonNull`
 
-The following APIs have been deprecated for removal.
+* `org.pkl.core.evaluatorSettings.PklEvaluatorSettings.parse`
++
+No longer accepts `pathNormalizer` argument
 
-* `org.pkl.config.java.mapper.NonNull` (https://github.com/apple/pkl/pull/1607[#1607]).
-
-==== Changes
-
-* `org.pkl.core.evaluatorSettings.PklEvaluatorSettings.parse` no longer accepts a `pathNormalizer` argument.
+* `org.pkl.formatter.Formatter`
+** Pass `GrammarVersion` to constructor instead of each `format` method
+** Replace `format(Path): String` with `format(Reader, Appendable)`
+** Mark as `throws IOException`
+** Deprecate methods that accept `GrammarVersion` as an argument
 
 === Loading rule changes in `pkl:EvaluatorSettings`
 
-Breaking changes have been made to how evaluator settings are loaded (https://github.com/apple/pkl/pull/1394[#1394]).
+Breaking changes have been made to how evaluator settings are loaded when using `PklProject` (https://github.com/apple/pkl/pull/1394[#1394]).
 
 ==== Loading rule changes for the external reader executable
 
@@ -76,18 +504,68 @@ The `--external-module-reader` and `--external-resource-reader` CLI flags will _
 
 This makes this behavior consistent with how other settings work.
 
-== Work In Progress [small]#🚆#
+== Bug Fixes [small]#🐜#
 
-They missed the train but deserve a mention.
+The following bugs have been fixed.
 
-.XXX
-[%collapsible]
-====
-XXX
-====
+* Data race in MessagePack encoder during concurrent server sends (https://github.com/apple/pkl/issues/1486[#1486])
+* pkl-doc library publishes incorrect Maven dependency scopes (https://github.com/apple/pkl/issues/1517[#1517])
+* Re-using pklbinary#Renderer during rendering results in incorrect output (https://github.com/apple/pkl/pull/1525[#1525])
+* Cannot glob using subpatterns inside a project dependency (https://github.com/apple/pkl/issues/1545[#1545])
+* Project package command incompatible with glob imports on Windows (https://github.com/apple/pkl/issues/1556[#1556])
+* Thrown PklBugException when using power assertions with unavailable source sections (https://github.com/apple/pkl/pull/1571[#1571])
+* pkl-doc: DocGenerator never shuts down its thread pool (https://github.com/apple/pkl/issues/1583[#1583])
+* Imports gathering Gradle task can fail with a confusing exception (https://github.com/apple/pkl/issues/1591[#1591])
+* HTTP rewrite fails with PklBugException under tr-TR locale when host contains 'I' (https://github.com/apple/pkl/issues/1617[#1617])
+* Formatter bug fixes (https://github.com/apple/pkl/pull/1619[#1619])
+* Unrelated error message thrown when computing an error message (https://github.com/apple/pkl/pull/1629[#1629])
+* pkl-binary serialization produces an incomplete msgpack value in the presence of local properties (https://github.com/apple/pkl/issues/1631[#1631]).
+* Poor parser error message (https://github.com/apple/pkl/issues/1638[#1638])
+* relativePathTo does not check if receiver is a module (https://github.com/apple/pkl/issues/1649[#1649])
+* `Int` overflow on multiplication throws unexpected exception (https://github.com/apple/pkl/issues/1651[#1651])
+* Incorrect eager check for `Map` type (https://github.com/apple/pkl/issues/1653[#1653])
+* Incorrect `toRadixString()` for `math.minInt` (https://github.com/apple/pkl/issues/1655[#1655])
+* `Evaluator.evaluateSchema()` throws if properties are annotated with `@ConvertProperty` (https://github.com/apple/pkl/issues/1657[#1657])
+* `String.padStart` and `String.padEnd` return incorrect strings sometimes (https://github.com/apple/pkl/issues/1661[#1661])
+* `String.getOrNull` crashes with certain strings (https://github.com/apple/pkl/issues/1662[#1662])
+* Incorrect facts in `pkl:base` doc comments (https://github.com/apple/pkl/pull/1669[#1669])
+* Index-based methods on Set aren't implemented (https://github.com/apple/pkl/issues/1682[#1682])
+* pkl-gradle throws exception when a Pkl task can't create an evaluator during configuration time (https://github.com/apple/pkl/pull/1684[#1684])
+* Unrelated exception gets thrown when validating elements/entries in objects (https://github.com/apple/pkl/issues/1697[#1697])
+* Type argument is lost in constraint expressions within generic typealiases (https://github.com/apple/pkl/issues/1705[#1705])
+* Typealiases with type var as root are broken (https://github.com/apple/pkl/issues/1711[#1711])
+* Incorrect `List`/`Set`/`Map`/`Listing`/`Mapping`/union type check behavior through typealiases (https://github.com/apple/pkl/issues/1710[#1710])
+* Type aliases with type var as root are broken (https://github.com/apple/pkl/issues/1711[#1711])
+* Type checks through aliases are always run lazily even when they should be eager (https://github.com/apple/pkl/issues/1716[#1716])
+* Improve thread safety when evaluating `pkl:base` (https://github.com/apple/pkl/pull/1719[#1719])
+* Incorrect member links in doc comments (https://github.com/apple/pkl/pull/1723[#1723])
+* pkl-gradle plugin does not allow `projectpackage:` reads by default (https://github.com/apple/pkl/issues/1734[#1734])
+* `IntSeq` incorrectly emits on empty ``IntSeq``s (https://github.com/apple/pkl/issues/1738[#1738])
+
+== Security Fixes [small]#🔒#
+
+The following security vulnerabilities were fixed:
+
+* Remote packages can read local filesystem items by escaping local dependency roots (https://github.com/apple/pkl/security/advisories/GHSA-fgvf-hh2w-cxff[GHSA-fgvf-hh2w-cxff], https://github.com/apple/pkl/pull/1737[#1737])
+* Packages can be read/written outside the configured cache directory (https://github.com/apple/pkl/security/advisories/GHSA-87qh-25w9-mh34[GHSA-87qh-25w9-mh34], https://github.com/apple/pkl/pull/1683[#1683])
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/04cb[@04cb]
+* https://github.com/0xmrma[@0xmrma]
+* https://github.com/adityabagchi24[@adityabagchi24]
+* https://github.com/adityasingh2400[@adityasingh2400]
+* https://github.com/bioball[@bioball]
+* https://github.com/fallintoplace[@fallintoplace]
+* https://github.com/ffluk3[@ffluk3]
+* https://github.com/HT154[@HT154]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/kyokuping[@kyokuping]
+* https://github.com/ldaley[@ldaley]
+* https://github.com/mirkoalicastro[@mirkoalicastro]
+* https://github.com/netvl[@netvl]
+* https://github.com/odenix[@odenix]
+* https://github.com/stackoverflow[@stackoverflow]
+* https://github.com/vinayakj592[@vinayakj592]

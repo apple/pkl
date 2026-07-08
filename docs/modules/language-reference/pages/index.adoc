@@ -6005,7 +6005,7 @@ This method accepts three parameters:
 It is only possible to construct new references with a referent type that is a simple (non-generic) class type.
 To obtain a reference to values of other types (generic, typealias, nullable, union, etc.), libraries must wrap those types in a class:
 
-[source,{pkl}%parsed]
+[source%parsed,pkl]
 ----
 import "pkl:ref"
 
