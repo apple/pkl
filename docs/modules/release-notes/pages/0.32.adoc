@@ -505,10 +505,6 @@ The `--external-module-reader` and `--external-resource-reader` CLI flags will _
 
 This makes this behavior consistent with how other settings work.
 
-=== IntSeq iteration fix
-
-A 
-
 == Bug Fixes [small]#🐜#
 
 The following bugs have been fixed.
