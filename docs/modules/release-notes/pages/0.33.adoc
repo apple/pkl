@@ -1,0 +1,30 @@
+= Pkl 0.33 Release Notes
+:version: 0.33
+:version-minor: 0.33.0
+:release-date: XXX
+:version-next: 0.34
+:version-next-date: February 2027
+
+include::partial$intro.adoc[]
+
+== Highlights [small]#💖#
+
+=== XXX
+
+== Noteworthy [small]#🎶#
+
+=== XXX
+
+== Breaking Changes [small]#💔#
+
+=== XXX
+
+== Bug Fixes [small]#🐜#
+
+* XXX
+
+== Contributors [small]#🙏#
+
+We would like to thank the contributors to this release (in alphabetical order):
+
+* XXX
