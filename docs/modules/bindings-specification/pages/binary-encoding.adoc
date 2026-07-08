@@ -196,6 +196,7 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Data
 |link:{uri-messagepack-array}[array]
 |Array of link:{uri-stdlib-ref-Access}[`pkl.ref#Access`] values
+|===
 
 [[type-name-encoding]]
 [NOTE]

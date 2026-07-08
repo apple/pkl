@@ -46,7 +46,7 @@ ifdef::is-release-version[]
   mavenCentral()
 endif::[]
 ifndef::is-release-version[]
-  maven(url = "{uri-sonatype}")
+  maven(url = "{uri-snapshot-repo}")
 endif::[]
 }
 ----
@@ -65,7 +65,7 @@ ifdef::is-release-version[]
   mavenCentral()
 endif::[]
 ifndef::is-release-version[]
-  maven { url "{uri-sonatype}" }
+  maven { url "{uri-snapshot-repo}" }
 endif::[]
 }
 ----
