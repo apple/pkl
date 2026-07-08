@@ -544,11 +544,19 @@ The following bugs have been fixed.
 * Dependency notation allow path traversal past package root for local dependencies (https://github.com/apple/pkl/pull/1737([#1737])
 * `IntSeq` incorrectly emits on empty ``IntSeq``s (https://github.com/apple/pkl/issues/1738[#1738])
 
+== Security Fixes [small]#🔒#
+
+The following security vulnerabilities were fixed:
+
+* Remote packages can read local filesystem items by escaping local dependency roots (https://github.com/apple/pkl/security/advisories/GHSA-fgvf-hh2w-cxff[GHSA-fgvf-hh2w-cxff])
+* Packages can be read/written outside the configured cache directory (https://github.com/apple/pkl/security/advisories/GHSA-87qh-25w9-mh34[GHSA-87qh-25w9-mh34])
+
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
 * https://github.com/04cb[@04cb]
+* https://github.com/0xmrma[@0xmrma]
 * https://github.com/adityabagchi24[@adityabagchi24]
 * https://github.com/adityasingh2400[@adityasingh2400]
 * https://github.com/bioball[@bioball]
