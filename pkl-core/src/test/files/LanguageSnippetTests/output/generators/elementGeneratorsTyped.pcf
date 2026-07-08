@@ -10,6 +10,8 @@ res1c {
   20
 }
 res1d = "Expected value of type `String`, but got type `Int`. Value: 0"
+res1e {}
+res1f {}
 res2 {
   2
   6

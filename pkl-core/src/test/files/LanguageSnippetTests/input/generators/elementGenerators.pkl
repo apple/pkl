@@ -30,6 +30,20 @@ res1d = new Dynamic {
   }
 }
 
+// noinspection ReplaceForGeneratorWithSpread
+res1e = new Dynamic {
+  for (n in IntSeq(0, -1)) {
+    n
+  }
+}
+
+// noinspection ReplaceForGeneratorWithSpread
+res1f = new Dynamic {
+  for (n in IntSeq(0, 1).step(-1)) {
+    n
+  }
+}
+
 res2 = new Listing {
   for (n in List(1, 2, 3, 4, 5)) {
     when (n.isOdd) {
