@@ -37,7 +37,7 @@ dependencies {
  * These packages are used by PackageServer to serve assets when running LanguageSnippetTests and
  * PackageResolversTest.
  */
-val createTestPackages by tasks.registering
+val createTestPackages = tasks.register("createTestPackages")
 
 // make sure that declaring a dependency on this project suffices to have test fixtures generated
 tasks.processResources {
@@ -92,8 +92,8 @@ val keystoreName = "localhost.p12"
 val keystoreFile = keystoreDir.map { it.file(keystoreName) }
 val certsFileName = "localhost.pem"
 
-val generateKeys by
-  tasks.registering(JavaExec::class) {
+val generateKeys =
+  tasks.register<JavaExec>("generateKeys") {
     outputs.file(keystoreFile)
     mainClass.set("sun.security.tools.keytool.Main")
     args =
@@ -117,8 +117,8 @@ val generateKeys by
     }
   }
 
-val exportCerts by
-  tasks.registering(JavaExec::class) {
+val exportCerts =
+  tasks.register<JavaExec>("exportCerts") {
     val outputFile = keystoreDir.map { it.file(certsFileName) }
     dependsOn(generateKeys)
     inputs.file(keystoreFile)

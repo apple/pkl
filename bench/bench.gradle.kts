@@ -19,8 +19,8 @@ plugins {
   id("me.champeau.jmh")
 }
 
-val truffle: Configuration by configurations.creating
-val graal: Configuration by configurations.creating
+val truffle: Configuration = configurations.create("truffle")
+val graal: Configuration = configurations.create("graal")
 
 dependencies {
   jmh(projects.pklCore)

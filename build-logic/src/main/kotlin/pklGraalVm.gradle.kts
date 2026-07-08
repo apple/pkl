@@ -21,11 +21,15 @@ plugins { id("de.undercouch.download") }
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
 // tries to minimize chance of corruption by download-to-temp-file-and-move
-val downloadGraalVmAarch64 by
-  tasks.registering(Download::class) { configureDownloadGraalVm(buildInfo.graalVmAarch64) }
+val downloadGraalVmAarch64 =
+  tasks.register<Download>("downloadGraalVmAarch64") {
+    configureDownloadGraalVm(buildInfo.graalVmAarch64)
+  }
 
-val downloadGraalVmAmd64 by
-  tasks.registering(Download::class) { configureDownloadGraalVm(buildInfo.graalVmAmd64) }
+val downloadGraalVmAmd64 =
+  tasks.register<Download>("downloadGraalVmAmd64") {
+    configureDownloadGraalVm(buildInfo.graalVmAmd64)
+  }
 
 fun Download.configureDownloadGraalVm(graalvm: BuildInfo.GraalVm) {
   onlyIf { !graalvm.installDir.exists() }
@@ -37,14 +41,14 @@ fun Download.configureDownloadGraalVm(graalvm: BuildInfo.GraalVm) {
   tempAndMove(true)
 }
 
-val verifyGraalVmAarch64 by
-  tasks.registering(Verify::class) {
+val verifyGraalVmAarch64 =
+  tasks.register<Verify>("verifyGraalVmAarch64") {
     configureVerifyGraalVm(buildInfo.graalVmAarch64)
     dependsOn(downloadGraalVmAarch64)
   }
 
-val verifyGraalVmAmd64 by
-  tasks.registering(Verify::class) {
+val verifyGraalVmAmd64 =
+  tasks.register<Verify>("verifyGraalVmAmd64") {
     configureVerifyGraalVm(buildInfo.graalVmAmd64)
     dependsOn(downloadGraalVmAmd64)
   }
@@ -60,15 +64,15 @@ fun Verify.configureVerifyGraalVm(graalvm: BuildInfo.GraalVm) {
 }
 
 @Suppress("unused")
-val installGraalVmAarch64 by
-  tasks.registering(InstallGraalVm::class) {
+val installGraalVmAarch64 =
+  tasks.register<InstallGraalVm>("installGraalVmAarch64") {
     dependsOn(verifyGraalVmAarch64)
     graalVm = buildInfo.graalVmAarch64
   }
 
 @Suppress("unused")
-val installGraalVmAmd64 by
-  tasks.registering(InstallGraalVm::class) {
+val installGraalVmAmd64 =
+  tasks.register<InstallGraalVm>("installGraalVmAmd64") {
     dependsOn(verifyGraalVmAmd64)
     graalVm = buildInfo.graalVmAmd64
   }

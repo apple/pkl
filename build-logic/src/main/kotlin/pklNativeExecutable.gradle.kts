@@ -30,22 +30,26 @@ plugins {
 val executableSpec = project.extensions.getByType<ExecutableSpec>()
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-val stagedMacAmd64Executable: Configuration by configurations.creating
-val stagedMacAarch64Executable: Configuration by configurations.creating
-val stagedLinuxAmd64Executable: Configuration by configurations.creating
-val stagedLinuxAarch64Executable: Configuration by configurations.creating
-val stagedAlpineLinuxAmd64Executable: Configuration by configurations.creating
-val stagedWindowsAmd64Executable: Configuration by configurations.creating
+val stagedMacAmd64Executable: Configuration = configurations.create("stagedMacAmd64Executable")
+val stagedMacAarch64Executable: Configuration = configurations.create("stagedMacAarch64Executable")
+val stagedLinuxAmd64Executable: Configuration = configurations.create("stagedLinuxAmd64Executable")
+val stagedLinuxAarch64Executable: Configuration =
+  configurations.create("stagedLinuxAarch64Executable")
+val stagedAlpineLinuxAmd64Executable: Configuration =
+  configurations.create("stagedAlpineLinuxAmd64Executable")
+val stagedWindowsAmd64Executable: Configuration =
+  configurations.create("stagedWindowsAmd64Executable")
 
-val nativeImageClasspath by configurations.creating {
-  extendsFrom(configurations.runtimeClasspath.get())
-  // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
-  // (comes from artifact `mordant-jvm-graal-ffi`).
-  exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
-  exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
-  exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
-  exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
-}
+val nativeImageClasspath =
+  configurations.create("nativeImageClasspath") {
+    extendsFrom(configurations.runtimeClasspath.get())
+    // Ensure native-image version uses GraalVM C SDKs instead of Java FFI or JNA
+    // (comes from artifact `mordant-jvm-graal-ffi`).
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-ffm-jvm")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna")
+    exclude("com.github.ajalt.mordant", "mordant-jvm-jna-jvm")
+  }
 
 val libs = the<LibrariesForLibs>()
 
@@ -85,32 +89,32 @@ private fun NativeImageBuild.setClasspath() {
   classpath.from(nativeImageClasspath)
 }
 
-val macExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
+val macExecutableAmd64 =
+  tasks.register<NativeImageBuild>("macExecutableAmd64") {
     imageName = executableSpec.name.map { "$it-macos-amd64" }
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
   }
 
-val macExecutableAarch64 by
-  tasks.registering(NativeImageBuild::class) {
+val macExecutableAarch64 =
+  tasks.register<NativeImageBuild>("macExecutableAarch64") {
     imageName = executableSpec.name.map { "$it-macos-aarch64" }
     mainClass = executableSpec.mainClass
     aarch64()
     setClasspath()
   }
 
-val linuxExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
+val linuxExecutableAmd64 =
+  tasks.register<NativeImageBuild>("linuxExecutableAmd64") {
     imageName = executableSpec.name.map { "$it-linux-amd64" }
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
   }
 
-val linuxExecutableAarch64 by
-  tasks.registering(NativeImageBuild::class) {
+val linuxExecutableAarch64 =
+  tasks.register<NativeImageBuild>("linuxExecutableAarch64") {
     imageName = executableSpec.name.map { "$it-linux-aarch64" }
     mainClass = executableSpec.mainClass
     aarch64()
@@ -120,8 +124,8 @@ val linuxExecutableAarch64 by
     extraNativeImageArgs.add("-H:PageSize=65536")
   }
 
-val alpineExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
+val alpineExecutableAmd64 =
+  tasks.register<NativeImageBuild>("alpineExecutableAmd64") {
     imageName = executableSpec.name.map { "$it-alpine-linux-amd64" }
     mainClass = executableSpec.mainClass
     amd64()
@@ -129,73 +133,75 @@ val alpineExecutableAmd64 by
     extraNativeImageArgs.addAll(listOf("--static", "--libc=musl"))
   }
 
-val windowsExecutableAmd64 by
-  tasks.registering(NativeImageBuild::class) {
+val windowsExecutableAmd64 =
+  tasks.register<NativeImageBuild>("windowsExecutableAmd64") {
     imageName = executableSpec.name.map { "$it-windows-amd64" }
     mainClass = executableSpec.mainClass
     amd64()
     setClasspath()
   }
 
-val assembleNative by tasks.existing
+val assembleNative = tasks.named("assembleNative")
 
-val testStartNativeExecutable by tasks.registering {
-  dependsOn(assembleNative)
+val testStartNativeExecutable =
+  tasks.register("testStartNativeExecutable") {
+    dependsOn(assembleNative)
 
-  // dummy file for up-to-date checking
-  val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
-  outputs.file(outputFile)
+    // dummy file for up-to-date checking
+    val outputFile = project.layout.buildDirectory.file("testStartNativeExecutable/output.txt")
+    outputs.file(outputFile)
 
-  val execOutput = providers.exec {
-    commandLine(assembleNative.get().outputs.files.singleFile, "--version")
-  }
-
-  doLast {
-    val outputText = execOutput.standardOutput.asText.get()
-    if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
-      throw GradleException(
-        "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
-      )
+    val execOutput = providers.exec {
+      commandLine(assembleNative.get().outputs.files.singleFile, "--version")
     }
-    outputFile.get().asFile.toPath().apply {
-      try {
-        parent.createDirectories()
-      } catch (_: java.nio.file.FileAlreadyExistsException) {}
-      writeText("OK")
+
+    doLast {
+      val outputText = execOutput.standardOutput.asText.get()
+      if (!outputText.contains(buildInfo.pklVersionNonUnique)) {
+        throw GradleException(
+          "Expected version output to contain current version (${buildInfo.pklVersionNonUnique}), but got '$outputText'"
+        )
+      }
+      outputFile.get().asFile.toPath().apply {
+        try {
+          parent.createDirectories()
+        } catch (_: java.nio.file.FileAlreadyExistsException) {}
+        writeText("OK")
+      }
     }
   }
-}
 
 val requiredGlibcVersion: Version = Version.parse("2.17")
 
-val checkGlibc by tasks.registering {
-  enabled = buildInfo.os.isLinux && !buildInfo.musl
-  dependsOn(assembleNative)
-  doLast {
-    val exec = providers.exec {
-      commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
-    }
-    val output = exec.standardOutput.asText.get()
-    val minimumGlibcVersion =
-      output
-        .split("\n")
-        .mapNotNull { line ->
-          val match = Regex("GLIBC_([.0-9]*)").find(line)
-          match?.groups[1]?.let { Version.parse(it.value) }
-        }
-        .maxOrNull()
-    if (minimumGlibcVersion == null) {
-      throw GradleException(
-        "Could not determine glibc version from executable. objdump output: $output"
-      )
-    }
-    if (minimumGlibcVersion > requiredGlibcVersion) {
-      throw GradleException(
-        "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
-      )
+val checkGlibc =
+  tasks.register("checkGlibc") {
+    enabled = buildInfo.os.isLinux && !buildInfo.musl
+    dependsOn(assembleNative)
+    doLast {
+      val exec = providers.exec {
+        commandLine("objdump", "-T", assembleNative.get().outputs.files.singleFile)
+      }
+      val output = exec.standardOutput.asText.get()
+      val minimumGlibcVersion =
+        output
+          .split("\n")
+          .mapNotNull { line ->
+            val match = Regex("GLIBC_([.0-9]*)").find(line)
+            match?.groups[1]?.let { Version.parse(it.value) }
+          }
+          .maxOrNull()
+      if (minimumGlibcVersion == null) {
+        throw GradleException(
+          "Could not determine glibc version from executable. objdump output: $output"
+        )
+      }
+      if (minimumGlibcVersion > requiredGlibcVersion) {
+        throw GradleException(
+          "Incorrect glibc version. Found: $minimumGlibcVersion, required: $requiredGlibcVersion"
+        )
+      }
     }
   }
-}
 
 // Expose underlying task's outputs
 private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
@@ -203,19 +209,24 @@ private fun <T : Task> Task.wraps(other: TaskProvider<T>) {
   outputs.files(other)
 }
 
-val testNative by tasks.existing { dependsOn(testStartNativeExecutable, checkGlibc) }
+val testNative = tasks.named("testNative") { dependsOn(testStartNativeExecutable, checkGlibc) }
 
-val assembleNativeMacOsAarch64 by tasks.existing { wraps(macExecutableAarch64) }
+val assembleNativeMacOsAarch64 =
+  tasks.named("assembleNativeMacOsAarch64") { wraps(macExecutableAarch64) }
 
-val assembleNativeMacOsAmd64 by tasks.existing { wraps(macExecutableAmd64) }
+val assembleNativeMacOsAmd64 = tasks.named("assembleNativeMacOsAmd64") { wraps(macExecutableAmd64) }
 
-val assembleNativeLinuxAarch64 by tasks.existing { wraps(linuxExecutableAarch64) }
+val assembleNativeLinuxAarch64 =
+  tasks.named("assembleNativeLinuxAarch64") { wraps(linuxExecutableAarch64) }
 
-val assembleNativeLinuxAmd64 by tasks.existing { wraps(linuxExecutableAmd64) }
+val assembleNativeLinuxAmd64 =
+  tasks.named("assembleNativeLinuxAmd64") { wraps(linuxExecutableAmd64) }
 
-val assembleNativeAlpineLinuxAmd64 by tasks.existing { wraps(alpineExecutableAmd64) }
+val assembleNativeAlpineLinuxAmd64 =
+  tasks.named("assembleNativeAlpineLinuxAmd64") { wraps(alpineExecutableAmd64) }
 
-val assembleNativeWindowsAmd64 by tasks.existing { wraps(windowsExecutableAmd64) }
+val assembleNativeWindowsAmd64 =
+  tasks.named("assembleNativeWindowsAmd64") { wraps(windowsExecutableAmd64) }
 
 publishing {
   publications {
