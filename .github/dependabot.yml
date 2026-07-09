@@ -10,9 +10,16 @@ updates:
   cooldown:
     default-days: 7
   directory: /
+  groups:
+    first-party:
+      patterns:
+      - actions/*
+    codeql:
+      patterns:
+      - github/codeql-action/*
   ignore:
   - dependency-name: '*'
     update-types:
     - version-update:semver-major
   schedule:
-    interval: weekly
+    interval: quarterly
