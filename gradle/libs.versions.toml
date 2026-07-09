@@ -29,7 +29,7 @@ graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-aarch64 = "unavailable"
 ideaExtPlugin = "1.4.1"
-javaPoet = "0.16.0"
+javaPoet = "0.17.0"
 javaxInject = "1"
 jimfs = "1.3.1"
 jline = "4.3.1"
