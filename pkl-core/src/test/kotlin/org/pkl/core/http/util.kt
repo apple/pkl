@@ -16,6 +16,9 @@
 package org.pkl.core.http
 
 import java.net.URI
+import java.net.http.HttpHeaders
+import java.net.http.HttpRequest
+import java.net.http.HttpResponse
 import java.util.regex.Pattern
 
 data class HttpSettings(
@@ -31,4 +34,22 @@ fun HttpClient.getConfiguredSettings(): HttpSettings {
 
 object NoopChecker : HttpClient.HttpRequestChecker {
   override fun check(uri: URI) {}
+}
+
+fun httpHeaders(name: String, value: String): HttpHeaders =
+  HttpHeaders.of(mapOf(name to listOf(value))) { _, _ -> true }
+
+class ReplayingClient(vararg responses: HttpResponse<*>) : HttpClient {
+  private val responses = ArrayDeque(responses.toList())
+
+  @Suppress("UNCHECKED_CAST")
+  override fun <T : Any> send(
+    request: HttpRequest,
+    responseBodyHandler: HttpResponse.BodyHandler<T>,
+    httpRequestChecker: HttpClient.HttpRequestChecker,
+  ): HttpResponse<T> {
+    return responses.removeFirst() as HttpResponse<T>
+  }
+
+  override fun close() {}
 }
