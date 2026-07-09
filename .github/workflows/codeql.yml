@@ -23,7 +23,7 @@ jobs:
         languages: actions
         build-mode: none
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+      uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
       with:
         category: /language:actions
   analyze-java-kotlin:
@@ -40,7 +40,7 @@ jobs:
         languages: java-kotlin
         build-mode: autobuild
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+      uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
       with:
         category: /language:java-kotlin
   analyze-javascript-typescript:
@@ -57,6 +57,6 @@ jobs:
         languages: javascript-typescript
         build-mode: none
     - name: Perform CodeQL Analysis
-      uses: github/codeql-action/analyze@8aad20d150bbac5944a9f9d289da16a4b0d87c1e # v4
+      uses: github/codeql-action/analyze@54f647b7e1bb85c95cddabcd46b0c578ec92bc1a # v4
       with:
         category: /language:javascript-typescript
