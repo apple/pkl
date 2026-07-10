@@ -1,0 +1,2 @@
+// make sure that we don't trim this identifier when not using the expression evaluator
+`THE REPL TEXT EXPR` = throw("uh oh")

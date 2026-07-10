@@ -36,9 +36,10 @@ public final class StackTraceRenderer {
       List<StackFrame> frames,
       @Nullable String hint,
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
-      AnsiStringBuilder out) {
+      AnsiStringBuilder out,
+      boolean forExpressionInput) {
     var compressed = compressFrames(frames);
-    doRender(compressed, hint, hintBuilder, out, "", true);
+    doRender(compressed, hint, hintBuilder, out, "", true, forExpressionInput);
   }
 
   // non-private for testing
@@ -48,12 +49,13 @@ public final class StackTraceRenderer {
       @Nullable BiConsumer<AnsiStringBuilder, Boolean> hintBuilder,
       AnsiStringBuilder out,
       String leftMargin,
-      boolean isFirstElement) {
+      boolean isFirstElement,
+      boolean forExpressionInput) {
     for (var frame : frames) {
       if (frame instanceof StackFrameLoop loop) {
         // ensure a cycle of length 1 doesn't get rendered as a loop
         if (loop.count == 1) {
-          doRender(loop.frames, null, null, out, leftMargin, isFirstElement);
+          doRender(loop.frames, null, null, out, leftMargin, isFirstElement, forExpressionInput);
         } else {
           if (!isFirstElement) {
             out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
@@ -63,7 +65,7 @@ public final class StackTraceRenderer {
               .append(AnsiTheme.STACK_TRACE_LOOP_COUNT, loop.count)
               .append(" repetitions of:\n");
           var newLeftMargin = leftMargin + "│ ";
-          doRender(loop.frames, null, null, out, newLeftMargin, isFirstElement);
+          doRender(loop.frames, null, null, out, newLeftMargin, isFirstElement, forExpressionInput);
           if (isFirstElement) {
             renderHint(hint, hintBuilder, out, newLeftMargin);
             isFirstElement = false;
@@ -74,7 +76,7 @@ public final class StackTraceRenderer {
         if (!isFirstElement) {
           out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin).append('\n');
         }
-        renderFrame((StackFrame) frame, out, leftMargin);
+        renderFrame((StackFrame) frame, out, leftMargin, forExpressionInput);
       }
 
       if (isFirstElement) {
@@ -84,9 +86,10 @@ public final class StackTraceRenderer {
     }
   }
 
-  private void renderFrame(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
+  private void renderFrame(
+      StackFrame frame, AnsiStringBuilder out, String leftMargin, boolean forExpressionInput) {
     var transformed = frameTransformer.apply(frame);
-    renderSourceLine(transformed, out, leftMargin);
+    renderSourceLine(transformed, out, leftMargin, forExpressionInput);
     renderSourceLocation(transformed, out, leftMargin);
   }
 
@@ -113,15 +116,27 @@ public final class StackTraceRenderer {
     out.append('\n');
   }
 
-  private void renderSourceLine(StackFrame frame, AnsiStringBuilder out, String leftMargin) {
+  private void renderSourceLine(
+      StackFrame frame, AnsiStringBuilder out, String leftMargin, boolean forExpressionInput) {
     var originalSourceLine = frame.getSourceLines().get(0);
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
+    var hasPreamble = false;
+    var preambleLength = VmUtils.EXPRESSION_PREAMBLE.length();
+    if (forExpressionInput && sourceLine.startsWith(VmUtils.EXPRESSION_PREAMBLE)) {
+      sourceLine = sourceLine.substring(preambleLength);
+      hasPreamble = true;
+    }
     var startColumn = frame.getStartColumn() - leadingWhitespace;
     var endColumn =
         frame.getStartLine() == frame.getEndLine()
             ? frame.getEndColumn() - leadingWhitespace
             : sourceLine.length();
+
+    if (hasPreamble) {
+      startColumn -= preambleLength;
+      endColumn -= preambleLength;
+    }
 
     var prefix = frame.getStartLine() + " | ";
     out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
