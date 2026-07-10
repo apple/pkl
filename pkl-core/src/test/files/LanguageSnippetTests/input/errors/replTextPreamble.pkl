@@ -1,2 +1,3 @@
 // make sure that we don't trim this identifier when not using the expression evaluator
+// see VmUtils.buildSyntheticModuleText()
 `THE REPL TEXT EXPR` = throw("uh oh")
