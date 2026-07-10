@@ -145,7 +145,7 @@ public final class VmExceptionRenderer {
       var hintBuilder = exception.getHintBuilder();
       if (!frames.isEmpty()) {
         stackTraceRenderer.render(
-            frames, hint, hintBuilder, out.append('\n'), exception.getForExpressionInput());
+            frames, hint, hintBuilder, out.append('\n'), exception.isForExpressionInput());
       } else if (hint != null) {
         // render hint if there are no stack frames
         out.append('\n').append(AnsiTheme.ERROR_MESSAGE_HINT, hint);

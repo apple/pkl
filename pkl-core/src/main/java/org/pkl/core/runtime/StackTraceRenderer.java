@@ -28,6 +28,8 @@ import org.pkl.core.util.SyntaxHighlighter;
 public final class StackTraceRenderer {
   private final Function<StackFrame, StackFrame> frameTransformer;
 
+  private static final int PREAMBLE_LENGTH = VmUtils.EXPRESSION_PREAMBLE.length();
+
   public StackTraceRenderer(Function<StackFrame, StackFrame> frameTransformer) {
     this.frameTransformer = frameTransformer;
   }
@@ -122,9 +124,8 @@ public final class StackTraceRenderer {
     var leadingWhitespace = VmUtils.countLeadingWhitespace(originalSourceLine);
     var sourceLine = originalSourceLine.strip();
     var hasPreamble = false;
-    var preambleLength = VmUtils.EXPRESSION_PREAMBLE.length();
     if (forExpressionInput && sourceLine.startsWith(VmUtils.EXPRESSION_PREAMBLE)) {
-      sourceLine = sourceLine.substring(preambleLength);
+      sourceLine = sourceLine.substring(PREAMBLE_LENGTH);
       hasPreamble = true;
     }
     var startColumn = frame.getStartColumn() - leadingWhitespace;
@@ -134,8 +135,8 @@ public final class StackTraceRenderer {
             : sourceLine.length();
 
     if (hasPreamble) {
-      startColumn -= preambleLength;
-      endColumn -= preambleLength;
+      startColumn -= PREAMBLE_LENGTH;
+      endColumn -= PREAMBLE_LENGTH;
     }
 
     var prefix = frame.getStartLine() + " | ";

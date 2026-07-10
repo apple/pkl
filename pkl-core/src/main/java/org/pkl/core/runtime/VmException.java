@@ -118,7 +118,7 @@ public abstract class VmException extends AbstractTruffleException {
     this.forExpressionInput = forExpressionInput;
   }
 
-  public boolean getForExpressionInput() {
+  public boolean isForExpressionInput() {
     return forExpressionInput;
   }
 
