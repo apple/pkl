@@ -192,7 +192,7 @@ class StackTraceRendererTest {
     val loop = StackTraceRenderer.StackFrameLoop(loopFrames, 1)
     val frames = listOf(createFrame("bar", 1), createFrame("baz", 2), loop)
     val formatter = AnsiStringBuilder(false)
-    renderer.doRender(frames, null, null, formatter, "", true)
+    renderer.doRender(frames, null, null, formatter, "", true, true)
     val renderedFrames = formatter.toString()
     assertThat(renderedFrames)
       .isEqualTo(

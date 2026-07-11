@@ -50,7 +50,6 @@ import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.MutableReference;
-import org.pkl.core.util.Pair;
 import org.pkl.core.util.SyntaxHighlighter;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
@@ -183,51 +182,6 @@ public class ReplServer implements AutoCloseable {
         .collect(Collectors.toList());
   }
 
-  /**
-   * Create a fake module that declares all the local properties that exist in ReplState, so that
-   * AstBuilder can correctly resolve variables. Additionally, return a {@link Node} with its span
-   * calculated in terms of this fake module.
-   *
-   * <p>This created module is never executed.
-   */
-  private Pair<String, Node> buildSyntheticModuleText(Node syntaxNode, String srcText) {
-    if (syntaxNode instanceof ModuleDecl) {
-      return Pair.of(srcText, syntaxNode);
-    }
-    var sb = new StringBuilder();
-    var nodeText = syntaxNode.text(srcText.toCharArray());
-    var adjustedNode = syntaxNode;
-    if (syntaxNode instanceof Expr) {
-      sb.append(expressionPreamble).append(nodeText).append('\n');
-    } else {
-      sb.append(nodeText).append('\n');
-    }
-    var mod = parser.parseModule(sb.toString());
-    if (syntaxNode instanceof Expr) {
-      adjustedNode = mod.getProperties().get(0).getExpr();
-    } else if (syntaxNode instanceof ImportClause) {
-      adjustedNode = mod.getImports().get(0);
-    } else if (syntaxNode instanceof ClassProperty) {
-      adjustedNode = mod.getProperties().get(0);
-    } else if (syntaxNode instanceof Class) {
-      adjustedNode = mod.getClasses().get(0);
-    } else if (syntaxNode instanceof org.pkl.parser.syntax.TypeAlias) {
-      adjustedNode = mod.getTypeAliases().get(0);
-    } else if (syntaxNode instanceof org.pkl.parser.syntax.ClassMethod) {
-      adjustedNode = mod.getMethods().get(0);
-    }
-    var cursor = EconomicMaps.getEntries(replState.module.getMembers());
-    while (cursor.advance()) {
-      var key = cursor.getKey();
-      var value = cursor.getValue();
-      if (value.isLocal()) {
-        sb.append("local ").append(key).append(" = Undefined()\n\n");
-      }
-    }
-    assert adjustedNode != null;
-    return Pair.of(sb.toString(), adjustedNode);
-  }
-
   @SuppressWarnings("StatementWithEmptyBody")
   private void handleNode(
       ReplState replState,
@@ -237,7 +191,7 @@ public class ReplServer implements AutoCloseable {
       String srcText,
       boolean evalDefinitions,
       boolean forceResults) {
-    var pair = buildSyntheticModuleText(node, srcText);
+    var pair = VmUtils.buildSyntheticModuleText(node, replState.module, srcText);
     var syntheticModuleText = pair.first;
     var adjustedNode = pair.second;
     var module = ModuleKeys.synthetic(uri, workingDir.toUri(), uri, syntheticModuleText, false);
@@ -283,8 +237,9 @@ public class ReplServer implements AutoCloseable {
             new ReplResponse.InternalError(new IllegalStateException("Unexpected parse result")));
       }
     } catch (VmException e) {
+      e.setForExpressionInput(true);
       // TODO: patch stack trace for constants
-      results.add(new EvalError(renderException(e)));
+      results.add(new EvalError(errorRenderer.render(e)));
     }
   }
 
