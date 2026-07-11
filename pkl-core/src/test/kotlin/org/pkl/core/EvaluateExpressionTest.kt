@@ -134,4 +134,43 @@ class EvaluateExpressionTest {
 
     assertThat(error).hasMessageContaining("Expected value of type `String`, but got type `Int`")
   }
+
+  @Test
+  fun `evaluate local property`() {
+    val result = evaluate("local foo = 1", "foo")
+
+    assertThat(result).isEqualTo(1L)
+  }
+
+  @Test
+  fun `evaluate throwing local property trims expression preamble when rendering stack frames`() {
+    val error = assertThrows<PklException> { evaluate("local foo = throw(\"uh oh\")", "foo") }
+
+    assertThat(error.message)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        uh oh
+
+        1 | local foo = throw("uh oh")
+                        ^^^^^^^^^^^^^^
+        at text#foo (repl:text)
+
+        1 | foo
+            ^^^
+        at  (repl:text)
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
+  fun `evaluate import`() {
+    val result = evaluate("import \"pkl:base\"", "base")
+
+    assertThat(result).isInstanceOf(PModule::class.java)
+    result as PModule
+    assertThat(result.moduleName).isEqualTo("pkl.base")
+  }
 }

@@ -61,9 +61,12 @@ import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.Pair;
 import org.pkl.parser.Parser;
 import org.pkl.parser.ParserError;
 import org.pkl.parser.syntax.Expr;
+import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.ModuleDecl;
 
 public final class VmUtils {
   /** See {@link VmUtils#shouldRunTypeCheck(VirtualFrame)}. */
@@ -91,6 +94,10 @@ public final class VmUtils {
 
   private static final DecimalFormatSymbols ROOT_DECIMAL_FORMAT_SYMBOLS =
       DecimalFormatSymbols.getInstance(Locale.ROOT);
+
+  public static final String EXPRESSION_PREAMBLE = "`THE REPL TEXT EXPR` = ";
+
+  private static final Parser parser = new Parser();
 
   private VmUtils() {}
 
@@ -930,12 +937,69 @@ public final class VmUtils {
     }
   }
 
+  /**
+   * Create a fake module that declares all the local properties that exist in {@code module}, so
+   * that AstBuilder can correctly resolve variables.
+   *
+   * <p>Additionally, return a {@link org.pkl.parser.syntax.Node} with its span calculated in terms
+   * of this fake module.
+   *
+   * <p>This created module is never executed.
+   */
+  public static Pair<String, org.pkl.parser.syntax.Node> buildSyntheticModuleText(
+      org.pkl.parser.syntax.Node syntaxNode, VmTyped module, String srcText) {
+    if (syntaxNode instanceof ModuleDecl) {
+      return Pair.of(srcText, syntaxNode);
+    }
+    var sb = new StringBuilder();
+    var nodeText = syntaxNode.text(srcText.toCharArray());
+    var adjustedNode = syntaxNode;
+    if (syntaxNode instanceof Expr) {
+      sb.append(EXPRESSION_PREAMBLE).append(nodeText).append('\n');
+    } else {
+      sb.append(nodeText).append('\n');
+    }
+    var mod = parser.parseModule(sb.toString());
+    if (syntaxNode instanceof Expr) {
+      adjustedNode = mod.getProperties().get(0).getExpr();
+    } else if (syntaxNode instanceof ImportClause) {
+      adjustedNode = mod.getImports().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.ClassProperty) {
+      adjustedNode = mod.getProperties().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.Class) {
+      adjustedNode = mod.getClasses().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.TypeAlias) {
+      adjustedNode = mod.getTypeAliases().get(0);
+    } else if (syntaxNode instanceof org.pkl.parser.syntax.ClassMethod) {
+      adjustedNode = mod.getMethods().get(0);
+    }
+    var cursor = EconomicMaps.getEntries(module.getMembers());
+    while (cursor.advance()) {
+      var key = cursor.getKey();
+      var value = cursor.getValue();
+      if (value.isLocal()) {
+        sb.append("local ").append(key).append(" = Undefined()\n\n");
+      }
+    }
+    assert adjustedNode != null;
+    return Pair.of(sb.toString(), adjustedNode);
+  }
+
   public static Object evaluateExpression(
       VmTyped module,
       String expression,
       SecurityManager securityManager,
       ModuleResolver moduleResolver) {
-    var syntheticModule = ModuleKeys.synthetic(REPL_TEXT_URI, expression);
+    org.pkl.parser.syntax.Node node;
+    try {
+      node = parser.parseExpressionInput(expression);
+    } catch (ParserError e) {
+      throw toVmException(e, expression, REPL_TEXT_URI, "");
+    }
+    var pair = buildSyntheticModuleText(node, module, expression);
+    var syntheticModuleText = pair.first;
+    var adjustedNode = pair.second;
+    var syntheticModule = ModuleKeys.synthetic(REPL_TEXT_URI, syntheticModuleText);
     ResolvedModuleKey resolvedModule;
     try {
       resolvedModule = syntheticModule.resolve(securityManager);
@@ -955,9 +1019,10 @@ public final class VmUtils {
             resolvedModule,
             false);
     var language = VmLanguage.get(null);
-    var parsedExpression = parseExpressionNode(expression, source);
     var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
-    var exprNode = builder.visitExpr(parsedExpression);
+    var mod = parser.parseModule(syntheticModuleText);
+    builder.visitModule(mod);
+    var exprNode = builder.visitExpr((Expr) adjustedNode);
     var rootNode =
         new SimpleRootNode(
             language,
@@ -966,7 +1031,12 @@ public final class VmUtils {
             "",
             exprNode);
     var callNode = Truffle.getRuntime().createIndirectCallNode();
-    return callNode.call(rootNode.getCallTarget(), module, module);
+    try {
+      return callNode.call(rootNode.getCallTarget(), module, module);
+    } catch (VmException e) {
+      e.setForExpressionInput(true);
+      throw e;
+    }
   }
 
   public static int findCustomThisSlot(VirtualFrame frame) {
