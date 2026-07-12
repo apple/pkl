@@ -777,6 +777,102 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
+  public static final class ClassValueTypeNode extends ValidatingObjectSlotTypeNode {
+    @Child private TypeNode typeArgumentNode;
+
+    public ClassValueTypeNode(SourceSection sourceSection, TypeNode typeArgumentNode) {
+      super(sourceSection);
+      this.typeArgumentNode = typeArgumentNode;
+      validate();
+    }
+
+    @Override
+    protected Object executeLazily(VirtualFrame frame, Object value) {
+      var typeArgumentClass = getTypeArgumentClass();
+      if (value instanceof VmClass vmClass
+          && (typeArgumentClass == null || typeArgumentClass.isSuperclassOf(vmClass))) {
+        return value;
+      }
+
+      throw typeMismatch(value, BaseModule.getClassClass());
+    }
+
+    private @Nullable VmClass getTypeArgumentClass() {
+      var unaliasedTypeArgumentNode = getUnaliasedTypeArgumentNode();
+      return unaliasedTypeArgumentNode instanceof TypeVariableNode
+          ? null
+          : unaliasedTypeArgumentNode.getVmClass();
+    }
+
+    private TypeNode getUnaliasedTypeArgumentNode() {
+      var result = typeArgumentNode;
+      while (result instanceof TypeAliasTypeNode typeAliasTypeNode) {
+        result = typeAliasTypeNode.getAliasedTypeNode();
+      }
+      return result;
+    }
+
+    @Override
+    protected String getValidationErrorKey() {
+      return "invalidClassTypeArgument";
+    }
+
+    @Override
+    protected @Nullable Node getViolatingNode() {
+      var unaliasedTypeArgumentNode = getUnaliasedTypeArgumentNode();
+      if (unaliasedTypeArgumentNode instanceof TypeVariableNode) return null;
+
+      return unaliasedTypeArgumentNode.getVmClass() != null
+              && unaliasedTypeArgumentNode.getVmTypeAlias() == null
+              && !(unaliasedTypeArgumentNode instanceof FinalModuleTypeNode)
+              && !(unaliasedTypeArgumentNode instanceof NonFinalModuleTypeNode)
+              && !unaliasedTypeArgumentNode.isParametric()
+          ? null
+          : unaliasedTypeArgumentNode;
+    }
+
+    @Override
+    protected boolean isIncludedInTrace(Node node) {
+      return node instanceof ClassValueTypeNode;
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return BaseModule.getClassClass();
+    }
+
+    @Override
+    public VmList getTypeArgumentMirrors() {
+      return VmList.of(typeArgumentNode.getMirror());
+    }
+
+    @Override
+    public boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof ClassValueTypeNode classValueTypeNode)) {
+        return false;
+      }
+      return typeArgumentNode.isEquivalentTo(classValueTypeNode.typeArgumentNode);
+    }
+
+    @Override
+    protected PType doExport() {
+      return new PType.Class(BaseModule.getClassClass().export(), typeArgumentNode.doExport());
+    }
+
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && typeArgumentNode.acceptTypeNode(true, consumer);
+      }
+      return consumer.accept(this);
+    }
+
+    @Override
+    protected boolean isParametric() {
+      return true;
+    }
+  }
+
   public static class NullableTypeNode extends WriteFrameSlotTypeNode {
     @Child private TypeNode elementTypeNode;
 
