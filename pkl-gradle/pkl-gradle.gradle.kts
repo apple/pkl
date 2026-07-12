@@ -20,9 +20,14 @@ plugins {
   id("pklJSpecify")
   `java-gradle-plugin`
   `maven-publish`
-  id("pklPublishLibrary")
   signing
 }
+
+configurePklPomMetadata()
+
+configurePomValidation()
+
+configurePklSigning()
 
 dependencies {
   // Declare a `compileOnly` dependency on `projects.pklTools`

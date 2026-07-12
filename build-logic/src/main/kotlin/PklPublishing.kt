@@ -65,22 +65,26 @@ fun Project.configurePklPomMetadata() {
 fun Project.configurePomValidation() {
   val validatePom =
     tasks.register("validatePom") {
-      if (tasks.findByName("generatePomFileForLibraryPublication") == null) {
-        return@register
-      }
-      val generatePomFileForLibraryPublication =
-        tasks.named<GenerateMavenPom>("generatePomFileForLibraryPublication")
+      val pomTaskName =
+        when {
+          tasks.findByName("generatePomFileForLibraryPublication") != null ->
+            "generatePomFileForLibraryPublication"
+          tasks.findByName("generatePomFileForPluginMavenPublication") != null ->
+            "generatePomFileForPluginMavenPublication"
+          else -> return@register
+        }
+      val generatePomFileForPublication = tasks.named<GenerateMavenPom>(pomTaskName)
       val outputFile =
         layout.buildDirectory.file("validatePom") // dummy output to satisfy up-to-date check
 
-      dependsOn(generatePomFileForLibraryPublication)
-      inputs.file(generatePomFileForLibraryPublication.get().destination)
+      dependsOn(generatePomFileForPublication)
+      inputs.file(generatePomFileForPublication.get().destination)
       outputs.file(outputFile)
 
       doLast {
         outputFile.get().asFile.delete()
 
-        val pomFile = generatePomFileForLibraryPublication.get().destination
+        val pomFile = generatePomFileForPublication.get().destination
         assert(pomFile.exists())
 
         val text = pomFile.readText()
