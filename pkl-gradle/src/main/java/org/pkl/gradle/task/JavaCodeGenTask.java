@@ -39,6 +39,10 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
   @Optional
   public abstract Property<String> getNonNullAnnotation();
 
+  @Input
+  @Optional
+  public abstract Property<String> getNullableAnnotation();
+
   @Override
   protected void doRunTask() {
     //noinspection ResultOfMethodCallIgnored
@@ -56,7 +60,8 @@ public abstract class JavaCodeGenTask extends CodeGenTask {
                 getParamsAnnotation().getOrNull(),
                 getNonNullAnnotation().getOrNull(),
                 getImplementSerializable().get(),
-                getRenames().get()))
+                getRenames().get(),
+                getNullableAnnotation().getOrNull()))
         .run();
   }
 }

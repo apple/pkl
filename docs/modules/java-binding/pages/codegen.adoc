@@ -204,6 +204,16 @@ The specified annotation type must be annotated with `@java.lang.annotation.Targ
 or the generated code may not compile.
 ====
 
+.--nullable-annotation
+[%collapsible]
+====
+Default: `none` +
+Fully qualified name of the annotation type to use for annotating nullable types. +
+The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+or the generated code may not compile.
+If unset, nullable types are not annotated.
+====
+
 Common code generator options:
 
 include::{partialsdir}/cli-codegen-options.adoc[]

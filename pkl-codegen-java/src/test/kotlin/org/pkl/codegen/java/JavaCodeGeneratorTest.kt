@@ -1167,14 +1167,26 @@ class JavaCodeGeneratorTest {
         module mod
 
         foo: String
+        bar: String?
+        baz: List<String?>
+        qux: Int?
         """
           .trimIndent(),
-        JavaCodeGeneratorOptions(nonNullAnnotation = "com.example.Annotations\$NonNull"),
+        JavaCodeGeneratorOptions(
+          nonNullAnnotation = "com.example.Annotations\$NonNull",
+          nullableAnnotation = "com.example.Annotations\$Nullable",
+        ),
       )
 
     assertThat(javaCode)
       .contains("import com.example.Annotations;")
       .contains("public final @Annotations.NonNull String foo;")
+      .contains("public final @Annotations.Nullable String bar;")
+      .contains("public final @Annotations.NonNull List<@Annotations.Nullable String> baz;")
+      .contains("public final @Annotations.Nullable Long qux;")
+      .contains("public Mod(@Named(\"foo\") @Annotations.NonNull String foo,")
+      .contains("@Named(\"bar\") @Annotations.Nullable String bar,")
+      .contains("public Mod withBar(@Annotations.Nullable String bar)")
 
     javaCode =
       generateJavaCode(
@@ -1215,6 +1227,38 @@ class JavaCodeGeneratorTest {
         """
           .trimMargin()
       )
+  }
+
+  @Test
+  fun `custom nullable annotation with getters`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module mod
+
+        nullable: String?
+        strings: List<String?>
+        nullableStrings: List<String>?
+        bytes: Bytes?
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(
+          generateGetters = true,
+          nullableAnnotation = "org.jspecify.annotations.Nullable",
+        ),
+      )
+
+    assertThat(javaCode)
+      .contains("import org.jspecify.annotations.Nullable;")
+      .contains("private final @Nullable String nullable;")
+      .contains("private final @NonNull List<@Nullable String> strings;")
+      .contains("private final @Nullable List<@NonNull String> nullableStrings;")
+      .contains("private final byte @Nullable [] bytes;")
+      .contains("public Mod(@Named(\"nullable\") @Nullable String nullable,")
+      .contains("public @Nullable String getNullable()")
+      .contains("public Mod withNullable(@Nullable String nullable)")
+
+    assertThatCode { javaCode.compile() }.doesNotThrowAnyException()
   }
 
   @Test

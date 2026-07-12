@@ -211,6 +211,7 @@ public class PklPlugin implements Plugin<Project> {
                     task.getGenerateJavadoc().set(spec.getGenerateJavadoc());
                     task.getParamsAnnotation().set(spec.getParamsAnnotation());
                     task.getNonNullAnnotation().set(spec.getNonNullAnnotation());
+                    task.getNullableAnnotation().set(spec.getNullableAnnotation());
                   });
         });
 

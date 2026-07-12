@@ -430,6 +430,17 @@ The specified annotation type must be annotated with `@java.lang.annotation.Targ
 or the generated code may not compile.
 ====
 
+.nullableAnnotation: Property<String>
+[%collapsible]
+====
+Default: `null` +
+Example: `nullableAnnotation = "org.project.MyAnnotation"` +
+Fully qualified name of the annotation type to use for annotating nullable types. +
+The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+or the generated code may not compile.
+If set to `null`, nullable types are not annotated.
+====
+
 Common code generation properties:
 
 include::../partials/gradle-codegen-properties.adoc[]

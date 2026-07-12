@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.codegen.java
 
+import com.github.ajalt.clikt.core.parse
 import java.nio.file.Path
 import kotlin.io.path.listDirectoryEntries
 import org.assertj.core.api.Assertions.assertThat
@@ -26,6 +27,36 @@ import org.pkl.commons.readString
 class CliJavaCodeGeneratorTest {
 
   private val dollar = "$"
+
+  @Test
+  fun `nullable annotation option`(@TempDir tempDir: Path) {
+    val moduleFile =
+      PklModule(
+          "org.mod",
+          """
+          module org.mod
+
+          nullable: String?
+          """,
+        )
+        .writeToDisk(tempDir.resolve("org/mod.pkl"))
+    val outputDir = tempDir.resolve("output")
+
+    PklJavaCodegenCommand()
+      .parse(
+        arrayOf(
+          "--nullable-annotation",
+          "org.jspecify.annotations.Nullable",
+          "--output-dir",
+          outputDir.toString(),
+          moduleFile.toString(),
+        )
+      )
+
+    assertThat(outputDir.resolve("java/org/Mod.java").readString())
+      .contains("import org.jspecify.annotations.Nullable;")
+      .contains("public final @Nullable String nullable;")
+  }
 
   @Test
   fun `module inheritance`(@TempDir tempDir: Path) {

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -62,7 +62,7 @@ data class CliJavaCodeGeneratorOptions(
    *
    * The specified annotation type must have a [java.lang.annotation.Target] of
    * [java.lang.annotation.ElementType.TYPE_USE] or the generated code may not compile. If set to
-   * `null`, [org.pkl.config.java.mapper.NonNull] will be used.
+   * `null`, [org.jspecify.annotations.NonNull] will be used.
    */
   val nonNullAnnotation: String? = null,
 
@@ -77,6 +77,15 @@ data class CliJavaCodeGeneratorOptions(
    * Pkl module name, and the value is the desired replacement.
    */
   val renames: Map<String, String> = emptyMap(),
+
+  /**
+   * Fully qualified name of the annotation type to use for annotating nullable types.
+   *
+   * The specified annotation type must have a [java.lang.annotation.Target] of
+   * [java.lang.annotation.ElementType.TYPE_USE] or the generated code may not compile. If set to
+   * `null`, nullable types are not annotated.
+   */
+  val nullableAnnotation: String? = null,
 ) {
   @Suppress("DeprecatedCallableAddReplaceWith")
   @Deprecated("deprecated without replacement")
@@ -93,5 +102,6 @@ data class CliJavaCodeGeneratorOptions(
       nonNullAnnotation,
       implementSerializable,
       renames,
+      nullableAnnotation,
     )
 }

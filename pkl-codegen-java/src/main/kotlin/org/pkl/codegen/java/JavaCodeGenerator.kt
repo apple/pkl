@@ -82,7 +82,7 @@ data class JavaCodeGeneratorOptions(
    *
    * The specified annotation type must have a [java.lang.annotation.Target] of
    * [java.lang.annotation.ElementType.TYPE_USE] or the generated code may not compile. If set to
-   * `null`, `org.pkl.config.java.mapper.NonNull` will be used.
+   * `null`, [org.jspecify.annotations.NonNull] will be used.
    */
   val nonNullAnnotation: String? = null,
 
@@ -96,6 +96,15 @@ data class JavaCodeGeneratorOptions(
    * from the corresponding name derived from the Pkl module declaration .
    */
   val renames: Map<String, String> = emptyMap(),
+
+  /**
+   * Fully qualified name of the annotation type to use for annotating nullable types.
+   *
+   * The specified annotation type must have a [java.lang.annotation.Target] of
+   * [java.lang.annotation.ElementType.TYPE_USE] or the generated code may not compile. If set to
+   * `null`, nullable types are not annotated.
+   */
+  val nullableAnnotation: String? = null,
 )
 
 /** Entrypoint for the Java code generator API. */
@@ -178,6 +187,10 @@ class JavaCodeGenerator(
         }
       return AnnotationSpec.builder(className).build()
     }
+
+  private val nullableAnnotation: AnnotationSpec?
+    get() =
+      codegenOptions.nullableAnnotation?.let { AnnotationSpec.builder(toClassName(it)).build() }
 
   private val javaFileName: String
     get() {
@@ -766,7 +779,8 @@ class JavaCodeGenerator(
           PClassInfo.Float -> TypeName.DOUBLE.boxIf(boxed).nullableIf(nullable)
           PClassInfo.Duration -> DURATION.nullableIf(nullable)
           PClassInfo.DataSize -> DATA_SIZE.nullableIf(nullable)
-          PClassInfo.Bytes -> ArrayTypeName.of(TypeName.BYTE)
+          PClassInfo.Bytes ->
+            ArrayTypeName.of(TypeName.BYTE).let { if (nullable) it.annotatedNullable() else it }
           PClassInfo.Pair ->
             ParameterizedTypeName.get(
                 PAIR,
@@ -893,8 +907,14 @@ class JavaCodeGenerator(
     }
 
   private fun TypeName.nullableIf(isNullable: Boolean): TypeName =
-    if (isPrimitive && isNullable) box()
-    else if (isPrimitive || isNullable) this else annotated(nonNullAnnotation)
+    when {
+      isNullable -> boxIf(isPrimitive).annotatedNullable()
+      isPrimitive -> this
+      else -> annotated(nonNullAnnotation)
+    }
+
+  private fun TypeName.annotatedNullable(): TypeName =
+    nullableAnnotation?.let { annotated(it) } ?: this
 
   private fun TypeName.boxIf(shouldBox: Boolean): TypeName = if (shouldBox) box() else this
 

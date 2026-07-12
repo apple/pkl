@@ -53,7 +53,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       |  public static final class Person {
       |    public final @Nonnull String name;
       |
-      |    public final @Nonnull List<Address> addresses;
+      |    public final @Nonnull List<@Nullable Address> addresses;
     """,
     )
 
@@ -150,6 +150,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       dependencies {
         integTestImplementation "javax.inject:javax.inject:1"
         integTestImplementation "com.google.code.findbugs:jsr305:3.0.2"
+        integTestImplementation "org.jspecify:jspecify:1.0.0"
       }
 
       pkl {
@@ -159,6 +160,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
             outputDir = file("build/generated")
             paramsAnnotation = "javax.inject.Named"
             nonNullAnnotation = "javax.annotation.Nonnull"
+            nullableAnnotation = "org.jspecify.annotations.Nullable"
             settingsModule = "pkl:settings"
             renames = ['org': 'foo.bar']
           }
@@ -192,6 +194,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
       dependencies {
         implementation "javax.inject:javax.inject:1"
         implementation "com.google.code.findbugs:jsr305:3.0.2"
+        implementation "org.jspecify:jspecify:1.0.0"
       }
 
       pkl {
@@ -201,6 +204,7 @@ class JavaCodeGeneratorsTest : AbstractTest() {
             outputDir = file("build/generated")
             paramsAnnotation = "javax.inject.Named"
             nonNullAnnotation = "javax.annotation.Nonnull"
+            nullableAnnotation = "org.jspecify.annotations.Nullable"
             settingsModule = "pkl:settings"
             renames = [
               'org': 'foo.bar'

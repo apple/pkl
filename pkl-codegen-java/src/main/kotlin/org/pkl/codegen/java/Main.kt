@@ -109,6 +109,18 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
           .trimIndent(),
     )
 
+  private val nullableAnnotation: String? by
+    option(
+      names = arrayOf("--nullable-annotation"),
+      help =
+        """
+        Fully qualified name of the annotation type to use for annotating nullable types.
+        The specified annotation type must be annotated with `@java.lang.annotation.Target(ElementType.TYPE_USE)`
+        or the generated code may not compile.
+        """
+          .trimIndent(),
+    )
+
   private val implementSerializable: Boolean by
     option(
         names = arrayOf("--implement-serializable"),
@@ -145,6 +157,7 @@ class PklJavaCodegenCommand : ModulesCommand(name = "pkl-codegen-java", helpLink
         generateSpringBootConfig = generateSpringBoot,
         paramsAnnotation = if (paramsAnnotation == "none") null else paramsAnnotation,
         nonNullAnnotation = nonNullAnnotation,
+        nullableAnnotation = nullableAnnotation,
         implementSerializable = implementSerializable,
         renames = renames,
       )
