@@ -113,6 +113,11 @@ tasks.test {
 publishing {
   publications {
     withType<MavenPublication>().configureEach {
+      if (name == "pluginMaven") {
+        // The plugin intentionally depends on the shaded pkl-tools runtime variant,
+        // which Gradle module metadata can express but Maven POM metadata cannot.
+        suppressPomMetadataWarningsFor("runtimeElements")
+      }
       pom {
         name = "pkl-gradle plugin"
         url = "https://github.com/apple/pkl/tree/main/pkl-gradle"
