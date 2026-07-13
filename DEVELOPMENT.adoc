@@ -53,7 +53,6 @@ gw pkl-cli:buildNative  # build native executable for current platform
 
 pkl-cli/build/executable/jpkl                   # run Java executable
 pkl-cli/build/executable/pkl-macos-aarch64      # run Mac executable
-pkl-cli/build/executable/pkl-macos-amd64        # run Intel Mac executable
 pkl-cli/build/executable/pkl-linux-amd64        # run Linux executable
 pkl-cli/build/executable/pkl-alpine-linux-amd64 # run Alpine Linux executable 
 pkl-cli/build/executable/pkl-windows-amd64.exe  # run Windows executable 

@@ -30,7 +30,6 @@ plugins {
 val executableSpec = project.extensions.getByType<ExecutableSpec>()
 val buildInfo = project.extensions.getByType<BuildInfo>()
 
-val stagedMacAmd64Executable: Configuration = configurations.create("stagedMacAmd64Executable")
 val stagedMacAarch64Executable: Configuration = configurations.create("stagedMacAarch64Executable")
 val stagedLinuxAmd64Executable: Configuration = configurations.create("stagedLinuxAmd64Executable")
 val stagedLinuxAarch64Executable: Configuration =
@@ -64,7 +63,6 @@ dependencies {
   nativeImageClasspath(libs.graalSdk)
 
   stagedMacAarch64Executable(executableFile("macos-aarch64"))
-  stagedMacAmd64Executable(executableFile("macos-amd64"))
   stagedLinuxAmd64Executable(executableFile("linux-amd64"))
   stagedLinuxAarch64Executable(executableFile("linux-aarch64"))
   stagedAlpineLinuxAmd64Executable(executableFile("alpine-linux-amd64"))
@@ -88,14 +86,6 @@ private fun NativeImageBuild.setClasspath() {
   )
   classpath.from(nativeImageClasspath)
 }
-
-val macExecutableAmd64 =
-  tasks.register<NativeImageBuild>("macExecutableAmd64") {
-    imageName = executableSpec.name.map { "$it-macos-amd64" }
-    mainClass = executableSpec.mainClass
-    amd64()
-    setClasspath()
-  }
 
 val macExecutableAarch64 =
   tasks.register<NativeImageBuild>("macExecutableAarch64") {
@@ -214,8 +204,6 @@ val testNative = tasks.named("testNative") { dependsOn(testStartNativeExecutable
 val assembleNativeMacOsAarch64 =
   tasks.named("assembleNativeMacOsAarch64") { wraps(macExecutableAarch64) }
 
-val assembleNativeMacOsAmd64 = tasks.named("assembleNativeMacOsAmd64") { wraps(macExecutableAmd64) }
-
 val assembleNativeLinuxAarch64 =
   tasks.named("assembleNativeLinuxAarch64") { wraps(linuxExecutableAarch64) }
 
@@ -232,23 +220,6 @@ publishing {
   publications {
     // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
     project.afterEvaluate {
-      create<MavenPublication>("macExecutableAmd64") {
-        artifactId = "${executableSpec.publicationName.get()}-macos-amd64"
-        artifact(stagedMacAmd64Executable.singleFile) {
-          classifier = null
-          extension = "bin"
-          builtBy(stagedMacAmd64Executable)
-        }
-        pom {
-          name = "${executableSpec.publicationName.get()}-macos-amd64"
-          url = executableSpec.website
-          description =
-            executableSpec.documentationName.map { name ->
-              "Native $name executable for macOS/amd64."
-            }
-        }
-      }
-
       create<MavenPublication>("macExecutableAarch64") {
         artifactId = "${executableSpec.publicationName.get()}-macos-aarch64"
         artifact(stagedMacAarch64Executable.singleFile) {
@@ -342,7 +313,6 @@ signing {
     sign(publishing.publications["linuxExecutableAarch64"])
     sign(publishing.publications["linuxExecutableAmd64"])
     sign(publishing.publications["macExecutableAarch64"])
-    sign(publishing.publications["macExecutableAmd64"])
     sign(publishing.publications["alpineLinuxExecutableAmd64"])
     sign(publishing.publications["windowsExecutableAmd64"])
   }

@@ -10,21 +10,20 @@ errorPronePlugin = "5.1.0"
 geantyref = "2.0.1"
 #noinspection UnusedVersionCatalogEntry
 googleJavaFormat = "1.35.0"
-# 25.0.2 no longer supports macos-x64
-graalVm = "25.0.1"
-#noinspection UnusedVersionCatalogEntry
-graalVmJdkVersion = "25.0.1"
+graalVm = "25.1.3"
+graalVmJdkVersion = "25.0.3"
 # slightly hacky but convenient place so we remember to update the checksum
+# pklGraalVm.gradle.kts assumes this entry exists
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-x64 = "a3d895b4cd1c783badbd277ec70409806bd4102fca0d2a60dbaeb0bab41aec30"
+graalVmSha256-macos-x64 = "unavailable"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-macos-aarch64 = "066339f24a8ab5c161548491a9400f7344e7761a1e46f8979e76c7ef11d5bc76"
+graalVmSha256-macos-aarch64 = "b41cdde27691a0e04a1f2b0660624bc37e59c738e536888860c4c9f65a4a9a3b"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-x64 = "01e39fe1a87f28b842a3e4e3b77be9b544dca3a58fa6e93b924a6106c8bac7fb"
+graalVmSha256-linux-x64 = "e9cd1637be853e105f8b09125b4b19fbce385696465d782cbca8bb80e1df8f0d"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-linux-aarch64 = "7aa0b9935a80e67f37c6025678393dbd123bb6f2226811decbc1a13093fc8ae2"
+graalVmSha256-linux-aarch64 = "5e79978983439d28506ebef82254fe9f98995121208dc8be77c604f4ad5bc579"
 #noinspection UnusedVersionCatalogEntry
-graalVmSha256-windows-x64 = "fde83c5ceec2c75560c747ccd9f314f90e4cf5c5287416e67c4ce442e344ca27"
+graalVmSha256-windows-x64 = "96f1e7a9674b5b5751224104ff0c4624f15f9522b190d960a041cab72c381393"
 # pklGraalVm.gradle.kts assumes this entry exists
 #noinspection UnusedVersionCatalogEntry
 graalVmSha256-windows-aarch64 = "unavailable"
@@ -117,10 +116,10 @@ slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
 slf4jSimple = { group = "org.slf4j", name = "slf4j-simple", version.ref = "slf4j" }
 snakeYaml = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = "snakeYaml" }
 spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotlessPlugin"}
-svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVm" }
+svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVmJdkVersion" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
-truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVm" }
+truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVmJdkVersion" }
 truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", version.ref = "graalVm" }
 wiremock = { group = "org.wiremock", name = "wiremock", version.ref = "wiremock" }
 
