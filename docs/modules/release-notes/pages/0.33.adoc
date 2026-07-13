@@ -17,6 +17,12 @@ include::partial$intro.adoc[]
 
 == Breaking Changes [small]#💔#
 
+=== Removal of macOS amd64 (Intel) Binaries
+
+Native `pkl` and `pkldoc` binaries for Intel Mac systems are no longer published with Pkl releases.
+
+To continue running new Pkl releases on these systems, use an appropriate Java runtime and the `jpkl` and `jpkldoc` Java executables.
+
 === XXX
 
 == Bug Fixes [small]#🐜#

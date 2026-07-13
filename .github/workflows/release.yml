@@ -208,54 +208,6 @@ jobs:
         name: test-results-html-java-executables-release
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
-  pkl-cli-macOS-amd64-release:
-    if: github.repository_owner == 'apple'
-    runs-on:
-    - self-hosted
-    - macos
-    env:
-      LANG: en_US.UTF-8
-    steps:
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      with:
-        persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
-      with:
-        java-version: '25'
-        distribution: temurin
-        architecture: x64
-    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
-      with:
-        cache-disabled: true
-    - name: Set DEBUG_ARGS env var
-      env:
-        RUNNER_DEBUG: ${{ runner.debug }}
-      shell: bash
-      run: |-
-        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
-          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
-        fi
-    - name: gradle buildNative
-      shell: bash
-      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-cli:buildNative
-    - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: executable-pkl-cli-macOS-amd64
-        path: pkl-cli*/build/executable/**/*
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-pkl-cli-macOS-amd64-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-html-pkl-cli-macOS-amd64-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   pkl-cli-linux-amd64-release:
     runs-on: ubuntu-latest
     env:
@@ -303,6 +255,57 @@ jobs:
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-cli-linux-amd64-release
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  pkl-cli-linux-aarch64-release:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with:
+        cache-disabled: true
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-cli-linux-aarch64
+        path: pkl-cli*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-cli-linux-aarch64-release
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-cli-linux-aarch64-release
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
     container:
@@ -355,57 +358,6 @@ jobs:
         name: test-results-html-pkl-cli-macOS-aarch64-release
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
-  pkl-cli-linux-aarch64-release:
-    runs-on: ubuntu-24.04-arm
-    env:
-      LANG: en_US.UTF-8
-    steps:
-    - name: Install deps
-      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      with:
-        persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
-      with:
-        java-version: '25'
-        distribution: temurin
-        architecture: aarch64
-    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
-      with:
-        cache-disabled: true
-    - name: Set DEBUG_ARGS env var
-      env:
-        RUNNER_DEBUG: ${{ runner.debug }}
-      shell: bash
-      run: |-
-        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
-          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
-        fi
-    - name: Fix git ownership
-      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: gradle buildNative
-      shell: bash
-      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-cli:buildNative
-    - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: executable-pkl-cli-linux-aarch64
-        path: pkl-cli*/build/executable/**/*
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-pkl-cli-linux-aarch64-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-html-pkl-cli-linux-aarch64-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
-    container:
-      image: redhat/ubi8:8.10
   pkl-cli-alpine-linux-amd64-release:
     runs-on: ubuntu-latest
     env:
@@ -570,54 +522,6 @@ jobs:
         name: test-results-html-pkl-cli-windows-amd64-release
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
-  pkl-doc-macOS-amd64-release:
-    if: github.repository_owner == 'apple'
-    runs-on:
-    - self-hosted
-    - macos
-    env:
-      LANG: en_US.UTF-8
-    steps:
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      with:
-        persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
-      with:
-        java-version: '25'
-        distribution: temurin
-        architecture: x64
-    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
-      with:
-        cache-disabled: true
-    - name: Set DEBUG_ARGS env var
-      env:
-        RUNNER_DEBUG: ${{ runner.debug }}
-      shell: bash
-      run: |-
-        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
-          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
-        fi
-    - name: gradle buildNative
-      shell: bash
-      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true -Dpkl.targetArch=amd64 "-Dpkl.native--native-compiler-path=${GITHUB_WORKSPACE}/.github/scripts/cc_macos_amd64.sh" pkl-doc:buildNative
-    - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: executable-pkl-doc-macOS-amd64
-        path: pkl-doc*/build/executable/**/*
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-pkl-doc-macOS-amd64-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-html-pkl-doc-macOS-amd64-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
   pkl-doc-linux-amd64-release:
     runs-on: ubuntu-latest
     env:
@@ -665,6 +569,57 @@ jobs:
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
         name: test-results-html-pkl-doc-linux-amd64-release
+        path: '**/build/reports/tests/**/*'
+        if-no-files-found: ignore
+    container:
+      image: redhat/ubi8:8.10
+  pkl-doc-linux-aarch64-release:
+    runs-on: ubuntu-24.04-arm
+    env:
+      LANG: en_US.UTF-8
+    steps:
+    - name: Install deps
+      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
+    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+      with:
+        persist-credentials: false
+    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+      with:
+        java-version: '25'
+        distribution: temurin
+        architecture: aarch64
+    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
+      with:
+        cache-disabled: true
+    - name: Set DEBUG_ARGS env var
+      env:
+        RUNNER_DEBUG: ${{ runner.debug }}
+      shell: bash
+      run: |-
+        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
+          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
+        fi
+    - name: Fix git ownership
+      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: gradle buildNative
+      shell: bash
+      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
+    - name: Upload executable artifacts
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: executable-pkl-doc-linux-aarch64
+        path: pkl-doc*/build/executable/**/*
+    - name: Upload Test Result XML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-xml-pkl-doc-linux-aarch64-release
+        path: '**/build/test-results/**/*.xml'
+    - name: Upload Test Result HTML
+      if: '!cancelled()'
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: test-results-html-pkl-doc-linux-aarch64-release
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
     container:
@@ -717,57 +672,6 @@ jobs:
         name: test-results-html-pkl-doc-macOS-aarch64-release
         path: '**/build/reports/tests/**/*'
         if-no-files-found: ignore
-  pkl-doc-linux-aarch64-release:
-    runs-on: ubuntu-24.04-arm
-    env:
-      LANG: en_US.UTF-8
-    steps:
-    - name: Install deps
-      run: dnf install -y git binutils gcc glibc-devel zlib-devel libstdc++-static glibc-langpack-en
-    - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
-      with:
-        persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
-      with:
-        java-version: '25'
-        distribution: temurin
-        architecture: aarch64
-    - uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
-      with:
-        cache-disabled: true
-    - name: Set DEBUG_ARGS env var
-      env:
-        RUNNER_DEBUG: ${{ runner.debug }}
-      shell: bash
-      run: |-
-        if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
-          echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
-        fi
-    - name: Fix git ownership
-      run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
-    - name: gradle buildNative
-      shell: bash
-      run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true pkl-doc:buildNative
-    - name: Upload executable artifacts
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: executable-pkl-doc-linux-aarch64
-        path: pkl-doc*/build/executable/**/*
-    - name: Upload Test Result XML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-xml-pkl-doc-linux-aarch64-release
-        path: '**/build/test-results/**/*.xml'
-    - name: Upload Test Result HTML
-      if: '!cancelled()'
-      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
-      with:
-        name: test-results-html-pkl-doc-linux-aarch64-release
-        path: '**/build/reports/tests/**/*'
-        if-no-files-found: ignore
-    container:
-      image: redhat/ubi8:8.10
   pkl-doc-alpine-linux-amd64-release:
     runs-on: ubuntu-latest
     env:
@@ -939,16 +843,14 @@ jobs:
     - bench
     - gradle-compatibility
     - java-executables-release
-    - pkl-cli-macOS-amd64-release
     - pkl-cli-linux-amd64-release
-    - pkl-cli-macOS-aarch64-release
     - pkl-cli-linux-aarch64-release
+    - pkl-cli-macOS-aarch64-release
     - pkl-cli-alpine-linux-amd64-release
     - pkl-cli-windows-amd64-release
-    - pkl-doc-macOS-amd64-release
     - pkl-doc-linux-amd64-release
-    - pkl-doc-macOS-aarch64-release
     - pkl-doc-linux-aarch64-release
+    - pkl-doc-macOS-aarch64-release
     - pkl-doc-alpine-linux-amd64-release
     - pkl-doc-windows-amd64-release
     runs-on: ubuntu-latest
@@ -1022,16 +924,14 @@ jobs:
     - gradle-check-windows
     - gradle-compatibility
     - java-executables-release
-    - pkl-cli-macOS-amd64-release
     - pkl-cli-linux-amd64-release
-    - pkl-cli-macOS-aarch64-release
     - pkl-cli-linux-aarch64-release
+    - pkl-cli-macOS-aarch64-release
     - pkl-cli-alpine-linux-amd64-release
     - pkl-cli-windows-amd64-release
-    - pkl-doc-macOS-amd64-release
     - pkl-doc-linux-amd64-release
-    - pkl-doc-macOS-aarch64-release
     - pkl-doc-linux-aarch64-release
+    - pkl-doc-macOS-aarch64-release
     - pkl-doc-alpine-linux-amd64-release
     - pkl-doc-windows-amd64-release
     permissions:
@@ -1062,16 +962,14 @@ jobs:
     - bench
     - gradle-compatibility
     - java-executables-release
-    - pkl-cli-macOS-amd64-release
     - pkl-cli-linux-amd64-release
-    - pkl-cli-macOS-aarch64-release
     - pkl-cli-linux-aarch64-release
+    - pkl-cli-macOS-aarch64-release
     - pkl-cli-alpine-linux-amd64-release
     - pkl-cli-windows-amd64-release
-    - pkl-doc-macOS-amd64-release
     - pkl-doc-linux-amd64-release
-    - pkl-doc-macOS-aarch64-release
     - pkl-doc-linux-aarch64-release
+    - pkl-doc-macOS-aarch64-release
     - pkl-doc-alpine-linux-amd64-release
     - pkl-doc-windows-amd64-release
     - deploy-release

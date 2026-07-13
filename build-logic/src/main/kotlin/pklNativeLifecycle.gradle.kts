@@ -15,8 +15,6 @@
  */
 val assembleNativeMacOsAarch64 = tasks.register("assembleNativeMacOsAarch64") { group = "build" }
 
-val assembleNativeMacOsAmd64 = tasks.register("assembleNativeMacOsAmd64") { group = "build" }
-
 val assembleNativeLinuxAarch64 = tasks.register("assembleNativeLinuxAarch64") { group = "build" }
 
 val assembleNativeLinuxAmd64 = tasks.register("assembleNativeLinuxAmd64") { group = "build" }
@@ -27,8 +25,6 @@ val assembleNativeAlpineLinuxAmd64 =
 val assembleNativeWindowsAmd64 = tasks.register("assembleNativeWindowsAmd64") { group = "build" }
 
 val testNativeMacOsAarch64 = tasks.register("testNativeMacOsAarch64") { group = "verification" }
-
-val testNativeMacOsAmd64 = tasks.register("testNativeMacOsAmd64") { group = "verification" }
 
 val testNativeLinuxAarch64 = tasks.register("testNativeLinuxAarch64") { group = "verification" }
 
@@ -57,9 +53,6 @@ val assembleNative =
     when {
       buildInfo.os.isMacOsX && buildInfo.targetArch == "aarch64" -> {
         wraps(assembleNativeMacOsAarch64)
-      }
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "amd64" -> {
-        wraps(assembleNativeMacOsAmd64)
       }
       buildInfo.os.isLinux && buildInfo.targetArch == "aarch64" -> {
         wraps(assembleNativeLinuxAarch64)
@@ -93,9 +86,6 @@ val testNative =
     when {
       buildInfo.os.isMacOsX && buildInfo.targetArch == "aarch64" -> {
         dependsOn(testNativeMacOsAarch64)
-      }
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "amd64" -> {
-        dependsOn(testNativeMacOsAmd64)
       }
       buildInfo.os.isLinux && buildInfo.targetArch == "aarch64" -> {
         dependsOn(testNativeLinuxAarch64)

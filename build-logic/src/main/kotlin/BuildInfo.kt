@@ -24,6 +24,7 @@ import org.gradle.api.provider.Provider
 import org.gradle.api.tasks.TaskProvider
 import org.gradle.api.tasks.testing.Test
 import org.gradle.internal.extensions.stdlib.capitalized
+import org.gradle.internal.os.OperatingSystem
 import org.gradle.jvm.toolchain.*
 import org.gradle.kotlin.dsl.*
 import org.gradle.kotlin.dsl.support.serviceOf
@@ -70,31 +71,27 @@ const val PKL_TEST_ALL_JDKS = false
 // `buildInfo` in main build scripts
 // `project.extensions.getByType<BuildInfo>()` in precompiled script plugins
 open class BuildInfo(private val project: Project) {
-  inner class GraalVm(val arch: String) {
+  inner class GraalVm(
+    val osName: String,
+    val arch: String,
+    val version: String,
+    val graalJdkVersion: String,
+  ) {
     val homeDir: String by lazy {
       System.getenv("GRAALVM_HOME") ?: "${System.getProperty("user.home")}/.graalvm"
     }
-
-    val version: String by lazy { libs.findVersion("graalVm").get().toString() }
-
     val graalVmJdkVersion: String by lazy { libs.findVersion("graalVmJdkVersion").get().toString() }
-
-    val osName: String by lazy {
-      when {
-        os.isMacOsX -> "macos"
-        os.isLinux -> "linux"
-        os.isWindows -> "windows"
-        else -> throw RuntimeException("${os.familyName} is not supported.")
-      }
-    }
 
     val baseName: String by lazy {
       "graalvm-community-jdk-${graalVmJdkVersion}_${osName}-${arch}_bin"
     }
 
+    val graalMajorVersion: String = graalJdkVersion.split(".").first()
+
     val downloadUrl: String by lazy {
-      val extension = if (os.isWindows) "zip" else "tar.gz"
-      "https://github.com/graalvm/graalvm-ce-builds/releases/download/jdk-${graalVmJdkVersion}/$baseName.$extension"
+      val ext = if (os.isWindows) "zip" else "tar.gz"
+      val platformArch = if (arch == "amd64") "x64" else arch
+      "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-$version/graalvm-community-jdk-${graalMajorVersion}i1-${graalJdkVersion}_${osName}-${platformArch}_bin.$ext"
     }
 
     val downloadFile: File by lazy {
@@ -131,9 +128,22 @@ open class BuildInfo(private val project: Project) {
     }
   }
 
-  val graalVmAarch64: GraalVm = GraalVm("aarch64")
+  val graalVmAarch64: GraalVm by lazy { createGraalVm("aarch64") }
 
-  val graalVmAmd64: GraalVm = GraalVm("x64")
+  val graalVmAmd64: GraalVm by lazy { createGraalVm("x64") }
+
+  private fun createGraalVm(arch: String): GraalVm {
+    val osName =
+      when {
+        os.isMacOsX -> "macos"
+        os.isLinux -> "linux"
+        os.isWindows -> "windows"
+        else -> throw RuntimeException("Unsupported OS for GraalVM: ${os.canonicalName}")
+      }
+    val version = libs.findVersion("graalVm").get().toString()
+    val graalJdkVersion = libs.findVersion("graalVmJdkVersion").get().toString()
+    return GraalVm(osName, arch, version, graalJdkVersion)
+  }
 
   val isCiBuild: Boolean by lazy { System.getenv("CI") != null }
 
@@ -368,9 +378,7 @@ open class BuildInfo(private val project: Project) {
     File(System.getProperty("user.home"), "staticdeps/bin/x86_64-linux-musl-gcc").exists()
   }
 
-  val os: org.gradle.internal.os.OperatingSystem by lazy {
-    org.gradle.internal.os.OperatingSystem.current()
-  }
+  val os: OperatingSystem by lazy { OperatingSystem.current() }
 
   // could be `commitId: Provider<String> = project.provider { ... }`
   val commitId: String by lazy {
@@ -425,3 +433,12 @@ open class BuildInfo(private val project: Project) {
 // Shape of a function which is applied to configure multi-JDK testing.
 private typealias MultiJdkTestConfigurator =
   Test.(Pair<JavaLanguageVersion, Provider<JavaLauncher>>) -> Unit
+
+private val OperatingSystem.canonicalName
+  get() =
+    when {
+      isMacOsX -> "macos"
+      isWindows -> "windows"
+      isLinux -> "linux"
+      else -> throw RuntimeException("Unsupported OS: $name")
+    }

@@ -42,12 +42,6 @@ val testMacExecutableAarch64 =
     configureNativeTest()
   }
 
-val testMacExecutableAmd64 =
-  tasks.register<Test>("testMacExecutableAmd64") {
-    dependsOn(":pkl-cli:macExecutableAmd64")
-    configureNativeTest()
-  }
-
 val testLinuxExecutableAmd64 =
   tasks.register<Test>("testLinuxExecutableAmd64") {
     dependsOn(":pkl-cli:linuxExecutableAmd64")
@@ -73,8 +67,6 @@ val testWindowsExecutableAmd64 =
   }
 
 tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
-
-tasks.testNativeMacOsAmd64 { dependsOn(testMacExecutableAmd64) }
 
 tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
 

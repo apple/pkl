@@ -4,7 +4,6 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-mise: https://mise.jdx.dev
 :uri-winget: https://learn.microsoft.com/en-us/windows/package-manager/
 
-:uri-pkl-macos-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-amd64&e=bin
 :uri-pkl-macos-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-macos-aarch64&e=bin
 :uri-pkl-linux-amd64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-amd64&e=bin
 :uri-pkl-linux-aarch64-download: {uri-sonatype-snapshot-download}&a=pkl-cli-linux-aarch64&e=bin
@@ -13,7 +12,6 @@ include::ROOT:partial$component-attributes.adoc[]
 :uri-pkl-java-download: {uri-sonatype-snapshot-download}&a=pkl-cli-java&e=jar
 
 ifdef::is-release-version[]
-:uri-pkl-macos-amd64-download: {github-releases}/pkl-macos-amd64
 :uri-pkl-macos-aarch64-download: {github-releases}/pkl-macos-aarch64
 :uri-pkl-linux-amd64-download: {github-releases}/pkl-linux-amd64
 :uri-pkl-linux-aarch64-download: {github-releases}/pkl-linux-aarch64
@@ -36,7 +34,7 @@ For interactive development, the CLI includes a Read-Eval-Print Loop (REPL).
 
 The CLI comes in multiple flavors:
 
-* Native macOS executable for amd64 (tested on macOS 10.15)
+* Native macOS executable for aarch64 (tested on macOS 10.15)
 * Native Linux executable for amd64
 * Native Linux executable for aarch64
 * Native Alpine Linux executable for amd64 (cross-compiled and tested on Oracle Linux 8)
@@ -140,22 +138,10 @@ Development and release versions can be downloaded and installed manually.
 
 === macOS Executable
 
-On aarch64:
-
 [source,shell]
 [subs="+attributes"]
 ----
 curl -L -o pkl '{uri-pkl-macos-aarch64-download}'
-chmod +x pkl
-./pkl --version
-----
-
-On amd64:
-
-[source,shell]
-[subs="+attributes"]
-----
-curl -L -o pkl '{uri-pkl-macos-amd64-download}'
 chmod +x pkl
 ./pkl --version
 ----

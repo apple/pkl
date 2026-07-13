@@ -178,7 +178,6 @@ tasks.test {
       .joinToString(File.pathSeparator),
   )
   useJUnitPlatform {
-    excludeEngines("MacAmd64LanguageSnippetTestsEngine")
     excludeEngines("MacAarch64LanguageSnippetTestsEngine")
     excludeEngines("LinuxAmd64LanguageSnippetTestsEngine")
     excludeEngines("LinuxAarch64LanguageSnippetTestsEngine")
@@ -247,12 +246,6 @@ val testJavaExecutable by
 
 tasks.check { dependsOn(testJavaExecutable) }
 
-val testMacExecutableAmd64 by
-  tasks.registering(Test::class) {
-    dependsOn(":pkl-cli:macExecutableAmd64")
-    configureExecutableTest("MacAmd64LanguageSnippetTestsEngine")
-  }
-
 val testMacExecutableAarch64 by
   tasks.registering(Test::class) {
     dependsOn(":pkl-cli:macExecutableAarch64")
@@ -284,8 +277,6 @@ val testWindowsExecutableAmd64 by
   }
 
 tasks.testNativeMacOsAarch64 { dependsOn(testMacExecutableAarch64) }
-
-tasks.testNativeMacOsAmd64 { dependsOn(testMacExecutableAmd64) }
 
 tasks.testNativeLinuxAarch64 { dependsOn(testLinuxExecutableAarch64) }
 

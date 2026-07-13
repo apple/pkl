@@ -315,11 +315,6 @@ abstract class AbstractNativeLanguageSnippetTestsEngine : AbstractLanguageSnippe
   }
 }
 
-class MacAmd64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
-  override val pklExecutablePath: Path = Executables.pkl.macAmd64
-  override val testClass: KClass<*> = MacLanguageSnippetTests::class
-}
-
 class MacAarch64LanguageSnippetTestsEngine : AbstractNativeLanguageSnippetTestsEngine() {
   override val pklExecutablePath: Path = Executables.pkl.macAarch64
   override val testClass: KClass<*> = MacLanguageSnippetTests::class
