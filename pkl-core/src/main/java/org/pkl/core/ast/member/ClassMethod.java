@@ -131,4 +131,8 @@ public final class ClassMethod extends ClassMember {
   public PClass.Method export(PClass owner) {
     return functionNode.export(owner, docComment, annotations, modifiers, typeParameters);
   }
+
+  public TypeNode getParameterTypeNode(int idx) {
+    return functionNode.getParameterTypeNodes()[idx];
+  }
 }

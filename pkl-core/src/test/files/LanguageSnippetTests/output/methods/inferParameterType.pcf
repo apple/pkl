@@ -1,0 +1,4 @@
+qualified = 1
+unqualifiedLexical = 1
+unqualifiedThis = 8
+`super` = 16

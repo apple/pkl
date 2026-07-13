@@ -109,6 +109,7 @@ import org.pkl.core.ast.expression.literal.MapLiteralNode;
 import org.pkl.core.ast.expression.literal.PropertiesLiteralNodeGen;
 import org.pkl.core.ast.expression.literal.SetLiteralNode;
 import org.pkl.core.ast.expression.literal.TrueLiteralNode;
+import org.pkl.core.ast.expression.member.InferParentWithinMethodArgumentNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
@@ -951,6 +952,71 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .evalError("cannotInferParent")
           .withSourceSection(createSourceSection(expr.newSpan()))
           .build();
+    } else if (parent instanceof ArgumentList argumentList) {
+      var sourceSection = createSourceSection(expr.newSpan());
+      var argIndex = argumentList.getArguments().indexOf(child);
+      var access = argumentList.parent();
+      if (access instanceof QualifiedAccessExpr qualifiedAccessExpr) {
+        var methodName = qualifiedAccessExpr.getIdentifier().getValue();
+        var methodIdentifier = org.pkl.core.runtime.Identifier.get(methodName);
+        inferredParentNode =
+            new InferParentWithinMethodArgumentNode.Virtual(
+                sourceSection,
+                language,
+                argIndex,
+                methodIdentifier,
+                visitExpr(qualifiedAccessExpr.getExpr()));
+      } else if (access instanceof UnqualifiedAccessExpr unqualifiedAccessExpr) {
+        var methodName = unqualifiedAccessExpr.getIdentifier().getValue();
+        var methodIdentifier = org.pkl.core.runtime.Identifier.get(methodName);
+        var resolution = scope.resolveMethod(methodName);
+        if (resolution instanceof LexicalMethod method) {
+          var levelsUp = method.levelsUp();
+          if (method.isObjectMethod()) {
+            inferredParentNode =
+                new InferParentWithinMethodArgumentNode.ObjectMethod(
+                    sourceSection, language, argIndex, methodIdentifier, levelsUp);
+          } else if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
+            inferredParentNode =
+                new InferParentWithinMethodArgumentNode.FinalClassMethod(
+                    sourceSection, language, argIndex, methodIdentifier, levelsUp);
+          } else {
+            inferredParentNode =
+                new InferParentWithinMethodArgumentNode.Virtual(
+                    sourceSection,
+                    language,
+                    argIndex,
+                    methodIdentifier,
+                    levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp));
+          }
+        } else if (resolution instanceof ImplicitBaseMethod) {
+          // no base method accepts object typed arguments
+          // only generic methods could, but we can't infer for those
+          throw exceptionBuilder()
+              .evalError("cannotInferParent")
+              .withSourceSection(createSourceSection(expr.newSpan()))
+              .build();
+        } else if (resolution instanceof ImplicitThisMethod) {
+          inferredParentNode =
+              new InferParentWithinMethodArgumentNode.Virtual(
+                  sourceSection, language, argIndex, methodIdentifier, new GetReceiverNode());
+        } else {
+          // no other resolution types
+          throw PklBugException.unreachableCode();
+        }
+      } else if (access instanceof SuperAccessExpr superAccessExpr) {
+        var methodName = superAccessExpr.getIdentifier().getValue();
+        var methodIdentifier = org.pkl.core.runtime.Identifier.get(methodName);
+        inferredParentNode =
+            new InferParentWithinMethodArgumentNode.Super(
+                createSourceSection(expr.newSpan()),
+                language,
+                argumentList.getArguments().indexOf(child),
+                methodIdentifier);
+      } else {
+        // no other nodes should contain argument lists
+        throw PklBugException.unreachableCode();
+      }
     } else {
       throw exceptionBuilder()
           .evalError("cannotInferParent")

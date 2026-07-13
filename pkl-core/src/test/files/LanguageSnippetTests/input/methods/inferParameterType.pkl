@@ -1,0 +1,26 @@
+open module inferParameterType
+
+hidden x: Int
+
+open class Foo extends module {
+  function bar(baz: Foo): Int =
+    super.bar(baz) * this.x
+
+  function superBar(baz: Foo): Int =
+    super.bar(new { x = 5 + baz.x }) * this.x
+  
+  function thisBar(baz: Foo): Int =
+    this.x + baz.x
+}
+
+class Qux extends Foo {
+  function bar(baz: Foo): Int =
+    thisBar(new { x = baz.x })
+}
+
+function bar(baz: Foo): Int = baz.x
+
+qualified = this.bar(new { x = 1 })
+unqualifiedLexical = bar(new { x = 1 })
+unqualifiedThis = new Qux { x = 7 }.bar(new { x = 1 })
+`super` = new Foo { x = 2 }.superBar(new Foo { x = 3 })
