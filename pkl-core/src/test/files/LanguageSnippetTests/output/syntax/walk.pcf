@@ -1,0 +1,37 @@
+examples {
+  ["read-only walk leaves the tree unchanged"] {
+    true
+    true
+  }
+  ["rename identifiers everywhere"] {
+    true
+  }
+  ["replace a leaf via a typed node"] {
+    true
+  }
+  ["rebuilds ancestors of a changed node"] {
+    true
+  }
+  ["descend reprocesses emitted nodes"] {
+    true
+  }
+  ["descend = false leaves the emitted subtree untouched"] {
+    true
+  }
+  ["parent back-references on the result tree"] {
+    true
+    true
+  }
+  ["visitor rewrites matched nodes only"] {
+    true
+  }
+  ["visitor reads typed fields"] {
+    true
+  }
+  ["visitor can broaden the node kind"] {
+    true
+  }
+  ["visitor leaves unmatched trees intact"] {
+    true
+  }
+}

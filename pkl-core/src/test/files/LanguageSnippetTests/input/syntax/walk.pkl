@@ -1,0 +1,119 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function mod(source: String): syntax.ModuleNode = syntax.parse(source) as syntax.ModuleNode
+
+local function fmt(source: String): String = syntax.format(mod(source).node)
+
+local function walkFormat(
+  source: String,
+  visit: (syntax.Node) -> Pair<syntax.Node, Boolean>?,
+): String = syntax.format(syntax.walk(mod(source).node, visit))
+
+local function visitFormat(source: String, visitor: syntax.Visitor): String =
+  syntax.format(syntax.visit(mod(source).node, visitor))
+
+examples {
+  ["read-only walk leaves the tree unchanged"] {
+    // returning `null` everywhere keeps every node and keeps descending
+    walkFormat("x = 1", (_) -> null) == fmt("x = 1")
+    walkFormat("x = if (cond) 1 else 2", (_) -> null) == fmt("x = if (cond) 1 else 2")
+  }
+
+  ["rename identifiers everywhere"] {
+    walkFormat("foo = foo + 1", (n) ->
+      if (n.type == "identifier" && n.text == "foo")
+        Pair((n) { text = "bar" }, true)
+      else
+        null) == fmt("bar = bar + 1")
+  }
+
+  ["replace a leaf via a typed node"] {
+    walkFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        Pair(new syntax.IntLiteralExprNode { value = 100 }.toNode(), false)
+      else
+        null) == fmt("x = 100")
+  }
+
+  ["rebuilds ancestors of a changed node"] {
+    walkFormat("x = if (cond) 41 else 0", (n) ->
+      if (n.type == "int_literal_expr" && n.text == "41")
+        Pair(new syntax.IntLiteralExprNode { value = 42 }.toNode(), false)
+      else if (n.type == "int_literal_expr" && n.text == "0")
+        Pair(new syntax.IntLiteralExprNode { value = 100 }.toNode(), false)
+      else
+        null) == fmt("x = if (cond) 42 else 100")
+  }
+
+  ["descend reprocesses emitted nodes"] {
+    walkFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        Pair(
+          new syntax.ParenthesizedExprNode {
+            expression = new syntax.IntLiteralExprNode { value = 1 }
+          }.toNode(),
+          true,
+        )
+      else if (n.type == "int_literal_expr" && n.text == "1")
+        Pair(new syntax.IntLiteralExprNode { value = 2 }.toNode(), true)
+      else
+        null) == fmt("x = (2)")
+  }
+
+  ["descend = false leaves the emitted subtree untouched"] {
+    walkFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        Pair(
+          new syntax.ParenthesizedExprNode {
+            expression = new syntax.IntLiteralExprNode { value = 1 }
+          }.toNode(),
+          false,
+        )
+      else if (n.type == "int_literal_expr" && n.text == "1")
+        Pair(new syntax.IntLiteralExprNode { value = 2 }.toNode(), true)
+      else
+        null) == fmt("x = (1)")
+  }
+
+  ["parent back-references on the result tree"] {
+    local result = syntax.walk(mod("x = 41").node, (n) ->
+      if (n.type == "int_literal_expr")
+        Pair(new syntax.IntLiteralExprNode { value = 42 }.toNode(), false)
+      else
+        null)
+    // the root of the returned tree has no parent
+    result.parent == null
+    result.children.first.parent.type == "module"
+  }
+
+  // ---- typed Visitor ----
+
+  ["visitor rewrites matched nodes only"] {
+    visitFormat("x = 1 + 2 * 3", new syntax.Visitor {
+      visitIntLiteralExpr = (_) -> Pair(new syntax.IntLiteralExprNode { value = 0 }, false)
+    }) == fmt("x = 0 + 0 * 0")
+  }
+
+  ["visitor reads typed fields"] {
+    visitFormat("x = foo + bar", new syntax.Visitor {
+      visitUnqualifiedAccessExpr = (it) ->
+        if (it.identifier == "foo")
+          Pair(new syntax.UnqualifiedAccessExprNode { identifier = "renamed" }, false)
+        else
+          null
+    }) == fmt("x = renamed + bar")
+  }
+
+  ["visitor can broaden the node kind"] {
+    visitFormat("x = true", new syntax.Visitor {
+      visitBoolLiteralExpr = (_) ->
+        Pair(new syntax.IntLiteralExprNode { value = 1 }, false)
+    }) == fmt("x = 1")
+  }
+
+  ["visitor leaves unmatched trees intact"] {
+    visitFormat("x = if (cond) 1 else 2", new syntax.Visitor {}) == fmt("x = if (cond) 1 else 2")
+  }
+}

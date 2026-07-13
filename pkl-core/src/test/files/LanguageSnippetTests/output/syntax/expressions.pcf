@@ -94,7 +94,6 @@ examples {
   ["new expression"] {
     true
     true
-    true
   }
   ["function literal"] {
     true

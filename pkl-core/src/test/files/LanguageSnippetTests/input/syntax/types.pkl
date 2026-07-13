@@ -6,7 +6,7 @@ local function parse(source: String) = syntax.parse(source)
 
 local function typeOf(typeSource: String) =
   let (result = parse("x: \(typeSource) = 0"))
-    (result as syntax.ModuleNode).properties.first.typeAnnotation!!.type
+    (result as syntax.ModuleNode).properties.first.typeAnnotation
 
 examples {
   ["simple types"] {
@@ -23,20 +23,18 @@ examples {
   ["declared type"] {
     local simple = typeOf("String")
     simple is syntax.DeclaredTypeNode
-    (simple as syntax.DeclaredTypeNode).name.identifiers.length == 1
-    (simple as syntax.DeclaredTypeNode).name.identifiers.first.value == "String"
-    (simple as syntax.DeclaredTypeNode).typeArgumentList == null
+    (simple as syntax.DeclaredTypeNode).name == "String"
+    (simple as syntax.DeclaredTypeNode).typeArguments.isEmpty
 
     local withArgs = typeOf("List<Int>")
     withArgs is syntax.DeclaredTypeNode
-    (withArgs as syntax.DeclaredTypeNode).name.identifiers.first.value == "List"
-    (withArgs as syntax.DeclaredTypeNode).typeArgumentList != null
-    (withArgs as syntax.DeclaredTypeNode).typeArgumentList!!.typeArguments.length == 1
-    (withArgs as syntax.DeclaredTypeNode).typeArgumentList!!.typeArguments.first is syntax.DeclaredTypeNode
+    (withArgs as syntax.DeclaredTypeNode).name == "List"
+    (withArgs as syntax.DeclaredTypeNode).typeArguments.length == 1
+    (withArgs as syntax.DeclaredTypeNode).typeArguments.first is syntax.DeclaredTypeNode
 
     local multiArgs = typeOf("Map<String, Int>")
     multiArgs is syntax.DeclaredTypeNode
-    (multiArgs as syntax.DeclaredTypeNode).typeArgumentList!!.typeArguments.length == 2
+    (multiArgs as syntax.DeclaredTypeNode).typeArguments.length == 2
   }
 
   ["nullable type"] {
@@ -98,7 +96,6 @@ examples {
     local result = parse("x: String = \"hello\"")
     local prop = (result as syntax.ModuleNode).properties.first
     prop.typeAnnotation != null
-    prop.typeAnnotation!! is syntax.TypeAnnotationNode
-    prop.typeAnnotation!!.type is syntax.DeclaredTypeNode
+    prop.typeAnnotation!! is syntax.DeclaredTypeNode
   }
 }

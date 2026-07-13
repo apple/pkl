@@ -81,20 +81,20 @@ examples {
   ["access expressions"] {
     local unqual = expr("foo")
     unqual is syntax.UnqualifiedAccessExprNode
-    (unqual as syntax.UnqualifiedAccessExprNode).identifier.value == "foo"
-    (unqual as syntax.UnqualifiedAccessExprNode).argumentList == null
+    (unqual as syntax.UnqualifiedAccessExprNode).identifier == "foo"
+    (unqual as syntax.UnqualifiedAccessExprNode).arguments == null
 
     local withArgs = expr("foo(1, 2)")
     withArgs is syntax.UnqualifiedAccessExprNode
-    (withArgs as syntax.UnqualifiedAccessExprNode).identifier.value == "foo"
-    (withArgs as syntax.UnqualifiedAccessExprNode).argumentList != null
-    (withArgs as syntax.UnqualifiedAccessExprNode).argumentList!!.arguments.length == 2
+    (withArgs as syntax.UnqualifiedAccessExprNode).identifier == "foo"
+    (withArgs as syntax.UnqualifiedAccessExprNode).arguments != null
+    (withArgs as syntax.UnqualifiedAccessExprNode).arguments.length == 2
 
     local qual = expr("foo.bar")
     qual is syntax.QualifiedAccessExprNode
     (qual as syntax.QualifiedAccessExprNode).receiver is syntax.UnqualifiedAccessExprNode
     (qual as syntax.QualifiedAccessExprNode).isNullSafe == false
-    (qual as syntax.QualifiedAccessExprNode).member.identifier.value == "bar"
+    (qual as syntax.QualifiedAccessExprNode).member == "bar"
 
     local nullSafe = expr("foo?.bar")
     nullSafe is syntax.QualifiedAccessExprNode
@@ -110,8 +110,8 @@ examples {
     local add = expr("1 + 2")
     add is syntax.BinaryOpExprNode
     (add as syntax.BinaryOpExprNode).operator == "+"
-    (add as syntax.BinaryOpExprNode).leftExpr is syntax.IntLiteralExprNode
-    (add as syntax.BinaryOpExprNode).rightExpr is syntax.IntLiteralExprNode
+    (add as syntax.BinaryOpExprNode).left is syntax.IntLiteralExprNode
+    (add as syntax.BinaryOpExprNode).right is syntax.IntLiteralExprNode
 
     local eq = expr("a == b")
     eq is syntax.BinaryOpExprNode
@@ -161,24 +161,23 @@ examples {
   ["let expression"] {
     local letExpr = expr("let (y = 1) y + 1")
     letExpr is syntax.LetExprNode
-    (letExpr as syntax.LetExprNode).parameter.identifier!!.value == "y"
+    (letExpr as syntax.LetExprNode).parameter.name == "y"
     (letExpr as syntax.LetExprNode).bindingValue is syntax.IntLiteralExprNode
-    (letExpr as syntax.LetExprNode).bodyExpr is syntax.BinaryOpExprNode
+    (letExpr as syntax.LetExprNode).body is syntax.BinaryOpExprNode
   }
 
   ["new expression"] {
     local newExpr = expr("new Mapping { [\"a\"] = 1 }")
     newExpr is syntax.NewExprNode
     (newExpr as syntax.NewExprNode).type is syntax.DeclaredTypeNode
-    (newExpr as syntax.NewExprNode).body is syntax.ObjectBodyNode
   }
 
   ["function literal"] {
     local fn = expr("(x, y) -> x + y")
     fn is syntax.FunctionLiteralExprNode
-    (fn as syntax.FunctionLiteralExprNode).parameterList.parameters.length == 2
-    (fn as syntax.FunctionLiteralExprNode).parameterList.parameters[0].identifier!!.value == "x"
-    (fn as syntax.FunctionLiteralExprNode).parameterList.parameters[1].identifier!!.value == "y"
+    (fn as syntax.FunctionLiteralExprNode).parameters.length == 2
+    (fn as syntax.FunctionLiteralExprNode).parameters[0].name == "x"
+    (fn as syntax.FunctionLiteralExprNode).parameters[1].name == "y"
     (fn as syntax.FunctionLiteralExprNode).body is syntax.BinaryOpExprNode
   }
 

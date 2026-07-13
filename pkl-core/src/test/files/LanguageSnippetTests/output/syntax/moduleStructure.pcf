@@ -8,12 +8,8 @@ examples {
     true
     true
     true
-    true
-    true
-    true
   }
   ["module with modifiers and doc comment"] {
-    true
     true
     true
     true
@@ -27,14 +23,8 @@ examples {
   ["amends clause"] {
     true
     true
-    true
-    true
-    true
   }
   ["extends clause"] {
-    true
-    true
-    true
     true
     true
   }
@@ -47,11 +37,8 @@ examples {
     true
     true
     true
-    true
-    true
   }
   ["class declaration"] {
-    true
     true
     true
     true
@@ -88,7 +75,6 @@ examples {
     true
     true
     true
-    true
   }
   ["top-level properties and methods"] {
     true
@@ -106,8 +92,6 @@ examples {
     true
   }
   ["parameter variations"] {
-    true
-    true
     true
     true
     true

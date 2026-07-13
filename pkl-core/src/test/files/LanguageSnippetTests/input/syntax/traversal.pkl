@@ -1,0 +1,102 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function mod(source: String): syntax.ModuleNode = syntax.parse(source) as syntax.ModuleNode
+
+local sample: syntax.Node =
+  mod(
+    """
+    import "foo.pkl"
+    import "bar.pkl" as baz
+
+    class Point {
+      x: Int
+      y: Int
+    }
+
+    origin = if (useOrigin) new Point { x = 0; y = 0 } else null
+
+    scaled = origin.x * 2
+    """,
+  ).node!!
+
+examples {
+  ["fold counts nodes by predicate"] {
+    syntax.fold(sample, 0, (acc, n) -> if (n.type == "import") acc + 1 else acc) == 2
+
+    syntax.fold(sample, 0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc) == 1
+
+    syntax.fold(sample, 0, (acc, n) -> if (n.type == "when_generator") acc + 1 else acc) == 0
+  }
+
+  ["fold accumulates into a collection"] {
+    syntax.fold(sample, List(), (acc, n) -> if (n.type == "identifier") acc.add(n.text) else acc)
+      == List(
+        "baz",
+        "Point",
+        "x",
+        "Int",
+        "y",
+        "Int",
+        "origin",
+        "useOrigin",
+        "Point",
+        "x",
+        "y",
+        "scaled",
+        "origin",
+        "x",
+      )
+  }
+
+  ["fold visits a node before its children (pre-order)"] {
+    // the module node is visited first
+    syntax.fold(sample, List(), (acc, n) -> acc.add(n.type)).first == "module"
+  }
+
+  ["descendants enumerates the whole tree"] {
+    syntax.descendants(sample).first == sample
+
+    syntax.descendants(sample) == syntax.fold(sample, List(), (acc, n) -> acc.add(n))
+
+    syntax.descendants(sample).filter((n) -> n.type == "class").length == 1
+  }
+
+  ["descendants + wrap gives type-safe access"] {
+    syntax
+      .descendants(sample)
+      .map((n) -> syntax.wrap(n))
+      .filter((s) -> s is syntax.ImportNode)
+      .map((s) -> (s as syntax.ImportNode).uri) == List("foo.pkl", "bar.pkl")
+
+    syntax
+      .descendants(sample)
+      .map((n) -> syntax.wrap(n))
+      .filter((s) -> s is syntax.ClassPropertyNode)
+      .map((s) -> (s as syntax.ClassPropertyNode).name) == List("x", "y", "origin", "scaled")
+  }
+
+  ["wrap returns typed nodes for known kinds"] {
+    syntax.wrap(new syntax.Node { type = "if_expr" }) is syntax.IfExprNode
+    syntax.wrap(new syntax.Node { type = "declared_type" }) is syntax.DeclaredTypeNode
+    syntax.wrap(new syntax.Node { type = "object_property" }) is syntax.ObjectPropertyNode
+    syntax.wrap(new syntax.Node { type = "class" }) is syntax.ClassNode
+    syntax.wrap(new syntax.Node { type = "parameter" }) is syntax.ParameterNode
+  }
+
+  ["wrap returns null for kinds without a typed form"] {
+    syntax.wrap(new syntax.Node { type = "terminal" }) == null
+    syntax.wrap(new syntax.Node { type = "modifier_list" }) == null
+    syntax.wrap(new syntax.Node { type = "if_header" }) == null
+  }
+
+  ["fold reads typed fields via wrap"] {
+    // collect the arithmetic operators used anywhere in the module
+    syntax.fold(sample, List(), (acc, n) ->
+      let (s = syntax.wrap(n))
+        if (s is syntax.BinaryOpExprNode) acc.add(s.operator) else acc
+    )
+      == List("*")
+  }
+}

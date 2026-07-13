@@ -18,12 +18,16 @@ package org.pkl.core.stdlib.syntax;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Locale;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
+import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -48,6 +52,7 @@ public final class SyntaxNodes {
   private static final Identifier LINE_END_ID = Identifier.get("lineEnd");
   private static final Identifier COL_END_ID = Identifier.get("colEnd");
   private static final char[] EMPTY_SOURCE = new char[0];
+  private static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
 
   /** Extra storage backing a Pkl {@code Node} instance. */
   static final class NodeData {
@@ -90,7 +95,10 @@ public final class SyntaxNodes {
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
           .addProperty(
               "text",
-              nd -> nd.node.children.isEmpty() ? nd.node.text(nd.source) : VmNull.withoutDefault())
+              nd ->
+                  nd.node.children.isEmpty() || nd.node.type == NodeType.STRING_CHARS
+                      ? nd.node.text(nd.source)
+                      : VmNull.withoutDefault())
           .addTypedProperty("span", nd -> nd.spanVm);
 
   private static final VmObjectFactory<ErrorData> parserErrorFactory =
@@ -122,6 +130,12 @@ public final class SyntaxNodes {
         childrenList.add(convertNode(child, sourceChars));
       }
 
+      // materialize text now so that nodes reused verbatim by `walk`/`format` are
+      // self-contained
+      if (genericNode.children.isEmpty() || genericNode.type == NodeType.STRING_CHARS) {
+        genericNode.text(sourceChars);
+      }
+
       var childrenVm = VmList.create(childrenList.toArray());
       var spanVm = spanFactory.create(genericNode.span);
       var data = new NodeData(genericNode, sourceChars, childrenVm, spanVm);
@@ -142,46 +156,134 @@ public final class SyntaxNodes {
     @Specialization
     @TruffleBoundary
     protected String eval(VmTyped self, VmTyped nodeVm, String grammarVersion) {
-      var node = convertVmToNode(nodeVm);
+      var node = convertVmToNode(nodeVm, ZERO_SPAN);
       return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
     }
   }
 
-  private static Node convertVmToNode(VmTyped nodeVm) {
+  public abstract static class walk extends ExternalMethod2Node {
+    @Child private ApplyVmFunction1Node applyVisit = ApplyVmFunction1Node.create();
+
+    @Specialization
+    @TruffleBoundary
+    protected VmTyped eval(VmTyped self, VmTyped node, VmFunction visit) {
+      var result = walkNode(node, visit);
+      // the root of the returned tree has no parent
+      if (result.hasExtraStorage()) {
+        ((NodeData) result.getExtraStorage()).parentVm = null;
+      }
+      return result;
+    }
+
+    private VmTyped walkNode(VmTyped nodeVm, VmFunction visit) {
+      var visited = applyVisit.execute(visit, nodeVm);
+
+      VmTyped node;
+      boolean descend;
+      if (visited instanceof VmPair pair) {
+        node = (VmTyped) pair.getFirst();
+        descend = (Boolean) pair.getSecond();
+      } else {
+        // `null`: leave this node unchanged and keep descending
+        node = nodeVm;
+        descend = true;
+      }
+      if (!descend) {
+        return node;
+      }
+
+      var childrenVm = (VmList) VmUtils.readMember(node, CHILDREN_ID);
+      var length = childrenVm.getLength();
+      if (length == 0) {
+        return node;
+      }
+
+      var newChildren = new Object[length];
+      var changed = false;
+      for (var i = 0; i < length; i++) {
+        var child = (VmTyped) childrenVm.get(i);
+        var newChild = walkNode(child, visit);
+        newChildren[i] = newChild;
+        changed |= newChild != child;
+      }
+      // reuse the node (and its extra storage) untouched when nothing below changed
+      return changed ? rebuild(node, newChildren) : node;
+    }
+  }
+
+  /** Rebuild a node from {@code template} (its type, span, text) with new children. */
+  private static VmTyped rebuild(VmTyped template, Object[] newChildrenVm) {
+    var nodeType =
+        NodeType.valueOf(((String) VmUtils.readMember(template, TYPE_ID)).toUpperCase(Locale.ROOT));
+    var spanVm = (VmTyped) VmUtils.readMember(template, SPAN_ID);
+    var span = readSpan(spanVm);
+
+    var childJavaNodes = new ArrayList<Node>(newChildrenVm.length);
+    for (var child : newChildrenVm) {
+      // constructed (storage-less) children have no meaningful span; anchor them to this
+      // node's span so the formatter's line-break heuristics stay consistent with reused
+      // siblings (which keep their original spans).
+      childJavaNodes.add(convertVmToNode((VmTyped) child, span));
+    }
+    var javaNode =
+        makeJavaNode(nodeType, span, childJavaNodes, VmUtils.readMember(template, Identifier.TEXT));
+
+    var childrenVm = VmList.create(newChildrenVm);
+    var result = nodeFactory.create(new NodeData(javaNode, EMPTY_SOURCE, childrenVm, spanVm));
+
+    // wire up the parent back-reference
+    for (var child : newChildrenVm) {
+      var childVm = (VmTyped) child;
+      if (childVm.hasExtraStorage()) {
+        ((NodeData) childVm.getExtraStorage()).parentVm = result;
+      }
+    }
+    return result;
+  }
+
+  /**
+   * Convert a Pkl node to a generic {@link Node}, reusing the parse-time node when present.
+   *
+   * <p>{@code fallbackSpan} is used for constructed nodes (and their descendants) that carry no
+   * meaningful span of their own, so that a subtree spliced into reused siblings lines up with
+   * them.
+   */
+  private static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
+    // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
+    if (nodeVm.hasExtraStorage()) {
+      return ((NodeData) nodeVm.getExtraStorage()).node;
+    }
+
     var typeStr = (String) VmUtils.readMember(nodeVm, TYPE_ID);
     var nodeType = NodeType.valueOf(typeStr.toUpperCase(Locale.ROOT));
+
+    var ownSpan = readSpan((VmTyped) VmUtils.readMember(nodeVm, SPAN_ID));
+    // a constructed node that did not set its own span inherits the insertion point's span
+    var span = ownSpan.equals(ZERO_SPAN) ? fallbackSpan : ownSpan;
 
     var childrenVm = (VmList) VmUtils.readMember(nodeVm, CHILDREN_ID);
     var children = new ArrayList<Node>(childrenVm.getLength());
     for (var i = 0; i < childrenVm.getLength(); i++) {
-      children.add(convertVmToNode((VmTyped) childrenVm.get(i)));
+      children.add(convertVmToNode((VmTyped) childrenVm.get(i), span));
     }
 
-    var spanVm = (VmTyped) VmUtils.readMember(nodeVm, SPAN_ID);
+    return makeJavaNode(nodeType, span, children, VmUtils.readMember(nodeVm, Identifier.TEXT));
+  }
+
+  private static FullSpan readSpan(VmTyped spanVm) {
     var lineStart = ((Long) VmUtils.readMember(spanVm, LINE_START_ID)).intValue();
     var colStart = ((Long) VmUtils.readMember(spanVm, COL_START_ID)).intValue();
     var lineEnd = ((Long) VmUtils.readMember(spanVm, LINE_END_ID)).intValue();
     var colEnd = ((Long) VmUtils.readMember(spanVm, COL_END_ID)).intValue();
-    var span = new FullSpan(0, 0, lineStart, colStart, lineEnd, colEnd);
+    return new FullSpan(0, 0, lineStart, colStart, lineEnd, colEnd);
+  }
 
-    Node node;
-    if (children.isEmpty()) {
-      node = new Node(nodeType, span);
-    } else {
-      node = new Node(nodeType, span, children);
-    }
-
-    var textObj = VmUtils.readMember(nodeVm, Identifier.TEXT);
+  private static Node makeJavaNode(
+      NodeType nodeType, FullSpan span, List<Node> children, Object textObj) {
+    var node = children.isEmpty() ? new Node(nodeType, span) : new Node(nodeType, span, children);
     if (textObj instanceof String text) {
       node.setText(text);
-    } else if (nodeType == NodeType.STRING_CHARS) {
-      var sb = new StringBuilder();
-      for (var child : children) {
-        sb.append(child.text(EMPTY_SOURCE));
-      }
-      node.setText(sb.toString());
     }
-
     return node;
   }
 }
