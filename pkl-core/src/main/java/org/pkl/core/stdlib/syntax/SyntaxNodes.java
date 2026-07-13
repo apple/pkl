@@ -44,13 +44,6 @@ import org.pkl.parser.syntax.generic.NodeType;
 public final class SyntaxNodes {
   private SyntaxNodes() {}
 
-  private static final Identifier TYPE_ID = Identifier.get("type");
-  private static final Identifier CHILDREN_ID = Identifier.get("children");
-  private static final Identifier SPAN_ID = Identifier.get("span");
-  private static final Identifier LINE_START_ID = Identifier.get("lineStart");
-  private static final Identifier COL_START_ID = Identifier.get("colStart");
-  private static final Identifier LINE_END_ID = Identifier.get("lineEnd");
-  private static final Identifier COL_END_ID = Identifier.get("colEnd");
   private static final char[] EMPTY_SOURCE = new char[0];
   private static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
 
@@ -192,7 +185,7 @@ public final class SyntaxNodes {
         return node;
       }
 
-      var childrenVm = (VmList) VmUtils.readMember(node, CHILDREN_ID);
+      var childrenVm = (VmList) VmUtils.readMember(node, Identifier.CHILDREN);
       var length = childrenVm.getLength();
       if (length == 0) {
         return node;
@@ -214,8 +207,9 @@ public final class SyntaxNodes {
   /** Rebuild a node from {@code template} (its type, span, text) with new children. */
   private static VmTyped rebuild(VmTyped template, Object[] newChildrenVm) {
     var nodeType =
-        NodeType.valueOf(((String) VmUtils.readMember(template, TYPE_ID)).toUpperCase(Locale.ROOT));
-    var spanVm = (VmTyped) VmUtils.readMember(template, SPAN_ID);
+        NodeType.valueOf(
+            ((String) VmUtils.readMember(template, Identifier.TYPE)).toUpperCase(Locale.ROOT));
+    var spanVm = (VmTyped) VmUtils.readMember(template, Identifier.SPAN);
     var span = readSpan(spanVm);
 
     var childJavaNodes = new ArrayList<Node>(newChildrenVm.length);
@@ -254,14 +248,14 @@ public final class SyntaxNodes {
       return ((NodeData) nodeVm.getExtraStorage()).node;
     }
 
-    var typeStr = (String) VmUtils.readMember(nodeVm, TYPE_ID);
+    var typeStr = (String) VmUtils.readMember(nodeVm, Identifier.TYPE);
     var nodeType = NodeType.valueOf(typeStr.toUpperCase(Locale.ROOT));
 
-    var ownSpan = readSpan((VmTyped) VmUtils.readMember(nodeVm, SPAN_ID));
+    var ownSpan = readSpan((VmTyped) VmUtils.readMember(nodeVm, Identifier.SPAN));
     // a constructed node that did not set its own span inherits the insertion point's span
     var span = ownSpan.equals(ZERO_SPAN) ? fallbackSpan : ownSpan;
 
-    var childrenVm = (VmList) VmUtils.readMember(nodeVm, CHILDREN_ID);
+    var childrenVm = (VmList) VmUtils.readMember(nodeVm, Identifier.CHILDREN);
     var children = new ArrayList<Node>(childrenVm.getLength());
     for (var i = 0; i < childrenVm.getLength(); i++) {
       children.add(convertVmToNode((VmTyped) childrenVm.get(i), span));
@@ -271,10 +265,10 @@ public final class SyntaxNodes {
   }
 
   private static FullSpan readSpan(VmTyped spanVm) {
-    var lineStart = ((Long) VmUtils.readMember(spanVm, LINE_START_ID)).intValue();
-    var colStart = ((Long) VmUtils.readMember(spanVm, COL_START_ID)).intValue();
-    var lineEnd = ((Long) VmUtils.readMember(spanVm, LINE_END_ID)).intValue();
-    var colEnd = ((Long) VmUtils.readMember(spanVm, COL_END_ID)).intValue();
+    var lineStart = ((Long) VmUtils.readMember(spanVm, Identifier.LINE_START)).intValue();
+    var colStart = ((Long) VmUtils.readMember(spanVm, Identifier.COL_START)).intValue();
+    var lineEnd = ((Long) VmUtils.readMember(spanVm, Identifier.LINE_END)).intValue();
+    var colEnd = ((Long) VmUtils.readMember(spanVm, Identifier.COL_END)).intValue();
     return new FullSpan(0, 0, lineStart, colStart, lineEnd, colEnd);
   }
 
