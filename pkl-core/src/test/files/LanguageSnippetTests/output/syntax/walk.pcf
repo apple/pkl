@@ -1,4 +1,4 @@
-examples {
+facts {
   ["read-only walk leaves the tree unchanged"] {
     true
     true

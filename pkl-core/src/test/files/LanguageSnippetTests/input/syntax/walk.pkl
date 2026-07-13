@@ -14,7 +14,7 @@ local function walkFormat(
 local function visitFormat(source: String, visitor: syntax.Visitor): String =
   syntax.format(syntax.visit(mod(source).node, visitor))
 
-examples {
+facts {
   ["read-only walk leaves the tree unchanged"] {
     // returning `null` everywhere keeps every node and keeps descending
     walkFormat("x = 1", (_) -> null) == fmt("x = 1")

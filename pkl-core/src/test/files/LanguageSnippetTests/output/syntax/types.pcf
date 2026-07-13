@@ -1,4 +1,4 @@
-examples {
+facts {
   ["simple types"] {
     true
     true

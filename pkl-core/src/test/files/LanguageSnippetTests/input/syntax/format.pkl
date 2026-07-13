@@ -31,7 +31,7 @@ local function transformFirst(
       children = node.children.map((c) -> transformFirst(c, targetType, transform))
     }
 
-examples {
+facts {
   ["empty module"] {
     roundTrip("") == "\n"
   }

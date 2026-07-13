@@ -1,4 +1,4 @@
-examples {
+facts {
   ["module declaration"] {
     true
     true
