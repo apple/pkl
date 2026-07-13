@@ -12,66 +12,68 @@ local function body(source: String) =
 examples {
   ["object property"] {
     local b = body("name = \"hello\"")
-    b.properties.length == 1
-    b.properties.first is syntax.ObjectPropertyNode
-    b.properties.first.name.value == "name"
-    b.properties.first.value is syntax.SingleLineStringLiteralExprNode
-    b.properties.first.modifiers == null
-    b.properties.first.typeAnnotation == null
-    b.properties.first.objectBodies.length == 0
+    b.members.length == 1
+    b.members.first is syntax.ObjectPropertyNode
+    local prop = b.members.first as syntax.ObjectPropertyNode
+    prop.name == "name"
+    prop.value is syntax.SingleLineStringLiteralExprNode
+    prop.modifiers.isEmpty
+    prop.typeAnnotation == null
+    prop.objectBodies.length == 0
   }
 
   ["object property with type and modifiers"] {
     local b = body("hidden name: String = \"hello\"")
-    b.properties.length == 1
-    b.properties.first.modifiers != null
-    b.properties.first.modifiers!!.modifiers == List("hidden")
-    b.properties.first.typeAnnotation != null
-    b.properties.first.typeAnnotation!!.type is syntax.DeclaredTypeNode
+    b.members.length == 1
+    local prop = b.members.first as syntax.ObjectPropertyNode
+    prop.modifiers == List("hidden")
+    prop.typeAnnotation != null
+    prop.typeAnnotation is syntax.DeclaredTypeNode
   }
 
   ["object property with amending body"] {
     local b = body("inner { x = 1 }")
-    b.properties.length == 1
-    b.properties.first.name.value == "inner"
-    b.properties.first.value == null
-    b.properties.first.objectBodies.length == 1
-    b.properties.first.objectBodies.first is syntax.ObjectBodyNode
+    b.members.length == 1
+    local prop = b.members.first as syntax.ObjectPropertyNode
+    prop.name == "inner"
+    prop.value == null
+    prop.objectBodies.length == 1
   }
 
   ["object method"] {
     local b = body("function greet(who: String): String = \"hi\"")
-    b.methods.length == 1
-    b.methods.first is syntax.ObjectMethodNode
-    b.methods.first.name.value == "greet"
-    b.methods.first.parameterList.parameters.length == 1
-    b.methods.first.parameterList.parameters.first.identifier!!.value == "who"
-    b.methods.first.returnType != null
-    b.methods.first.body is syntax.SingleLineStringLiteralExprNode
+    b.members.length == 1
+    b.members.first is syntax.ObjectMethodNode
+    local method = b.members.first as syntax.ObjectMethodNode
+    method.name == "greet"
+    method.parameters.length == 1
+    method.parameters.first.name == "who"
+    method.returnType != null
+    method.body is syntax.SingleLineStringLiteralExprNode
   }
 
   ["object element"] {
     local b = body("1\n  2\n  3")
-    b.elements.length == 3
-    b.elements[0] is syntax.ObjectElementNode
-    b.elements[0].expression is syntax.IntLiteralExprNode
-    b.elements[1].expression is syntax.IntLiteralExprNode
-    b.elements[2].expression is syntax.IntLiteralExprNode
+    b.members.length == 3
+    b.members[0] is syntax.ObjectElementNode
+    b.members[0].expression is syntax.IntLiteralExprNode
+    b.members[1].expression is syntax.IntLiteralExprNode
+    b.members[2].expression is syntax.IntLiteralExprNode
   }
 
   ["object entry"] {
     local b = body("[\"key\"] = 42")
-    b.entries.length == 1
-    b.entries.first is syntax.ObjectEntryNode
-    b.entries.first.key is syntax.SingleLineStringLiteralExprNode
-    b.entries.first.value is syntax.IntLiteralExprNode
+    b.members.length == 1
+    b.members.first is syntax.ObjectEntryNode
+    b.members.first.key is syntax.SingleLineStringLiteralExprNode
+    b.members.first.value is syntax.IntLiteralExprNode
   }
 
   ["object entry with amending body"] {
     local b = body("[\"key\"] { x = 1 }")
-    b.entries.length == 1
-    b.entries.first.key is syntax.SingleLineStringLiteralExprNode
-    b.entries.first.objectBodies.length == 1
+    b.members.length == 1
+    b.members.first.key is syntax.SingleLineStringLiteralExprNode
+    b.members.first.objectBodies.length == 1
   }
 
   ["object spread"] {
@@ -111,17 +113,16 @@ examples {
     b.members.first is syntax.ForGeneratorNode
     local gen = b.members.first as syntax.ForGeneratorNode
     gen.keyParameter == null
-    gen.valueParameter.identifier!!.value == "item"
+    gen.valueParameter.name == "item"
     gen.iterable is syntax.UnqualifiedAccessExprNode
-    gen.body is syntax.ObjectBodyNode
   }
 
   ["for generator with key"] {
     local b = body("for (k, v in items) { v }")
     local gen = b.members.first as syntax.ForGeneratorNode
     gen.keyParameter != null
-    gen.keyParameter!!.identifier!!.value == "k"
-    gen.valueParameter.identifier!!.value == "v"
+    gen.keyParameter!!.name == "k"
+    gen.valueParameter.name == "v"
   }
 
   ["when generator"] {
@@ -130,7 +131,6 @@ examples {
     b.members.first is syntax.WhenGeneratorNode
     local gen = b.members.first as syntax.WhenGeneratorNode
     gen.condition is syntax.UnqualifiedAccessExprNode
-    gen.thenBody is syntax.ObjectBodyNode
     gen.elseBody == null
   }
 
@@ -138,7 +138,6 @@ examples {
     local b = body("when (flag) { 1 } else { 2 }")
     local gen = b.members.first as syntax.WhenGeneratorNode
     gen.condition is syntax.UnqualifiedAccessExprNode
-    gen.thenBody is syntax.ObjectBodyNode
     gen.elseBody != null
     gen.elseBody is syntax.ObjectBodyNode
   }
@@ -150,8 +149,8 @@ examples {
     propVal is syntax.NewExprNode
     local newBody = (propVal as syntax.NewExprNode).body
     newBody.parameters.length == 2
-    newBody.parameters[0].identifier!!.value == "a"
-    newBody.parameters[1].identifier!!.value == "b"
+    newBody.parameters[0].name == "a"
+    newBody.parameters[1].name == "b"
   }
 
   ["mixed object members"] {
@@ -161,10 +160,9 @@ examples {
       ["key"] = 2
       function f() = 3
       """)
-    b.properties.length == 1
-    b.elements.length == 1
-    b.entries.length == 1
-    b.methods.length == 1
     b.members.length == 4
+    b.members.filterIsInstance(syntax.ObjectPropertyNode).length == 1
+    b.members.filterIsInstance(syntax.ObjectEntryNode).length == 1
+    b.members.filterIsInstance(syntax.ObjectMethodNode).length == 1
   }
 }
