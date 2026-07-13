@@ -2854,25 +2854,21 @@ public abstract class TypeNode extends PklNode {
       return this;
     }
 
+    @TruffleBoundary
+    private int getCustomThisSlot(FrameDescriptor frameDescriptor) {
+      // can't store the slot id as this node may be called from different root nodes
+      // (see constraints14 snippet)
+      return frameDescriptor.findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
+    }
+
     @ExplodeLoop
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      int customThisSlot;
-      var numberOfAuxiliarySlots = frame.getFrameDescriptor().getNumberOfAuxiliarySlots();
-      if (numberOfAuxiliarySlots == 0) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        customThisSlot =
-            frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
-      } else {
-        // assertion: we only use auxiliary slots for custom `this`.
-        assert numberOfAuxiliarySlots == 1;
-        customThisSlot = 0;
-      }
       var ret = childNode.executeLazily(frame, value);
 
       var localContext = language.localContext.get();
       var prevShouldTypeCheck = localContext.shouldEagerTypecheck();
       localContext.shouldEagerTypecheck(true);
-      frame.setAuxiliarySlot(customThisSlot, value);
+      frame.setAuxiliarySlot(getCustomThisSlot(frame.getFrameDescriptor()), value);
       try {
         for (var node : constraintNodes) {
           node.execute(frame);

@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.member;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -23,11 +24,13 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.MemberNode;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDynamic;
+import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
-public final class ObjectMember extends Member {
+public final class ObjectMember extends Member implements Method {
 
   @CompilationFinal private @Nullable Object constantValue;
   @CompilationFinal private @Nullable MemberNode memberNode;
@@ -101,6 +104,17 @@ public final class ObjectMember extends Member {
     var callTarget = getMemberNode().getCallTarget();
     assert callTarget != null;
     return callTarget;
+  }
+
+  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
+    assert memberNode instanceof ObjectMethodNode;
+    return (CallTarget) getCallTarget().call(owner, owner);
+  }
+
+  @Override
+  public TypeNode getParameterTypeNode(int idx) {
+    assert memberNode instanceof ObjectMethodNode;
+    return ((ObjectMethodNode) memberNode).getParameterTypeNode(idx);
   }
 
   public boolean isUndefined(VirtualFrame frame) {

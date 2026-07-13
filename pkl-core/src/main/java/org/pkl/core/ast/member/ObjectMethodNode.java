@@ -57,6 +57,11 @@ public final class ObjectMethodNode extends RegularMemberNode {
     return functionNode.getReturnTypeNode();
   }
 
+  public TypeNode getParameterTypeNode(int idx) {
+    assert functionNode != null;
+    return functionNode.getParameterTypeNodes()[idx];
+  }
+
   @Override
   protected CallTarget executeImpl(VirtualFrame frame) {
     if (functionNode == null) {

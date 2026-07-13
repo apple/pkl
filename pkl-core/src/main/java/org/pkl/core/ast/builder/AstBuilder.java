@@ -109,6 +109,7 @@ import org.pkl.core.ast.expression.literal.MapLiteralNode;
 import org.pkl.core.ast.expression.literal.PropertiesLiteralNodeGen;
 import org.pkl.core.ast.expression.literal.SetLiteralNode;
 import org.pkl.core.ast.expression.literal.TrueLiteralNode;
+import org.pkl.core.ast.expression.member.InferParentWithinMethodArgumentNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
@@ -998,6 +999,17 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .evalError("cannotInferParent")
           .withSourceSection(createSourceSection(expr.newSpan()))
           .build();
+    } else if (parent instanceof ArgumentList argumentList) {
+      // cases we can't cover currently
+      // - FunctionN.apply: the parameter type nodes are not stored
+      // - pkl.base intrinsic constructorts: List(), Set(), Map(), Bytes()
+      // - generic methods: pkl.base#Pair(), etc.
+      // these will throw cannotInferParent at runtime
+
+      var sourceSection = createSourceSection(expr.newSpan());
+      var argIndex = argumentList.getArguments().indexOf(child);
+      inferredParentNode =
+          new InferParentWithinMethodArgumentNode(sourceSection, language, argIndex);
     } else {
       throw exceptionBuilder()
           .evalError("cannotInferParent")

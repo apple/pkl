@@ -15,10 +15,10 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.member.Method;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -43,9 +43,9 @@ public final class InvokeLexicalObjectMethodNode extends AbstractInvokeLexicalMe
   }
 
   @Override
-  protected CallTarget getCallTarget(VmObjectLike owner) {
+  protected Method getMethod(VmObjectLike owner) {
     var method = owner.getMember(methodName);
     assert method != null && method.isLocal();
-    return (CallTarget) method.getCallTarget().call(owner, owner);
+    return method;
   }
 }

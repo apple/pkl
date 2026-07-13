@@ -24,7 +24,8 @@ import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.runtime.VmObjectLike;
 
 /** A non-virtual ("direct") method call. Used only for methods on {@code pkl:base}. */
-public final class InvokeMethodDirectNode extends ExpressionNode {
+public final class InvokeMethodDirectNode extends AbstractInvokeMethodNode {
+  private final ClassMethod method;
   private final VmObjectLike owner;
   @Child private ExpressionNode receiverNode;
   @Children private final ExpressionNode[] argumentNodes;
@@ -38,6 +39,7 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
       ExpressionNode[] argumentNodes) {
 
     super(sourceSection);
+    this.method = method;
     this.owner = method.getOwner();
     this.receiverNode = receiverNode;
     this.argumentNodes = argumentNodes;
@@ -51,6 +53,7 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiverNode.executeGeneric(frame);
     args[1] = owner;
+    frame.setAuxiliarySlot(getMethodSlot(frame), method);
     for (var i = 0; i < argumentNodes.length; i++) {
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }

@@ -43,7 +43,7 @@ import org.pkl.core.runtime.VmFunction;
 @NodeChild(value = "receiverNode", type = ExpressionNode.class)
 @NodeChild(value = "receiverClassNode", type = GetClassNode.class, executeWith = "receiverNode")
 @GenerateWrapper
-public abstract class InvokeMethodVirtualNode extends ExpressionNode {
+public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected final Identifier methodName;
   @Children private final ExpressionNode[] argumentNodes;
   private final MemberLookupMode lookupMode;
@@ -91,6 +91,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
     args[1] = receiver;
+    frame.setAuxiliarySlot(getMethodSlot(frame), null);
     for (var i = 0; i < argumentNodes.length; i++) {
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
@@ -110,6 +111,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver.getThisValue();
     args[1] = receiver;
+    frame.setAuxiliarySlot(getMethodSlot(frame), null);
     for (var i = 0; i < argumentNodes.length; i++) {
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
@@ -130,6 +132,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = method.getOwner();
+    frame.setAuxiliarySlot(getMethodSlot(frame), method);
     for (var i = 0; i < argumentNodes.length; i++) {
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
@@ -149,6 +152,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = method.getOwner();
+    frame.setAuxiliarySlot(getMethodSlot(frame), method);
     for (var i = 0; i < argumentNodes.length; i++) {
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
