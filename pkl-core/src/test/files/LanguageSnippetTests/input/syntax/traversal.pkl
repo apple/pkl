@@ -21,7 +21,7 @@ local sample: syntax.Node =
     """,
   ).node!!
 
-examples {
+facts {
   ["fold counts nodes by predicate"] {
     syntax.fold(sample, 0, (acc, n) -> if (n.type == "import") acc + 1 else acc) == 2
 

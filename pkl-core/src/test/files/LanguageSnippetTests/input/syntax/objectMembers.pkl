@@ -9,7 +9,7 @@ local function body(source: String) =
     let (mod = result as syntax.ModuleNode)
       mod.properties.first.objectBodies.first
 
-examples {
+facts {
   ["object property"] {
     local b = body("name = \"hello\"")
     b.members.length == 1

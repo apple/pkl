@@ -4,7 +4,7 @@ import "pkl:syntax"
 
 local function parse(source: String) = syntax.parse(source)
 
-examples {
+facts {
   ["module declaration"] {
     local result = parse("module my.app")
     result is syntax.ModuleNode

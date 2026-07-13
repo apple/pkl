@@ -8,7 +8,7 @@ local function typeOf(typeSource: String) =
   let (result = parse("x: \(typeSource) = 0"))
     (result as syntax.ModuleNode).properties.first.typeAnnotation
 
-examples {
+facts {
   ["simple types"] {
     local unknownT = typeOf("unknown")
     unknownT is syntax.UnknownTypeNode

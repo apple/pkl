@@ -8,7 +8,7 @@ local function expr(source: String) =
   let (result = parse("x = \(source)"))
     (result as syntax.ModuleNode).properties.first.value
 
-examples {
+facts {
   ["literals"] {
     local boolTrue = expr("true")
     boolTrue is syntax.BoolLiteralExprNode

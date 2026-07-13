@@ -1,4 +1,4 @@
-examples {
+facts {
   ["fold counts nodes by predicate"] {
     true
     true
