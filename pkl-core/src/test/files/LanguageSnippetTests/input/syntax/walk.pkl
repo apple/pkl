@@ -32,7 +32,7 @@ facts {
   ["replace a leaf via a typed node"] {
     walkFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
-        Pair(new syntax.IntLiteralExprNode { value = 100 }.toNode(), false)
+        Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
       else
         null) == fmt("x = 100")
   }
@@ -40,9 +40,9 @@ facts {
   ["rebuilds ancestors of a changed node"] {
     walkFormat("x = if (cond) 41 else 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "41")
-        Pair(new syntax.IntLiteralExprNode { value = 42 }.toNode(), false)
+        Pair(new syntax.IntLiteralExprNode { value = 42 }.builtNode, false)
       else if (n.type == "int_literal_expr" && n.text == "0")
-        Pair(new syntax.IntLiteralExprNode { value = 100 }.toNode(), false)
+        Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
       else
         null) == fmt("x = if (cond) 42 else 100")
   }
@@ -53,11 +53,11 @@ facts {
         Pair(
           new syntax.ParenthesizedExprNode {
             expression = new syntax.IntLiteralExprNode { value = 1 }
-          }.toNode(),
+          }.builtNode,
           true,
         )
       else if (n.type == "int_literal_expr" && n.text == "1")
-        Pair(new syntax.IntLiteralExprNode { value = 2 }.toNode(), true)
+        Pair(new syntax.IntLiteralExprNode { value = 2 }.builtNode, true)
       else
         null) == fmt("x = (2)")
   }
@@ -68,11 +68,11 @@ facts {
         Pair(
           new syntax.ParenthesizedExprNode {
             expression = new syntax.IntLiteralExprNode { value = 1 }
-          }.toNode(),
+          }.builtNode,
           false,
         )
       else if (n.type == "int_literal_expr" && n.text == "1")
-        Pair(new syntax.IntLiteralExprNode { value = 2 }.toNode(), true)
+        Pair(new syntax.IntLiteralExprNode { value = 2 }.builtNode, true)
       else
         null) == fmt("x = (1)")
   }
@@ -80,7 +80,7 @@ facts {
   ["parent back-references on the result tree"] {
     local result = syntax.walk(mod("x = 41").node, (n) ->
       if (n.type == "int_literal_expr")
-        Pair(new syntax.IntLiteralExprNode { value = 42 }.toNode(), false)
+        Pair(new syntax.IntLiteralExprNode { value = 42 }.builtNode, false)
       else
         null)
     // the root of the returned tree has no parent
