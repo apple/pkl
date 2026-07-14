@@ -55,7 +55,7 @@ public final class ModuleClassNodes {
       }
 
       throw exceptionBuilder()
-          .evalError("noDescendentPathBetweenModules", selfUri, otherUri)
+          .evalError("noDescendantPathBetweenModules", selfUri, otherUri)
           .build();
     }
   }

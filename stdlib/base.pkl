@@ -79,7 +79,7 @@ external class TypeAlias extends Any
 
 /// Base class for modules.
 abstract external class Module {
-  /// Returns the relative, descendent directory path between this module and [other].
+  /// Returns the relative, descendant directory path between this module and [other].
   ///
   /// Throws if no such path exists.
   ///
