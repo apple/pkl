@@ -18,17 +18,14 @@
 @ModuleInfo { minPklVersion = "0.32.0" }
 module pkl.syntax
 
-/// Parse the string as a Pkl module, returning either a typed AST node or an error.
-function parse(source: String): ModuleNode | ParserError =
-  let (result = parseNodes(source))
+/// Parse the string or resource as a Pkl module, returning either a typed AST node or an error.
+function parse(source: String | Resource): ModuleNode | ParserError =
+  let (src = if (source is String) source else source.text)
+  let (result = parseNodes(src))
     if (result is ParserError)
       result
     else
       new ModuleNode { node = result }
-
-/// Parse a resource as a Pkl module, returning either a typed AST node or an error.
-function parseResource(resourceURI: String): ModuleNode | ParserError =
-  parse(read(resourceURI).text)
 
 external local function parseNodes(source: String): Node | ParserError
 
@@ -60,7 +57,7 @@ external function walk(node: Node, visit: (Node) -> Pair<Node, Boolean>?): Node
 /// `Pair(replacement, descend)` where `replacement` is any [SyntaxNode].
 /// Nodes without a matching callback are traversed and reused unchanged.
 ///
-/// Because [SyntaxNode.toNode] always rebuilds from fields, return `null` to keep
+/// Because [SyntaxNode.builtNode] always rebuilds from fields, return `null` to keep
 /// a node unchanged — never `Pair(it, ...)`, as that would rebuild its subtree
 /// (dropping inner comments/spacing).
 function visit(node: Node, visitor: Visitor): Node = walk(node, (n) -> dispatch(n, visitor))
@@ -515,26 +512,20 @@ abstract class SyntaxNode {
   hidden comments: List<Node> =
     children.filter((n) -> n.type == "line_comment" || n.type == "block_comment")
 
-  /// Rebuild this into a generic [Node].
+  /// This node rebuilt into a generic [Node].
   ///
   /// Always constructs a fresh node from this node's fields.
-  abstract function toNode(): Node
+  fixed builtNode: Node
 }
 
 /// Base class for expression nodes.
-abstract class Expr extends SyntaxNode {
-  abstract function toNode(): Node
-}
+abstract class Expr extends SyntaxNode
 
 /// Base class for type nodes.
-abstract class TypeNode extends SyntaxNode {
-  abstract function toNode(): Node
-}
+abstract class TypeNode extends SyntaxNode
 
 /// Base class for object member nodes.
-abstract class ObjectMemberNode extends SyntaxNode {
-  abstract function toNode(): Node
-}
+abstract class ObjectMemberNode extends SyntaxNode
 
 /// The top-level module node.
 class ModuleNode extends SyntaxNode {
@@ -566,25 +557,25 @@ class ModuleNode extends SyntaxNode {
   methods: List<ClassMethodNode> =
     findChildren(node, "class_method").map((n) -> new ClassMethodNode { node = n })
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "module"
         children =
-          (if (self.declaration == null) List() else List(self.declaration.toNode()))
+          (if (self.declaration == null) List() else List(self.declaration.builtNode))
             + (
               if (self.imports.isEmpty)
                 List()
               else
                 List(new Node {
                   type = "import_list"
-                  children = self.imports.map((i) -> i.toNode())
+                  children = self.imports.map((i) -> i.builtNode)
                 })
             )
-            + self.classes.map((c) -> c.toNode())
-            + self.typeAliases.map((t) -> t.toNode())
-            + self.properties.map((p) -> p.toNode())
-            + self.methods.map((m) -> m.toNode())
+            + self.classes.map((c) -> c.builtNode)
+            + self.typeAliases.map((t) -> t.builtNode)
+            + self.properties.map((p) -> p.builtNode)
+            + self.methods.map((m) -> m.builtNode)
       }
 }
 
@@ -622,13 +613,13 @@ class ModuleDeclarationNode extends SyntaxNode {
     let (n = findChild(node, "extends_clause"))
       if (n == null) null else getStringChars(n)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "module_declaration"
         children =
-          (if (self.docComment == null) List() else List(self.docComment.toNode()))
-            + self.annotations.map((a) -> a.toNode())
+          (if (self.docComment == null) List() else List(self.docComment.builtNode))
+            + self.annotations.map((a) -> a.builtNode)
             + (
               if (self.name != null)
                 List(new Node {
@@ -676,7 +667,7 @@ class ImportNode extends SyntaxNode {
     let (aliasNode = findChild(node, "import_alias"))
       if (aliasNode == null) null else identifierText(aliasNode)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "import"
@@ -743,13 +734,13 @@ class ClassNode extends SyntaxNode {
     let (n = findChild(node, "class_body"))
       if (n == null) null else new ClassBodyNode { node = n }
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "class"
         children =
-          (if (self.docComment == null) List() else List(self.docComment.toNode()))
-            + self.annotations.map((a) -> a.toNode())
+          (if (self.docComment == null) List() else List(self.docComment.builtNode))
+            + self.annotations.map((a) -> a.builtNode)
             + List(new Node {
               type = "class_header"
               children =
@@ -765,11 +756,11 @@ class ClassNode extends SyntaxNode {
                     else
                       List(new Node {
                         type = "class_header_extends"
-                        children = List((terminal) { text = "extends" }, self.extendsType.toNode())
+                        children = List((terminal) { text = "extends" }, self.extendsType.builtNode)
                       })
                   )
             })
-            + (if (self.body == null) List() else List(self.body.toNode()))
+            + (if (self.body == null) List() else List(self.body.builtNode))
       }
 }
 
@@ -810,13 +801,13 @@ class TypeAliasNode extends SyntaxNode {
     let (t = findTypeChild(body!!))
       wrapTypeNode(t!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "typealias"
         children =
-          (if (self.docComment == null) List() else List(self.docComment.toNode()))
-            + self.annotations.map((a) -> a.toNode())
+          (if (self.docComment == null) List() else List(self.docComment.builtNode))
+            + self.annotations.map((a) -> a.builtNode)
             + List(new Node {
               type = "typealias_header"
               children =
@@ -830,7 +821,7 @@ class TypeAliasNode extends SyntaxNode {
             })
             + List(new Node {
               type = "typealias_body"
-              children = List(self.type.toNode())
+              children = List(self.type.builtNode)
             })
       }
 }
@@ -853,7 +844,7 @@ class ClassBodyNode extends SyntaxNode {
     else
       findChildren(elements, "class_method").map((n) -> new ClassMethodNode { node = n })
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "class_body"
@@ -862,7 +853,7 @@ class ClassBodyNode extends SyntaxNode {
             + (
               let (
                 members =
-                  self.properties.map((p) -> p.toNode()) + self.methods.map((m) -> m.toNode())
+                  self.properties.map((p) -> p.builtNode) + self.methods.map((m) -> m.builtNode)
               )
                 if (members.isEmpty)
                   List()
@@ -911,13 +902,13 @@ class ClassPropertyNode extends SyntaxNode {
   objectBodies: List<ObjectBodyNode> =
     findChildren(node, "object_body").map((n) -> new ObjectBodyNode { node = n })
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "class_property"
         children =
-          (if (self.docComment == null) List() else List(self.docComment.toNode()))
-            + self.annotations.map((a) -> a.toNode())
+          (if (self.docComment == null) List() else List(self.docComment.builtNode))
+            + self.annotations.map((a) -> a.builtNode)
             + List(new Node {
               type = "class_property_header"
               children =
@@ -935,11 +926,11 @@ class ClassPropertyNode extends SyntaxNode {
                   (terminal) { text = "=" },
                   new Node {
                     type = "class_property_body"
-                    children = List(self.value.toNode())
+                    children = List(self.value.builtNode)
                   },
                 )
               else
-                self.objectBodies.map((b) -> b.toNode())
+                self.objectBodies.map((b) -> b.builtNode)
             )
       }
 }
@@ -994,13 +985,13 @@ class ClassMethodNode extends SyntaxNode {
         let (e = findExprChild(bodyNode))
           if (e == null) null else wrapExpr(e)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "class_method"
         children =
-          (if (self.docComment == null) List() else List(self.docComment.toNode()))
-            + self.annotations.map((a) -> a.toNode())
+          (if (self.docComment == null) List() else List(self.docComment.builtNode))
+            + self.annotations.map((a) -> a.builtNode)
             + List(new Node {
               type = "class_method_header"
               children =
@@ -1021,7 +1012,7 @@ class ClassMethodNode extends SyntaxNode {
                   (terminal) { text = "=" },
                   new Node {
                     type = "class_method_body"
-                    children = List(self.body.toNode())
+                    children = List(self.body.builtNode)
                   },
                 )
             )
@@ -1049,7 +1040,7 @@ class ObjectBodyNode extends SyntaxNode {
         .filter((c) -> isObjectMemberType(c.type))
         .map((n) -> wrapObjectMember(n))
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "object_body"
@@ -1062,7 +1053,7 @@ class ObjectBodyNode extends SyntaxNode {
                 List(new Node {
                   type = "object_parameter_list"
                   children =
-                    commaSeparate(self.parameters.map((p) -> p.toNode()))
+                    commaSeparate(self.parameters.map((p) -> p.builtNode))
                       .add((terminal) { text = "->" })
                 })
             )
@@ -1072,7 +1063,7 @@ class ObjectBodyNode extends SyntaxNode {
               else
                 List(new Node {
                   type = "object_member_list"
-                  children = self.members.map((m) -> m.toNode())
+                  children = self.members.map((m) -> m.builtNode)
                 })
             )
             + List((terminal) { text = "}" })
@@ -1108,7 +1099,7 @@ class ObjectPropertyNode extends ObjectMemberNode {
   objectBodies: List<ObjectBodyNode> =
     findChildren(node, "object_body").map((n) -> new ObjectBodyNode { node = n })
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "object_property"
@@ -1130,11 +1121,11 @@ class ObjectPropertyNode extends ObjectMemberNode {
                   (terminal) { text = "=" },
                   new Node {
                     type = "object_property_body"
-                    children = List(self.value.toNode())
+                    children = List(self.value.builtNode)
                   },
                 )
               else
-                self.objectBodies.map((b) -> b.toNode())
+                self.objectBodies.map((b) -> b.builtNode)
             )
       }
 }
@@ -1176,7 +1167,7 @@ class ObjectMethodNode extends ObjectMemberNode {
     let (bodyNode = findChild(node, "class_method_body"))
       wrapExpr(findExprChild(bodyNode!!)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "object_method"
@@ -1197,7 +1188,7 @@ class ObjectMethodNode extends ObjectMemberNode {
               (terminal) { text = "=" },
               new Node {
                 type = "class_method_body"
-                children = List(self.body.toNode())
+                children = List(self.body.builtNode)
               },
             )
       }
@@ -1208,11 +1199,11 @@ class ObjectElementNode extends ObjectMemberNode {
   /// The expression value.
   expression: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "object_element"
-        children = List(self.expression.toNode())
+        children = List(self.expression.builtNode)
       }
 }
 
@@ -1232,7 +1223,7 @@ class ObjectEntryNode extends ObjectMemberNode {
   objectBodies: List<ObjectBodyNode> =
     findChildren(node, "object_body").map((n) -> new ObjectBodyNode { node = n })
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "object_entry"
@@ -1242,16 +1233,16 @@ class ObjectEntryNode extends ObjectMemberNode {
             children =
               List(
                 (terminal) { text = "[" },
-                self.key.toNode(),
+                self.key.builtNode,
                 (terminal) { text = "]" },
               )
                 + (if (self.value != null) List((terminal) { text = "=" }) else List())
           })
             + (
               if (self.value != null)
-                List(self.value.toNode())
+                List(self.value.builtNode)
               else
-                self.objectBodies.map((b) -> b.toNode())
+                self.objectBodies.map((b) -> b.builtNode)
             )
       }
 }
@@ -1264,14 +1255,14 @@ class ObjectSpreadNode extends ObjectMemberNode {
   /// The spread expression.
   expression: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "object_spread"
         children =
           List(
             (terminal) { text = if (self.isNullable) "...?" else "..." },
-            self.expression.toNode(),
+            self.expression.builtNode,
           )
       }
 }
@@ -1290,22 +1281,22 @@ class MemberPredicateNode extends ObjectMemberNode {
   objectBodies: List<ObjectBodyNode> =
     findChildren(node, "object_body").map((n) -> new ObjectBodyNode { node = n })
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "member_predicate"
         children =
           List(
             (terminal) { text = "[[" },
-            self.condition.toNode(),
+            self.condition.builtNode,
             (terminal) { text = "]" },
             (terminal) { text = "]" },
           )
             + (
               if (self.value != null)
-                List((terminal) { text = "=" }, self.value.toNode())
+                List((terminal) { text = "=" }, self.value.builtNode)
               else
-                self.objectBodies.map((b) -> b.toNode())
+                self.objectBodies.map((b) -> b.builtNode)
             )
       }
 }
@@ -1332,7 +1323,7 @@ class ForGeneratorNode extends ObjectMemberNode {
     let (n = findChild(node, "object_body"))
       new ObjectBodyNode { node = n!! }
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "for_generator"
@@ -1353,23 +1344,23 @@ class ForGeneratorNode extends ObjectMemberNode {
                           children =
                             (
                               if (self.keyParameter == null)
-                                List(self.valueParameter.toNode())
+                                List(self.valueParameter.builtNode)
                               else
                                 List(
-                                  self.keyParameter.toNode(),
+                                  self.keyParameter.builtNode,
                                   (terminal) { text = "," },
-                                  self.valueParameter.toNode(),
+                                  self.valueParameter.builtNode,
                                 )
                             )
                               + List((terminal) { text = "in" })
                         },
-                        self.iterable.toNode(),
+                        self.iterable.builtNode,
                       )
                   },
                   (terminal) { text = ")" },
                 )
             },
-            self.body.toNode(),
+            self.body.builtNode,
           )
       }
 }
@@ -1389,7 +1380,7 @@ class WhenGeneratorNode extends ObjectMemberNode {
   elseBody: ObjectBodyNode? =
     if (bodyNodes.length < 2) null else new ObjectBodyNode { node = bodyNodes[1] }
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "when_generator"
@@ -1401,39 +1392,39 @@ class WhenGeneratorNode extends ObjectMemberNode {
               children =
                 List(
                   (terminal) { text = "(" },
-                  self.condition.toNode(),
+                  self.condition.builtNode,
                   (terminal) { text = ")" },
                 )
             },
-            self.thenBody.toNode(),
+            self.thenBody.builtNode,
           )
             + (
               if (self.elseBody == null)
                 List()
               else
-                List((terminal) { text = "else" }, self.elseBody.toNode())
+                List((terminal) { text = "else" }, self.elseBody.builtNode)
             )
       }
 }
 
 /// The `this` expression.
 class ThisExprNode extends Expr {
-  function toNode(): Node = new Node { type = "this_expr"; text = "this" }
+  fixed builtNode = new Node { type = "this_expr"; text = "this" }
 }
 
 /// The `outer` expression.
 class OuterExprNode extends Expr {
-  function toNode(): Node = new Node { type = "outer_expr"; text = "outer" }
+  fixed builtNode = new Node { type = "outer_expr"; text = "outer" }
 }
 
 /// The `module` expression.
 class ModuleExprNode extends Expr {
-  function toNode(): Node = new Node { type = "module_expr"; text = "module" }
+  fixed builtNode = new Node { type = "module_expr"; text = "module" }
 }
 
 /// A `null` literal expression.
 class NullLiteralExprNode extends Expr {
-  function toNode(): Node = new Node { type = "null_expr"; text = "null" }
+  fixed builtNode = new Node { type = "null_expr"; text = "null" }
 }
 
 /// A boolean literal expression (`true` or `false`).
@@ -1441,7 +1432,7 @@ class BoolLiteralExprNode extends Expr {
   /// The boolean value.
   value: Boolean = node?.text == "true"
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node { type = "bool_literal_expr"; text = if (self.value) "true" else "false" }
 }
@@ -1451,7 +1442,7 @@ class IntLiteralExprNode extends Expr {
   /// The integer literal (e.g. `42`, `"0xFF"`).
   value: Int | String = node?.text ?? ""
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node { type = "int_literal_expr"; text = self.value.toString() }
 }
@@ -1461,7 +1452,7 @@ class FloatLiteralExprNode extends Expr {
   /// The float literal (e.g. `3.14`, `"1.0e10"`).
   value: Float | String = node?.text ?? ""
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node { type = "float_literal_expr"; text = self.value.toString() }
 }
@@ -1471,7 +1462,7 @@ class SingleLineStringLiteralExprNode extends Expr {
   /// The string parts (chars, escapes, interpolations).
   parts: List<StringPartNode> = buildStringParts(children)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "single_line_string_literal_expr"
@@ -1489,7 +1480,7 @@ class MultiLineStringLiteralExprNode extends Expr {
   /// The string parts (chars, escapes, newlines, interpolations).
   parts: List<StringPartNode> = buildStringParts(children)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "multi_line_string_literal_expr"
@@ -1516,7 +1507,7 @@ class UnqualifiedAccessExprNode extends Expr {
     let (n = findChild(node, "argument_list"))
       if (n == null) null else argumentsOf(n)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "unqualified_access_expr"
@@ -1546,13 +1537,13 @@ class QualifiedAccessExprNode extends Expr {
     let (n = findChild(m, "argument_list"))
       if (n == null) null else argumentsOf(n)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "qualified_access_expr"
         children =
           List(
-            self.receiver.toNode(),
+            self.receiver.builtNode,
             (operatorLeaf) { text = if (self.isNullSafe) "?." else "." },
             new Node {
               type = "unqualified_access_expr"
@@ -1574,15 +1565,15 @@ class SubscriptExprNode extends Expr {
   /// The index expression.
   index: Expr = wrapExpr(findExprChildren(node)[1])
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "subscript_expr"
         children =
           List(
-            self.receiver.toNode(),
+            self.receiver.builtNode,
             (operatorLeaf) { text = "[" },
-            self.index.toNode(),
+            self.index.builtNode,
             (terminal) { text = "]" },
           )
       }
@@ -1592,14 +1583,14 @@ class SubscriptExprNode extends Expr {
 ///
 /// Read-only: this node has no builder and cannot be constructed from scratch.
 class SuperAccessExprNode extends Expr {
-  function toNode(): Node = node!!
+  fixed builtNode = node!!
 }
 
 /// A `super[index]` subscript expression.
 ///
 /// Read-only: this node has no builder and cannot be constructed from scratch.
 class SuperSubscriptExprNode extends Expr {
-  function toNode(): Node = node!!
+  fixed builtNode = node!!
 }
 
 /// An `if (condition) thenExpr else elseExpr` expression.
@@ -1621,7 +1612,7 @@ class IfExprNode extends Expr {
     let (elseNode = findChild(node, "if_else_expr"))
       wrapExpr(findExprChild(elseNode!!)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "if_expr"
@@ -1639,7 +1630,7 @@ class IfExprNode extends Expr {
                         (terminal) { text = "(" },
                         new Node {
                           type = "if_condition_expr"
-                          children = List(self.condition.toNode())
+                          children = List(self.condition.builtNode)
                         },
                         (terminal) { text = ")" },
                       )
@@ -1648,12 +1639,12 @@ class IfExprNode extends Expr {
             },
             new Node {
               type = "if_then_expr"
-              children = List(self.thenExpr.toNode())
+              children = List(self.thenExpr.builtNode)
             },
             (terminal) { text = "else" },
             new Node {
               type = "if_else_expr"
-              children = List(self.elseExpr.toNode())
+              children = List(self.elseExpr.builtNode)
             },
           )
       }
@@ -1675,7 +1666,7 @@ class LetExprNode extends Expr {
   /// The body expression.
   body: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "let_expr"
@@ -1691,15 +1682,15 @@ class LetExprNode extends Expr {
                     type = "let_parameter"
                     children =
                       List(
-                        self.parameter.toNode(),
+                        self.parameter.builtNode,
                         (terminal) { text = "=" },
-                        self.bindingValue.toNode(),
+                        self.bindingValue.builtNode,
                       )
                   },
                   (terminal) { text = ")" },
                 )
             },
-            self.body.toNode(),
+            self.body.builtNode,
           )
       }
 }
@@ -1709,7 +1700,7 @@ class ThrowExprNode extends Expr {
   /// The expression being thrown.
   expression: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "throw_expr"
@@ -1717,7 +1708,7 @@ class ThrowExprNode extends Expr {
           List(
             (terminal) { text = "throw" },
             (terminal) { text = "(" },
-            self.expression.toNode(),
+            self.expression.builtNode,
             (terminal) { text = ")" },
           )
       }
@@ -1728,7 +1719,7 @@ class TraceExprNode extends Expr {
   /// The expression being traced.
   expression: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "trace_expr"
@@ -1736,7 +1727,7 @@ class TraceExprNode extends Expr {
           List(
             (terminal) { text = "trace" },
             (terminal) { text = "(" },
-            self.expression.toNode(),
+            self.expression.builtNode,
             (terminal) { text = ")" },
           )
       }
@@ -1750,7 +1741,7 @@ class ImportExprNode extends Expr {
   /// The import URI string.
   uri: String = getStringChars(node)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "import_expr"
@@ -1773,7 +1764,7 @@ class ReadExprNode extends Expr {
   /// The expression to be read.
   expression: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "read_expr"
@@ -1781,7 +1772,7 @@ class ReadExprNode extends Expr {
           List(
             (terminal) { text = self.keyword },
             (terminal) { text = "(" },
-            self.expression.toNode(),
+            self.expression.builtNode,
             (terminal) { text = ")" },
           )
       }
@@ -1801,7 +1792,7 @@ class NewExprNode extends Expr {
     let (n = findChild(node, "object_body"))
       new ObjectBodyNode { node = n!! }
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "new_expr"
@@ -1813,9 +1804,9 @@ class NewExprNode extends Expr {
                 if (self.type == null)
                   List((terminal) { text = "new" })
                 else
-                  List((terminal) { text = "new" }, self.type.toNode())
+                  List((terminal) { text = "new" }, self.type.builtNode)
             },
-            self.body.toNode(),
+            self.body.builtNode,
           )
       }
 }
@@ -1830,11 +1821,11 @@ class AmendsExprNode extends Expr {
     let (n = findChild(node, "object_body"))
       new ObjectBodyNode { node = n!! }
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "amends_expr"
-        children = List(self.parentExpr.toNode(), self.body.toNode())
+        children = List(self.parentExpr.builtNode, self.body.builtNode)
       }
 }
 
@@ -1856,22 +1847,22 @@ class BinaryOpExprNode extends Expr {
     let (t = findTypeChild(node))
       if (t == null) null else wrapTypeNode(t)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "binary_op_expr"
         children =
           if (self.operator == "is" || self.operator == "as")
             List(
-              self.left.toNode(),
+              self.left.builtNode,
               (operatorLeaf) { text = self.operator },
-              self.rightType!!.toNode(),
+              self.rightType!!.builtNode,
             )
           else
             List(
-              self.left.toNode(),
+              self.left.builtNode,
               (operatorLeaf) { text = self.operator },
-              self.right!!.toNode(),
+              self.right!!.builtNode,
             )
       }
 }
@@ -1881,11 +1872,11 @@ class UnaryMinusExprNode extends Expr {
   /// The operand expression.
   operand: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "unary_minus_expr"
-        children = List((terminal) { text = "-" }, self.operand.toNode())
+        children = List((terminal) { text = "-" }, self.operand.builtNode)
       }
 }
 
@@ -1894,11 +1885,11 @@ class LogicalNotExprNode extends Expr {
   /// The operand expression.
   operand: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "logical_not_expr"
-        children = List((terminal) { text = "!" }, self.operand.toNode())
+        children = List((terminal) { text = "!" }, self.operand.builtNode)
       }
 }
 
@@ -1907,11 +1898,11 @@ class NonNullExprNode extends Expr {
   /// The operand expression.
   operand: Expr = wrapExpr(findExprChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "non_null_expr"
-        children = List(self.operand.toNode(), (operatorLeaf) { text = "!!" })
+        children = List(self.operand.builtNode, (operatorLeaf) { text = "!!" })
       }
 }
 
@@ -1927,7 +1918,7 @@ class FunctionLiteralExprNode extends Expr {
     let (bodyNode = findChild(node, "function_literal_body"))
       wrapExpr(findExprChild(bodyNode!!)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "function_literal_expr"
@@ -1937,7 +1928,7 @@ class FunctionLiteralExprNode extends Expr {
             (terminal) { text = "->" },
             new Node {
               type = "function_literal_body"
-              children = List(self.body.toNode())
+              children = List(self.body.builtNode)
             },
           )
       }
@@ -1954,7 +1945,7 @@ class ParenthesizedExprNode extends Expr {
         let (e = findExprChild(elems))
           if (e == null) null else wrapExpr(e)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "parenthesized_expr"
@@ -1963,7 +1954,7 @@ class ParenthesizedExprNode extends Expr {
             (terminal) { text = "(" },
             new Node {
               type = "parenthesized_expr_elements"
-              children = List(self.expression!!.toNode())
+              children = List(self.expression!!.builtNode)
             },
             (terminal) { text = ")" },
           )
@@ -1972,17 +1963,17 @@ class ParenthesizedExprNode extends Expr {
 
 /// The `unknown` type.
 class UnknownTypeNode extends TypeNode {
-  function toNode(): Node = new Node { type = "unknown_type"; text = "unknown" }
+  fixed builtNode = new Node { type = "unknown_type"; text = "unknown" }
 }
 
 /// The `nothing` type.
 class NothingTypeNode extends TypeNode {
-  function toNode(): Node = new Node { type = "nothing_type"; text = "nothing" }
+  fixed builtNode = new Node { type = "nothing_type"; text = "nothing" }
 }
 
 /// The `module` type.
 class ModuleTypeNode extends TypeNode {
-  function toNode(): Node = new Node { type = "module_type"; text = "module" }
+  fixed builtNode = new Node { type = "module_type"; text = "module" }
 }
 
 /// A declared type (e.g., `String`, `List<Int>`).
@@ -2001,7 +1992,7 @@ class DeclaredTypeNode extends TypeNode {
         let (elems = findChild(tal, "type_argument_list_elements"))
           if (elems == null) List() else findTypeChildren(elems).map((n) -> wrapTypeNode(n))
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "declared_type"
@@ -2016,7 +2007,7 @@ class DeclaredTypeNode extends TypeNode {
                   (terminal) { text = "<" },
                   new Node {
                     type = "type_argument_list_elements"
-                    children = commaSeparate(self.typeArguments.map((t) -> t.toNode()))
+                    children = commaSeparate(self.typeArguments.map((t) -> t.builtNode))
                   },
                   (terminal) { text = ">" },
                 )
@@ -2029,11 +2020,11 @@ class NullableTypeNode extends TypeNode {
   /// The base type.
   baseType: TypeNode = wrapTypeNode(findTypeChild(node)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "nullable_type"
-        children = List(self.baseType.toNode(), (terminal) { text = "?" })
+        children = List(self.baseType.builtNode, (terminal) { text = "?" })
       }
 }
 
@@ -2042,13 +2033,13 @@ class UnionTypeNode extends TypeNode {
   /// The member types.
   members: List<TypeNode> = findTypeChildren(node).map((n) -> wrapTypeNode(n))
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "union_type"
         children =
           self.members
-            .map((m) -> m.toNode())
+            .map((m) -> m.builtNode)
             .fold(List(), (acc: List<Node>, item: Node) ->
               if (acc.isEmpty) List(item) else acc.add((terminal) { text = "|" }).add(item)
             )
@@ -2067,7 +2058,7 @@ class FunctionTypeNode extends TypeNode {
   /// The return type.
   returnType: TypeNode = wrapTypeNode(findTypeChildren(node).last)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "function_type"
@@ -2083,13 +2074,13 @@ class FunctionTypeNode extends TypeNode {
                     (terminal) { text = "(" },
                     new Node {
                       type = "parenthesized_type_elements"
-                      children = commaSeparate(self.parameterTypes.map((t) -> t.toNode()))
+                      children = commaSeparate(self.parameterTypes.map((t) -> t.builtNode))
                     },
                     (terminal) { text = ")" },
                   )
             },
             (terminal) { text = "->" },
-            self.returnType.toNode(),
+            self.returnType.builtNode,
           )
       }
 }
@@ -2105,19 +2096,19 @@ class ConstrainedTypeNode extends TypeNode {
   /// The constraint expressions.
   constraints: List<Expr> = findExprChildren(constraintElems).map((n) -> wrapExpr(n))
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "constrained_type"
         children =
-          List(self.baseType.toNode(), new Node {
+          List(self.baseType.builtNode, new Node {
             type = "constrained_type_constraint"
             children =
               List(
                 (terminal) { text = "(" },
                 new Node {
                   type = "constrained_type_elements"
-                  children = commaSeparate(self.constraints.map((c) -> c.toNode()))
+                  children = commaSeparate(self.constraints.map((c) -> c.builtNode))
                 },
                 (terminal) { text = ")" },
               )
@@ -2136,7 +2127,7 @@ class ParenthesizedTypeNode extends TypeNode {
         let (t = findTypeChild(elems))
           if (t == null) null else wrapTypeNode(t)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "parenthesized_type"
@@ -2145,7 +2136,7 @@ class ParenthesizedTypeNode extends TypeNode {
             (terminal) { text = "(" },
             new Node {
               type = "parenthesized_type_elements"
-              children = List(self.type!!.toNode())
+              children = List(self.type!!.builtNode)
             },
             (terminal) { text = ")" },
           )
@@ -2157,7 +2148,7 @@ class StringConstantTypeNode extends TypeNode {
   /// The string value.
   value: String = getStringChars(node)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "string_constant_type"
@@ -2175,13 +2166,13 @@ class AnnotationNode extends SyntaxNode {
     let (n = findChild(node, "object_body"))
       if (n == null) null else new ObjectBodyNode { node = n }
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "annotation"
         children =
-          List((terminal) { text = "@" }, self.type.toNode())
-            + (if (self.body == null) List() else List(self.body.toNode()))
+          List((terminal) { text = "@" }, self.type.builtNode)
+            + (if (self.body == null) List() else List(self.body.builtNode))
       }
 }
 
@@ -2205,7 +2196,7 @@ class ParameterNode extends SyntaxNode {
     let (n = findChild(node, "type_annotation"))
       if (n == null) null else wrapTypeNode(findTypeChild(n)!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "parameter"
@@ -2229,7 +2220,7 @@ class TypeParameterNode extends SyntaxNode {
   /// The type parameter name.
   name: String = identifierText(node!!)
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "type_parameter"
@@ -2251,7 +2242,7 @@ class DocCommentNode extends SyntaxNode {
           if (l.startsWith("///")) l.drop(3) else l
       )
 
-  function toNode(): Node =
+  fixed builtNode =
     let (self = this)
       new Node {
         type = "doc_comment"
@@ -2302,7 +2293,7 @@ class StringInterpolationNode extends StringPartNode {
     let (self = this)
       List(
         (terminal) { text = "\\(" },
-        self.expression.toNode(),
+        self.expression.builtNode,
         (terminal) { text = ")" },
       )
 }
@@ -2448,7 +2439,7 @@ local const function parameterListNode(parameters: List<ParameterNode>): Node = 
         (terminal) { text = "(" },
         new Node {
           type = "parameter_list_elements"
-          children = commaSeparate(parameters.map((p) -> p.toNode()))
+          children = commaSeparate(parameters.map((p) -> p.builtNode))
         },
         (terminal) { text = ")" },
       )
@@ -2465,7 +2456,7 @@ local const function argumentListNode(arguments: List<Expr>): Node = new Node {
         (terminal) { text = "(" },
         new Node {
           type = "argument_list_elements"
-          children = commaSeparate(arguments.map((a) -> a.toNode()))
+          children = commaSeparate(arguments.map((a) -> a.builtNode))
         },
         (terminal) { text = ")" },
       )
@@ -2483,7 +2474,7 @@ local const function typeParameterListNodes(typeParameters: List<TypeParameterNo
           (terminal) { text = "<" },
           new Node {
             type = "type_parameter_list_elements"
-            children = commaSeparate(typeParameters.map((t) -> t.toNode()))
+            children = commaSeparate(typeParameters.map((t) -> t.builtNode))
           },
           (terminal) { text = ">" },
         )
@@ -2496,7 +2487,7 @@ local const function typeAnnotationNodes(_type: TypeNode?): List<Node> =
   else
     List(new Node {
       type = "type_annotation"
-      children = List((terminal) { text = ":" }, _type.toNode())
+      children = List((terminal) { text = ":" }, _type.builtNode)
     })
 
 // ===============
@@ -2582,7 +2573,7 @@ class Visitor {
 
 // Map a typed visitor result into the raw-node result that `walk` consumes.
 local const function toWalkResult(r: Pair<SyntaxNode, Boolean>?): Pair<Node, Boolean>? =
-  if (r == null) null else Pair(r.first.toNode(), r.second)
+  if (r == null) null else Pair(r.first.builtNode, r.second)
 
 // Dispatch a raw node to the matching visitor callback (or `null` if none applies).
 local function dispatch(n: Node, v: Visitor): Pair<Node, Boolean>? =
