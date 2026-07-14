@@ -494,16 +494,16 @@ class ModuleNode extends SyntaxNode {
       new Node {
         type = "module"
         children =
-          (if (self.declaration == null) List() else List(self.declaration.builtNode))
-            + (
-              if (self.imports.isEmpty)
-                List()
-              else
-                List(new Node {
-                  type = "import_list"
-                  children = self.imports.map((i) -> i.builtNode)
-                })
-            )
+          List(
+            self.declaration?.builtNode,
+            if (self.imports.isEmpty)
+              null
+            else
+              new Node {
+                type = "import_list"
+                children = self.imports.map((i) -> i.builtNode)
+              },
+          ).filterNonNull()
             + self.classes.map((c) -> c.builtNode)
             + self.typeAliases.map((t) -> t.builtNode)
             + self.properties.map((p) -> p.builtNode)
@@ -552,37 +552,35 @@ class ModuleDeclarationNode extends SyntaxNode {
         children =
           (if (self.docComment == null) List() else List(self.docComment.builtNode))
             + self.annotations.map((a) -> a.builtNode)
-            + (
+            + List(
               if (self.name != null)
-                List(new Node {
+                new Node {
                   type = "module_definition"
                   children =
-                    (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                      + List(
-                        (terminal) { text = "module" },
-                        qualifiedIdentifierNode(self.name!!),
-                      )
-                })
+                    List(
+                      if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
+                      (terminal) { text = "module" },
+                      qualifiedIdentifierNode(self.name!!),
+                    ).filterNonNull()
+                }
               else if (!self.modifiers.isEmpty)
-                List(modifierListNode(self.modifiers))
+                modifierListNode(self.modifiers)
               else
-                List()
-            )
-            + (
+                null,
               if (self.amendsUri != null)
-                List(new Node {
+                new Node {
                   type = "amends_clause"
                   children = List((terminal) { text = "amends" }, stringCharsNode(self.amendsUri!!))
-                })
+                }
               else if (self.extendsUri != null)
-                List(new Node {
+                new Node {
                   type = "extends_clause"
                   children =
                     List((terminal) { text = "extends" }, stringCharsNode(self.extendsUri!!))
-                })
+                }
               else
-                List()
-            )
+                null,
+            ).filterNonNull()
       }
 }
 
@@ -607,17 +605,15 @@ class ImportNode extends SyntaxNode {
           List(
             (terminal) { text = if (self.isGlob) "import*" else "import" },
             stringCharsNode(self.uri),
-          )
-            + (
-              if (self.alias == null)
-                List()
-              else
-                List(new Node {
-                  type = "import_alias"
-                  children =
-                    List((terminal) { text = "as" }, (identifierLeaf) { text = self.alias!! })
-                })
-            )
+            if (self.alias == null)
+              null
+            else
+              new Node {
+                type = "import_alias"
+                children =
+                  List((terminal) { text = "as" }, (identifierLeaf) { text = self.alias!! })
+              },
+          ).filterNonNull()
       }
 }
 
@@ -673,26 +669,29 @@ class ClassNode extends SyntaxNode {
         children =
           (if (self.docComment == null) List() else List(self.docComment.builtNode))
             + self.annotations.map((a) -> a.builtNode)
-            + List(new Node {
-              type = "class_header"
-              children =
-                (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                  + List(
+            + List(
+              new Node {
+                type = "class_header"
+                children =
+                  List(
+                    if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
                     (terminal) { text = "class" },
                     (identifierLeaf) { text = self.name },
-                  )
-                  + typeParameterListNodes(self.typeParameters)
-                  + (
-                    if (self.extendsType == null)
-                      List()
-                    else
-                      List(new Node {
-                        type = "class_header_extends"
-                        children = List((terminal) { text = "extends" }, self.extendsType.builtNode)
-                      })
-                  )
-            })
-            + (if (self.body == null) List() else List(self.body.builtNode))
+                  ).filterNonNull()
+                    + typeParameterListNodes(self.typeParameters)
+                    + (
+                      if (self.extendsType == null)
+                        List()
+                      else
+                        List(new Node {
+                          type = "class_header_extends"
+                          children =
+                            List((terminal) { text = "extends" }, self.extendsType.builtNode)
+                        })
+                    )
+              },
+              self.body?.builtNode,
+            ).filterNonNull()
       }
 }
 
@@ -743,11 +742,11 @@ class TypeAliasNode extends SyntaxNode {
             + List(new Node {
               type = "typealias_header"
               children =
-                (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                  + List(
-                    (terminal) { text = "typealias" },
-                    (identifierLeaf) { text = self.name },
-                  )
+                List(
+                  if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
+                  (terminal) { text = "typealias" },
+                  (identifierLeaf) { text = self.name },
+                ).filterNonNull()
                   + typeParameterListNodes(self.typeParameters)
                   + List((terminal) { text = "=" })
             })
@@ -781,18 +780,18 @@ class ClassBodyNode extends SyntaxNode {
       new Node {
         type = "class_body"
         children =
-          List((terminal) { text = "{" })
-            + (
-              let (
-                members =
-                  self.properties.map((p) -> p.builtNode) + self.methods.map((m) -> m.builtNode)
-              )
-                if (members.isEmpty)
-                  List()
-                else
-                  List(new Node { type = "class_body_elements"; children = members })
+          List(
+            (terminal) { text = "{" },
+            let (
+              members =
+                self.properties.map((p) -> p.builtNode) + self.methods.map((m) -> m.builtNode)
             )
-            + List((terminal) { text = "}" })
+              if (members.isEmpty)
+                null
+              else
+                new Node { type = "class_body_elements"; children = members },
+            (terminal) { text = "}" },
+          ).filterNonNull()
       }
 }
 
@@ -847,8 +846,9 @@ class ClassPropertyNode extends SyntaxNode {
                 List(new Node {
                   type = "class_property_header_begin"
                   children =
-                    (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                      + List((identifierLeaf) { text = self.name })
+                    List(if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers), (
+                      identifierLeaf
+                    ) { text = self.name }).filterNonNull()
                 })
                   + typeAnnotationNodes(self.typeAnnotation)
             })
@@ -927,11 +927,11 @@ class ClassMethodNode extends SyntaxNode {
             + List(new Node {
               type = "class_method_header"
               children =
-                (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                  + List(
-                    (terminal) { text = "function" },
-                    (identifierLeaf) { text = self.name },
-                  )
+                List(
+                  if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
+                  (terminal) { text = "function" },
+                  (identifierLeaf) { text = self.name },
+                ).filterNonNull()
             })
             + typeParameterListNodes(self.typeParameters)
             + List(parameterListNode(self.parameters))
@@ -977,28 +977,26 @@ class ObjectBodyNode extends SyntaxNode {
       new Node {
         type = "object_body"
         children =
-          List((terminal) { text = "{" })
-            + (
-              if (self.parameters.isEmpty)
-                List()
-              else
-                List(new Node {
-                  type = "object_parameter_list"
-                  children =
-                    commaSeparate(self.parameters.map((p) -> p.builtNode))
-                      .add((terminal) { text = "->" })
-                })
-            )
-            + (
-              if (self.members.isEmpty)
-                List()
-              else
-                List(new Node {
-                  type = "object_member_list"
-                  children = self.members.map((m) -> m.builtNode)
-                })
-            )
-            + List((terminal) { text = "}" })
+          List(
+            (terminal) { text = "{" },
+            if (self.parameters.isEmpty)
+              null
+            else
+              new Node {
+                type = "object_parameter_list"
+                children =
+                  commaSeparate(self.parameters.map((p) -> p.builtNode))
+                    .add((terminal) { text = "->" })
+              },
+            if (self.members.isEmpty)
+              null
+            else
+              new Node {
+                type = "object_member_list"
+                children = self.members.map((m) -> m.builtNode)
+              },
+            (terminal) { text = "}" },
+          ).filterNonNull()
       }
 }
 
@@ -1107,11 +1105,11 @@ class ObjectMethodNode extends ObjectMemberNode {
           List(new Node {
             type = "class_method_header"
             children =
-              (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                + List(
-                  (terminal) { text = "function" },
-                  (identifierLeaf) { text = self.name },
-                )
+              List(
+                if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
+                (terminal) { text = "function" },
+                (identifierLeaf) { text = self.name },
+              ).filterNonNull()
           })
             + typeParameterListNodes(self.typeParameters)
             + List(parameterListNode(self.parameters))
@@ -1167,8 +1165,8 @@ class ObjectEntryNode extends ObjectMemberNode {
                 (terminal) { text = "[" },
                 self.key.builtNode,
                 (terminal) { text = "]" },
-              )
-                + (if (self.value != null) List((terminal) { text = "=" }) else List())
+                if (self.value != null) (terminal) { text = "=" } else null,
+              ).filterNonNull()
           })
             + (
               if (self.value != null)
@@ -2103,8 +2101,11 @@ class AnnotationNode extends SyntaxNode {
       new Node {
         type = "annotation"
         children =
-          List((terminal) { text = "@" }, self.type.builtNode)
-            + (if (self.body == null) List() else List(self.body.builtNode))
+          List(
+            (terminal) { text = "@" },
+            self.type.builtNode,
+            self.body?.builtNode,
+          ).filterNonNull()
       }
 }
 
