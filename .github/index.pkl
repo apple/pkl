@@ -234,7 +234,7 @@ dependabot {
     new {
       `package-ecosystem` = "gradle"
       schedule {
-        interval = "weekly"
+        interval = "quarterly"
       }
       cooldown {
         `default-days` = 7
