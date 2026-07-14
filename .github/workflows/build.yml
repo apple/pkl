@@ -23,7 +23,7 @@ jobs:
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -64,7 +64,7 @@ jobs:
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -103,7 +103,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -130,7 +130,7 @@ jobs:
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -170,7 +170,7 @@ jobs:
       with:
         persist-credentials: false
         fetch-depth: 0
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -219,7 +219,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -269,7 +269,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -320,7 +320,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -364,7 +364,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -482,7 +482,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -528,7 +528,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -578,7 +578,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -629,7 +629,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -673,7 +673,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
@@ -791,7 +791,7 @@ jobs:
     - uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
       with:
         persist-credentials: false
-    - uses: actions/setup-java@1bcf9fb12cf4aa7d266a90ae39939e61372fe520 # v5
+    - uses: actions/setup-java@0f481fcb613427c0f801b606911222b5b6f3083a # v5
       with:
         java-version: '25'
         distribution: temurin
