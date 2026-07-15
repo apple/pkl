@@ -102,17 +102,7 @@ class BaseOptions : OptionGroup() {
   private val defaults = CliBaseOptions()
 
   private val output =
-    arrayOf(
-      "json",
-      "jsonnet",
-      "pcf",
-      "properties",
-      "plist",
-      "textproto",
-      "xml",
-      "yaml",
-      "pkl-binary",
-    )
+    arrayOf("json", "jsonnet", "pcf", "properties", "plist", "xml", "yaml", "pkl-binary")
 
   val allowedModules: List<Pattern> by
     option(
