@@ -22,11 +22,11 @@ plugins {
   signing
 }
 
-val pklCodegenJava: Configuration by configurations.creating
-val firstPartySourcesJars by configurations.existing
+val pklCodegenJava: Configuration = configurations.create("pklCodegenJava")
+val firstPartySourcesJars = configurations.named("firstPartySourcesJars")
 
-val generateTestConfigClasses by
-  tasks.registering(JavaExec::class) {
+val generateTestConfigClasses =
+  tasks.register<JavaExec>("generateTestConfigClasses") {
     val outputDir = layout.buildDirectory.dir("testConfigClasses")
     outputs.dir(outputDir)
     inputs.dir("src/test/resources/codegenPkl")
@@ -45,13 +45,13 @@ tasks.processTestResources { dependsOn(generateTestConfigClasses) }
 
 tasks.compileTestKotlin { dependsOn(generateTestConfigClasses) }
 
-val bundleTests by tasks.registering(Jar::class) { from(sourceSets.test.get().output) }
+val bundleTests = tasks.register<Jar>("bundleTests") { from(sourceSets.test.get().output) }
 
 // Runs unit tests using jar'd class files as a source.
 // This is to test loading the ClassRegistry from within a jar, as opposed to directly from the file
 // system.
-val testFromJar by
-  tasks.registering(Test::class) {
+val testFromJar =
+  tasks.register<Test>("testFromJar") {
     dependsOn(bundleTests)
 
     testClassesDirs = files(tasks.test.get().testClassesDirs)
