@@ -138,36 +138,37 @@ tasks.withType<JavaCompile>().configureEach {
 
 tasks.compileKotlin { enabled = false }
 
-val externalReaderFixture by tasks.registering {
-  group = "build"
-  dependsOn(tasks.named("compileExternalReaderFixtureJava"))
-  inputs.files(externalReaderFixtureSourceSet.map { it.output })
-  val fileName = if (buildInfo.os.isWindows) "externalreader.bat" else "externalreader"
-  val outputFile = layout.buildDirectory.file("fixtures/$fileName")
-  outputs.file(outputFile)
-  doLast {
-    val classpath = externalReaderFixtureSourceSet.get().runtimeClasspath.asPath
-    val scriptContent =
-      if (buildInfo.os.isWindows) {
-        """
+val externalReaderFixture =
+  tasks.register("externalReaderFixture") {
+    group = "build"
+    dependsOn(tasks.named("compileExternalReaderFixtureJava"))
+    inputs.files(externalReaderFixtureSourceSet.map { it.output })
+    val fileName = if (buildInfo.os.isWindows) "externalreader.bat" else "externalreader"
+    val outputFile = layout.buildDirectory.file("fixtures/$fileName")
+    outputs.file(outputFile)
+    doLast {
+      val classpath = externalReaderFixtureSourceSet.get().runtimeClasspath.asPath
+      val scriptContent =
+        if (buildInfo.os.isWindows) {
+          """
           @echo off
           java -cp $classpath org.pkl.core.externalreaderfixture.Main
         """
-          .trimIndent()
-      } else {
-        """
+            .trimIndent()
+        } else {
+          """
           #!/usr/bin/env bash
 
           java -cp $classpath org.pkl.core.externalreaderfixture.Main
         """
-          .trimIndent()
-      }
+            .trimIndent()
+        }
 
-    outputFile.get().asFile.writeText(scriptContent)
-    outputFile.get().asFile.setExecutable(true)
-    println("Created external reader ${outputFile.get().asFile.absolutePath}")
+      outputFile.get().asFile.writeText(scriptContent)
+      outputFile.get().asFile.setExecutable(true)
+      println("Created external reader ${outputFile.get().asFile.absolutePath}")
+    }
   }
-}
 
 tasks.test {
   configureTest()
@@ -195,8 +196,8 @@ tasks.test {
   )
 }
 
-val generateBaseModuleMembers by
-  tasks.registering(JavaExec::class) {
+val generateBaseModuleMembers =
+  tasks.register<JavaExec>("generateBaseModuleMembers") {
     group = "build"
 
     val outputDir = layout.buildDirectory.dir("generated/sources/baseModuleMembers")
@@ -227,8 +228,8 @@ tasks.compileJava { dependsOn(generateBaseModuleMembers) }
 
 tasks.sourcesJar { dependsOn(generateBaseModuleMembers) }
 
-val testJavaExecutable by
-  tasks.registering(Test::class) {
+val testJavaExecutable =
+  tasks.register<Test>("testJavaExecutable") {
     configureExecutableTest("LanguageSnippetTestsEngine")
     classpath =
       // compiled test classes
@@ -247,38 +248,38 @@ val testJavaExecutable by
 
 tasks.check { dependsOn(testJavaExecutable) }
 
-val testMacExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testMacExecutableAmd64 =
+  tasks.register<Test>("testMacExecutableAmd64") {
     dependsOn(":pkl-cli:macExecutableAmd64")
     configureExecutableTest("MacAmd64LanguageSnippetTestsEngine")
   }
 
-val testMacExecutableAarch64 by
-  tasks.registering(Test::class) {
+val testMacExecutableAarch64 =
+  tasks.register<Test>("testMacExecutableAarch64") {
     dependsOn(":pkl-cli:macExecutableAarch64")
     configureExecutableTest("MacAarch64LanguageSnippetTestsEngine")
   }
 
-val testLinuxExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testLinuxExecutableAmd64 =
+  tasks.register<Test>("testLinuxExecutableAmd64") {
     dependsOn(":pkl-cli:linuxExecutableAmd64")
     configureExecutableTest("LinuxAmd64LanguageSnippetTestsEngine")
   }
 
-val testLinuxExecutableAarch64 by
-  tasks.registering(Test::class) {
+val testLinuxExecutableAarch64 =
+  tasks.register<Test>("testLinuxExecutableAarch64") {
     dependsOn(":pkl-cli:linuxExecutableAarch64")
     configureExecutableTest("LinuxAarch64LanguageSnippetTestsEngine")
   }
 
-val testAlpineExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testAlpineExecutableAmd64 =
+  tasks.register<Test>("testAlpineExecutableAmd64") {
     dependsOn(":pkl-cli:alpineExecutableAmd64")
     configureExecutableTest("AlpineLanguageSnippetTestsEngine")
   }
 
-val testWindowsExecutableAmd64 by
-  tasks.registering(Test::class) {
+val testWindowsExecutableAmd64 =
+  tasks.register<Test>("testWindowsExecutableAmd64") {
     dependsOn(":pkl-cli:windowsExecutableAmd64")
     configureExecutableTest("WindowsLanguageSnippetTestsEngine")
   }
