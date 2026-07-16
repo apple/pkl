@@ -30,13 +30,10 @@ import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
-import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.formatter.Formatter;
 import org.pkl.formatter.GrammarVersion;
-import org.pkl.parser.GenericParser;
-import org.pkl.parser.GenericParserError;
 import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
@@ -74,13 +71,6 @@ public final class SyntaxNodes {
     }
   }
 
-  private static final VmObjectFactory<FullSpan> spanFactory =
-      new VmObjectFactory<FullSpan>(SyntaxModule::getSpanClass)
-          .addIntProperty("lineStart", FullSpan::lineBegin)
-          .addIntProperty("colStart", FullSpan::colBegin)
-          .addIntProperty("lineEnd", FullSpan::lineEnd)
-          .addIntProperty("colEnd", FullSpan::colEnd);
-
   private static final VmObjectFactory<NodeData> nodeFactory =
       new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
@@ -93,57 +83,6 @@ public final class SyntaxNodes {
                       ? nd.node.text(nd.source)
                       : VmNull.withoutDefault())
           .addTypedProperty("span", nd -> nd.spanVm);
-
-  private static final VmObjectFactory<ErrorData> parserErrorFactory =
-      new VmObjectFactory<ErrorData>(SyntaxModule::getParserErrorClass)
-          .addStringProperty("text", ed -> ed.text)
-          .addTypedProperty("span", ed -> ed.spanVm);
-
-  public abstract static class parseNodes extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected Object eval(VmTyped self, String source) {
-      var sourceChars = source.toCharArray();
-
-      try {
-        var parser = new GenericParser();
-        var root = parser.parseModule(source);
-        return convertNode(root, sourceChars);
-      } catch (GenericParserError e) {
-        var errorSpanVm = spanFactory.create(e.getSpan());
-        var text = e.getMessage() != null ? e.getMessage() : "Parse error";
-        return parserErrorFactory.create(new ErrorData(text, errorSpanVm));
-      }
-    }
-
-    private static VmTyped convertNode(Node genericNode, char[] sourceChars) {
-      // convert children recursively
-      var childrenList = new ArrayList<VmTyped>(genericNode.children.size());
-      for (var child : genericNode.children) {
-        childrenList.add(convertNode(child, sourceChars));
-      }
-
-      // materialize text now so that nodes reused verbatim by `walk`/`format` are
-      // self-contained
-      if (genericNode.children.isEmpty() || genericNode.type == NodeType.STRING_CHARS) {
-        genericNode.text(sourceChars);
-      }
-
-      var childrenVm = VmList.create(childrenList.toArray());
-      var spanVm = spanFactory.create(genericNode.span);
-      var data = new NodeData(genericNode, sourceChars, childrenVm, spanVm);
-
-      var result = nodeFactory.create(data);
-
-      // set parent back-reference on each child
-      for (var childVm : childrenList) {
-        var childData = (NodeData) childVm.getExtraStorage();
-        childData.parentVm = result;
-      }
-
-      return result;
-    }
-  }
 
   public abstract static class formatToString extends ExternalMethod2Node {
     @Specialization

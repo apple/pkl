@@ -2,11 +2,8 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local function parse(source: String) = syntax.parse(source)
-
 local function expr(source: String) =
-  let (result = parse("x = \(source)"))
-    (result as syntax.ModuleNode).properties.first.value
+  new syntax.Parser {}.parseModule("x = \(source)").properties.first.value
 
 facts {
   ["literals"] {

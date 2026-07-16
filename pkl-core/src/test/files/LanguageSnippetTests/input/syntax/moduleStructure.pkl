@@ -2,7 +2,9 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local function parse(source: String) = syntax.parse(source)
+local parser = new syntax.Parser {}
+
+local function parse(source: String) = parser.parseModule(source)
 
 facts {
   ["module declaration"] {
@@ -174,32 +176,29 @@ facts {
 
     params[0].name == "x"
     params[0].typeAnnotation != null
-    params[0].isWildcard == false
+    params[0].isBlankIdentifier == false
 
     params[1].name == "_"
-    params[1].isWildcard == true
+    params[1].isBlankIdentifier == true
     params[1].typeAnnotation == null
 
     params[2].name == "y"
     params[2].typeAnnotation == null
-    params[2].isWildcard == false
+    params[2].isBlankIdentifier == false
   }
 
   ["parser error"] {
-    local result = parse("x = {{{")
-    result is syntax.ParserError
-    (result as syntax.ParserError).text.length > 0
+    local result = new syntax.Parser {}.parseModuleOrNull("x = {{{")
+    result == null
   }
 
   ["empty module"] {
     local result = parse("")
-    result is syntax.ModuleNode
-    local mod = result as syntax.ModuleNode
-    mod.declaration == null
-    mod.imports.length == 0
-    mod.classes.length == 0
-    mod.typeAliases.length == 0
-    mod.properties.length == 0
-    mod.methods.length == 0
+    result.declaration == null
+    result.imports.length == 0
+    result.classes.length == 0
+    result.typeAliases.length == 0
+    result.properties.length == 0
+    result.methods.length == 0
   }
 }

@@ -37,8 +37,8 @@ public final class SyntaxModule extends StdLibModule {
     return SpanClass.instance;
   }
 
-  public static VmClass getParserErrorClass() {
-    return ParserErrorClass.instance;
+  public static VmClass getModuleNodeClass() {
+    return ModuleNodeClass.instance;
   }
 
   private static final class NodeClass {
@@ -49,8 +49,8 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("Span");
   }
 
-  private static final class ParserErrorClass {
-    static final VmClass instance = loadClass("ParserError");
+  private static final class ModuleNodeClass {
+    static final VmClass instance = loadClass("ModuleNode");
   }
 
   @CompilerDirectives.TruffleBoundary

@@ -15,19 +15,19 @@
 //===----------------------------------------------------------------------===//
 
 /// Utilities for managing Pkl source code
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.33.0" }
 module pkl.syntax
 
-/// Parse the string or resource as a Pkl module, returning either a typed AST node or an error.
-function parse(source: String | Resource): ModuleNode | ParserError =
-  let (src = if (source is String) source else source.text)
-  let (result = parseNodes(src))
-    if (result is ParserError)
-      result
-    else
-      new ModuleNode { node = result }
+/// Utilities to parse Pkl source code to a typed AST.
+class Parser {
+  /// Parse the string or resource as a Pkl module, returning either a typed AST node or
+  /// throwing an error.
+  external function parseModule(source: String | Resource): ModuleNode
 
-external local function parseNodes(source: String): Node | ParserError
+  /// Parse the string or resource as a Pkl module, returning either a typed AST node or null
+  /// in case of an error.
+  external function parseModuleOrNull(source: String | Resource): ModuleNode?
+}
 
 /// Format a syntax node back to Pkl source code.
 function format(node: Node): String = formatToString(node, "V2")
@@ -127,11 +127,6 @@ class ConvertSpan extends ConvertProperty {
   render = (property: Pair<String, Span>, _) ->
     let (span = property.value)
       Pair(property.key, "\(span.lineStart):\(span.colStart)-\(span.lineEnd):\(span.colEnd)")
-}
-
-class ParserError {
-  text: String
-  span: Span
 }
 
 typealias NodeType =
@@ -386,7 +381,7 @@ local const constructors: Map<NodeType, (Node) -> SyntaxNode> =
   )
 
 // Wrap a raw Node into the appropriate Expr subclass.
-local const function wrapExpr(n: Node): Expr = constructors[n.type].apply(n) as Expr
+local const function wrapExpr(n: Node): ExprNode = constructors[n.type].apply(n) as ExprNode
 
 // Wrap a raw Node into the appropriate TypeNode subclass.
 local const function wrapTypeNode(n: Node): TypeNode = constructors[n.type].apply(n) as TypeNode
@@ -450,7 +445,7 @@ abstract class SyntaxNode {
 }
 
 /// Base class for expression nodes.
-abstract class Expr extends SyntaxNode
+abstract class ExprNode extends SyntaxNode
 
 /// Base class for type nodes.
 abstract class TypeNode extends SyntaxNode
@@ -821,7 +816,7 @@ class ClassPropertyNode extends SyntaxNode {
       if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
 
   /// The value expression, if present (from `= expr`).
-  value: Expr? =
+  value: ExprNode? =
     let (body = node?.findChild("class_property_body"))
       if (body == null)
         null
@@ -909,7 +904,7 @@ class ClassMethodNode extends SyntaxNode {
       if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
 
   /// The method body expression, if present. Null for abstract methods.
-  body: Expr? =
+  body: ExprNode? =
     let (bodyNode = node?.findChild("class_method_body"))
       if (bodyNode == null)
         null
@@ -1017,7 +1012,7 @@ class ObjectPropertyNode extends ObjectMemberNode {
       if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
 
   /// The value expression, if present (from `= expr`).
-  value: Expr? =
+  value: ExprNode? =
     let (body = node?.findChild("object_property_body"))
       if (body == null)
         null
@@ -1093,7 +1088,7 @@ class ObjectMethodNode extends ObjectMemberNode {
       if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
 
   /// The method body expression.
-  body: Expr =
+  body: ExprNode =
     let (bodyNode = node?.findChild("class_method_body"))
       wrapExpr(bodyNode!!.findExprChild()!!)
 
@@ -1127,7 +1122,7 @@ class ObjectMethodNode extends ObjectMemberNode {
 /// An object element (a positional expression in an object body).
 class ObjectElementNode extends ObjectMemberNode {
   /// The expression value.
-  expression: Expr = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1142,10 +1137,10 @@ class ObjectEntryNode extends ObjectMemberNode {
   local entryHeader: Node? = node?.findChild("object_entry_header")
 
   /// The key expression.
-  key: Expr = wrapExpr(entryHeader?.findExprChild()!!)
+  key: ExprNode = wrapExpr(entryHeader?.findExprChild()!!)
 
   /// The value expression, if present (from `[key] = value`).
-  value: Expr? =
+  value: ExprNode? =
     let (e = node?.findExprChildren()?.findOrNull((c) -> c != entryHeader?.findExprChild()))
       if (e == null) null else wrapExpr(e)
 
@@ -1183,7 +1178,7 @@ class ObjectSpreadNode extends ObjectMemberNode {
   isNullable: Boolean = terminals.firstOrNull?.text == "...?"
 
   /// The spread expression.
-  expression: Expr = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1202,10 +1197,10 @@ class MemberPredicateNode extends ObjectMemberNode {
   local exprs: List<Node> = node?.findExprChildren() ?? List()
 
   /// The condition expression.
-  condition: Expr = wrapExpr(exprs.first)
+  condition: ExprNode = wrapExpr(exprs.first)
 
   /// The value expression, if present.
-  value: Expr? = if (exprs.length < 2) null else wrapExpr(exprs[1])
+  value: ExprNode? = if (exprs.length < 2) null else wrapExpr(exprs[1])
 
   /// Object bodies for amending.
   objectBodies: List<ObjectBodyNode> =
@@ -1246,7 +1241,7 @@ class ForGeneratorNode extends ObjectMemberNode {
   valueParameter: ParameterNode = new ParameterNode { node = paramNodes.last }
 
   /// The iterable expression.
-  iterable: Expr = wrapExpr(forDef?.findExprChild()!!)
+  iterable: ExprNode = wrapExpr(forDef?.findExprChild()!!)
 
   /// The body.
   body: ObjectBodyNode =
@@ -1301,7 +1296,7 @@ class WhenGeneratorNode extends ObjectMemberNode {
   local bodyNodes: List<Node> = node?.findChildren("object_body") ?? List()
 
   /// The condition expression.
-  condition: Expr = wrapExpr(whenHeader?.findExprChild()!!)
+  condition: ExprNode = wrapExpr(whenHeader?.findExprChild()!!)
 
   /// The "then" body.
   thenBody: ObjectBodyNode = new ObjectBodyNode { node = bodyNodes.first }
@@ -1338,27 +1333,27 @@ class WhenGeneratorNode extends ObjectMemberNode {
 }
 
 /// The `this` expression.
-class ThisExprNode extends Expr {
+class ThisExprNode extends ExprNode {
   fixed builtNode = new Node { type = "this_expr"; text = "this" }
 }
 
 /// The `outer` expression.
-class OuterExprNode extends Expr {
+class OuterExprNode extends ExprNode {
   fixed builtNode = new Node { type = "outer_expr"; text = "outer" }
 }
 
 /// The `module` expression.
-class ModuleExprNode extends Expr {
+class ModuleExprNode extends ExprNode {
   fixed builtNode = new Node { type = "module_expr"; text = "module" }
 }
 
 /// A `null` literal expression.
-class NullLiteralExprNode extends Expr {
+class NullLiteralExprNode extends ExprNode {
   fixed builtNode = new Node { type = "null_expr"; text = "null" }
 }
 
 /// A boolean literal expression (`true` or `false`).
-class BoolLiteralExprNode extends Expr {
+class BoolLiteralExprNode extends ExprNode {
   /// The boolean value.
   value: Boolean = node?.text == "true"
 
@@ -1368,7 +1363,7 @@ class BoolLiteralExprNode extends Expr {
 }
 
 /// An integer literal expression.
-class IntLiteralExprNode extends Expr {
+class IntLiteralExprNode extends ExprNode {
   /// The integer literal (e.g. `42`, `"0xFF"`).
   value: Int | String = node?.text ?? ""
 
@@ -1378,7 +1373,7 @@ class IntLiteralExprNode extends Expr {
 }
 
 /// A float literal expression.
-class FloatLiteralExprNode extends Expr {
+class FloatLiteralExprNode extends ExprNode {
   /// The float literal (e.g. `3.14`, `"1.0e10"`).
   value: Float | String = node?.text ?? ""
 
@@ -1388,7 +1383,7 @@ class FloatLiteralExprNode extends Expr {
 }
 
 /// A single-line string literal expression.
-class SingleLineStringLiteralExprNode extends Expr {
+class SingleLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, interpolations).
   parts: List<StringPartNode> = buildStringParts(children)
 
@@ -1406,7 +1401,7 @@ class SingleLineStringLiteralExprNode extends Expr {
 /// A multi-line string literal expression.
 ///
 /// Use [StringNewlineNode] entries in [parts] to separate lines.
-class MultiLineStringLiteralExprNode extends Expr {
+class MultiLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, newlines, interpolations).
   parts: List<StringPartNode> = buildStringParts(children)
 
@@ -1428,12 +1423,12 @@ class MultiLineStringLiteralExprNode extends Expr {
 }
 
 /// An unqualified access expression (`name` or `name(args)`).
-class UnqualifiedAccessExprNode extends Expr {
+class UnqualifiedAccessExprNode extends ExprNode {
   /// The identifier being accessed.
   identifier: String = identifierText(node!!)
 
   /// The arguments, if this is a function call. Null for a plain identifier access.
-  arguments: List<Expr>? =
+  arguments: List<ExprNode>? =
     let (n = node?.findChild("argument_list"))
       if (n == null) null else argumentsOf(n)
 
@@ -1449,9 +1444,9 @@ class UnqualifiedAccessExprNode extends Expr {
 
 /// A qualified access expression (`receiver.member` or `receiver?.member`,
 /// optionally with arguments for method calls).
-class QualifiedAccessExprNode extends Expr {
+class QualifiedAccessExprNode extends ExprNode {
   /// The receiver expression.
-  receiver: Expr = wrapExpr((node?.findExprChildren() ?? List()).first)
+  receiver: ExprNode = wrapExpr((node?.findExprChildren() ?? List()).first)
 
   /// Whether this is a null-safe access (`?.`).
   isNullSafe: Boolean = node?.findChild("operator")?.text == "?."
@@ -1462,7 +1457,7 @@ class QualifiedAccessExprNode extends Expr {
       identifierText(m)
 
   /// The arguments, if this is a method call. Null for a property access.
-  arguments: List<Expr>? =
+  arguments: List<ExprNode>? =
     let (m = (node?.findChildren("unqualified_access_expr") ?? List()).last)
     let (n = m.findChild("argument_list"))
       if (n == null) null else argumentsOf(n)
@@ -1488,12 +1483,12 @@ class QualifiedAccessExprNode extends Expr {
 }
 
 /// A subscript expression (`receiver[index]`).
-class SubscriptExprNode extends Expr {
+class SubscriptExprNode extends ExprNode {
   /// The receiver expression.
-  receiver: Expr = wrapExpr(node?.findExprChildren().first)
+  receiver: ExprNode = wrapExpr(node?.findExprChildren().first)
 
   /// The index expression.
-  index: Expr = wrapExpr(node?.findExprChildren().getOrNull(1)!!)
+  index: ExprNode = wrapExpr(node?.findExprChildren().getOrNull(1)!!)
 
   fixed builtNode =
     let (self = this)
@@ -1512,33 +1507,33 @@ class SubscriptExprNode extends Expr {
 /// A `super.member` access expression.
 ///
 /// Read-only: this node has no builder and cannot be constructed from scratch.
-class SuperAccessExprNode extends Expr {
+class SuperAccessExprNode extends ExprNode {
   fixed builtNode = node!!
 }
 
 /// A `super[index]` subscript expression.
 ///
 /// Read-only: this node has no builder and cannot be constructed from scratch.
-class SuperSubscriptExprNode extends Expr {
+class SuperSubscriptExprNode extends ExprNode {
   fixed builtNode = node!!
 }
 
 /// An `if (condition) thenExpr else elseExpr` expression.
-class IfExprNode extends Expr {
+class IfExprNode extends ExprNode {
   local ifHeader: Node = node?.findChild("if_header")!!
   local ifCondition: Node = ifHeader.findChild("if_condition")!!
   local ifConditionExpr: Node = ifCondition.findChild("if_condition_expr")!!
 
   /// The condition expression.
-  condition: Expr = wrapExpr(ifConditionExpr.findExprChild()!!)
+  condition: ExprNode = wrapExpr(ifConditionExpr.findExprChild()!!)
 
   /// The then-branch expression.
-  thenExpr: Expr =
+  thenExpr: ExprNode =
     let (thenNode = node?.findChild("if_then_expr"))
       wrapExpr(thenNode!!.findExprChild()!!)
 
   /// The else-branch expression.
-  elseExpr: Expr =
+  elseExpr: ExprNode =
     let (elseNode = node?.findChild("if_else_expr"))
       wrapExpr(elseNode!!.findExprChild()!!)
 
@@ -1581,7 +1576,7 @@ class IfExprNode extends Expr {
 }
 
 /// A `let (param = value) body` expression.
-class LetExprNode extends Expr {
+class LetExprNode extends ExprNode {
   local letParamDef: Node = node?.findChild("let_parameter_definition")!!
   local letParam: Node = letParamDef.findChild("let_parameter")!!
 
@@ -1591,10 +1586,10 @@ class LetExprNode extends Expr {
       new ParameterNode { node = p!! }
 
   /// The binding value expression.
-  bindingValue: Expr = wrapExpr(letParam.findExprChild()!!)
+  bindingValue: ExprNode = wrapExpr(letParam.findExprChild()!!)
 
   /// The body expression.
-  body: Expr = wrapExpr(node?.findExprChild()!!)
+  body: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1626,9 +1621,9 @@ class LetExprNode extends Expr {
 }
 
 /// A `throw(expr)` expression.
-class ThrowExprNode extends Expr {
+class ThrowExprNode extends ExprNode {
   /// The expression being thrown.
-  expression: Expr = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1645,9 +1640,9 @@ class ThrowExprNode extends Expr {
 }
 
 /// A `trace(expr)` expression.
-class TraceExprNode extends Expr {
+class TraceExprNode extends ExprNode {
   /// The expression being traced.
-  expression: Expr = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1664,7 +1659,7 @@ class TraceExprNode extends Expr {
 }
 
 /// An `import("uri")` or `import*("uri")` expression.
-class ImportExprNode extends Expr {
+class ImportExprNode extends ExprNode {
   /// Whether this is a glob import expression (`import*`).
   isGlob: Boolean = terminals.firstOrNull?.text == "import*"
 
@@ -1686,13 +1681,13 @@ class ImportExprNode extends Expr {
 }
 
 /// A `read(expr)`, `read*(expr)`, or `read?(expr)` expression.
-class ReadExprNode extends Expr {
+class ReadExprNode extends ExprNode {
   /// The keyword used (`"read"`, `"read?"`, or `"read*"`).
   keyword: "read" | "read?" | "read*" =
     (terminals.firstOrNull?.text ?? "read") as "read" | "read?" | "read*"
 
   /// The expression to be read.
-  expression: Expr = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1709,7 +1704,7 @@ class ReadExprNode extends Expr {
 }
 
 /// A `new Type { ... }` expression.
-class NewExprNode extends Expr {
+class NewExprNode extends ExprNode {
   local newHeader: Node = node?.findChild("new_header")!!
 
   /// The type being constructed, if present.
@@ -1742,9 +1737,9 @@ class NewExprNode extends Expr {
 }
 
 /// An `(expr) { ... }` amends expression.
-class AmendsExprNode extends Expr {
+class AmendsExprNode extends ExprNode {
   /// The expression being amended.
-  parentExpr: Expr = wrapExpr((node?.findExprChildren() ?? List()).first)
+  parentExpr: ExprNode = wrapExpr((node?.findExprChildren() ?? List()).first)
 
   /// The object body.
   body: ObjectBodyNode =
@@ -1760,17 +1755,17 @@ class AmendsExprNode extends Expr {
 }
 
 /// A binary operator expression (`left op right`), including `is`/`as`.
-class BinaryOpExprNode extends Expr {
+class BinaryOpExprNode extends ExprNode {
   local exprs: List<Node> = node?.findExprChildren() ?? List()
 
   /// The operator string.
   operator: String = node?.findChild("operator")?.text ?? ""
 
   /// The left-hand expression.
-  left: Expr = wrapExpr(exprs.first)
+  left: ExprNode = wrapExpr(exprs.first)
 
   /// The right-hand expression, if present (not present for `is`/`as` which use [rightType]).
-  right: Expr? = if (exprs.length < 2) null else wrapExpr(exprs[1])
+  right: ExprNode? = if (exprs.length < 2) null else wrapExpr(exprs[1])
 
   /// The right-hand type, if this is an `is` or `as` operation.
   rightType: TypeNode? =
@@ -1798,9 +1793,9 @@ class BinaryOpExprNode extends Expr {
 }
 
 /// A unary minus expression (`-expr`).
-class UnaryMinusExprNode extends Expr {
+class UnaryMinusExprNode extends ExprNode {
   /// The operand expression.
-  operand: Expr = wrapExpr(node?.findExprChild()!!)
+  operand: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1811,9 +1806,9 @@ class UnaryMinusExprNode extends Expr {
 }
 
 /// A logical not expression (`!expr`).
-class LogicalNotExprNode extends Expr {
+class LogicalNotExprNode extends ExprNode {
   /// The operand expression.
-  operand: Expr = wrapExpr(node?.findExprChild()!!)
+  operand: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1824,9 +1819,9 @@ class LogicalNotExprNode extends Expr {
 }
 
 /// A non-null assertion expression (`expr!!`).
-class NonNullExprNode extends Expr {
+class NonNullExprNode extends ExprNode {
   /// The operand expression.
-  operand: Expr = wrapExpr(node?.findExprChild()!!)
+  operand: ExprNode = wrapExpr(node?.findExprChild()!!)
 
   fixed builtNode =
     let (self = this)
@@ -1837,14 +1832,14 @@ class NonNullExprNode extends Expr {
 }
 
 /// A function literal expression (`(params) -> body`).
-class FunctionLiteralExprNode extends Expr {
+class FunctionLiteralExprNode extends ExprNode {
   /// The parameters.
   parameters: List<ParameterNode> =
     let (pl = node?.findChild("parameter_list"))
       parametersOf(pl!!)
 
   /// The body expression.
-  body: Expr =
+  body: ExprNode =
     let (bodyNode = node?.findChild("function_literal_body"))
       wrapExpr(bodyNode!!.findExprChild()!!)
 
@@ -1865,9 +1860,9 @@ class FunctionLiteralExprNode extends Expr {
 }
 
 /// A parenthesized expression (`(expr)`).
-class ParenthesizedExprNode extends Expr {
+class ParenthesizedExprNode extends ExprNode {
   /// The inner expression, if present (may be empty for `()`).
-  expression: Expr? =
+  expression: ExprNode? =
     let (elems = node?.findChild("parenthesized_expr_elements"))
       if (elems == null)
         null
@@ -2024,7 +2019,7 @@ class ConstrainedTypeNode extends TypeNode {
   local constraintElems: Node = constraint.findChild("constrained_type_elements")!!
 
   /// The constraint expressions.
-  constraints: List<Expr> = constraintElems.findExprChildren().map((n) -> wrapExpr(n))
+  constraints: List<ExprNode> = constraintElems.findExprChildren().map((n) -> wrapExpr(n))
 
   fixed builtNode =
     let (self = this)
@@ -2111,8 +2106,8 @@ class AnnotationNode extends SyntaxNode {
 
 /// A parameter declaration (`name`, `name: Type`, or `_`).
 class ParameterNode extends SyntaxNode {
-  /// Whether this is a wildcard parameter (`_`).
-  isWildcard: Boolean = name == "_"
+  /// Whether this is a blank identifier parameter (`_`).
+  isBlankIdentifier: Boolean = name == "_"
 
   /// The parameter name. Use `"_"` for a wildcard parameter.
   name: String =
@@ -2219,7 +2214,7 @@ class StringNewlineNode extends StringPartNode {
 /// An interpolation in a string literal (`\(expr)`).
 class StringInterpolationNode extends StringPartNode {
   /// The interpolated expression.
-  expression: Expr = wrapExpr(node!!)
+  expression: ExprNode = wrapExpr(node!!)
 
   function toNodes(): List<Node> =
     let (self = this)
@@ -2356,7 +2351,7 @@ local const function parametersOf(pl: Node?): List<ParameterNode> =
       elems.findChildren("parameter").map((n) -> new ParameterNode { node = n })
 
 // Read the argument expressions of an `argument_list` node.
-local const function argumentsOf(al: Node?): List<Expr> =
+local const function argumentsOf(al: Node?): List<ExprNode> =
   let (elems = al?.findChild("argument_list_elements"))
     if (elems == null) List() else elems.findExprChildren().map((n) -> wrapExpr(n))
 
@@ -2378,7 +2373,7 @@ local const function parameterListNode(parameters: List<ParameterNode>): Node = 
 }
 
 // Build an `argument_list` node from typed argument expressions.
-local const function argumentListNode(arguments: List<Expr>): Node = new Node {
+local const function argumentListNode(arguments: List<ExprNode>): Node = new Node {
   type = "argument_list"
   children =
     if (arguments.isEmpty)
