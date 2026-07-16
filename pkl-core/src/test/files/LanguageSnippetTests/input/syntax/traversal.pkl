@@ -2,7 +2,7 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local function mod(source: String): syntax.ModuleNode = syntax.parse(source) as syntax.ModuleNode
+local function mod(source: String): syntax.ModuleNode = new syntax.Parser {}.parseModule(source)
 
 local sample: syntax.Node =
   mod(

@@ -4,7 +4,7 @@ import "pkl:syntax"
 
 local function roundTrip(source: String) = syntax.format(parseNode(source))
 
-local function parseNode(source: String) = syntax.parse(source).node
+local function parseNode(source: String) = new syntax.Parser {}.parseModule(source).node
 
 local function replaceLeaf(
   node: syntax.Node,

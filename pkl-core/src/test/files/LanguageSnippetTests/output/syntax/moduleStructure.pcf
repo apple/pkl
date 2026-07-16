@@ -105,10 +105,8 @@ facts {
   }
   ["parser error"] {
     true
-    true
   }
   ["empty module"] {
-    true
     true
     true
     true
