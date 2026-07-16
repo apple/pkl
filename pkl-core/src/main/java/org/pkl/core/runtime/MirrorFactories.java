@@ -180,8 +180,7 @@ public final class MirrorFactories {
         .addProperty(
             "defaultValue",
             property ->
-                property.isAbstract()
-                        || property.isExternal()
+                property.isExternal()
                         || property
                             .getInitializer()
                             .isUndefined(VmUtils.createEmptyMaterializedFrame())

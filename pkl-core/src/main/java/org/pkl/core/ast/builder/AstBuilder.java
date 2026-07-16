@@ -1476,7 +1476,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var scope = (ModuleScope) symbolTable.getCurrentScope();
     scope.setModifiers(modifiers);
 
-    checkAbstractMembersAllowed(modifiers, mod.getProperties(), mod.getMethods());
+    checkAbstractMethodsAllowed(modifiers, mod.getMethods(), "module");
 
     // visit imports first so that we already have the object member name available
     var imports = mod.getImports();
@@ -1722,7 +1722,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           List<ClassProperty> properties = bodyNode != null ? bodyNode.getProperties() : List.of();
           List<ClassMethod> methods = bodyNode != null ? bodyNode.getMethods() : List.of();
           registerClassScopeNames(scope, properties, methods);
-          checkAbstractMembersAllowed(modifiers, properties, methods);
+          checkAbstractMethodsAllowed(modifiers, methods, "class");
 
           var supertypeCtx = clazz.getSuperClass();
 
@@ -1813,26 +1813,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     };
   }
 
-  private void checkAbstractMembersAllowed(
-      int enclosingModifiers, List<ClassProperty> properties, List<ClassMethod> methods) {
+  private void checkAbstractMethodsAllowed(
+      int enclosingModifiers, List<ClassMethod> methods, String context) {
     if (VmModifier.isAbstract(enclosingModifiers)) {
       return;
     }
-    for (var property : properties) {
-      checkMemberNotAbstract(property.getModifiers());
-    }
     for (var method : methods) {
-      checkMemberNotAbstract(method.getModifiers());
-    }
-  }
-
-  private void checkMemberNotAbstract(List<Modifier> modifiers) {
-    for (var modifier : modifiers) {
-      if (modifier.getValue() == ModifierValue.ABSTRACT) {
-        throw exceptionBuilder()
-            .evalError("abstractMemberInNonAbstractClass")
-            .withSourceSection(createSourceSection(modifier.span()))
-            .build();
+      for (var modifier : method.getModifiers()) {
+        if (modifier.getValue() == ModifierValue.ABSTRACT) {
+          throw exceptionBuilder()
+              .evalError("abstractMethodInNonAbstractType", context)
+              .withSourceSection(createSourceSection(modifier.span()))
+              .build();
+        }
       }
     }
   }
@@ -1878,9 +1871,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var headerEnd = typeAnnotation != null ? typeAnnotation.span() : name.span();
     var headerSection = createSourceSection(headerStart.endWith(headerEnd));
 
-    var modifiers =
+    var fullModifiers =
         doVisitModifiers(
             modifierList, VmModifier.VALID_PROPERTY_MODIFIERS, "invalidPropertyModifier");
+    // for compat, properties may be abstract, but ignore this
+    var modifiers = fullModifiers & ~VmModifier.ABSTRACT;
 
     var isLocal = VmModifier.isLocal(modifiers);
     var propertyName = org.pkl.core.runtime.Identifier.property(name.getValue(), isLocal);
@@ -1896,12 +1891,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             if (VmModifier.isExternal(modifiers)) {
               throw exceptionBuilder()
                   .evalError("externalMemberCannotHaveBody")
-                  .withSourceSection(headerSection)
-                  .build();
-            }
-            if (VmModifier.isAbstract(modifiers)) {
-              throw exceptionBuilder()
-                  .evalError("abstractMemberCannotHaveBody")
                   .withSourceSection(headerSection)
                   .build();
             }
@@ -1931,9 +1920,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               if (bodyNode instanceof LanguageAwareNode languageAwareNode) {
                 languageAwareNode.initLanguage(language);
               }
-            } else if (VmModifier.isAbstract(modifiers)) {
-              bodyNode =
-                  new CannotInvokeAbstractPropertyNode(headerSection, scope.getQualifiedName());
             } else {
               bodyNode = null; // will be given a default by UnresolvedPropertyNode
             }
