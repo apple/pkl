@@ -16,6 +16,7 @@
 package org.pkl.core.http;
 
 import com.google.errorprone.annotations.ThreadSafe;
+import java.io.Closeable;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -117,6 +118,9 @@ final class RequestRewritingClient implements HttpClient {
       var response = delegate.send(currentRequest, responseBodyHandler, httpRequestChecker);
       if (!HttpUtils.isRedirectStatusCode(response.statusCode())) {
         return response;
+      }
+      if (response.body() instanceof Closeable closeable) {
+        closeable.close();
       }
       if (redirectCount >= MAX_HTTP_REDIRECTS) {
         throw new HttpClientException(

@@ -15,6 +15,8 @@
  */
 package org.pkl.core.http
 
+import java.io.ByteArrayInputStream
+import java.io.InputStream
 import java.net.URI
 import java.net.http.HttpClient as JdkHttpClient
 import java.net.http.HttpRequest
@@ -25,6 +27,7 @@ import java.util.Locale
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
 import org.junit.jupiter.api.Test
+import org.pkl.commons.test.FakeHttpResponse
 import org.pkl.core.util.GlobResolver
 import org.pkl.core.util.IoUtils
 
@@ -440,5 +443,39 @@ class RequestRewritingClientTest {
 
     assertThatList(captured.request.headers().allValues("user-agent"))
       .containsExactly("My User Agent")
+  }
+
+  @Test
+  fun `closes intermediate redirect response body before following the redirect`() {
+    val intermediateBody = CloseTrackingInputStream()
+    val delegate =
+      ReplayingClient(
+        FakeHttpResponse<InputStream>().apply {
+          statusCode = 302
+          headers = httpHeaders("Location", "/bar.pkl")
+          body = intermediateBody
+        },
+        FakeHttpResponse<InputStream>(),
+      )
+    val client =
+      RequestRewritingClient("Pkl", Duration.ofSeconds(42), -1, delegate, mapOf(), mapOf())
+    val request = HttpRequest.newBuilder(URI("https://example.com/foo.pkl")).build()
+
+    client.send(request, BodyHandlers.ofInputStream(), NoopChecker)
+
+    assertThat(intermediateBody.closed)
+      .`as`("intermediate 3xx response body must be closed to release its connection")
+      .isTrue
+  }
+
+  /** @ByteArrayInputStream that records whether it was closed. */
+  private class CloseTrackingInputStream : ByteArrayInputStream(ByteArray(0)) {
+    var closed = false
+      private set
+
+    override fun close() {
+      closed = true
+      super.close()
+    }
   }
 }
