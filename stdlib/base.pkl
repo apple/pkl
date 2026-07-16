@@ -740,28 +740,28 @@ class Resource {
 /// use [Number] instead of [Float] in type annotations.
 abstract external class Number extends Any {
   /// A [Duration] with value [this] and unit `"ns"` (nanoseconds).
-  abstract ns: Duration
+  ns: Duration
 
   /// A [Duration] with value [this] and unit `"us"` (microseconds).
-  abstract us: Duration
+  us: Duration
 
   /// A [Duration] with value [this] and unit `"ms"` (milliseconds).
-  abstract ms: Duration
+  ms: Duration
 
   /// A [Duration] with value [this] and unit `"s"` (seconds).
-  abstract s: Duration
+  s: Duration
 
   /// A [Duration] with value [this] and unit `"min"` (minutes).
-  abstract min: Duration
+  min: Duration
 
   /// A [Duration] with value [this] and unit `"h"` (hours).
-  abstract h: Duration
+  h: Duration
 
   /// A [Duration] with value [this] and unit `"d"` (days).
-  abstract d: Duration
+  d: Duration
 
   /// A [DataSize] with value [this] and unit `"b"` (bytes).
-  abstract b: DataSize
+  b: DataSize
 
   /// A [DataSize] with value [this] and unit `"kb"` (kilobytes).
   ///
@@ -769,7 +769,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.kb == 1000.b
   /// ```
-  abstract kb: DataSize
+  kb: DataSize
 
   /// A [DataSize] with value [this] and unit `"mb"` (megabytes).
   ///
@@ -777,7 +777,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.mb == 1000.kb
   /// ```
-  abstract mb: DataSize
+  mb: DataSize
 
   /// A [DataSize] with value [this] and unit `"gb"` (gigabytes).
   ///
@@ -785,7 +785,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.gb == 1000.mb
   /// ```
-  abstract gb: DataSize
+  gb: DataSize
 
   /// A [DataSize] with value [this] and unit `"tb"` (terabytes).
   ///
@@ -793,7 +793,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.tb == 1000.gb
   /// ```
-  abstract tb: DataSize
+  tb: DataSize
 
   /// A [DataSize] with value [this] and unit `"pb"` (petabytes).
   ///
@@ -801,7 +801,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.pb == 1000.tb
   /// ```
-  abstract pb: DataSize
+  pb: DataSize
 
   /// A [DataSize] with value [this] and unit `"kib"` (kibibytes).
   ///
@@ -809,7 +809,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.kib == 1024.b
   /// ```
-  abstract kib: DataSize
+  kib: DataSize
 
   /// A [DataSize] with value [this] and unit `"mib"` (mebibytes).
   ///
@@ -817,7 +817,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.mib == 1024.kib
   /// ```
-  abstract mib: DataSize
+  mib: DataSize
 
   /// A [DataSize] with value [this] and unit `"gib"` (gibibytes).
   ///
@@ -825,7 +825,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.gib == 1024.mib
   /// ```
-  abstract gib: DataSize
+  gib: DataSize
 
   /// A [DataSize] with value [this] and unit `"tib"` (tebibytes).
   ///
@@ -833,7 +833,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.tib == 1024.gib
   /// ```
-  abstract tib: DataSize
+  tib: DataSize
 
   /// A [DataSize] with value [this] and unit `"pib"` (pebibytes).
   ///
@@ -841,14 +841,14 @@ abstract external class Number extends Any {
   /// ```
   /// 1.pib == 1024.tib
   /// ```
-  abstract pib: DataSize
+  pib: DataSize
 
   /// The sign of this number.
   ///
   /// Returns `0` for `0`, `0.0`, `-0.0`, and [NaN],
   /// `1` for positive numbers (including [Infinity]),
   /// and `-1` for negative numbers (including `-`[Infinity]).
-  abstract sign: Number
+  sign: Number
 
   /// The absolute value of this number.
   ///
@@ -862,7 +862,7 @@ abstract external class Number extends Any {
   /// (-Infinity).abs == Infinity
   /// NaN.abs == NaN
   /// ```
-  abstract abs: Number
+  abs: Number
 
   /// Rounds this number to the next mathematical integer towards [Infinity].
   ///
@@ -870,7 +870,7 @@ abstract external class Number extends Any {
   /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
   /// Otherwise, returns the smallest [Float] that is greater than or equal to [this]
   /// and is equal to a mathematical integer.
-  abstract ceil: Number
+  ceil: Number
 
   /// Rounds this number to the next mathematical integer towards -[Infinity].
   ///
@@ -878,7 +878,7 @@ abstract external class Number extends Any {
   /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
   /// Otherwise, returns the largest [Float] that is less than or equal to [this]
   /// and is equal to a mathematical integer.
-  abstract floor: Number
+  floor: Number
 
   /// Rounds this number to the nearest mathematical integer, breaking ties in favor
   /// of the even integer.
@@ -946,23 +946,23 @@ abstract external class Number extends Any {
   /// !(-Infinity).isPositive
   /// !NaN.isPositive
   /// ```
-  abstract isPositive: Boolean
+  isPositive: Boolean
 
   /// Tells if this number is neither [NaN] nor [isInfinite].
-  abstract isFinite: Boolean
+  isFinite: Boolean
 
   /// Tells if this number is [Infinity] or -[Infinity].
-  abstract isInfinite: Boolean
+  isInfinite: Boolean
 
   /// Tells if this number is [NaN].
   ///
   /// Always use this method when testing for [NaN].
   /// Note that `x == NaN` is *not* a correct way to test for [NaN] because `NaN != NaN` as per the
   /// IEEE spec.
-  abstract isNaN: Boolean
+  isNaN: Boolean
 
   /// Tells if this number is not 0.
-  abstract isNonZero: Boolean
+  isNonZero: Boolean
 
   /// Tells if this number is greater than or equal to [start] and less than or equal to
   /// [inclusiveEnd].
@@ -2419,7 +2419,7 @@ abstract external class Collection<out Element> extends Any {
   /// List().length == 0
   /// ```
   @AlsoKnownAs { names { "size"; "count" } }
-  abstract length: Int
+  length: Int
 
   /// Tells whether this collection is empty.
   ///
@@ -2428,7 +2428,7 @@ abstract external class Collection<out Element> extends Any {
   /// !List(1, 2, 3).isEmpty
   /// List().isEmpty
   /// ```
-  abstract isEmpty: Boolean
+  isEmpty: Boolean
 
   /// Tells whether this collection is not empty.
   ///
@@ -2438,7 +2438,7 @@ abstract external class Collection<out Element> extends Any {
   /// !List().isNotEmpty
   /// ```
   @Since { version = "0.31.0" }
-  abstract isNotEmpty: Boolean
+  isNotEmpty: Boolean
 
   /// The first element in this collection.
   ///
@@ -2450,11 +2450,11 @@ abstract external class Collection<out Element> extends Any {
   /// import("pkl:test").catch(() -> List().first)
   /// ```
   @AlsoKnownAs { names { "head" } }
-  abstract first: Element
+  first: Element
 
   /// Same as [first] but returns [null] if this collection is empty.
   @AlsoKnownAs { names { "head" } }
-  abstract firstOrNull: Element?
+  firstOrNull: Element?
 
   /// The tail of this collection.
   ///
@@ -2466,11 +2466,11 @@ abstract external class Collection<out Element> extends Any {
   /// import("pkl:test").catch(() -> List().rest)
   /// ```
   @AlsoKnownAs { names { "tail" } }
-  abstract rest: Collection<Element>
+  rest: Collection<Element>
 
   /// Same as [rest] but returns [null] if this collection is empty.
   @AlsoKnownAs { names { "tail" } }
-  abstract restOrNull: Collection<Element>?
+  restOrNull: Collection<Element>?
 
   /// The last element in this collection.
   ///
@@ -2481,10 +2481,10 @@ abstract external class Collection<out Element> extends Any {
   /// List(1, 2, 3).last == 3
   /// import("pkl:test").catch(() -> List().last)
   /// ```
-  abstract last: Element
+  last: Element
 
   /// Same as [last] but returns [null] if this collection is empty.
-  abstract lastOrNull: Element?
+  lastOrNull: Element?
 
   /// The single element in this collection.
   ///
@@ -2496,10 +2496,10 @@ abstract external class Collection<out Element> extends Any {
   /// throws(() -> List().single)
   /// throws(() -> List(1, 2, 3).single)
   /// ```
-  abstract single: Element
+  single: Element
 
   /// Same as [single] but returns [null] if this collection is empty or has more than one element.
-  abstract singleOrNull: Element?
+  singleOrNull: Element?
 
   /// Tests if [element] is contained in this collection.
   ///
@@ -2790,10 +2790,10 @@ abstract external class Collection<out Element> extends Any {
   /// Shorthand for `minWith((a, b) -> a < b)`.
   ///
   /// Throws if this collection is empty, or if any two elements cannot be compared with `<`.
-  abstract min: Element
+  min: Element
 
   /// Same as [min] but returns [null] if this collection is empty.
-  abstract minOrNull: Element?
+  minOrNull: Element?
 
   /// Returns the first element in this collection that is less than or equal to any other element
   /// after applying [selector].
@@ -2824,10 +2824,10 @@ abstract external class Collection<out Element> extends Any {
   /// Shorthand for `maxWith((a, b) -> a < b)`.
   ///
   /// Throws if this collection is empty, or if any two elements cannot be compared with `<`.
-  abstract max: Element
+  max: Element
 
   /// Same as [max] but returns [null] if this collection empty.
-  abstract maxOrNull: Element
+  maxOrNull: Element
 
   /// Returns the first element in this collection that is greater than or equal to any other
   /// element after applying [selector].
