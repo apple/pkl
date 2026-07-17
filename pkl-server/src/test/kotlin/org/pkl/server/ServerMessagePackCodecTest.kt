@@ -103,6 +103,7 @@ class ServerMessagePackCodecTest {
         externalModuleReaders = mapOf("external" to externalReader, "external2" to externalReader),
         externalResourceReaders = mapOf("external" to externalReader),
         traceMode = TraceMode.PRETTY,
+        featureFlags = mapOf("foo" to true, "bar" to false),
       )
     )
   }

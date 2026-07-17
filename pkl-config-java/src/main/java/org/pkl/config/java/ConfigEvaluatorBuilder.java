@@ -24,6 +24,7 @@ import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.pkl.config.java.mapper.ValueMapperBuilder;
 import org.pkl.core.EvaluatorBuilder;
+import org.pkl.core.Logger;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
 import org.pkl.core.http.HttpClient;
@@ -229,6 +230,18 @@ public final class ConfigEvaluatorBuilder {
    */
   public ConfigEvaluatorBuilder applyFromProject(Project project) {
     evaluatorBuilder.applyFromProject(project);
+    return this;
+  }
+
+  /**
+   * Sets the project for the evaluator, and applies any settings if set.
+   *
+   * <p>This is a convenience method that delegates to the underlying evaluator builder.
+   *
+   * @throws IllegalStateException if {@link #setSecurityManager(SecurityManager)} was also called.
+   */
+  public ConfigEvaluatorBuilder applyFromProject(Project project, Logger logger) {
+    evaluatorBuilder.applyFromProject(project, logger);
     return this;
   }
 

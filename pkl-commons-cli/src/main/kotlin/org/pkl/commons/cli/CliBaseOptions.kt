@@ -158,6 +158,9 @@ data class CliBaseOptions(
 
   /** Whether power assertions are enabled. */
   val powerAssertionsEnabled: Boolean = false,
+
+  /** Feature flag state. */
+  val featureFlags: Map<String, Boolean>? = null,
 ) {
 
   companion object {
