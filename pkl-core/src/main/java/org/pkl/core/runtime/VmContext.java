@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.FeatureFlag;
 import org.pkl.core.Logger;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
@@ -61,6 +62,7 @@ public final class VmContext {
     private final @Nullable ProjectDependenciesManager projectDependenciesManager;
     private final TraceMode traceMode;
     private final boolean powerAssertions;
+    private final Map<FeatureFlag, Boolean> featureFlags;
 
     public Holder(
         StackFrameTransformer frameTransformer,
@@ -76,7 +78,8 @@ public final class VmContext {
         @Nullable PackageResolver packageResolver,
         @Nullable ProjectDependenciesManager projectDependenciesManager,
         TraceMode traceMode,
-        boolean powerAssertions) {
+        boolean powerAssertions,
+        Map<FeatureFlag, Boolean> featureFlags) {
 
       this.frameTransformer = frameTransformer;
       this.securityManager = securityManager;
@@ -99,6 +102,7 @@ public final class VmContext {
       this.projectDependenciesManager = projectDependenciesManager;
       this.traceMode = traceMode;
       this.powerAssertions = powerAssertions;
+      this.featureFlags = featureFlags;
     }
   }
 
@@ -170,5 +174,9 @@ public final class VmContext {
 
   public VmValueTrackerFactory getValueTrackerFactory() {
     return valueTrackerFactory;
+  }
+
+  public boolean getFeatureFlag(FeatureFlag flag) {
+    return holder.featureFlags.getOrDefault(flag, flag.defaultValue());
   }
 }
