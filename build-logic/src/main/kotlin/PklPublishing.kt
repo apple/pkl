@@ -61,26 +61,31 @@ fun Project.configurePklPomMetadata() {
   }
 }
 
-/** Configures POM validation task to check for unresolved versions and snapshots in releases. */
-fun Project.configurePomValidation() {
+/**
+ * Configures POM validation for [publicationName] to check for unresolved versions and snapshots in
+ * releases.
+ */
+fun Project.configurePomValidation(publicationName: String = "library") {
+  val generatePomTaskName =
+    "generatePomFileFor${publicationName.replaceFirstChar { it.uppercase() }}Publication"
+  val generatePomTasks =
+    tasks.withType<GenerateMavenPom>().matching { it.name == generatePomTaskName }
+  val pomFiles = providers.provider { generatePomTasks.map { it.destination } }
+
   val validatePom =
     tasks.register("validatePom") {
-      if (tasks.findByName("generatePomFileForLibraryPublication") == null) {
-        return@register
-      }
-      val generatePomFileForLibraryPublication =
-        tasks.named<GenerateMavenPom>("generatePomFileForLibraryPublication")
       val outputFile =
         layout.buildDirectory.file("validatePom") // dummy output to satisfy up-to-date check
 
-      dependsOn(generatePomFileForLibraryPublication)
-      inputs.file(generatePomFileForLibraryPublication.get().destination)
+      dependsOn(generatePomTasks)
+      inputs.files(pomFiles)
       outputs.file(outputFile)
+      onlyIf { pomFiles.get().isNotEmpty() }
 
       doLast {
         outputFile.get().asFile.delete()
 
-        val pomFile = generatePomFileForLibraryPublication.get().destination
+        val pomFile = pomFiles.get().single()
         assert(pomFile.exists())
 
         val text = pomFile.readText()

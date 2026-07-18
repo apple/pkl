@@ -20,8 +20,18 @@ plugins {
   id("pklJSpecify")
   `java-gradle-plugin`
   `maven-publish`
-  id("pklPublishLibrary")
   signing
+}
+
+configurePklPomMetadata()
+
+configurePomValidation("pluginMaven")
+
+configurePklSigning()
+
+artifacts {
+  tasks.findByName("javadocJar")?.let { archives(it) }
+  tasks.findByName("sourcesJar")?.let { archives(it) }
 }
 
 dependencies {
