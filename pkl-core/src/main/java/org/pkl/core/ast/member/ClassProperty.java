@@ -24,7 +24,7 @@ import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.*;
 
 public final class ClassProperty extends ClassMember {
-  private final @Nullable PropertyTypeNode typeNode;
+  private @Nullable PropertyTypeNode typeNode;
   private final ObjectMember initializer;
 
   public ClassProperty(
@@ -62,6 +62,11 @@ public final class ClassProperty extends ClassMember {
       }
     }
     return VmModifier.getMirrors(mods, false);
+  }
+
+  public void lateInitTypeNodeAndModifiers(@Nullable PropertyTypeNode typeNode, int modifiers) {
+    this.typeNode = typeNode;
+    this.modifiers = modifiers;
   }
 
   public @Nullable PropertyTypeNode getTypeNode() {

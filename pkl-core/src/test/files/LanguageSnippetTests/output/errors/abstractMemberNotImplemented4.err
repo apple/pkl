@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Class `abstractMemberNotImplemented4` should either be declared `abstract`, or should implement property `bar`.
+
+x | extends "../../input-helper/classes/AbstractModule.pkl"
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at abstractMemberNotImplemented4 (file:///$snippetsDir/input/errors/abstractMemberNotImplemented4.pkl)

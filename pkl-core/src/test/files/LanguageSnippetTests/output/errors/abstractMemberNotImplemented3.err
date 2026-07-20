@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Class `abstractMemberNotImplemented3#MyClass` should either be declared `abstract`, or implement the following members:
+* property `foo`
+* property `bar`
+* method `foo`
+* method `bar`
+
+x | class MyClass extends AbstractPropertiesAndMethods {}
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at abstractMemberNotImplemented3#MyClass (file:///$snippetsDir/input/errors/abstractMemberNotImplemented3.pkl)
+
+xx | foo: MyClass
+          ^^^^^^^
+at abstractMemberNotImplemented3 (file:///$snippetsDir/input/errors/abstractMemberNotImplemented3.pkl)

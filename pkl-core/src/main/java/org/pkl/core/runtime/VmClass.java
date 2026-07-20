@@ -22,6 +22,7 @@ import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import org.graalvm.collections.*;
 import org.jspecify.annotations.Nullable;
@@ -83,6 +84,13 @@ public final class VmClass extends VmValue {
   private @Nullable UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
 
   private final Object allHiddenPropertyNamesLock = new Object();
+
+  @GuardedBy("finalizersLock")
+  private @Nullable List<Runnable> __finalizers = null;
+
+  private final Object finalizersLock = new Object();
+
+  private final AtomicInteger uninitializedSuperclassCount = new AtomicInteger(0);
 
   // Helps to overcome recursive initialization issues
   // between classes and annotations in pkl.base.
@@ -151,6 +159,83 @@ public final class VmClass extends VmValue {
   }
 
   @TruffleBoundary
+  private void checkAbstractMembers() {
+    if (this.isAbstract()) return;
+    // minimize allocations in the non-error case
+    if (!hasAbstractMember()) return;
+    var abstractMembers = getAbstractMembers();
+    if (abstractMembers.size() == 1) {
+      var member = abstractMembers.get(0);
+      var message =
+          member instanceof ClassProperty
+              ? "noImplementationForAbstractProperty"
+              : "noImplementationForAbstractMethod";
+      throw new VmExceptionBuilder()
+          .evalError(message, getDisplayName(), member.getName().toString())
+          .withSourceSection(getHeaderSection())
+          .build();
+    }
+    var memberList = new StringBuilder();
+    var isFirst = true;
+    for (var member : abstractMembers) {
+      if (isFirst) {
+        isFirst = false;
+      } else {
+        memberList.append('\n');
+      }
+      memberList.append("* ");
+      if (member instanceof ClassProperty) {
+        memberList.append("property ");
+      } else {
+        memberList.append("method ");
+      }
+      memberList.append('`').append(member.getName()).append('`');
+    }
+    throw new VmExceptionBuilder()
+        .evalError("noImplementationForAbstractMembers", getDisplayName(), memberList.toString())
+        .withSourceSection(getHeaderSection())
+        .build();
+  }
+
+  private boolean hasAbstractMember() {
+    var propertyCursor = getAllProperties().getEntries();
+    while (propertyCursor.advance()) {
+      var property = propertyCursor.getValue();
+      if (property.isAbstract()) {
+        return true;
+      }
+    }
+    var methodCursor = getAllMethods().getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isAbstract()) {
+        return true;
+      }
+    }
+    return false;
+  }
+
+  private List<ClassMember> getAbstractMembers() {
+    assert this.superclass != null;
+    var result = new ArrayList<ClassMember>();
+    var propertyCursor = getAllProperties().getEntries();
+    while (propertyCursor.advance()) {
+      var property = propertyCursor.getValue();
+      if (property.isAbstract()) {
+        result.add(property);
+      }
+    }
+    var methodCursor = getAllMethods().getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isAbstract()) {
+        result.add(method);
+      }
+    }
+    return result;
+  }
+
+  @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
     EconomicMaps.put(declaredProperties, property.getName(), property);
@@ -190,8 +275,46 @@ public final class VmClass extends VmValue {
     }
   }
 
+  private void onInitialized(Runnable runnable) {
+    synchronized (finalizersLock) {
+      if (this.__finalizers == null) {
+        this.__finalizers = new ArrayList<>();
+      }
+      this.__finalizers.add(runnable);
+    }
+  }
+
   // Note: Superclasses may not have finished their initialization when this method is called.
   public void notifyInitialized() {
+    var sc = superclass;
+    var isAllInitialized = true;
+    var uninitializedCount = 0;
+    while (sc != null) {
+      if (!sc.isInitialized) {
+        sc.onInitialized(
+            () -> {
+              var count = uninitializedSuperclassCount.decrementAndGet();
+              if (count == 0) {
+                checkAbstractMembers();
+              }
+            });
+        uninitializedCount++;
+        isAllInitialized = false;
+      }
+      sc = sc.superclass;
+    }
+    uninitializedSuperclassCount.set(uninitializedCount);
+    if (isAllInitialized) {
+      checkAbstractMembers();
+    }
+    lock:
+    synchronized (finalizersLock) {
+      if (__finalizers == null) break lock;
+      for (var finalizer : __finalizers) {
+        finalizer.run();
+      }
+      this.__finalizers = null;
+    }
     isInitialized = true;
   }
 
@@ -753,13 +876,27 @@ public final class VmClass extends VmValue {
     for (var property : EconomicMaps.getValues(declaredProperties)) {
       if (property.isLocal()) continue;
 
-      // A property is considered a class property definition
-      // if it has a type annotation or has no superdefinition (ad-hoc case).
+      // A property is considered a class property definition if any of the following are true:
+      //
+      // 1. It has a type annotation.
+      // 2. It has no superdefinition.
+      // 3. It is not abstract but its superclass is.
+      //
       // Otherwise, it is considered an object property definition,
       // which means it affects the class prototype but not the class itself.
       // An example for the latter is when `Module.output` is overridden with `output { ... }`.
-      if (property.getTypeNode() != null || !EconomicMaps.containsKey(result, property.getName())) {
+      if (property.getTypeNode() != null) {
         EconomicMaps.put(result, property.getName(), property);
+      } else {
+        var existingProperty = EconomicMaps.get(result, property.getName());
+        if (existingProperty != null && existingProperty.isAbstract() && !this.isAbstract()) {
+          property.lateInitTypeNodeAndModifiers(
+              existingProperty.getTypeNode(),
+              existingProperty.getModifiers() & ~VmModifier.ABSTRACT);
+          EconomicMaps.put(result, property.getName(), property);
+        } else if (existingProperty == null) {
+          EconomicMaps.put(result, property.getName(), property);
+        }
       }
     }
 
