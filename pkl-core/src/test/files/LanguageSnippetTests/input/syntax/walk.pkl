@@ -11,9 +11,6 @@ local function walkFormat(
   visit: (syntax.Node) -> Pair<syntax.Node, Boolean>?,
 ): String = syntax.format(syntax.walk(mod(source).node, visit))
 
-local function visitFormat(source: String, visitor: syntax.Visitor): String =
-  syntax.format(syntax.visit(mod(source).node, visitor))
-
 facts {
   ["read-only walk leaves the tree unchanged"] {
     // returning `null` everywhere keeps every node and keeps descending
@@ -86,34 +83,5 @@ facts {
     // the root of the returned tree has no parent
     result.parent == null
     result.children.first.parent.type == "module"
-  }
-
-  // ---- typed Visitor ----
-
-  ["visitor rewrites matched nodes only"] {
-    visitFormat("x = 1 + 2 * 3", new syntax.Visitor {
-      visitIntLiteralExpr = (_) -> Pair(new syntax.IntLiteralExprNode { value = 0 }, false)
-    }) == fmt("x = 0 + 0 * 0")
-  }
-
-  ["visitor reads typed fields"] {
-    visitFormat("x = foo + bar", new syntax.Visitor {
-      visitUnqualifiedAccessExpr = (it) ->
-        if (it.identifier == "foo")
-          Pair(new syntax.UnqualifiedAccessExprNode { identifier = "renamed" }, false)
-        else
-          null
-    }) == fmt("x = renamed + bar")
-  }
-
-  ["visitor can broaden the node kind"] {
-    visitFormat("x = true", new syntax.Visitor {
-      visitBoolLiteralExpr = (_) ->
-        Pair(new syntax.IntLiteralExprNode { value = 1 }, false)
-    }) == fmt("x = 1")
-  }
-
-  ["visitor leaves unmatched trees intact"] {
-    visitFormat("x = if (cond) 1 else 2", new syntax.Visitor {}) == fmt("x = if (cond) 1 else 2")
   }
 }

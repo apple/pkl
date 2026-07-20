@@ -12,7 +12,7 @@ facts {
     result is syntax.ModuleNode
     local mod = result as syntax.ModuleNode
     mod.declaration != null
-    mod.declaration!!.name == "my.app"
+    mod.declaration!!.name!!.value == "my.app"
     mod.declaration!!.docComment == null
     mod.declaration!!.annotations.length == 0
     mod.declaration!!.modifiers.isEmpty
@@ -68,7 +68,7 @@ facts {
     mod.imports[0].alias == null
 
     mod.imports[1].uri == "bar.pkl"
-    mod.imports[1].alias == "myBar"
+    mod.imports[1].alias!!.value == "myBar"
 
     mod.imports[2].uri == "*.pkl"
     mod.imports[2].isGlob == true
@@ -92,22 +92,22 @@ facts {
     cls.modifiers != null
     cls.modifiers == List("abstract")
 
-    cls.name == "Bird"
+    cls.identifier.value == "Bird"
 
     cls.typeParameters.isEmpty
     cls.extendsType == null
 
     cls.body != null
     cls.body!!.properties.length == 1
-    cls.body!!.properties.first.name == "name"
+    cls.body!!.properties.first.identifier.value == "name"
     cls.body!!.properties.first.typeAnnotation != null
     cls.body!!.properties.first.typeAnnotation is syntax.DeclaredTypeNode
     cls.body!!.properties.first.value == null
 
     cls.body!!.methods.length == 1
-    cls.body!!.methods.first.name == "fly"
+    cls.body!!.methods.first.identifier.value == "fly"
     cls.body!!.methods.first.parameters.length == 1
-    cls.body!!.methods.first.parameters.first.name == "speed"
+    cls.body!!.methods.first.parameters.first.identifier!!.value == "speed"
     cls.body!!.methods.first.returnType != null
     cls.body!!.methods.first.body != null
     cls.body!!.methods.first.body is syntax.BoolLiteralExprNode
@@ -122,10 +122,10 @@ facts {
     local mod = result as syntax.ModuleNode
     local cls = mod.classes.first
 
-    cls.name == "Container"
+    cls.identifier.value == "Container"
     cls.typeParameters != null
     cls.typeParameters.length == 1
-    cls.typeParameters.first.name == "T"
+    cls.typeParameters.first.identifier.value == "T"
     cls.typeParameters.first.variance == null
 
     cls.extendsType != null
@@ -137,7 +137,7 @@ facts {
     local mod = result as syntax.ModuleNode
     mod.typeAliases.length == 1
     local ta = mod.typeAliases.first
-    ta.name == "Positive"
+    ta.identifier.value == "Positive"
     ta.typeParameters.isEmpty
     ta.type is syntax.ConstrainedTypeNode
   }
@@ -151,17 +151,17 @@ facts {
     local mod = result as syntax.ModuleNode
 
     mod.properties.length == 2
-    mod.properties[0].name == "name"
+    mod.properties[0].identifier.value == "name"
     mod.properties[0].modifiers != null
     mod.properties[0].modifiers == List("hidden")
     mod.properties[0].value is syntax.SingleLineStringLiteralExprNode
 
-    mod.properties[1].name == "count"
+    mod.properties[1].identifier.value == "count"
     mod.properties[1].modifiers != null
     mod.properties[1].modifiers == List("local")
 
     mod.methods.length == 1
-    mod.methods.first.name == "greet"
+    mod.methods.first.identifier.value == "greet"
     mod.methods.first.parameters.length == 1
     mod.methods.first.returnType != null
     mod.methods.first.body is syntax.SingleLineStringLiteralExprNode
@@ -174,15 +174,15 @@ facts {
 
     params.length == 3
 
-    params[0].name == "x"
+    params[0].identifier!!.value == "x"
     params[0].typeAnnotation != null
     params[0].isBlankIdentifier == false
 
-    params[1].name == "_"
+    params[1].identifier == null
     params[1].isBlankIdentifier == true
     params[1].typeAnnotation == null
 
-    params[2].name == "y"
+    params[2].identifier!!.value == "y"
     params[2].typeAnnotation == null
     params[2].isBlankIdentifier == false
   }

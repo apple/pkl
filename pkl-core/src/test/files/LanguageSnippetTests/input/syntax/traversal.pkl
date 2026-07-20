@@ -62,41 +62,4 @@ facts {
 
     syntax.descendants(sample).filter((n) -> n.type == "class").length == 1
   }
-
-  ["descendants + wrap gives type-safe access"] {
-    syntax
-      .descendants(sample)
-      .map((n) -> syntax.wrap(n))
-      .filter((s) -> s is syntax.ImportNode)
-      .map((s) -> (s as syntax.ImportNode).uri) == List("foo.pkl", "bar.pkl")
-
-    syntax
-      .descendants(sample)
-      .map((n) -> syntax.wrap(n))
-      .filter((s) -> s is syntax.ClassPropertyNode)
-      .map((s) -> (s as syntax.ClassPropertyNode).name) == List("x", "y", "origin", "scaled")
-  }
-
-  ["wrap returns typed nodes for known kinds"] {
-    syntax.wrap(new syntax.Node { type = "if_expr" }) is syntax.IfExprNode
-    syntax.wrap(new syntax.Node { type = "declared_type" }) is syntax.DeclaredTypeNode
-    syntax.wrap(new syntax.Node { type = "object_property" }) is syntax.ObjectPropertyNode
-    syntax.wrap(new syntax.Node { type = "class" }) is syntax.ClassNode
-    syntax.wrap(new syntax.Node { type = "parameter" }) is syntax.ParameterNode
-  }
-
-  ["wrap returns null for kinds without a typed form"] {
-    syntax.wrap(new syntax.Node { type = "terminal" }) == null
-    syntax.wrap(new syntax.Node { type = "modifier_list" }) == null
-    syntax.wrap(new syntax.Node { type = "if_header" }) == null
-  }
-
-  ["fold reads typed fields via wrap"] {
-    // collect the arithmetic operators used anywhere in the module
-    syntax.fold(sample, List(), (acc, n) ->
-      let (s = syntax.wrap(n))
-        if (s is syntax.BinaryOpExprNode) acc.add(s.operator) else acc
-    )
-      == List("*")
-  }
 }

@@ -22,12 +22,12 @@ facts {
   ["declared type"] {
     local simple = typeOf("String")
     simple is syntax.DeclaredTypeNode
-    (simple as syntax.DeclaredTypeNode).name == "String"
+    (simple as syntax.DeclaredTypeNode).name.value == "String"
     (simple as syntax.DeclaredTypeNode).typeArguments.isEmpty
 
     local withArgs = typeOf("List<Int>")
     withArgs is syntax.DeclaredTypeNode
-    (withArgs as syntax.DeclaredTypeNode).name == "List"
+    (withArgs as syntax.DeclaredTypeNode).name.value == "List"
     (withArgs as syntax.DeclaredTypeNode).typeArguments.length == 1
     (withArgs as syntax.DeclaredTypeNode).typeArguments.first is syntax.DeclaredTypeNode
 
