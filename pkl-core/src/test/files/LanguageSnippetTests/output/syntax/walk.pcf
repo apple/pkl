@@ -22,16 +22,4 @@ facts {
     true
     true
   }
-  ["visitor rewrites matched nodes only"] {
-    true
-  }
-  ["visitor reads typed fields"] {
-    true
-  }
-  ["visitor can broaden the node kind"] {
-    true
-  }
-  ["visitor leaves unmatched trees intact"] {
-    true
-  }
 }

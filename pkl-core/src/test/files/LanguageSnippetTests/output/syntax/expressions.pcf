@@ -128,4 +128,33 @@ facts {
     true
     true
   }
+  ["class declaration"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["generic class"] {
+    true
+    true
+    true
+    true
+  }
+  ["minimal class"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
 }

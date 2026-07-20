@@ -50,18 +50,6 @@ external function formatToString(node: Node, grammarVersion: "V1" | "V2"): Strin
 /// nodes constructed from scratch retain their given `parent`.
 external function walk(node: Node, visit: (Node) -> Pair<Node, Boolean>?): Node
 
-/// Walk [node] with a [Visitor].
-///
-/// This is a type-safe wrapper around [walk]: each callback receives the typed
-/// node and returns either `null` to leave it unchanged, or
-/// `Pair(replacement, descend)` where `replacement` is any [SyntaxNode].
-/// Nodes without a matching callback are traversed and reused unchanged.
-///
-/// Because [SyntaxNode.builtNode] always rebuilds from fields, return `null` to keep
-/// a node unchanged — never `Pair(it, ...)`, as that would rebuild its subtree
-/// (dropping inner comments/spacing).
-function visit(node: Node, visitor: Visitor): Node = walk(node, (n) -> dispatch(n, visitor))
-
 /// Fold [accumulate] over [node] and its descendants, top-down in pre-order.
 ///
 /// ```
@@ -73,20 +61,8 @@ function fold<Acc>(node: Node, initial: Acc, accumulate: (Acc, Node) -> Acc): Ac
 
 /// Every node at or below [node], in pre-order.
 ///
-/// A convenience over [fold] for the common case of enumerating nodes. Combine with
-/// [wrap] for type-safe access:
-///
-/// ```
-/// // every imported URI in a module
-/// descendants(module.node)
-///   .map((n) -> wrap(n))
-///   .filterIsInstance(ImportNode)
-///   .map((s) -> s.uri)
-/// ```
+/// A convenience over [fold] for the common case of enumerating nodes.
 function descendants(node: Node): List<Node> = fold(node, List(), (acc, n) -> acc.add(n))
-
-/// Wrap a raw [node] into its typed [SyntaxNode], or `null` if it has no typed form.
-function wrap(_node: Node): SyntaxNode? = constructors.getOrNull(_node.type)?.apply(_node)
 
 class Node {
   type: NodeType
@@ -301,119 +277,6 @@ local const function isTypeType(t: NodeType): Boolean =
     || t == "string_constant_type"
     || t == "constrained_type"
 
-// Check if a NodeType represents an object member.
-local const function isObjectMemberType(t: NodeType): Boolean =
-  t == "object_element"
-    || t == "object_property"
-    || t == "object_method"
-    || t == "member_predicate"
-    || t == "object_entry"
-    || t == "object_spread"
-    || t == "when_generator"
-    || t == "for_generator"
-
-// Constructs the typed [SyntaxNode] backing each node type.
-local const constructors: Map<NodeType, (Node) -> SyntaxNode> =
-  Map(
-    // module structure
-    "module", (n) -> new ModuleNode { node = n },
-    "module_declaration", (n) -> new ModuleDeclarationNode { node = n },
-    "import", (n) -> new ImportNode { node = n },
-    "class", (n) -> new ClassNode { node = n },
-    "typealias", (n) -> new TypeAliasNode { node = n },
-    "class_body", (n) -> new ClassBodyNode { node = n },
-    "class_property", (n) -> new ClassPropertyNode { node = n },
-    "class_method", (n) -> new ClassMethodNode { node = n },
-    "object_body", (n) -> new ObjectBodyNode { node = n },
-    "annotation", (n) -> new AnnotationNode { node = n },
-    "parameter", (n) -> new ParameterNode { node = n },
-    "type_parameter", (n) -> new TypeParameterNode { node = n },
-    "doc_comment", (n) -> new DocCommentNode { node = n },
-    // object members
-    "object_element", (n) -> new ObjectElementNode { node = n },
-    "object_property", (n) -> new ObjectPropertyNode { node = n },
-    "object_method", (n) -> new ObjectMethodNode { node = n },
-    "member_predicate", (n) -> new MemberPredicateNode { node = n },
-    "object_entry", (n) -> new ObjectEntryNode { node = n },
-    "object_spread", (n) -> new ObjectSpreadNode { node = n },
-    "when_generator", (n) -> new WhenGeneratorNode { node = n },
-    "for_generator", (n) -> new ForGeneratorNode { node = n },
-    // expressions
-    "this_expr", (n) -> new ThisExprNode { node = n },
-    "outer_expr", (n) -> new OuterExprNode { node = n },
-    "module_expr", (n) -> new ModuleExprNode { node = n },
-    "null_expr", (n) -> new NullLiteralExprNode { node = n },
-    "bool_literal_expr", (n) -> new BoolLiteralExprNode { node = n },
-    "int_literal_expr", (n) -> new IntLiteralExprNode { node = n },
-    "float_literal_expr", (n) -> new FloatLiteralExprNode { node = n },
-    "single_line_string_literal_expr", (n) -> new SingleLineStringLiteralExprNode { node = n },
-    "multi_line_string_literal_expr", (n) -> new MultiLineStringLiteralExprNode { node = n },
-    "unqualified_access_expr", (n) -> new UnqualifiedAccessExprNode { node = n },
-    "qualified_access_expr", (n) -> new QualifiedAccessExprNode { node = n },
-    "subscript_expr", (n) -> new SubscriptExprNode { node = n },
-    "super_access_expr", (n) -> new SuperAccessExprNode { node = n },
-    "super_subscript_expr", (n) -> new SuperSubscriptExprNode { node = n },
-    "if_expr", (n) -> new IfExprNode { node = n },
-    "let_expr", (n) -> new LetExprNode { node = n },
-    "throw_expr", (n) -> new ThrowExprNode { node = n },
-    "trace_expr", (n) -> new TraceExprNode { node = n },
-    "import_expr", (n) -> new ImportExprNode { node = n },
-    "read_expr", (n) -> new ReadExprNode { node = n },
-    "new_expr", (n) -> new NewExprNode { node = n },
-    "amends_expr", (n) -> new AmendsExprNode { node = n },
-    "binary_op_expr", (n) -> new BinaryOpExprNode { node = n },
-    "unary_minus_expr", (n) -> new UnaryMinusExprNode { node = n },
-    "logical_not_expr", (n) -> new LogicalNotExprNode { node = n },
-    "non_null_expr", (n) -> new NonNullExprNode { node = n },
-    "function_literal_expr", (n) -> new FunctionLiteralExprNode { node = n },
-    "parenthesized_expr", (n) -> new ParenthesizedExprNode { node = n },
-    // types
-    "unknown_type", (n) -> new UnknownTypeNode { node = n },
-    "nothing_type", (n) -> new NothingTypeNode { node = n },
-    "module_type", (n) -> new ModuleTypeNode { node = n },
-    "declared_type", (n) -> new DeclaredTypeNode { node = n },
-    "nullable_type", (n) -> new NullableTypeNode { node = n },
-    "union_type", (n) -> new UnionTypeNode { node = n },
-    "function_type", (n) -> new FunctionTypeNode { node = n },
-    "constrained_type", (n) -> new ConstrainedTypeNode { node = n },
-    "parenthesized_type", (n) -> new ParenthesizedTypeNode { node = n },
-    "string_constant_type", (n) -> new StringConstantTypeNode { node = n },
-  )
-
-// Wrap a raw Node into the appropriate Expr subclass.
-local const function wrapExpr(n: Node): ExprNode = constructors[n.type].apply(n) as ExprNode
-
-// Wrap a raw Node into the appropriate TypeNode subclass.
-local const function wrapTypeNode(n: Node): TypeNode = constructors[n.type].apply(n) as TypeNode
-
-// Wrap a raw Node into the appropriate ObjectMemberNode subclass.
-local const function wrapObjectMember(n: Node): ObjectMemberNode =
-  constructors[n.type].apply(n) as ObjectMemberNode
-
-// Extract the string constant from a STRING_CHARS node.
-local const function extractStringConstant(n: Node?): String =
-  if (n == null)
-    ""
-  else
-    let (inner = n.children.filter((c) -> c.type == "terminal").drop(1).dropLast(1))
-      inner.map((c) -> c.text ?? "").join("")
-
-// Find and extract the string_chars of a node.
-local const function getStringChars(node: Node?): String =
-  extractStringConstant(node?.findChild("string_chars"))
-
-// The dotted name of a `qualified_identifier` node (e.g. "a.b.c").
-local const function qualifiedName(qid: Node?): String =
-  (qid?.findChildren("identifier") ?? List()).map((n) -> n.text ?? "").join(".")
-
-// The identifier text of the first `identifier` child of `node`.
-local const function identifierText(node: Node?): String = node?.findChild("identifier")?.text ?? ""
-
-// The modifier keywords of a `modifier_list` child of `node`.
-local const function modifiersOf(node: Node?): List<String> =
-  let (ml = node?.findChild("modifier_list"))
-    if (ml == null) List() else ml.findChildren("modifier").map((n) -> n.text ?? "")
-
 /// Base class for all typed syntax nodes.
 ///
 /// A typed node may be *backed* by a parsed [Node] (available via [node]) or
@@ -423,20 +286,9 @@ abstract class SyntaxNode {
   /// The original parsed node, or `null` when this was built from scratch.
   hidden node: Node? = null
 
-  hidden children: List<Node> = node?.children ?? List()
-
-  hidden text: String? = node?.text
-
   /// The source span of this node.
   @ConvertSpan
   span: Span = node?.span ?? new Span {}
-
-  /// All terminal children (keywords, punctuation, operators).
-  hidden terminals: List<Node> = children.filter((n) -> n.type == "terminal")
-
-  /// All comment children.
-  hidden comments: List<Node> =
-    children.filter((n) -> n.type == "line_comment" || n.type == "block_comment")
 
   /// This node rebuilt into a generic [Node].
   ///
@@ -456,33 +308,22 @@ abstract class ObjectMemberNode extends SyntaxNode
 /// The top-level module node.
 class ModuleNode extends SyntaxNode {
   /// The module declaration, if present.
-  declaration: ModuleDeclarationNode? =
-    let (n = node?.findChild("module_declaration"))
-      if (n == null) null else new ModuleDeclarationNode { node = n }
+  declaration: ModuleDeclarationNode?
 
   /// All imports in this module.
-  imports: List<ImportNode> =
-    let (importList = node?.findChild("import_list"))
-      if (importList == null)
-        List()
-      else
-        importList.findChildren("import").map((n) -> new ImportNode { node = n })
+  imports: List<ImportNode>
 
   /// All class declarations in this module.
-  classes: List<ClassNode> =
-    node?.findChildren("class")?.map((n) -> new ClassNode { node = n }) ?? List()
+  classes: List<ClassNode>
 
   /// All typealias declarations in this module.
-  typeAliases: List<TypeAliasNode> =
-    node?.findChildren("typealias")?.map((n) -> new TypeAliasNode { node = n }) ?? List()
+  typeAliases: List<TypeAliasNode>
 
   /// All top-level properties in this module.
-  properties: List<ClassPropertyNode> =
-    node?.findChildren("class_property")?.map((n) -> new ClassPropertyNode { node = n }) ?? List()
+  properties: List<ClassPropertyNode>
 
   /// All top-level methods in this module.
-  methods: List<ClassMethodNode> =
-    node?.findChildren("class_method")?.map((n) -> new ClassMethodNode { node = n }) ?? List()
+  methods: List<ClassMethodNode>
 
   fixed builtNode =
     let (self = this)
@@ -508,37 +349,23 @@ class ModuleNode extends SyntaxNode {
 
 /// A module declaration (including doc comment, annotations, modifiers, name, amends/extends).
 class ModuleDeclarationNode extends SyntaxNode {
-  local moduleDefinition: Node? = node?.findChild("module_definition")
-
   /// The doc comment on the module declaration, if present.
-  docComment: DocCommentNode? =
-    let (n = node?.findChild("doc_comment"))
-      if (n == null) null else new DocCommentNode { node = n }
+  docComment: DocCommentNode?
 
   /// Annotations on the module declaration.
-  annotations: List<AnnotationNode> =
-    node?.findChildren("annotation")?.map((n) -> new AnnotationNode { node = n }) ?? List()
+  annotations: List<AnnotationNode>
 
   /// The modifiers on the module declaration.
-  modifiers: List<String> = if (moduleDefinition == null) List() else modifiersOf(moduleDefinition)
+  modifiers: List<String>
 
   /// The qualified name of the module, if present.
-  name: String? =
-    if (moduleDefinition == null)
-      null
-    else
-      let (n = moduleDefinition?.findChild("qualified_identifier"))
-        if (n == null) null else qualifiedName(n)
+  name: QualifiedIdentifierNode?
 
   /// The URI string of the amended module, if any. Mutually exclusive with [extendsUri].
-  amendsUri: String? =
-    let (n = node?.findChild("amends_clause"))
-      if (n == null) null else getStringChars(n)
+  amendsUri: String?
 
   /// The URI string of the extended module, if any. Mutually exclusive with [amendsUri].
-  extendsUri: String? =
-    let (n = node?.findChild("extends_clause"))
-      if (n == null) null else getStringChars(n)
+  extendsUri: String?
 
   fixed builtNode =
     let (self = this)
@@ -555,7 +382,7 @@ class ModuleDeclarationNode extends SyntaxNode {
                     List(
                       if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
                       (terminal) { text = "module" },
-                      qualifiedIdentifierNode(self.name!!),
+                      self.name.builtNode,
                     ).filterNonNull()
                 }
               else if (!self.modifiers.isEmpty)
@@ -582,15 +409,13 @@ class ModuleDeclarationNode extends SyntaxNode {
 /// An import declaration.
 class ImportNode extends SyntaxNode {
   /// Whether this is a glob import (`import*`).
-  isGlob: Boolean = terminals.firstOrNull?.text == "import*"
+  isGlob: Boolean
 
   /// The URI string of the import.
-  uri: String = getStringChars(node)
+  uri: String
 
   /// The alias for this import, if present.
-  alias: String? =
-    let (aliasNode = node?.findChild("import_alias"))
-      if (aliasNode == null) null else identifierText(aliasNode)
+  alias: IdentifierNode?
 
   fixed builtNode =
     let (self = this)
@@ -605,8 +430,7 @@ class ImportNode extends SyntaxNode {
             else
               new Node {
                 type = "import_alias"
-                children =
-                  List((terminal) { text = "as" }, (identifierLeaf) { text = self.alias!! })
+                children = List((terminal) { text = "as" }, self.alias.builtNode)
               },
           ).filterNonNull()
       }
@@ -614,48 +438,26 @@ class ImportNode extends SyntaxNode {
 
 /// A class declaration.
 class ClassNode extends SyntaxNode {
-  local header: Node? = node?.findChild("class_header")
-
   /// The doc comment, if present.
-  docComment: DocCommentNode? =
-    let (n = node?.findChild("doc_comment"))
-      if (n == null) null else new DocCommentNode { node = n }
+  docComment: DocCommentNode?
 
   /// Annotations on the class.
-  annotations: List<AnnotationNode> =
-    node?.findChildren("annotation")?.map((n) -> new AnnotationNode { node = n }) ?? List()
+  annotations: List<AnnotationNode>
 
   /// The modifiers on the class.
-  modifiers: List<String> = modifiersOf(header)
+  modifiers: List<String>
 
   /// The class name.
-  name: String = identifierText(header)
+  identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode> =
-    let (tpl = header?.findChild("type_parameter_list"))
-      if (tpl == null)
-        List()
-      else
-        let (elems = tpl.findChild("type_parameter_list_elements"))
-          if (elems == null)
-            List()
-          else
-            elems.findChildren("type_parameter").map((n) -> new TypeParameterNode { node = n })
+  typeParameters: List<TypeParameterNode>
 
   /// The supertype this class extends, if present.
-  extendsType: TypeNode? =
-    let (ext = header?.findChild("class_header_extends"))
-      if (ext == null)
-        null
-      else
-        let (t = ext.findTypeChild())
-          if (t == null) null else wrapTypeNode(t)
+  extendsType: TypeNode?
 
   /// The class body, if present.
-  body: ClassBodyNode? =
-    let (n = node?.findChild("class_body"))
-      if (n == null) null else new ClassBodyNode { node = n }
+  body: ClassBodyNode?
 
   fixed builtNode =
     let (self = this)
@@ -671,7 +473,7 @@ class ClassNode extends SyntaxNode {
                   List(
                     if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
                     (terminal) { text = "class" },
-                    (identifierLeaf) { text = self.name },
+                    self.identifier.builtNode,
                   ).filterNonNull()
                     + typeParameterListNodes(self.typeParameters)
                     + (
@@ -692,40 +494,23 @@ class ClassNode extends SyntaxNode {
 
 /// A typealias declaration.
 class TypeAliasNode extends SyntaxNode {
-  local header: Node? = node?.findChild("typealias_header")
-
   /// The doc comment, if present.
-  docComment: DocCommentNode? =
-    let (n = node?.findChild("doc_comment"))
-      if (n == null) null else new DocCommentNode { node = n }
+  docComment: DocCommentNode?
 
   /// Annotations on the typealias.
-  annotations: List<AnnotationNode> =
-    node?.findChildren("annotation")?.map((n) -> new AnnotationNode { node = n }) ?? List()
+  annotations: List<AnnotationNode>
 
   /// The modifiers on the typealias.
-  modifiers: List<String> = modifiersOf(header)
+  modifiers: List<String>
 
   /// The typealias name.
-  name: String = identifierText(header)
+  identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode> =
-    let (tpl = header?.findChild("type_parameter_list"))
-      if (tpl == null)
-        List()
-      else
-        let (elems = tpl.findChild("type_parameter_list_elements"))
-          if (elems == null)
-            List()
-          else
-            elems.findChildren("type_parameter").map((n) -> new TypeParameterNode { node = n })
+  typeParameters: List<TypeParameterNode>
 
   /// The type that this alias resolves to.
-  type: TypeNode =
-    let (body = node?.findChild("typealias_body"))
-    let (t = body!!.findTypeChild())
-      wrapTypeNode(t!!)
+  type: TypeNode
 
   fixed builtNode =
     let (self = this)
@@ -740,7 +525,7 @@ class TypeAliasNode extends SyntaxNode {
                 List(
                   if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
                   (terminal) { text = "typealias" },
-                  (identifierLeaf) { text = self.name },
+                  self.identifier.builtNode,
                 ).filterNonNull()
                   + typeParameterListNodes(self.typeParameters)
                   + List((terminal) { text = "=" })
@@ -754,21 +539,11 @@ class TypeAliasNode extends SyntaxNode {
 
 /// A class body delimited by braces.
 class ClassBodyNode extends SyntaxNode {
-  local elements: Node? = node?.findChild("class_body_elements")
-
   /// Properties declared in this class body.
-  properties: List<ClassPropertyNode> =
-    if (elements == null)
-      List()
-    else
-      elements.findChildren("class_property").map((n) -> new ClassPropertyNode { node = n })
+  properties: List<ClassPropertyNode>
 
   /// Methods declared in this class body.
-  methods: List<ClassMethodNode> =
-    if (elements == null)
-      List()
-    else
-      elements.findChildren("class_method").map((n) -> new ClassMethodNode { node = n })
+  methods: List<ClassMethodNode>
 
   fixed builtNode =
     let (self = this)
@@ -792,41 +567,26 @@ class ClassBodyNode extends SyntaxNode {
 
 /// A class property declaration.
 class ClassPropertyNode extends SyntaxNode {
-  local propHeader: Node? = node?.findChild("class_property_header")
-  local headerBegin: Node? = propHeader?.findChild("class_property_header_begin")
-
   /// The doc comment, if present.
-  docComment: DocCommentNode? =
-    let (n = node?.findChild("doc_comment"))
-      if (n == null) null else new DocCommentNode { node = n }
+  docComment: DocCommentNode?
 
   /// Annotations on the property.
-  annotations: List<AnnotationNode> =
-    node?.findChildren("annotation")?.map((n) -> new AnnotationNode { node = n }) ?? List()
+  annotations: List<AnnotationNode>
 
   /// The modifiers on the property.
-  modifiers: List<String> = modifiersOf(headerBegin)
+  modifiers: List<String>
 
   /// The property name.
-  name: String = identifierText(headerBegin)
+  identifier: IdentifierNode
 
   /// The type annotation, if present.
-  typeAnnotation: TypeNode? =
-    let (n = propHeader?.findChild("type_annotation"))
-      if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
+  typeAnnotation: TypeNode?
 
   /// The value expression, if present (from `= expr`).
-  value: ExprNode? =
-    let (body = node?.findChild("class_property_body"))
-      if (body == null)
-        null
-      else
-        let (e = body.findExprChild())
-          if (e == null) null else wrapExpr(e)
+  value: ExprNode?
 
   /// Object bodies for amending (from `{ ... }` blocks).
-  objectBodies: List<ObjectBodyNode> =
-    node?.findChildren("object_body")?.map((n) -> new ObjectBodyNode { node = n }) ?? List()
+  objectBodies: List<ObjectBodyNode>
 
   fixed builtNode =
     let (self = this)
@@ -841,9 +601,10 @@ class ClassPropertyNode extends SyntaxNode {
                 List(new Node {
                   type = "class_property_header_begin"
                   children =
-                    List(if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers), (
-                      identifierLeaf
-                    ) { text = self.name }).filterNonNull()
+                    List(
+                      if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
+                      self.identifier.builtNode,
+                    ).filterNonNull()
                 })
                   + typeAnnotationNodes(self.typeAnnotation)
             })
@@ -864,53 +625,29 @@ class ClassPropertyNode extends SyntaxNode {
 
 /// A class method declaration.
 class ClassMethodNode extends SyntaxNode {
-  local methodHeader: Node? = node?.findChild("class_method_header")
-
   /// The doc comment, if present.
-  docComment: DocCommentNode? =
-    let (n = node?.findChild("doc_comment"))
-      if (n == null) null else new DocCommentNode { node = n }
+  docComment: DocCommentNode?
 
   /// Annotations on the method.
-  annotations: List<AnnotationNode> =
-    node?.findChildren("annotation")?.map((n) -> new AnnotationNode { node = n }) ?? List()
+  annotations: List<AnnotationNode>
 
   /// The modifiers on the method.
-  modifiers: List<String> = modifiersOf(methodHeader)
+  modifiers: List<String>
 
   /// The method name.
-  name: String = identifierText(methodHeader)
+  identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode> =
-    let (tpl = node?.findChild("type_parameter_list"))
-      if (tpl == null)
-        List()
-      else
-        let (elems = tpl.findChild("type_parameter_list_elements"))
-          if (elems == null)
-            List()
-          else
-            elems.findChildren("type_parameter").map((n) -> new TypeParameterNode { node = n })
+  typeParameters: List<TypeParameterNode>
 
   /// The parameters.
-  parameters: List<ParameterNode> =
-    let (pl = node?.findChild("parameter_list"))
-      parametersOf(pl!!)
+  parameters: List<ParameterNode>
 
   /// The return type annotation, if present.
-  returnType: TypeNode? =
-    let (n = node?.findChild("type_annotation"))
-      if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
+  returnType: TypeNode?
 
   /// The method body expression, if present. Null for abstract methods.
-  body: ExprNode? =
-    let (bodyNode = node?.findChild("class_method_body"))
-      if (bodyNode == null)
-        null
-      else
-        let (e = bodyNode?.findExprChild())
-          if (e == null) null else wrapExpr(e)
+  body: ExprNode?
 
   fixed builtNode =
     let (self = this)
@@ -925,7 +662,7 @@ class ClassMethodNode extends SyntaxNode {
                 List(
                   if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
                   (terminal) { text = "function" },
-                  (identifierLeaf) { text = self.name },
+                  self.identifier.builtNode,
                 ).filterNonNull()
             })
             + typeParameterListNodes(self.typeParameters)
@@ -948,24 +685,11 @@ class ClassMethodNode extends SyntaxNode {
 
 /// An object body delimited by braces.
 class ObjectBodyNode extends SyntaxNode {
-  local paramList: Node? = node?.findChild("object_parameter_list")
-  local memberList: Node? = node?.findChild("object_member_list")
-
   /// Parameters for this object body (e.g., `{ x, y -> ... }`).
-  parameters: List<ParameterNode> =
-    if (paramList == null)
-      List()
-    else
-      paramList.findChildren("parameter").map((n) -> new ParameterNode { node = n })
+  parameters: List<ParameterNode>
 
   /// All object members (properties, methods, elements, entries, spreads, generators).
-  members: List<ObjectMemberNode> =
-    if (memberList == null)
-      List()
-    else
-      memberList.children
-        .filter((c) -> isObjectMemberType(c.type))
-        .map((n) -> wrapObjectMember(n))
+  members: List<ObjectMemberNode>
 
   fixed builtNode =
     let (self = this)
@@ -997,32 +721,20 @@ class ObjectBodyNode extends SyntaxNode {
 
 /// An object property declaration.
 class ObjectPropertyNode extends ObjectMemberNode {
-  local propHeader: Node? = node?.findChild("object_property_header")
-  local headerBegin: Node? = propHeader?.findChild("object_property_header_begin")
-
   /// The modifiers on the property.
-  modifiers: List<String> = modifiersOf(headerBegin)
+  modifiers: List<String>
 
   /// The property name.
-  name: String = identifierText(headerBegin)
+  identifier: IdentifierNode
 
   /// The type annotation, if present.
-  typeAnnotation: TypeNode? =
-    let (n = propHeader?.findChild("type_annotation"))
-      if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
+  typeAnnotation: TypeNode?
 
   /// The value expression, if present (from `= expr`).
-  value: ExprNode? =
-    let (body = node?.findChild("object_property_body"))
-      if (body == null)
-        null
-      else
-        let (e = body.findExprChild())
-          if (e == null) null else wrapExpr(e)
+  value: ExprNode?
 
   /// Object bodies for amending.
-  objectBodies: List<ObjectBodyNode> =
-    node?.findChildren("object_body")?.map((n) -> new ObjectBodyNode { node = n }) ?? List()
+  objectBodies: List<ObjectBodyNode>
 
   fixed builtNode =
     let (self = this)
@@ -1036,7 +748,7 @@ class ObjectPropertyNode extends ObjectMemberNode {
                 type = "object_property_header_begin"
                 children =
                   (if (self.modifiers.isEmpty) List() else List(modifierListNode(self.modifiers)))
-                    + List((identifierLeaf) { text = self.name })
+                    + List(self.identifier.builtNode)
               })
                 + typeAnnotationNodes(self.typeAnnotation)
           })
@@ -1057,40 +769,23 @@ class ObjectPropertyNode extends ObjectMemberNode {
 
 /// An object method declaration.
 class ObjectMethodNode extends ObjectMemberNode {
-  local methodHeader: Node? = node?.findChild("class_method_header")
-
   /// The modifiers on the method.
-  modifiers: List<String> = modifiersOf(methodHeader)
+  modifiers: List<String>
 
   /// The method name.
-  name: String = identifierText(methodHeader)
+  identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode> =
-    let (tpl = node?.findChild("type_parameter_list"))
-      if (tpl == null)
-        List()
-      else
-        let (elems = tpl.findChild("type_parameter_list_elements"))
-          if (elems == null)
-            List()
-          else
-            elems.findChildren("type_parameter").map((n) -> new TypeParameterNode { node = n })
+  typeParameters: List<TypeParameterNode>
 
   /// The parameters.
-  parameters: List<ParameterNode> =
-    let (pl = node?.findChild("parameter_list"))
-      parametersOf(pl!!)
+  parameters: List<ParameterNode>
 
   /// The return type annotation, if present.
-  returnType: TypeNode? =
-    let (n = node?.findChild("type_annotation"))
-      if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
+  returnType: TypeNode?
 
   /// The method body expression.
-  body: ExprNode =
-    let (bodyNode = node?.findChild("class_method_body"))
-      wrapExpr(bodyNode!!.findExprChild()!!)
+  body: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1103,7 +798,7 @@ class ObjectMethodNode extends ObjectMemberNode {
               List(
                 if (self.modifiers.isEmpty) null else modifierListNode(self.modifiers),
                 (terminal) { text = "function" },
-                (identifierLeaf) { text = self.name },
+                self.identifier.builtNode,
               ).filterNonNull()
           })
             + typeParameterListNodes(self.typeParameters)
@@ -1122,7 +817,7 @@ class ObjectMethodNode extends ObjectMemberNode {
 /// An object element (a positional expression in an object body).
 class ObjectElementNode extends ObjectMemberNode {
   /// The expression value.
-  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1134,19 +829,14 @@ class ObjectElementNode extends ObjectMemberNode {
 
 /// An object entry (`[key] = value` or `[key] { ... }`).
 class ObjectEntryNode extends ObjectMemberNode {
-  local entryHeader: Node? = node?.findChild("object_entry_header")
-
   /// The key expression.
-  key: ExprNode = wrapExpr(entryHeader?.findExprChild()!!)
+  key: ExprNode
 
   /// The value expression, if present (from `[key] = value`).
-  value: ExprNode? =
-    let (e = node?.findExprChildren()?.findOrNull((c) -> c != entryHeader?.findExprChild()))
-      if (e == null) null else wrapExpr(e)
+  value: ExprNode?
 
   /// Object bodies for amending.
-  objectBodies: List<ObjectBodyNode> =
-    node?.findChildren("object_body")?.map((n) -> new ObjectBodyNode { node = n }) ?? List()
+  objectBodies: List<ObjectBodyNode>
 
   fixed builtNode =
     let (self = this)
@@ -1175,10 +865,10 @@ class ObjectEntryNode extends ObjectMemberNode {
 /// An object spread (`...expr` or `...?expr`).
 class ObjectSpreadNode extends ObjectMemberNode {
   /// Whether this is a nullable spread (`...?`).
-  isNullable: Boolean = terminals.firstOrNull?.text == "...?"
+  isNullable: Boolean
 
   /// The spread expression.
-  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1194,17 +884,14 @@ class ObjectSpreadNode extends ObjectMemberNode {
 
 /// A member predicate (`[[condition]] = value` or `[[condition]] { ... }`).
 class MemberPredicateNode extends ObjectMemberNode {
-  local exprs: List<Node> = node?.findExprChildren() ?? List()
-
   /// The condition expression.
-  condition: ExprNode = wrapExpr(exprs.first)
+  condition: ExprNode
 
   /// The value expression, if present.
-  value: ExprNode? = if (exprs.length < 2) null else wrapExpr(exprs[1])
+  value: ExprNode?
 
   /// Object bodies for amending.
-  objectBodies: List<ObjectBodyNode> =
-    node?.findChildren("object_body")?.map((n) -> new ObjectBodyNode { node = n }) ?? List()
+  objectBodies: List<ObjectBodyNode>
 
   fixed builtNode =
     let (self = this)
@@ -1228,25 +915,17 @@ class MemberPredicateNode extends ObjectMemberNode {
 
 /// A `for (param in iterable) { ... }` generator.
 class ForGeneratorNode extends ObjectMemberNode {
-  local forHeader: Node? = node?.findChild("for_generator_header")
-  local forDef: Node? = forHeader?.findChild("for_generator_header_definition")
-  local forDefHeader: Node? = forDef?.findChild("for_generator_header_definition_header")
-  local paramNodes: List<Node> = forDefHeader?.findChildren("parameter") ?? List()
-
   /// The key parameter (first parameter when two are present), if present.
-  keyParameter: ParameterNode? =
-    if (paramNodes.length < 2) null else new ParameterNode { node = paramNodes.first }
+  keyParameter: ParameterNode?
 
   /// The value parameter (or the only parameter when just one is present).
-  valueParameter: ParameterNode = new ParameterNode { node = paramNodes.last }
+  valueParameter: ParameterNode
 
   /// The iterable expression.
-  iterable: ExprNode = wrapExpr(forDef?.findExprChild()!!)
+  iterable: ExprNode
 
   /// The body.
-  body: ObjectBodyNode =
-    let (n = node?.findChild("object_body"))
-      new ObjectBodyNode { node = n!! }
+  body: ObjectBodyNode
 
   fixed builtNode =
     let (self = this)
@@ -1292,18 +971,14 @@ class ForGeneratorNode extends ObjectMemberNode {
 
 /// A `when (condition) { ... }` generator.
 class WhenGeneratorNode extends ObjectMemberNode {
-  local whenHeader: Node? = node?.findChild("when_generator_header")
-  local bodyNodes: List<Node> = node?.findChildren("object_body") ?? List()
-
   /// The condition expression.
-  condition: ExprNode = wrapExpr(whenHeader?.findExprChild()!!)
+  condition: ExprNode
 
   /// The "then" body.
-  thenBody: ObjectBodyNode = new ObjectBodyNode { node = bodyNodes.first }
+  thenBody: ObjectBodyNode
 
   /// The "else" body, if present.
-  elseBody: ObjectBodyNode? =
-    if (bodyNodes.length < 2) null else new ObjectBodyNode { node = bodyNodes[1] }
+  elseBody: ObjectBodyNode?
 
   fixed builtNode =
     let (self = this)
@@ -1355,7 +1030,7 @@ class NullLiteralExprNode extends ExprNode {
 /// A boolean literal expression (`true` or `false`).
 class BoolLiteralExprNode extends ExprNode {
   /// The boolean value.
-  value: Boolean = node?.text == "true"
+  value: Boolean
 
   fixed builtNode =
     let (self = this)
@@ -1365,7 +1040,7 @@ class BoolLiteralExprNode extends ExprNode {
 /// An integer literal expression.
 class IntLiteralExprNode extends ExprNode {
   /// The integer literal (e.g. `42`, `"0xFF"`).
-  value: Int | String = node?.text ?? ""
+  value: Int | String
 
   fixed builtNode =
     let (self = this)
@@ -1375,7 +1050,7 @@ class IntLiteralExprNode extends ExprNode {
 /// A float literal expression.
 class FloatLiteralExprNode extends ExprNode {
   /// The float literal (e.g. `3.14`, `"1.0e10"`).
-  value: Float | String = node?.text ?? ""
+  value: Float | String
 
   fixed builtNode =
     let (self = this)
@@ -1385,7 +1060,7 @@ class FloatLiteralExprNode extends ExprNode {
 /// A single-line string literal expression.
 class SingleLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, interpolations).
-  parts: List<StringPartNode> = buildStringParts(children)
+  parts: List<StringPartNode>
 
   fixed builtNode =
     let (self = this)
@@ -1403,7 +1078,7 @@ class SingleLineStringLiteralExprNode extends ExprNode {
 /// Use [StringNewlineNode] entries in [parts] to separate lines.
 class MultiLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, newlines, interpolations).
-  parts: List<StringPartNode> = buildStringParts(children)
+  parts: List<StringPartNode>
 
   fixed builtNode =
     let (self = this)
@@ -1425,19 +1100,17 @@ class MultiLineStringLiteralExprNode extends ExprNode {
 /// An unqualified access expression (`name` or `name(args)`).
 class UnqualifiedAccessExprNode extends ExprNode {
   /// The identifier being accessed.
-  identifier: String = identifierText(node!!)
+  identifier: IdentifierNode
 
   /// The arguments, if this is a function call. Null for a plain identifier access.
-  arguments: List<ExprNode>? =
-    let (n = node?.findChild("argument_list"))
-      if (n == null) null else argumentsOf(n)
+  arguments: List<ExprNode>?
 
   fixed builtNode =
     let (self = this)
       new Node {
         type = "unqualified_access_expr"
         children =
-          List((identifierLeaf) { text = self.identifier })
+          List(self.identifier.builtNode)
             + (if (self.arguments == null) List() else List(argumentListNode(self.arguments!!)))
       }
 }
@@ -1446,21 +1119,16 @@ class UnqualifiedAccessExprNode extends ExprNode {
 /// optionally with arguments for method calls).
 class QualifiedAccessExprNode extends ExprNode {
   /// The receiver expression.
-  receiver: ExprNode = wrapExpr((node?.findExprChildren() ?? List()).first)
+  receiver: ExprNode
 
   /// Whether this is a null-safe access (`?.`).
-  isNullSafe: Boolean = node?.findChild("operator")?.text == "?."
+  isNullSafe: Boolean
 
   /// The accessed member name.
-  member: String =
-    let (m = (node?.findChildren("unqualified_access_expr") ?? List()).last)
-      identifierText(m)
+  identifier: IdentifierNode
 
   /// The arguments, if this is a method call. Null for a property access.
-  arguments: List<ExprNode>? =
-    let (m = (node?.findChildren("unqualified_access_expr") ?? List()).last)
-    let (n = m.findChild("argument_list"))
-      if (n == null) null else argumentsOf(n)
+  arguments: List<ExprNode>?
 
   fixed builtNode =
     let (self = this)
@@ -1473,7 +1141,7 @@ class QualifiedAccessExprNode extends ExprNode {
             new Node {
               type = "unqualified_access_expr"
               children =
-                List((identifierLeaf) { text = self.member })
+                List(self.identifier.builtNode)
                   + (
                     if (self.arguments == null) List() else List(argumentListNode(self.arguments!!))
                   )
@@ -1485,10 +1153,10 @@ class QualifiedAccessExprNode extends ExprNode {
 /// A subscript expression (`receiver[index]`).
 class SubscriptExprNode extends ExprNode {
   /// The receiver expression.
-  receiver: ExprNode = wrapExpr(node?.findExprChildren().first)
+  receiver: ExprNode
 
   /// The index expression.
-  index: ExprNode = wrapExpr(node?.findExprChildren().getOrNull(1)!!)
+  index: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1520,22 +1188,14 @@ class SuperSubscriptExprNode extends ExprNode {
 
 /// An `if (condition) thenExpr else elseExpr` expression.
 class IfExprNode extends ExprNode {
-  local ifHeader: Node = node?.findChild("if_header")!!
-  local ifCondition: Node = ifHeader.findChild("if_condition")!!
-  local ifConditionExpr: Node = ifCondition.findChild("if_condition_expr")!!
-
   /// The condition expression.
-  condition: ExprNode = wrapExpr(ifConditionExpr.findExprChild()!!)
+  condition: ExprNode
 
   /// The then-branch expression.
-  thenExpr: ExprNode =
-    let (thenNode = node?.findChild("if_then_expr"))
-      wrapExpr(thenNode!!.findExprChild()!!)
+  thenExpr: ExprNode
 
   /// The else-branch expression.
-  elseExpr: ExprNode =
-    let (elseNode = node?.findChild("if_else_expr"))
-      wrapExpr(elseNode!!.findExprChild()!!)
+  elseExpr: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1577,19 +1237,14 @@ class IfExprNode extends ExprNode {
 
 /// A `let (param = value) body` expression.
 class LetExprNode extends ExprNode {
-  local letParamDef: Node = node?.findChild("let_parameter_definition")!!
-  local letParam: Node = letParamDef.findChild("let_parameter")!!
-
   /// The let-binding parameter.
-  parameter: ParameterNode =
-    let (p = letParam.findChild("parameter"))
-      new ParameterNode { node = p!! }
+  parameter: ParameterNode
 
   /// The binding value expression.
-  bindingValue: ExprNode = wrapExpr(letParam.findExprChild()!!)
+  bindingValue: ExprNode
 
   /// The body expression.
-  body: ExprNode = wrapExpr(node?.findExprChild()!!)
+  body: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1623,7 +1278,7 @@ class LetExprNode extends ExprNode {
 /// A `throw(expr)` expression.
 class ThrowExprNode extends ExprNode {
   /// The expression being thrown.
-  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1642,7 +1297,7 @@ class ThrowExprNode extends ExprNode {
 /// A `trace(expr)` expression.
 class TraceExprNode extends ExprNode {
   /// The expression being traced.
-  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1661,10 +1316,10 @@ class TraceExprNode extends ExprNode {
 /// An `import("uri")` or `import*("uri")` expression.
 class ImportExprNode extends ExprNode {
   /// Whether this is a glob import expression (`import*`).
-  isGlob: Boolean = terminals.firstOrNull?.text == "import*"
+  isGlob: Boolean
 
   /// The import URI string.
-  uri: String = getStringChars(node)
+  uri: String
 
   fixed builtNode =
     let (self = this)
@@ -1683,11 +1338,10 @@ class ImportExprNode extends ExprNode {
 /// A `read(expr)`, `read*(expr)`, or `read?(expr)` expression.
 class ReadExprNode extends ExprNode {
   /// The keyword used (`"read"`, `"read?"`, or `"read*"`).
-  keyword: "read" | "read?" | "read*" =
-    (terminals.firstOrNull?.text ?? "read") as "read" | "read?" | "read*"
+  keyword: "read" | "read?" | "read*"
 
   /// The expression to be read.
-  expression: ExprNode = wrapExpr(node?.findExprChild()!!)
+  expression: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1705,17 +1359,11 @@ class ReadExprNode extends ExprNode {
 
 /// A `new Type { ... }` expression.
 class NewExprNode extends ExprNode {
-  local newHeader: Node = node?.findChild("new_header")!!
-
   /// The type being constructed, if present.
-  type: TypeNode? =
-    let (t = newHeader.findTypeChild())
-      if (t == null) null else wrapTypeNode(t)
+  type: TypeNode?
 
   /// The object body.
-  body: ObjectBodyNode =
-    let (n = node?.findChild("object_body"))
-      new ObjectBodyNode { node = n!! }
+  body: ObjectBodyNode
 
   fixed builtNode =
     let (self = this)
@@ -1739,12 +1387,10 @@ class NewExprNode extends ExprNode {
 /// An `(expr) { ... }` amends expression.
 class AmendsExprNode extends ExprNode {
   /// The expression being amended.
-  parentExpr: ExprNode = wrapExpr((node?.findExprChildren() ?? List()).first)
+  parentExpr: ExprNode
 
   /// The object body.
-  body: ObjectBodyNode =
-    let (n = node?.findChild("object_body"))
-      new ObjectBodyNode { node = n!! }
+  body: ObjectBodyNode
 
   fixed builtNode =
     let (self = this)
@@ -1756,21 +1402,17 @@ class AmendsExprNode extends ExprNode {
 
 /// A binary operator expression (`left op right`), including `is`/`as`.
 class BinaryOpExprNode extends ExprNode {
-  local exprs: List<Node> = node?.findExprChildren() ?? List()
-
   /// The operator string.
-  operator: String = node?.findChild("operator")?.text ?? ""
+  operator: String
 
   /// The left-hand expression.
-  left: ExprNode = wrapExpr(exprs.first)
+  left: ExprNode
 
   /// The right-hand expression, if present (not present for `is`/`as` which use [rightType]).
-  right: ExprNode? = if (exprs.length < 2) null else wrapExpr(exprs[1])
+  right: ExprNode?
 
   /// The right-hand type, if this is an `is` or `as` operation.
-  rightType: TypeNode? =
-    let (t = node?.findTypeChild())
-      if (t == null) null else wrapTypeNode(t)
+  rightType: TypeNode?
 
   fixed builtNode =
     let (self = this)
@@ -1795,7 +1437,7 @@ class BinaryOpExprNode extends ExprNode {
 /// A unary minus expression (`-expr`).
 class UnaryMinusExprNode extends ExprNode {
   /// The operand expression.
-  operand: ExprNode = wrapExpr(node?.findExprChild()!!)
+  operand: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1808,7 +1450,7 @@ class UnaryMinusExprNode extends ExprNode {
 /// A logical not expression (`!expr`).
 class LogicalNotExprNode extends ExprNode {
   /// The operand expression.
-  operand: ExprNode = wrapExpr(node?.findExprChild()!!)
+  operand: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1821,7 +1463,7 @@ class LogicalNotExprNode extends ExprNode {
 /// A non-null assertion expression (`expr!!`).
 class NonNullExprNode extends ExprNode {
   /// The operand expression.
-  operand: ExprNode = wrapExpr(node?.findExprChild()!!)
+  operand: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1834,14 +1476,10 @@ class NonNullExprNode extends ExprNode {
 /// A function literal expression (`(params) -> body`).
 class FunctionLiteralExprNode extends ExprNode {
   /// The parameters.
-  parameters: List<ParameterNode> =
-    let (pl = node?.findChild("parameter_list"))
-      parametersOf(pl!!)
+  parameters: List<ParameterNode>
 
   /// The body expression.
-  body: ExprNode =
-    let (bodyNode = node?.findChild("function_literal_body"))
-      wrapExpr(bodyNode!!.findExprChild()!!)
+  body: ExprNode
 
   fixed builtNode =
     let (self = this)
@@ -1862,13 +1500,7 @@ class FunctionLiteralExprNode extends ExprNode {
 /// A parenthesized expression (`(expr)`).
 class ParenthesizedExprNode extends ExprNode {
   /// The inner expression, if present (may be empty for `()`).
-  expression: ExprNode? =
-    let (elems = node?.findChild("parenthesized_expr_elements"))
-      if (elems == null)
-        null
-      else
-        let (e = elems.findExprChild())
-          if (e == null) null else wrapExpr(e)
+  expression: ExprNode?
 
   fixed builtNode =
     let (self = this)
@@ -1903,19 +1535,11 @@ class ModuleTypeNode extends TypeNode {
 
 /// A declared type (e.g., `String`, `List<Int>`).
 class DeclaredTypeNode extends TypeNode {
-  /// The type name (dotted, e.g. `"List"` or `"foo.Bar"`).
-  name: String =
-    let (n = node?.findChild("qualified_identifier"))
-      qualifiedName(n!!)
+  /// The type name (dotted, e.g. `List` or `foo.Bar`).
+  name: QualifiedIdentifierNode
 
   /// The type arguments.
-  typeArguments: List<TypeNode> =
-    let (tal = node?.findChild("type_argument_list"))
-      if (tal == null)
-        List()
-      else
-        let (elems = tal.findChild("type_argument_list_elements"))
-          if (elems == null) List() else elems.findTypeChildren().map((n) -> wrapTypeNode(n))
+  typeArguments: List<TypeNode>
 
   fixed builtNode =
     let (self = this)
@@ -1923,9 +1547,9 @@ class DeclaredTypeNode extends TypeNode {
         type = "declared_type"
         children =
           if (self.typeArguments.isEmpty)
-            List(qualifiedIdentifierNode(self.name))
+            List(self.name.builtNode)
           else
-            List(qualifiedIdentifierNode(self.name), new Node {
+            List(self.name.builtNode, new Node {
               type = "type_argument_list"
               children =
                 List(
@@ -1943,7 +1567,7 @@ class DeclaredTypeNode extends TypeNode {
 /// A nullable type (`Type?`).
 class NullableTypeNode extends TypeNode {
   /// The base type.
-  baseType: TypeNode = wrapTypeNode(node?.findTypeChild()!!)
+  baseType: TypeNode
 
   fixed builtNode =
     let (self = this)
@@ -1956,7 +1580,7 @@ class NullableTypeNode extends TypeNode {
 /// A union type (`TypeA|TypeB|TypeC`).
 class UnionTypeNode extends TypeNode {
   /// The member types.
-  members: List<TypeNode> = node?.findTypeChildren()?.map((n) -> wrapTypeNode(n)) ?? List()
+  members: List<TypeNode>
 
   fixed builtNode =
     let (self = this)
@@ -1973,15 +1597,11 @@ class UnionTypeNode extends TypeNode {
 
 /// A function type (`(ParamTypes) -> ReturnType`).
 class FunctionTypeNode extends TypeNode {
-  local params: Node = node?.findChild("function_type_parameters")!!
-  local paramElems: Node? = params.findChild("parenthesized_type_elements")
-
   /// The parameter types.
-  parameterTypes: List<TypeNode> =
-    if (paramElems == null) List() else paramElems.findTypeChildren().map((n) -> wrapTypeNode(n))
+  parameterTypes: List<TypeNode>
 
   /// The return type.
-  returnType: TypeNode = wrapTypeNode((node?.findTypeChildren() ?? List()).last)
+  returnType: TypeNode
 
   fixed builtNode =
     let (self = this)
@@ -2013,13 +1633,10 @@ class FunctionTypeNode extends TypeNode {
 /// A constrained type (`Type(constraint)`).
 class ConstrainedTypeNode extends TypeNode {
   /// The base type.
-  baseType: TypeNode = wrapTypeNode(node?.findTypeChild()!!)
-
-  local constraint: Node = node?.findChild("constrained_type_constraint")!!
-  local constraintElems: Node = constraint.findChild("constrained_type_elements")!!
+  baseType: TypeNode
 
   /// The constraint expressions.
-  constraints: List<ExprNode> = constraintElems.findExprChildren().map((n) -> wrapExpr(n))
+  constraints: List<ExprNode>
 
   fixed builtNode =
     let (self = this)
@@ -2044,13 +1661,7 @@ class ConstrainedTypeNode extends TypeNode {
 /// A parenthesized type (`(Type)`).
 class ParenthesizedTypeNode extends TypeNode {
   /// The inner type, if present.
-  type: TypeNode? =
-    let (elems = node?.findChild("parenthesized_type_elements"))
-      if (elems == null)
-        null
-      else
-        let (t = elems.findTypeChild())
-          if (t == null) null else wrapTypeNode(t)
+  type: TypeNode?
 
   fixed builtNode =
     let (self = this)
@@ -2071,7 +1682,7 @@ class ParenthesizedTypeNode extends TypeNode {
 /// A string constant type (e.g., `"foo"`).
 class StringConstantTypeNode extends TypeNode {
   /// The string value.
-  value: String = getStringChars(node)
+  value: String
 
   fixed builtNode =
     let (self = this)
@@ -2084,12 +1695,10 @@ class StringConstantTypeNode extends TypeNode {
 /// An annotation (`@Type { ... }`).
 class AnnotationNode extends SyntaxNode {
   /// The annotation type.
-  type: TypeNode = wrapTypeNode(node?.findTypeChild()!!)
+  type: TypeNode
 
   /// The annotation body, if present.
-  body: ObjectBodyNode? =
-    let (n = node?.findChild("object_body"))
-      if (n == null) null else new ObjectBodyNode { node = n }
+  body: ObjectBodyNode?
 
   fixed builtNode =
     let (self = this)
@@ -2107,34 +1716,25 @@ class AnnotationNode extends SyntaxNode {
 /// A parameter declaration (`name`, `name: Type`, or `_`).
 class ParameterNode extends SyntaxNode {
   /// Whether this is a blank identifier parameter (`_`).
-  isBlankIdentifier: Boolean = name == "_"
+  isBlankIdentifier: Boolean
 
-  /// The parameter name. Use `"_"` for a wildcard parameter.
-  name: String =
-    let (id = node?.findChild("identifier"))
-      if (id != null)
-        id.text ?? ""
-      else if (children.findOrNull((c) -> c.type == "terminal" && c.text == "_") != null)
-        "_"
-      else
-        ""
+  /// The parameter name, or `null` for a wildcard parameter (`_`).
+  identifier: IdentifierNode?
 
   /// The type annotation, if present.
-  typeAnnotation: TypeNode? =
-    let (n = node?.findChild("type_annotation"))
-      if (n == null) null else wrapTypeNode(n.findTypeChild()!!)
+  typeAnnotation: TypeNode?
 
   fixed builtNode =
     let (self = this)
       new Node {
         type = "parameter"
         children =
-          if (self.name == "_")
+          if (self.identifier == null)
             List((terminal) { text = "_" })
           else if (self.typeAnnotation == null)
-            List((identifierLeaf) { text = self.name })
+            List(self.identifier.builtNode)
           else
-            List((identifierLeaf) { text = self.name })
+            List(self.identifier.builtNode)
               + typeAnnotationNodes(self.typeAnnotation)
       }
 }
@@ -2142,11 +1742,10 @@ class ParameterNode extends SyntaxNode {
 /// A type parameter declaration (`T`, `in T`, or `out T`).
 class TypeParameterNode extends SyntaxNode {
   /// The variance modifier (`"in"`, `"out"`, or null).
-  variance: ("in" | "out")? =
-    terminals.findOrNull((t) -> t.text == "in" || t.text == "out")?.text as ("in" | "out")?
+  variance: ("in" | "out")?
 
   /// The type parameter name.
-  name: String = identifierText(node!!)
+  identifier: IdentifierNode
 
   fixed builtNode =
     let (self = this)
@@ -2154,20 +1753,47 @@ class TypeParameterNode extends SyntaxNode {
         type = "type_parameter"
         children =
           if (self.variance == null)
-            List((identifierLeaf) { text = self.name })
+            List(self.identifier.builtNode)
           else
-            List((terminal) { text = self.variance!! }, (identifierLeaf) { text = self.name })
+            List((terminal) { text = self.variance!! }, self.identifier.builtNode)
+      }
+}
+
+/// An identifier (a name occurring in the source, e.g. a property or class name).
+class IdentifierNode extends SyntaxNode {
+  /// The identifier text.
+  value: String
+
+  fixed builtNode =
+    let (self = this)
+      new Node { type = "identifier"; text = self.value }
+}
+
+/// A qualified (dotted) identifier, e.g. `foo.bar.baz`.
+class QualifiedIdentifierNode extends SyntaxNode {
+  /// The parts of the qualified identifier.
+  identifiers: List<IdentifierNode>
+
+  /// The dotted name (e.g. `"foo.bar.baz"`).
+  value: String
+
+  fixed builtNode =
+    let (self = this)
+      new Node {
+        type = "qualified_identifier"
+        children =
+          self.identifiers
+            .map((i) -> i.builtNode)
+            .fold(List(), (acc: List<Node>, item: Node) ->
+              if (acc.isEmpty) List(item) else acc.add((terminal) { text = "." }).add(item)
+            )
       }
 }
 
 /// A doc comment.
 class DocCommentNode extends SyntaxNode {
   /// The body text of each line, without the leading `///`.
-  lines: List<String> =
-    (node?.findChildren("doc_comment_line") ?? List()).map((n) ->
-      let (l = n.text ?? "")
-        if (l.startsWith("///")) l.drop(3) else l
-    )
+  lines: List<String>
 
   fixed builtNode =
     let (self = this)
@@ -2189,7 +1815,7 @@ abstract class StringPartNode {
 /// A plain text part of a string literal.
 class StringCharsNode extends StringPartNode {
   /// The text content.
-  value: String = node?.text ?? ""
+  value: String
 
   function toNodes(): List<Node> =
     let (self = this)
@@ -2199,7 +1825,7 @@ class StringCharsNode extends StringPartNode {
 /// An escape sequence in a string literal (e.g., `"\\n"`, `"\\t"`).
 class StringEscapeNode extends StringPartNode {
   /// The escape sequence text including the leading backslash.
-  value: String = node?.text ?? ""
+  value: String
 
   function toNodes(): List<Node> =
     let (self = this)
@@ -2214,7 +1840,7 @@ class StringNewlineNode extends StringPartNode {
 /// An interpolation in a string literal (`\(expr)`).
 class StringInterpolationNode extends StringPartNode {
   /// The interpolated expression.
-  expression: ExprNode = wrapExpr(node!!)
+  expression: ExprNode
 
   function toNodes(): List<Node> =
     let (self = this)
@@ -2225,79 +1851,11 @@ class StringInterpolationNode extends StringPartNode {
       )
 }
 
-/// Build string parts from the children of a string literal node.
-local const function buildStringParts(cs: List<Node>): List<StringPartNode> =
-  // skip opening and closing terminals
-  let (inner = cs.drop(1).dropLast(1))
-    buildStringPartsInner(inner, 0, List())
-
-local const function buildStringPartsInner(
-  cs: List<Node>,
-  i: Int,
-  acc: List<StringPartNode>,
-): List<StringPartNode> =
-  if (i >= cs.length)
-    acc
-  else
-    let (c = cs[i])
-      if (c.type == "string_chars")
-        buildStringPartsInner(cs, i + 1, acc.add(new StringCharsNode { node = c }))
-      else if (c.type == "string_escape")
-        buildStringPartsInner(cs, i + 1, acc.add(new StringEscapeNode { node = c }))
-      else if (c.type == "string_newline")
-        buildStringPartsInner(cs, i + 1, acc.add(new StringNewlineNode { node = c }))
-      else if (c.type == "terminal" && isInterpolationStart(c))
-        let (exprAndClose = findInterpolationExpr(cs, i + 1))
-          buildStringPartsInner(
-            cs,
-            exprAndClose.second,
-            acc.add(new StringInterpolationNode { node = exprAndClose.first }),
-          )
-      else if (c.type == "line_comment" || c.type == "block_comment" || c.type == "semicolon")
-        // skip affixes
-        buildStringPartsInner(cs, i + 1, acc)
-      else
-        // skip other terminals (shouldn't normally happen)
-        buildStringPartsInner(cs, i + 1, acc)
-
-local const function isInterpolationStart(n: Node): Boolean =
-  let (t = n.text)
-    if (t == null)
-      false
-    else
-      t.endsWith("(") && (t.startsWith("\\") || t.startsWith("#"))
-
-/// Find the interpolation expression and return it along with the index past the closing paren.
-local const function findInterpolationExpr(cs: List<Node>, startIdx: Int): Pair<Node, Int> =
-  // walk forward to find the expression node (skip affixes)
-  let (exprIdx = findNextNonAffix(cs, startIdx))
-    if (exprIdx >= cs.length)
-      Pair(cs[startIdx - 1], cs.length)
-    else
-      let (exprNode = cs[exprIdx])
-      // next should be the closing terminal ")"
-      let (closeIdx = findNextNonAffix(cs, exprIdx + 1))
-        Pair(exprNode, closeIdx + 1)
-
-local const function findNextNonAffix(cs: List<Node>, startIdx: Int): Int =
-  if (startIdx >= cs.length)
-    startIdx
-  else if (
-    cs[startIdx].type == "line_comment"
-      || cs[startIdx].type == "block_comment"
-      || cs[startIdx].type == "semicolon"
-  )
-    findNextNonAffix(cs, startIdx + 1)
-  else
-    startIdx
-
 // ===============
 // Node construction helpers
 // ===============
 
 local const terminal: Node = new Node { type = "terminal" }
-
-local const identifierLeaf: Node = new Node { type = "identifier" }
 
 local const operatorLeaf: Node = new Node { type = "operator" }
 
@@ -2315,20 +1873,6 @@ local const function modifierListNode(mods: List<String>): Node = new Node {
   children = mods.map((m) -> new Node { type = "modifier"; text = m })
 }
 
-// Build a `qualified_identifier` node from a dotted name like `"a.b.c"`.
-local const function qualifiedIdentifierNode(qname: String): Node = new Node {
-  type = "qualified_identifier"
-  children =
-    qname
-      .split(".")
-      .fold(List(), (acc: List<Node>, part: String) ->
-        if (acc.isEmpty)
-          List((identifierLeaf) { text = part })
-        else
-          acc.add((terminal) { text = "." }).add((identifierLeaf) { text = part })
-      )
-}
-
 // Build a quoted `string_chars` node for a string constant like `"foo"`.
 // Parsed nodes derive `text` from source, built nodes must set it themselves.
 local const function stringCharsNode(value: String): Node = new Node {
@@ -2341,19 +1885,6 @@ local const function stringCharsNode(value: String): Node = new Node {
       (terminal) { text = "\"" },
     )
 }
-
-// Read the parameters of a `parameter_list` node.
-local const function parametersOf(pl: Node?): List<ParameterNode> =
-  let (elems = pl?.findChild("parameter_list_elements"))
-    if (elems == null)
-      List()
-    else
-      elems.findChildren("parameter").map((n) -> new ParameterNode { node = n })
-
-// Read the argument expressions of an `argument_list` node.
-local const function argumentsOf(al: Node?): List<ExprNode> =
-  let (elems = al?.findChild("argument_list_elements"))
-    if (elems == null) List() else elems.findExprChildren().map((n) -> wrapExpr(n))
 
 // Build a `parameter_list` node from typed parameters.
 local const function parameterListNode(parameters: List<ParameterNode>): Node = new Node {
@@ -2416,175 +1947,3 @@ local const function typeAnnotationNodes(_type: TypeNode?): List<Node> =
       type = "type_annotation"
       children = List((terminal) { text = ":" }, _type.builtNode)
     })
-
-// ===============
-// Visitor
-// ===============
-
-/// A type-safe tree visitor for use with [visit].
-///
-/// See [visit] for the descent and rebuild semantics.
-class Visitor {
-  // module structure
-  visitModule: (ModuleNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitModuleDeclaration: (ModuleDeclarationNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitImport: (ImportNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitClass: (ClassNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitTypeAlias: (TypeAliasNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitClassBody: (ClassBodyNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitClassProperty: (ClassPropertyNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitClassMethod: (ClassMethodNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitObjectBody: (ObjectBodyNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitAnnotation: (AnnotationNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitParameter: (ParameterNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitTypeParameter: (TypeParameterNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitDocComment: (DocCommentNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-
-  // object members
-  visitObjectProperty: (ObjectPropertyNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitObjectMethod: (ObjectMethodNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitObjectElement: (ObjectElementNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitObjectEntry: (ObjectEntryNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitObjectSpread: (ObjectSpreadNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitMemberPredicate: (MemberPredicateNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitForGenerator: (ForGeneratorNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitWhenGenerator: (WhenGeneratorNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-
-  // expressions
-  visitThisExpr: (ThisExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitOuterExpr: (OuterExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitModuleExpr: (ModuleExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitNullLiteralExpr: (NullLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitBoolLiteralExpr: (BoolLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitIntLiteralExpr: (IntLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitFloatLiteralExpr: (FloatLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitSingleLineStringLiteralExpr: (SingleLineStringLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (
-    _,
-  ) -> null
-  visitMultiLineStringLiteralExpr: (MultiLineStringLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (
-    _,
-  ) -> null
-  visitUnqualifiedAccessExpr: (UnqualifiedAccessExprNode) -> Pair<SyntaxNode, Boolean>? = (_) ->
-    null
-  visitQualifiedAccessExpr: (QualifiedAccessExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitSubscriptExpr: (SubscriptExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitSuperAccessExpr: (SuperAccessExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitSuperSubscriptExpr: (SuperSubscriptExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitIfExpr: (IfExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitLetExpr: (LetExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitThrowExpr: (ThrowExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitTraceExpr: (TraceExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitImportExpr: (ImportExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitReadExpr: (ReadExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitNewExpr: (NewExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitAmendsExpr: (AmendsExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitBinaryOpExpr: (BinaryOpExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitUnaryMinusExpr: (UnaryMinusExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitLogicalNotExpr: (LogicalNotExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitNonNullExpr: (NonNullExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitFunctionLiteralExpr: (FunctionLiteralExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitParenthesizedExpr: (ParenthesizedExprNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-
-  // types
-  visitUnknownType: (UnknownTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitNothingType: (NothingTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitModuleType: (ModuleTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitDeclaredType: (DeclaredTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitNullableType: (NullableTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitUnionType: (UnionTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitFunctionType: (FunctionTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitConstrainedType: (ConstrainedTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitParenthesizedType: (ParenthesizedTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-  visitStringConstantType: (StringConstantTypeNode) -> Pair<SyntaxNode, Boolean>? = (_) -> null
-}
-
-// Map a typed visitor result into the raw-node result that `walk` consumes.
-local const function toWalkResult(r: Pair<SyntaxNode, Boolean>?): Pair<Node, Boolean>? =
-  if (r == null) null else Pair(r.first.builtNode, r.second)
-
-// Dispatch a raw node to the matching visitor callback (or `null` if none applies).
-local function dispatch(n: Node, v: Visitor): Pair<Node, Boolean>? =
-  let (call = dispatchers.getOrNull(n.type))
-    if (call == null) null else toWalkResult(call.apply(n, v))
-
-local dispatchers: Map<NodeType, (Node, Visitor) -> Pair<SyntaxNode, Boolean>?> =
-  Map(
-    // module structure
-    "module", (n, v) -> v.visitModule.apply(new ModuleNode { node = n }),
-    "module_declaration",
-    (n, v) -> v.visitModuleDeclaration.apply(new ModuleDeclarationNode { node = n }),
-    "import", (n, v) -> v.visitImport.apply(new ImportNode { node = n }),
-    "class", (n, v) -> v.visitClass.apply(new ClassNode { node = n }),
-    "typealias", (n, v) -> v.visitTypeAlias.apply(new TypeAliasNode { node = n }),
-    "class_body", (n, v) -> v.visitClassBody.apply(new ClassBodyNode { node = n }),
-    "class_property", (n, v) -> v.visitClassProperty.apply(new ClassPropertyNode { node = n }),
-    "class_method", (n, v) -> v.visitClassMethod.apply(new ClassMethodNode { node = n }),
-    "object_body", (n, v) -> v.visitObjectBody.apply(new ObjectBodyNode { node = n }),
-    "annotation", (n, v) -> v.visitAnnotation.apply(new AnnotationNode { node = n }),
-    "parameter", (n, v) -> v.visitParameter.apply(new ParameterNode { node = n }),
-    "type_parameter", (n, v) -> v.visitTypeParameter.apply(new TypeParameterNode { node = n }),
-    "doc_comment", (n, v) -> v.visitDocComment.apply(new DocCommentNode { node = n }),
-    // object members
-    "object_property", (n, v) -> v.visitObjectProperty.apply(new ObjectPropertyNode { node = n }),
-    "object_method", (n, v) -> v.visitObjectMethod.apply(new ObjectMethodNode { node = n }),
-    "object_element", (n, v) -> v.visitObjectElement.apply(new ObjectElementNode { node = n }),
-    "object_entry", (n, v) -> v.visitObjectEntry.apply(new ObjectEntryNode { node = n }),
-    "object_spread", (n, v) -> v.visitObjectSpread.apply(new ObjectSpreadNode { node = n }),
-    "member_predicate", (n, v) -> v.visitMemberPredicate.apply(new MemberPredicateNode { node = n }),
-    "for_generator", (n, v) -> v.visitForGenerator.apply(new ForGeneratorNode { node = n }),
-    "when_generator", (n, v) -> v.visitWhenGenerator.apply(new WhenGeneratorNode { node = n }),
-    // expressions
-    "this_expr", (n, v) -> v.visitThisExpr.apply(new ThisExprNode { node = n }),
-    "outer_expr", (n, v) -> v.visitOuterExpr.apply(new OuterExprNode { node = n }),
-    "module_expr", (n, v) -> v.visitModuleExpr.apply(new ModuleExprNode { node = n }),
-    "null_expr", (n, v) -> v.visitNullLiteralExpr.apply(new NullLiteralExprNode { node = n }),
-    "bool_literal_expr",
-    (n, v) -> v.visitBoolLiteralExpr.apply(new BoolLiteralExprNode { node = n }),
-    "int_literal_expr", (n, v) -> v.visitIntLiteralExpr.apply(new IntLiteralExprNode { node = n }),
-    "float_literal_expr",
-    (n, v) -> v.visitFloatLiteralExpr.apply(new FloatLiteralExprNode { node = n }),
-    "single_line_string_literal_expr",
-    (n, v) ->
-      v.visitSingleLineStringLiteralExpr.apply(new SingleLineStringLiteralExprNode { node = n }),
-    "multi_line_string_literal_expr",
-    (n, v) ->
-      v.visitMultiLineStringLiteralExpr.apply(new MultiLineStringLiteralExprNode { node = n }),
-    "unqualified_access_expr",
-    (n, v) -> v.visitUnqualifiedAccessExpr.apply(new UnqualifiedAccessExprNode { node = n }),
-    "qualified_access_expr",
-    (n, v) -> v.visitQualifiedAccessExpr.apply(new QualifiedAccessExprNode { node = n }),
-    "subscript_expr", (n, v) -> v.visitSubscriptExpr.apply(new SubscriptExprNode { node = n }),
-    "super_access_expr",
-    (n, v) -> v.visitSuperAccessExpr.apply(new SuperAccessExprNode { node = n }),
-    "super_subscript_expr",
-    (n, v) -> v.visitSuperSubscriptExpr.apply(new SuperSubscriptExprNode { node = n }),
-    "if_expr", (n, v) -> v.visitIfExpr.apply(new IfExprNode { node = n }),
-    "let_expr", (n, v) -> v.visitLetExpr.apply(new LetExprNode { node = n }),
-    "throw_expr", (n, v) -> v.visitThrowExpr.apply(new ThrowExprNode { node = n }),
-    "trace_expr", (n, v) -> v.visitTraceExpr.apply(new TraceExprNode { node = n }),
-    "import_expr", (n, v) -> v.visitImportExpr.apply(new ImportExprNode { node = n }),
-    "read_expr", (n, v) -> v.visitReadExpr.apply(new ReadExprNode { node = n }),
-    "new_expr", (n, v) -> v.visitNewExpr.apply(new NewExprNode { node = n }),
-    "amends_expr", (n, v) -> v.visitAmendsExpr.apply(new AmendsExprNode { node = n }),
-    "binary_op_expr", (n, v) -> v.visitBinaryOpExpr.apply(new BinaryOpExprNode { node = n }),
-    "unary_minus_expr", (n, v) -> v.visitUnaryMinusExpr.apply(new UnaryMinusExprNode { node = n }),
-    "logical_not_expr", (n, v) -> v.visitLogicalNotExpr.apply(new LogicalNotExprNode { node = n }),
-    "non_null_expr", (n, v) -> v.visitNonNullExpr.apply(new NonNullExprNode { node = n }),
-    "function_literal_expr",
-    (n, v) -> v.visitFunctionLiteralExpr.apply(new FunctionLiteralExprNode { node = n }),
-    "parenthesized_expr",
-    (n, v) -> v.visitParenthesizedExpr.apply(new ParenthesizedExprNode { node = n }),
-    // types
-    "unknown_type", (n, v) -> v.visitUnknownType.apply(new UnknownTypeNode { node = n }),
-    "nothing_type", (n, v) -> v.visitNothingType.apply(new NothingTypeNode { node = n }),
-    "module_type", (n, v) -> v.visitModuleType.apply(new ModuleTypeNode { node = n }),
-    "declared_type", (n, v) -> v.visitDeclaredType.apply(new DeclaredTypeNode { node = n }),
-    "nullable_type", (n, v) -> v.visitNullableType.apply(new NullableTypeNode { node = n }),
-    "union_type", (n, v) -> v.visitUnionType.apply(new UnionTypeNode { node = n }),
-    "function_type", (n, v) -> v.visitFunctionType.apply(new FunctionTypeNode { node = n }),
-    "constrained_type", (n, v) -> v.visitConstrainedType.apply(new ConstrainedTypeNode { node = n }),
-    "parenthesized_type",
-    (n, v) -> v.visitParenthesizedType.apply(new ParenthesizedTypeNode { node = n }),
-    "string_constant_type",
-    (n, v) -> v.visitStringConstantType.apply(new StringConstantTypeNode { node = n }),
-  )

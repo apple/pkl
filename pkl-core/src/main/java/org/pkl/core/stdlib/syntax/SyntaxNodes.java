@@ -60,17 +60,6 @@ public final class SyntaxNodes {
     }
   }
 
-  /** Extra storage backing a Pkl {@code ParserError} instance. */
-  static final class ErrorData {
-    final String text;
-    final VmTyped spanVm;
-
-    ErrorData(String text, VmTyped spanVm) {
-      this.text = text;
-      this.spanVm = spanVm;
-    }
-  }
-
   private static final VmObjectFactory<NodeData> nodeFactory =
       new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
