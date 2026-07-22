@@ -1,0 +1,65 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function mod(source: String): syntax.ModuleNode = new syntax.Parser {}.parseModule(source)
+
+local sample: syntax.Node =
+  mod(
+    """
+    import "foo.pkl"
+    import "bar.pkl" as baz
+
+    class Point {
+      x: Int
+      y: Int
+    }
+
+    origin = if (useOrigin) new Point { x = 0; y = 0 } else null
+
+    scaled = origin.x * 2
+    """,
+  ).node!!
+
+facts {
+  ["fold counts nodes by predicate"] {
+    syntax.fold(sample, 0, (acc, n) -> if (n.type == "import") acc + 1 else acc) == 2
+
+    syntax.fold(sample, 0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc) == 1
+
+    syntax.fold(sample, 0, (acc, n) -> if (n.type == "when_generator") acc + 1 else acc) == 0
+  }
+
+  ["fold accumulates into a collection"] {
+    syntax.fold(sample, List(), (acc, n) -> if (n.type == "identifier") acc.add(n.text) else acc)
+      == List(
+        "baz",
+        "Point",
+        "x",
+        "Int",
+        "y",
+        "Int",
+        "origin",
+        "useOrigin",
+        "Point",
+        "x",
+        "y",
+        "scaled",
+        "origin",
+        "x",
+      )
+  }
+
+  ["fold visits a node before its children (pre-order)"] {
+    // the module node is visited first
+    syntax.fold(sample, List(), (acc, n) -> acc.add(n.type)).first == "module"
+  }
+
+  ["descendants enumerates the whole tree"] {
+    syntax.descendants(sample).first == sample
+
+    syntax.descendants(sample) == syntax.fold(sample, List(), (acc, n) -> acc.add(n))
+
+    syntax.descendants(sample).filter((n) -> n.type == "class").length == 1
+  }
+}

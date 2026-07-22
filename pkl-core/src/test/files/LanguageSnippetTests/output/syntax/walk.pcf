@@ -1,0 +1,28 @@
+facts {
+  ["read-only walk leaves the tree unchanged"] {
+    true
+    true
+  }
+  ["rename identifiers everywhere"] {
+    true
+  }
+  ["replace a leaf via a typed node"] {
+    true
+  }
+  ["rebuilds ancestors of a changed node"] {
+    true
+  }
+  ["descend reprocesses emitted nodes"] {
+    true
+  }
+  ["descend = false leaves the emitted subtree untouched"] {
+    true
+  }
+  ["build super access from scratch"] {
+    true
+    true
+  }
+  ["build super subscript from scratch"] {
+    true
+  }
+}
