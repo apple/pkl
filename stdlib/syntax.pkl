@@ -71,24 +71,6 @@ class Node {
   text: String?
   @ConvertSpan
   span: Span
-
-  /// The first child of type [t], or `null` if there is none.
-  function findChild(t: NodeType): Node? = children.findOrNull((c) -> c.type == t)
-
-  /// All children of type [t].
-  function findChildren(t: NodeType): List<Node> = children.filter((c) -> c.type == t)
-
-  /// The first child that is an expression, or `null` if there is none.
-  function findExprChild(): Node? = children.findOrNull((c) -> isExprType(c.type))
-
-  /// All children that are expressions.
-  function findExprChildren(): List<Node> = children.filter((c) -> isExprType(c.type))
-
-  /// The first child that is a type node, or `null` if there is none.
-  function findTypeChild(): Node? = children.findOrNull((c) -> isTypeType(c.type))
-
-  /// All children that are type nodes.
-  function findTypeChildren(): List<Node> = children.filter((c) -> isTypeType(c.type))
 }
 
 class Span {
