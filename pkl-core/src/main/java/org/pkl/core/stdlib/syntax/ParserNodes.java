@@ -186,7 +186,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> parenthesizedTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedTypeNodeClass)
           .addProperty("node", vm -> vm)
-          .addProperty("type", ParserNodes::parenthesizedTypeType);
+          .addTypedProperty("type", ParserNodes::parenthesizedTypeType);
   private static final VmObjectFactory<VmTyped> stringConstantTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringConstantTypeNodeClass)
           .addProperty("node", vm -> vm)
@@ -523,13 +523,13 @@ public class ParserNodes {
     return wrapExprs(findExprChildrenVm(elems));
   }
 
-  private static Object parenthesizedTypeType(VmTyped typeVm) {
+  private static VmTyped parenthesizedTypeType(VmTyped typeVm) {
     var elems = findChildVm(typeVm, NodeType.PARENTHESIZED_TYPE_ELEMENTS);
-    if (elems == null) {
-      return VmNull.withoutDefault();
+    var type = elems == null ? null : findTypeChildVm(elems);
+    if (type == null) {
+      throw new VmExceptionBuilder().bug("A parenthesized type always has an inner type.").build();
     }
-    var type = findTypeChildVm(elems);
-    return type == null ? VmNull.withoutDefault() : wrapType(type);
+    return wrapType(type);
   }
 
   private static String stringConstantTypeValue(VmTyped typeVm) {

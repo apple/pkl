@@ -150,9 +150,7 @@ public final class SyntaxNodeNodes {
               "parenthesized_type",
               List.of(
                   terminal("("),
-                  branch(
-                      "parenthesized_type_elements",
-                      List.of(build(nonNull(optNode(self, "type"))))),
+                  branch("parenthesized_type_elements", List.of(build(reqNode(self, "type")))),
                   terminal(")")));
       case "StringConstantTypeNode" ->
           branch("string_constant_type", List.of(stringCharsNode(str(self, "value"))));
