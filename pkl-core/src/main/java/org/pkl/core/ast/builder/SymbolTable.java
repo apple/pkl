@@ -523,6 +523,13 @@ public final class SymbolTable {
         if (scope instanceof LexicalScope lex) {
           if (shouldSkip && !(scope instanceof ForGeneratorScope)) {
             if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
+              // skipping the object scope should now see the object body params, because the params
+              // are one level higher than the body itself.
+              var result = fun.apply(objectScope, levelsUp);
+              if (result instanceof Parameter parameter) {
+                //noinspection unchecked
+                return (R) new Parameter(parameter.slot(), parameter.levelsUp() - 1);
+              }
               levelsUp++;
             }
             // An EagerGeneratorScope (for `when` predicates) skipped an ObjectScope.
