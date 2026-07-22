@@ -2,7 +2,7 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local function roundTrip(source: String) = syntax.format(parseNode(source))
+local function roundTrip(source: String) = syntax.render(parseNode(source)!!)
 
 local function parseNode(source: String) = new syntax.Parser {}.parseModule(source).node
 
@@ -314,38 +314,38 @@ facts {
 
   ["modify identifier"] {
     local root = parseNode("x = 1")
-    local modified = replaceLeaf(root, "identifier", "x", "y")
-    syntax.format(modified) == "y = 1\n"
+    local modified = replaceLeaf(root!!, "identifier", "x", "y")
+    syntax.render(modified) == "y = 1\n"
   }
 
   ["modify modifier"] {
     local root = parseNode("hidden x = 1")
-    local modified = replaceLeaf(root, "modifier", "hidden", "local")
-    syntax.format(modified) == "local x = 1\n"
+    local modified = replaceLeaf(root!!, "modifier", "hidden", "local")
+    syntax.render(modified) == "local x = 1\n"
   }
 
   ["modify string content"] {
     local root = parseNode(#"x = "hello""#)
-    local modified = replaceLeaf(root, "string_chars", "hello", "world")
-    syntax.format(modified) == #"x = "world"\#n"#
+    local modified = replaceLeaf(root!!, "string_chars", "hello", "world")
+    syntax.render(modified) == #"x = "world"\#n"#
   }
 
   ["modify int literal"] {
     local root = parseNode("x = 42")
-    local modified = replaceLeaf(root, "int_literal_expr", "42", "99")
-    syntax.format(modified) == "x = 99\n"
+    local modified = replaceLeaf(root!!, "int_literal_expr", "42", "99")
+    syntax.render(modified) == "x = 99\n"
   }
 
   ["modify boolean literal"] {
     local root = parseNode("x = true")
-    local modified = replaceLeaf(root, "bool_literal_expr", "true", "false")
-    syntax.format(modified) == "x = false\n"
+    local modified = replaceLeaf(root!!, "bool_literal_expr", "true", "false")
+    syntax.render(modified) == "x = false\n"
   }
 
   ["modify float literal"] {
     local root = parseNode("x = 3.14")
-    local modified = replaceLeaf(root, "float_literal_expr", "3.14", "2.72")
-    syntax.format(modified) == "x = 2.72\n"
+    local modified = replaceLeaf(root!!, "float_literal_expr", "3.14", "2.72")
+    syntax.render(modified) == "x = 2.72\n"
   }
 
   ["add new modifier"] {
@@ -355,13 +355,26 @@ facts {
       text = "const"
     }
     local modified =
-      transformFirst(root, "modifier_list", (n) -> (n) {
+      transformFirst(root!!, "modifier_list", (n) -> (n) {
         children = List(constModifier) + n.children
       })
     // modifier order is switched by the formatter
-    syntax.format(modified) == """
+    syntax.render(modified) == """
       local const x = 1
-      
+
       """
+  }
+
+  ["format delegates to a default Renderer"] {
+    local node = parseNode("x = 1")
+    syntax.render(node!!) == new syntax.Renderer {}.render(node!!)
+    new syntax.Renderer {}.render(node!!) == new syntax.Renderer { grammarVersion = "V2" }.render(node!!)
+  }
+
+  ["renderer honors the grammar version"] {
+    local node =
+      parseNode("x = fn(argument1, argument2, argument3, argument4, argument5, argument6, argument7, argument8, argument9)")
+    new syntax.Renderer { grammarVersion = "V1" }.render(node!!)
+      != new syntax.Renderer { grammarVersion = "V2" }.render(node!!)
   }
 }

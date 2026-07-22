@@ -32,8 +32,6 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.formatter.Formatter;
-import org.pkl.formatter.GrammarVersion;
 import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
@@ -42,7 +40,7 @@ public final class SyntaxNodes {
   private SyntaxNodes() {}
 
   private static final char[] EMPTY_SOURCE = new char[0];
-  private static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
+  static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
 
   /** Extra storage backing a Pkl {@code Node} instance. */
   static final class NodeData {
@@ -72,15 +70,6 @@ public final class SyntaxNodes {
                       ? nd.node.text(nd.source)
                       : VmNull.withoutDefault())
           .addTypedProperty("span", nd -> nd.spanVm);
-
-  public abstract static class formatToString extends ExternalMethod2Node {
-    @Specialization
-    @TruffleBoundary
-    protected String eval(VmTyped self, VmTyped nodeVm, String grammarVersion) {
-      var node = convertVmToNode(nodeVm, ZERO_SPAN);
-      return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
-    }
-  }
 
   public abstract static class walk extends ExternalMethod2Node {
     @Child private ApplyVmFunction1Node applyVisit = ApplyVmFunction1Node.create();
@@ -170,7 +159,7 @@ public final class SyntaxNodes {
    * meaningful span of their own, so that a subtree spliced into reused siblings lines up with
    * them.
    */
-  private static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
+  static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
     // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
     if (nodeVm.hasExtraStorage()) {
       return ((NodeData) nodeVm.getExtraStorage()).node;

@@ -4,12 +4,12 @@ import "pkl:syntax"
 
 local function mod(source: String): syntax.ModuleNode = new syntax.Parser {}.parseModule(source)
 
-local function fmt(source: String): String = syntax.format(mod(source).node)
+local function fmt(source: String): String = syntax.render(mod(source).node!!)
 
 local function walkFormat(
   source: String,
   visit: (syntax.Node) -> Pair<syntax.Node, Boolean>?,
-): String = syntax.format(syntax.walk(mod(source).node, visit))
+): String = syntax.render(syntax.walk(mod(source).node!!, visit))
 
 facts {
   ["read-only walk leaves the tree unchanged"] {

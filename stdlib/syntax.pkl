@@ -29,10 +29,19 @@ class Parser {
   external function parseModuleOrNull(source: String | Resource): ModuleNode?
 }
 
-/// Format a syntax node back to Pkl source code.
-function format(node: Node): String = formatToString(node, "V2")
+/// Renders a syntax [Node] back to Pkl source code.
+class Renderer {
+  /// The grammar version to target.
+  ///
+  /// `"V1"` matches Pkl 0.25 - 0.29, `"V2"` matches Pkl 0.30+.
+  grammarVersion: "V1" | "V2" = "V2"
 
-external function formatToString(node: Node, grammarVersion: "V1" | "V2"): String
+  /// Render [node] as Pkl source code.
+  external function render(node: Node): String
+}
+
+/// Render a syntax node back to Pkl source code using default settings.
+function render(node: Node): String = new Renderer {}.render(node)
 
 /// Walk [node] and its descendants top-down, applying [visit] to each node and
 /// returning the (possibly rewritten) tree.
