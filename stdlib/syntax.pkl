@@ -64,19 +64,40 @@ function fold<Acc>(node: Node, initial: Acc, accumulate: (Acc, Node) -> Acc): Ac
 /// A convenience over [fold] for the common case of enumerating nodes.
 function descendants(node: Node): List<Node> = fold(node, List(), (acc, n) -> acc.add(n))
 
+/// A generic, untyped node in the Pkl syntax tree.
+///
+/// A node is either a *leaf*, carrying source [text] and no
+/// [children], or a *branch*, carrying [children] and no [text].
 class Node {
+  /// The kind of this node.
   type: NodeType
+
+  /// The child nodes, in source order. Empty for leaf nodes.
   children: List<Node>
+
+  /// The parent node, or `null` for the root and for nodes not attached to a tree.
   hidden parent: Node?
+
+  /// The verbatim source text of a leaf node (identifier, literal, terminal, etc.),
+  /// or `null` for a branch node whose content is its [children].
   text: String?
-  @ConvertSpan
+
+  /// The source location of this node.
   span: Span
 }
 
+/// A source location, given as 1-based line and column positions.
 class Span {
+  /// The line of the first character.
   lineStart: UInt = 0
+
+  /// The column of the first character.
   colStart: UInt = 0
+
+  /// The line of the character following the span.
   lineEnd: UInt = 0
+
+  /// The column of the character following the span.
   colEnd: UInt = 0
 }
 
