@@ -1,0 +1,8 @@
+foo = new Mapping {
+  default { key ->
+    when (key is String) {
+      bar = key
+    }
+  }
+  ["x"] {}
+}
