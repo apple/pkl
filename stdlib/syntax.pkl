@@ -269,7 +269,6 @@ abstract class SyntaxNode {
   hidden node: Node? = null
 
   /// The source span of this node.
-  @ConvertSpan
   span: Span = node?.span ?? new Span {}
 
   /// This node rebuilt into a generic [Node].
@@ -880,8 +879,8 @@ class QualifiedIdentifierNode extends SyntaxNode {
 
 /// A doc comment.
 class DocCommentNode extends SyntaxNode {
-  /// The body text of each line, without the leading `///`.
-  lines: List<String>
+  /// The body text of the comment, with the leading `///` stripped from each line.
+  value: String
 }
 
 /// Base class for parts of a string literal (text, escapes, newlines, interpolations).

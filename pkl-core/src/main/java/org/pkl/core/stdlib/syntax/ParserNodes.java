@@ -79,7 +79,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> docCommentNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getDocCommentNodeClass)
           .addProperty("node", vm -> vm)
-          .addListProperty("lines", ParserNodes::docCommentLines);
+          .addStringProperty("value", ParserNodes::docCommentValue);
   private static final VmObjectFactory<VmTyped> annotationNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getAnnotationNodeClass)
           .addProperty("node", vm -> vm)
@@ -437,21 +437,24 @@ public class ParserNodes {
     return body == null ? VmNull.withoutDefault() : objectBodyNodeFactory.create(body);
   }
 
-  private static VmList docCommentLines(VmTyped docCommentVm) {
+  private static String docCommentValue(VmTyped docCommentVm) {
     var lineVms = findChildrenVm(docCommentVm, NodeType.DOC_COMMENT_LINE);
-    var result = new Object[lineVms.size()];
+    var builder = new StringBuilder();
     for (var i = 0; i < lineVms.size(); i++) {
+      if (i > 0) {
+        builder.append('\n');
+      }
       var data = (NodeData) lineVms.get(i).getExtraStorage();
       var text = data.node.text(data.source);
       if (text.startsWith("/// ")) {
-        result[i] = text.substring(4);
+        builder.append(text, 4, text.length());
       } else if (text.startsWith("///")) {
-        result[i] = text.substring(3);
+        builder.append(text, 3, text.length());
       } else {
-        result[i] = text;
+        builder.append(text);
       }
     }
-    return VmList.create(result);
+    return builder.toString();
   }
 
   private static VmTyped declaredTypeName(VmTyped typeVm) {

@@ -30,7 +30,7 @@ facts {
     mod.declaration != null
     mod.declaration!!.docComment != null
     mod.declaration!!.docComment!! is syntax.DocCommentNode
-    mod.declaration!!.docComment!!.lines.length == 1
+    mod.declaration!!.docComment!!.value == "This is my module."
 
     mod.declaration!!.annotations.length == 1
     mod.declaration!!.annotations.first is syntax.AnnotationNode
@@ -87,7 +87,7 @@ facts {
     local cls = mod.classes.first
 
     cls.docComment != null
-    cls.docComment!!.lines.length == 1
+    cls.docComment!!.value == "A bird class."
 
     cls.modifiers != null
     cls.modifiers == List("abstract")

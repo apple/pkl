@@ -234,7 +234,7 @@ facts {
     cls.identifier.value == "Person"
     cls.modifiers == List("abstract", "open")
     cls.docComment != null
-    cls.docComment!!.lines.length == 1
+    cls.docComment!!.value == "A person."
     cls.annotations.length == 1
     cls.annotations.first.type is syntax.DeclaredTypeNode
     cls.extendsType is syntax.DeclaredTypeNode

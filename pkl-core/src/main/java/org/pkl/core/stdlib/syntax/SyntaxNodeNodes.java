@@ -688,10 +688,10 @@ public final class SyntaxNodeNodes {
   }
 
   private static VmTyped buildDocComment(VmTyped self) {
-    var lines = listMember(self, "lines");
+    var value = str(self, "value");
     var children = new ArrayList<>();
-    for (var i = 0; i < lines.getLength(); i++) {
-      children.add(leaf("doc_comment_line", "/// " + lines.get(i)));
+    for (var line : value.split("\n", -1)) {
+      children.add(leaf("doc_comment_line", "/// " + line));
     }
     return branch("doc_comment", children);
   }
