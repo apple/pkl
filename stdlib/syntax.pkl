@@ -822,8 +822,8 @@ class ConstrainedTypeNode extends TypeNode {
 
 /// A parenthesized type (`(Type)`).
 class ParenthesizedTypeNode extends TypeNode {
-  /// The inner type, if present.
-  type: TypeNode?
+  /// The inner type.
+  type: TypeNode
 }
 
 /// A string constant type (e.g., `"foo"`).
