@@ -238,9 +238,14 @@ public class ParserNodes {
           .addTypedProperty("receiver", ParserNodes::subscriptReceiver)
           .addTypedProperty("index", ParserNodes::subscriptIndex);
   private static final VmObjectFactory<VmTyped> superAccessExprNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getSuperAccessExprNodeClass);
+      new VmObjectFactory<VmTyped>(SyntaxModule::getSuperAccessExprNodeClass)
+          .addProperty("node", vm -> vm)
+          .addTypedProperty("identifier", ParserNodes::identifierNodeOf)
+          .addProperty("arguments", ParserNodes::argumentsOrNull);
   private static final VmObjectFactory<VmTyped> superSubscriptExprNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getSuperSubscriptExprNodeClass);
+      new VmObjectFactory<VmTyped>(SyntaxModule::getSuperSubscriptExprNodeClass)
+          .addProperty("node", vm -> vm)
+          .addTypedProperty("index", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> ifExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIfExprNodeClass)
           .addProperty("node", vm -> vm)

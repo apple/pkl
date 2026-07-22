@@ -18,8 +18,11 @@ facts {
   ["descend = false leaves the emitted subtree untouched"] {
     true
   }
-  ["parent back-references on the result tree"] {
+  ["build super access from scratch"] {
     true
+    true
+  }
+  ["build super subscript from scratch"] {
     true
   }
 }
