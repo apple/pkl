@@ -21,7 +21,7 @@
 #include "pkl.h"
 
 // Callback for receiving messages
-void test_message_handler(int length, char *message, void *userData) {
+void test_message_handler(unsigned int length, char *message, void *userData) {
 	printf("Received message of length %d\n", length);
 	// Store message in userData for verification
 	if (userData != NULL) {
