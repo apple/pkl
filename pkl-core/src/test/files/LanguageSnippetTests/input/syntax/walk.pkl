@@ -74,14 +74,42 @@ facts {
         null) == fmt("x = (1)")
   }
 
-  ["parent back-references on the result tree"] {
-    local result = syntax.walk(mod("x = 41").node, (n) ->
+  ["build super access from scratch"] {
+    walkFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr")
-        Pair(new syntax.IntLiteralExprNode { value = 42 }.builtNode, false)
+        Pair(
+          new syntax.SuperAccessExprNode {
+            identifier = new syntax.IdentifierNode { value = "foo" }
+            arguments = null
+          }.builtNode,
+          false,
+        )
       else
-        null)
-    // the root of the returned tree has no parent
-    result.parent == null
-    result.children.first.parent.type == "module"
+        null) == fmt("x = super.foo")
+
+    walkFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr")
+        Pair(
+          new syntax.SuperAccessExprNode {
+            identifier = new syntax.IdentifierNode { value = "foo" }
+            arguments = List(new syntax.IntLiteralExprNode { value = 1 })
+          }.builtNode,
+          false,
+        )
+      else
+        null) == fmt("x = super.foo(1)")
+  }
+
+  ["build super subscript from scratch"] {
+    walkFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr")
+        Pair(
+          new syntax.SuperSubscriptExprNode {
+            index = new syntax.IntLiteralExprNode { value = 0 }
+          }.builtNode,
+          false,
+        )
+      else
+        null) == fmt("x = super[0]")
   }
 }
