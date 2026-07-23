@@ -1,0 +1,27 @@
+–– Pkl Error ––
+Tried to read property `undefinedValue` but its value is undefined.
+
+x | undefinedValue: String
+    ^^^^^^^^^^^^^^
+at traceThenIterateUndefinedMember#undefinedValue (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
+
+x | undefinedValue
+    ^^^^^^^^^^^^^^
+at traceThenIterateUndefinedMember#items[#1] (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
+
+xx | let (_ = trace(items))
+     ^^^^^^^^^^^^^^^^^^^^^^
+at traceThenIterateUndefinedMember#result.<let expr> (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
+
+xx | value = result
+             ^^^^^^
+at traceThenIterateUndefinedMember#output.value (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
+
+xxx | renderer.renderDocument(value)
+                              ^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
+pkl: TRACE: items = new Listing { ? } (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
