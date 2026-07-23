@@ -26,7 +26,10 @@ dependencies {
   api(libs.junitApi)
   api(libs.junitEngine)
   api(libs.junitParams)
+  api(libs.wiremock)
   api(projects.pklCommons) // for convenience
+  implementation(projects.pklCore)
+  implementation(projects.pklServer)
   implementation(libs.assertj)
   implementation(libs.msgpack)
 }

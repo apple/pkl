@@ -123,7 +123,7 @@ public final class MessageTransports {
     }
   }
 
-  protected abstract static class AbstractMessageTransport implements MessageTransport {
+  public abstract static class AbstractMessageTransport implements MessageTransport {
 
     private final Logger logger;
     private MessageTransport.OneWayHandler oneWayHandler =
