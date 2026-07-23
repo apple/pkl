@@ -48,6 +48,7 @@ public class Analyzer {
   private final ModuleResolver moduleResolver;
   private final HttpClient httpClient;
   private final TraceMode traceMode;
+  private final Map<FeatureFlag, Boolean> featureFlags;
 
   public Analyzer(
       StackFrameTransformer transformer,
@@ -57,7 +58,8 @@ public class Analyzer {
       @Nullable Path moduleCacheDir,
       @Nullable DeclaredDependencies projectDependencies,
       HttpClient httpClient,
-      TraceMode traceMode) {
+      TraceMode traceMode,
+      Map<FeatureFlag, Boolean> featureFlags) {
     this.transformer = transformer;
     this.color = color;
     this.securityManager = securityManager;
@@ -66,6 +68,7 @@ public class Analyzer {
     this.moduleResolver = new ModuleResolver(moduleKeyFactories);
     this.httpClient = httpClient;
     this.traceMode = traceMode;
+    this.featureFlags = featureFlags;
   }
 
   /**
@@ -118,7 +121,8 @@ public class Analyzer {
                       : new ProjectDependenciesManager(
                           projectDependencies, moduleResolver, securityManager),
                   traceMode,
-                  false));
+                  false,
+                  featureFlags));
         });
   }
 }

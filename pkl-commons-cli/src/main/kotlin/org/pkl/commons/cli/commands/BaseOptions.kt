@@ -18,6 +18,7 @@ package org.pkl.commons.cli.commands
 import com.github.ajalt.clikt.completion.CompletionCandidates
 import com.github.ajalt.clikt.parameters.groups.OptionGroup
 import com.github.ajalt.clikt.parameters.options.*
+import com.github.ajalt.clikt.parameters.transform.TransformContext
 import com.github.ajalt.clikt.parameters.types.enum
 import com.github.ajalt.clikt.parameters.types.int
 import com.github.ajalt.clikt.parameters.types.long
@@ -27,10 +28,12 @@ import java.net.URI
 import java.net.URISyntaxException
 import java.nio.file.Path
 import java.time.Duration
+import java.util.Locale
 import java.util.regex.Pattern
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.CliException
 import org.pkl.commons.shlex
+import org.pkl.core.FeatureFlag
 import org.pkl.core.evaluatorSettings.Color
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings.ExternalReader
 import org.pkl.core.evaluatorSettings.TraceMode
@@ -92,7 +95,7 @@ class BaseOptions : OptionGroup() {
     > {
       return splitPair(delimiter).convert {
         val cmd = shlex(it.second)
-        Pair(it.first, ExternalReader(cmd.first(), cmd.drop(1), null))
+        it.first to ExternalReader(cmd.first(), cmd.drop(1), null)
       }
     }
 
@@ -350,6 +353,39 @@ class BaseOptions : OptionGroup() {
       .enum<TraceMode> { it.name.lowercase() }
       .single()
 
+  val featureFlags: Map<String, Boolean> by
+    option(
+        names = arrayOf("--feature"),
+        metavar = "<feature>[=<boolean>]",
+        help =
+          "Feature flag enabled state. Omitting <boolean> is equivalent to true. <${FeatureFlag.entries.joinToString(", ") { "${it.name.lowercase(Locale.ROOT)} (default: ${it.defaultValue()})" }}>",
+      )
+      .convert {
+        val idx = it.indexOf('=')
+        return@convert if (idx < 0) it to true
+        else it.substring(0..<idx) to valueToBool(it.substring(idx + 1))
+      }
+      .multiple()
+      .toMap()
+
+  private fun TransformContext.valueToBool(value: String): Boolean {
+    return when (value.lowercase()) {
+      "true",
+      "t",
+      "1",
+      "yes",
+      "y",
+      "on" -> true
+      "false",
+      "f",
+      "0",
+      "no",
+      "n",
+      "off" -> false
+      else -> fail(context.localization.boolConversionError(value))
+    }
+  }
+
   // hidden option used by native tests
   private val testPort: Int by
     option(names = arrayOf("--test-port"), help = "Internal test option", hidden = true)
@@ -391,6 +427,7 @@ class BaseOptions : OptionGroup() {
       externalResourceReaders = externalResourceReaders.ifEmpty { null },
       traceMode = traceMode,
       powerAssertionsEnabled = powerAssertionsEnabled,
+      featureFlags = featureFlags,
     )
   }
 }

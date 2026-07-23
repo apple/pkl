@@ -92,7 +92,8 @@ public final class EvaluatorImpl implements Evaluator {
       @Nullable DeclaredDependencies projectDependencies,
       @Nullable String outputFormat,
       TraceMode traceMode,
-      boolean powerAssertions) {
+      boolean powerAssertions,
+      Map<FeatureFlag, Boolean> featureFlags) {
 
     securityManager = manager;
     frameTransformer = transformer;
@@ -127,7 +128,8 @@ public final class EvaluatorImpl implements Evaluator {
                           : new ProjectDependenciesManager(
                               projectDependencies, moduleResolver, securityManager),
                       traceMode,
-                      powerAssertions));
+                      powerAssertions,
+                      featureFlags));
             });
     this.timeout = timeout;
     // NOTE: would probably make sense to share executor between evaluators

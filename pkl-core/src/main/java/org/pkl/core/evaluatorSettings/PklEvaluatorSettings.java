@@ -52,7 +52,8 @@ public record PklEvaluatorSettings(
     @Nullable Http http,
     @Nullable Map<String, ExternalReader> externalModuleReaders,
     @Nullable Map<String, ExternalReader> externalResourceReaders,
-    @Nullable TraceMode traceMode) {
+    @Nullable TraceMode traceMode,
+    @Nullable Map<String, Boolean> featureFlags) {
 
   /** Initializes a {@link PklEvaluatorSettings} from a raw object representation. */
   @SuppressWarnings("unchecked")
@@ -102,6 +103,7 @@ public record PklEvaluatorSettings(
 
     var color = (String) pSettings.get("color");
     var traceMode = (String) pSettings.get("traceMode");
+    var featureFlags = (Map<String, Boolean>) pSettings.get("featureFlags");
 
     return new PklEvaluatorSettings(
         (Map<String, String>) pSettings.get("externalProperties"),
@@ -117,7 +119,8 @@ public record PklEvaluatorSettings(
         Http.parse((Value) pSettings.get("http")),
         externalModuleReaders,
         externalResourceReaders,
-        traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase(Locale.ROOT)));
+        traceMode == null ? null : TraceMode.valueOf(traceMode.toUpperCase(Locale.ROOT)),
+        featureFlags);
   }
 
   public record Http(
@@ -261,7 +264,8 @@ public record PklEvaluatorSettings(
         && Objects.equals(timeout, that.timeout)
         && Objects.equals(rootDir, that.rootDir)
         && Objects.equals(http, that.http)
-        && Objects.equals(traceMode, that.traceMode);
+        && Objects.equals(traceMode, that.traceMode)
+        && Objects.equals(featureFlags, that.featureFlags);
   }
 
   private int hashPatterns(@Nullable List<Pattern> patterns) {
@@ -287,7 +291,8 @@ public record PklEvaluatorSettings(
             timeout,
             rootDir,
             http,
-            traceMode);
+            traceMode,
+            featureFlags);
     result = 31 * result + hashPatterns(allowedModules);
     result = 31 * result + hashPatterns(allowedResources);
     return result;

@@ -179,6 +179,10 @@ public abstract class BasePklTask extends DefaultTask {
   @Nested
   public abstract MapProperty<String, ExternalReaderSpec> getExternalResourceReaders();
 
+  @Input
+  @Optional
+  public abstract MapProperty<String, Boolean> getFeatureFlags();
+
   /**
    * There are issues with using native libraries in Gradle plugins. As a workaround for now, make
    * Truffle use an un-optimized runtime.
@@ -236,7 +240,8 @@ public abstract class BasePklTask extends DefaultTask {
         toExternalReaderMap(getExternalModuleReaders().get().values()),
         toExternalReaderMap(getExternalResourceReaders().get().values()),
         null,
-        getPowerAssertions().getOrElse(false));
+        getPowerAssertions().getOrElse(false),
+        getFeatureFlags().getOrNull());
   }
 
   @Internal

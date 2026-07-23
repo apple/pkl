@@ -228,6 +228,13 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         }
         outputFormat = message.outputFormat
         message.traceMode?.let { traceMode = it }
+        message.featureFlags?.forEach { name, value ->
+          FeatureFlag.parse(name)?.let {
+            addFeatureFlag(it, value)
+            return@forEach
+          }
+          logger.warn("Unrecognized feature flag named `${name}`", "pkl:#server")
+        }
         build()
       }
     } catch (e: IllegalArgumentException) {

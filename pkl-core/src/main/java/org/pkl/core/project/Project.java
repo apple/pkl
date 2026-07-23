@@ -221,7 +221,8 @@ public final class Project {
             builder.getModuleCacheDir(),
             builder.getProjectDependencies(),
             builder.getHttpClient(),
-            builder.getTraceMode());
+            builder.getTraceMode(),
+            builder.getFeatureFlags());
     var importGraph = analyzer.importGraph(moduleSource.getUri());
     var ret = ImportGraphUtils.findImportCycles(importGraph);
     // we only care about cycles in the same scheme as `moduleSource`
@@ -562,7 +563,8 @@ public final class Project {
               null,
               null,
               null,
-              traceMode);
+              traceMode,
+              Map.of());
     }
 
     @Deprecated(forRemoval = true)

@@ -182,3 +182,17 @@ Default: `compact` +
 Specifies how `trace()` output is formatted.
 Possible options are `compact` and `pretty`.
 ====
+
+.--feature
+[%collapsible]
+====
+Default: (none) +
+Example: `magic=true` +
+
+Enable or disable feature flags.
+
+Available feature flags and their default values are provided in the full command line help.
+Specifying a feature flag unknown to the current version of Pkl will result in a warning.
+
+Providing only the name of a flag is equivalent to setting its value to `true`.
+====

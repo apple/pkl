@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -27,12 +27,12 @@ public final class Loggers {
   public static Logger noop() {
     return new Logger() {
       @Override
-      public void trace(String message, StackFrame frame) {
+      public void trace(String message, String frameUri) {
         // do nothing
       }
 
       @Override
-      public void warn(String message, StackFrame frame) {
+      public void warn(String message, String frameUri) {
         // do nothing
       }
     };
@@ -48,14 +48,14 @@ public final class Loggers {
   public static Logger stream(PrintStream stream) {
     return new Logger() {
       @Override
-      public void trace(String message, StackFrame frame) {
-        stream.println(formatMessage("TRACE", message, frame));
+      public void trace(String message, String frameUri) {
+        stream.println(formatMessage("TRACE", message, frameUri));
         stream.flush();
       }
 
       @Override
-      public void warn(String message, StackFrame frame) {
-        stream.println(formatMessage("WARN", message, frame));
+      public void warn(String message, String frameUri) {
+        stream.println(formatMessage("WARN", message, frameUri));
         stream.flush();
       }
     };
@@ -66,27 +66,27 @@ public final class Loggers {
   public static Logger writer(PrintWriter writer) {
     return new Logger() {
       @Override
-      public void trace(String message, StackFrame frame) {
-        writer.println(formatMessage("TRACE", message, frame));
+      public void trace(String message, String frameUri) {
+        writer.println(formatMessage("TRACE", message, frameUri));
         writer.flush();
       }
 
       @Override
-      public void warn(String message, StackFrame frame) {
-        writer.println(formatMessage("WARN", message, frame));
+      public void warn(String message, String frameUri) {
+        writer.println(formatMessage("WARN", message, frameUri));
         writer.flush();
       }
     };
   }
 
-  private static String formatMessage(String level, String message, StackFrame frame) {
+  private static String formatMessage(String level, String message, String frameUri) {
     return "pkl: "
         + level
         + ": "
         + message
         + (message.endsWith("\n") ? "" : " ")
         + "("
-        + frame.getModuleUri()
+        + frameUri
         + ')';
   }
 }
