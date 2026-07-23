@@ -1,0 +1,3 @@
+extends "classType.pkl"
+
+res9 = C as Class<A?>

@@ -169,6 +169,69 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
   }
 
+  public static final class Class extends VmTypeMismatchException {
+
+    private final String renderedExpected;
+    private final @Nullable VmClass expectedClass;
+
+    public Class(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
+      super(sourceSection, actualClass);
+      this.expectedClass = expectedClass;
+      renderedExpected = "Class<" + expectedClass + ">";
+    }
+
+    public Class(SourceSection sourceSection, VmClass actualClass, PType expectedType) {
+      super(sourceSection, actualClass);
+      this.expectedClass = null;
+      renderedExpected = "Class<" + expectedType + ">";
+    }
+
+    @Override
+    @TruffleBoundary
+    public void buildMessage(
+        AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      var actualClass = (VmClass) actualValue;
+      var renderedActualClass = "Class<" + actualClass + ">";
+
+      // give better error than "expected Class<foo.Bar>, but got Class<foo.Bar>" in case of naming
+      // conflict
+      if (expectedClass != null
+          && actualClass.getQualifiedName().equals(expectedClass.getQualifiedName())) {
+        var actualModuleUri = actualClass.getModule().getModuleInfo().getModuleKey().getUri();
+        var expectedModuleUri = expectedClass.getModule().getModuleInfo().getModuleKey().getUri();
+
+        builder
+            .append(
+                ErrorMessages.createIndented(
+                    actualClass.getPClassInfo().isModuleClass()
+                        ? "typeMismatchVersionConflict1"
+                        : "typeMismatchVersionConflict2",
+                    indent,
+                    renderedExpected,
+                    expectedModuleUri,
+                    actualModuleUri))
+            .append("\n");
+        return;
+      }
+
+      builder.append(
+          ErrorMessages.createIndented(
+              "typeMismatch", indent, renderedExpected, renderedActualClass));
+    }
+
+    @Override
+    protected Boolean hasHint() {
+      return expectedClass == null;
+    }
+
+    @Override
+    public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
+      if (expectedClass != null) return;
+      builder.append(
+          "A `Class` type check can only succeed when its type argument is an un-parameterized class, a module, `unknown`, `module`, or an alias to one of those types.");
+    }
+  }
+
   public static final class Constraint extends VmTypeMismatchException {
 
     private final SourceSection constraintBodySourceSection;
