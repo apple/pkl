@@ -1,0 +1,9 @@
+abstract class AbstractMethod {
+  abstract function foo(): Int
+}
+
+class MyClass extends AbstractMethod {
+}
+
+foo: MyClass
+
