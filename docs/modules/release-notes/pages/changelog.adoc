@@ -6,6 +6,22 @@ include::ROOT:partial$component-attributes.adoc[]
 
 xref:0.33.adoc[Release Notes]
 
+[[release-0.32.1]]
+== 0.32.1 (2026-07-23)
+
+=== Fixes
+
+* Fix closing intermediate response bodies when following HTTP redirects (https://github.com/apple/pkl/pull/1749[#1749]).
+* Fix `eval -x` of local members (https://github.com/apple/pkl/pull/1760[#1760]).
+* Fix variable resolution of object body params (https://github.com/apple/pkl/pull/1788[#1788]).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/bioball[@bioball]
+* https://github.com/KushalP[@KushalP]
+
 [[release-0.32.0]]
 == 0.32.0 (2026-07-08)
 

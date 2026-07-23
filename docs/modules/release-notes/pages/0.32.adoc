@@ -1,6 +1,6 @@
 = Pkl 0.32 Release Notes
 :version: 0.32
-:version-minor: 0.32.0
+:version-minor: 0.32.1
 :release-date: July 8th, 2026
 :version-next: 0.33
 :version-next-date: October 2026
