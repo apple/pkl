@@ -15,7 +15,7 @@
 //===----------------------------------------------------------------------===//
 
 /// A JSON parser.
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.32.1" }
 module pkl.json
 
 /// Annotate properties of classes and modules with this class to override how a [JsonRenderer]

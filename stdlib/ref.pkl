@@ -27,7 +27,7 @@
 ///   * Workflow tools
 ///
 /// _**WARNING**_: This module is _experimental_ and not ready for production use.
-@ModuleInfo { minPklVersion = "0.32.0" }
+@ModuleInfo { minPklVersion = "0.32.1" }
 @Since { version = "0.32.0" }
 module pkl.ref
 
