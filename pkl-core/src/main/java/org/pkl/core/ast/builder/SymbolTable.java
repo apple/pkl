@@ -417,6 +417,14 @@ public final class SymbolTable {
       return this instanceof AnnotationScope;
     }
 
+    public final boolean isPropertyScope() {
+      return this instanceof PropertyScope;
+    }
+
+    public final boolean isMethodScope() {
+      return this instanceof MethodScope;
+    }
+
     public final boolean isLetScope() {
       return this instanceof LetExpressionScope;
     }

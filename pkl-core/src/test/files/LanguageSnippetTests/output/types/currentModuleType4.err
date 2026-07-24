@@ -1,2 +1,6 @@
-pkl: WARN: Cannot declare `module` types inside class bodies. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
-pkl: WARN: Cannot declare `module` types inside type alias bodies. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+qux = false
+pkl: WARN: Cannot reference `module` type within an annotation body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type within an annotation body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type from const property `currentModuleType4#qux`. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot reference `module` type from const method `currentModuleType4#quux`. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
