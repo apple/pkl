@@ -166,6 +166,40 @@ class EvaluateExpressionTest {
   }
 
   @Test
+  fun `evaluate throwing multi-line expression renders without crashing`() {
+    val error =
+      assertThrows<PklException> {
+        evaluate(
+          "x = 1",
+          """
+          let (_a = 1)
+          let (_b = 2)
+            throw("boom")
+          """
+            .trimIndent(),
+        )
+      }
+
+    assertThat(error.message)
+      .isEqualTo(
+        """
+        –– Pkl Error ––
+        boom
+
+        3 | throw("boom")
+            ^^^^^^^^^^^^^
+        at  (repl:text)
+
+        1 | let (_a = 1)
+            ^^^^^^^^^^^^
+        at repl:text.<let expr> (repl:text)
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `evaluate import`() {
     val result = evaluate("import \"pkl:base\"", "base")
 
