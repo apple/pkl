@@ -383,21 +383,43 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitModuleType(ModuleType type) {
     var sourceSection = createSourceSection(type);
-    for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
-      if (scope.isAnnotationScope()) break;
-      if (scope instanceof ClassScope classScope && classScope.getSuperClass() != type) {
-        logger.warn(
-            ErrorMessages.create("invalidSelfTypeUsage", "module", "class")
-                + " This will be an error in a future release.",
-            VmUtils.createStackFrame(sourceSection, null));
-        break;
+    String errorMessage = null;
+    Object[] errorArgs = new Object[] {};
+
+    // attempt to identify containing class/alias/annotation before checking const
+    // properties/methods
+    for (var scope = symbolTable.getCurrentScope();
+        scope != null && errorMessage == null;
+        scope = scope.getParent()) {
+      if (scope.isAnnotationScope()) {
+        errorMessage = "moduleTypeIsNotConstAnnotation";
+      } else if (scope.isClassScope()) {
+        errorMessage = "moduleTypeIsNotConstClass";
       } else if (scope.isTypeAliasScope()) {
-        logger.warn(
-            ErrorMessages.create("invalidSelfTypeUsage", "module", "type alias")
-                + " This will be an error in a future release.",
-            VmUtils.createStackFrame(sourceSection, null));
-        break;
+        errorMessage = "moduleTypeIsNotConstTypeAlias";
       }
+    }
+    for (var scope = symbolTable.getCurrentScope();
+        scope != null && errorMessage == null;
+        scope = scope.getParent()) {
+      if (!scope.getConstLevel().isConst()) {
+        continue;
+      }
+      if (scope.isPropertyScope()) {
+        errorMessage = "moduleTypeIsNotConstProperty";
+        errorArgs = new Object[] {scope.getQualifiedName()};
+      } else if (scope.isMethodScope()) {
+        errorMessage = "moduleTypeIsNotConstMethod";
+        errorArgs = new Object[] {scope.getQualifiedName()};
+      } else {
+        throw exceptionBuilder().unreachableCode().build();
+      }
+    }
+    if (errorMessage != null) {
+      logger.warn(
+          ErrorMessages.create(errorMessage, errorArgs)
+              + " This will be an error in a future release.",
+          VmUtils.createStackFrame(sourceSection, null));
     }
 
     return new UnresolvedTypeNode.Module(sourceSection);
