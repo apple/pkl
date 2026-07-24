@@ -347,6 +347,9 @@ internal abstract class PageGenerator<out S>(
       PType.MODULE -> {
         +"module"
       }
+      PType.THIS -> {
+        +"this"
+      }
       is PType.StringLiteral -> {
         +"\"${type.literal}\""
       }
