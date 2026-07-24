@@ -169,11 +169,17 @@ class EvaluateExpressionTest {
   fun `evaluate throwing multi-line expression renders without crashing`() {
     val error =
       assertThrows<PklException> {
-        evaluate("x = 1", "let (_a = 1)\n    let (_b = 2)\n        throw(\"boom\")")
+        evaluate(
+          "x = 1",
+          """
+          let (_a = 1)
+          let (_b = 2)
+            throw("boom")
+          """
+            .trimIndent(),
+        )
       }
 
-    // A multi-line frame used to throw `IllegalArgumentException: count is negative` while
-    // rendering.
     assertThat(error.message)
       .isEqualTo(
         """
