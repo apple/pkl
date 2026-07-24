@@ -44,15 +44,15 @@ output {
   // force eval but don't render to prevent recursion
   value =
     let (r1 = res1)
-      let (r2 = res2)
-        let (r3 = res3)
-          let (r4 = res4)
-            let (r5 = res5)
-              let (r6 = res6)
-                let (r6a = res6a)
-                  let (r7 = res7)
-                    let (r8 = res8)
-                      let (r9 = res9)
-                        let (r10 = res10)
-                          new Dynamic { result = "ok" }
+    let (r2 = res2)
+    let (r3 = res3)
+    let (r4 = res4)
+    let (r5 = res5)
+    let (r6 = res6)
+    let (r6a = res6a)
+    let (r7 = res7)
+    let (r8 = res8)
+    let (r9 = res9)
+    let (r10 = res10)
+      new Dynamic { result = "ok" }
 }

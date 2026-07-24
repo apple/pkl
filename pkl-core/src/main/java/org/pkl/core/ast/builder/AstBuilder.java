@@ -35,6 +35,7 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.Logger;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManagerException;
@@ -118,6 +119,7 @@ import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
 import org.pkl.core.ast.expression.member.InvokeObjectMethodNode;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
 import org.pkl.core.ast.expression.member.ReadAmbiguousLocalityPropertyNode;
+import org.pkl.core.ast.expression.member.ReadClassNode;
 import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
@@ -127,6 +129,7 @@ import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
+import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.expression.primary.OuterNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
@@ -203,6 +206,7 @@ import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
 import org.pkl.core.stdlib.registry.MemberRegistryFactory;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
 import org.pkl.parser.Span;
@@ -274,6 +278,7 @@ import org.pkl.parser.syntax.Type.NothingType;
 import org.pkl.parser.syntax.Type.NullableType;
 import org.pkl.parser.syntax.Type.ParenthesizedType;
 import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.ThisType;
 import org.pkl.parser.syntax.Type.UnionType;
 import org.pkl.parser.syntax.Type.UnknownType;
 import org.pkl.parser.syntax.TypeAlias;
@@ -282,6 +287,7 @@ import org.pkl.parser.syntax.TypeParameterList;
 
 public class AstBuilder extends AbstractAstBuilder<Object> {
   private final VmLanguage language;
+  private final Logger logger;
   private final ModuleInfo moduleInfo;
 
   private final ModuleKey moduleKey;
@@ -293,9 +299,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private final boolean isMethodReturnTypeChecked;
 
   public AstBuilder(
-      Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
+      Source source,
+      VmLanguage language,
+      Logger logger,
+      ModuleInfo moduleInfo,
+      ModuleResolver moduleResolver) {
     super(source);
     this.language = language;
+    this.logger = logger;
     this.moduleInfo = moduleInfo;
 
     moduleKey = moduleInfo.getModuleKey();
@@ -310,6 +321,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public static AstBuilder create(
       Source source,
       VmLanguage language,
+      Logger logger,
       Module ctx,
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
@@ -350,7 +362,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               isAmend);
     }
 
-    return new AstBuilder(source, language, moduleInfo, moduleResolver);
+    return new AstBuilder(source, language, logger, moduleInfo, moduleResolver);
   }
 
   @Override
@@ -365,7 +377,59 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public UnresolvedTypeNode visitModuleType(ModuleType type) {
-    return new UnresolvedTypeNode.Module(createSourceSection(type));
+    var sourceSection = createSourceSection(type);
+    for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
+      if (scope.isAnnotationScope()) break;
+      if (scope instanceof ClassScope classScope && classScope.getSuperClass() != type) {
+        logger.warn(
+            ErrorMessages.create("invalidSelfTypeUsage", "module", "class")
+                + " This will be an error in a future release.",
+            VmUtils.createStackFrame(sourceSection, null));
+        break;
+      } else if (scope.isTypeAliasScope()) {
+        logger.warn(
+            ErrorMessages.create("invalidSelfTypeUsage", "module", "type alias")
+                + " This will be an error in a future release.",
+            VmUtils.createStackFrame(sourceSection, null));
+        break;
+      }
+    }
+
+    return new UnresolvedTypeNode.Module(sourceSection);
+  }
+
+  @Override
+  public UnresolvedTypeNode visitThisType(ThisType type) {
+    var sourceSection = createSourceSection(type);
+    // need to pass explicit class name for property and method arg/return type annotations
+    // do not need: when in any object or at the module level (where `this` is the receiver's class)
+    ClassScope classScope = null;
+    var baseScope = symbolTable.getCurrentScope();
+    for (var scope = baseScope; scope != null; scope = scope.getParent()) {
+      if (scope.isObjectScope() || scope.isCustomThisScope()) {
+        break;
+      }
+      if (scope instanceof ClassScope foundClassScope) {
+        classScope = foundClassScope;
+        break;
+      }
+      // it's still safe to break on ObjectScope because this is valid:
+      // typealias Foo = List(any((it) -> it == new Dynamic { it is this })) // this == Dynamic
+      if (scope.isTypeAliasScope()) {
+        throw exceptionBuilder()
+            .withSourceSection(sourceSection)
+            .evalError("invalidSelfTypeUsage", "this", "type alias")
+            .build();
+      }
+    }
+
+    var getClassNode =
+        classScope == null
+            ? new GetReceiverClassNode(sourceSection)
+            : isBaseModule
+                ? new GetBaseModuleClassNode(classScope.getName())
+                : new ReadClassNode(sourceSection, classScope.getName(), classScope.isLocal());
+    return new UnresolvedTypeNode.This(sourceSection, getClassNode);
   }
 
   @Override
@@ -1711,11 +1775,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         org.pkl.core.runtime.Identifier.property(clazz.getName().getValue(), isLocalClass);
 
     var annotations = doVisitAnnotations(clazz.getAnnotations(), className);
+    var supertypeCtx = clazz.getSuperClass();
 
     return symbolTable.enterClass(
         className,
         modifiers,
         typeParameters,
+        supertypeCtx,
         scope -> {
           var bodyNode = clazz.getBody();
 
@@ -1723,8 +1789,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           List<ClassMethod> methods = bodyNode != null ? bodyNode.getMethods() : List.of();
           registerClassScopeNames(scope, properties, methods);
           checkAbstractMembersAllowed(modifiers, properties, methods);
-
-          var supertypeCtx = clazz.getSuperClass();
 
           // needs to be inside `enterClass` so that class' type parameters are in scope
           var supertypeNode =

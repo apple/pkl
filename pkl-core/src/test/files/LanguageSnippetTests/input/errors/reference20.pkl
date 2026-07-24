@@ -5,11 +5,11 @@ class A {
 }
 
 class D extends ref.Domain {
-  function renderReference(reference: ref.Reference<D, Any>): String = throw("not supported")
+  function renderReference(reference: ref.Reference<this, Any>): String = throw("not supported")
 }
 local d: D = new {}
 
 local test = ref.Reference(d, A, "").foo
 testInterpolation = "test:\(test)"
 
-// this tests that the interpolation appears in the output when referenceToString throws
+// this tests that the interpolation appears in the output when renderReference throws

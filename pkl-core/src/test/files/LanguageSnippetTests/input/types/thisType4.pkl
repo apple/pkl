@@ -1,0 +1,22 @@
+open module thisType4
+// cover custom this contexts in an open module
+
+local foo: Listing(any((it) -> it is this)) = new { bar }
+local bar: Listing = new { foo }
+res1 = foo.length
+
+local baz: Listing = new {
+  new Listing { "hello" }
+  new Mapping { ["hello"] = "world" }
+  module
+}
+
+res2 = (baz) {
+  [[this is this]] {
+    res2 = "blah"
+  }
+  when (module is this) {
+    123
+  }
+  module is this
+}

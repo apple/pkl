@@ -231,6 +231,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @Override
+  @TruffleBoundary
   public TypeAlias export() {
     synchronized (pTypeAliasLock) {
       if (__pTypeAlias == null) {

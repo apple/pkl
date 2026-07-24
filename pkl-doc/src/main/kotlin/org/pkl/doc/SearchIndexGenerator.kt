@@ -343,6 +343,9 @@ internal class SearchIndexGenerator(private val outputDir: Path, consoleOut: Out
       PType.MODULE -> {
         append("module")
       }
+      PType.THIS -> {
+        append("this")
+      }
       is PType.StringLiteral -> {
         append("\\\"${type.literal}\\\"")
       }

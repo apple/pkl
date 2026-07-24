@@ -43,6 +43,7 @@ import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.util.ArrayUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.parser.Lexer;
+import org.pkl.parser.syntax.Type;
 
 public final class SymbolTable {
 
@@ -69,6 +70,7 @@ public final class SymbolTable {
       Identifier name,
       int modifiers,
       List<TypeParameter> typeParameters,
+      @Nullable Type superClass,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
         new ClassScope(
@@ -77,7 +79,8 @@ public final class SymbolTable {
             toQualifiedName(name),
             modifiers,
             new FrameDescriptorBuilder(),
-            typeParameters),
+            typeParameters,
+            superClass),
         nodeFactory);
   }
 
@@ -403,6 +406,10 @@ public final class SymbolTable {
       return curr;
     }
 
+    public final boolean isAnnotationScope() {
+      return this instanceof AnnotationScope;
+    }
+
     public final boolean isLetScope() {
       return this instanceof LetExpressionScope;
     }
@@ -413,6 +420,14 @@ public final class SymbolTable {
 
     public final boolean isClassScope() {
       return this instanceof ClassScope;
+    }
+
+    public final boolean isTypeAliasScope() {
+      return this instanceof TypeAliasScope;
+    }
+
+    public final boolean isObjectScope() {
+      return this instanceof ObjectScope;
     }
 
     public final boolean isClassMemberScope() {
@@ -981,6 +996,8 @@ public final class SymbolTable {
 
   public static final class ClassScope extends TypeParameterizableScope implements LexicalScope {
     private final boolean isClosed;
+    private final boolean isLocal;
+    private final @Nullable Type superClass;
 
     public ClassScope(
         Scope parent,
@@ -988,7 +1005,8 @@ public final class SymbolTable {
         String qualifiedName,
         int modifiers,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        List<TypeParameter> typeParameters,
+        @Nullable Type superClass) {
       super(
           parent,
           name,
@@ -999,11 +1017,12 @@ public final class SymbolTable {
           EMPTY_INT_ARRAY,
           EMPTY_INT_ARRAY);
       isClosed = VmModifier.isClosed(modifiers);
+      isLocal = VmModifier.isLocal(modifiers);
+      this.superClass = superClass;
     }
 
     @Override
     public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
-
       var member = properties.get(name);
       if (member == null) return null;
       return new LexicalProperty(false, member.modifiers, levelsUp);
@@ -1011,10 +1030,17 @@ public final class SymbolTable {
 
     @Override
     public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
-
       var member = methods.get(name);
       if (member == null) return null;
       return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);
+    }
+
+    public boolean isLocal() {
+      return isLocal;
+    }
+
+    public @Nullable Type getSuperClass() {
+      return superClass;
     }
   }
 

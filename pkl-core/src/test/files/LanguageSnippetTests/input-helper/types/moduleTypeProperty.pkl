@@ -1,0 +1,6 @@
+open module moduleTypeProperty
+
+x = 1
+y = mod.x
+modName = module.getClass().toString()
+hidden mod: module
