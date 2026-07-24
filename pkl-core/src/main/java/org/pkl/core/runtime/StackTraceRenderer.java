@@ -128,16 +128,12 @@ public final class StackTraceRenderer {
       sourceLine = sourceLine.substring(PREAMBLE_LENGTH);
       hasPreamble = true;
     }
-    var startColumn = frame.getStartColumn() - leadingWhitespace;
+    var preambleOffset = hasPreamble ? PREAMBLE_LENGTH : 0;
+    var startColumn = frame.getStartColumn() - leadingWhitespace - preambleOffset;
     var endColumn =
         frame.getStartLine() == frame.getEndLine()
-            ? frame.getEndColumn() - leadingWhitespace
+            ? frame.getEndColumn() - leadingWhitespace - preambleOffset
             : sourceLine.length();
-
-    if (hasPreamble) {
-      startColumn -= PREAMBLE_LENGTH;
-      endColumn -= PREAMBLE_LENGTH;
-    }
 
     var prefix = frame.getStartLine() + " | ";
     out.append(AnsiTheme.STACK_TRACE_MARGIN, leftMargin)
