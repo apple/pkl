@@ -1,0 +1,11 @@
+prefix=${pcfiledir}/../..
+exec_prefix=${prefix}
+libdir=${exec_prefix}/lib
+includedir=${prefix}/include
+
+Name: libpkl
+Description: C library for calling into Pkl's message passing API.
+URL: https://pkl-lang.org/main/current/libpkl/index.html
+Version: @version@
+Libs: -L${libdir} -lpkl -lz -lpthread
+Cflags: -I${includedir}

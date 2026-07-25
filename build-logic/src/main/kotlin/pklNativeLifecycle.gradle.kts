@@ -46,31 +46,20 @@ val assembleNative =
   tasks.register("assembleNative") {
     group = "build"
 
+    @Suppress("DuplicatedCode")
     if (!buildInfo.isCrossArchSupported && buildInfo.isCrossArch) {
-      throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
+      doLast {
+        throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
+      }
     }
 
-    when {
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "aarch64" -> {
-        wraps(assembleNativeMacOsAarch64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "aarch64" -> {
-        wraps(assembleNativeLinuxAarch64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "amd64" -> {
-        if (buildInfo.musl) wraps(assembleNativeAlpineLinuxAmd64)
-        else wraps(assembleNativeLinuxAmd64)
-      }
-      buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
-        wraps(assembleNativeWindowsAmd64)
-      }
-      else -> {
-        doLast {
-          throw GradleException(
-            "Cannot build targeting ${buildInfo.os.name}/${buildInfo.targetArch} with musl=${buildInfo.musl}"
-          )
-        }
-      }
+    @Suppress("DuplicatedCode")
+    when (buildInfo.targetMachine) {
+      Target.MacosAarch64 -> wraps(assembleNativeMacOsAarch64)
+      Target.LinuxAarch64 -> wraps(assembleNativeLinuxAarch64)
+      Target.LinuxAmd64 -> wraps(assembleNativeLinuxAmd64)
+      Target.AlpineLinuxAmd64 -> wraps(assembleNativeAlpineLinuxAmd64)
+      Target.WindowsAmd64 -> wraps(assembleNativeWindowsAmd64)
     }
   }
 
@@ -79,31 +68,18 @@ val testNative =
     group = "verification"
     dependsOn(assembleNative)
 
+    @Suppress("DuplicatedCode")
     if (!buildInfo.isCrossArchSupported && buildInfo.isCrossArch) {
       throw GradleException("Cross-arch builds are not supported on ${buildInfo.os.name}")
     }
 
-    when {
-      buildInfo.os.isMacOsX && buildInfo.targetArch == "aarch64" -> {
-        dependsOn(testNativeMacOsAarch64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "aarch64" -> {
-        dependsOn(testNativeLinuxAarch64)
-      }
-      buildInfo.os.isLinux && buildInfo.targetArch == "amd64" -> {
-        if (buildInfo.musl) dependsOn(testNativeAlpineLinuxAmd64)
-        else dependsOn(testNativeLinuxAmd64)
-      }
-      buildInfo.os.isWindows && buildInfo.targetArch == "amd64" -> {
-        dependsOn(testNativeWindowsAmd64)
-      }
-      else -> {
-        doLast {
-          throw GradleException(
-            "Cannot build targeting ${buildInfo.os.name}/${buildInfo.targetArch} with musl=${buildInfo.musl}"
-          )
-        }
-      }
+    @Suppress("DuplicatedCode")
+    when (buildInfo.targetMachine) {
+      Target.MacosAarch64 -> wraps(testNativeMacOsAarch64)
+      Target.LinuxAarch64 -> wraps(testNativeLinuxAarch64)
+      Target.LinuxAmd64 -> wraps(testNativeLinuxAmd64)
+      Target.AlpineLinuxAmd64 -> wraps(testNativeAlpineLinuxAmd64)
+      Target.WindowsAmd64 -> wraps(testNativeWindowsAmd64)
     }
   }
 

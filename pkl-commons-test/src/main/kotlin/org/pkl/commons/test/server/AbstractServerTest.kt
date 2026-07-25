@@ -13,24 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.server
+package org.pkl.commons.test.server
 
-import com.github.tomakehurst.wiremock.client.WireMock.equalTo
-import com.github.tomakehurst.wiremock.client.WireMock.get
-import com.github.tomakehurst.wiremock.client.WireMock.getRequestedFor
-import com.github.tomakehurst.wiremock.client.WireMock.ok
-import com.github.tomakehurst.wiremock.client.WireMock.stubFor
-import com.github.tomakehurst.wiremock.client.WireMock.urlEqualTo
-import com.github.tomakehurst.wiremock.client.WireMock.verify
-import com.github.tomakehurst.wiremock.junit5.WireMockRuntimeInfo
-import com.github.tomakehurst.wiremock.junit5.WireMockTest
 import java.io.PipedInputStream
 import java.io.PipedOutputStream
 import java.net.URI
 import java.nio.file.Path
+import java.util.concurrent.AbstractExecutorService
 import java.util.concurrent.CountDownLatch
 import java.util.concurrent.ExecutorService
 import java.util.concurrent.Executors
+import java.util.concurrent.TimeUnit
 import java.util.concurrent.atomic.AtomicInteger
 import kotlin.io.path.createDirectories
 import kotlin.io.path.outputStream
@@ -39,20 +32,47 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.AfterAll
 import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Disabled
-import org.junit.jupiter.api.Nested
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
 import org.pkl.commons.test.PackageServer
+import org.pkl.commons.test.debugRendering
 import org.pkl.core.messaging.Messages.*
 import org.pkl.core.module.PathElement
+import org.pkl.server.*
 
+@Suppress("FunctionName")
 abstract class AbstractServerTest {
 
   companion object {
-    /** Set to `true` to bypass messagepack serialization when running [JvmServerTest]. */
-    internal const val USE_DIRECT_TRANSPORT = false
+    /** Set to `true` to bypass messagepack serialization when running JvmServerTest. */
+    const val USE_DIRECT_TRANSPORT = false
     lateinit var executor: ExecutorService
+
+    fun createDirectExecutor(): ExecutorService =
+      object : AbstractExecutorService() {
+        override fun execute(command: Runnable) {
+          command.run()
+        }
+
+        override fun shutdown() {}
+
+        override fun shutdownNow(): MutableList<Runnable> {
+          throw UnsupportedOperationException("shutdownNow")
+        }
+
+        override fun isShutdown(): Boolean {
+          throw UnsupportedOperationException("isShutdown")
+        }
+
+        override fun isTerminated(): Boolean {
+          throw UnsupportedOperationException("isTerminated")
+        }
+
+        override fun awaitTermination(timeout: Long, unit: TimeUnit): Boolean {
+          throw UnsupportedOperationException("awaitTermination")
+        }
+      }
 
     @BeforeAll
     @JvmStatic
@@ -643,7 +663,8 @@ abstract class AbstractServerTest {
   fun `read and evaluate module path from jar`(@TempDir tempDir: Path) {
     val jarFile = tempDir.resolve("resource1.jar")
     jarFile.outputStream().use { outStream ->
-      javaClass.getResourceAsStream("resource1.jar")!!.use { inStream ->
+      javaClass.getResourceAsStream("/org/pkl/commons/test/server/resource1.jar")!!.use { inStream
+        ->
         inStream.copyTo(outStream)
       }
     }
@@ -933,7 +954,7 @@ abstract class AbstractServerTest {
     writerA.start()
     writerB.start()
 
-    done.await(30, java.util.concurrent.TimeUnit.SECONDS)
+    done.await(30, TimeUnit.SECONDS)
     pipeOut.close()
     reader.join(10_000)
 
@@ -1112,38 +1133,7 @@ abstract class AbstractServerTest {
       .contains("Rewrite rule must end with '/', but was 'https://example.com'")
   }
 
-  @Nested
-  @WireMockTest
-  inner class HttpTests {
-    @Test
-    fun `http headers`(wwRuntimeInfo: WireMockRuntimeInfo) {
-      stubFor(get(urlEqualTo("/foo.pkl")).willReturn(ok("foo = 1")))
-      val evaluatorId =
-        client.sendCreateEvaluatorRequest(
-          http =
-            Http(
-              caCertificates = null,
-              proxy = null,
-              rewrites = null,
-              headers = mapOf("**" to mapOf("X-Foo" to listOf("Foo"))),
-            )
-        )
-      client.send(
-        EvaluateRequest(
-          1,
-          evaluatorId,
-          URI("repl:text"),
-          "res = import(\"${wwRuntimeInfo.httpBaseUrl}/foo.pkl\")",
-          "output.text",
-        )
-      )
-      val response = client.receive<EvaluateResponse>()
-      assertThat(response.error).isNull()
-      verify(getRequestedFor(urlEqualTo("/foo.pkl")).withHeader("X-Foo", equalTo("Foo")))
-    }
-  }
-
-  private fun TestTransport.sendCreateEvaluatorRequest(
+  protected fun TestTransport.sendCreateEvaluatorRequest(
     requestId: Long = 123,
     resourceReaders: List<ResourceReaderSpec> = listOf(),
     moduleReaders: List<ModuleReaderSpec> = listOf(),
