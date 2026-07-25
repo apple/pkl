@@ -283,12 +283,6 @@ val Target.libraryDir
 val Target.tempOutputDir
   get() = layout.buildDirectory.dir("tmp/native-libs/$targetName")
 
-val createArtifacts =
-  tasks.register("createArtifacts") {
-    dependsOn(buildSharedLibrary, buildStaticLibrary, tasks.processResources)
-    doLast { copy { from(layout.buildDirectory.file("resources/")) } }
-  }
-
 val distTar =
   tasks.register<Tar>("distTar") {
     val isUnix = buildInfo.os.isMacOS || buildInfo.os.isLinux
@@ -307,7 +301,7 @@ val distZip =
     onlyIf { isWindows }
     dependsOn(buildSharedLibrary, buildStaticLibrary, processFiles)
     val baseName = "libpkl-${buildInfo.pklVersionNonUnique}-${buildInfo.targetMachine.targetName}"
-    archiveFileName = "${baseName}.tar.gz"
+    archiveFileName = "${baseName}.zip"
     from(buildInfo.targetMachine.outputDir)
     into(baseName)
   }

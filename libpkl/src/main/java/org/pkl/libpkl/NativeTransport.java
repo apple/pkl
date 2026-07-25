@@ -60,9 +60,13 @@ public class NativeTransport extends AbstractMessageTransport {
   }
 
   public void sendMessage(int length, CCharPointer ptr) throws ProtocolException {
+    if (length == 0) {
+      throw new ProtocolException("Unexpected end of input; 0 message bytes");
+    }
     try (var is = new NativeInputStream(length, ptr);
         var unpacker = MessagePack.newDefaultUnpacker(is)) {
       var message = new ServerMessagePackDecoder(unpacker).decode();
+      // guaranteed by `length == 0` check above
       assert message != null;
       accept(message);
     } catch (IOException e) {

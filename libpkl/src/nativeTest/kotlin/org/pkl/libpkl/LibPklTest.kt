@@ -45,6 +45,26 @@ class LibPklTest {
   }
 
   @Test
+  fun testEmptyMessageIsRejected() {
+    val execRef = PointerByReference()
+    val error = LibPklJNA.PklError()
+    val messageResponseHandler =
+      object : LibPklJNA.PklMessageResponseHandler {
+        override fun invoke(length: Int, message: Pointer, userData: Pointer?) {}
+      }
+    assertThat(LibPklJNA.INSTANCE.pkl_init(messageResponseHandler, Pointer.NULL, execRef, error))
+      .`as` { "Failed to call pkl_init: ${error.message}" }
+      .isEqualTo(0)
+    try {
+      val result = LibPklJNA.INSTANCE.pkl_send_message(execRef.value, 0, byteArrayOf(0), error)
+      assertThat(result).isEqualTo(2)
+      assertThat(error.message).contains("Unexpected end of input")
+    } finally {
+      assertThat(LibPklJNA.INSTANCE.pkl_close(execRef.value, error)).isEqualTo(0)
+    }
+  }
+
+  @Test
   fun testVersionString() {
     val currentVersion = Release.current().version.toString()
     assertThat(LibPklJNA.INSTANCE.pkl_version()).isEqualTo(currentVersion)

@@ -42,7 +42,7 @@ public class LibPklInternal {
   private static final byte[] STOP_SENTINEL = new byte[0];
 
   // keep in sync with values defined in pkl.h
-  private static final int PKL_ERR_PROTOCOL = 2;
+  static final int PKL_ERR_PROTOCOL = 2;
 
   private LibPklInternal() {}
 

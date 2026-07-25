@@ -63,12 +63,27 @@ void test_null_send_message() {
 	printf("✓ Error handling works\n");
 }
 
+// A zero-length message decodes to nothing and must be reported as an error, not silently accepted.
+void test_empty_message() {
+	pkl_error_t err = { 0 };
+	pkl_exec_t *exec = NULL;
+	assert(pkl_init(test_message_handler, NULL, &exec, &err) == 0);
+
+	char dummy = 0;
+	int result = pkl_send_message(exec, 0, &dummy, &err);
+	assert(result == PKL_ERR_PROTOCOL);
+
+	assert(pkl_close(exec, &err) == 0);
+	printf("✓ Empty message rejected\n");
+}
+
 int main() {
 	printf("Running libpkl C tests...\n\n");
 
 	test_version();
 	test_init_close();
 	test_null_send_message();
+	test_empty_message();
 
 	printf("\nAll tests passed!\n");
 	return 0;

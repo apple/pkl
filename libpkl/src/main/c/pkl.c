@@ -107,20 +107,15 @@ static int pkl_start_dispatch_worker(pkl_exec_t *pexec, pkl_error_t *error) {
 #ifdef _WIN32
   pexec->queue_thread = CreateThread(NULL, 0, pkl_dispatch_worker, pexec, 0, NULL);
   if (pexec->queue_thread == NULL) {
-    if (error != NULL) {
-      error->message = "Failed to create response dispatch thread";
-    }
-    return -1;
-  }
 #else
 	if (pthread_create(&pexec->queue_thread, NULL, pkl_dispatch_worker, pexec)
 			!= 0) {
+#endif
 		if (error != NULL) {
 			error->message = "Failed to create response dispatch thread";
 		}
 		return -1;
 	}
-#endif
 	return 0;
 }
 
@@ -293,7 +288,7 @@ int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *message,
 	if (lock_response != 0) {
 		return lock_response;
 	}
-	char *errormessage;
+	char *errormessage = NULL;
 	int resp = pkl_internal_send_message(pexec->graal_isolatethread, length,
 			message, &errormessage);
 	pkl_unlock_mutex(pexec);

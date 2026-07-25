@@ -21,6 +21,8 @@
 #
 # Use with --native-compiler-path=${pathToThisScript}
 
+set -e
+
 # Detect OS
 OS=$(uname -s)
 case "$OS" in
@@ -66,10 +68,10 @@ echo "=====================================================" >> "${LOG_FILE}"
 echo "                  SHARED LIBRARY                     " >> "${LOG_FILE}"
 echo "=====================================================" >> "${LOG_FILE}"
 
-CC_ARGS=$*
-echo "cc $CC_ARGS" >> "${LOG_FILE}"
-# shellcheck disable=SC2086
-cc $CC_ARGS
+CC_ARGS=( "$@" )
+echo "cc ${CC_ARGS[*]@Q}" >> "${LOG_FILE}"
+cc "${CC_ARGS[@]}"
+
 echo "=====================================================" >> "${LOG_FILE}"
 echo "                   STATIC LIBRARY                    " >> "${LOG_FILE}"
 echo "=====================================================" >> "${LOG_FILE}"
