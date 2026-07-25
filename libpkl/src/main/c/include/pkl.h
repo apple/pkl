@@ -38,7 +38,7 @@ typedef struct {
 /**
  * Pkl executor instance that manages communication with the Pkl runtime.
  *
- * Instances should be created via pkl_init() and destroyed via pkl_close().
+ * Instances should be created via `pkl_init()` and destroyed via `pkl_close().`
  *
  * All operations on this struct are considered thread-safe and are synchronized via a mutex.
  */
@@ -98,9 +98,7 @@ PKL_EXPORT int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *me
 PKL_EXPORT int pkl_close(pkl_exec_t *pexec, pkl_error_t *error);
 
 /**
- * Returns the version of Pkl in use.
- *
- * @return a string with the version information.
+ * Returns a null-terminated string indicating Pkl's version.
  */
 PKL_EXPORT const char* pkl_version();
 
