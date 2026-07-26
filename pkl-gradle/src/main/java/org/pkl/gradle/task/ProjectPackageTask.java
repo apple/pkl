@@ -65,6 +65,10 @@ public abstract class ProjectPackageTask extends BasePklTask {
 
   @Input
   @Optional
+  public abstract Property<Boolean> getInstall();
+
+  @Input
+  @Optional
   public abstract Property<String> getTestReporter();
 
   public ProjectPackageTask() {
@@ -92,6 +96,7 @@ public abstract class ProjectPackageTask extends BasePklTask {
                 toTestReporter(getTestReporter())),
             getOutputPath().get().getAsFile().getAbsolutePath(),
             getSkipPublishCheck().getOrElse(false),
+            getInstall().getOrElse(false),
             new PrintWriter(System.out),
             new PrintWriter(System.err))
         .run();

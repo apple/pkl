@@ -30,5 +30,7 @@ public interface ProjectPackageSpec extends BasePklSpec {
 
   Property<Boolean> getSkipPublishCheck();
 
+  Property<Boolean> getInstall();
+
   Property<String> getTestReporter();
 }

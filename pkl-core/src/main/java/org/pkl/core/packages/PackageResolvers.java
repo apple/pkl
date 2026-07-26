@@ -318,6 +318,11 @@ final class PackageResolvers {
     }
 
     @Override
+    public Pair<Path, Path> writePackage(PackageUri packageUri, Path metadataFile, Path zipFile) {
+      throw new UnsupportedOperationException();
+    }
+
+    @Override
     public byte[] getBytes(
         PackageAssetUri uri, boolean allowDirectories, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
@@ -428,6 +433,7 @@ final class PackageResolvers {
 
     private final Path tmpDir;
 
+    // if updated, also update CliProjectPackagerTest.`install package to local cache`
     private static final String CACHE_DIR_PREFIX = "package-2";
 
     @GuardedBy("lock")
@@ -503,12 +509,16 @@ final class PackageResolvers {
       }
     }
 
+    private Path doGetMetadataPath(PackageUri packageUri) {
+      var metadataFileName = getLastSegmentName(packageUri) + ".json";
+      var metadataRelativePath = getRelativePath(packageUri).resolve(metadataFileName);
+      return cacheDir.resolve(metadataRelativePath);
+    }
+
     private Path getMetadataPath(
         PackageUri packageUri, URI requestUri, @Nullable Checksums checksums)
         throws IOException, SecurityManagerException {
-      var metadataFileName = getLastSegmentName(packageUri) + ".json";
-      var metadataRelativePath = getRelativePath(packageUri).resolve(metadataFileName);
-      var cachePath = cacheDir.resolve(metadataRelativePath);
+      var cachePath = doGetMetadataPath(packageUri);
       if (Files.exists(cachePath)) {
         return cachePath;
       }
@@ -556,11 +566,15 @@ final class PackageResolvers {
       return metadata;
     }
 
-    private Path getZipFilePath(PackageUri packageUri, DependencyMetadata dependencyMetadata)
-        throws IOException, SecurityManagerException {
+    private Path doGetZipFilePath(PackageUri packageUri) {
       var packageZipName = getLastSegmentName(packageUri) + ".zip";
       var relativePath = getRelativePath(packageUri).resolve(packageZipName);
-      var cachePath = cacheDir.resolve(relativePath);
+      return cacheDir.resolve(relativePath);
+    }
+
+    private Path getZipFilePath(PackageUri packageUri, DependencyMetadata dependencyMetadata)
+        throws IOException, SecurityManagerException {
+      var cachePath = doGetZipFilePath(packageUri);
       if (Files.exists(cachePath)) {
         return cachePath;
       }
@@ -683,6 +697,29 @@ final class PackageResolvers {
         }
         fileSystems.clear();
       }
+    }
+
+    @Override
+    public Pair<Path, Path> writePackage(PackageUri packageUri, Path metadataFile, Path zipFile)
+        throws IOException {
+      Files.createDirectories(tmpDir);
+      var tmpSubpath = IoUtils.encodePath(packageUri.toString().replace("/", "-"));
+      return Pair.of(
+          writePackagePart(metadataFile, doGetMetadataPath(packageUri), tmpSubpath, ".json"),
+          writePackagePart(zipFile, doGetZipFilePath(packageUri), tmpSubpath, ".zip"));
+    }
+
+    private Path writePackagePart(Path srcFile, Path cacheFile, String tmpSubpath, String suffix)
+        throws IOException {
+      var tmpFile = Files.createTempFile(tmpDir, tmpSubpath, suffix);
+      Files.createDirectories(cacheFile.getParent());
+      Files.copy(srcFile, tmpFile, StandardCopyOption.REPLACE_EXISTING);
+      Files.move(
+          tmpFile, cacheFile, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);
+      if (!IoUtils.isWindows()) {
+        Files.setPosixFilePermissions(cacheFile, FILE_PERMISSIONS);
+      }
+      return cacheFile;
     }
   }
 }
