@@ -2,7 +2,7 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local function roundTrip(source: String) = syntax.render(parseNode(source)!!)
+local function roundTrip(source: String) = parseNode(source)!!.render()
 
 local function parseNode(source: String) = new syntax.Parser {}.parseModule(source).node
 
@@ -315,37 +315,37 @@ facts {
   ["modify identifier"] {
     local root = parseNode("x = 1")
     local modified = replaceLeaf(root!!, "identifier", "x", "y")
-    syntax.render(modified) == "y = 1\n"
+    modified.render() == "y = 1\n"
   }
 
   ["modify modifier"] {
     local root = parseNode("hidden x = 1")
     local modified = replaceLeaf(root!!, "modifier", "hidden", "local")
-    syntax.render(modified) == "local x = 1\n"
+    modified.render() == "local x = 1\n"
   }
 
   ["modify string content"] {
     local root = parseNode(#"x = "hello""#)
     local modified = replaceLeaf(root!!, "string_chars", "hello", "world")
-    syntax.render(modified) == #"x = "world"\#n"#
+    modified.render() == #"x = "world"\#n"#
   }
 
   ["modify int literal"] {
     local root = parseNode("x = 42")
     local modified = replaceLeaf(root!!, "int_literal_expr", "42", "99")
-    syntax.render(modified) == "x = 99\n"
+    modified.render() == "x = 99\n"
   }
 
   ["modify boolean literal"] {
     local root = parseNode("x = true")
     local modified = replaceLeaf(root!!, "bool_literal_expr", "true", "false")
-    syntax.render(modified) == "x = false\n"
+    modified.render() == "x = false\n"
   }
 
   ["modify float literal"] {
     local root = parseNode("x = 3.14")
     local modified = replaceLeaf(root!!, "float_literal_expr", "3.14", "2.72")
-    syntax.render(modified) == "x = 2.72\n"
+    modified.render() == "x = 2.72\n"
   }
 
   ["add new modifier"] {
@@ -359,7 +359,7 @@ facts {
         children = List(constModifier) + n.children
       })
     // modifier order is switched by the formatter
-    syntax.render(modified) == """
+    modified.render() == """
       local const x = 1
 
       """
@@ -367,7 +367,7 @@ facts {
 
   ["format delegates to a default Renderer"] {
     local node = parseNode("x = 1")
-    syntax.render(node!!) == new syntax.Renderer {}.render(node!!)
+    node!!.render() == new syntax.Renderer {}.render(node!!)
     new syntax.Renderer {}.render(node!!) == new syntax.Renderer { grammarVersion = "V2" }.render(node!!)
   }
 

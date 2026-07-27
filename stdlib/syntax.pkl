@@ -40,39 +40,6 @@ class Renderer {
   external function render(node: Node): String
 }
 
-/// Render a syntax node back to Pkl source code using default settings.
-function render(node: Node): String = new Renderer {}.render(node)
-
-/// Walk [node] and its descendants top-down, applying [visit] to each node and
-/// returning the (possibly rewritten) tree.
-///
-/// For each node, [visit] returns either:
-/// - `null` to leave the node unchanged and continue walking into its children.
-/// - `Pair(replacement, descend)` to replace the node with `replacement`. When
-///   `descend` is `true`, the children of `replacement` are visited in turn, so
-///   nodes emitted by a rewrite are themselves processed further down. When
-///   `descend` is `false`, `replacement` and its subtree are left as-is.
-///
-/// Constructed nodes must set their own [Node.text] where it applies.
-/// [Node.span] is carried through unchanged unless set explicitly.
-/// [Node.parent] is populated on the returned tree for nodes originating from [parse];
-/// nodes constructed from scratch retain their given `parent`.
-external function walk(node: Node, visit: (Node) -> Pair<Node, Boolean>?): Node
-
-/// Fold [accumulate] over [node] and its descendants, top-down in pre-order.
-///
-/// ```
-/// // count the if-expressions in a module
-/// fold(module.node, 0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
-/// ```
-function fold<Acc>(node: Node, initial: Acc, accumulate: (Acc, Node) -> Acc): Acc =
-  node.children.fold(accumulate.apply(initial, node), (acc, child) -> fold(child, acc, accumulate))
-
-/// Every node at or below [node], in pre-order.
-///
-/// A convenience over [fold] for the common case of enumerating nodes.
-function descendants(node: Node): List<Node> = fold(node, List(), (acc, n) -> acc.add(n))
-
 /// A generic, untyped node in the Pkl syntax tree.
 ///
 /// A node is either a *leaf*, carrying source [text] and no
@@ -93,6 +60,39 @@ class Node {
 
   /// The source location of this node.
   span: Span
+
+  /// Render this node back to Pkl source code using default settings.
+  function render(): String = new Renderer {}.render(this)
+
+  /// Walk this node and its descendants top-down, applying [visit] to each node and
+  /// returning the (possibly rewritten) tree.
+  ///
+  /// For each node, [visit] returns either:
+  /// - `null` to leave the node unchanged and continue walking into its children.
+  /// - `Pair(replacement, descend)` to replace the node with `replacement`. When
+  ///   `descend` is `true`, the children of `replacement` are visited in turn, so
+  ///   nodes emitted by a rewrite are themselves processed further down. When
+  ///   `descend` is `false`, `replacement` and its subtree are left as-is.
+  ///
+  /// Constructed nodes must set their own [text] where it applies.
+  /// [span] is carried through unchanged unless set explicitly.
+  /// [parent] is populated on the returned tree for nodes originating from [Parser.parseModule];
+  /// nodes constructed from scratch retain their given `parent`.
+  external function walk(visit: (Node) -> Pair<Node, Boolean>?): Node
+
+  /// Fold [accumulate] over this node and its descendants, top-down in pre-order.
+  ///
+  /// ```
+  /// // count the if-expressions in a module
+  /// module.node.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
+  /// ```
+  function fold<Acc>(initial: Acc, accumulate: (Acc, Node) -> Acc): Acc =
+    children.fold(accumulate.apply(initial, this), (acc, child) -> child.fold(acc, accumulate))
+
+  /// Every node at or below this node, in pre-order.
+  ///
+  /// A convenience over [fold()] for the common case of enumerating nodes.
+  function descendants(): List<Node> = fold(List(), (acc, n) -> acc.add(n))
 }
 
 /// A source location, given as 1-based line and column positions.
@@ -933,9 +933,7 @@ class StringCharsNode extends StringPartNode {
   /// The text content.
   value: String
 
-  function toNodes(): List<Node> =
-    let (self = this)
-      List(new Node { type = "string_chars"; text = self.value })
+  function toNodes(): List<Node> = List(new Node { type = "string_chars"; text = outer.value })
 }
 
 /// An escape sequence in a string literal (e.g., `"\\n"`, `"\\t"`).
@@ -943,9 +941,7 @@ class StringEscapeNode extends StringPartNode {
   /// The escape sequence text including the leading backslash.
   value: String
 
-  function toNodes(): List<Node> =
-    let (self = this)
-      List(new Node { type = "string_escape"; text = self.value })
+  function toNodes(): List<Node> = List(new Node { type = "string_escape"; text = outer.value })
 }
 
 /// A newline in a multi-line string literal.
@@ -961,10 +957,9 @@ class StringInterpolationNode extends StringPartNode {
   local const terminal: Node = new Node { type = "terminal" }
 
   function toNodes(): List<Node> =
-    let (self = this)
-      List(
-        (terminal) { text = "\\(" },
-        self.expression.builtNode,
-        (terminal) { text = ")" },
-      )
+    List(
+      (terminal) { text = "\\(" },
+      outer.expression.builtNode,
+      (terminal) { text = ")" },
+    )
 }
