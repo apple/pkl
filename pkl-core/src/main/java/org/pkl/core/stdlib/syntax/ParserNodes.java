@@ -347,8 +347,13 @@ public class ParserNodes {
           .addListProperty("annotations", ParserNodes::annotationsOf)
           .addListProperty("modifiers", ParserNodes::moduleDeclModifiers)
           .addProperty("name", ParserNodes::moduleDeclName)
-          .addProperty("amendsUri", ParserNodes::moduleDeclAmendsUri)
-          .addProperty("extendsUri", ParserNodes::moduleDeclExtendsUri);
+          .addProperty("extendsOrAmendsClause", ParserNodes::moduleDeclExtendsOrAmendsClause);
+
+  private static final VmObjectFactory<VmTyped> extendsOrAmendsClauseNodeFactory =
+      new VmObjectFactory<VmTyped>(SyntaxModule::getExtendsOrAmendsClauseNodeClass)
+          .addProperty("node", vm -> vm)
+          .addBooleanProperty("isAmend", ParserNodes::extendsOrAmendsClauseIsAmend)
+          .addStringProperty("uri", ParserNodes::stringCharsOf);
 
   private static final VmObjectFactory<VmTyped> classNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassNodeClass)
@@ -989,14 +994,19 @@ public class ParserNodes {
     return name == null ? VmNull.withoutDefault() : qualifiedIdentifierNodeFactory.create(name);
   }
 
-  private static Object moduleDeclAmendsUri(VmTyped declVm) {
+  private static Object moduleDeclExtendsOrAmendsClause(VmTyped declVm) {
     var clause = findChildVm(declVm, NodeType.AMENDS_CLAUSE);
-    return clause == null ? VmNull.withoutDefault() : stringCharsOf(clause);
+    if (clause == null) {
+      clause = findChildVm(declVm, NodeType.EXTENDS_CLAUSE);
+    }
+    return clause == null
+        ? VmNull.withoutDefault()
+        : extendsOrAmendsClauseNodeFactory.create(clause);
   }
 
-  private static Object moduleDeclExtendsUri(VmTyped declVm) {
-    var clause = findChildVm(declVm, NodeType.EXTENDS_CLAUSE);
-    return clause == null ? VmNull.withoutDefault() : stringCharsOf(clause);
+  private static boolean extendsOrAmendsClauseIsAmend(VmTyped clauseVm) {
+    var data = (NodeData) clauseVm.getExtraStorage();
+    return data.node.type == NodeType.AMENDS_CLAUSE;
   }
 
   private static VmList moduleClasses(VmTyped moduleVm) {

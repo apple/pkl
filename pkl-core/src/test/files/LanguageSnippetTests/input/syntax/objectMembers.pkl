@@ -142,8 +142,7 @@ facts {
   }
 
   ["object body with parameters"] {
-    local result = parse("x = new Listing { a, b -> a }")
-    local mod = result as syntax.ModuleNode
+    local mod = parse("x = new Listing { a, b -> a }")
     local propVal = mod.properties.first.value
     propVal is syntax.NewExprNode
     local newBody = (propVal as syntax.NewExprNode).body

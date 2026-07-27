@@ -54,6 +54,13 @@ public final class SyntaxNodeNodes {
     return switch (self.getVmClass().getSimpleName()) {
       case "ModuleNode" -> buildModule(self);
       case "ModuleDeclarationNode" -> buildModuleDeclaration(self);
+      case "ExtendsOrAmendsClauseNode" ->
+          bool(self, "isAmend")
+              ? branch(
+                  "amends_clause", List.of(terminal("amends"), stringCharsNode(str(self, "uri"))))
+              : branch(
+                  "extends_clause",
+                  List.of(terminal("extends"), stringCharsNode(str(self, "uri"))));
       case "ImportNode" -> buildImport(self);
       case "ClassNode" -> buildClass(self);
       case "TypeAliasNode" -> buildTypeAlias(self);
@@ -202,12 +209,9 @@ public final class SyntaxNodeNodes {
     } else if (modifiers.getLength() > 0) {
       children.add(modifierListNode(modifiers));
     }
-    var amendsUri = member(self, "amendsUri");
-    var extendsUri = member(self, "extendsUri");
-    if (amendsUri instanceof String uri) {
-      children.add(branch("amends_clause", List.of(terminal("amends"), stringCharsNode(uri))));
-    } else if (extendsUri instanceof String uri) {
-      children.add(branch("extends_clause", List.of(terminal("extends"), stringCharsNode(uri))));
+    var clause = optNode(self, "extendsOrAmendsClause");
+    if (clause != null) {
+      children.add(build(clause));
     }
     return branch("module_declaration", children);
   }

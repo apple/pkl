@@ -45,6 +45,10 @@ public final class SyntaxModule extends StdLibModule {
     return ModuleDeclarationNodeClass.instance;
   }
 
+  public static VmClass getExtendsOrAmendsClauseNodeClass() {
+    return ExtendsOrAmendsClauseNodeClass.instance;
+  }
+
   public static VmClass getImportNodeClass() {
     return ImportNodeClass.instance;
   }
@@ -311,6 +315,10 @@ public final class SyntaxModule extends StdLibModule {
 
   private static final class ModuleDeclarationNodeClass {
     static final VmClass instance = loadClass("ModuleDeclarationNode");
+  }
+
+  private static final class ExtendsOrAmendsClauseNodeClass {
+    static final VmClass instance = loadClass("ExtendsOrAmendsClauseNode");
   }
 
   private static final class ImportNodeClass {

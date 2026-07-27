@@ -351,11 +351,17 @@ class ModuleDeclarationNode extends SyntaxNode {
   /// The qualified name of the module, if present.
   name: QualifiedIdentifierNode?
 
-  /// The URI string of the amended module, if any. Mutually exclusive with [extendsUri].
-  amendsUri: String?
+  /// The `extends` or `amends` clause, if present.
+  extendsOrAmendsClause: ExtendsOrAmendsClauseNode?
+}
 
-  /// The URI string of the extended module, if any. Mutually exclusive with [amendsUri].
-  extendsUri: String?
+/// The `extends` or `amends` clause of a module declaration.
+class ExtendsOrAmendsClauseNode extends SyntaxNode {
+  /// Whether this is an `amends` clause. When `false`, this is an `extends` clause.
+  isAmend: Boolean
+
+  /// The URI string of the amended or extended module.
+  uri: String
 }
 
 /// An import declaration.
