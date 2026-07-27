@@ -237,7 +237,7 @@ facts {
     cls.docComment!!.value == "A person."
     cls.annotations.length == 1
     cls.annotations.first.type is syntax.DeclaredTypeNode
-    cls.extendsType is syntax.DeclaredTypeNode
+    cls.superType is syntax.DeclaredTypeNode
     cls.body != null
     cls.body!!.properties.length == 1
     cls.body!!.methods.length == 1
@@ -260,7 +260,7 @@ facts {
     cls.modifiers.isEmpty
     cls.docComment == null
     cls.annotations.isEmpty
-    cls.extendsType == null
+    cls.superType == null
     cls.body == null
     cls.typeParameters.isEmpty
   }

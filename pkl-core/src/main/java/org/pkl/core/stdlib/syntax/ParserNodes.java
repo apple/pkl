@@ -363,7 +363,7 @@ public class ParserNodes {
           .addListProperty("modifiers", ParserNodes::classModifiers)
           .addTypedProperty("identifier", ParserNodes::classIdentifier)
           .addListProperty("typeParameters", ParserNodes::classTypeParameters)
-          .addProperty("extendsType", ParserNodes::classExtendsType)
+          .addProperty("superType", ParserNodes::classSuperType)
           .addProperty("body", ParserNodes::classBody);
 
   private static final VmObjectFactory<VmTyped> typeAliasNodeFactory =
@@ -1026,7 +1026,7 @@ public class ParserNodes {
     return typeParametersOf(findChildVm(classVm, NodeType.CLASS_HEADER));
   }
 
-  private static Object classExtendsType(VmTyped classVm) {
+  private static Object classSuperType(VmTyped classVm) {
     var header = findChildVm(classVm, NodeType.CLASS_HEADER);
     if (header == null) {
       return VmNull.withoutDefault();

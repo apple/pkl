@@ -89,7 +89,7 @@ facts {
     cls.identifier.value == "Bird"
 
     cls.typeParameters.isEmpty
-    cls.extendsType == null
+    cls.superType == null
 
     cls.body != null
     cls.body!!.properties.length == 1
@@ -121,8 +121,8 @@ facts {
     cls.typeParameters.first.identifier.value == "T"
     cls.typeParameters.first.variance == null
 
-    cls.extendsType != null
-    cls.extendsType is syntax.DeclaredTypeNode
+    cls.superType != null
+    cls.superType is syntax.DeclaredTypeNode
   }
 
   ["typealias"] {

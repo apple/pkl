@@ -237,9 +237,9 @@ public final class SyntaxNodeNodes {
     header.add(terminal("class"));
     header.add(build(reqNode(self, "identifier")));
     header.addAll(typeParameterListNodes(listMember(self, "typeParameters")));
-    var extendsType = optNode(self, "extendsType");
-    if (extendsType != null) {
-      header.add(branch("class_header_extends", List.of(terminal("extends"), build(extendsType))));
+    var superType = optNode(self, "superType");
+    if (superType != null) {
+      header.add(branch("class_header_extends", List.of(terminal("extends"), build(superType))));
     }
     children.add(branch("class_header", header));
     var body = optNode(self, "body");

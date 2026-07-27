@@ -394,7 +394,7 @@ class ClassNode extends SyntaxNode {
   typeParameters: List<TypeParameterNode>
 
   /// The supertype this class extends, if present.
-  extendsType: TypeNode?
+  superType: TypeNode?
 
   /// The class body, if present.
   body: ClassBodyNode?
