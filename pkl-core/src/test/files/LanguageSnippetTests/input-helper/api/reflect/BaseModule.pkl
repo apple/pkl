@@ -48,6 +48,8 @@ nullable: Person?
 stringLiteral: "yes"
 constrained: String(length.isBetween(3, 10))
 aliased: MyMap<Person>
+mod: module
+self: this
 
 hidden hiddenProp: String
 const constProp: String = "the const prop"

@@ -25,6 +25,9 @@ import org.pkl.core.runtime.VmUtils;
 @NodeInfo(shortName = "module")
 public final class GetModuleNode extends ExpressionNode {
 
+  // NB: When used in an open module, this may resolve to instances of a regular class that extends
+  // the module.
+
   public GetModuleNode(SourceSection sourceSection) {
     super(sourceSection);
   }

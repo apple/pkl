@@ -1,0 +1,45 @@
+// interactions between references and self types
+
+import "pkl:ref"
+
+class D extends ref.Domain {
+  function renderReference(r: ref.Reference<this, Any>): String =
+    r.getPath().map((it) -> it.property ?? it.key.toString()).join(".")
+}
+
+// this type in a final class
+class Node {
+  parent: this?
+  children: List<this>
+}
+
+// this type in an open class
+open class Node2 {
+  parent: this?
+  children: List<this>
+}
+
+typealias R = ref.Reference<D, Node?>
+typealias R2 = ref.Reference<D, Node2?>
+
+res0: R = ref.Reference(new D {}, Node, null)
+res1: R = res0.parent
+res2: R = res0.parent.parent
+res3: R = res0.children[0]
+res4: R = res0.children[0].parent
+res5: R = res0.children[0].children[0]
+
+res0a: R2 = ref.Reference(new D {}, Node2, null)
+res1a: R2 = res0a.parent
+res2a: R2 = res0a.parent.parent
+res3a: R2 = res0a.children[0]
+res4a: R2 = res0a.children[0].parent
+res5a: R2 = res0a.children[0].children[0]
+
+output {
+  renderer {
+    converters {
+      [ref.Reference] = (it) -> it.toString()
+    }
+  }
+}

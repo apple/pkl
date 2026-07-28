@@ -1042,10 +1042,12 @@ public final class CommandSpecParser {
                 amendModuleNode.getModuleInfo().getModuleKey(),
                 context.getSecurityManager(),
                 context.getModuleResolver(),
+                context.getLogger(),
                 VmUtils::createEmptyModule,
                 ((moduleKey1,
                     resolvedModuleKey,
                     moduleResolver,
+                    logger,
                     source,
                     emptyModule,
                     importNode) -> {

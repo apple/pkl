@@ -1,0 +1,16 @@
+// test this type interacting with local class
+
+local class Foo {
+  bar: this? = new { bar = null }
+  baz = new Foo {} is this
+
+  function qux(a: this): this = this
+  function quux(a: Any): Boolean = a is this
+}
+
+local foo = new Foo {}
+
+res1 = foo.bar
+res2 = foo.baz
+res3 = foo.qux(new Foo {})
+res4 = foo.quux(new Foo {})

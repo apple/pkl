@@ -1,0 +1,2 @@
+pkl: WARN: Cannot declare `module` types inside class bodies. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)
+pkl: WARN: Cannot declare `module` types inside type alias bodies. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType4.pkl)

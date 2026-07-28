@@ -1,0 +1,5 @@
+typealias Foo = module
+
+class Bar {
+  baz: module
+}

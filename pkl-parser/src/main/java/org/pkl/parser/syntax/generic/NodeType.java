@@ -135,6 +135,7 @@ public enum NodeType {
   UNKNOWN_TYPE(NodeKind.TYPE),
   NOTHING_TYPE(NodeKind.TYPE),
   MODULE_TYPE(NodeKind.TYPE),
+  THIS_TYPE(NodeKind.TYPE),
   UNION_TYPE(NodeKind.TYPE),
   FUNCTION_TYPE(NodeKind.TYPE),
   FUNCTION_TYPE_PARAMETERS,

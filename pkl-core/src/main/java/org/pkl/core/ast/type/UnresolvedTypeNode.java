@@ -103,8 +103,28 @@ public abstract class UnresolvedTypeNode extends PklNode {
       var module = (VmTyped) getModuleNode.executeGeneric(frame);
       var moduleClass = module.getVmClass();
       return moduleClass.isClosed()
-          ? new FinalModuleTypeNode(sourceSection, moduleClass)
-          : new NonFinalModuleTypeNode(sourceSection, moduleClass);
+          ? FinalSelfTypeNode.moduleType(sourceSection, moduleClass)
+          : NonFinalSelfTypeNode.moduleType(sourceSection, moduleClass);
+    }
+  }
+
+  /** The `this` type. */
+  public static final class This extends UnresolvedTypeNode {
+    @Child private ExpressionNode getClassNode;
+
+    public This(SourceSection sourceSection, ExpressionNode getClassNode) {
+      super(sourceSection);
+      this.getClassNode = getClassNode;
+    }
+
+    @Override
+    public TypeNode execute(VirtualFrame frame) {
+      CompilerDirectives.transferToInterpreter();
+
+      var clazz = (VmClass) getClassNode.executeGeneric(frame);
+      return clazz.isClosed()
+          ? FinalSelfTypeNode.thisType(sourceSection, clazz)
+          : NonFinalSelfTypeNode.thisType(sourceSection, clazz);
     }
   }
 

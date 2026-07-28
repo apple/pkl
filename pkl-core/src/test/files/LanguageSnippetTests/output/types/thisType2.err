@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Cannot declare `this` types inside type alias bodies.
+
+x | typealias Foo = this
+                    ^^^^
+at thisType2#Foo (file:///$snippetsDir/input/types/thisType2.pkl)

@@ -107,6 +107,9 @@ const bytesType: DeclaredType = DeclaredType(Class(Bytes))
 /// A mirror for the `module` type.
 external const moduleType: ModuleType
 
+/// A mirror for the `this` type.
+external const thisType: ThisType
+
 /// A mirror for the `unknown` type.
 external const unknownType: UnknownType
 
@@ -430,6 +433,11 @@ external class FunctionType extends Type {
 ///
 /// [moduleType] is an instance of this class.
 class ModuleType extends Type
+
+/// The `this` type.
+///
+/// [thisType] is an instance of this class.
+class ThisType extends Type
 
 /// The `unknown` type.
 ///

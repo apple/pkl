@@ -1,0 +1,6 @@
+res0 = ""
+res1 = "parent"
+res2 = "parent.parent"
+res3 = "children.0"
+res4 = "children.0.parent"
+res5 = "children.0.children.0"

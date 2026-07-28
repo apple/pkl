@@ -57,11 +57,7 @@ public final class VmReference extends VmValue {
 
   @TruffleBoundary
   public VmReference(VmTyped domain, VmClass clazz, Object data) {
-    this(
-        domain,
-        data,
-        RrbTree.empty(),
-        normalizeTypes(new PType.Class(clazz.export()), clazz.getModule().getVmClass().export()));
+    this(domain, data, RrbTree.empty(), normalizeTypes(new PType.Class(clazz.export())));
   }
 
   public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, PType referentType) {
@@ -92,12 +88,16 @@ public final class VmReference extends VmValue {
   // * transforming T? into T|Null
   // * dereferencing aliases (except for well-known stdlib alias types)
   // * flattening unions
-  // * when moduleClass is supplied, replace PType.MODULE with appropriate PType.Class
   // * drop PType.Function and PType.TypeVariable
-  private static PType normalizeTypes(PType type, PClass moduleClass) {
+  private static PType normalizeTypes(
+      PType type, @Nullable PType thisClass, @Nullable PType moduleClass) {
     var types = new HashSet<PType>();
-    normalizeTypes(type, moduleClass, types);
+    normalizeTypes(type, types, thisClass, moduleClass);
     return minimizeTypes(types);
+  }
+
+  private static PType normalizeTypes(PType type) {
+    return normalizeTypes(type, null, null);
   }
 
   private static PType minimizeTypes(Set<PType> types) {
@@ -112,7 +112,8 @@ public final class VmReference extends VmValue {
     return new PType.Union(typesList);
   }
 
-  private static void normalizeTypes(PType type, PClass moduleClass, Set<PType> result) {
+  private static void normalizeTypes(
+      PType type, Set<PType> result, @Nullable PType thisClass, @Nullable PType moduleClass) {
     if (type == PType.UNKNOWN || type == PType.NOTHING || type instanceof PType.StringLiteral) {
       result.add(type);
     } else if (type instanceof PType.Class clazz) {
@@ -128,35 +129,50 @@ public final class VmReference extends VmValue {
       } else {
         var typeArgs = new ArrayList<PType>(clazz.getTypeArguments().size());
         for (var arg : clazz.getTypeArguments()) {
-          typeArgs.add(normalizeTypes(arg, moduleClass));
+          typeArgs.add(normalizeTypes(arg, thisClass, moduleClass));
         }
         result.add(new PType.Class(clazz.getPClass(), typeArgs));
       }
     }
     // normalize `T?` to `T | Null`
     else if (type instanceof PType.Nullable nullable) {
-      normalizeTypes(nullable.getBaseType(), moduleClass, result);
+      normalizeTypes(nullable.getBaseType(), result, thisClass, moduleClass);
       result.add(new PType.Class(BaseModule.getNullClass().export()));
       // erase `T(someConstraint)` to `T`
     } else if (type instanceof PType.Constrained constrained) {
-      normalizeTypes(constrained.getBaseType(), moduleClass, result);
+      normalizeTypes(constrained.getBaseType(), result, thisClass, moduleClass);
     } else if (type instanceof PType.Alias alias) {
       if (isPreservedTypeAlias(alias.getTypeAlias())) {
         result.add(alias);
       } else {
-        normalizeTypes(alias.getAliasedType(), alias.getTypeAlias().getModuleClass(), result);
+        normalizeTypes(alias.getAliasedType(), result, thisClass, moduleClass);
       }
     } else if (type instanceof PType.Union union) {
       for (var t : union.getElementTypes()) {
-        normalizeTypes(t, moduleClass, result);
+        normalizeTypes(t, result, thisClass, moduleClass);
       }
+    } else if (type == PType.THIS) {
+      assert thisClass != null;
+      // there are 4 entrypoints here, and only property access can produce THIS or MODULE:
+      // 1. init via the Reference constructor can only normalize an unparameterized PType.Class
+      // 2. typecheck via ReferenceTypeNode erases self types to their actual PType.Class
+      // 3. subscript access can only be achieved by first performing property access, at which time
+      // self types are erased
+      // 4. property access uses the enclosing receiver's class to substitute for these self types
+      // getCandidatePropertyType always passes a value for thisClass, which is null in other cases
+      result.add(thisClass);
     } else if (type == PType.MODULE) {
-      result.add(new PType.Class(moduleClass));
+      // this can be incorrect for usage of the module type in a class's property type annotation,
+      // which is deprecated!!
+      assert moduleClass != null;
+      // see PType.THIS case above
+      result.add(moduleClass);
     } else {
       // remaining types: PType.Function, PType.TypeVariable. no normalizing needed; TypeVariable
       // gets replaced upon instantiation, and Function can bubble up to users as a reference error
       // if accessed.
       result.add(type);
+      // PType.MODULE and PType.THIS can never be encountered here; caller must deref self types
     }
   }
 
@@ -243,7 +259,8 @@ public final class VmReference extends VmValue {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.EXTERNAL_MEMBER);
     }
 
-    normalizeTypes(prop.getType(), clazz.getPClass().getModuleClass(), result);
+    normalizeTypes(
+        prop.getType(), result, clazz, new PType.Class(clazz.getPClass().getModuleClass()));
   }
 
   private static PClassInfo<?> getClassInfo(Object value) {
@@ -273,19 +290,19 @@ public final class VmReference extends VmValue {
       if (!(key instanceof Long)) {
         throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
       }
-      normalizeTypes(clazz.getTypeArguments().get(0), clazz.getPClass().getModuleClass(), result);
+      normalizeTypes(clazz.getTypeArguments().get(0), result, null, null);
       return;
     }
     if (clazz.getPClass().getInfo() == PClassInfo.Mapping
         || clazz.getPClass().getInfo() == PClassInfo.Map) {
       var typeArgs = clazz.getTypeArguments();
-      var keyTypes = normalizeTypes(typeArgs.get(0), clazz.getPClass().getModuleClass());
+      var keyTypes = normalizeTypes(typeArgs.get(0));
       for (var kt : iterateTypes(keyTypes)) {
         if (kt == PType.UNKNOWN
             || (kt instanceof PType.Class klazz && klazz.getPClass().getInfo() == getClassInfo(key))
             || (kt instanceof PType.StringLiteral stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
-          normalizeTypes(typeArgs.get(1), clazz.getPClass().getModuleClass(), result);
+          normalizeTypes(typeArgs.get(1), result, null, null);
           return;
         }
       }
@@ -303,13 +320,14 @@ public final class VmReference extends VmValue {
   /**
    * Tells if this reference's referent type is a subtype of {@code type}. Does not check domain.
    */
-  public boolean referentTypeIsSubtypeOf(PType type, PClass moduleClass) {
+  @TruffleBoundary
+  public boolean referentTypeIsSubtypeOf(PType type) {
     // fast path: if referent is unknown it can match any type check
     if (referentType == PType.UNKNOWN) {
       return true;
     }
 
-    var checkType = normalizeTypes(type, moduleClass);
+    var checkType = normalizeTypes(type);
     // fast path: short circuit if any referent is accepted
     if (checkType == PType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass().export())) {
       return true;

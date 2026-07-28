@@ -28,6 +28,7 @@ import java.util.Set;
 import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.Logger;
 import org.pkl.core.Release;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
@@ -57,6 +58,7 @@ public final class ModuleCache {
         ModuleKey moduleKey,
         ResolvedModuleKey resolvedModuleKey,
         ModuleResolver moduleResolver,
+        Logger logger,
         Source source,
         VmTyped emptyModule,
         @Nullable Node importNode);
@@ -75,6 +77,7 @@ public final class ModuleCache {
       ModuleKey moduleKey,
       SecurityManager securityManager,
       ModuleResolver moduleResolver,
+      Logger logger,
       Supplier<VmTyped> moduleInstantiator,
       ModuleInitializer moduleInitializer,
       @Nullable Node importNode) {
@@ -136,6 +139,7 @@ public final class ModuleCache {
           moduleKey,
           resolvedKey,
           moduleResolver,
+          logger,
           moduleInstantiator,
           moduleInitializer,
           importNode);
@@ -161,13 +165,20 @@ public final class ModuleCache {
     }
 
     return doLoad(
-        moduleKey, resolvedKey, moduleResolver, moduleInstantiator, moduleInitializer, importNode);
+        moduleKey,
+        resolvedKey,
+        moduleResolver,
+        logger,
+        moduleInstantiator,
+        moduleInitializer,
+        importNode);
   }
 
   private VmTyped doLoad(
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedKey,
       ModuleResolver moduleResolver,
+      Logger logger,
       Supplier<VmTyped> moduleInstantiator,
       ModuleInitializer moduleInitializer,
       @Nullable Node importNode) {
@@ -182,7 +193,7 @@ public final class ModuleCache {
       modulesByResolvedUri.put(resolvedKey.getUri(), module);
 
       moduleInitializer.initialize(
-          moduleKey, resolvedKey, moduleResolver, result, module, importNode);
+          moduleKey, resolvedKey, moduleResolver, logger, result, module, importNode);
     } catch (Exception e) {
       // handle error deterministically by caching it and rethrowing it when the module is loaded
       // again
