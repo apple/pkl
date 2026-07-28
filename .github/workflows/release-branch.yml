@@ -192,7 +192,7 @@ jobs:
     - name: Upload executable artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: executable-java
+        name: deploy-artifacts-java-executables
         path: '*/build/executable/**/*'
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -240,7 +240,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-cli-linux-amd64
+        name: deploy-artifacts-pkl-cli-linux-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -290,7 +290,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-cli-linux-aarch64
+        name: deploy-artifacts-pkl-cli-linux-aarch64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -339,7 +339,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-cli-macOS-aarch64
+        name: deploy-artifacts-pkl-cli-macOS-aarch64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -456,7 +456,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-cli-alpine-linux-amd64
+        name: deploy-artifacts-pkl-cli-alpine-linux-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -501,7 +501,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-cli-windows-amd64
+        name: deploy-artifacts-pkl-cli-windows-amd64
         path: pkl-cli*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -549,7 +549,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-doc-linux-amd64
+        name: deploy-artifacts-pkl-doc-linux-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -599,7 +599,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-doc-linux-aarch64
+        name: deploy-artifacts-pkl-doc-linux-aarch64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -648,7 +648,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-doc-macOS-aarch64
+        name: deploy-artifacts-pkl-doc-macOS-aarch64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -765,7 +765,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-doc-alpine-linux-amd64
+        name: deploy-artifacts-pkl-doc-alpine-linux-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -810,7 +810,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-pkl-doc-windows-amd64
+        name: deploy-artifacts-pkl-doc-windows-amd64
         path: pkl-doc*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -858,7 +858,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-libpkl-linux-amd64
+        name: deploy-artifacts-libpkl-linux-amd64
         path: libpkl/build/native-libs/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -908,7 +908,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-libpkl-linux-aarch64
+        name: deploy-artifacts-libpkl-linux-aarch64
         path: libpkl/build/native-libs/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -957,7 +957,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-libpkl-macOS-aarch64
+        name: deploy-artifacts-libpkl-macOS-aarch64
         path: libpkl*/build/executable/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -1074,7 +1074,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-libpkl-alpine-linux-amd64
+        name: deploy-artifacts-libpkl-alpine-linux-amd64
         path: libpkl*/build/distributions/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
@@ -1121,7 +1121,7 @@ jobs:
     - name: Upload built artifacts
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
       with:
-        name: artifacts-libpkl-windows-amd64
+        name: deploy-artifacts-libpkl-windows-amd64
         path: libpkl*/build/distributions/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'

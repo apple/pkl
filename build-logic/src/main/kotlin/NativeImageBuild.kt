@@ -13,8 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.nio.file.Files
+import java.nio.file.StandardCopyOption
 import javax.inject.Inject
+import kotlin.io.path.createDirectories
+import kotlin.io.path.exists
 import org.gradle.api.DefaultTask
+import org.gradle.api.GradleException
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.DirectoryProperty
 import org.gradle.api.file.FileCollection
@@ -165,14 +170,20 @@ abstract class NativeImageBuild : DefaultTask() {
   }
 
   @TaskAction
-  @Suppress("unused")
   protected fun run() {
-    execOperations.exec {
+    val workingDir =
+      project.layout.buildDirectory
+        .dir("tmp/native-image-build/${name}")
+        .get()
+        .asFile
+        .toPath()
+        .also { it.createDirectories() }
+    val execResult = execOperations.exec {
       val exclusions =
         listOf(buildInfo.libs.findLibrary("graalSdk").get()).map { it.get().module.name }
 
       executable = nativeImageExecutable.get()
-      workingDir(outputDir)
+      workingDir(workingDir)
 
       args = buildList {
         add("--color=always")
@@ -239,6 +250,18 @@ abstract class NativeImageBuild : DefaultTask() {
         addAll(environment.keys.filter { it.startsWith("HOMEBREW_") }.map { "-E$it" })
         addAll(extraNativeImageArgs.get())
         addAll(extraArgsFromProperties)
+      }
+    }
+
+    if (execResult.exitValue == 0) {
+      val outputFileNames = getEffectiveOutputFiles().files.map { it.name }
+      for (fileName in outputFileNames) {
+        val sourceFile = workingDir.resolve(fileName)
+        val targetFile = outputDir.get().asFile.toPath().resolve(fileName)
+        if (!sourceFile.exists()) {
+          throw GradleException("Expected to find $fileName in the working dir but didn't")
+        }
+        Files.copy(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING)
       }
     }
   }
