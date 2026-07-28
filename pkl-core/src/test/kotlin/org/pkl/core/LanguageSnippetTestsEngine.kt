@@ -223,8 +223,11 @@ class LanguageSnippetTestsEngine : AbstractLanguageSnippetTestsEngine() {
 
     val stderr = logWriter.toString().withUnixLineEndings()
 
+    // match native CLI: if an error happens, any WARN or TRACE gets emitted first, then the
+    // error message
+    val effectiveOutput = if (success) output + stderr else stderr + output
     return (success && stderr.isBlank()) to
-      (output + stderr).stripFilePaths().stripWebsite().stripStdlibLocationSha()
+      effectiveOutput.stripFilePaths().stripWebsite().stripStdlibLocationSha()
   }
 }
 

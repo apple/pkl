@@ -1,3 +1,4 @@
+pkl: TRACE: items = new Listing { ? } (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
 –– Pkl Error ––
 Tried to read property `undefinedValue` but its value is undefined.
 
@@ -24,4 +25,3 @@ at pkl.base#Module.output.text (pkl:base)
 xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
                                                                          ^^^^
 at pkl.base#Module.output.bytes (pkl:base)
-pkl: TRACE: items = new Listing { ? } (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
