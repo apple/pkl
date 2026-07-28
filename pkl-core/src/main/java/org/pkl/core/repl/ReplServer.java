@@ -76,6 +76,7 @@ public class ReplServer implements AutoCloseable {
   private final @Nullable ProjectDependenciesManager projectDependenciesManager;
   private final boolean color;
   private final Parser parser = new Parser();
+  private final Logger logger;
 
   public ReplServer(
       SecurityManager securityManager,
@@ -99,6 +100,7 @@ public class ReplServer implements AutoCloseable {
     this.errorRenderer =
         new VmExceptionRenderer(new StackTraceRenderer(frameTransformer), color, true);
     this.color = color;
+    this.logger = logger;
     replState = new ReplState(createEmptyReplModule(BaseModule.getModuleClass().getPrototype()));
 
     var languageRef = new MutableReference<VmLanguage>(null);
@@ -208,6 +210,7 @@ public class ReplServer implements AutoCloseable {
         new AstBuilder(
             VmUtils.loadSource(resolved),
             language,
+            logger,
             replState.module.getModuleInfo(),
             moduleResolver);
     var mod = parser.parseModule(syntheticModuleText);

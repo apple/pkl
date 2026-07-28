@@ -137,6 +137,14 @@ public final class ReflectNodes {
     }
   }
 
+  public abstract static class thisType extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected VmTyped eval(VmTyped self) {
+      return MirrorFactories.thisTypeFactory.create(null);
+    }
+  }
+
   public abstract static class unknownType extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary

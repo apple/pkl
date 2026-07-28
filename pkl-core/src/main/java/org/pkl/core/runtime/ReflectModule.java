@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -84,6 +84,10 @@ public final class ReflectModule extends StdLibModule {
     return ModuleTypeClass.instance;
   }
 
+  public static VmClass getThisTypeClass() {
+    return ThisTypeClass.instance;
+  }
+
   public static VmClass getFunctionTypeClass() {
     return FunctionTypeClass.instance;
   }
@@ -150,6 +154,10 @@ public final class ReflectModule extends StdLibModule {
 
   private static final class ModuleTypeClass {
     static final VmClass instance = loadClass("ModuleType");
+  }
+
+  private static final class ThisTypeClass {
+    static final VmClass instance = loadClass("ThisType");
   }
 
   private static final class FunctionTypeClass {

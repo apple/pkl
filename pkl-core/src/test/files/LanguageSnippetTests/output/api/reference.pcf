@@ -60,3 +60,4 @@ aValuesJoined = """
   ${b.outputs.nonString}
   """
 typeArgs = "${null.prop}"
+badThisRef = "Expected value of type `pkl.ref#Reference<reference#D, reference#BadResource>`, but got type `pkl.ref#Reference<reference#D, reference#A>`. Value: Reference(new D {}, reference#A, new BadResource { name = ? })"

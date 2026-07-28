@@ -1,0 +1,19 @@
+// test that `module` type use in annotations is allowed
+@Foo { baz = bar is module }
+module currentModuleType7
+
+@Foo { baz = bar is module }
+typealias Qux = Foo
+
+@Foo { baz = bar is module }
+class Quux {
+  @Foo { baz = bar is module }
+  corge = 2
+}
+
+class Foo extends Annotation {
+  bar: Int = 1
+  baz: Boolean
+}
+
+ok = true

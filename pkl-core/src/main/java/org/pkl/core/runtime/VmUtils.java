@@ -40,6 +40,7 @@ import org.graalvm.polyglot.Engine;
 import org.jspecify.annotations.Nullable;
 import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.FileOutput;
+import org.pkl.core.Logger;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.SecurityManager;
@@ -989,7 +990,8 @@ public final class VmUtils {
       VmTyped module,
       String expression,
       SecurityManager securityManager,
-      ModuleResolver moduleResolver) {
+      ModuleResolver moduleResolver,
+      Logger logger) {
     org.pkl.parser.syntax.Node node;
     try {
       node = parser.parseExpressionInput(expression);
@@ -1019,7 +1021,7 @@ public final class VmUtils {
             resolvedModule,
             false);
     var language = VmLanguage.get(null);
-    var builder = new AstBuilder(source, language, moduleInfo, moduleResolver);
+    var builder = new AstBuilder(source, language, logger, moduleInfo, moduleResolver);
     var mod = parser.parseModule(syntheticModuleText);
     builder.visitModule(mod);
     var exprNode = builder.visitExpr((Expr) adjustedNode);

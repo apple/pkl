@@ -3,7 +3,7 @@ amends "../snippetTest.pkl"
 import "pkl:ref"
 
 local class D extends ref.Domain {
-  function renderReference(reference: ref.Reference<D, Any>): String = reference.getData().toString()
+  function renderReference(reference: ref.Reference<this, Any>): String = reference.getData().toString()
 }
 
 local const d: D = new {}
