@@ -16,36 +16,23 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
-import org.pkl.core.runtime.VmUtils;
 
 /**
  * A non-virtual call of closed methods (methods whose enclosing class/module is not open nor
  * abstract, and is lexically scoped).
  */
-public final class InvokeLexicalClassMethodNode extends AbstractInvokeMethodNode {
-  private final int levelsUp;
-
+public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMethodNode {
   public InvokeLexicalClassMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
       ExpressionNode[] argumentNodes,
       boolean needsConst) {
-    super(sourceSection, methodName, argumentNodes, needsConst);
-    this.levelsUp = levelsUp;
-  }
-
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    var capturedFrame = VmUtils.getFrame(frame, levelsUp);
-    var owner = VmUtils.getOwner(capturedFrame);
-    var receiver = VmUtils.getReceiver(capturedFrame);
-    return invoke(frame, owner, receiver);
+    super(sourceSection, methodName, levelsUp, argumentNodes, needsConst);
   }
 
   @Override

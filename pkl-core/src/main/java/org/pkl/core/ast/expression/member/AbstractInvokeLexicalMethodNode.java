@@ -15,37 +15,31 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmUtils;
 
-/** A non-virtual call of an object method that is lexically scoped. */
-public final class InvokeLexicalObjectMethodNode extends AbstractInvokeLexicalMethodNode {
-  public InvokeLexicalObjectMethodNode(
+public abstract sealed class AbstractInvokeLexicalMethodNode extends AbstractInvokeMethodNode
+    permits InvokeLexicalClassMethodNode, InvokeLexicalObjectMethodNode {
+  private final int levelsUp;
+
+  public AbstractInvokeLexicalMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
       ExpressionNode[] argumentNodes,
       boolean needsConst) {
-    super(sourceSection, methodName, levelsUp, argumentNodes, needsConst);
+    super(sourceSection, methodName, argumentNodes, needsConst);
+    this.levelsUp = levelsUp;
   }
 
   @Override
-  protected void doCheckConst(VmObjectLike owner) {
-    var member = owner.getMember(methodName);
-    assert member != null;
-    if (!VmModifier.isConst(member.getModifiers())) {
-      throw exceptionBuilder().evalError("methodMustBeConst", methodName).build();
-    }
-  }
-
-  @Override
-  protected CallTarget getCallTarget(VmObjectLike owner) {
-    var method = owner.getMember(methodName);
-    assert method != null && method.isLocal();
-    return (CallTarget) method.getCallTarget().call(owner, owner);
+  public final Object executeGeneric(VirtualFrame frame) {
+    var capturedFrame = VmUtils.getFrame(frame, levelsUp);
+    var owner = VmUtils.getOwner(capturedFrame);
+    var receiver = VmUtils.getReceiver(capturedFrame);
+    return invoke(frame, owner, receiver);
   }
 }

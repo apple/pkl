@@ -36,10 +36,7 @@ import org.pkl.core.runtime.VmObjectLike;
  * InvokeQualifiedClassMethodNode}, {@link InvokeQualifiedObjectMethodNode}).
  */
 public abstract sealed class AbstractInvokeMethodNode extends ExpressionNode
-    permits InvokeLexicalClassMethodNode,
-        InvokeLexicalObjectMethodNode,
-        InvokeQualifiedClassMethodNode,
-        InvokeQualifiedObjectMethodNode {
+    permits AbstractInvokeQualifiedMethodNode, AbstractInvokeLexicalMethodNode {
 
   protected final Identifier methodName;
   private final boolean needsConst;

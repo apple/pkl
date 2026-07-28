@@ -21,7 +21,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -2744,20 +2743,9 @@ public abstract class TypeNode extends PklNode {
       return aliasedTypeNode.executeEagerly(frame, value);
     }
 
-    /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
     @Override
     public Object executeAndSet(VirtualFrame frame, Object value) {
-      var prevOwner = VmUtils.getOwner(frame);
-      var prevReceiver = VmUtils.getReceiver(frame);
-      setOwner(frame, VmUtils.getOwner(typeAlias.getEnclosingFrame()));
-      setReceiver(frame, VmUtils.getReceiver(typeAlias.getEnclosingFrame()));
-
-      try {
-        return aliasedTypeNode.executeAndSet(frame, value);
-      } finally {
-        setOwner(frame, prevOwner);
-        setReceiver(frame, prevReceiver);
-      }
+      return aliasedTypeNode.executeAndSet(frame, value);
     }
 
     @TruffleBoundary
@@ -2831,22 +2819,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean isParametric() {
       return typeArgumentNodes.length > 0;
-    }
-
-    // Note that mutating a frame's receiver and owner argument is very risky
-    // because any VmObject instantiated within the same root node execution
-    // holds a reference to (not immutable snapshot of) the frame
-    // via VmObjectLike.enclosingFrame.
-    // *Maybe* this works out for TypeAliasTypeNode because an object instantiated
-    // within a type constraint doesn't escape the constraint expression.
-    // If mutating receiver and owner can't be avoided, it would be safer
-    // to have VmObjectLike store them directly instead of storing enclosingFrame.
-    private static void setReceiver(Frame frame, Object receiver) {
-      frame.getArguments()[0] = receiver;
-    }
-
-    private static void setOwner(Frame frame, VmObjectLike owner) {
-      frame.getArguments()[1] = owner;
     }
   }
 
