@@ -29,6 +29,7 @@ import org.gradle.api.provider.ListProperty
 import org.gradle.api.provider.MapProperty
 import org.gradle.api.provider.Property
 import org.gradle.api.provider.Provider
+import org.gradle.api.provider.SetProperty
 import org.gradle.api.services.BuildService
 import org.gradle.api.services.BuildServiceParameters
 import org.gradle.api.tasks.ClasspathNormalizer
@@ -37,6 +38,7 @@ import org.gradle.api.tasks.InputFile
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.Optional
+import org.gradle.api.tasks.OutputDirectories
 import org.gradle.api.tasks.OutputFiles
 import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
@@ -52,6 +54,12 @@ abstract class NativeImageBuild : DefaultTask() {
   @get:Input abstract val extraNativeImageArgs: ListProperty<String>
 
   @get:Input abstract val arch: Property<Target.Arch>
+
+  /**
+   * Names of extra directories, relative to the native-image working directory, that should be
+   * copied into [outputDir] after a successful build.
+   */
+  @get:Input abstract val additionalOutputDirectoryNames: SetProperty<String>
 
   /**
    * The main class entrypoint for the executable.
@@ -163,11 +171,19 @@ abstract class NativeImageBuild : DefaultTask() {
               }
             )
           } else {
-            dir.file(libraryName)
+            val executableName = if (buildInfo.os.isWindows) "${libraryName}.exe" else libraryName
+            dir.file(executableName)
           }
         }
       )
   }
+
+  @Suppress("unused")
+  @OutputDirectories
+  fun getEffectiveOutputDirectories(): FileCollection =
+    objectFactory
+      .fileCollection()
+      .from(additionalOutputDirectoryNames.map { names -> names.map { outputDir.get().dir(it) } })
 
   @TaskAction
   protected fun run() {
@@ -262,6 +278,15 @@ abstract class NativeImageBuild : DefaultTask() {
           throw GradleException("Expected to find $fileName in the working dir but didn't")
         }
         Files.copy(sourceFile, targetFile, StandardCopyOption.REPLACE_EXISTING)
+      }
+      for (dirName in additionalOutputDirectoryNames.get()) {
+        val sourceDir = workingDir.resolve(dirName).toFile()
+        if (!sourceDir.exists()) {
+          throw GradleException("Expected to find directory $dirName in the working dir but didn't")
+        }
+        val targetDir = outputDir.get().asFile.resolve(dirName)
+        targetDir.deleteRecursively()
+        sourceDir.copyRecursively(targetDir, overwrite = true)
       }
     }
   }
