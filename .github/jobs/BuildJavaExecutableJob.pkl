@@ -25,7 +25,7 @@ steps {
   (catalog.`actions/upload-artifact@v5`) {
     name = "Upload executable artifacts"
     with {
-      name = "executable-java"
+      name = "deploy-artifacts-java-executables"
       path = "*/build/executable/**/*"
     }
   }

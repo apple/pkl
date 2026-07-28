@@ -60,9 +60,9 @@ steps {
     with {
       name =
         if (musl)
-          "artifacts-\(project)-alpine-\(module.os)-\(module.arch)"
+          "deploy-artifacts-\(project)-alpine-\(module.os)-\(module.arch)"
         else
-          "artifacts-\(project)-\(module.os)-\(module.arch)"
+          "deploy-artifacts-\(project)-\(module.os)-\(module.arch)"
       // Need to insert a wildcard to make actions/upload-artifact preserve the folder hierarchy.
       // See https://github.com/actions/upload-artifact/issues/206
       path = module.buildDir
