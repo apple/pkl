@@ -24,6 +24,7 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
@@ -86,7 +87,15 @@ public final class TypeAliasNode extends ExpressionNode {
             frame.materialize());
 
     VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
-    cachedTypeAlias.initTypeCheckNode(typeAnnotationNode.execute(frame));
+    var bodyTypeNode = typeAnnotationNode.execute(frame);
+    bodyTypeNode.accept(
+        node -> {
+          if (node instanceof GetTypeAliasModuleNode getTypeAliasModuleNode) {
+            getTypeAliasModuleNode.lateInitModule(module);
+          }
+          return true;
+        });
+    cachedTypeAlias.initTypeCheckNode(bodyTypeNode);
 
     return cachedTypeAlias;
   }

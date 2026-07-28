@@ -67,7 +67,7 @@ public final class ReadAmbiguousLocalityPropertyNode extends ExpressionNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       readLocalPropertyNode =
           insert(
-              new ReadLocalPropertyNode(
+              new ReadLexicalLocalPropertyNode(
                   sourceSection, name.toLocalProperty(), levelsUp, needsConst));
     }
     return readLocalPropertyNode;

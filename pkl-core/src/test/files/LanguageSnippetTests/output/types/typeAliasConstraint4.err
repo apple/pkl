@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Type constraint `startsWith(name)` violated.
+Value: "Alice Jenkins"
+
+    startsWith(name)
+    │          │
+    false      "Bob"
+
+x | typealias Inner = String(startsWith(name))
+                             ^^^^^^^^^^^^^^^^
+at typeAliasConstraint4#myProp (file:///$snippetsDir/input-helper/types/typealias1.pkl)
+
+x | myProp: typealias2.Outer = "Alice Jenkins"
+                               ^^^^^^^^^^^^^^^
+at typeAliasConstraint4#myProp (file:///$snippetsDir/input/types/typeAliasConstraint4.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

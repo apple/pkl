@@ -26,40 +26,43 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
-import org.pkl.core.runtime.VmUtils;
 
-public abstract sealed class AbstractInvokeMethodLexicalNode extends ExpressionNode
-    permits InvokeObjectMethodNode, InvokeClassMethodNode {
+/**
+ * A non-virtual (statically dispatched) method call.
+ *
+ * <p>Subclasses differ only in how they obtain the {@code owner}/{@code receiver} that the method
+ * is invoked on: either by walking the frame chain ({@link InvokeLexicalClassMethodNode}, {@link
+ * InvokeLexicalObjectMethodNode}), or off of an explicit receiver expression ({@link
+ * InvokeQualifiedClassMethodNode}, {@link InvokeQualifiedObjectMethodNode}).
+ */
+public abstract sealed class AbstractInvokeMethodNode extends ExpressionNode
+    permits InvokeLexicalClassMethodNode,
+        InvokeLexicalObjectMethodNode,
+        InvokeQualifiedClassMethodNode,
+        InvokeQualifiedObjectMethodNode {
 
   protected final Identifier methodName;
-  protected final int levelsUp;
   private final boolean needsConst;
   @Children private ExpressionNode[] argumentNodes;
   @Child private @Nullable DirectCallNode callNode;
   @CompilationFinal protected boolean isConstChecked;
 
-  protected AbstractInvokeMethodLexicalNode(
+  protected AbstractInvokeMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
-      int levelsUp,
       ExpressionNode[] argumentNodes,
       boolean needsConst) {
     super(sourceSection);
     this.methodName = methodName;
-    this.levelsUp = levelsUp;
     this.argumentNodes = argumentNodes;
     this.needsConst = needsConst;
     this.isConstChecked = false;
   }
 
-  @Override
   @ExplodeLoop
-  public final Object executeGeneric(VirtualFrame frame) {
-    var args = new Object[2 + argumentNodes.length];
-    var capturedFrame = VmUtils.getFrame(frame, levelsUp);
-    var owner = VmUtils.getOwner(capturedFrame);
-    var receiver = VmUtils.getReceiver(capturedFrame);
+  protected final Object invoke(VirtualFrame frame, VmObjectLike owner, Object receiver) {
     checkConst(owner);
+    var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = owner;
     for (var i = 0; i < argumentNodes.length; i++) {
@@ -80,10 +83,6 @@ public abstract sealed class AbstractInvokeMethodLexicalNode extends ExpressionN
   protected abstract CallTarget getCallTarget(VmObjectLike owner);
 
   protected abstract void doCheckConst(VmObjectLike owner);
-
-  protected final VmObjectLike getOwner(VirtualFrame frame) {
-    return VmUtils.getOwner(frame, levelsUp);
-  }
 
   protected DirectCallNode getCallNode(VmObjectLike owner) {
     if (callNode == null) {

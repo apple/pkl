@@ -16,23 +16,35 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmTyped;
 
-/** A non-virtual call of a local method. */
-public final class InvokeObjectMethodNode extends AbstractInvokeMethodLexicalNode {
-  public InvokeObjectMethodNode(
+/** A non-virtual call of an object method, invoked off of an explicit receiver. */
+public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeMethodNode {
+  @Child private ExpressionNode getReceiverNode;
+
+  public InvokeQualifiedObjectMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
-      int levelsUp,
       ExpressionNode[] argumentNodes,
-      boolean needsConst) {
-    super(sourceSection, methodName, levelsUp, argumentNodes, needsConst);
+      boolean needsConst,
+      ExpressionNode getReceiverNode) {
+    super(sourceSection, methodName, argumentNodes, needsConst);
+    this.getReceiverNode = getReceiverNode;
   }
 
+  @Override
+  public Object executeGeneric(VirtualFrame frame) {
+    var receiver = (VmTyped) getReceiverNode.executeGeneric(frame);
+    return invoke(frame, receiver, receiver);
+  }
+
+  @Override
   protected void doCheckConst(VmObjectLike owner) {
     var member = owner.getMember(methodName);
     assert member != null;

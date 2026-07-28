@@ -447,6 +447,19 @@ public final class SymbolTable {
       return this instanceof ForGeneratorScope;
     }
 
+    public final boolean isTypeAliasScope() {
+      return this instanceof TypeAliasScope;
+    }
+
+    public final boolean isInTypeAliasScope() {
+      for (var scope = this; scope != null; scope = scope.getParent()) {
+        if (scope.isTypeAliasScope()) {
+          return true;
+        }
+      }
+      return false;
+    }
+
     public ConstLevel getConstLevel() {
       return constLevel;
     }
