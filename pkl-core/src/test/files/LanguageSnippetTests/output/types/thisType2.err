@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Cannot declare `this` types inside type alias bodies.
+Cannot reference `this` type within a type alias body.
 
 x | typealias Foo = this
                     ^^^^

@@ -1,3 +1,4 @@
+pkl: WARN: Cannot reference `module` type within a type alias body. This will be an error in a future release. (file:///$snippetsDir/input-helper/types/typeAliasModule.pkl)
 –– Pkl Error ––
 Expected value of type `typeAliasModule`, but got type `typeAlias6`.
 Value: new ModuleClass { res = ? }
