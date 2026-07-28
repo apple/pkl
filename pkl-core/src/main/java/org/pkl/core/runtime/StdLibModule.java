@@ -72,7 +72,6 @@ public abstract class StdLibModule {
                   moduleKey,
                   (ResolvedModuleKey) moduleKey,
                   vmContext.getModuleResolver(),
-                  vmContext.getLogger(),
                   source,
                   instance,
                   null);

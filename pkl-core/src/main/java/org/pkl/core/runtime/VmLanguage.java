@@ -23,7 +23,6 @@ import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.Logger;
 import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -71,7 +70,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
             moduleKey,
             context.getSecurityManager(),
             context.getModuleResolver(),
-            context.getLogger(),
             VmUtils::createEmptyModule,
             this::initializeModule,
             null);
@@ -86,7 +84,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
             moduleKey,
             context.getSecurityManager(),
             context.getModuleResolver(),
-            context.getLogger(),
             VmUtils::createEmptyModule,
             this::initializeModule,
             importNode);
@@ -96,7 +93,6 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
       ModuleResolver moduleResolver,
-      Logger logger,
       Source source,
       VmTyped emptyModule,
       @Nullable Node importNode) {
@@ -113,7 +109,7 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
 
     var builder =
         AstBuilder.create(
-            source, this, logger, moduleContext, moduleKey, resolvedModuleKey, moduleResolver);
+            source, this, moduleContext, moduleKey, resolvedModuleKey, moduleResolver);
     var moduleNode = builder.visitModule(moduleContext);
     moduleNode.getCallTarget().call(emptyModule, emptyModule);
     MinPklVersionChecker.check(emptyModule, importNode);

@@ -35,7 +35,6 @@ import java.util.function.Supplier;
 import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.Logger;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManagerException;
@@ -122,7 +121,6 @@ import org.pkl.core.ast.expression.member.InvokeQualifiedObjectMethodNode;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
 import org.pkl.core.ast.expression.member.ReadAmbiguousLocalityPropertyNode;
 import org.pkl.core.ast.expression.member.ReadLexicalLocalPropertyNode;
-import org.pkl.core.ast.expression.member.ReadClassNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadQualifiedLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
@@ -292,7 +290,6 @@ import org.pkl.parser.syntax.TypeParameterList;
 
 public class AstBuilder extends AbstractAstBuilder<Object> {
   private final VmLanguage language;
-  private final Logger logger;
   private final ModuleInfo moduleInfo;
 
   private final ModuleKey moduleKey;
@@ -304,14 +301,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private final boolean isMethodReturnTypeChecked;
 
   public AstBuilder(
-      Source source,
-      VmLanguage language,
-      Logger logger,
-      ModuleInfo moduleInfo,
-      ModuleResolver moduleResolver) {
+      Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
     super(source);
     this.language = language;
-    this.logger = logger;
     this.moduleInfo = moduleInfo;
 
     moduleKey = moduleInfo.getModuleKey();
@@ -326,7 +318,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public static AstBuilder create(
       Source source,
       VmLanguage language,
-      Logger logger,
       Module ctx,
       ModuleKey moduleKey,
       ResolvedModuleKey resolvedModuleKey,
@@ -367,7 +358,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               isAmend);
     }
 
-    return new AstBuilder(source, language, logger, moduleInfo, moduleResolver);
+    return new AstBuilder(source, language, moduleInfo, moduleResolver);
   }
 
   @Override
@@ -383,6 +374,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public UnresolvedTypeNode visitModuleType(ModuleType type) {
     var sourceSection = createSourceSection(type);
+    checkModuleType(type, sourceSection);
+    return new UnresolvedTypeNode.Module(sourceSection);
+  }
+
+  private void checkModuleType(ModuleType type, SourceSection sourceSection) {
+    // `class X extends module` is fine
+    if (type.parent() instanceof Class classNode && classNode.getSuperClass() == type) {
+      return;
+    }
+
     String errorMessage = null;
     Object[] errorArgs = new Object[] {};
 
@@ -392,11 +393,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         scope != null && errorMessage == null;
         scope = scope.getParent()) {
       if (scope.isAnnotationScope()) {
-        errorMessage = "moduleTypeIsNotConstAnnotation";
+        errorMessage = "invalidModuleTypeInAnnotation";
       } else if (scope.isClassScope()) {
-        errorMessage = "moduleTypeIsNotConstClass";
+        errorMessage = "invalidModuleTypeInClass";
       } else if (scope.isTypeAliasScope()) {
-        errorMessage = "moduleTypeIsNotConstTypeAlias";
+        errorMessage = "invalidModuleTypeInTypeAlias";
       }
     }
     for (var scope = symbolTable.getCurrentScope();
@@ -406,23 +407,24 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         continue;
       }
       if (scope.isPropertyScope()) {
-        errorMessage = "moduleTypeIsNotConstProperty";
+        errorMessage = "invalidModuleTypeInProperty";
         errorArgs = new Object[] {scope.getQualifiedName()};
       } else if (scope.isMethodScope()) {
-        errorMessage = "moduleTypeIsNotConstMethod";
+        errorMessage = "invalidModuleTypeInMethod";
         errorArgs = new Object[] {scope.getQualifiedName()};
       } else {
+        // all possibly const scopes should be covered in one of these loops
         throw exceptionBuilder().unreachableCode().build();
       }
     }
     if (errorMessage != null) {
-      logger.warn(
-          ErrorMessages.create(errorMessage, errorArgs)
-              + " This will be an error in a future release.",
-          VmUtils.createStackFrame(sourceSection, null));
+      VmContext.get(null)
+          .getLogger()
+          .warn(
+              ErrorMessages.create(errorMessage, errorArgs)
+                  + " This will be an error in a future release.",
+              VmUtils.createStackFrame(sourceSection, null));
     }
-
-    return new UnresolvedTypeNode.Module(sourceSection);
   }
 
   @Override
@@ -430,14 +432,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var sourceSection = createSourceSection(type);
     // need to pass explicit class name for property and method arg/return type annotations
     // do not need: when in any object or at the module level (where `this` is the receiver's class)
-    ClassScope classScope = null;
-    var baseScope = symbolTable.getCurrentScope();
-    for (var scope = baseScope; scope != null; scope = scope.getParent()) {
+    org.pkl.core.runtime.Identifier className = null;
+    for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
       if (scope.isObjectScope() || scope.isCustomThisScope()) {
         break;
       }
       if (scope instanceof ClassScope foundClassScope) {
-        classScope = foundClassScope;
+        className = foundClassScope.getName();
         break;
       }
       // it's still safe to break on ObjectScope because this is valid:
@@ -445,17 +446,25 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       if (scope.isTypeAliasScope()) {
         throw exceptionBuilder()
             .withSourceSection(sourceSection)
-            .evalError("invalidSelfTypeUsage", "this", "type alias")
+            .evalError("invalidThisTypeInTypeAlias")
             .build();
       }
     }
 
-    var getClassNode =
-        classScope == null
-            ? new GetReceiverClassNode(sourceSection)
-            : isBaseModule
-                ? new GetBaseModuleClassNode(classScope.getName())
-                : new ReadClassNode(sourceSection, classScope.getName(), classScope.isLocal());
+    ExpressionNode getClassNode;
+    if (isBaseModule && className != null) {
+      getClassNode = new GetBaseModuleClassNode(className);
+    } else if (className == null) {
+      getClassNode = new GetReceiverClassNode(sourceSection);
+    } else if (className.isLocalProp()) {
+      getClassNode =
+          new ReadQualifiedLocalPropertyNode(
+              sourceSection, className, false, new GetModuleNode(sourceSection));
+    } else {
+      getClassNode =
+          ReadPropertyNodeGen.create(
+              sourceSection, className, false, new GetModuleNode(sourceSection));
+    }
     return new UnresolvedTypeNode.This(sourceSection, getClassNode);
   }
 
@@ -875,7 +884,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       // Assumption: typealiases can only be declared on the module.
       // If we ever allow typealiases in classes, this code needs to change.
       if (symbolTable.isInTypeAliasScope && method.isModuleScope()) {
-      if (scope.isInTypeAliasScope() && method.isModuleScope()) {
         var getModuleNode = new GetTypeAliasModuleNode(sourceSection);
         if (method.isObjectMethod()) {
           return new InvokeQualifiedObjectMethodNode(
@@ -1838,13 +1846,11 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         org.pkl.core.runtime.Identifier.property(clazz.getName().getValue(), isLocalClass);
 
     var annotations = doVisitAnnotations(clazz.getAnnotations(), className);
-    var supertypeCtx = clazz.getSuperClass();
 
     return symbolTable.enterClass(
         className,
         modifiers,
         typeParameters,
-        supertypeCtx,
         scope -> {
           var bodyNode = clazz.getBody();
 
@@ -1852,6 +1858,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           List<ClassMethod> methods = bodyNode != null ? bodyNode.getMethods() : List.of();
           registerClassScopeNames(scope, properties, methods);
           checkAbstractMethodsAllowed(modifiers, methods, "class");
+
+          var supertypeCtx = clazz.getSuperClass();
 
           // needs to be inside `enterClass` so that class' type parameters are in scope
           var supertypeNode =

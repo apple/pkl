@@ -212,8 +212,7 @@ public final class EvaluatorImpl implements Evaluator {
               moduleSource,
               (module) -> {
                 var expressionResult =
-                    VmUtils.evaluateExpression(
-                        module, expression, securityManager, moduleResolver, logger);
+                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
                 if (expressionResult instanceof VmValue value) {
                   value.force(false);
                   return value.export();
@@ -244,8 +243,7 @@ public final class EvaluatorImpl implements Evaluator {
                     VmUtils.readMember(VmUtils.readModuleOutput(module), Identifier.VALUE);
                 case "output.bytes" -> VmUtils.readBytesProperty(VmUtils.readModuleOutput(module));
                 default ->
-                    VmUtils.evaluateExpression(
-                        module, expression, securityManager, moduleResolver, logger);
+                    VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
               };
           VmValue.force(expressionResult, false);
 
@@ -266,8 +264,7 @@ public final class EvaluatorImpl implements Evaluator {
         moduleSource,
         (module) -> {
           var expressionResult =
-              VmUtils.evaluateExpression(
-                  module, expression, securityManager, moduleResolver, logger);
+              VmUtils.evaluateExpression(module, expression, securityManager, moduleResolver);
           var toStringNode =
               ToStringNodeGen.create(
                   VmUtils.unavailableSourceSection(), new ConstantValueNode(expressionResult));
