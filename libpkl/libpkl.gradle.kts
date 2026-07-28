@@ -91,18 +91,29 @@ private fun NativeImageBuild.configure(target: Target) {
   sharedLibrary = true
   val scriptName = if (buildInfo.os.isWindows) "build_windows.bat" else "build_unix.sh"
   nativeCompilerPath = projectDir.resolve("scripts/${scriptName}")
+
+  if (!buildInfo.os.isWindows) {
+    // build_unix.sh extracts the object files of every archive it links against into a loose
+    // `objects/` dir so that `buildStaticLibrary` can merge them into a single, self-contained
+    // static library.
+    //
+    // Don't need to do this for Windows because it produces a merged archive.
+    additionalOutputDirectoryNames.add("objects")
+  }
 }
 
 val macNativeImageAarch64 =
   tasks.register<NativeImageBuild>("macNativeImageAarch64") {
     configure(Target.MacosAarch64)
     // macOS only supports 16K page size
-    extraNativeImageArgs =
-      listOf(
-        "-H:PageSize=16384",
-        // increase memory available to native-image
-        "-J-Xmx32g",
-      )
+    extraNativeImageArgs = buildList {
+      add("-H:PageSize=16384")
+      if (buildInfo.isCiBuild) {
+        add("-J-Xmx12g")
+        add("-H:+DeadlockWatchdogExitOnTimeout")
+        add("-H:DeadlockWatchdogInterval=10")
+      }
+    }
   }
 
 val linuxNativeImageAmd64 =
