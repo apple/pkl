@@ -156,7 +156,10 @@ public abstract class VmObject extends VmObjectLike {
   public final void force(boolean allowUndefinedValues, boolean recurse) {
     if (forced) return;
 
+    // set eagerly to break reference cycles
     if (recurse) forced = true;
+
+    var fullyForced = true;
 
     try {
       for (VmObjectLike owner = this; owner != null; owner = owner.getParent()) {
@@ -177,6 +180,7 @@ public abstract class VmObject extends VmObjectLike {
               memberValue = VmUtils.doReadMember(this, owner, memberKey, member);
             } catch (VmUndefinedValueException e) {
               if (!allowUndefinedValues) throw e;
+              fullyForced = false;
               continue;
             }
           }
@@ -190,6 +194,9 @@ public abstract class VmObject extends VmObjectLike {
       forced = false;
       throw t;
     }
+
+    // make sure uncached values are not marked as forced
+    if (recurse && !fullyForced) forced = false;
   }
 
   @Override
