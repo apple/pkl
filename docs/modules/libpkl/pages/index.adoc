@@ -1,0 +1,91 @@
+= libpkl
+
+libpkl is a C library for driving Pkl evaluation.
+
+It is designed to be a low-level API that interacts with Pkl via the xref:bindings-specification:message-passing-api.adoc[message passing API].
+It is meant to be paired with higher level logic written in a host language within the context of a Pkl language binding library.
+The higher level logic deals with implementing the evaluator API, and serializing/deserializing messages according to the message passing API.
+
+== Linking to libpkl
+
+It is possible to link to libpkl either as a static library or a dynamic library.
+
+Statically linking to Pkl means that it is possible to copy libpkl's library code directly into your own library or executable at compile time, meaning that it is self-contained.
+However, this impacts the binary size of your application, as libpkl's library files are around 100MB.
+
+On the other hand, dynamically linking to Pkl has negligible impact on binary size, but requires that end users have libpkl installed on their OS.
+
+== Distribution
+
+We publish archives that contain header files, as well as both shared and static libraries.
+
+The distributions are published as releases on GitHub, and can be downloaded for the appropriate OS/architecture.
+
+The archives contain both statically linked and dynamically linked binaries for each OS.
+
+The archive has the following structure:
+
+[source]
+----
+.
+└── libpkl-<version>-<os>-<arch>
+    ├── include
+    │   └── pkl.h
+    ├── lib
+    │   ├── libpkl.<static library extension>
+    │   ├── libpkl.<dynamic library extension>
+    │   └── pkgconfig
+    │       └── libpkl.pc
+    ├── LICENSE.txt
+    ├── README.md
+    └── THIRD-PARTY-NOTICES.txt
+----
+
+The file extensions are as follows:
+
+
+|===
+|OS |Static Library Extension |Dynamic library extension
+
+|macOS
+|`.a`
+|`.dylib`
+
+|Linux
+|`.a`
+|`.so`
+
+|Windows
+|`.lib`
+|`.dll`
+|===
+
+== Building libpkl from source
+
+To build libpkl from source, the apple/pkl repository first must be cloned down to a host OS.
+
+Build machine requirements:
+
+* Java 21 or higher
+* zlib
+* C compiler
+** `cc` (gcc, clang) toolchain on Unix
+** MSVC toolchain on Windows
+
+Example:
+
+[source,shell]
+----
+git clone git@github.com:apple/pkl.git
+cd pkl/
+./gradlew libpkl:buildNative
+----
+
+The resulting archive will be written to `libpkl/build/distributions`.
+
+Cross-compilation is not supported.
+
+== ABI compatibility
+
+libpkl is ABI compatible across Pkl versions.
+The underlying Pkl version can be accessed using the `pkl_version()` method.

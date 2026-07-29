@@ -7,7 +7,10 @@ Pkl can be embedded within any host application.
 The host application has access to low level controls.
 It is able to manage the lifecycle of evaluators, as well as provide custom modules and resources to Pkl.
 
-Currently, Pkl must be embedded as a child process, by shelling out to the CLI using the xref:pkl-cli:index.adoc#command-server[`pkl server`] command. In the future, a C library will also be provided.
+Pkl can be embedded in one of two ways:
+
+1. By spawning xref:pkl-cli:index.adoc#command-server[`pkl server`] as a subprocess, and communicating with it via STDIN/STDOUT.
+2. By linking to the xref:libpkl:index.adoc[libpkl library].
 
 When embedded, communication between a host application and Pkl happens via message passing.
 The message passing specification can be found in xref:message-passing-api.adoc[].
@@ -20,7 +23,7 @@ NOTE: Pkl's Java and Kotlin libraries binds to Pkl directly, and do not use mess
 
 A language binding for Pkl should generally have the following components:
 
-. A client that spawns `pkl server`, and talks to it using message passing.
+. A client that either spawns `pkl server` or links to `libpkl`, and talks to it using message passing.
 . A deserializer that turns xref:binary-encoding.adoc[pkl binary encoding] into a structure in the host language.
 . A code generator that transforms Pkl schemas into schemas written in the host language.
   The code generator is mostly written in Pkl, with a lightweight executable that acts as the glue layer.
