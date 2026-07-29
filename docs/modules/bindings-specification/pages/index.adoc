@@ -9,8 +9,8 @@ It is able to manage the lifecycle of evaluators, as well as provide custom modu
 
 Pkl can be embedded in one of two ways:
 
-1. By spawning xref:pkl-cli:index.adoc#command-server[`pkl server`] as a subprocess, and communicating with it via STDIN/STDOUT.
-2. By linking to the xref:libpkl:index.adoc[libpkl library].
+. By spawning xref:pkl-cli:index.adoc#command-server[`pkl server`] as a subprocess, and communicating with it via STDIN/STDOUT.
+. By linking to the xref:libpkl:index.adoc[libpkl library].
 
 When embedded, communication between a host application and Pkl happens via message passing.
 The message passing specification can be found in xref:message-passing-api.adoc[].
