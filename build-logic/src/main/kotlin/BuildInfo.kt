@@ -84,6 +84,7 @@ open class BuildInfo(private val project: Project) {
       System.getenv("GRAALVM_HOME") ?: "${System.getProperty("user.home")}/.graalvm"
     }
     val graalVmJdkVersion: String by lazy { libs.findVersion("graalVmJdkVersion").get().toString() }
+    val graalVmInnovation: String by lazy { libs.findVersion("graalVmInnovation").get().toString() }
 
     val baseName: String by lazy {
       "graalvm-community-jdk-${graalVmJdkVersion}_${osName}-${arch}_bin"
@@ -94,7 +95,7 @@ open class BuildInfo(private val project: Project) {
     val downloadUrl: String by lazy {
       val ext = if (os.isWindows) "zip" else "tar.gz"
       val platformArch = if (arch == "amd64") "x64" else arch
-      "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-$version/graalvm-community-jdk-${graalMajorVersion}i1-${graalJdkVersion}_${osName}-${platformArch}_bin.$ext"
+      "https://github.com/graalvm/graalvm-ce-builds/releases/download/graal-$version/graalvm-community-jdk-${graalMajorVersion}i${graalVmInnovation}-${graalJdkVersion}_${osName}-${platformArch}_bin.$ext"
     }
 
     val downloadFile: File by lazy {
