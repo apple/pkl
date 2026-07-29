@@ -15,6 +15,7 @@
  */
 package org.pkl.parser;
 
+import java.util.EnumSet;
 import java.util.Locale;
 
 public enum Token {
@@ -135,16 +136,16 @@ public enum Token {
   STRING_END,
   STRING_PART;
 
+  private static final EnumSet<Token> modifiers =
+      EnumSet.of(EXTERNAL, ABSTRACT, OPEN, LOCAL, HIDDEN, FIXED, CONST);
+
   public boolean isModifier() {
-    return switch (this) {
-      case EXTERNAL, ABSTRACT, OPEN, LOCAL, HIDDEN, FIXED, CONST -> true;
-      default -> false;
-    };
+    return modifiers.contains(this);
   }
 
-  public boolean isKeyword() {
-    return switch (this) {
-      case ABSTRACT,
+  private static final EnumSet<Token> keywords =
+      EnumSet.of(
+          ABSTRACT,
           AMENDS,
           AS,
           CLASS,
@@ -189,46 +190,25 @@ public enum Token {
           DELETE,
           CASE,
           SWITCH,
-          VARARG ->
-          true;
-      default -> false;
-    };
+          VARARG);
+
+  public boolean isKeyword() {
+    return keywords.contains(this);
   }
+
+  private static final EnumSet<Token> operators =
+      EnumSet.of(
+          POW, STAR, DIV, INT_DIV, MOD, PLUS, MINUS, GT, GTE, LT, LTE, IS, AS, EQUAL, NOT_EQUAL,
+          AND, OR, PIPE, COALESCE, DOT, QDOT, LBRACK);
 
   public boolean isOperator() {
-    return switch (this) {
-      case POW,
-          STAR,
-          DIV,
-          INT_DIV,
-          MOD,
-          PLUS,
-          MINUS,
-          GT,
-          GTE,
-          LT,
-          LTE,
-          IS,
-          AS,
-          EQUAL,
-          NOT_EQUAL,
-          AND,
-          OR,
-          PIPE,
-          COALESCE,
-          DOT,
-          QDOT,
-          LBRACK ->
-          true;
-      default -> false;
-    };
+    return operators.contains(this);
   }
 
+  private static final EnumSet<Token> affixes = EnumSet.of(LINE_COMMENT, BLOCK_COMMENT, SEMICOLON);
+
   public boolean isAffix() {
-    return switch (this) {
-      case LINE_COMMENT, BLOCK_COMMENT, SEMICOLON -> true;
-      default -> false;
-    };
+    return affixes.contains(this);
   }
 
   public String text() {
