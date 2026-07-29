@@ -216,7 +216,7 @@ external class Module extends Declaration {
 /// A class or type alias declaration.
 abstract external class TypeDeclaration extends Declaration {
   /// The class or type alias reflected upon.
-  abstract hidden reflectee: base.Class | base.TypeAlias
+  hidden reflectee: base.Class | base.TypeAlias
 
   /// The module enclosing this type declaration.
   ///
@@ -224,7 +224,7 @@ abstract external class TypeDeclaration extends Declaration {
   hidden enclosingDeclaration: Module
 
   /// The type parameters of this type declaration.
-  abstract typeParameters: List<TypeParameter>
+  typeParameters: List<TypeParameter>
 }
 
 /// A class declaration.

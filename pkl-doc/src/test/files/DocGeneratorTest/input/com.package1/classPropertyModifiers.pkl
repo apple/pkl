@@ -8,9 +8,6 @@ abstract class Modifiers {
   /// Property with `hidden` modifier.
   hidden property2: Float = 3.14159265359
 
-  /// Property with `abstract` modifier.
-  abstract property3: Float
-
   /// Property with multiple modifiers.
   abstract hidden property4: Float
 

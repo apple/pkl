@@ -71,6 +71,7 @@ public final class VmModifier {
 
   public static final int VALID_METHOD_MODIFIERS = ABSTRACT | LOCAL | EXTERNAL | CONST;
 
+  // for compat, properties may be parsed with abstract modifier but this is ignored
   public static final int VALID_PROPERTY_MODIFIERS =
       ABSTRACT | LOCAL | HIDDEN | EXTERNAL | FIXED | CONST;
 
