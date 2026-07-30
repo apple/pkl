@@ -47,6 +47,8 @@ import org.pkl.parser.Lexer;
 public final class SymbolTable {
 
   private Scope currentScope;
+  // consider having each scope keep track of this individually rather than set on SymbolTable.
+  public boolean isInTypeAliasScope;
 
   public SymbolTable(ModuleInfo moduleInfo, boolean isBaseModule) {
     currentScope = new ModuleScope(moduleInfo, isBaseModule);
@@ -85,14 +87,19 @@ public final class SymbolTable {
       Identifier name,
       List<TypeParameter> typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
-    return doEnter(
-        new TypeAliasScope(
-            currentScope,
-            name,
-            toQualifiedName(name),
-            new FrameDescriptorBuilder(),
-            typeParameters),
-        nodeFactory);
+    try {
+      this.isInTypeAliasScope = true;
+      return doEnter(
+          new TypeAliasScope(
+              currentScope,
+              name,
+              toQualifiedName(name),
+              new FrameDescriptorBuilder(),
+              typeParameters),
+          nodeFactory);
+    } finally {
+      this.isInTypeAliasScope = false;
+    }
   }
 
   public <T> T enterMethod(
@@ -445,19 +452,6 @@ public final class SymbolTable {
 
     public final boolean isForGeneratorScope() {
       return this instanceof ForGeneratorScope;
-    }
-
-    public final boolean isTypeAliasScope() {
-      return this instanceof TypeAliasScope;
-    }
-
-    public final boolean isInTypeAliasScope() {
-      for (var scope = this; scope != null; scope = scope.getParent()) {
-        if (scope.isTypeAliasScope()) {
-          return true;
-        }
-      }
-      return false;
     }
 
     public ConstLevel getConstLevel() {

@@ -23,9 +23,9 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmTyped;
 
-public class GetTypeAliasModuleNode extends ExpressionNode {
+public final class GetTypeAliasModuleNode extends ExpressionNode {
 
-  @CompilationFinal public @Nullable VmTyped module;
+  @CompilationFinal private @Nullable VmTyped module;
 
   public GetTypeAliasModuleNode(SourceSection sourceSection) {
     super(sourceSection);
@@ -37,10 +37,9 @@ public class GetTypeAliasModuleNode extends ExpressionNode {
   }
 
   public void lateInitModule(VmTyped module) {
-    // should only set this once
-    if (this.module != null) {
-      return;
-    }
+    // must only set this once; the first typealias initialization wins.
+    // guards against nested typealiases; e.g. `typealias A = module; typealias B = A`
+    if (this.module != null) return;
     CompilerDirectives.transferToInterpreterAndInvalidate();
     this.module = module;
   }

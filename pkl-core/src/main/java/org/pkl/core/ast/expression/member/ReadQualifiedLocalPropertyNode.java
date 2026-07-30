@@ -22,7 +22,7 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmTyped;
 
 /** Reads a local property off of the receiver node. */
-public class ReadQualifiedLocalPropertyNode extends AbstractReadLocalPropertyNode {
+public final class ReadQualifiedLocalPropertyNode extends AbstractReadLocalPropertyNode {
   @Child private ExpressionNode getReceiverNode;
 
   public ReadQualifiedLocalPropertyNode(

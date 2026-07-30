@@ -530,7 +530,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public GetModuleNode visitModuleExpr(ModuleExpr expr) {
+  public ExpressionNode visitModuleExpr(ModuleExpr expr) {
     var currentScope = symbolTable.getCurrentScope();
     // cannot use unqualified `module` in a const context
     if (currentScope.getConstLevel().isConst() && !(expr.parent() instanceof QualifiedAccessExpr)) {
@@ -553,7 +553,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .withSourceSection(createSourceSection(expr))
           .build();
     }
-    return new GetModuleNode(createSourceSection(expr));
+    return symbolTable.isInTypeAliasScope
+        ? new GetTypeAliasModuleNode(createSourceSection(expr))
+        : new GetModuleNode(createSourceSection(expr));
   }
 
   @Override
@@ -691,7 +693,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             case MODULE -> p.isModuleScope();
             case ALL -> p.levelsUp() > constDepth;
           };
-      if (scope.isInTypeAliasScope() && p.isModuleScope()) {
+      // Assumption: typealiases can only be declared on the module.
+      // If we ever allow typealiases in classes, this code needs to change.
+      if (symbolTable.isInTypeAliasScope && p.isModuleScope()) {
         var getModuleNode = new GetTypeAliasModuleNode(sourceSection);
         if (p.isLocal()) {
           return new ReadQualifiedLocalPropertyNode(
@@ -789,7 +793,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             case MODULE -> method.isModuleScope();
             case ALL -> method.levelsUp() > constDepth;
           };
-      if (scope.isInTypeAliasScope() && method.isModuleScope()) {
+      // Assumption: typealiases can only be declared on the module.
+      // If we ever allow typealiases in classes, this code needs to change.
+      if (symbolTable.isInTypeAliasScope && method.isModuleScope()) {
         var getModuleNode = new GetTypeAliasModuleNode(sourceSection);
         if (method.isObjectMethod()) {
           return new InvokeQualifiedObjectMethodNode(
