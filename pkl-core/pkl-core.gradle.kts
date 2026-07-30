@@ -74,6 +74,7 @@ dependencies {
   add("generatorImplementation", libs.truffleApi)
   add("generatorImplementation", libs.jspecify)
   add("generatorImplementation", projects.pklParser)
+  add("generatorImplementation", libs.snakeYaml)
 
   javaExecutableConfiguration(project(":pkl-cli", "javaExecutable"))
 }
@@ -222,6 +223,30 @@ val generateBaseModuleMembers =
   }
 
 sourceSets.main { java.srcDir(layout.buildDirectory.dir("generated/sources/baseModuleMembers")) }
+
+// Regenerates the `pkl:url` WHATWG conformance snippet-test input from the web-platform-tests
+// fixtures. Downloaded on each run rather than vendored.
+// This is an on-demand task rather than a `compileJava` dependency.
+tasks.register<JavaExec>("generateWptUrlTests") {
+  group = "build"
+  description = "Regenerates the pkl:url WHATWG conformance snippet test from urltestdata.json."
+
+  val testDataUrl =
+    "https://raw.githubusercontent.com/web-platform-tests/wpt/master/url/resources/urltestdata.json"
+  val outputFile =
+    layout.projectDirectory.file(
+      "src/test/files/LanguageSnippetTests/input/api/urlWhatwgConformance.pkl"
+    )
+
+  outputs.upToDateWhen { false }
+
+  classpath = generatorSourceSet.get().runtimeClasspath
+  mainClass = "org.pkl.core.generator.WptUrlTestGenerator"
+
+  argumentProviders.add(
+    CommandLineArgumentProvider { listOf(testDataUrl, outputFile.asFile.absolutePath) }
+  )
+}
 
 tasks.compileJava { dependsOn(generateBaseModuleMembers) }
 
