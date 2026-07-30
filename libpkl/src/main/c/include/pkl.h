@@ -65,7 +65,7 @@ typedef void (*pkl_message_response_handler)(unsigned int length, char *message,
  * @param[in] handler   The callback that gets called when a message is received from Pkl.
  * @param[in] userData  User-defined data that gets passed to handler.
  * @param[out] exec      The pointer to write the created pkl_exec_t to.
- * @param[out] error     The pointer to write error details to.
+ * @param[out] error     The pointer to write error details to. Can optionally be `NULL`.
  *
  * @return 0 on success, non-zero on failure.
  */
@@ -81,7 +81,7 @@ PKL_EXPORT int pkl_init(pkl_message_response_handler handler, void *userData,
  * @param[in] pexec     The Pkl executor instance.
  * @param[in] length    The length of the message, in bytes.
  * @param[in] message   The message to send to Pkl.
- * @param[out] error    The pointer to write error details to.
+ * @param[out] error    The pointer to write error details to. Can optionally be `NULL`.
  *
  * @return 0 on success, and non-zero otherwise.
  */
@@ -93,9 +93,9 @@ PKL_EXPORT int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *me
  * for our `pkl_exec_t` instance.
  *
  * @param[in] pexec     The Pkl executor instance.
- * @param[out] error    The pointer to write error details to.
+ * @param[out] error    The pointer to write error details to. Can optionally be `NULL`.
  *
- * @return 0 on success, -1 if `pexec` is NULL, and an error code otherwise.
+ * @return 0 on success, -1 if `pexec` is `NULL`, and an error code otherwise.
  */
 PKL_EXPORT int pkl_close(pkl_exec_t *pexec, pkl_error_t *error);
 
