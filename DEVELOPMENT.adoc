@@ -99,6 +99,8 @@ libpkl is a native library written in C, and is best written in CLion, or VSCode
 
 IntelliJ has limited support for editing C sources.
 
+There is a CMakeLists.txt file whose only job is to configure CLion with proper include paths.
+
 == Resources
 
 For automated build setup examples see our https://github.com/apple/pkl/blob/main/.github/[GitHub Actions] jobs like our https://github.com/apple/pkl/blob/main/.github/jobs/BuildNativeJob.pkl[BuildNativeJob.pkl], where we build Pkl automatically.

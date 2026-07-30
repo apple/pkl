@@ -86,8 +86,8 @@ void test_garbage_send_message() {
 	int result = pkl_send_message(exec, 3, message, &err);
 	assert(result == PKL_ERR_PROTOCOL);
 
-	result = pkl_close(NULL, &err);
-	assert(result == -1);
+	result = pkl_close(exec, &err);
+	assert(result == 0);
 	printf("✓ Garbage message becomes protocol exception\n");
 }
 
