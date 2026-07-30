@@ -32,6 +32,7 @@
 #define PKL_VERSION "0.0.0"
 #endif
 
+// ReSharper disable once CppClassNeverUsed
 struct __pkl_exec_t {
 #ifdef _WIN32
   CRITICAL_SECTION mutex;
@@ -280,7 +281,7 @@ int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *message,
 	}
 
 	char *errormessage = NULL;
-	int resp = pkl_internal_send_message(thread, length, message,
+	const int resp = pkl_internal_send_message(thread, (int) length, message,
 			&errormessage);
 
 	if (graal_detach_thread(thread) != 0) {
