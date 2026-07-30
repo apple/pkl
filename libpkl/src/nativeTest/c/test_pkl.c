@@ -77,6 +77,20 @@ void test_empty_message() {
 	printf("✓ Empty message rejected\n");
 }
 
+void test_garbage_send_message() {
+	pkl_error_t err = { 0 };
+	pkl_exec_t *exec = NULL;
+	assert(pkl_init(test_message_handler, NULL, &exec, &err) == 0);
+
+	char *message = (char*) (unsigned char[] ) { 0x41, 0x42, 0x43 };
+	int result = pkl_send_message(exec, 3, message, &err);
+	assert(result == PKL_ERR_PROTOCOL);
+
+	result = pkl_close(NULL, &err);
+	assert(result == -1);
+	printf("✓ Garbage message becomes protocol exception\n");
+}
+
 int main() {
 	printf("Running libpkl C tests...\n\n");
 
@@ -84,6 +98,7 @@ int main() {
 	test_init_close();
 	test_null_send_message();
 	test_empty_message();
+	test_garbage_send_message();
 
 	printf("\nAll tests passed!\n");
 	return 0;

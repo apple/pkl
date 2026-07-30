@@ -38,13 +38,11 @@ struct __pkl_exec_t {
 #else
 	pthread_mutex_t mutex;
 #endif
-	graal_isolatethread_t *graal_isolatethread;
 	graal_isolate_t *isolate;
 
-	/**
-	 * The caller-supplied handler/userData from pkl_init, invoked only from `queue_thread`.
-	 */
+	/** The caller-supplied handler/userData from pkl_init, invoked only from `queue_thread`. */
 	pkl_message_response_handler handler;
+
 	void *userData;
 
 #ifdef _WIN32
@@ -53,8 +51,6 @@ struct __pkl_exec_t {
 	pthread_t queue_thread;
 #endif
 };
-
-static int pkl_is_initialized = 0;
 
 /**
  * Polls for messages coming from Pkl and sends them back to the handler.
@@ -131,10 +127,18 @@ static void pkl_stop_dispatch_worker(pkl_exec_t *pexec) {
 static void pkl_runtime_cleanup(pkl_exec_t *pexec) {
 	// pkl_internal_server_stop unblocks queue_thread's pending/next poll call, so the join
 	// below is guaranteed to return; only then is it safe to tear down the isolate.
-	pkl_internal_server_stop(pexec->graal_isolatethread);
+	graal_isolatethread_t *thread;
+	if (graal_attach_thread(pexec->isolate, &thread) != 0) {
+		fprintf(stderr,
+				"fatal: failed to attach response dispatch thread to isolate.\n");
+		abort();
+	}
+	pkl_internal_server_stop(thread);
 	pkl_stop_dispatch_worker(pexec);
-	pkl_internal_close(pexec->graal_isolatethread);
-	pexec->graal_isolatethread = NULL;
+	if (graal_tear_down_isolate(thread) != 0) {
+		fprintf(stderr, "fatal: failed to tear down graal isolate.\n");
+		abort();
+	}
 }
 
 static void pkl_unlock_mutex(pkl_exec_t *pexec) {
@@ -176,13 +180,6 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 		}
 		return -1;
 	}
-	if (pkl_is_initialized) {
-		if (error != NULL) {
-			error->message =
-					"pkl_init called multiple times without calling pkl_close";
-		}
-		return -1;
-	}
 	pkl_exec_t *pexec = calloc(1, sizeof(pkl_exec_t));
 	if (pexec == NULL) {
 		fprintf(stderr, "failed to allocate pkl_exec_t\n");
@@ -205,11 +202,12 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 	pexec->handler = handler;
 	pexec->userData = userData;
 
-	pexec->graal_isolatethread = pkl_internal_init();
+	graal_isolate_t *isolate;
+	graal_isolatethread_t *isolateThread;
 
-	if (pexec->graal_isolatethread == NULL) {
+	if (graal_create_isolate(NULL, &isolate, &isolateThread) != 0) {
 		if (error != NULL) {
-			error->message = "Failed to allocate graal_isolatethread";
+			error->message = "Failed to create graal isolate thread";
 		}
 #ifdef _WIN32
     DeleteCriticalSection(&pexec->mutex);
@@ -223,29 +221,10 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 		*exec = NULL;
 		return -1;
 	}
-
-	pexec->isolate = graal_get_isolate(pexec->graal_isolatethread);
-	if (pexec->isolate == NULL) {
-		if (error != NULL) {
-			error->message =
-					"Failed to resolve isolate from graal_isolatethread";
-		}
-		pkl_internal_close(pexec->graal_isolatethread);
-#ifdef _WIN32
-    DeleteCriticalSection(&pexec->mutex);
-#else
-		if (pthread_mutex_destroy(&pexec->mutex) != 0) {
-			fprintf(stderr, "fatal: failed to destroy mutex.\n");
-			abort();
-		}
-#endif
-		free(pexec);
-		*exec = NULL;
-		return -1;
-	}
+	pexec->isolate = isolate;
 
 	if (pkl_start_dispatch_worker(pexec, error) != 0) {
-		pkl_internal_close(pexec->graal_isolatethread);
+		graal_tear_down_isolate(isolateThread);
 #ifdef _WIN32
     DeleteCriticalSection(&pexec->mutex);
 #else
@@ -259,9 +238,13 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 		return -1;
 	}
 
-	pkl_internal_server_start(pexec->graal_isolatethread);
+	pkl_internal_server_start(isolateThread);
+	if (graal_detach_thread(isolateThread) != 0) {
+		fprintf(stderr,
+				"fatal: failed to detach response dispatch thread from isolate.\n");
+		abort();
+	}
 
-	pkl_is_initialized = 1;
 	*exec = pexec;
 	if (error != NULL) {
 		error->message = NULL;
@@ -288,10 +271,25 @@ int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *message,
 	if (lock_response != 0) {
 		return lock_response;
 	}
+
+	graal_isolatethread_t *thread;
+	if (graal_attach_thread(pexec->isolate, &thread) != 0) {
+		fprintf(stderr,
+				"fatal: failed to attach response dispatch thread to isolate.\n");
+		abort();
+	}
+
 	char *errormessage = NULL;
-	int resp = pkl_internal_send_message(pexec->graal_isolatethread, length,
-			message, &errormessage);
+	int resp = pkl_internal_send_message(thread, length, message,
+			&errormessage);
+
+	if (graal_detach_thread(thread) != 0) {
+		fprintf(stderr,
+				"fatal: failed to detach response dispatch thread from isolate.\n");
+		abort();
+	}
 	pkl_unlock_mutex(pexec);
+
 	if (resp != 0) {
 		if (error != NULL) {
 			error->message = errormessage;
@@ -340,7 +338,6 @@ int pkl_close(pkl_exec_t *pexec, pkl_error_t *error) {
 	}
 #endif
 
-	pkl_is_initialized = 0;
 	free(pexec);
 	if (error != NULL) {
 		error->message = NULL;

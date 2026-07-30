@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("FunctionName")
+
 package org.pkl.libpkl
 
 import com.sun.jna.Pointer
@@ -23,7 +25,7 @@ import org.pkl.core.Release
 
 class LibPklTest {
   @Test
-  fun testMalformedMessage() {
+  fun `malformed message`() {
     val messageResponseHandler =
       object : LibPklJNA.PklMessageResponseHandler {
         override fun invoke(length: Int, message: Pointer, userData: Pointer?) {}
@@ -45,7 +47,7 @@ class LibPklTest {
   }
 
   @Test
-  fun testEmptyMessageIsRejected() {
+  fun `empty message is rejected`() {
     val execRef = PointerByReference()
     val error = LibPklJNA.PklError()
     val messageResponseHandler =
@@ -65,7 +67,7 @@ class LibPklTest {
   }
 
   @Test
-  fun testVersionString() {
+  fun `version string matches current version`() {
     val currentVersion = Release.current().version.toString()
     assertThat(LibPklJNA.INSTANCE.pkl_version()).isEqualTo(currentVersion)
   }

@@ -46,9 +46,6 @@ public class LibPklInternal {
 
   private LibPklInternal() {}
 
-  @CEntryPoint(name = "pkl_internal_init", builtin = CEntryPoint.Builtin.CREATE_ISOLATE)
-  static native IsolateThread pklInternalInit();
-
   @CEntryPoint(name = "pkl_internal_send_message")
   public static int pklInternalSendMessage(
       IsolateThread thread, int length, CCharPointer ptr, CCharPointerPointer errorMessage) {
@@ -63,9 +60,6 @@ public class LibPklInternal {
       return PKL_ERR_PROTOCOL;
     }
   }
-
-  @CEntryPoint(name = "pkl_internal_close", builtin = CEntryPoint.Builtin.TEAR_DOWN_ISOLATE)
-  public static native void pklInternalClose(IsolateThread thread);
 
   @CEntryPoint(name = "pkl_internal_server_start")
   public static void pklInternalServerStart(IsolateThread thread) {

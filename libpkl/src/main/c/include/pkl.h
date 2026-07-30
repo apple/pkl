@@ -59,8 +59,8 @@ typedef void (*pkl_message_response_handler)(unsigned int length, char *message,
 
 /**
  * Initialises and allocates a Pkl executor, writing it to the slot pointed by `exec`.
- * Only one executor can exist at one time.
- * Calling `pkl_init` multiple times without calling `pkl_close` in between results in an error.
+ *
+ * To clean up resources allocated by the executor, use `pkl_close()`.
  *
  * @param handler   The callback that gets called when a message is received from Pkl.
  * @param userData  User-defined data that gets passed to handler.
