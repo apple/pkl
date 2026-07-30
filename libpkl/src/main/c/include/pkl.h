@@ -50,22 +50,22 @@ typedef struct __pkl_exec_t pkl_exec_t;
  * Messages must be deserialized to Pkl's Message Passing API: 
  * https://pkl-lang.org/main/current/bindings-specification/message-passing-api.html
  *
- * @param length    The length of the message bytes
- * @param message   The message itself
- * @param userData  User-defined data passed in from pkl_init.
+ * @param[in] length    The length of the message bytes
+ * @param[in] message   The message itself
+ * @param[in] userData  User-defined data passed in from pkl_init.
  */
 typedef void (*pkl_message_response_handler)(unsigned int length, char *message,
 		void *userData);
 
 /**
- * Initialises and allocates a Pkl executor, writing it to the slot pointed by `exec`.
+ * Initializes and allocates a Pkl executor, writing it to the slot pointed by `exec`.
  *
  * To clean up resources allocated by the executor, use `pkl_close()`.
  *
- * @param handler   The callback that gets called when a message is received from Pkl.
- * @param userData  User-defined data that gets passed to handler.
- * @param exec      The pointer to write the created pkl_exec_t to.
- * @param error     The pointer to write error details to.
+ * @param[in] handler   The callback that gets called when a message is received from Pkl.
+ * @param[in] userData  User-defined data that gets passed to handler.
+ * @param[out] exec      The pointer to write the created pkl_exec_t to.
+ * @param[out] error     The pointer to write error details to.
  *
  * @return 0 on success, non-zero on failure.
  */
@@ -78,9 +78,10 @@ PKL_EXPORT int pkl_init(pkl_message_response_handler handler, void *userData,
  * Messages must be serialized to Pkl's Message Passing API:
  * https://pkl-lang.org/main/current/bindings-specification/message-passing-api.html
  *
- * @param pexec     The Pkl executor instance.
- * @param length    The length of the message, in bytes.
- * @param message   The message to send to Pkl.
+ * @param[in] pexec     The Pkl executor instance.
+ * @param[in] length    The length of the message, in bytes.
+ * @param[in] message   The message to send to Pkl.
+ * @param[out] error    The pointer to write error details to.
  *
  * @return 0 on success, and non-zero otherwise.
  */
@@ -91,7 +92,8 @@ PKL_EXPORT int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *me
  * Cleans up any resources that were created as part of the `pkl_init` process
  * for our `pkl_exec_t` instance.
  *
- * @param pexec     The Pkl executor instance.
+ * @param[in] pexec     The Pkl executor instance.
+ * @param[out] error    The pointer to write error details to.
  *
  * @return 0 on success, -1 if `pexec` is NULL, and an error code otherwise.
  */
