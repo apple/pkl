@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,6 +31,7 @@ class CliProjectPackager(
   private val testOptions: CliTestOptions,
   private val outputPath: String,
   private val skipPublishCheck: Boolean,
+  private val install: Boolean,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
 ) : CliProjectCommand(baseOptions, projectDirs) {
@@ -85,6 +86,8 @@ class CliProjectPackager(
         securityManager,
         httpClient,
         skipPublishCheck,
+        install,
+        moduleCacheDir,
         consoleWriter,
       )
       .createPackages()

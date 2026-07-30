@@ -107,6 +107,7 @@ public class PklPlugin implements Plugin<Project> {
                 task.getProjectDirectories().from(spec.getProjectDirectories());
                 task.getOutputPath().set(spec.getOutputPath());
                 task.getSkipPublishCheck().set(spec.getSkipPublishCheck());
+                task.getInstall().set(spec.getInstall());
                 task.getJunitReportsDir().set(spec.getJunitReportsDir());
                 task.getOverwrite().set(spec.getOverwrite());
                 task.getTestReporter().set(spec.getTestReporter());

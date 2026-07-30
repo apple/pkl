@@ -21,6 +21,7 @@ import com.github.ajalt.clikt.core.subcommands
 import com.github.ajalt.clikt.parameters.arguments.argument
 import com.github.ajalt.clikt.parameters.arguments.multiple
 import com.github.ajalt.clikt.parameters.groups.provideDelegate
+import com.github.ajalt.clikt.parameters.options.check
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -128,6 +129,15 @@ class PackageCommand : BaseCommand(name = "package", helpLink = helpLink) {
       .single()
       .flag()
 
+  private val install: Boolean by
+    option(
+        names = arrayOf("--install"),
+        help = "Install the built package into the module cache dir",
+      )
+      .single()
+      .flag()
+      .check("not compatible with --no-cache") { !(it && baseOptions.noCache) }
+
   override fun run() {
     CliProjectPackager(
         baseOptions.baseOptions(emptyList()),
@@ -135,6 +145,7 @@ class PackageCommand : BaseCommand(name = "package", helpLink = helpLink) {
         testOptions.cliTestOptions,
         outputPath,
         skipPublishCheck,
+        install,
       )
       .run()
   }

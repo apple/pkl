@@ -60,6 +60,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageStartingWith("No project visible to the working directory.")
@@ -74,6 +75,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err).hasMessageStartingWith("Directory $tempDir does not contain a PklProject file.")
@@ -96,6 +98,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
       )
     val err = assertThrows<CliException> { packager.run() }
     assertThat(err)
@@ -140,6 +143,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = buffer,
       )
     val err = assertThrows<CliException> { packager.run() }
@@ -187,6 +191,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = buffer,
       )
     packager.run()
@@ -286,6 +291,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = buffer,
       )
     packager.run()
@@ -337,6 +343,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = StringWriter(),
       )
     packager.run()
@@ -419,6 +426,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = StringWriter(),
       )
       .run()
@@ -517,6 +525,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = StringWriter(),
       )
       .run()
@@ -655,6 +664,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
+            install = false,
             consoleWriter = StringWriter(),
           )
           .run()
@@ -695,6 +705,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
+            install = false,
             consoleWriter = StringWriter(),
           )
           .run()
@@ -749,6 +760,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
+            install = false,
             consoleWriter = StringWriter(),
           )
           .run()
@@ -795,6 +807,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = StringWriter(),
       )
       .run()
@@ -832,6 +845,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = true,
+            install = false,
             consoleWriter = StringWriter(),
           )
           .run()
@@ -875,6 +889,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = StringWriter(),
       )
       .run()
@@ -919,6 +934,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = out,
       )
       .run()
@@ -974,6 +990,7 @@ class CliProjectPackagerTest {
             CliTestOptions(),
             ".out/%{name}@%{version}",
             skipPublishCheck = false,
+            install = false,
             consoleWriter = StringWriter(),
           )
           .run()
@@ -1018,6 +1035,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = false,
+        install = false,
         consoleWriter = out,
       )
       .run()
@@ -1062,6 +1080,7 @@ class CliProjectPackagerTest {
         CliTestOptions(),
         ".out/%{name}@%{version}",
         skipPublishCheck = true,
+        install = false,
         consoleWriter = StringWriter(),
       )
     packager.run()
@@ -1119,6 +1138,73 @@ class CliProjectPackagerTest {
         """
           .trimIndent()
       )
+  }
+
+  @Test
+  fun `install package to local cache`(@TempDir tempDir: Path, @TempDir cacheDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        """
+        amends "pkl:Project"
+
+        package {
+          name = "mypackage"
+          version = "1.0.0"
+          baseUri = "package://example.com/mypackage"
+          packageZipUrl = "https://foo.com"
+        }
+        """
+          .trimIndent()
+      )
+    val packager =
+      CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir, moduleCacheDir = cacheDir),
+        listOf(tempDir),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        install = true,
+        consoleWriter = StringWriter(),
+      )
+    packager.run()
+
+    assertThat(cacheDir.resolve("package-2/example.com/mypackage@1.0.0/mypackage@1.0.0.json"))
+      .exists()
+    assertThat(cacheDir.resolve("package-2/example.com/mypackage@1.0.0/mypackage@1.0.0.zip"))
+      .exists()
+  }
+
+  @Test
+  fun `cannot install with no cache`(@TempDir tempDir: Path) {
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        """
+        amends "pkl:Project"
+
+        package {
+          name = "mypackage"
+          version = "1.0.0"
+          baseUri = "package://example.com/mypackage"
+          packageZipUrl = "https://foo.com"
+        }
+        """
+          .trimIndent()
+      )
+    val packager =
+      CliProjectPackager(
+        CliBaseOptions(workingDir = tempDir, noCache = true),
+        listOf(tempDir),
+        CliTestOptions(),
+        ".out/%{name}@%{version}",
+        skipPublishCheck = true,
+        install = true,
+        consoleWriter = StringWriter(),
+      )
+    val exc = assertThrows<CliException> { packager.run() }
+    assertThat(exc.message)
+      .isEqualTo("Cannot install package to module cache dir when module cache is disabled.")
   }
 
   private fun Path.zipFilePaths(): List<String> {
