@@ -156,7 +156,7 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 		return -1;
 	}
 	pexec->isolate = isolate;
-  pexec->isolateThread = isolateThread;
+	pexec->isolateThread = isolateThread;
 
 	if (pkl_start_dispatch_worker(pexec, error) != 0) {
 		graal_tear_down_isolate(isolateThread);
@@ -165,7 +165,7 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 		return -1;
 	}
 
-  pkl_internal_server_start(isolateThread);
+	pkl_internal_server_start(isolateThread);
 
 	*exec = pexec;
 	if (error != NULL) {
@@ -174,8 +174,8 @@ int pkl_init(pkl_message_response_handler handler, void *userData,
 	return 0;
 }
 
-int pkl_send_message(const pkl_exec_t *pexec, const unsigned int length, char *message,
-		pkl_error_t *error) {
+int pkl_send_message(const pkl_exec_t *pexec, const unsigned int length,
+		char *message, pkl_error_t *error) {
 	if (pexec == NULL) {
 		if (error != NULL) {
 			error->message = "pexec is null";
@@ -189,13 +189,14 @@ int pkl_send_message(const pkl_exec_t *pexec, const unsigned int length, char *m
 		return -1;
 	}
 
-  graal_isolatethread_t *thread = graal_get_current_thread(pexec->isolate);
-  if (thread != pexec->isolateThread) {
-    if (error != NULL) {
-      error->message = "called into pkl_send_message from different thread";
-    }
-    return PKL_ERR_THREAD;
-  }
+	graal_isolatethread_t *thread = graal_get_current_thread(pexec->isolate);
+	if (thread != pexec->isolateThread) {
+		if (error != NULL) {
+			error->message =
+					"called into pkl_send_message from different thread";
+		}
+		return PKL_ERR_THREAD;
+	}
 
 	char *errormessage = NULL;
 	const int resp = pkl_internal_send_message(thread, (int) length, message,
@@ -221,23 +222,23 @@ int pkl_close(pkl_exec_t *pexec, pkl_error_t *error) {
 		return -1;
 	}
 
-  graal_isolatethread_t *thread = graal_get_current_thread(pexec->isolate);
-  if (thread != pexec->isolateThread) {
-    if (error != NULL) {
-      error->message = "called into pkl_close from different thread";
-    }
-    return PKL_ERR_THREAD;
-  }
+	graal_isolatethread_t *thread = graal_get_current_thread(pexec->isolate);
+	if (thread != pexec->isolateThread) {
+		if (error != NULL) {
+			error->message = "called into pkl_close from different thread";
+		}
+		return PKL_ERR_THREAD;
+	}
 
-  // pkl_internal_server_stop unblocks queue_thread's pending/next poll call, so the join
-  // below is guaranteed to return; only then is it safe to tear down the isolate.
-  pkl_internal_server_stop(thread);
-  pkl_stop_dispatch_worker(pexec);
+	// pkl_internal_server_stop unblocks queue_thread's pending/next poll call, so the join
+	// below is guaranteed to return; only then is it safe to tear down the isolate.
+	pkl_internal_server_stop(thread);
+	pkl_stop_dispatch_worker(pexec);
 
-  if (graal_tear_down_isolate(thread) != 0) {
-    fprintf(stderr, "fatal: failed to tear down graal isolate.\n");
-    abort();
-  }
+	if (graal_tear_down_isolate(thread) != 0) {
+		fprintf(stderr, "fatal: failed to tear down graal isolate.\n");
+		abort();
+	}
 
 	free(pexec);
 	if (error != NULL) {
