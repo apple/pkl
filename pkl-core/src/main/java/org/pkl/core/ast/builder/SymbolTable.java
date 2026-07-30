@@ -47,6 +47,8 @@ import org.pkl.parser.Lexer;
 public final class SymbolTable {
 
   private Scope currentScope;
+  // consider having each scope keep track of this individually rather than set on SymbolTable.
+  public boolean isInTypeAliasScope;
 
   public SymbolTable(ModuleInfo moduleInfo, boolean isBaseModule) {
     currentScope = new ModuleScope(moduleInfo, isBaseModule);
@@ -85,14 +87,19 @@ public final class SymbolTable {
       Identifier name,
       List<TypeParameter> typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
-    return doEnter(
-        new TypeAliasScope(
-            currentScope,
-            name,
-            toQualifiedName(name),
-            new FrameDescriptorBuilder(),
-            typeParameters),
-        nodeFactory);
+    try {
+      this.isInTypeAliasScope = true;
+      return doEnter(
+          new TypeAliasScope(
+              currentScope,
+              name,
+              toQualifiedName(name),
+              new FrameDescriptorBuilder(),
+              typeParameters),
+          nodeFactory);
+    } finally {
+      this.isInTypeAliasScope = false;
+    }
   }
 
   public <T> T enterMethod(

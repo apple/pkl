@@ -112,14 +112,17 @@ import org.pkl.core.ast.expression.literal.TrueLiteralNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
-import org.pkl.core.ast.expression.member.InvokeClassMethodNode;
+import org.pkl.core.ast.expression.member.InvokeLexicalClassMethodNode;
+import org.pkl.core.ast.expression.member.InvokeLexicalObjectMethodNode;
 import org.pkl.core.ast.expression.member.InvokeMethodDirectNode;
 import org.pkl.core.ast.expression.member.InvokeMethodVirtualNodeGen;
-import org.pkl.core.ast.expression.member.InvokeObjectMethodNode;
+import org.pkl.core.ast.expression.member.InvokeQualifiedClassMethodNode;
+import org.pkl.core.ast.expression.member.InvokeQualifiedObjectMethodNode;
 import org.pkl.core.ast.expression.member.InvokeSuperMethodNodeGen;
 import org.pkl.core.ast.expression.member.ReadAmbiguousLocalityPropertyNode;
-import org.pkl.core.ast.expression.member.ReadLocalPropertyNode;
+import org.pkl.core.ast.expression.member.ReadLexicalLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
+import org.pkl.core.ast.expression.member.ReadQualifiedLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
 import org.pkl.core.ast.expression.member.ReadSuperPropertyNode;
 import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
@@ -128,6 +131,7 @@ import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
+import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
 import org.pkl.core.ast.expression.primary.OuterNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.expression.ternary.IfElseNode;
@@ -526,7 +530,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public GetModuleNode visitModuleExpr(ModuleExpr expr) {
+  public ExpressionNode visitModuleExpr(ModuleExpr expr) {
     var currentScope = symbolTable.getCurrentScope();
     // cannot use unqualified `module` in a const context
     if (currentScope.getConstLevel().isConst() && !(expr.parent() instanceof QualifiedAccessExpr)) {
@@ -549,7 +553,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .withSourceSection(createSourceSection(expr))
           .build();
     }
-    return new GetModuleNode(createSourceSection(expr));
+    return symbolTable.isInTypeAliasScope
+        ? new GetTypeAliasModuleNode(createSourceSection(expr))
+        : new GetModuleNode(createSourceSection(expr));
   }
 
   @Override
@@ -687,12 +693,30 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             case MODULE -> p.isModuleScope();
             case ALL -> p.levelsUp() > constDepth;
           };
+      // Assumption: typealiases can only be declared on the module.
+      // If we ever allow typealiases in classes, this code needs to change.
+      if (symbolTable.isInTypeAliasScope && p.isModuleScope()) {
+        var getModuleNode = new GetTypeAliasModuleNode(sourceSection);
+        if (p.isLocal()) {
+          return new ReadQualifiedLocalPropertyNode(
+              sourceSection,
+              org.pkl.core.runtime.Identifier.localProperty(name),
+              needsConst,
+              getModuleNode);
+        }
+        return ReadPropertyNodeGen.create(
+            sourceSection,
+            org.pkl.core.runtime.Identifier.get(name),
+            MemberLookupMode.IMPLICIT_LEXICAL,
+            needsConst,
+            getModuleNode);
+      }
       if (p.isAmbiguousLocality()) {
         return new ReadAmbiguousLocalityPropertyNode(
             sourceSection, org.pkl.core.runtime.Identifier.get(name), p.levelsUp(), needsConst);
       }
       if (p.isLocal()) {
-        return new ReadLocalPropertyNode(
+        return new ReadLexicalLocalPropertyNode(
             sourceSection,
             org.pkl.core.runtime.Identifier.localProperty(name),
             p.levelsUp(),
@@ -769,11 +793,34 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             case MODULE -> method.isModuleScope();
             case ALL -> method.levelsUp() > constDepth;
           };
+      // Assumption: typealiases can only be declared on the module.
+      // If we ever allow typealiases in classes, this code needs to change.
+      if (symbolTable.isInTypeAliasScope && method.isModuleScope()) {
+        var getModuleNode = new GetTypeAliasModuleNode(sourceSection);
+        if (method.isObjectMethod()) {
+          return new InvokeQualifiedObjectMethodNode(
+              sourceSection, identifier, args, needsConst, getModuleNode);
+        }
+        if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
+          return new InvokeQualifiedClassMethodNode(
+              sourceSection, identifier, args, needsConst, getModuleNode);
+        }
+        return InvokeMethodVirtualNodeGen.create(
+            sourceSection,
+            identifier,
+            args,
+            MemberLookupMode.IMPLICIT_LEXICAL,
+            needsConst,
+            getModuleNode,
+            GetClassNodeGen.create(null));
+      }
       if (method.isObjectMethod()) {
-        return new InvokeObjectMethodNode(sourceSection, identifier, levelsUp, args, needsConst);
+        return new InvokeLexicalObjectMethodNode(
+            sourceSection, identifier, levelsUp, args, needsConst);
       }
       if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
-        return new InvokeClassMethodNode(sourceSection, identifier, levelsUp, args, needsConst);
+        return new InvokeLexicalClassMethodNode(
+            sourceSection, identifier, levelsUp, args, needsConst);
       }
       return InvokeMethodVirtualNodeGen.create(
           sourceSection,

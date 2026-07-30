@@ -1,0 +1,3 @@
+import "../../input-helper/types/typeAliasModule.pkl"
+
+res: typeAliasModule = module

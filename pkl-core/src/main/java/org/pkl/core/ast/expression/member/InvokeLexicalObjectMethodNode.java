@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,17 +18,13 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
-/**
- * A non-virtual call of closed methods (methods whose enclosing class/module is not open nor
- * abstract, and is lexically scoped).
- *
- * <p>For local methods, use {@link InvokeObjectMethodNode}.
- */
-public final class InvokeClassMethodNode extends AbstractInvokeMethodLexicalNode {
-  public InvokeClassMethodNode(
+/** A non-virtual call of an object method that is lexically scoped. */
+public final class InvokeLexicalObjectMethodNode extends AbstractInvokeLexicalMethodNode {
+  public InvokeLexicalObjectMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
@@ -39,17 +35,17 @@ public final class InvokeClassMethodNode extends AbstractInvokeMethodLexicalNode
 
   @Override
   protected void doCheckConst(VmObjectLike owner) {
-    var method = owner.getVmClass().getDeclaredMethod(methodName);
-    assert method != null;
-    if (!method.isConst()) {
+    var member = owner.getMember(methodName);
+    assert member != null;
+    if (!VmModifier.isConst(member.getModifiers())) {
       throw exceptionBuilder().evalError("methodMustBeConst", methodName).build();
     }
   }
 
   @Override
   protected CallTarget getCallTarget(VmObjectLike owner) {
-    var method = owner.getVmClass().getDeclaredMethod(methodName);
-    assert method != null;
-    return method.getCallTarget(getSourceSection());
+    var method = owner.getMember(methodName);
+    assert method != null && method.isLocal();
+    return (CallTarget) method.getCallTarget().call(owner, owner);
   }
 }

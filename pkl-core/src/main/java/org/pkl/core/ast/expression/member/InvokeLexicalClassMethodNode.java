@@ -1,5 +1,5 @@
 /*
- * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,13 +18,15 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.VmModifier;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
-/** A non-virtual call of a local method. */
-public final class InvokeObjectMethodNode extends AbstractInvokeMethodLexicalNode {
-  public InvokeObjectMethodNode(
+/**
+ * A non-virtual call of closed methods (methods whose enclosing class/module is not open nor
+ * abstract, and is lexically scoped).
+ */
+public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMethodNode {
+  public InvokeLexicalClassMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
@@ -33,18 +35,19 @@ public final class InvokeObjectMethodNode extends AbstractInvokeMethodLexicalNod
     super(sourceSection, methodName, levelsUp, argumentNodes, needsConst);
   }
 
+  @Override
   protected void doCheckConst(VmObjectLike owner) {
-    var member = owner.getMember(methodName);
-    assert member != null;
-    if (!VmModifier.isConst(member.getModifiers())) {
+    var method = owner.getVmClass().getDeclaredMethod(methodName);
+    assert method != null;
+    if (!method.isConst()) {
       throw exceptionBuilder().evalError("methodMustBeConst", methodName).build();
     }
   }
 
   @Override
   protected CallTarget getCallTarget(VmObjectLike owner) {
-    var method = owner.getMember(methodName);
-    assert method != null && method.isLocal();
-    return (CallTarget) method.getCallTarget().call(owner, owner);
+    var method = owner.getVmClass().getDeclaredMethod(methodName);
+    assert method != null;
+    return method.getCallTarget(getSourceSection());
   }
 }
