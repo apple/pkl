@@ -1,0 +1,168 @@
+facts {
+  ["components"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parse(): normalizing"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parse(): coercing"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parse(): failing"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parseStrict(): accepting well-formed input"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parseStrict(): rejecting invalid URL units"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["Parser.base"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["origin"] {
+    true
+    true
+    true
+    true
+  }
+  ["segments"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["SearchParams.toList()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["SearchParams.get()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["SearchParams.has()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["SearchParams.toMap()"] {
+    true
+    true
+    true
+    true
+  }
+  ["toString()"] {
+    true
+  }
+  ["equality"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["encodeComponent()"] {
+    true
+    true
+    true
+    true
+  }
+  ["decodeComponent()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["buildQuery()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+}

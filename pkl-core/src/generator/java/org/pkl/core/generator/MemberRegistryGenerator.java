@@ -159,11 +159,11 @@ public final class MemberRegistryGenerator extends AbstractProcessor {
       var enclosingClass = nodeClass.getEnclosingElement();
       assert enclosingClass != null;
 
-      var pklClassName = getAnnotatedPklName(enclosingClass);
-      if (pklClassName == null) {
-        pklClassName =
-            stripSuffix(enclosingClass.getSimpleName().toString(), TRUFFLE_NODE_FACTORY_SUFFIX);
-      }
+      var pklClassNameOverride = getAnnotatedPklName(enclosingClass);
+      var pklClassName =
+          pklClassNameOverride != null
+              ? pklClassNameOverride
+              : stripSuffix(enclosingClass.getSimpleName().toString(), TRUFFLE_NODE_FACTORY_SUFFIX);
 
       var pklMemberName = getAnnotatedPklName(nodeClass);
       if (pklMemberName == null) {
@@ -171,8 +171,12 @@ public final class MemberRegistryGenerator extends AbstractProcessor {
             stripSuffix(nodeClass.getSimpleName().toString(), TRUFFLE_NODE_CLASS_SUFFIX);
       }
 
+      // A node holder whose derived name matches the capitalized module name backs the module's
+      // top-level members (e.g. `MathNodes` -> `pkl.math#exp`). An explicit `@PklName` override
+      // means the holder backs a Pkl class instead, even when that class shares the module's name
+      // (e.g. `pkl:url`'s `Url` class -> `pkl.url#Url.toString`, not `pkl.url#toString`).
       String pklMemberNameQualified;
-      if (pklClassName.equals(pklModuleNameCapitalized)) {
+      if (pklClassNameOverride == null && pklClassName.equals(pklModuleNameCapitalized)) {
         pklMemberNameQualified = "pkl." + pklModuleName + "#" + pklMemberName;
       } else {
         pklMemberNameQualified = "pkl." + pklModuleName + "#" + pklClassName + "." + pklMemberName;

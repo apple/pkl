@@ -1,0 +1,235 @@
+amends "../snippetTest.pkl"
+
+import "pkl:url"
+
+local parser = new url.Parser {}
+
+local base = "http://example.org/foo/bar?q#z"
+
+local function componentsOf(input: String): List<unknown> =
+  let (result = parser.parse(input)!!)
+    List(
+      result.scheme,
+      result.username,
+      result.password,
+      result.host,
+      result.port,
+      result.path,
+      result.search,
+      result.fragment,
+    )
+
+local function lenient(input: String): String? = parser.parse(input)?.toString()
+
+/// The lenient and strict serializations of [input].
+local function both(input: String): List<String?> =
+  List(lenient(input), parser.parseStrict(input)?.toString())
+
+/// Whether [input] parses to itself, both leniently and strictly.
+local function roundTrips(input: String): Boolean = both(input) == List(input, input)
+
+local function resolve(theBase: String, input: String): String? =
+  new url.Parser { base = theBase }.parse(input)?.toString()
+
+facts {
+  ["components"] {
+    componentsOf("https://user:pw@example.com:8080/a/b?q=1#f")
+      == List("https", "user", "pw", "example.com", 8080, "/a/b", "q=1", "f")
+    componentsOf("https://example.com")
+      == List("https", "", "", "example.com", null, "/", null, null)
+    componentsOf("https://example.com/a?#")
+      == List("https", "", "", "example.com", null, "/a", "", "")
+    componentsOf("mailto:user@example.com")
+      == List("mailto", "", "", null, null, "user@example.com", null, null)
+    componentsOf("https://example.com:443/a")
+      == List("https", "", "", "example.com", null, "/a", null, null)
+    componentsOf("https://example.com:8443/a")
+      == List("https", "", "", "example.com", 8443, "/a", null, null)
+  }
+
+  ["parse(): normalizing"] {
+    lenient("HTTPS://example.com") == "https://example.com/"
+    lenient("http://EXAMPLE.com/A") == "http://example.com/A"
+    lenient("https://example.com:443/a") == "https://example.com/a"
+    lenient("https://example.com:8443/a") == "https://example.com:8443/a"
+    lenient("http://example.com/a/b/../c/./d") == "http://example.com/a/c/d"
+    lenient("http://0x7f.0.0.1/") == "http://127.0.0.1/"
+    lenient("http://[2001:db8:0:0:0:0:0:1]/") == "http://[2001:db8::1]/"
+    lenient("mailto:user@example.com") == "mailto:user@example.com"
+    lenient("https://example.com/münchen?q=café")
+      == "https://example.com/m%C3%BCnchen?q=caf%C3%A9"
+  }
+
+  ["parse(): coercing"] {
+    both(" https://example.com/a ") == List("https://example.com/a", null)
+    both("https://exa\tmple.com/a") == List("https://example.com/a", null)
+    both("https://example.com/a\nb") == List("https://example.com/ab", null)
+    both("https:/example.com/a") == List("https://example.com/a", null)
+    both("https:example.com/a") == List("https://example.com/a", null)
+    both("https:///example.com/a") == List("https://example.com/a", null)
+    both("https://example.com\\a") == List("https://example.com/a", null)
+    both("file:/a/b") == List("file:///a/b", null)
+    both("http://1.2.3.4./") == List("http://1.2.3.4/", null)
+    both("https://user:pw@example.com/a") == List("https://user:pw@example.com/a", null)
+    both("non-special:opaque #hi") == List("non-special:opaque%20#hi", null)
+    both("non-special:opa que") == List("non-special:opa que", null)
+  }
+
+  ["parse(): failing"] {
+    lenient("") == null
+    lenient("../c") == null
+    lenient("not a url") == null
+    lenient("http://") == null
+    lenient("http://exa mple.com/") == null
+    lenient("http://[::1") == null
+    lenient("http://[::1.2.3.4x]/") == null
+    lenient("http://1.2.3.4.5/") == null
+    lenient("https://example.com:99999/") == null
+    lenient("https://example.com:port/") == null
+    lenient("http://münchen.de/") == null
+    lenient("foo://münchen.de") == "foo://m%C3%BCnchen.de"
+  }
+
+  ["parseStrict(): accepting well-formed input"] {
+    roundTrips("https://example.com/a?q=1#f")
+    roundTrips("http://1.2.3.4/")
+    roundTrips("http://[2001:db8::1]/")
+    roundTrips("file:///a/b")
+    roundTrips("foo://example.com/a")
+    roundTrips("mailto:user@example.com")
+    roundTrips("https://example.com/a%20b?q=%C3%A9#f%2F")
+  }
+
+  ["parseStrict(): rejecting invalid URL units"] {
+    both("https://example.com/a<b") == List("https://example.com/a%3Cb", null)
+    both("https://example.com/a%zz") == List("https://example.com/a%zz", null)
+    both("https://example.com/a%2") == List("https://example.com/a%2", null)
+    both("https://example.com/?a b") == List("https://example.com/?a%20b", null)
+    both("https://example.com/?a%zz") == List("https://example.com/?a%zz", null)
+    both("https://example.com/?a﷐") == List("https://example.com/?a%EF%B7%90", null)
+    both("https://example.com/#a<b") == List("https://example.com/#a%3Cb", null)
+    both("https://example.com/#a%zz") == List("https://example.com/#a%zz", null)
+    both("foo:a<b") == List("foo:a<b", null)
+    both("foo:a%zz") == List("foo:a%zz", null)
+    both("foo://a{b") == List("foo://a{b", null)
+    both("foo://a%zz") == List("foo://a%zz", null)
+  }
+
+  ["Parser.base"] {
+    resolve(base, "") == "http://example.org/foo/bar?q"
+    resolve(base, "c") == "http://example.org/foo/c"
+    resolve(base, "../c") == "http://example.org/c"
+    resolve(base, "/c") == "http://example.org/c"
+    resolve(base, "//other.org/c") == "http://other.org/c"
+    resolve(base, "?r") == "http://example.org/foo/bar?r"
+    resolve(base, "#y") == "http://example.org/foo/bar?q#y"
+    resolve(base, "https://example.com/a") == "https://example.com/a"
+    resolve("mailto:user@example.com", "#y") == "mailto:user@example.com#y"
+    lenient("../c") == null
+    resolve("http://example.org/foo/bar", "../c") == "http://example.org/c"
+    new url.Parser { base = " http://example.org/foo\\bar " }.parseStrict("c")?.toString()
+      == "http://example.org/foo/c"
+  }
+
+  ["origin"] {
+    parser.parse("https://example.com:443/a?q#f")!!.origin == "https://example.com"
+    parser.parse("http://example.com:8080/a")!!.origin == "http://example.com:8080"
+    parser.parse("mailto:user@example.com")!!.origin == null
+    parser.parse("file:///a/b")!!.origin == null
+  }
+
+  ["segments"] {
+    parser.parse("https://example.com/a/b")!!.segments == List("a", "b")
+    parser.parse("https://example.com/")!!.segments == List("")
+    parser.parse("https://example.com/a/")!!.segments == List("a", "")
+    parser.parse("https://example.com/a/b%20c")!!.segments == List("a", "b c")
+    parser.parse("https://example.com/m%C3%BCnchen")!!.segments == List("münchen")
+    parser.parse("https://example.com/a%2Fb")!!.segments == List("a/b")
+    parser.parse("mailto:user@example.com")!!.segments == List()
+    parser.parse("foo://example.com")!!.segments == List()
+  }
+
+  ["SearchParams.toList()"] {
+    parser.parse("https://example.com?a=1&b=2")!!.searchParams.toList()
+      == List(Pair("a", "1"), Pair("b", "2"))
+    parser.parse("https://example.com?a=1&a=2")!!.searchParams.toList()
+      == List(Pair("a", "1"), Pair("a", "2"))
+    parser.parse("https://example.com?a+b=c%20d")!!.searchParams.toList()
+      == List(Pair("a b", "c d"))
+    parser.parse("https://example.com?a&b=")!!.searchParams.toList()
+      == List(Pair("a", ""), Pair("b", ""))
+    parser.parse("https://example.com?a=1=2")!!.searchParams.toList() == List(Pair("a", "1=2"))
+    parser.parse("https://example.com?&a=1&&")!!.searchParams.toList() == List(Pair("a", "1"))
+    parser.parse("https://example.com?")!!.searchParams.toList() == List()
+    parser.parse("https://example.com")!!.searchParams.toList() == List()
+  }
+
+  ["SearchParams.get()"] {
+    parser.parse("https://example.com?a=1&b=2")!!.searchParams.get("a") == "1"
+    parser.parse("https://example.com?a=1&a=2")!!.searchParams.get("a") == "1"
+    parser.parse("https://example.com?a+b=c%20d")!!.searchParams.get("a b") == "c d"
+    parser.parse("https://example.com?a=1")!!.searchParams.get("b") == null
+    parser.parse("https://example.com?a")!!.searchParams.get("a") == ""
+    parser.parse("https://example.com?a=")!!.searchParams.get("a") == ""
+    parser.parse("https://example.com")!!.searchParams.get("a") == null
+  }
+
+  ["SearchParams.has()"] {
+    parser.parse("https://example.com?a=1&b=2")!!.searchParams.has("a")
+    parser.parse("https://example.com?a+b=c")!!.searchParams.has("a b")
+    parser.parse("https://example.com?a")!!.searchParams.has("a")
+    parser.parse("https://example.com?a=")!!.searchParams.has("a")
+    !parser.parse("https://example.com?a=1")!!.searchParams.has("b")
+    !parser.parse("https://example.com")!!.searchParams.has("a")
+  }
+
+  ["SearchParams.toMap()"] {
+    parser.parse("https://example.com?a=1&b=2")!!.searchParams.toMap()
+      == Map("a", "1", "b", "2")
+    parser.parse("https://example.com?a=1&a=2")!!.searchParams.toMap() == Map("a", "1")
+    parser.parse("https://example.com?a&b=")!!.searchParams.toMap() == Map("a", "", "b", "")
+    parser.parse("https://example.com")!!.searchParams.toMap() == Map()
+  }
+
+  ["toString()"] {
+    parser.parse("https://user:pw@example.com:8080/a/b?q=1#f")!!.toString()
+      == "https://user:pw@example.com:8080/a/b?q=1#f"
+  }
+
+  ["equality"] {
+    parser.parse("https://example.com/a") == parser.parse("https://example.com/a")
+    parser.parse("https://example.com/a") != parser.parse("https://example.com/b")
+    parser.parse("https://example.com/a") == parser.parse("HTTPS://example.com:443/a")
+    parser.parse("https://example.com/a")
+      == new url.Parser { base = "https://example.com/b" }.parse("a")
+    Set(parser.parse("https://example.com/a"), parser.parse("HTTPS://example.com:443/a")).length
+      == 1
+    Set(parser.parse("https://example.com/a"), parser.parse("https://example.com/b")).length == 2
+  }
+
+  ["encodeComponent()"] {
+    url.encodeComponent("a b&c") == "a%20b%26c"
+    url.encodeComponent("münchen") == "m%C3%BCnchen"
+    url.encodeComponent("aZ09!'()*-._~") == "aZ09!'()*-._~"
+    url.encodeComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
+  }
+
+  ["decodeComponent()"] {
+    url.decodeComponent("a%20b%26c") == "a b&c"
+    url.decodeComponent("m%C3%BCnchen") == "münchen"
+    url.decodeComponent("a+b") == "a+b"
+    url.decodeComponent("100%") == "100%"
+    url.decodeComponent("%zz") == "%zz"
+    url.decodeComponent(url.encodeComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
+  }
+
+  ["buildQuery()"] {
+    url.buildQuery(Map("a", "1", "b c", "d&e")) == "a=1&b+c=d%26e"
+    url.buildQuery(Map("a", null, "b", "")) == "a&b="
+    url.buildQuery(Map()) == ""
+    url.buildQuery(List(Pair("a", "1"), Pair("a", "2"))) == "a=1&a=2"
+    url.buildQuery(List()) == ""
+    url.buildQuery(parser.parse("https://example.com?a=1&a=2&b&c=d+e")!!.searchParams.toList())
+      == "a=1&a=2&b=&c=d+e"
+  }
+}

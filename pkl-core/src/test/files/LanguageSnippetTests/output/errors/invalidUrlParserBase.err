@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot parse `Parser.base` as an absolute URL: `not a url`.
+
+x | res = new url.Parser { base = "not a url" }.parse("../c")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at invalidUrlParserBase#res (file:///$snippetsDir/input/errors/invalidUrlParserBase.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

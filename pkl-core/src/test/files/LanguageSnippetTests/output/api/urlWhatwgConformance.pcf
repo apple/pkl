@@ -1,0 +1,16 @@
+mismatches {
+  "[46] `http://é@é` -> expected `http://%C3%A9@xn--9ca/`, got parse failure"
+  "[277] `http://GOO​⁠﻿goo.com` (base: `http://other.com/`) -> expected `http://googoo.com/`, got parse failure"
+  "[287] `http://www.foo。bar.com` (base: `http://other.com/`) -> expected `http://www.foo.bar.com/`, got parse failure"
+  "[299] `http://Ｇｏ.com` (base: `http://other.com/`) -> expected `http://go.com/`, got parse failure"
+  "[304] `http://你好你好` (base: `http://other.com/`) -> expected `http://xn--6qqa088eba/`, got parse failure"
+  "[305] `https://faß.ExAmPlE/` -> expected `https://xn--fa-hia.example/`, got parse failure"
+  "[316] `http://０Ｘｃ０．０２５０．０１` (base: `http://other.com/`) -> expected `http://192.168.0.1/`, got parse failure"
+  "[496] `ftp://%e2%98%83` -> expected `ftp://xn--n3h/`, got parse failure"
+  "[497] `https://%e2%98%83` -> expected `https://xn--n3h/`, got parse failure"
+  "[728] `file://a­b/p` -> expected `file://ab/p`, got parse failure"
+  "[729] `file://a%C2%ADb/p` -> expected `file://ab/p`, got parse failure"
+  "[730] `file://loC𝐀𝐋𝐇𝐨𝐬𝐭/usr/bin` -> expected `file:///usr/bin`, got parse failure"
+  "[805] `https://a%C2%ADb/` -> expected `https://ab/`, got parse failure"
+}
+summary = "878 of 891 cases conform"

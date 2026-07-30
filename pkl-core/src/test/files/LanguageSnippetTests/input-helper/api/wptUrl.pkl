@@ -1,0 +1,136 @@
+/// Checks `pkl:url` against the WHATWG URL Standard's conformance fixtures.
+///
+/// [cases] is generated from web-platform-tests' `urltestdata.json` by
+/// `org.pkl.core.generator.WptUrlTestGenerator`.
+/// Regenerate with:
+///
+/// ```
+/// ./gradlew :pkl-core:generateWptUrlTests
+/// ```
+open module api.wptUrl
+
+import "pkl:url"
+import "pkl:test"
+
+/// A single web-platform-test case.
+///
+/// The expectation fields use the WHATWG getter names that `urltestdata.json` uses.
+///
+/// All expectation fields default to `""`, so the generator omits the ones WHATWG expects to be
+/// empty.
+class TestCase {
+  /// The input to parse.
+  input: String
+
+  /// The URL to resolve [input] against, or [null] to parse [input] on its own.
+  base: String?
+
+  /// Whether parsing must fail. When [true], the expectation fields are unused.
+  failure: Boolean = false
+
+  /// The full serialization of the URL.
+  href: String = ""
+
+  /// The scheme, followed by `:`.
+  protocol: String = ""
+
+  username: String = ""
+
+  password: String = ""
+
+  /// The host without the port, or `""` if there is none.
+  hostname: String = ""
+
+  /// The port as a string, or `""` if there is none.
+  port: String = ""
+
+  /// The serialized path.
+  pathname: String = ""
+
+  /// `""` if the query is absent *or* empty, otherwise `?` followed by the query.
+  search: String = ""
+
+  /// `""` if the fragment is absent *or* empty, otherwise `#` followed by the fragment.
+  hash: String = ""
+
+  /// The serialization of the origin, or `"null"` if it is opaque.
+  ///
+  /// Unlike the other expectation fields, this one is [null] when `urltestdata.json` states no
+  /// expectation, in which case it is not compared.
+  origin: String? = null
+
+  /// The query, serialized back from its parsed `URLSearchParams` form.
+  ///
+  /// Like [origin], this is [null] when `urltestdata.json` states no expectation.
+  searchParams: String? = null
+}
+
+/// The test cases. Generated.
+hidden cases: Listing<TestCase>
+
+local function parse(testCase: TestCase): url.Url? =
+  new url.Parser { base = testCase.base }.parse(testCase.input)
+
+local function fieldDiff(name: String, expected: String, actual: String): String? =
+  if (expected == actual) null else "\(name): expected `\(expected)`, got `\(actual)`"
+
+local function diffsOf(testCase: TestCase, actual: url.Url): List<String> =
+  List(
+    fieldDiff("href", testCase.href, actual.toString()),
+    fieldDiff("protocol", testCase.protocol, actual.scheme + ":"),
+    fieldDiff("username", testCase.username, actual.username),
+    fieldDiff("password", testCase.password, actual.password),
+    fieldDiff("hostname", testCase.hostname, actual.host ?? ""),
+    fieldDiff("port", testCase.port, if (actual.port == null) "" else actual.port.toString()),
+    fieldDiff("pathname", testCase.pathname, actual.path),
+    fieldDiff(
+      "search",
+      testCase.search,
+      if (actual.search == null || actual.search == "") "" else "?" + actual.search
+    ),
+    fieldDiff(
+      "hash",
+      testCase.hash,
+      if (actual.fragment == null || actual.fragment == "") "" else "#" + actual.fragment
+    ),
+    // WHATWG serializes an opaque origin as the string `"null"`, whereas `pkl:url` uses [null].
+    if (testCase.origin == null) null
+    else fieldDiff("origin", testCase.origin, actual.origin ?? "null"),
+    if (testCase.searchParams == null) null
+    else
+      fieldDiff(
+        "searchParams",
+        testCase.searchParams,
+        url.buildQuery(actual.searchParams.toList())
+      )
+  )
+    .filterNonNull()
+
+/// Describes how [testCase] deviates from its expectation, or [null] if it conforms.
+local function describe(testCase: TestCase): String? =
+  let (error = test.catchOrNull(() -> parse(testCase)))
+    if (error != null) "threw: \(error)"
+    else
+      let (actual = parse(testCase))
+        if (testCase.failure)
+          if (actual == null) null else "expected parse failure, got `\(actual)`"
+        else if (actual == null) "expected `\(testCase.href)`, got parse failure"
+        else
+          let (diffs = diffsOf(testCase, actual))
+            if (diffs.isEmpty) null else diffs.join("; ")
+
+local function label(index: Int, testCase: TestCase): String =
+  let (basePart = if (testCase.base == null) "" else " (base: `\(testCase.base)`)")
+    "[\(index)] `\(testCase.input)`\(basePart)"
+
+/// The cases whose result differs from what the WHATWG URL Standard requires.
+mismatches: Listing<String> =
+  new {
+    for (i, testCase in cases) {
+      when (describe(testCase) != null) {
+        "\(label(i, testCase)) -> \(describe(testCase))"
+      }
+    }
+  }
+
+summary: String = "\(cases.length - mismatches.length) of \(cases.length) cases conform"

@@ -1,0 +1,3 @@
+import "pkl:url"
+
+res = new url.Parser { base = "not a url" }.parse("../c")

@@ -1,0 +1,206 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Parsing and manipulation of URLs, following the
+/// [WHATWG URL Standard](https://url.spec.whatwg.org/).
+@ModuleInfo { minPklVersion = "0.33.0" }
+module pkl.url
+
+/// A URL parser.
+///
+/// Follows the WHATWG [basic URL parser](https://url.spec.whatwg.org/#concept-basic-url-parser).
+class Parser {
+  /// The URL to resolve relative references against.
+  ///
+  /// When set, [parse()] accepts relative references (for example `../c` or `//host/d`) and
+  /// resolves them against this URL.
+  /// When [null], only absolute URLs can be parsed.
+  ///
+  /// Throws if it is not a parseable absolute URL.
+  base: String?
+
+  /// Parses [input] as a URL.
+  ///
+  /// Parsing is lenient: malformed input is coerced rather than
+  /// rejected. Returns [null] only when [input] cannot be parsed at all.
+  external function parse(input: String): Url?
+
+  /// Like [parse()], but any validation error is fatal: returns [null] instead of coercing
+  /// malformed input.
+  external function parseStrict(input: String): Url?
+}
+
+/// A parsed URL.
+external class Url {
+  /// The scheme of this URL, lowercased and without the trailing `:`.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("HTTPS://example.com")!!.scheme == "https"
+  /// ```
+  scheme: String
+
+  /// The username of this URL, or the empty string if it has none.
+  username: String
+
+  /// The password of this URL, or the empty string if it has none.
+  password: String
+
+  /// The host of this URL, or [null] if it has none.
+  ///
+  /// Unlike WHATWG's `host`, this does not include [port].
+  host: String?
+
+  /// The port of this URL, or [null] if it is not stated or is the scheme's default port.
+  port: UInt16?
+
+  /// The path of this URL, in its serialized form.
+  path: String
+
+  /// The query of this URL, without the leading `?`, or [null] if it has none.
+  search: String?
+
+  /// The fragment of this URL, without the leading `#`, or [null] if it has none.
+  fragment: String?
+
+  /// The origin of this URL, or [null] if it is an *opaque origin*.
+  ///
+  /// The origin is [scheme], [host], and [port], serialized as `scheme://host[:port]`.
+  ///
+  /// A URL whose scheme is not one of `http`, `https`, `ws`, `wss`, `ftp`, or `blob` has an opaque
+  /// origin.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com:443/a?q#f")!!.origin == "https://example.com"
+  /// new Parser {}.parse("http://example.com:8080/a")!!.origin == "http://example.com:8080"
+  /// new Parser {}.parse("mailto:user@example.com")!!.origin == null
+  /// ```
+  external origin: String?
+
+  /// The percent-decoded segments of [path].
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a/b%20c")!!.segments == List("a", "b c")
+  /// new Parser {}.parse("https://example.com/a/")!!.segments == List("a", "")
+  /// new Parser {}.parse("mailto:user@example.com")!!.segments == List()
+  /// ```
+  external segments: List<String>
+
+  /// The parameters of [search], percent-decoded.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com?a=1&a=2")!!.searchParams.get("a") == "1"
+  /// ```
+  external searchParams: SearchParams
+
+  /// The serialization of this URL.
+  external function toString(): String
+}
+
+/// The parameters of a URL's [Url.search], percent-decoded.
+///
+/// [Url.search] is parsed as `application/x-www-form-urlencoded`: parameters are separated by `&`,
+/// a name is separated from its value by the first `=`, and `+` means a space.
+class SearchParams {
+  /// The value of the first parameter named [name], or [null] if there is no such parameter.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com?a=1&a=2")!!.searchParams.get("a") == "1"
+  /// new Parser {}.parse("https://example.com?a")!!.searchParams.get("a") == ""
+  /// new Parser {}.parse("https://example.com?a=1")!!.searchParams.get("b") == null
+  /// ```
+  external function get(name: String): String?
+
+  /// Tells whether there is a parameter named [name].
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com?a=1")!!.searchParams.has("a")
+  /// new Parser {}.parse("https://example.com?a")!!.searchParams.has("a")
+  /// !new Parser {}.parse("https://example.com?a=1")!!.searchParams.has("b")
+  /// ```
+  external function has(name: String): Boolean
+
+  /// The parameters, in the order they appear.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com?a=1&a=2")!!.searchParams.toList() ==
+  ///   List(Pair("a", "1"), Pair("a", "2"))
+  /// new Parser {}.parse("https://example.com?a+b=c%20d")!!.searchParams.toList() ==
+  ///   List(Pair("a b", "c d"))
+  /// new Parser {}.parse("https://example.com?a&b=")!!.searchParams.toList() ==
+  ///   List(Pair("a", ""), Pair("b", ""))
+  /// ```
+  external function toList(): List<Pair<String, String>>
+
+  /// The parameters as a map.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com?a=1&b=2")!!.searchParams.toMap() ==
+  ///   Map("a", "1", "b", "2")
+  /// new Parser {}.parse("https://example.com?a=1&a=2")!!.searchParams.toMap() == Map("a", "1")
+  /// new Parser {}.parse("https://example.com?a&b=")!!.searchParams.toMap() ==
+  ///   Map("a", "", "b", "")
+  /// ```
+  external function toMap(): Map<String, String>
+}
+
+/// Percent-encodes [value] so that it can be interpolated into a URL component.
+///
+/// Every code point other than an ASCII alphanumeric or one of `!'()*-._~` is percent-encoded as
+/// its UTF-8 bytes, which is what JavaScript's `encodeURIComponent` does.
+///
+/// Facts:
+/// ```
+/// encodeComponent("a b&c") == "a%20b%26c"
+/// encodeComponent("münchen") == "m%C3%BCnchen"
+/// ```
+external function encodeComponent(value: String): String
+
+/// Percent-decodes [value], interpreting the decoded bytes as UTF-8.
+///
+/// The inverse of [encodeComponent()].
+/// A `%` that does not start a percent-encoded byte is kept as-is, and `+` decodes to `+` rather
+/// than to a space.
+///
+/// Facts:
+/// ```
+/// decodeComponent("a%20b%26c") == "a b&c"
+/// decodeComponent("m%C3%BCnchen") == "münchen"
+/// decodeComponent("100%") == "100%"
+/// ```
+external function decodeComponent(value: String): String
+
+/// Builds an `application/x-www-form-urlencoded` query string from [params], without a leading `?`.
+///
+/// Names and values are percent-encoded, and spaces are encoded as `+`.
+/// A [null] value emits a bare name (`a`), whereas an empty string emits `a=`.
+///
+/// [params] is either a [Map] of names to values, or a [List] of (name, value) [Pair]s.
+///
+/// Facts:
+/// ```
+/// buildQuery(Map("a", "1", "b c", "d&e")) == "a=1&b+c=d%26e"
+/// buildQuery(Map("a", null, "b", "")) == "a&b="
+/// buildQuery(List(Pair("a", "1"), Pair("a", "2"))) == "a=1&a=2"
+/// ```
+external function buildQuery(params: Map<String, String?> | List<Pair<String, String?>>): String
