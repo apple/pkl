@@ -19,6 +19,7 @@ import com.google.errorprone.annotations.ThreadSafe;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.PushbackInputStream;
 import java.lang.invoke.MethodHandle;
 import java.lang.invoke.MethodHandles;
 import java.lang.invoke.MethodType;
@@ -37,11 +38,10 @@ import java.security.SecureRandom;
 import java.security.cert.Certificate;
 import java.security.cert.CertificateException;
 import java.security.cert.CertificateFactory;
-import java.security.cert.X509Certificate;
 import java.time.Duration;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Objects;
 import javax.net.ssl.SSLContext;
 import javax.net.ssl.SSLException;
 import javax.net.ssl.SSLHandshakeException;
@@ -177,17 +177,40 @@ final class JdkHttpClient implements HttpClient {
       CertificateFactory factory,
       InputStream stream,
       Object source) {
-    Collection<X509Certificate> certificates;
+    var input = new PushbackInputStream(stream);
+
     try {
-      //noinspection unchecked
-      certificates = (Collection<X509Certificate>) factory.generateCertificates(stream);
-    } catch (CertificateException e) {
+      var peekByte = input.read();
+      if (peekByte == -1) {
+        throw new HttpClientException(ErrorMessages.create("emptyCertFile", source));
+      } else {
+        input.unread(peekByte);
+      }
+    } catch (IOException e) {
       throw new HttpClientException(
           ErrorMessages.create("cannotParseCertFile", source, Exceptions.getRootReason(e)));
     }
-    if (certificates.isEmpty()) {
-      throw new HttpClientException(ErrorMessages.create("emptyCertFile", source));
+
+    var first = true;
+    while (true) {
+      try {
+        anchors.add(factory.generateCertificate(input));
+      } catch (CertificateException e) {
+        if (e.getCause() instanceof IOException ioExc) {
+          if (Objects.equals(ioExc.getMessage(), "Empty input")) {
+            if (first) {
+              throw new HttpClientException(
+                  ErrorMessages.create("cannotParseCertFile", source, "No certificate data found"));
+            }
+            break;
+          }
+          if (Objects.equals(ioExc.getMessage(), "Duplicate extensions not allowed")) continue;
+        }
+        throw new HttpClientException(
+            ErrorMessages.create("cannotParseCertFile", source, Exceptions.getRootReason(e)));
+      } finally {
+        first = false;
+      }
     }
-    anchors.addAll(certificates);
   }
 }
