@@ -219,7 +219,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     var certsAdded = false
     if (Files.isDirectory(caCertsDir)) {
       Files.list(caCertsDir)
-        .filter { it.isRegularFile() }
+        .filter { it.isRegularFile() && !it.fileName.toString().startsWith(".") }
         .forEach { cert ->
           certsAdded = true
           addCertificates(cert)
