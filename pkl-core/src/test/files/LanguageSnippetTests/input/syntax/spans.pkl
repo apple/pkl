@@ -21,7 +21,7 @@ local function nestedProperty(mod: syntax.ModuleNode): syntax.Node =
 
 examples {
   ["span of a module parsed from a string"] {
-    stringModule.span
+    stringModule.node.span
   }
 
   ["span of a leaf parsed from a string"] {
@@ -29,7 +29,7 @@ examples {
   }
 
   ["span of a module parsed from a resource carries the resource URI"] {
-    resourceModule.span
+    resourceModule.node.span
   }
 
   ["span of a leaf parsed from a resource carries the resource URI"] {
@@ -39,8 +39,8 @@ examples {
 
 facts {
   ["span positions are 1-based"] {
-    stringModule.span!!.start.line == 1
-    stringModule.span!!.start.column == 1
+    stringModule.node.span!!.start.line == 1
+    stringModule.node.span!!.start.column == 1
   }
 
   ["end is exclusive"] {
@@ -64,7 +64,7 @@ facts {
   }
 
   ["nodes constructed from scratch have no span"] {
-    new syntax.IntLiteralExprNode { value = 42 }.span == null
+    new syntax.IntLiteralExprNode { value = 42 }?.node?.span == null
     new syntax.IntLiteralExprNode { value = 42 }.builtNode.span == null
   }
 
@@ -73,8 +73,8 @@ facts {
   }
 
   ["parsing the same text from a string and a resource differs only in displayUri"] {
-    local fromString = stringModule.span!!
-    local fromResource = resourceModule.span!!
+    local fromString = stringModule.node.span!!
+    local fromResource = resourceModule.node.span!!
     fromString.start.line == fromResource.start.line
     fromString.start.column == fromResource.start.column
     fromString.end.line == fromResource.end.line

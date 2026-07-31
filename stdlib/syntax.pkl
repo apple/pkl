@@ -260,9 +260,6 @@ abstract class SyntaxNode {
   /// The original parsed node, or `null` when this was built from scratch.
   hidden node: Node? = null
 
-  /// The source span of this node or `null`.
-  span: Span? = node?.span
-
   /// This node rebuilt into a generic [Node].
   ///
   /// Always constructs a fresh node from this node's fields.
