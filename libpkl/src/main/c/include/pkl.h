@@ -41,7 +41,6 @@ typedef struct {
  * Instances should be created via `pkl_init` and destroyed via `pkl_close`.
  *
  * All calls using this executor should be synchronized in the same thread.
- * Failing to do so will possibly cause the process to be aborted with a segfault.
  */
 typedef struct __pkl_exec_t pkl_exec_t;
 
@@ -92,13 +91,13 @@ PKL_EXPORT int pkl_init(pkl_message_response_handler handler, void *userData,
  *
  * @return 0 on success, and non-zero otherwise.
  */
-PKL_EXPORT int pkl_send_message(const pkl_exec_t *pexec, unsigned int length, char *message,
-		pkl_error_t *error);
+PKL_EXPORT int pkl_send_message(const pkl_exec_t *pexec, unsigned int length,
+		char *message, pkl_error_t *error);
 
 /**
  * Cleans up any resources that were created as part of the `pkl_init` process
  * for our `pkl_exec_t` instance.
-*
+ *
  * If called from a different thread than `pkl_exec_t`'s originating thread, returns
  * `PKL_ERR_THREAD`.
  *

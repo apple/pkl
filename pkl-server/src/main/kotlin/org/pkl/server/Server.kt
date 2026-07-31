@@ -231,9 +231,9 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
         build()
       }
     } catch (e: IllegalArgumentException) {
-      throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)
+      throw ProtocolException(e.message ?: "Failed to create an evaluator. $e", e)
     } catch (e: IllegalStateException) {
-      throw ProtocolException(e.message ?: "Failed to create an evalutor. $e", e)
+      throw ProtocolException(e.message ?: "Failed to create an evaluator. $e", e)
     }
   }
 
