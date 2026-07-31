@@ -22,7 +22,6 @@ import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.*;
 import org.graalvm.collections.*;
 import org.jspecify.annotations.Nullable;
@@ -85,13 +84,6 @@ public final class VmClass extends VmValue {
   private @Nullable UnmodifiableEconomicSet<Object> __allHiddenPropertyNames;
 
   private final Object allHiddenPropertyNamesLock = new Object();
-
-  @GuardedBy("finalizersLock")
-  private @Nullable List<Runnable> __finalizers = null;
-
-  private final Object finalizersLock = new Object();
-
-  private final AtomicInteger uninitializedSuperclassCount = new AtomicInteger(0);
 
   // Helps to overcome recursive initialization issues
   // between classes and annotations in pkl.base.
@@ -249,47 +241,18 @@ public final class VmClass extends VmValue {
     }
   }
 
-  private void onInitialized(Runnable runnable) {
-    synchronized (finalizersLock) {
-      if (this.__finalizers == null) {
-        this.__finalizers = new ArrayList<>();
-      }
-      this.__finalizers.add(runnable);
-    }
+  /**
+   * Called when this class itself has been initialized.
+   *
+   * <p>Superclasses may not have been initialized yet.
+   */
+  public void onOwnClassInitialized() {
+    isInitialized = true;
   }
 
-  // Note: Superclasses may not have finished their initialization when this method is called.
-  public void notifyInitialized() {
-    var sc = superclass;
-    var isAllInitialized = true;
-    var uninitializedCount = 0;
-    while (sc != null) {
-      if (!sc.isInitialized) {
-        sc.onInitialized(
-            () -> {
-              var count = uninitializedSuperclassCount.decrementAndGet();
-              if (count == 0) {
-                checkAbstractMethods();
-              }
-            });
-        uninitializedCount++;
-        isAllInitialized = false;
-      }
-      sc = sc.superclass;
-    }
-    uninitializedSuperclassCount.set(uninitializedCount);
-    if (isAllInitialized) {
-      checkAbstractMethods();
-    }
-    lock:
-    synchronized (finalizersLock) {
-      if (__finalizers == null) break lock;
-      for (var finalizer : __finalizers) {
-        finalizer.run();
-      }
-      this.__finalizers = null;
-    }
-    isInitialized = true;
+  /** Called when the entire class hierarchy is completely initialized, including superclasses. */
+  public void onFullyInitialized() {
+    checkAbstractMethods();
   }
 
   public int getTypeParameterCount() {

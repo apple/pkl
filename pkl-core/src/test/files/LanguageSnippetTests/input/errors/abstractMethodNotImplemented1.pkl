@@ -6,4 +6,3 @@ class MyClass extends AbstractMethod {
 }
 
 foo: MyClass
-

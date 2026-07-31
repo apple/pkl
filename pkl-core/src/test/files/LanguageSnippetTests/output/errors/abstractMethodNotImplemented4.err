@@ -3,8 +3,4 @@ Class `abstractMethodNotImplemented4#MyClass` should either be declared `abstrac
 
 x | class MyClass extends AbstractIntermediate {
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at abstractMethodNotImplemented4#MyClass (file:///$snippetsDir/input/errors/abstractMethodNotImplemented4.pkl)
-
-xx | foo: MyClass
-          ^^^^^^^
 at abstractMethodNotImplemented4 (file:///$snippetsDir/input/errors/abstractMethodNotImplemented4.pkl)
