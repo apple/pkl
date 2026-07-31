@@ -453,8 +453,29 @@ class ObjectBodyNode extends SyntaxNode {
   /// Parameters for this object body (e.g., `{ x, y -> ... }`).
   parameters: List<ParameterNode>
 
-  /// All object members (properties, methods, elements, entries, spreads, generators).
-  members: List<ObjectMemberNode>
+  /// Properties declared in this object body.
+  properties: List<ObjectPropertyNode>
+
+  /// Methods declared in this object body.
+  methods: List<ObjectMethodNode>
+
+  /// Elements declared in this object body.
+  elements: List<ObjectElementNode>
+
+  /// Entries declared in this object body.
+  entries: List<ObjectEntryNode>
+
+  /// Spreads declared in this object body.
+  spreads: List<ObjectSpreadNode>
+
+  /// Member predicates declared in this object body.
+  memberPredicates: List<MemberPredicateNode>
+
+  /// `for` generators declared in this object body.
+  forGenerators: List<ForGeneratorNode>
+
+  /// `when` generators declared in this object body.
+  whenGenerators: List<WhenGeneratorNode>
 }
 
 /// An object property declaration.

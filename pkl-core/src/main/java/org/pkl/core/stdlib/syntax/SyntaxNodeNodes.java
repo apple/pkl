@@ -332,9 +332,17 @@ public final class SyntaxNodeNodes {
       elements.add(terminal("->"));
       children.add(branch("object_parameter_list", elements));
     }
-    var members = listMember(self, "members");
-    if (members.getLength() > 0) {
-      children.add(branch("object_member_list", buildAll(members)));
+    var members = new ArrayList<>();
+    members.addAll(buildAll(listMember(self, "properties")));
+    members.addAll(buildAll(listMember(self, "methods")));
+    members.addAll(buildAll(listMember(self, "elements")));
+    members.addAll(buildAll(listMember(self, "entries")));
+    members.addAll(buildAll(listMember(self, "spreads")));
+    members.addAll(buildAll(listMember(self, "memberPredicates")));
+    members.addAll(buildAll(listMember(self, "forGenerators")));
+    members.addAll(buildAll(listMember(self, "whenGenerators")));
+    if (!members.isEmpty()) {
+      children.add(branch("object_member_list", members));
     }
     children.add(terminal("}"));
     return branch("object_body", children);

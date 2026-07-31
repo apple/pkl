@@ -87,7 +87,14 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectBodyNodeClass)
           .addProperty("node", vm -> vm)
           .addListProperty("parameters", ParserNodes::objectBodyParameters)
-          .addListProperty("members", ParserNodes::objectBodyMembers);
+          .addListProperty("properties", ParserNodes::objectBodyProperties)
+          .addListProperty("methods", ParserNodes::objectBodyMethods)
+          .addListProperty("elements", ParserNodes::objectBodyElements)
+          .addListProperty("entries", ParserNodes::objectBodyEntries)
+          .addListProperty("spreads", ParserNodes::objectBodySpreads)
+          .addListProperty("memberPredicates", ParserNodes::objectBodyMemberPredicates)
+          .addListProperty("forGenerators", ParserNodes::objectBodyForGenerators)
+          .addListProperty("whenGenerators", ParserNodes::objectBodyWhenGenerators);
   private static final VmObjectFactory<VmTyped> parameterNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParameterNodeClass)
           .addProperty("node", vm -> vm)
@@ -740,20 +747,45 @@ public class ParserNodes {
     return wrapAll(findChildrenVm(paramList, NodeType.PARAMETER), parameterNodeFactory);
   }
 
-  private static VmList objectBodyMembers(VmTyped bodyVm) {
+  private static VmList objectBodyMembers(
+      VmTyped bodyVm, NodeType memberType, VmObjectFactory<VmTyped> factory) {
     var memberList = findChildVm(bodyVm, NodeType.OBJECT_MEMBER_LIST);
     if (memberList == null) {
       return VmList.EMPTY;
     }
-    var data = (NodeData) memberList.getExtraStorage();
-    var children = data.node.children;
-    var result = new ArrayList<>();
-    for (var i = 0; i < children.size(); i++) {
-      if (isObjectMemberType(children.get(i).type)) {
-        result.add(wrapObjectMember((VmTyped) data.childrenVm.get(i)));
-      }
-    }
-    return VmList.create(result.toArray());
+    return wrapAll(findChildrenVm(memberList, memberType), factory);
+  }
+
+  private static VmList objectBodyProperties(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.OBJECT_PROPERTY, objectPropertyNodeFactory);
+  }
+
+  private static VmList objectBodyMethods(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.OBJECT_METHOD, objectMethodNodeFactory);
+  }
+
+  private static VmList objectBodyElements(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.OBJECT_ELEMENT, objectElementNodeFactory);
+  }
+
+  private static VmList objectBodyEntries(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.OBJECT_ENTRY, objectEntryNodeFactory);
+  }
+
+  private static VmList objectBodySpreads(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.OBJECT_SPREAD, objectSpreadNodeFactory);
+  }
+
+  private static VmList objectBodyMemberPredicates(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.MEMBER_PREDICATE, memberPredicateNodeFactory);
+  }
+
+  private static VmList objectBodyForGenerators(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.FOR_GENERATOR, forGeneratorNodeFactory);
+  }
+
+  private static VmList objectBodyWhenGenerators(VmTyped bodyVm) {
+    return objectBodyMembers(bodyVm, NodeType.WHEN_GENERATOR, whenGeneratorNodeFactory);
   }
 
   private static @Nullable VmTyped objectPropertyHeaderBegin(VmTyped propertyVm) {
@@ -1428,41 +1460,6 @@ public class ParserNodes {
           throw new VmExceptionBuilder()
               .bug("Unexpected expression node: " + data.node.type)
               .build();
-    };
-  }
-
-  // Wrap a generic object-member node into the matching `ObjectMemberNode` alternative
-  private static VmTyped wrapObjectMember(VmTyped memberVm) {
-    var data = (NodeData) memberVm.getExtraStorage();
-    return switch (data.node.type) {
-      case OBJECT_ELEMENT -> objectElementNodeFactory.create(memberVm);
-      case OBJECT_PROPERTY -> objectPropertyNodeFactory.create(memberVm);
-      case OBJECT_METHOD -> objectMethodNodeFactory.create(memberVm);
-      case MEMBER_PREDICATE -> memberPredicateNodeFactory.create(memberVm);
-      case OBJECT_ENTRY -> objectEntryNodeFactory.create(memberVm);
-      case OBJECT_SPREAD -> objectSpreadNodeFactory.create(memberVm);
-      case WHEN_GENERATOR -> whenGeneratorNodeFactory.create(memberVm);
-      case FOR_GENERATOR -> forGeneratorNodeFactory.create(memberVm);
-      default ->
-          throw new VmExceptionBuilder()
-              .bug("Unexpected object-member node: " + data.node.type)
-              .build();
-    };
-  }
-
-  // Whether `type` is one of the object-member node types
-  private static boolean isObjectMemberType(NodeType type) {
-    return switch (type) {
-      case OBJECT_ELEMENT,
-          OBJECT_PROPERTY,
-          OBJECT_METHOD,
-          MEMBER_PREDICATE,
-          OBJECT_ENTRY,
-          OBJECT_SPREAD,
-          WHEN_GENERATOR,
-          FOR_GENERATOR ->
-          true;
-      default -> false;
     };
   }
 
