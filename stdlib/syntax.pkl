@@ -80,19 +80,13 @@ class Node {
   /// nodes constructed from scratch retain their given `parent`.
   external function walk(visit: (Node) -> Pair<Node, Boolean>?): Node
 
-  /// Fold [accumulate] over this node and its descendants, top-down in pre-order.
+  /// Fold [operator] over this node and its descendants, top-down in pre-order.
   ///
   /// ```
   /// // count the if-expressions in a module
   /// module.node.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
   /// ```
-  function fold<Acc>(initial: Acc, accumulate: (Acc, Node) -> Acc): Acc =
-    children.fold(accumulate.apply(initial, this), (acc, child) -> child.fold(acc, accumulate))
-
-  /// Every node at or below this node, in pre-order.
-  ///
-  /// A convenience over [fold()] for the common case of enumerating nodes.
-  function descendants(): List<Node> = fold(List(), (acc, n) -> acc.add(n))
+  external function fold<Result>(initial: Result, operator: (Result, Node) -> Result): Result
 }
 
 /// A source location, given as 1-based line and column positions.
@@ -108,13 +102,6 @@ class Span {
 
   /// The column of the character following the span.
   colEnd: UInt = 0
-}
-
-// noinspection TypeMismatch
-class ConvertSpan extends ConvertProperty {
-  render = (property: Pair<String, Span>, _) ->
-    let (span = property.value)
-      Pair(property.key, "\(span.lineStart):\(span.colStart)-\(span.lineEnd):\(span.colEnd)")
 }
 
 typealias NodeType =
@@ -244,50 +231,6 @@ typealias NodeType =
     | "constrained_type"
     | "constrained_type_constraint"
     | "constrained_type_elements"
-
-// Check if a NodeType represents an expression.
-local const function isExprType(t: NodeType): Boolean =
-  t == "this_expr"
-    || t == "outer_expr"
-    || t == "module_expr"
-    || t == "null_expr"
-    || t == "throw_expr"
-    || t == "trace_expr"
-    || t == "import_expr"
-    || t == "read_expr"
-    || t == "new_expr"
-    || t == "unary_minus_expr"
-    || t == "logical_not_expr"
-    || t == "function_literal_expr"
-    || t == "parenthesized_expr"
-    || t == "super_subscript_expr"
-    || t == "super_access_expr"
-    || t == "subscript_expr"
-    || t == "qualified_access_expr"
-    || t == "if_expr"
-    || t == "let_expr"
-    || t == "bool_literal_expr"
-    || t == "int_literal_expr"
-    || t == "float_literal_expr"
-    || t == "single_line_string_literal_expr"
-    || t == "multi_line_string_literal_expr"
-    || t == "unqualified_access_expr"
-    || t == "non_null_expr"
-    || t == "amends_expr"
-    || t == "binary_op_expr"
-
-// Check if a NodeType represents a type node.
-local const function isTypeType(t: NodeType): Boolean =
-  t == "unknown_type"
-    || t == "nothing_type"
-    || t == "module_type"
-    || t == "union_type"
-    || t == "function_type"
-    || t == "parenthesized_type"
-    || t == "declared_type"
-    || t == "nullable_type"
-    || t == "string_constant_type"
-    || t == "constrained_type"
 
 /// Base class for all typed syntax nodes.
 ///

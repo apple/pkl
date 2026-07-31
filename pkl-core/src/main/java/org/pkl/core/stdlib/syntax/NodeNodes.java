@@ -17,7 +17,10 @@ package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import java.util.ArrayDeque;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
+import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
@@ -25,10 +28,32 @@ import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.NodeData;
 
 public final class NodeNodes {
   private NodeNodes() {}
+
+  public abstract static class fold extends ExternalMethod2Node {
+    @Child private ApplyVmFunction2Node applyAccumulate = ApplyVmFunction2NodeGen.create();
+
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, Object initial, VmFunction operator) {
+      var pending = new ArrayDeque<VmTyped>();
+      pending.push(self);
+      var result = initial;
+      while (!pending.isEmpty()) {
+        var node = pending.pop();
+        result = applyAccumulate.execute(operator, result, node);
+        var children = (VmList) VmUtils.readMember(node, Identifier.CHILDREN);
+        for (var i = children.getLength() - 1; i >= 0; i--) {
+          pending.push((VmTyped) children.get(i));
+        }
+      }
+      return result;
+    }
+  }
 
   public abstract static class walk extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyVisit = ApplyVmFunction1Node.create();

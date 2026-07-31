@@ -54,12 +54,4 @@ facts {
     // the module node is visited first
     sample.fold(List(), (acc, n) -> acc.add(n.type)).first == "module"
   }
-
-  ["descendants enumerates the whole tree"] {
-    sample.descendants().first == sample
-
-    sample.descendants() == sample.fold(List(), (acc, n) -> acc.add(n))
-
-    sample.descendants().filter((n) -> n.type == "class").length == 1
-  }
 }

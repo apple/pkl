@@ -10,9 +10,4 @@ facts {
   ["fold visits a node before its children (pre-order)"] {
     true
   }
-  ["descendants enumerates the whole tree"] {
-    true
-    true
-    true
-  }
 }
