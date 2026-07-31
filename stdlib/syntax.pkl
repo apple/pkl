@@ -272,8 +272,16 @@ abstract class ExprNode extends SyntaxNode
 /// Base class for type nodes.
 abstract class TypeNode extends SyntaxNode
 
-/// Base class for object member nodes.
-abstract class ObjectMemberNode extends SyntaxNode
+/// A member of an [ObjectBodyNode].
+typealias ObjectMemberNode =
+  ObjectPropertyNode
+    | ObjectMethodNode
+    | ObjectElementNode
+    | ObjectEntryNode
+    | ObjectSpreadNode
+    | MemberPredicateNode
+    | ForGeneratorNode
+    | WhenGeneratorNode
 
 /// The top-level module node.
 class ModuleNode extends SyntaxNode {
@@ -450,7 +458,7 @@ class ObjectBodyNode extends SyntaxNode {
 }
 
 /// An object property declaration.
-class ObjectPropertyNode extends ObjectMemberNode {
+class ObjectPropertyNode extends SyntaxNode {
   /// The modifiers on the property.
   modifiers: List<String>
 
@@ -468,7 +476,7 @@ class ObjectPropertyNode extends ObjectMemberNode {
 }
 
 /// An object method declaration.
-class ObjectMethodNode extends ObjectMemberNode {
+class ObjectMethodNode extends SyntaxNode {
   /// The modifiers on the method.
   modifiers: List<String>
 
@@ -489,13 +497,13 @@ class ObjectMethodNode extends ObjectMemberNode {
 }
 
 /// An object element (a positional expression in an object body).
-class ObjectElementNode extends ObjectMemberNode {
+class ObjectElementNode extends SyntaxNode {
   /// The expression value.
   expression: ExprNode
 }
 
 /// An object entry (`[key] = value` or `[key] { ... }`).
-class ObjectEntryNode extends ObjectMemberNode {
+class ObjectEntryNode extends SyntaxNode {
   /// The key expression.
   key: ExprNode
 
@@ -507,7 +515,7 @@ class ObjectEntryNode extends ObjectMemberNode {
 }
 
 /// An object spread (`...expr` or `...?expr`).
-class ObjectSpreadNode extends ObjectMemberNode {
+class ObjectSpreadNode extends SyntaxNode {
   /// Whether this is a nullable spread (`...?`).
   isNullable: Boolean
 
@@ -516,7 +524,7 @@ class ObjectSpreadNode extends ObjectMemberNode {
 }
 
 /// A member predicate (`[[condition]] = value` or `[[condition]] { ... }`).
-class MemberPredicateNode extends ObjectMemberNode {
+class MemberPredicateNode extends SyntaxNode {
   /// The condition expression.
   condition: ExprNode
 
@@ -528,7 +536,7 @@ class MemberPredicateNode extends ObjectMemberNode {
 }
 
 /// A `for (param in iterable) { ... }` generator.
-class ForGeneratorNode extends ObjectMemberNode {
+class ForGeneratorNode extends SyntaxNode {
   /// The key parameter (first parameter when two are present), if present.
   keyParameter: ParameterNode?
 
@@ -543,7 +551,7 @@ class ForGeneratorNode extends ObjectMemberNode {
 }
 
 /// A `when (condition) { ... }` generator.
-class WhenGeneratorNode extends ObjectMemberNode {
+class WhenGeneratorNode extends SyntaxNode {
   /// The condition expression.
   condition: ExprNode
 

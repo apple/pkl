@@ -1431,7 +1431,7 @@ public class ParserNodes {
     };
   }
 
-  // Wrap a generic object-member node into its `ObjectMemberNode` subclass
+  // Wrap a generic object-member node into the matching `ObjectMemberNode` alternative
   private static VmTyped wrapObjectMember(VmTyped memberVm) {
     var data = (NodeData) memberVm.getExtraStorage();
     return switch (data.node.type) {
