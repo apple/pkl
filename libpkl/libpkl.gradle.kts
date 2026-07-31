@@ -511,7 +511,7 @@ spotless {
       rootProject.file("build-logic/src/main/resources/license-header.star-block.txt"),
       "// ",
     )
-    target("src/*/c/*.c", "src/*/c/*.h")
+    target("src/*/c/**/*.c", "src/*/c/**/*.h")
     eclipseCdt(libs.versions.eclipseCdtFormat.get())
   }
   shell {

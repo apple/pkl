@@ -43,7 +43,7 @@ public class NativeTransport extends AbstractMessageTransport {
   protected void doClose() {}
 
   @Override
-  protected void doSend(Message message) {
+  protected void doSend(Message message) throws ProtocolException {
     try (var os = new ByteArrayOutputStream();
         var packer = MessagePack.newDefaultPacker(os)) {
       var encoder = new ServerMessagePackEncoder(packer);
@@ -53,9 +53,9 @@ public class NativeTransport extends AbstractMessageTransport {
       // impossible; no IO happens during packing
       throw PklBugException.unreachableCode();
     } catch (ProtocolException e) {
-      System.err.println("Received unexpected ProtocolException when encoding a message, aborting");
-      e.printStackTrace(System.err);
-      System.exit(1);
+      // should never happen; messages coming from Pkl should always be well-formed.
+      log("Unexpected protocol exception: " + e);
+      throw e;
     }
   }
 

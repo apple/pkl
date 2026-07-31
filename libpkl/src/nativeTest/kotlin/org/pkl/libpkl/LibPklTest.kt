@@ -13,17 +13,20 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+@file:Suppress("FunctionName")
+
 package org.pkl.libpkl
 
 import com.sun.jna.Pointer
 import com.sun.jna.ptr.PointerByReference
+import java.util.concurrent.Executors
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.pkl.core.Release
 
 class LibPklTest {
   @Test
-  fun testMalformedMessage() {
+  fun `malformed message`() {
     val messageResponseHandler =
       object : LibPklJNA.PklMessageResponseHandler {
         override fun invoke(length: Int, message: Pointer, userData: Pointer?) {}
@@ -45,7 +48,44 @@ class LibPklTest {
   }
 
   @Test
-  fun testEmptyMessageIsRejected() {
+  fun `empty message is rejected`() {
+    val exec = init()
+    val error = LibPklJNA.PklError()
+    try {
+      val result = LibPklJNA.INSTANCE.pkl_send_message(exec, 0, byteArrayOf(0), error)
+      assertThat(result).isEqualTo(2)
+      assertThat(error.message).contains("Unexpected end of input")
+    } finally {
+      assertThat(LibPklJNA.INSTANCE.pkl_close(exec, error)).isEqualTo(0)
+    }
+  }
+
+  @Test
+  fun `version string matches current version`() {
+    val currentVersion = Release.current().version.toString()
+    assertThat(LibPklJNA.INSTANCE.pkl_version()).isEqualTo(currentVersion)
+  }
+
+  @Test
+  fun `calling into libpkl from different thread using same pkl_exec_t instance fails`() {
+    val exec = init()
+    val error = LibPklJNA.PklError()
+    val executor = Executors.newSingleThreadExecutor()
+    try {
+      executor
+        .submit {
+          val resp = LibPklJNA.INSTANCE.pkl_close(exec, error)
+          assertThat(resp).isEqualTo(1)
+          assertThat(error.message).isEqualTo("called into pkl_close from different thread")
+        }
+        .get()
+    } finally {
+      executor.shutdown()
+      assertThat(LibPklJNA.INSTANCE.pkl_close(exec, error)).isEqualTo(0)
+    }
+  }
+
+  private fun init(): Pointer {
     val execRef = PointerByReference()
     val error = LibPklJNA.PklError()
     val messageResponseHandler =
@@ -55,18 +95,6 @@ class LibPklTest {
     assertThat(LibPklJNA.INSTANCE.pkl_init(messageResponseHandler, Pointer.NULL, execRef, error))
       .`as` { "Failed to call pkl_init: ${error.message}" }
       .isEqualTo(0)
-    try {
-      val result = LibPklJNA.INSTANCE.pkl_send_message(execRef.value, 0, byteArrayOf(0), error)
-      assertThat(result).isEqualTo(2)
-      assertThat(error.message).contains("Unexpected end of input")
-    } finally {
-      assertThat(LibPklJNA.INSTANCE.pkl_close(execRef.value, error)).isEqualTo(0)
-    }
-  }
-
-  @Test
-  fun testVersionString() {
-    val currentVersion = Release.current().version.toString()
-    assertThat(LibPklJNA.INSTANCE.pkl_version()).isEqualTo(currentVersion)
+    return execRef.value
   }
 }

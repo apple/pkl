@@ -27,7 +27,7 @@ extern "C" {
 #define PKL_EXPORT __attribute__((visibility("default")))
 #endif
 
-#define PKL_ERR_LOCK      1     /* Failed to create a mutex, or acquire a lock on a mutex */
+#define PKL_ERR_THREAD    1     /* Called using the same pexec_t but from a different thread */
 #define PKL_ERR_PROTOCOL  2     /* Failed to decode a message */
 
 /** Error details that occurred during a method call */
@@ -38,34 +38,36 @@ typedef struct {
 /**
  * Pkl executor instance that manages communication with the Pkl runtime.
  *
- * Instances should be created via `pkl_init()` and destroyed via `pkl_close().`
+ * Instances should be created via `pkl_init` and destroyed via `pkl_close`.
  *
- * All operations on this struct are considered thread-safe and are synchronized via a mutex.
+ * All calls using this executor should be synchronized in the same thread.
  */
 typedef struct __pkl_exec_t pkl_exec_t;
 
 /**
  * The callback that gets called when a message is received from Pkl.
  *
- * Messages must be deserialized to Pkl's Message Passing API: 
+ * Messages must be deserialized to Pkl's Message Passing API:
  * https://pkl-lang.org/main/current/bindings-specification/message-passing-api.html
  *
- * @param length    The length of the message bytes
- * @param message   The message itself
- * @param userData  User-defined data passed in from pkl_init.
+ * @param[in] length    The length of the message bytes
+ * @param[in] message   The message itself
+ * @param[in] userData  User-defined data passed in from pkl_init.
  */
 typedef void (*pkl_message_response_handler)(unsigned int length, char *message,
 		void *userData);
 
 /**
- * Initialises and allocates a Pkl executor, writing it to the slot pointed by `exec`.
- * Only one executor can exist at one time.
- * Calling `pkl_init` multiple times without calling `pkl_close` in between results in an error.
+ * Initializes and allocates a Pkl executor, writing it to the slot pointed by `exec`.
  *
- * @param handler   The callback that gets called when a message is received from Pkl.
- * @param userData  User-defined data that gets passed to handler.
- * @param exec      The pointer to write the created pkl_exec_t to.
- * @param error     The pointer to write error details to.
+ * To clean up resources allocated by the executor, use `pkl_close()`.
+ *
+ * All calls using this executor should come from the same thread.
+ *
+ * @param[in] handler   The callback that gets called when a message is received from Pkl.
+ * @param[in] userData  User-defined data that gets passed to handler.
+ * @param[out] exec      The pointer to write the created pkl_exec_t to.
+ * @param[out] error     The pointer to write error details to. Can optionally be `NULL`.
  *
  * @return 0 on success, non-zero on failure.
  */
@@ -75,25 +77,34 @@ PKL_EXPORT int pkl_init(pkl_message_response_handler handler, void *userData,
 /**
  * Send a message to Pkl, providing the length and a pointer to the first byte.
  *
- * Messages must be serialized to Pkl's Message Passing API:
+ * Messages must be serialized according to Pkl's Message Passing API:
  * https://pkl-lang.org/main/current/bindings-specification/message-passing-api.html
  *
- * @param pexec     The Pkl executor instance.
- * @param length    The length of the message, in bytes.
- * @param message   The message to send to Pkl.
+ * If a message is incorrectly serialized, returns `PKL_ERR_PROTOCOL`.
+ * If called from a different thread than `pkl_exec_t`'s originating thread, returns
+ * `PKL_ERR_THREAD`.
+ *
+ * @param[in] pexec     The Pkl executor instance.
+ * @param[in] length    The length of the message, in bytes.
+ * @param[in] message   The message to send to Pkl.
+ * @param[out] error    The pointer to write error details to. Can optionally be `NULL`.
  *
  * @return 0 on success, and non-zero otherwise.
  */
-PKL_EXPORT int pkl_send_message(pkl_exec_t *pexec, unsigned int length, char *message,
-		pkl_error_t *error);
+PKL_EXPORT int pkl_send_message(const pkl_exec_t *pexec, unsigned int length,
+		char *message, pkl_error_t *error);
 
 /**
  * Cleans up any resources that were created as part of the `pkl_init` process
  * for our `pkl_exec_t` instance.
  *
- * @param pexec     The Pkl executor instance.
+ * If called from a different thread than `pkl_exec_t`'s originating thread, returns
+ * `PKL_ERR_THREAD`.
  *
- * @return 0 on success, -1 if `pexec` is NULL, and an error code otherwise.
+ * @param[in] pexec     The Pkl executor instance.
+ * @param[out] error    The pointer to write error details to. Can optionally be `NULL`.
+ *
+ * @return 0 on success, -1 if `pexec` is `NULL`, and an error code otherwise.
  */
 PKL_EXPORT int pkl_close(pkl_exec_t *pexec, pkl_error_t *error);
 
