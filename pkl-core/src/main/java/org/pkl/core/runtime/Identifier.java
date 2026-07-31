@@ -172,14 +172,14 @@ public final class Identifier implements Comparable<Identifier> {
   // common in lambdas etc
   public static final Identifier IT = get("it");
 
-  // members of pkl.syntax#Node and pkl.syntax#Span
+  // members of pkl.syntax#Node, pkl.syntax#Span and pkl.syntax#SourceLocation
   public static final Identifier TYPE = get("type");
   public static final Identifier CHILDREN = get("children");
   public static final Identifier SPAN = get("span");
-  public static final Identifier LINE_START = get("lineStart");
-  public static final Identifier COL_START = get("colStart");
-  public static final Identifier LINE_END = get("lineEnd");
-  public static final Identifier COL_END = get("colEnd");
+  public static final Identifier START = get("start");
+  public static final Identifier END = get("end");
+  public static final Identifier LINE = get("line");
+  public static final Identifier COLUMN = get("column");
 
   // members of pkl.syntax#Renderer
   public static final Identifier GRAMMAR_VERSION = get("grammarVersion");

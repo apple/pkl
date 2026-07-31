@@ -29,6 +29,8 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
+import org.pkl.parser.syntax.generic.FullSpan;
 
 /**
  * Backs {@code pkl.syntax#SyntaxNode.builtNode}.
@@ -465,11 +467,11 @@ public final class SyntaxNodeNodes {
     var children = new ArrayList<>();
     children.add(terminal("\"\"\""));
     children.addAll(buildStringParts(listMember(self, "parts")));
-    // The formatter uses colStart of the closing `"""` to determine the indentation to strip from
-    // each content line.
-    var closingSpan = new VmObjectBuilder(1).addProperty(Identifier.COL_START, 1L);
-    children.add(
-        makeNode("terminal", null, "\"\"\"", closingSpan.toTyped(SyntaxModule.getSpanClass())));
+    // The formatter uses the start column of the closing `"""` to determine the indentation to
+    // strip from each content line.
+    var closingSpan =
+        SyntaxNodes.spanFactory.create(new SpanData(new FullSpan(0, 0, 0, 1, 0, 0), null));
+    children.add(makeNode("terminal", null, "\"\"\"", closingSpan));
     return branch("multi_line_string_literal_expr", children);
   }
 

@@ -33,21 +33,14 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.NodeData;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
 import org.pkl.parser.GenericParser;
 import org.pkl.parser.GenericParserError;
-import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
 
 public class ParserNodes {
   private ParserNodes() {}
-
-  private static final VmObjectFactory<FullSpan> spanFactory =
-      new VmObjectFactory<FullSpan>(SyntaxModule::getSpanClass)
-          .addIntProperty("lineStart", FullSpan::lineBegin)
-          .addIntProperty("colStart", FullSpan::colBegin)
-          .addIntProperty("lineEnd", FullSpan::lineEnd)
-          .addIntProperty("colEnd", FullSpan::colEnd);
 
   private static final VmObjectFactory<NodeData> nodeFactory =
       new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
@@ -60,7 +53,7 @@ public class ParserNodes {
                   nd.node.children.isEmpty() || nd.node.type == NodeType.STRING_CHARS
                       ? nd.node.text(nd.source)
                       : VmNull.withoutDefault())
-          .addTypedProperty("span", nd -> nd.spanVm);
+          .addProperty("span", nd -> VmNull.lift(nd.spanVm));
 
   private static final VmObjectFactory<VmTyped> identifierNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIdentifierNodeClass)
@@ -1490,7 +1483,7 @@ public class ParserNodes {
     @Specialization
     @TruffleBoundary
     protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
-      return doParse(source);
+      return doParse(source, null);
     }
 
     @Specialization
@@ -1498,7 +1491,7 @@ public class ParserNodes {
     protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
       // `source` is a `pkl.base#Resource`
       var text = (String) VmUtils.readMember(source, Identifier.TEXT);
-      return doParse(text);
+      return doParse(text, sourceUri(source));
     }
   }
 
@@ -1506,7 +1499,7 @@ public class ParserNodes {
     @Specialization
     @TruffleBoundary
     protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
-      return doParseOrNull(source);
+      return doParseOrNull(source, null);
     }
 
     @Specialization
@@ -1514,39 +1507,44 @@ public class ParserNodes {
     protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
       // `source` is a `pkl.base#Resource`
       var text = (String) VmUtils.readMember(source, Identifier.TEXT);
-      return doParseOrNull(text);
+      return doParseOrNull(text, sourceUri(source));
     }
   }
 
-  private static Object doParse(String src) {
+  private static String sourceUri(VmTyped resource) {
+    return VmUtils.readMember(resource, Identifier.URI).toString();
+  }
+
+  private static Object doParse(String src, @Nullable String sourceUri) {
     var sourceChars = src.toCharArray();
     try {
       var parser = new GenericParser();
       var root = parser.parseModule(src);
-      var genericNode = convertNode(root, sourceChars);
+      var genericNode = convertNode(root, sourceChars, sourceUri);
       return moduleNodeFactory.create(genericNode);
     } catch (GenericParserError e) {
       throw new VmExceptionBuilder().evalError("parserError").withHint(e.toString()).build();
     }
   }
 
-  private static Object doParseOrNull(String src) {
+  private static Object doParseOrNull(String src, @Nullable String sourceUri) {
     var sourceChars = src.toCharArray();
     try {
       var parser = new GenericParser();
       var root = parser.parseModule(src);
-      var genericNode = convertNode(root, sourceChars);
+      var genericNode = convertNode(root, sourceChars, sourceUri);
       return moduleNodeFactory.create(genericNode);
     } catch (GenericParserError e) {
       return VmNull.withoutDefault();
     }
   }
 
-  private static VmTyped convertNode(Node genericNode, char[] sourceChars) {
+  private static VmTyped convertNode(
+      Node genericNode, char[] sourceChars, @Nullable String sourceUri) {
     // convert children recursively
     var childrenList = new ArrayList<VmTyped>(genericNode.children.size());
     for (var child : genericNode.children) {
-      childrenList.add(convertNode(child, sourceChars));
+      childrenList.add(convertNode(child, sourceChars, sourceUri));
     }
 
     // materialize text now so that nodes reused verbatim by `walk`/`format` are
@@ -1556,7 +1554,7 @@ public class ParserNodes {
     }
 
     var childrenVm = VmList.create(childrenList.toArray());
-    var spanVm = spanFactory.create(genericNode.span);
+    var spanVm = SyntaxNodes.spanFactory.create(new SpanData(genericNode.span, sourceUri));
     var data = new NodeData(genericNode, sourceChars, childrenVm, spanVm);
 
     var result = nodeFactory.create(data);

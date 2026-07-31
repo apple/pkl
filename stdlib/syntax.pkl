@@ -58,8 +58,8 @@ class Node {
   /// or `null` for a branch node whose content is its [children].
   text: String?
 
-  /// The source location of this node.
-  span: Span
+  /// The source location of this node or `null`.
+  span: Span?
 
   /// Render this node back to Pkl source code using default settings.
   function render(): String = new Renderer {}.render(this)
@@ -89,19 +89,38 @@ class Node {
   external function fold<Result>(initial: Result, operator: (Result, Node) -> Result): Result
 }
 
-/// A source location, given as 1-based line and column positions.
+/// A range of source code, spanning [start] (inclusive) to [end] (exclusive).
 class Span {
-  /// The line of the first character.
-  lineStart: UInt = 0
+  /// The start of this span.
+  start: SourceLocation
 
-  /// The column of the first character.
-  colStart: UInt = 0
+  /// The end of this span.
+  end: SourceLocation
 
-  /// The line of the character following the span.
-  lineEnd: UInt = 0
+  /// The display URI of this span.
+  ///
+  /// For nodes parsed from a [Resource], this is the resource's URI with the span appended
+  /// as a fragment, for example `file:///foo/bar.pkl#3:5-3:12`.
+  /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
+  /// span itself, for example `3:5-3:12`.
+  displayUri: String
+}
 
-  /// The column of the character following the span.
-  colEnd: UInt = 0
+/// A position in source code, given as a 1-based line and column.
+class SourceLocation {
+  /// The 1-based line number of this source location.
+  line: UInt
+
+  /// The 1-based column number of this source location.
+  column: UInt
+
+  /// The display URI of this source location.
+  ///
+  /// For nodes parsed from a [Resource], this is the resource's URI with the location appended
+  /// as a fragment, for example `file:///foo/bar.pkl#3:5`.
+  /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
+  /// location itself, for example `3:5`.
+  displayUri: String
 }
 
 typealias NodeType =
@@ -241,8 +260,8 @@ abstract class SyntaxNode {
   /// The original parsed node, or `null` when this was built from scratch.
   hidden node: Node? = null
 
-  /// The source span of this node.
-  span: Span = node?.span ?? new Span {}
+  /// The source span of this node or `null`.
+  span: Span? = node?.span
 
   /// This node rebuilt into a generic [Node].
   ///

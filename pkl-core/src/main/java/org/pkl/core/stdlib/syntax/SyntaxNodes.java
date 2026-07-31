@@ -36,15 +36,57 @@ public final class SyntaxNodes {
   private static final char[] EMPTY_SOURCE = new char[0];
   static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
 
+  record SpanData(FullSpan span, @Nullable String sourceUri) {}
+
+  private record SourceLocationData(int line, int column, @Nullable String sourceUri) {}
+
+  private static final VmObjectFactory<SourceLocationData> sourceLocationFactory =
+      new VmObjectFactory<SourceLocationData>(SyntaxModule::getSourceLocationClass)
+          .addIntProperty("line", SourceLocationData::line)
+          .addIntProperty("column", SourceLocationData::column)
+          .addStringProperty(
+              "displayUri", sl -> displayUri(sl.sourceUri(), position(sl.line(), sl.column())));
+
+  static final VmObjectFactory<SpanData> spanFactory =
+      new VmObjectFactory<SpanData>(SyntaxModule::getSpanClass)
+          .addTypedProperty(
+              "start",
+              sd ->
+                  sourceLocationFactory.create(
+                      new SourceLocationData(
+                          sd.span().lineBegin(), sd.span().colBegin(), sd.sourceUri())))
+          .addTypedProperty(
+              "end",
+              sd ->
+                  sourceLocationFactory.create(
+                      new SourceLocationData(
+                          sd.span().lineEnd(), sd.span().colEnd(), sd.sourceUri())))
+          .addStringProperty(
+              "displayUri",
+              sd ->
+                  displayUri(
+                      sd.sourceUri(),
+                      position(sd.span().lineBegin(), sd.span().colBegin())
+                          + "-"
+                          + position(sd.span().lineEnd(), sd.span().colEnd())));
+
+  private static String position(int line, int column) {
+    return line + ":" + column;
+  }
+
+  private static String displayUri(@Nullable String sourceUri, String position) {
+    return sourceUri == null ? position : sourceUri + "#" + position;
+  }
+
   /** Extra storage backing a Pkl {@code Node} instance. */
   static final class NodeData {
     final Node node;
     final char[] source;
     @Nullable VmTyped parentVm;
     VmList childrenVm;
-    VmTyped spanVm;
+    @Nullable VmTyped spanVm;
 
-    NodeData(Node node, char[] source, VmList childrenVm, VmTyped spanVm) {
+    NodeData(Node node, char[] source, VmList childrenVm, @Nullable VmTyped spanVm) {
       this.node = node;
       this.source = source;
       this.childrenVm = childrenVm;
@@ -63,14 +105,14 @@ public final class SyntaxNodes {
                   nd.node.children.isEmpty() || nd.node.type == NodeType.STRING_CHARS
                       ? nd.node.text(nd.source)
                       : VmNull.withoutDefault())
-          .addTypedProperty("span", nd -> nd.spanVm);
+          .addProperty("span", nd -> VmNull.lift(nd.spanVm));
 
   /** Rebuild a node from {@code template} (its type, span, text) with new children. */
   static VmTyped rebuild(VmTyped template, Object[] newChildrenVm) {
     var nodeType =
         NodeType.valueOf(
             ((String) VmUtils.readMember(template, Identifier.TYPE)).toUpperCase(Locale.ROOT));
-    var spanVm = (VmTyped) VmUtils.readMember(template, Identifier.SPAN);
+    var spanVm = optSpan(template);
     var span = readSpan(spanVm);
 
     var childJavaNodes = new ArrayList<Node>(newChildrenVm.length);
@@ -112,7 +154,7 @@ public final class SyntaxNodes {
     var typeStr = (String) VmUtils.readMember(nodeVm, Identifier.TYPE);
     var nodeType = NodeType.valueOf(typeStr.toUpperCase(Locale.ROOT));
 
-    var ownSpan = readSpan((VmTyped) VmUtils.readMember(nodeVm, Identifier.SPAN));
+    var ownSpan = readSpan(optSpan(nodeVm));
     // a constructed node that did not set its own span inherits the insertion point's span
     var span = ownSpan.equals(ZERO_SPAN) ? fallbackSpan : ownSpan;
 
@@ -125,12 +167,27 @@ public final class SyntaxNodes {
     return makeJavaNode(nodeType, span, children, VmUtils.readMember(nodeVm, Identifier.TEXT));
   }
 
-  private static FullSpan readSpan(VmTyped spanVm) {
-    var lineStart = ((Long) VmUtils.readMember(spanVm, Identifier.LINE_START)).intValue();
-    var colStart = ((Long) VmUtils.readMember(spanVm, Identifier.COL_START)).intValue();
-    var lineEnd = ((Long) VmUtils.readMember(spanVm, Identifier.LINE_END)).intValue();
-    var colEnd = ((Long) VmUtils.readMember(spanVm, Identifier.COL_END)).intValue();
-    return new FullSpan(0, 0, lineStart, colStart, lineEnd, colEnd);
+  private static @Nullable VmTyped optSpan(VmTyped nodeVm) {
+    return VmUtils.readMember(nodeVm, Identifier.SPAN) instanceof VmTyped spanVm ? spanVm : null;
+  }
+
+  private static FullSpan readSpan(@Nullable VmTyped spanVm) {
+    if (spanVm == null) {
+      return ZERO_SPAN;
+    }
+    var start = (VmTyped) VmUtils.readMember(spanVm, Identifier.START);
+    var end = (VmTyped) VmUtils.readMember(spanVm, Identifier.END);
+    return new FullSpan(
+        0,
+        0,
+        readPosition(start, Identifier.LINE),
+        readPosition(start, Identifier.COLUMN),
+        readPosition(end, Identifier.LINE),
+        readPosition(end, Identifier.COLUMN));
+  }
+
+  private static int readPosition(VmTyped sourceLocationVm, Identifier name) {
+    return ((Long) VmUtils.readMember(sourceLocationVm, name)).intValue();
   }
 
   private static Node makeJavaNode(

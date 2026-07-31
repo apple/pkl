@@ -37,6 +37,10 @@ public final class SyntaxModule extends StdLibModule {
     return SpanClass.instance;
   }
 
+  public static VmClass getSourceLocationClass() {
+    return SourceLocationClass.instance;
+  }
+
   public static VmClass getModuleNodeClass() {
     return ModuleNodeClass.instance;
   }
@@ -307,6 +311,10 @@ public final class SyntaxModule extends StdLibModule {
 
   private static final class SpanClass {
     static final VmClass instance = loadClass("Span");
+  }
+
+  private static final class SourceLocationClass {
+    static final VmClass instance = loadClass("SourceLocation");
   }
 
   private static final class ModuleNodeClass {
