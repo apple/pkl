@@ -177,6 +177,52 @@ facts {
     params[2].isBlankIdentifier == false
   }
 
+  // `value` carries the identifier verbatim, so quoted identifiers keep their backticks
+  ["quoted identifiers"] {
+    local mod = parse("""
+      module `my mod`.`sub pkg`
+
+      import "foo.pkl" as `my alias`
+
+      class `My Class` {
+        `a prop`: String
+        function `do it`(`the arg`: Int) = `the arg`
+      }
+
+      typealias `My Alias` = `My Class`
+
+      const `my prop` = 0
+      """)
+
+    mod.declaration!!.name!!.value == "`my mod`.`sub pkg`"
+    mod.declaration!!.name!!.identifiers.map((i) -> i.value) == List("`my mod`", "`sub pkg`")
+
+    mod.imports.first.alias!!.value == "`my alias`"
+
+    local cls = mod.classes.first
+    cls.identifier.value == "`My Class`"
+    cls.body!!.properties.first.identifier.value == "`a prop`"
+    cls.body!!.methods.first.identifier.value == "`do it`"
+    cls.body!!.methods.first.parameters.first.identifier!!.value == "`the arg`"
+
+    local ta = mod.typeAliases.first
+    ta.identifier.value == "`My Alias`"
+    (ta.type as syntax.DeclaredTypeNode).name.value == "`My Class`"
+
+    mod.properties.first.identifier.value == "`my prop`"
+    mod.properties.first.modifiers == List("const")
+  }
+
+  ["quoted identifiers in object bodies and accesses"] {
+    local mod = parse("x { `inner prop` = `some`.`path` }")
+    local prop = mod.properties.first.objectBodies.first.properties.first
+    prop.identifier.value == "`inner prop`"
+
+    local access = prop.value as syntax.QualifiedAccessExprNode
+    access.identifier.value == "`path`"
+    (access.receiver as syntax.UnqualifiedAccessExprNode).identifier.value == "`some`"
+  }
+
   ["parser error"] {
     local result = new syntax.Parser {}.parseModuleOrNull("x = {{{")
     result == null

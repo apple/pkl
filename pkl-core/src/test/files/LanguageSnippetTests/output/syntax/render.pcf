@@ -106,6 +106,13 @@ facts {
   ["parenthesized expression"] {
     true
   }
+  ["quoted identifiers"] {
+    true
+    true
+    true
+    true
+    true
+  }
   ["modify identifier"] {
     true
   }

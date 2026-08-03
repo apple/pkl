@@ -312,6 +312,27 @@ facts {
     roundTrip("x = (1 + 2)") == "x = (1 + 2)\n"
   }
 
+  ["quoted identifiers"] {
+    roundTrip("const `my prop` = 0") == "const `my prop` = 0\n"
+    roundTrip("x = `some`.`path`") == "x = `some`.`path`\n"
+    roundTrip("module `my mod`.`sub pkg`") == "module `my mod`.`sub pkg`\n"
+    roundTrip("function `do it`(`the arg`: Int) = `the arg`")
+      == "function `do it`(`the arg`: Int) = `the arg`\n"
+    roundTrip(
+      """
+      class `My Class` {
+        `a prop`: String
+      }
+      """,
+    )
+      == """
+      class `My Class` {
+        `a prop`: String
+      }
+
+      """
+  }
+
   ["modify identifier"] {
     local root = parseNode("x = 1")
     local modified = replaceLeaf(root!!, "identifier", "x", "y")

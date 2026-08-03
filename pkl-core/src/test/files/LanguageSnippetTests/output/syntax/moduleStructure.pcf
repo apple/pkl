@@ -103,6 +103,24 @@ facts {
     true
     true
   }
+  ["quoted identifiers"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["quoted identifiers in object bodies and accesses"] {
+    true
+    true
+    true
+  }
   ["parser error"] {
     true
   }
