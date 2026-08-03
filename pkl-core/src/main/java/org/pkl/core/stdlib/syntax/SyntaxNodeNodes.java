@@ -56,13 +56,12 @@ public final class SyntaxNodeNodes {
     return switch (self.getVmClass().getSimpleName()) {
       case "ModuleNode" -> buildModule(self);
       case "ModuleDeclarationNode" -> buildModuleDeclaration(self);
-      case "ExtendsOrAmendsClauseNode" ->
-          bool(self, "isAmend")
-              ? branch(
-                  "amends_clause", List.of(terminal("amends"), stringCharsNode(str(self, "uri"))))
-              : branch(
-                  "extends_clause",
-                  List.of(terminal("extends"), stringCharsNode(str(self, "uri"))));
+      case "ExtendsOrAmendsClauseNode" -> {
+        var keyword = str(self, "keyword");
+        yield branch(
+            keyword.equals("amends") ? "amends_clause" : "extends_clause",
+            List.of(terminal(keyword), stringCharsNode(str(self, "uri"))));
+      }
       case "ImportNode" -> buildImport(self);
       case "ClassNode" -> buildClass(self);
       case "TypeAliasNode" -> buildTypeAlias(self);
@@ -78,9 +77,7 @@ public final class SyntaxNodeNodes {
       case "ObjectSpreadNode" ->
           branch(
               "object_spread",
-              List.of(
-                  terminal(bool(self, "isNullable") ? "...?" : "..."),
-                  build(reqNode(self, "expression"))));
+              List.of(terminal(str(self, "keyword")), build(reqNode(self, "expression"))));
       case "MemberPredicateNode" -> buildMemberPredicate(self);
       case "ForGeneratorNode" -> buildForGenerator(self);
       case "WhenGeneratorNode" -> buildWhenGenerator(self);
@@ -115,10 +112,7 @@ public final class SyntaxNodeNodes {
       case "ThrowExprNode" -> buildCall("throw_expr", "throw", build(reqNode(self, "expression")));
       case "TraceExprNode" -> buildCall("trace_expr", "trace", build(reqNode(self, "expression")));
       case "ImportExprNode" ->
-          buildCall(
-              "import_expr",
-              bool(self, "isGlob") ? "import*" : "import",
-              stringCharsNode(str(self, "uri")));
+          buildCall("import_expr", str(self, "keyword"), stringCharsNode(str(self, "uri")));
       case "ReadExprNode" ->
           buildCall("read_expr", str(self, "keyword"), build(reqNode(self, "expression")));
       case "NewExprNode" -> buildNew(self);
@@ -220,7 +214,7 @@ public final class SyntaxNodeNodes {
 
   private static VmTyped buildImport(VmTyped self) {
     var children = new ArrayList<>();
-    children.add(terminal(bool(self, "isGlob") ? "import*" : "import"));
+    children.add(terminal(str(self, "keyword")));
     children.add(stringCharsNode(str(self, "uri")));
     var alias = optNode(self, "alias");
     if (alias != null) {

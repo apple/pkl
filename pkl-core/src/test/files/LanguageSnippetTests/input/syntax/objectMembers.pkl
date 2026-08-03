@@ -74,14 +74,14 @@ facts {
   ["object spread"] {
     local b = body("...other")
     b.spreads.length == 1
-    b.spreads.first.isNullable == false
+    b.spreads.first.keyword == "..."
     b.spreads.first.expression is syntax.UnqualifiedAccessExprNode
   }
 
   ["nullable object spread"] {
     local b = body("...?other")
     b.spreads.length == 1
-    b.spreads.first.isNullable == true
+    b.spreads.first.keyword == "...?"
   }
 
   ["member predicate"] {

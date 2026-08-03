@@ -326,8 +326,8 @@ class ModuleDeclarationNode extends SyntaxNode {
 
 /// The `extends` or `amends` clause of a module declaration.
 class ExtendsOrAmendsClauseNode extends SyntaxNode {
-  /// Whether this is an `amends` clause. When `false`, this is an `extends` clause.
-  isAmend: Boolean
+  /// The keyword used (`"extends"` or `"amends"`).
+  keyword: "extends" | "amends"
 
   /// The URI string of the amended or extended module.
   uri: String
@@ -335,8 +335,8 @@ class ExtendsOrAmendsClauseNode extends SyntaxNode {
 
 /// An import declaration.
 class ImportNode extends SyntaxNode {
-  /// Whether this is a glob import (`import*`).
-  isGlob: Boolean
+  /// The keyword used (`"import"` or `"import*"`).
+  keyword: "import" | "import*"
 
   /// The URI string of the import.
   uri: String
@@ -541,8 +541,8 @@ class ObjectEntryNode extends SyntaxNode {
 
 /// An object spread (`...expr` or `...?expr`).
 class ObjectSpreadNode extends SyntaxNode {
-  /// Whether this is a nullable spread (`...?`).
-  isNullable: Boolean
+  /// The keyword used (`"..."` or `"...?"`).
+  keyword: "..." | "...?"
 
   /// The spread expression.
   expression: ExprNode
@@ -718,8 +718,8 @@ class TraceExprNode extends ExprNode {
 
 /// An `import("uri")` or `import*("uri")` expression.
 class ImportExprNode extends ExprNode {
-  /// Whether this is a glob import expression (`import*`).
-  isGlob: Boolean
+  /// The keyword used (`"import"` or `"import*"`).
+  keyword: "import" | "import*"
 
   /// The import URI string.
   uri: String

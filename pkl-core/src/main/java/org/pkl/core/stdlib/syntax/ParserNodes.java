@@ -138,7 +138,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> objectSpreadNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectSpreadNodeClass)
           .addProperty("node", vm -> vm)
-          .addBooleanProperty("isNullable", ParserNodes::objectSpreadIsNullable)
+          .addStringProperty("keyword", ParserNodes::objectSpreadKeyword)
           .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> whenGeneratorNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getWhenGeneratorNodeClass)
@@ -269,7 +269,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> importExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getImportExprNodeClass)
           .addProperty("node", vm -> vm)
-          .addBooleanProperty("isGlob", ParserNodes::importIsGlob)
+          .addStringProperty("keyword", ParserNodes::importKeyword)
           .addStringProperty("uri", ParserNodes::importUri);
   private static final VmObjectFactory<VmTyped> readExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getReadExprNodeClass)
@@ -336,7 +336,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> importNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getImportNodeClass)
           .addProperty("node", vm -> vm)
-          .addBooleanProperty("isGlob", ParserNodes::importIsGlob)
+          .addStringProperty("keyword", ParserNodes::importKeyword)
           .addStringProperty("uri", ParserNodes::importUri)
           .addProperty("alias", ParserNodes::importAlias);
 
@@ -352,7 +352,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> extendsOrAmendsClauseNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getExtendsOrAmendsClauseNodeClass)
           .addProperty("node", vm -> vm)
-          .addBooleanProperty("isAmend", ParserNodes::extendsOrAmendsClauseIsAmend)
+          .addStringProperty("keyword", ParserNodes::extendsOrAmendsClauseKeyword)
           .addStringProperty("uri", ParserNodes::stringCharsOf);
 
   private static final VmObjectFactory<VmTyped> classNodeFactory =
@@ -631,13 +631,7 @@ public class ParserNodes {
   }
 
   private static String readKeyword(VmTyped exprVm) {
-    var data = (NodeData) exprVm.getExtraStorage();
-    for (var child : data.node.children) {
-      if (child.type == NodeType.TERMINAL) {
-        return child.text(data.source);
-      }
-    }
-    return "read";
+    return firstTerminalText(exprVm, "read");
   }
 
   private static Object newExprType(VmTyped exprVm) {
@@ -845,14 +839,8 @@ public class ParserNodes {
     return objectBodiesOf(entryVm);
   }
 
-  private static boolean objectSpreadIsNullable(VmTyped spreadVm) {
-    var data = (NodeData) spreadVm.getExtraStorage();
-    for (var child : data.node.children) {
-      if (child.type == NodeType.TERMINAL) {
-        return "...?".equals(child.text(data.source));
-      }
-    }
-    return false;
+  private static String objectSpreadKeyword(VmTyped spreadVm) {
+    return firstTerminalText(spreadVm, "...");
   }
 
   private static VmTyped whenCondition(VmTyped whenVm) {
@@ -1029,9 +1017,9 @@ public class ParserNodes {
         : extendsOrAmendsClauseNodeFactory.create(clause);
   }
 
-  private static boolean extendsOrAmendsClauseIsAmend(VmTyped clauseVm) {
+  private static String extendsOrAmendsClauseKeyword(VmTyped clauseVm) {
     var data = (NodeData) clauseVm.getExtraStorage();
-    return data.node.type == NodeType.AMENDS_CLAUSE;
+    return data.node.type == NodeType.AMENDS_CLAUSE ? "amends" : "extends";
   }
 
   private static VmList moduleClasses(VmTyped moduleVm) {
@@ -1180,14 +1168,8 @@ public class ParserNodes {
     return wrapAll(findChildrenVm(importListVm, NodeType.IMPORT), importNodeFactory);
   }
 
-  private static boolean importIsGlob(VmTyped importVm) {
-    var data = (NodeData) importVm.getExtraStorage();
-    for (var child : data.node.children) {
-      if (child.type == NodeType.TERMINAL) {
-        return "import*".equals(child.text(data.source));
-      }
-    }
-    return false;
+  private static String importKeyword(VmTyped importVm) {
+    return firstTerminalText(importVm, "import");
   }
 
   private static String importUri(VmTyped importVm) {
@@ -1213,6 +1195,17 @@ public class ParserNodes {
     return data.node.children.isEmpty() || data.node.type == NodeType.STRING_CHARS
         ? data.node.text(data.source)
         : null;
+  }
+
+  // The text of the node's first terminal child, or `fallback` if it has none
+  private static String firstTerminalText(VmTyped nodeVm, String fallback) {
+    var data = (NodeData) nodeVm.getExtraStorage();
+    for (var child : data.node.children) {
+      if (child.type == NodeType.TERMINAL) {
+        return child.text(data.source);
+      }
+    }
+    return fallback;
   }
 
   // Extract the string constant from a node's `string_chars` child (dropping the enclosing quotes)

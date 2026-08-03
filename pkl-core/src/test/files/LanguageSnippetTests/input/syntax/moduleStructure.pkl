@@ -38,7 +38,7 @@ facts {
     local mod = parse(#"amends "base.pkl""#)
     mod.declaration != null
     mod.declaration!!.extendsOrAmendsClause != null
-    mod.declaration!!.extendsOrAmendsClause!!.isAmend == true
+    mod.declaration!!.extendsOrAmendsClause!!.keyword == "amends"
     mod.declaration!!.extendsOrAmendsClause!!.uri == "base.pkl"
   }
 
@@ -46,7 +46,7 @@ facts {
     local mod = parse(#"extends "base.pkl""#)
     mod.declaration != null
     mod.declaration!!.extendsOrAmendsClause != null
-    mod.declaration!!.extendsOrAmendsClause!!.isAmend == false
+    mod.declaration!!.extendsOrAmendsClause!!.keyword == "extends"
     mod.declaration!!.extendsOrAmendsClause!!.uri == "base.pkl"
   }
 
@@ -59,14 +59,14 @@ facts {
     mod.imports.length == 3
 
     mod.imports[0].uri == "foo.pkl"
-    mod.imports[0].isGlob == false
+    mod.imports[0].keyword == "import"
     mod.imports[0].alias == null
 
     mod.imports[1].uri == "bar.pkl"
     mod.imports[1].alias!!.value == "myBar"
 
     mod.imports[2].uri == "*.pkl"
-    mod.imports[2].isGlob == true
+    mod.imports[2].keyword == "import*"
   }
 
   ["class declaration"] {

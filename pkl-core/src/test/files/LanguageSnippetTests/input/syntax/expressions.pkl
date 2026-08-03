@@ -197,12 +197,12 @@ facts {
   ["import expression"] {
     local impExpr = expr(#"import("foo.pkl")"#)
     impExpr is syntax.ImportExprNode
-    (impExpr as syntax.ImportExprNode).isGlob == false
+    (impExpr as syntax.ImportExprNode).keyword == "import"
     (impExpr as syntax.ImportExprNode).uri == "foo.pkl"
 
     local impGlob = expr(#"import*("*.pkl")"#)
     impGlob is syntax.ImportExprNode
-    (impGlob as syntax.ImportExprNode).isGlob == true
+    (impGlob as syntax.ImportExprNode).keyword == "import*"
     (impGlob as syntax.ImportExprNode).uri == "*.pkl"
   }
 
