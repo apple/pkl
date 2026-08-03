@@ -53,7 +53,10 @@ public abstract class AbstractReadNode extends UnaryExpressionNode {
   @TruffleBoundary
   protected final @Nullable Object doRead(String resourceUri, VmContext context, Node readNode) {
     var resolvedUri = resolveResource(currentModule, resourceUri);
-    return context.getResourceManager().read(resolvedUri, readNode).orElse(null);
+    return context
+        .getResourceManager()
+        .read(currentModule.getUri(), resolvedUri, readNode)
+        .orElse(null);
   }
 
   private URI resolveResource(ModuleKey moduleKey, String resourceUri) {

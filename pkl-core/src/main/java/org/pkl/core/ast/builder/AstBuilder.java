@@ -1957,16 +1957,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                         scope.getName(),
                         scope.getConstLevel() == ConstLevel.ALL));
           } else { // no value given
-            if (isLocal) {
-              assert typeAnnotation != null;
-              throw missingLocalPropertyValue(typeAnnotation);
-            }
             if (VmModifier.isExternal(modifiers)) {
               bodyNode =
                   externalMemberRegistry.getPropertyBody(scope.getQualifiedName(), headerSection);
               if (bodyNode instanceof LanguageAwareNode languageAwareNode) {
                 languageAwareNode.initLanguage(language);
               }
+            } else if (isLocal) {
+              assert typeAnnotation != null;
+              throw missingLocalPropertyValue(typeAnnotation);
             } else {
               bodyNode = null; // will be given a default by UnresolvedPropertyNode
             }

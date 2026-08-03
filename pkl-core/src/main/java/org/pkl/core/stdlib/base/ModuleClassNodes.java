@@ -21,6 +21,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import java.net.URI;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
 
 @PklName("Module")
@@ -57,6 +58,16 @@ public final class ModuleClassNodes {
       throw exceptionBuilder()
           .evalError("noDescendentPathBetweenModules", selfUri, otherUri)
           .build();
+    }
+  }
+
+  /** Bypass resource trust level check when determining the output format */
+  public abstract static class outputFormat extends ExternalPropertyNode {
+    @Specialization
+    protected Object eval(VmObjectLike self) {
+      var context = VmContext.get(this);
+      var outputFormat = context.getExternalProperties().get("pkl.outputFormat");
+      return outputFormat != null ? outputFormat : VmNull.withoutDefault();
     }
   }
 }
