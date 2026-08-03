@@ -573,10 +573,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private <T> T parseNumber(IntLiteralExpr expr, BiFunction<String, Integer, T> parser) {
-    var text = remove_(expr.getNumber());
+    var text = expr.getNumber();
+    var isHex = text.startsWith("0x");
+    text = VmUtils.removeUnderscoresFromNumber(text, isHex);
 
     var radix = 10;
-    if (text.startsWith("0x") || text.startsWith("0b") || text.startsWith("0o")) {
+    if (isHex || text.startsWith("0b") || text.startsWith("0o")) {
       radix =
           switch (text.charAt(1)) {
             case 'x' -> 16;
@@ -611,7 +613,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public FloatLiteralNode visitFloatLiteralExpr(FloatLiteralExpr expr) {
     var section = createSourceSection(expr);
-    var text = remove_(expr.getNumber());
+    var text = VmUtils.removeUnderscoresFromNumber(expr.getNumber(), false);
     // relies on grammar rule nesting depth, but a breakage won't go unnoticed by tests
     if (expr.parent() instanceof UnaryMinusExpr) {
       // handle negation here for consistency with visitIntegerLiteral
@@ -625,16 +627,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     } catch (NumberFormatException e) {
       throw exceptionBuilder().evalError("floatTooLarge", text).withSourceSection(section).build();
     }
-  }
-
-  private static String remove_(String number) {
-    var builder = new StringBuilder(number.length());
-    for (var i = 0; i < number.length(); i++) {
-      var ch = number.charAt(i);
-      if (ch == '_') continue;
-      builder.append(ch);
-    }
-    return builder.toString();
   }
 
   @Override

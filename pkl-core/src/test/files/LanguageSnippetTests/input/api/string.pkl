@@ -266,15 +266,56 @@ examples {
   ["toInt()"] {
     "123".toInt()
     "-123".toInt()
+    "+123".toInt()
     "1_2__3___".toInt()
     "-1_2__3___".toInt()
+    "+1_2__3___".toInt()
     "0".toInt()
     "-0".toInt()
+    "+0".toInt()
+    "-9223372036854775808".toInt() // math.minInt
+    "9223372036854775807".toInt() // math.maxInt
+
+    "0x123".toInt()
+    "-0x123".toInt()
+    "+0x123".toInt()
+    "0x1_2__3___".toInt()
+    "-0x1_2__3___".toInt()
+    "+0x1_2__3___".toInt()
+    "0x0".toInt()
+    "-0x0".toInt()
+    "+0x0".toInt()
+
+    "0b101".toInt()
+    "-0b101".toInt()
+    "+0b101".toInt()
+    "0b1_0__1___".toInt()
+    "-0b1_0__1___".toInt()
+    "+0b1_0__1___".toInt()
+    "0b0".toInt()
+    "-0b0".toInt()
+    "+0b0".toInt()
+
+    "0o123".toInt()
+    "-0o123".toInt()
+    "+0o123".toInt()
+    "0o1_2__3___".toInt()
+    "-0o1_2__3___".toInt()
+    "+0o1_2__3___".toInt()
+    "0o0".toInt()
+    "-0o0".toInt()
+    "+0o0".toInt()
+    
     module.catch(() -> "1.2".toInt())
     module.catch(() -> "9223372036854775808".toInt())
     module.catch(() -> "-9223372036854775809".toInt())
     module.catch(() -> "abc".toInt())
     module.catch(() -> "_1_000".toInt())
+    module.catch(() -> "0p0".toInt())
+    module.catch(() -> "0x-0".toInt())
+    module.catch(() -> "0x+0".toInt())
+    module.catch(() -> "0x0 + 0x1".toInt())
+    module.catch(() -> "".toInt())
   }
 
   ["toIntOrNull()"] {
@@ -289,6 +330,11 @@ examples {
     "-9223372036854775809".toIntOrNull()
     "abc".toIntOrNull()
     "_1_2__3___".toIntOrNull()
+    "0p0".toIntOrNull()
+    "0x-0".toIntOrNull()
+    "0x+0".toIntOrNull()
+    "0x0 + 0x1".toIntOrNull()
+    "".toIntOrNull()
   }
 
   ["toFloat()"] {

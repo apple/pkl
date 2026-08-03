@@ -1092,4 +1092,25 @@ public final class VmUtils {
     var truffleStackTraceElements = TruffleStackTrace.getStackTrace(e);
     return truffleStackTraceElements != null && truffleStackTraceElements.size() < 100;
   }
+
+  /** Removes `_` from numbers to be parsed. Returns the string unmodified if it's invalid. */
+  public static String removeUnderscoresFromNumber(String number, boolean isHex) {
+    if (number.indexOf('_') < 0) return number;
+
+    var builder = new StringBuilder();
+    var numberStart = true;
+    for (var i = 0; i < number.length(); i++) {
+      var c = number.charAt(i);
+      if (c != '_') {
+        builder.append(c);
+      } else if (numberStart) {
+        // invalid: _ at start or after [.eE]
+        return number;
+      }
+
+      numberStart = c == '.' || (!isHex && (c == 'e' || c == 'E'));
+    }
+
+    return builder.toString();
+  }
 }

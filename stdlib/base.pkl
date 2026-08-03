@@ -1640,15 +1640,27 @@ external class String extends Any {
   /// ```
   external function decapitalize(): String
 
-  /// Parses this string as a signed decimal (base 10) integer.
+  /// Parses this string as a signed integer.
   ///
-  /// Throws if this string cannot be parsed as a signed decimal integer,
+  /// Supports integer formats supported by Pkl:
+  /// * Decimal (base 10)
+  /// * Hexadecimal (base 16) with prefix `0x`
+  /// * Binary (base 2) with prefix `0b`
+  /// * Octal (base 8) with prefix `0o`
+  ///
+  /// Throws if this string cannot be parsed,
   /// or if the integer is too large to fit into [Int].
   external function toInt(): Int
 
-  /// Parses this string as a signed decimal (base 10) integer.
+  /// Parses this string as a signed integer.
   ///
-  /// Returns [null] if this string cannot be parsed as a signed decimal integer,
+  /// Supports integer formats supported by Pkl:
+  /// * Decimal (base 10)
+  /// * Hexadecimal (base 16) with prefix `0x`
+  /// * Binary (base 2) with prefix `0b`
+  /// * Octal (base 8) with prefix `0o`
+  ///
+  /// Returns [null] if this string cannot be parsed,
   /// or if the integer is too large to fit into [Int].
   external function toIntOrNull(): Int?
 

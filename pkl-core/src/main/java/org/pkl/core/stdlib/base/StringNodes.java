@@ -33,6 +33,9 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.Pair;
 import org.pkl.core.util.StringUtils;
+import org.pkl.parser.Lexer;
+import org.pkl.parser.ParserError;
+import org.pkl.parser.Token;
 
 @SuppressWarnings("unused")
 public final class StringNodes {
@@ -830,12 +833,58 @@ public final class StringNodes {
     }
   }
 
+  /** Use the lexer to parse integer values in the same forms that Pkl itself accepts */
+  private static Long toInt(String self) throws NumberFormatException {
+    try {
+      var lexer = new Lexer(self);
+      var tk = lexer.next();
+      var prefix = "";
+      switch (tk) {
+        case MINUS -> {
+          prefix = "-";
+          tk = lexer.next();
+        }
+        case PLUS -> tk = lexer.next();
+      }
+
+      int radix;
+      var text = lexer.text();
+      switch (tk) {
+        case INT -> radix = 10;
+        case BIN -> {
+          radix = 2;
+          text = text.substring(2); // strip "0b"
+        }
+        case OCT -> {
+          radix = 8;
+          text = text.substring(2); // strip "0o"
+        }
+        case HEX -> {
+          radix = 16;
+          text = text.substring(2); // strip "0x"
+        }
+        default -> throw new NumberFormatException();
+      }
+      var parsed =
+          Long.parseLong(prefix + VmUtils.removeUnderscoresFromNumber(text, radix == 16), radix);
+
+      // ensure no trailing garbage
+      if (lexer.next() != Token.EOF) {
+        throw new NumberFormatException();
+      }
+
+      return parsed;
+    } catch (ParserError ignored) {
+      throw new NumberFormatException();
+    }
+  }
+
   public abstract static class toInt extends ExternalMethod0Node {
     @TruffleBoundary
     @Specialization
     protected long eval(String self) {
       try {
-        return Long.parseLong(removeUnderlinesFromNumber(self));
+        return toInt(self);
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Int")
@@ -850,7 +899,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Long.parseLong(removeUnderlinesFromNumber(self));
+        return toInt(self);
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
@@ -862,7 +911,7 @@ public final class StringNodes {
     @Specialization
     protected double eval(String self) {
       try {
-        return Double.parseDouble(removeUnderlinesFromNumber(self));
+        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, false));
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Float")
@@ -877,7 +926,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Double.parseDouble(removeUnderlinesFromNumber(self));
+        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, false));
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }
@@ -1030,24 +1079,5 @@ public final class StringNodes {
     var regexMatch = RegexMatchFactory.create(Pair.of(matcher.toMatchResult(), -1));
     var replacement = applyNode.executeString(mapper, regexMatch);
     return Matcher.quoteReplacement(replacement);
-  }
-
-  /**
-   * Removes `_` from numbers to be parsed to be compatible with how Pkl parses numbers. Will return
-   * the string unmodified if it's invalid.
-   */
-  private static String removeUnderlinesFromNumber(String number) {
-    var builder = new StringBuilder();
-    var numberStart = true;
-    for (var i = 0; i < number.length(); i++) {
-      var c = number.charAt(i);
-      if (c != '_') {
-        builder.append(c);
-      } else if (numberStart) return number;
-
-      numberStart = c == '.' || c == 'e' || c == 'E';
-    }
-
-    return builder.toString();
   }
 }
