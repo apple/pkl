@@ -152,8 +152,7 @@ public final class SyntaxNodeNodes {
               List.of(
                   terminal("("),
                   branch(
-                      "parenthesized_expr_elements",
-                      List.of(build(nonNull(optNode(self, "expression"))))),
+                      "parenthesized_expr_elements", List.of(build(reqNode(self, "expression")))),
                   terminal(")")));
       case "UnknownTypeNode" -> leaf("unknown_type", "unknown");
       case "NothingTypeNode" -> leaf("nothing_type", "nothing");
@@ -902,13 +901,6 @@ public final class SyntaxNodeNodes {
 
   private static boolean bool(VmTyped self, String name) {
     return (Boolean) member(self, name);
-  }
-
-  private static VmTyped nonNull(@Nullable VmTyped value) {
-    if (value == null) {
-      throw new VmExceptionBuilder().evalError("expectedNonNullValue").build();
-    }
-    return value;
   }
 
   private static String numText(Object value) {

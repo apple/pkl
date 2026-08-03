@@ -859,8 +859,8 @@ class FunctionLiteralExprNode extends ExprNode {
 
 /// A parenthesized expression (`(expr)`).
 class ParenthesizedExprNode extends ExprNode {
-  /// The inner expression (may be empty for `()`).
-  expression: ExprNode?
+  /// The inner expression.
+  expression: ExprNode
 }
 
 /// The `unknown` type.

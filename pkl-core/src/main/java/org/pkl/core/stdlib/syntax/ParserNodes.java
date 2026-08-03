@@ -359,7 +359,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> parenthesizedExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedExprNodeClass)
           .addProperty("node", vm -> vm)
-          .addProperty("expression", ParserNodes::parenthesizedExpression);
+          .addTypedProperty("expression", ParserNodes::parenthesizedExpression);
 
   // String-part factories, produced by `buildStringParts`. `StringPartNode` is not a `SyntaxNode`,
   // but it also carries a hidden `node`, so the same `node`-property shape applies.
@@ -754,13 +754,9 @@ public class ParserNodes {
     return wrapExpr(requireExprChild(requireChild(exprVm, NodeType.FUNCTION_LITERAL_BODY)));
   }
 
-  private static Object parenthesizedExpression(VmTyped exprVm) {
-    var elems = findChildVm(exprVm, NodeType.PARENTHESIZED_EXPR_ELEMENTS);
-    if (elems == null) {
-      return VmNull.withoutDefault();
-    }
-    var expr = findExprChildVm(elems);
-    return expr == null ? VmNull.withoutDefault() : wrapExpr(expr);
+  private static VmTyped parenthesizedExpression(VmTyped exprVm) {
+    var elems = requireChild(exprVm, NodeType.PARENTHESIZED_EXPR_ELEMENTS);
+    return wrapExpr(requireExprChild(elems));
   }
 
   private static Object argumentsOrNull(VmTyped ownerVm) {

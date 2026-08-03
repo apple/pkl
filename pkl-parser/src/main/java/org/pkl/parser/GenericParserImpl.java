@@ -937,7 +937,9 @@ class GenericParserImpl {
       var token = next().token;
       ff();
       if (token == Token.RPAREN) {
-        return lookahead == Token.ARROW;
+        // `()` is only valid as an empty parameter list
+        // let `parseFunctionLiteral` report the missing `->`
+        return true;
       }
       if (token == Token.UNDERSCORE) {
         return true;
@@ -1072,11 +1074,6 @@ class GenericParserImpl {
   private Node parseParenthesizedExpr() {
     var children = new ArrayList<Node>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
-    if (lookahead() == Token.RPAREN) {
-      ff(children);
-      children.add(makeTerminal(next()));
-      return new Node(NodeType.PARENTHESIZED_EXPR, children);
-    }
     var elements = new ArrayList<Node>();
     ff(elements);
     elements.add(parseExpr(")"));
