@@ -200,10 +200,10 @@ public class ParserNodes {
       nodeOnlyFactory(SyntaxModule::getModuleExprNodeClass);
   private static final VmObjectFactory<VmTyped> nullLiteralExprNodeFactory =
       nodeOnlyFactory(SyntaxModule::getNullLiteralExprNodeClass);
-  private static final VmObjectFactory<VmTyped> boolLiteralExprNodeFactory =
-      new VmObjectFactory<VmTyped>(SyntaxModule::getBoolLiteralExprNodeClass)
+  private static final VmObjectFactory<VmTyped> booleanLiteralExprNodeFactory =
+      new VmObjectFactory<VmTyped>(SyntaxModule::getBooleanLiteralExprNodeClass)
           .addProperty("node", vm -> vm)
-          .addBooleanProperty("value", ParserNodes::boolLiteralValue);
+          .addBooleanProperty("value", ParserNodes::booleanLiteralValue);
   private static final VmObjectFactory<VmTyped> intLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIntLiteralExprNodeClass)
           .addProperty("node", vm -> vm)
@@ -555,7 +555,7 @@ public class ParserNodes {
     return text == null ? "" : text;
   }
 
-  private static boolean boolLiteralValue(VmTyped exprVm) {
+  private static boolean booleanLiteralValue(VmTyped exprVm) {
     return "true".equals(nodeText((NodeData) exprVm.getExtraStorage()));
   }
 
@@ -1425,7 +1425,7 @@ public class ParserNodes {
       case OUTER_EXPR -> outerExprNodeFactory.create(exprVm);
       case MODULE_EXPR -> moduleExprNodeFactory.create(exprVm);
       case NULL_EXPR -> nullLiteralExprNodeFactory.create(exprVm);
-      case BOOL_LITERAL_EXPR -> boolLiteralExprNodeFactory.create(exprVm);
+      case BOOL_LITERAL_EXPR -> booleanLiteralExprNodeFactory.create(exprVm);
       case INT_LITERAL_EXPR -> intLiteralExprNodeFactory.create(exprVm);
       case FLOAT_LITERAL_EXPR -> floatLiteralExprNodeFactory.create(exprVm);
       case SINGLE_LINE_STRING_LITERAL_EXPR -> singleLineStringLiteralExprNodeFactory.create(exprVm);

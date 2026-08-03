@@ -85,7 +85,7 @@ public final class SyntaxNodeNodes {
       case "OuterExprNode" -> leaf("outer_expr", "outer");
       case "ModuleExprNode" -> leaf("module_expr", "module");
       case "NullLiteralExprNode" -> leaf("null_expr", "null");
-      case "BoolLiteralExprNode" ->
+      case "BooleanLiteralExprNode" ->
           leaf("bool_literal_expr", Boolean.toString(bool(self, "value")));
       case "IntLiteralExprNode" -> leaf("int_literal_expr", numText(member(self, "value")));
       case "FloatLiteralExprNode" -> leaf("float_literal_expr", numText(member(self, "value")));

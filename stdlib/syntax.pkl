@@ -554,7 +554,7 @@ class MemberPredicateNode extends SyntaxNode {
   condition: ExprNode
 
   /// The value expression.
-  value: ExprNode?
+  value: ExprNode(objectBodies.isEmpty)?
 
   /// Object bodies for amending.
   objectBodies: List<ObjectBodyNode>
@@ -588,19 +588,19 @@ class WhenGeneratorNode extends SyntaxNode {
 }
 
 /// The `this` expression.
-class ThisExprNode extends ExprNode {}
+class ThisExprNode extends ExprNode
 
 /// The `outer` expression.
-class OuterExprNode extends ExprNode {}
+class OuterExprNode extends ExprNode
 
 /// The `module` expression.
-class ModuleExprNode extends ExprNode {}
+class ModuleExprNode extends ExprNode
 
 /// A `null` literal expression.
-class NullLiteralExprNode extends ExprNode {}
+class NullLiteralExprNode extends ExprNode
 
 /// A boolean literal expression (`true` or `false`).
-class BoolLiteralExprNode extends ExprNode {
+class BooleanLiteralExprNode extends ExprNode {
   /// The boolean value.
   value: Boolean
 }

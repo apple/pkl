@@ -104,7 +104,7 @@ facts {
     cls.body!!.methods.first.parameters.first.identifier!!.value == "speed"
     cls.body!!.methods.first.returnType != null
     cls.body!!.methods.first.body != null
-    cls.body!!.methods.first.body is syntax.BoolLiteralExprNode
+    cls.body!!.methods.first.body is syntax.BooleanLiteralExprNode
   }
 
   ["class with extends and type parameters"] {

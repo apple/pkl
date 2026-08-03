@@ -8,12 +8,12 @@ local function expr(source: String) =
 facts {
   ["literals"] {
     local boolTrue = expr("true")
-    boolTrue is syntax.BoolLiteralExprNode
-    (boolTrue as syntax.BoolLiteralExprNode).value == true
+    boolTrue is syntax.BooleanLiteralExprNode
+    (boolTrue as syntax.BooleanLiteralExprNode).value == true
 
     local boolFalse = expr("false")
-    boolFalse is syntax.BoolLiteralExprNode
-    (boolFalse as syntax.BoolLiteralExprNode).value == false
+    boolFalse is syntax.BooleanLiteralExprNode
+    (boolFalse as syntax.BooleanLiteralExprNode).value == false
 
     local intLit = expr("42")
     intLit is syntax.IntLiteralExprNode

@@ -209,8 +209,8 @@ public final class SyntaxModule extends StdLibModule {
     return NullLiteralExprNodeClass.instance;
   }
 
-  public static VmClass getBoolLiteralExprNodeClass() {
-    return BoolLiteralExprNodeClass.instance;
+  public static VmClass getBooleanLiteralExprNodeClass() {
+    return BooleanLiteralExprNodeClass.instance;
   }
 
   public static VmClass getIntLiteralExprNodeClass() {
@@ -485,8 +485,8 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("NullLiteralExprNode");
   }
 
-  private static final class BoolLiteralExprNodeClass {
-    static final VmClass instance = loadClass("BoolLiteralExprNode");
+  private static final class BooleanLiteralExprNodeClass {
+    static final VmClass instance = loadClass("BooleanLiteralExprNode");
   }
 
   private static final class IntLiteralExprNodeClass {
