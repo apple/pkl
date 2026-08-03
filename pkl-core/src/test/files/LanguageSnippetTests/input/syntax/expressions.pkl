@@ -57,11 +57,18 @@ facts {
     local multiLine = expr(#"""
       """
       hello
+      world
       """
       """#)
     multiLine is syntax.MultiLineStringLiteralExprNode
     local mlParts = (multiLine as syntax.MultiLineStringLiteralExprNode).parts
-    mlParts.length >= 1
+    // each content line is preceded by a newline part
+    mlParts.length == 5
+    mlParts[0] is syntax.StringNewlineNode
+    (mlParts[1] as syntax.StringCharsNode).value == "hello"
+    mlParts[2] is syntax.StringNewlineNode
+    (mlParts[3] as syntax.StringCharsNode).value == "world"
+    mlParts[4] is syntax.StringNewlineNode
   }
 
   ["keyword expressions"] {

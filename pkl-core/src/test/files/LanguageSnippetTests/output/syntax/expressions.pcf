@@ -29,6 +29,11 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+    true
   }
   ["keyword expressions"] {
     true

@@ -978,43 +978,25 @@ class DocCommentNode extends SyntaxNode {
 abstract class StringPartNode {
   /// The original parsed node, or `null` when built from scratch.
   hidden node: Node? = null
-
-  /// Build the list of [Node] parts for this string part.
-  abstract function toNodes(): List<Node>
 }
 
 /// A plain text part of a string literal.
 class StringCharsNode extends StringPartNode {
   /// The text content.
   value: String
-
-  function toNodes(): List<Node> = List(new Node { type = "string_chars"; text = outer.value })
 }
 
 /// An escape sequence in a string literal (e.g., `"\\n"`, `"\\t"`).
 class StringEscapeNode extends StringPartNode {
   /// The escape sequence text including the leading backslash.
   value: String
-
-  function toNodes(): List<Node> = List(new Node { type = "string_escape"; text = outer.value })
 }
 
 /// A newline in a multi-line string literal.
-class StringNewlineNode extends StringPartNode {
-  function toNodes(): List<Node> = List(new Node { type = "string_newline" })
-}
+class StringNewlineNode extends StringPartNode
 
 /// An interpolation in a string literal (`\(expr)`).
 class StringInterpolationNode extends StringPartNode {
   /// The interpolated expression.
   expression: ExprNode
-
-  local const terminal: Node = new Node { type = "terminal" }
-
-  function toNodes(): List<Node> =
-    List(
-      (terminal) { text = "\\(" },
-      outer.expression.builtNode,
-      (terminal) { text = ")" },
-    )
 }
