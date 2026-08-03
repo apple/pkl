@@ -21,10 +21,10 @@ facts {
   }
 
   ["object property with type and modifiers"] {
-    local b = body("hidden name: String = \"hello\"")
+    local b = body("local name: String = \"hello\"")
     b.properties.length == 1
     local prop = b.properties.first
-    prop.modifiers == List("hidden")
+    prop.modifiers == List("local")
     prop.typeAnnotation != null
     prop.typeAnnotation is syntax.DeclaredTypeNode
   }

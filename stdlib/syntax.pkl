@@ -285,7 +285,7 @@ typealias ObjectMemberNode =
 
 /// The top-level module node.
 class ModuleNode extends SyntaxNode {
-  /// The module declaration, if present.
+  /// The module declaration.
   declaration: ModuleDeclarationNode?
 
   /// All imports in this module.
@@ -306,19 +306,21 @@ class ModuleNode extends SyntaxNode {
 
 /// A module declaration (including doc comment, annotations, modifiers, name, amends/extends).
 class ModuleDeclarationNode extends SyntaxNode {
-  /// The doc comment on the module declaration, if present.
+  /// The doc comment on the module declaration.
   docComment: DocCommentNode?
 
   /// Annotations on the module declaration.
   annotations: List<AnnotationNode>
 
   /// The modifiers on the module declaration.
-  modifiers: List<String>
+  ///
+  /// An amending module cannot have any modifiers.
+  modifiers: List<"abstract" | "open">(isDistinct)
 
-  /// The qualified name of the module, if present.
+  /// The qualified name of the module.
   name: QualifiedIdentifierNode?
 
-  /// The `extends` or `amends` clause, if present.
+  /// The `extends` or `amends` clause.
   extendsOrAmendsClause: ExtendsOrAmendsClauseNode?
 }
 
@@ -339,20 +341,20 @@ class ImportNode extends SyntaxNode {
   /// The URI string of the import.
   uri: String
 
-  /// The alias for this import, if present.
+  /// The alias for this import.
   alias: IdentifierNode?
 }
 
 /// A class declaration.
 class ClassNode extends SyntaxNode {
-  /// The doc comment, if present.
+  /// The doc comment.
   docComment: DocCommentNode?
 
   /// Annotations on the class.
   annotations: List<AnnotationNode>
 
   /// The modifiers on the class.
-  modifiers: List<String>
+  modifiers: List<"abstract" | "open" | "local" | "external">(isDistinct)
 
   /// The class name.
   identifier: IdentifierNode
@@ -360,23 +362,23 @@ class ClassNode extends SyntaxNode {
   /// The type parameters.
   typeParameters: List<TypeParameterNode>
 
-  /// The supertype this class extends, if present.
+  /// The supertype this class extends.
   superType: TypeNode?
 
-  /// The class body, if present.
+  /// The class body.
   body: ClassBodyNode?
 }
 
 /// A typealias declaration.
 class TypeAliasNode extends SyntaxNode {
-  /// The doc comment, if present.
+  /// The doc comment.
   docComment: DocCommentNode?
 
   /// Annotations on the typealias.
   annotations: List<AnnotationNode>
 
   /// The modifiers on the typealias.
-  modifiers: List<String>
+  modifiers: List<"local" | "external">(isDistinct)
 
   /// The typealias name.
   identifier: IdentifierNode
@@ -399,22 +401,24 @@ class ClassBodyNode extends SyntaxNode {
 
 /// A class property declaration.
 class ClassPropertyNode extends SyntaxNode {
-  /// The doc comment, if present.
+  /// The doc comment.
   docComment: DocCommentNode?
 
   /// Annotations on the property.
   annotations: List<AnnotationNode>
 
   /// The modifiers on the property.
-  modifiers: List<String>
+  ///
+  /// The `abstract` modifier is accepted for backwards compatibility, but has no effect.
+  modifiers: List<"abstract" | "local" | "hidden" | "external" | "fixed" | "const">(isDistinct)
 
   /// The property name.
   identifier: IdentifierNode
 
-  /// The type annotation, if present.
+  /// The type annotation.
   typeAnnotation: TypeNode?
 
-  /// The value expression, if present (from `= expr`).
+  /// The value expression (from `= expr`).
   value: ExprNode?
 
   /// Object bodies for amending (from `{ ... }` blocks).
@@ -423,14 +427,14 @@ class ClassPropertyNode extends SyntaxNode {
 
 /// A class method declaration.
 class ClassMethodNode extends SyntaxNode {
-  /// The doc comment, if present.
+  /// The doc comment.
   docComment: DocCommentNode?
 
   /// Annotations on the method.
   annotations: List<AnnotationNode>
 
   /// The modifiers on the method.
-  modifiers: List<String>
+  modifiers: List<"abstract" | "local" | "external" | "const">(isDistinct)
 
   /// The method name.
   identifier: IdentifierNode
@@ -441,10 +445,10 @@ class ClassMethodNode extends SyntaxNode {
   /// The parameters.
   parameters: List<ParameterNode>
 
-  /// The return type annotation, if present.
+  /// The return type annotation.
   returnType: TypeNode?
 
-  /// The method body expression, if present. Null for abstract methods.
+  /// The method body expression. Null for abstract methods.
   body: ExprNode?
 }
 
@@ -481,15 +485,15 @@ class ObjectBodyNode extends SyntaxNode {
 /// An object property declaration.
 class ObjectPropertyNode extends SyntaxNode {
   /// The modifiers on the property.
-  modifiers: List<String>
+  modifiers: List<"local" | "const">(isDistinct)
 
   /// The property name.
   identifier: IdentifierNode
 
-  /// The type annotation, if present.
+  /// The type annotation.
   typeAnnotation: TypeNode?
 
-  /// The value expression, if present (from `= expr`).
+  /// The value expression (from `= expr`).
   value: ExprNode?
 
   /// Object bodies for amending.
@@ -499,7 +503,7 @@ class ObjectPropertyNode extends SyntaxNode {
 /// An object method declaration.
 class ObjectMethodNode extends SyntaxNode {
   /// The modifiers on the method.
-  modifiers: List<String>
+  modifiers: List<"local" | "const">(isDistinct)
 
   /// The method name.
   identifier: IdentifierNode
@@ -510,7 +514,7 @@ class ObjectMethodNode extends SyntaxNode {
   /// The parameters.
   parameters: List<ParameterNode>
 
-  /// The return type annotation, if present.
+  /// The return type annotation.
   returnType: TypeNode?
 
   /// The method body expression.
@@ -528,7 +532,7 @@ class ObjectEntryNode extends SyntaxNode {
   /// The key expression.
   key: ExprNode
 
-  /// The value expression, if present (from `[key] = value`).
+  /// The value expression (from `[key] = value`).
   value: ExprNode?
 
   /// Object bodies for amending.
@@ -549,7 +553,7 @@ class MemberPredicateNode extends SyntaxNode {
   /// The condition expression.
   condition: ExprNode
 
-  /// The value expression, if present.
+  /// The value expression.
   value: ExprNode?
 
   /// Object bodies for amending.
@@ -558,7 +562,7 @@ class MemberPredicateNode extends SyntaxNode {
 
 /// A `for (param in iterable) { ... }` generator.
 class ForGeneratorNode extends SyntaxNode {
-  /// The key parameter (first parameter when two are present), if present.
+  /// The key parameter (first parameter when two are present).
   keyParameter: ParameterNode?
 
   /// The value parameter (or the only parameter when just one is present).
@@ -579,7 +583,7 @@ class WhenGeneratorNode extends SyntaxNode {
   /// The "then" body.
   thenBody: ObjectBodyNode
 
-  /// The "else" body, if present.
+  /// The "else" body.
   elseBody: ObjectBodyNode?
 }
 
@@ -732,7 +736,7 @@ class ReadExprNode extends ExprNode {
 
 /// A `new Type { ... }` expression.
 class NewExprNode extends ExprNode {
-  /// The type being constructed, if present.
+  /// The type being constructed.
   type: TypeNode?
 
   /// The object body.
@@ -756,7 +760,7 @@ class BinaryOpExprNode extends ExprNode {
   /// The left-hand expression.
   left: ExprNode
 
-  /// The right-hand expression, if present (not present for `is`/`as` which use [rightType]).
+  /// The right-hand expression (not present for `is`/`as` which use [rightType]).
   right: ExprNode?
 
   /// The right-hand type, if this is an `is` or `as` operation.
@@ -792,7 +796,7 @@ class FunctionLiteralExprNode extends ExprNode {
 
 /// A parenthesized expression (`(expr)`).
 class ParenthesizedExprNode extends ExprNode {
-  /// The inner expression, if present (may be empty for `()`).
+  /// The inner expression (may be empty for `()`).
   expression: ExprNode?
 }
 
@@ -861,7 +865,7 @@ class AnnotationNode extends SyntaxNode {
   /// The annotation type.
   type: TypeNode
 
-  /// The annotation body, if present.
+  /// The annotation body.
   body: ObjectBodyNode?
 }
 
@@ -873,7 +877,7 @@ class ParameterNode extends SyntaxNode {
   /// The parameter name, or `null` for a wildcard parameter (`_`).
   identifier: IdentifierNode?
 
-  /// The type annotation, if present.
+  /// The type annotation.
   typeAnnotation: TypeNode?
 }
 
