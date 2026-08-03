@@ -120,7 +120,25 @@ public final class SyntaxNodeNodes {
           branch(
               "amends_expr",
               List.of(build(reqNode(self, "parentExpr")), build(reqNode(self, "body"))));
-      case "BinaryOpExprNode" -> buildBinaryOp(self);
+      case "ExponentiationExprNode" -> buildBinaryOp(self, "**");
+      case "MultiplicationExprNode" -> buildBinaryOp(self, "*");
+      case "DivisionExprNode" -> buildBinaryOp(self, "/");
+      case "IntegerDivisionExprNode" -> buildBinaryOp(self, "~/");
+      case "RemainderExprNode" -> buildBinaryOp(self, "%");
+      case "AdditionExprNode" -> buildBinaryOp(self, "+");
+      case "SubtractionExprNode" -> buildBinaryOp(self, "-");
+      case "LessThanExprNode" -> buildBinaryOp(self, "<");
+      case "LessThanOrEqualExprNode" -> buildBinaryOp(self, "<=");
+      case "GreaterThanExprNode" -> buildBinaryOp(self, ">");
+      case "GreaterThanOrEqualExprNode" -> buildBinaryOp(self, ">=");
+      case "EqualExprNode" -> buildBinaryOp(self, "==");
+      case "NotEqualExprNode" -> buildBinaryOp(self, "!=");
+      case "LogicalAndExprNode" -> buildBinaryOp(self, "&&");
+      case "LogicalOrExprNode" -> buildBinaryOp(self, "||");
+      case "PipeExprNode" -> buildBinaryOp(self, "|>");
+      case "NullCoalescingExprNode" -> buildBinaryOp(self, "??");
+      case "TypeCheckExprNode" -> buildTypeOp(self, "is");
+      case "TypeCastExprNode" -> buildTypeOp(self, "as");
       case "UnaryMinusExprNode" ->
           branch("unary_minus_expr", List.of(terminal("-"), build(reqNode(self, "operand"))));
       case "LogicalNotExprNode" ->
@@ -585,14 +603,20 @@ public final class SyntaxNodeNodes {
     return branch("new_expr", List.of(branch("new_header", header), build(reqNode(self, "body"))));
   }
 
-  private static VmTyped buildBinaryOp(VmTyped self) {
-    var operator = str(self, "operator");
-    var right =
-        operator.equals("is") || operator.equals("as")
-            ? build(nonNull(optNode(self, "rightType")))
-            : build(nonNull(optNode(self, "right")));
+  private static VmTyped buildBinaryOp(VmTyped self, String operator) {
     return branch(
-        "binary_op_expr", List.of(build(reqNode(self, "left")), operatorLeaf(operator), right));
+        "binary_op_expr",
+        List.of(
+            build(reqNode(self, "left")), operatorLeaf(operator), build(reqNode(self, "right"))));
+  }
+
+  private static VmTyped buildTypeOp(VmTyped self, String operator) {
+    return branch(
+        "binary_op_expr",
+        List.of(
+            build(reqNode(self, "expression")),
+            operatorLeaf(operator),
+            build(reqNode(self, "type"))));
   }
 
   private static VmTyped buildFunctionLiteral(VmTyped self) {

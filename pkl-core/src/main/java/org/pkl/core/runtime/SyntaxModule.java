@@ -281,8 +281,80 @@ public final class SyntaxModule extends StdLibModule {
     return AmendsExprNodeClass.instance;
   }
 
-  public static VmClass getBinaryOpExprNodeClass() {
-    return BinaryOpExprNodeClass.instance;
+  public static VmClass getExponentiationExprNodeClass() {
+    return ExponentiationExprNodeClass.instance;
+  }
+
+  public static VmClass getMultiplicationExprNodeClass() {
+    return MultiplicationExprNodeClass.instance;
+  }
+
+  public static VmClass getDivisionExprNodeClass() {
+    return DivisionExprNodeClass.instance;
+  }
+
+  public static VmClass getIntegerDivisionExprNodeClass() {
+    return IntegerDivisionExprNodeClass.instance;
+  }
+
+  public static VmClass getRemainderExprNodeClass() {
+    return RemainderExprNodeClass.instance;
+  }
+
+  public static VmClass getAdditionExprNodeClass() {
+    return AdditionExprNodeClass.instance;
+  }
+
+  public static VmClass getSubtractionExprNodeClass() {
+    return SubtractionExprNodeClass.instance;
+  }
+
+  public static VmClass getLessThanExprNodeClass() {
+    return LessThanExprNodeClass.instance;
+  }
+
+  public static VmClass getLessThanOrEqualExprNodeClass() {
+    return LessThanOrEqualExprNodeClass.instance;
+  }
+
+  public static VmClass getGreaterThanExprNodeClass() {
+    return GreaterThanExprNodeClass.instance;
+  }
+
+  public static VmClass getGreaterThanOrEqualExprNodeClass() {
+    return GreaterThanOrEqualExprNodeClass.instance;
+  }
+
+  public static VmClass getEqualExprNodeClass() {
+    return EqualExprNodeClass.instance;
+  }
+
+  public static VmClass getNotEqualExprNodeClass() {
+    return NotEqualExprNodeClass.instance;
+  }
+
+  public static VmClass getLogicalAndExprNodeClass() {
+    return LogicalAndExprNodeClass.instance;
+  }
+
+  public static VmClass getLogicalOrExprNodeClass() {
+    return LogicalOrExprNodeClass.instance;
+  }
+
+  public static VmClass getPipeExprNodeClass() {
+    return PipeExprNodeClass.instance;
+  }
+
+  public static VmClass getNullCoalescingExprNodeClass() {
+    return NullCoalescingExprNodeClass.instance;
+  }
+
+  public static VmClass getTypeCheckExprNodeClass() {
+    return TypeCheckExprNodeClass.instance;
+  }
+
+  public static VmClass getTypeCastExprNodeClass() {
+    return TypeCastExprNodeClass.instance;
   }
 
   public static VmClass getUnaryMinusExprNodeClass() {
@@ -557,8 +629,80 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("AmendsExprNode");
   }
 
-  private static final class BinaryOpExprNodeClass {
-    static final VmClass instance = loadClass("BinaryOpExprNode");
+  private static final class ExponentiationExprNodeClass {
+    static final VmClass instance = loadClass("ExponentiationExprNode");
+  }
+
+  private static final class MultiplicationExprNodeClass {
+    static final VmClass instance = loadClass("MultiplicationExprNode");
+  }
+
+  private static final class DivisionExprNodeClass {
+    static final VmClass instance = loadClass("DivisionExprNode");
+  }
+
+  private static final class IntegerDivisionExprNodeClass {
+    static final VmClass instance = loadClass("IntegerDivisionExprNode");
+  }
+
+  private static final class RemainderExprNodeClass {
+    static final VmClass instance = loadClass("RemainderExprNode");
+  }
+
+  private static final class AdditionExprNodeClass {
+    static final VmClass instance = loadClass("AdditionExprNode");
+  }
+
+  private static final class SubtractionExprNodeClass {
+    static final VmClass instance = loadClass("SubtractionExprNode");
+  }
+
+  private static final class LessThanExprNodeClass {
+    static final VmClass instance = loadClass("LessThanExprNode");
+  }
+
+  private static final class LessThanOrEqualExprNodeClass {
+    static final VmClass instance = loadClass("LessThanOrEqualExprNode");
+  }
+
+  private static final class GreaterThanExprNodeClass {
+    static final VmClass instance = loadClass("GreaterThanExprNode");
+  }
+
+  private static final class GreaterThanOrEqualExprNodeClass {
+    static final VmClass instance = loadClass("GreaterThanOrEqualExprNode");
+  }
+
+  private static final class EqualExprNodeClass {
+    static final VmClass instance = loadClass("EqualExprNode");
+  }
+
+  private static final class NotEqualExprNodeClass {
+    static final VmClass instance = loadClass("NotEqualExprNode");
+  }
+
+  private static final class LogicalAndExprNodeClass {
+    static final VmClass instance = loadClass("LogicalAndExprNode");
+  }
+
+  private static final class LogicalOrExprNodeClass {
+    static final VmClass instance = loadClass("LogicalOrExprNode");
+  }
+
+  private static final class PipeExprNodeClass {
+    static final VmClass instance = loadClass("PipeExprNode");
+  }
+
+  private static final class NullCoalescingExprNodeClass {
+    static final VmClass instance = loadClass("NullCoalescingExprNode");
+  }
+
+  private static final class TypeCheckExprNodeClass {
+    static final VmClass instance = loadClass("TypeCheckExprNode");
+  }
+
+  private static final class TypeCastExprNodeClass {
+    static final VmClass instance = loadClass("TypeCastExprNode");
   }
 
   private static final class UnaryMinusExprNodeClass {

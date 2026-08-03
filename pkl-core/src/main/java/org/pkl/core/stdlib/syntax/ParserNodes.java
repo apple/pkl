@@ -286,13 +286,59 @@ public class ParserNodes {
           .addProperty("node", vm -> vm)
           .addTypedProperty("parentExpr", ParserNodes::amendsParentExpr)
           .addTypedProperty("body", ParserNodes::amendsBody);
-  private static final VmObjectFactory<VmTyped> binaryOpExprNodeFactory =
-      new VmObjectFactory<VmTyped>(SyntaxModule::getBinaryOpExprNodeClass)
-          .addProperty("node", vm -> vm)
-          .addStringProperty("operator", ParserNodes::binaryOpOperator)
-          .addTypedProperty("left", ParserNodes::binaryOpLeft)
-          .addProperty("right", ParserNodes::binaryOpRight)
-          .addProperty("rightType", ParserNodes::binaryOpRightType);
+
+  private static VmObjectFactory<VmTyped> binaryOpExprNodeFactory(Supplier<VmClass> classSupplier) {
+    return new VmObjectFactory<VmTyped>(classSupplier)
+        .addProperty("node", vm -> vm)
+        .addTypedProperty("left", ParserNodes::binaryOpLeft)
+        .addTypedProperty("right", ParserNodes::binaryOpRight);
+  }
+
+  private static VmObjectFactory<VmTyped> typeOpExprNodeFactory(Supplier<VmClass> classSupplier) {
+    return new VmObjectFactory<VmTyped>(classSupplier)
+        .addProperty("node", vm -> vm)
+        .addTypedProperty("expression", ParserNodes::binaryOpLeft)
+        .addTypedProperty("type", ParserNodes::typeOpType);
+  }
+
+  private static final VmObjectFactory<VmTyped> exponentiationExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getExponentiationExprNodeClass);
+  private static final VmObjectFactory<VmTyped> multiplicationExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getMultiplicationExprNodeClass);
+  private static final VmObjectFactory<VmTyped> divisionExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getDivisionExprNodeClass);
+  private static final VmObjectFactory<VmTyped> integerDivisionExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getIntegerDivisionExprNodeClass);
+  private static final VmObjectFactory<VmTyped> remainderExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getRemainderExprNodeClass);
+  private static final VmObjectFactory<VmTyped> additionExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getAdditionExprNodeClass);
+  private static final VmObjectFactory<VmTyped> subtractionExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getSubtractionExprNodeClass);
+  private static final VmObjectFactory<VmTyped> lessThanExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getLessThanExprNodeClass);
+  private static final VmObjectFactory<VmTyped> lessThanOrEqualExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getLessThanOrEqualExprNodeClass);
+  private static final VmObjectFactory<VmTyped> greaterThanExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getGreaterThanExprNodeClass);
+  private static final VmObjectFactory<VmTyped> greaterThanOrEqualExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getGreaterThanOrEqualExprNodeClass);
+  private static final VmObjectFactory<VmTyped> equalExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getEqualExprNodeClass);
+  private static final VmObjectFactory<VmTyped> notEqualExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getNotEqualExprNodeClass);
+  private static final VmObjectFactory<VmTyped> logicalAndExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getLogicalAndExprNodeClass);
+  private static final VmObjectFactory<VmTyped> logicalOrExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getLogicalOrExprNodeClass);
+  private static final VmObjectFactory<VmTyped> pipeExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getPipeExprNodeClass);
+  private static final VmObjectFactory<VmTyped> nullCoalescingExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getNullCoalescingExprNodeClass);
+  private static final VmObjectFactory<VmTyped> typeCheckExprNodeFactory =
+      typeOpExprNodeFactory(SyntaxModule::getTypeCheckExprNodeClass);
+  private static final VmObjectFactory<VmTyped> typeCastExprNodeFactory =
+      typeOpExprNodeFactory(SyntaxModule::getTypeCastExprNodeClass);
   private static final VmObjectFactory<VmTyped> unaryMinusExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnaryMinusExprNodeClass)
           .addProperty("node", vm -> vm)
@@ -665,14 +711,39 @@ public class ParserNodes {
     return wrapExpr(findExprChildrenVm(exprVm).get(0));
   }
 
-  private static Object binaryOpRight(VmTyped exprVm) {
-    var exprs = findExprChildrenVm(exprVm);
-    return exprs.size() < 2 ? VmNull.withoutDefault() : wrapExpr(exprs.get(1));
+  private static VmTyped binaryOpRight(VmTyped exprVm) {
+    return wrapExpr(findExprChildrenVm(exprVm).get(1));
   }
 
-  private static Object binaryOpRightType(VmTyped exprVm) {
-    var type = findTypeChildVm(exprVm);
-    return type == null ? VmNull.withoutDefault() : wrapType(type);
+  private static VmTyped typeOpType(VmTyped exprVm) {
+    return wrapType(requireTypeChild(exprVm));
+  }
+
+  private static VmObjectFactory<VmTyped> binaryOpFactory(VmTyped exprVm) {
+    var operator = binaryOpOperator(exprVm);
+    return switch (operator) {
+      case "**" -> exponentiationExprNodeFactory;
+      case "*" -> multiplicationExprNodeFactory;
+      case "/" -> divisionExprNodeFactory;
+      case "~/" -> integerDivisionExprNodeFactory;
+      case "%" -> remainderExprNodeFactory;
+      case "+" -> additionExprNodeFactory;
+      case "-" -> subtractionExprNodeFactory;
+      case "<" -> lessThanExprNodeFactory;
+      case "<=" -> lessThanOrEqualExprNodeFactory;
+      case ">" -> greaterThanExprNodeFactory;
+      case ">=" -> greaterThanOrEqualExprNodeFactory;
+      case "==" -> equalExprNodeFactory;
+      case "!=" -> notEqualExprNodeFactory;
+      case "&&" -> logicalAndExprNodeFactory;
+      case "||" -> logicalOrExprNodeFactory;
+      case "|>" -> pipeExprNodeFactory;
+      case "??" -> nullCoalescingExprNodeFactory;
+      case "is" -> typeCheckExprNodeFactory;
+      case "as" -> typeCastExprNodeFactory;
+      default ->
+          throw new VmExceptionBuilder().bug("Unexpected binary operator: " + operator).build();
+    };
   }
 
   private static VmList functionLiteralParameters(VmTyped exprVm) {
@@ -1443,7 +1514,7 @@ public class ParserNodes {
       case READ_EXPR -> readExprNodeFactory.create(exprVm);
       case NEW_EXPR -> newExprNodeFactory.create(exprVm);
       case AMENDS_EXPR -> amendsExprNodeFactory.create(exprVm);
-      case BINARY_OP_EXPR -> binaryOpExprNodeFactory.create(exprVm);
+      case BINARY_OP_EXPR -> binaryOpFactory(exprVm).create(exprVm);
       case UNARY_MINUS_EXPR -> unaryMinusExprNodeFactory.create(exprVm);
       case LOGICAL_NOT_EXPR -> logicalNotExprNodeFactory.create(exprVm);
       case NON_NULL_EXPR -> nonNullExprNodeFactory.create(exprVm);

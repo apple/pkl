@@ -87,14 +87,14 @@ facts {
   ["member predicate"] {
     local b = body("[[name == \"foo\"]] = 1")
     b.memberPredicates.length == 1
-    b.memberPredicates.first.condition is syntax.BinaryOpExprNode
+    b.memberPredicates.first.condition is syntax.EqualExprNode
     b.memberPredicates.first.value is syntax.IntLiteralExprNode
   }
 
   ["member predicate with amending body"] {
     local b = body("[[name == \"foo\"]] { x = 1 }")
     local pred = b.memberPredicates.first
-    pred.condition is syntax.BinaryOpExprNode
+    pred.condition is syntax.EqualExprNode
     pred.value == null
     pred.objectBodies.length == 1
   }

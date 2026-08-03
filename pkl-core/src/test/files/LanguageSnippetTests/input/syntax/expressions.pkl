@@ -105,32 +105,36 @@ facts {
 
   ["binary operators"] {
     local add = expr("1 + 2")
-    add is syntax.BinaryOpExprNode
-    (add as syntax.BinaryOpExprNode).operator == "+"
-    (add as syntax.BinaryOpExprNode).left is syntax.IntLiteralExprNode
-    (add as syntax.BinaryOpExprNode).right is syntax.IntLiteralExprNode
+    add is syntax.AdditionExprNode
+    (add as syntax.AdditionExprNode).left is syntax.IntLiteralExprNode
+    (add as syntax.AdditionExprNode).right is syntax.IntLiteralExprNode
 
-    local eq = expr("a == b")
-    eq is syntax.BinaryOpExprNode
-    (eq as syntax.BinaryOpExprNode).operator == "=="
-
-    local pipeline = expr("a |> b")
-    pipeline is syntax.BinaryOpExprNode
-    (pipeline as syntax.BinaryOpExprNode).operator == "|>"
-
-    local nullCoalesce = expr("a ?? b")
-    nullCoalesce is syntax.BinaryOpExprNode
-    (nullCoalesce as syntax.BinaryOpExprNode).operator == "??"
+    expr("1 ** 2") is syntax.ExponentiationExprNode
+    expr("1 * 2") is syntax.MultiplicationExprNode
+    expr("1 / 2") is syntax.DivisionExprNode
+    expr("1 ~/ 2") is syntax.IntegerDivisionExprNode
+    expr("1 % 2") is syntax.RemainderExprNode
+    expr("1 - 2") is syntax.SubtractionExprNode
+    expr("a < b") is syntax.LessThanExprNode
+    expr("a <= b") is syntax.LessThanOrEqualExprNode
+    expr("a > b") is syntax.GreaterThanExprNode
+    expr("a >= b") is syntax.GreaterThanOrEqualExprNode
+    expr("a == b") is syntax.EqualExprNode
+    expr("a != b") is syntax.NotEqualExprNode
+    expr("a && b") is syntax.LogicalAndExprNode
+    expr("a || b") is syntax.LogicalOrExprNode
+    expr("a |> b") is syntax.PipeExprNode
+    expr("a ?? b") is syntax.NullCoalescingExprNode
 
     local isOp = expr("a is String")
-    isOp is syntax.BinaryOpExprNode
-    (isOp as syntax.BinaryOpExprNode).operator == "is"
-    (isOp as syntax.BinaryOpExprNode).rightType is syntax.DeclaredTypeNode
+    isOp is syntax.TypeCheckExprNode
+    (isOp as syntax.TypeCheckExprNode).expression is syntax.UnqualifiedAccessExprNode
+    (isOp as syntax.TypeCheckExprNode).type is syntax.DeclaredTypeNode
 
     local asOp = expr("a as String")
-    asOp is syntax.BinaryOpExprNode
-    (asOp as syntax.BinaryOpExprNode).operator == "as"
-    (asOp as syntax.BinaryOpExprNode).rightType is syntax.DeclaredTypeNode
+    asOp is syntax.TypeCastExprNode
+    (asOp as syntax.TypeCastExprNode).expression is syntax.UnqualifiedAccessExprNode
+    (asOp as syntax.TypeCastExprNode).type is syntax.DeclaredTypeNode
   }
 
   ["unary operators"] {
@@ -160,7 +164,7 @@ facts {
     letExpr is syntax.LetExprNode
     (letExpr as syntax.LetExprNode).parameter.identifier!!.value == "y"
     (letExpr as syntax.LetExprNode).bindingValue is syntax.IntLiteralExprNode
-    (letExpr as syntax.LetExprNode).body is syntax.BinaryOpExprNode
+    (letExpr as syntax.LetExprNode).body is syntax.AdditionExprNode
   }
 
   ["new expression"] {
@@ -175,13 +179,13 @@ facts {
     (fn as syntax.FunctionLiteralExprNode).parameters.length == 2
     (fn as syntax.FunctionLiteralExprNode).parameters[0].identifier!!.value == "x"
     (fn as syntax.FunctionLiteralExprNode).parameters[1].identifier!!.value == "y"
-    (fn as syntax.FunctionLiteralExprNode).body is syntax.BinaryOpExprNode
+    (fn as syntax.FunctionLiteralExprNode).body is syntax.AdditionExprNode
   }
 
   ["parenthesized expression"] {
     local paren = expr("(1 + 2)")
     paren is syntax.ParenthesizedExprNode
-    (paren as syntax.ParenthesizedExprNode).expression is syntax.BinaryOpExprNode
+    (paren as syntax.ParenthesizedExprNode).expression is syntax.AdditionExprNode
   }
 
   ["throw and trace"] {

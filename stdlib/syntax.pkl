@@ -752,19 +752,82 @@ class AmendsExprNode extends ExprNode {
   body: ObjectBodyNode
 }
 
-/// A binary operator expression (`left op right`), including `is`/`as`.
-class BinaryOpExprNode extends ExprNode {
-  /// The operator string.
-  operator: String
-
+/// Base class for binary operator expressions (`left op right`).
+abstract class BinaryOpExprNode extends ExprNode {
   /// The left-hand expression.
   left: ExprNode
 
-  /// The right-hand expression (not present for `is`/`as` which use [rightType]).
-  right: ExprNode?
+  /// The right-hand expression.
+  right: ExprNode
+}
 
-  /// The right-hand type, if this is an `is` or `as` operation.
-  rightType: TypeNode?
+/// An exponentiation expression (`left ** right`).
+class ExponentiationExprNode extends BinaryOpExprNode
+
+/// A multiplication expression (`left * right`).
+class MultiplicationExprNode extends BinaryOpExprNode
+
+/// A division expression (`left / right`).
+class DivisionExprNode extends BinaryOpExprNode
+
+/// An integer division expression (`left ~/ right`).
+class IntegerDivisionExprNode extends BinaryOpExprNode
+
+/// A remainder expression (`left % right`).
+class RemainderExprNode extends BinaryOpExprNode
+
+/// An addition expression (`left + right`).
+class AdditionExprNode extends BinaryOpExprNode
+
+/// A subtraction expression (`left - right`).
+class SubtractionExprNode extends BinaryOpExprNode
+
+/// A less-than comparison expression (`left < right`).
+class LessThanExprNode extends BinaryOpExprNode
+
+/// A less-than-or-equal comparison expression (`left <= right`).
+class LessThanOrEqualExprNode extends BinaryOpExprNode
+
+/// A greater-than comparison expression (`left > right`).
+class GreaterThanExprNode extends BinaryOpExprNode
+
+/// A greater-than-or-equal comparison expression (`left >= right`).
+class GreaterThanOrEqualExprNode extends BinaryOpExprNode
+
+/// An equality expression (`left == right`).
+class EqualExprNode extends BinaryOpExprNode
+
+/// An inequality expression (`left != right`).
+class NotEqualExprNode extends BinaryOpExprNode
+
+/// A logical and expression (`left && right`).
+class LogicalAndExprNode extends BinaryOpExprNode
+
+/// A logical or expression (`left || right`).
+class LogicalOrExprNode extends BinaryOpExprNode
+
+/// A pipe expression (`left |> right`).
+class PipeExprNode extends BinaryOpExprNode
+
+/// A null coalescing expression (`left ?? right`).
+class NullCoalescingExprNode extends BinaryOpExprNode
+
+/// A type check expression (`expression is Type`).
+class TypeCheckExprNode extends ExprNode {
+  /// The left-hand expression.
+  expression: ExprNode
+
+  /// The right-hand type.
+  type: TypeNode
+}
+
+/// A type cast expression (`expression as Type`).
+class TypeCastExprNode extends ExprNode {
+  /// The left-hand expression.
+  expression: ExprNode
+
+  /// The right-hand type.
+  type: TypeNode
 }
 
 /// A unary minus expression (`-expr`).

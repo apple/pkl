@@ -70,7 +70,7 @@ facts {
     constrained is syntax.ConstrainedTypeNode
     (constrained as syntax.ConstrainedTypeNode).baseType is syntax.DeclaredTypeNode
     (constrained as syntax.ConstrainedTypeNode).constraints.length == 1
-    (constrained as syntax.ConstrainedTypeNode).constraints.first is syntax.BinaryOpExprNode
+    (constrained as syntax.ConstrainedTypeNode).constraints.first is syntax.GreaterThanOrEqualExprNode
   }
 
   ["parenthesized type"] {

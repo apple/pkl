@@ -70,6 +70,15 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
   }
   ["unary operators"] {
     true
