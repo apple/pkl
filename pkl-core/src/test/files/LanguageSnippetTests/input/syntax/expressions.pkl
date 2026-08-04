@@ -36,7 +36,8 @@ facts {
     simple is syntax.SingleLineStringLiteralExprNode
     (simple as syntax.SingleLineStringLiteralExprNode).parts.length == 1
     (simple as syntax.SingleLineStringLiteralExprNode).parts.first is syntax.StringCharsNode
-    ((simple as syntax.SingleLineStringLiteralExprNode).parts.first as syntax.StringCharsNode).value == "hello"
+    ((simple as syntax.SingleLineStringLiteralExprNode).parts.first as syntax.StringCharsNode).value
+      == "hello"
 
     local withEscape = expr(#""hello\nworld""#)
     withEscape is syntax.SingleLineStringLiteralExprNode
@@ -52,14 +53,18 @@ facts {
     interpParts.length == 2
     interpParts[0] is syntax.StringCharsNode
     interpParts[1] is syntax.StringInterpolationNode
-    (interpParts[1] as syntax.StringInterpolationNode).expression is syntax.UnqualifiedAccessExprNode
+    (interpParts[1] as syntax.StringInterpolationNode).expression
+      is syntax.UnqualifiedAccessExprNode
 
-    local multiLine = expr(#"""
-      """
-      hello
-      world
-      """
-      """#)
+    local multiLine =
+      expr(
+        #"""
+        """
+        hello
+        world
+        """
+        """#,
+      )
     multiLine is syntax.MultiLineStringLiteralExprNode
     local mlParts = (multiLine as syntax.MultiLineStringLiteralExprNode).parts
     // each content line is preceded by a newline part
@@ -232,18 +237,21 @@ facts {
   }
 
   ["class declaration"] {
-    local mod = new syntax.Parser {}.parseModule("""
-      /// A person.
-      @Deprecated { message = "old" }
-      abstract open class Person extends Being {
-        name: String
-        function greet() = "hi"
-      }
-      """)
+    local mod =
+      new syntax.Parser {}.parseModule(
+        """
+        /// A person.
+        @Deprecated { message = "old" }
+        abstract open class Person extends Being {
+          name: String
+          function greet() = "hi"
+        }
+        """,
+      )
     mod.classes.length == 1
     local cls = mod.classes.first
     cls.identifier.value == "Person"
-    cls.modifiers == List("abstract", "open")
+    cls.modifiers == new Listing { "abstract"; "open" }
     cls.docComment != null
     cls.docComment!!.value == "A person."
     cls.annotations.length == 1

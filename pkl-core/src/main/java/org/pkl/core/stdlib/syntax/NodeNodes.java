@@ -24,6 +24,7 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -189,7 +190,7 @@ public final class NodeNodes {
       children.add(build(declaration));
     }
     var imports = listMember(self, "imports");
-    if (imports.getLength() > 0) {
+    if (!imports.isEmpty()) {
       children.add(branch("import_list", buildAll(imports)));
     }
     children.addAll(buildAll(listMember(self, "classes")));
@@ -205,13 +206,13 @@ public final class NodeNodes {
     var modifiers = listMember(self, "modifiers");
     if (name != null) {
       var definition = new ArrayList<>();
-      if (modifiers.getLength() > 0) {
+      if (!modifiers.isEmpty()) {
         definition.add(modifierListNode(modifiers));
       }
       definition.add(terminal("module"));
       definition.add(build(name));
       children.add(branch("module_definition", definition));
-    } else if (modifiers.getLength() > 0) {
+    } else if (!modifiers.isEmpty()) {
       children.add(modifierListNode(modifiers));
     }
     var clause = optNode(self, "extendsOrAmendsClause");
@@ -236,7 +237,7 @@ public final class NodeNodes {
     var children = docAndAnnotations(self);
     var header = new ArrayList<>();
     var modifiers = listMember(self, "modifiers");
-    if (modifiers.getLength() > 0) {
+    if (!modifiers.isEmpty()) {
       header.add(modifierListNode(modifiers));
     }
     header.add(terminal("class"));
@@ -258,7 +259,7 @@ public final class NodeNodes {
     var children = docAndAnnotations(self);
     var header = new ArrayList<>();
     var modifiers = listMember(self, "modifiers");
-    if (modifiers.getLength() > 0) {
+    if (!modifiers.isEmpty()) {
       header.add(modifierListNode(modifiers));
     }
     header.add(terminal("typealias"));
@@ -287,7 +288,7 @@ public final class NodeNodes {
     var children = docAndAnnotations(self);
     var headerBegin = new ArrayList<>();
     var modifiers = listMember(self, "modifiers");
-    if (modifiers.getLength() > 0) {
+    if (!modifiers.isEmpty()) {
       headerBegin.add(modifierListNode(modifiers));
     }
     headerBegin.add(build(reqNode(self, "identifier")));
@@ -309,7 +310,7 @@ public final class NodeNodes {
     var children = docAndAnnotations(self);
     var header = new ArrayList<>();
     var modifiers = listMember(self, "modifiers");
-    if (modifiers.getLength() > 0) {
+    if (!modifiers.isEmpty()) {
       header.add(modifierListNode(modifiers));
     }
     header.add(terminal("function"));
@@ -330,7 +331,7 @@ public final class NodeNodes {
     var children = new ArrayList<>();
     children.add(terminal("{"));
     var parameters = listMember(self, "parameters");
-    if (parameters.getLength() > 0) {
+    if (!parameters.isEmpty()) {
       var elements = interleave(buildAll(parameters), NodeNodes::comma);
       elements.add(terminal("->"));
       children.add(branch("object_parameter_list", elements));
@@ -354,7 +355,7 @@ public final class NodeNodes {
   private static VmTyped buildObjectProperty(VmTyped self) {
     var headerBegin = new ArrayList<>();
     var modifiers = listMember(self, "modifiers");
-    if (modifiers.getLength() > 0) {
+    if (!modifiers.isEmpty()) {
       headerBegin.add(modifierListNode(modifiers));
     }
     headerBegin.add(build(reqNode(self, "identifier")));
@@ -376,7 +377,7 @@ public final class NodeNodes {
   private static VmTyped buildObjectMethod(VmTyped self) {
     var header = new ArrayList<>();
     var modifiers = listMember(self, "modifiers");
-    if (modifiers.getLength() > 0) {
+    if (!modifiers.isEmpty()) {
       header.add(modifierListNode(modifiers));
     }
     header.add(terminal("function"));
@@ -486,10 +487,10 @@ public final class NodeNodes {
     return branch("multi_line_string_literal_expr", children);
   }
 
-  private static List<Object> buildStringParts(VmList parts) {
+  private static List<Object> buildStringParts(List<Object> parts) {
     var result = new ArrayList<>();
-    for (var i = 0; i < parts.getLength(); i++) {
-      result.addAll(buildStringPart((VmTyped) parts.get(i)));
+    for (var part : parts) {
+      result.addAll(buildStringPart((VmTyped) part));
     }
     return result;
   }
@@ -621,7 +622,7 @@ public final class NodeNodes {
   private static VmTyped buildDeclaredType(VmTyped self) {
     var name = build(reqNode(self, "name"));
     var typeArguments = listMember(self, "typeArguments");
-    if (typeArguments.getLength() == 0) {
+    if (typeArguments.isEmpty()) {
       return branch("declared_type", List.of(name));
     }
     return branch(
@@ -641,7 +642,7 @@ public final class NodeNodes {
   private static VmTyped buildFunctionType(VmTyped self) {
     var parameterTypes = listMember(self, "parameterTypes");
     var parameters =
-        parameterTypes.getLength() == 0
+        parameterTypes.isEmpty()
             ? List.<Object>of(terminal("("), terminal(")"))
             : List.<Object>of(
                 terminal("("),
@@ -732,10 +733,10 @@ public final class NodeNodes {
 
   // Node construction helpers
 
-  private static VmTyped modifierListNode(VmList modifiers) {
+  private static VmTyped modifierListNode(List<Object> modifiers) {
     var children = new ArrayList<>();
-    for (var i = 0; i < modifiers.getLength(); i++) {
-      children.add(leaf("modifier", (String) modifiers.get(i)));
+    for (var modifier : modifiers) {
+      children.add(leaf("modifier", (String) modifier));
     }
     return branch("modifier_list", children);
   }
@@ -749,8 +750,8 @@ public final class NodeNodes {
         null);
   }
 
-  private static VmTyped parameterListNode(VmList parameters) {
-    if (parameters.getLength() == 0) {
+  private static VmTyped parameterListNode(List<Object> parameters) {
+    if (parameters.isEmpty()) {
       return branch("parameter_list", List.of(terminal("("), terminal(")")));
     }
     return branch(
@@ -761,8 +762,8 @@ public final class NodeNodes {
             terminal(")")));
   }
 
-  private static VmTyped argumentListNode(VmList arguments) {
-    if (arguments.getLength() == 0) {
+  private static VmTyped argumentListNode(List<Object> arguments) {
+    if (arguments.isEmpty()) {
       return branch("argument_list", List.of(terminal("("), terminal(")")));
     }
     return branch(
@@ -773,8 +774,8 @@ public final class NodeNodes {
             terminal(")")));
   }
 
-  private static List<Object> typeParameterListNodes(VmList typeParameters) {
-    if (typeParameters.getLength() == 0) {
+  private static List<Object> typeParameterListNodes(List<Object> typeParameters) {
+    if (typeParameters.isEmpty()) {
       return List.of();
     }
     return List.of(
@@ -854,10 +855,10 @@ public final class NodeNodes {
   // Member readers
   // ===============
 
-  private static List<Object> buildAll(VmList nodes) {
+  private static List<Object> buildAll(List<Object> nodes) {
     var result = new ArrayList<>();
-    for (var i = 0; i < nodes.getLength(); i++) {
-      result.add(build((VmTyped) nodes.get(i)));
+    for (var node : nodes) {
+      result.add(build((VmTyped) node));
     }
     return result;
   }
@@ -874,12 +875,21 @@ public final class NodeNodes {
     return member(self, name) instanceof VmTyped node ? node : null;
   }
 
-  private static VmList listMember(VmTyped self, String name) {
-    return (VmList) member(self, name);
+  private static List<Object> listMember(VmTyped self, String name) {
+    return elementsOf((VmListing) member(self, name));
   }
 
-  private static @Nullable VmList optList(VmTyped self, String name) {
-    return member(self, name) instanceof VmList list ? list : null;
+  private static @Nullable List<Object> optList(VmTyped self, String name) {
+    return member(self, name) instanceof VmListing listing ? elementsOf(listing) : null;
+  }
+
+  // The elements of `listing`, in order.
+  private static List<Object> elementsOf(VmListing listing) {
+    var result = new ArrayList<>(listing.getLength());
+    for (var i = 0; i < listing.getLength(); i++) {
+      result.add(VmUtils.readMember(listing, (long) i));
+    }
+    return result;
   }
 
   private static String str(VmTyped self, String name) {

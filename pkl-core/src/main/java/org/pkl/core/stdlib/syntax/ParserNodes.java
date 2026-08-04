@@ -27,6 +27,7 @@ import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -67,7 +68,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> qualifiedIdentifierNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getQualifiedIdentifierNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("identifiers", ParserNodes::qualifiedIdentifierIdentifiers)
+          .addListingProperty("identifiers", ParserNodes::qualifiedIdentifierIdentifiers)
           .addStringProperty("value", ParserNodes::qualifiedIdentifierValue);
   private static final VmObjectFactory<VmTyped> docCommentNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getDocCommentNodeClass)
@@ -86,15 +87,15 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> objectBodyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectBodyNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("parameters", ParserNodes::objectBodyParameters)
-          .addListProperty("properties", ParserNodes::objectBodyProperties)
-          .addListProperty("methods", ParserNodes::objectBodyMethods)
-          .addListProperty("elements", ParserNodes::objectBodyElements)
-          .addListProperty("entries", ParserNodes::objectBodyEntries)
-          .addListProperty("spreads", ParserNodes::objectBodySpreads)
-          .addListProperty("memberPredicates", ParserNodes::objectBodyMemberPredicates)
-          .addListProperty("forGenerators", ParserNodes::objectBodyForGenerators)
-          .addListProperty("whenGenerators", ParserNodes::objectBodyWhenGenerators);
+          .addListingProperty("parameters", ParserNodes::objectBodyParameters)
+          .addListingProperty("properties", ParserNodes::objectBodyProperties)
+          .addListingProperty("methods", ParserNodes::objectBodyMethods)
+          .addListingProperty("elements", ParserNodes::objectBodyElements)
+          .addListingProperty("entries", ParserNodes::objectBodyEntries)
+          .addListingProperty("spreads", ParserNodes::objectBodySpreads)
+          .addListingProperty("memberPredicates", ParserNodes::objectBodyMemberPredicates)
+          .addListingProperty("forGenerators", ParserNodes::objectBodyForGenerators)
+          .addListingProperty("whenGenerators", ParserNodes::objectBodyWhenGenerators);
   private static final VmObjectFactory<VmTyped> parameterNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParameterNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -109,18 +110,18 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> objectPropertyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectPropertyNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("modifiers", ParserNodes::objectPropertyModifiers)
+          .addListingProperty("modifiers", ParserNodes::objectPropertyModifiers)
           .addTypedProperty("identifier", ParserNodes::objectPropertyIdentifier)
           .addProperty("typeAnnotation", ParserNodes::objectPropertyTypeAnnotation)
           .addProperty("value", ParserNodes::objectPropertyValue)
-          .addListProperty("objectBodies", ParserNodes::objectPropertyObjectBodies);
+          .addListingProperty("objectBodies", ParserNodes::objectPropertyObjectBodies);
   private static final VmObjectFactory<VmTyped> objectMethodNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectMethodNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("modifiers", ParserNodes::classMethodModifiers)
+          .addListingProperty("modifiers", ParserNodes::classMethodModifiers)
           .addTypedProperty("identifier", ParserNodes::classMethodIdentifier)
-          .addListProperty("typeParameters", ParserNodes::classMethodTypeParameters)
-          .addListProperty("parameters", ParserNodes::classMethodParameters)
+          .addListingProperty("typeParameters", ParserNodes::classMethodTypeParameters)
+          .addListingProperty("parameters", ParserNodes::classMethodParameters)
           .addProperty("returnType", ParserNodes::classMethodReturnType)
           .addTypedProperty("body", ParserNodes::objectMethodBody);
   private static final VmObjectFactory<VmTyped> memberPredicateNodeFactory =
@@ -128,13 +129,13 @@ public class ParserNodes {
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("condition", ParserNodes::memberPredicateCondition)
           .addProperty("value", ParserNodes::memberPredicateValue)
-          .addListProperty("objectBodies", ParserNodes::memberPredicateObjectBodies);
+          .addListingProperty("objectBodies", ParserNodes::memberPredicateObjectBodies);
   private static final VmObjectFactory<VmTyped> objectEntryNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectEntryNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("key", ParserNodes::objectEntryKey)
           .addProperty("value", ParserNodes::objectEntryValue)
-          .addListProperty("objectBodies", ParserNodes::objectEntryObjectBodies);
+          .addListingProperty("objectBodies", ParserNodes::objectEntryObjectBodies);
   private static final VmObjectFactory<VmTyped> objectSpreadNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectSpreadNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -164,7 +165,7 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getDeclaredTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("name", ParserNodes::declaredTypeName)
-          .addListProperty("typeArguments", ParserNodes::declaredTypeArguments);
+          .addListingProperty("typeArguments", ParserNodes::declaredTypeArguments);
   private static final VmObjectFactory<VmTyped> nullableTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getNullableTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -172,17 +173,17 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> unionTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnionTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("members", ParserNodes::unionTypeMembers);
+          .addListingProperty("members", ParserNodes::unionTypeMembers);
   private static final VmObjectFactory<VmTyped> functionTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getFunctionTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("parameterTypes", ParserNodes::functionTypeParameterTypes)
+          .addListingProperty("parameterTypes", ParserNodes::functionTypeParameterTypes)
           .addTypedProperty("returnType", ParserNodes::functionTypeReturnType);
   private static final VmObjectFactory<VmTyped> constrainedTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getConstrainedTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("baseType", ParserNodes::constrainedTypeBaseType)
-          .addListProperty("constraints", ParserNodes::constrainedTypeConstraints);
+          .addListingProperty("constraints", ParserNodes::constrainedTypeConstraints);
   private static final VmObjectFactory<VmTyped> parenthesizedTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -215,11 +216,11 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> singleLineStringLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getSingleLineStringLiteralExprNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("parts", ParserNodes::buildStringParts);
+          .addListingProperty("parts", ParserNodes::buildStringParts);
   private static final VmObjectFactory<VmTyped> multiLineStringLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getMultiLineStringLiteralExprNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("parts", ParserNodes::buildStringParts);
+          .addListingProperty("parts", ParserNodes::buildStringParts);
   private static final VmObjectFactory<VmTyped> unqualifiedAccessExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnqualifiedAccessExprNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -354,7 +355,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> functionLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getFunctionLiteralExprNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("parameters", ParserNodes::functionLiteralParameters)
+          .addListingProperty("parameters", ParserNodes::functionLiteralParameters)
           .addTypedProperty("body", ParserNodes::functionLiteralBody);
   private static final VmObjectFactory<VmTyped> parenthesizedExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedExprNodeClass)
@@ -390,8 +391,8 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getModuleDeclarationNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
-          .addListProperty("annotations", ParserNodes::annotationsOf)
-          .addListProperty("modifiers", ParserNodes::moduleDeclModifiers)
+          .addListingProperty("annotations", ParserNodes::annotationsOf)
+          .addListingProperty("modifiers", ParserNodes::moduleDeclModifiers)
           .addProperty("name", ParserNodes::moduleDeclName)
           .addProperty("extendsOrAmendsClause", ParserNodes::moduleDeclExtendsOrAmendsClause);
 
@@ -405,10 +406,10 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
-          .addListProperty("annotations", ParserNodes::annotationsOf)
-          .addListProperty("modifiers", ParserNodes::classModifiers)
+          .addListingProperty("annotations", ParserNodes::annotationsOf)
+          .addListingProperty("modifiers", ParserNodes::classModifiers)
           .addTypedProperty("identifier", ParserNodes::classIdentifier)
-          .addListProperty("typeParameters", ParserNodes::classTypeParameters)
+          .addListingProperty("typeParameters", ParserNodes::classTypeParameters)
           .addProperty("superType", ParserNodes::classSuperType)
           .addProperty("body", ParserNodes::classBody);
 
@@ -416,50 +417,50 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getTypeAliasNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
-          .addListProperty("annotations", ParserNodes::annotationsOf)
-          .addListProperty("modifiers", ParserNodes::typeAliasModifiers)
+          .addListingProperty("annotations", ParserNodes::annotationsOf)
+          .addListingProperty("modifiers", ParserNodes::typeAliasModifiers)
           .addTypedProperty("identifier", ParserNodes::typeAliasIdentifier)
-          .addListProperty("typeParameters", ParserNodes::typeAliasTypeParameters)
+          .addListingProperty("typeParameters", ParserNodes::typeAliasTypeParameters)
           .addTypedProperty("type", ParserNodes::typeAliasType);
 
   private static final VmObjectFactory<VmTyped> classPropertyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassPropertyNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
-          .addListProperty("annotations", ParserNodes::annotationsOf)
-          .addListProperty("modifiers", ParserNodes::classPropertyModifiers)
+          .addListingProperty("annotations", ParserNodes::annotationsOf)
+          .addListingProperty("modifiers", ParserNodes::classPropertyModifiers)
           .addTypedProperty("identifier", ParserNodes::classPropertyIdentifier)
           .addProperty("typeAnnotation", ParserNodes::classPropertyTypeAnnotation)
           .addProperty("value", ParserNodes::classPropertyValue)
-          .addListProperty("objectBodies", ParserNodes::classPropertyObjectBodies);
+          .addListingProperty("objectBodies", ParserNodes::classPropertyObjectBodies);
 
   private static final VmObjectFactory<VmTyped> classMethodNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassMethodNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
-          .addListProperty("annotations", ParserNodes::annotationsOf)
-          .addListProperty("modifiers", ParserNodes::classMethodModifiers)
+          .addListingProperty("annotations", ParserNodes::annotationsOf)
+          .addListingProperty("modifiers", ParserNodes::classMethodModifiers)
           .addTypedProperty("identifier", ParserNodes::classMethodIdentifier)
-          .addListProperty("typeParameters", ParserNodes::classMethodTypeParameters)
-          .addListProperty("parameters", ParserNodes::classMethodParameters)
+          .addListingProperty("typeParameters", ParserNodes::classMethodTypeParameters)
+          .addListingProperty("parameters", ParserNodes::classMethodParameters)
           .addProperty("returnType", ParserNodes::classMethodReturnType)
           .addProperty("body", ParserNodes::classMethodBody);
 
   private static final VmObjectFactory<VmTyped> classBodyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassBodyNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListProperty("properties", ParserNodes::classBodyProperties)
-          .addListProperty("methods", ParserNodes::classBodyMethods);
+          .addListingProperty("properties", ParserNodes::classBodyProperties)
+          .addListingProperty("methods", ParserNodes::classBodyMethods);
 
   private static final VmObjectFactory<VmTyped> moduleNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getModuleNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("declaration", ParserNodes::moduleDeclaration)
-          .addListProperty("imports", ParserNodes::moduleImports)
-          .addListProperty("classes", ParserNodes::moduleClasses)
-          .addListProperty("typeAliases", ParserNodes::moduleTypeAliases)
-          .addListProperty("properties", ParserNodes::moduleProperties)
-          .addListProperty("methods", ParserNodes::moduleMethods);
+          .addListingProperty("imports", ParserNodes::moduleImports)
+          .addListingProperty("classes", ParserNodes::moduleClasses)
+          .addListingProperty("typeAliases", ParserNodes::moduleTypeAliases)
+          .addListingProperty("properties", ParserNodes::moduleProperties)
+          .addListingProperty("methods", ParserNodes::moduleMethods);
 
   private static Object moduleDeclaration(VmTyped moduleVm) {
     var declVm = findChildVm(moduleVm, NodeType.MODULE_DECLARATION);
@@ -471,7 +472,7 @@ public class ParserNodes {
     return dc == null ? VmNull.withoutDefault() : docCommentNodeFactory.create(dc);
   }
 
-  private static VmList annotationsOf(VmTyped ownerVm) {
+  private static VmListing annotationsOf(VmTyped ownerVm) {
     return wrapAll(findChildrenVm(ownerVm, NodeType.ANNOTATION), annotationNodeFactory);
   }
 
@@ -518,14 +519,14 @@ public class ParserNodes {
     return qualifiedIdentifierNodeFactory.create(name);
   }
 
-  private static VmList declaredTypeArguments(VmTyped typeVm) {
+  private static VmListing declaredTypeArguments(VmTyped typeVm) {
     var list = findChildVm(typeVm, NodeType.TYPE_ARGUMENT_LIST);
     if (list == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var elems = findChildVm(list, NodeType.TYPE_ARGUMENT_LIST_ELEMENTS);
     if (elems == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapTypes(findTypeChildrenVm(elems));
   }
@@ -534,18 +535,18 @@ public class ParserNodes {
     return wrapType(requireTypeChild(typeVm));
   }
 
-  private static VmList unionTypeMembers(VmTyped typeVm) {
+  private static VmListing unionTypeMembers(VmTyped typeVm) {
     return wrapTypes(findTypeChildrenVm(typeVm));
   }
 
-  private static VmList functionTypeParameterTypes(VmTyped typeVm) {
+  private static VmListing functionTypeParameterTypes(VmTyped typeVm) {
     var params = findChildVm(typeVm, NodeType.FUNCTION_TYPE_PARAMETERS);
     if (params == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var elems = findChildVm(params, NodeType.PARENTHESIZED_TYPE_ELEMENTS);
     if (elems == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapTypes(findTypeChildrenVm(elems));
   }
@@ -562,14 +563,14 @@ public class ParserNodes {
     return wrapType(requireTypeChild(typeVm));
   }
 
-  private static VmList constrainedTypeConstraints(VmTyped typeVm) {
+  private static VmListing constrainedTypeConstraints(VmTyped typeVm) {
     var constraint = findChildVm(typeVm, NodeType.CONSTRAINED_TYPE_CONSTRAINT);
     if (constraint == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var elems = findChildVm(constraint, NodeType.CONSTRAINED_TYPE_ELEMENTS);
     if (elems == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapExprs(findExprChildrenVm(elems));
   }
@@ -746,7 +747,7 @@ public class ParserNodes {
     };
   }
 
-  private static VmList functionLiteralParameters(VmTyped exprVm) {
+  private static VmListing functionLiteralParameters(VmTyped exprVm) {
     return parametersOf(exprVm);
   }
 
@@ -764,10 +765,10 @@ public class ParserNodes {
     return argList == null ? VmNull.withoutDefault() : argumentsOf(argList);
   }
 
-  private static VmList argumentsOf(VmTyped argListVm) {
+  private static VmListing argumentsOf(VmTyped argListVm) {
     var elems = findChildVm(argListVm, NodeType.ARGUMENT_LIST_ELEMENTS);
     if (elems == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapExprs(findExprChildrenVm(elems));
   }
@@ -800,52 +801,52 @@ public class ParserNodes {
     return result;
   }
 
-  private static VmList objectBodyParameters(VmTyped bodyVm) {
+  private static VmListing objectBodyParameters(VmTyped bodyVm) {
     var paramList = findChildVm(bodyVm, NodeType.OBJECT_PARAMETER_LIST);
     if (paramList == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(paramList, NodeType.PARAMETER), parameterNodeFactory);
   }
 
-  private static VmList objectBodyMembers(
+  private static VmListing objectBodyMembers(
       VmTyped bodyVm, NodeType memberType, VmObjectFactory<VmTyped> factory) {
     var memberList = findChildVm(bodyVm, NodeType.OBJECT_MEMBER_LIST);
     if (memberList == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(memberList, memberType), factory);
   }
 
-  private static VmList objectBodyProperties(VmTyped bodyVm) {
+  private static VmListing objectBodyProperties(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.OBJECT_PROPERTY, objectPropertyNodeFactory);
   }
 
-  private static VmList objectBodyMethods(VmTyped bodyVm) {
+  private static VmListing objectBodyMethods(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.OBJECT_METHOD, objectMethodNodeFactory);
   }
 
-  private static VmList objectBodyElements(VmTyped bodyVm) {
+  private static VmListing objectBodyElements(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.OBJECT_ELEMENT, objectElementNodeFactory);
   }
 
-  private static VmList objectBodyEntries(VmTyped bodyVm) {
+  private static VmListing objectBodyEntries(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.OBJECT_ENTRY, objectEntryNodeFactory);
   }
 
-  private static VmList objectBodySpreads(VmTyped bodyVm) {
+  private static VmListing objectBodySpreads(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.OBJECT_SPREAD, objectSpreadNodeFactory);
   }
 
-  private static VmList objectBodyMemberPredicates(VmTyped bodyVm) {
+  private static VmListing objectBodyMemberPredicates(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.MEMBER_PREDICATE, memberPredicateNodeFactory);
   }
 
-  private static VmList objectBodyForGenerators(VmTyped bodyVm) {
+  private static VmListing objectBodyForGenerators(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.FOR_GENERATOR, forGeneratorNodeFactory);
   }
 
-  private static VmList objectBodyWhenGenerators(VmTyped bodyVm) {
+  private static VmListing objectBodyWhenGenerators(VmTyped bodyVm) {
     return objectBodyMembers(bodyVm, NodeType.WHEN_GENERATOR, whenGeneratorNodeFactory);
   }
 
@@ -854,9 +855,9 @@ public class ParserNodes {
     return header == null ? null : findChildVm(header, NodeType.OBJECT_PROPERTY_HEADER_BEGIN);
   }
 
-  private static VmList objectPropertyModifiers(VmTyped propertyVm) {
+  private static VmListing objectPropertyModifiers(VmTyped propertyVm) {
     var headerBegin = objectPropertyHeaderBegin(propertyVm);
-    return headerBegin == null ? VmList.EMPTY : modifiersOf(headerBegin);
+    return headerBegin == null ? VmListing.empty() : modifiersOf(headerBegin);
   }
 
   private static VmTyped objectPropertyIdentifier(VmTyped propertyVm) {
@@ -871,7 +872,7 @@ public class ParserNodes {
     return exprInChild(propertyVm, NodeType.OBJECT_PROPERTY_BODY);
   }
 
-  private static VmList objectPropertyObjectBodies(VmTyped propertyVm) {
+  private static VmListing objectPropertyObjectBodies(VmTyped propertyVm) {
     return objectBodiesOf(propertyVm);
   }
 
@@ -888,7 +889,7 @@ public class ParserNodes {
     return exprs.size() < 2 ? VmNull.withoutDefault() : wrapExpr(exprs.get(1));
   }
 
-  private static VmList memberPredicateObjectBodies(VmTyped predicateVm) {
+  private static VmListing memberPredicateObjectBodies(VmTyped predicateVm) {
     return objectBodiesOf(predicateVm);
   }
 
@@ -902,7 +903,7 @@ public class ParserNodes {
     return expr == null ? VmNull.withoutDefault() : wrapExpr(expr);
   }
 
-  private static VmList objectEntryObjectBodies(VmTyped entryVm) {
+  private static VmListing objectEntryObjectBodies(VmTyped entryVm) {
     return objectBodiesOf(entryVm);
   }
 
@@ -954,7 +955,7 @@ public class ParserNodes {
     return objectBodyNodeFactory.create(requireChild(forVm, NodeType.OBJECT_BODY));
   }
 
-  private static VmList qualifiedIdentifierIdentifiers(VmTyped qualifiedVm) {
+  private static VmListing qualifiedIdentifierIdentifiers(VmTyped qualifiedVm) {
     return wrapAll(findChildrenVm(qualifiedVm, NodeType.IDENTIFIER), identifierNodeFactory);
   }
 
@@ -997,7 +998,7 @@ public class ParserNodes {
     return typeAnnotationOf(parameterVm);
   }
 
-  private static VmList buildStringParts(VmTyped stringVm) {
+  private static VmListing buildStringParts(VmTyped stringVm) {
     var data = (GenericNodeData) stringVm.getExtraStorage();
     var children = data.node.children;
     var childrenVm = data.childrenVm;
@@ -1036,7 +1037,7 @@ public class ParserNodes {
         default -> i++; // affixes and stray terminals
       }
     }
-    return VmList.create(parts.toArray());
+    return listingOf(parts.toArray());
   }
 
   private static boolean isInterpolationStart(Node terminal, char[] source) {
@@ -1060,9 +1061,9 @@ public class ParserNodes {
     return i;
   }
 
-  private static VmList moduleDeclModifiers(VmTyped declVm) {
+  private static VmListing moduleDeclModifiers(VmTyped declVm) {
     var moduleDefinition = findChildVm(declVm, NodeType.MODULE_DEFINITION);
-    return moduleDefinition == null ? VmList.EMPTY : modifiersOf(moduleDefinition);
+    return moduleDefinition == null ? VmListing.empty() : modifiersOf(moduleDefinition);
   }
 
   private static Object moduleDeclName(VmTyped declVm) {
@@ -1089,20 +1090,20 @@ public class ParserNodes {
     return data.node.type == NodeType.AMENDS_CLAUSE ? "amends" : "extends";
   }
 
-  private static VmList moduleClasses(VmTyped moduleVm) {
+  private static VmListing moduleClasses(VmTyped moduleVm) {
     return wrapAll(findChildrenVm(moduleVm, NodeType.CLASS), classNodeFactory);
   }
 
-  private static VmList classModifiers(VmTyped classVm) {
+  private static VmListing classModifiers(VmTyped classVm) {
     var header = findChildVm(classVm, NodeType.CLASS_HEADER);
-    return header == null ? VmList.EMPTY : modifiersOf(header);
+    return header == null ? VmListing.empty() : modifiersOf(header);
   }
 
   private static VmTyped classIdentifier(VmTyped classVm) {
     return identifierNodeOf(findChildVm(classVm, NodeType.CLASS_HEADER));
   }
 
-  private static VmList classTypeParameters(VmTyped classVm) {
+  private static VmListing classTypeParameters(VmTyped classVm) {
     return typeParametersOf(findChildVm(classVm, NodeType.CLASS_HEADER));
   }
 
@@ -1124,20 +1125,20 @@ public class ParserNodes {
     return body == null ? VmNull.withoutDefault() : classBodyNodeFactory.create(body);
   }
 
-  private static VmList moduleTypeAliases(VmTyped moduleVm) {
+  private static VmListing moduleTypeAliases(VmTyped moduleVm) {
     return wrapAll(findChildrenVm(moduleVm, NodeType.TYPEALIAS), typeAliasNodeFactory);
   }
 
-  private static VmList typeAliasModifiers(VmTyped typeAliasVm) {
+  private static VmListing typeAliasModifiers(VmTyped typeAliasVm) {
     var header = findChildVm(typeAliasVm, NodeType.TYPEALIAS_HEADER);
-    return header == null ? VmList.EMPTY : modifiersOf(header);
+    return header == null ? VmListing.empty() : modifiersOf(header);
   }
 
   private static VmTyped typeAliasIdentifier(VmTyped typeAliasVm) {
     return identifierNodeOf(findChildVm(typeAliasVm, NodeType.TYPEALIAS_HEADER));
   }
 
-  private static VmList typeAliasTypeParameters(VmTyped typeAliasVm) {
+  private static VmListing typeAliasTypeParameters(VmTyped typeAliasVm) {
     return typeParametersOf(findChildVm(typeAliasVm, NodeType.TYPEALIAS_HEADER));
   }
 
@@ -1150,11 +1151,11 @@ public class ParserNodes {
     return wrapType(type);
   }
 
-  private static VmList moduleProperties(VmTyped moduleVm) {
+  private static VmListing moduleProperties(VmTyped moduleVm) {
     return wrapAll(findChildrenVm(moduleVm, NodeType.CLASS_PROPERTY), classPropertyNodeFactory);
   }
 
-  private static VmList moduleMethods(VmTyped moduleVm) {
+  private static VmListing moduleMethods(VmTyped moduleVm) {
     return wrapAll(findChildrenVm(moduleVm, NodeType.CLASS_METHOD), classMethodNodeFactory);
   }
 
@@ -1165,9 +1166,9 @@ public class ParserNodes {
         : findChildVm(propHeader, NodeType.CLASS_PROPERTY_HEADER_BEGIN);
   }
 
-  private static VmList classPropertyModifiers(VmTyped propertyVm) {
+  private static VmListing classPropertyModifiers(VmTyped propertyVm) {
     var headerBegin = classPropertyHeaderBegin(propertyVm);
-    return headerBegin == null ? VmList.EMPTY : modifiersOf(headerBegin);
+    return headerBegin == null ? VmListing.empty() : modifiersOf(headerBegin);
   }
 
   private static VmTyped classPropertyIdentifier(VmTyped propertyVm) {
@@ -1182,24 +1183,24 @@ public class ParserNodes {
     return exprInChild(propertyVm, NodeType.CLASS_PROPERTY_BODY);
   }
 
-  private static VmList classPropertyObjectBodies(VmTyped propertyVm) {
+  private static VmListing classPropertyObjectBodies(VmTyped propertyVm) {
     return objectBodiesOf(propertyVm);
   }
 
-  private static VmList classMethodModifiers(VmTyped methodVm) {
+  private static VmListing classMethodModifiers(VmTyped methodVm) {
     var header = findChildVm(methodVm, NodeType.CLASS_METHOD_HEADER);
-    return header == null ? VmList.EMPTY : modifiersOf(header);
+    return header == null ? VmListing.empty() : modifiersOf(header);
   }
 
   private static VmTyped classMethodIdentifier(VmTyped methodVm) {
     return identifierNodeOf(findChildVm(methodVm, NodeType.CLASS_METHOD_HEADER));
   }
 
-  private static VmList classMethodTypeParameters(VmTyped methodVm) {
+  private static VmListing classMethodTypeParameters(VmTyped methodVm) {
     return typeParametersOf(methodVm);
   }
 
-  private static VmList classMethodParameters(VmTyped methodVm) {
+  private static VmListing classMethodParameters(VmTyped methodVm) {
     return parametersOf(methodVm);
   }
 
@@ -1211,26 +1212,26 @@ public class ParserNodes {
     return exprInChild(methodVm, NodeType.CLASS_METHOD_BODY);
   }
 
-  private static VmList classBodyProperties(VmTyped classBodyVm) {
+  private static VmListing classBodyProperties(VmTyped classBodyVm) {
     var elements = findChildVm(classBodyVm, NodeType.CLASS_BODY_ELEMENTS);
     if (elements == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(elements, NodeType.CLASS_PROPERTY), classPropertyNodeFactory);
   }
 
-  private static VmList classBodyMethods(VmTyped classBodyVm) {
+  private static VmListing classBodyMethods(VmTyped classBodyVm) {
     var elements = findChildVm(classBodyVm, NodeType.CLASS_BODY_ELEMENTS);
     if (elements == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(elements, NodeType.CLASS_METHOD), classMethodNodeFactory);
   }
 
-  private static VmList moduleImports(VmTyped moduleVm) {
+  private static VmListing moduleImports(VmTyped moduleVm) {
     var importListVm = findChildVm(moduleVm, NodeType.IMPORT_LIST);
     if (importListVm == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(importListVm, NodeType.IMPORT), importNodeFactory);
   }
@@ -1295,10 +1296,15 @@ public class ParserNodes {
     return builder.toString();
   }
 
-  private static VmList modifiersOf(VmTyped ownerVm) {
+  // A `Listing` holding `elements`, in order.
+  private static VmListing listingOf(Object[] elements) {
+    return VmList.create(elements).toListing();
+  }
+
+  private static VmListing modifiersOf(VmTyped ownerVm) {
     var modifierList = findChildVm(ownerVm, NodeType.MODIFIER_LIST);
     if (modifierList == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var modifierVms = findChildrenVm(modifierList, NodeType.MODIFIER);
     var result = new Object[modifierVms.size()];
@@ -1306,7 +1312,7 @@ public class ParserNodes {
       var data = (GenericNodeData) modifierVms.get(i).getExtraStorage();
       result[i] = data.node.text(data.source);
     }
-    return VmList.create(result);
+    return listingOf(result);
   }
 
   private static String stringCharsOf(VmTyped clauseVm) {
@@ -1376,22 +1382,22 @@ public class ParserNodes {
     return result;
   }
 
-  // Wrap each generic type node into its `TypeNode` subclass, as a `VmList`.
-  private static VmList wrapTypes(List<VmTyped> typeVms) {
+  // Wrap each generic type node into its `TypeNode` subclass, as a `VmListing`.
+  private static VmListing wrapTypes(List<VmTyped> typeVms) {
     var result = new Object[typeVms.size()];
     for (var i = 0; i < typeVms.size(); i++) {
       result[i] = wrapType(typeVms.get(i));
     }
-    return VmList.create(result);
+    return listingOf(result);
   }
 
-  // Wrap each generic expression node into its `ExprNode` subclass, as a `VmList`.
-  private static VmList wrapExprs(List<VmTyped> exprVms) {
+  // Wrap each generic expression node into its `ExprNode` subclass, as a `VmListing`.
+  private static VmListing wrapExprs(List<VmTyped> exprVms) {
     var result = new Object[exprVms.size()];
     for (var i = 0; i < exprVms.size(); i++) {
       result[i] = wrapExpr(exprVms.get(i));
     }
-    return VmList.create(result);
+    return listingOf(result);
   }
 
   private static Object typeAnnotationOf(@Nullable VmTyped ownerVm) {
@@ -1420,29 +1426,29 @@ public class ParserNodes {
     return expr == null ? VmNull.withoutDefault() : wrapExpr(expr);
   }
 
-  private static VmList objectBodiesOf(VmTyped ownerVm) {
+  private static VmListing objectBodiesOf(VmTyped ownerVm) {
     return wrapAll(findChildrenVm(ownerVm, NodeType.OBJECT_BODY), objectBodyNodeFactory);
   }
 
-  private static VmList parametersOf(VmTyped ownerVm) {
+  private static VmListing parametersOf(VmTyped ownerVm) {
     var list = findChildVm(ownerVm, NodeType.PARAMETER_LIST);
     if (list == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var elems = findChildVm(list, NodeType.PARAMETER_LIST_ELEMENTS);
     if (elems == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(elems, NodeType.PARAMETER), parameterNodeFactory);
   }
 
-  // Wrap each generic-node `VmTyped` into a typed node via `factory`, as a `VmList`.
-  private static VmList wrapAll(List<VmTyped> genericVms, VmObjectFactory<VmTyped> factory) {
+  // Wrap each generic-node `VmTyped` into a typed node via `factory`, as a `VmListing`.
+  private static VmListing wrapAll(List<VmTyped> genericVms, VmObjectFactory<VmTyped> factory) {
     var result = new Object[genericVms.size()];
     for (var i = 0; i < genericVms.size(); i++) {
       result[i] = factory.create(genericVms.get(i));
     }
-    return VmList.create(result);
+    return listingOf(result);
   }
 
   private static VmTyped identifierNodeOf(@Nullable VmTyped ownerVm) {
@@ -1450,17 +1456,17 @@ public class ParserNodes {
     return identifierNodeFactory.create(id);
   }
 
-  private static VmList typeParametersOf(@Nullable VmTyped ownerVm) {
+  private static VmListing typeParametersOf(@Nullable VmTyped ownerVm) {
     if (ownerVm == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var list = findChildVm(ownerVm, NodeType.TYPE_PARAMETER_LIST);
     if (list == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     var elems = findChildVm(list, NodeType.TYPE_PARAMETER_LIST_ELEMENTS);
     if (elems == null) {
-      return VmList.EMPTY;
+      return VmListing.empty();
     }
     return wrapAll(findChildrenVm(elems, NodeType.TYPE_PARAMETER), typeParameterNodeFactory);
   }

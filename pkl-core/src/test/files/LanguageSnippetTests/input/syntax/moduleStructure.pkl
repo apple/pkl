@@ -31,7 +31,7 @@ facts {
     mod.declaration!!.annotations.first.type is syntax.DeclaredTypeNode
 
     mod.declaration!!.modifiers != null
-    mod.declaration!!.modifiers == List("open")
+    mod.declaration!!.modifiers == new Listing { "open" }
   }
 
   ["amends clause"] {
@@ -84,7 +84,7 @@ facts {
     cls.docComment!!.value == "A bird class."
 
     cls.modifiers != null
-    cls.modifiers == List("abstract")
+    cls.modifiers == new Listing { "abstract" }
 
     cls.identifier.value == "Bird"
 
@@ -144,12 +144,12 @@ facts {
     mod.properties.length == 2
     mod.properties[0].identifier.value == "name"
     mod.properties[0].modifiers != null
-    mod.properties[0].modifiers == List("hidden")
+    mod.properties[0].modifiers == new Listing { "hidden" }
     mod.properties[0].value is syntax.SingleLineStringLiteralExprNode
 
     mod.properties[1].identifier.value == "count"
     mod.properties[1].modifiers != null
-    mod.properties[1].modifiers == List("local")
+    mod.properties[1].modifiers == new Listing { "local" }
 
     mod.methods.length == 1
     mod.methods.first.identifier.value == "greet"
@@ -195,7 +195,7 @@ facts {
       """)
 
     mod.declaration!!.name!!.value == "`my mod`.`sub pkg`"
-    mod.declaration!!.name!!.identifiers.map((i) -> i.value) == List("`my mod`", "`sub pkg`")
+    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.value) == List("`my mod`", "`sub pkg`")
 
     mod.imports.first.alias!!.value == "`my alias`"
 
@@ -210,7 +210,7 @@ facts {
     (ta.type as syntax.DeclaredTypeNode).name.value == "`My Class`"
 
     mod.properties.first.identifier.value == "`my prop`"
-    mod.properties.first.modifiers == List("const")
+    mod.properties.first.modifiers == new Listing { "const" }
   }
 
   ["quoted identifiers in object bodies and accesses"] {

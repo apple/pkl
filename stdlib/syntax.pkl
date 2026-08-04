@@ -289,19 +289,19 @@ class ModuleNode extends Node {
   declaration: ModuleDeclarationNode?
 
   /// All imports in this module.
-  imports: List<ImportNode>
+  imports: Listing<ImportNode>
 
   /// All class declarations in this module.
-  classes: List<ClassNode>
+  classes: Listing<ClassNode>
 
   /// All typealias declarations in this module.
-  typeAliases: List<TypeAliasNode>
+  typeAliases: Listing<TypeAliasNode>
 
   /// All top-level properties in this module.
-  properties: List<ClassPropertyNode>
+  properties: Listing<ClassPropertyNode>
 
   /// All top-level methods in this module.
-  methods: List<ClassMethodNode>
+  methods: Listing<ClassMethodNode>
 }
 
 /// A module declaration (including doc comment, annotations, modifiers, name, amends/extends).
@@ -310,12 +310,12 @@ class ModuleDeclarationNode extends Node {
   docComment: DocCommentNode?
 
   /// Annotations on the module declaration.
-  annotations: List<AnnotationNode>
+  annotations: Listing<AnnotationNode>
 
   /// The modifiers on the module declaration.
   ///
   /// An amending module cannot have any modifiers.
-  modifiers: List<"abstract" | "open">(isDistinct)
+  modifiers: Listing<"abstract" | "open">(isDistinct)
 
   /// The qualified name of the module.
   name: QualifiedIdentifierNode?
@@ -351,16 +351,16 @@ class ClassNode extends Node {
   docComment: DocCommentNode?
 
   /// Annotations on the class.
-  annotations: List<AnnotationNode>
+  annotations: Listing<AnnotationNode>
 
   /// The modifiers on the class.
-  modifiers: List<"abstract" | "open" | "local" | "external">(isDistinct)
+  modifiers: Listing<"abstract" | "open" | "local" | "external">(isDistinct)
 
   /// The class name.
   identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode>
+  typeParameters: Listing<TypeParameterNode>
 
   /// The supertype this class extends.
   superType: TypeNode?
@@ -375,16 +375,16 @@ class TypeAliasNode extends Node {
   docComment: DocCommentNode?
 
   /// Annotations on the typealias.
-  annotations: List<AnnotationNode>
+  annotations: Listing<AnnotationNode>
 
   /// The modifiers on the typealias.
-  modifiers: List<"local" | "external">(isDistinct)
+  modifiers: Listing<"local" | "external">(isDistinct)
 
   /// The typealias name.
   identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode>
+  typeParameters: Listing<TypeParameterNode>
 
   /// The type that this alias resolves to.
   type: TypeNode
@@ -393,10 +393,10 @@ class TypeAliasNode extends Node {
 /// A class body delimited by braces.
 class ClassBodyNode extends Node {
   /// Properties declared in this class body.
-  properties: List<ClassPropertyNode>
+  properties: Listing<ClassPropertyNode>
 
   /// Methods declared in this class body.
-  methods: List<ClassMethodNode>
+  methods: Listing<ClassMethodNode>
 }
 
 /// A class property declaration.
@@ -405,12 +405,12 @@ class ClassPropertyNode extends Node {
   docComment: DocCommentNode?
 
   /// Annotations on the property.
-  annotations: List<AnnotationNode>
+  annotations: Listing<AnnotationNode>
 
   /// The modifiers on the property.
   ///
   /// The `abstract` modifier is accepted for backwards compatibility, but has no effect.
-  modifiers: List<"abstract" | "local" | "hidden" | "external" | "fixed" | "const">(isDistinct)
+  modifiers: Listing<"abstract" | "local" | "hidden" | "external" | "fixed" | "const">(isDistinct)
 
   /// The property name.
   identifier: IdentifierNode
@@ -422,7 +422,7 @@ class ClassPropertyNode extends Node {
   value: ExprNode?
 
   /// Object bodies for amending (from `{ ... }` blocks).
-  objectBodies: List<ObjectBodyNode>
+  objectBodies: Listing<ObjectBodyNode>
 }
 
 /// A class method declaration.
@@ -431,19 +431,19 @@ class ClassMethodNode extends Node {
   docComment: DocCommentNode?
 
   /// Annotations on the method.
-  annotations: List<AnnotationNode>
+  annotations: Listing<AnnotationNode>
 
   /// The modifiers on the method.
-  modifiers: List<"abstract" | "local" | "external" | "const">(isDistinct)
+  modifiers: Listing<"abstract" | "local" | "external" | "const">(isDistinct)
 
   /// The method name.
   identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode>
+  typeParameters: Listing<TypeParameterNode>
 
   /// The parameters.
-  parameters: List<ParameterNode>
+  parameters: Listing<ParameterNode>
 
   /// The return type annotation.
   returnType: TypeNode?
@@ -455,37 +455,37 @@ class ClassMethodNode extends Node {
 /// An object body delimited by braces.
 class ObjectBodyNode extends Node {
   /// Parameters for this object body (e.g., `{ x, y -> ... }`).
-  parameters: List<ParameterNode>
+  parameters: Listing<ParameterNode>
 
   /// Properties declared in this object body.
-  properties: List<ObjectPropertyNode>
+  properties: Listing<ObjectPropertyNode>
 
   /// Methods declared in this object body.
-  methods: List<ObjectMethodNode>
+  methods: Listing<ObjectMethodNode>
 
   /// Elements declared in this object body.
-  elements: List<ObjectElementNode>
+  elements: Listing<ObjectElementNode>
 
   /// Entries declared in this object body.
-  entries: List<ObjectEntryNode>
+  entries: Listing<ObjectEntryNode>
 
   /// Spreads declared in this object body.
-  spreads: List<ObjectSpreadNode>
+  spreads: Listing<ObjectSpreadNode>
 
   /// Member predicates declared in this object body.
-  memberPredicates: List<MemberPredicateNode>
+  memberPredicates: Listing<MemberPredicateNode>
 
   /// `for` generators declared in this object body.
-  forGenerators: List<ForGeneratorNode>
+  forGenerators: Listing<ForGeneratorNode>
 
   /// `when` generators declared in this object body.
-  whenGenerators: List<WhenGeneratorNode>
+  whenGenerators: Listing<WhenGeneratorNode>
 }
 
 /// An object property declaration.
 class ObjectPropertyNode extends Node {
   /// The modifiers on the property.
-  modifiers: List<"local" | "const">(isDistinct)
+  modifiers: Listing<"local" | "const">(isDistinct)
 
   /// The property name.
   identifier: IdentifierNode
@@ -497,22 +497,22 @@ class ObjectPropertyNode extends Node {
   value: ExprNode?
 
   /// Object bodies for amending.
-  objectBodies: List<ObjectBodyNode>
+  objectBodies: Listing<ObjectBodyNode>
 }
 
 /// An object method declaration.
 class ObjectMethodNode extends Node {
   /// The modifiers on the method.
-  modifiers: List<"local" | "const">(isDistinct)
+  modifiers: Listing<"local" | "const">(isDistinct)
 
   /// The method name.
   identifier: IdentifierNode
 
   /// The type parameters.
-  typeParameters: List<TypeParameterNode>
+  typeParameters: Listing<TypeParameterNode>
 
   /// The parameters.
-  parameters: List<ParameterNode>
+  parameters: Listing<ParameterNode>
 
   /// The return type annotation.
   returnType: TypeNode?
@@ -536,7 +536,7 @@ class ObjectEntryNode extends Node {
   value: ExprNode?
 
   /// Object bodies for amending.
-  objectBodies: List<ObjectBodyNode>
+  objectBodies: Listing<ObjectBodyNode>
 }
 
 /// An object spread (`...expr` or `...?expr`).
@@ -557,7 +557,7 @@ class MemberPredicateNode extends Node {
   value: ExprNode(objectBodies.isEmpty)?
 
   /// Object bodies for amending.
-  objectBodies: List<ObjectBodyNode>
+  objectBodies: Listing<ObjectBodyNode>
 }
 
 /// A `for (param in iterable) { ... }` generator.
@@ -620,7 +620,7 @@ class FloatLiteralExprNode extends ExprNode {
 /// A single-line string literal expression.
 class SingleLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, interpolations).
-  parts: List<StringPartNode>
+  parts: Listing<StringPartNode>
 }
 
 /// A multi-line string literal expression.
@@ -628,7 +628,7 @@ class SingleLineStringLiteralExprNode extends ExprNode {
 /// Use [StringNewlineNode] entries in [parts] to separate lines.
 class MultiLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, newlines, interpolations).
-  parts: List<StringPartNode>
+  parts: Listing<StringPartNode>
 }
 
 /// An unqualified access expression (`name` or `name(args)`).
@@ -637,7 +637,7 @@ class UnqualifiedAccessExprNode extends ExprNode {
   identifier: IdentifierNode
 
   /// The arguments, if this is a function call. Null for a plain identifier access.
-  arguments: List<ExprNode>?
+  arguments: Listing<ExprNode>?
 }
 
 /// A qualified access expression (`receiver.member` or `receiver?.member`,
@@ -653,7 +653,7 @@ class QualifiedAccessExprNode extends ExprNode {
   identifier: IdentifierNode
 
   /// The arguments, if this is a method call. Null for a property access.
-  arguments: List<ExprNode>?
+  arguments: Listing<ExprNode>?
 }
 
 /// A subscript expression (`receiver[index]`).
@@ -671,7 +671,7 @@ class SuperAccessExprNode extends ExprNode {
   identifier: IdentifierNode
 
   /// The arguments, if this is a method call. Null for a property access.
-  arguments: List<ExprNode>?
+  arguments: Listing<ExprNode>?
 }
 
 /// A `super[index]` subscript expression.
@@ -851,7 +851,7 @@ class NonNullExprNode extends ExprNode {
 /// A function literal expression (`(params) -> body`).
 class FunctionLiteralExprNode extends ExprNode {
   /// The parameters.
-  parameters: List<ParameterNode>
+  parameters: Listing<ParameterNode>
 
   /// The body expression.
   body: ExprNode
@@ -878,7 +878,7 @@ class DeclaredTypeNode extends TypeNode {
   name: QualifiedIdentifierNode
 
   /// The type arguments.
-  typeArguments: List<TypeNode>
+  typeArguments: Listing<TypeNode>
 }
 
 /// A nullable type (`Type?`).
@@ -890,13 +890,13 @@ class NullableTypeNode extends TypeNode {
 /// A union type (`TypeA|TypeB|TypeC`).
 class UnionTypeNode extends TypeNode {
   /// The member types.
-  members: List<TypeNode>
+  members: Listing<TypeNode>
 }
 
 /// A function type (`(ParamTypes) -> ReturnType`).
 class FunctionTypeNode extends TypeNode {
   /// The parameter types.
-  parameterTypes: List<TypeNode>
+  parameterTypes: Listing<TypeNode>
 
   /// The return type.
   returnType: TypeNode
@@ -908,7 +908,7 @@ class ConstrainedTypeNode extends TypeNode {
   baseType: TypeNode
 
   /// The constraint expressions.
-  constraints: List<ExprNode>
+  constraints: Listing<ExprNode>
 }
 
 /// A parenthesized type (`(Type)`).
@@ -962,7 +962,7 @@ class IdentifierNode extends Node {
 /// A qualified (dotted) identifier, e.g. `foo.bar.baz`.
 class QualifiedIdentifierNode extends Node {
   /// The parts of the qualified identifier.
-  identifiers: List<IdentifierNode>
+  identifiers: Listing<IdentifierNode>
 
   /// The dotted name (e.g. `"foo.bar.baz"`).
   value: String

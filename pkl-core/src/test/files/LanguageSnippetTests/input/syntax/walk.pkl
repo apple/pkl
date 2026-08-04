@@ -23,7 +23,8 @@ facts {
       if (n.type == "identifier" && n.text == "foo")
         Pair((n) { text = "bar" }, true)
       else
-        null) == fmt("bar = bar + 1")
+        null
+    ) == fmt("bar = bar + 1")
   }
 
   ["replace a leaf via a typed node"] {
@@ -31,7 +32,8 @@ facts {
       if (n.type == "int_literal_expr" && n.text == "0")
         Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
       else
-        null) == fmt("x = 100")
+        null
+    ) == fmt("x = 100")
   }
 
   ["rebuilds ancestors of a changed node"] {
@@ -41,7 +43,8 @@ facts {
       else if (n.type == "int_literal_expr" && n.text == "0")
         Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
       else
-        null) == fmt("x = if (cond) 42 else 100")
+        null
+    ) == fmt("x = if (cond) 42 else 100")
   }
 
   ["descend reprocesses emitted nodes"] {
@@ -56,7 +59,8 @@ facts {
       else if (n.type == "int_literal_expr" && n.text == "1")
         Pair(new syntax.IntLiteralExprNode { value = 2 }.builtNode, true)
       else
-        null) == fmt("x = (2)")
+        null
+    ) == fmt("x = (2)")
   }
 
   ["descend = false leaves the emitted subtree untouched"] {
@@ -71,7 +75,8 @@ facts {
       else if (n.type == "int_literal_expr" && n.text == "1")
         Pair(new syntax.IntLiteralExprNode { value = 2 }.builtNode, true)
       else
-        null) == fmt("x = (1)")
+        null
+    ) == fmt("x = (1)")
   }
 
   ["build super access from scratch"] {
@@ -85,19 +90,21 @@ facts {
           false,
         )
       else
-        null) == fmt("x = super.foo")
+        null
+    ) == fmt("x = super.foo")
 
     walkFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr")
         Pair(
           new syntax.SuperAccessExprNode {
             identifier = new syntax.IdentifierNode { value = "foo" }
-            arguments = List(new syntax.IntLiteralExprNode { value = 1 })
+            arguments { new syntax.IntLiteralExprNode { value = 1 } }
           }.builtNode,
           false,
         )
       else
-        null) == fmt("x = super.foo(1)")
+        null
+    ) == fmt("x = super.foo(1)")
   }
 
   ["build super subscript from scratch"] {
@@ -110,6 +117,7 @@ facts {
           false,
         )
       else
-        null) == fmt("x = super[0]")
+        null
+    ) == fmt("x = super[0]")
   }
 }
