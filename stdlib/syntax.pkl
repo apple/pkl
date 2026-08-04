@@ -61,9 +61,6 @@ class GenericNode {
   /// The source location of this node or `null`.
   span: Span?
 
-  /// Render this node back to Pkl source code using default settings.
-  function render(): String = new Renderer {}.render(this)
-
   /// Walk this node and its descendants top-down, applying [visit] to each node and
   /// returning the (possibly rewritten) tree.
   ///
