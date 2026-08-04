@@ -29,8 +29,8 @@ public final class SyntaxModule extends StdLibModule {
     return instance;
   }
 
-  public static VmClass getNodeClass() {
-    return NodeClass.instance;
+  public static VmClass getGenericNodeClass() {
+    return GenericNodeClass.instance;
   }
 
   public static VmClass getSpanClass() {
@@ -377,8 +377,8 @@ public final class SyntaxModule extends StdLibModule {
     return ParenthesizedExprNodeClass.instance;
   }
 
-  private static final class NodeClass {
-    static final VmClass instance = loadClass("Node");
+  private static final class GenericNodeClass {
+    static final VmClass instance = loadClass("GenericNode");
   }
 
   private static final class SpanClass {

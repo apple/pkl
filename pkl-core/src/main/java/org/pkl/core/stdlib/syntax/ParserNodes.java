@@ -32,7 +32,7 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.stdlib.syntax.SyntaxNodes.NodeData;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.GenericNodeData;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
 import org.pkl.parser.GenericParser;
 import org.pkl.parser.GenericParserError;
@@ -42,8 +42,8 @@ import org.pkl.parser.syntax.generic.NodeType;
 public class ParserNodes {
   private ParserNodes() {}
 
-  private static final VmObjectFactory<NodeData> nodeFactory =
-      new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
+  private static final VmObjectFactory<GenericNodeData> genericNodeFactory =
+      new VmObjectFactory<GenericNodeData>(SyntaxModule::getGenericNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
           .addListProperty("children", nd -> nd.childrenVm)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
@@ -57,35 +57,35 @@ public class ParserNodes {
 
   private static final VmObjectFactory<VmTyped> identifierNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIdentifierNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::identifierValue);
 
-  private static VmObjectFactory<VmTyped> nodeOnlyFactory(Supplier<VmClass> classSupplier) {
-    return new VmObjectFactory<VmTyped>(classSupplier).addProperty("node", vm -> vm);
+  private static VmObjectFactory<VmTyped> genericNodeOnlyFactory(Supplier<VmClass> classSupplier) {
+    return new VmObjectFactory<VmTyped>(classSupplier).addProperty("genericNode", vm -> vm);
   }
 
   private static final VmObjectFactory<VmTyped> qualifiedIdentifierNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getQualifiedIdentifierNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("identifiers", ParserNodes::qualifiedIdentifierIdentifiers)
           .addStringProperty("value", ParserNodes::qualifiedIdentifierValue);
   private static final VmObjectFactory<VmTyped> docCommentNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getDocCommentNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::docCommentValue);
   private static final VmObjectFactory<VmTyped> annotationNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getAnnotationNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("type", ParserNodes::annotationType)
           .addProperty("body", ParserNodes::annotationBody);
   private static final VmObjectFactory<VmTyped> typeParameterNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getTypeParameterNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("variance", ParserNodes::typeParameterVariance)
           .addTypedProperty("identifier", ParserNodes::identifierNodeOf);
   private static final VmObjectFactory<VmTyped> objectBodyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectBodyNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("parameters", ParserNodes::objectBodyParameters)
           .addListProperty("properties", ParserNodes::objectBodyProperties)
           .addListProperty("methods", ParserNodes::objectBodyMethods)
@@ -97,18 +97,18 @@ public class ParserNodes {
           .addListProperty("whenGenerators", ParserNodes::objectBodyWhenGenerators);
   private static final VmObjectFactory<VmTyped> parameterNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParameterNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addBooleanProperty("isBlankIdentifier", ParserNodes::parameterIsBlankIdentifier)
           .addProperty("identifier", ParserNodes::parameterIdentifier)
           .addProperty("typeAnnotation", ParserNodes::parameterTypeAnnotation);
 
   private static final VmObjectFactory<VmTyped> objectElementNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectElementNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> objectPropertyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectPropertyNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("modifiers", ParserNodes::objectPropertyModifiers)
           .addTypedProperty("identifier", ParserNodes::objectPropertyIdentifier)
           .addProperty("typeAnnotation", ParserNodes::objectPropertyTypeAnnotation)
@@ -116,7 +116,7 @@ public class ParserNodes {
           .addListProperty("objectBodies", ParserNodes::objectPropertyObjectBodies);
   private static final VmObjectFactory<VmTyped> objectMethodNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectMethodNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("modifiers", ParserNodes::classMethodModifiers)
           .addTypedProperty("identifier", ParserNodes::classMethodIdentifier)
           .addListProperty("typeParameters", ParserNodes::classMethodTypeParameters)
@@ -125,178 +125,178 @@ public class ParserNodes {
           .addTypedProperty("body", ParserNodes::objectMethodBody);
   private static final VmObjectFactory<VmTyped> memberPredicateNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getMemberPredicateNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("condition", ParserNodes::memberPredicateCondition)
           .addProperty("value", ParserNodes::memberPredicateValue)
           .addListProperty("objectBodies", ParserNodes::memberPredicateObjectBodies);
   private static final VmObjectFactory<VmTyped> objectEntryNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectEntryNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("key", ParserNodes::objectEntryKey)
           .addProperty("value", ParserNodes::objectEntryValue)
           .addListProperty("objectBodies", ParserNodes::objectEntryObjectBodies);
   private static final VmObjectFactory<VmTyped> objectSpreadNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectSpreadNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("keyword", ParserNodes::objectSpreadKeyword)
           .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> whenGeneratorNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getWhenGeneratorNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("condition", ParserNodes::whenCondition)
           .addTypedProperty("thenBody", ParserNodes::whenThenBody)
           .addProperty("elseBody", ParserNodes::whenElseBody);
   private static final VmObjectFactory<VmTyped> forGeneratorNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getForGeneratorNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("keyParameter", ParserNodes::forKeyParameter)
           .addTypedProperty("valueParameter", ParserNodes::forValueParameter)
           .addTypedProperty("iterable", ParserNodes::forIterable)
           .addTypedProperty("body", ParserNodes::forBody);
 
   private static final VmObjectFactory<VmTyped> unknownTypeNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getUnknownTypeNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getUnknownTypeNodeClass);
   private static final VmObjectFactory<VmTyped> nothingTypeNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getNothingTypeNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getNothingTypeNodeClass);
   private static final VmObjectFactory<VmTyped> moduleTypeNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getModuleTypeNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getModuleTypeNodeClass);
   private static final VmObjectFactory<VmTyped> declaredTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getDeclaredTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("name", ParserNodes::declaredTypeName)
           .addListProperty("typeArguments", ParserNodes::declaredTypeArguments);
   private static final VmObjectFactory<VmTyped> nullableTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getNullableTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("baseType", ParserNodes::nullableTypeBaseType);
   private static final VmObjectFactory<VmTyped> unionTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnionTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("members", ParserNodes::unionTypeMembers);
   private static final VmObjectFactory<VmTyped> functionTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getFunctionTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("parameterTypes", ParserNodes::functionTypeParameterTypes)
           .addTypedProperty("returnType", ParserNodes::functionTypeReturnType);
   private static final VmObjectFactory<VmTyped> constrainedTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getConstrainedTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("baseType", ParserNodes::constrainedTypeBaseType)
           .addListProperty("constraints", ParserNodes::constrainedTypeConstraints);
   private static final VmObjectFactory<VmTyped> parenthesizedTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("type", ParserNodes::parenthesizedTypeType);
   private static final VmObjectFactory<VmTyped> stringConstantTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringConstantTypeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::stringConstantTypeValue);
 
   private static final VmObjectFactory<VmTyped> thisExprNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getThisExprNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getThisExprNodeClass);
   private static final VmObjectFactory<VmTyped> outerExprNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getOuterExprNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getOuterExprNodeClass);
   private static final VmObjectFactory<VmTyped> moduleExprNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getModuleExprNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getModuleExprNodeClass);
   private static final VmObjectFactory<VmTyped> nullLiteralExprNodeFactory =
-      nodeOnlyFactory(SyntaxModule::getNullLiteralExprNodeClass);
+      genericNodeOnlyFactory(SyntaxModule::getNullLiteralExprNodeClass);
   private static final VmObjectFactory<VmTyped> booleanLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getBooleanLiteralExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addBooleanProperty("value", ParserNodes::booleanLiteralValue);
   private static final VmObjectFactory<VmTyped> intLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIntLiteralExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("value", ParserNodes::literalText);
   private static final VmObjectFactory<VmTyped> floatLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getFloatLiteralExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("value", ParserNodes::literalText);
   private static final VmObjectFactory<VmTyped> singleLineStringLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getSingleLineStringLiteralExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("parts", ParserNodes::buildStringParts);
   private static final VmObjectFactory<VmTyped> multiLineStringLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getMultiLineStringLiteralExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("parts", ParserNodes::buildStringParts);
   private static final VmObjectFactory<VmTyped> unqualifiedAccessExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnqualifiedAccessExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("identifier", ParserNodes::identifierNodeOf)
           .addProperty("arguments", ParserNodes::unqualifiedAccessArguments);
   private static final VmObjectFactory<VmTyped> qualifiedAccessExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getQualifiedAccessExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("receiver", ParserNodes::qualifiedAccessReceiver)
           .addBooleanProperty("isNullSafe", ParserNodes::qualifiedAccessIsNullSafe)
           .addTypedProperty("identifier", ParserNodes::qualifiedAccessIdentifier)
           .addProperty("arguments", ParserNodes::qualifiedAccessArguments);
   private static final VmObjectFactory<VmTyped> subscriptExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getSubscriptExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("receiver", ParserNodes::subscriptReceiver)
           .addTypedProperty("index", ParserNodes::subscriptIndex);
   private static final VmObjectFactory<VmTyped> superAccessExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getSuperAccessExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("identifier", ParserNodes::identifierNodeOf)
           .addProperty("arguments", ParserNodes::argumentsOrNull);
   private static final VmObjectFactory<VmTyped> superSubscriptExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getSuperSubscriptExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("index", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> ifExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIfExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("condition", ParserNodes::ifCondition)
           .addTypedProperty("thenExpr", ParserNodes::ifThenExpr)
           .addTypedProperty("elseExpr", ParserNodes::ifElseExpr);
   private static final VmObjectFactory<VmTyped> letExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getLetExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("parameter", ParserNodes::letParameter)
           .addTypedProperty("bindingValue", ParserNodes::letBindingValue)
           .addTypedProperty("body", ParserNodes::letBody);
   private static final VmObjectFactory<VmTyped> throwExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getThrowExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> traceExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getTraceExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> importExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getImportExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("keyword", ParserNodes::importKeyword)
           .addStringProperty("uri", ParserNodes::importUri);
   private static final VmObjectFactory<VmTyped> readExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getReadExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("keyword", ParserNodes::readKeyword)
           .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> newExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getNewExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("type", ParserNodes::newExprType)
           .addTypedProperty("body", ParserNodes::newExprBody);
   private static final VmObjectFactory<VmTyped> amendsExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getAmendsExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("parentExpr", ParserNodes::amendsParentExpr)
           .addTypedProperty("body", ParserNodes::amendsBody);
 
   private static VmObjectFactory<VmTyped> binaryOpExprNodeFactory(Supplier<VmClass> classSupplier) {
     return new VmObjectFactory<VmTyped>(classSupplier)
-        .addProperty("node", vm -> vm)
+        .addProperty("genericNode", vm -> vm)
         .addTypedProperty("left", ParserNodes::binaryOpLeft)
         .addTypedProperty("right", ParserNodes::binaryOpRight);
   }
 
   private static VmObjectFactory<VmTyped> typeOpExprNodeFactory(Supplier<VmClass> classSupplier) {
     return new VmObjectFactory<VmTyped>(classSupplier)
-        .addProperty("node", vm -> vm)
+        .addProperty("genericNode", vm -> vm)
         .addTypedProperty("expression", ParserNodes::binaryOpLeft)
         .addTypedProperty("type", ParserNodes::typeOpType);
   }
@@ -341,54 +341,54 @@ public class ParserNodes {
       typeOpExprNodeFactory(SyntaxModule::getTypeCastExprNodeClass);
   private static final VmObjectFactory<VmTyped> unaryMinusExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnaryMinusExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("operand", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> logicalNotExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getLogicalNotExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("operand", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> nonNullExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getNonNullExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("operand", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> functionLiteralExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getFunctionLiteralExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("parameters", ParserNodes::functionLiteralParameters)
           .addTypedProperty("body", ParserNodes::functionLiteralBody);
   private static final VmObjectFactory<VmTyped> parenthesizedExprNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedExprNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::parenthesizedExpression);
 
-  // String-part factories, produced by `buildStringParts`. `StringPartNode` is not a `SyntaxNode`,
-  // but it also carries a hidden `node`, so the same `node`-property shape applies.
+  // String-part factories, produced by `buildStringParts`. `StringPartNode` is not a `Node`,
+  // but it also carries a hidden `genericNode`, so the same property shape applies.
   private static final VmObjectFactory<VmTyped> stringCharsNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringCharsNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::literalText);
   private static final VmObjectFactory<VmTyped> stringEscapeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringEscapeNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::literalText);
   private static final VmObjectFactory<VmTyped> stringNewlineNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringNewlineNodeClass)
-          .addProperty("node", vm -> vm);
+          .addProperty("genericNode", vm -> vm);
   private static final VmObjectFactory<VmTyped> stringInterpolationNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringInterpolationNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::wrapExpr);
 
   private static final VmObjectFactory<VmTyped> importNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getImportNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("keyword", ParserNodes::importKeyword)
           .addStringProperty("uri", ParserNodes::importUri)
           .addProperty("alias", ParserNodes::importAlias);
 
   private static final VmObjectFactory<VmTyped> moduleDeclarationNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getModuleDeclarationNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
           .addListProperty("annotations", ParserNodes::annotationsOf)
           .addListProperty("modifiers", ParserNodes::moduleDeclModifiers)
@@ -397,13 +397,13 @@ public class ParserNodes {
 
   private static final VmObjectFactory<VmTyped> extendsOrAmendsClauseNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getExtendsOrAmendsClauseNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addStringProperty("keyword", ParserNodes::extendsOrAmendsClauseKeyword)
           .addStringProperty("uri", ParserNodes::stringCharsOf);
 
   private static final VmObjectFactory<VmTyped> classNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
           .addListProperty("annotations", ParserNodes::annotationsOf)
           .addListProperty("modifiers", ParserNodes::classModifiers)
@@ -414,7 +414,7 @@ public class ParserNodes {
 
   private static final VmObjectFactory<VmTyped> typeAliasNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getTypeAliasNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
           .addListProperty("annotations", ParserNodes::annotationsOf)
           .addListProperty("modifiers", ParserNodes::typeAliasModifiers)
@@ -424,7 +424,7 @@ public class ParserNodes {
 
   private static final VmObjectFactory<VmTyped> classPropertyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassPropertyNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
           .addListProperty("annotations", ParserNodes::annotationsOf)
           .addListProperty("modifiers", ParserNodes::classPropertyModifiers)
@@ -435,7 +435,7 @@ public class ParserNodes {
 
   private static final VmObjectFactory<VmTyped> classMethodNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassMethodNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("docComment", ParserNodes::docCommentOf)
           .addListProperty("annotations", ParserNodes::annotationsOf)
           .addListProperty("modifiers", ParserNodes::classMethodModifiers)
@@ -447,13 +447,13 @@ public class ParserNodes {
 
   private static final VmObjectFactory<VmTyped> classBodyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassBodyNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addListProperty("properties", ParserNodes::classBodyProperties)
           .addListProperty("methods", ParserNodes::classBodyMethods);
 
   private static final VmObjectFactory<VmTyped> moduleNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getModuleNodeClass)
-          .addProperty("node", vm -> vm)
+          .addProperty("genericNode", vm -> vm)
           .addProperty("declaration", ParserNodes::moduleDeclaration)
           .addListProperty("imports", ParserNodes::moduleImports)
           .addListProperty("classes", ParserNodes::moduleClasses)
@@ -495,7 +495,7 @@ public class ParserNodes {
       if (i > 0) {
         builder.append('\n');
       }
-      var data = (NodeData) lineVms.get(i).getExtraStorage();
+      var data = (GenericNodeData) lineVms.get(i).getExtraStorage();
       var text = data.node.text(data.source);
       if (text.startsWith("/// ")) {
         builder.append(text, 4, text.length());
@@ -584,7 +584,7 @@ public class ParserNodes {
   }
 
   private static String stringConstantTypeValue(VmTyped typeVm) {
-    var data = (NodeData) typeVm.getExtraStorage();
+    var data = (GenericNodeData) typeVm.getExtraStorage();
     return extractStringChars(data.node, data.source);
   }
 
@@ -597,12 +597,12 @@ public class ParserNodes {
   }
 
   private static String literalText(VmTyped exprVm) {
-    var text = nodeText((NodeData) exprVm.getExtraStorage());
+    var text = nodeText((GenericNodeData) exprVm.getExtraStorage());
     return text == null ? "" : text;
   }
 
   private static boolean booleanLiteralValue(VmTyped exprVm) {
-    return "true".equals(nodeText((NodeData) exprVm.getExtraStorage()));
+    return "true".equals(nodeText((GenericNodeData) exprVm.getExtraStorage()));
   }
 
   private static Object unqualifiedAccessArguments(VmTyped exprVm) {
@@ -618,7 +618,7 @@ public class ParserNodes {
     if (op == null) {
       return false;
     }
-    var data = (NodeData) op.getExtraStorage();
+    var data = (GenericNodeData) op.getExtraStorage();
     return "?.".equals(data.node.text(data.source));
   }
 
@@ -703,7 +703,7 @@ public class ParserNodes {
     if (op == null) {
       return "";
     }
-    var data = (NodeData) op.getExtraStorage();
+    var data = (GenericNodeData) op.getExtraStorage();
     return data.node.text(data.source);
   }
 
@@ -789,7 +789,7 @@ public class ParserNodes {
   }
 
   private static @Nullable VmTyped lastChildVm(VmTyped genericVm, NodeType type) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     VmTyped result = null;
     for (var i = 0; i < children.size(); i++) {
@@ -965,14 +965,14 @@ public class ParserNodes {
       if (i > 0) {
         builder.append('.');
       }
-      var text = nodeText((NodeData) idVms.get(i).getExtraStorage());
+      var text = nodeText((GenericNodeData) idVms.get(i).getExtraStorage());
       builder.append(text == null ? "" : text);
     }
     return builder.toString();
   }
 
   private static Object typeParameterVariance(VmTyped typeParameterVm) {
-    var data = (NodeData) typeParameterVm.getExtraStorage();
+    var data = (GenericNodeData) typeParameterVm.getExtraStorage();
     for (var child : data.node.children) {
       if (child.type == NodeType.TERMINAL) {
         var text = child.text(data.source);
@@ -998,7 +998,7 @@ public class ParserNodes {
   }
 
   private static VmList buildStringParts(VmTyped stringVm) {
-    var data = (NodeData) stringVm.getExtraStorage();
+    var data = (GenericNodeData) stringVm.getExtraStorage();
     var children = data.node.children;
     var childrenVm = data.childrenVm;
     var parts = new ArrayList<>();
@@ -1085,7 +1085,7 @@ public class ParserNodes {
   }
 
   private static String extendsOrAmendsClauseKeyword(VmTyped clauseVm) {
-    var data = (NodeData) clauseVm.getExtraStorage();
+    var data = (GenericNodeData) clauseVm.getExtraStorage();
     return data.node.type == NodeType.AMENDS_CLAUSE ? "amends" : "extends";
   }
 
@@ -1240,7 +1240,7 @@ public class ParserNodes {
   }
 
   private static String importUri(VmTyped importVm) {
-    var data = (NodeData) importVm.getExtraStorage();
+    var data = (GenericNodeData) importVm.getExtraStorage();
     return extractStringChars(data.node, data.source);
   }
 
@@ -1254,11 +1254,11 @@ public class ParserNodes {
   }
 
   private static String identifierValue(VmTyped identifierVm) {
-    var text = nodeText((NodeData) identifierVm.getExtraStorage());
+    var text = nodeText((GenericNodeData) identifierVm.getExtraStorage());
     return text == null ? "" : text;
   }
 
-  private static @Nullable String nodeText(NodeData data) {
+  private static @Nullable String nodeText(GenericNodeData data) {
     return data.node.children.isEmpty() || data.node.type == NodeType.STRING_CHARS
         ? data.node.text(data.source)
         : null;
@@ -1266,7 +1266,7 @@ public class ParserNodes {
 
   // The text of the node's first terminal child, or `fallback` if it has none
   private static String firstTerminalText(VmTyped nodeVm, String fallback) {
-    var data = (NodeData) nodeVm.getExtraStorage();
+    var data = (GenericNodeData) nodeVm.getExtraStorage();
     for (var child : data.node.children) {
       if (child.type == NodeType.TERMINAL) {
         return child.text(data.source);
@@ -1303,20 +1303,20 @@ public class ParserNodes {
     var modifierVms = findChildrenVm(modifierList, NodeType.MODIFIER);
     var result = new Object[modifierVms.size()];
     for (var i = 0; i < modifierVms.size(); i++) {
-      var data = (NodeData) modifierVms.get(i).getExtraStorage();
+      var data = (GenericNodeData) modifierVms.get(i).getExtraStorage();
       result[i] = data.node.text(data.source);
     }
     return VmList.create(result);
   }
 
   private static String stringCharsOf(VmTyped clauseVm) {
-    var data = (NodeData) clauseVm.getExtraStorage();
+    var data = (GenericNodeData) clauseVm.getExtraStorage();
     return extractStringChars(data.node, data.source);
   }
 
   // The first child of `genericVm` with the given type, as a generic-node `VmTyped`, or null.
   private static @Nullable VmTyped findChildVm(VmTyped genericVm, NodeType type) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     for (var i = 0; i < children.size(); i++) {
       if (children.get(i).type == type) {
@@ -1328,7 +1328,7 @@ public class ParserNodes {
 
   // The first type-node child of `genericVm`, as a generic-node `VmTyped`, or null.
   private static @Nullable VmTyped findTypeChildVm(VmTyped genericVm) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     for (var i = 0; i < children.size(); i++) {
       if (children.get(i).type.isType()) {
@@ -1340,7 +1340,7 @@ public class ParserNodes {
 
   // The first expression-node child of `genericVm`, as a generic-node `VmTyped`, or null.
   private static @Nullable VmTyped findExprChildVm(VmTyped genericVm) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     for (var i = 0; i < children.size(); i++) {
       if (children.get(i).type.isExpression()) {
@@ -1352,7 +1352,7 @@ public class ParserNodes {
 
   // All type-node children of `genericVm`, as generic-node `VmTyped`s.
   private static List<VmTyped> findTypeChildrenVm(VmTyped genericVm) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     var result = new ArrayList<VmTyped>();
     for (var i = 0; i < children.size(); i++) {
@@ -1365,7 +1365,7 @@ public class ParserNodes {
 
   // All expression-node children of `genericVm`, as generic-node `VmTyped`s.
   private static List<VmTyped> findExprChildrenVm(VmTyped genericVm) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     var result = new ArrayList<VmTyped>();
     for (var i = 0; i < children.size(); i++) {
@@ -1467,7 +1467,7 @@ public class ParserNodes {
 
   // Wrap a generic type node into its specific `TypeNode` subclass
   private static VmTyped wrapType(VmTyped typeVm) {
-    var data = (NodeData) typeVm.getExtraStorage();
+    var data = (GenericNodeData) typeVm.getExtraStorage();
     return switch (data.node.type) {
       case UNKNOWN_TYPE -> unknownTypeNodeFactory.create(typeVm);
       case NOTHING_TYPE -> nothingTypeNodeFactory.create(typeVm);
@@ -1486,7 +1486,7 @@ public class ParserNodes {
 
   // Wrap a generic expression node into its specific `ExprNode` subclass
   private static VmTyped wrapExpr(VmTyped exprVm) {
-    var data = (NodeData) exprVm.getExtraStorage();
+    var data = (GenericNodeData) exprVm.getExtraStorage();
     return switch (data.node.type) {
       case THIS_EXPR -> thisExprNodeFactory.create(exprVm);
       case OUTER_EXPR -> outerExprNodeFactory.create(exprVm);
@@ -1525,7 +1525,7 @@ public class ParserNodes {
 
   // All children of `genericVm` with the given type, as generic-node `VmTyped`s.
   private static List<VmTyped> findChildrenVm(VmTyped genericVm, NodeType type) {
-    var data = (NodeData) genericVm.getExtraStorage();
+    var data = (GenericNodeData) genericVm.getExtraStorage();
     var children = data.node.children;
     var result = new ArrayList<VmTyped>();
     for (var i = 0; i < children.size(); i++) {
@@ -1612,13 +1612,13 @@ public class ParserNodes {
 
     var childrenVm = VmList.create(childrenList.toArray());
     var spanVm = SyntaxNodes.spanFactory.create(new SpanData(genericNode.span, sourceUri));
-    var data = new NodeData(genericNode, sourceChars, childrenVm, spanVm);
+    var data = new GenericNodeData(genericNode, sourceChars, childrenVm, spanVm);
 
-    var result = nodeFactory.create(data);
+    var result = genericNodeFactory.create(data);
 
     // set parent back-reference on each child
     for (var childVm : childrenList) {
-      var childData = (NodeData) childVm.getExtraStorage();
+      var childData = (GenericNodeData) childVm.getExtraStorage();
       childData.parentVm = result;
     }
 

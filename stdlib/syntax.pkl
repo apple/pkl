@@ -29,7 +29,7 @@ class Parser {
   external function parseModuleOrNull(source: String | Resource): ModuleNode?
 }
 
-/// Renders a syntax [Node] back to Pkl source code.
+/// Renders a [GenericNode] back to Pkl source code.
 class Renderer {
   /// The grammar version to target.
   ///
@@ -37,22 +37,22 @@ class Renderer {
   grammarVersion: "V1" | "V2" = "V2"
 
   /// Render [node] as Pkl source code.
-  external function render(node: Node): String
+  external function render(node: GenericNode): String
 }
 
 /// A generic, untyped node in the Pkl syntax tree.
 ///
 /// A node is either a *leaf*, carrying source [text] and no
 /// [children], or a *branch*, carrying [children] and no [text].
-class Node {
+class GenericNode {
   /// The kind of this node.
   type: NodeType
 
   /// The child nodes, in source order. Empty for leaf nodes.
-  children: List<Node>
+  children: List<GenericNode>
 
   /// The parent node, or `null` for the root and for nodes not attached to a tree.
-  hidden parent: Node?
+  hidden parent: GenericNode?
 
   /// The verbatim source text of a leaf node (identifier, literal, terminal, etc.),
   /// or `null` for a branch node whose content is its [children].
@@ -78,15 +78,15 @@ class Node {
   /// [span] is carried through unchanged unless set explicitly.
   /// [parent] is populated on the returned tree for nodes originating from [Parser.parseModule];
   /// nodes constructed from scratch retain their given `parent`.
-  external function walk(visit: (Node) -> Pair<Node, Boolean>?): Node
+  external function walk(visit: (GenericNode) -> Pair<GenericNode, Boolean>?): GenericNode
 
   /// Fold [operator] over this node and its descendants, top-down in pre-order.
   ///
   /// ```
   /// // count the if-expressions in a module
-  /// module.node.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
+  /// module.genericNode.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
   /// ```
-  external function fold<Result>(initial: Result, operator: (Result, Node) -> Result): Result
+  external function fold<Result>(initial: Result, operator: (Result, GenericNode) -> Result): Result
 }
 
 /// A range of source code, spanning [start] (inclusive) to [end] (exclusive).
@@ -253,24 +253,24 @@ typealias NodeType =
 
 /// Base class for all typed syntax nodes.
 ///
-/// A typed node may be *backed* by a parsed [Node] (available via [node]) or
-/// constructed from scratch (in which case [node] is `null`). Its typed fields
-/// are read from [node] when backed, or supplied directly when constructed.
-abstract class SyntaxNode {
+/// A typed node may be *backed* by a parsed [GenericNode] (available via [genericNode]) or
+/// constructed from scratch (in which case [genericNode] is `null`). Its typed fields
+/// are read from [genericNode] when backed, or supplied directly when constructed.
+abstract class Node {
   /// The original parsed node, or `null` when this was built from scratch.
-  hidden node: Node? = null
+  hidden genericNode: GenericNode? = null
 
-  /// This node rebuilt into a generic [Node].
+  /// This node rebuilt into a [GenericNode].
   ///
   /// Always constructs a fresh node from this node's fields.
-  external fixed builtNode: Node
+  external fixed builtNode: GenericNode
 }
 
 /// Base class for expression nodes.
-abstract class ExprNode extends SyntaxNode
+abstract class ExprNode extends Node
 
 /// Base class for type nodes.
-abstract class TypeNode extends SyntaxNode
+abstract class TypeNode extends Node
 
 /// A member of an [ObjectBodyNode].
 typealias ObjectMemberNode =
@@ -284,7 +284,7 @@ typealias ObjectMemberNode =
     | WhenGeneratorNode
 
 /// The top-level module node.
-class ModuleNode extends SyntaxNode {
+class ModuleNode extends Node {
   /// The module declaration.
   declaration: ModuleDeclarationNode?
 
@@ -305,7 +305,7 @@ class ModuleNode extends SyntaxNode {
 }
 
 /// A module declaration (including doc comment, annotations, modifiers, name, amends/extends).
-class ModuleDeclarationNode extends SyntaxNode {
+class ModuleDeclarationNode extends Node {
   /// The doc comment on the module declaration.
   docComment: DocCommentNode?
 
@@ -325,7 +325,7 @@ class ModuleDeclarationNode extends SyntaxNode {
 }
 
 /// The `extends` or `amends` clause of a module declaration.
-class ExtendsOrAmendsClauseNode extends SyntaxNode {
+class ExtendsOrAmendsClauseNode extends Node {
   /// The keyword used (`"extends"` or `"amends"`).
   keyword: "extends" | "amends"
 
@@ -334,7 +334,7 @@ class ExtendsOrAmendsClauseNode extends SyntaxNode {
 }
 
 /// An import declaration.
-class ImportNode extends SyntaxNode {
+class ImportNode extends Node {
   /// The keyword used (`"import"` or `"import*"`).
   keyword: "import" | "import*"
 
@@ -346,7 +346,7 @@ class ImportNode extends SyntaxNode {
 }
 
 /// A class declaration.
-class ClassNode extends SyntaxNode {
+class ClassNode extends Node {
   /// The doc comment.
   docComment: DocCommentNode?
 
@@ -370,7 +370,7 @@ class ClassNode extends SyntaxNode {
 }
 
 /// A typealias declaration.
-class TypeAliasNode extends SyntaxNode {
+class TypeAliasNode extends Node {
   /// The doc comment.
   docComment: DocCommentNode?
 
@@ -391,7 +391,7 @@ class TypeAliasNode extends SyntaxNode {
 }
 
 /// A class body delimited by braces.
-class ClassBodyNode extends SyntaxNode {
+class ClassBodyNode extends Node {
   /// Properties declared in this class body.
   properties: List<ClassPropertyNode>
 
@@ -400,7 +400,7 @@ class ClassBodyNode extends SyntaxNode {
 }
 
 /// A class property declaration.
-class ClassPropertyNode extends SyntaxNode {
+class ClassPropertyNode extends Node {
   /// The doc comment.
   docComment: DocCommentNode?
 
@@ -426,7 +426,7 @@ class ClassPropertyNode extends SyntaxNode {
 }
 
 /// A class method declaration.
-class ClassMethodNode extends SyntaxNode {
+class ClassMethodNode extends Node {
   /// The doc comment.
   docComment: DocCommentNode?
 
@@ -453,7 +453,7 @@ class ClassMethodNode extends SyntaxNode {
 }
 
 /// An object body delimited by braces.
-class ObjectBodyNode extends SyntaxNode {
+class ObjectBodyNode extends Node {
   /// Parameters for this object body (e.g., `{ x, y -> ... }`).
   parameters: List<ParameterNode>
 
@@ -483,7 +483,7 @@ class ObjectBodyNode extends SyntaxNode {
 }
 
 /// An object property declaration.
-class ObjectPropertyNode extends SyntaxNode {
+class ObjectPropertyNode extends Node {
   /// The modifiers on the property.
   modifiers: List<"local" | "const">(isDistinct)
 
@@ -501,7 +501,7 @@ class ObjectPropertyNode extends SyntaxNode {
 }
 
 /// An object method declaration.
-class ObjectMethodNode extends SyntaxNode {
+class ObjectMethodNode extends Node {
   /// The modifiers on the method.
   modifiers: List<"local" | "const">(isDistinct)
 
@@ -522,13 +522,13 @@ class ObjectMethodNode extends SyntaxNode {
 }
 
 /// An object element (a positional expression in an object body).
-class ObjectElementNode extends SyntaxNode {
+class ObjectElementNode extends Node {
   /// The expression value.
   expression: ExprNode
 }
 
 /// An object entry (`[key] = value` or `[key] { ... }`).
-class ObjectEntryNode extends SyntaxNode {
+class ObjectEntryNode extends Node {
   /// The key expression.
   key: ExprNode
 
@@ -540,7 +540,7 @@ class ObjectEntryNode extends SyntaxNode {
 }
 
 /// An object spread (`...expr` or `...?expr`).
-class ObjectSpreadNode extends SyntaxNode {
+class ObjectSpreadNode extends Node {
   /// The keyword used (`"..."` or `"...?"`).
   keyword: "..." | "...?"
 
@@ -549,7 +549,7 @@ class ObjectSpreadNode extends SyntaxNode {
 }
 
 /// A member predicate (`[[condition]] = value` or `[[condition]] { ... }`).
-class MemberPredicateNode extends SyntaxNode {
+class MemberPredicateNode extends Node {
   /// The condition expression.
   condition: ExprNode
 
@@ -561,7 +561,7 @@ class MemberPredicateNode extends SyntaxNode {
 }
 
 /// A `for (param in iterable) { ... }` generator.
-class ForGeneratorNode extends SyntaxNode {
+class ForGeneratorNode extends Node {
   /// The key parameter (first parameter when two are present).
   keyParameter: ParameterNode?
 
@@ -576,7 +576,7 @@ class ForGeneratorNode extends SyntaxNode {
 }
 
 /// A `when (condition) { ... }` generator.
-class WhenGeneratorNode extends SyntaxNode {
+class WhenGeneratorNode extends Node {
   /// The condition expression.
   condition: ExprNode
 
@@ -924,7 +924,7 @@ class StringConstantTypeNode extends TypeNode {
 }
 
 /// An annotation (`@Type { ... }`).
-class AnnotationNode extends SyntaxNode {
+class AnnotationNode extends Node {
   /// The annotation type.
   type: TypeNode
 
@@ -933,7 +933,7 @@ class AnnotationNode extends SyntaxNode {
 }
 
 /// A parameter declaration (`name`, `name: Type`, or `_`).
-class ParameterNode extends SyntaxNode {
+class ParameterNode extends Node {
   /// Whether this is a blank identifier parameter (`_`).
   isBlankIdentifier: Boolean
 
@@ -945,7 +945,7 @@ class ParameterNode extends SyntaxNode {
 }
 
 /// A type parameter declaration (`T`, `in T`, or `out T`).
-class TypeParameterNode extends SyntaxNode {
+class TypeParameterNode extends Node {
   /// The variance modifier (`"in"`, `"out"`, or null).
   variance: ("in" | "out")?
 
@@ -954,13 +954,13 @@ class TypeParameterNode extends SyntaxNode {
 }
 
 /// An identifier (a name occurring in the source, e.g. a property or class name).
-class IdentifierNode extends SyntaxNode {
+class IdentifierNode extends Node {
   /// The identifier text.
   value: String
 }
 
 /// A qualified (dotted) identifier, e.g. `foo.bar.baz`.
-class QualifiedIdentifierNode extends SyntaxNode {
+class QualifiedIdentifierNode extends Node {
   /// The parts of the qualified identifier.
   identifiers: List<IdentifierNode>
 
@@ -969,7 +969,7 @@ class QualifiedIdentifierNode extends SyntaxNode {
 }
 
 /// A doc comment.
-class DocCommentNode extends SyntaxNode {
+class DocCommentNode extends Node {
   /// The body text of the comment, with the leading `///` stripped from each line.
   value: String
 }
@@ -977,7 +977,7 @@ class DocCommentNode extends SyntaxNode {
 /// Base class for parts of a string literal (text, escapes, newlines, interpolations).
 abstract class StringPartNode {
   /// The original parsed node, or `null` when built from scratch.
-  hidden node: Node? = null
+  hidden genericNode: GenericNode? = null
 }
 
 /// A plain text part of a string literal.

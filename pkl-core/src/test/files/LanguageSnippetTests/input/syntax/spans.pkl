@@ -14,14 +14,14 @@ local stringModule = parser.parseModule("""
 
 local resourceModule = parser.parseModule(read(".../input-helper/syntax/spans/sample.pkl"))
 
-local function nestedProperty(mod: syntax.ModuleNode): syntax.Node =
-  mod.node!!
-    .fold(List(), (acc: List<syntax.Node>, n) -> if (n.type == "object_property") acc.add(n) else acc)
+local function nestedProperty(mod: syntax.ModuleNode): syntax.GenericNode =
+  mod.genericNode!!
+    .fold(List(), (acc: List<syntax.GenericNode>, n) -> if (n.type == "object_property") acc.add(n) else acc)
     .last
 
 examples {
   ["span of a module parsed from a string"] {
-    stringModule.node.span
+    stringModule.genericNode.span
   }
 
   ["span of a leaf parsed from a string"] {
@@ -29,7 +29,7 @@ examples {
   }
 
   ["span of a module parsed from a resource carries the resource URI"] {
-    resourceModule.node.span
+    resourceModule.genericNode.span
   }
 
   ["span of a leaf parsed from a resource carries the resource URI"] {
@@ -39,8 +39,8 @@ examples {
 
 facts {
   ["span positions are 1-based"] {
-    stringModule.node.span!!.start.line == 1
-    stringModule.node.span!!.start.column == 1
+    stringModule.genericNode.span!!.start.line == 1
+    stringModule.genericNode.span!!.start.column == 1
   }
 
   ["end is exclusive"] {
@@ -64,7 +64,7 @@ facts {
   }
 
   ["nodes constructed from scratch have no span"] {
-    new syntax.IntLiteralExprNode { value = 42 }?.node?.span == null
+    new syntax.IntLiteralExprNode { value = 42 }?.genericNode?.span == null
     new syntax.IntLiteralExprNode { value = 42 }.builtNode.span == null
   }
 
@@ -73,8 +73,8 @@ facts {
   }
 
   ["parsing the same text from a string and a resource differs only in displayUri"] {
-    local fromString = stringModule.node.span!!
-    local fromResource = resourceModule.node.span!!
+    local fromString = stringModule.genericNode.span!!
+    local fromResource = resourceModule.genericNode.span!!
     fromString.start.line == fromResource.start.line
     fromString.start.column == fromResource.start.column
     fromString.end.line == fromResource.end.line

@@ -4,14 +4,14 @@ import "pkl:syntax"
 
 local function roundTrip(source: String) = parseNode(source)!!.render()
 
-local function parseNode(source: String) = new syntax.Parser {}.parseModule(source).node
+local function parseNode(source: String) = new syntax.Parser {}.parseModule(source).genericNode
 
 local function replaceLeaf(
-  node: syntax.Node,
+  node: syntax.GenericNode,
   targetType: syntax.NodeType,
   oldText: String,
   newText: String,
-): syntax.Node =
+): syntax.GenericNode =
   if (node.type == targetType && node.text == oldText)
     (node) { text = newText }
   else
@@ -20,10 +20,10 @@ local function replaceLeaf(
     }
 
 local function transformFirst(
-  node: syntax.Node,
+  node: syntax.GenericNode,
   targetType: syntax.NodeType,
-  transform: (syntax.Node) -> syntax.Node,
-): syntax.Node =
+  transform: (syntax.GenericNode) -> syntax.GenericNode,
+): syntax.GenericNode =
   if (node.type == targetType)
     transform.apply(node)
   else
@@ -371,7 +371,7 @@ facts {
 
   ["add new modifier"] {
     local root = parseNode("local x = 1")
-    local constModifier = new syntax.Node {
+    local constModifier = new syntax.GenericNode {
       type = "modifier"
       text = "const"
     }

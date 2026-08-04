@@ -4,7 +4,7 @@ import "pkl:syntax"
 
 local function mod(source: String): syntax.ModuleNode = new syntax.Parser {}.parseModule(source)
 
-local sample: syntax.Node =
+local sample: syntax.GenericNode =
   mod(
     """
     import "foo.pkl"
@@ -19,7 +19,7 @@ local sample: syntax.Node =
 
     scaled = origin.x * 2
     """,
-  ).node!!
+  ).genericNode!!
 
 facts {
   ["fold counts nodes by predicate"] {

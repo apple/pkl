@@ -78,15 +78,15 @@ public final class SyntaxNodes {
     return sourceUri == null ? position : sourceUri + "#" + position;
   }
 
-  /** Extra storage backing a Pkl {@code Node} instance. */
-  static final class NodeData {
+  /** Extra storage backing a Pkl {@code GenericNode} instance. */
+  static final class GenericNodeData {
     final Node node;
     final char[] source;
     @Nullable VmTyped parentVm;
     VmList childrenVm;
     @Nullable VmTyped spanVm;
 
-    NodeData(Node node, char[] source, VmList childrenVm, @Nullable VmTyped spanVm) {
+    GenericNodeData(Node node, char[] source, VmList childrenVm, @Nullable VmTyped spanVm) {
       this.node = node;
       this.source = source;
       this.childrenVm = childrenVm;
@@ -94,8 +94,8 @@ public final class SyntaxNodes {
     }
   }
 
-  private static final VmObjectFactory<NodeData> nodeFactory =
-      new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
+  private static final VmObjectFactory<GenericNodeData> genericNodeFactory =
+      new VmObjectFactory<GenericNodeData>(SyntaxModule::getGenericNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
           .addListProperty("children", nd -> nd.childrenVm)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
@@ -126,20 +126,22 @@ public final class SyntaxNodes {
         makeJavaNode(nodeType, span, childJavaNodes, VmUtils.readMember(template, Identifier.TEXT));
 
     var childrenVm = VmList.create(newChildrenVm);
-    var result = nodeFactory.create(new NodeData(javaNode, EMPTY_SOURCE, childrenVm, spanVm));
+    var result =
+        genericNodeFactory.create(new GenericNodeData(javaNode, EMPTY_SOURCE, childrenVm, spanVm));
 
     // wire up the parent back-reference
     for (var child : newChildrenVm) {
       var childVm = (VmTyped) child;
       if (childVm.hasExtraStorage()) {
-        ((NodeData) childVm.getExtraStorage()).parentVm = result;
+        ((GenericNodeData) childVm.getExtraStorage()).parentVm = result;
       }
     }
     return result;
   }
 
   /**
-   * Convert a Pkl node to a generic {@link Node}, reusing the parse-time node when present.
+   * Convert a Pkl {@code GenericNode} to a generic {@link Node}, reusing the parse-time node when
+   * present.
    *
    * <p>{@code fallbackSpan} is used for constructed nodes (and their descendants) that carry no
    * meaningful span of their own, so that a subtree spliced into reused siblings lines up with
@@ -148,7 +150,7 @@ public final class SyntaxNodes {
   static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
     // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
     if (nodeVm.hasExtraStorage()) {
-      return ((NodeData) nodeVm.getExtraStorage()).node;
+      return ((GenericNodeData) nodeVm.getExtraStorage()).node;
     }
 
     var typeStr = (String) VmUtils.readMember(nodeVm, Identifier.TYPE);
