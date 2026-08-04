@@ -269,9 +269,7 @@ public final class NodeNodes {
   }
 
   private static VmTyped buildClassBody(VmTyped self) {
-    var members = new ArrayList<>();
-    members.addAll(buildAll(listMember(self, "properties")));
-    members.addAll(buildAll(listMember(self, "methods")));
+    var members = buildAll(listMember(self, "members"));
     var children = new ArrayList<>();
     children.add(terminal("{"));
     if (!members.isEmpty()) {

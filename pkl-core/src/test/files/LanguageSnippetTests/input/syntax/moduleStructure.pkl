@@ -102,18 +102,18 @@ facts {
 
     cls.body != null
     cls.body!!.properties.length == 1
-    cls.body!!.properties.first.identifier.value == "name"
-    cls.body!!.properties.first.typeAnnotation != null
-    cls.body!!.properties.first.typeAnnotation is syntax.DeclaredTypeNode
-    cls.body!!.properties.first.value == null
+    cls.body!!.properties["name"].identifier.value == "name"
+    cls.body!!.properties["name"].typeAnnotation != null
+    cls.body!!.properties["name"].typeAnnotation is syntax.DeclaredTypeNode
+    cls.body!!.properties["name"].value == null
 
     cls.body!!.methods.length == 1
-    cls.body!!.methods.first.identifier.value == "fly"
-    cls.body!!.methods.first.parameters.length == 1
-    cls.body!!.methods.first.parameters.first.identifier!!.value == "speed"
-    cls.body!!.methods.first.returnType != null
-    cls.body!!.methods.first.body != null
-    cls.body!!.methods.first.body is syntax.BooleanLiteralExprNode
+    cls.body!!.methods["fly"].identifier.value == "fly"
+    cls.body!!.methods["fly"].parameters.length == 1
+    cls.body!!.methods["fly"].parameters.first.identifier!!.value == "speed"
+    cls.body!!.methods["fly"].returnType != null
+    cls.body!!.methods["fly"].body != null
+    cls.body!!.methods["fly"].body is syntax.BooleanLiteralExprNode
   }
 
   ["class with extends and type parameters"] {
@@ -218,18 +218,18 @@ facts {
 
     mod.imports.first.alias!!.value == "`my alias`"
 
-    local cls = mod.classes["`My Class`"]
+    local cls = mod.classes["My Class"]
     cls.identifier.value == "`My Class`"
-    cls.body!!.properties.first.identifier.value == "`a prop`"
-    cls.body!!.methods.first.identifier.value == "`do it`"
-    cls.body!!.methods.first.parameters.first.identifier!!.value == "`the arg`"
+    cls.body!!.properties["a prop"].identifier.value == "`a prop`"
+    cls.body!!.methods["do it"].identifier.value == "`do it`"
+    cls.body!!.methods["do it"].parameters.first.identifier!!.value == "`the arg`"
 
-    local ta = mod.typeAliases["`My Alias`"]
+    local ta = mod.typeAliases["My Alias"]
     ta.identifier.value == "`My Alias`"
     (ta.type as syntax.DeclaredTypeNode).name.value == "`My Class`"
 
-    mod.properties["`my prop`"].identifier.value == "`my prop`"
-    mod.properties["`my prop`"].modifiers == new Listing { "const" }
+    mod.properties["my prop"].identifier.value == "`my prop`"
+    mod.properties["my prop"].modifiers == new Listing { "const" }
   }
 
   ["quoted identifiers in object bodies and accesses"] {

@@ -449,15 +449,14 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> classBodyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getClassBodyNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addListingProperty("properties", ParserNodes::classBodyProperties)
-          .addListingProperty("methods", ParserNodes::classBodyMethods);
+          .addListingProperty("members", ParserNodes::classBodyMembers);
 
   private static final VmObjectFactory<VmTyped> moduleNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getModuleNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addProperty("declaration", ParserNodes::moduleDeclaration)
           .addListingProperty("imports", ParserNodes::moduleImports)
-          .addListingProperty("members", ParserNodes::moduleMembers);
+          .addListingProperty("members", ParserNodes::memberChildren);
 
   private static Object moduleDeclaration(VmTyped moduleVm) {
     var declVm = findChildVm(moduleVm, NodeType.MODULE_DECLARATION);
@@ -1087,9 +1086,10 @@ public class ParserNodes {
     return data.node.type == NodeType.AMENDS_CLAUSE ? "amends" : "extends";
   }
 
-  // The module's classes, typealiases, properties, and methods, in source order.
-  private static VmListing moduleMembers(VmTyped moduleVm) {
-    var data = (GenericNodeData) moduleVm.getExtraStorage();
+  // The typed classes, typealiases, properties, and methods among `ownerVm`'s children,
+  // in source order.
+  private static VmListing memberChildren(VmTyped ownerVm) {
+    var data = (GenericNodeData) ownerVm.getExtraStorage();
     var children = data.node.children;
     var result = new ArrayList<>();
     for (var i = 0; i < children.size(); i++) {
@@ -1214,20 +1214,12 @@ public class ParserNodes {
     return exprInChild(methodVm, NodeType.CLASS_METHOD_BODY);
   }
 
-  private static VmListing classBodyProperties(VmTyped classBodyVm) {
+  private static VmListing classBodyMembers(VmTyped classBodyVm) {
     var elements = findChildVm(classBodyVm, NodeType.CLASS_BODY_ELEMENTS);
     if (elements == null) {
       return VmListing.empty();
     }
-    return wrapAll(findChildrenVm(elements, NodeType.CLASS_PROPERTY), classPropertyNodeFactory);
-  }
-
-  private static VmListing classBodyMethods(VmTyped classBodyVm) {
-    var elements = findChildVm(classBodyVm, NodeType.CLASS_BODY_ELEMENTS);
-    if (elements == null) {
-      return VmListing.empty();
-    }
-    return wrapAll(findChildrenVm(elements, NodeType.CLASS_METHOD), classMethodNodeFactory);
+    return memberChildren(elements);
   }
 
   private static VmListing moduleImports(VmTyped moduleVm) {

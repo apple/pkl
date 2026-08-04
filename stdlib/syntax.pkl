@@ -286,6 +286,14 @@ typealias ObjectMemberNode =
 /// A member of a [ModuleNode].
 typealias ModuleMember = ClassNode | TypeAliasNode | ClassPropertyNode | ClassMethodNode
 
+/// Indexes [members] by name, stripping the enclosing backticks of quoted identifiers.
+local const function byIdentifier(members: List<ModuleMember>) =
+  members.toMap((it) -> unquote(it.identifier.value), (it) -> it).toMapping()
+
+/// Strips the enclosing backticks of a quoted identifier.
+local const function unquote(identifier: String): String =
+  if (identifier.startsWith("`")) identifier.drop(1).dropLast(1) else identifier
+
 // noinspection TypeMismatch
 /// The top-level module node.
 class ModuleNode extends Node {
@@ -297,9 +305,6 @@ class ModuleNode extends Node {
 
   /// The members of this module, in source order.
   members: Listing<ModuleMember>
-
-  local const function byIdentifier(members: List<ModuleMember>) =
-    members.toMap((it) -> it.identifier.value, (it) -> it).toMapping()
 
   /// All class declarations in this module, keyed by class name.
   fixed classes: Mapping<String, ClassNode> =
@@ -404,13 +409,22 @@ class TypeAliasNode extends Node {
   type: TypeNode
 }
 
+/// A member of a [ClassBodyNode].
+typealias ClassMember = ClassPropertyNode | ClassMethodNode
+
+// noinspection TypeMismatch
 /// A class body delimited by braces.
 class ClassBodyNode extends Node {
-  /// Properties declared in this class body.
-  properties: Listing<ClassPropertyNode>
+  /// The members of this class body, in source order.
+  members: Listing<ClassMember>
 
-  /// Methods declared in this class body.
-  methods: Listing<ClassMethodNode>
+  /// Properties declared in this class body, keyed by property name.
+  fixed properties: Mapping<String, ClassPropertyNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassPropertyNode))
+
+  /// Methods declared in this class body, keyed by method name.
+  fixed methods: Mapping<String, ClassMethodNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassMethodNode))
 }
 
 /// A class property declaration.
