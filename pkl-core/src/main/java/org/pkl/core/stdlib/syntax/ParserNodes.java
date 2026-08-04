@@ -457,10 +457,7 @@ public class ParserNodes {
           .addProperty("genericNode", vm -> vm)
           .addProperty("declaration", ParserNodes::moduleDeclaration)
           .addListingProperty("imports", ParserNodes::moduleImports)
-          .addListingProperty("classes", ParserNodes::moduleClasses)
-          .addListingProperty("typeAliases", ParserNodes::moduleTypeAliases)
-          .addListingProperty("properties", ParserNodes::moduleProperties)
-          .addListingProperty("methods", ParserNodes::moduleMethods);
+          .addListingProperty("members", ParserNodes::moduleMembers);
 
   private static Object moduleDeclaration(VmTyped moduleVm) {
     var declVm = findChildVm(moduleVm, NodeType.MODULE_DECLARATION);
@@ -1090,8 +1087,25 @@ public class ParserNodes {
     return data.node.type == NodeType.AMENDS_CLAUSE ? "amends" : "extends";
   }
 
-  private static VmListing moduleClasses(VmTyped moduleVm) {
-    return wrapAll(findChildrenVm(moduleVm, NodeType.CLASS), classNodeFactory);
+  // The module's classes, typealiases, properties, and methods, in source order.
+  private static VmListing moduleMembers(VmTyped moduleVm) {
+    var data = (GenericNodeData) moduleVm.getExtraStorage();
+    var children = data.node.children;
+    var result = new ArrayList<>();
+    for (var i = 0; i < children.size(); i++) {
+      var factory =
+          switch (children.get(i).type) {
+            case CLASS -> classNodeFactory;
+            case TYPEALIAS -> typeAliasNodeFactory;
+            case CLASS_PROPERTY -> classPropertyNodeFactory;
+            case CLASS_METHOD -> classMethodNodeFactory;
+            default -> null;
+          };
+      if (factory != null) {
+        result.add(factory.create((VmTyped) data.childrenVm.get(i)));
+      }
+    }
+    return listingOf(result.toArray());
   }
 
   private static VmListing classModifiers(VmTyped classVm) {
@@ -1125,10 +1139,6 @@ public class ParserNodes {
     return body == null ? VmNull.withoutDefault() : classBodyNodeFactory.create(body);
   }
 
-  private static VmListing moduleTypeAliases(VmTyped moduleVm) {
-    return wrapAll(findChildrenVm(moduleVm, NodeType.TYPEALIAS), typeAliasNodeFactory);
-  }
-
   private static VmListing typeAliasModifiers(VmTyped typeAliasVm) {
     var header = findChildVm(typeAliasVm, NodeType.TYPEALIAS_HEADER);
     return header == null ? VmListing.empty() : modifiersOf(header);
@@ -1149,14 +1159,6 @@ public class ParserNodes {
       throw new VmExceptionBuilder().bug("A parsed `typealias` always has a body type.").build();
     }
     return wrapType(type);
-  }
-
-  private static VmListing moduleProperties(VmTyped moduleVm) {
-    return wrapAll(findChildrenVm(moduleVm, NodeType.CLASS_PROPERTY), classPropertyNodeFactory);
-  }
-
-  private static VmListing moduleMethods(VmTyped moduleVm) {
-    return wrapAll(findChildrenVm(moduleVm, NodeType.CLASS_METHOD), classMethodNodeFactory);
   }
 
   private static @Nullable VmTyped classPropertyHeaderBegin(VmTyped propertyVm) {

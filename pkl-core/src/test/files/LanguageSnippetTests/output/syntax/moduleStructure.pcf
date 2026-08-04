@@ -124,6 +124,22 @@ facts {
   ["parser error"] {
     true
   }
+  ["members keep source order"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["building a module keeps member order"] {
+    true
+  }
   ["empty module"] {
     true
     true

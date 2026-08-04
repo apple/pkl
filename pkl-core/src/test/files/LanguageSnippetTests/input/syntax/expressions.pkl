@@ -3,7 +3,7 @@ amends "../snippetTest.pkl"
 import "pkl:syntax"
 
 local function expr(source: String) =
-  new syntax.Parser {}.parseModule("x = \(source)").properties.first.value
+  new syntax.Parser {}.parseModule("x = \(source)").properties["x"].value
 
 facts {
   ["literals"] {
@@ -249,7 +249,7 @@ facts {
         """,
       )
     mod.classes.length == 1
-    local cls = mod.classes.first
+    local cls = mod.classes["Person"]
     cls.identifier.value == "Person"
     cls.modifiers == new Listing { "abstract"; "open" }
     cls.docComment != null
@@ -265,7 +265,7 @@ facts {
 
   ["generic class"] {
     local mod = new syntax.Parser {}.parseModule("class Box<out T> { value: T }")
-    local cls = mod.classes.first
+    local cls = mod.classes["Box"]
     cls.identifier.value == "Box"
     cls.typeParameters.length == 1
     cls.typeParameters.first.identifier.value == "T"
@@ -274,7 +274,7 @@ facts {
 
   ["minimal class"] {
     local mod = new syntax.Parser {}.parseModule("class Empty")
-    local cls = mod.classes.first
+    local cls = mod.classes["Empty"]
     cls.identifier.value == "Empty"
     cls.modifiers.isEmpty
     cls.docComment == null

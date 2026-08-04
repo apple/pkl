@@ -193,10 +193,7 @@ public final class NodeNodes {
     if (!imports.isEmpty()) {
       children.add(branch("import_list", buildAll(imports)));
     }
-    children.addAll(buildAll(listMember(self, "classes")));
-    children.addAll(buildAll(listMember(self, "typeAliases")));
-    children.addAll(buildAll(listMember(self, "properties")));
-    children.addAll(buildAll(listMember(self, "methods")));
+    children.addAll(buildAll(listMember(self, "members")));
     return branch("module", children);
   }
 

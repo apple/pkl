@@ -18,11 +18,14 @@ facts {
   }
 
   ["module with modifiers and doc comment"] {
-    local mod = parse("""
-      /// This is my module.
-      @Deprecated { message = "use other" }
-      open module my.mod
-      """)
+    local mod =
+      parse(
+        """
+        /// This is my module.
+        @Deprecated { message = "use other" }
+        open module my.mod
+        """,
+      )
     mod.declaration != null
     mod.declaration!!.docComment != null
     mod.declaration!!.docComment!!.value == "This is my module."
@@ -51,11 +54,14 @@ facts {
   }
 
   ["imports"] {
-    local mod = parse("""
-      import "foo.pkl"
-      import "bar.pkl" as myBar
-      import* "*.pkl"
-      """)
+    local mod =
+      parse(
+        """
+        import "foo.pkl"
+        import "bar.pkl" as myBar
+        import* "*.pkl"
+        """,
+      )
     mod.imports.length == 3
 
     mod.imports[0].uri == "foo.pkl"
@@ -70,15 +76,18 @@ facts {
   }
 
   ["class declaration"] {
-    local mod = parse("""
-      /// A bird class.
-      abstract class Bird {
-        name: String
-        function fly(speed: Int): Boolean = true
-      }
-      """)
+    local mod =
+      parse(
+        """
+        /// A bird class.
+        abstract class Bird {
+          name: String
+          function fly(speed: Int): Boolean = true
+        }
+        """,
+      )
     mod.classes.length == 1
-    local cls = mod.classes.first
+    local cls = mod.classes["Bird"]
 
     cls.docComment != null
     cls.docComment!!.value == "A bird class."
@@ -108,12 +117,15 @@ facts {
   }
 
   ["class with extends and type parameters"] {
-    local mod = parse("""
-      class Container<T> extends Base {
-        item: T
-      }
-      """)
-    local cls = mod.classes.first
+    local mod =
+      parse(
+        """
+        class Container<T> extends Base {
+          item: T
+        }
+        """,
+      )
+    local cls = mod.classes["Container"]
 
     cls.identifier.value == "Container"
     cls.typeParameters != null
@@ -128,39 +140,42 @@ facts {
   ["typealias"] {
     local mod = parse("typealias Positive = Int(this > 0)")
     mod.typeAliases.length == 1
-    local ta = mod.typeAliases.first
+    local ta = mod.typeAliases["Positive"]
     ta.identifier.value == "Positive"
     ta.typeParameters.isEmpty
     ta.type is syntax.ConstrainedTypeNode
   }
 
   ["top-level properties and methods"] {
-    local mod = parse("""
-      hidden name: String = "pkl"
-      local count: Int = 42
-      function greet(who: String): String = "hi"
-      """)
+    local mod =
+      parse(
+        """
+        hidden name: String = "pkl"
+        local count: Int = 42
+        function greet(who: String): String = "hi"
+        """,
+      )
 
     mod.properties.length == 2
-    mod.properties[0].identifier.value == "name"
-    mod.properties[0].modifiers != null
-    mod.properties[0].modifiers == new Listing { "hidden" }
-    mod.properties[0].value is syntax.SingleLineStringLiteralExprNode
+    mod.properties["name"].identifier.value == "name"
+    mod.properties["name"].modifiers != null
+    mod.properties["name"].modifiers == new Listing { "hidden" }
+    mod.properties["name"].value is syntax.SingleLineStringLiteralExprNode
 
-    mod.properties[1].identifier.value == "count"
-    mod.properties[1].modifiers != null
-    mod.properties[1].modifiers == new Listing { "local" }
+    mod.properties["count"].identifier.value == "count"
+    mod.properties["count"].modifiers != null
+    mod.properties["count"].modifiers == new Listing { "local" }
 
     mod.methods.length == 1
-    mod.methods.first.identifier.value == "greet"
-    mod.methods.first.parameters.length == 1
-    mod.methods.first.returnType != null
-    mod.methods.first.body is syntax.SingleLineStringLiteralExprNode
+    mod.methods["greet"].identifier.value == "greet"
+    mod.methods["greet"].parameters.length == 1
+    mod.methods["greet"].returnType != null
+    mod.methods["greet"].body is syntax.SingleLineStringLiteralExprNode
   }
 
   ["parameter variations"] {
     local mod = parse("function f(x: Int, _, y): Boolean = true")
-    local params = mod.methods.first.parameters
+    local params = mod.methods["f"].parameters
 
     params.length == 3
 
@@ -179,43 +194,47 @@ facts {
 
   // `value` carries the identifier verbatim, so quoted identifiers keep their backticks
   ["quoted identifiers"] {
-    local mod = parse("""
-      module `my mod`.`sub pkg`
+    local mod =
+      parse(
+        """
+        module `my mod`.`sub pkg`
 
-      import "foo.pkl" as `my alias`
+        import "foo.pkl" as `my alias`
 
-      class `My Class` {
-        `a prop`: String
-        function `do it`(`the arg`: Int) = `the arg`
-      }
+        class `My Class` {
+          `a prop`: String
+          function `do it`(`the arg`: Int) = `the arg`
+        }
 
-      typealias `My Alias` = `My Class`
+        typealias `My Alias` = `My Class`
 
-      const `my prop` = 0
-      """)
+        const `my prop` = 0
+        """,
+      )
 
     mod.declaration!!.name!!.value == "`my mod`.`sub pkg`"
-    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.value) == List("`my mod`", "`sub pkg`")
+    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.value)
+      == List("`my mod`", "`sub pkg`")
 
     mod.imports.first.alias!!.value == "`my alias`"
 
-    local cls = mod.classes.first
+    local cls = mod.classes["`My Class`"]
     cls.identifier.value == "`My Class`"
     cls.body!!.properties.first.identifier.value == "`a prop`"
     cls.body!!.methods.first.identifier.value == "`do it`"
     cls.body!!.methods.first.parameters.first.identifier!!.value == "`the arg`"
 
-    local ta = mod.typeAliases.first
+    local ta = mod.typeAliases["`My Alias`"]
     ta.identifier.value == "`My Alias`"
     (ta.type as syntax.DeclaredTypeNode).name.value == "`My Class`"
 
-    mod.properties.first.identifier.value == "`my prop`"
-    mod.properties.first.modifiers == new Listing { "const" }
+    mod.properties["`my prop`"].identifier.value == "`my prop`"
+    mod.properties["`my prop`"].modifiers == new Listing { "const" }
   }
 
   ["quoted identifiers in object bodies and accesses"] {
     local mod = parse("x { `inner prop` = `some`.`path` }")
-    local prop = mod.properties.first.objectBodies.first.properties.first
+    local prop = mod.properties["x"].objectBodies.first.properties.first
     prop.identifier.value == "`inner prop`"
 
     local access = prop.value as syntax.QualifiedAccessExprNode
@@ -226,6 +245,56 @@ facts {
   ["parser error"] {
     local result = new syntax.Parser {}.parseModuleOrNull("x = {{{")
     result == null
+  }
+
+  ["members keep source order"] {
+    local mod =
+      parse(
+        """
+        a = 1
+        typealias A = Int
+        function f() = 0
+        class C {
+          z: Int
+        }
+        b = 2
+        """,
+      )
+
+    mod.members.length == 5
+    mod.members[0] is syntax.ClassPropertyNode
+    mod.members[1] is syntax.TypeAliasNode
+    mod.members[2] is syntax.ClassMethodNode
+    mod.members[3] is syntax.ClassNode
+    mod.members[4] is syntax.ClassPropertyNode
+
+    // the specific-member views index `members` by name
+    mod.properties.keys == Set("a", "b")
+    mod.typeAliases.keys == Set("A")
+    mod.methods.keys == Set("f")
+    mod.classes.keys == Set("C")
+    mod.classes["C"] == mod.members[3]
+  }
+
+  ["building a module keeps member order"] {
+    local mod =
+      parse(
+        """
+        a = 1
+        typealias A = Int
+        function f() = 0
+        b = 2
+        """,
+      )
+
+    mod.builtNode.render()
+      == """
+      a = 1
+      typealias A = Int
+      function f() = 0
+      b = 2
+
+      """
   }
 
   ["empty module"] {

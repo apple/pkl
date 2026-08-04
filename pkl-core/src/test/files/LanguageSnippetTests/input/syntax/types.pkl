@@ -5,7 +5,7 @@ import "pkl:syntax"
 local function parse(source: String): syntax.ModuleNode = new syntax.Parser {}.parseModule(source)
 
 local function typeOf(typeSource: String) =
-  parse("x: \(typeSource) = 0").properties.first.typeAnnotation
+  parse("x: \(typeSource) = 0").properties["x"].typeAnnotation
 
 facts {
   ["simple types"] {
@@ -81,7 +81,7 @@ facts {
 
   ["string constant type"] {
     local result = parse(#"typealias Foo = "bar"|"baz""#)
-    local ta = result.typeAliases.first
+    local ta = result.typeAliases["Foo"]
     ta.type is syntax.UnionTypeNode
     local members = (ta.type as syntax.UnionTypeNode).members
     members.length == 2
@@ -93,7 +93,7 @@ facts {
 
   ["type annotation"] {
     local result = parse("x: String = \"hello\"")
-    local prop = result.properties.first
+    local prop = result.properties["x"]
     prop.typeAnnotation != null
     prop.typeAnnotation!! is syntax.DeclaredTypeNode
   }

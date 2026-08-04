@@ -283,6 +283,10 @@ typealias ObjectMemberNode =
     | ForGeneratorNode
     | WhenGeneratorNode
 
+/// A member of a [ModuleNode].
+typealias ModuleMember = ClassNode | TypeAliasNode | ClassPropertyNode | ClassMethodNode
+
+// noinspection TypeMismatch
 /// The top-level module node.
 class ModuleNode extends Node {
   /// The module declaration.
@@ -291,17 +295,27 @@ class ModuleNode extends Node {
   /// All imports in this module.
   imports: Listing<ImportNode>
 
-  /// All class declarations in this module.
-  classes: Listing<ClassNode>
+  /// The members of this module, in source order.
+  members: Listing<ModuleMember>
 
-  /// All typealias declarations in this module.
-  typeAliases: Listing<TypeAliasNode>
+  local const function byIdentifier(members: List<ModuleMember>) =
+    members.toMap((it) -> it.identifier.value, (it) -> it).toMapping()
 
-  /// All top-level properties in this module.
-  properties: Listing<ClassPropertyNode>
+  /// All class declarations in this module, keyed by class name.
+  fixed classes: Mapping<String, ClassNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassNode))
 
-  /// All top-level methods in this module.
-  methods: Listing<ClassMethodNode>
+  /// All typealias declarations in this module, keyed by typealias name.
+  fixed typeAliases: Mapping<String, TypeAliasNode> =
+    byIdentifier(members.toList().filterIsInstance(TypeAliasNode))
+
+  /// All top-level properties in this module, keyed by property name.
+  fixed properties: Mapping<String, ClassPropertyNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassPropertyNode))
+
+  /// All top-level methods in this module, keyed by method name.
+  fixed methods: Mapping<String, ClassMethodNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassMethodNode))
 }
 
 /// A module declaration (including doc comment, annotations, modifiers, name, amends/extends).

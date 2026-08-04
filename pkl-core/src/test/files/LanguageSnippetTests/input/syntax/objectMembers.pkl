@@ -6,7 +6,7 @@ local function parse(source: String) = new syntax.Parser {}.parseModule(source)
 
 local function body(source: String) =
   let (result = parse("x { \(source) }"))
-    result.properties.first.objectBodies.first
+    result.properties["x"].objectBodies.first
 
 facts {
   ["object property"] {
@@ -134,7 +134,7 @@ facts {
 
   ["object body with parameters"] {
     local mod = parse("x = new Listing { a, b -> a }")
-    local propVal = mod.properties.first.value
+    local propVal = mod.properties["x"].value
     propVal is syntax.NewExprNode
     local newBody = (propVal as syntax.NewExprNode).body
     newBody.parameters.length == 2
