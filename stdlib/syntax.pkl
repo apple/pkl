@@ -903,7 +903,7 @@ class ModuleTypeNode extends TypeNode {}
 /// A declared type (e.g., `String`, `List<Int>`).
 class DeclaredTypeNode extends TypeNode {
   /// The type name (dotted, e.g. `List` or `foo.Bar`).
-  name: QualifiedIdentifierNode
+  name: QualifiedIdentifierNode(identifiers.length.isBetween(1, 2))
 
   /// The type arguments.
   typeArguments: Listing<TypeNode>
@@ -945,8 +945,8 @@ class ParenthesizedTypeNode extends TypeNode {
   type: TypeNode
 }
 
-/// A string constant type (e.g., `"foo"`).
-class StringConstantTypeNode extends TypeNode {
+/// A string literal type (e.g., `"foo"`).
+class StringLiteralTypeNode extends TypeNode {
   /// The string value.
   value: String
 }

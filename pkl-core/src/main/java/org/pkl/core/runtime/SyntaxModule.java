@@ -189,8 +189,8 @@ public final class SyntaxModule extends StdLibModule {
     return ParenthesizedTypeNodeClass.instance;
   }
 
-  public static VmClass getStringConstantTypeNodeClass() {
-    return StringConstantTypeNodeClass.instance;
+  public static VmClass getStringLiteralTypeNodeClass() {
+    return StringLiteralTypeNodeClass.instance;
   }
 
   public static VmClass getThisExprNodeClass() {
@@ -537,8 +537,8 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("ParenthesizedTypeNode");
   }
 
-  private static final class StringConstantTypeNodeClass {
-    static final VmClass instance = loadClass("StringConstantTypeNode");
+  private static final class StringLiteralTypeNodeClass {
+    static final VmClass instance = loadClass("StringLiteralTypeNode");
   }
 
   private static final class ThisExprNodeClass {

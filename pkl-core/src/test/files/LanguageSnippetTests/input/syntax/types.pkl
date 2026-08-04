@@ -85,10 +85,10 @@ facts {
     ta.type is syntax.UnionTypeNode
     local members = (ta.type as syntax.UnionTypeNode).members
     members.length == 2
-    members[0] is syntax.StringConstantTypeNode
-    (members[0] as syntax.StringConstantTypeNode).value == "bar"
-    members[1] is syntax.StringConstantTypeNode
-    (members[1] as syntax.StringConstantTypeNode).value == "baz"
+    members[0] is syntax.StringLiteralTypeNode
+    (members[0] as syntax.StringLiteralTypeNode).value == "bar"
+    members[1] is syntax.StringLiteralTypeNode
+    (members[1] as syntax.StringLiteralTypeNode).value == "baz"
   }
 
   ["type annotation"] {

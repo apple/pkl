@@ -165,7 +165,7 @@ public final class NodeNodes {
                   terminal("("),
                   branch("parenthesized_type_elements", List.of(build(reqNode(self, "type")))),
                   terminal(")")));
-      case "StringConstantTypeNode" ->
+      case "StringLiteralTypeNode" ->
           branch("string_constant_type", List.of(stringCharsNode(str(self, "value"))));
       case "AnnotationNode" -> buildAnnotation(self);
       case "ParameterNode" -> buildParameter(self);

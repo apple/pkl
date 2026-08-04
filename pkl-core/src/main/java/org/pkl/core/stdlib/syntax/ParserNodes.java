@@ -188,10 +188,10 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getParenthesizedTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("type", ParserNodes::parenthesizedTypeType);
-  private static final VmObjectFactory<VmTyped> stringConstantTypeNodeFactory =
-      new VmObjectFactory<VmTyped>(SyntaxModule::getStringConstantTypeNodeClass)
+  private static final VmObjectFactory<VmTyped> stringLiteralTypeNodeFactory =
+      new VmObjectFactory<VmTyped>(SyntaxModule::getStringLiteralTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addStringProperty("value", ParserNodes::stringConstantTypeValue);
+          .addStringProperty("value", ParserNodes::stringLiteralTypeValue);
 
   private static final VmObjectFactory<VmTyped> thisExprNodeFactory =
       genericNodeOnlyFactory(SyntaxModule::getThisExprNodeClass);
@@ -580,7 +580,7 @@ public class ParserNodes {
     return wrapType(type);
   }
 
-  private static String stringConstantTypeValue(VmTyped typeVm) {
+  private static String stringLiteralTypeValue(VmTyped typeVm) {
     var data = (GenericNodeData) typeVm.getExtraStorage();
     return extractStringChars(data.node, data.source);
   }
@@ -1478,7 +1478,7 @@ public class ParserNodes {
       case FUNCTION_TYPE -> functionTypeNodeFactory.create(typeVm);
       case CONSTRAINED_TYPE -> constrainedTypeNodeFactory.create(typeVm);
       case PARENTHESIZED_TYPE -> parenthesizedTypeNodeFactory.create(typeVm);
-      case STRING_CONSTANT_TYPE -> stringConstantTypeNodeFactory.create(typeVm);
+      case STRING_CONSTANT_TYPE -> stringLiteralTypeNodeFactory.create(typeVm);
       default ->
           throw new VmExceptionBuilder().bug("Unexpected type node: " + data.node.type).build();
     };
