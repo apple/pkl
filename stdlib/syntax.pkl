@@ -262,7 +262,9 @@ abstract class Node {
 
   /// This node rebuilt into a [GenericNode].
   ///
-  /// Always constructs a fresh node from this node's fields.
+  /// A node that is verbatim from [Parser.parseModule()] yields its [genericNode] unchanged, as
+  /// does any part of this node's subtree that was not modified. Modified and constructed nodes are
+  /// rebuilt from their fields.
   external fixed builtNode: GenericNode
 }
 

@@ -46,6 +46,9 @@ public final class NodeNodes {
   }
 
   private static VmTyped build(VmTyped self) {
+    if (self.hasExtraStorage() && self.getExtraStorage() instanceof VmTyped genericNode) {
+      return genericNode;
+    }
     return switch (self.getVmClass().getSimpleName()) {
       case "ModuleNode" -> buildModule(self);
       case "ModuleDeclarationNode" -> buildModuleDeclaration(self);
