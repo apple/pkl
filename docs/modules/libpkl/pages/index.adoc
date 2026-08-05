@@ -32,9 +32,12 @@ The archive has the following structure:
     ├── include
     │   └── pkl.h
     ├── lib
-    │   ├── libpkl.<static library extension>
-    │   ├── libpkl.<dynamic library extension>
+    |   └── shared
+    |   |   └── libpkl.<shared library extension>
+    |   └── static
+    |   |   └── libpkl.<static library extension>
     │   └── pkgconfig
+    |       ├── libpkl-static.pc
     │       └── libpkl.pc
     ├── LICENSE.txt
     ├── README.md
@@ -57,6 +60,26 @@ The file extensions are as follows:
 |`.lib`
 |`.dll`
 |===
+
+=== Linking to the static vs. shared library
+
+On macOS and Linux, the simplest way to configure your compiler to link to either the static or the shared library is to use https://en.wikipedia.org/wiki/Pkg-config[pkg-config].
+
+The libpkl library ships with two pkg-config files: `libpkl.pc`, and `libpkl-static.pc`.
+
+To link to the static library, pass in library "libpkl-static".
+To link to the shared library, pass in library "libpkl".
+
+For example, when using `cc`:
+
+[source,shell]
+----
+# Link against the shared library
+cc -o myprogram myprogram.c $(pkg-config --libs --cflags libpkl)
+
+# Link against the static library
+cc -o myprogram myprogram.c $(pkg-config --static --libs --cflags libpkl-static)
+----
 
 == Building libpkl from source
 

@@ -212,7 +212,7 @@ val buildStaticLibrary =
 
     outputFile =
       targetMachine.outputDir.map { dir ->
-        dir.file("lib/libpkl.${targetMachine.os.staticLibraryExtension}")
+        dir.file("lib/static/libpkl.${targetMachine.os.staticLibraryExtension}")
       }
   }
 
@@ -245,7 +245,7 @@ val buildSharedLibrary =
     positionIndependentCode = true
     sharedLibrary = true
 
-    outputFile = targetMachine.outputDir.map { it.file("lib/libpkl.${extension}") }
+    outputFile = targetMachine.outputDir.map { it.file("lib/shared/libpkl.${extension}") }
 
     if (buildInfo.os.isMacOS) {
       frameworks.addAll("Foundation", "CoreServices")
@@ -291,6 +291,12 @@ val Target.outputDir
 val Target.libraryDir
   get() = layout.buildDirectory.dir("native-libs/$targetName/lib")
 
+val Target.sharedLibraryDir
+  get() = layout.buildDirectory.dir("native-libs/$targetName/lib/shared")
+
+val Target.staticLibraryDir
+  get() = layout.buildDirectory.dir("native-libs/$targetName/lib/static")
+
 val Target.tempOutputDir
   get() = layout.buildDirectory.dir("tmp/native-libs/$targetName")
 
@@ -329,8 +335,14 @@ val processFiles =
     includeEmptyDirs = true
     into(buildInfo.targetMachine.outputDir)
 
-    filesMatching("libpkl.pc") {
-      filter<ReplaceTokens>("tokens" to mapOf("version" to buildInfo.pklVersion))
+    val tokens = buildMap {
+      this["version"] = buildInfo.pklVersion
+      this["extra_static_libs"] =
+        if (buildInfo.os.isMacOS) " -framework Foundation -framework CoreServices"
+        else ""
+    }
+    filesMatching("**/libpkl*.pc") {
+      filter<ReplaceTokens>("tokens" to tokens)
     }
   }
 
@@ -349,14 +361,14 @@ val testNativeJava =
     jvmArgumentProviders.add(
       CommandLineArgumentProvider {
         listOf(
-          "-Djna.library.path=" + buildInfo.targetMachine.libraryDir.get().asFile.absolutePath,
-          "-Djava.library.path=" + buildInfo.targetMachine.libraryDir.get().asFile.absolutePath,
+          "-Djna.library.path=" + buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
+          "-Djava.library.path=" + buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
           "--enable-native-access=ALL-UNNAMED",
         )
       }
     )
 
-    environment("LD_LIBRARY_PATH", buildInfo.targetMachine.libraryDir.get().asFile.absolutePath)
+    environment("LD_LIBRARY_PATH", buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath)
 
     useJUnitPlatform()
   }
@@ -369,7 +381,7 @@ val compileNativeTestStatic =
 
     dependsOn(tasks.assembleNative)
 
-    val libDir = buildInfo.targetMachine.libraryDir.get().asFile
+    val libDir = buildInfo.targetMachine.staticLibraryDir.get().asFile
     val testSrc = file("src/nativeTest/c/test_pkl.c")
 
     link = true
@@ -420,20 +432,18 @@ val compileNativeTestDynamic =
         "native-test/${buildInfo.targetMachine.targetName}/test_pkl_dynamic"
       )
 
-    libraryPaths.from(buildInfo.targetMachine.libraryDir)
+    libraryPaths.from(buildInfo.targetMachine.sharedLibraryDir)
 
     if (buildInfo.os.isWindows) {
       // "pkl" would resolve to libpkl.lib, which is buildStaticLibrary's static archive, not
       // the DLL's import library — link against the import library directly instead.
-      libraryFiles.from(buildInfo.targetMachine.libraryDir.map { it.file("libpkl_dll.lib") })
+      libraryFiles.from(buildInfo.targetMachine.sharedLibraryDir.map { it.file("libpkl_dll.lib") })
     } else {
       libraries.add("pkl")
-      libraries.add("z")
-      libraries.add("pthread")
       // Bake the library's location into the test executable so the dynamic loader can find
       // libpkl.so/libpkl.dylib without needing LD_LIBRARY_PATH/DYLD_LIBRARY_PATH set at run time.
       linkerFlags.add("-rpath")
-      linkerFlags.add(buildInfo.targetMachine.libraryDir.get().asFile.absolutePath)
+      linkerFlags.add(buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath)
     }
 
     if (buildInfo.os.isLinux) {
@@ -490,7 +500,7 @@ val testNativeCDynamic =
       doFirst {
         environment(
           "PATH",
-          "${buildInfo.targetMachine.libraryDir.get().asFile.absolutePath};${System.getenv("PATH")}",
+          "${buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath};${System.getenv("PATH")}",
         )
       }
     }
