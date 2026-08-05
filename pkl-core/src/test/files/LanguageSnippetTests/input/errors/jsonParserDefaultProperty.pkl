@@ -1,0 +1,9 @@
+import "pkl:json"
+
+// https://github.com/apple/pkl/issues/561
+res = new json.Parser {}.parse("""
+  {
+    "hello": "world",
+    "default": "greeting"
+  }
+  """)

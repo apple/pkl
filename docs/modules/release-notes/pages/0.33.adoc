@@ -240,6 +240,20 @@ This affects every standard library member typed as `Uri`, among them link:{uri-
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
+=== JSON and YAML parsers reject the object key `default`
+
+`Dynamic` declares a hidden `default` property, so an object key named `default` could not be represented as a `Dynamic` property.
+Previously, `json.Parser.parse()`, `yaml.Parser.parse()` and `yaml.Parser.parseAll()` silently produced an object that was missing the key, and reading `.default` on it failed with a confusing type error.
+
+These methods now throw, and the error message points at `useMapping = true`, which parses into a `Mapping` and preserves the key:
+
+[source,pkl]
+----
+new json.Parser { useMapping = true }.parse("""
+  {"default": "greeting"}
+  """)
+----
+
 == Bug Fixes [small]#🐜#
 
 * XXX
