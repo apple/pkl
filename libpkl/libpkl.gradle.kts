@@ -337,16 +337,18 @@ val processFiles =
 
     val tokens = buildMap {
       this["version"] = buildInfo.pklVersion
-      this["extra_static_libs"] = when {
-        buildInfo.os.isMacOS -> " -lpkl -lz -framework Foundation -framework CoreServices"
-        buildInfo.os.isWindows -> " -l:libpkl.lib"
-        else -> " -lpkl -lz"
-      }
-      this["extra_shared_libs"] = when {
-        buildInfo.os.isMacOS -> " -lpkl"
-        buildInfo.os.isWindows -> " -l:libpkl_dll.lib"
-        else -> " -lpkl"
-      }
+      this["extra_static_libs"] =
+        when {
+          buildInfo.os.isMacOS -> " -lpkl -lz -framework Foundation -framework CoreServices"
+          buildInfo.os.isWindows -> " -l:libpkl.lib"
+          else -> " -lpkl -lz"
+        }
+      this["extra_shared_libs"] =
+        when {
+          buildInfo.os.isMacOS -> " -lpkl"
+          buildInfo.os.isWindows -> " -l:libpkl_dll.lib"
+          else -> " -lpkl"
+        }
     }
     filesMatching("**/libpkl*.pc") { filter<ReplaceTokens>("tokens" to tokens) }
   }
