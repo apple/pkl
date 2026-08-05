@@ -63,7 +63,7 @@ The file extensions are as follows:
 
 === Linking to the static vs. shared library
 
-On macOS and Linux, the simplest way to configure your compiler to link to either the static or the shared library is to use https://en.wikipedia.org/wiki/Pkg-config[pkg-config].
+The simplest way to configure your compiler to link to either the static or the shared library is to use https://en.wikipedia.org/wiki/Pkg-config[pkg-config].
 
 The libpkl library ships with two pkg-config files: `libpkl.pc`, and `libpkl-static.pc`.
 
@@ -80,6 +80,11 @@ cc -o myprogram myprogram.c $(pkg-config --libs --cflags libpkl)
 # Link against the static library
 cc -o myprogram myprogram.c $(pkg-config --static --libs --cflags libpkl-static)
 ----
+
+If libpkl is installed in a non-system directory, set `PKG_CONFIG_PATH` to the subpath `lib/pkgconfig` within directory that contains libpkl. For example, given libpkl directory `/path/to/libpkl`, the environment variable should have `/path/to/libpkl/lib/pkgconfig`.
+
+NOTE: Windows can use pkg-config through the https://www.msys2.org/docs/pkgconfig/[MSYS2 toolchain]. Using pkg-config on Windows implies compiling with gcc-style compiler like https://code.visualstudio.com/docs/cpp/config-mingw[MinGW], instead of MSVC).
+
 
 == Building libpkl from source
 
