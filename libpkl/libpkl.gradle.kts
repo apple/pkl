@@ -267,7 +267,7 @@ val buildSharedLibrary =
       // Without an explicit /IMPLIB, MSVC would name the DLL's import library "libpkl.lib" —
       // the same path buildStaticLibrary writes its static archive to.
       linkerFlags.add(
-        targetMachine.libraryDir.map { dir -> "/IMPLIB:${dir.file("libpkl_dll.lib").asFile}" }
+        targetMachine.sharedLibraryDir.map { dir -> "/IMPLIB:${dir.file("libpkl_dll.lib").asFile}" }
       )
     } else {
       libraries.add("z")
@@ -338,12 +338,9 @@ val processFiles =
     val tokens = buildMap {
       this["version"] = buildInfo.pklVersion
       this["extra_static_libs"] =
-        if (buildInfo.os.isMacOS) " -framework Foundation -framework CoreServices"
-        else ""
+        if (buildInfo.os.isMacOS) " -framework Foundation -framework CoreServices" else ""
     }
-    filesMatching("**/libpkl*.pc") {
-      filter<ReplaceTokens>("tokens" to tokens)
-    }
+    filesMatching("**/libpkl*.pc") { filter<ReplaceTokens>("tokens" to tokens) }
   }
 
 val testNativeJava =
@@ -361,14 +358,19 @@ val testNativeJava =
     jvmArgumentProviders.add(
       CommandLineArgumentProvider {
         listOf(
-          "-Djna.library.path=" + buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
-          "-Djava.library.path=" + buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
+          "-Djna.library.path=" +
+            buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
+          "-Djava.library.path=" +
+            buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
           "--enable-native-access=ALL-UNNAMED",
         )
       }
     )
 
-    environment("LD_LIBRARY_PATH", buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath)
+    environment(
+      "LD_LIBRARY_PATH",
+      buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
+    )
 
     useJUnitPlatform()
   }
