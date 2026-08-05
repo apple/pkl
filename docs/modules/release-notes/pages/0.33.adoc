@@ -645,6 +645,20 @@ These rendering choices are somewhat ad-hoc and likely to break from one usage t
 
 Users of protobuf are encouraged render Pkl into https://protobuf.dev/programming-guides/json/[ProtoJSON] instead.
 
+=== JSON and YAML parsers reject the object key `default`
+
+`Dynamic` declares a hidden `default` property, so an object key named `default` could not be represented as a `Dynamic` property.
+Previously, `json.Parser.parse()`, `yaml.Parser.parse()` and `yaml.Parser.parseAll()` silently produced an object that was missing the key, and reading `.default` on it failed with a confusing type error.
+
+These methods now throw, and the error message points at `useMapping = true`, which parses into a `Mapping` and preserves the key:
+
+[source,pkl]
+----
+new json.Parser { useMapping = true }.parse("""
+  {"default": "greeting"}
+  """)
+----
+
 == Miscellaneous [small]#🐸#
 
 * The `abstract` modifier is now a no-op for properties. (https://github.com/apple/pkl/pull/1781[#1781]).
