@@ -331,9 +331,6 @@ val processFiles =
 
     val tokens = buildMap {
       this["version"] = buildInfo.pklVersion
-      // The static archive is referenced by its literal path rather than via `-lpkl`, since
-      // `-lpkl` would resolve to the shared library instead (linkers prefer a dynamic library
-      // over a static one when both share the same base name in the same directory).
       this["static_lib_filename"] = "libpkl.${buildInfo.os.staticLibraryExtension}"
       this["extra_static_libs"] =
         when {
