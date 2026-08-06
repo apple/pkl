@@ -45,7 +45,7 @@ The archive has the following structure:
 
 The file extensions are as follows:
 |===
-|OS |Static Library Extension |Dynamic library extension
+|OS |Static Library Extension |Shared library extension
 
 |macOS
 |`.a`
@@ -82,9 +82,9 @@ cc -o myprogram myprogram.c $(pkg-config --static --libs --cflags libpkl-static)
 ----
 
 
-If libpkl is installed in a non-system directory, set `PKG_CONFIG_PATH` to the subpath `lib/pkgconfig` within directory that contains libpkl. For example, given libpkl directory `/path/to/libpkl`, the environment variable should have `/path/to/libpkl/lib/pkgconfig`.
+If libpkl is installed in a non-system directory, set `PKG_CONFIG_PATH` to the subpath `lib/pkgconfig` within the directory that contains libpkl. For example, given libpkl directory `/path/to/libpkl`, the environment variable should have `/path/to/libpkl/lib/pkgconfig`.
 
-NOTE: Windows can use pkg-config through the https://www.msys2.org/docs/pkgconfig/[MSYS2 toolchain]. Using pkg-config on Windows implies compiling with gcc-style compiler like https://code.visualstudio.com/docs/cpp/config-mingw[MinGW], instead of MSVC).
+NOTE: Windows can use pkg-config through the https://www.msys2.org/docs/pkgconfig/[MSYS2 toolchain]. Using pkg-config on Windows implies compiling with gcc-style compiler like https://code.visualstudio.com/docs/cpp/config-mingw[MinGW], instead of MSVC.
 
 [NOTE]
 ====
