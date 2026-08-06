@@ -212,7 +212,7 @@ val buildStaticLibrary =
 
     outputFile =
       targetMachine.outputDir.map { dir ->
-        dir.file("lib/static/libpkl.${targetMachine.os.staticLibraryExtension}")
+        dir.file("lib/libpkl.${targetMachine.os.staticLibraryExtension}")
       }
   }
 
@@ -245,7 +245,7 @@ val buildSharedLibrary =
     positionIndependentCode = true
     sharedLibrary = true
 
-    outputFile = targetMachine.outputDir.map { it.file("lib/shared/libpkl.${extension}") }
+    outputFile = targetMachine.outputDir.map { it.file("lib/libpkl.${extension}") }
 
     if (buildInfo.os.isMacOS) {
       frameworks.addAll("Foundation", "CoreServices")
@@ -267,7 +267,7 @@ val buildSharedLibrary =
       // Without an explicit /IMPLIB, MSVC would name the DLL's import library "libpkl.lib" —
       // the same path buildStaticLibrary writes its static archive to.
       linkerFlags.add(
-        targetMachine.sharedLibraryDir.map { dir -> "/IMPLIB:${dir.file("libpkl_dll.lib").asFile}" }
+        targetMachine.libraryDir.map { dir -> "/IMPLIB:${dir.file("libpkl_dll.lib").asFile}" }
       )
     } else {
       libraries.add("z")
@@ -290,12 +290,6 @@ val Target.outputDir
 
 val Target.libraryDir
   get() = layout.buildDirectory.dir("native-libs/$targetName/lib")
-
-val Target.sharedLibraryDir
-  get() = layout.buildDirectory.dir("native-libs/$targetName/lib/shared")
-
-val Target.staticLibraryDir
-  get() = layout.buildDirectory.dir("native-libs/$targetName/lib/static")
 
 val Target.tempOutputDir
   get() = layout.buildDirectory.dir("tmp/native-libs/$targetName")
@@ -323,7 +317,7 @@ val distZip =
     into(baseName)
   }
 
-tasks.assembleNative { dependsOn(distZip, distTar) }
+tasks.assembleNative { dependsOn(distZip, distTar, processFiles) }
 
 val processFiles =
   tasks.register<Copy>("processFiles") {
@@ -337,11 +331,15 @@ val processFiles =
 
     val tokens = buildMap {
       this["version"] = buildInfo.pklVersion
+      // The static archive is referenced by its literal path rather than via `-lpkl`, since
+      // `-lpkl` would resolve to the shared library instead (linkers prefer a dynamic library
+      // over a static one when both share the same base name in the same directory).
+      this["static_lib_filename"] = "libpkl.${buildInfo.os.staticLibraryExtension}"
       this["extra_static_libs"] =
         when {
-          buildInfo.os.isMacOS -> " -lpkl -lz -framework Foundation -framework CoreServices"
-          buildInfo.os.isWindows -> " -l:libpkl.lib"
-          else -> " -lpkl -lz"
+          buildInfo.os.isMacOS -> " -lz -framework Foundation -framework CoreServices"
+          buildInfo.os.isWindows -> ""
+          else -> " -lz"
         }
       this["extra_shared_libs"] =
         when {
@@ -368,19 +366,14 @@ val testNativeJava =
     jvmArgumentProviders.add(
       CommandLineArgumentProvider {
         listOf(
-          "-Djna.library.path=" +
-            buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
-          "-Djava.library.path=" +
-            buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
+          "-Djna.library.path=" + buildInfo.targetMachine.libraryDir.get().asFile.absolutePath,
+          "-Djava.library.path=" + buildInfo.targetMachine.libraryDir.get().asFile.absolutePath,
           "--enable-native-access=ALL-UNNAMED",
         )
       }
     )
 
-    environment(
-      "LD_LIBRARY_PATH",
-      buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath,
-    )
+    environment("LD_LIBRARY_PATH", buildInfo.targetMachine.libraryDir.get().asFile.absolutePath)
 
     useJUnitPlatform()
   }
@@ -393,7 +386,7 @@ val compileNativeTestStatic =
 
     dependsOn(tasks.assembleNative)
 
-    val libDir = buildInfo.targetMachine.staticLibraryDir.get().asFile
+    val libDir = buildInfo.targetMachine.libraryDir.get().asFile
     val testSrc = file("src/nativeTest/c/test_pkl.c")
 
     link = true
@@ -444,18 +437,18 @@ val compileNativeTestDynamic =
         "native-test/${buildInfo.targetMachine.targetName}/test_pkl_dynamic"
       )
 
-    libraryPaths.from(buildInfo.targetMachine.sharedLibraryDir)
+    libraryPaths.from(buildInfo.targetMachine.libraryDir)
 
     if (buildInfo.os.isWindows) {
       // "pkl" would resolve to libpkl.lib, which is buildStaticLibrary's static archive, not
       // the DLL's import library — link against the import library directly instead.
-      libraryFiles.from(buildInfo.targetMachine.sharedLibraryDir.map { it.file("libpkl_dll.lib") })
+      libraryFiles.from(buildInfo.targetMachine.libraryDir.map { it.file("libpkl_dll.lib") })
     } else {
       libraries.add("pkl")
       // Bake the library's location into the test executable so the dynamic loader can find
       // libpkl.so/libpkl.dylib without needing LD_LIBRARY_PATH/DYLD_LIBRARY_PATH set at run time.
       linkerFlags.add("-rpath")
-      linkerFlags.add(buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath)
+      linkerFlags.add(buildInfo.targetMachine.libraryDir.get().asFile.absolutePath)
     }
 
     if (buildInfo.os.isLinux) {
@@ -512,7 +505,7 @@ val testNativeCDynamic =
       doFirst {
         environment(
           "PATH",
-          "${buildInfo.targetMachine.sharedLibraryDir.get().asFile.absolutePath};${System.getenv("PATH")}",
+          "${buildInfo.targetMachine.libraryDir.get().asFile.absolutePath};${System.getenv("PATH")}",
         )
       }
     }

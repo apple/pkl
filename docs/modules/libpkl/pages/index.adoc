@@ -1,4 +1,5 @@
 = libpkl
+include::ROOT:partial$component-attributes.adoc[]
 
 libpkl is a C library for driving Pkl evaluation.
 
@@ -32,12 +33,10 @@ The archive has the following structure:
     ├── include
     │   └── pkl.h
     ├── lib
-    |   └── shared
-    |   |   └── libpkl.<shared library extension>
-    |   └── static
-    |   |   └── libpkl.<static library extension>
+    │   ├── libpkl.<shared library extension>
+    │   ├── libpkl.<static library extension>
     │   └── pkgconfig
-    |       ├── libpkl-static.pc
+    │       ├── libpkl-static.pc
     │       └── libpkl.pc
     ├── LICENSE.txt
     ├── README.md
@@ -67,8 +66,9 @@ The simplest way to configure your compiler to link to either the static or the 
 
 The libpkl library ships with two pkg-config files: `libpkl.pc`, and `libpkl-static.pc`.
 
-To link to the static library, pass in library "libpkl-static".
-To link to the shared library, pass in library "libpkl".
+The normal `libpkl.pc` links to the shared library.
+
+To unambiguously link to the static library, use `libpkl-static.pc`.
 
 For example, when using `cc`:
 
@@ -81,10 +81,22 @@ cc -o myprogram myprogram.c $(pkg-config --libs --cflags libpkl)
 cc -o myprogram myprogram.c $(pkg-config --static --libs --cflags libpkl-static)
 ----
 
+
 If libpkl is installed in a non-system directory, set `PKG_CONFIG_PATH` to the subpath `lib/pkgconfig` within directory that contains libpkl. For example, given libpkl directory `/path/to/libpkl`, the environment variable should have `/path/to/libpkl/lib/pkgconfig`.
 
 NOTE: Windows can use pkg-config through the https://www.msys2.org/docs/pkgconfig/[MSYS2 toolchain]. Using pkg-config on Windows implies compiling with gcc-style compiler like https://code.visualstudio.com/docs/cpp/config-mingw[MinGW], instead of MSVC).
 
+[NOTE]
+====
+It's also possible to link to the static library with the normal `libpkl.pc`.
+
+For example:
+
+[source,shell]
+----
+cc -Wl,-Bstatic $(pkg-config --libs --cflags libpkl)
+----
+====
 
 == Building libpkl from source
 
@@ -108,6 +120,7 @@ cd pkl/
 ----
 
 The resulting archive will be written to `libpkl/build/distributions`.
+Additionally, the archive contents will be written to `libpkl/build/native-libs/<os>-<arch>`.
 
 Cross-compilation is not supported.
 
