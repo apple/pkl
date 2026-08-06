@@ -1,5 +1,5 @@
 facts {
-  ["read-only walk leaves the tree unchanged"] {
+  ["read-only transform leaves the tree unchanged"] {
     true
     true
   }

@@ -8,13 +8,13 @@ local renderer = new syntax.Renderer {}
 
 local function fmt(source: String): String = renderer.render(mod(source).genericNode!!)
 
-local function walkFormat(
+local function transformFormat(
   source: String,
-  visit: (syntax.GenericNode) -> Pair<syntax.GenericNode, Boolean>?,
-): String = renderer.render(mod(source).genericNode!!.walk(visit))
+  operator: (syntax.GenericNode) -> Pair<syntax.GenericNode, Boolean>?,
+): String = renderer.render(mod(source).genericNode!!.transform(operator))
 
 local function renameIdentifier(source: String, oldText: String, newName: String): String =
-  walkFormat(source, (n) ->
+  transformFormat(source, (n) ->
     if (n.type == "identifier" && n.text == oldText)
       Pair(new syntax.IdentifierNode { name = newName }.builtNode, false)
     else
@@ -22,7 +22,7 @@ local function renameIdentifier(source: String, oldText: String, newName: String
   )
 
 local function accessNamed(newName: String): String =
-  walkFormat("x = 0", (n) ->
+  transformFormat("x = 0", (n) ->
     if (n.type == "int_literal_expr")
       Pair(
         new syntax.UnqualifiedAccessExprNode {
@@ -36,14 +36,14 @@ local function accessNamed(newName: String): String =
   )
 
 facts {
-  ["read-only walk leaves the tree unchanged"] {
+  ["read-only transform leaves the tree unchanged"] {
     // returning `null` everywhere keeps every node and keeps descending
-    walkFormat("x = 1", (_) -> null) == fmt("x = 1")
-    walkFormat("x = if (cond) 1 else 2", (_) -> null) == fmt("x = if (cond) 1 else 2")
+    transformFormat("x = 1", (_) -> null) == fmt("x = 1")
+    transformFormat("x = if (cond) 1 else 2", (_) -> null) == fmt("x = if (cond) 1 else 2")
   }
 
   ["rename identifiers everywhere"] {
-    walkFormat("foo = foo + 1", (n) ->
+    transformFormat("foo = foo + 1", (n) ->
       if (n.type == "identifier" && n.text == "foo")
         Pair((n) { text = "bar" }, true)
       else
@@ -52,7 +52,7 @@ facts {
   }
 
   ["replace a leaf via a typed node"] {
-    walkFormat("x = 0", (n) ->
+    transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
         Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
       else
@@ -61,7 +61,7 @@ facts {
   }
 
   ["rebuilds ancestors of a changed node"] {
-    walkFormat("x = if (cond) 41 else 0", (n) ->
+    transformFormat("x = if (cond) 41 else 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "41")
         Pair(new syntax.IntLiteralExprNode { value = 42 }.builtNode, false)
       else if (n.type == "int_literal_expr" && n.text == "0")
@@ -72,7 +72,7 @@ facts {
   }
 
   ["descend reprocesses emitted nodes"] {
-    walkFormat("x = 0", (n) ->
+    transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
         Pair(
           new syntax.ParenthesizedExprNode {
@@ -88,7 +88,7 @@ facts {
   }
 
   ["descend = false leaves the emitted subtree untouched"] {
-    walkFormat("x = 0", (n) ->
+    transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
         Pair(
           new syntax.ParenthesizedExprNode {
@@ -104,7 +104,7 @@ facts {
   }
 
   ["build super access from scratch"] {
-    walkFormat("x = 0", (n) ->
+    transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr")
         Pair(
           new syntax.SuperAccessExprNode {
@@ -117,7 +117,7 @@ facts {
         null
     ) == fmt("x = super.foo")
 
-    walkFormat("x = 0", (n) ->
+    transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr")
         Pair(
           new syntax.SuperAccessExprNode {
@@ -132,7 +132,7 @@ facts {
   }
 
   ["build super subscript from scratch"] {
-    walkFormat("x = 0", (n) ->
+    transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr")
         Pair(
           new syntax.SuperSubscriptExprNode {

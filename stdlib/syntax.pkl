@@ -61,10 +61,10 @@ class GenericNode {
   /// The source location of this node or `null`.
   span: Span?
 
-  /// Walk this node and its descendants top-down, applying [visit] to each node and
+  /// Walk this node and its descendants top-down, applying [operator] to each node and
   /// returning the (possibly rewritten) tree.
   ///
-  /// For each node, [visit] returns either:
+  /// For each node, [operator] returns either:
   /// - `null` to leave the node unchanged and continue walking into its children.
   /// - `Pair(replacement, descend)` to replace the node with `replacement`. When
   ///   `descend` is `true`, the children of `replacement` are visited in turn, so
@@ -75,7 +75,7 @@ class GenericNode {
   /// [span] is carried through unchanged unless set explicitly.
   /// [parent] is populated on the returned tree for nodes originating from [Parser.parseModule];
   /// nodes constructed from scratch retain their given `parent`.
-  external function walk(visit: (GenericNode) -> Pair<GenericNode, Boolean>?): GenericNode
+  external function transform(operator: (GenericNode) -> Pair<GenericNode, Boolean>?): GenericNode
 
   /// Fold [operator] over this node and its descendants, top-down in pre-order.
   ///

@@ -31,7 +31,7 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.GenericNodeData;
 
-/** Backs {@code pkl.syntax#GenericNode.fold} and {@code pkl.syntax#GenericNode.walk}. */
+/** Backs {@code pkl.syntax#GenericNode.fold} and {@code pkl.syntax#GenericNode.transform}. */
 public final class GenericNodeNodes {
   private GenericNodeNodes() {}
 
@@ -56,13 +56,13 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class walk extends ExternalMethod1Node {
-    @Child private ApplyVmFunction1Node applyVisit = ApplyVmFunction1Node.create();
+  public abstract static class transform extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyOperator = ApplyVmFunction1Node.create();
 
     @Specialization
     @TruffleBoundary
-    protected VmTyped eval(VmTyped self, VmFunction visit) {
-      var result = walkNode(self, visit);
+    protected VmTyped eval(VmTyped self, VmFunction operator) {
+      var result = transformNode(self, operator);
       // the root of the returned tree has no parent
       if (result.hasExtraStorage()) {
         ((GenericNodeData) result.getExtraStorage()).parentVm = null;
@@ -70,12 +70,12 @@ public final class GenericNodeNodes {
       return result;
     }
 
-    private VmTyped walkNode(VmTyped nodeVm, VmFunction visit) {
-      var visited = applyVisit.execute(visit, nodeVm);
+    private VmTyped transformNode(VmTyped nodeVm, VmFunction operator) {
+      var transformed = applyOperator.execute(operator, nodeVm);
 
       VmTyped node;
       boolean descend;
-      if (visited instanceof VmPair pair) {
+      if (transformed instanceof VmPair pair) {
         node = (VmTyped) pair.getFirst();
         descend = (Boolean) pair.getSecond();
       } else {
@@ -97,7 +97,7 @@ public final class GenericNodeNodes {
       var changed = false;
       for (var i = 0; i < length; i++) {
         var child = (VmTyped) childrenVm.get(i);
-        var newChild = walkNode(child, visit);
+        var newChild = transformNode(child, operator);
         newChildren[i] = newChild;
         changed |= newChild != child;
       }

@@ -1580,7 +1580,7 @@ public class ParserNodes {
       childrenList.add(convertNode(child, sourceChars, sourceUri));
     }
 
-    // materialize text now so that nodes reused verbatim by `walk`/`format` are
+    // materialize text now so that nodes reused verbatim by `transform`/`format` are
     // self-contained
     if (genericNode.children.isEmpty() || genericNode.type == NodeType.STRING_CHARS) {
       genericNode.text(sourceChars);
