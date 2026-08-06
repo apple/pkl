@@ -699,11 +699,13 @@ public final class NodeNodes {
   }
 
   private static VmTyped buildTypeParameter(VmTyped self) {
-    var variance = member(self, "variance");
-    if (variance instanceof String v) {
-      return branch("type_parameter", List.of(terminal(v), build(reqNode(self, "identifier"))));
+    var children = new ArrayList<>();
+    // Unlike other modifiers, variance modifiers are plain terminals rather than a `modifier_list`.
+    for (var modifier : listMember(self, "modifiers")) {
+      children.add(terminal((String) modifier));
     }
-    return branch("type_parameter", List.of(build(reqNode(self, "identifier"))));
+    children.add(build(reqNode(self, "identifier")));
+    return branch("type_parameter", children);
   }
 
   private static VmTyped buildDocComment(VmTyped self) {

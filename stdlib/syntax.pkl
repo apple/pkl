@@ -969,8 +969,8 @@ class ParameterNode extends Node {
 
 /// A type parameter declaration (`T`, `in T`, or `out T`).
 class TypeParameterNode extends Node {
-  /// The variance modifier (`"in"`, `"out"`, or null).
-  variance: ("in" | "out")?
+  /// The variance modifiers on the type parameter.
+  modifiers: Listing<"in" | "out">(isDistinct)
 
   /// The type parameter name.
   identifier: IdentifierNode

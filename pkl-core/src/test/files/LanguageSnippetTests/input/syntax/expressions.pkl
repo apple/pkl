@@ -269,7 +269,7 @@ facts {
     cls.identifier.name == "Box"
     cls.typeParameters.length == 1
     cls.typeParameters.first.identifier.name == "T"
-    cls.typeParameters.first.variance == "out"
+    cls.typeParameters.first.modifiers == new Listing { "out" }
   }
 
   ["minimal class"] {

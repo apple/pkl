@@ -82,7 +82,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> typeParameterNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getTypeParameterNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addProperty("variance", ParserNodes::typeParameterVariance)
+          .addListingProperty("modifiers", ParserNodes::typeParameterModifiers)
           .addTypedProperty("identifier", ParserNodes::identifierNodeOf);
   private static final VmObjectFactory<VmTyped> objectBodyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectBodyNodeClass)
@@ -968,17 +968,19 @@ public class ParserNodes {
     return builder.toString();
   }
 
-  private static Object typeParameterVariance(VmTyped typeParameterVm) {
+  // Unlike other modifiers, variance modifiers are plain terminals rather than `modifier` nodes.
+  private static VmListing typeParameterModifiers(VmTyped typeParameterVm) {
     var data = (GenericNodeData) typeParameterVm.getExtraStorage();
+    var result = new ArrayList<>();
     for (var child : data.node.children) {
       if (child.type == NodeType.TERMINAL) {
         var text = child.text(data.source);
         if ("in".equals(text) || "out".equals(text)) {
-          return text;
+          result.add(text);
         }
       }
     }
-    return VmNull.withoutDefault();
+    return listingOf(result.toArray());
   }
 
   private static boolean parameterIsBlankIdentifier(VmTyped parameterVm) {

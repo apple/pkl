@@ -131,7 +131,7 @@ facts {
     cls.typeParameters != null
     cls.typeParameters.length == 1
     cls.typeParameters.first.identifier.name == "T"
-    cls.typeParameters.first.variance == null
+    cls.typeParameters.first.modifiers.isEmpty
 
     cls.superType != null
     cls.superType is syntax.DeclaredTypeNode
