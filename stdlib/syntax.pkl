@@ -646,10 +646,17 @@ class FloatLiteralExprNode extends ExprNode {
   value: Float | String(toFloatOrNull() != null)
 }
 
+/// A part of a single-line string literal.
+typealias SingleLineStringPartNode = StringCharsNode | StringEscapeNode | StringInterpolationNode
+
+/// A part of a multi-line string literal.
+typealias MultiLineStringPartNode =
+  StringCharsNode | StringEscapeNode | StringInterpolationNode | StringNewlineNode
+
 /// A single-line string literal expression.
 class SingleLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, interpolations).
-  parts: Listing<StringPartNode>
+  parts: Listing<SingleLineStringPartNode>
 }
 
 /// A multi-line string literal expression.
@@ -657,7 +664,7 @@ class SingleLineStringLiteralExprNode extends ExprNode {
 /// Use [StringNewlineNode] entries in [parts] to separate lines.
 class MultiLineStringLiteralExprNode extends ExprNode {
   /// The string parts (chars, escapes, newlines, interpolations).
-  parts: Listing<StringPartNode>
+  parts: Listing<MultiLineStringPartNode>
 }
 
 /// Splits a string into runs of characters that can appear verbatim in a single-line string
@@ -679,14 +686,14 @@ local const stringEscapes: Map<Char, String> =
 
 /// Turns a chunk matched by [singleLineStringChunks] or [multiLineStringChunks] into a string
 /// literal part.
-local const function stringPart(match: RegexMatch): StringPartNode =
+local const function stringPart(match: RegexMatch): SingleLineStringPartNode =
   if (match.groups[1] != null)
     new StringCharsNode { value = match.value }
   else
     new StringEscapeNode { value = stringEscapes[match.value] }
 
 /// Same as [stringPart()], but turns a newline into a [StringNewlineNode].
-local const function multiLineStringPart(match: RegexMatch): StringPartNode =
+local const function multiLineStringPart(match: RegexMatch): MultiLineStringPartNode =
   if (match.value == "\n") new StringNewlineNode {} else stringPart(match)
 
 /// Creates a single-line string literal expression that evaluates to [value].
@@ -1079,29 +1086,23 @@ class DocCommentNode extends Node {
   value: String
 }
 
-/// Base class for parts of a string literal (text, escapes, newlines, interpolations).
-abstract class StringPartNode {
-  /// The original parsed node, or `null` when built from scratch.
-  hidden genericNode: GenericNode? = null
-}
-
 /// A plain text part of a string literal.
-class StringCharsNode extends StringPartNode {
+class StringCharsNode {
   /// The text content.
   value: String
 }
 
 /// An escape sequence in a string literal (e.g., `"\\n"`, `"\\t"`).
-class StringEscapeNode extends StringPartNode {
+class StringEscapeNode {
   /// The escape sequence text including the leading backslash.
   value: String
 }
 
 /// A newline in a multi-line string literal.
-class StringNewlineNode extends StringPartNode
+class StringNewlineNode
 
 /// An interpolation in a string literal (`\(expr)`).
-class StringInterpolationNode extends StringPartNode {
+class StringInterpolationNode {
   /// The interpolated expression.
   expression: ExprNode
 }

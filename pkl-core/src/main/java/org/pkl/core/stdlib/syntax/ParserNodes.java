@@ -351,22 +351,18 @@ public class ParserNodes {
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::parenthesizedExpression);
 
-  // String-part factories, produced by `buildStringParts`. `StringPartNode` is not a `Node`,
-  // but it also carries a hidden `genericNode`, so the same property shape applies.
+  // String-part factories, produced by `buildStringParts`. String parts are not `Node`s and don't
+  // carry a `genericNode`, but the generic node is still their factory input.
   private static final VmObjectFactory<VmTyped> stringCharsNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringCharsNodeClass)
-          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::literalText);
   private static final VmObjectFactory<VmTyped> stringEscapeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringEscapeNodeClass)
-          .addProperty("genericNode", vm -> vm)
           .addStringProperty("value", ParserNodes::literalText);
   private static final VmObjectFactory<VmTyped> stringNewlineNodeFactory =
-      new VmObjectFactory<VmTyped>(SyntaxModule::getStringNewlineNodeClass)
-          .addProperty("genericNode", vm -> vm);
+      new VmObjectFactory<VmTyped>(SyntaxModule::getStringNewlineNodeClass);
   private static final VmObjectFactory<VmTyped> stringInterpolationNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getStringInterpolationNodeClass)
-          .addProperty("genericNode", vm -> vm)
           .addTypedProperty("expression", ParserNodes::wrapExpr);
 
   private static final VmObjectFactory<VmTyped> importNodeFactory =

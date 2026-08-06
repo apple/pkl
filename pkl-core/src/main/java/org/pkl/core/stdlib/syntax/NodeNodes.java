@@ -494,7 +494,7 @@ public final class NodeNodes {
     return result;
   }
 
-  // `StringPartNode` is not a `Node`, so it is handled here rather than through `build`.
+  // String parts are not `Node`s, so they are handled here rather than through `build`.
   private static List<Object> buildStringPart(VmTyped part) {
     return switch (part.getVmClass().getSimpleName()) {
       case "StringCharsNode" -> List.of(leaf("string_chars", str(part, "value")));
