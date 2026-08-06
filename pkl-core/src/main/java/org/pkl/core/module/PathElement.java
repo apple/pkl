@@ -24,7 +24,9 @@ import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.util.EconomicMaps;
 
+/** Describes a child of a hierarchical module or resource path. */
 public class PathElement {
+  /** Orders files before directories, then orders elements lexicographically by name. */
   public static final Comparator<PathElement> comparator =
       (o1, o2) -> {
         if (o1.isDirectory && !o2.isDirectory) {
@@ -39,19 +41,23 @@ public class PathElement {
 
   private final boolean isDirectory;
 
+  /** Creates an element whose type cannot be inspected and is therefore treated as a file. */
   public static PathElement opaque(String name) {
     return new PathElement(name, false);
   }
 
+  /** Creates an element with the given name and directory status. */
   public PathElement(String name, boolean isDirectory) {
     this.name = name;
     this.isDirectory = isDirectory;
   }
 
+  /** Returns this element's name relative to its parent. */
   public String getName() {
     return name;
   }
 
+  /** Returns an equivalent element with {@code name}, or this element if its name is unchanged. */
   public PathElement withName(String name) {
     if (name.equals(this.name)) {
       return this;
@@ -59,6 +65,7 @@ public class PathElement {
     return new PathElement(name, isDirectory);
   }
 
+  /** Returns whether this element represents a directory. */
   public boolean isDirectory() {
     return isDirectory;
   }
@@ -80,13 +87,19 @@ public class PathElement {
     return "PathElement{" + "name='" + name + '\'' + ", isDirectory=" + isDirectory + '}';
   }
 
+  /** A path element that stores its descendants as a tree. */
   public static final class TreePathElement extends PathElement {
     private final EconomicMap<String, TreePathElement> children = EconomicMaps.create();
 
+    /** Creates a tree element with the given name and directory status. */
     public TreePathElement(String name, boolean isDirectory) {
       super(name, isDirectory);
     }
 
+    /**
+     * Adds {@code child} unless a child named {@code name} already exists, and returns the stored
+     * child.
+     */
     public TreePathElement putIfAbsent(String name, TreePathElement child) {
       children.putIfAbsent(name, child);
       return children.get(name);
@@ -113,10 +126,12 @@ public class PathElement {
       return getElement(Path.of(basePath));
     }
 
+    /** Returns this element's children, keyed by name. */
     public EconomicMap<String, TreePathElement> getChildren() {
       return children;
     }
 
+    /** Returns a snapshot of this element's child values. */
     public List<PathElement> getChildrenValues() {
       var ret = new ArrayList<PathElement>(children.size());
       for (var elem : EconomicMaps.getValues(children)) {
