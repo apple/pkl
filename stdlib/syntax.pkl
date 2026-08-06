@@ -660,6 +660,63 @@ class MultiLineStringLiteralExprNode extends ExprNode {
   parts: Listing<StringPartNode>
 }
 
+/// Splits a string into runs of characters that can appear verbatim in a single-line string
+/// literal (group 1), and single characters that must be escaped (group 2).
+local const singleLineStringChunks = Regex(#"([^\\"\n\r\t]+)|([\s\S])"#)
+
+/// Same as [singleLineStringChunks], but for a multi-line string literal.
+local const multiLineStringChunks = Regex(#"((?:(?!""")[^\\\n\r\t])+)|([\s\S])"#)
+
+/// The escape sequence for each character that cannot appear verbatim in a string literal.
+local const stringEscapes: Map<Char, String> =
+  Map(
+    "\\", #"\\"#,
+    "\"", #"\""#,
+    "\n", #"\n"#,
+    "\r", #"\r"#,
+    "\t", #"\t"#,
+  )
+
+/// Turns a chunk matched by [singleLineStringChunks] or [multiLineStringChunks] into a string
+/// literal part.
+local const function stringPart(match: RegexMatch): StringPartNode =
+  if (match.groups[1] != null)
+    new StringCharsNode { value = match.value }
+  else
+    new StringEscapeNode { value = stringEscapes[match.value] }
+
+/// Same as [stringPart()], but turns a newline into a [StringNewlineNode].
+local const function multiLineStringPart(match: RegexMatch): StringPartNode =
+  if (match.value == "\n") new StringNewlineNode {} else stringPart(match)
+
+/// Creates a single-line string literal expression that evaluates to [value].
+///
+/// Characters that cannot appear verbatim in a single-line string literal
+/// (`\`, `"`, newline, carriage return, and tab) become [StringEscapeNode] parts.
+///
+/// To interpolate expressions, set [SingleLineStringLiteralExprNode.parts] directly,
+/// using [StringInterpolationNode] parts.
+const function singleLineStringLiteral(value: String): SingleLineStringLiteralExprNode = new {
+  parts { ...singleLineStringChunks.findMatchesIn(value).map((match) -> stringPart(match)) }
+}
+
+/// Creates a multi-line string literal expression that evaluates to [value].
+///
+/// Newlines in [value] become [StringNewlineNode] parts.
+/// Characters that cannot appear verbatim in a multi-line string literal
+/// (`\`, carriage return, tab, and quotes that would otherwise form `"""`)
+/// become [StringEscapeNode] parts.
+///
+/// To interpolate expressions, set [MultiLineStringLiteralExprNode.parts] directly,
+/// using [StringInterpolationNode] parts.
+const function multiLineStringLiteral(value: String): MultiLineStringLiteralExprNode = new {
+  parts {
+    new StringNewlineNode {}
+    ...multiLineStringChunks.findMatchesIn(value).map((match) -> multiLineStringPart(match))
+    new StringNewlineNode {}
+  }
+}
+
 /// An unqualified access expression (`name` or `name(args)`).
 class UnqualifiedAccessExprNode extends ExprNode {
   /// The identifier being accessed.
