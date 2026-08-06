@@ -115,8 +115,12 @@ facts {
     true
     true
     true
+    true
+    true
+    true
   }
   ["quoted identifiers in object bodies and accesses"] {
+    true
     true
     true
     true

@@ -285,13 +285,9 @@ typealias ObjectMemberNode =
 /// A member of a [ModuleNode].
 typealias ModuleMember = ClassNode | TypeAliasNode | ClassPropertyNode | ClassMethodNode
 
-/// Indexes [members] by name, stripping the enclosing backticks of quoted identifiers.
+/// Indexes [members] by [IdentifierNode.name].
 local const function byIdentifier(members: List<ModuleMember>) =
-  members.toMap((it) -> unquote(it.identifier.value), (it) -> it).toMapping()
-
-/// Strips the enclosing backticks of a quoted identifier.
-local const function unquote(identifier: String): String =
-  if (identifier.startsWith("`")) identifier.drop(1).dropLast(1) else identifier
+  members.toMap((it) -> it.identifier.name, (it) -> it).toMapping()
 
 // noinspection TypeMismatch
 /// The top-level module node.
@@ -891,13 +887,13 @@ class ParenthesizedExprNode extends ExprNode {
 }
 
 /// The `unknown` type.
-class UnknownTypeNode extends TypeNode {}
+class UnknownTypeNode extends TypeNode
 
 /// The `nothing` type.
-class NothingTypeNode extends TypeNode {}
+class NothingTypeNode extends TypeNode
 
 /// The `module` type.
-class ModuleTypeNode extends TypeNode {}
+class ModuleTypeNode extends TypeNode
 
 /// A declared type (e.g., `String`, `List<Int>`).
 class DeclaredTypeNode extends TypeNode {
@@ -980,10 +976,24 @@ class TypeParameterNode extends Node {
   identifier: IdentifierNode
 }
 
+/// Strips the enclosing backticks of a quoted identifier.
+local const function unquote(identifier: String): String =
+  if (identifier.startsWith("`")) identifier.drop(1).dropLast(1) else identifier
+
 /// An identifier (a name occurring in the source, e.g. a property or class name).
 class IdentifierNode extends Node {
-  /// The identifier text.
-  value: String
+  /// The verbatim identifier text, including the enclosing backticks of a quoted identifier.
+  ///
+  /// For example, the text of `` `my ## foo` `` is ``"`my ## foo`"``.
+  text: String
+
+  /// The identifier name, with the enclosing backticks of a quoted identifier stripped.
+  ///
+  /// For example, the name of `` `my ## foo` `` is `"my ## foo"`.
+  ///
+  /// This is the name used when rendering this node back to source code; it is quoted again
+  /// if it is not a regular Pkl identifier.
+  name: String = unquote(text)
 }
 
 /// A qualified (dotted) identifier, e.g. `foo.bar.baz`.

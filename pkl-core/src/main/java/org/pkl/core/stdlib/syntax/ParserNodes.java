@@ -59,7 +59,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> identifierNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getIdentifierNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addStringProperty("value", ParserNodes::identifierValue);
+          .addStringProperty("text", ParserNodes::identifierText);
 
   private static VmObjectFactory<VmTyped> genericNodeOnlyFactory(Supplier<VmClass> classSupplier) {
     return new VmObjectFactory<VmTyped>(classSupplier).addProperty("genericNode", vm -> vm);
@@ -1248,7 +1248,7 @@ public class ParserNodes {
     return identifierNodeFactory.create(findChildVm(aliasVm, NodeType.IDENTIFIER));
   }
 
-  private static String identifierValue(VmTyped identifierVm) {
+  private static String identifierText(VmTyped identifierVm) {
     var text = nodeText((GenericNodeData) identifierVm.getExtraStorage());
     return text == null ? "" : text;
   }

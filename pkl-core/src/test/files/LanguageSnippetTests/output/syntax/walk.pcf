@@ -25,4 +25,11 @@ facts {
   ["build super subscript from scratch"] {
     true
   }
+  ["an identifier name is quoted as needed"] {
+    true
+    true
+    true
+    true
+    true
+  }
 }

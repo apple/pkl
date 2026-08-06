@@ -134,8 +134,7 @@ facts {
   ["add new modifier"] {
     true
   }
-  ["format delegates to a default Renderer"] {
-    true
+  ["a default renderer targets the V2 grammar"] {
     true
   }
   ["renderer honors the grammar version"] {

@@ -4,12 +4,36 @@ import "pkl:syntax"
 
 local function mod(source: String): syntax.ModuleNode = new syntax.Parser {}.parseModule(source)
 
-local function fmt(source: String): String = mod(source).genericNode!!.render()
+local renderer = new syntax.Renderer {}
+
+local function fmt(source: String): String = renderer.render(mod(source).genericNode!!)
 
 local function walkFormat(
   source: String,
   visit: (syntax.GenericNode) -> Pair<syntax.GenericNode, Boolean>?,
-): String = mod(source).genericNode!!.walk(visit).render()
+): String = renderer.render(mod(source).genericNode!!.walk(visit))
+
+local function renameIdentifier(source: String, oldText: String, newName: String): String =
+  walkFormat(source, (n) ->
+    if (n.type == "identifier" && n.text == oldText)
+      Pair(new syntax.IdentifierNode { name = newName }.builtNode, false)
+    else
+      null
+  )
+
+local function accessNamed(newName: String): String =
+  walkFormat("x = 0", (n) ->
+    if (n.type == "int_literal_expr")
+      Pair(
+        new syntax.UnqualifiedAccessExprNode {
+          identifier = new syntax.IdentifierNode { name = newName }
+          arguments = null
+        }.builtNode,
+        false,
+      )
+    else
+      null
+  )
 
 facts {
   ["read-only walk leaves the tree unchanged"] {
@@ -84,7 +108,7 @@ facts {
       if (n.type == "int_literal_expr")
         Pair(
           new syntax.SuperAccessExprNode {
-            identifier = new syntax.IdentifierNode { value = "foo" }
+            identifier = new syntax.IdentifierNode { name = "foo" }
             arguments = null
           }.builtNode,
           false,
@@ -97,7 +121,7 @@ facts {
       if (n.type == "int_literal_expr")
         Pair(
           new syntax.SuperAccessExprNode {
-            identifier = new syntax.IdentifierNode { value = "foo" }
+            identifier = new syntax.IdentifierNode { name = "foo" }
             arguments { new syntax.IntLiteralExprNode { value = 1 } }
           }.builtNode,
           false,
@@ -119,5 +143,13 @@ facts {
       else
         null
     ) == fmt("x = super[0]")
+  }
+
+  ["an identifier name is quoted as needed"] {
+    accessNamed("foo") == fmt("x = foo")
+    accessNamed("my ## foo") == fmt("x = `my ## foo`")
+    accessNamed("class") == fmt("x = `class`")
+    renameIdentifier("x = someProp", "someProp", "other prop") == fmt("x = `other prop`")
+    renameIdentifier("x = `some prop`", "`some prop`", "otherProp") == fmt("x = otherProp")
   }
 }

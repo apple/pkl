@@ -2,7 +2,9 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local function roundTrip(source: String) = parseNode(source)!!.render()
+local renderer = new syntax.Renderer {}
+
+local function roundTrip(source: String) = renderer.render(parseNode(source)!!)
 
 local function parseNode(source: String) = new syntax.Parser {}.parseModule(source).genericNode
 
@@ -336,37 +338,37 @@ facts {
   ["modify identifier"] {
     local root = parseNode("x = 1")
     local modified = replaceLeaf(root!!, "identifier", "x", "y")
-    modified.render() == "y = 1\n"
+    renderer.render(modified) == "y = 1\n"
   }
 
   ["modify modifier"] {
     local root = parseNode("hidden x = 1")
     local modified = replaceLeaf(root!!, "modifier", "hidden", "local")
-    modified.render() == "local x = 1\n"
+    renderer.render(modified) == "local x = 1\n"
   }
 
   ["modify string content"] {
     local root = parseNode(#"x = "hello""#)
     local modified = replaceLeaf(root!!, "string_chars", "hello", "world")
-    modified.render() == #"x = "world"\#n"#
+    renderer.render(modified) == #"x = "world"\#n"#
   }
 
   ["modify int literal"] {
     local root = parseNode("x = 42")
     local modified = replaceLeaf(root!!, "int_literal_expr", "42", "99")
-    modified.render() == "x = 99\n"
+    renderer.render(modified) == "x = 99\n"
   }
 
   ["modify boolean literal"] {
     local root = parseNode("x = true")
     local modified = replaceLeaf(root!!, "bool_literal_expr", "true", "false")
-    modified.render() == "x = false\n"
+    renderer.render(modified) == "x = false\n"
   }
 
   ["modify float literal"] {
     local root = parseNode("x = 3.14")
     local modified = replaceLeaf(root!!, "float_literal_expr", "3.14", "2.72")
-    modified.render() == "x = 2.72\n"
+    renderer.render(modified) == "x = 2.72\n"
   }
 
   ["add new modifier"] {
@@ -380,16 +382,15 @@ facts {
         children = List(constModifier) + n.children
       })
     // modifier order is switched by the formatter
-    modified.render() == """
+    renderer.render(modified) == """
       local const x = 1
 
       """
   }
 
-  ["format delegates to a default Renderer"] {
+  ["a default renderer targets the V2 grammar"] {
     local node = parseNode("x = 1")
-    node!!.render() == new syntax.Renderer {}.render(node!!)
-    new syntax.Renderer {}.render(node!!) == new syntax.Renderer { grammarVersion = "V2" }.render(node!!)
+    renderer.render(node!!) == new syntax.Renderer { grammarVersion = "V2" }.render(node!!)
   }
 
   ["renderer honors the grammar version"] {

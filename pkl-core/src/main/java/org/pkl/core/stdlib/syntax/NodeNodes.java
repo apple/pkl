@@ -31,6 +31,7 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
+import org.pkl.parser.Lexer;
 import org.pkl.parser.syntax.generic.FullSpan;
 
 public final class NodeNodes {
@@ -173,7 +174,7 @@ public final class NodeNodes {
       case "AnnotationNode" -> buildAnnotation(self);
       case "ParameterNode" -> buildParameter(self);
       case "TypeParameterNode" -> buildTypeParameter(self);
-      case "IdentifierNode" -> leaf("identifier", str(self, "value"));
+      case "IdentifierNode" -> leaf("identifier", identifierText(self));
       case "QualifiedIdentifierNode" ->
           branch(
               "qualified_identifier",
@@ -716,6 +717,10 @@ public final class NodeNodes {
 
   private static VmTyped buildCall(String type, String keyword, VmTyped inner) {
     return branch(type, List.of(terminal(keyword), terminal("("), inner, terminal(")")));
+  }
+
+  private static String identifierText(VmTyped self) {
+    return Lexer.maybeQuoteIdentifier(str(self, "name"));
   }
 
   // The doc comment (if any) followed by the annotations of a declaration.

@@ -90,12 +90,12 @@ facts {
   ["access expressions"] {
     local unqual = expr("foo")
     unqual is syntax.UnqualifiedAccessExprNode
-    (unqual as syntax.UnqualifiedAccessExprNode).identifier.value == "foo"
+    (unqual as syntax.UnqualifiedAccessExprNode).identifier.name == "foo"
     (unqual as syntax.UnqualifiedAccessExprNode).arguments == null
 
     local withArgs = expr("foo(1, 2)")
     withArgs is syntax.UnqualifiedAccessExprNode
-    (withArgs as syntax.UnqualifiedAccessExprNode).identifier.value == "foo"
+    (withArgs as syntax.UnqualifiedAccessExprNode).identifier.name == "foo"
     (withArgs as syntax.UnqualifiedAccessExprNode).arguments != null
     (withArgs as syntax.UnqualifiedAccessExprNode).arguments.length == 2
 
@@ -103,7 +103,7 @@ facts {
     qual is syntax.QualifiedAccessExprNode
     (qual as syntax.QualifiedAccessExprNode).receiver is syntax.UnqualifiedAccessExprNode
     (qual as syntax.QualifiedAccessExprNode).isNullSafe == false
-    (qual as syntax.QualifiedAccessExprNode).identifier.value == "bar"
+    (qual as syntax.QualifiedAccessExprNode).identifier.name == "bar"
 
     local nullSafe = expr("foo?.bar")
     nullSafe is syntax.QualifiedAccessExprNode
@@ -174,7 +174,7 @@ facts {
   ["let expression"] {
     local letExpr = expr("let (y = 1) y + 1")
     letExpr is syntax.LetExprNode
-    (letExpr as syntax.LetExprNode).parameter.identifier!!.value == "y"
+    (letExpr as syntax.LetExprNode).parameter.identifier!!.name == "y"
     (letExpr as syntax.LetExprNode).bindingValue is syntax.IntLiteralExprNode
     (letExpr as syntax.LetExprNode).body is syntax.AdditionExprNode
   }
@@ -189,8 +189,8 @@ facts {
     local fn = expr("(x, y) -> x + y")
     fn is syntax.FunctionLiteralExprNode
     (fn as syntax.FunctionLiteralExprNode).parameters.length == 2
-    (fn as syntax.FunctionLiteralExprNode).parameters[0].identifier!!.value == "x"
-    (fn as syntax.FunctionLiteralExprNode).parameters[1].identifier!!.value == "y"
+    (fn as syntax.FunctionLiteralExprNode).parameters[0].identifier!!.name == "x"
+    (fn as syntax.FunctionLiteralExprNode).parameters[1].identifier!!.name == "y"
     (fn as syntax.FunctionLiteralExprNode).body is syntax.AdditionExprNode
   }
 
@@ -250,7 +250,7 @@ facts {
       )
     mod.classes.length == 1
     local cls = mod.classes["Person"]
-    cls.identifier.value == "Person"
+    cls.identifier.name == "Person"
     cls.modifiers == new Listing { "abstract"; "open" }
     cls.docComment != null
     cls.docComment!!.value == "A person."
@@ -266,16 +266,16 @@ facts {
   ["generic class"] {
     local mod = new syntax.Parser {}.parseModule("class Box<out T> { value: T }")
     local cls = mod.classes["Box"]
-    cls.identifier.value == "Box"
+    cls.identifier.name == "Box"
     cls.typeParameters.length == 1
-    cls.typeParameters.first.identifier.value == "T"
+    cls.typeParameters.first.identifier.name == "T"
     cls.typeParameters.first.variance == "out"
   }
 
   ["minimal class"] {
     local mod = new syntax.Parser {}.parseModule("class Empty")
     local cls = mod.classes["Empty"]
-    cls.identifier.value == "Empty"
+    cls.identifier.name == "Empty"
     cls.modifiers.isEmpty
     cls.docComment == null
     cls.annotations.isEmpty

@@ -69,7 +69,7 @@ facts {
     mod.imports[0].alias == null
 
     mod.imports[1].uri == "bar.pkl"
-    mod.imports[1].alias!!.value == "myBar"
+    mod.imports[1].alias!!.name == "myBar"
 
     mod.imports[2].uri == "*.pkl"
     mod.imports[2].keyword == "import*"
@@ -95,22 +95,22 @@ facts {
     cls.modifiers != null
     cls.modifiers == new Listing { "abstract" }
 
-    cls.identifier.value == "Bird"
+    cls.identifier.name == "Bird"
 
     cls.typeParameters.isEmpty
     cls.superType == null
 
     cls.body != null
     cls.body!!.properties.length == 1
-    cls.body!!.properties["name"].identifier.value == "name"
+    cls.body!!.properties["name"].identifier.name == "name"
     cls.body!!.properties["name"].typeAnnotation != null
     cls.body!!.properties["name"].typeAnnotation is syntax.DeclaredTypeNode
     cls.body!!.properties["name"].value == null
 
     cls.body!!.methods.length == 1
-    cls.body!!.methods["fly"].identifier.value == "fly"
+    cls.body!!.methods["fly"].identifier.name == "fly"
     cls.body!!.methods["fly"].parameters.length == 1
-    cls.body!!.methods["fly"].parameters.first.identifier!!.value == "speed"
+    cls.body!!.methods["fly"].parameters.first.identifier!!.name == "speed"
     cls.body!!.methods["fly"].returnType != null
     cls.body!!.methods["fly"].body != null
     cls.body!!.methods["fly"].body is syntax.BooleanLiteralExprNode
@@ -127,10 +127,10 @@ facts {
       )
     local cls = mod.classes["Container"]
 
-    cls.identifier.value == "Container"
+    cls.identifier.name == "Container"
     cls.typeParameters != null
     cls.typeParameters.length == 1
-    cls.typeParameters.first.identifier.value == "T"
+    cls.typeParameters.first.identifier.name == "T"
     cls.typeParameters.first.variance == null
 
     cls.superType != null
@@ -141,7 +141,7 @@ facts {
     local mod = parse("typealias Positive = Int(this > 0)")
     mod.typeAliases.length == 1
     local ta = mod.typeAliases["Positive"]
-    ta.identifier.value == "Positive"
+    ta.identifier.name == "Positive"
     ta.typeParameters.isEmpty
     ta.type is syntax.ConstrainedTypeNode
   }
@@ -157,17 +157,17 @@ facts {
       )
 
     mod.properties.length == 2
-    mod.properties["name"].identifier.value == "name"
+    mod.properties["name"].identifier.name == "name"
     mod.properties["name"].modifiers != null
     mod.properties["name"].modifiers == new Listing { "hidden" }
     mod.properties["name"].value is syntax.SingleLineStringLiteralExprNode
 
-    mod.properties["count"].identifier.value == "count"
+    mod.properties["count"].identifier.name == "count"
     mod.properties["count"].modifiers != null
     mod.properties["count"].modifiers == new Listing { "local" }
 
     mod.methods.length == 1
-    mod.methods["greet"].identifier.value == "greet"
+    mod.methods["greet"].identifier.name == "greet"
     mod.methods["greet"].parameters.length == 1
     mod.methods["greet"].returnType != null
     mod.methods["greet"].body is syntax.SingleLineStringLiteralExprNode
@@ -179,7 +179,7 @@ facts {
 
     params.length == 3
 
-    params[0].identifier!!.value == "x"
+    params[0].identifier!!.name == "x"
     params[0].typeAnnotation != null
     params[0].isBlankIdentifier == false
 
@@ -187,7 +187,7 @@ facts {
     params[1].isBlankIdentifier == true
     params[1].typeAnnotation == null
 
-    params[2].identifier!!.value == "y"
+    params[2].identifier!!.name == "y"
     params[2].typeAnnotation == null
     params[2].isBlankIdentifier == false
   }
@@ -213,33 +213,38 @@ facts {
       )
 
     mod.declaration!!.name!!.value == "`my mod`.`sub pkg`"
-    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.value)
+    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.text)
       == List("`my mod`", "`sub pkg`")
+    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.name)
+      == List("my mod", "sub pkg")
 
-    mod.imports.first.alias!!.value == "`my alias`"
+    mod.imports.first.alias!!.text == "`my alias`"
+    mod.imports.first.alias!!.name == "my alias"
 
     local cls = mod.classes["My Class"]
-    cls.identifier.value == "`My Class`"
-    cls.body!!.properties["a prop"].identifier.value == "`a prop`"
-    cls.body!!.methods["do it"].identifier.value == "`do it`"
-    cls.body!!.methods["do it"].parameters.first.identifier!!.value == "`the arg`"
+    cls.identifier.text == "`My Class`"
+    cls.identifier.name == "My Class"
+    cls.body!!.properties["a prop"].identifier.name == "a prop"
+    cls.body!!.methods["do it"].identifier.name == "do it"
+    cls.body!!.methods["do it"].parameters.first.identifier!!.name == "the arg"
 
     local ta = mod.typeAliases["My Alias"]
-    ta.identifier.value == "`My Alias`"
+    ta.identifier.name == "My Alias"
     (ta.type as syntax.DeclaredTypeNode).name.value == "`My Class`"
 
-    mod.properties["my prop"].identifier.value == "`my prop`"
+    mod.properties["my prop"].identifier.name == "my prop"
     mod.properties["my prop"].modifiers == new Listing { "const" }
   }
 
   ["quoted identifiers in object bodies and accesses"] {
     local mod = parse("x { `inner prop` = `some`.`path` }")
     local prop = mod.properties["x"].objectBodies.first.properties.first
-    prop.identifier.value == "`inner prop`"
+    prop.identifier.text == "`inner prop`"
+    prop.identifier.name == "inner prop"
 
     local access = prop.value as syntax.QualifiedAccessExprNode
-    access.identifier.value == "`path`"
-    (access.receiver as syntax.UnqualifiedAccessExprNode).identifier.value == "`some`"
+    access.identifier.name == "path"
+    (access.receiver as syntax.UnqualifiedAccessExprNode).identifier.name == "some"
   }
 
   ["parser error"] {
@@ -287,7 +292,7 @@ facts {
         """,
       )
 
-    mod.builtNode.render()
+    new syntax.Renderer {}.render(mod.builtNode)
       == """
       a = 1
       typealias A = Int

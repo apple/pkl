@@ -13,7 +13,7 @@ facts {
     local b = body("name = \"hello\"")
     b.properties.length == 1
     local prop = b.properties.first
-    prop.identifier.value == "name"
+    prop.identifier.name == "name"
     prop.value is syntax.SingleLineStringLiteralExprNode
     prop.modifiers.isEmpty
     prop.typeAnnotation == null
@@ -33,7 +33,7 @@ facts {
     local b = body("inner { x = 1 }")
     b.properties.length == 1
     local prop = b.properties.first
-    prop.identifier.value == "inner"
+    prop.identifier.name == "inner"
     prop.value == null
     prop.objectBodies.length == 1
   }
@@ -42,9 +42,9 @@ facts {
     local b = body("function greet(who: String): String = \"hi\"")
     b.methods.length == 1
     local method = b.methods.first
-    method.identifier.value == "greet"
+    method.identifier.name == "greet"
     method.parameters.length == 1
-    method.parameters.first.identifier!!.value == "who"
+    method.parameters.first.identifier!!.name == "who"
     method.returnType != null
     method.body is syntax.SingleLineStringLiteralExprNode
   }
@@ -104,7 +104,7 @@ facts {
     b.forGenerators.length == 1
     local gen = b.forGenerators.first
     gen.keyParameter == null
-    gen.valueParameter.identifier!!.value == "item"
+    gen.valueParameter.identifier!!.name == "item"
     gen.iterable is syntax.UnqualifiedAccessExprNode
   }
 
@@ -112,8 +112,8 @@ facts {
     local b = body("for (k, v in items) { v }")
     local gen = b.forGenerators.first
     gen.keyParameter != null
-    gen.keyParameter!!.identifier!!.value == "k"
-    gen.valueParameter.identifier!!.value == "v"
+    gen.keyParameter!!.identifier!!.name == "k"
+    gen.valueParameter.identifier!!.name == "v"
   }
 
   ["when generator"] {
@@ -138,8 +138,8 @@ facts {
     propVal is syntax.NewExprNode
     local newBody = (propVal as syntax.NewExprNode).body
     newBody.parameters.length == 2
-    newBody.parameters[0].identifier!!.value == "a"
-    newBody.parameters[1].identifier!!.value == "b"
+    newBody.parameters[0].identifier!!.name == "a"
+    newBody.parameters[1].identifier!!.name == "b"
   }
 
   ["mixed object members"] {
