@@ -52,9 +52,9 @@ facts {
   ["object element"] {
     local b = body("1\n  2\n  3")
     b.elements.length == 3
-    b.elements[0].expression is syntax.IntLiteralExprNode
-    b.elements[1].expression is syntax.IntLiteralExprNode
-    b.elements[2].expression is syntax.IntLiteralExprNode
+    b.elements[0] is syntax.IntLiteralExprNode
+    b.elements[1] is syntax.IntLiteralExprNode
+    b.elements[2] is syntax.IntLiteralExprNode
   }
 
   ["object entry"] {
@@ -149,9 +149,22 @@ facts {
       ["key"] = 2
       function f() = 3
       """)
+
+    // `members` keeps source order across member kinds
+    b.members.length == 4
+    b.members[0] is syntax.ObjectPropertyNode
+    b.members[1] is syntax.IntLiteralExprNode
+    b.members[2] is syntax.ObjectEntryNode
+    b.members[3] is syntax.ObjectMethodNode
+
+    // the specific-member views are derived from `members`
     b.properties.length == 1
+    b.properties.first == b.members[0]
     b.elements.length == 1
+    b.elements.first == b.members[1]
     b.entries.length == 1
+    b.entries.first == b.members[2]
     b.methods.length == 1
+    b.methods.first == b.members[3]
   }
 }

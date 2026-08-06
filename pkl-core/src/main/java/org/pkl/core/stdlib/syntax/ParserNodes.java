@@ -88,14 +88,7 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectBodyNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addListingProperty("parameters", ParserNodes::objectBodyParameters)
-          .addListingProperty("properties", ParserNodes::objectBodyProperties)
-          .addListingProperty("methods", ParserNodes::objectBodyMethods)
-          .addListingProperty("elements", ParserNodes::objectBodyElements)
-          .addListingProperty("entries", ParserNodes::objectBodyEntries)
-          .addListingProperty("spreads", ParserNodes::objectBodySpreads)
-          .addListingProperty("memberPredicates", ParserNodes::objectBodyMemberPredicates)
-          .addListingProperty("forGenerators", ParserNodes::objectBodyForGenerators)
-          .addListingProperty("whenGenerators", ParserNodes::objectBodyWhenGenerators);
+          .addListingProperty("members", ParserNodes::objectBodyMembers);
   private static final VmObjectFactory<VmTyped> parameterNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getParameterNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -103,10 +96,6 @@ public class ParserNodes {
           .addProperty("identifier", ParserNodes::parameterIdentifier)
           .addProperty("typeAnnotation", ParserNodes::parameterTypeAnnotation);
 
-  private static final VmObjectFactory<VmTyped> objectElementNodeFactory =
-      new VmObjectFactory<VmTyped>(SyntaxModule::getObjectElementNodeClass)
-          .addProperty("genericNode", vm -> vm)
-          .addTypedProperty("expression", ParserNodes::soleExpr);
   private static final VmObjectFactory<VmTyped> objectPropertyNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getObjectPropertyNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -805,45 +794,34 @@ public class ParserNodes {
     return wrapAll(findChildrenVm(paramList, NodeType.PARAMETER), parameterNodeFactory);
   }
 
-  private static VmListing objectBodyMembers(
-      VmTyped bodyVm, NodeType memberType, VmObjectFactory<VmTyped> factory) {
+  private static VmListing objectBodyMembers(VmTyped bodyVm) {
     var memberList = findChildVm(bodyVm, NodeType.OBJECT_MEMBER_LIST);
     if (memberList == null) {
       return VmListing.empty();
     }
-    return wrapAll(findChildrenVm(memberList, memberType), factory);
-  }
-
-  private static VmListing objectBodyProperties(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.OBJECT_PROPERTY, objectPropertyNodeFactory);
-  }
-
-  private static VmListing objectBodyMethods(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.OBJECT_METHOD, objectMethodNodeFactory);
-  }
-
-  private static VmListing objectBodyElements(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.OBJECT_ELEMENT, objectElementNodeFactory);
-  }
-
-  private static VmListing objectBodyEntries(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.OBJECT_ENTRY, objectEntryNodeFactory);
-  }
-
-  private static VmListing objectBodySpreads(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.OBJECT_SPREAD, objectSpreadNodeFactory);
-  }
-
-  private static VmListing objectBodyMemberPredicates(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.MEMBER_PREDICATE, memberPredicateNodeFactory);
-  }
-
-  private static VmListing objectBodyForGenerators(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.FOR_GENERATOR, forGeneratorNodeFactory);
-  }
-
-  private static VmListing objectBodyWhenGenerators(VmTyped bodyVm) {
-    return objectBodyMembers(bodyVm, NodeType.WHEN_GENERATOR, whenGeneratorNodeFactory);
+    var data = (GenericNodeData) memberList.getExtraStorage();
+    var children = data.node.children;
+    var result = new ArrayList<>();
+    for (var i = 0; i < children.size(); i++) {
+      var childVm = (VmTyped) data.childrenVm.get(i);
+      var member =
+          switch (children.get(i).type) {
+            case OBJECT_PROPERTY -> objectPropertyNodeFactory.create(childVm);
+            case OBJECT_METHOD -> objectMethodNodeFactory.create(childVm);
+            // an element is represented by its expression
+            case OBJECT_ELEMENT -> soleExpr(childVm);
+            case OBJECT_ENTRY -> objectEntryNodeFactory.create(childVm);
+            case OBJECT_SPREAD -> objectSpreadNodeFactory.create(childVm);
+            case MEMBER_PREDICATE -> memberPredicateNodeFactory.create(childVm);
+            case FOR_GENERATOR -> forGeneratorNodeFactory.create(childVm);
+            case WHEN_GENERATOR -> whenGeneratorNodeFactory.create(childVm);
+            default -> null;
+          };
+      if (member != null) {
+        result.add(member);
+      }
+    }
+    return listingOf(result.toArray());
   }
 
   private static @Nullable VmTyped objectPropertyHeaderBegin(VmTyped propertyVm) {

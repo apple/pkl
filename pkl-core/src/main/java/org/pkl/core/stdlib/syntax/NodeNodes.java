@@ -68,8 +68,6 @@ public final class NodeNodes {
       case "ObjectBodyNode" -> buildObjectBody(self);
       case "ObjectPropertyNode" -> buildObjectProperty(self);
       case "ObjectMethodNode" -> buildObjectMethod(self);
-      case "ObjectElementNode" ->
-          branch("object_element", List.of(build(reqNode(self, "expression"))));
       case "ObjectEntryNode" -> buildObjectEntry(self);
       case "ObjectSpreadNode" ->
           branch(
@@ -336,19 +334,21 @@ public final class NodeNodes {
       children.add(branch("object_parameter_list", elements));
     }
     var members = new ArrayList<>();
-    members.addAll(buildAll(listMember(self, "properties")));
-    members.addAll(buildAll(listMember(self, "methods")));
-    members.addAll(buildAll(listMember(self, "elements")));
-    members.addAll(buildAll(listMember(self, "entries")));
-    members.addAll(buildAll(listMember(self, "spreads")));
-    members.addAll(buildAll(listMember(self, "memberPredicates")));
-    members.addAll(buildAll(listMember(self, "forGenerators")));
-    members.addAll(buildAll(listMember(self, "whenGenerators")));
+    for (var member : listMember(self, "members")) {
+      members.add(buildObjectMember((VmTyped) member));
+    }
     if (!members.isEmpty()) {
       children.add(branch("object_member_list", members));
     }
     children.add(terminal("}"));
     return branch("object_body", children);
+  }
+
+  private static VmTyped buildObjectMember(VmTyped member) {
+    var built = build(member);
+    return member.getVmClass().isSubclassOf(SyntaxModule.getExprNodeClass())
+        ? branch("object_element", List.of(built))
+        : built;
   }
 
   private static VmTyped buildObjectProperty(VmTyped self) {

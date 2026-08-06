@@ -101,10 +101,6 @@ public final class SyntaxModule extends StdLibModule {
     return ParameterNodeClass.instance;
   }
 
-  public static VmClass getObjectElementNodeClass() {
-    return ObjectElementNodeClass.instance;
-  }
-
   public static VmClass getObjectPropertyNodeClass() {
     return ObjectPropertyNodeClass.instance;
   }
@@ -191,6 +187,10 @@ public final class SyntaxModule extends StdLibModule {
 
   public static VmClass getStringLiteralTypeNodeClass() {
     return StringLiteralTypeNodeClass.instance;
+  }
+
+  public static VmClass getExprNodeClass() {
+    return ExprNodeClass.instance;
   }
 
   public static VmClass getThisExprNodeClass() {
@@ -449,10 +449,6 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("ParameterNode");
   }
 
-  private static final class ObjectElementNodeClass {
-    static final VmClass instance = loadClass("ObjectElementNode");
-  }
-
   private static final class ObjectPropertyNodeClass {
     static final VmClass instance = loadClass("ObjectPropertyNode");
   }
@@ -539,6 +535,10 @@ public final class SyntaxModule extends StdLibModule {
 
   private static final class StringLiteralTypeNodeClass {
     static final VmClass instance = loadClass("StringLiteralTypeNode");
+  }
+
+  private static final class ExprNodeClass {
+    static final VmClass instance = loadClass("ExprNode");
   }
 
   private static final class ThisExprNodeClass {

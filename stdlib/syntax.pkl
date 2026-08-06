@@ -271,17 +271,6 @@ abstract class ExprNode extends Node
 /// Base class for type nodes.
 abstract class TypeNode extends Node
 
-/// A member of an [ObjectBodyNode].
-typealias ObjectMemberNode =
-  ObjectPropertyNode
-    | ObjectMethodNode
-    | ObjectElementNode
-    | ObjectEntryNode
-    | ObjectSpreadNode
-    | MemberPredicateNode
-    | ForGeneratorNode
-    | WhenGeneratorNode
-
 /// A member of a [ModuleNode].
 typealias ModuleMember = ClassNode | TypeAliasNode | ClassPropertyNode | ClassMethodNode
 
@@ -475,34 +464,57 @@ class ClassMethodNode extends Node {
   body: ExprNode?
 }
 
+/// A member of an [ObjectBodyNode].
+///
+/// An [ExprNode] member is an *element*, that is, a positional value such as the `1` in `{ 1 }`.
+typealias ObjectMemberNode =
+  ObjectPropertyNode
+    | ObjectMethodNode
+    | ExprNode
+    | ObjectEntryNode
+    | ObjectSpreadNode
+    | MemberPredicateNode
+    | ForGeneratorNode
+    | WhenGeneratorNode
+
 /// An object body delimited by braces.
 class ObjectBodyNode extends Node {
   /// Parameters for this object body (e.g., `{ x, y -> ... }`).
   parameters: Listing<ParameterNode>
 
-  /// Properties declared in this object body.
-  properties: Listing<ObjectPropertyNode>
+  /// The members of this object body, in source order.
+  members: Listing<ObjectMemberNode>
 
-  /// Methods declared in this object body.
-  methods: Listing<ObjectMethodNode>
+  /// Properties declared in this object body, in source order.
+  fixed properties: Listing<ObjectPropertyNode> =
+    members.toList().filterIsInstance(ObjectPropertyNode).toListing()
 
-  /// Elements declared in this object body.
-  elements: Listing<ObjectElementNode>
+  /// Methods declared in this object body, in source order.
+  fixed methods: Listing<ObjectMethodNode> =
+    members.toList().filterIsInstance(ObjectMethodNode).toListing()
 
-  /// Entries declared in this object body.
-  entries: Listing<ObjectEntryNode>
+  /// Elements declared in this object body, in source order.
+  fixed elements: Listing<ExprNode> = members.toList().filterIsInstance(ExprNode).toListing()
 
-  /// Spreads declared in this object body.
-  spreads: Listing<ObjectSpreadNode>
+  /// Entries declared in this object body, in source order.
+  fixed entries: Listing<ObjectEntryNode> =
+    members.toList().filterIsInstance(ObjectEntryNode).toListing()
 
-  /// Member predicates declared in this object body.
-  memberPredicates: Listing<MemberPredicateNode>
+  /// Spreads declared in this object body, in source order.
+  fixed spreads: Listing<ObjectSpreadNode> =
+    members.toList().filterIsInstance(ObjectSpreadNode).toListing()
 
-  /// `for` generators declared in this object body.
-  forGenerators: Listing<ForGeneratorNode>
+  /// Member predicates declared in this object body, in source order.
+  fixed memberPredicates: Listing<MemberPredicateNode> =
+    members.toList().filterIsInstance(MemberPredicateNode).toListing()
 
-  /// `when` generators declared in this object body.
-  whenGenerators: Listing<WhenGeneratorNode>
+  /// `for` generators declared in this object body, in source order.
+  fixed forGenerators: Listing<ForGeneratorNode> =
+    members.toList().filterIsInstance(ForGeneratorNode).toListing()
+
+  /// `when` generators declared in this object body, in source order.
+  fixed whenGenerators: Listing<WhenGeneratorNode> =
+    members.toList().filterIsInstance(WhenGeneratorNode).toListing()
 }
 
 /// An object property declaration.
@@ -542,12 +554,6 @@ class ObjectMethodNode extends Node {
 
   /// The method body expression.
   body: ExprNode
-}
-
-/// An object element (a positional expression in an object body).
-class ObjectElementNode extends Node {
-  /// The expression value.
-  expression: ExprNode
 }
 
 /// An object entry (`[key] = value` or `[key] { ... }`).
