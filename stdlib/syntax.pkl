@@ -442,7 +442,7 @@ class ClassPropertyNode extends Node {
   typeAnnotation: TypeNode?
 
   /// The value expression (from `= expr`).
-  value: ExprNode?
+  value: ExprNode(objectBodies.isEmpty)?
 
   /// Object bodies for amending (from `{ ... }` blocks).
   objectBodies: Listing<ObjectBodyNode>
@@ -517,7 +517,7 @@ class ObjectPropertyNode extends Node {
   typeAnnotation: TypeNode?
 
   /// The value expression (from `= expr`).
-  value: ExprNode?
+  value: ExprNode(objectBodies.isEmpty)?
 
   /// Object bodies for amending.
   objectBodies: Listing<ObjectBodyNode>
@@ -556,7 +556,7 @@ class ObjectEntryNode extends Node {
   key: ExprNode
 
   /// The value expression (from `[key] = value`).
-  value: ExprNode?
+  value: ExprNode(objectBodies.isEmpty)?
 
   /// Object bodies for amending.
   objectBodies: Listing<ObjectBodyNode>
