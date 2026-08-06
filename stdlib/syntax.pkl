@@ -461,7 +461,7 @@ class ClassMethodNode extends Node {
   returnType: TypeNode?
 
   /// The method body expression. Null for abstract methods.
-  body: ExprNode?
+  body: ExprNode?((this == null) == modifiers.contains("abstract"))
 }
 
 /// A member of an [ObjectBodyNode].
@@ -643,7 +643,7 @@ class IntLiteralExprNode extends ExprNode {
 /// A float literal expression.
 class FloatLiteralExprNode extends ExprNode {
   /// The float literal (e.g. `3.14`, `"1.0e10"`).
-  value: Float | String
+  value: Float | String(toFloatOrNull() != null)
 }
 
 /// A single-line string literal expression.
@@ -775,7 +775,12 @@ class NewExprNode extends ExprNode {
 /// An `(expr) { ... }` amends expression.
 class AmendsExprNode extends ExprNode {
   /// The expression being amended.
-  parentExpr: ExprNode
+  ///
+  /// Takes one of a few forms:
+  /// * [ParenthesizedExprNode]: `(expr) { ... }`
+  /// * [AmendsExprNode]: `(expr) { ... } { ... }` (where `(expr) { ... }` is the parent)
+  /// * [NewExprNode]: `new { ... } { ... }` (where `new { ... }` is the parent)
+  parentExpr: ParenthesizedExprNode | AmendsExprNode | NewExprNode
 
   /// The object body.
   body: ObjectBodyNode
@@ -964,7 +969,7 @@ class AnnotationNode extends Node {
 /// A parameter declaration (`name`, `name: Type`, or `_`).
 class ParameterNode extends Node {
   /// Whether this is a blank identifier parameter (`_`).
-  isBlankIdentifier: Boolean
+  isBlankIdentifier: Boolean(this == (identifier == null), implies(typeAnnotation == null))
 
   /// The parameter name, or `null` for a wildcard parameter (`_`).
   identifier: IdentifierNode?
