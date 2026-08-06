@@ -232,11 +232,11 @@ public final class IoUtils {
   }
 
   public static @Nullable Path getSystemModuleCacheDir() {
-    return BaseDirectories.cache.resolveHome("");
+    return BaseDirectories.cache.getHome();
   }
 
   public static Path getSystemSettingsFile() {
-    var path = BaseDirectories.config.firstExistingPath("settings.pkl");
+    var path = BaseDirectories.config.firstMatchingPath("settings.pkl", Files::exists);
     if (path == null) {
       return getLegacyPklHomeDir().resolve("settings.pkl");
     }
@@ -244,7 +244,7 @@ public final class IoUtils {
   }
 
   public static Path getSystemCaCertsDir() {
-    var path = BaseDirectories.config.firstExistingPath("cacerts");
+    var path = BaseDirectories.config.firstMatchingPath("cacerts", Files::isDirectory);
     if (path == null) {
       return getLegacyPklHomeDir().resolve("cacerts");
     }

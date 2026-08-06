@@ -16,12 +16,12 @@
 package org.pkl.core.util;
 
 import java.io.File;
-import java.nio.file.Files;
 import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.util.Arrays;
 import java.util.Map;
 import java.util.Objects;
+import java.util.function.Predicate;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -32,21 +32,40 @@ import org.jspecify.annotations.Nullable;
  * <p>On Windows, follows {@code $APPDATA} and {@code $LOCALAPPDATA} conventions, but can be
  * overridden by {@code XDG} style env vars.
  */
-public record BaseDirectory(
-    String xdgHomeEnvVar,
-    @Nullable String xdgDirsEnvVar,
-    String windowsEnvVar,
-    @Nullable String windowsSubpath,
-    String homeDefault,
-    String @Nullable [] dirsDefault) {
+class BaseDirectory {
+  private final String xdgHomeEnvVar;
+  private final @Nullable String xdgDirsEnvVar;
+  private final String windowsEnvVar;
+  private final @Nullable String windowsSubpath;
+  private final String homeDefault;
+  private final String @Nullable [] dirsDefault;
+
+  BaseDirectory(
+      String xdgHomeEnvVar,
+      @Nullable String xdgDirsEnvVar,
+      String windowsEnvVar,
+      @Nullable String windowsSubpath,
+      String homeDefault,
+      String @Nullable [] dirsDefault) {
+    this.xdgHomeEnvVar = xdgHomeEnvVar;
+    this.xdgDirsEnvVar = xdgDirsEnvVar;
+    this.windowsEnvVar = windowsEnvVar;
+    this.windowsSubpath = windowsSubpath;
+    this.homeDefault = homeDefault;
+    this.dirsDefault = dirsDefault;
+  }
+
+  @Nullable Path getHome() {
+    return getHome(System.getenv(), IoUtils.isWindows());
+  }
 
   /** Returns the first file within the search hierarchy that exists. */
-  public @Nullable Path firstExistingPath(String subpath) {
-    return firstExistingPath(subpath, System.getenv(), IoUtils.isWindows());
+  @Nullable Path firstMatchingPath(String subpath, Predicate<Path> predicate) {
+    return firstMatchingPath(subpath, System.getenv(), IoUtils.isWindows(), predicate);
   }
 
   /** Returns the subpath within the {@code home} of this base directory type. */
-  public @Nullable Path resolveHome(String subpath) {
+  @Nullable Path resolveHome(String subpath) {
     var homeDir = getHome(System.getenv(), IoUtils.isWindows());
     if (homeDir != null) {
       return homeDir.resolve(subpath);
@@ -55,12 +74,13 @@ public record BaseDirectory(
   }
 
   // for testing only
-  @Nullable Path firstExistingPath(String subpath, Map<String, String> envVars, boolean isWindows) {
+  @Nullable Path firstMatchingPath(
+      String subpath, Map<String, String> envVars, boolean isWindows, Predicate<Path> predicate) {
     var home = getHome(envVars, isWindows);
     Path candidate;
     if (home != null) {
       candidate = home.resolve(subpath);
-      if (Files.exists(candidate)) {
+      if (predicate.test(candidate)) {
         return candidate;
       }
     }
@@ -68,7 +88,7 @@ public record BaseDirectory(
     if (dirs != null) {
       for (var dir : dirs) {
         candidate = dir.resolve(subpath);
-        if (Files.exists(candidate)) {
+        if (predicate.test(candidate)) {
           return candidate;
         }
       }

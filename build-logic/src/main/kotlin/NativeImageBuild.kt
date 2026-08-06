@@ -213,6 +213,8 @@ abstract class NativeImageBuild : DefaultTask() {
         // prevent storing `homeDir` in native image
         add("--initialize-at-run-time=org.pkl.core.util.BaseDirectory")
         add("--initialize-at-run-time=org.pkl.core.util.BaseDirectories")
+        // prevent storing `isEnabled`
+        add("--initialize-at-run-time=org.pkl.core.util.DebugLogger")
         // needed for jline-terminal-jni
         add("--initialize-at-run-time=org.jline.nativ,org.jline.terminal.impl.jni")
         add("--no-fallback")

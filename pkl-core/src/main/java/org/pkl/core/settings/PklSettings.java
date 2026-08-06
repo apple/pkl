@@ -26,6 +26,7 @@ import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.DebugLogger;
 import org.pkl.core.util.IoUtils;
 
 /**
@@ -54,6 +55,7 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
   public static PklSettings loadFromSystem() throws VmEvalException {
     var file = IoUtils.getSystemSettingsFile();
     if (Files.exists(file)) {
+      DebugLogger.log("Loading settings file from " + file.normalize().toAbsolutePath());
       return load(ModuleSource.path(file));
     }
     return defaultInstance;
@@ -62,7 +64,7 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
   /**
    * Loads the user settings file.
    *
-   * @deprecated As of 0.33.0, renamed to {@link #loadFromSystem()}, which now prefers {@code
+   * @deprecated As of 0.33.0, use {@link #loadFromSystem()}, which now prefers {@code
    *     ~/.config/pkl/settings.pkl} over the legacy {@code ~/.pkl/settings.pkl}.
    */
   @Deprecated(since = "0.33.0", forRemoval = true)

@@ -63,7 +63,8 @@ internal class Repl(workingDir: Path, private val server: ReplServer, private va
         }
         completer(AggregateCompleter(CommandCompleter, FileCompleter(workingDir)))
         option(Option.DISABLE_EVENT_EXPANSION, true)
-        // will be null if `$HOME` is not set. if so, don't bother writing repl history.
+        // Will be null if `user.home` property is not set.
+        // If so, don't bother writing repl history.
         IoUtils.getReplHistoryFile()?.let { historyFile ->
           variable(LineReader.HISTORY_FILE, historyFile)
         }

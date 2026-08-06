@@ -17,7 +17,7 @@ include::partial$intro.adoc[]
 
 ==== Default file locations
 
-For new setups, the CLI no longer stores anything under `~/.pkl` (https://github.com/apple/pkl/pull/1674[#1674]).
+For new setups, the CLI no longer stores anything under `~/.pkl` (https://github.com/apple/pkl/pull/1809[#1809]).
 
 It uses XDG-style locations on Unix and Known Folder locations on Windows:
 
@@ -46,7 +46,7 @@ It uses XDG-style locations on Unix and Known Folder locations on Windows:
 | none
 |===
 
-On every OS, these locations can be overriden with XDG-style env vars.
+On every OS, these locations can be overridden with XDG-style env vars.
 For example, setting `XDG_CACHE_HOME` will configure the cache directory.
 
 Note that the existing `~/.pkl/cache` directory is ignored, so Pkl will download packages to populate its cache if configured to do so.

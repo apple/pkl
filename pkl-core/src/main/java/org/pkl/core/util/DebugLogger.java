@@ -15,19 +15,21 @@
  */
 package org.pkl.core.util;
 
-final class BaseDirectories {
-  public static final BaseDirectory config =
-      new BaseDirectory(
-          "XDG_CONFIG_HOME",
-          "XDG_CONFIG_DIRS",
-          "APPDATA",
-          null,
-          ".config",
-          new String[] {"/etc/xdg"});
+import java.util.Objects;
 
-  public static final BaseDirectory cache =
-      new BaseDirectory("XDG_CACHE_HOME", null, "LOCALAPPDATA", "Cache", ".cache", null);
+public final class DebugLogger {
+  private DebugLogger() {}
 
-  public static final BaseDirectory state =
-      new BaseDirectory("XDG_STATE_HOME", null, "LOCALAPPDATA", null, ".local/state", null);
+  private static final boolean isEnabled;
+
+  static {
+    isEnabled = Objects.equals(System.getenv("PKL_DEBUG"), "1");
+  }
+
+  public static void log(String message) {
+    if (!isEnabled) {
+      return;
+    }
+    System.err.println("[pkl] " + message);
+  }
 }

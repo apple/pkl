@@ -16,6 +16,7 @@
 package org.pkl.executor;
 
 import java.net.URI;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
@@ -27,6 +28,8 @@ import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Options for {@link Executor#evaluatePath}.
@@ -34,6 +37,8 @@ import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
  * <p>To create {@code ExecutorOptions}, use its {@linkplain #builder builder}.
  */
 public final class ExecutorOptions {
+  private static final Logger logger = LoggerFactory.getLogger(ExecutorOptions.class);
+
   private final List<String> allowedModules;
 
   private final List<String> allowedResources;
@@ -76,17 +81,26 @@ public final class ExecutorOptions {
   static Path defaultModuleCacheDir(
       Path home, boolean isWindows, Map<String, String> environmentVariables) {
     // Keep in sync with org.pkl.core.util.IoUtils.getSystemModuleCacheDir (pkl-executor cannot
-    // depend on pkl-core). On Unix prefer the XDG-style `~/.cache/pkl`; on Windows prefer
-    // `%LOCALAPPDATA%/pkl/cache`. Keep using a pre-existing legacy `~/.pkl/cache` so that
-    // already-populated caches aren't orphaned.
+    // depend on pkl-core).
+    //
+    // On Unix prefer the XDG-style `~/.cache/pkl`.
+    // On Windows prefer `%LOCALAPPDATA%/pkl/Cache`.
     var xdgConfig = environmentVariables.get("XDG_CACHE_HOME");
-    if (xdgConfig != null) {
-      return Path.of(xdgConfig).resolve("pkl");
+    if (xdgConfig != null && !xdgConfig.isEmpty()) {
+      try {
+        return Path.of(xdgConfig).resolve("pkl");
+      } catch (InvalidPathException e) {
+        logger.warn("'XDG_CACHE_HOME' is an invalid path: {}", e.getMessage());
+      }
     }
     if (isWindows) {
       var localAppData = environmentVariables.get("LOCALAPPDATA");
-      if (localAppData != null) {
-        return Path.of(localAppData).resolve("pkl/Cache");
+      if (localAppData != null && !localAppData.isEmpty()) {
+        try {
+          return Path.of(localAppData).resolve("pkl/Cache");
+        } catch (InvalidPathException e) {
+          logger.warn("'LOCALAPPDATA' is an invalid path: {}", e.getMessage());
+        }
       }
     }
     return home.resolve(".cache/pkl");

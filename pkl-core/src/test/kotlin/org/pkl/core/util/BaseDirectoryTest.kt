@@ -16,6 +16,7 @@
 package org.pkl.core.util
 
 import java.io.File
+import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.createDirectories
 import kotlin.io.path.createFile
@@ -28,17 +29,17 @@ class BaseDirectoryTest {
   private val subject = BaseDirectories.config
 
   @Test
-  fun `firstExistingPath() - finds a file within the XDG-configured home`(@TempDir tempDir: Path) {
+  fun `firstMatchingPath() - finds a file within the XDG-configured home`(@TempDir tempDir: Path) {
     val xdgHome = tempDir.resolve("xdg-home").createDirectories()
     xdgHome.resolve("pkl/settings.pkl").createParentDirectories().createFile()
     val envVars = mapOf("XDG_CONFIG_HOME" to xdgHome.toString())
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, false))
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, false, Files::exists))
       .isEqualTo(xdgHome.resolve("pkl/settings.pkl"))
   }
 
   @Test
-  fun `firstExistingPath() - prefers home over dirs when both contain the file`(
+  fun `firstMatchingPath() - prefers home over dirs when both contain the file`(
     @TempDir tempDir: Path
   ) {
     val xdgHome = tempDir.resolve("xdg-home").createDirectories()
@@ -48,26 +49,29 @@ class BaseDirectoryTest {
     val envVars =
       mapOf("XDG_CONFIG_HOME" to xdgHome.toString(), "XDG_CONFIG_DIRS" to dir1.toString())
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, false))
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, false, Files::exists))
       .isEqualTo(xdgHome.resolve("pkl/settings.pkl"))
   }
 
   @Test
-  fun `firstExistingPath() - falls back to dirs when home does not contain the file`(
+  fun `firstMatchingPath() - falls back to dirs when home does not contain the file`(
     @TempDir tempDir: Path
   ) {
     val xdgHome = tempDir.resolve("xdg-home").createDirectories()
     val dir1 = tempDir.resolve("dir1").createDirectories()
-    dir1.resolve("settings.pkl").createFile()
+    dir1.resolve("pkl/settings.pkl").let {
+      it.createParentDirectories()
+      it.createFile()
+    }
     val envVars =
       mapOf("XDG_CONFIG_HOME" to xdgHome.toString(), "XDG_CONFIG_DIRS" to dir1.toString())
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, false))
-      .isEqualTo(dir1.resolve("settings.pkl"))
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, false, Files::exists))
+      .isEqualTo(dir1.resolve("pkl/settings.pkl"))
   }
 
   @Test
-  fun `firstExistingPath() - searches multiple dirs in order`(@TempDir tempDir: Path) {
+  fun `firstMatchingPath() - searches multiple dirs in order`(@TempDir tempDir: Path) {
     val xdgHome = tempDir.resolve("xdg-home").createDirectories()
     val dir1 = tempDir.resolve("dir1").createDirectories()
     val dir2 = tempDir.resolve("dir2").createDirectories()
@@ -82,11 +86,12 @@ class BaseDirectoryTest {
         "XDG_CONFIG_DIRS" to "$dir1${File.pathSeparator}$dir2",
       )
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, false)).isEqualTo(expected)
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, false, Files::exists))
+      .isEqualTo(expected)
   }
 
   @Test
-  fun `firstExistingPath() - returns null when the file exists nowhere in the search hierarchy`(
+  fun `firstMatchingPath() - returns null when the file exists nowhere in the search hierarchy`(
     @TempDir tempDir: Path
   ) {
     val xdgHome = tempDir.resolve("xdg-home").createDirectories()
@@ -94,11 +99,11 @@ class BaseDirectoryTest {
     val envVars =
       mapOf("XDG_CONFIG_HOME" to xdgHome.toString(), "XDG_CONFIG_DIRS" to dir1.toString())
 
-    assertThat(subject.firstExistingPath("missing.pkl", envVars, false)).isNull()
+    assertThat(subject.firstMatchingPath("missing.pkl", envVars, false, Files::exists)).isNull()
   }
 
   @Test
-  fun `firstExistingPath() - XDG env var wins over the Windows env var even when isWindows is true`(
+  fun `firstMatchingPath() - XDG env var wins over the Windows env var even when isWindows is true`(
     @TempDir tempDir: Path
   ) {
     val xdgHome = tempDir.resolve("xdg-home").createDirectories()
@@ -107,52 +112,52 @@ class BaseDirectoryTest {
     appData.resolve("pkl/settings.pkl").createParentDirectories().createFile()
     val envVars = mapOf("XDG_CONFIG_HOME" to xdgHome.toString(), "AppData" to appData.toString())
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, true))
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, true, Files::exists))
       .isEqualTo(xdgHome.resolve("pkl/settings.pkl"))
   }
 
   @Test
-  fun `firstExistingPath() - uses the Windows env var when the XDG env var is unset and isWindows is true`(
+  fun `firstMatchingPath() - uses the Windows env var when the XDG env var is unset and isWindows is true`(
     @TempDir tempDir: Path
   ) {
     val appData = tempDir.resolve("app-data").createDirectories()
     appData.resolve("pkl/settings.pkl").createParentDirectories().createFile()
     val envVars = mapOf("APPDATA" to appData.toString())
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, true))
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, true, Files::exists))
       .isEqualTo(appData.resolve("pkl/settings.pkl"))
   }
 
   @Test
-  fun `firstExistingPath() - ignores the Windows env var when isWindows is false`(
+  fun `firstMatchingPath() - ignores the Windows env var when isWindows is false`(
     @TempDir tempDir: Path
   ) {
     val appData = tempDir.resolve("app-data").createDirectories()
     appData.resolve("pkl/settings.pkl").createParentDirectories().createFile()
     val envVars = mapOf("APPDATA" to appData.toString())
 
-    assertThat(subject.firstExistingPath("settings.pkl", envVars, false)).isNull()
+    assertThat(subject.firstMatchingPath("settings.pkl", envVars, false, Files::exists)).isNull()
   }
 
   @Test
-  fun `firstExistingPath() - appends the Windows subpath after 'pkl' when configured`(
+  fun `firstMatchingPath() - appends the Windows subpath after 'pkl' when configured`(
     @TempDir tempDir: Path
   ) {
     val localAppData = tempDir.resolve("local-app-data").createDirectories()
     localAppData.resolve("pkl/Cache/cache.db").createParentDirectories().createFile()
     val envVars = mapOf("LOCALAPPDATA" to localAppData.toString())
 
-    assertThat(BaseDirectories.cache.firstExistingPath("cache.db", envVars, true))
+    assertThat(BaseDirectories.cache.firstMatchingPath("cache.db", envVars, true, Files::exists))
       .isEqualTo(localAppData.resolve("pkl/Cache/cache.db"))
   }
 
   @Test
-  fun `firstExistingPath() - returns null when falling back to defaults that do not contain the file`() {
+  fun `firstMatchingPath() - returns null when falling back to defaults that do not contain the file`() {
     // Doesn't touch the real filesystem: this subpath is not expected to exist under the real
     // `~/.config` or `/etc/xdg`, so the defaults are exercised without creating any real files.
     val subpath = "base-directory-test/definitely-does-not-exist.txt"
-    assertThat(subject.firstExistingPath(subpath, emptyMap(), false)).isNull()
-    assertThat(subject.firstExistingPath(subpath, emptyMap(), true)).isNull()
+    assertThat(subject.firstMatchingPath(subpath, emptyMap(), false, Files::exists)).isNull()
+    assertThat(subject.firstMatchingPath(subpath, emptyMap(), true, Files::exists)).isNull()
   }
 
   @Test
@@ -220,12 +225,12 @@ class BaseDirectoryTest {
   }
 
   @Test
-  fun `firstExistingPath() - does not crash when XDG_CONFIG_DIRS contains a leading empty segment`(
+  fun `firstMatchingPath() - does not crash when XDG_CONFIG_DIRS contains a leading empty segment`(
     @TempDir tempDir: Path
   ) {
     val dir1 = tempDir.resolve("dir1").createDirectories()
     val envVars = mapOf("XDG_CONFIG_DIRS" to "${File.pathSeparator}$dir1")
 
-    assertThat(subject.firstExistingPath("missing.pkl", envVars, false)).isNull()
+    assertThat(subject.firstMatchingPath("missing.pkl", envVars, false, Files::exists)).isNull()
   }
 }

@@ -43,7 +43,7 @@ The cache directory for storing packages.
 If unset, defaults to the following locations:
 
 . `$XDG_CACHE_HOME/pkl`
-. `$LOCALAPPDATA/pkl/cache` (on Windows only)
+. `$LOCALAPPDATA/pkl/Cache` (on Windows only)
 . `~/.cache/pkl` (if `$XDG_CACHE_HOME` and `$LOCALAPPDATA` are both unset)
 ====
 
