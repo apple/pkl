@@ -119,8 +119,10 @@ cd pkl/
 ./gradlew libpkl:buildNative
 ----
 
-The resulting archive will be written to `libpkl/build/distributions`.
-Additionally, the archive contents will be written to `libpkl/build/native-libs/<os>-<arch>`.
+This results in two directories of interest:
+
+* `libpkl/build/distributions/`: directory containing archives (`.zip` on Windows, `.tar.gz` on macOS/Linux) of C libraries.
+* `libpkl/build/native-libs/<os>-<arch>`: directory containing the built library files (the inner structure of the archive).
 
 Cross-compilation is not supported.
 

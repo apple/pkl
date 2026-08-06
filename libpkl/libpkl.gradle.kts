@@ -251,16 +251,11 @@ val buildSharedLibrary =
       frameworks.addAll("Foundation", "CoreServices")
       linkerFlags.addAll("-current_version", project.version.toString())
       linkerFlags.addAll("-compatibility_version", "0.1.0")
-
-      // libpkl_internal_s bundles Native Image's own JNI-named implementations of JDK native
-      // methods (e.g. Java_sun_nio_ch_UnixFileDispatcherImpl_write0), which by default get
-      // exported with global visibility. Loading libpkl.dylib into a JVM process (e.g. via JNA)
-      // then lets the host JVM's own native-method resolution bind to these internal
-      // implementations instead of the JDK's real ones, silently corrupting unrelated file I/O.
-      // Restrict the dylib's exported symbols to just the public pkl_* API to prevent this.
+      // prevent JNI symbols from being exported and clobbering the symbol table
       val exportedSymbolsFile = file("src/main/c/pkl.exported_symbols")
       inputs.file(exportedSymbolsFile)
       linkerFlags.addAll("-exported_symbols_list", exportedSymbolsFile.absolutePath)
+      compilerArgs.addAll("-install_name", "@rpath/libpkl.dylib")
     }
 
     if (targetMachine.os.isWindows) {
@@ -276,9 +271,7 @@ val buildSharedLibrary =
 
     if (targetMachine.os.isLinux) {
       libraries.add("dl")
-
-      // Same symbol-collision hazard as the macOS case above (see comment there), but scoped via
-      // a GNU ld version script instead of an exported-symbols list.
+      // prevent JNI symbols from being exported and clobbering the symbol table
       val versionScriptFile = file("src/main/c/pkl.map")
       inputs.file(versionScriptFile)
       linkerFlags.add("--version-script=${versionScriptFile.absolutePath}")
