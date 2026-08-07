@@ -1544,6 +1544,38 @@ public class ParserNodes {
     }
   }
 
+  public abstract static class parseExpression extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+      return doParseExpression(source, null);
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
+      // `source` is a `pkl.base#Resource`
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      return doParseExpression(text, sourceUri(source));
+    }
+  }
+
+  public abstract static class parseExpressionOrNull extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+      return doParseExpressionOrNull(source, null);
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
+      // `source` is a `pkl.base#Resource`
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      return doParseExpressionOrNull(text, sourceUri(source));
+    }
+  }
+
   private static String sourceUri(VmTyped resource) {
     return VmUtils.readMember(resource, Identifier.URI).toString();
   }
@@ -1567,6 +1599,28 @@ public class ParserNodes {
       var root = parser.parseModule(src);
       var genericNode = convertNode(root, sourceChars, sourceUri);
       return moduleNodeFactory.create(genericNode);
+    } catch (GenericParserError e) {
+      return VmNull.withoutDefault();
+    }
+  }
+
+  private static Object doParseExpression(String src, @Nullable String sourceUri) {
+    var sourceChars = src.toCharArray();
+    try {
+      var parser = new GenericParser();
+      var root = parser.parseExpressionInput(src);
+      return wrapExpr(convertNode(root, sourceChars, sourceUri));
+    } catch (GenericParserError e) {
+      throw new VmExceptionBuilder().evalError("parserError").withHint(e.toString()).build();
+    }
+  }
+
+  private static Object doParseExpressionOrNull(String src, @Nullable String sourceUri) {
+    var sourceChars = src.toCharArray();
+    try {
+      var parser = new GenericParser();
+      var root = parser.parseExpressionInput(src);
+      return wrapExpr(convertNode(root, sourceChars, sourceUri));
     } catch (GenericParserError e) {
       return VmNull.withoutDefault();
     }

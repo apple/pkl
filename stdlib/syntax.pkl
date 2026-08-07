@@ -27,6 +27,14 @@ class Parser {
   /// Parse the string or resource as a Pkl module, returning either a typed AST node or null
   /// in case of an error.
   external function parseModuleOrNull(source: String | Resource): ModuleNode?
+
+  /// Parse the string or resource as a Pkl expression, returning either a typed AST node or
+  /// throwing an error.
+  external function parseExpression(source: String | Resource): ExprNode
+
+  /// Parse the string or resource as a Pkl expression, returning either a typed AST node or null
+  /// in case of an error.
+  external function parseExpressionOrNull(source: String | Resource): ExprNode?
 }
 
 /// Renders a [GenericNode] back to Pkl source code.

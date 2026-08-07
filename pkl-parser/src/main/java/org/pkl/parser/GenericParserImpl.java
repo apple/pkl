@@ -102,6 +102,16 @@ class GenericParserImpl {
     return new Node(NodeType.MODULE, nodes);
   }
 
+  Node parseExpressionInput() {
+    ff();
+    var expr = parseExpr();
+    ff();
+    if (lookahead != Token.EOF) {
+      throw parserError("unexpectedToken", _lookahead.text(lexer), "end of file");
+    }
+    return expr;
+  }
+
   private Node parseModuleDecl(List<Node> preChildren) {
     var headerParts = getHeaderParts(preChildren);
     var children = new ArrayList<>(headerParts.preffixes);
