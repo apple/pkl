@@ -6,3 +6,12 @@ We'd love to hear from you!
 
 * Create an {uri-github-issue}[issue]
 * Ask questions on {uri-github-discussions}[GitHub Discussions]
+* Join a <<community-calls,community call>>
+
+[[community-calls]]
+== Community Calls
+
+Every two weeks on Wednesday, we host a community call to chat about the development of Pkl.
+If you're interested in, or actively working on a feature in the Pkl ecosystem, you're invited to join!
+
+For dial-in details, see the https://github.com/apple/pkl/discussions/1164[Pkl Community Calls] discussion on GitHub.
