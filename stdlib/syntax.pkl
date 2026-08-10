@@ -270,6 +270,11 @@ abstract class Node {
   /// A node that is verbatim from [Parser.parseModule()] yields its [genericNode] unchanged, as
   /// does any part of this node's subtree that was not modified. Modified and constructed nodes are
   /// rebuilt from their fields.
+  ///
+  /// Operands are parenthesized where they would otherwise be parsed back into a different tree
+  /// or be syntacticaly invalid.
+  /// For example, the operand of a [LogicalNotExprNode] is only left as-is if it binds at least as
+  /// tightly as `!`, so a [LogicalAndExprNode] operand yields `!(a && b)`.
   external fixed builtNode: GenericNode
 }
 

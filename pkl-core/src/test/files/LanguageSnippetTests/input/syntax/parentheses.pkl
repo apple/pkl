@@ -1,0 +1,336 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local renderer = new syntax.Renderer {}
+
+local parser = new syntax.Parser {}
+
+local function render(node: syntax.ExprNode) = renderer.render(node.builtNode).trim()
+
+local function renderType(node: syntax.TypeNode) = renderer.render(node.builtNode).trim()
+
+local function shape(node: syntax.GenericNode): String =
+  if (node.children.isEmpty)
+    "\(node.type)(\(node.text))"
+  else
+    "\(node.type)[\(node.children.map((c) -> shape(c)).join(", "))]"
+
+/// Tells if the rendering of [node] parses back into the very same tree.
+local function reparses(node: syntax.ExprNode) =
+  shape(parser.parseExpression(render(node)).builtNode) == shape(node.builtNode)
+
+/// Same as [reparses()], but for a type node.
+local function typeReparses(node: syntax.TypeNode) =
+  let (property = parser.parseModule("x: " + renderType(node)).properties["x"]!!)
+    shape(property.typeAnnotation!!.builtNode) == shape(node.builtNode)
+
+local function renders(node: syntax.ExprNode, expected: String) =
+  render(node) == expected && reparses(node)
+
+local function rendersType(node: syntax.TypeNode, expected: String) =
+  renderType(node) == expected && typeReparses(node)
+
+local function ref(id: String): syntax.UnqualifiedAccessExprNode = new {
+  identifier { text = id }
+}
+
+local function call(id: String, args: List<syntax.ExprNode>): syntax.UnqualifiedAccessExprNode =
+  new {
+    identifier { text = id }
+    arguments = new Listing<syntax.ExprNode> { ...args }
+  }
+
+local a = ref("a")
+
+local b = ref("b")
+
+local c = ref("c")
+
+local function int(number: Int | String): syntax.IntLiteralExprNode = new { value = number }
+
+local function float(number: Float): syntax.FloatLiteralExprNode = new { value = number }
+
+local function add(lhs: syntax.ExprNode, rhs: syntax.ExprNode): syntax.AdditionExprNode = new {
+  left = lhs
+  right = rhs
+}
+
+local function sub(lhs: syntax.ExprNode, rhs: syntax.ExprNode): syntax.SubtractionExprNode = new {
+  left = lhs
+  right = rhs
+}
+
+local function mult(lhs: syntax.ExprNode, rhs: syntax.ExprNode): syntax.MultiplicationExprNode =
+  new {
+    left = lhs
+    right = rhs
+  }
+
+local function pow(lhs: syntax.ExprNode, rhs: syntax.ExprNode): syntax.ExponentiationExprNode =
+  new {
+    left = lhs
+    right = rhs
+  }
+
+local function coalesce(
+  lhs: syntax.ExprNode,
+  rhs: syntax.ExprNode,
+): syntax.NullCoalescingExprNode = new {
+  left = lhs
+  right = rhs
+}
+
+local function and(lhs: syntax.ExprNode, rhs: syntax.ExprNode): syntax.LogicalAndExprNode = new {
+  left = lhs
+  right = rhs
+}
+
+local function or(lhs: syntax.ExprNode, rhs: syntax.ExprNode): syntax.LogicalOrExprNode = new {
+  left = lhs
+  right = rhs
+}
+
+local function not(expr: syntax.ExprNode): syntax.LogicalNotExprNode = new { operand = expr }
+
+local function neg(expr: syntax.ExprNode): syntax.UnaryMinusExprNode = new { operand = expr }
+
+local function nonNull(expr: syntax.ExprNode): syntax.NonNullExprNode = new { operand = expr }
+
+local function paren(expr: syntax.ExprNode): syntax.ParenthesizedExprNode = new {
+  expression = expr
+}
+
+local function dot(rcv: syntax.ExprNode, id: String): syntax.QualifiedAccessExprNode = new {
+  receiver = rcv
+  isNullSafe = false
+  identifier { text = id }
+}
+
+local function at(rcv: syntax.ExprNode, idx: syntax.ExprNode): syntax.SubscriptExprNode = new {
+  receiver = rcv
+  index = idx
+}
+
+local function isA(expr: syntax.ExprNode): syntax.TypeCheckExprNode = new {
+  expression = expr
+  type = A
+}
+
+local function asA(expr: syntax.ExprNode): syntax.TypeCastExprNode = new {
+  expression = expr
+  type = A
+}
+
+local function ifElse(
+  cond: syntax.ExprNode,
+  thn: syntax.ExprNode,
+  els: syntax.ExprNode,
+): syntax.IfExprNode = new {
+  condition = cond
+  thenExpr = thn
+  elseExpr = els
+}
+
+local function letIn(bind: syntax.ExprNode, bdy: syntax.ExprNode): syntax.LetExprNode = new {
+  parameter = param("x")
+  bindingValue = bind
+  body = bdy
+}
+
+local function param(id: String): syntax.ParameterNode = new {
+  isBlankIdentifier = false
+  identifier { text = id }
+}
+
+local lambda: syntax.FunctionLiteralExprNode = new {
+  parameters { param("x") }
+  body = ref("x")
+}
+
+local function decl(id: String): syntax.DeclaredTypeNode = new {
+  name { identifiers { new { text = id } } }
+}
+
+local A = decl("A")
+
+local B = decl("B")
+
+local function nullable(base: syntax.TypeNode): syntax.NullableTypeNode = new { baseType = base }
+
+local function union(types: List<syntax.TypeNode>): syntax.UnionTypeNode = new {
+  members { ...types }
+}
+
+local function constrained(
+  base: syntax.TypeNode,
+  cond: syntax.ExprNode,
+): syntax.ConstrainedTypeNode = new {
+  baseType = base
+  constraints { cond }
+}
+
+local function fnType(params: List<syntax.TypeNode>, ret: syntax.TypeNode): syntax.FunctionTypeNode =
+  new {
+    parameterTypes { ...params }
+    returnType = ret
+  }
+
+facts {
+  ["binary operator precedence"] {
+    renders(mult(add(a, b), c), "(a + b) * c")
+    renders(add(mult(a, b), c), "a * b + c")
+    renders(mult(a, add(b, c)), "a * (b + c)")
+    renders(or(and(a, b), c), "a && b || c")
+    renders(and(or(a, b), c), "(a || b) && c")
+  }
+
+  ["binary operator associativity"] {
+    renders(add(add(a, b), c), "a + b + c")
+    renders(add(a, add(b, c)), "a + (b + c)")
+    // `??` and `**` are right-associative, so it is the left operand that needs parentheses
+    renders(coalesce(a, coalesce(b, c)), "a ?? b ?? c")
+    renders(coalesce(coalesce(a, b), c), "(a ?? b) ?? c")
+    renders(pow(a, pow(b, c)), "a ** b ** c")
+    renders(pow(pow(a, b), c), "(a ** b) ** c")
+  }
+
+  ["prefix operators"] {
+    renders(not(and(a, b)), "!(a && b)")
+    renders(and(not(a), b), "!a && b")
+    renders(neg(add(a, b)), "-(a + b)")
+    renders(add(neg(a), b), "-a + b")
+    renders(sub(a, neg(b)), "a - -b")
+    // a prefix operator binds tighter than `**`
+    renders(neg(pow(a, b)), "-(a ** b)")
+    renders(pow(neg(a), b), "-a ** b")
+  }
+
+  ["postfix operators"] {
+    renders(not(nonNull(a)), "!a!!")
+    renders(nonNull(not(a)), "(!a)!!")
+    renders(nonNull(add(a, b)), "(a + b)!!")
+    renders(nonNull(nonNull(a)), "a!!!!")
+  }
+
+  ["access chains"] {
+    renders(dot(neg(a), "foo"), "(-a).foo")
+    renders(dot(add(a, b), "foo"), "(a + b).foo")
+    renders(at(not(a), b), "(!a)[b]")
+    renders(at(add(a, b), b), "(a + b)[b]")
+    // an access chain is closed on the right, so it never needs parentheses as a receiver
+    renders(dot(at(a, b), "foo"), "a[b].foo")
+    renders(at(dot(a, "foo"), b), "a.foo[b]")
+    renders(dot(nonNull(a), "foo"), "a!!.foo")
+    renders(nonNull(dot(a, "foo")), "a.foo!!")
+    renders(dot(dot(a, "foo"), "bar"), "a.foo.bar")
+  }
+
+  ["expressions that extend to the right"] {
+    renders(add(ifElse(a, b, c), a), "(if (a) b else c) + a")
+    renders(add(letIn(a, b), a), "(let (x = a) b) + a")
+    renders(add(lambda, a), "((x) -> x) + a")
+    renders(dot(ifElse(a, b, c), "foo"), "(if (a) b else c).foo")
+    renders(at(lambda, b), "((x) -> x)[b]")
+    // nothing follows the right operand, so these are fine as they are
+    renders(add(a, ifElse(a, b, c)), "a + if (a) b else c")
+    renders(add(a, letIn(a, b)), "a + let (x = a) b")
+    renders(add(a, lambda), "a + (x) -> x")
+    renders(not(ifElse(a, b, c)), "!if (a) b else c")
+  }
+
+  ["type operators"] {
+    renders(dot(isA(a), "foo"), "(a is A).foo")
+    renders(dot(asA(a), "foo"), "(a as A).foo")
+    renders(neg(isA(a)), "-(a is A)")
+    renders(nonNull(isA(a)), "a is A!!")
+    renders(add(isA(a), b), "a is A + b")
+    renders(isA(add(a, b)), "a + b is A")
+    renders(isA(ifElse(a, b, c)), "(if (a) b else c) is A")
+  }
+
+  ["negative numeric literals"] {
+    // a leading `-` re-parses as a unary minus, so these are parenthesized like one.
+    render(dot(int(-5), "foo")) == "(-5).foo"
+    render(at(int(-5), b)) == "(-5)[b]"
+    render(dot(int("-0xFF"), "foo")) == "(-0xFF).foo"
+    render(dot(float(-1.5), "foo")) == "(-1.5).foo"
+    render(nonNull(int(-5))) == "(-5)!!"
+    render(sub(a, int(-5))) == "a - -5"
+    render(add(int(-5), b)) == "-5 + b"
+    renders(dot(int(5), "foo"), "5.foo")
+  }
+
+  ["explicit parentheses are not duplicated"] {
+    renders(not(paren(and(a, b))), "!(a && b)")
+    renders(dot(paren(add(a, b)), "foo"), "(a + b).foo")
+    renders(paren(add(a, b)), "(a + b)")
+  }
+
+  ["bracketed slots are never parenthesized"] {
+    renders(at(a, add(b, c)), "a[b + c]")
+    renders(call("f", List(add(a, b), ifElse(a, b, c))), "f(a + b, if (a) b else c)")
+    renders(ifElse(add(a, b), add(a, b), add(a, b)), "if (a + b) a + b else a + b")
+    renders(letIn(add(a, b), add(a, b)), "let (x = a + b) a + b")
+    renders(paren(ifElse(a, b, c)), "(if (a) b else c)")
+  }
+
+  ["nullable types"] {
+    rendersType(nullable(union(List(A, B))), "(A | B)?")
+    rendersType(nullable(fnType(List(A), B)), "((A) -> B)?")
+    rendersType(nullable(constrained(A, a)), "A(a)?")
+    // `A??` would lex as a single `??` token
+    rendersType(nullable(nullable(A)), "(A?)?")
+  }
+
+  ["constrained types"] {
+    rendersType(constrained(union(List(A, B)), a), "(A | B)(a)")
+    rendersType(constrained(fnType(List(A), B), a), "((A) -> B)(a)")
+    rendersType(constrained(nullable(A), a), "A?(a)")
+    rendersType(constrained(A, add(a, b)), "A(a + b)")
+  }
+
+  ["union types"] {
+    rendersType(union(List(nullable(A), B)), "A? | B")
+    rendersType(union(List(constrained(A, a), B)), "A(a) | B")
+    rendersType(union(List(A, union(List(B, A)))), "A | (B | A)")
+    rendersType(union(List(fnType(List(A), B), B)), "((A) -> B) | B")
+  }
+
+  ["function types"] {
+    rendersType(fnType(List(A), union(List(A, B))), "(A) -> A | B")
+    rendersType(fnType(List(A), fnType(List(A), B)), "(A) -> (A) -> B")
+    rendersType(fnType(List(union(List(A, B))), A), "(A | B) -> A")
+    rendersType(fnType(List(nullable(A), B), A), "(A?, B) -> A")
+  }
+
+  ["type arguments are never parenthesized"] {
+    rendersType(
+      new syntax.DeclaredTypeNode {
+        name { identifiers { new { text = "List" } } }
+        typeArguments { union(List(A, B)) }
+      },
+      "List<A | B>",
+    )
+  }
+
+  ["parentheses are added when a parsed operand is replaced"] {
+    local module_ = parser.parseModule("x = !(a && b)")
+    local property = module_.properties["x"]!!
+    local modified = (module_) {
+      members {
+        [0] = (property) {
+          value = (property.value as syntax.LogicalNotExprNode) {
+            operand = or(ref("c"), ref("d"))
+          }
+        }
+      }
+    }
+    renderer.render(modified.builtNode) == "x = !(c || d)\n"
+  }
+
+  ["parentheses of a parsed operand are kept"] {
+    local module_ = parser.parseModule("x = !(a && b)")
+    renderer.render(module_.builtNode) == "x = !(a && b)\n"
+  }
+}

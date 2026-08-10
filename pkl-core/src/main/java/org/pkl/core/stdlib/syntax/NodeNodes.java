@@ -32,6 +32,7 @@ import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
 import org.pkl.parser.Lexer;
+import org.pkl.parser.syntax.Operator;
 import org.pkl.parser.syntax.generic.FullSpan;
 
 public final class NodeNodes {
@@ -50,7 +51,12 @@ public final class NodeNodes {
     if (self.hasExtraStorage() && self.getExtraStorage() instanceof VmTyped genericNode) {
       return genericNode;
     }
-    return switch (self.getVmClass().getSimpleName()) {
+    var className = self.getVmClass().getSimpleName();
+    var binaryOperator = binaryOperator(className);
+    if (binaryOperator != null) {
+      return buildBinaryOp(self, binaryOperator);
+    }
+    return switch (className) {
       case "ModuleNode" -> buildModule(self);
       case "ModuleDeclarationNode" -> buildModuleDeclaration(self);
       case "ExtendsOrAmendsClauseNode" -> {
@@ -92,7 +98,7 @@ public final class NodeNodes {
           branch(
               "subscript_expr",
               List.of(
-                  build(reqNode(self, "receiver")),
+                  buildExprIn(reqNode(self, "receiver"), 0, SUBSCRIPT),
                   operatorLeaf("["),
                   build(reqNode(self, "index")),
                   terminal("]")));
@@ -115,31 +121,22 @@ public final class NodeNodes {
           branch(
               "amends_expr",
               List.of(build(reqNode(self, "parentExpr")), build(reqNode(self, "body"))));
-      case "ExponentiationExprNode" -> buildBinaryOp(self, "**");
-      case "MultiplicationExprNode" -> buildBinaryOp(self, "*");
-      case "DivisionExprNode" -> buildBinaryOp(self, "/");
-      case "IntegerDivisionExprNode" -> buildBinaryOp(self, "~/");
-      case "RemainderExprNode" -> buildBinaryOp(self, "%");
-      case "AdditionExprNode" -> buildBinaryOp(self, "+");
-      case "SubtractionExprNode" -> buildBinaryOp(self, "-");
-      case "LessThanExprNode" -> buildBinaryOp(self, "<");
-      case "LessThanOrEqualExprNode" -> buildBinaryOp(self, "<=");
-      case "GreaterThanExprNode" -> buildBinaryOp(self, ">");
-      case "GreaterThanOrEqualExprNode" -> buildBinaryOp(self, ">=");
-      case "EqualExprNode" -> buildBinaryOp(self, "==");
-      case "NotEqualExprNode" -> buildBinaryOp(self, "!=");
-      case "LogicalAndExprNode" -> buildBinaryOp(self, "&&");
-      case "LogicalOrExprNode" -> buildBinaryOp(self, "||");
-      case "PipeExprNode" -> buildBinaryOp(self, "|>");
-      case "NullCoalescingExprNode" -> buildBinaryOp(self, "??");
       case "TypeCheckExprNode" -> buildTypeOp(self, "is");
       case "TypeCastExprNode" -> buildTypeOp(self, "as");
       case "UnaryMinusExprNode" ->
-          branch("unary_minus_expr", List.of(terminal("-"), build(reqNode(self, "operand"))));
+          branch(
+              "unary_minus_expr",
+              List.of(
+                  terminal("-"), buildExprIn(reqNode(self, "operand"), UNARY_MINUS_OPERAND, 0)));
       case "LogicalNotExprNode" ->
-          branch("logical_not_expr", List.of(terminal("!"), build(reqNode(self, "operand"))));
+          branch(
+              "logical_not_expr",
+              List.of(
+                  terminal("!"), buildExprIn(reqNode(self, "operand"), LOGICAL_NOT_OPERAND, 0)));
       case "NonNullExprNode" ->
-          branch("non_null_expr", List.of(build(reqNode(self, "operand")), operatorLeaf("!!")));
+          branch(
+              "non_null_expr",
+              List.of(buildExprIn(reqNode(self, "operand"), 0, NON_NULL), operatorLeaf("!!")));
       case "FunctionLiteralExprNode" -> buildFunctionLiteral(self);
       case "ParenthesizedExprNode" ->
           branch(
@@ -154,10 +151,10 @@ public final class NodeNodes {
       case "ModuleTypeNode" -> leaf("module_type", "module");
       case "DeclaredTypeNode" -> buildDeclaredType(self);
       case "NullableTypeNode" ->
-          branch("nullable_type", List.of(build(reqNode(self, "baseType")), terminal("?")));
-      case "UnionTypeNode" ->
           branch(
-              "union_type", interleave(buildAll(listMember(self, "members")), () -> terminal("|")));
+              "nullable_type",
+              List.of(buildTypeIn(reqNode(self, "baseType"), TYPE_END, QUESTION), terminal("?")));
+      case "UnionTypeNode" -> buildUnionType(self);
       case "FunctionTypeNode" -> buildFunctionType(self);
       case "ConstrainedTypeNode" -> buildConstrainedType(self);
       case "ParenthesizedTypeNode" ->
@@ -529,7 +526,7 @@ public final class NodeNodes {
     return branch(
         "qualified_access_expr",
         List.of(
-            build(reqNode(self, "receiver")),
+            buildExprIn(reqNode(self, "receiver"), 0, DOT),
             operatorLeaf(bool(self, "isNullSafe") ? "?." : "."),
             branch("unqualified_access_expr", member)));
   }
@@ -594,17 +591,21 @@ public final class NodeNodes {
   }
 
   private static VmTyped buildBinaryOp(VmTyped self, String operator) {
+    var op = Operator.byName(operator);
+    var prec = op.getPrec();
     return branch(
         "binary_op_expr",
         List.of(
-            build(reqNode(self, "left")), operatorLeaf(operator), build(reqNode(self, "right"))));
+            buildExprIn(reqNode(self, "left"), 0, prec),
+            operatorLeaf(operator),
+            buildExprIn(reqNode(self, "right"), op.isLeftAssoc() ? prec + 1 : prec, 0)));
   }
 
   private static VmTyped buildTypeOp(VmTyped self, String operator) {
     return branch(
         "binary_op_expr",
         List.of(
-            build(reqNode(self, "expression")),
+            buildExprIn(reqNode(self, "expression"), 0, Operator.byName(operator).getPrec()),
             operatorLeaf(operator),
             build(reqNode(self, "type"))));
   }
@@ -638,6 +639,14 @@ public final class NodeNodes {
                     terminal(">")))));
   }
 
+  private static VmTyped buildUnionType(VmTyped self) {
+    var members = new ArrayList<>();
+    for (var member : listMember(self, "members")) {
+      members.add(buildTypeIn((VmTyped) member, TYPE_END, UNION_TYPE));
+    }
+    return branch("union_type", interleave(members, () -> terminal("|")));
+  }
+
   private static VmTyped buildFunctionType(VmTyped self) {
     var parameterTypes = listMember(self, "parameterTypes");
     var parameters =
@@ -654,14 +663,14 @@ public final class NodeNodes {
         List.of(
             branch("function_type_parameters", parameters),
             terminal("->"),
-            build(reqNode(self, "returnType"))));
+            buildTypeIn(reqNode(self, "returnType"), FUNCTION_TYPE, 0)));
   }
 
   private static VmTyped buildConstrainedType(VmTyped self) {
     return branch(
         "constrained_type",
         List.of(
-            build(reqNode(self, "baseType")),
+            buildTypeIn(reqNode(self, "baseType"), TYPE_END, 0),
             branch(
                 "constrained_type_constraint",
                 List.of(
@@ -719,6 +728,124 @@ public final class NodeNodes {
 
   private static VmTyped buildCall(String type, String keyword, VmTyped inner) {
     return branch(type, List.of(terminal(keyword), terminal("("), inner, terminal(")")));
+  }
+
+  // =====================
+  // Parenthesization
+  // =====================
+
+  // The binding power of an expression or type node as seen from the outside: `lp` is the
+  // precedence of the tightest operator that may directly precede the node's rendering, `rp` the
+  // precedence of the tightest operator that may directly follow it.
+  private record Prec(int lp, int rp) {}
+
+  private static final int UNBOUNDED = Integer.MAX_VALUE;
+
+  // An expression that neither begins nor ends with a subexpression.
+  private static final Prec ATOM = new Prec(UNBOUNDED, UNBOUNDED);
+
+  private static final int DOT = Operator.DOT.getPrec();
+  private static final int SUBSCRIPT = Operator.SUBSCRIPT.getPrec();
+  private static final int NON_NULL = Operator.NON_NULL.getPrec();
+
+  private static final int UNARY_MINUS_OPERAND = 12;
+  private static final int LOGICAL_NOT_OPERAND = 11;
+
+  // `is` and `as` are followed by a type, which absorbs a trailing `.foo`.
+  private static final int TYPE_OPERATOR_RP = DOT - 1;
+
+  private static final int FUNCTION_TYPE = 1;
+  private static final int UNION_TYPE = 2;
+  private static final int TYPE_END = 3;
+
+  // The `?` of a nullable type cannot follow another `?`
+  // because the two would lex as a single `??` token.
+  private static final int QUESTION = TYPE_END + 1;
+
+  private static Prec prec(VmTyped node) {
+    var className = node.getVmClass().getSimpleName();
+    var binaryOperator = binaryOperator(className);
+    if (binaryOperator != null) {
+      var op = Operator.byName(binaryOperator);
+      // an operator of the same precedence may follow a left-associative operator (`a - b - c`
+      // groups to the left), but not a right-associative one (`a ?? b ?? c` groups to the right).
+      return new Prec(op.getPrec(), op.isLeftAssoc() ? op.getPrec() : op.getPrec() - 1);
+    }
+    return switch (className) {
+      case "QualifiedAccessExprNode" -> new Prec(DOT, UNBOUNDED);
+      case "SubscriptExprNode" -> new Prec(SUBSCRIPT, UNBOUNDED);
+      case "NonNullExprNode" -> new Prec(NON_NULL, UNBOUNDED);
+      case "TypeCheckExprNode", "TypeCastExprNode" ->
+          new Prec(Operator.IS.getPrec(), TYPE_OPERATOR_RP);
+      case "UnaryMinusExprNode" -> new Prec(UNBOUNDED, UNARY_MINUS_OPERAND - 1);
+      case "LogicalNotExprNode" -> new Prec(UNBOUNDED, LOGICAL_NOT_OPERAND - 1);
+      case "IfExprNode", "LetExprNode", "FunctionLiteralExprNode" -> new Prec(UNBOUNDED, 0);
+      case "IntLiteralExprNode", "FloatLiteralExprNode" ->
+          numText(member(node, "value")).startsWith("-")
+              ? new Prec(UNBOUNDED, UNARY_MINUS_OPERAND - 1)
+              : ATOM;
+      case "FunctionTypeNode" -> new Prec(FUNCTION_TYPE, FUNCTION_TYPE);
+      case "UnionTypeNode" -> new Prec(UNION_TYPE, UNION_TYPE);
+      case "NullableTypeNode" -> new Prec(TYPE_END, TYPE_END);
+      case "ConstrainedTypeNode" -> new Prec(TYPE_END, UNBOUNDED);
+      default -> ATOM;
+    };
+  }
+
+  private static @Nullable String binaryOperator(String className) {
+    return switch (className) {
+      case "ExponentiationExprNode" -> "**";
+      case "MultiplicationExprNode" -> "*";
+      case "DivisionExprNode" -> "/";
+      case "IntegerDivisionExprNode" -> "~/";
+      case "RemainderExprNode" -> "%";
+      case "AdditionExprNode" -> "+";
+      case "SubtractionExprNode" -> "-";
+      case "LessThanExprNode" -> "<";
+      case "LessThanOrEqualExprNode" -> "<=";
+      case "GreaterThanExprNode" -> ">";
+      case "GreaterThanOrEqualExprNode" -> ">=";
+      case "EqualExprNode" -> "==";
+      case "NotEqualExprNode" -> "!=";
+      case "LogicalAndExprNode" -> "&&";
+      case "LogicalOrExprNode" -> "||";
+      case "PipeExprNode" -> "|>";
+      case "NullCoalescingExprNode" -> "??";
+      default -> null;
+    };
+  }
+
+  // Builds the expression `node` for a slot whose contents are parsed at `minPrecedence`, and that
+  // is directly followed by an operator of precedence `followingPrecedence` within its parent
+  // (`0` if a keyword, a closing terminal, or nothing follows).
+  private static VmTyped buildExprIn(VmTyped node, int minPrecedence, int followingPrecedence) {
+    var built = build(node);
+    return needsParens(node, minPrecedence, followingPrecedence)
+        ? branch(
+            "parenthesized_expr",
+            List.of(
+                terminal("("),
+                branch("parenthesized_expr_elements", List.of(built)),
+                terminal(")")))
+        : built;
+  }
+
+  // Same as `buildExprIn`, but for a type slot.
+  private static VmTyped buildTypeIn(VmTyped node, int minPrecedence, int followingPrecedence) {
+    var built = build(node);
+    return needsParens(node, minPrecedence, followingPrecedence)
+        ? branch(
+            "parenthesized_type",
+            List.of(
+                terminal("("),
+                branch("parenthesized_type_elements", List.of(built)),
+                terminal(")")))
+        : built;
+  }
+
+  private static boolean needsParens(VmTyped node, int minPrecedence, int followingPrecedence) {
+    var prec = prec(node);
+    return prec.lp() < minPrecedence || prec.rp() < followingPrecedence;
   }
 
   private static String identifierText(VmTyped self) {
