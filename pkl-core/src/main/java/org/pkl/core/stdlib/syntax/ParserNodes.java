@@ -40,7 +40,7 @@ import org.pkl.parser.GenericParserError;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
 
-public class ParserNodes {
+public final class ParserNodes {
   private ParserNodes() {}
 
   private static final VmObjectFactory<GenericNodeData> genericNodeFactory =
@@ -158,7 +158,7 @@ public class ParserNodes {
   private static final VmObjectFactory<VmTyped> nullableTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getNullableTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
-          .addTypedProperty("baseType", ParserNodes::nullableTypeBaseType);
+          .addTypedProperty("member", ParserNodes::nullableTypeMember);
   private static final VmObjectFactory<VmTyped> unionTypeNodeFactory =
       new VmObjectFactory<VmTyped>(SyntaxModule::getUnionTypeNodeClass)
           .addProperty("genericNode", vm -> vm)
@@ -219,7 +219,7 @@ public class ParserNodes {
       new VmObjectFactory<VmTyped>(SyntaxModule::getQualifiedAccessExprNodeClass)
           .addProperty("genericNode", vm -> vm)
           .addTypedProperty("receiver", ParserNodes::qualifiedAccessReceiver)
-          .addBooleanProperty("isNullSafe", ParserNodes::qualifiedAccessIsNullSafe)
+          .addStringProperty("operator", ParserNodes::qualifiedAccessOperator)
           .addTypedProperty("identifier", ParserNodes::qualifiedAccessIdentifier)
           .addProperty("arguments", ParserNodes::qualifiedAccessArguments);
   private static final VmObjectFactory<VmTyped> subscriptExprNodeFactory =
@@ -297,8 +297,8 @@ public class ParserNodes {
       binaryOpExprNodeFactory(SyntaxModule::getMultiplicationExprNodeClass);
   private static final VmObjectFactory<VmTyped> divisionExprNodeFactory =
       binaryOpExprNodeFactory(SyntaxModule::getDivisionExprNodeClass);
-  private static final VmObjectFactory<VmTyped> integerDivisionExprNodeFactory =
-      binaryOpExprNodeFactory(SyntaxModule::getIntegerDivisionExprNodeClass);
+  private static final VmObjectFactory<VmTyped> intDivisionExprNodeFactory =
+      binaryOpExprNodeFactory(SyntaxModule::getIntDivisionExprNodeClass);
   private static final VmObjectFactory<VmTyped> remainderExprNodeFactory =
       binaryOpExprNodeFactory(SyntaxModule::getRemainderExprNodeClass);
   private static final VmObjectFactory<VmTyped> additionExprNodeFactory =
@@ -512,7 +512,7 @@ public class ParserNodes {
     return wrapTypes(findTypeChildrenVm(elems));
   }
 
-  private static VmTyped nullableTypeBaseType(VmTyped typeVm) {
+  private static VmTyped nullableTypeMember(VmTyped typeVm) {
     return wrapType(requireTypeChild(typeVm));
   }
 
@@ -595,13 +595,13 @@ public class ParserNodes {
     return wrapExpr(requireExprChild(exprVm));
   }
 
-  private static boolean qualifiedAccessIsNullSafe(VmTyped exprVm) {
+  private static String qualifiedAccessOperator(VmTyped exprVm) {
     var op = findChildVm(exprVm, NodeType.OPERATOR);
     if (op == null) {
-      return false;
+      return ".";
     }
     var data = (GenericNodeData) op.getExtraStorage();
-    return "?.".equals(data.node.text(data.source));
+    return "?.".equals(data.node.text(data.source)) ? "?." : ".";
   }
 
   private static VmTyped qualifiedAccessIdentifier(VmTyped exprVm) {
@@ -707,7 +707,7 @@ public class ParserNodes {
       case "**" -> exponentiationExprNodeFactory;
       case "*" -> multiplicationExprNodeFactory;
       case "/" -> divisionExprNodeFactory;
-      case "~/" -> integerDivisionExprNodeFactory;
+      case "~/" -> intDivisionExprNodeFactory;
       case "%" -> remainderExprNodeFactory;
       case "+" -> additionExprNodeFactory;
       case "-" -> subtractionExprNodeFactory;

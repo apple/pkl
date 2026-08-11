@@ -101,12 +101,12 @@ facts {
     local qual = expr("foo.bar")
     qual is syntax.QualifiedAccessExprNode
     (qual as syntax.QualifiedAccessExprNode).receiver is syntax.UnqualifiedAccessExprNode
-    (qual as syntax.QualifiedAccessExprNode).isNullSafe == false
+    (qual as syntax.QualifiedAccessExprNode).operator == "."
     (qual as syntax.QualifiedAccessExprNode).identifier.name == "bar"
 
     local nullSafe = expr("foo?.bar")
     nullSafe is syntax.QualifiedAccessExprNode
-    (nullSafe as syntax.QualifiedAccessExprNode).isNullSafe == true
+    (nullSafe as syntax.QualifiedAccessExprNode).operator == "?."
 
     local subscript = expr("foo[0]")
     subscript is syntax.SubscriptExprNode
@@ -123,7 +123,7 @@ facts {
     expr("1 ** 2") is syntax.ExponentiationExprNode
     expr("1 * 2") is syntax.MultiplicationExprNode
     expr("1 / 2") is syntax.DivisionExprNode
-    expr("1 ~/ 2") is syntax.IntegerDivisionExprNode
+    expr("1 ~/ 2") is syntax.IntDivisionExprNode
     expr("1 % 2") is syntax.RemainderExprNode
     expr("1 - 2") is syntax.SubtractionExprNode
     expr("a < b") is syntax.LessThanExprNode

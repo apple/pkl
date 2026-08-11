@@ -59,21 +59,21 @@ class GenericNode {
   /// The child nodes, in source order. Empty for leaf nodes.
   children: List<GenericNode>
 
-  /// The parent node, or `null` for the root and for nodes not attached to a tree.
+  /// The parent node, or [null] for the root and for nodes not attached to a tree.
   hidden parent: GenericNode?
 
   /// The verbatim source text of a leaf node (identifier, literal, terminal, etc.),
-  /// or `null` for a branch node whose content is its [children].
+  /// or [null] for a branch node whose content is its [children].
   text: String?
 
-  /// The source location of this node or `null`.
+  /// The source location of this node or [null].
   span: Span?
 
   /// Walk this node and its descendants top-down, applying [operator] to each node and
   /// returning the (possibly rewritten) tree.
   ///
   /// For each node, [operator] returns either:
-  /// - `null` to leave the node unchanged and continue walking into its children.
+  /// - [null] to leave the node unchanged and continue walking into its children.
   /// - `Pair(replacement, descend)` to replace the node with `replacement`. When
   ///   `descend` is `true`, the children of `replacement` are visited in turn, so
   ///   nodes emitted by a rewrite are themselves processed further down. When
@@ -259,10 +259,10 @@ typealias NodeType =
 /// Base class for all typed syntax nodes.
 ///
 /// A typed node may be *backed* by a parsed [GenericNode] (available via [genericNode]) or
-/// constructed from scratch (in which case [genericNode] is `null`). Its typed fields
+/// constructed from scratch (in which case [genericNode] is [null]). Its typed fields
 /// are read from [genericNode] when backed, or supplied directly when constructed.
 abstract class Node {
-  /// The original parsed node, or `null` when this was built from scratch.
+  /// The original parsed node, or [null] when this was built from scratch.
   hidden genericNode: GenericNode? = null
 
   /// This node rebuilt into a [GenericNode].
@@ -742,7 +742,9 @@ class UnqualifiedAccessExprNode extends ExprNode {
   /// The identifier being accessed.
   identifier: IdentifierNode
 
-  /// The arguments, if this is a function call. Null for a plain identifier access.
+  /// The arguments, if this is a function call.
+  ///
+  /// [null] for property access.
   arguments: Listing<ExprNode>?
 }
 
@@ -752,13 +754,15 @@ class QualifiedAccessExprNode extends ExprNode {
   /// The receiver expression.
   receiver: ExprNode
 
-  /// Whether this is a null-safe access (`?.`).
-  isNullSafe: Boolean
+  /// The operator used (`"."` or `"?."` for null-safe access).
+  operator: "." | "?." = "."
 
   /// The accessed member name.
   identifier: IdentifierNode
 
-  /// The arguments, if this is a method call. Null for a property access.
+  /// The arguments, if this is a method call.
+  ///
+  /// [null] for property access.
   arguments: Listing<ExprNode>?
 }
 
@@ -776,7 +780,9 @@ class SuperAccessExprNode extends ExprNode {
   /// The accessed member name.
   identifier: IdentifierNode
 
-  /// The arguments, if this is a method call. Null for a property access.
+  /// The arguments, if this is a method call.
+  ///
+  /// [null] for property access.
   arguments: Listing<ExprNode>?
 }
 
@@ -825,7 +831,7 @@ class TraceExprNode extends ExprNode {
 /// An `import("uri")` or `import*("uri")` expression.
 class ImportExprNode extends ExprNode {
   /// The keyword used (`"import"` or `"import*"`).
-  keyword: "import" | "import*"
+  keyword: "import" | "import*" = "import"
 
   /// The import URI string.
   uri: String
@@ -882,7 +888,7 @@ class MultiplicationExprNode extends BinaryOpExprNode
 class DivisionExprNode extends BinaryOpExprNode
 
 /// An integer division expression (`left ~/ right`).
-class IntegerDivisionExprNode extends BinaryOpExprNode
+class IntDivisionExprNode extends BinaryOpExprNode
 
 /// A remainder expression (`left % right`).
 class RemainderExprNode extends BinaryOpExprNode
@@ -994,8 +1000,8 @@ class DeclaredTypeNode extends TypeNode {
 
 /// A nullable type (`Type?`).
 class NullableTypeNode extends TypeNode {
-  /// The base type.
-  baseType: TypeNode
+  /// The member of this nullable type.
+  member: TypeNode
 }
 
 /// A union type (`TypeA|TypeB|TypeC`).
@@ -1048,7 +1054,7 @@ class ParameterNode extends Node {
   /// Whether this is a blank identifier parameter (`_`).
   isBlankIdentifier: Boolean(this == (identifier == null), implies(typeAnnotation == null))
 
-  /// The parameter name, or `null` for a wildcard parameter (`_`).
+  /// The parameter name, or [null] for a wildcard parameter (`_`).
   identifier: IdentifierNode?
 
   /// The type annotation.
@@ -1087,7 +1093,7 @@ class IdentifierNode extends Node {
 /// A qualified (dotted) identifier, e.g. `foo.bar.baz`.
 class QualifiedIdentifierNode extends Node {
   /// The parts of the qualified identifier.
-  identifiers: Listing<IdentifierNode>
+  identifiers: Listing<IdentifierNode>(!isEmpty)
 
   /// The dotted name (e.g. `"foo.bar.baz"`).
   value: String

@@ -293,8 +293,8 @@ public final class SyntaxModule extends StdLibModule {
     return DivisionExprNodeClass.instance;
   }
 
-  public static VmClass getIntegerDivisionExprNodeClass() {
-    return IntegerDivisionExprNodeClass.instance;
+  public static VmClass getIntDivisionExprNodeClass() {
+    return IntDivisionExprNodeClass.instance;
   }
 
   public static VmClass getRemainderExprNodeClass() {
@@ -641,8 +641,8 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("DivisionExprNode");
   }
 
-  private static final class IntegerDivisionExprNodeClass {
-    static final VmClass instance = loadClass("IntegerDivisionExprNode");
+  private static final class IntDivisionExprNodeClass {
+    static final VmClass instance = loadClass("IntDivisionExprNode");
   }
 
   private static final class RemainderExprNodeClass {

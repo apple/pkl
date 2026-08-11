@@ -48,7 +48,9 @@ public final class NodeNodes {
   }
 
   private static VmTyped build(VmTyped self) {
-    if (self.hasExtraStorage() && self.getExtraStorage() instanceof VmTyped genericNode) {
+    if (self.hasExtraStorage()
+        && self.getExtraStorage() instanceof VmTyped genericNode
+        && genericNode.getVmClass() == SyntaxModule.getGenericNodeClass()) {
       return genericNode;
     }
     var className = self.getVmClass().getSimpleName();
@@ -153,7 +155,7 @@ public final class NodeNodes {
       case "NullableTypeNode" ->
           branch(
               "nullable_type",
-              List.of(buildTypeIn(reqNode(self, "baseType"), TYPE_END, QUESTION), terminal("?")));
+              List.of(buildTypeIn(reqNode(self, "member"), TYPE_END, QUESTION), terminal("?")));
       case "UnionTypeNode" -> buildUnionType(self);
       case "FunctionTypeNode" -> buildFunctionType(self);
       case "ConstrainedTypeNode" -> buildConstrainedType(self);
@@ -527,7 +529,7 @@ public final class NodeNodes {
         "qualified_access_expr",
         List.of(
             buildExprIn(reqNode(self, "receiver"), 0, DOT),
-            operatorLeaf(bool(self, "isNullSafe") ? "?." : "."),
+            operatorLeaf(str(self, "operator")),
             branch("unqualified_access_expr", member)));
   }
 
@@ -797,7 +799,7 @@ public final class NodeNodes {
       case "ExponentiationExprNode" -> "**";
       case "MultiplicationExprNode" -> "*";
       case "DivisionExprNode" -> "/";
-      case "IntegerDivisionExprNode" -> "~/";
+      case "IntDivisionExprNode" -> "~/";
       case "RemainderExprNode" -> "%";
       case "AdditionExprNode" -> "+";
       case "SubtractionExprNode" -> "-";

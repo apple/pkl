@@ -39,7 +39,7 @@ facts {
   ["nullable type"] {
     local nullable = typeOf("String?")
     nullable is syntax.NullableTypeNode
-    (nullable as syntax.NullableTypeNode).baseType is syntax.DeclaredTypeNode
+    (nullable as syntax.NullableTypeNode).member is syntax.DeclaredTypeNode
   }
 
   ["union type"] {

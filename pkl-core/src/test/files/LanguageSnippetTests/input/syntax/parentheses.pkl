@@ -103,7 +103,6 @@ local function paren(expr: syntax.ExprNode): syntax.ParenthesizedExprNode = new 
 
 local function dot(rcv: syntax.ExprNode, id: String): syntax.QualifiedAccessExprNode = new {
   receiver = rcv
-  isNullSafe = false
   identifier { text = id }
 }
 
@@ -156,7 +155,7 @@ local A = decl("A")
 
 local B = decl("B")
 
-local function nullable(base: syntax.TypeNode): syntax.NullableTypeNode = new { baseType = base }
+local function nullable(base: syntax.TypeNode): syntax.NullableTypeNode = new { member = base }
 
 local function union(types: List<syntax.TypeNode>): syntax.UnionTypeNode = new {
   members { ...types }
