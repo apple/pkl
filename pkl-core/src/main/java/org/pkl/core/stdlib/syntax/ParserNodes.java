@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -42,6 +44,114 @@ import org.pkl.parser.syntax.generic.NodeType;
 
 public final class ParserNodes {
   private ParserNodes() {}
+
+  public abstract static class parseModule extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+      try {
+        return parseModuleNode(source, null);
+      } catch (GenericParserError e) {
+        throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
+      }
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object evalResource(
+        @SuppressWarnings("unused") VmTyped self,
+        VmTyped source,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT, callNode);
+      var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
+      try {
+        return parseModuleNode(text, uri);
+      } catch (GenericParserError e) {
+        throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
+      }
+    }
+  }
+
+  public abstract static class parseModuleOrNull extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+      try {
+        return parseModuleNode(source, null);
+      } catch (GenericParserError e) {
+        return VmNull.withoutDefault();
+      }
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object evalResource(
+        @SuppressWarnings("unused") VmTyped self,
+        VmTyped source,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
+      try {
+        return parseModuleNode(text, uri);
+      } catch (GenericParserError e) {
+        return VmNull.withoutDefault();
+      }
+    }
+  }
+
+  public abstract static class parseExpression extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+      try {
+        return parseExpressionNode(source, null);
+      } catch (GenericParserError e) {
+        throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
+      }
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object evalResource(
+        @SuppressWarnings("unused") VmTyped self,
+        VmTyped source,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
+      try {
+        return parseExpressionNode(text, uri);
+      } catch (GenericParserError e) {
+        throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
+      }
+    }
+  }
+
+  public abstract static class parseExpressionOrNull extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+      try {
+        return parseExpressionNode(source, null);
+      } catch (GenericParserError e) {
+        return VmNull.withoutDefault();
+      }
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object evalResource(
+        @SuppressWarnings("unused") VmTyped self,
+        VmTyped source,
+        @Cached("create()") IndirectCallNode callNode) {
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
+      try {
+        return parseExpressionNode(text, uri);
+      } catch (GenericParserError e) {
+        return VmNull.withoutDefault();
+      }
+    }
+  }
 
   private static final VmObjectFactory<GenericNodeData> genericNodeFactory =
       new VmObjectFactory<GenericNodeData>(SyntaxModule::getGenericNodeClass)
@@ -1512,118 +1622,16 @@ public final class ParserNodes {
     return result;
   }
 
-  public abstract static class parseModule extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
-      return doParse(source, null);
-    }
-
-    @Specialization
-    @TruffleBoundary
-    protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
-      // `source` is a `pkl.base#Resource`
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
-      return doParse(text, sourceUri(source));
-    }
+  private static VmTyped parseModuleNode(String src, @Nullable String sourceUri) {
+    var parser = new GenericParser();
+    var root = parser.parseModule(src);
+    return moduleNodeFactory.create(convertNode(root, src.toCharArray(), sourceUri));
   }
 
-  public abstract static class parseModuleOrNull extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
-      return doParseOrNull(source, null);
-    }
-
-    @Specialization
-    @TruffleBoundary
-    protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
-      // `source` is a `pkl.base#Resource`
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
-      return doParseOrNull(text, sourceUri(source));
-    }
-  }
-
-  public abstract static class parseExpression extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
-      return doParseExpression(source, null);
-    }
-
-    @Specialization
-    @TruffleBoundary
-    protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
-      // `source` is a `pkl.base#Resource`
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
-      return doParseExpression(text, sourceUri(source));
-    }
-  }
-
-  public abstract static class parseExpressionOrNull extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
-      return doParseExpressionOrNull(source, null);
-    }
-
-    @Specialization
-    @TruffleBoundary
-    protected Object evalResource(@SuppressWarnings("unused") VmTyped self, VmTyped source) {
-      // `source` is a `pkl.base#Resource`
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
-      return doParseExpressionOrNull(text, sourceUri(source));
-    }
-  }
-
-  private static String sourceUri(VmTyped resource) {
-    return VmUtils.readMember(resource, Identifier.URI).toString();
-  }
-
-  private static Object doParse(String src, @Nullable String sourceUri) {
-    var sourceChars = src.toCharArray();
-    try {
-      var parser = new GenericParser();
-      var root = parser.parseModule(src);
-      var genericNode = convertNode(root, sourceChars, sourceUri);
-      return moduleNodeFactory.create(genericNode);
-    } catch (GenericParserError e) {
-      throw new VmExceptionBuilder().evalError("parserError").withHint(e.toString()).build();
-    }
-  }
-
-  private static Object doParseOrNull(String src, @Nullable String sourceUri) {
-    var sourceChars = src.toCharArray();
-    try {
-      var parser = new GenericParser();
-      var root = parser.parseModule(src);
-      var genericNode = convertNode(root, sourceChars, sourceUri);
-      return moduleNodeFactory.create(genericNode);
-    } catch (GenericParserError e) {
-      return VmNull.withoutDefault();
-    }
-  }
-
-  private static Object doParseExpression(String src, @Nullable String sourceUri) {
-    var sourceChars = src.toCharArray();
-    try {
-      var parser = new GenericParser();
-      var root = parser.parseExpressionInput(src);
-      return wrapExpr(convertNode(root, sourceChars, sourceUri));
-    } catch (GenericParserError e) {
-      throw new VmExceptionBuilder().evalError("parserError").withHint(e.toString()).build();
-    }
-  }
-
-  private static Object doParseExpressionOrNull(String src, @Nullable String sourceUri) {
-    var sourceChars = src.toCharArray();
-    try {
-      var parser = new GenericParser();
-      var root = parser.parseExpressionInput(src);
-      return wrapExpr(convertNode(root, sourceChars, sourceUri));
-    } catch (GenericParserError e) {
-      return VmNull.withoutDefault();
-    }
+  private static VmTyped parseExpressionNode(String src, @Nullable String sourceUri) {
+    var parser = new GenericParser();
+    var root = parser.parseExpressionInput(src);
+    return wrapExpr(convertNode(root, src.toCharArray(), sourceUri));
   }
 
   private static VmTyped convertNode(
