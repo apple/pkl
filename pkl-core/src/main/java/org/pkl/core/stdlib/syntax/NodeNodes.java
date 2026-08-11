@@ -119,10 +119,7 @@ public final class NodeNodes {
       case "ReadExprNode" ->
           buildCall("read_expr", str(self, "keyword"), build(reqNode(self, "expression")));
       case "NewExprNode" -> buildNew(self);
-      case "AmendsExprNode" ->
-          branch(
-              "amends_expr",
-              List.of(build(reqNode(self, "parentExpr")), build(reqNode(self, "body"))));
+      case "AmendsExprNode" -> buildAmends(self);
       case "TypeCheckExprNode" -> buildTypeOp(self, "is");
       case "TypeCastExprNode" -> buildTypeOp(self, "as");
       case "UnaryMinusExprNode" ->
@@ -140,14 +137,7 @@ public final class NodeNodes {
               "non_null_expr",
               List.of(buildExprIn(reqNode(self, "operand"), 0, NON_NULL), operatorLeaf("!!")));
       case "FunctionLiteralExprNode" -> buildFunctionLiteral(self);
-      case "ParenthesizedExprNode" ->
-          branch(
-              "parenthesized_expr",
-              List.of(
-                  terminal("("),
-                  branch(
-                      "parenthesized_expr_elements", List.of(build(reqNode(self, "expression")))),
-                  terminal(")")));
+      case "ParenthesizedExprNode" -> parenthesizedExpr(build(reqNode(self, "expression")));
       case "UnknownTypeNode" -> leaf("unknown_type", "unknown");
       case "NothingTypeNode" -> leaf("nothing_type", "nothing");
       case "ModuleTypeNode" -> leaf("module_type", "module");
@@ -159,13 +149,7 @@ public final class NodeNodes {
       case "UnionTypeNode" -> buildUnionType(self);
       case "FunctionTypeNode" -> buildFunctionType(self);
       case "ConstrainedTypeNode" -> buildConstrainedType(self);
-      case "ParenthesizedTypeNode" ->
-          branch(
-              "parenthesized_type",
-              List.of(
-                  terminal("("),
-                  branch("parenthesized_type_elements", List.of(build(reqNode(self, "type")))),
-                  terminal(")")));
+      case "ParenthesizedTypeNode" -> parenthesizedType(build(reqNode(self, "type")));
       case "StringLiteralTypeNode" ->
           branch("string_constant_type", List.of(stringCharsNode(str(self, "value"))));
       case "AnnotationNode" -> buildAnnotation(self);
@@ -592,6 +576,20 @@ public final class NodeNodes {
     return branch("new_expr", List.of(branch("new_header", header), build(reqNode(self, "body"))));
   }
 
+  private static VmTyped buildAmends(VmTyped self) {
+    return branch(
+        "amends_expr",
+        List.of(buildAmendsParent(reqNode(self, "parentExpr")), build(reqNode(self, "body"))));
+  }
+
+  private static VmTyped buildAmendsParent(VmTyped node) {
+    var built = build(node);
+    return switch (node.getVmClass().getSimpleName()) {
+      case "ParenthesizedExprNode", "NewExprNode", "AmendsExprNode" -> built;
+      default -> parenthesizedExpr(built);
+    };
+  }
+
   private static VmTyped buildBinaryOp(VmTyped self, String operator) {
     var op = Operator.byName(operator);
     var prec = op.getPrec();
@@ -822,27 +820,27 @@ public final class NodeNodes {
   // (`0` if a keyword, a closing terminal, or nothing follows).
   private static VmTyped buildExprIn(VmTyped node, int minPrecedence, int followingPrecedence) {
     var built = build(node);
-    return needsParens(node, minPrecedence, followingPrecedence)
-        ? branch(
-            "parenthesized_expr",
-            List.of(
-                terminal("("),
-                branch("parenthesized_expr_elements", List.of(built)),
-                terminal(")")))
-        : built;
+    return needsParens(node, minPrecedence, followingPrecedence) ? parenthesizedExpr(built) : built;
   }
 
   // Same as `buildExprIn`, but for a type slot.
   private static VmTyped buildTypeIn(VmTyped node, int minPrecedence, int followingPrecedence) {
     var built = build(node);
-    return needsParens(node, minPrecedence, followingPrecedence)
-        ? branch(
-            "parenthesized_type",
-            List.of(
-                terminal("("),
-                branch("parenthesized_type_elements", List.of(built)),
-                terminal(")")))
-        : built;
+    return needsParens(node, minPrecedence, followingPrecedence) ? parenthesizedType(built) : built;
+  }
+
+  private static VmTyped parenthesizedExpr(VmTyped built) {
+    return branch(
+        "parenthesized_expr",
+        List.of(
+            terminal("("), branch("parenthesized_expr_elements", List.of(built)), terminal(")")));
+  }
+
+  private static VmTyped parenthesizedType(VmTyped built) {
+    return branch(
+        "parenthesized_type",
+        List.of(
+            terminal("("), branch("parenthesized_type_elements", List.of(built)), terminal(")")));
   }
 
   private static boolean needsParens(VmTyped node, int minPrecedence, int followingPrecedence) {

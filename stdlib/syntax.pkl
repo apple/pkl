@@ -859,11 +859,9 @@ class NewExprNode extends ExprNode {
 class AmendsExprNode extends ExprNode {
   /// The expression being amended.
   ///
-  /// Takes one of a few forms:
-  /// * [ParenthesizedExprNode]: `(expr) { ... }`
-  /// * [AmendsExprNode]: `(expr) { ... } { ... }` (where `(expr) { ... }` is the parent)
-  /// * [NewExprNode]: `new { ... } { ... }` (where `new { ... }` is the parent)
-  parentExpr: ParenthesizedExprNode | AmendsExprNode | NewExprNode
+  /// Only a [ParenthesizedExprNode], an [AmendsExprNode], or a [NewExprNode] can be amended
+  /// directly, other expressions will be automatically parenthesized.
+  parentExpr: ExprNode
 
   /// The object body.
   body: ObjectBodyNode
