@@ -34,13 +34,33 @@ import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
+import org.pkl.core.stdlib.PklName;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.Rebuild;
 
 /** Backs the methods of {@code pkl.syntax#Node}. */
 public final class NodeNodes {
   private NodeNodes() {}
+
+  // Truffle strips the `Node` suffix off the generated class name, so the name must be explicit.
+  @PklName("toSyntaxNode")
+  public abstract static class toSyntaxNode extends ExternalMethod0Node {
+    @Child private IndirectCallNode callNode = IndirectCallNode.create();
+
+    @Specialization
+    @TruffleBoundary
+    protected VmTyped eval(VmTyped self) {
+      var syntaxNode = ParserNodes.toSyntaxNodeOrNull(self, callNode);
+      if (syntaxNode == null) {
+        throw exceptionBuilder()
+            .evalError("cannotConvertToSyntaxNode", VmUtils.readMember(self, Identifier.TYPE))
+            .build();
+      }
+      return syntaxNode;
+    }
+  }
 
   public abstract static class fold extends ExternalMethod2Node {
     @Child private ApplyVmFunction2Node applyAccumulate = ApplyVmFunction2NodeGen.create();
