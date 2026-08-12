@@ -1028,7 +1028,6 @@ final class Builder {
   }
 
   private FormatNode formatParenthesizedExpr(Node node) {
-    if (node.children.size() == 2) return new Text("()");
     var nodes =
         formatGenericWithGen(
             node.children,

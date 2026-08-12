@@ -1,0 +1,13 @@
+facts {
+  ["fold counts nodes by predicate"] {
+    true
+    true
+    true
+  }
+  ["fold accumulates into a collection"] {
+    true
+  }
+  ["fold visits a node before its children (pre-order)"] {
+    true
+  }
+}

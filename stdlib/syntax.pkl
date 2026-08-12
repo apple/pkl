@@ -1,0 +1,257 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Utilities for managing Pkl source code
+@ModuleInfo { minPklVersion = "0.33.0" }
+module pkl.syntax
+
+/// Utilities to parse Pkl source code to a syntax tree.
+class Parser {
+  /// Parse the string or resource as a Pkl module, returning either a syntax node or
+  /// throwing an error.
+  external function parseModule(source: String | Resource): GenericNode
+
+  /// Parse the string or resource as a Pkl module, returning either a syntax node or null
+  /// in case of an error.
+  external function parseModuleOrNull(source: String | Resource): GenericNode?
+
+  /// Parse the string or resource as a Pkl expression, returning either a syntax node or
+  /// throwing an error.
+  external function parseExpression(source: String | Resource): GenericNode
+
+  /// Parse the string or resource as a Pkl expression, returning either a syntax node or null
+  /// in case of an error.
+  external function parseExpressionOrNull(source: String | Resource): GenericNode?
+}
+
+/// Renders a [GenericNode] back to Pkl source code.
+class Renderer {
+  /// The grammar version to target.
+  ///
+  /// `"V1"` matches Pkl 0.25 - 0.29, `"V2"` matches Pkl 0.30+.
+  grammarVersion: "V1" | "V2" = "V2"
+
+  /// Render [node] as Pkl source code.
+  external function render(node: GenericNode): String
+}
+
+/// A generic, untyped node in the Pkl syntax tree.
+///
+/// A node is either a *leaf*, carrying source [text] and no
+/// [children], or a *branch*, carrying [children] and no [text].
+class GenericNode {
+  /// The kind of this node.
+  type: NodeType
+
+  /// The child nodes, in source order. Empty for leaf nodes.
+  children: List<GenericNode>
+
+  /// The parent node, or [null] for the root and for nodes not attached to a tree.
+  hidden parent: GenericNode?
+
+  /// The verbatim source text of a leaf node (identifier, literal, terminal, etc.),
+  /// or [null] for a branch node whose content is its [children].
+  text: String?
+
+  /// The source location of this node or [null].
+  span: Span?
+
+  /// Walk this node and its descendants top-down, applying [operator] to each node and
+  /// returning the (possibly rewritten) tree.
+  ///
+  /// For each node, [operator] returns either:
+  /// - [null] to leave the node unchanged and continue walking into its children.
+  /// - `Pair(replacement, descend)` to replace the node with `replacement`. When
+  ///   `descend` is `true`, the children of `replacement` are visited in turn, so
+  ///   nodes emitted by a rewrite are themselves processed further down. When
+  ///   `descend` is `false`, `replacement` and its subtree are left as-is.
+  ///
+  /// Constructed nodes must set their own [text] where it applies.
+  /// [span] is carried through unchanged unless set explicitly.
+  /// [parent] is populated on the returned tree for nodes originating from [Parser.parseModule];
+  /// nodes constructed from scratch retain their given `parent`.
+  external function transform(operator: (GenericNode) -> Pair<GenericNode, Boolean>?): GenericNode
+
+  /// Fold [operator] over this node and its descendants, top-down in pre-order.
+  ///
+  /// ```
+  /// // count the if-expressions in a module
+  /// module.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
+  /// ```
+  external function fold<Result>(initial: Result, operator: (Result, GenericNode) -> Result): Result
+}
+
+/// A range of source code, spanning [start] (inclusive) to [end] (exclusive).
+class Span {
+  /// The start of this span.
+  start: SourceLocation
+
+  /// The end of this span.
+  end: SourceLocation
+
+  /// The display URI of this span.
+  ///
+  /// For nodes parsed from a [Resource], this is the resource's URI with the span appended
+  /// as a fragment, for example `file:///foo/bar.pkl#3:5-3:12`.
+  /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
+  /// span itself, for example `3:5-3:12`.
+  displayUri: String
+}
+
+/// A position in source code, given as a 1-based line and column.
+class SourceLocation {
+  /// The 1-based line number of this source location.
+  line: UInt
+
+  /// The 1-based column number of this source location.
+  column: UInt
+
+  /// The display URI of this source location.
+  ///
+  /// For nodes parsed from a [Resource], this is the resource's URI with the location appended
+  /// as a fragment, for example `file:///foo/bar.pkl#3:5`.
+  /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
+  /// location itself, for example `3:5`.
+  displayUri: String
+}
+
+typealias NodeType =
+  // terminals and affixes
+  "terminal"
+    | "shebang"
+    | "line_comment"
+    | "block_comment"
+    | "semicolon"
+    // module structure
+    | "module"
+    | "doc_comment"
+    | "doc_comment_line"
+    | "modifier"
+    | "modifier_list"
+    | "amends_clause"
+    | "extends_clause"
+    | "module_declaration"
+    | "module_definition"
+    | "annotation"
+    | "identifier"
+    | "qualified_identifier"
+    | "import"
+    | "import_alias"
+    | "import_list"
+    | "typealias"
+    | "typealias_header"
+    | "typealias_body"
+    | "class"
+    | "class_header"
+    | "class_header_extends"
+    | "class_body"
+    | "class_body_elements"
+    | "class_method"
+    | "class_method_header"
+    | "class_method_body"
+    | "class_property"
+    | "class_property_header"
+    | "class_property_header_begin"
+    | "class_property_body"
+    | "object_body"
+    | "object_member_list"
+    | "parameter"
+    | "type_annotation"
+    | "parameter_list"
+    | "parameter_list_elements"
+    | "type_parameter_list"
+    | "type_parameter_list_elements"
+    | "argument_list"
+    | "argument_list_elements"
+    | "type_argument_list"
+    | "type_argument_list_elements"
+    | "object_parameter_list"
+    | "type_parameter"
+    | "string_chars"
+    | "operator"
+    | "string_newline"
+    | "string_escape"
+    // members
+    | "object_element"
+    | "object_property"
+    | "object_property_header"
+    | "object_property_header_begin"
+    | "object_property_body"
+    | "object_method"
+    | "member_predicate"
+    | "object_entry"
+    | "object_entry_header"
+    | "object_spread"
+    | "when_generator"
+    | "when_generator_header"
+    | "for_generator"
+    | "for_generator_header"
+    | "for_generator_header_definition"
+    | "for_generator_header_definition_header"
+    // expressions
+    | "this_expr"
+    | "outer_expr"
+    | "module_expr"
+    | "null_expr"
+    | "throw_expr"
+    | "trace_expr"
+    | "import_expr"
+    | "read_expr"
+    | "new_expr"
+    | "new_header"
+    | "unary_minus_expr"
+    | "logical_not_expr"
+    | "function_literal_expr"
+    | "function_literal_body"
+    | "parenthesized_expr"
+    | "parenthesized_expr_elements"
+    | "super_subscript_expr"
+    | "super_access_expr"
+    | "subscript_expr"
+    | "qualified_access_expr"
+    | "if_expr"
+    | "if_header"
+    | "if_condition"
+    | "if_condition_expr"
+    | "if_then_expr"
+    | "if_else_expr"
+    | "let_expr"
+    | "let_parameter_definition"
+    | "let_parameter"
+    | "bool_literal_expr"
+    | "int_literal_expr"
+    | "float_literal_expr"
+    | "single_line_string_literal_expr"
+    | "multi_line_string_literal_expr"
+    | "unqualified_access_expr"
+    | "non_null_expr"
+    | "amends_expr"
+    | "binary_op_expr"
+    // types
+    | "unknown_type"
+    | "nothing_type"
+    | "module_type"
+    | "union_type"
+    | "function_type"
+    | "function_type_parameters"
+    | "parenthesized_type"
+    | "parenthesized_type_elements"
+    | "declared_type"
+    | "nullable_type"
+    | "string_constant_type"
+    | "constrained_type"
+    | "constrained_type_constraint"
+    | "constrained_type_elements"
