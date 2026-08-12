@@ -33,7 +33,7 @@ import org.pkl.parser.syntax.generic.NodeType;
 public final class SyntaxNodes {
   private SyntaxNodes() {}
 
-  private static final char[] EMPTY_SOURCE = new char[0];
+  static final char[] EMPTY_SOURCE = new char[0];
   static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
 
   record SpanData(FullSpan span, @Nullable String sourceUri) {}

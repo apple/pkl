@@ -6,6 +6,12 @@ local parser = new syntax.Parser {}
 
 local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
 
+local function intLiteral(value: Int): syntax.GenericNode =
+  new syntax.GenericNode {
+    type = "int_literal_expr"
+    text = value.toString()
+  }
+
 local renderer = new syntax.Renderer {}
 
 local function fmt(source: String): String = renderer.render(mod(source))
@@ -15,11 +21,27 @@ local function transformFormat(
   operator: (syntax.GenericNode) -> Pair<syntax.GenericNode, Boolean>?,
 ): String = renderer.render(mod(source).transform(operator))
 
-local function intLiteral(value: Int): syntax.GenericNode =
-  new syntax.GenericNode {
-    type = "int_literal_expr"
-    text = value.toString()
-  }
+local function renameIdentifier(source: String, oldText: String, newName: String): String =
+  transformFormat(source, (n) ->
+    if (n.type == "identifier" && n.text == oldText)
+      Pair(new syntax.IdentifierNode { name = newName }.builtNode, false)
+    else
+      null
+  )
+
+local function accessNamed(newName: String): String =
+  transformFormat("x = 0", (n) ->
+    if (n.type == "int_literal_expr")
+      Pair(
+        new syntax.UnqualifiedAccessExprNode {
+          identifier = new syntax.IdentifierNode { name = newName }
+          arguments = null
+        }.builtNode,
+        false,
+      )
+    else
+      null
+  )
 
 facts {
   ["read-only transform leaves the tree unchanged"] {
@@ -37,24 +59,22 @@ facts {
     ) == fmt("bar = bar + 1")
   }
 
-  ["replace a leaf with a constructed node"] {
+  ["replace a leaf via a typed node"] {
+    transformFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
+      else
+        null
+    ) == fmt("x = 100")
+  }
+
+  ["replace a leaf with a constructed generic node"] {
     transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
         Pair(intLiteral(100), false)
       else
         null
     ) == fmt("x = 100")
-  }
-
-  ["rebuilds ancestors of a changed node"] {
-    transformFormat("x = if (cond) 41 else 0", (n) ->
-      if (n.type == "int_literal_expr" && n.text == "41")
-        Pair(intLiteral(42), false)
-      else if (n.type == "int_literal_expr" && n.text == "0")
-        Pair(intLiteral(100), false)
-      else
-        null
-    ) == fmt("x = if (cond) 42 else 100")
   }
 
   ["splice in a parsed subtree"] {
@@ -66,12 +86,28 @@ facts {
     ) == fmt("x = foo.bar + 1")
   }
 
+  ["rebuilds ancestors of a changed node"] {
+    transformFormat("x = if (cond) 41 else 0", (n) ->
+      if (n.type == "int_literal_expr" && n.text == "41")
+        Pair(new syntax.IntLiteralExprNode { value = 42 }.builtNode, false)
+      else if (n.type == "int_literal_expr" && n.text == "0")
+        Pair(new syntax.IntLiteralExprNode { value = 100 }.builtNode, false)
+      else
+        null
+    ) == fmt("x = if (cond) 42 else 100")
+  }
+
   ["descend reprocesses emitted nodes"] {
     transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
-        Pair(parser.parseExpression("(1)"), true)
+        Pair(
+          new syntax.ParenthesizedExprNode {
+            expression = new syntax.IntLiteralExprNode { value = 1 }
+          }.builtNode,
+          true,
+        )
       else if (n.type == "int_literal_expr" && n.text == "1")
-        Pair(intLiteral(2), true)
+        Pair(new syntax.IntLiteralExprNode { value = 2 }.builtNode, true)
       else
         null
     ) == fmt("x = (2)")
@@ -80,11 +116,66 @@ facts {
   ["descend = false leaves the emitted subtree untouched"] {
     transformFormat("x = 0", (n) ->
       if (n.type == "int_literal_expr" && n.text == "0")
-        Pair(parser.parseExpression("(1)"), false)
+        Pair(
+          new syntax.ParenthesizedExprNode {
+            expression = new syntax.IntLiteralExprNode { value = 1 }
+          }.builtNode,
+          false,
+        )
       else if (n.type == "int_literal_expr" && n.text == "1")
-        Pair(intLiteral(2), true)
+        Pair(new syntax.IntLiteralExprNode { value = 2 }.builtNode, true)
       else
         null
     ) == fmt("x = (1)")
+  }
+
+  ["build super access from scratch"] {
+    transformFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr")
+        Pair(
+          new syntax.SuperAccessExprNode {
+            identifier = new syntax.IdentifierNode { name = "foo" }
+            arguments = null
+          }.builtNode,
+          false,
+        )
+      else
+        null
+    ) == fmt("x = super.foo")
+
+    transformFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr")
+        Pair(
+          new syntax.SuperAccessExprNode {
+            identifier = new syntax.IdentifierNode { name = "foo" }
+            arguments { new syntax.IntLiteralExprNode { value = 1 } }
+          }.builtNode,
+          false,
+        )
+      else
+        null
+    ) == fmt("x = super.foo(1)")
+  }
+
+  ["build super subscript from scratch"] {
+    transformFormat("x = 0", (n) ->
+      if (n.type == "int_literal_expr")
+        Pair(
+          new syntax.SuperSubscriptExprNode {
+            index = new syntax.IntLiteralExprNode { value = 0 }
+          }.builtNode,
+          false,
+        )
+      else
+        null
+    ) == fmt("x = super[0]")
+  }
+
+  ["an identifier name is quoted as needed"] {
+    accessNamed("foo") == fmt("x = foo")
+    accessNamed("my ## foo") == fmt("x = `my ## foo`")
+    accessNamed("class") == fmt("x = `class`")
+    renameIdentifier("x = someProp", "someProp", "other prop") == fmt("x = `other prop`")
+    renameIdentifier("x = `some prop`", "`some prop`", "otherProp") == fmt("x = otherProp")
   }
 }

@@ -19,6 +19,8 @@
 module pkl.syntax
 
 /// Utilities to parse Pkl source code to a syntax tree.
+///
+/// Parsing yields a [GenericNode]; use [GenericNode.toNode()] to convert it to a typed [Node].
 class Parser {
   /// Parse the string or resource as a Pkl module, returning either a syntax node or
   /// throwing an error.
@@ -92,6 +94,16 @@ class GenericNode {
   /// module.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
   /// ```
   external function fold<Result>(initial: Result, operator: (Result, GenericNode) -> Result): Result
+
+  /// This node converted to a typed [Node].
+  ///
+  /// ```
+  /// new Parser {}.parseModule("x = 1").toNode() // a ModuleNode
+  /// ```
+  ///
+  /// Throws if this node has no typed counterpart, as is the case for the structural nodes that
+  /// only the generic tree models (`terminal`, `modifier_list`, `argument_list`, and the like).
+  external function toNode(): Node
 }
 
 /// A range of source code, spanning [start] (inclusive) to [end] (exclusive).
@@ -255,3 +267,871 @@ typealias NodeType =
     | "constrained_type"
     | "constrained_type_constraint"
     | "constrained_type_elements"
+
+/// Base class for all typed syntax nodes.
+///
+/// A typed node may be *backed* by a parsed [GenericNode] (available via [genericNode]) or
+/// constructed from scratch (in which case [genericNode] is [null]). Its typed fields
+/// are read from [genericNode] when backed, or supplied directly when constructed.
+abstract class Node {
+  /// The original parsed node, or [null] when this was built from scratch.
+  hidden genericNode: GenericNode? = null
+
+  /// This node rebuilt into a [GenericNode].
+  ///
+  /// A node that is verbatim from [GenericNode.toNode()] yields its [genericNode] unchanged, as
+  /// does any part of this node's subtree that was not modified. Modified and constructed nodes are
+  /// rebuilt from their fields.
+  ///
+  /// Operands are parenthesized where they would otherwise be parsed back into a different tree
+  /// or be syntacticaly invalid.
+  /// For example, the operand of a [LogicalNotExprNode] is only left as-is if it binds at least as
+  /// tightly as `!`, so a [LogicalAndExprNode] operand yields `!(a && b)`.
+  external fixed builtNode: GenericNode
+}
+
+/// Base class for expression nodes.
+abstract class ExprNode extends Node
+
+/// Base class for type nodes.
+abstract class TypeNode extends Node
+
+/// A member of a [ModuleNode].
+typealias ModuleMember = ClassNode | TypeAliasNode | ClassPropertyNode | ClassMethodNode
+
+/// Indexes [members] by [IdentifierNode.name].
+local const function byIdentifier(members: List<ModuleMember>) =
+  members.toMap((it) -> it.identifier.name, (it) -> it).toMapping()
+
+// noinspection TypeMismatch
+/// The top-level module node.
+class ModuleNode extends Node {
+  /// The module declaration.
+  declaration: ModuleDeclarationNode?
+
+  /// All imports in this module.
+  imports: Listing<ImportNode>
+
+  /// The members of this module, in source order.
+  members: Listing<ModuleMember>
+
+  /// All class declarations in this module, keyed by class name.
+  fixed classes: Mapping<String, ClassNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassNode))
+
+  /// All typealias declarations in this module, keyed by typealias name.
+  fixed typeAliases: Mapping<String, TypeAliasNode> =
+    byIdentifier(members.toList().filterIsInstance(TypeAliasNode))
+
+  /// All top-level properties in this module, keyed by property name.
+  fixed properties: Mapping<String, ClassPropertyNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassPropertyNode))
+
+  /// All top-level methods in this module, keyed by method name.
+  fixed methods: Mapping<String, ClassMethodNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassMethodNode))
+}
+
+/// A module declaration (including doc comment, annotations, modifiers, name, amends/extends).
+class ModuleDeclarationNode extends Node {
+  /// The doc comment on the module declaration.
+  docComment: DocCommentNode?
+
+  /// Annotations on the module declaration.
+  annotations: Listing<AnnotationNode>
+
+  /// The modifiers on the module declaration.
+  ///
+  /// An amending module cannot have any modifiers.
+  modifiers: Listing<"abstract" | "open">(isDistinct)
+
+  /// The qualified name of the module.
+  name: QualifiedIdentifierNode?
+
+  /// The `extends` or `amends` clause.
+  extendsOrAmendsClause: ExtendsOrAmendsClauseNode?
+}
+
+/// The `extends` or `amends` clause of a module declaration.
+class ExtendsOrAmendsClauseNode extends Node {
+  /// The keyword used (`"extends"` or `"amends"`).
+  keyword: "extends" | "amends"
+
+  /// The URI string of the amended or extended module.
+  uri: String
+}
+
+/// An import declaration.
+class ImportNode extends Node {
+  /// The keyword used (`"import"` or `"import*"`).
+  keyword: "import" | "import*"
+
+  /// The URI string of the import.
+  uri: String
+
+  /// The alias for this import.
+  alias: IdentifierNode?
+}
+
+/// A class declaration.
+class ClassNode extends Node {
+  /// The doc comment.
+  docComment: DocCommentNode?
+
+  /// Annotations on the class.
+  annotations: Listing<AnnotationNode>
+
+  /// The modifiers on the class.
+  modifiers: Listing<"abstract" | "open" | "local" | "external">(isDistinct)
+
+  /// The class name.
+  identifier: IdentifierNode
+
+  /// The type parameters.
+  typeParameters: Listing<TypeParameterNode>
+
+  /// The supertype this class extends.
+  superType: TypeNode?
+
+  /// The class body.
+  body: ClassBodyNode?
+}
+
+/// A typealias declaration.
+class TypeAliasNode extends Node {
+  /// The doc comment.
+  docComment: DocCommentNode?
+
+  /// Annotations on the typealias.
+  annotations: Listing<AnnotationNode>
+
+  /// The modifiers on the typealias.
+  modifiers: Listing<"local" | "external">(isDistinct)
+
+  /// The typealias name.
+  identifier: IdentifierNode
+
+  /// The type parameters.
+  typeParameters: Listing<TypeParameterNode>
+
+  /// The type that this alias resolves to.
+  type: TypeNode
+}
+
+/// A member of a [ClassBodyNode].
+typealias ClassMember = ClassPropertyNode | ClassMethodNode
+
+// noinspection TypeMismatch
+/// A class body delimited by braces.
+class ClassBodyNode extends Node {
+  /// The members of this class body, in source order.
+  members: Listing<ClassMember>
+
+  /// Properties declared in this class body, keyed by property name.
+  fixed properties: Mapping<String, ClassPropertyNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassPropertyNode))
+
+  /// Methods declared in this class body, keyed by method name.
+  fixed methods: Mapping<String, ClassMethodNode> =
+    byIdentifier(members.toList().filterIsInstance(ClassMethodNode))
+}
+
+/// A class property declaration.
+class ClassPropertyNode extends Node {
+  /// The doc comment.
+  docComment: DocCommentNode?
+
+  /// Annotations on the property.
+  annotations: Listing<AnnotationNode>
+
+  /// The modifiers on the property.
+  ///
+  /// The `abstract` modifier is accepted for backwards compatibility, but has no effect.
+  modifiers: Listing<"abstract" | "local" | "hidden" | "external" | "fixed" | "const">(isDistinct)
+
+  /// The property name.
+  identifier: IdentifierNode
+
+  /// The type annotation.
+  typeAnnotation: TypeNode?
+
+  /// The value expression (from `= expr`).
+  value: ExprNode(objectBodies.isEmpty)?
+
+  /// Object bodies for amending (from `{ ... }` blocks).
+  objectBodies: Listing<ObjectBodyNode>
+}
+
+/// A class method declaration.
+class ClassMethodNode extends Node {
+  /// The doc comment.
+  docComment: DocCommentNode?
+
+  /// Annotations on the method.
+  annotations: Listing<AnnotationNode>
+
+  /// The modifiers on the method.
+  modifiers: Listing<"abstract" | "local" | "external" | "const">(isDistinct)
+
+  /// The method name.
+  identifier: IdentifierNode
+
+  /// The type parameters.
+  typeParameters: Listing<TypeParameterNode>
+
+  /// The parameters.
+  parameters: Listing<ParameterNode>
+
+  /// The return type annotation.
+  returnType: TypeNode?
+
+  /// The method body expression. Null for abstract methods.
+  body: ExprNode?((this == null) == modifiers.contains("abstract"))
+}
+
+/// A member of an [ObjectBodyNode].
+///
+/// An [ExprNode] member is an *element*, that is, a positional value such as the `1` in `{ 1 }`.
+typealias ObjectMemberNode =
+  ObjectPropertyNode
+    | ObjectMethodNode
+    | ExprNode
+    | ObjectEntryNode
+    | ObjectSpreadNode
+    | MemberPredicateNode
+    | ForGeneratorNode
+    | WhenGeneratorNode
+
+/// An object body delimited by braces.
+class ObjectBodyNode extends Node {
+  /// Parameters for this object body (e.g., `{ x, y -> ... }`).
+  parameters: Listing<ParameterNode>
+
+  /// The members of this object body, in source order.
+  members: Listing<ObjectMemberNode>
+
+  /// Properties declared in this object body, in source order.
+  fixed properties: Listing<ObjectPropertyNode> =
+    members.toList().filterIsInstance(ObjectPropertyNode).toListing()
+
+  /// Methods declared in this object body, in source order.
+  fixed methods: Listing<ObjectMethodNode> =
+    members.toList().filterIsInstance(ObjectMethodNode).toListing()
+
+  /// Elements declared in this object body, in source order.
+  fixed elements: Listing<ExprNode> = members.toList().filterIsInstance(ExprNode).toListing()
+
+  /// Entries declared in this object body, in source order.
+  fixed entries: Listing<ObjectEntryNode> =
+    members.toList().filterIsInstance(ObjectEntryNode).toListing()
+
+  /// Spreads declared in this object body, in source order.
+  fixed spreads: Listing<ObjectSpreadNode> =
+    members.toList().filterIsInstance(ObjectSpreadNode).toListing()
+
+  /// Member predicates declared in this object body, in source order.
+  fixed memberPredicates: Listing<MemberPredicateNode> =
+    members.toList().filterIsInstance(MemberPredicateNode).toListing()
+
+  /// `for` generators declared in this object body, in source order.
+  fixed forGenerators: Listing<ForGeneratorNode> =
+    members.toList().filterIsInstance(ForGeneratorNode).toListing()
+
+  /// `when` generators declared in this object body, in source order.
+  fixed whenGenerators: Listing<WhenGeneratorNode> =
+    members.toList().filterIsInstance(WhenGeneratorNode).toListing()
+}
+
+/// An object property declaration.
+class ObjectPropertyNode extends Node {
+  /// The modifiers on the property.
+  modifiers: Listing<"local" | "const">(isDistinct)
+
+  /// The property name.
+  identifier: IdentifierNode
+
+  /// The type annotation.
+  typeAnnotation: TypeNode?
+
+  /// The value expression (from `= expr`).
+  value: ExprNode(objectBodies.isEmpty)?
+
+  /// Object bodies for amending.
+  objectBodies: Listing<ObjectBodyNode>
+}
+
+/// An object method declaration.
+class ObjectMethodNode extends Node {
+  /// The modifiers on the method.
+  modifiers: Listing<"local" | "const">(isDistinct)
+
+  /// The method name.
+  identifier: IdentifierNode
+
+  /// The type parameters.
+  typeParameters: Listing<TypeParameterNode>
+
+  /// The parameters.
+  parameters: Listing<ParameterNode>
+
+  /// The return type annotation.
+  returnType: TypeNode?
+
+  /// The method body expression.
+  body: ExprNode
+}
+
+/// An object entry (`[key] = value` or `[key] { ... }`).
+class ObjectEntryNode extends Node {
+  /// The key expression.
+  key: ExprNode
+
+  /// The value expression (from `[key] = value`).
+  value: ExprNode(objectBodies.isEmpty)?
+
+  /// Object bodies for amending.
+  objectBodies: Listing<ObjectBodyNode>
+}
+
+/// An object spread (`...expr` or `...?expr`).
+class ObjectSpreadNode extends Node {
+  /// The keyword used (`"..."` or `"...?"`).
+  keyword: "..." | "...?"
+
+  /// The spread expression.
+  expression: ExprNode
+}
+
+/// A member predicate (`[[condition]] = value` or `[[condition]] { ... }`).
+class MemberPredicateNode extends Node {
+  /// The condition expression.
+  condition: ExprNode
+
+  /// The value expression.
+  value: ExprNode(objectBodies.isEmpty)?
+
+  /// Object bodies for amending.
+  objectBodies: Listing<ObjectBodyNode>
+}
+
+/// A `for (param in iterable) { ... }` generator.
+class ForGeneratorNode extends Node {
+  /// The key parameter (first parameter when two are present).
+  keyParameter: ParameterNode?
+
+  /// The value parameter (or the only parameter when just one is present).
+  valueParameter: ParameterNode
+
+  /// The iterable expression.
+  iterable: ExprNode
+
+  /// The body.
+  body: ObjectBodyNode
+}
+
+/// A `when (condition) { ... }` generator.
+class WhenGeneratorNode extends Node {
+  /// The condition expression.
+  condition: ExprNode
+
+  /// The "then" body.
+  thenBody: ObjectBodyNode
+
+  /// The "else" body.
+  elseBody: ObjectBodyNode?
+}
+
+/// The `this` expression.
+class ThisExprNode extends ExprNode
+
+/// The `outer` expression.
+class OuterExprNode extends ExprNode
+
+/// The `module` expression.
+class ModuleExprNode extends ExprNode
+
+/// A `null` literal expression.
+class NullLiteralExprNode extends ExprNode
+
+/// A boolean literal expression (`true` or `false`).
+class BooleanLiteralExprNode extends ExprNode {
+  /// The boolean value.
+  value: Boolean
+}
+
+/// An integer literal expression.
+class IntLiteralExprNode extends ExprNode {
+  /// The integer literal (e.g. `42`, `"0xFF"`).
+  value: Int | String
+}
+
+/// A float literal expression.
+class FloatLiteralExprNode extends ExprNode {
+  /// The float literal (e.g. `3.14`, `"1.0e10"`).
+  value: Float | String(toFloatOrNull() != null)
+}
+
+/// A part of a single-line string literal.
+typealias SingleLineStringPartNode = StringCharsNode | StringEscapeNode | StringInterpolationNode
+
+/// A part of a multi-line string literal.
+typealias MultiLineStringPartNode =
+  StringCharsNode | StringEscapeNode | StringInterpolationNode | StringNewlineNode
+
+/// A single-line string literal expression.
+class SingleLineStringLiteralExprNode extends ExprNode {
+  /// The string parts (chars, escapes, interpolations).
+  parts: Listing<SingleLineStringPartNode>
+}
+
+/// A multi-line string literal expression.
+///
+/// Use [StringNewlineNode] entries in [parts] to separate lines.
+class MultiLineStringLiteralExprNode extends ExprNode {
+  /// The string parts (chars, escapes, newlines, interpolations).
+  parts: Listing<MultiLineStringPartNode>
+}
+
+/// Splits a string into runs of characters that can appear verbatim in a single-line string
+/// literal (group 1), and single characters that must be escaped (group 2).
+local const singleLineStringChunks = Regex(#"([^\\"\n\r\t]+)|([\s\S])"#)
+
+/// Same as [singleLineStringChunks], but for a multi-line string literal.
+local const multiLineStringChunks = Regex(#"((?:(?!""")[^\\\n\r\t])+)|([\s\S])"#)
+
+/// The escape sequence for each character that cannot appear verbatim in a string literal.
+local const stringEscapes: Map<Char, String> =
+  Map(
+    "\\", #"\\"#,
+    "\"", #"\""#,
+    "\n", #"\n"#,
+    "\r", #"\r"#,
+    "\t", #"\t"#,
+  )
+
+/// Turns a chunk matched by [singleLineStringChunks] or [multiLineStringChunks] into a string
+/// literal part.
+local const function stringPart(match: RegexMatch): SingleLineStringPartNode =
+  if (match.groups[1] != null)
+    new StringCharsNode { value = match.value }
+  else
+    new StringEscapeNode { value = stringEscapes[match.value] }
+
+/// Same as [stringPart()], but turns a newline into a [StringNewlineNode].
+local const function multiLineStringPart(match: RegexMatch): MultiLineStringPartNode =
+  if (match.value == "\n") new StringNewlineNode {} else stringPart(match)
+
+/// Creates a single-line string literal expression that evaluates to [value].
+///
+/// Characters that cannot appear verbatim in a single-line string literal
+/// (`\`, `"`, newline, carriage return, and tab) become [StringEscapeNode] parts.
+///
+/// To interpolate expressions, set [SingleLineStringLiteralExprNode.parts] directly,
+/// using [StringInterpolationNode] parts.
+const function singleLineStringLiteral(value: String): SingleLineStringLiteralExprNode = new {
+  parts { ...singleLineStringChunks.findMatchesIn(value).map((match) -> stringPart(match)) }
+}
+
+/// Creates a multi-line string literal expression that evaluates to [value].
+///
+/// Newlines in [value] become [StringNewlineNode] parts.
+/// Characters that cannot appear verbatim in a multi-line string literal
+/// (`\`, carriage return, tab, and quotes that would otherwise form `"""`)
+/// become [StringEscapeNode] parts.
+///
+/// To interpolate expressions, set [MultiLineStringLiteralExprNode.parts] directly,
+/// using [StringInterpolationNode] parts.
+const function multiLineStringLiteral(value: String): MultiLineStringLiteralExprNode = new {
+  parts {
+    new StringNewlineNode {}
+    ...multiLineStringChunks.findMatchesIn(value).map((match) -> multiLineStringPart(match))
+    new StringNewlineNode {}
+  }
+}
+
+/// An unqualified access expression (`name` or `name(args)`).
+class UnqualifiedAccessExprNode extends ExprNode {
+  /// The identifier being accessed.
+  identifier: IdentifierNode
+
+  /// The arguments, if this is a function call.
+  ///
+  /// [null] for property access.
+  arguments: Listing<ExprNode>?
+}
+
+/// A qualified access expression (`receiver.member` or `receiver?.member`,
+/// optionally with arguments for method calls).
+class QualifiedAccessExprNode extends ExprNode {
+  /// The receiver expression.
+  receiver: ExprNode
+
+  /// The operator used (`"."` or `"?."` for null-safe access).
+  operator: "." | "?." = "."
+
+  /// The accessed member name.
+  identifier: IdentifierNode
+
+  /// The arguments, if this is a method call.
+  ///
+  /// [null] for property access.
+  arguments: Listing<ExprNode>?
+}
+
+/// A subscript expression (`receiver[index]`).
+class SubscriptExprNode extends ExprNode {
+  /// The receiver expression.
+  receiver: ExprNode
+
+  /// The index expression.
+  index: ExprNode
+}
+
+/// A `super.member` access expression (`super.member` or `super.member(args)`).
+class SuperAccessExprNode extends ExprNode {
+  /// The accessed member name.
+  identifier: IdentifierNode
+
+  /// The arguments, if this is a method call.
+  ///
+  /// [null] for property access.
+  arguments: Listing<ExprNode>?
+}
+
+/// A `super[index]` subscript expression.
+class SuperSubscriptExprNode extends ExprNode {
+  /// The index expression.
+  index: ExprNode
+}
+
+/// An `if (condition) thenExpr else elseExpr` expression.
+class IfExprNode extends ExprNode {
+  /// The condition expression.
+  condition: ExprNode
+
+  /// The then-branch expression.
+  thenExpr: ExprNode
+
+  /// The else-branch expression.
+  elseExpr: ExprNode
+}
+
+/// A `let (param = value) body` expression.
+class LetExprNode extends ExprNode {
+  /// The let-binding parameter.
+  parameter: ParameterNode
+
+  /// The binding value expression.
+  bindingValue: ExprNode
+
+  /// The body expression.
+  body: ExprNode
+}
+
+/// A `throw(expr)` expression.
+class ThrowExprNode extends ExprNode {
+  /// The expression being thrown.
+  expression: ExprNode
+}
+
+/// A `trace(expr)` expression.
+class TraceExprNode extends ExprNode {
+  /// The expression being traced.
+  expression: ExprNode
+}
+
+/// An `import("uri")` or `import*("uri")` expression.
+class ImportExprNode extends ExprNode {
+  /// The keyword used (`"import"` or `"import*"`).
+  keyword: "import" | "import*" = "import"
+
+  /// The import URI string.
+  uri: String
+}
+
+/// A `read(expr)`, `read*(expr)`, or `read?(expr)` expression.
+class ReadExprNode extends ExprNode {
+  /// The keyword used (`"read"`, `"read?"`, or `"read*"`).
+  keyword: "read" | "read?" | "read*"
+
+  /// The expression to be read.
+  expression: ExprNode
+}
+
+/// A `new Type { ... }` expression.
+class NewExprNode extends ExprNode {
+  /// The type being constructed.
+  type: TypeNode?
+
+  /// The object body.
+  body: ObjectBodyNode
+}
+
+/// An `(expr) { ... }` amends expression.
+class AmendsExprNode extends ExprNode {
+  /// The expression being amended.
+  ///
+  /// Only a [ParenthesizedExprNode], an [AmendsExprNode], or a [NewExprNode] can be amended
+  /// directly, other expressions will be automatically parenthesized.
+  parentExpr: ExprNode
+
+  /// The object body.
+  body: ObjectBodyNode
+}
+
+/// Base class for binary operator expressions (`left op right`).
+abstract class BinaryOpExprNode extends ExprNode {
+  /// The left-hand expression.
+  left: ExprNode
+
+  /// The right-hand expression.
+  right: ExprNode
+}
+
+/// An exponentiation expression (`left ** right`).
+class ExponentiationExprNode extends BinaryOpExprNode
+
+/// A multiplication expression (`left * right`).
+class MultiplicationExprNode extends BinaryOpExprNode
+
+/// A division expression (`left / right`).
+class DivisionExprNode extends BinaryOpExprNode
+
+/// An integer division expression (`left ~/ right`).
+class IntDivisionExprNode extends BinaryOpExprNode
+
+/// A remainder expression (`left % right`).
+class RemainderExprNode extends BinaryOpExprNode
+
+/// An addition expression (`left + right`).
+class AdditionExprNode extends BinaryOpExprNode
+
+/// A subtraction expression (`left - right`).
+class SubtractionExprNode extends BinaryOpExprNode
+
+/// A less-than comparison expression (`left < right`).
+class LessThanExprNode extends BinaryOpExprNode
+
+/// A less-than-or-equal comparison expression (`left <= right`).
+class LessThanOrEqualExprNode extends BinaryOpExprNode
+
+/// A greater-than comparison expression (`left > right`).
+class GreaterThanExprNode extends BinaryOpExprNode
+
+/// A greater-than-or-equal comparison expression (`left >= right`).
+class GreaterThanOrEqualExprNode extends BinaryOpExprNode
+
+/// An equality expression (`left == right`).
+class EqualExprNode extends BinaryOpExprNode
+
+/// An inequality expression (`left != right`).
+class NotEqualExprNode extends BinaryOpExprNode
+
+/// A logical and expression (`left && right`).
+class LogicalAndExprNode extends BinaryOpExprNode
+
+/// A logical or expression (`left || right`).
+class LogicalOrExprNode extends BinaryOpExprNode
+
+/// A pipe expression (`left |> right`).
+class PipeExprNode extends BinaryOpExprNode
+
+/// A null coalescing expression (`left ?? right`).
+class NullCoalescingExprNode extends BinaryOpExprNode
+
+/// A type check expression (`expression is Type`).
+class TypeCheckExprNode extends ExprNode {
+  /// The left-hand expression.
+  expression: ExprNode
+
+  /// The right-hand type.
+  type: TypeNode
+}
+
+/// A type cast expression (`expression as Type`).
+class TypeCastExprNode extends ExprNode {
+  /// The left-hand expression.
+  expression: ExprNode
+
+  /// The right-hand type.
+  type: TypeNode
+}
+
+/// A unary minus expression (`-expr`).
+class UnaryMinusExprNode extends ExprNode {
+  /// The operand expression.
+  operand: ExprNode
+}
+
+/// A logical not expression (`!expr`).
+class LogicalNotExprNode extends ExprNode {
+  /// The operand expression.
+  operand: ExprNode
+}
+
+/// A non-null assertion expression (`expr!!`).
+class NonNullExprNode extends ExprNode {
+  /// The operand expression.
+  operand: ExprNode
+}
+
+/// A function literal expression (`(params) -> body`).
+class FunctionLiteralExprNode extends ExprNode {
+  /// The parameters.
+  parameters: Listing<ParameterNode>
+
+  /// The body expression.
+  body: ExprNode
+}
+
+/// A parenthesized expression (`(expr)`).
+class ParenthesizedExprNode extends ExprNode {
+  /// The inner expression.
+  expression: ExprNode
+}
+
+/// The `unknown` type.
+class UnknownTypeNode extends TypeNode
+
+/// The `nothing` type.
+class NothingTypeNode extends TypeNode
+
+/// The `module` type.
+class ModuleTypeNode extends TypeNode
+
+/// A declared type (e.g., `String`, `List<Int>`).
+class DeclaredTypeNode extends TypeNode {
+  /// The type name (dotted, e.g. `List` or `foo.Bar`).
+  name: QualifiedIdentifierNode(identifiers.length.isBetween(1, 2))
+
+  /// The type arguments.
+  typeArguments: Listing<TypeNode>
+}
+
+/// A nullable type (`Type?`).
+class NullableTypeNode extends TypeNode {
+  /// The member of this nullable type.
+  member: TypeNode
+}
+
+/// A union type (`TypeA|TypeB|TypeC`).
+class UnionTypeNode extends TypeNode {
+  /// The member types.
+  members: Listing<TypeNode>
+}
+
+/// A function type (`(ParamTypes) -> ReturnType`).
+class FunctionTypeNode extends TypeNode {
+  /// The parameter types.
+  parameterTypes: Listing<TypeNode>
+
+  /// The return type.
+  returnType: TypeNode
+}
+
+/// A constrained type (`Type(constraint)`).
+class ConstrainedTypeNode extends TypeNode {
+  /// The base type.
+  baseType: TypeNode
+
+  /// The constraint expressions.
+  constraints: Listing<ExprNode>
+}
+
+/// A parenthesized type (`(Type)`).
+class ParenthesizedTypeNode extends TypeNode {
+  /// The inner type.
+  type: TypeNode
+}
+
+/// A string literal type (e.g., `"foo"`).
+class StringLiteralTypeNode extends TypeNode {
+  /// The string value.
+  value: String
+}
+
+/// An annotation (`@Type { ... }`).
+class AnnotationNode extends Node {
+  /// The annotation type.
+  type: TypeNode
+
+  /// The annotation body.
+  body: ObjectBodyNode?
+}
+
+/// A parameter declaration (`name`, `name: Type`, or `_`).
+class ParameterNode extends Node {
+  /// Whether this is a blank identifier parameter (`_`).
+  isBlankIdentifier: Boolean(this == (identifier == null), implies(typeAnnotation == null))
+
+  /// The parameter name, or [null] for a wildcard parameter (`_`).
+  identifier: IdentifierNode?
+
+  /// The type annotation.
+  typeAnnotation: TypeNode?
+}
+
+/// A type parameter declaration (`T`, `in T`, or `out T`).
+class TypeParameterNode extends Node {
+  /// The variance modifiers on the type parameter.
+  modifiers: Listing<"in" | "out">(isDistinct)
+
+  /// The type parameter name.
+  identifier: IdentifierNode
+}
+
+/// Strips the enclosing backticks of a quoted identifier.
+local const function unquote(identifier: String): String =
+  if (identifier.startsWith("`")) identifier.drop(1).dropLast(1) else identifier
+
+/// An identifier (a name occurring in the source, e.g. a property or class name).
+class IdentifierNode extends Node {
+  /// The verbatim identifier text, including the enclosing backticks of a quoted identifier.
+  ///
+  /// For example, the text of `` `my ## foo` `` is ``"`my ## foo`"``.
+  text: String
+
+  /// The identifier name, with the enclosing backticks of a quoted identifier stripped.
+  ///
+  /// For example, the name of `` `my ## foo` `` is `"my ## foo"`.
+  ///
+  /// This is the name used when rendering this node back to source code; it is quoted again
+  /// if it is not a regular Pkl identifier.
+  name: String = unquote(text)
+}
+
+/// A qualified (dotted) identifier, e.g. `foo.bar.baz`.
+class QualifiedIdentifierNode extends Node {
+  /// The parts of the qualified identifier.
+  identifiers: Listing<IdentifierNode>(!isEmpty)
+
+  /// The dotted name (e.g. `"foo.bar.baz"`).
+  value: String
+}
+
+/// A doc comment.
+class DocCommentNode extends Node {
+  /// The body text of the comment, with the leading `///` stripped from each line.
+  value: String
+}
+
+/// A plain text part of a string literal.
+class StringCharsNode {
+  /// The text content.
+  value: String
+}
+
+/// An escape sequence in a string literal (e.g., `"\\n"`, `"\\t"`).
+class StringEscapeNode {
+  /// The escape sequence text including the leading backslash.
+  value: String
+}
+
+/// A newline in a multi-line string literal.
+class StringNewlineNode
+
+/// An interpolation in a string literal (`\(expr)`).
+class StringInterpolationNode {
+  /// The interpolated expression.
+  expression: ExprNode
+}

@@ -16,6 +16,24 @@ facts {
   ["multiline string"] {
     true
   }
+  ["single-line string literal from a value"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["multi-line string literal from a value"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["comments"] {
     true
   }

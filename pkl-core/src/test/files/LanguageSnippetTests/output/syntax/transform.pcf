@@ -6,19 +6,36 @@ facts {
   ["rename identifiers everywhere"] {
     true
   }
-  ["replace a leaf with a constructed node"] {
+  ["replace a leaf via a typed node"] {
     true
   }
-  ["rebuilds ancestors of a changed node"] {
+  ["replace a leaf with a constructed generic node"] {
     true
   }
   ["splice in a parsed subtree"] {
+    true
+  }
+  ["rebuilds ancestors of a changed node"] {
     true
   }
   ["descend reprocesses emitted nodes"] {
     true
   }
   ["descend = false leaves the emitted subtree untouched"] {
+    true
+  }
+  ["build super access from scratch"] {
+    true
+    true
+  }
+  ["build super subscript from scratch"] {
+    true
+  }
+  ["an identifier name is quoted as needed"] {
+    true
+    true
+    true
+    true
     true
   }
 }

@@ -9,6 +9,8 @@ local function roundTrip(source: String) = renderer.render(parseNode(source))
 local function parseNode(source: String): syntax.GenericNode =
   new syntax.Parser {}.parseModule(source)
 
+local function renderExpr(node: syntax.ExprNode) = renderer.render(node.builtNode).trim()
+
 local function replaceLeaf(
   node: syntax.GenericNode,
   targetType: syntax.NodeType,
@@ -79,6 +81,59 @@ facts {
         world
         """
 
+      """#
+  }
+
+  ["single-line string literal from a value"] {
+    renderExpr(syntax.singleLineStringLiteral("hello")) == #""hello""#
+    renderExpr(syntax.singleLineStringLiteral("")) == "\"\""
+    renderExpr(syntax.singleLineStringLiteral("a\\b")) == #""a\\b""#
+    renderExpr(syntax.singleLineStringLiteral(#"he said "hi""#)) == #""he said \"hi\"""#
+    renderExpr(syntax.singleLineStringLiteral("a\nb\tc\rd")) == #""a\nb\tc\rd""#
+    renderExpr(syntax.singleLineStringLiteral(#"\(foo)"#)) == #""\\(foo)""#
+  }
+
+  ["multi-line string literal from a value"] {
+    renderExpr(syntax.multiLineStringLiteral("hello\nworld")) == #"""
+      """
+      hello
+      world
+      """
+      """#
+    renderExpr(syntax.multiLineStringLiteral("")) == "\"\"\"\n\n\"\"\""
+    renderExpr(syntax.multiLineStringLiteral("foo\n")) == #"""
+      """
+      foo
+
+      """
+      """#
+    renderExpr(syntax.multiLineStringLiteral("  indented")) == #"""
+      """
+        indented
+      """
+      """#
+    renderExpr(syntax.multiLineStringLiteral("a\n\nb")) == #"""
+      """
+      a
+
+      b
+      """
+      """#
+    renderExpr(syntax.multiLineStringLiteral("a\\b\tc\rd")) == #"""
+      """
+      a\\b\tc\rd
+      """
+      """#
+    renderExpr(syntax.multiLineStringLiteral(#"say """ now"#)) == #"""
+      """
+      say \""" now
+      """
+      """#
+    // in a longer run, every quote that would start a `"""` sequence is escaped
+    renderExpr(syntax.multiLineStringLiteral(#"quad """" quotes"#)) == #"""
+      """
+      quad \"\""" quotes
+      """
       """#
   }
 

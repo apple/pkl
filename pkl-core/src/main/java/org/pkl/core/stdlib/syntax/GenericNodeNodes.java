@@ -27,13 +27,33 @@ import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
+import org.pkl.core.stdlib.PklName;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.GenericNodeData;
 
-/** Backs {@code pkl.syntax#GenericNode.fold} and {@code pkl.syntax#GenericNode.transform}. */
+/**
+ * Backs {@code pkl.syntax#GenericNode.fold}, {@code pkl.syntax#GenericNode.transform} and {@code
+ * pkl.syntax#GenericNode.toNode}.
+ */
 public final class GenericNodeNodes {
   private GenericNodeNodes() {}
+
+  @PklName("toNode")
+  public abstract static class toNode extends ExternalMethod0Node {
+    @Specialization
+    @TruffleBoundary
+    protected VmTyped eval(VmTyped self) {
+      var typedNode = ParserNodes.toTypedNodeOrNull(self);
+      if (typedNode == null) {
+        throw exceptionBuilder()
+            .evalError("cannotConvertToTypedNode", VmUtils.readMember(self, Identifier.TYPE))
+            .build();
+      }
+      return typedNode;
+    }
+  }
 
   public abstract static class fold extends ExternalMethod2Node {
     @Child private ApplyVmFunction2Node applyAccumulate = ApplyVmFunction2NodeGen.create();

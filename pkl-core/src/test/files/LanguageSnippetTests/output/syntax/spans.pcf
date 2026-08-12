@@ -18,8 +18,11 @@ facts {
   }
   ["nodes constructed from scratch have no span"] {
     true
+    true
+    true
   }
   ["a spanless constructed node still renders"] {
+    true
     true
   }
   ["parsing the same text from a string and a resource differs only in displayUri"] {
