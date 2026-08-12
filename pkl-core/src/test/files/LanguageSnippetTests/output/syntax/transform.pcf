@@ -1,0 +1,24 @@
+facts {
+  ["read-only transform leaves the tree unchanged"] {
+    true
+    true
+  }
+  ["rename identifiers everywhere"] {
+    true
+  }
+  ["replace a leaf with a constructed node"] {
+    true
+  }
+  ["rebuilds ancestors of a changed node"] {
+    true
+  }
+  ["splice in a parsed subtree"] {
+    true
+  }
+  ["descend reprocesses emitted nodes"] {
+    true
+  }
+  ["descend = false leaves the emitted subtree untouched"] {
+    true
+  }
+}

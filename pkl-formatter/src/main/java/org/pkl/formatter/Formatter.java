@@ -21,6 +21,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.pkl.parser.GenericParser;
+import org.pkl.parser.syntax.generic.Node;
 
 /**
  * A formatter for Pkl files that applies canonical formatting rules.
@@ -109,6 +110,24 @@ public class Formatter {
       sb.append(buf, 0, n);
     }
     format(sb.toString(), output);
+  }
+
+  /**
+   * Format the given Pkl AST as text.
+   *
+   * <p>The AST terminal nodes should have their text property set before calling format, as this
+   * method does not have access to the original source.
+   *
+   * @param ast the Pkl module node to format
+   * @return the formatted Pkl source code
+   */
+  public String format(Node ast) {
+    var formatAst = new Builder("", grammarVersion).format(ast);
+    // force a line at the end of the file
+    var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
+    var output = new StringBuilder();
+    new Generator(output).generate(nodes);
+    return output.toString();
   }
 
   private void format(String input, Appendable output) {
