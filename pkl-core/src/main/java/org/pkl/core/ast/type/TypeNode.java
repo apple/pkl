@@ -494,7 +494,6 @@ public abstract class TypeNode extends PklNode {
     @Child private ExpressionNode getTargetNode;
     private final PType pType;
     private final VmObjectFactory<Void> mirrorFactory;
-    @CompilationFinal private int realFrameSlot = -1;
 
     private NonFinalSelfTypeNode(
         SourceSection sourceSection,

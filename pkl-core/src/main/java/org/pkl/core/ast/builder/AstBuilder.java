@@ -383,54 +383,58 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (type.parent() instanceof Class classNode && classNode.getSuperClass() == type) {
       return;
     }
-
+    var currentScope = symbolTable.getCurrentScope();
+    if (!currentScope.getConstLevel().isConst()) {
+      return;
+    }
     String errorMessage = null;
-    Object[] errorArgs = new Object[] {};
-
-    // attempt to identify containing class/alias/annotation before checking const
-    // properties/methods
-    for (var scope = symbolTable.getCurrentScope();
-        scope != null && errorMessage == null;
-        scope = scope.getParent()) {
-      if (scope.isAnnotationScope()) {
-        errorMessage = "invalidModuleTypeInAnnotation";
-      } else if (scope.isClassScope()) {
-        errorMessage = "invalidModuleTypeInClass";
-      } else if (scope.isTypeAliasScope()) {
-        errorMessage = "invalidModuleTypeInTypeAlias";
+    // only classes/typealiases/annotations will apply "MODULE" const level
+    if (currentScope.getConstLevel() == ConstLevel.MODULE) {
+      for (var scope = currentScope; scope != null; scope = scope.getParent()) {
+        if (scope.isAnnotationScope()) {
+          errorMessage = ErrorMessages.create("invalidModuleTypeInAnnotation");
+          break;
+        } else if (scope.isClassScope()) {
+          errorMessage = ErrorMessages.create("invalidModuleTypeInClass");
+          break;
+        } else if (scope.isTypeAliasScope()) {
+          errorMessage = ErrorMessages.create("invalidModuleTypeInTypeAlias");
+          break;
+        }
       }
     }
-    for (var scope = symbolTable.getCurrentScope();
-        scope != null && errorMessage == null;
-        scope = scope.getParent()) {
-      if (!scope.getConstLevel().isConst()) {
-        continue;
-      }
-      if (scope.isPropertyScope()) {
-        errorMessage = "invalidModuleTypeInProperty";
-        errorArgs = new Object[] {scope.getQualifiedName()};
-      } else if (scope.isMethodScope()) {
-        errorMessage = "invalidModuleTypeInMethod";
-        errorArgs = new Object[] {scope.getQualifiedName()};
-      } else {
-        // all possibly const scopes should be covered in one of these loops
-        throw exceptionBuilder().unreachableCode().build();
+    // Only properties and methods will apply "ALL" const level
+    else {
+      for (var scope = currentScope; scope != null; scope = scope.getParent()) {
+        if (scope.isPropertyScope() || scope.isMethodScope()) {
+          var parentScope = scope.getParent();
+          assert parentScope != null;
+          // if the parent also has "ALL", we haven't found the originating const property/method
+          // yet.
+          if (parentScope.getConstLevel() == ConstLevel.ALL) {
+            continue;
+          }
+          var message =
+              scope.isPropertyScope() ? "invalidModuleTypeInProperty" : "invalidModuleTypeInMethod";
+          errorMessage = ErrorMessages.create(message, scope.getQualifiedName());
+        }
       }
     }
-    if (errorMessage != null) {
-      VmContext.get(null)
-          .getLogger()
-          .warn(
-              ErrorMessages.create(errorMessage, errorArgs)
-                  + " This will be an error in a future release.",
-              VmUtils.createStackFrame(sourceSection, null));
-    }
+    assert errorMessage != null;
+    VmContext.get(null)
+        .getLogger()
+        .warn(
+            errorMessage + " This will be an error in a future release.",
+            VmUtils.createStackFrame(sourceSection, null));
   }
 
   @Override
   public UnresolvedTypeNode visitThisType(ThisType type) {
     var sourceSection = createSourceSection(type);
-    // need to pass explicit class name for property and method arg/return type annotations
+    // need to pass explicit class name for property and method arg/return type annotations.
+    // this is because type annotations on class properties/methods are initialized when the
+    // ClassNode
+    // is executed, and the frame's receiver is the enclosing module rather than the class.
     // do not need: when in any object or at the module level (where `this` is the receiver's class)
     org.pkl.core.runtime.Identifier className = null;
     for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
