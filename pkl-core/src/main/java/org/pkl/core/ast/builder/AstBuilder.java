@@ -421,6 +421,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       }
     }
     assert errorMessage != null;
+    // TODO: when making this an error, update comment on moduleClass in ReferenceTypeNode.eval
     VmContext.get(null)
         .getLogger()
         .warn(

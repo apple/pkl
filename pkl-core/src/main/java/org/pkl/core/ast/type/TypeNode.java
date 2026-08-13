@@ -45,6 +45,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
@@ -171,7 +172,7 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static PType export(@Nullable TypeNode node) {
-    return node != null ? node.doExport(null) : PType.UNKNOWN;
+    return node != null ? node.doExport() : PType.UNKNOWN;
   }
 
   public static VmTyped getMirror(@Nullable TypeNode node) {
@@ -190,7 +191,7 @@ public abstract class TypeNode extends PklNode {
    * If {@code frame} is provided then self types should be resolved to real types, otherwise return
    * the self PType
    */
-  protected PType doExport(@Nullable VirtualFrame frame) {
+  protected PType doExport() {
     var alias = getVmTypeAlias();
     // needs to come before `clazz != null` check
     if (alias != null) {
@@ -353,7 +354,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return PType.UNKNOWN;
     }
 
@@ -405,7 +406,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return PType.NOTHING;
     }
 
@@ -463,8 +464,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
-      return frame == null ? pType : new PType.Class(clazz.export());
+    protected PType doExport() {
+      return pType;
     }
 
     @Override
@@ -548,10 +549,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
-      if (frame == null) return pType;
-      var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
-      return new PType.Class(clazz.export());
+    protected PType doExport() {
+      return pType;
     }
 
     @Override
@@ -618,7 +617,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.StringLiteral(literal);
     }
 
@@ -858,8 +857,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Nullable(elementTypeNode.doExport(frame));
+    protected final PType doExport() {
+      return new PType.Nullable(elementTypeNode.doExport());
     }
 
     @Override
@@ -941,11 +940,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       var elementTypes =
-          Arrays.stream(elementTypeNodes)
-              .map(it -> it.doExport(frame))
-              .collect(Collectors.toList());
+          Arrays.stream(elementTypeNodes).map(TypeNode::doExport).collect(Collectors.toList());
       return new PType.Union(elementTypes);
     }
 
@@ -1163,7 +1160,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.Union(
           stringLiterals.stream().map(StringLiteral::new).collect(Collectors.toList()));
     }
@@ -1248,9 +1245,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Class(
-          BaseModule.getCollectionClass().export(), elementTypeNode.doExport(frame));
+    protected PType doExport() {
+      return new PType.Class(BaseModule.getCollectionClass().export(), elementTypeNode.doExport());
     }
 
     @Override
@@ -1354,8 +1350,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Class(BaseModule.getListClass().export(), elementTypeNode.doExport(frame));
+    protected PType doExport() {
+      return new PType.Class(BaseModule.getListClass().export(), elementTypeNode.doExport());
     }
 
     @Override
@@ -1451,8 +1447,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Class(BaseModule.getSetClass().export(), elementTypeNode.doExport(frame));
+    protected final PType doExport() {
+      return new PType.Class(BaseModule.getSetClass().export(), elementTypeNode.doExport());
     }
 
     @Override
@@ -1551,11 +1547,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.Class(
-          BaseModule.getMapClass().export(),
-          keyTypeNode.doExport(frame),
-          valueTypeNode.doExport(frame));
+          BaseModule.getMapClass().export(), keyTypeNode.doExport(), valueTypeNode.doExport());
     }
 
     @Override
@@ -1646,8 +1640,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Class(BaseModule.getListingClass().export(), valueTypeNode.doExport(frame));
+    protected PType doExport() {
+      return new PType.Class(BaseModule.getListingClass().export(), valueTypeNode.doExport());
     }
 
     @Override
@@ -1717,12 +1711,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       assert keyTypeNode != null;
       return new PType.Class(
-          BaseModule.getMappingClass().export(),
-          keyTypeNode.doExport(frame),
-          valueTypeNode.doExport(frame));
+          BaseModule.getMappingClass().export(), keyTypeNode.doExport(), valueTypeNode.doExport());
     }
 
     @Override
@@ -2005,12 +1997,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport(@Nullable VirtualFrame frame) {
+    protected final PType doExport() {
       var parameterTypes =
-          Arrays.stream(parameterTypeNodes)
-              .map(it -> it.doExport(frame))
-              .collect(Collectors.toList());
-      return new PType.Function(parameterTypes, returnTypeNode.doExport(frame));
+          Arrays.stream(parameterTypeNodes).map(TypeNode::doExport).collect(Collectors.toList());
+      return new PType.Function(parameterTypes, returnTypeNode.doExport());
     }
 
     @Override
@@ -2060,9 +2050,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Class(
-          BaseModule.getFunctionClass().export(), typeArgumentNode.doExport(frame));
+    protected final PType doExport() {
+      return new PType.Class(BaseModule.getFunctionClass().export(), typeArgumentNode.doExport());
     }
 
     @Specialization
@@ -2139,11 +2128,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport(@Nullable VirtualFrame frame) {
+    protected final PType doExport() {
       var typeArguments =
-          Arrays.stream(typeArgumentNodes)
-              .map(it -> it.doExport(frame))
-              .collect(Collectors.toList());
+          Arrays.stream(typeArgumentNodes).map(TypeNode::doExport).collect(Collectors.toList());
       return new PType.Class(getFunctionNClass().export(), typeArguments);
     }
 
@@ -2177,12 +2164,16 @@ public abstract class TypeNode extends PklNode {
   public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
+    @Child private ExpressionNode getReceiverClassNode;
+    @Child private ExpressionNode getModuleNode;
 
     public ReferenceTypeNode(
         SourceSection sourceSection, TypeNode domainTypeNode, TypeNode referentTypeNode) {
       super(sourceSection);
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
+      this.getReceiverClassNode = new GetReceiverClassNode(sourceSection);
+      this.getModuleNode = new GetModuleNode(sourceSection);
       validate();
     }
 
@@ -2219,8 +2210,8 @@ public abstract class TypeNode extends PklNode {
         return value;
       }
 
-      var referentType = referentTypeNode.doExport(frame);
-      var domainType = domainTypeNode.doExport(frame);
+      var referentType = referentTypeNode.doExport();
+      var domainType = domainTypeNode.doExport();
       try {
         domainTypeNode.execute(frame, value.getDomain());
       } catch (VmTypeMismatchException e) {
@@ -2228,7 +2219,16 @@ public abstract class TypeNode extends PklNode {
         throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
       }
 
-      if (value.referentTypeIsSubtypeOf(referentType)) {
+      // NB: this is correct because the `this` type is not allowed in typealias bodies.
+      // So `this` can only correspond to the receiver where the type check/annotation is written.
+      var thisClass = ((VmClass) getReceiverClassNode.executeGeneric(frame)).export();
+
+      // NB: This will be wrong for deprecated usage of the `module` type in typealias bodies.
+      // It will always resolve to the module where the type check/annotation is written
+      // not the type itself. This is no _more_ broken than it was before.
+      var moduleClass = VmUtils.getClass(getModuleNode.executeGeneric(frame)).export();
+
+      if (value.referentTypeIsSubtypeOf(referentType, thisClass, moduleClass)) {
         return value;
       }
 
@@ -2274,11 +2274,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.Class(
           RefModule.getReferenceClass().export(),
-          domainTypeNode.doExport(frame),
-          referentTypeNode.doExport(frame));
+          domainTypeNode.doExport(),
+          referentTypeNode.doExport());
     }
 
     @Override
@@ -2341,11 +2341,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.Class(
-          BaseModule.getPairClass().export(),
-          firstTypeNode.doExport(frame),
-          secondTypeNode.doExport(frame));
+          BaseModule.getPairClass().export(), firstTypeNode.doExport(), secondTypeNode.doExport());
     }
 
     @Override
@@ -2396,9 +2394,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final PType doExport(@Nullable VirtualFrame frame) {
-      return new PType.Class(
-          BaseModule.getVarArgsClass().export(), elementTypeNode.doExport(frame));
+    protected final PType doExport() {
+      return new PType.Class(BaseModule.getVarArgsClass().export(), elementTypeNode.doExport());
     }
 
     @Override
@@ -2465,7 +2462,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.TypeVariable(typeParameter);
     }
 
@@ -2856,13 +2853,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.Alias(
           typeAlias.export(),
-          Arrays.stream(typeArgumentNodes)
-              .map(it -> it.doExport(frame))
-              .collect(Collectors.toList()),
-          aliasedTypeNode.doExport(frame));
+          Arrays.stream(typeArgumentNodes).map(TypeNode::doExport).collect(Collectors.toList()),
+          aliasedTypeNode.doExport());
     }
 
     @Override
@@ -2963,9 +2958,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected PType doExport(@Nullable VirtualFrame frame) {
+    protected PType doExport() {
       return new PType.Constrained(
-          childNode.doExport(frame),
+          childNode.doExport(),
           Arrays.stream(constraintNodes)
               .map(TypeConstraintNode::export)
               .collect(Collectors.toList()));

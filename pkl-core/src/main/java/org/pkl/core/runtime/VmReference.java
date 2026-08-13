@@ -321,13 +321,13 @@ public final class VmReference extends VmValue {
    * Tells if this reference's referent type is a subtype of {@code type}. Does not check domain.
    */
   @TruffleBoundary
-  public boolean referentTypeIsSubtypeOf(PType type) {
+  public boolean referentTypeIsSubtypeOf(PType type, PClass thisClass, PClass moduleClass) {
     // fast path: if referent is unknown it can match any type check
     if (referentType == PType.UNKNOWN) {
       return true;
     }
 
-    var checkType = normalizeTypes(type);
+    var checkType = normalizeTypes(type, new PType.Class(thisClass), new PType.Class(moduleClass));
     // fast path: short circuit if any referent is accepted
     if (checkType == PType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass().export())) {
       return true;
