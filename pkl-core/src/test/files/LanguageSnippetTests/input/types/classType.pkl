@@ -1,5 +1,7 @@
 open module classType
 
+import "pkl:reflect"
+
 open class A
 open class B
 class C extends A
@@ -8,6 +10,8 @@ typealias E = A
 typealias BB = B
 
 res0 = C is Class<C>
+res0a = C is Class<(C)>
+res0b = C is Class<((C))>
 res1 = C is Class<A>
 res2 = C is Class<E>
 
@@ -24,3 +28,9 @@ res19 = D is Class<Int>
 typealias F<T> = List<Class<T>>
 res20 = List(A, C) is F<A>
 res21 = List(new A {}, new B {}, new C {}).filterIsInstance(A).length
+
+hidden $res22: Class<A> = A
+res22 =
+  let (t = reflect.Module(module).moduleClass.properties["$res22"].type as reflect.DeclaredType)
+  let (arg = t.typeArguments.single as reflect.DeclaredType)
+    "\(t.referent.enclosingDeclaration.uri)#\(t.referent.name)<\(arg.referent.enclosingDeclaration.uri)#\(arg.referent.name)>"

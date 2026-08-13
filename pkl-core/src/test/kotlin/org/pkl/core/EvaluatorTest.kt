@@ -773,6 +773,24 @@ class EvaluatorTest {
   }
 
   @Test
+  fun `eval schema containing a parameterized Class type`() {
+    val evaluator = Evaluator.preconfigured()
+    val schema =
+      evaluator.evaluateSchema(
+        text(
+          """
+          foo: Class<Int>
+          """
+            .trimIndent()
+        )
+      )
+    val fooType = schema.moduleClass.properties["foo"]?.type as? PType.Class
+    assertThat(fooType?.pClass?.info).isEqualTo(PClassInfo.Class)
+    val argType = fooType?.typeArguments?.single() as? PType.Class
+    assertThat(argType?.pClass?.info).isEqualTo(PClassInfo.Int)
+  }
+
+  @Test
   fun `concurrent evals`() {
     val exceptions = mutableListOf<Throwable>()
     val threads =
