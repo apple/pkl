@@ -227,8 +227,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     @Override
     public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       if (expectedClass != null) return;
-      builder.append(
-          "A `Class` type check can only succeed when its type argument is an un-parameterized class, a module, `unknown`, `module`, or an alias to one of those types.");
+      builder.append(ErrorMessages.createIndented("classTypeMismatchHint", indent));
     }
   }
 

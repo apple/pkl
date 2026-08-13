@@ -1,4 +1,6 @@
 res0 = true
+res0a = true
+res0b = true
 res1 = true
 res2 = true
 res3 = true
@@ -11,3 +13,4 @@ res18 = false
 res19 = false
 res20 = true
 res21 = 2
+res22 = "pkl:base#Class<file:///$snippetsDir/input/types/classType.pkl#A>"

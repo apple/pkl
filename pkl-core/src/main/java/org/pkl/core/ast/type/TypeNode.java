@@ -62,17 +62,10 @@ import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
 
-  /**
-   * Type node that corresponds to a simple, unparameterized {@link VmClass}.
-   *
-   * <p>This includes generic classes written without any type arguments like {@code List}.
-   */
-  public interface SimpleClassTypeNode {
+  /** Type node that corresponds to a user-defined class (or module class). */
+  public interface UserClassTypeNode {
     VmClass getVmClass();
   }
-
-  /** Type node that corresponds to a user-defined class (or module class). */
-  public interface UserClassTypeNode extends SimpleClassTypeNode {}
 
   protected TypeNode(SourceSection sourceSection) {
     super(sourceSection);
@@ -419,8 +412,7 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** The `module` type for a final module. */
-  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode
-      implements UserClassTypeNode {
+  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode {
     private final VmClass moduleClass;
 
     public FinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
@@ -474,8 +466,7 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** The `module` type for an open module. */
-  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
-      implements UserClassTypeNode {
+  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode {
     private final VmClass moduleClass; // only used by getVmClass()
     @Child private ExpressionNode getModuleNode;
 
@@ -589,8 +580,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class TypedTypeNode extends ObjectSlotTypeNode
-      implements SimpleClassTypeNode {
+  public static final class TypedTypeNode extends ObjectSlotTypeNode {
     public TypedTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -618,8 +608,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class DynamicTypeNode extends ObjectSlotTypeNode
-      implements SimpleClassTypeNode {
+  public static final class DynamicTypeNode extends ObjectSlotTypeNode {
     public DynamicTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -2949,8 +2938,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class AnyTypeNode extends WriteFrameSlotTypeNode
-      implements SimpleClassTypeNode {
+  public static final class AnyTypeNode extends WriteFrameSlotTypeNode {
     public AnyTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -2982,8 +2970,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class StringTypeNode extends ObjectSlotTypeNode
-      implements SimpleClassTypeNode {
+  public static final class StringTypeNode extends ObjectSlotTypeNode {
     public StringTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3011,8 +2998,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class NumberTypeNode extends FrameSlotTypeNode
-      implements SimpleClassTypeNode {
+  public static final class NumberTypeNode extends FrameSlotTypeNode {
     public NumberTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3071,7 +3057,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class IntTypeNode extends IntSlotTypeNode implements SimpleClassTypeNode {
+  public static final class IntTypeNode extends IntSlotTypeNode {
     public IntTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3099,7 +3085,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class FloatTypeNode extends FrameSlotTypeNode implements SimpleClassTypeNode {
+  public static final class FloatTypeNode extends FrameSlotTypeNode {
     public FloatTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3139,8 +3125,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static final class BooleanTypeNode extends FrameSlotTypeNode
-      implements SimpleClassTypeNode {
+  public static final class BooleanTypeNode extends FrameSlotTypeNode {
     public BooleanTypeNode(SourceSection sourceSection) {
       super(sourceSection);
     }
@@ -3180,47 +3165,33 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class ClassClassTypeNode extends ValidatingObjectSlotTypeNode {
+  public abstract static class ClassClassTypeNode extends ObjectSlotTypeNode {
 
     @Child private TypeNode typeNode;
-    @CompilationFinal private @Nullable VmClass clazz;
+    @CompilationFinal private boolean initialized = false;
+    @CompilationFinal private @Nullable VmClass clazz = null;
 
     public ClassClassTypeNode(SourceSection sourceSection, TypeNode typeNode) {
       super(sourceSection);
       this.typeNode = typeNode;
-      validate();
     }
 
-    @Override
-    public String getValidationErrorKey() {
-      // getViolatingNode() always returns null, it's only used to re-calculate clazz
-      throw PklBugException.unreachableCode();
-    }
+    private void initVmClass() {
+      if (initialized) return;
 
-    @Override
-    protected boolean isIncludedInTrace(Node node) {
-      // getViolatingNode() always returns null, it's only used to re-calculate clazz
-      throw PklBugException.unreachableCode();
-    }
-
-    @Override
-    public @Nullable Node getViolatingNode() {
-      // use the validation hook to recalculate clazz after typealias instantiation
       CompilerDirectives.transferToInterpreterAndInvalidate();
+      initialized = true;
 
       var node = typeNode;
       while (node instanceof TypeAliasTypeNode typeAliasTypeNode) {
         node = typeAliasTypeNode.getAliasedTypeNode();
       }
 
-      if (node instanceof SimpleClassTypeNode simpleClassTypeNode) {
-        clazz = simpleClassTypeNode.getVmClass();
-      } else if (node instanceof UnknownTypeNode || node instanceof TypeVariableNode) {
+      if (node instanceof UnknownTypeNode || node instanceof TypeVariableNode) {
         clazz = BaseModule.getAnyClass();
-      } else {
-        clazz = null;
+      } else if (!node.isParametric()) {
+        clazz = node.getVmClass();
       }
-      return null;
     }
 
     @Override
@@ -3230,6 +3201,10 @@ public abstract class TypeNode extends PklNode {
 
     @Specialization
     protected Object eval(VmClass value) {
+      // safe to init clazz here (instead of on init and typealias instantiate)
+      // because in the typealias case this node will never execute prior to instantiation
+      initVmClass();
+
       // Fast path: all classes match Class<Any> / Class<unknown> / Class<type arg>.
       // In this case, skip the subclass check and behave like a bare `Class` type annotation.
       if (clazz == BaseModule.getAnyClass()) {
@@ -3255,6 +3230,9 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && typeNode.acceptTypeNode(visitTypeArguments, consumer);
+      }
       return consumer.accept(this);
     }
 
