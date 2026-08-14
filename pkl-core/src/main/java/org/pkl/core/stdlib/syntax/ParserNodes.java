@@ -41,7 +41,7 @@ public final class ParserNodes {
   public abstract static class parseModule extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+    protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseModuleNode(source, null);
       } catch (GenericParserError e) {
@@ -52,9 +52,7 @@ public final class ParserNodes {
     @Specialization
     @TruffleBoundary
     protected Object evalResource(
-        @SuppressWarnings("unused") VmTyped self,
-        VmTyped source,
-        @Cached("create()") IndirectCallNode callNode) {
+        VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(source, Identifier.TEXT, callNode);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
@@ -68,7 +66,7 @@ public final class ParserNodes {
   public abstract static class parseModuleOrNull extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+    protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseModuleNode(source, null);
       } catch (GenericParserError e) {
@@ -79,9 +77,7 @@ public final class ParserNodes {
     @Specialization
     @TruffleBoundary
     protected Object evalResource(
-        @SuppressWarnings("unused") VmTyped self,
-        VmTyped source,
-        @Cached("create()") IndirectCallNode callNode) {
+        VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(source, Identifier.TEXT);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
@@ -95,7 +91,7 @@ public final class ParserNodes {
   public abstract static class parseExpression extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+    protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseExpressionNode(source, null);
       } catch (GenericParserError e) {
@@ -106,9 +102,7 @@ public final class ParserNodes {
     @Specialization
     @TruffleBoundary
     protected Object evalResource(
-        @SuppressWarnings("unused") VmTyped self,
-        VmTyped source,
-        @Cached("create()") IndirectCallNode callNode) {
+        VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(source, Identifier.TEXT);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
@@ -122,7 +116,7 @@ public final class ParserNodes {
   public abstract static class parseExpressionOrNull extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object evalString(@SuppressWarnings("unused") VmTyped self, String source) {
+    protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseExpressionNode(source, null);
       } catch (GenericParserError e) {
@@ -133,9 +127,7 @@ public final class ParserNodes {
     @Specialization
     @TruffleBoundary
     protected Object evalResource(
-        @SuppressWarnings("unused") VmTyped self,
-        VmTyped source,
-        @Cached("create()") IndirectCallNode callNode) {
+        VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(source, Identifier.TEXT);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
