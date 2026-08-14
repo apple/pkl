@@ -187,10 +187,6 @@ public abstract class TypeNode extends PklNode {
     return builder.build();
   }
 
-  /**
-   * If {@code frame} is provided then self types should be resolved to real types, otherwise return
-   * the self PType
-   */
   protected PType doExport() {
     var alias = getVmTypeAlias();
     // needs to come before `clazz != null` check
@@ -942,7 +938,7 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected PType doExport() {
       var elementTypes =
-          Arrays.stream(elementTypeNodes).map(TypeNode::doExport).collect(Collectors.toList());
+          Arrays.stream(elementTypeNodes).map(TypeNode::export).collect(Collectors.toList());
       return new PType.Union(elementTypes);
     }
 
@@ -1999,7 +1995,7 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected final PType doExport() {
       var parameterTypes =
-          Arrays.stream(parameterTypeNodes).map(TypeNode::doExport).collect(Collectors.toList());
+          Arrays.stream(parameterTypeNodes).map(TypeNode::export).collect(Collectors.toList());
       return new PType.Function(parameterTypes, returnTypeNode.doExport());
     }
 
@@ -2130,7 +2126,7 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected final PType doExport() {
       var typeArguments =
-          Arrays.stream(typeArgumentNodes).map(TypeNode::doExport).collect(Collectors.toList());
+          Arrays.stream(typeArgumentNodes).map(TypeNode::export).collect(Collectors.toList());
       return new PType.Class(getFunctionNClass().export(), typeArguments);
     }
 
@@ -2856,7 +2852,7 @@ public abstract class TypeNode extends PklNode {
     protected PType doExport() {
       return new PType.Alias(
           typeAlias.export(),
-          Arrays.stream(typeArgumentNodes).map(TypeNode::doExport).collect(Collectors.toList()),
+          Arrays.stream(typeArgumentNodes).map(TypeNode::export).collect(Collectors.toList()),
           aliasedTypeNode.doExport());
     }
 
