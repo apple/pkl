@@ -122,17 +122,33 @@ public class Formatter {
    * @return the formatted Pkl source code
    */
   public String format(Node ast) {
-    var formatAst = new Builder("", grammarVersion).format(ast);
-    // force a line at the end of the file
-    var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
     var output = new StringBuilder();
-    new Generator(output).generate(nodes);
+    format(ast, output);
     return output.toString();
+  }
+
+  /**
+   * Formats the given Pkl AST as text.
+   *
+   * <p>The AST terminal nodes should have their text property set before calling format, as this
+   * method does not have access to the original source.
+   *
+   * <p>It is the caller's responsibility to close {@code output}, if applicable.
+   *
+   * @param ast the Pkl module node to format
+   * @param output the formatted Pkl source code
+   * @throws java.io.UncheckedIOException if an I/O error occurs during writing
+   */
+  public void format(Node ast, Appendable output) {
+    generate(new Builder("", grammarVersion).format(ast), output);
   }
 
   private void format(String input, Appendable output) {
     var ast = new GenericParser().parseModule(input);
-    var formatAst = new Builder(input, grammarVersion).format(ast);
+    generate(new Builder(input, grammarVersion).format(ast), output);
+  }
+
+  private static void generate(FormatNode formatAst, Appendable output) {
     // force a line at the end of the file
     var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
     new Generator(output).generate(nodes);
