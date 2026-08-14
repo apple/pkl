@@ -54,4 +54,20 @@ facts {
     // the module node is visited first
     sample.fold(List(), (acc, n) -> acc.add(n.type)).first == "module"
   }
+
+  ["isLeaf is true exactly for nodes without children"] {
+    sample.fold(true, (acc, n) -> acc && n.isLeaf == n.children.isEmpty)
+  }
+
+  ["a parsed module is a branch"] {
+    !sample.isLeaf
+  }
+
+  ["identifiers are leaves"] {
+    sample.fold(true, (acc, n) -> if (n.type == "identifier") acc && n.isLeaf else acc)
+  }
+
+  ["leaves carry text"] {
+    sample.fold(true, (acc, n) -> if (n.isLeaf) acc && n.text != null else acc)
+  }
 }
