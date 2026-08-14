@@ -186,6 +186,7 @@ typealias NodeType =
     | "string_chars"
     | "operator"
     | "string_newline"
+    | "string_continuation"
     | "string_escape"
     // members
     | "object_element"
@@ -258,3 +259,64 @@ typealias NodeType =
     | "constrained_type"
     | "constrained_type_constraint"
     | "constrained_type_elements"
+
+/// The [NodeType]s that describe an expression.
+typealias ExprNodeType =
+  "this_expr"
+    | "outer_expr"
+    | "module_expr"
+    | "null_expr"
+    | "throw_expr"
+    | "trace_expr"
+    | "import_expr"
+    | "read_expr"
+    | "new_expr"
+    | "unary_minus_expr"
+    | "logical_not_expr"
+    | "function_literal_expr"
+    | "parenthesized_expr"
+    | "super_subscript_expr"
+    | "super_access_expr"
+    | "subscript_expr"
+    | "qualified_access_expr"
+    | "if_expr"
+    | "let_expr"
+    | "bool_literal_expr"
+    | "int_literal_expr"
+    | "float_literal_expr"
+    | "single_line_string_literal_expr"
+    | "multi_line_string_literal_expr"
+    | "unqualified_access_expr"
+    | "non_null_expr"
+    | "amends_expr"
+    | "binary_op_expr"
+
+/// The [NodeType]s that describe a type.
+typealias TypeNodeType =
+  "unknown_type"
+    | "nothing_type"
+    | "module_type"
+    | "union_type"
+    | "function_type"
+    | "parenthesized_type"
+    | "declared_type"
+    | "nullable_type"
+    | "string_constant_type"
+    | "constrained_type"
+
+/// The [NodeType]s that describe a member of an object body.
+typealias ObjectMemberNodeType =
+  "object_element"
+    | "object_property"
+    | "object_method"
+    | "member_predicate"
+    | "object_entry"
+    | "object_spread"
+    | "when_generator"
+    | "for_generator"
+
+/// The [NodeType]s that describe a member of a class body.
+typealias ClassMemberNodeType = "class_property" | "class_method"
+
+/// The [NodeType]s that describe a member of a module.
+typealias ModuleMemberNodeType = "class_property" | "class_method" | "class" | "typealias"
