@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.syntax;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -109,6 +110,7 @@ public final class SyntaxNodes {
           .addProperty("isLeaf", nd -> nd.childrenVm.isEmpty());
 
   /** Rebuild a node from {@code template} (its type, span, text) with new children. */
+  @TruffleBoundary
   static VmTyped rebuild(VmTyped template, Object[] newChildrenVm) {
     var nodeType =
         NodeType.valueOf(
@@ -146,6 +148,7 @@ public final class SyntaxNodes {
    * meaningful span of their own, so that a subtree spliced into reused siblings lines up with
    * them.
    */
+  @TruffleBoundary
   static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
     // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
     if (nodeVm.hasExtraStorage()) {
