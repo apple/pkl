@@ -10,4 +10,16 @@ facts {
   ["fold visits a node before its children (pre-order)"] {
     true
   }
+  ["isLeaf is true exactly for nodes without children"] {
+    true
+  }
+  ["a parsed module is a branch"] {
+    true
+  }
+  ["identifiers are leaves"] {
+    true
+  }
+  ["leaves carry text"] {
+    true
+  }
 }

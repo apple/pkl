@@ -105,7 +105,8 @@ public final class SyntaxNodes {
                   nd.node.children.isEmpty() || nd.node.type == NodeType.STRING_CHARS
                       ? nd.node.text(nd.source)
                       : VmNull.withoutDefault())
-          .addProperty("span", nd -> VmNull.lift(nd.spanVm));
+          .addProperty("span", nd -> VmNull.lift(nd.spanVm))
+          .addProperty("isLeaf", nd -> nd.childrenVm.isEmpty());
 
   /** Rebuild a node from {@code template} (its type, span, text) with new children. */
   static VmTyped rebuild(VmTyped template, Object[] newChildrenVm) {
