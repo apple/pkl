@@ -169,7 +169,7 @@ public final class SyntaxNodes {
   }
 
   private static @Nullable VmTyped optSpan(VmTyped nodeVm) {
-    return VmUtils.readMember(nodeVm, Identifier.SPAN) instanceof VmTyped spanVm ? spanVm : null;
+    return (VmTyped) VmNull.unwrap(VmUtils.readMember(nodeVm, Identifier.SPAN));
   }
 
   private static FullSpan readSpan(@Nullable VmTyped spanVm) {
