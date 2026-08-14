@@ -15,7 +15,7 @@
  */
 package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.net.URI;
 
 public final class SyntaxModule extends StdLibModule {
@@ -53,7 +53,7 @@ public final class SyntaxModule extends StdLibModule {
     static final VmClass instance = loadClass("SourceLocation");
   }
 
-  @CompilerDirectives.TruffleBoundary
+  @TruffleBoundary
   private static VmClass loadClass(String className) {
     var theModule = getModule();
     return (VmClass) VmUtils.readMember(theModule, Identifier.get(className));
