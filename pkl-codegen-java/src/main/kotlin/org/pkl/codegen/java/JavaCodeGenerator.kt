@@ -751,6 +751,11 @@ class JavaCodeGenerator(
     when (this) {
       PType.UNKNOWN -> OBJECT.nullableIf(nullable)
       PType.NOTHING -> TypeName.VOID
+      PType.MODULE,
+      PType.THIS ->
+        throw JavaCodeGeneratorException(
+          "Pkl `${this}` types are not supported by the Java code generator."
+        )
       is PType.StringLiteral -> STRING.nullableIf(nullable)
       is PType.Class -> {
         // if in doubt, spell it out
