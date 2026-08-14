@@ -213,7 +213,7 @@ examples {
     List()
     List(97, 98, 99, 100, 101, 102, 103)
   }
-  ["toInt()"] {
+  ["toInt() decimal"] {
     123
     -123
     123
@@ -225,6 +225,8 @@ examples {
     0
     -9223372036854775808
     9223372036854775807
+  }
+  ["toInt() hex"] {
     291
     -291
     291
@@ -234,6 +236,8 @@ examples {
     0
     0
     0
+  }
+  ["toInt() binary"] {
     5
     -5
     5
@@ -243,6 +247,8 @@ examples {
     0
     0
     0
+  }
+  ["toInt() octal"] {
     83
     -83
     83
@@ -252,6 +258,8 @@ examples {
     0
     0
     0
+  }
+  ["toInt() error cases"] {
     "Cannot parse string as `Int`. String: \"1.2\""
     "Cannot parse string as `Int`. String: \"9223372036854775808\""
     "Cannot parse string as `Int`. String: \"-9223372036854775809\""

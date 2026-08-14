@@ -263,7 +263,7 @@ examples {
     str1.codePoints
   }
 
-  ["toInt()"] {
+  ["toInt() decimal"] {
     "123".toInt()
     "-123".toInt()
     "+123".toInt()
@@ -275,7 +275,9 @@ examples {
     "+0".toInt()
     "-9223372036854775808".toInt() // math.minInt
     "9223372036854775807".toInt() // math.maxInt
-
+  }
+  
+  ["toInt() hex"] {
     "0x123".toInt()
     "-0x123".toInt()
     "+0x123".toInt()
@@ -285,7 +287,9 @@ examples {
     "0x0".toInt()
     "-0x0".toInt()
     "+0x0".toInt()
+  }
 
+  ["toInt() binary"] {
     "0b101".toInt()
     "-0b101".toInt()
     "+0b101".toInt()
@@ -295,7 +299,9 @@ examples {
     "0b0".toInt()
     "-0b0".toInt()
     "+0b0".toInt()
+  }
 
+  ["toInt() octal"] {
     "0o123".toInt()
     "-0o123".toInt()
     "+0o123".toInt()
@@ -305,7 +311,9 @@ examples {
     "0o0".toInt()
     "-0o0".toInt()
     "+0o0".toInt()
-    
+  }
+   
+  ["toInt() error cases"] {
     module.catch(() -> "1.2".toInt())
     module.catch(() -> "9223372036854775808".toInt())
     module.catch(() -> "-9223372036854775809".toInt())
