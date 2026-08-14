@@ -75,7 +75,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
 
   private FunctionNode getFunctionNode(VirtualFrame frame) {
     if (functionNode != null) return functionNode;
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
 
     var parameterTypeNodes =
         VmUtils.resolveParameterTypes(frame, getFrameDescriptor(), unresolvedParameterTypeNodes);

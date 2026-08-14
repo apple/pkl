@@ -27,6 +27,7 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmUtils;
 
 /** Infers the parent to amend in `obj { local function createPerson(): Person = new { ... } }`. */
 public final class InferParentWithinObjectMethodNode extends ExpressionNode {
@@ -55,8 +56,9 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
 
     // remaining code only runs first time this node is executed
     // (assuming evaluation isn't continued despite errors)
+    // except when return type is a non-final self type (not cacheable)
 
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
 
     assert ownerNode != null;
     var owner = (VmObjectLike) ownerNode.executeGeneric(frame);
@@ -67,22 +69,31 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
     var methodNode = (ObjectMethodNode) member.getMemberNode();
     assert methodNode != null;
 
-    var returnTypeNode = methodNode.getReturnTypeNode();
-    if (returnTypeNode == null || returnTypeNode instanceof UnknownTypeNode) {
+    var typeNode = methodNode.getReturnTypeNode();
+    if (typeNode == null || typeNode instanceof UnknownTypeNode) {
       inferredParent = VmDynamic.empty();
       ownerNode = null;
       return inferredParent;
     }
 
-    Object defaultReturnTypeValue =
-        returnTypeNode.createDefaultValue(
+    var defaultValue =
+        typeNode.createDefaultValue(
             frame, language, member.getHeaderSection(), member.getQualifiedName());
-    if (defaultReturnTypeValue != null) {
-      inferredParent = defaultReturnTypeValue;
-      ownerNode = null;
-      return inferredParent;
+
+    if (defaultValue == null) {
+      // try to produce a more specific error message than "cannotInstantiateType"
+      var clazz = typeNode.getVmClass();
+      if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
+
+      throw exceptionBuilder()
+          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
+          .build();
     }
 
-    throw exceptionBuilder().evalError("cannotInferParent").build();
+    if (typeNode.isFinalType()) {
+      inferredParent = defaultValue;
+      ownerNode = null;
+    }
+    return inferredParent;
   }
 }

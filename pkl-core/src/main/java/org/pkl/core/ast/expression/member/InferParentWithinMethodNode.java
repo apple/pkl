@@ -49,8 +49,9 @@ public final class InferParentWithinMethodNode extends ExpressionNode {
 
     // remaining code only runs first time this node is executed
     // (assuming evaluation isn't continued despite errors)
+    // except when return type is a non-final self type (not cacheable)
 
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
 
     assert ownerNode != null;
     var owner = (VmObjectLike) ownerNode.executeGeneric(frame);
@@ -59,22 +60,34 @@ public final class InferParentWithinMethodNode extends ExpressionNode {
     var method = owner.getVmClass().getDeclaredMethod(methodName);
     assert method != null;
 
-    var returnTypeNode = method.getReturnTypeNode();
-    if (returnTypeNode == null || returnTypeNode instanceof UnknownTypeNode) {
+    // >> Keep in sync with GetParentForTypeNode.executeGeneric
+
+    var typeNode = method.getReturnTypeNode();
+    if (typeNode == null || typeNode instanceof UnknownTypeNode) {
       inferredParent = VmDynamic.empty();
       ownerNode = null;
       return inferredParent;
     }
 
-    var returnTypeDefaultValue =
-        returnTypeNode.createDefaultValue(
+    var defaultValue =
+        typeNode.createDefaultValue(
             frame, language, method.getHeaderSection(), method.getQualifiedName());
-    if (returnTypeDefaultValue != null) {
-      inferredParent = returnTypeDefaultValue;
-      ownerNode = null;
-      return inferredParent;
+
+    if (defaultValue == null) {
+      // try to produce a more specific error message than "cannotInstantiateType"
+      var clazz = typeNode.getVmClass();
+      if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
+
+      throw exceptionBuilder()
+          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
+          .build();
     }
 
-    throw exceptionBuilder().evalError("cannotInferParent").build();
+    if (typeNode.isFinalType()) {
+      inferredParent = defaultValue;
+      ownerNode = null;
+    }
+
+    return inferredParent;
   }
 }

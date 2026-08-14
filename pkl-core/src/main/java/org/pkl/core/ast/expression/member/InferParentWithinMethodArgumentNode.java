@@ -45,7 +45,7 @@ public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
     // (assuming evaluation isn't continued despite errors)
     // except when param type is a non-final self type (not cacheable)
 
-    CompilerDirectives.transferToInterpreter();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
 
     var methodSlot =
         frame.getFrameDescriptor().getAuxiliarySlots().get(VmUtils.METHOD_FRAME_SLOT_ID);

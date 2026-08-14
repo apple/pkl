@@ -1005,7 +1005,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       // - pkl.base intrinsic constructorts: List(), Set(), Map(), Bytes()
       // - generic methods: pkl.base#Pair(), etc.
       // these will throw cannotInferParent at runtime
-
       var sourceSection = createSourceSection(expr.newSpan());
       var argIndex = argumentList.getArguments().indexOf(child);
       inferredParentNode =
