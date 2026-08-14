@@ -16,6 +16,7 @@
 package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmObjectLike;
@@ -23,7 +24,7 @@ import org.pkl.core.runtime.VmObjectLike;
 public interface Method {
   CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner);
 
-  TypeNode getParameterTypeNode(int idx);
+  TypeNode getParameterTypeNode(VirtualFrame frame, int idx);
 
   SourceSection getHeaderSection();
 

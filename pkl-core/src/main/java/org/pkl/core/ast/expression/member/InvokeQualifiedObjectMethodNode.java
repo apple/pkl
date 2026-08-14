@@ -19,6 +19,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.member.ObjectMethodNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -44,8 +45,10 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
 
   @Override
   protected Method getMethod(VmObjectLike owner) {
-    var method = owner.getMember(methodName);
-    assert method != null && method.isLocal();
+    var member = owner.getMember(methodName);
+    assert member != null && member.isLocal();
+    var method = (ObjectMethodNode) member.getMemberNode();
+    assert method != null;
     return method;
   }
 }

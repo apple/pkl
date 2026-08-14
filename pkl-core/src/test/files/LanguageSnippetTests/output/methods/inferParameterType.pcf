@@ -3,6 +3,9 @@ unqualifiedLexical = 1
 unqualifiedThis = 8
 `super` = 16
 nestedMethodCalls = 26
+objectMethod {
+  call = 0
+}
 intrinsicConstructor = "Cannot tell which parent to amend."
 genericMethod = "Cannot instantiate type `First`."
 fnApply = "Cannot tell which parent to amend."

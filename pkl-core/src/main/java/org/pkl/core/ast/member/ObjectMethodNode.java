@@ -20,13 +20,14 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 
-public final class ObjectMethodNode extends RegularMemberNode {
+public final class ObjectMethodNode extends RegularMemberNode implements Method {
   private final VmLanguage language;
   private final int parameterCount;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
@@ -57,34 +58,41 @@ public final class ObjectMethodNode extends RegularMemberNode {
     return functionNode.getReturnTypeNode();
   }
 
-  public TypeNode getParameterTypeNode(int idx) {
-    assert functionNode != null;
-    return functionNode.getParameterTypeNodes()[idx];
+  @Override
+  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
+    return (CallTarget) getCallTarget().call(owner, owner);
+  }
+
+  @Override
+  public TypeNode getParameterTypeNode(VirtualFrame frame, int idx) {
+    return getFunctionNode(frame).getParameterTypeNodes()[idx];
   }
 
   @Override
   protected CallTarget executeImpl(VirtualFrame frame) {
-    if (functionNode == null) {
-      CompilerDirectives.transferToInterpreter();
+    return getFunctionNode(frame).getCallTarget();
+  }
 
-      var parameterTypeNodes =
-          VmUtils.resolveParameterTypes(frame, getFrameDescriptor(), unresolvedParameterTypeNodes);
+  private FunctionNode getFunctionNode(VirtualFrame frame) {
+    if (functionNode != null) return functionNode;
+    CompilerDirectives.transferToInterpreter();
 
-      var returnTypeNode =
-          unresolvedReturnTypeNode != null ? unresolvedReturnTypeNode.execute(frame) : null;
+    var parameterTypeNodes =
+        VmUtils.resolveParameterTypes(frame, getFrameDescriptor(), unresolvedParameterTypeNodes);
 
-      functionNode =
-          new FunctionNode(
-              language,
-              getFrameDescriptor(),
-              member,
-              parameterCount,
-              parameterTypeNodes,
-              returnTypeNode,
-              true,
-              bodyNode);
-    }
+    var returnTypeNode =
+        unresolvedReturnTypeNode != null ? unresolvedReturnTypeNode.execute(frame) : null;
 
-    return functionNode.getCallTarget();
+    functionNode =
+        new FunctionNode(
+            language,
+            getFrameDescriptor(),
+            member,
+            parameterCount,
+            parameterTypeNodes,
+            returnTypeNode,
+            true,
+            bodyNode);
+    return functionNode;
   }
 }

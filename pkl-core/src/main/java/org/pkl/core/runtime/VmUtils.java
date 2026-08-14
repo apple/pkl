@@ -82,6 +82,7 @@ public final class VmUtils {
           return "customThisSlot";
         }
       };
+
   public static final Object METHOD_FRAME_SLOT_ID =
       new Object() {
         @Override

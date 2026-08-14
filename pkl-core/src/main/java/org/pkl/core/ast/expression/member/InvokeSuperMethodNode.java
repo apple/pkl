@@ -52,7 +52,8 @@ public abstract class InvokeSuperMethodNode extends AbstractInvokeMethodNode {
       VirtualFrame frame,
       @Cached(value = "findSupermethod(frame)", neverDefault = true) ClassMethod supermethod,
       @Cached("create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
-    var args = evalArgs(frame, supermethod, supermethod.getOwner(), VmUtils.getReceiverOrNull(frame));
+    var args =
+        evalArgs(frame, supermethod, supermethod.getOwner(), VmUtils.getReceiverOrNull(frame));
     return callNode.call(args);
   }
 

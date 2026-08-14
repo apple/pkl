@@ -18,6 +18,7 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
@@ -137,7 +138,7 @@ public final class ClassMethod extends ClassMember implements Method {
     return functionNode.export(owner, docComment, annotations, modifiers, typeParameters);
   }
 
-  public TypeNode getParameterTypeNode(int idx) {
+  public TypeNode getParameterTypeNode(VirtualFrame frame, int idx) {
     return functionNode.getParameterTypeNodes()[idx];
   }
 }

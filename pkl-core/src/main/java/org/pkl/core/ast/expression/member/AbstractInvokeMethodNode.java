@@ -23,28 +23,27 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
-import org.pkl.core.runtime.PklTags.Expression;
-import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
   @Children protected ExpressionNode[] argumentNodes;
-  
+
   public AbstractInvokeMethodNode(SourceSection sourceSection, ExpressionNode[] argumentNodes) {
     super(sourceSection);
     this.argumentNodes = argumentNodes;
   }
 
   @TruffleBoundary
-  protected int getMethodSlot(FrameDescriptor frameDescriptor) {
+  private int getMethodSlot(FrameDescriptor frameDescriptor) {
     // can't store the slot id as this node may be called from different root nodes
     // (see constraints14 snippet)
     return frameDescriptor.findOrAddAuxiliarySlot(VmUtils.METHOD_FRAME_SLOT_ID);
   }
-  
+
   @ExplodeLoop
-  protected Object[] evalArgs(VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
+  protected Object[] evalArgs(
+      VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
     var methodSlot = getMethodSlot(frame.getFrameDescriptor());
     var prevMethod = frame.getAuxiliarySlot(methodSlot);
     frame.setAuxiliarySlot(methodSlot, method);
@@ -60,7 +59,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
     } finally {
       frame.setAuxiliarySlot(methodSlot, prevMethod);
     }
-    
+
     return args;
   }
 }

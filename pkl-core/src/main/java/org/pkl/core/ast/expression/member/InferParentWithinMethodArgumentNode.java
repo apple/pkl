@@ -62,7 +62,7 @@ public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
 
     // >> Keep in sync with GetParentForTypeNode.executeGeneric
 
-    var typeNode = method.getParameterTypeNode(argIndex);
+    var typeNode = method.getParameterTypeNode(frame, argIndex);
     var defaultValue =
         typeNode.createDefaultValue(
             frame, language, method.getHeaderSection(), method.getQualifiedName());
