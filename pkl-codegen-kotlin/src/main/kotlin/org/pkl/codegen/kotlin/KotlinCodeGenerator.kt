@@ -651,6 +651,7 @@ class KotlinCodeGenerator(
       PType.NOTHING -> NOTHING
       PType.MODULE,
       PType.THIS ->
+        // TODO: support self types: `class Foo<T extends Foo<T>>`
         throw KotlinCodeGeneratorException(
           "Pkl `${this}` types are not supported by the Kotlin code generator."
         )

@@ -753,6 +753,7 @@ class JavaCodeGenerator(
       PType.NOTHING -> TypeName.VOID
       PType.MODULE,
       PType.THIS ->
+        // TODO: support self types: `class Foo<T extends Foo<T>>`
         throw JavaCodeGeneratorException(
           "Pkl `${this}` types are not supported by the Java code generator."
         )
