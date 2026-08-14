@@ -23,6 +23,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmUtils;
 
 public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
   private final VmLanguage language;
@@ -42,14 +43,12 @@ public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
 
     // remaining code only runs first time this node is executed
     // (assuming evaluation isn't continued despite errors)
+    // except when param type is a non-final self type (not cacheable)
 
     CompilerDirectives.transferToInterpreter();
 
     var methodSlot =
-        frame
-            .getFrameDescriptor()
-            .getAuxiliarySlots()
-            .get(AbstractInvokeLexicalOrQualifiedMethodNode.METHOD_FRAME_SLOT_ID);
+        frame.getFrameDescriptor().getAuxiliarySlots().get(VmUtils.METHOD_FRAME_SLOT_ID);
     if (methodSlot == null) {
       // used in intrinsic constructor e.g. pkl.base#List()
       throw exceptionBuilder().evalError("cannotInferParent").build();
@@ -61,15 +60,28 @@ public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
       throw exceptionBuilder().evalError("cannotInferParent").build();
     }
 
-    var parentTypeNode = method.getParameterTypeNode(argIndex);
-    var parameterTypeDefaultValue =
-        parentTypeNode.createDefaultValue(
+    // >> Keep in sync with GetParentForTypeNode.executeGeneric
+
+    var typeNode = method.getParameterTypeNode(argIndex);
+    var defaultValue =
+        typeNode.createDefaultValue(
             frame, language, method.getHeaderSection(), method.getQualifiedName());
-    if (parameterTypeDefaultValue != null) {
-      inferredParent = parameterTypeDefaultValue;
-      return inferredParent;
+
+    if (defaultValue == null) {
+      // try to produce a more specific error message than "cannotInstantiateType"
+      var clazz = typeNode.getVmClass();
+      if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
+
+      throw exceptionBuilder()
+          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
+          .build();
     }
 
-    throw exceptionBuilder().evalError("cannotInferParent").build();
+    // can't cache default value for non-final `module`/`this` types because they're a self-types
+    // (the default value changes when inherited).
+    if (typeNode.isFinalType()) {
+      inferredParent = defaultValue;
+    }
+    return defaultValue;
   }
 }

@@ -51,7 +51,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.AstBuilder;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
@@ -75,6 +74,21 @@ public final class VmUtils {
   public static final String REPL_TEXT = "repl:text";
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
+
+  public static final Object CUSTOM_THIS_FRAME_SLOT_ID =
+      new Object() {
+        @Override
+        public String toString() {
+          return "customThisSlot";
+        }
+      };
+  public static final Object METHOD_FRAME_SLOT_ID =
+      new Object() {
+        @Override
+        public String toString() {
+          return "method";
+        }
+      };
 
   private static final Engine PKL_ENGINE =
       Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
@@ -1040,7 +1054,7 @@ public final class VmUtils {
   }
 
   public static int findCustomThisSlot(VirtualFrame frame) {
-    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CustomThisScope.FRAME_SLOT_ID);
+    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CUSTOM_THIS_FRAME_SLOT_ID);
     assert result != null;
     return result;
   }

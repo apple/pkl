@@ -45,7 +45,6 @@ import org.pkl.core.runtime.VmFunction;
 @GenerateWrapper
 public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected final Identifier methodName;
-  @Children private final ExpressionNode[] argumentNodes;
   private final MemberLookupMode lookupMode;
   private final boolean needsConst;
 
@@ -56,9 +55,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       MemberLookupMode lookupMode,
       boolean needsConst) {
 
-    super(sourceSection);
+    super(sourceSection, argumentNodes);
     this.methodName = methodName;
-    this.argumentNodes = argumentNodes;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
   }
@@ -78,7 +76,6 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   public abstract Object executeWith(VirtualFrame frame, Object value, VmClass clazz);
 
   /** Intrinsifies `FunctionN.apply()` calls. */
-  @ExplodeLoop
   @Specialization(guards = {"methodName == APPLY", "receiver.getCallTarget() == cachedCallTarget"})
   protected Object evalFunctionCached(
       VirtualFrame frame,
@@ -87,39 +84,21 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       @Cached("receiver.getCallTarget()") @SuppressWarnings("unused")
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver.getThisValue();
-    args[1] = receiver;
-    frame.setAuxiliarySlot(getMethodSlot(frame), null);
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, null, receiver, receiver.getThisValue());
     return callNode.call(args);
   }
 
   /** Intrinsifies `FunctionN.apply()` calls. */
-  @ExplodeLoop
   @Specialization(guards = "methodName == APPLY", replaces = "evalFunctionCached")
   protected Object evalFunction(
       VirtualFrame frame,
       VmFunction receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver.getThisValue();
-    args[1] = receiver;
-    frame.setAuxiliarySlot(getMethodSlot(frame), null);
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, null, receiver, receiver.getThisValue());
     return callNode.call(receiver.getCallTarget(), args);
   }
 
-  @ExplodeLoop
   @Specialization(guards = "receiverClass == cachedReceiverClass")
   protected Object evalCached(
       VirtualFrame frame,
@@ -128,34 +107,18 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       @Cached("receiverClass") @SuppressWarnings("unused") VmClass cachedReceiverClass,
       @Cached("resolveMethod(receiverClass)") ClassMethod method,
       @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = method.getOwner();
-    frame.setAuxiliarySlot(getMethodSlot(frame), method);
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, method, method.getOwner(), receiver);
     return callNode.call(args);
   }
 
-  @ExplodeLoop
   @Specialization(replaces = "evalCached")
   protected Object eval(
       VirtualFrame frame,
       Object receiver,
       VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
-
     var method = resolveMethod(receiverClass);
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = method.getOwner();
-    frame.setAuxiliarySlot(getMethodSlot(frame), method);
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
+    var args = evalArgs(frame, method, method.getOwner(), receiver);
 
     // Deprecation should not report here (getCallTarget(sourceSection)), as this happens for each
     // and every call.

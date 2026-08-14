@@ -18,12 +18,15 @@ class Qux extends Foo {
 
 function bar(baz: Foo): Int = baz.x
 
+const function outerMethod(a: Int, b: Qux) = a + b.x * 2
+
 local quux = (a: Foo) -> a.x
 
 qualified = this.bar(new { x = 1 })
 unqualifiedLexical = bar(new { x = 1 })
 unqualifiedThis = new Qux { x = 7 }.bar(new { x = 1 })
 `super` = new Foo { x = 2 }.superBar(new Foo { x = 3 })
+nestedMethodCalls = outerMethod(bar(new { x = 8 }), new { x = 9 })
 
 intrinsicConstructor = test.catch(() -> List(new {}))
 genericMethod = test.catch(() -> Pair(new {}, new {}))

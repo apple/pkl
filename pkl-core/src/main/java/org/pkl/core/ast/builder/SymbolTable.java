@@ -40,6 +40,7 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.ArrayUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.parser.Lexer;
@@ -1048,16 +1049,9 @@ public final class SymbolTable {
    * A scope where {@code this} has a special meaning (type constraint, object member predicate).
    *
    * <p>Technically, a scope where {@code this} isn't {@code frame.getArguments()[0]}, but the value
-   * at an auxiliary slot identified by {@link CustomThisScope#FRAME_SLOT_ID}.
+   * at an auxiliary slot identified by {@link VmUtils#CUSTOM_THIS_FRAME_SLOT_ID}.
    */
   public static final class CustomThisScope extends Scope {
-    public static final Object FRAME_SLOT_ID =
-        new Object() {
-          @Override
-          public String toString() {
-            return "customThisSlot";
-          }
-        };
 
     public CustomThisScope(Scope parent, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(

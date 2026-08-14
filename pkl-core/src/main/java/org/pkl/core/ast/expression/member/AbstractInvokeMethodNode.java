@@ -15,29 +15,52 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.member.Method;
+import org.pkl.core.runtime.PklTags.Expression;
+import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmUtils;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
-  public static final Object METHOD_FRAME_SLOT_ID =
-      new Object() {
-        @Override
-        public String toString() {
-          return "method";
-        }
-      };
-
-  public AbstractInvokeMethodNode(SourceSection sourceSection) {
+  @Children protected ExpressionNode[] argumentNodes;
+  
+  public AbstractInvokeMethodNode(SourceSection sourceSection, ExpressionNode[] argumentNodes) {
     super(sourceSection);
+    this.argumentNodes = argumentNodes;
   }
 
-  protected int getMethodSlot(VirtualFrame frame) {
+  @TruffleBoundary
+  protected int getMethodSlot(FrameDescriptor frameDescriptor) {
     // can't store the slot id as this node may be called from different root nodes
     // (see constraints14 snippet)
-    CompilerDirectives.transferToInterpreter();
-    return frame.getFrameDescriptor().findOrAddAuxiliarySlot(METHOD_FRAME_SLOT_ID);
+    return frameDescriptor.findOrAddAuxiliarySlot(VmUtils.METHOD_FRAME_SLOT_ID);
+  }
+  
+  @ExplodeLoop
+  protected Object[] evalArgs(VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
+    var methodSlot = getMethodSlot(frame.getFrameDescriptor());
+    var prevMethod = frame.getAuxiliarySlot(methodSlot);
+    frame.setAuxiliarySlot(methodSlot, method);
+
+    var args = new Object[2 + argumentNodes.length];
+    args[0] = receiver;
+    args[1] = owner;
+
+    try {
+      for (var i = 0; i < argumentNodes.length; i++) {
+        args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      }
+    } finally {
+      frame.setAuxiliarySlot(methodSlot, prevMethod);
+    }
+    
+    return args;
   }
 }

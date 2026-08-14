@@ -43,7 +43,6 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.StackFrame;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
@@ -2858,7 +2857,7 @@ public abstract class TypeNode extends PklNode {
     private int getCustomThisSlot(FrameDescriptor frameDescriptor) {
       // can't store the slot id as this node may be called from different root nodes
       // (see constraints14 snippet)
-      return frameDescriptor.findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
+      return frameDescriptor.findOrAddAuxiliarySlot(VmUtils.CUSTOM_THIS_FRAME_SLOT_ID);
     }
 
     @ExplodeLoop

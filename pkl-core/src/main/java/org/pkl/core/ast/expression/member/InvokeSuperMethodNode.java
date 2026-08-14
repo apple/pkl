@@ -30,7 +30,6 @@ import org.pkl.core.runtime.VmUtils;
 
 public abstract class InvokeSuperMethodNode extends AbstractInvokeMethodNode {
   private final Identifier methodName;
-  @Children private final ExpressionNode[] argumentNodes;
   private final boolean needsConst;
 
   protected InvokeSuperMethodNode(
@@ -39,13 +38,12 @@ public abstract class InvokeSuperMethodNode extends AbstractInvokeMethodNode {
       ExpressionNode[] argumentNodes,
       boolean needsConst) {
 
-    super(sourceSection);
+    super(sourceSection, argumentNodes);
     this.needsConst = needsConst;
 
     assert !methodName.isLocalMethod();
 
     this.methodName = methodName;
-    this.argumentNodes = argumentNodes;
   }
 
   @ExplodeLoop
@@ -54,15 +52,7 @@ public abstract class InvokeSuperMethodNode extends AbstractInvokeMethodNode {
       VirtualFrame frame,
       @Cached(value = "findSupermethod(frame)", neverDefault = true) ClassMethod supermethod,
       @Cached("create(supermethod.getCallTarget(sourceSection))") DirectCallNode callNode) {
-
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = VmUtils.getReceiverOrNull(frame);
-    args[1] = supermethod.getOwner();
-    frame.setAuxiliarySlot(getMethodSlot(frame), supermethod);
-    for (int i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, supermethod, supermethod.getOwner(), VmUtils.getReceiverOrNull(frame));
     return callNode.call(args);
   }
 

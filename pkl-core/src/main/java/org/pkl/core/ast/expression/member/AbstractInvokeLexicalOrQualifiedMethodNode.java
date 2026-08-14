@@ -41,7 +41,6 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
 
   protected final Identifier methodName;
   private final boolean needsConst;
-  @Children private ExpressionNode[] argumentNodes;
   @Child private @Nullable DirectCallNode callNode;
   @CompilationFinal protected boolean isConstChecked;
 
@@ -50,24 +49,16 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
       Identifier methodName,
       ExpressionNode[] argumentNodes,
       boolean needsConst) {
-    super(sourceSection);
+    super(sourceSection, argumentNodes);
     this.methodName = methodName;
-    this.argumentNodes = argumentNodes;
     this.needsConst = needsConst;
     this.isConstChecked = false;
   }
 
-  @ExplodeLoop
   protected final Object invoke(VirtualFrame frame, VmObjectLike owner, Object receiver) {
     checkConst(owner);
     var method = getMethod(owner);
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiver;
-    args[1] = owner;
-    frame.setAuxiliarySlot(getMethodSlot(frame), method);
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
+    var args = evalArgs(frame, method, owner, receiver);
     return getCallNode(method, owner).call(args);
   }
 
