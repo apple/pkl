@@ -72,17 +72,11 @@ public final class GenericNodeNodes {
 
     private VmTyped transformNode(VmTyped nodeVm, VmFunction operator) {
       var transformed = applyOperator.execute(operator, nodeVm);
+      assert transformed instanceof VmPair;
+      var pair = (VmPair) transformed;
 
-      VmTyped node;
-      boolean descend;
-      if (transformed instanceof VmPair pair) {
-        node = (VmTyped) pair.getFirst();
-        descend = (Boolean) pair.getSecond();
-      } else {
-        // `null`: leave this node unchanged and keep descending
-        node = nodeVm;
-        descend = true;
-      }
+      var node = (VmTyped) pair.getFirst();
+      var descend = (Boolean) pair.getSecond();
       if (!descend) {
         return node;
       }
