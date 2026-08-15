@@ -49,7 +49,7 @@ public abstract class LetExprNode extends ExpressionNode {
     this.slot = slot;
   }
 
-  private TypeNode getTypeNode(VirtualFrame frame) {
+  public TypeNode getTypeNode(VirtualFrame frame) {
     if (typeNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (unresolvedTypeNode != null) {
@@ -63,6 +63,10 @@ public abstract class LetExprNode extends ExpressionNode {
     }
     assert typeNode != null;
     return typeNode;
+  }
+
+  public String getQualifiedName() {
+    return qualifiedName;
   }
 
   @Specialization

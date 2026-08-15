@@ -6,3 +6,4 @@ res5 = "Expected value of type `String`, but got type `Int`. Value: 42"
 res6 = "Type constraint `endsWith(\"A\")` violated. Value: \"noegiP\""
 res7 = "Type constraint `!isPositive` violated. Value: 2.5"
 res8 = "Expected value of type `Null|Boolean|\"Pigeon\"`, but got type `String`. Value: \"Barn Owl\""
+res9 = 1

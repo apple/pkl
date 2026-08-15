@@ -33,3 +33,11 @@ res7 = test.catch(() ->
 res8 = test.catch(() ->
   let (xs: List<Null|Boolean|"Pigeon"> = List("Barn Owl", true, null))
     xs)
+
+class Foo {
+  y: Int
+}
+
+res9 =
+  let (x: Foo = new { y = 1 })
+    x.y
