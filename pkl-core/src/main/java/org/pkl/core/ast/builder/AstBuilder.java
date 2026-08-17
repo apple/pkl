@@ -946,6 +946,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             newExpr.getBody(),
             new GetParentForTypeNode(
                 createSourceSection(newExpr),
+                language,
                 parentType,
                 symbolTable.getCurrentScope().getQualifiedName()));
     if (type instanceof DeclaredType declaredType && declaredType.getArgs() != null) {

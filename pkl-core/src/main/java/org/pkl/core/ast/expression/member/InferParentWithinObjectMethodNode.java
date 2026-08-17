@@ -15,26 +15,19 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ObjectMethodNode;
-import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
-import org.pkl.core.runtime.VmUtils;
 
 /** Infers the parent to amend in `obj { local function createPerson(): Person = new { ... } }`. */
-public final class InferParentWithinObjectMethodNode extends ExpressionNode {
-  private final VmLanguage language;
+public final class InferParentWithinObjectMethodNode extends AbstractInferParentNode {
   private final Identifier localMethodName;
   @Child private @Nullable ExpressionNode ownerNode;
-  @CompilationFinal private @Nullable Object inferredParent;
 
   public InferParentWithinObjectMethodNode(
       SourceSection sourceSection,
@@ -42,8 +35,7 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
       Identifier localMethodName,
       ExpressionNode ownerNode) {
 
-    super(sourceSection);
-    this.language = language;
+    super(sourceSection, language, true);
     this.localMethodName = localMethodName;
     this.ownerNode = ownerNode;
 
@@ -51,15 +43,7 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
   }
 
   @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    if (inferredParent != null) return inferredParent;
-
-    // remaining code only runs first time this node is executed
-    // (assuming evaluation isn't continued despite errors)
-    // except when return type is a non-final self type (not cacheable)
-
-    CompilerDirectives.transferToInterpreterAndInvalidate();
-
+  protected TypeInfo getTypeInfo(VirtualFrame frame) {
     assert ownerNode != null;
     var owner = (VmObjectLike) ownerNode.executeGeneric(frame);
 
@@ -69,31 +53,14 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
     var methodNode = (ObjectMethodNode) member.getMemberNode();
     assert methodNode != null;
 
-    var typeNode = methodNode.getReturnTypeNode();
-    if (typeNode == null || typeNode instanceof UnknownTypeNode) {
-      inferredParent = VmDynamic.empty();
-      ownerNode = null;
-      return inferredParent;
-    }
+    return new TypeInfo(
+        methodNode.getReturnTypeNode(),
+        methodNode.getHeaderSection(),
+        methodNode.getQualifiedName());
+  }
 
-    var defaultValue =
-        typeNode.createDefaultValue(
-            frame, language, member.getHeaderSection(), member.getQualifiedName());
-
-    if (defaultValue == null) {
-      // try to produce a more specific error message than "cannotInstantiateType"
-      var clazz = typeNode.getVmClass();
-      if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
-
-      throw exceptionBuilder()
-          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
-          .build();
-    }
-
-    if (typeNode.isFinalType()) {
-      inferredParent = defaultValue;
-      ownerNode = null;
-    }
-    return inferredParent;
+  @Override
+  protected void onInfer() {
+    ownerNode = null;
   }
 }

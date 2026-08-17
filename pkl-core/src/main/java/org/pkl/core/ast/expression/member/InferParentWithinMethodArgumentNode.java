@@ -15,38 +15,26 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmUtils;
 
-public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
-  private final VmLanguage language;
+public final class InferParentWithinMethodArgumentNode extends AbstractInferParentNode {
   private final int argIndex;
   @CompilationFinal private @Nullable Object inferredParent;
 
   public InferParentWithinMethodArgumentNode(
       SourceSection sourceSection, VmLanguage language, int argIndex) {
-    super(sourceSection);
-    this.language = language;
+    super(sourceSection, language, false);
     this.argIndex = argIndex;
   }
 
   @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    if (inferredParent != null) return inferredParent;
-
-    // remaining code only runs first time this node is executed
-    // (assuming evaluation isn't continued despite errors)
-    // except when param type is a non-final self type (not cacheable)
-
-    CompilerDirectives.transferToInterpreterAndInvalidate();
-
+  protected TypeInfo getTypeInfo(VirtualFrame frame) {
     var methodSlot =
         frame.getFrameDescriptor().getAuxiliarySlots().get(VmUtils.METHOD_FRAME_SLOT_ID);
     if (methodSlot == null) {
@@ -60,28 +48,9 @@ public final class InferParentWithinMethodArgumentNode extends ExpressionNode {
       throw exceptionBuilder().evalError("cannotInferParent").build();
     }
 
-    // >> Keep in sync with GetParentForTypeNode.executeGeneric
-
-    var typeNode = method.getParameterTypeNode(frame, argIndex);
-    var defaultValue =
-        typeNode.createDefaultValue(
-            frame, language, method.getHeaderSection(), method.getQualifiedName());
-
-    if (defaultValue == null) {
-      // try to produce a more specific error message than "cannotInstantiateType"
-      var clazz = typeNode.getVmClass();
-      if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
-
-      throw exceptionBuilder()
-          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
-          .build();
-    }
-
-    // can't cache default value for non-final `module`/`this` types because they're a self-types
-    // (the default value changes when inherited).
-    if (typeNode.isFinalType()) {
-      inferredParent = defaultValue;
-    }
-    return defaultValue;
+    return new TypeInfo(
+        method.getParameterTypeNode(frame, argIndex),
+        method.getHeaderSection(),
+        method.getQualifiedName());
   }
 }

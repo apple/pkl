@@ -16,62 +16,37 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.expression.member.AbstractInferParentNode;
 import org.pkl.core.runtime.*;
 
 /** Resolves `<type>` to the type's default value in `new <type> { ... }`. */
-public final class GetParentForTypeNode extends ExpressionNode {
+public final class GetParentForTypeNode extends AbstractInferParentNode {
   @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
   @Child private @Nullable TypeNode typeNode;
   private final String qualifiedName;
 
-  @CompilationFinal private @Nullable Object defaultValue;
-
   public GetParentForTypeNode(
-      SourceSection sourceSection, UnresolvedTypeNode unresolvedTypeNode, String qualifiedName) {
-    super(sourceSection);
+      SourceSection sourceSection,
+      VmLanguage language,
+      UnresolvedTypeNode unresolvedTypeNode,
+      String qualifiedName) {
+    super(sourceSection, language, false);
     this.unresolvedTypeNode = unresolvedTypeNode;
     this.qualifiedName = qualifiedName;
   }
 
-  private TypeNode getTypeNode(VirtualFrame frame) {
+  @Override
+  protected TypeInfo getTypeInfo(VirtualFrame frame) {
     if (typeNode == null) {
       assert unresolvedTypeNode != null;
       CompilerDirectives.transferToInterpreterAndInvalidate();
       typeNode = unresolvedTypeNode.execute(frame);
       adoptChildren();
     }
-    return typeNode;
-  }
 
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    if (defaultValue != null) return defaultValue;
-    CompilerDirectives.transferToInterpreterAndInvalidate();
-
-    var typeNode = getTypeNode(frame);
-    var defaultValue =
-        typeNode.createDefaultValue(frame, VmLanguage.get(this), sourceSection, qualifiedName);
-
-    if (defaultValue == null) {
-      // try to produce a more specific error message than "cannotInstantiateType"
-      var clazz = typeNode.getVmClass();
-      if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
-
-      throw exceptionBuilder()
-          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
-          .build();
-    }
-
-    // can't cache default value for non-final `module`/`this` types because they're a self-types
-    // (the default value changes when inherited).
-    if (typeNode.isFinalType()) {
-      this.defaultValue = defaultValue;
-    }
-    return defaultValue;
+    return new TypeInfo(typeNode, sourceSection, qualifiedName);
   }
 }
