@@ -1,3 +1,4 @@
+y = 0
 res1 = 43
 res2 = "Pigeon"
 res3 = 12.5.min
@@ -9,3 +10,8 @@ res8 = "Expected value of type `Null | Boolean | \"Pigeon\"`, but got type `Stri
 res9 = 1
 res10 = 0
 res11 = "Cannot instantiate type `unknown`."
+res12a = "Cannot instantiate, or amend an instance of, external class `Int`."
+res12b = "Cannot instantiate abstract class `letTyped#Bar`."
+res12c = "Cannot instantiate type `nothing`."
+res13a = "letTyped"
+res13b = "letTyped#Child"

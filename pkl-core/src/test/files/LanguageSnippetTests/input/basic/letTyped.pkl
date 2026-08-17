@@ -1,4 +1,8 @@
+open module letTyped
+
 import "pkl:test"
+
+y: Int = 0
 
 res1 =
   let (x: Int = 42)
@@ -42,6 +46,8 @@ res8 =
       xs
   )
 
+// test basic `new {}` inference
+
 class Foo {
   y: Int
 }
@@ -50,8 +56,33 @@ res9 =
   let (x: Foo = new { y = 1 })
     x.y
 
+// test inference with let in binding expression
+
 res10 =
   let (x: Foo = let (z = 0) new { y = z })
     x.y
 
+// test inference against underscore binding
+
 res11 = test.catch(() -> let (_ = new { y = 1 }) null)
+
+// test inference of non-instantiable types
+
+abstract class Bar {
+  y: Int
+}
+
+res12a = test.catch(() -> let (x: Int = new { y = 1 }) x)
+res12b = test.catch(() -> let (x: Bar = new { y = 1 }) x)
+res12c = test.catch(() -> let (x: nothing = new { y = 1 }) x)
+
+// test inference of a self type
+
+function make(_y: Int): module =
+  let (z: module = new { y = _y })
+    z
+
+class Child extends module
+
+res13a = make(2).getClass().toString()
+res13b = new Child {}.make(3).getClass().toString()
