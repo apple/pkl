@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,11 +18,12 @@ package org.pkl.core.ast.expression.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.binary.LetExprNode;
+import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmUtils;
 
@@ -45,9 +46,20 @@ public final class InferParentWithinLetBindingNode extends ExpressionNode {
 
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
+    Node child = this;
+    LetExprNode letNode = null;
+    for (var node = getParent(); node != null; node = node.getParent()) {
+      if (node instanceof LetExprNode let && let.getBindingNode() == child) {
+        letNode = let;
+        break;
+      }
+      child = node;
+    }
+    assert letNode != null
+        : "AstBuilder created an InferParentWithinLetBindingNode outside of a let binding";
+
     // >> Keep in sync with GetParentForTypeNode.executeGeneric
 
-    var letNode = NodeUtil.findParent(this, LetExprNode.class);
     var typeNode = letNode.getTypeNode(frame);
     var defaultValue =
         typeNode.createDefaultValue(
@@ -58,9 +70,15 @@ public final class InferParentWithinLetBindingNode extends ExpressionNode {
       var clazz = typeNode.getVmClass();
       if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
 
-      throw exceptionBuilder()
-          .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
-          .build();
+      // fallback in case typeNode is synthesized (e.g. when LetExprNode.slot == -1):
+      // use the TypeNode's exported PType's string representation
+      var typeSourceSection = typeNode.getSourceSection();
+      var typeName =
+          typeSourceSection.isAvailable()
+              ? typeSourceSection.getCharacters()
+              : TypeNode.export(typeNode).toString();
+
+      throw exceptionBuilder().evalError("cannotInstantiateType", typeName).build();
     }
 
     // can't cache default value for non-final `module`/`this` types because they're a self-types

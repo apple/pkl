@@ -10,29 +10,37 @@ res2 =
 
 res3 =
   let (x: Duration(unit == "min") = 3.min + 2.min)
-    let (y: Float(isPositive) = 1.2 + 1.3)
-      x * y
+  let (y: Float(isPositive) = 1.2 + 1.3)
+    x * y
 
 res4 =
-  let (xs: List<Null|Boolean|"Pigeon"> = List("Pigeon", true, null))
+  let (xs: List<Null | Boolean | "Pigeon"> = List("Pigeon", true, null))
     xs
 
-res5 = test.catch(() ->
-  let (x: String = 42)
-    x + 1)
+res5 =
+  test.catch(() ->
+    let (x: String = 42)
+      x + 1
+  )
 
-res6 = test.catch(() ->
-  let (str: String(endsWith("A")) = "Pigeon".reverse())
-    str.reverse())
+res6 =
+  test.catch(() ->
+    let (str: String(endsWith("A")) = "Pigeon".reverse())
+      str.reverse()
+  )
 
-res7 = test.catch(() ->
-  let (x: Duration(unit == "min") = 3.min + 2.min)
+res7 =
+  test.catch(() ->
+    let (x: Duration(unit == "min") = 3.min + 2.min)
     let (y: Float(!isPositive) = 1.2 + 1.3)
-      x * y)
+      x * y
+  )
 
-res8 = test.catch(() ->
-  let (xs: List<Null|Boolean|"Pigeon"> = List("Barn Owl", true, null))
-    xs)
+res8 =
+  test.catch(() ->
+    let (xs: List<Null | Boolean | "Pigeon"> = List("Barn Owl", true, null))
+      xs
+  )
 
 class Foo {
   y: Int
@@ -41,3 +49,9 @@ class Foo {
 res9 =
   let (x: Foo = new { y = 1 })
     x.y
+
+res10 =
+  let (x: Foo = let (z = 0) new { y = z })
+    x.y
+
+res11 = test.catch(() -> let (_ = new { y = 1 }) null)

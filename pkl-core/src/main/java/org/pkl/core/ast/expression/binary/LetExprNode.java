@@ -16,8 +16,6 @@
 package org.pkl.core.ast.expression.binary;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.dsl.NodeChild;
-import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
@@ -27,29 +25,32 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmUtils;
 
-@NodeChild(value = "bindingNode", type = ExpressionNode.class)
-public abstract class LetExprNode extends ExpressionNode {
+public final class LetExprNode extends ExpressionNode {
 
   private final String qualifiedName;
   private @Child @Nullable UnresolvedTypeNode unresolvedTypeNode;
+  private @Child ExpressionNode bindingNode;
   private @Child ExpressionNode bodyNode;
   private @Child @Nullable TypeNode typeNode;
   private final int slot;
 
-  protected LetExprNode(
+  public LetExprNode(
       SourceSection sourceSection,
       String qualifiedName,
       @Nullable UnresolvedTypeNode unresolvedTypeNode,
+      ExpressionNode bindingNode,
       ExpressionNode bodyNode,
       int slot) {
     super(sourceSection);
     this.qualifiedName = qualifiedName;
     this.unresolvedTypeNode = unresolvedTypeNode;
+    this.bindingNode = bindingNode;
     this.bodyNode = bodyNode;
     this.slot = slot;
   }
 
   public TypeNode getTypeNode(VirtualFrame frame) {
+    if (slot == -1) return new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
     if (typeNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       if (unresolvedTypeNode != null) {
@@ -69,8 +70,13 @@ public abstract class LetExprNode extends ExpressionNode {
     return qualifiedName;
   }
 
-  @Specialization
-  protected Object eval(VirtualFrame frame, Object value) {
+  public ExpressionNode getBindingNode() {
+    return bindingNode;
+  }
+
+  @Override
+  public Object executeGeneric(VirtualFrame frame) {
+    var value = bindingNode.executeGeneric(frame);
     if (slot != -1) {
       getTypeNode(frame).executeAndSet(frame, value);
     }

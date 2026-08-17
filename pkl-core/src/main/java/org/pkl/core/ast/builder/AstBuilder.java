@@ -68,7 +68,7 @@ import org.pkl.core.ast.expression.binary.GreaterThanNodeGen;
 import org.pkl.core.ast.expression.binary.GreaterThanOrEqualNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanOrEqualNodeGen;
-import org.pkl.core.ast.expression.binary.LetExprNodeGen;
+import org.pkl.core.ast.expression.binary.LetExprNode;
 import org.pkl.core.ast.expression.binary.LogicalAndNodeGen;
 import org.pkl.core.ast.expression.binary.LogicalOrNodeGen;
 import org.pkl.core.ast.expression.binary.MultiplicationNodeGen;
@@ -962,10 +962,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var parent = expr.parent();
     var scope = symbolTable.getCurrentScope();
 
-    while (parent instanceof IfExpr
+    while (parent instanceof IfExpr ifExpr
+            && (ifExpr.getThen() == child || ifExpr.getEls() == child)
         || parent instanceof TraceExpr
         || parent instanceof LetExpr letExpr && letExpr.getExpr() == child) {
-
       child = parent;
       parent = parent.parent();
     }
@@ -1178,13 +1178,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         binding,
         scope -> {
           var bodyExpr = visitExpr(letExpr.getExpr());
-          return LetExprNodeGen.create(
+          return new LetExprNode(
               sourceSection,
               scope.getQualifiedName(),
               t,
+              bindingExpr,
               bodyExpr,
-              b == null ? -1 : b.slot(),
-              bindingExpr);
+              b == null ? -1 : b.slot());
         });
   }
 
