@@ -1094,7 +1094,7 @@ public final class VmUtils {
   }
 
   /** Removes `_` from numbers to be parsed. Returns the string unmodified if it's invalid. */
-  public static String removeUnderscoresFromNumber(String number, boolean isHex) {
+  public static String removeUnderscoresFromNumber(String number, boolean allowExponents) {
     if (number.indexOf('_') < 0) return number;
 
     var builder = new StringBuilder();
@@ -1108,7 +1108,7 @@ public final class VmUtils {
         return number;
       }
 
-      numberStart = c == '.' || (!isHex && (c == 'e' || c == 'E'));
+      numberStart = c == '.' || (allowExponents && (c == 'e' || c == 'E'));
     }
 
     return builder.toString();

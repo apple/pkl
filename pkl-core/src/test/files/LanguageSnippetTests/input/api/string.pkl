@@ -266,7 +266,9 @@ examples {
   ["toInt() decimal"] {
     "123".toInt()
     "-123".toInt()
+    "- 123".toInt()
     "+123".toInt()
+    "+ 123".toInt()
     "1_2__3___".toInt()
     "-1_2__3___".toInt()
     "+1_2__3___".toInt()
@@ -279,20 +281,27 @@ examples {
   
   ["toInt() hex"] {
     "0x123".toInt()
+    "0X123".toInt()
     "-0x123".toInt()
+    "- 0x123".toInt()
     "+0x123".toInt()
+    "+ 0x123".toInt()
     "0x1_2__3___".toInt()
     "-0x1_2__3___".toInt()
     "+0x1_2__3___".toInt()
     "0x0".toInt()
     "-0x0".toInt()
     "+0x0".toInt()
+    "0x1E_2".toInt() // test underscore removal after 'E' succeeds for toInt (fails for toFloat)
   }
 
   ["toInt() binary"] {
     "0b101".toInt()
+    "0B101".toInt()
     "-0b101".toInt()
+    "- 0b101".toInt()
     "+0b101".toInt()
+    "+ 0b101".toInt()
     "0b1_0__1___".toInt()
     "-0b1_0__1___".toInt()
     "+0b1_0__1___".toInt()
@@ -303,8 +312,11 @@ examples {
 
   ["toInt() octal"] {
     "0o123".toInt()
+    "0O123".toInt()
     "-0o123".toInt()
+    "- 0o123".toInt()
     "+0o123".toInt()
+    "+ 0o123".toInt()
     "0o1_2__3___".toInt()
     "-0o1_2__3___".toInt()
     "+0o1_2__3___".toInt()
@@ -324,6 +336,7 @@ examples {
     module.catch(() -> "0x+0".toInt())
     module.catch(() -> "0x0 + 0x1".toInt())
     module.catch(() -> "".toInt())
+    module.catch(() -> "0o123e4".toInt())
   }
 
   ["toIntOrNull()"] {

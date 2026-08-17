@@ -834,7 +834,7 @@ public final class StringNodes {
   }
 
   /** Use the lexer to parse integer values in the same forms that Pkl itself accepts */
-  private static Long toInt(String self) throws NumberFormatException {
+  private static long toInt(String self) throws NumberFormatException {
     try {
       var lexer = new Lexer(self);
       var tk = lexer.next();
@@ -865,8 +865,7 @@ public final class StringNodes {
         }
         default -> throw new NumberFormatException();
       }
-      var parsed =
-          Long.parseLong(prefix + VmUtils.removeUnderscoresFromNumber(text, radix == 16), radix);
+      var parsed = Long.parseLong(prefix + VmUtils.removeUnderscoresFromNumber(text, false), radix);
 
       // ensure no trailing garbage
       if (lexer.next() != Token.EOF) {
@@ -911,7 +910,7 @@ public final class StringNodes {
     @Specialization
     protected double eval(String self) {
       try {
-        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, false));
+        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, true));
       } catch (NumberFormatException e) {
         throw exceptionBuilder()
             .evalError("cannotParseStringAs", "Float")
@@ -926,7 +925,7 @@ public final class StringNodes {
     @Specialization
     protected Object eval(String self) {
       try {
-        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, false));
+        return Double.parseDouble(VmUtils.removeUnderscoresFromNumber(self, true));
       } catch (NumberFormatException e) {
         return VmNull.withoutDefault();
       }

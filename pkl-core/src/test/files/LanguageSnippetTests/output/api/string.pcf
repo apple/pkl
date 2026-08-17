@@ -216,6 +216,8 @@ examples {
   ["toInt() decimal"] {
     123
     -123
+    -123
+    123
     123
     123
     -123
@@ -228,18 +230,25 @@ examples {
   }
   ["toInt() hex"] {
     291
+    291
+    -291
     -291
     291
     291
+    291
     -291
     291
     0
     0
     0
+    482
   }
   ["toInt() binary"] {
     5
+    5
     -5
+    -5
+    5
     5
     5
     -5
@@ -250,7 +259,10 @@ examples {
   }
   ["toInt() octal"] {
     83
+    83
     -83
+    -83
+    83
     83
     83
     -83
@@ -270,6 +282,7 @@ examples {
     "Cannot parse string as `Int`. String: \"0x+0\""
     "Cannot parse string as `Int`. String: \"0x0 + 0x1\""
     "Cannot parse string as `Int`. String: \"\""
+    "Cannot parse string as `Int`. String: \"0o123e4\""
   }
   ["toIntOrNull()"] {
     123

@@ -236,7 +236,7 @@ public final class Lexer {
           } else {
             throw unexpectedChar("..", ".", "...", "...?");
           }
-        } else if (lookahead >= 48 /* '0' */ && lookahead <= 57 /* '9' */) {
+        } else if (lookahead >= '0' && lookahead <= '9') {
           yield lexNumber(ch);
         } else {
           yield Token.DOT;
@@ -574,7 +574,7 @@ public final class Lexer {
       return Token.FLOAT;
     }
 
-    while ((lookahead >= 48 /* '0' */ && lookahead <= 57 /* '9' */) || lookahead == '_') {
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
       nextChar();
     }
 
@@ -587,7 +587,7 @@ public final class Lexer {
       if (lookahead == '_') {
         throw lexError("invalidSeparatorPosition");
       }
-      if (lookahead < 48 /* '0' */ || lookahead > 57 /* '9' */) {
+      if (lookahead < '0' || lookahead > '9') {
         backup();
         return Token.INT;
       }
@@ -661,10 +661,10 @@ public final class Lexer {
       throw lexError("invalidSeparatorPosition");
     }
     var ch = lookahead;
-    if (!(ch >= 48 /* '0' */ && ch <= 55 /* '7' */)) {
+    if (!(ch >= '0' && ch <= '7')) {
       throw unexpectedChar(ch, "octal number");
     }
-    while ((ch >= 48 /* '0' */ && ch <= 55 /* '7' */) || ch == '_') {
+    while ((ch >= '0' && ch <= '7') || ch == '_') {
       nextChar();
       ch = lookahead;
     }
@@ -677,10 +677,10 @@ public final class Lexer {
     if (lookahead == '_') {
       throw lexError("invalidSeparatorPosition");
     }
-    if (lookahead < 48 /* '0' */ || lookahead > 57 /* '9' */) {
+    if (lookahead < '0' || lookahead > '9') {
       throw unexpectedChar(lookahead, "number");
     }
-    while ((lookahead >= 48 /* '0' */ && lookahead <= 57 /* '9' */) || lookahead == '_') {
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
       nextChar();
     }
   }
@@ -689,7 +689,7 @@ public final class Lexer {
     if (lookahead == '_') {
       throw lexError("invalidSeparatorPosition");
     }
-    while ((lookahead >= 48 /* '0' */ && lookahead <= 57 /* '9' */) || lookahead == '_') {
+    while ((lookahead >= '0' && lookahead <= '9') || lookahead == '_') {
       nextChar();
     }
     if (lookahead == 'e' || lookahead == 'E') {
@@ -706,9 +706,9 @@ public final class Lexer {
   }
 
   private boolean isHex(int code) {
-    return (code >= 48 /* '0' */ && code <= 57 /* '9' */)
-        || (code >= 97 /* 'a' */ && code <= 102 /* 'f' */)
-        || (code >= 65 /* 'A' */ && code <= 70 /* 'F' */);
+    return (code >= '0' && code <= '9')
+        || (code >= 'a' && code <= 'f')
+        || (code >= 'A' && code <= 'F');
   }
 
   private static boolean isIdentifierStart(int c) {
