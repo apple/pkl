@@ -123,37 +123,45 @@ public final class ClassNode extends ExpressionNode {
             typeParameters,
             prototype);
 
-    if (unresolvedSupertypeNode != null) {
-      var supertypeNode = unresolvedSupertypeNode.execute(frame);
-      var superclass = supertypeNode.getVmClass();
+    var localContext = VmLanguage.get(this).localContext.get();
+    localContext.beginClassInit(cachedClass);
 
-      checkSupertype(supertypeNode, superclass);
-      cachedClass.initSupertype(supertypeNode, superclass);
+    try {
+      if (unresolvedSupertypeNode != null) {
+        var supertypeNode = unresolvedSupertypeNode.execute(frame);
+        var superclass = supertypeNode.getVmClass();
+
+        checkSupertype(supertypeNode, superclass);
+        cachedClass.initSupertype(supertypeNode, superclass);
+      }
+
+      // The superclass resolved above may not itself have completed the below initializations yet.
+      // That's because these initializations may have indirectly or directly triggered
+      // resolution of this class, in which case the `resolveSuperclass()` call above
+      // will have returned the partially initialized `cachedClass` of the superclass.
+      // As a consequence, initializations that require a fully initialized class hierarchy
+      // are done lazily in VmClass rather than here.
+      // A fully initialized class hierarchy is only required for initialization of internal caches,
+      // which is guaranteed to succeed (no impact on eager vs. lazy error reporting) and easy to
+      // defer.
+
+      VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
+
+      for (var node : unresolvedPropertyNodes) {
+        cachedClass.addProperty(node.execute(frame, cachedClass));
+      }
+
+      for (var node : unresolvedMethodNodes) {
+        cachedClass.addMethod(node.execute(frame, cachedClass));
+      }
+
+      cachedClass.onOwnClassInitialized();
+      localContext.endClassInit();
+      return cachedClass;
+    } catch (Throwable e) {
+      localContext.clearClassInitState();
+      throw e;
     }
-
-    // The superclass resolved above may not itself have completed the below initializations yet.
-    // That's because these initializations may have indirectly or directly triggered
-    // resolution of this class, in which case the `resolveSuperclass()` call above
-    // will have returned the partially initialized `cachedClass` of the superclass.
-    // As a consequence, initializations that require a fully initialized class hierarchy
-    // are done lazily in VmClass rather than here.
-    // A fully initialized class hierarchy is only required for initialization of internal caches,
-    // which is guaranteed to succeed (no impact on eager vs. lazy error reporting) and easy to
-    // defer.
-
-    VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
-
-    for (var node : unresolvedPropertyNodes) {
-      cachedClass.addProperty(node.execute(frame, cachedClass));
-    }
-
-    for (var node : unresolvedMethodNodes) {
-      cachedClass.addMethod(node.execute(frame, cachedClass));
-    }
-
-    cachedClass.notifyInitialized();
-
-    return cachedClass;
   }
 
   private void checkSupertype(TypeNode supertypeNode, @Nullable VmClass superclass) {
