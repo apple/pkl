@@ -38,6 +38,8 @@ import org.pkl.parser.syntax.generic.NodeType;
 public final class ParserNodes {
   private ParserNodes() {}
 
+  private static GenericParser parser = new GenericParser();
+
   public abstract static class parseModule extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
@@ -139,13 +141,11 @@ public final class ParserNodes {
   }
 
   private static VmTyped parseModuleNode(String src, @Nullable String sourceUri) {
-    var parser = new GenericParser();
     var root = parser.parseModule(src);
     return convertNode(root, src.toCharArray(), sourceUri);
   }
 
   private static VmTyped parseExpressionNode(String src, @Nullable String sourceUri) {
-    var parser = new GenericParser();
     var root = parser.parseExpressionInput(src);
     return convertNode(root, src.toCharArray(), sourceUri);
   }
