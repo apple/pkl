@@ -24,8 +24,8 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.formatter.Formatter;
 import org.pkl.formatter.GrammarVersion;
 
-public final class RendererNodes {
-  private RendererNodes() {}
+public final class FormattingRendererNodes {
+  private FormattingRendererNodes() {}
 
   public abstract static class render extends ExternalMethod1Node {
     @Specialization

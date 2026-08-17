@@ -16,6 +16,7 @@
 
 /// Utilities for managing Pkl source code
 @ModuleInfo { minPklVersion = "0.33.0" }
+@Since { version = "0.33.0" }
 module pkl.syntax
 
 /// Utilities to parse Pkl source code to a syntax tree.
@@ -37,8 +38,8 @@ class Parser {
   external function parseExpressionOrNull(source: String | Resource): GenericNode?
 }
 
-/// Renders a [GenericNode] back to Pkl source code.
-class Renderer {
+/// Renders a [GenericNode] back to Pkl source code, using the canonical Pkl formatter.
+class FormattingRenderer {
   /// The grammar version to target.
   ///
   /// `"V1"` matches Pkl 0.25 - 0.29, `"V2"` matches Pkl 0.30+.
@@ -90,6 +91,7 @@ class GenericNode {
 
   /// Fold [operator] over this node and its descendants, top-down in pre-order.
   ///
+  /// Example:
   /// ```
   /// // count the if-expressions in a module
   /// module.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)

@@ -181,7 +181,7 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier LINE = get("line");
   public static final Identifier COLUMN = get("column");
 
-  // members of pkl.syntax#Renderer
+  // members of pkl.syntax#FormattingRenderer
   public static final Identifier GRAMMAR_VERSION = get("grammarVersion");
 
   private final String name;
