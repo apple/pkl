@@ -68,7 +68,7 @@ facts {
   }
 
   ["a spanless constructed node still renders"] {
-    new syntax.Renderer {}
+    new syntax.FormattingRenderer {}
       .render(new syntax.GenericNode { type = "int_literal_expr"; text = "42" })
       .trim() == "42"
   }

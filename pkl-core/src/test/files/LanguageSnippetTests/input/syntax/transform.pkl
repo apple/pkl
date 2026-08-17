@@ -6,7 +6,7 @@ local parser = new syntax.Parser {}
 
 local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
 
-local renderer = new syntax.Renderer {}
+local renderer = new syntax.FormattingRenderer {}
 
 local function fmt(source: String): String = renderer.render(mod(source))
 

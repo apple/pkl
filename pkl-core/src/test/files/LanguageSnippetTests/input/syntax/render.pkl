@@ -2,7 +2,7 @@ amends "../snippetTest.pkl"
 
 import "pkl:syntax"
 
-local renderer = new syntax.Renderer {}
+local renderer = new syntax.FormattingRenderer {}
 
 local function roundTrip(source: String) = renderer.render(parseNode(source))
 
@@ -391,13 +391,13 @@ facts {
 
   ["a default renderer targets the V2 grammar"] {
     local node = parseNode("x = 1")
-    renderer.render(node) == new syntax.Renderer { grammarVersion = "V2" }.render(node)
+    renderer.render(node) == new syntax.FormattingRenderer { grammarVersion = "V2" }.render(node)
   }
 
   ["renderer honors the grammar version"] {
     local node =
       parseNode("x = fn(argument1, argument2, argument3, argument4, argument5, argument6, argument7, argument8, argument9)")
-    new syntax.Renderer { grammarVersion = "V1" }.render(node)
-      != new syntax.Renderer { grammarVersion = "V2" }.render(node)
+    new syntax.FormattingRenderer { grammarVersion = "V1" }.render(node)
+      != new syntax.FormattingRenderer { grammarVersion = "V2" }.render(node)
   }
 }
