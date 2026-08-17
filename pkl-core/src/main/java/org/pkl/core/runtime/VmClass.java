@@ -153,16 +153,16 @@ public final class VmClass extends VmValue {
 
   @TruffleBoundary
   private void checkAbstractMethods() {
-    if (this.isAbstract()) return;
+    if (isAbstract()) return;
     // minimize allocations in the non-error case
-    if (!hasAbstractMethod()) return;
     var abstractMethods = getAbstractMethods();
+    if (abstractMethods.isEmpty()) return;
     if (abstractMethods.size() == 1) {
       throw new VmExceptionBuilder()
           .evalError(
               "noImplementationForAbstractMethod",
               getDisplayName(),
-              abstractMethods.get(0).getName().toString())
+              abstractMethods.get(0).getCallSignature())
           .withSourceSection(getHeaderSection())
           .build();
     }
@@ -175,17 +175,6 @@ public final class VmClass extends VmValue {
             "noImplementationForAbstractMethods", getDisplayName(), MultilineValue.of(methodList))
         .withSourceSection(getHeaderSection())
         .build();
-  }
-
-  private boolean hasAbstractMethod() {
-    var methodCursor = getAllMethods().getEntries();
-    while (methodCursor.advance()) {
-      var method = methodCursor.getValue();
-      if (method.isAbstract()) {
-        return true;
-      }
-    }
-    return false;
   }
 
   private List<ClassMethod> getAbstractMethods() {

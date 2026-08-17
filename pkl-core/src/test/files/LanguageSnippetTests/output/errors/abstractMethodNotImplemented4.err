@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Class `abstractMethodNotImplemented4#MyClass` should either be declared `abstract`, or should implement method `foo`.
+Class `abstractMethodNotImplemented4#MyClass` should either be declared `abstract`, or should implement method `foo()`.
 
 x | class MyClass extends AbstractIntermediate {
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

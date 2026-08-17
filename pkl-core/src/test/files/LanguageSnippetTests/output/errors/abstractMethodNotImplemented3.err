@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Class `abstractMethodNotImplemented3` should either be declared `abstract`, or should implement method `bar`.
+Class `abstractMethodNotImplemented3` should either be declared `abstract`, or should implement method `bar()`.
 
 x | extends "../../input-helper/classes/AbstractModule.pkl"
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
