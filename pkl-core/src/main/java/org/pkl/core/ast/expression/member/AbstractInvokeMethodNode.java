@@ -15,79 +15,51 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.ast.member.Method;
+import org.pkl.core.runtime.VmUtils;
 
-/**
- * A non-virtual (statically dispatched) method call.
- *
- * <p>Subclasses differ only in how they obtain the {@code owner}/{@code receiver} that the method
- * is invoked on: either by walking the frame chain ({@link InvokeLexicalClassMethodNode}, {@link
- * InvokeLexicalObjectMethodNode}), or off of an explicit receiver expression ({@link
- * InvokeQualifiedClassMethodNode}, {@link InvokeQualifiedObjectMethodNode}).
- */
-public abstract sealed class AbstractInvokeMethodNode extends ExpressionNode
-    permits AbstractInvokeQualifiedMethodNode, AbstractInvokeLexicalMethodNode {
+public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
-  protected final Identifier methodName;
-  private final boolean needsConst;
-  @Children private ExpressionNode[] argumentNodes;
-  @Child private @Nullable DirectCallNode callNode;
-  @CompilationFinal protected boolean isConstChecked;
+  @Children protected ExpressionNode[] argumentNodes;
 
-  protected AbstractInvokeMethodNode(
-      SourceSection sourceSection,
-      Identifier methodName,
-      ExpressionNode[] argumentNodes,
-      boolean needsConst) {
+  public AbstractInvokeMethodNode(SourceSection sourceSection, ExpressionNode[] argumentNodes) {
     super(sourceSection);
-    this.methodName = methodName;
     this.argumentNodes = argumentNodes;
-    this.needsConst = needsConst;
-    this.isConstChecked = false;
+  }
+
+  @TruffleBoundary
+  private int getMethodSlot(FrameDescriptor frameDescriptor) {
+    // can't store the slot id as this node may be called from different root nodes
+    // (see constraints14 snippet)
+    return frameDescriptor.findOrAddAuxiliarySlot(VmUtils.METHOD_FRAME_SLOT_ID);
   }
 
   @ExplodeLoop
-  protected final Object invoke(VirtualFrame frame, VmObjectLike owner, Object receiver) {
-    checkConst(owner);
+  protected Object[] evalArgs(
+      VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
+    var methodSlot = getMethodSlot(frame.getFrameDescriptor());
+    var prevMethod = frame.getAuxiliarySlot(methodSlot);
+    frame.setAuxiliarySlot(methodSlot, method);
+
     var args = new Object[2 + argumentNodes.length];
     args[0] = receiver;
     args[1] = owner;
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
+
+    try {
+      for (var i = 0; i < argumentNodes.length; i++) {
+        args[2 + i] = argumentNodes[i].executeGeneric(frame);
+      }
+    } finally {
+      frame.setAuxiliarySlot(methodSlot, prevMethod);
     }
-    return getCallNode(owner).call(args);
-  }
 
-  private void checkConst(VmObjectLike owner) {
-    if (!needsConst || isConstChecked) {
-      return;
-    }
-    CompilerDirectives.transferToInterpreterAndInvalidate();
-    doCheckConst(owner);
-    isConstChecked = true;
-  }
-
-  protected abstract CallTarget getCallTarget(VmObjectLike owner);
-
-  protected abstract void doCheckConst(VmObjectLike owner);
-
-  protected DirectCallNode getCallNode(VmObjectLike owner) {
-    if (callNode == null) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      callNode = DirectCallNode.create(getCallTarget(owner));
-      insert(callNode);
-    }
-    assert callNode != null;
-    return callNode;
+    return args;
   }
 }

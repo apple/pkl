@@ -21,7 +21,8 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmUtils;
 
-public abstract sealed class AbstractInvokeLexicalMethodNode extends AbstractInvokeMethodNode
+public abstract sealed class AbstractInvokeLexicalMethodNode
+    extends AbstractInvokeLexicalOrQualifiedMethodNode
     permits InvokeLexicalClassMethodNode, InvokeLexicalObjectMethodNode {
   private final int levelsUp;
 

@@ -17,17 +17,16 @@ package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
-import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.runtime.VmObjectLike;
 
 /** A non-virtual ("direct") method call. Used only for methods on {@code pkl:base}. */
-public final class InvokeMethodDirectNode extends ExpressionNode {
+public final class InvokeMethodDirectNode extends AbstractInvokeMethodNode {
+  private final ClassMethod method;
   private final VmObjectLike owner;
   @Child private ExpressionNode receiverNode;
-  @Children private final ExpressionNode[] argumentNodes;
 
   @Child private DirectCallNode callNode;
 
@@ -37,24 +36,17 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
       ExpressionNode receiverNode,
       ExpressionNode[] argumentNodes) {
 
-    super(sourceSection);
+    super(sourceSection, argumentNodes);
+    this.method = method;
     this.owner = method.getOwner();
     this.receiverNode = receiverNode;
-    this.argumentNodes = argumentNodes;
 
     callNode = DirectCallNode.create(method.getCallTarget(sourceSection));
   }
 
   @Override
-  @ExplodeLoop
   public Object executeGeneric(VirtualFrame frame) {
-    var args = new Object[2 + argumentNodes.length];
-    args[0] = receiverNode.executeGeneric(frame);
-    args[1] = owner;
-    for (var i = 0; i < argumentNodes.length; i++) {
-      args[2 + i] = argumentNodes[i].executeGeneric(frame);
-    }
-
+    var args = evalArgs(frame, method, owner, receiverNode.executeGeneric(frame));
     return callNode.call(args);
   }
 }

@@ -21,7 +21,8 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmTyped;
 
-public abstract sealed class AbstractInvokeQualifiedMethodNode extends AbstractInvokeMethodNode
+public abstract sealed class AbstractInvokeQualifiedMethodNode
+    extends AbstractInvokeLexicalOrQualifiedMethodNode
     permits InvokeQualifiedClassMethodNode, InvokeQualifiedObjectMethodNode {
   @Child private ExpressionNode getReceiverNode;
 

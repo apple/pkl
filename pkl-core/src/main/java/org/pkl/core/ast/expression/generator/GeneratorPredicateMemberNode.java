@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -22,7 +22,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.UnexpectedResultException;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.EconomicMaps;
@@ -132,7 +131,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
       customThisSlot =
-          frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
+          frame.getFrameDescriptor().findOrAddAuxiliarySlot(VmUtils.CUSTOM_THIS_FRAME_SLOT_ID);
     }
   }
 }
