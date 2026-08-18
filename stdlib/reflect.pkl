@@ -30,6 +30,7 @@
 module pkl.reflect
 
 import "pkl:base"
+import "pkl:syntax"
 
 /// A mirror for the [Any] type.
 const anyType: DeclaredType = DeclaredType(Class(Any))
@@ -163,7 +164,7 @@ external const function TypeVariable(referent: TypeParameter): TypeVariable
 /// A program declaration.
 abstract external class Declaration {
   /// The source location of this declaration.
-  location: SourceLocation
+  location: syntax.SourceLocation
 
   /// The documentation comment for this declaration, if any.
   docComment: String?
@@ -449,13 +450,5 @@ external class TypeVariable extends Type {
 }
 
 /// A source location within a module.
-external class SourceLocation {
-  /// The 1-based line number of this source location.
-  line: UInt
-
-  /// The 1-based column number of this source location.
-  column: UInt
-
-  /// The display URI of this source location.
-  displayUri: String
-}
+@Deprecated { since = "0.33.0"; replaceWith = "syntax.SourceLocation" }
+typealias SourceLocation = syntax.SourceLocation
