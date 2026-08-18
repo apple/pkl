@@ -70,4 +70,32 @@ facts {
   ["leaves carry text"] {
     sample.fold(true, (acc, n) -> if (n.isLeaf) acc && n.text != null else acc)
   }
+
+  ["branches carry the text of their entire subtree"] {
+    sample.fold(true, (acc, n) -> acc && n.text != null)
+
+    // the module node spans the whole source
+    sample.text == """
+      import "foo.pkl"
+      import "bar.pkl" as baz
+
+      class Point {
+        x: Int
+        y: Int
+      }
+
+      origin = if (useOrigin) new Point { x = 0; y = 0 } else null
+
+      scaled = origin.x * 2
+      """
+
+    // a branch's text includes the whitespace and comments between its children
+    sample.fold(List(), (acc, n) -> if (n.type == "class_body") acc.add(n.text) else acc)
+      == List("""
+        {
+          x: Int
+          y: Int
+        }
+        """)
+  }
 }
