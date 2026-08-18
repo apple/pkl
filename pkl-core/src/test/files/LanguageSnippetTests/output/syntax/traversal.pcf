@@ -22,4 +22,9 @@ facts {
   ["leaves carry text"] {
     true
   }
+  ["branches carry the text of their entire subtree"] {
+    true
+    true
+    true
+  }
 }
