@@ -71,7 +71,7 @@ public final class SyntaxNodes {
                           + position(sd.span().lineEnd(), sd.span().colEnd())));
 
   private static String position(int line, int column) {
-    return line + ":" + column;
+    return "L" + line + "C" + column;
   }
 
   private static String displayUri(@Nullable String sourceUri, String position) {

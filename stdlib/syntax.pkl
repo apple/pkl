@@ -111,9 +111,9 @@ class Span {
   /// The display URI of this span.
   ///
   /// For nodes parsed from a [Resource], this is the resource's URI with the span appended
-  /// as a fragment, for example `file:///foo/bar.pkl#3:5-3:12`.
+  /// as a fragment, for example `file:///foo/bar.pkl#L3C5-L3C12`.
   /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
-  /// span itself, for example `3:5-3:12`.
+  /// span itself, for example `L3C5-L3C12`.
   displayUri: String
 }
 
@@ -125,12 +125,13 @@ class SourceLocation {
   /// The 1-based column number of this source location.
   column: UInt
 
-  /// The display URI of this source location.
+  /// A URI identifying this source location, suitable for display.
   ///
-  /// For nodes parsed from a [Resource], this is the resource's URI with the location appended
-  /// as a fragment, for example `file:///foo/bar.pkl#3:5`.
-  /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
-  /// location itself, for example `3:5`.
+  /// The exact format depends on where this location came from.
+  /// For locations obtained from [Parser], this is the URI of the source with the location
+  /// appended as a fragment, for example `file:///foo/bar.pkl#L3C5`.
+  /// If the URI of the source is unknown, as is the case for nodes parsed from a [String], this is
+  /// just the location itself, for example `L3C5`.
   displayUri: String
 }
 
