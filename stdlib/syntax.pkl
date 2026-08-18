@@ -135,8 +135,8 @@ class SourceLocation {
 }
 
 typealias NodeType =
-  // terminals and affixes
-  "terminal"
+  TerminalNodeType
+    // affixes
     | "shebang"
     | "line_comment"
     | "block_comment"
@@ -262,6 +262,63 @@ typealias NodeType =
     | "constrained_type"
     | "constrained_type_constraint"
     | "constrained_type_elements"
+
+/// The [NodeType]s that describe a terminal: a fixed token of the grammar, such as a keyword or a
+/// punctuation character.
+typealias TerminalNodeType =
+  // keywords
+  "amends_keyword"
+    | "as_keyword"
+    | "class_keyword"
+    | "else_keyword"
+    | "extends_keyword"
+    | "for_keyword"
+    | "function_keyword"
+    | "if_keyword"
+    | "import_keyword"
+    | "import_star_keyword"
+    | "in_keyword"
+    | "let_keyword"
+    | "module_keyword"
+    | "new_keyword"
+    | "out_keyword"
+    | "read_keyword"
+    | "read_question_keyword"
+    | "read_star_keyword"
+    | "super_keyword"
+    | "throw_keyword"
+    | "trace_keyword"
+    | "typealias_keyword"
+    | "when_keyword"
+    // punctuation
+    | "arrow"
+    | "assign"
+    | "at"
+    | "colon"
+    | "comma"
+    | "dot"
+    | "gt"
+    | "lbrace"
+    | "lbrack"
+    | "lparen"
+    | "lpred"
+    | "lt"
+    | "minus"
+    | "not"
+    | "qspread"
+    | "question"
+    | "rbrace"
+    | "rbrack"
+    | "rparen"
+    | "spread"
+    | "star"
+    | "underscore"
+    | "union"
+    // string delimiters
+    | "interpolation_start"
+    | "string_start"
+    | "string_multi_start"
+    | "string_end"
 
 /// The [NodeType]s that describe an expression.
 typealias ExprNodeType =

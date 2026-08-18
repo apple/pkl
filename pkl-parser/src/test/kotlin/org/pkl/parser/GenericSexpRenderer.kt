@@ -55,13 +55,13 @@ class GenericSexpRenderer(code: String) {
     buf.append("(")
     buf.append(name(node))
     val oldTab = increaseTab()
-    var previousTerminal: Node? = null
+    var isDefault = false
     for (child in node.children) {
-      if (child.type == NodeType.TERMINAL) previousTerminal = child
-      if (child.type in IGNORED_CHILDREN) continue
+      if (child.type == NodeType.STAR) isDefault = true
+      if (child.type.isIgnored()) continue
       buf.append('\n')
-      if (previousTerminal != null && previousTerminal.text(source) == "*") {
-        previousTerminal = null
+      if (isDefault) {
+        isDefault = false
         renderDefaultUnionType(child)
       } else {
         innerRender(child)
@@ -83,9 +83,9 @@ class GenericSexpRenderer(code: String) {
   private fun collectChildren(node: Node): List<Node> =
     when (node.type) {
       NodeType.MULTI_LINE_STRING_LITERAL_EXPR ->
-        node.children.filter { it.type !in IGNORED_CHILDREN && !it.type.isStringData() }
+        node.children.filter { !it.type.isIgnored() && !it.type.isStringData() }
       NodeType.SINGLE_LINE_STRING_LITERAL_EXPR -> {
-        val children = node.children.filter { it.type !in IGNORED_CHILDREN }
+        val children = node.children.filter { !it.type.isIgnored() }
         val res = mutableListOf<Node>()
         var prev: Node? = null
         for (child in children) {
@@ -97,11 +97,13 @@ class GenericSexpRenderer(code: String) {
         }
         res
       }
+      // a string constant is rendered as a single leaf
+      NodeType.STRING_CHARS,
       NodeType.DOC_COMMENT -> listOf()
       else -> {
         val nodes = mutableListOf<Node>()
         for (child in node.children) {
-          if (child.type in IGNORED_CHILDREN) continue
+          if (child.type.isIgnored()) continue
           if (child.type in UNPACK_CHILDREN) {
             nodes += collectChildren(child)
           } else {
@@ -111,6 +113,8 @@ class GenericSexpRenderer(code: String) {
         nodes
       }
     }
+
+  private fun NodeType.isIgnored(): Boolean = isTerminal || this in IGNORED_CHILDREN
 
   private fun NodeType.isStringData(): Boolean =
     this == NodeType.STRING_CHARS || this == NodeType.STRING_ESCAPE
@@ -130,14 +134,12 @@ class GenericSexpRenderer(code: String) {
         val op = node.findChildByType(NodeType.OPERATOR)!!
         if (op.text(source) == ".") "qualifiedAccessExpr" else "nullableQualifiedAccessExpr"
       }
-      NodeType.READ_EXPR -> {
-        val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
-        when (terminal) {
-          "read*" -> "readGlobExpr"
-          "read?" -> "readNullExpr"
+      NodeType.READ_EXPR ->
+        when {
+          node.findChildByType(NodeType.READ_STAR_KEYWORD) != null -> "readGlobExpr"
+          node.findChildByType(NodeType.READ_QUESTION_KEYWORD) != null -> "readNullExpr"
           else -> "readExpr"
         }
-      }
       else -> {
         val names = node.type.name.split('_').map { it.lowercase() }
         if (names.size > 1) {
@@ -148,9 +150,9 @@ class GenericSexpRenderer(code: String) {
     }
 
   private fun importName(node: Node, isExpr: Boolean): String {
-    val terminal = node.children.find { it.type == NodeType.TERMINAL }!!.text(source)
+    val isGlob = node.findChildByType(NodeType.IMPORT_STAR_KEYWORD) != null
     val suffix = if (isExpr) "Expr" else "Clause"
-    return if (terminal == "import*") "importGlob$suffix" else "import$suffix"
+    return if (isGlob) "importGlob$suffix" else "import$suffix"
   }
 
   private fun binopName(node: Node): String {
@@ -194,7 +196,6 @@ class GenericSexpRenderer(code: String) {
         NodeType.BLOCK_COMMENT,
         NodeType.SHEBANG,
         NodeType.SEMICOLON,
-        NodeType.TERMINAL,
         NodeType.OPERATOR,
         NodeType.STRING_NEWLINE,
         NodeType.STRING_CONTINUATION,
