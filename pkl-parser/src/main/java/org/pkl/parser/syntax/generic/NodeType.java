@@ -16,12 +16,67 @@
 package org.pkl.parser.syntax.generic;
 
 public enum NodeType {
-  TERMINAL,
   SHEBANG,
   // affixes,
   LINE_COMMENT(NodeKind.AFFIX),
   BLOCK_COMMENT(NodeKind.AFFIX),
   SEMICOLON(NodeKind.AFFIX),
+
+  // terminals: keywords
+  AMENDS_KEYWORD(NodeKind.TERMINAL),
+  AS_KEYWORD(NodeKind.TERMINAL),
+  CLASS_KEYWORD(NodeKind.TERMINAL),
+  ELSE_KEYWORD(NodeKind.TERMINAL),
+  EXTENDS_KEYWORD(NodeKind.TERMINAL),
+  FOR_KEYWORD(NodeKind.TERMINAL),
+  FUNCTION_KEYWORD(NodeKind.TERMINAL),
+  IF_KEYWORD(NodeKind.TERMINAL),
+  IMPORT_KEYWORD(NodeKind.TERMINAL),
+  IMPORT_STAR_KEYWORD(NodeKind.TERMINAL),
+  IN_KEYWORD(NodeKind.TERMINAL),
+  LET_KEYWORD(NodeKind.TERMINAL),
+  MODULE_KEYWORD(NodeKind.TERMINAL),
+  NEW_KEYWORD(NodeKind.TERMINAL),
+  OUT_KEYWORD(NodeKind.TERMINAL),
+  READ_KEYWORD(NodeKind.TERMINAL),
+  READ_QUESTION_KEYWORD(NodeKind.TERMINAL),
+  READ_STAR_KEYWORD(NodeKind.TERMINAL),
+  SUPER_KEYWORD(NodeKind.TERMINAL),
+  THROW_KEYWORD(NodeKind.TERMINAL),
+  TRACE_KEYWORD(NodeKind.TERMINAL),
+  TYPEALIAS_KEYWORD(NodeKind.TERMINAL),
+  WHEN_KEYWORD(NodeKind.TERMINAL),
+
+  // terminals: punctuation
+  ARROW(NodeKind.TERMINAL),
+  ASSIGN(NodeKind.TERMINAL),
+  AT(NodeKind.TERMINAL),
+  COLON(NodeKind.TERMINAL),
+  COMMA(NodeKind.TERMINAL),
+  DOT(NodeKind.TERMINAL),
+  GT(NodeKind.TERMINAL),
+  LBRACE(NodeKind.TERMINAL),
+  LBRACK(NodeKind.TERMINAL),
+  LPAREN(NodeKind.TERMINAL),
+  LPRED(NodeKind.TERMINAL),
+  LT(NodeKind.TERMINAL),
+  MINUS(NodeKind.TERMINAL),
+  NOT(NodeKind.TERMINAL),
+  QSPREAD(NodeKind.TERMINAL),
+  QUESTION(NodeKind.TERMINAL),
+  RBRACE(NodeKind.TERMINAL),
+  RBRACK(NodeKind.TERMINAL),
+  RPAREN(NodeKind.TERMINAL),
+  SPREAD(NodeKind.TERMINAL),
+  STAR(NodeKind.TERMINAL),
+  UNDERSCORE(NodeKind.TERMINAL),
+  UNION(NodeKind.TERMINAL),
+
+  // terminals: string delimiters
+  INTERPOLATION_START(NodeKind.TERMINAL),
+  STRING_START(NodeKind.TERMINAL),
+  STRING_MULTI_START(NodeKind.TERMINAL),
+  STRING_END(NodeKind.TERMINAL),
 
   MODULE,
   DOC_COMMENT,
@@ -161,6 +216,10 @@ public enum NodeType {
     return kind == NodeKind.AFFIX;
   }
 
+  public boolean isTerminal() {
+    return kind == NodeKind.TERMINAL;
+  }
+
   public boolean isExpression() {
     return kind == NodeKind.EXPR;
   }
@@ -173,6 +232,7 @@ public enum NodeType {
     TYPE,
     EXPR,
     AFFIX,
+    TERMINAL,
     NONE;
   }
 }
