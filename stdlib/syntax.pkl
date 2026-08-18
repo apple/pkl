@@ -110,8 +110,10 @@ class Span {
 
   /// The display URI of this span.
   ///
-  /// For nodes parsed from a [Resource], this is the resource's URI with the span appended
-  /// as a fragment, for example `file:///foo/bar.pkl#L3C5-L3C12`.
+  /// Rendered for the editor configured in the Pkl settings file, the same way a location is
+  /// rendered in a stack trace.
+  /// If no such rendering applies to the source's URI, this is that URI with the span appended as
+  /// a fragment, for example `file:///foo/bar.pkl#L3C5-L3C12`.
   /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
   /// span itself, for example `L3C5-L3C12`.
   displayUri: String
@@ -127,9 +129,10 @@ class SourceLocation {
 
   /// A URI identifying this source location, suitable for display.
   ///
-  /// The exact format depends on where this location came from.
-  /// For locations obtained from [Parser], this is the URI of the source with the location
-  /// appended as a fragment, for example `file:///foo/bar.pkl#L3C5`.
+  /// The exact format depends on where this location came from and on the editor configured in the
+  /// Pkl settings file.
+  /// For locations obtained from [Parser], this is typically the URI of the source with the
+  /// location appended as a fragment, for example `file:///foo/bar.pkl#L3C5`.
   /// If the URI of the source is unknown, as is the case for nodes parsed from a [String], this is
   /// just the location itself, for example `L3C5`.
   displayUri: String
