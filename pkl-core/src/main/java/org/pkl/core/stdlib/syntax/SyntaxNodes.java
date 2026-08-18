@@ -22,6 +22,7 @@ import java.util.Locale;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
+import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
@@ -45,7 +46,7 @@ public final class SyntaxNodes {
           .addIntProperty("line", SourceLocationData::line)
           .addIntProperty("column", SourceLocationData::column)
           .addStringProperty(
-              "displayUri", sl -> displayUri(sl.sourceUri(), position(sl.line(), sl.column())));
+              "displayUri", sl -> displayUri(sl.sourceUri(), sl.line(), sl.column()));
 
   static final VmObjectFactory<SpanData> spanFactory =
       new VmObjectFactory<SpanData>(SyntaxModule::getSpanClass)
@@ -68,14 +69,40 @@ public final class SyntaxNodes {
                       sd.sourceUri(),
                       position(sd.span().lineBegin(), sd.span().colBegin())
                           + "-"
-                          + position(sd.span().lineEnd(), sd.span().colEnd())));
+                          + position(sd.span().lineEnd(), sd.span().colEnd()),
+                      sd.span().lineBegin(),
+                      sd.span().colBegin(),
+                      sd.span().lineEnd(),
+                      sd.span().colEnd()));
 
   private static String position(int line, int column) {
     return "L" + line + "C" + column;
   }
 
-  private static String displayUri(@Nullable String sourceUri, String position) {
-    return sourceUri == null ? position : sourceUri + "#" + position;
+  private static String displayUri(@Nullable String sourceUri, int line, int column) {
+    return displayUri(sourceUri, position(line, column), line, column, line, column);
+  }
+
+  @TruffleBoundary
+  private static String displayUri(
+      @Nullable String sourceUri,
+      String fragment,
+      int startLine,
+      int startColumn,
+      int endLine,
+      int endColumn) {
+    if (sourceUri == null) {
+      return fragment;
+    }
+    var transformed =
+        VmUtils.getDisplayUri(
+            sourceUri,
+            startLine,
+            startColumn,
+            endLine,
+            endColumn,
+            VmContext.get(null).getFrameTransformer());
+    return transformed.equals(sourceUri) ? sourceUri + "#" + fragment : transformed;
   }
 
   /** Extra storage backing a Pkl {@code GenericNode} instance. */
