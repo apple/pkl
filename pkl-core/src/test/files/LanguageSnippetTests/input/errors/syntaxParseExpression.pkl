@@ -1,0 +1,5 @@
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+res = parser.parseExpression("1 +")
