@@ -18,12 +18,14 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmTypeAlias;
@@ -87,16 +89,26 @@ public final class TypeAliasNode extends ExpressionNode {
             frame.materialize());
 
     VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
+    initTypeAliasModule(typeAnnotationNode, module);
     var bodyTypeNode = typeAnnotationNode.execute(frame);
-    bodyTypeNode.accept(
-        node -> {
-          if (node instanceof GetTypeAliasModuleNode getTypeAliasModuleNode) {
-            getTypeAliasModuleNode.lateInitModule(module);
-          }
-          return true;
-        });
     cachedTypeAlias.initTypeCheckNode(bodyTypeNode);
 
     return cachedTypeAlias;
+  }
+
+  private static void initTypeAliasModule(Node node, VmTyped module) {
+    node.accept(
+        n -> {
+          if (n instanceof GetTypeAliasModuleNode getTypeAliasModuleNode) {
+            getTypeAliasModuleNode.lateInitModule(module);
+            // `node.accept` won't walk past root nodes, but this can happen if we have a
+            // let expression in a constraint.
+            //
+            // If we encounter `ExecuteCustomThisWithRootNode`; walk its expression node directly.
+          } else if (n instanceof ExecuteCustomThisWithRootNode executeCustomThisWithRootNode) {
+            initTypeAliasModule(executeCustomThisWithRootNode.getExpressionNode(), module);
+          }
+          return true;
+        });
   }
 }

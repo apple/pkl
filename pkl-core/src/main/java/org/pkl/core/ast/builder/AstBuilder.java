@@ -129,6 +129,7 @@ import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetModuleOwnerNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
@@ -2225,13 +2226,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   private ResolveDeclaredTypeNode doVisitTypeName(QualifiedIdentifier ctx) {
     var identifiers = ctx.getIdentifiers();
+    var getModuleNode =
+        isBaseModule
+            ? new ConstantValueNode(BaseModule.getModule())
+            : symbolTable.isInTypeAliasScope
+                ? new GetTypeAliasModuleNode(VmUtils.unavailableSourceSection())
+                : new GetModuleOwnerNode(VmUtils.unavailableSourceSection());
     return switch (identifiers.size()) {
       case 1 -> {
         var identifier = identifiers.get(0);
+        var sourceSection = createSourceSection(identifier);
         yield new ResolveSimpleDeclaredTypeNode(
-            createSourceSection(identifier),
+            sourceSection,
             org.pkl.core.runtime.Identifier.get(identifier.getValue()),
-            isBaseModule);
+            isBaseModule,
+            getModuleNode);
       }
       case 2 -> {
         var identifier1 = identifiers.get(0);
@@ -2241,7 +2250,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             createSourceSection(identifier1),
             createSourceSection(identifier2),
             org.pkl.core.runtime.Identifier.localProperty(identifier1.getValue()),
-            org.pkl.core.runtime.Identifier.get(identifier2.getValue()));
+            org.pkl.core.runtime.Identifier.get(identifier2.getValue()),
+            getModuleNode);
       }
       default ->
           throw exceptionBuilder()
