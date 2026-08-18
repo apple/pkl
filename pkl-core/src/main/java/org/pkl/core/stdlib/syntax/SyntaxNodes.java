@@ -34,7 +34,6 @@ import org.pkl.parser.syntax.generic.NodeType;
 public final class SyntaxNodes {
   private SyntaxNodes() {}
 
-  private static final char[] EMPTY_SOURCE = new char[0];
   static final FullSpan ZERO_SPAN = new FullSpan(0, 0, 0, 0, 0, 0);
 
   record SpanData(FullSpan span, @Nullable String sourceUri) {}
@@ -82,16 +81,35 @@ public final class SyntaxNodes {
   /** Extra storage backing a Pkl {@code GenericNode} instance. */
   static final class GenericNodeData {
     final Node node;
-    final char[] source;
+    // the source {@link #node} was parsed from, or {@code null} for constructed nodes
+    final @Nullable char[] source;
+    // the text of a constructed node
+    private final Object textWithoutSource;
+
     @Nullable VmTyped parentVm;
     VmList childrenVm;
     @Nullable VmTyped spanVm;
 
     GenericNodeData(Node node, char[] source, VmList childrenVm, @Nullable VmTyped spanVm) {
+      this(node, source, VmNull.withoutDefault(), childrenVm, spanVm);
+    }
+
+    GenericNodeData(
+        Node node,
+        @Nullable char[] source,
+        Object textWithoutSource,
+        VmList childrenVm,
+        @Nullable VmTyped spanVm) {
       this.node = node;
       this.source = source;
+      this.textWithoutSource = textWithoutSource;
       this.childrenVm = childrenVm;
       this.spanVm = spanVm;
+    }
+
+    Object text() {
+      //noinspection ConstantValue
+      return source == null ? textWithoutSource : node.text(source);
     }
   }
 
@@ -100,12 +118,7 @@ public final class SyntaxNodes {
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
           .addListProperty("children", nd -> nd.childrenVm)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
-          .addProperty(
-              "text",
-              nd ->
-                  nd.node.children.isEmpty() || nd.node.type == NodeType.STRING_CHARS
-                      ? nd.node.text(nd.source)
-                      : VmNull.withoutDefault())
+          .addProperty("text", GenericNodeData::text)
           .addProperty("span", nd -> VmNull.lift(nd.spanVm))
           .addProperty("isLeaf", nd -> nd.childrenVm.isEmpty());
 
@@ -123,12 +136,13 @@ public final class SyntaxNodes {
       // constructed (storage-less) children have no meaningful span
       childJavaNodes.add(convertVmToNode((VmTyped) child, span));
     }
-    var javaNode =
-        makeJavaNode(nodeType, span, childJavaNodes, VmUtils.readMember(template, Identifier.TEXT));
+    var text = VmUtils.readMember(template, Identifier.TEXT);
+    var javaNode = makeJavaNode(nodeType, span, childJavaNodes, text);
 
     var childrenVm = VmList.create(newChildrenVm);
+    //noinspection DataFlowIssue
     var result =
-        genericNodeFactory.create(new GenericNodeData(javaNode, EMPTY_SOURCE, childrenVm, spanVm));
+        genericNodeFactory.create(new GenericNodeData(javaNode, null, text, childrenVm, spanVm));
 
     // wire up the parent back-reference
     for (var child : newChildrenVm) {
