@@ -104,10 +104,6 @@ public final class ReflectModule extends StdLibModule {
     return TypeVariableClass.instance;
   }
 
-  public static VmClass getSourceLocationClass() {
-    return SourceLocationClass.instance;
-  }
-
   private static final class ModuleClass {
     static final VmClass instance = loadClass("Module");
   }
@@ -174,10 +170,6 @@ public final class ReflectModule extends StdLibModule {
 
   private static final class TypeVariableClass {
     static final VmClass instance = loadClass("TypeVariable");
-  }
-
-  private static final class SourceLocationClass {
-    static final VmClass instance = loadClass("SourceLocation");
   }
 
   @TruffleBoundary
