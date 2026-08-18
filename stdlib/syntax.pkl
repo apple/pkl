@@ -51,8 +51,8 @@ class FormattingRenderer {
 
 /// A generic, untyped node in the Pkl syntax tree.
 ///
-/// A node is either a *leaf*, carrying source [text] and no
-/// [children], or a *branch*, carrying [children] and no [text].
+/// A node is either a *leaf*, carrying no [children], or a *branch*, whose content is its
+/// [children]. Either way, [text] is the source code the node spans.
 class GenericNode {
   /// The kind of this node.
   type: NodeType
@@ -63,8 +63,8 @@ class GenericNode {
   /// The parent node, or [null] for the root and for nodes not attached to a tree.
   hidden parent: GenericNode?
 
-  /// The verbatim source text of a leaf node (identifier, literal, terminal, etc.),
-  /// or [null] for a branch node whose content is its [children].
+  /// The verbatim source text this node spans, or [null] for a node that was not parsed
+  /// from source code.
   text: String?
 
   /// The source location of this node or [null].
@@ -84,7 +84,8 @@ class GenericNode {
   /// To leave a node unchanged and keep walking into its children, return `Pair(node, true)`.
   ///
   /// Constructed nodes must set their own [text] where it applies.
-  /// [span] is carried through unchanged unless set explicitly.
+  /// [text] and [span] are carried through unchanged unless set explicitly, so a rebuilt branch
+  /// still reports the source code it was parsed from.
   /// [parent] is populated on the returned tree for nodes originating from [Parser.parseModule];
   /// nodes constructed from scratch retain their given `parent`.
   external function transform(operator: (GenericNode) -> Pair<GenericNode, Boolean>): GenericNode
