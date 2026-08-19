@@ -1,0 +1,123 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+import "pkl:test"
+
+local parser = new syntax.Parser {}
+
+local renderer = new syntax.FormattingRenderer {}
+
+local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
+
+local function intLiteral(value: Int): syntax.GenericNode =
+  new syntax.GenericNode {
+    type = "int_literal_expr"
+    text = value.toString()
+  }
+
+local function identifiersOf(node: syntax.GenericNode): List<String> =
+  node.fold(List(), (acc: List<String>, n) ->
+    if (n.type == "identifier") acc.add(n.text!!) else acc)
+
+local function intLiteralsOf(node: syntax.GenericNode): List<String> =
+  node.fold(List(), (acc: List<String>, n) ->
+    if (n.type == "int_literal_expr") acc.add(n.text!!) else acc)
+
+local function rootOf(node: syntax.GenericNode): syntax.GenericNode =
+  if (node.parent == null) node else rootOf(node.parent!!)
+
+local function hasAncestorOfType(node: syntax.GenericNode, type: syntax.NodeType): Boolean =
+  if (node.parent == null)
+    false
+  else if (node.parent!!.type == type)
+    true
+  else
+    hasAncestorOfType(node.parent!!, type)
+
+local original = mod("""
+  x = 1
+  y = 2
+  """)
+
+local renamed = original.transform((n) ->
+  if (n.type == "identifier" && n.text == "x")
+    Pair((n) { text = "z" }, false)
+  else
+    Pair(n, true)
+)
+
+local yProperty: syntax.GenericNode =
+  original
+    .fold(List(), (acc: List<syntax.GenericNode>, n) ->
+      if (n.type == "class_property" && n.text == "y = 2") acc.add(n) else acc)
+    .first
+
+// a node built from scratch, whose children have no parent of their own
+local constructedAccess = new syntax.GenericNode {
+  type = "unqualified_access_expr"
+  children = List(new syntax.GenericNode { type = "identifier"; text = "foo" })
+}
+
+local exploding = mod("x = 1").transform((n) ->
+  if (n.type == "identifier") throw("boom") else Pair(n, true))
+
+facts {
+  ["a transform does not re-parent the nodes of the tree it walks"] {
+    // force the whole rewritten tree, then check that the walked tree is unchanged
+    let (rendered = renderer.render(renamed))
+      rendered == "z = 1\ny = 2\n" && identifiersOf(rootOf(yProperty)) == List("x", "y")
+  }
+
+  ["transforming a node does not detach it from its own tree"] {
+    let (detached = yProperty.transform((n) -> Pair(n, true)))
+      detached.parent == null && yProperty.parent != null
+  }
+
+  ["only the root of a transformed tree has no parent"] {
+    // the constructed node's child has no parent of its own, so the result tree must supply one
+    let (result =
+      mod("x = 0").transform((n) ->
+        if (n.type == "int_literal_expr") Pair(constructedAccess, false) else Pair(n, true))
+    )
+      result.fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
+  }
+
+  ["a node inside a spliced subtree sees where it was spliced in"] {
+    let (result =
+      mod("x = 0").transform((n) ->
+        if (n.type == "int_literal_expr")
+          Pair(parser.parseExpression("foo"), true)
+        else if (n.type == "identifier" && n.text == "foo")
+          Pair((n) { text = if (hasAncestorOfType(n, "class_property")) "yes" else "no" }, false)
+        else
+          Pair(n, true)
+      )
+    )
+      renderer.render(result) == "x = yes\n"
+  }
+
+  ["a node spliced in by an earlier transform sees where it was spliced in"] {
+    let (spliced =
+      mod("x = 0").transform((n) ->
+        if (n.type == "int_literal_expr") Pair(parser.parseExpression("foo"), false)
+        else Pair(n, true))
+    )
+      let (marked =
+        spliced.transform((n) ->
+          if (n.type == "identifier" && n.text == "foo")
+            Pair((n) { text = if (hasAncestorOfType(n, "class_property")) "yes" else "no" }, false)
+          else
+            Pair(n, true)
+        )
+      )
+        renderer.render(marked) == "x = yes\n"
+  }
+
+  ["a transform does not apply the operator until the tree is read"] {
+    test.catchOrNull(() -> exploding.type) == null
+  }
+
+  ["the operator's failure surfaces once the tree is read"] {
+    test.catch(() -> exploding.fold(0, (acc, _n) -> acc + 1)).contains("boom")
+  }
+}

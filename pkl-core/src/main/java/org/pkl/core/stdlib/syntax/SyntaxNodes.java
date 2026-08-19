@@ -17,14 +17,19 @@ package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmContext;
+import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.VmObjectFactory;
@@ -105,80 +110,200 @@ public final class SyntaxNodes {
     return transformed.equals(sourceUri) ? sourceUri + "#" + fragment : transformed;
   }
 
-  /** Extra storage backing a Pkl {@code GenericNode} instance. */
+  /** Extra storage backing a Pkl {@code GenericNode} parsed from source. */
   static final class GenericNodeData {
     final Node node;
-    // the source {@link #node} was parsed from, or {@code null} for constructed nodes
-    final @Nullable char[] source;
-    // the text of a constructed node
-    private final Object textWithoutSource;
+    // the source {@link #node} was parsed from
+    final char[] source;
+    // the URI of {@link #source}, or {@code null} if unknown
+    private final @Nullable String sourceUri;
+    private final @Nullable VmTyped parentVm;
 
-    @Nullable VmTyped parentVm;
-    VmList childrenVm;
-    @Nullable VmTyped spanVm;
-
-    GenericNodeData(Node node, char[] source, VmList childrenVm, @Nullable VmTyped spanVm) {
-      this(node, source, VmNull.withoutDefault(), childrenVm, spanVm);
-    }
+    // the object this storage backs, so that lazily created children can be parented at it
+    private @Nullable VmTyped selfVm;
 
     GenericNodeData(
-        Node node,
-        @Nullable char[] source,
-        Object textWithoutSource,
-        VmList childrenVm,
-        @Nullable VmTyped spanVm) {
+        Node node, char[] source, @Nullable String sourceUri, @Nullable VmTyped parentVm) {
       this.node = node;
       this.source = source;
-      this.textWithoutSource = textWithoutSource;
-      this.childrenVm = childrenVm;
-      this.spanVm = spanVm;
+      this.sourceUri = sourceUri;
+      this.parentVm = parentVm;
     }
 
-    Object text() {
-      //noinspection ConstantValue
-      return source == null ? textWithoutSource : node.text(source);
+    String text() {
+      return node.text(source);
+    }
+
+    VmList children() {
+      var childNodes = node.children;
+      if (childNodes.isEmpty()) {
+        return VmList.EMPTY;
+      }
+      var children = new Object[childNodes.size()];
+      for (var i = 0; i < children.length; i++) {
+        children[i] = createNode(new GenericNodeData(childNodes.get(i), source, sourceUri, selfVm));
+      }
+      return VmList.create(children);
+    }
+
+    VmTyped span() {
+      return spanFactory.create(new SpanData(node.span, sourceUri));
+    }
+
+    boolean isLeaf() {
+      return node.children.isEmpty();
     }
   }
 
   static final VmObjectFactory<GenericNodeData> genericNodeFactory =
       new VmObjectFactory<GenericNodeData>(SyntaxModule::getGenericNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
-          .addListProperty("children", nd -> nd.childrenVm)
+          .addListProperty("children", GenericNodeData::children)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
           .addProperty("text", GenericNodeData::text)
-          .addProperty("span", nd -> VmNull.lift(nd.spanVm))
-          .addProperty("isLeaf", nd -> nd.childrenVm.isEmpty());
+          .addProperty("span", GenericNodeData::span)
+          .addProperty("isLeaf", GenericNodeData::isLeaf);
 
-  /** Rebuild a node from {@code template} (its type, span, text) with new children. */
-  @TruffleBoundary
-  static VmTyped rebuild(VmTyped template, Object[] newChildrenVm) {
-    var nodeType =
-        NodeType.valueOf(
-            ((String) VmUtils.readMember(template, Identifier.TYPE)).toUpperCase(Locale.ROOT));
-    var spanVm = optSpan(template);
-    var span = readSpan(spanVm);
-
-    var childJavaNodes = new ArrayList<Node>(newChildrenVm.length);
-    for (var child : newChildrenVm) {
-      // constructed (storage-less) children have no meaningful span
-      childJavaNodes.add(convertVmToNode((VmTyped) child, span));
-    }
-    var text = VmUtils.readMember(template, Identifier.TEXT);
-    var javaNode = makeJavaNode(nodeType, span, childJavaNodes, text);
-
-    var childrenVm = VmList.create(newChildrenVm);
-    //noinspection DataFlowIssue
-    var result =
-        genericNodeFactory.create(new GenericNodeData(javaNode, null, text, childrenVm, spanVm));
-
-    // wire up the parent back-reference
-    for (var child : newChildrenVm) {
-      var childVm = (VmTyped) child;
-      if (childVm.hasExtraStorage()) {
-        ((GenericNodeData) childVm.getExtraStorage()).parentVm = result;
-      }
-    }
+  /** Create the Pkl {@code GenericNode} backed by {@code data}. */
+  static VmTyped createNode(GenericNodeData data) {
+    var result = genericNodeFactory.create(data);
+    data.selfVm = result;
     return result;
+  }
+
+  /** What a node becomes in a tree being built, and whether to keep rewriting below it. */
+  record Rewrite(VmTyped node, boolean descend) {}
+
+  /** Decides what each node of a tree being built becomes. */
+  interface Rewriter {
+    /**
+     * Rewrite {@code basis}, which sits at the position {@code input} presents.
+     *
+     * <p>{@code input} is what a Pkl callback is given: {@code basis} positioned in the tree being
+     * built, so that the callback sees the parents the result will have.
+     */
+    Rewrite rewrite(VmTyped basis, VmTyped input);
+  }
+
+  /** Applies the operator of {@code GenericNode.transform}. */
+  static final class OperatorRewriter implements Rewriter {
+    private final VmFunction operator;
+
+    OperatorRewriter(VmFunction operator) {
+      this.operator = operator;
+    }
+
+    @Override
+    public Rewrite rewrite(VmTyped basis, VmTyped input) {
+      var result = operator.apply(input);
+      assert result instanceof VmPair;
+      var pair = (VmPair) result;
+      var replacement = (VmTyped) pair.getFirst();
+      var descend = (Boolean) pair.getSecond();
+      // an unchanged node is presented directly; wrapping its input view would only add a layer
+      return new Rewrite(replacement == input ? basis : replacement, (Boolean) descend);
+    }
+  }
+
+  /** Replaces a fixed set of nodes, as {@code GenericNode.replaceChild*Where} do. */
+  static final class TargetRewriter implements Rewriter {
+    // an identity set: `==` on a Pkl GenericNode is a deep structural compare, so two distinct
+    // nodes with the same content are equal to each other
+    private final Set<VmTyped> targets;
+    private final VmFunction replacer;
+
+    TargetRewriter(Set<VmTyped> targets, VmFunction replacer) {
+      this.targets = targets;
+      this.replacer = replacer;
+    }
+
+    @Override
+    public Rewrite rewrite(VmTyped basis, VmTyped input) {
+      if (!targets.contains(basis)) {
+        return new Rewrite(basis, true);
+      }
+      // a replacement is left as-is, so a match nested in a match is never visited
+      return new Rewrite((VmTyped) replacer.apply(input), false);
+    }
+  }
+
+  /** A set that holds nodes by identity rather than by their content. */
+  static Set<VmTyped> newNodeSet() {
+    return Collections.newSetFromMap(new IdentityHashMap<>());
+  }
+
+  /**
+   * Extra storage backing a Pkl {@code GenericNode} that presents another node at a position in a
+   * tree being built by a rewrite.
+   */
+  static final class ViewData {
+    final VmTyped basis;
+    private final @Nullable Rewriter rewriter;
+    private final @Nullable VmTyped parentVm;
+
+    private @Nullable VmTyped selfVm;
+
+    ViewData(VmTyped basis, @Nullable Rewriter rewriter, @Nullable VmTyped parentVm) {
+      this.basis = basis;
+      this.rewriter = rewriter;
+      this.parentVm = parentVm;
+    }
+
+    /** Whether this view presents its basis unchanged, all the way down. */
+    boolean isPassThrough() {
+      return rewriter == null;
+    }
+
+    VmList children() {
+      var basisChildren = (VmList) VmUtils.readMember(basis, Identifier.CHILDREN);
+      if (basisChildren.isEmpty()) {
+        return VmList.EMPTY;
+      }
+      var children = new Object[basisChildren.getLength()];
+      for (var i = 0; i < children.length; i++) {
+        children[i] = child((VmTyped) basisChildren.get(i));
+      }
+      return VmList.create(children);
+    }
+
+    private VmTyped child(VmTyped basisChild) {
+      var rewriter = this.rewriter;
+      // a pass-through view only repositions its basis' children
+      var input = createView(new ViewData(basisChild, null, selfVm));
+      if (rewriter == null) {
+        return input;
+      }
+      var rewrite = rewriter.rewrite(basisChild, input);
+      return createView(new ViewData(rewrite.node(), rewrite.descend() ? rewriter : null, selfVm));
+    }
+  }
+
+  private static final VmObjectFactory<ViewData> viewFactory =
+      new VmObjectFactory<ViewData>(SyntaxModule::getGenericNodeClass)
+          .addStringProperty("type", vd -> (String) VmUtils.readMember(vd.basis, Identifier.TYPE))
+          .addListProperty("children", ViewData::children)
+          .addProperty("parent", vd -> VmNull.lift(vd.parentVm))
+          .addProperty("text", vd -> VmUtils.readMember(vd.basis, Identifier.TEXT))
+          .addProperty("span", vd -> VmUtils.readMember(vd.basis, Identifier.SPAN))
+          .addProperty("isLeaf", vd -> VmUtils.readMember(vd.basis, Identifier.IS_LEAF));
+
+  /** Create the Pkl {@code GenericNode} backed by {@code data}. */
+  static VmTyped createView(ViewData data) {
+    var result = viewFactory.create(data);
+    data.selfVm = result;
+    return result;
+  }
+
+  /**
+   * Build the tree rooted at {@code self} with {@code targets} replaced by {@code replacer}'s
+   * results.
+   *
+   * <p>As with {@code transform}, the returned root has no parent and the tree {@code self} belongs
+   * to is left untouched.
+   */
+  static VmTyped replaceTargets(VmTyped self, Set<VmTyped> targets, VmFunction replacer) {
+    var rewriter = targets.isEmpty() ? null : new TargetRewriter(targets, replacer);
+    return createView(new ViewData(self, rewriter, null));
   }
 
   /**
@@ -191,9 +316,17 @@ public final class SyntaxNodes {
    */
   @TruffleBoundary
   static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
-    // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
     if (nodeVm.hasExtraStorage()) {
-      return ((GenericNodeData) nodeVm.getExtraStorage()).node;
+      var storage = nodeVm.getExtraStorage();
+      // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
+      if (storage instanceof GenericNodeData data) {
+        materializeText(data.node, data.source);
+        return data.node;
+      }
+      // a pass-through view presents its basis unchanged
+      if (storage instanceof ViewData view && view.isPassThrough()) {
+        return convertVmToNode(view.basis, fallbackSpan);
+      }
     }
 
     var typeStr = (String) VmUtils.readMember(nodeVm, Identifier.TYPE);
@@ -242,5 +375,21 @@ public final class SyntaxNodes {
       node.setText(text);
     }
     return node;
+  }
+
+  /**
+   * Materialize the text of the nodes in {@code node}'s subtree that the formatter reads directly.
+   *
+   * <p>{@link org.pkl.formatter.Formatter#format(Node)} has no access to the source, so a subtree
+   * reused verbatim from a parse must carry its own text by the time it is handed over.
+   */
+  private static void materializeText(Node node, char[] source) {
+    // `string_chars` is read by the formatter but is not always a leaf
+    if (node.children.isEmpty() || node.type == NodeType.STRING_CHARS) {
+      node.text(source);
+    }
+    for (var child : node.children) {
+      materializeText(child, source);
+    }
   }
 }
