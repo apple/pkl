@@ -21,7 +21,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.VmUtils;
 
-public class GetModuleOwnerNode extends ExpressionNode {
+public final class GetModuleOwnerNode extends ExpressionNode {
 
   public GetModuleOwnerNode(SourceSection sourceSection) {
     super(sourceSection);
