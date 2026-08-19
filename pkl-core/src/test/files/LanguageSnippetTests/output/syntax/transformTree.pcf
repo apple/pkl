@@ -1,0 +1,23 @@
+facts {
+  ["a transform does not re-parent the nodes of the tree it walks"] {
+    true
+  }
+  ["transforming a node does not detach it from its own tree"] {
+    true
+  }
+  ["only the root of a transformed tree has no parent"] {
+    true
+  }
+  ["a node inside a spliced subtree sees where it was spliced in"] {
+    true
+  }
+  ["a node spliced in by an earlier transform sees where it was spliced in"] {
+    true
+  }
+  ["a transform does not apply the operator until the tree is read"] {
+    true
+  }
+  ["the operator's failure surfaces once the tree is read"] {
+    true
+  }
+}

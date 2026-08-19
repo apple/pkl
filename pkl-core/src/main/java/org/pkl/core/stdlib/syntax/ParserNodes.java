@@ -19,20 +19,15 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import java.util.ArrayList;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.GenericNodeData;
-import org.pkl.core.stdlib.syntax.SyntaxNodes.SpanData;
 import org.pkl.parser.GenericParser;
 import org.pkl.parser.GenericParserError;
-import org.pkl.parser.syntax.generic.Node;
-import org.pkl.parser.syntax.generic.NodeType;
 
 /** Backs the {@code parse*} methods of {@code pkl.syntax#Parser}. */
 public final class ParserNodes {
@@ -142,40 +137,11 @@ public final class ParserNodes {
 
   private static VmTyped parseModuleNode(String src, @Nullable String sourceUri) {
     var root = parser.parseModule(src);
-    return convertNode(root, src.toCharArray(), sourceUri);
+    return SyntaxNodes.createNode(new GenericNodeData(root, src.toCharArray(), sourceUri, null));
   }
 
   private static VmTyped parseExpressionNode(String src, @Nullable String sourceUri) {
     var root = parser.parseExpressionInput(src);
-    return convertNode(root, src.toCharArray(), sourceUri);
-  }
-
-  private static VmTyped convertNode(
-      Node genericNode, char[] sourceChars, @Nullable String sourceUri) {
-    // convert children recursively
-    var childrenList = new ArrayList<VmTyped>(genericNode.children.size());
-    for (var child : genericNode.children) {
-      childrenList.add(convertNode(child, sourceChars, sourceUri));
-    }
-
-    // materialize text now so that nodes reused verbatim by `transform`/`format` are
-    // self-contained
-    if (genericNode.children.isEmpty() || genericNode.type == NodeType.STRING_CHARS) {
-      genericNode.text(sourceChars);
-    }
-
-    var childrenVm = VmList.create(childrenList.toArray());
-    var spanVm = SyntaxNodes.spanFactory.create(new SpanData(genericNode.span, sourceUri));
-    var data = new GenericNodeData(genericNode, sourceChars, childrenVm, spanVm);
-
-    var result = SyntaxNodes.genericNodeFactory.create(data);
-
-    // set parent back-reference on each child
-    for (var childVm : childrenList) {
-      var childData = (GenericNodeData) childVm.getExtraStorage();
-      childData.parentVm = result;
-    }
-
-    return result;
+    return SyntaxNodes.createNode(new GenericNodeData(root, src.toCharArray(), sourceUri, null));
   }
 }

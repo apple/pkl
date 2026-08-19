@@ -86,8 +86,8 @@ class GenericNode {
   /// Constructed nodes must set their own [text] where it applies.
   /// [text] and [span] are carried through unchanged unless set explicitly, so a rebuilt branch
   /// still reports the source code it was parsed from.
-  /// [parent] is populated on the returned tree for nodes originating from [Parser.parseModule];
-  /// nodes constructed from scratch retain their given `parent`.
+  /// Every node of the returned tree reports its [parent] within that tree, including nodes
+  /// constructed from scratch and nodes spliced in from another parse.
   external function transform(operator: (GenericNode) -> Pair<GenericNode, Boolean>): GenericNode
 
   /// Fold [operator] over this node and its descendants, top-down in pre-order.
@@ -98,6 +98,93 @@ class GenericNode {
   /// module.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
   /// ```
   external function fold<Result>(initial: Result, operator: (Result, GenericNode) -> Result): Result
+
+  /// Returns the first child matching [predicate], searching depth-first in pre-order,
+  /// or [null] if there is none.
+  ///
+  /// *Child* means any node below this one, at any depth.
+  /// This node itself is not considered.
+  /// The search stops at the first match.
+  ///
+  /// Example:
+  /// ```
+  /// // the name of the first class declared in a module
+  /// module.findChildWhere((n) -> n.type == "class")?.findChildOfType("identifier")?.text
+  /// ```
+  external function findChildWhere(predicate: (GenericNode) -> Boolean): GenericNode?
+
+  /// Returns every child matching [predicate], in depth-first pre-order.
+  ///
+  /// *Child* means any node below this one, at any depth.
+  /// This node itself is not considered.
+  /// A matching node is searched for further matches, so a match may contain another.
+  function findChildrenWhere(predicate: (GenericNode) -> Boolean): List<GenericNode> =
+    children.flatMap((child) ->
+      child.fold(List(), (acc: List<GenericNode>, node) ->
+        if (predicate.apply(node)) acc.add(node) else acc
+      )
+    )
+
+  /// Returns the first child whose [type] is [type], or [null] if there is none.
+  function findChildOfType(type: NodeType): GenericNode? =
+    findChildWhere((node) -> node.type == type)
+
+  /// Returns every child whose [type] is [type], in depth-first pre-order.
+  function findChildrenOfType(type: NodeType): List<GenericNode> =
+    findChildrenWhere((node) -> node.type == type)
+
+  /// Returns this node with the first child matching [predicate] replaced by [replacer]'s result.
+  ///
+  /// The child replaced is the one [findChildWhere()] returns. If there is none, the tree is
+  /// returned unchanged.
+  /// The replacement is left as it is, so it is not searched for further matches.
+  external function replaceChildWhere(
+    predicate: (GenericNode) -> Boolean,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode
+
+  /// Returns this node with every child matching [predicate] replaced by [replacer]'s result.
+  ///
+  /// The children replaced are those [findChildrenWhere()] returns.
+  /// A replacement is left as it is, so a match nested in another match is left to [replacer].
+  external function replaceChildrenWhere(
+    predicate: (GenericNode) -> Boolean,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode
+
+  /// Returns this node with the first child whose [type] is [type] replaced by [replacer]'s result.
+  function replaceChildOfType(type: NodeType, replacer: (GenericNode) -> GenericNode): GenericNode =
+    replaceChildWhere((node) -> node.type == type, replacer)
+
+  /// Returns this node with every child whose [type] is [type] replaced by [replacer]'s result.
+  function replaceChildrenOfType(
+    type: NodeType,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode = replaceChildrenWhere((node) -> node.type == type, replacer)
+
+  /// Returns the nearest parent matching [predicate], or [null] if there is none.
+  function findParentWhere(predicate: (GenericNode) -> Boolean): GenericNode? =
+    if (parent == null)
+      null
+    else if (predicate.apply(parent))
+      parent
+    else
+      parent.findParentWhere(predicate)
+
+  /// Returns every parent matching [predicate], nearest first.
+  function findParentsWhere(predicate: (GenericNode) -> Boolean): List<GenericNode> =
+    if (parent == null)
+      List()
+    else
+      (if (predicate.apply(parent)) List(parent) else List())
+        + parent.findParentsWhere(predicate)
+
+  /// Tells whether any parent matches [predicate].
+  function hasParentWhere(predicate: (GenericNode) -> Boolean): Boolean =
+    findParentWhere(predicate) != null
+
+  /// Tells whether any parent's [type] is [type].
+  function hasParentOfType(type: NodeType): Boolean = hasParentWhere((node) -> node.type == type)
 }
 
 /// A range of source code, spanning [start] (inclusive) to [end] (exclusive).
