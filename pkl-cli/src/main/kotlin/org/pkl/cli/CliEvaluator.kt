@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import com.oracle.truffle.api.TruffleOptions
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -114,6 +115,9 @@ constructor(
       Closeables.closeQuietly(builder.resourceReaders)
       // Unset system properties so that we don't leave profiling enabled upon exit.
       ProfilerOptions.clearSystemProperties()
+      if (TruffleOptions.AOT) {
+        VmUtils.closeEngine()
+      }
     }
   }
 
