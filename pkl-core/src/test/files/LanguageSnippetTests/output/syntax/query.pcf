@@ -1,0 +1,73 @@
+facts {
+  ["findChildWhere returns the first match in pre-order"] {
+    true
+    true
+  }
+  ["findChildWhere returns null when nothing matches"] {
+    true
+  }
+  ["findChildWhere does not consider this node"] {
+    true
+    true
+  }
+  ["findChildrenWhere returns every match in pre-order"] {
+    true
+    true
+  }
+  ["findChildrenWhere searches a match for further matches"] {
+    true
+  }
+  ["findChildOfType agrees with findChildWhere"] {
+    true
+    true
+  }
+  ["findParentWhere returns the nearest match"] {
+    true
+    true
+    true
+  }
+  ["findParentsWhere returns every match, nearest first"] {
+    true
+  }
+  ["parent lookups do not consider this node"] {
+    true
+    true
+    true
+  }
+  ["hasParentWhere and hasParentOfType follow findParentWhere"] {
+    true
+    true
+    true
+  }
+  ["replaceChildWhere replaces only the first match"] {
+    true
+  }
+  ["replaceChildWhere leaves the tree unchanged when nothing matches"] {
+    true
+  }
+  ["replaceChildrenWhere replaces every match"] {
+    true
+  }
+  ["a replacer sees the node it replaces"] {
+    true
+  }
+  ["a replacement is not searched for further matches"] {
+    true
+  }
+  ["replaceChildOfType agrees with replaceChildWhere"] {
+    true
+  }
+  ["a replacer sees where its node sits in the tree being built"] {
+    true
+  }
+  ["a replace does not change the tree it walks"] {
+    true
+  }
+  ["the root of a replaced tree has no parent"] {
+    true
+    true
+  }
+  ["only the root of a replaced tree has no parent"] {
+    true
+  }
+}

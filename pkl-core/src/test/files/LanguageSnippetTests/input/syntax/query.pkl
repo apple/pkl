@@ -1,0 +1,156 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local renderer = new syntax.FormattingRenderer {}
+
+local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
+
+local function intLiteral(value: Int): syntax.GenericNode =
+  new syntax.GenericNode {
+    type = "int_literal_expr"
+    text = value.toString()
+  }
+
+local sample: syntax.GenericNode =
+  mod("""
+    class Point {
+      x: Int
+      y: Int
+    }
+
+    origin = new Point { x = 0; y = 0 }
+    """)
+
+facts {
+  ["findChildWhere returns the first match in pre-order"] {
+    sample.findChildWhere((n) -> n.type == "identifier")!!.text == "Point"
+    sample.findChildWhere((n) -> n.type == "int_literal_expr")!!.text == "0"
+  }
+
+  ["findChildWhere returns null when nothing matches"] {
+    sample.findChildWhere((n) -> n.type == "when_generator") == null
+  }
+
+  ["findChildWhere does not consider this node"] {
+    sample.findChildWhere((n) -> n.type == "module") == null
+    sample.type == "module"
+  }
+
+  ["findChildrenWhere returns every match in pre-order"] {
+    sample.findChildrenWhere((n) -> n.type == "identifier").map((n) -> n.text)
+      == List("Point", "x", "Int", "y", "Int", "origin", "Point", "x", "y")
+
+    sample.findChildrenWhere((n) -> n.type == "when_generator") == List()
+  }
+
+  ["findChildrenWhere searches a match for further matches"] {
+    // the outer object body contains the two entries, which are themselves matches
+    mod("foo { bar { baz = 1 } }").findChildrenWhere((n) -> n.type == "object_body").length == 2
+  }
+
+  ["findChildOfType agrees with findChildWhere"] {
+    sample.findChildOfType("class")!!.text == sample.findChildWhere((n) -> n.type == "class")!!.text
+    sample.findChildrenOfType("identifier").length == 9
+  }
+
+  ["findParentWhere returns the nearest match"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChildWhere((n) -> n.text == "baz")!!
+    inner.findParentWhere((n) -> n.type == "object_body")!!.text == "{ baz = 1 }"
+    inner.findParentWhere((n) -> n.type == "module")!!.type == "module"
+    inner.findParentWhere((n) -> n.type == "class") == null
+  }
+
+  ["findParentsWhere returns every match, nearest first"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChildWhere((n) -> n.text == "baz")!!
+    inner.findParentsWhere((n) -> n.type == "object_body").map((n) -> n.text)
+      == List("{ baz = 1 }", "{ bar { baz = 1 } }")
+  }
+
+  ["parent lookups do not consider this node"] {
+    sample.findParentWhere((n) -> n.type == "module") == null
+    sample.findParentsWhere((n) -> true) == List()
+    !sample.hasParentOfType("module")
+  }
+
+  ["hasParentWhere and hasParentOfType follow findParentWhere"] {
+    local inner = mod("foo { bar = 1 }").findChildWhere((n) -> n.text == "bar")!!
+    inner.hasParentWhere((n) -> n.type == "object_body")
+    inner.hasParentOfType("class_property")
+    !inner.hasParentOfType("class")
+  }
+
+  ["replaceChildWhere replaces only the first match"] {
+    renderer.render(
+      mod("x = 1 + 1").replaceChildWhere((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
+    ) == "x = 9 + 1\n"
+  }
+
+  ["replaceChildWhere leaves the tree unchanged when nothing matches"] {
+    renderer.render(
+      mod("x = 1").replaceChildWhere((n) -> n.type == "when_generator", (_n) -> intLiteral(9))
+    ) == "x = 1\n"
+  }
+
+  ["replaceChildrenWhere replaces every match"] {
+    renderer.render(
+      mod("x = 1 + 1").replaceChildrenWhere(
+        (n) -> n.type == "int_literal_expr",
+        (_n) -> intLiteral(9),
+      )
+    ) == "x = 9 + 9\n"
+  }
+
+  ["a replacer sees the node it replaces"] {
+    renderer.render(
+      mod("x = 1 + 2").replaceChildrenWhere(
+        (n) -> n.type == "int_literal_expr",
+        (n) -> intLiteral(n.text!!.toInt() * 10),
+      )
+    ) == "x = 10 + 20\n"
+  }
+
+  ["a replacement is not searched for further matches"] {
+    // replacing an identifier with an identifier terminates instead of looping
+    renderer.render(
+      mod("foo = 1").replaceChildrenOfType("identifier", (n) -> (n) { text = "\(n.text!!)Bar" })
+    ) == "fooBar = 1\n"
+  }
+
+  ["replaceChildOfType agrees with replaceChildWhere"] {
+    renderer.render(mod("x = 1 + 1").replaceChildOfType("int_literal_expr", (_n) -> intLiteral(9)))
+      == renderer.render(
+        mod("x = 1 + 1").replaceChildWhere(
+          (n) -> n.type == "int_literal_expr",
+          (_n) -> intLiteral(9),
+        )
+      )
+  }
+
+  ["a replacer sees where its node sits in the tree being built"] {
+    local result =
+      mod("x = 1").replaceChildOfType("int_literal_expr", (n) ->
+        if (n.hasParentOfType("class_property")) intLiteral(9) else intLiteral(0))
+    renderer.render(result) == "x = 9\n"
+  }
+
+  ["a replace does not change the tree it walks"] {
+    local original = mod("x = 1")
+    local rewritten = original.replaceChildrenOfType("int_literal_expr", (_n) -> intLiteral(9))
+    let (rendered = renderer.render(rewritten))
+      rendered == "x = 9\n" && renderer.render(original) == "x = 1\n"
+  }
+
+  ["the root of a replaced tree has no parent"] {
+    mod("x = 1").replaceChildrenOfType("int_literal_expr", (_n) -> intLiteral(9)).parent == null
+    mod("x = 1").replaceChildrenOfType("when_generator", (_n) -> intLiteral(9)).parent == null
+  }
+
+  ["only the root of a replaced tree has no parent"] {
+    mod("x = 1")
+      .replaceChildrenOfType("int_literal_expr", (_n) -> intLiteral(9))
+      .fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
+  }
+}

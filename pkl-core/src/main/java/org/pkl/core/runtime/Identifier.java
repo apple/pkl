@@ -176,6 +176,7 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier TYPE = get("type");
   public static final Identifier CHILDREN = get("children");
   public static final Identifier SPAN = get("span");
+  public static final Identifier IS_LEAF = get("isLeaf");
   public static final Identifier START = get("start");
   public static final Identifier END = get("end");
   public static final Identifier LINE = get("line");

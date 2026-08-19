@@ -17,19 +17,21 @@ package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.nodes.Node;
 import java.util.ArrayDeque;
+import java.util.Set;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
-import org.pkl.core.runtime.VmPair;
+import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
-import org.pkl.core.stdlib.syntax.SyntaxNodes.GenericNodeData;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.ViewData;
 
 /** Backs {@code pkl.syntax#GenericNode.fold} and {@code pkl.syntax#GenericNode.transform}. */
 public final class GenericNodeNodes {
@@ -58,90 +60,83 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class transform extends ExternalMethod1Node {
-    @Child private ApplyVmFunction1Node applyOperator = ApplyVmFunction1Node.create();
+  public abstract static class findChildWhere extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
-    protected VmTyped eval(VmTyped self, VmFunction operator) {
-      var result = transformNode(self, operator);
-      // the root of the returned tree has no parent
-      if (result.hasExtraStorage()) {
-        ((GenericNodeData) result.getExtraStorage()).parentVm = null;
-      }
-      return result;
+    protected Object eval(VmTyped self, VmFunction predicate) {
+      var matches = findMatches(this, self, predicate, applyPredicate, true);
+      return matches.isEmpty() ? VmNull.withoutDefault() : matches.iterator().next();
     }
+  }
 
-    private VmTyped transformNode(VmTyped self, VmFunction operator) {
-      var stack = new ArrayDeque<Descent>();
-      var pending = self;
-      var visited = 0;
+  public abstract static class replaceChildWhere extends ExternalMethod2Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
-      for (; ; ) {
-        var transformed = applyOperator.execute(operator, pending);
-        assert transformed instanceof VmPair;
-        var pair = (VmPair) transformed;
-        visited += 1;
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction predicate, VmFunction replacer) {
+      var targets = findMatches(this, self, predicate, applyPredicate, true);
+      return SyntaxNodes.replaceTargets(self, targets, replacer);
+    }
+  }
 
-        var node = (VmTyped) pair.getFirst();
-        var descend = (Boolean) pair.getSecond();
-        if (descend) {
-          var childrenVm = (VmList) VmUtils.readMember(node, Identifier.CHILDREN);
-          if (childrenVm.getLength() != 0) {
-            var descent = new Descent(node, childrenVm);
-            stack.push(descent);
-            pending = descent.currentChild();
-            continue;
-          }
-        }
+  public abstract static class replaceChildrenWhere extends ExternalMethod2Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
-        var done = node;
-        Descent descent;
-        while ((descent = stack.peek()) != null) {
-          if (descent.acceptChild(done)) {
-            pending = descent.currentChild();
-            break;
-          }
-          stack.pop();
-          done = descent.finish();
-        }
-        if (descent == null) {
-          LoopNode.reportLoopCount(this, visited);
-          return done;
-        }
-      }
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction predicate, VmFunction replacer) {
+      var targets = findMatches(this, self, predicate, applyPredicate, false);
+      return SyntaxNodes.replaceTargets(self, targets, replacer);
     }
   }
 
   /**
-   * A node whose children are being transformed, plus the transformed children collected so far.
+   * Collect the descendants of {@code self} matching {@code predicate}, searching depth-first in
+   * pre-order and stopping at the first match if {@code firstOnly}.
+   *
+   * <p>Matching eagerly keeps a search independent of the order in which a lazily built tree is
+   * read: "the first match in pre-order" is not something a rewrite could decide as it goes.
    */
-  private static final class Descent {
-    private final VmTyped node;
-    private final VmList childrenVm;
-    private final Object[] newChildren;
-    private int index;
-    private boolean changed;
+  private static Set<VmTyped> findMatches(
+      Node owner,
+      VmTyped self,
+      VmFunction predicate,
+      ApplyVmFunction1Node applyPredicate,
+      boolean firstOnly) {
 
-    Descent(VmTyped node, VmList childrenVm) {
-      this.node = node;
-      this.childrenVm = childrenVm;
-      this.newChildren = new Object[childrenVm.getLength()];
+    var matches = SyntaxNodes.newNodeSet();
+    var pending = new ArrayDeque<VmTyped>();
+    pushChildren(pending, self);
+    var visited = 0;
+    while (!pending.isEmpty()) {
+      var node = pending.pop();
+      visited += 1;
+      if (applyPredicate.executeBoolean(predicate, node)) {
+        matches.add(node);
+        if (firstOnly) break;
+      }
+      pushChildren(pending, node);
     }
+    LoopNode.reportLoopCount(owner, visited);
+    return matches;
+  }
 
-    VmTyped currentChild() {
-      return (VmTyped) childrenVm.get(index);
+  private static void pushChildren(ArrayDeque<VmTyped> pending, VmTyped node) {
+    var children = (VmList) VmUtils.readMember(node, Identifier.CHILDREN);
+    for (var i = children.getLength() - 1; i >= 0; i--) {
+      pending.push((VmTyped) children.get(i));
     }
+  }
 
-    /** Records the transformed current child; returns whether further children remain. */
-    boolean acceptChild(VmTyped newChild) {
-      changed |= newChild != childrenVm.get(index);
-      newChildren[index] = newChild;
-      return ++index < newChildren.length;
-    }
-
-    VmTyped finish() {
-      // reuse the node (and its extra storage) untouched when nothing below changed
-      return changed ? SyntaxNodes.rebuild(node, newChildren) : node;
+  public abstract static class transform extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction operator) {
+      // the operator is applied to this node right away, and to its descendants as they are read
+      var rewriter = new SyntaxNodes.OperatorRewriter(operator);
+      var rewrite = rewriter.rewrite(self, self);
+      // the root of the returned tree has no parent
+      return SyntaxNodes.createView(
+          new ViewData(rewrite.node(), rewrite.descend() ? rewriter : null, null));
     }
   }
 }
