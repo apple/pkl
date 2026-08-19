@@ -26,25 +26,15 @@ local function intLiteralsOf(node: syntax.GenericNode): List<String> =
 local function rootOf(node: syntax.GenericNode): syntax.GenericNode =
   if (node.parent == null) node else rootOf(node.parent!!)
 
-local function hasAncestorOfType(node: syntax.GenericNode, type: syntax.NodeType): Boolean =
-  if (node.parent == null)
-    false
-  else if (node.parent!!.type == type)
-    true
-  else
-    hasAncestorOfType(node.parent!!, type)
-
 local original = mod("""
   x = 1
   y = 2
   """)
 
-local renamed = original.transform((n) ->
-  if (n.type == "identifier" && n.text == "x")
-    Pair((n) { text = "z" }, false)
-  else
-    Pair(n, true)
-)
+local renameX = (n: syntax.GenericNode) ->
+  if (n.type == "identifier" && n.text == "x") (n) { text = "z" } else n.transform(renameX)
+
+local renamed = original.transform(renameX)
 
 local yProperty: syntax.GenericNode =
   original
@@ -58,59 +48,67 @@ local constructedAccess = new syntax.GenericNode {
   children = List(new syntax.GenericNode { type = "identifier"; text = "foo" })
 }
 
-local exploding = mod("x = 1").transform((n) ->
-  if (n.type == "identifier") throw("boom") else Pair(n, true))
+local explode = (n: syntax.GenericNode) ->
+  if (n.type == "identifier") throw("boom") else n.transform(explode)
+
+local exploding = mod("x = 1").transform(explode)
 
 facts {
   ["a transform does not re-parent the nodes of the tree it walks"] {
     // force the whole rewritten tree, then check that the walked tree is unchanged
-    let (rendered = renderer.render(renamed))
-      rendered == "z = 1\ny = 2\n" && identifiersOf(rootOf(yProperty)) == List("x", "y")
+    local rendered = renderer.render(renamed)
+    rendered == "z = 1\ny = 2\n" && identifiersOf(rootOf(yProperty)) == List("x", "y")
   }
 
   ["transforming a node does not detach it from its own tree"] {
-    let (detached = yProperty.transform((n) -> Pair(n, true)))
-      detached.parent == null && yProperty.parent != null
+    local detached = yProperty.transform((n) -> n)
+    detached.parent == null && yProperty.parent != null
   }
 
   ["only the root of a transformed tree has no parent"] {
     // the constructed node's child has no parent of its own, so the result tree must supply one
-    let (result =
-      mod("x = 0").transform((n) ->
-        if (n.type == "int_literal_expr") Pair(constructedAccess, false) else Pair(n, true))
-    )
-      result.fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
+    local replaceLiterals = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr") constructedAccess else n.transform(replaceLiterals)
+    mod("x = 0")
+      .transform(replaceLiterals)
+      .fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
   }
 
   ["a node inside a spliced subtree sees where it was spliced in"] {
-    let (result =
-      mod("x = 0").transform((n) ->
-        if (n.type == "int_literal_expr")
-          Pair(parser.parseExpression("foo"), true)
-        else if (n.type == "identifier" && n.text == "foo")
-          Pair((n) { text = if (hasAncestorOfType(n, "class_property")) "yes" else "no" }, false)
-        else
-          Pair(n, true)
-      )
-    )
-      renderer.render(result) == "x = yes\n"
+    local markFoo = (n: syntax.GenericNode) ->
+      if (n.type == "identifier" && n.text == "foo")
+        (n) { text = if (n.hasParentOfType("class_property")) "yes" else "no" }
+      else
+        n.transform(markFoo)
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        parser.parseExpression("foo").transform(markFoo)
+      else
+        n.transform(splice)
+    renderer.render(mod("x = 0").transform(splice)) == "x = yes\n"
   }
 
   ["a node spliced in by an earlier transform sees where it was spliced in"] {
-    let (spliced =
-      mod("x = 0").transform((n) ->
-        if (n.type == "int_literal_expr") Pair(parser.parseExpression("foo"), false)
-        else Pair(n, true))
-    )
-      let (marked =
-        spliced.transform((n) ->
-          if (n.type == "identifier" && n.text == "foo")
-            Pair((n) { text = if (hasAncestorOfType(n, "class_property")) "yes" else "no" }, false)
-          else
-            Pair(n, true)
-        )
-      )
-        renderer.render(marked) == "x = yes\n"
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr") parser.parseExpression("foo") else n.transform(splice)
+    local markFoo = (n: syntax.GenericNode) ->
+      if (n.type == "identifier" && n.text == "foo")
+        (n) { text = if (n.hasParentOfType("class_property")) "yes" else "no" }
+      else
+        n.transform(markFoo)
+    renderer.render(mod("x = 0").transform(splice).transform(markFoo)) == "x = yes\n"
+  }
+
+  ["reading a node's children inside the operator does not rewrite them"] {
+    local rewrite = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        intLiteral(1)
+      // a class_property's subtree must read as parsed, not as rewritten
+      else if (n.type == "class_property" && intLiteralsOf(n) != List("0"))
+        intLiteral(9)
+      else
+        n.transform(rewrite)
+    renderer.render(mod("x = 0").transform(rewrite)) == "x = 1\n"
   }
 
   ["a transform does not apply the operator until the tree is read"] {
