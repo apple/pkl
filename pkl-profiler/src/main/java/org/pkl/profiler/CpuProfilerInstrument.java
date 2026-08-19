@@ -118,11 +118,12 @@ public final class CpuProfilerInstrument extends TruffleInstrument {
   private void flush() {
     if (!cpuProfilerOptions.isEnabled() || isFlushed) return;
     isFlushed = true;
-    cpuSampler.close();
     var outputFile = cpuProfilerOptions.outputFile();
     assert outputFile != null;
     assert startTime != null;
+    // must read data before closing; `close()` clears it (see `CPUSampler#clearData()`).
     var data = new PklProfilerData(startTime, cpuSampler.getPeriod(), cpuSampler.getDataList());
+    cpuSampler.close();
     new PProfOutput(data, outputFile).write();
   }
 }
