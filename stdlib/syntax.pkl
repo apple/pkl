@@ -73,22 +73,30 @@ class GenericNode {
   /// [true] if this node does not have children.
   isLeaf: Boolean
 
-  /// Walk this node and its descendants top-down, applying [operator] to each node and
-  /// returning the (possibly rewritten) tree.
+  /// Returns this node with each of its children replaced by [operator]'s result for that child.
   ///
-  /// For each node, [operator] returns `Pair(replacement, descend)`, replacing the node with
-  /// `replacement`. When `descend` is `true`, the children of `replacement` are visited in turn, so
-  /// nodes emitted by a rewrite are themselves processed further down. When `descend` is `false`,
-  /// `replacement` and its subtree are left as-is.
+  /// [operator] decides for each child whether the walk goes on: returning the child leaves it and
+  /// its subtree as they are, while returning `child.transform(operator)` keeps rewriting below it.
+  /// A rewrite that must reach every node needs to recurse manually:
+  /// ```pkl
+  /// local upperCaseIdentifiers = (node: GenericNode) ->
+  ///   if (node.type == "identifier")
+  ///     (node) { text = node.text!!.toUpperCase() }
+  ///   else
+  ///     // keep going
+  ///     node.transform(upperCaseIdentifiers)
   ///
-  /// To leave a node unchanged and keep walking into its children, return `Pair(node, true)`.
+  /// module.transform(upperCaseIdentifiers)
+  /// ```
+  /// [operator] is *not* applied to this node. Rewriting this node too is the caller's to do, with
+  /// `operator.apply(node)`.
+  ///
+  /// [operator] is applied to a child only once that child is read.
   ///
   /// Constructed nodes must set their own [text] where it applies.
   /// [text] and [span] are carried through unchanged unless set explicitly, so a rebuilt branch
   /// still reports the source code it was parsed from.
-  /// Every node of the returned tree reports its [parent] within that tree, including nodes
-  /// constructed from scratch and nodes spliced in from another parse.
-  external function transform(operator: (GenericNode) -> Pair<GenericNode, Boolean>): GenericNode
+  external function transform(operator: (GenericNode) -> GenericNode): GenericNode
 
   /// Fold [operator] over this node and its descendants, top-down in pre-order.
   ///

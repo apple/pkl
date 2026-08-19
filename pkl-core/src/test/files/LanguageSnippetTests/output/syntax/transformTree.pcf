@@ -14,6 +14,9 @@ facts {
   ["a node spliced in by an earlier transform sees where it was spliced in"] {
     true
   }
+  ["reading a node's children inside the operator does not rewrite them"] {
+    true
+  }
   ["a transform does not apply the operator until the tree is read"] {
     true
   }

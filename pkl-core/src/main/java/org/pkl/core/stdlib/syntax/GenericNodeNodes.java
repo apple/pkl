@@ -131,12 +131,10 @@ public final class GenericNodeNodes {
   public abstract static class transform extends ExternalMethod1Node {
     @Specialization
     protected VmTyped eval(VmTyped self, VmFunction operator) {
-      // the operator is applied to this node right away, and to its descendants as they are read
-      var rewriter = new SyntaxNodes.OperatorRewriter(operator);
-      var rewrite = rewriter.rewrite(self, self);
-      // the root of the returned tree has no parent
+      // the operator is applied to a child only when that child is read, it is never applied to
+      // `self`, so an operator that recurses with `node.transform(operator)` terminates
       return SyntaxNodes.createView(
-          new ViewData(rewrite.node(), rewrite.descend() ? rewriter : null, null));
+          new ViewData(self, new SyntaxNodes.OperatorRewriter(operator), null));
     }
   }
 }
