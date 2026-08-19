@@ -1,6 +1,7 @@
 open module thisType1
 
 import "pkl:test"
+import "pkl:reflect"
 
 x: Int = 1
 
@@ -81,6 +82,68 @@ res15 = a.fun2(a)
 res15a = test.catch(() -> b.fun2(a))
 res15b = b.fun2(b)
 
+// test function type, function literal param, object body param 
+local c: (this) -> Dynamic = (xx: this) -> new Dynamic { x = xx.x * 2 }
+local d = (c) { xx: this ->
+  x = super.x + xx.x * 3
+}
+res16 = d.apply(this).x
+res16a = test.catch(() -> d.apply(new Dynamic { x = 1 }).x)
+
+// let expr binding type
+res17 =
+  let (xx: this = new module { x = 3 })
+    xx.x
+
+// for/when generator vars skip a level
+res18: Listing<Int> = new {
+  for (xx: this in List(module)) {
+    xx.x
+  }
+}
+
+// object property/method param/method return
+res19 = new Dynamic {
+  local foo: this = new Dynamic { x = 1 }
+  local function bar(a: this): this = new { x = foo.x + a.x }
+  baz = bar(new Dynamic { x = 2 })
+}
+
+// type cast, explicit new expr
+res20 = new this { x = 6 } as this
+
+// constrained
+res21: this(this.x > 5) = res20
+  
+// lazy type check and default value
+res22: Listing<this> = new {
+  new { x = 1 }
+  new Good {}
+  new { x = 3 }
+  new Good { x = 4 }
+}
+
+// annotation type
+
+open class ThisAnnotation extends Annotation {
+  @this { x = 1 }
+  x: Int
+}
+    
+open class ThatAnnotation extends ThisAnnotation
+
+@ThisAnnotation { x = 2 }
+annThis: Int = 1
+res23 = reflect.Class(getClass()).properties["annThis"].annotations.single
+res23a = res23.getClass().toString()
+res23b = reflect.Class(res23.getClass()).allProperties["x"].annotations.single.getClass().toString()
+
+@ThatAnnotation { x = 2 }
+annThat: Int = 1
+res24 = reflect.Class(getClass()).properties["annThat"].annotations.single
+res24a = res24.getClass().toString()
+res24b = reflect.Class(res24.getClass()).allProperties["x"].annotations.single.getClass().toString()
+
 output {
   // force eval but don't render to prevent recursion
   value =
@@ -104,6 +167,13 @@ output {
     let (_ = res15)
     let (_ = res15a)
     let (_ = res15b)
+    let (_ = res16)
+    let (_ = res17)
+    let (_ = res18)
+    let (_ = res19)
+    let (_ = res20)
+    let (_ = res21)
+    let (_ = res22)
       new Dynamic { 
         result = "ok"
         res1a = res1.res2.x
@@ -116,5 +186,16 @@ output {
         res11d = res11.res6a.x
         res12 = module.res12
         res14a = module.res14a
+        res16 = module.res16
+        res16a = module.res16a
+        res17 = module.res17
+        res18 = module.res18
+        res19 = module.res19
+        res22 = module.res22.toList().map((it) -> "\(it.getClass()): \(it.x)").toListing()
+        res22a = new Good {}.res22.toList().map((it) -> "\(it.getClass()): \(it.x)").toListing()
+        res23a = module.res23a
+        res23b = module.res23b
+        res24a = module.res24a
+        res24b = module.res24b
       }
 }

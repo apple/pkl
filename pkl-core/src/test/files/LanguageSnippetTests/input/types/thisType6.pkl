@@ -1,0 +1,3 @@
+open module thisType6
+
+class Foo extends this

@@ -3380,6 +3380,7 @@ public abstract class TypeNode extends PklNode {
     if (clazz.isInstantiable()) {
       if (clazz.isListingClass()) return VmListing.empty();
       if (clazz.isMappingClass()) return VmMapping.empty();
+      if (clazz.isDynamicClass()) return VmDynamic.empty();
       return clazz.getPrototype();
     }
 
