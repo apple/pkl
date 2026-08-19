@@ -95,6 +95,8 @@ abstract external class Module {
   /// path = rootModule.relativePathTo(module)
   /// ```
   external function relativePathTo(other: Module): List<String>
+  
+  external local outputFormat: String?
 
   /// The output of this module.
   ///
@@ -103,7 +105,7 @@ abstract external class Module {
   hidden output: ModuleOutput = new {
     value = outer
     renderer =
-      let (format = read?("prop:pkl.outputFormat") ?? "pcf")
+      let (format = outputFormat ?? "pcf")
         if (format == "json")
           new JsonRenderer {}
         else if (format == "jsonnet")

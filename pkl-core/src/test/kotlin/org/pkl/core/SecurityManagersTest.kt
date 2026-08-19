@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -63,30 +63,32 @@ class SecurityManagersTest {
   }
 
   @Test
-  fun `checkReadResource() - complete match`() {
-    val e = catchThrowable { manager.checkReadResource(URI("env:FOO_BAR")) }
+  fun `checkResolveResource - complete match`() {
+    val e = catchThrowable { manager.checkResolveResource(URI("env:FOO_BAR")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
-  fun `checkReadResource() - partial match from start`() {
-    val e = catchThrowable { manager.checkReadResource(URI("env:FOO_BAR_BAZ")) }
+  fun `checkResolveResource - partial match from start`() {
+    val e = catchThrowable { manager.checkResolveResource(URI("env:FOO_BAR_BAZ")) }
     assertThat(e).doesNotThrowAnyException()
   }
 
   @Test
-  fun `checkReadResource() - partial match not from start`() {
-    assertThrows<SecurityManagerException> { manager.checkReadResource(URI("other:env:FOO_BAR")) }
+  fun `checkResolveResource - partial match not from start`() {
+    assertThrows<SecurityManagerException> {
+      manager.checkResolveResource(URI("other:env:FOO_BAR"))
+    }
   }
 
   @Test
-  fun `checkReadResource() - no match`() {
-    assertThrows<SecurityManagerException> { manager.checkReadResource(URI("other:uri")) }
+  fun `checkResolveResource - no match`() {
+    assertThrows<SecurityManagerException> { manager.checkResolveResource(URI("other:uri")) }
   }
 
   @Test
-  fun `checkReadResource() - no match #2`() {
-    assertThrows<SecurityManagerException> { manager.checkReadResource(URI("env:FOO_BAZ")) }
+  fun `checkResolveResource - no match #2`() {
+    assertThrows<SecurityManagerException> { manager.checkResolveResource(URI("env:FOO_BAZ")) }
   }
 
   @Test
@@ -148,10 +150,10 @@ class SecurityManagersTest {
     val path = rootDir.resolve("baz.pkl")
     Files.createFile(path)
     manager.checkResolveModule(path.toUri())
-    manager.checkReadResource(path.toUri())
+    manager.checkResolveResource(path.toUri())
 
     manager.checkResolveModule(rootDir.toUri().resolve("qux/../baz.pkl"))
-    manager.checkReadResource(rootDir.toUri().resolve("qux/../baz.pkl"))
+    manager.checkResolveResource(rootDir.toUri().resolve("qux/../baz.pkl"))
   }
 
   @Test
@@ -167,10 +169,10 @@ class SecurityManagersTest {
       )
 
     manager.checkResolveModule(Path.of("/foo/bar/baz.pkl").toUri())
-    manager.checkReadResource(Path.of("/foo/bar/baz.pkl").toUri())
+    manager.checkResolveResource(Path.of("/foo/bar/baz.pkl").toUri())
 
     manager.checkResolveModule(Path.of("/foo/bar/qux/../baz.pkl").toUri())
-    manager.checkReadResource(Path.of("/foo/bar/qux/../baz.pkl").toUri())
+    manager.checkResolveResource(Path.of("/foo/bar/qux/../baz.pkl").toUri())
   }
 
   @Test
@@ -191,14 +193,14 @@ class SecurityManagersTest {
     val path = rootDir.resolve("../baz.pkl")
     Files.createFile(path)
     assertThrows<SecurityManagerException> { manager.checkResolveModule(path.toUri()) }
-    assertThrows<SecurityManagerException> { manager.checkReadResource(path.toUri()) }
+    assertThrows<SecurityManagerException> { manager.checkResolveResource(path.toUri()) }
 
     val symlink = rootDir.resolve("qux")
     Files.createSymbolicLink(symlink, tempDir)
     val path2 = symlink.resolve("baz2.pkl")
     Files.createFile(path2)
     assertThrows<SecurityManagerException> { manager.checkResolveModule(path2.toUri()) }
-    assertThrows<SecurityManagerException> { manager.checkReadResource(path2.toUri()) }
+    assertThrows<SecurityManagerException> { manager.checkResolveResource(path2.toUri()) }
   }
 
   @Test
@@ -217,14 +219,14 @@ class SecurityManagersTest {
       manager.checkResolveModule(Path.of("/foo/baz.pkl").toUri())
     }
     assertThrows<SecurityManagerException> {
-      manager.checkReadResource(Path.of("/foo/baz.pkl").toUri())
+      manager.checkResolveResource(Path.of("/foo/baz.pkl").toUri())
     }
 
     assertThrows<SecurityManagerException> {
       manager.checkResolveModule(Path.of("/foo/bar/../baz.pkl").toUri())
     }
     assertThrows<SecurityManagerException> {
-      manager.checkReadResource(Path.of("/foo/bar/../baz.pkl").toUri())
+      manager.checkResolveResource(Path.of("/foo/bar/../baz.pkl").toUri())
     }
   }
 }
