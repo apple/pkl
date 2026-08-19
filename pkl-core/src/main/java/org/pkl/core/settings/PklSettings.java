@@ -68,6 +68,7 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
             .addModuleKeyFactory(ModuleKeyFactories.standardLibrary)
             .addModuleKeyFactory(ModuleKeyFactories.file)
             .addResourceReader(ResourceReaders.environmentVariable())
+            .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(System.getenv())
             .build()) {
       var module = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Settings);

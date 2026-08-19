@@ -1,0 +1,159 @@
+amends "../snippetTest.pkl"
+
+import "pkl:EvaluatorSettings"
+
+local const http = new EvaluatorSettings.Http {}
+
+examples {
+  ["netRcHeaders - basic"] {
+    http.netRcHeaders("""
+      machine github.com
+        login octocat
+        password secret_pass
+    """)
+  }
+
+  ["netRcHeaders - quotes"] {
+    http.netRcHeaders("""
+      machine foo.com
+        login "bar bar"
+        password baz
+    """)
+  }
+
+  ["netRcHeaders - trailing comments"] {
+    http.netRcHeaders("""
+      machine foo.com
+        login bar
+        password foo # some comment
+      machine bar.com
+        login bar2
+        password foo#some comment
+    """)
+  }
+
+  ["netRcHeaders - hash inside quote"] {
+    http.netRcHeaders("""
+      machine foo.com
+        login "foo # bar"
+        password "pass#1"
+    """)
+  }
+
+  ["netRcHeaders - tabs as whitespace"] {
+    http.netRcHeaders("machine\tfoo.com\tlogin\tbar\tpassword\tbaz")
+  }
+
+  ["netRcHeaders - crlf line endings"] {
+    http.netRcHeaders("machine crlf.example.com\r\n  login foo\r\n  password bar\r\n")
+  }
+
+  ["netRcHeaders - entry with login but no password"] {
+    http.netRcHeaders("""
+      machine nologin.com
+        password onlypass
+      machine nopass.com
+        login onlylogin
+      machine valid.com
+        login user
+        password pass
+    """)
+  }
+
+  ["netRcHeaders - duplicate machines"] {
+    http.netRcHeaders("""
+      machine foo.com login firstUser password firstPass
+      machine foo.com login secondUser password secondPass
+    """)
+  }
+
+  ["netRcHeaders - machine that collides with keyword"] {
+    http.netRcHeaders("""
+      machine machine login user password pass
+    """)
+  }
+
+  ["netRcHeaders - machine default and default keyword"] {
+    http.netRcHeaders("""
+      default login defUser password defPass
+      machine default login machDefUser password machDefPass
+    """)
+  }
+
+  ["netRcHeaders - machine with slash omitted"] {
+    http.netRcHeaders("""
+      machine foo.com/bar login user password pass
+      machine valid.com login user password pass
+    """)
+  }
+
+  ["netRcHeaders - machine with glob characters escaped"] {
+    http.netRcHeaders("""
+      machine foo[bar].com login user password pass
+      machine star*.com login user password pass
+    """)
+  }
+
+  ["netRcHeaders - files with only comments or whitespace"] {
+    http.netRcHeaders("")
+    http.netRcHeaders("# only comments\n# second comment")
+    http.netRcHeaders("   \t  \n  \n  ")
+  }
+
+  ["netRcHeaders - skipped macdef"] {
+    http.netRcHeaders("""
+      macdef init
+        echo hello
+        echo world
+
+      machine foo.com login user1 password pass1
+    """)
+  }
+
+  ["netRcHeaders - macdef as value"] {
+    http.netRcHeaders("""
+      machine foo.com login macdef password pass1
+    """)
+  }
+
+  ["netRcHeaders - empty quotes"] {
+    http.netRcHeaders("""
+      machine foo.com login "" password ""
+    """)
+  }
+
+  ["netRcHeaders - escaped quotes and chars"] {
+    http.netRcHeaders("""
+      machine foo.com login "foo\"bar" password "foo \\z"
+    """)
+  }
+
+  ["netRcHeaders - consecutive quotes"] {
+    http.netRcHeaders("""
+      machine foo.com login "foo""bar" password pass
+    """)
+  }
+
+  ["netRcHeaders - quoted keywords"] {
+    http.netRcHeaders("""
+      "machine" foo.com "login" user "password" pass
+    """)
+  }
+
+  ["netRcHeaders - single line entry"] {
+    http.netRcHeaders("machine foo.com login bar password pass1")
+  }
+
+  ["netRcHeaders - trailing machine at EOF"] {
+    http.netRcHeaders("machine foo.com login bar password pass1 machine")
+  }
+
+  ["netRcHeaders - unterminated quote error"] {
+    module.catch(() -> http.netRcHeaders("""
+      machine foo.com login "foo
+    """))
+    module.catch(() -> http.netRcHeaders("""
+      machine foo.com login "foo\\
+    """))
+  }
+}
