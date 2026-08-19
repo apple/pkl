@@ -1,17 +1,17 @@
 open class Foo {
   @Deprecated
-  function bar() = 40
+  open function bar() = 40
 
   @Deprecated { message="Use only Foo#qux" }
-  function baz() = "baz"
+  open function baz() = "baz"
 
-  function qux() = 0
+  open function qux() = 0
 }
 
 class Bar extends Foo {
-  function bar() = super.bar() + 2
-  function baz() = super.baz() + " was called"
-  function qux() = super.qux() - 1
+  override function bar() = super.bar() + 2
+  override function baz() = super.baz() + " was called"
+  override function qux() = super.qux() - 1
 }
 
 barCall = new Bar {}.bar()

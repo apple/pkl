@@ -63,7 +63,7 @@ Library authors describe types as `ref.Reference<D, T>`, where `D` is the _domai
 import "pkl:ref"
 
 class MyDomain extends ref.Domain { // <1>
-  function renderReference(ref: ref.Reference<MyDomain, Any>): String =
+override function renderReference(ref: ref.Reference<MyDomain, Any>): String =
     "${ " + ref.getData() + "." + ref.getPath().join(".") + " }"
 }
 

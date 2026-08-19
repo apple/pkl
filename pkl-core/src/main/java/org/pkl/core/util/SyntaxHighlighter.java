@@ -66,35 +66,9 @@ public final class SyntaxHighlighter {
           Token.DIV,
           Token.INT_DIV,
           Token.MOD,
-          Token.PIPE);
-
-  private static final EnumSet<Token> keyword =
-      EnumSet.of(
-          Token.AMENDS,
-          Token.AS,
-          Token.EXTENDS,
-          Token.CLASS,
-          Token.TYPE_ALIAS,
-          Token.FUNCTION,
-          Token.MODULE,
-          Token.IMPORT,
-          Token.IMPORT_STAR,
-          Token.READ,
-          Token.READ_STAR,
-          Token.READ_QUESTION,
-          Token.TRACE,
-          Token.THROW,
-          Token.UNKNOWN,
-          Token.NOTHING,
-          Token.OUTER,
-          Token.SUPER,
-          Token.THIS,
-          Token.HIDDEN,
-          Token.ABSTRACT,
-          Token.CONST,
-          Token.FIXED,
-          Token.LOCAL,
-          Token.OPEN);
+          Token.PIPE,
+          Token.IS,
+          Token.AS);
 
   private static final EnumSet<Token> control =
       EnumSet.of(
@@ -147,7 +121,7 @@ public final class SyntaxHighlighter {
           out.append(AnsiTheme.SYNTAX_OPERATOR, lexer.text());
         } else if (control.contains(next)) {
           out.append(AnsiTheme.SYNTAX_CONTROL, lexer.text());
-        } else if (keyword.contains(next)) {
+        } else if (next.isKeyword()) {
           out.append(AnsiTheme.SYNTAX_KEYWORD, lexer.text());
         } else if (next.isAffix()) {
           out.append(AnsiTheme.SYNTAX_COMMENT, lexer.text());

@@ -5,6 +5,6 @@ propertya1 = "pigeon"
 function methoda1() = "pigeon"
 
 open class Classa1 {
-  name: String
-  age: Int
+  open name: String
+  open age: Int
 }

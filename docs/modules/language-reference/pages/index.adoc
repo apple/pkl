@@ -6028,7 +6028,7 @@ Here's a realistic example of how references might be used:
 import "pkl:ref"
 
 class Domain extends ref.Domain { // <1>
-  function renderReference(reference: ref.Reference<Domain, Any>): String =
+override function renderReference(reference: ref.Reference<Domain, Any>): String =
     if (reference.getData() is Task)
       let (path = reference.getPath().map((access) -> access.property ?? access.key.toString()))
         "${\(reference.getData().name)/\(path.join("/"))}"

@@ -96,9 +96,9 @@ class Renderer extends ValueRenderer {
   /// Renders [value] as a Jsonnet document.
   ///
   /// Every Jsonnet value is a valid Jsonnet document.
-  external function renderDocument(value: Any): String
+  override external function renderDocument(value: Any): String
 
-  external function renderValue(value: Any): String
+  override external function renderValue(value: Any): String
 }
 
 /// Annotate properties of classes and modules with this class to override how a [Renderer]

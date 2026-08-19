@@ -1151,7 +1151,7 @@ result = someLib.x
         class Person {
           name: String
 
-          function toString() = "Person(\(name))"
+          override function toString() = "Person(\(name))"
         }
         person: Person = new { name = "Frodo" }
         """

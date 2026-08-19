@@ -674,17 +674,17 @@ class EvaluatorTest {
           """
           import "pkl:pklbinary"
           abstract class Base {
-            fixed kind: String
+            open fixed kind: String
             input: String
             local encodedRequest = new pklbinary.Renderer {}.renderValue(this).base64
             hidden fixed requestUri: String = "b64:\(encodedRequest)"
             hidden fixed result: Resource = read(requestUri) as Resource
           }
           class Enc extends Base {
-            fixed kind: "enc"
+            override fixed kind: "enc"
           }
           class Dec extends Base {
-            fixed kind: "dec"
+            override fixed kind: "dec"
           }
           local enc = new Enc { input = "hello world" }
           local dec = new Dec { input = enc.result.text }

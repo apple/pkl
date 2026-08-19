@@ -6,62 +6,62 @@ local class MyAnn extends Annotation
 
 open local class A {
   inheritedFromA: String
-  overriddenInBFromA: String
-  overriddenInCFromA: String
-  overriddenInBCFromA: String
+  open overriddenInBFromA: String
+  open overriddenInCFromA: String
+  open overriddenInBCFromA: String
 
   fixed modA: String = ""
-  fixed modAOverrideB: String = ""
-  fixed modAOverrideC: String = ""
-  fixed modAOverrideBC: String = ""
-  fixed modAOverrideCB: String = ""
+  open fixed modAOverrideB: String = ""
+  open fixed modAOverrideC: String = ""
+  open fixed modAOverrideBC: String = ""
+  open fixed modAOverrideCB: String = ""
 
   @Unlisted
   annA: String
   @Unlisted
-  annAOverrideB: String
+  open annAOverrideB: String
   @Unlisted
-  annAOverrideC: String
+  open annAOverrideC: String
   @Unlisted
-  annAOverrideBC: String
+  open annAOverrideBC: String
 }
 
 open local class B extends A {
   inheritedFromB: String
-  overriddenInBFromA: Int
-  overriddenInCFromB: String
-  overriddenInBCFromA: Int
+  override overriddenInBFromA: Int
+  open  overriddenInCFromB: String
+  override overriddenInBCFromA: Int
 
   fixed modB: String = ""
-  hidden fixed modAOverrideB: Int = 0
-  hidden fixed modAOverrideBC: Int = 0
-  fixed modAOverrideCB: Int = 0
+  override hidden fixed modAOverrideB: Int = 0
+  override hidden fixed modAOverrideBC: Int = 0
+  override fixed modAOverrideCB: Int = 0
 
   @Unlisted
   annB: String
   @MyAnn
-  annAOverrideB: String
+  override annAOverrideB: String
   @MyAnn
-  annAOverrideBC: String
+  override annAOverrideBC: String
 }
 
 local class C extends B {
   fromC: String
-  overriddenInCFromA: Int
-  overriddenInCFromB: Int
-  overriddenInBCFromA: Boolean
+  override overriddenInCFromA: Int
+  override overriddenInCFromB: Int
+  override overriddenInBCFromA: Boolean
 
   fixed modC: String = ""
-  hidden fixed modAOverrideC: Int = 0
-  fixed modAOverrideBC: Boolean = false
-  hidden fixed modAOverrideCB: Boolean = false
+  override hidden fixed modAOverrideC: Int = 0
+  override fixed modAOverrideBC: Boolean = false
+  override hidden fixed modAOverrideCB: Boolean = false
 
   @Unlisted
   annC: String
   @MyAnn
-  annAOverrideC: String
+  override annAOverrideC: String
   @AlsoKnownAs { names { "mergedAnnotations" } }
-  annAOverrideBC: String
+  override annAOverrideBC: String
 }
 
 local class DisplayProperty {

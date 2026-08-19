@@ -172,7 +172,7 @@ class Microbenchmark extends Benchmark {
   /// The expression to evaluate.
   expression: Any
 
-  external function run(): BenchmarkResult
+  override external function run(): BenchmarkResult
 }
 
 /// A benchmark that measures the time taken to render a module's output.
@@ -180,7 +180,7 @@ class OutputBenchmark extends Benchmark {
   /// The module to evaluate.
   sourceModule: Module
 
-  external function run(): BenchmarkResult
+  override external function run(): BenchmarkResult
 }
 
 /// A benchmark that measures the time taken to parse a module's source code.
@@ -195,7 +195,7 @@ class ParserBenchmark extends Benchmark {
   /// resolved.
   sourceUri: String = "repl:text"
 
-  external function run(): BenchmarkResult
+  override external function run(): BenchmarkResult
 }
 
 /// The results of running a module's benchmarks.

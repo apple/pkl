@@ -51,7 +51,7 @@ abstract external class Any {
   /// Returns a string representation of [this].
   ///
   /// This method is used to convert the values of string interpolation expressions to strings.
-  external function toString(): String
+  open external function toString(): String
 
   /// Returns `this |> transform` if [this] is non-null, and [null] otherwise.
   ///
@@ -468,9 +468,9 @@ class PcfRenderer extends ValueRenderer {
   /// over escaping quotes and backslashes.
   useCustomStringDelimiters: Boolean = false
 
-  external function renderDocument(value: Any): String
+  override external function renderDocument(value: Any): String
 
-  external function renderValue(value: Any): String
+  override external function renderValue(value: Any): String
 }
 
 /// Directs a [ValueRenderer] to output [text] as-is in place of this directive.
@@ -548,9 +548,9 @@ class JsonRenderer extends ValueRenderer {
   /// Renders [value] as a JSON document.
   ///
   /// Every JSON value is a valid JSON document.
-  external function renderDocument(value: Any): String
+  override external function renderDocument(value: Any): String
 
-  external function renderValue(value: Any): String
+  override external function renderValue(value: Any): String
 }
 
 /// Renders values as YAML.
@@ -593,10 +593,10 @@ class YamlRenderer extends ValueRenderer {
   /// Renders [value] as a YAML document.
   ///
   /// Every YAML value is a valid YAML document.
-  external function renderDocument(value: Any): String
+  override external function renderDocument(value: Any): String
 
   /// Renders [value] as YAML value.
-  external function renderValue(value: Any): String
+  override external function renderValue(value: Any): String
 }
 
 /// Renders values as
@@ -612,9 +612,9 @@ class PListRenderer extends ValueRenderer {
   /// The characters to use for indenting output.
   indent: String = "  "
 
-  external function renderDocument(value: Any): String
+  override external function renderDocument(value: Any): String
 
-  external function renderValue(value: Any): String
+  override external function renderValue(value: Any): String
 }
 
 /// Renders values as
@@ -661,9 +661,9 @@ class PropertiesRenderer extends ValueRenderer {
   /// [Unicode escapes](https://docs.oracle.com/javase/specs/jls/se8/html/jls-3.html#jls-3.3).
   restrictCharset: Boolean = false
 
-  external function renderDocument(value: Any): String
+  override external function renderDocument(value: Any): String
 
-  external function renderValue(value: Any): String
+  override external function renderValue(value: Any): String
 }
 
 /// An external (file, HTTP, etc.) resource.
@@ -740,28 +740,28 @@ class Resource {
 /// use [Number] instead of [Float] in type annotations.
 abstract external class Number extends Any {
   /// A [Duration] with value [this] and unit `"ns"` (nanoseconds).
-  ns: Duration
+  open ns: Duration
 
   /// A [Duration] with value [this] and unit `"us"` (microseconds).
-  us: Duration
+  open us: Duration
 
   /// A [Duration] with value [this] and unit `"ms"` (milliseconds).
-  ms: Duration
+  open ms: Duration
 
   /// A [Duration] with value [this] and unit `"s"` (seconds).
-  s: Duration
+  open s: Duration
 
   /// A [Duration] with value [this] and unit `"min"` (minutes).
-  min: Duration
+  open min: Duration
 
   /// A [Duration] with value [this] and unit `"h"` (hours).
-  h: Duration
+  open h: Duration
 
   /// A [Duration] with value [this] and unit `"d"` (days).
-  d: Duration
+  open d: Duration
 
   /// A [DataSize] with value [this] and unit `"b"` (bytes).
-  b: DataSize
+  open b: DataSize
 
   /// A [DataSize] with value [this] and unit `"kb"` (kilobytes).
   ///
@@ -769,7 +769,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.kb == 1000.b
   /// ```
-  kb: DataSize
+  open kb: DataSize
 
   /// A [DataSize] with value [this] and unit `"mb"` (megabytes).
   ///
@@ -777,7 +777,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.mb == 1000.kb
   /// ```
-  mb: DataSize
+  open mb: DataSize
 
   /// A [DataSize] with value [this] and unit `"gb"` (gigabytes).
   ///
@@ -785,7 +785,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.gb == 1000.mb
   /// ```
-  gb: DataSize
+  open gb: DataSize
 
   /// A [DataSize] with value [this] and unit `"tb"` (terabytes).
   ///
@@ -793,7 +793,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.tb == 1000.gb
   /// ```
-  tb: DataSize
+  open tb: DataSize
 
   /// A [DataSize] with value [this] and unit `"pb"` (petabytes).
   ///
@@ -801,7 +801,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.pb == 1000.tb
   /// ```
-  pb: DataSize
+  open pb: DataSize
 
   /// A [DataSize] with value [this] and unit `"kib"` (kibibytes).
   ///
@@ -809,7 +809,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.kib == 1024.b
   /// ```
-  kib: DataSize
+  open kib: DataSize
 
   /// A [DataSize] with value [this] and unit `"mib"` (mebibytes).
   ///
@@ -817,7 +817,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.mib == 1024.kib
   /// ```
-  mib: DataSize
+  open mib: DataSize
 
   /// A [DataSize] with value [this] and unit `"gib"` (gibibytes).
   ///
@@ -825,7 +825,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.gib == 1024.mib
   /// ```
-  gib: DataSize
+  open gib: DataSize
 
   /// A [DataSize] with value [this] and unit `"tib"` (tebibytes).
   ///
@@ -833,7 +833,7 @@ abstract external class Number extends Any {
   /// ```
   /// 1.tib == 1024.gib
   /// ```
-  tib: DataSize
+  open tib: DataSize
 
   /// A [DataSize] with value [this] and unit `"pib"` (pebibytes).
   ///
@@ -841,14 +841,14 @@ abstract external class Number extends Any {
   /// ```
   /// 1.pib == 1024.tib
   /// ```
-  pib: DataSize
+  open pib: DataSize
 
   /// The sign of this number.
   ///
   /// Returns `0` for `0`, `0.0`, `-0.0`, and [NaN],
   /// `1` for positive numbers (including [Infinity]),
   /// and `-1` for negative numbers (including `-`[Infinity]).
-  sign: Number
+  open sign: Number
 
   /// The absolute value of this number.
   ///
@@ -862,7 +862,7 @@ abstract external class Number extends Any {
   /// (-Infinity).abs == Infinity
   /// NaN.abs == NaN
   /// ```
-  abs: Number
+  open abs: Number
 
   /// Rounds this number to the next mathematical integer towards [Infinity].
   ///
@@ -870,7 +870,7 @@ abstract external class Number extends Any {
   /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
   /// Otherwise, returns the smallest [Float] that is greater than or equal to [this]
   /// and is equal to a mathematical integer.
-  ceil: Number
+  open ceil: Number
 
   /// Rounds this number to the next mathematical integer towards -[Infinity].
   ///
@@ -878,7 +878,7 @@ abstract external class Number extends Any {
   /// If [this] is [NaN], [Infinity], -[Infinity], `0.0`, or `-0.0`, returns [this].
   /// Otherwise, returns the largest [Float] that is less than or equal to [this]
   /// and is equal to a mathematical integer.
-  floor: Number
+  open floor: Number
 
   /// Rounds this number to the nearest mathematical integer, breaking ties in favor
   /// of the even integer.
@@ -917,7 +917,7 @@ abstract external class Number extends Any {
   abstract function toFloat(): Float
 
   /// Converts this number to its decimal string representation.
-  abstract function toString(): String
+  abstract override function toString(): String
 
   /// Converts this number to a decimal fixed-point representation with [fractionDigits] digits
   /// after the decimal point.
@@ -946,23 +946,23 @@ abstract external class Number extends Any {
   /// !(-Infinity).isPositive
   /// !NaN.isPositive
   /// ```
-  isPositive: Boolean
+  open isPositive: Boolean
 
   /// Tells if this number is neither [NaN] nor [isInfinite].
-  isFinite: Boolean
+  open isFinite: Boolean
 
   /// Tells if this number is [Infinity] or -[Infinity].
-  isInfinite: Boolean
+  open isInfinite: Boolean
 
   /// Tells if this number is [NaN].
   ///
   /// Always use this method when testing for [NaN].
   /// Note that `x == NaN` is *not* a correct way to test for [NaN] because `NaN != NaN` as per the
   /// IEEE spec.
-  isNaN: Boolean
+  open isNaN: Boolean
 
   /// Tells if this number is not 0.
-  isNonZero: Boolean
+  open isNonZero: Boolean
 
   /// Tells if this number is greater than or equal to [start] and less than or equal to
   /// [inclusiveEnd].
@@ -991,45 +991,45 @@ abstract external class Number extends Any {
 /// a ** b // exponentiation
 /// ```
 external class Int extends Number {
-  external ns: Duration
-  external us: Duration
-  external ms: Duration
-  external s: Duration
-  external min: Duration
-  external h: Duration
-  external d: Duration
+  override external ns: Duration
+  override external us: Duration
+  override external ms: Duration
+  override external s: Duration
+  override external min: Duration
+  override external h: Duration
+  override external d: Duration
 
-  external b: DataSize
+  override external b: DataSize
 
-  external kb: DataSize
-  external mb: DataSize
-  external gb: DataSize
-  external tb: DataSize
-  external pb: DataSize
+  override external kb: DataSize
+  override external mb: DataSize
+  override external gb: DataSize
+  override external tb: DataSize
+  override external pb: DataSize
 
-  external kib: DataSize
-  external mib: DataSize
-  external gib: DataSize
-  external tib: DataSize
-  external pib: DataSize
+  override external kib: DataSize
+  override external mib: DataSize
+  override external gib: DataSize
+  override external tib: DataSize
+  override external pib: DataSize
 
-  external sign: Int
+  override external sign: Int
 
-  external abs: Int
+  override external abs: Int
 
-  external ceil: Int
+  override external ceil: Int
 
-  external floor: Int
+  override external floor: Int
 
-  external function round(): Int
+  override external function round(): Int
 
-  external function truncate(): Int
+  override external function truncate(): Int
 
-  external function toInt(): Int
+  override external function toInt(): Int
 
-  external function toFloat(): Float
+  override external function toFloat(): Float
 
-  external function toString(): String
+  override external function toString(): String
 
   /// Converts this number to a string representation in the given radix.
   ///
@@ -1043,11 +1043,11 @@ external class Int extends Number {
   /// ```
   external function toRadixString(radix: Int(this.isBetween(2, 36))): String
 
-  external function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
+  override external function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
 
-  external function toDuration(unit: DurationUnit): Duration
+  override external function toDuration(unit: DurationUnit): Duration
 
-  external function toDataSize(unit: DataSizeUnit): DataSize
+  override external function toDataSize(unit: DataSizeUnit): DataSize
 
   /// Shifts this integer left by [n] bits.
   external function shl(n: Int): Int
@@ -1072,13 +1072,13 @@ external class Int extends Number {
   /// Bitwise NOT (inverse) of this integer.
   external inv: Int
 
-  external isPositive: Boolean
+  override external isPositive: Boolean
 
-  external isFinite: Boolean
+  override external isFinite: Boolean
 
-  external isInfinite: Boolean
+  override external isInfinite: Boolean
 
-  external isNaN: Boolean
+  override external isNaN: Boolean
 
   /// Tells if this integer is evenly divisible by two.
   external isEven: Boolean
@@ -1086,9 +1086,9 @@ external class Int extends Number {
   /// Tells if this number is not [isEven].
   external isOdd: Boolean
 
-  external isNonZero: Boolean
+  override external isNonZero: Boolean
 
-  external function isBetween(start: Number, inclusiveEnd: Number): Boolean
+  override external function isBetween(start: Number, inclusiveEnd: Number): Boolean
 
   /// Returns the Unicode character with code point [this].
   ///
@@ -1141,63 +1141,63 @@ typealias Comparable = String | Number | Duration | DataSize
 /// Tip: To allow transparent use of [Float] and [Int],
 /// use [Number] instead of [Float] in type annotations.
 external class Float extends Number {
-  external ns: Duration
-  external us: Duration
-  external ms: Duration
-  external s: Duration
-  external min: Duration
-  external h: Duration
-  external d: Duration
+  override external ns: Duration
+  override external us: Duration
+  override external ms: Duration
+  override external s: Duration
+  override external min: Duration
+  override external h: Duration
+  override external d: Duration
 
-  external b: DataSize
+  override external b: DataSize
 
-  external kb: DataSize
-  external mb: DataSize
-  external gb: DataSize
-  external tb: DataSize
-  external pb: DataSize
+  override external kb: DataSize
+  override external mb: DataSize
+  override external gb: DataSize
+  override external tb: DataSize
+  override external pb: DataSize
 
-  external kib: DataSize
-  external mib: DataSize
-  external gib: DataSize
-  external tib: DataSize
-  external pib: DataSize
+  override external kib: DataSize
+  override external mib: DataSize
+  override external gib: DataSize
+  override external tib: DataSize
+  override external pib: DataSize
 
-  external sign: Float
+  override external sign: Float
 
-  external abs: Float
+  override external abs: Float
 
-  external ceil: Float
+  override external ceil: Float
 
-  external floor: Float
+  override external floor: Float
 
-  external function round(): Float
+  override external function round(): Float
 
-  external function truncate(): Float
+  override external function truncate(): Float
 
-  external function toInt(): Int
+  override external function toInt(): Int
 
-  external function toFloat(): Float
+  override external function toFloat(): Float
 
-  external function toString(): String
+  override external function toString(): String
 
-  external function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
+  override external function toFixed(fractionDigits: Int(this.isBetween(0, 20))): String
 
-  external function toDuration(unit: DurationUnit): Duration
+  override external function toDuration(unit: DurationUnit): Duration
 
-  external function toDataSize(unit: DataSizeUnit): DataSize
+  override external function toDataSize(unit: DataSizeUnit): DataSize
 
-  external isPositive: Boolean
+  override external isPositive: Boolean
 
-  external isFinite: Boolean
+  override external isFinite: Boolean
 
-  external isInfinite: Boolean
+  override external isInfinite: Boolean
 
-  external isNaN: Boolean
+  override external isNaN: Boolean
 
-  external isNonZero: Boolean
+  override external isNonZero: Boolean
 
-  external function isBetween(start: Number, inclusiveEnd: Number): Boolean
+  override external function isBetween(start: Number, inclusiveEnd: Number): Boolean
 }
 
 /// The [Float] value that is not a number (NaN).
@@ -1763,7 +1763,7 @@ class RegexMatch {
   groups: List<RegexMatch?>
 
   /// Returns [value].
-  function toString(): String = value
+  override function toString(): String = value
 }
 
 /// The unit of a [Duration].
@@ -2431,7 +2431,7 @@ abstract external class Collection<out Element> extends Any {
   /// List().length == 0
   /// ```
   @AlsoKnownAs { names { "size"; "count" } }
-  length: Int
+  open length: Int
 
   /// Tells whether this collection is empty.
   ///
@@ -2440,7 +2440,7 @@ abstract external class Collection<out Element> extends Any {
   /// !List(1, 2, 3).isEmpty
   /// List().isEmpty
   /// ```
-  isEmpty: Boolean
+  open isEmpty: Boolean
 
   /// Tells whether this collection is not empty.
   ///
@@ -2450,7 +2450,7 @@ abstract external class Collection<out Element> extends Any {
   /// !List().isNotEmpty
   /// ```
   @Since { version = "0.31.0" }
-  isNotEmpty: Boolean
+  open isNotEmpty: Boolean
 
   /// The first element in this collection.
   ///
@@ -2462,11 +2462,11 @@ abstract external class Collection<out Element> extends Any {
   /// import("pkl:test").catch(() -> List().first)
   /// ```
   @AlsoKnownAs { names { "head" } }
-  first: Element
+  open first: Element
 
   /// Same as [first] but returns [null] if this collection is empty.
   @AlsoKnownAs { names { "head" } }
-  firstOrNull: Element?
+  open firstOrNull: Element?
 
   /// The tail of this collection.
   ///
@@ -2478,11 +2478,11 @@ abstract external class Collection<out Element> extends Any {
   /// import("pkl:test").catch(() -> List().rest)
   /// ```
   @AlsoKnownAs { names { "tail" } }
-  rest: Collection<Element>
+  open rest: Collection<Element>
 
   /// Same as [rest] but returns [null] if this collection is empty.
   @AlsoKnownAs { names { "tail" } }
-  restOrNull: Collection<Element>?
+  open restOrNull: Collection<Element>?
 
   /// The last element in this collection.
   ///
@@ -2493,10 +2493,10 @@ abstract external class Collection<out Element> extends Any {
   /// List(1, 2, 3).last == 3
   /// import("pkl:test").catch(() -> List().last)
   /// ```
-  last: Element
+  open last: Element
 
   /// Same as [last] but returns [null] if this collection is empty.
-  lastOrNull: Element?
+  open lastOrNull: Element?
 
   /// The single element in this collection.
   ///
@@ -2508,10 +2508,10 @@ abstract external class Collection<out Element> extends Any {
   /// throws(() -> List().single)
   /// throws(() -> List(1, 2, 3).single)
   /// ```
-  single: Element
+  open single: Element
 
   /// Same as [single] but returns [null] if this collection is empty or has more than one element.
-  singleOrNull: Element?
+  open singleOrNull: Element?
 
   /// Tests if [element] is contained in this collection.
   ///
@@ -2802,10 +2802,10 @@ abstract external class Collection<out Element> extends Any {
   /// Shorthand for `minWith((a, b) -> a < b)`.
   ///
   /// Throws if this collection is empty, or if any two elements cannot be compared with `<`.
-  min: Element
+  open min: Element
 
   /// Same as [min] but returns [null] if this collection is empty.
-  minOrNull: Element?
+  open minOrNull: Element?
 
   /// Returns the first element in this collection that is less than or equal to any other element
   /// after applying [selector].
@@ -2836,10 +2836,10 @@ abstract external class Collection<out Element> extends Any {
   /// Shorthand for `maxWith((a, b) -> a < b)`.
   ///
   /// Throws if this collection is empty, or if any two elements cannot be compared with `<`.
-  max: Element
+  open max: Element
 
   /// Same as [max] but returns [null] if this collection empty.
-  maxOrNull: Element
+  open maxOrNull: Element
 
   /// Returns the first element in this collection that is greater than or equal to any other
   /// element after applying [selector].
@@ -3076,12 +3076,12 @@ external const function List<Element>(elements: VarArgs<Element>): List<Element>
 /// list1 + list2 // concatenation
 /// ```
 external class List<out Element> extends Collection<Element> {
-  external length: Int
+  override external length: Int
 
-  external isEmpty: Boolean
+  override external isEmpty: Boolean
 
   @Since { version = "0.31.0" }
-  external isNotEmpty: Boolean
+  override external isNotEmpty: Boolean
 
   /// The index of the last element in this list (same as `length - 1`).
   ///
@@ -3137,44 +3137,50 @@ external class List<out Element> extends Collection<Element> {
   /// ```
   external function sublistOrNull(start: Int, exclusiveEnd: Int): List<Element>?
 
-  external first: Element
-  external firstOrNull: Element?
+  override external first: Element
+  override external firstOrNull: Element?
 
-  external rest: List<Element>
-  external restOrNull: List<Element>?
+  override external rest: List<Element>
+  override external restOrNull: List<Element>?
 
-  external last: Element
-  external lastOrNull: Element?
+  override external last: Element
+  override external lastOrNull: Element?
 
-  external single: Element
-  external singleOrNull: Element?
+  override external single: Element
+  override external singleOrNull: Element?
 
-  external function contains(element: Any): Boolean
-  external function startsWith(coll: Collection<Any>): Boolean
-  external function endsWith(coll: Collection<Any>): Boolean
+  override external function contains(element: Any): Boolean
+  override external function startsWith(coll: Collection<Any>): Boolean
+  override external function endsWith(coll: Collection<Any>): Boolean
 
-  external function split(index: Int): Pair<List<Element>, List<Element>>
-  external function splitOrNull(index: Int): Pair<List<Element>, List<Element>>?
-  external function partition(predicate: (Element) -> Boolean): Pair<List<Element>, List<Element>>
+  override external function split(index: Int): Pair<List<Element>, List<Element>>
+  override external function splitOrNull(index: Int): Pair<List<Element>, List<Element>>?
+  override external function partition(
+    predicate: (Element) -> Boolean,
+  ): Pair<List<Element>, List<Element>>
 
-  external function filter(predicate: (Element) -> Boolean): List<Element>
-  external function filterNonNull(): List<Element(this != null)>
-  external function map<Result>(transform: (Element) -> Result): List<Result>
-  external function mapNonNull<Result>(transform: (Element) -> Result): List<Result(this != null)>
-  external function flatMap<Result>(transform: (Element) -> Collection<Result>): List<Result>
+  override external function filter(predicate: (Element) -> Boolean): List<Element>
+  override external function filterNonNull(): List<Element(this != null)>
+  override external function map<Result>(transform: (Element) -> Result): List<Result>
+  override external function mapNonNull<Result>(
+    transform: (Element) -> Result,
+  ): List<Result(this != null)>
+  override external function flatMap<Result>(
+    transform: (Element) -> Collection<Result>,
+  ): List<Result>
 
-  external function filterIndexed(predicate: (Int, Element) -> Boolean): List<Element>
-  external function mapIndexed<Result>(transform: (Int, Element) -> Result): List<Result>
+  override external function filterIndexed(predicate: (Int, Element) -> Boolean): List<Element>
+  override external function mapIndexed<Result>(transform: (Int, Element) -> Result): List<Result>
 
   @Since { version = "0.29.0" }
-  external function mapNonNullIndexed<Result>(
+  override external function mapNonNullIndexed<Result>(
     transform: (Int, Element) -> Result,
   ): List<Result(this != null)>
-  external function flatMapIndexed<Result>(
+  override external function flatMapIndexed<Result>(
     transform: (Int, Element) -> Collection<Result>,
   ): List<Result>
 
-  external function filterIsInstance<Type>(clazz: Class<Type>): List<Type>
+  override external function filterIsInstance<Type>(clazz: Class<Type>): List<Type>
 
   /// Tells whether this list contains no duplicate elements.
   ///
@@ -3221,12 +3227,12 @@ external class List<out Element> extends Collection<Element> {
   @AlsoKnownAs { names { "uniqueBy" } }
   external function distinctBy(selector: (Element) -> Any): List<Element>
 
-  external function flatten(): List
+  override external function flatten(): List
 
-  external function every(predicate: (Element) -> Boolean): Boolean
-  external function any(predicate: (Element) -> Boolean): Boolean
+  override external function every(predicate: (Element) -> Boolean): Boolean
+  override external function any(predicate: (Element) -> Boolean): Boolean
 
-  external function add<Other>(element: Other): List<Element | Other>
+  override external function add<Other>(element: Other): List<Element | Other>
 
   /// Replaces the element at [index] with [replacement].
   ///
@@ -3256,11 +3262,11 @@ external class List<out Element> extends Collection<Element> {
     replacement: Collection<Other>,
   ): List<Element | Other>?
 
-  external function find(predicate: (Element) -> Boolean): Element
-  external function findOrNull(predicate: (Element) -> Boolean): Element?
+  override external function find(predicate: (Element) -> Boolean): Element
+  override external function findOrNull(predicate: (Element) -> Boolean): Element?
 
-  external function findLast(predicate: (Element) -> Boolean): Element
-  external function findLastOrNull(predicate: (Element) -> Boolean): Element?
+  override external function findLast(predicate: (Element) -> Boolean): Element
+  override external function findLastOrNull(predicate: (Element) -> Boolean): Element?
 
   /// The index of the first element for which [predicate] returns [true].
   ///
@@ -3328,72 +3334,80 @@ external class List<out Element> extends Collection<Element> {
   /// Same as [lastIndexOf()] but returns [null] if this collection does not contain [element].
   external function lastIndexOfOrNull(element: Any): Int?
 
-  external function count(predicate: (Element) -> Boolean): Int
+  override external function count(predicate: (Element) -> Boolean): Int
 
-  external function take(n: Int): List<Element>
-  external function takeWhile(predicate: (Element) -> Boolean): List<Element>
-  external function takeLast(n: Int): List<Element>
-  external function takeLastWhile(predicate: (Element) -> Boolean): List<Element>
+  override external function take(n: Int): List<Element>
+  override external function takeWhile(predicate: (Element) -> Boolean): List<Element>
+  override external function takeLast(n: Int): List<Element>
+  override external function takeLastWhile(predicate: (Element) -> Boolean): List<Element>
 
-  external function drop(n: Int): List<Element>
-  external function dropWhile(predicate: (Element) -> Boolean): List<Element>
-  external function dropLast(n: Int): List<Element>
-  external function dropLastWhile(predicate: (Element) -> Boolean): List<Element>
+  override external function drop(n: Int): List<Element>
+  override external function dropWhile(predicate: (Element) -> Boolean): List<Element>
+  override external function dropLast(n: Int): List<Element>
+  override external function dropLastWhile(predicate: (Element) -> Boolean): List<Element>
 
-  external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
-  external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
-  external function foldIndexed<Result>(
+  override external function fold<Result>(
+    initial: Result,
+    operator: (Result, Element) -> Result,
+  ): Result
+  override external function foldBack<Result>(
+    initial: Result,
+    operator: (Element, Result) -> Result,
+  ): Result
+  override external function foldIndexed<Result>(
     initial: Result,
     operator: (Int, Result, Element) -> Result,
   ): Result
 
-  external function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
-  external function reduceOrNull<Result>(operator: (Element | Result, Element) -> Result): Result?
+  override external function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
+  override external function reduceOrNull<Result>(
+    operator: (Element | Result, Element) -> Result,
+  ): Result?
 
-  external function groupBy<Key>(selector: (Element) -> Key): Map<Key, List<Element>>
+  override external function groupBy<Key>(selector: (Element) -> Key): Map<Key, List<Element>>
 
-  external function repeat(n: Int): List<Element>
+  override external function repeat(n: Int): List<Element>
 
-  external min: Element
-  external minOrNull: Element
+  override external min: Element
+  override external minOrNull: Element
 
-  external function minBy(selector: (Element) -> Comparable): Element
-  external function minByOrNull(selector: (Element) -> Comparable): Element?
+  override external function minBy(selector: (Element) -> Comparable): Element
+  override external function minByOrNull(selector: (Element) -> Comparable): Element?
 
-  external function minWith(comparator: (Element, Element) -> Boolean): Element
-  external function minWithOrNull(comparator: (Element, Element) -> Boolean): Element?
+  override external function minWith(comparator: (Element, Element) -> Boolean): Element
+  override external function minWithOrNull(comparator: (Element, Element) -> Boolean): Element?
 
-  external max: Element
-  external maxOrNull: Element?
+  override external max: Element
+  override external maxOrNull: Element?
 
-  external function maxBy(selector: (Element) -> Comparable): Element
-  external function maxByOrNull(selector: (Element) -> Comparable): Element?
+  override external function maxBy(selector: (Element) -> Comparable): Element
+  override external function maxByOrNull(selector: (Element) -> Comparable): Element?
 
-  external function maxWith(comparator: (Element, Element) -> Boolean): Element
-  external function maxWithOrNull(comparator: (Element, Element) -> Boolean): Element?
+  override external function maxWith(comparator: (Element, Element) -> Boolean): Element
+  override external function maxWithOrNull(comparator: (Element, Element) -> Boolean): Element?
 
-  external function sort(): List<Element>
-  external function sortBy(selector: (Element) -> Comparable): List<Element>
-  external function sortWith(comparator: (Element, Element) -> Boolean): List<Element>
+  override external function sort(): List<Element>
+  override external function sortBy(selector: (Element) -> Comparable): List<Element>
+  override external function sortWith(comparator: (Element, Element) -> Boolean): List<Element>
 
-  external function reverse(): List<Element>
+  override external function reverse(): List<Element>
 
-  external function zip<Other>(coll: Collection<Other>): List<Pair<Element, Other>>
+  override external function zip<Other>(coll: Collection<Other>): List<Pair<Element, Other>>
 
-  external function join(separator: String): String
+  override external function join(separator: String): String
 
-  external function toList(): List<Element>
+  override external function toList(): List<Element>
 
-  external function toSet(): Set<Element>
+  override external function toSet(): Set<Element>
 
-  external function toMap<Key, Value>(
+  override external function toMap<Key, Value>(
     keyExtractor: (Element) -> Key,
     valueExtractor: (Element) -> Value,
   ): Map<Key, Value>
 
-  external function toListing(): Listing<Element>
+  override external function toListing(): Listing<Element>
 
-  external function toDynamic(): Dynamic
+  override external function toDynamic(): Dynamic
 
   /// Converts this list to [Bytes].
   ///
@@ -3424,137 +3438,155 @@ external const function Set<Element>(elements: VarArgs<Element>): Set<Element>
 /// set1 + set2  // union
 /// ```
 external class Set<out Element> extends Collection<Element> {
-  external length: Int
+  override external length: Int
 
-  external isEmpty: Boolean
+  override external isEmpty: Boolean
 
   @Since { version = "0.31.0" }
-  external isNotEmpty: Boolean
+  override external isNotEmpty: Boolean
 
-  external first: Element
-  external firstOrNull: Element?
+  override external first: Element
+  override external firstOrNull: Element?
 
-  external rest: Set<Element>
-  external restOrNull: Set<Element>?
+  override external rest: Set<Element>
+  override external restOrNull: Set<Element>?
 
-  external last: Element
-  external lastOrNull: Element?
+  override external last: Element
+  override external lastOrNull: Element?
 
-  external single: Element
-  external singleOrNull: Element?
+  override external single: Element
+  override external singleOrNull: Element?
 
-  external function contains(element: Any): Boolean
-  external function startsWith(coll: Collection<Any>): Boolean
-  external function endsWith(coll: Collection<Any>): Boolean
+  override external function contains(element: Any): Boolean
+  override external function startsWith(coll: Collection<Any>): Boolean
+  override external function endsWith(coll: Collection<Any>): Boolean
 
-  external function split(index: Int): Pair<Set<Element>, Set<Element>>
-  external function splitOrNull(index: Int): Pair<Set<Element>, Set<Element>>?
-  external function partition(predicate: (Element) -> Boolean): Pair<Set<Element>, Set<Element>>
+  override external function split(index: Int): Pair<Set<Element>, Set<Element>>
+  override external function splitOrNull(index: Int): Pair<Set<Element>, Set<Element>>?
+  override external function partition(
+    predicate: (Element) -> Boolean,
+  ): Pair<Set<Element>, Set<Element>>
 
-  external function filter(predicate: (Element) -> Boolean): Set<Element>
-  external function filterNonNull(): Set<Element(this != null)>
-  external function map<Result>(transform: (Element) -> Result): Set<Result>
-  external function mapNonNull<Result>(transform: (Element) -> Result): Set<Result(this != null)>
-  external function flatMap<Result>(transform: (Element) -> Collection<Result>): Set<Result>
+  override external function filter(predicate: (Element) -> Boolean): Set<Element>
+  override external function filterNonNull(): Set<Element(this != null)>
+  override external function map<Result>(transform: (Element) -> Result): Set<Result>
+  override external function mapNonNull<Result>(
+    transform: (Element) -> Result,
+  ): Set<Result(this != null)>
+  override external function flatMap<Result>(
+    transform: (Element) -> Collection<Result>,
+  ): Set<Result>
 
-  external function filterIndexed(predicate: (Int, Element) -> Boolean): Set<Element>
-  external function mapIndexed<Result>(transform: (Int, Element) -> Result): Set<Result>
+  override external function filterIndexed(predicate: (Int, Element) -> Boolean): Set<Element>
+  override external function mapIndexed<Result>(transform: (Int, Element) -> Result): Set<Result>
 
   @Since { version = "0.29.0" }
-  external function mapNonNullIndexed<Result>(
+  override external function mapNonNullIndexed<Result>(
     transform: (Int, Element) -> Result,
   ): Set<Result(this != null)>
-  external function flatMapIndexed<Result>(
+  override external function flatMapIndexed<Result>(
     transform: (Int, Element) -> Collection<Result>,
   ): Set<Result>
 
-  external function filterIsInstance<Type>(clazz: Class<Type>): Set<Type>
+  override external function filterIsInstance<Type>(clazz: Class<Type>): Set<Type>
 
-  external function flatten(): Set
+  override external function flatten(): Set
 
-  external function every(predicate: (Element) -> Boolean): Boolean
-  external function any(predicate: (Element) -> Boolean): Boolean
+  override external function every(predicate: (Element) -> Boolean): Boolean
+  override external function any(predicate: (Element) -> Boolean): Boolean
 
-  external function add<Other>(element: Other): Set<Element | Other>
+  override external function add<Other>(element: Other): Set<Element | Other>
 
-  external function find(predicate: (Element) -> Boolean): Element
-  external function findOrNull(predicate: (Element) -> Boolean): Element?
+  override external function find(predicate: (Element) -> Boolean): Element
+  override external function findOrNull(predicate: (Element) -> Boolean): Element?
 
-  external function findLast(predicate: (Element) -> Boolean): Element
-  external function findLastOrNull(predicate: (Element) -> Boolean): Element?
+  override external function findLast(predicate: (Element) -> Boolean): Element
+  override external function findLastOrNull(predicate: (Element) -> Boolean): Element?
 
-  external function count(predicate: (Element) -> Boolean): Int
+  override external function count(predicate: (Element) -> Boolean): Int
 
-  external function take(n: Int): Set<Element>
-  external function takeWhile(predicate: (Element) -> Boolean): Set<Element>
-  external function takeLast(n: Int): Set<Element>
-  external function takeLastWhile(predicate: (Element) -> Boolean): Set<Element>
+  override external function take(n: Int): Set<Element>
+  override external function takeWhile(predicate: (Element) -> Boolean): Set<Element>
+  override external function takeLast(n: Int): Set<Element>
+  override external function takeLastWhile(predicate: (Element) -> Boolean): Set<Element>
 
-  external function drop(n: Int): Set<Element>
-  external function dropWhile(predicate: (Element) -> Boolean): Set<Element>
-  external function dropLast(n: Int): Set<Element>
-  external function dropLastWhile(predicate: (Element) -> Boolean): Set<Element>
+  override external function drop(n: Int): Set<Element>
+  override external function dropWhile(predicate: (Element) -> Boolean): Set<Element>
+  override external function dropLast(n: Int): Set<Element>
+  override external function dropLastWhile(predicate: (Element) -> Boolean): Set<Element>
 
-  external function fold<Result>(initial: Result, operator: (Result, Element) -> Result): Result
-  external function foldBack<Result>(initial: Result, operator: (Element, Result) -> Result): Result
-  external function foldIndexed<Result>(
+  override external function fold<Result>(
+    initial: Result,
+    operator: (Result, Element) -> Result,
+  ): Result
+  override external function foldBack<Result>(
+    initial: Result,
+    operator: (Element, Result) -> Result,
+  ): Result
+  override external function foldIndexed<Result>(
     initial: Result,
     operator: (Int, Result, Element) -> Result,
   ): Result
 
-  external function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
-  external function reduceOrNull<Result>(operator: (Element | Result, Element) -> Result): Result?
+  override external function reduce<Result>(operator: (Element | Result, Element) -> Result): Result
+  override external function reduceOrNull<Result>(
+    operator: (Element | Result, Element) -> Result,
+  ): Result?
 
-  external function groupBy<Key>(selector: (Element) -> Key): Map<Key, Set<Element>>
+  override external function groupBy<Key>(selector: (Element) -> Key): Map<Key, Set<Element>>
 
-  external function repeat(n: Int): List<Element>
+  override external function repeat(n: Int): List<Element>
 
-  external min: Element
-  external minOrNull: Element
+  override external min: Element
+  override external minOrNull: Element
 
-  external function minBy(selector: (Element) -> Int): Element
-  external function minByOrNull(selector: (Element) -> Int): Element?
+  override external function minBy(selector: (Element) -> Int): Element
+  override external function minByOrNull(selector: (Element) -> Int): Element?
 
-  external function minWith(comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int): Element
-  external function minWithOrNull(
+  override external function minWith(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): Element
+  override external function minWithOrNull(
     comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
   ): Element?
 
-  external max: Element
-  external maxOrNull: Element?
+  override external max: Element
+  override external maxOrNull: Element?
 
-  external function maxBy(selector: (Element) -> Int): Element
-  external function maxByOrNull(selector: (Element) -> Int): Element?
+  override external function maxBy(selector: (Element) -> Int): Element
+  override external function maxByOrNull(selector: (Element) -> Int): Element?
 
-  external function maxWith(comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int): Element
-  external function maxWithOrNull(
+  override external function maxWith(
+    comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
+  ): Element
+  override external function maxWithOrNull(
     comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
   ): Element?
 
-  external function sort(): List<Element>
-  external function sortBy(selector: (Element) -> Comparable): List<Element>
-  external function sortWith(
+  override external function sort(): List<Element>
+  override external function sortBy(selector: (Element) -> Comparable): List<Element>
+  override external function sortWith(
     comparator: (Element, Element) -> Boolean | /*Deprecated*/ Int,
   ): List<Element>
 
-  external function reverse(): List<Element>
+  override external function reverse(): List<Element>
 
-  external function zip<Other>(coll: Collection<Other>): Set<Pair<Element, Other>>
+  override external function zip<Other>(coll: Collection<Other>): Set<Pair<Element, Other>>
 
-  external function join(separator: String): String
+  override external function join(separator: String): String
 
-  external function toList(): List<Element>
+  override external function toList(): List<Element>
 
-  external function toSet(): Set<Element>
+  override external function toSet(): Set<Element>
 
-  external function toMap<Key, Value>(
+  override external function toMap<Key, Value>(
     keyExtractor: (Element) -> Key,
     valueExtractor: (Element) -> Value,
   ): Map<Key, Value>
 
-  external function toListing(): Listing<Element>
+  override external function toListing(): Listing<Element>
 
-  external function toDynamic(): Dynamic
+  override external function toDynamic(): Dynamic
 
   /// The intersection of this set and [other].
   external function intersect(other: Set): Set<Element>
