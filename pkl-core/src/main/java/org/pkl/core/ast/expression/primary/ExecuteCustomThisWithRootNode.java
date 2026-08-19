@@ -41,6 +41,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
       new CustomThisNode(VmUtils.unavailableSourceSection());
   private @Child DirectCallNode callNode;
 
+  // shouldn't be marked `@Child` because this node is actually the child of the SimpleRootNode
+  // created in the constructor.
+  private final ExpressionNode expressionNode;
+
   public ExecuteCustomThisWithRootNode(
       SourceSection sourceSection,
       ExpressionNode expressionNode,
@@ -49,6 +53,7 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
       int[] forGeneratorSlots,
       int[] parameterSlots) {
     super(sourceSection);
+    this.expressionNode = expressionNode;
     frameDescriptor.findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
     var rootNode =
         new SimpleRootNode(
@@ -58,6 +63,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
             qualifiedName,
             new WithCustomThisExpression(expressionNode, forGeneratorSlots, parameterSlots));
     this.callNode = DirectCallNode.create(rootNode.getCallTarget());
+  }
+
+  public ExpressionNode getExpressionNode() {
+    return expressionNode;
   }
 
   @Override
