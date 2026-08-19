@@ -29,7 +29,6 @@ import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
-import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.VmObjectFactory;
@@ -171,8 +170,13 @@ public final class SyntaxNodes {
     return result;
   }
 
-  /** What a node becomes in a tree being built, and whether to keep rewriting below it. */
-  record Rewrite(VmTyped node, boolean descend) {}
+  /**
+   * What a node becomes in a tree being built.
+   *
+   * <p>{@code below} is the rewriter to apply to {@link #node}'s children, or {@code null} to leave
+   * them as they are.
+   */
+  record Rewrite(VmTyped node, @Nullable Rewriter below) {}
 
   /** Decides what each node of a tree being built becomes. */
   interface Rewriter {
@@ -185,6 +189,16 @@ public final class SyntaxNodes {
     Rewrite rewrite(VmTyped basis, VmTyped input);
   }
 
+  /** Present the result of a Pkl rewrite callback at the position it was returned for. */
+  private static Rewrite unwrapRewriteRoot(VmTyped result) {
+    if (result.hasExtraStorage()
+        && result.getExtraStorage() instanceof ViewData view
+        && view.parentVm == null) {
+      return new Rewrite(view.basis, view.rewriter);
+    }
+    return new Rewrite(result, null);
+  }
+
   /** Applies the operator of {@code GenericNode.transform}. */
   static final class OperatorRewriter implements Rewriter {
     private final VmFunction operator;
@@ -195,13 +209,10 @@ public final class SyntaxNodes {
 
     @Override
     public Rewrite rewrite(VmTyped basis, VmTyped input) {
-      var result = operator.apply(input);
-      assert result instanceof VmPair;
-      var pair = (VmPair) result;
-      var replacement = (VmTyped) pair.getFirst();
-      var descend = (Boolean) pair.getSecond();
+      // the operator recurses on its own, so whatever it returns is final for this position
+      var rewrite = unwrapRewriteRoot((VmTyped) operator.apply(input));
       // an unchanged node is presented directly; wrapping its input view would only add a layer
-      return new Rewrite(replacement == input ? basis : replacement, (Boolean) descend);
+      return rewrite.node() == input ? new Rewrite(basis, rewrite.below()) : rewrite;
     }
   }
 
@@ -220,10 +231,11 @@ public final class SyntaxNodes {
     @Override
     public Rewrite rewrite(VmTyped basis, VmTyped input) {
       if (!targets.contains(basis)) {
-        return new Rewrite(basis, true);
+        return new Rewrite(basis, this);
       }
-      // a replacement is left as-is, so a match nested in a match is never visited
-      return new Rewrite((VmTyped) replacer.apply(input), false);
+      // a replacement is not searched for further matches, so a match nested in a match is not
+      // visited
+      return unwrapRewriteRoot((VmTyped) replacer.apply(input));
     }
   }
 
@@ -274,7 +286,7 @@ public final class SyntaxNodes {
         return input;
       }
       var rewrite = rewriter.rewrite(basisChild, input);
-      return createView(new ViewData(rewrite.node(), rewrite.descend() ? rewriter : null, selfVm));
+      return createView(new ViewData(rewrite.node(), rewrite.below(), selfVm));
     }
   }
 
