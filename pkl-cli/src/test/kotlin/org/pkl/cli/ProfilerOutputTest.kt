@@ -75,7 +75,7 @@ class ProfilerOutputTest {
     val exitCode = process.waitFor()
     assertThat(exitCode).withFailMessage { "process failed with output:\n$output" }.isZero()
 
-    // sanity check only
+    // smoke test only
     val profile = GZIPInputStream(outputFile.inputStream()).use { Profile.parseFrom(it) }
     assertThat(profile.stringTableList.first()).isEmpty() // string_table[0] must be ""
     assertThat(profile.sampleTypeList).isNotEmpty()
