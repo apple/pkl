@@ -19,7 +19,10 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import java.util.ArrayDeque;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Set;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
@@ -33,7 +36,7 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.ViewData;
 
-/** Backs {@code pkl.syntax#GenericNode.fold} and {@code pkl.syntax#GenericNode.transform}. */
+/** Backs the methods of {@code pkl.syntax#GenericNode}. */
 public final class GenericNodeNodes {
   private GenericNodeNodes() {}
 
@@ -65,8 +68,33 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected Object eval(VmTyped self, VmFunction predicate) {
-      var matches = findMatches(this, self, predicate, applyPredicate, true);
-      return matches.isEmpty() ? VmNull.withoutDefault() : matches.iterator().next();
+      return VmNull.lift(
+          findFirstChild(this, self, new PredicateMatcher(predicate, applyPredicate)));
+    }
+  }
+
+  public abstract static class findChildrenWhere extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected VmList eval(VmTyped self, VmFunction predicate) {
+      var matches =
+          findChildren(this, self, new PredicateMatcher(predicate, applyPredicate), false);
+      return VmList.create(matches);
+    }
+  }
+
+  public abstract static class findChildOfType extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmTyped self, String type) {
+      return VmNull.lift(findFirstChild(this, self, new TypeMatcher(type)));
+    }
+  }
+
+  public abstract static class findChildrenOfType extends ExternalMethod1Node {
+    @Specialization
+    protected VmList eval(VmTyped self, String type) {
+      return VmList.create(findChildren(this, self, new TypeMatcher(type), false));
     }
   }
 
@@ -75,8 +103,8 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected VmTyped eval(VmTyped self, VmFunction predicate, VmFunction replacer) {
-      var targets = findMatches(this, self, predicate, applyPredicate, true);
-      return SyntaxNodes.replaceTargets(self, targets, replacer);
+      var matcher = new PredicateMatcher(predicate, applyPredicate);
+      return SyntaxNodes.replaceTargets(self, findTargets(this, self, matcher, true), replacer);
     }
   }
 
@@ -85,33 +113,118 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected VmTyped eval(VmTyped self, VmFunction predicate, VmFunction replacer) {
-      var targets = findMatches(this, self, predicate, applyPredicate, false);
+      var matcher = new PredicateMatcher(predicate, applyPredicate);
+      return SyntaxNodes.replaceTargets(self, findTargets(this, self, matcher, false), replacer);
+    }
+  }
+
+  public abstract static class replaceChildOfType extends ExternalMethod2Node {
+    @Specialization
+    protected VmTyped eval(VmTyped self, String type, VmFunction replacer) {
+      var targets = findTargets(this, self, new TypeMatcher(type), true);
       return SyntaxNodes.replaceTargets(self, targets, replacer);
     }
   }
 
+  public abstract static class replaceChildrenOfType extends ExternalMethod2Node {
+    @Specialization
+    protected VmTyped eval(VmTyped self, String type, VmFunction replacer) {
+      var targets = findTargets(this, self, new TypeMatcher(type), false);
+      return SyntaxNodes.replaceTargets(self, targets, replacer);
+    }
+  }
+
+  public abstract static class findParentWhere extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected Object eval(VmTyped self, VmFunction predicate) {
+      return VmNull.lift(
+          findFirstParent(this, self, new PredicateMatcher(predicate, applyPredicate)));
+    }
+  }
+
+  public abstract static class findParentsWhere extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected VmList eval(VmTyped self, VmFunction predicate) {
+      var matcher = new PredicateMatcher(predicate, applyPredicate);
+      return VmList.create(findParents(this, self, matcher));
+    }
+  }
+
+  public abstract static class hasParentWhere extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected boolean eval(VmTyped self, VmFunction predicate) {
+      return findFirstParent(this, self, new PredicateMatcher(predicate, applyPredicate)) != null;
+    }
+  }
+
+  public abstract static class hasParentOfType extends ExternalMethod1Node {
+    @Specialization
+    protected boolean eval(VmTyped self, String type) {
+      return findFirstParent(this, self, new TypeMatcher(type)) != null;
+    }
+  }
+
+  public abstract static class transform extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction operator) {
+      // the operator is applied to a child only when that child is read, it is never applied to
+      // `self`, so an operator that recurses with `node.transform(operator)` terminates
+      return SyntaxNodes.createView(
+          new ViewData(self, new SyntaxNodes.OperatorRewriter(operator), null));
+    }
+  }
+
+  /** Decides whether a node is a match for a search. */
+  private interface NodeMatcher {
+    boolean matches(VmTyped node);
+  }
+
+  /** Matches the nodes a Pkl predicate accepts. */
+  private record PredicateMatcher(VmFunction predicate, ApplyVmFunction1Node applyPredicate)
+      implements NodeMatcher {
+
+    @Override
+    public boolean matches(VmTyped node) {
+      return applyPredicate.executeBoolean(predicate, node);
+    }
+  }
+
+  /** Matches the nodes of a given type. */
+  private record TypeMatcher(String type) implements NodeMatcher {
+    @Override
+    public boolean matches(VmTyped node) {
+      return type.equals(VmUtils.readMember(node, Identifier.TYPE));
+    }
+  }
+
+  private static @Nullable VmTyped findFirstChild(Node owner, VmTyped self, NodeMatcher matcher) {
+    var matches = findChildren(owner, self, matcher, true);
+    return matches.isEmpty() ? null : matches.get(0);
+  }
+
   /**
-   * Collect the descendants of {@code self} matching {@code predicate}, searching depth-first in
+   * Collect the descendants of {@code self} matching {@code matcher}, searching depth-first in
    * pre-order and stopping at the first match if {@code firstOnly}.
    *
-   * <p>Matching eagerly keeps a search independent of the order in which a lazily built tree is
-   * read: "the first match in pre-order" is not something a rewrite could decide as it goes.
+   * <p>A match is searched for further matches, so a match may contain another.
    */
-  private static Set<VmTyped> findMatches(
-      Node owner,
-      VmTyped self,
-      VmFunction predicate,
-      ApplyVmFunction1Node applyPredicate,
-      boolean firstOnly) {
+  private static List<VmTyped> findChildren(
+      Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly) {
 
-    var matches = SyntaxNodes.newNodeSet();
+    var matches = new ArrayList<VmTyped>();
     var pending = new ArrayDeque<VmTyped>();
     pushChildren(pending, self);
     var visited = 0;
     while (!pending.isEmpty()) {
       var node = pending.pop();
       visited += 1;
-      if (applyPredicate.executeBoolean(predicate, node)) {
+      if (matcher.matches(node)) {
         matches.add(node);
         if (firstOnly) break;
       }
@@ -128,13 +241,42 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class transform extends ExternalMethod1Node {
-    @Specialization
-    protected VmTyped eval(VmTyped self, VmFunction operator) {
-      // the operator is applied to a child only when that child is read, it is never applied to
-      // `self`, so an operator that recurses with `node.transform(operator)` terminates
-      return SyntaxNodes.createView(
-          new ViewData(self, new SyntaxNodes.OperatorRewriter(operator), null));
+  private static Set<VmTyped> findTargets(
+      Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly) {
+
+    var targets = SyntaxNodes.newNodeSet();
+    targets.addAll(findChildren(owner, self, matcher, firstOnly));
+    return targets;
+  }
+
+  private static @Nullable VmTyped findFirstParent(Node owner, VmTyped self, NodeMatcher matcher) {
+    VmTyped result = null;
+    var visited = 0;
+    for (var node = parentOf(self); node != null; node = parentOf(node)) {
+      visited += 1;
+      if (matcher.matches(node)) {
+        result = node;
+        break;
+      }
     }
+    LoopNode.reportLoopCount(owner, visited);
+    return result;
+  }
+
+  private static List<VmTyped> findParents(Node owner, VmTyped self, NodeMatcher matcher) {
+    var matches = new ArrayList<VmTyped>();
+    var visited = 0;
+    for (var node = parentOf(self); node != null; node = parentOf(node)) {
+      visited += 1;
+      if (matcher.matches(node)) {
+        matches.add(node);
+      }
+    }
+    LoopNode.reportLoopCount(owner, visited);
+    return matches;
+  }
+
+  private static @Nullable VmTyped parentOf(VmTyped node) {
+    return (VmTyped) VmNull.unwrap(VmUtils.readMember(node, Identifier.PARENT));
   }
 }
