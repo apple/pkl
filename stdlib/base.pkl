@@ -24,6 +24,7 @@ import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
 import "pkl:pklbinary"
+// noinspection Deprecated
 import "pkl:protobuf"
 import "pkl:xml"
 import "pkl:yaml"

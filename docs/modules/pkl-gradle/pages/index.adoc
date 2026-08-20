@@ -152,7 +152,7 @@ The default output renderer for a module supports the following formats:
 * `"pcf"`
 * `"plist"`
 * `"properties"`
-* `"textproto"`
+* `"textproto"` (deprecated in Pkl 0.33)
 * `"xml"`
 * `"yaml"`
 ====

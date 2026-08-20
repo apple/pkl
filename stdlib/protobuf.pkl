@@ -1,5 +1,5 @@
 //===----------------------------------------------------------------------===//
-// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+// Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -15,10 +15,16 @@
 //===----------------------------------------------------------------------===//
 
 /// A renderer for [Protocol Buffers](https://developers.google.com/protocol-buffers).
-/// Note: This module is _experimental_ and not ready for production use.
+///
+/// WARNING:
+/// This module is deprecated, and scheduled for removal without replacement.
+/// For rendering into a protobuf wire format, consider rendering to
+/// [ProtoJSON](https://protobuf.dev/programming-guides/json/) using [json.Renderer].
 @ModuleInfo { minPklVersion = "0.33.0" }
+@Deprecated { since = "0.33.0"; message = "Scheduled for removal without replacement" }
 module pkl.protobuf
 
+import "pkl:json"
 import "pkl:reflect"
 
 /// A renderer for [Protocol Buffers](https://developers.google.com/protocol-buffers).
