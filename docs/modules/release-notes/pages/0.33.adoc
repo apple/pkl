@@ -23,6 +23,20 @@ Native `pkl` and `pkldoc` binaries for Intel Mac systems are no longer published
 
 To continue running new Pkl releases on these systems, use an appropriate Java runtime and the `jpkl` and `jpkldoc` Java executables.
 
+=== JSON and YAML Parsers Reject the Object Key `default`
+
+`Dynamic` declares a hidden `default` property, so an object key named `default` could not be represented as a `Dynamic` property.
+Previously, `json.Parser.parse()`, `yaml.Parser.parse()` and `yaml.Parser.parseAll()` silently produced an object that was missing the key, and reading `.default` on it failed with a confusing type error.
+
+These methods now throw, and the error message points at `useMapping = true`, which parses into a `Mapping` and preserves the key:
+
+[source,pkl]
+----
+new json.Parser { useMapping = true }.parse("""
+  {"default": "greeting"}
+  """)
+----
+
 === XXX
 
 == Bug Fixes [small]#🐜#

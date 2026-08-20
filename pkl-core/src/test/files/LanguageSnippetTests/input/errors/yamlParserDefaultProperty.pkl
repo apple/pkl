@@ -1,0 +1,7 @@
+import "pkl:yaml"
+
+// https://github.com/apple/pkl/issues/561
+res = new yaml.Parser {}.parse("""
+  hello: world
+  default: greeting
+  """)

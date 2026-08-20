@@ -31,6 +31,8 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.ErrorMessages;
+import org.pkl.core.util.yaml.ParseException;
 import org.pkl.core.util.yaml.snake.YamlUtils;
 import org.snakeyaml.engine.v2.api.ConstructNode;
 import org.snakeyaml.engine.v2.api.Load;
@@ -72,6 +74,9 @@ public final class ParserNodes {
         var document = load.loadFromString(text);
         return converter.convert(document, List.of());
       } catch (YamlEngineException e) {
+        if (e.getCause() instanceof ParseException cause) {
+          throw exceptionBuilder().evalError("yamlParseError").withHint(cause.getMessage()).build();
+        }
         if (e.getMessage()
             .startsWith("Number of aliases for non-scalar nodes exceeds the specified")) {
           throw exceptionBuilder()
@@ -110,6 +115,9 @@ public final class ParserNodes {
           builder.add(converter.convert(document, List.of(VmValueConverter.TOP_LEVEL_VALUE)));
         }
       } catch (YamlEngineException e) {
+        if (e.getCause() instanceof ParseException cause) {
+          throw exceptionBuilder().evalError("yamlParseError").withHint(cause.getMessage()).build();
+        }
         if (e.getMessage()
             .startsWith("Number of aliases for non-scalar nodes exceeds the specified")) {
           throw exceptionBuilder()
@@ -479,6 +487,13 @@ public final class ParserNodes {
 
           var memberName =
               convertedKey instanceof String string && !useMapping ? Identifier.get(string) : null;
+
+          // https://github.com/apple/pkl/issues/561
+          if (memberName == Identifier.DEFAULT) {
+            throw new ParseException(
+                ErrorMessages.create("yamlParseErrorDynamicPropertyDefault"),
+                keyNode.getStartMark().orElse(null));
+          }
 
           var member =
               new ObjectMember(
