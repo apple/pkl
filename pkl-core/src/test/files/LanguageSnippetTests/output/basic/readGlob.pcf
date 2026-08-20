@@ -30,6 +30,14 @@ examples {
           """
         base64 = "bmFtZSA9ICJjaGlsZC9tb2R1bGVDIgo="
       }
+      ["../../input-helper/globtest/childlinked/moduleC.pkl"] {
+        uri = "file:///$snippetsDir/input-helper/globtest/childlinked/moduleC.pkl"
+        text = """
+          name = "child/moduleC"
+          
+          """
+        base64 = "bmFtZSA9ICJjaGlsZC9tb2R1bGVDIgo="
+      }
     }
     new {
       ["globtest/file1.txt"] {
@@ -69,6 +77,11 @@ examples {
       }
       ["../../input-helper/globtest/child/moduleC.pkl"] {
         uri = "file:///$snippetsDir/input-helper/globtest/child/moduleC.pkl"
+        text = "hi"
+        base64 = "bmFtZSA9ICJjaGlsZC9tb2R1bGVDIgo="
+      }
+      ["../../input-helper/globtest/childlinked/moduleC.pkl"] {
+        uri = "file:///$snippetsDir/input-helper/globtest/childlinked/moduleC.pkl"
         text = "hi"
         base64 = "bmFtZSA9ICJjaGlsZC9tb2R1bGVDIgo="
       }
