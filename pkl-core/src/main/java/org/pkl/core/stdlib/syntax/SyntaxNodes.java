@@ -218,12 +218,10 @@ public final class SyntaxNodes {
 
   /** Replaces a fixed set of nodes, as {@code GenericNode.replaceChild*Where} do. */
   static final class TargetRewriter implements Rewriter {
-    // an identity set: `==` on a Pkl GenericNode is a deep structural compare, so two distinct
-    // nodes with the same content are equal to each other
-    private final Set<VmTyped> targets;
+    private final NodeSet targets;
     private final VmFunction replacer;
 
-    TargetRewriter(Set<VmTyped> targets, VmFunction replacer) {
+    TargetRewriter(NodeSet targets, VmFunction replacer) {
       this.targets = targets;
       this.replacer = replacer;
     }
@@ -239,9 +237,33 @@ public final class SyntaxNodes {
     }
   }
 
-  /** A set that holds nodes by identity rather than by their content. */
-  static Set<VmTyped> newNodeSet() {
-    return Collections.newSetFromMap(new IdentityHashMap<>());
+  /* A set that holds nodes by identity rather than by their content. */
+  static final class NodeSet {
+    private final Set<VmTyped> nodes;
+    private final boolean isEmpty;
+
+    private NodeSet(Set<VmTyped> nodes) {
+      this.nodes = nodes;
+      this.isEmpty = nodes.isEmpty();
+    }
+
+    @TruffleBoundary
+    static NodeSet of(VmList nodes) {
+      Set<VmTyped> set = Collections.newSetFromMap(new IdentityHashMap<>());
+      for (var node : nodes) {
+        set.add((VmTyped) node);
+      }
+      return new NodeSet(set);
+    }
+
+    boolean isEmpty() {
+      return isEmpty;
+    }
+
+    @TruffleBoundary
+    boolean contains(VmTyped node) {
+      return nodes.contains(node);
+    }
   }
 
   /**
@@ -313,7 +335,7 @@ public final class SyntaxNodes {
    * <p>As with {@code transform}, the returned root has no parent and the tree {@code self} belongs
    * to is left untouched.
    */
-  static VmTyped replaceTargets(VmTyped self, Set<VmTyped> targets, VmFunction replacer) {
+  static VmTyped replaceTargets(VmTyped self, NodeSet targets, VmFunction replacer) {
     var rewriter = targets.isEmpty() ? null : new TargetRewriter(targets, replacer);
     return createView(new ViewData(self, rewriter, null));
   }

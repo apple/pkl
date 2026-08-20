@@ -19,9 +19,6 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import java.util.ArrayDeque;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
@@ -34,6 +31,7 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.NodeSet;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.ViewData;
 
 /** Backs the methods of {@code pkl.syntax#GenericNode}. */
@@ -78,9 +76,7 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected VmList eval(VmTyped self, VmFunction predicate) {
-      var matches =
-          findChildren(this, self, new PredicateMatcher(predicate, applyPredicate), false);
-      return VmList.create(matches);
+      return findChildren(this, self, new PredicateMatcher(predicate, applyPredicate), false);
     }
   }
 
@@ -94,7 +90,7 @@ public final class GenericNodeNodes {
   public abstract static class findChildrenOfType extends ExternalMethod1Node {
     @Specialization
     protected VmList eval(VmTyped self, String type) {
-      return VmList.create(findChildren(this, self, new TypeMatcher(type), false));
+      return findChildren(this, self, new TypeMatcher(type), false);
     }
   }
 
@@ -150,7 +146,7 @@ public final class GenericNodeNodes {
     @Specialization
     protected VmList eval(VmTyped self, VmFunction predicate) {
       var matcher = new PredicateMatcher(predicate, applyPredicate);
-      return VmList.create(findParents(this, self, matcher));
+      return findParents(this, self, matcher);
     }
   }
 
@@ -205,7 +201,7 @@ public final class GenericNodeNodes {
 
   private static @Nullable VmTyped findFirstChild(Node owner, VmTyped self, NodeMatcher matcher) {
     var matches = findChildren(owner, self, matcher, true);
-    return matches.isEmpty() ? null : matches.get(0);
+    return matches.isEmpty() ? null : (VmTyped) matches.getFirst();
   }
 
   /**
@@ -214,10 +210,10 @@ public final class GenericNodeNodes {
    *
    * <p>A match is searched for further matches, so a match may contain another.
    */
-  private static List<VmTyped> findChildren(
+  private static VmList findChildren(
       Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly) {
 
-    var matches = new ArrayList<VmTyped>();
+    var matches = VmList.EMPTY.builder();
     var pending = new ArrayDeque<VmTyped>();
     pushChildren(pending, self);
     var visited = 0;
@@ -231,7 +227,7 @@ public final class GenericNodeNodes {
       pushChildren(pending, node);
     }
     LoopNode.reportLoopCount(owner, visited);
-    return matches;
+    return matches.build();
   }
 
   private static void pushChildren(ArrayDeque<VmTyped> pending, VmTyped node) {
@@ -241,12 +237,10 @@ public final class GenericNodeNodes {
     }
   }
 
-  private static Set<VmTyped> findTargets(
+  private static NodeSet findTargets(
       Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly) {
 
-    var targets = SyntaxNodes.newNodeSet();
-    targets.addAll(findChildren(owner, self, matcher, firstOnly));
-    return targets;
+    return NodeSet.of(findChildren(owner, self, matcher, firstOnly));
   }
 
   private static @Nullable VmTyped findFirstParent(Node owner, VmTyped self, NodeMatcher matcher) {
@@ -263,8 +257,8 @@ public final class GenericNodeNodes {
     return result;
   }
 
-  private static List<VmTyped> findParents(Node owner, VmTyped self, NodeMatcher matcher) {
-    var matches = new ArrayList<VmTyped>();
+  private static VmList findParents(Node owner, VmTyped self, NodeMatcher matcher) {
+    var matches = VmList.EMPTY.builder();
     var visited = 0;
     for (var node = parentOf(self); node != null; node = parentOf(node)) {
       visited += 1;
@@ -273,7 +267,7 @@ public final class GenericNodeNodes {
       }
     }
     LoopNode.reportLoopCount(owner, visited);
-    return matches;
+    return matches.build();
   }
 
   private static @Nullable VmTyped parentOf(VmTyped node) {
