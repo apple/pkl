@@ -214,6 +214,22 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
     cliOptions.traceMode ?: evaluatorSettings?.traceMode ?: TraceMode.COMPACT
   }
 
+  private val featureFlags: Map<FeatureFlag, Boolean> by lazy {
+    cliOptions.featureFlags?.asFeatureFlags("cli")
+      ?: evaluatorSettings?.featureFlags?.asFeatureFlags("PklProject")
+      ?: emptyMap()
+  }
+
+  protected fun Map<String, Boolean>.asFeatureFlags(context: String): Map<FeatureFlag, Boolean> =
+    mapNotNull { entry ->
+        FeatureFlag.parse(entry.key)?.let {
+          return@mapNotNull it to entry.value
+        }
+        logger.warn("Unrecognized feature flag named `${entry.key}`", "pkl:#${context}")
+        return@mapNotNull null
+      }
+      .toMap()
+
   private fun HttpClient.Builder.addDefaultCliCertificates() {
     val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
     var certsAdded = false
@@ -258,6 +274,8 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       buildLazily()
     }
   }
+
+  val logger: Logger = Loggers.stdErr()
 
   protected fun moduleKeyFactories(modulePathResolver: ModulePathResolver): List<ModuleKeyFactory> {
     return buildList {
@@ -310,10 +328,11 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       .addModuleKeyFactories(moduleKeyFactories(modulePathResolver))
       .addResourceReaders(resourceReaders(modulePathResolver))
       .setColor(useColor)
-      .setLogger(Loggers.stdErr())
+      .setLogger(logger)
       .setTimeout(cliOptions.timeout)
       .setModuleCacheDir(moduleCacheDir)
       .setTraceMode(traceMode)
       .setPowerAssertionsEnabled(cliOptions.powerAssertionsEnabled)
+      .setFeatureFlags(featureFlags)
   }
 }

@@ -125,6 +125,10 @@ class CliCommandTest {
         ["foo"] { executable = "foo" }
       }
       traceMode = "pretty"
+      featureFlags {
+        ["foo"] = true
+        ["bar"] = false
+      }
     }
     """
       .trimIndent()
@@ -153,6 +157,7 @@ class CliCommandTest {
     assertThat(cliTest.myExternalModuleReaders).isEmpty()
     assertThat(cliTest.myExternalResourceReaders).isEmpty()
     assertThat(builder.traceMode).isEqualTo(TraceMode.COMPACT)
+    assertThat(builder.featureFlags).isEmpty()
   }
 
   // hygiene test to ensure new evaluator settings get covered by the above test
