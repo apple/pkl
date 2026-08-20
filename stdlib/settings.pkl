@@ -17,8 +17,17 @@
 /// Configuration settings for Pkl itself.
 ///
 /// Every settings file must amend this module.
+///
 /// Unless CLI commands and build tool plugins are explicitly configured with a settings file,
-/// they will use `~/.pkl/settings.pkl` or the defaults specified in this module.
+/// they look in the following locations in order of precedence:
+///
+/// 1. `$XDG_CONFIG_HOME/pkl/settings.pkl`
+/// 2. `$APPDATA/pkl/settings.pkl` (on Windows only)
+/// 3. `~/.config/pkl/settings.pkl`
+/// 4. Path `pkl/settings.pkl` within the `$XDG_CONFIG_DIRS` search path
+///    (dirs separated by `:` on Unix, `;` on Windows).
+/// 4. `/etc/xdg/pkl/settings.pkl`
+/// 5. `~/.pkl/settings.pkl` (legacy location used by Pkl 0.32 and lower)
 @ModuleInfo { minPklVersion = "0.33.0" }
 module pkl.settings
 

@@ -36,9 +36,15 @@ Possible values:
 .--cache-dir
 [%collapsible]
 ====
-Default: `~/.pkl/cache` +
 Example: `/path/to/module/cache/` +
+
 The cache directory for storing packages.
+
+If unset, defaults to the following locations:
+
+. `$XDG_CACHE_HOME/pkl`
+. `$LOCALAPPDATA/pkl/Cache` (on Windows only)
+. `~/.cache/pkl` (if `$XDG_CACHE_HOME` and `$LOCALAPPDATA` are both unset)
 ====
 
 .--no-cache
@@ -97,7 +103,7 @@ Any symlinks are resolved before this check is performed.
 Default: (none) +
 Example: `mySettings.pkl` +
 File path of the Pkl settings file to use.
-If not set, `~/.pkl/settings.pkl` or defaults specified in the `pkl.settings` standard library module are used.
+If not set, `~/.config/pkl/settings.pkl` on Unix or `%APPDATA%/pkl/settings.pkl` on Windows (or the legacy `~/.pkl/settings.pkl`), or defaults specified in the `pkl.settings` standard library module are used.
 ====
 
 .-t, --timeout

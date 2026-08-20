@@ -26,6 +26,7 @@ import org.pkl.core.module.ModuleKeyFactories;
 import org.pkl.core.resource.ResourceReaders;
 import org.pkl.core.runtime.VmEvalException;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.util.DebugLogger;
 import org.pkl.core.util.IoUtils;
 
 /**
@@ -33,8 +34,10 @@ import org.pkl.core.util.IoUtils;
  * {@literal pkl.settings} standard library module. To load a settings file, use one of the static
  * {@code load} methods.
  */
-// keep in sync with stdlib/settings.pkl
 public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http http) {
+  // keep in sync with stdlib/settings.pkl
+  public static final PklSettings defaultInstance = new PklSettings(Editor.SYSTEM, null);
+
   private static final List<Pattern> ALLOWED_MODULES =
       List.of(Pattern.compile("pkl:"), Pattern.compile("file:"));
 
@@ -42,16 +45,43 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
       List.of(Pattern.compile("env:"), Pattern.compile("file:"));
 
   /**
-   * Loads the user settings file ({@literal ~/.pkl/settings.pkl}). If this file does not exist,
-   * returns default settings defined by module {@literal pkl.settings}.
+   * Loads the user settings file.
+   *
+   * <p>Prefers XDG_CONFIG_HOME (e.g. {@code ~/.config/pkl/settings.pkl}), falling back to the
+   * legacy {@code ~/.pkl/settings.pkl}.
+   *
+   * <p>If neither file exists, returns default settings defined by module {@code pkl.settings}.
    */
+  public static PklSettings loadFromSystem() throws VmEvalException {
+    var file = IoUtils.getSystemSettingsFile();
+    if (Files.exists(file)) {
+      DebugLogger.log("Loading settings file from " + file.normalize().toAbsolutePath());
+      return load(ModuleSource.path(file));
+    }
+    return defaultInstance;
+  }
+
+  /**
+   * Loads the user settings file.
+   *
+   * @deprecated As of 0.33.0, use {@link #loadFromSystem()}, which now prefers {@code
+   *     ~/.config/pkl/settings.pkl} over the legacy {@code ~/.pkl/settings.pkl}.
+   */
+  @Deprecated(since = "0.33.0", forRemoval = true)
   public static PklSettings loadFromPklHomeDir() throws VmEvalException {
-    return loadFromPklHomeDir(IoUtils.getPklHomeDir());
+    var candidate = IoUtils.getLegacyPklHomeDir().resolve("settings.pkl");
+    if (Files.exists(candidate)) {
+      return load(ModuleSource.path(candidate));
+    }
+    return defaultInstance;
   }
 
   /** For testing only. */
-  static PklSettings loadFromPklHomeDir(Path pklHomeDir) throws VmEvalException {
-    var path = pklHomeDir.resolve("settings.pkl");
+  static PklSettings loadFromSettingsDir(Path settingsDir) throws VmEvalException {
+    return loadFromSettingsFile(settingsDir.resolve("settings.pkl"));
+  }
+
+  private static PklSettings loadFromSettingsFile(Path path) throws VmEvalException {
     return Files.exists(path)
         ? load(ModuleSource.path(path))
         : new PklSettings(Editor.SYSTEM, null);

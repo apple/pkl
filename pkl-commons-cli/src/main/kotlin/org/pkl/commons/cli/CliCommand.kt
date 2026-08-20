@@ -20,6 +20,7 @@ import java.net.URI
 import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.isRegularFile
 import org.pkl.core.*
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
@@ -33,6 +34,7 @@ import org.pkl.core.project.Project
 import org.pkl.core.resource.ResourceReader
 import org.pkl.core.resource.ResourceReaders
 import org.pkl.core.settings.PklSettings
+import org.pkl.core.util.DebugLogger
 import org.pkl.core.util.IoUtils
 
 /** Building block for CLI commands. Configured programmatically to allow for embedding. */
@@ -69,7 +71,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       if (cliOptions.normalizedSettingsModule != null) {
         PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule))
       } else {
-        PklSettings.loadFromPklHomeDir()
+        PklSettings.loadFromSystem()
       }
     } catch (e: PklException) {
       // do not use `errorRenderer` because it depends on `settings`
@@ -146,7 +148,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
         ?: evaluatorSettings?.let { settings ->
           if (settings.noCache == true) null else settings.moduleCacheDir
         }
-        ?: IoUtils.getDefaultModuleCacheDir()
+        ?: IoUtils.getSystemModuleCacheDir()
   }
 
   protected val modulePath: List<Path> by lazy {
@@ -215,7 +217,7 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   }
 
   private fun HttpClient.Builder.addDefaultCliCertificates() {
-    val caCertsDir = IoUtils.getPklHomeDir().resolve("cacerts")
+    val caCertsDir = IoUtils.getSystemCaCertsDir()
     var certsAdded = false
     if (Files.isDirectory(caCertsDir)) {
       Files.list(caCertsDir)
@@ -225,7 +227,10 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
           addCertificates(cert)
         }
     }
-    if (!certsAdded) {
+    if (certsAdded) {
+      DebugLogger.log("Loading CA certificates from ${caCertsDir.normalize().absolutePathString()}")
+    } else {
+      DebugLogger.log("Using built-in CA certificates")
       val defaultCerts =
         this@CliCommand.javaClass.classLoader.getResourceAsStream(
           "org/pkl/commons/cli/PklCARoots.pem"

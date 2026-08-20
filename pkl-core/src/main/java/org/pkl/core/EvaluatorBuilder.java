@@ -58,7 +58,7 @@ public final class EvaluatorBuilder {
 
   private java.time.@Nullable Duration timeout;
 
-  private @Nullable Path moduleCacheDir = IoUtils.getDefaultModuleCacheDir();
+  private @Nullable Path moduleCacheDir = IoUtils.getSystemModuleCacheDir();
 
   private @Nullable String outputFormat;
 

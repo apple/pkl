@@ -16,9 +16,11 @@
 package org.pkl.executor;
 
 import java.net.URI;
+import java.nio.file.InvalidPathException;
 import java.nio.file.Path;
 import java.time.Duration;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import org.jspecify.annotations.Nullable;
@@ -26,6 +28,8 @@ import org.pkl.executor.spi.v1.ExecutorSpiOptions;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions2;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions3;
 import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * Options for {@link Executor#evaluatePath}.
@@ -33,6 +37,8 @@ import org.pkl.executor.spi.v1.ExecutorSpiOptions4;
  * <p>To create {@code ExecutorOptions}, use its {@linkplain #builder builder}.
  */
 public final class ExecutorOptions {
+  private static final Logger logger = LoggerFactory.getLogger(ExecutorOptions.class);
+
   private final List<String> allowedModules;
 
   private final List<String> allowedResources;
@@ -67,7 +73,42 @@ public final class ExecutorOptions {
 
   /** Returns the module cache dir that the CLI uses by default. */
   public static Path defaultModuleCacheDir() {
-    return Path.of(System.getProperty("user.home"), ".pkl", "cache");
+    return defaultModuleCacheDir(
+        Path.of(System.getProperty("user.home")), isWindowsOs(), System.getenv());
+  }
+
+  // Package-private; injectable so tests can exercise the Windows code path on a Unix CI box.
+  static Path defaultModuleCacheDir(
+      Path home, boolean isWindows, Map<String, String> environmentVariables) {
+    // Keep in sync with org.pkl.core.util.IoUtils.getSystemModuleCacheDir (pkl-executor cannot
+    // depend on pkl-core).
+    //
+    // On Unix prefer the XDG-style `~/.cache/pkl`.
+    // On Windows prefer `%LOCALAPPDATA%/pkl/Cache`.
+    var xdgConfig = environmentVariables.get("XDG_CACHE_HOME");
+    if (xdgConfig != null && !xdgConfig.isEmpty()) {
+      try {
+        return Path.of(xdgConfig).resolve("pkl");
+      } catch (InvalidPathException e) {
+        logger.warn("'XDG_CACHE_HOME' is an invalid path: {}", e.getMessage());
+      }
+    }
+    if (isWindows) {
+      var localAppData = environmentVariables.get("LOCALAPPDATA");
+      if (localAppData != null && !localAppData.isEmpty()) {
+        try {
+          return Path.of(localAppData).resolve("pkl/Cache");
+        } catch (InvalidPathException e) {
+          logger.warn("'LOCALAPPDATA' is an invalid path: {}", e.getMessage());
+        }
+      }
+    }
+    return home.resolve(".cache/pkl");
+  }
+
+  private static boolean isWindowsOs() {
+    var osName = System.getProperty("os.name");
+    return osName != null && osName.toLowerCase(Locale.ROOT).contains("windows");
   }
 
   public static Builder builder() {

@@ -322,7 +322,10 @@ public class PklPlugin implements Plugin<Project> {
     // Therefore, we don't set any initial value for the environmentVariables property.
 
     // Not using `convention()` to allow the user to unset this property, disabling the cache.
-    spec.getModuleCacheDir().set(IoUtils.getDefaultModuleCacheDir().toFile());
+    var systemCacheDir = IoUtils.getSystemModuleCacheDir();
+    if (systemCacheDir != null) {
+      spec.getModuleCacheDir().set(systemCacheDir.toFile());
+    }
 
     spec.getNoCache().convention(false);
 
