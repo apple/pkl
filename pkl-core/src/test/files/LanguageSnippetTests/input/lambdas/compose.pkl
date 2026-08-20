@@ -1,0 +1,21 @@
+local addOne = (x) -> x + 1
+local double = (x) -> x * 2
+
+res1 = double.compose(addOne).apply(5)
+
+local toUpper = (s: String) -> s.toUpperCase()
+local exclaim = (s: String) -> "\(s)!"
+
+res2 = exclaim.compose(toUpper).apply("hello")
+
+local addTwo = (x) -> x + 2
+local triple = (x) -> x * 3
+
+res3 = triple.compose(addTwo).compose(double).apply(5)
+
+local identity = (x) -> x
+
+res4 = addOne.compose(identity).apply(10)
+res5 = identity.compose(addOne).apply(10)
+
+res6 = double.andThen(addOne).apply(5)
