@@ -1,0 +1,45 @@
+# This file is GENERATED and should not be edited manually.  Edit language_bindings_request.pkl instead.
+name: Language Bindings Request
+description: Request for Pkl bindings for a programming language.
+title: '[Bindings Request]: '
+labels:
+- bindings
+- enhancement
+body:
+- type: markdown
+  attributes:
+    value: |-
+      ## Language Bindings Request
+      Thank you for your interest in expanding the compatibility of Pkl!
+      Before you fill out this request form, please do the following:
+        -  Check the [documentation](https://pkl-lang.org/main/current/language-bindings.html) to confirm that this language isn't already supported.
+        -  Search for [existing issues and pull requests](https://github.com/apple/pkl/issues?q="label%3Abindings+) to ensure this bindings request has not already been submitted."
+- type: checkboxes
+  id: readiness
+  attributes:
+    label: Confirmation
+    description: Please confirm the following items before submitting a new request.
+    options:
+    - label: I have checked the documentation to confirm this language isn't already supported.
+      required: true
+    - label: I have searched for existing issues and pull requests to ensure this bindings request has not already been submitted.
+      required: true
+- type: input
+  id: language-name
+  attributes:
+    label: Language Name
+    description: What is the name of the programming language for which you're requesting bindings?
+  validations:
+    required: true
+- type: textarea
+  id: pitch
+  attributes:
+    label: Pitch
+    description: Why should we add support for this language?
+- type: textarea
+  id: additional-info
+  attributes:
+    label: Additional Information (Optional)
+    description: Any other information you'd like to add
+  validations:
+    required: false
