@@ -42,7 +42,7 @@ jna = "5.19.1"
 jspecify = "1.0.0"
 junit = "6.1.1"
 # 1.7+ generates much more verbose code
-kotlinPoet = "1.6.0"
+kotlinPoet = "2.3.0"
 kotlinStdLib = "2.2.21"
 #noinspection UnusedVersionCatalogEntry
 kotlinTarget = "2.2"
