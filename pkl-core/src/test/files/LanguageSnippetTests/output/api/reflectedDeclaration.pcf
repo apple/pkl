@@ -3698,7 +3698,33 @@ rec {
         }
         properties = Map()
         allProperties = Map()
-        methods = Map()
+        methods = Map("toMixin", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Converts this object to a [Mixin] function.
+            
+            The resulting mixin can be applied to any object using the `|>` operator
+            to amend it with the properties, elements, and entries from this object.
+            
+            Example:
+            ```
+            obj = new { name = "Pigeon"; age = 42 }
+            person = new Person { name = "Original" } |> obj.toMixin()
+            // person.name == "Pigeon", person.age == 42
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "toMixin"
+          typeParameters = List()
+          parameters = Map()
+        })
         allMethods = Map("getClass", new {
           location {
             line = XX
@@ -3749,6 +3775,32 @@ rec {
           parameters = Map("transform", new {
             name = "transform"
           })
+        }, "toMixin", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Converts this object to a [Mixin] function.
+            
+            The resulting mixin can be applied to any object using the `|>` operator
+            to amend it with the properties, elements, and entries from this object.
+            
+            Example:
+            ```
+            obj = new { name = "Pigeon"; age = 42 }
+            person = new Person { name = "Original" } |> obj.toMixin()
+            // person.name == "Pigeon", person.age == 42
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "toMixin"
+          typeParameters = List()
+          parameters = Map()
         })
       }
       supertype {
@@ -4086,7 +4138,33 @@ rec {
           }
           properties = Map()
           allProperties = Map()
-          methods = Map()
+          methods = Map("toMixin", new {
+            location {
+              line = XXXX
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+            }
+            docComment = """
+              Converts this object to a [Mixin] function.
+              
+              The resulting mixin can be applied to any object using the `|>` operator
+              to amend it with the properties, elements, and entries from this object.
+              
+              Example:
+              ```
+              obj = new { name = "Pigeon"; age = 42 }
+              person = new Person { name = "Original" } |> obj.toMixin()
+              // person.name == "Pigeon", person.age == 42
+              ```
+              """
+            annotations = List(new {
+              version = "0.31.0"
+            })
+            modifiers = Set()
+            name = "toMixin"
+            typeParameters = List()
+            parameters = Map()
+          })
           allMethods = Map("getClass", new {
             location {
               line = XX
@@ -4137,6 +4215,32 @@ rec {
             parameters = Map("transform", new {
               name = "transform"
             })
+          }, "toMixin", new {
+            location {
+              line = XXXX
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+            }
+            docComment = """
+              Converts this object to a [Mixin] function.
+              
+              The resulting mixin can be applied to any object using the `|>` operator
+              to amend it with the properties, elements, and entries from this object.
+              
+              Example:
+              ```
+              obj = new { name = "Pigeon"; age = 42 }
+              person = new Person { name = "Original" } |> obj.toMixin()
+              // person.name == "Pigeon", person.age == 42
+              ```
+              """
+            annotations = List(new {
+              version = "0.31.0"
+            })
+            modifiers = Set()
+            name = "toMixin"
+            typeParameters = List()
+            parameters = Map()
           })
         }
         typeArguments = List()
@@ -4268,6 +4372,32 @@ rec {
         parameters = Map("transform", new {
           name = "transform"
         })
+      }, "toMixin", new {
+        location {
+          line = XXXX
+          column = 3
+          displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+        }
+        docComment = """
+          Converts this object to a [Mixin] function.
+          
+          The resulting mixin can be applied to any object using the `|>` operator
+          to amend it with the properties, elements, and entries from this object.
+          
+          Example:
+          ```
+          obj = new { name = "Pigeon"; age = 42 }
+          person = new Person { name = "Original" } |> obj.toMixin()
+          // person.name == "Pigeon", person.age == 42
+          ```
+          """
+        annotations = List(new {
+          version = "0.31.0"
+        })
+        modifiers = Set()
+        name = "toMixin"
+        typeParameters = List()
+        parameters = Map()
       }, "hasProperty", new {
         location {
           line = XXXX
@@ -4695,7 +4825,33 @@ rec {
           }
           properties = Map()
           allProperties = Map()
-          methods = Map()
+          methods = Map("toMixin", new {
+            location {
+              line = XXXX
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+            }
+            docComment = """
+              Converts this object to a [Mixin] function.
+              
+              The resulting mixin can be applied to any object using the `|>` operator
+              to amend it with the properties, elements, and entries from this object.
+              
+              Example:
+              ```
+              obj = new { name = "Pigeon"; age = 42 }
+              person = new Person { name = "Original" } |> obj.toMixin()
+              // person.name == "Pigeon", person.age == 42
+              ```
+              """
+            annotations = List(new {
+              version = "0.31.0"
+            })
+            modifiers = Set()
+            name = "toMixin"
+            typeParameters = List()
+            parameters = Map()
+          })
           allMethods = Map("getClass", new {
             location {
               line = XX
@@ -4746,6 +4902,32 @@ rec {
             parameters = Map("transform", new {
               name = "transform"
             })
+          }, "toMixin", new {
+            location {
+              line = XXXX
+              column = 3
+              displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+            }
+            docComment = """
+              Converts this object to a [Mixin] function.
+              
+              The resulting mixin can be applied to any object using the `|>` operator
+              to amend it with the properties, elements, and entries from this object.
+              
+              Example:
+              ```
+              obj = new { name = "Pigeon"; age = 42 }
+              person = new Person { name = "Original" } |> obj.toMixin()
+              // person.name == "Pigeon", person.age == 42
+              ```
+              """
+            annotations = List(new {
+              version = "0.31.0"
+            })
+            modifiers = Set()
+            name = "toMixin"
+            typeParameters = List()
+            parameters = Map()
           })
         }
         supertype {
@@ -5083,7 +5265,33 @@ rec {
             }
             properties = Map()
             allProperties = Map()
-            methods = Map()
+            methods = Map("toMixin", new {
+              location {
+                line = XXXX
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+              }
+              docComment = """
+                Converts this object to a [Mixin] function.
+                
+                The resulting mixin can be applied to any object using the `|>` operator
+                to amend it with the properties, elements, and entries from this object.
+                
+                Example:
+                ```
+                obj = new { name = "Pigeon"; age = 42 }
+                person = new Person { name = "Original" } |> obj.toMixin()
+                // person.name == "Pigeon", person.age == 42
+                ```
+                """
+              annotations = List(new {
+                version = "0.31.0"
+              })
+              modifiers = Set()
+              name = "toMixin"
+              typeParameters = List()
+              parameters = Map()
+            })
             allMethods = Map("getClass", new {
               location {
                 line = XX
@@ -5134,6 +5342,32 @@ rec {
               parameters = Map("transform", new {
                 name = "transform"
               })
+            }, "toMixin", new {
+              location {
+                line = XXXX
+                column = 3
+                displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+              }
+              docComment = """
+                Converts this object to a [Mixin] function.
+                
+                The resulting mixin can be applied to any object using the `|>` operator
+                to amend it with the properties, elements, and entries from this object.
+                
+                Example:
+                ```
+                obj = new { name = "Pigeon"; age = 42 }
+                person = new Person { name = "Original" } |> obj.toMixin()
+                // person.name == "Pigeon", person.age == 42
+                ```
+                """
+              annotations = List(new {
+                version = "0.31.0"
+              })
+              modifiers = Set()
+              name = "toMixin"
+              typeParameters = List()
+              parameters = Map()
             })
           }
           typeArguments = List()
@@ -5265,6 +5499,32 @@ rec {
           parameters = Map("transform", new {
             name = "transform"
           })
+        }, "toMixin", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Converts this object to a [Mixin] function.
+            
+            The resulting mixin can be applied to any object using the `|>` operator
+            to amend it with the properties, elements, and entries from this object.
+            
+            Example:
+            ```
+            obj = new { name = "Pigeon"; age = 42 }
+            person = new Person { name = "Original" } |> obj.toMixin()
+            // person.name == "Pigeon", person.age == 42
+            ```
+            """
+          annotations = List(new {
+            version = "0.31.0"
+          })
+          modifiers = Set()
+          name = "toMixin"
+          typeParameters = List()
+          parameters = Map()
         }, "hasProperty", new {
           location {
             line = XXXX
@@ -5420,6 +5680,32 @@ rec {
       parameters = Map("transform", new {
         name = "transform"
       })
+    }, "toMixin", new {
+      location {
+        line = XXXX
+        column = 3
+        displayUri = "pkl:base"
+      }
+      docComment = """
+        Converts this object to a [Mixin] function.
+        
+        The resulting mixin can be applied to any object using the `|>` operator
+        to amend it with the properties, elements, and entries from this object.
+        
+        Example:
+        ```
+        obj = new { name = "Pigeon"; age = 42 }
+        person = new Person { name = "Original" } |> obj.toMixin()
+        // person.name == "Pigeon", person.age == 42
+        ```
+        """
+      annotations = List(new {
+        version = "0.31.0"
+      })
+      modifiers = Set()
+      name = "toMixin"
+      typeParameters = List()
+      parameters = Map()
     }, "hasProperty", new {
       location {
         line = XXXX
