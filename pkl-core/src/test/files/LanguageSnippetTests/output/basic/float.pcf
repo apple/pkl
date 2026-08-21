@@ -83,6 +83,7 @@ examples {
   ["division"] {
     0.8
     0.8800000000000001
+    Infinity
   }
   ["integer division"] {
     1
@@ -90,10 +91,13 @@ examples {
     1
     1
     1
+    "Cannot convert Float `5.0` to Int because it is too large."
   }
   ["remainder"] {
     5.5
     5.0
+    "Division by zero."
+    "Division by zero."
   }
   ["negation"] {
     -1.2
