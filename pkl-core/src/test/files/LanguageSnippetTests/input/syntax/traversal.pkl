@@ -55,20 +55,20 @@ facts {
     sample.fold(List(), (acc, n) -> acc.add(n.type)).first == "module"
   }
 
-  ["isLeaf is true exactly for nodes without children"] {
-    sample.fold(true, (acc, n) -> acc && n.isLeaf == n.children.isEmpty)
+  ["terminals have no children"] {
+    sample.fold(true, (acc, n) -> if (n.isTerminal) acc && n.children.isEmpty else acc)
   }
 
   ["a parsed module is a branch"] {
-    !sample.isLeaf
+    !sample.isTerminal
   }
 
-  ["identifiers are leaves"] {
-    sample.fold(true, (acc, n) -> if (n.type == "identifier") acc && n.isLeaf else acc)
+  ["identifiers are terminals"] {
+    sample.fold(true, (acc, n) -> if (n.type == "identifier") acc && n.isTerminal else acc)
   }
 
-  ["leaves carry text"] {
-    sample.fold(true, (acc, n) -> if (n.isLeaf) acc && n.text != null else acc)
+  ["terminals carry text"] {
+    sample.fold(true, (acc, n) -> if (n.isTerminal) acc && n.text != null else acc)
   }
 
   ["branches carry the text of their entire subtree"] {
