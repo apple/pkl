@@ -1,0 +1,439 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Utilities for managing Pkl source code
+@ModuleInfo { minPklVersion = "0.33.0" }
+@Since { version = "0.33.0" }
+module pkl.syntax
+
+/// Utilities to parse Pkl source code to a syntax tree.
+class Parser {
+  /// Parse the string or resource as a Pkl module, returning either a syntax node or
+  /// throwing an error.
+  external function parseModule(source: String | Resource): GenericNode
+
+  /// Parse the string or resource as a Pkl module, returning either a syntax node or null
+  /// in case of an error.
+  external function parseModuleOrNull(source: String | Resource): GenericNode?
+
+  /// Parse the string or resource as a Pkl expression, returning either a syntax node or
+  /// throwing an error.
+  external function parseExpression(source: String | Resource): GenericNode
+
+  /// Parse the string or resource as a Pkl expression, returning either a syntax node or null
+  /// in case of an error.
+  external function parseExpressionOrNull(source: String | Resource): GenericNode?
+}
+
+/// Renders a [GenericNode] back to Pkl source code, using the canonical Pkl formatter.
+class FormattingRenderer {
+  /// The grammar version to target.
+  ///
+  /// `"V1"` matches Pkl 0.25 - 0.29, `"V2"` matches Pkl 0.30+.
+  grammarVersion: "V1" | "V2" = "V2"
+
+  /// Render [node] as Pkl source code.
+  external function render(node: GenericNode): String
+}
+
+/// A generic, untyped node in the Pkl syntax tree.
+///
+/// A node is either a *leaf*, carrying no [children], or a *branch*, whose content is its
+/// [children]. Either way, [text] is the source code the node spans.
+class GenericNode {
+  /// The kind of this node.
+  type: NodeType
+
+  /// The child nodes, in source order. Empty for leaf nodes.
+  children: List<GenericNode>(isTerminal.implies(isEmpty))
+
+  /// The parent node, or [null] for the root and for nodes not attached to a tree.
+  hidden parent: GenericNode?
+
+  /// The verbatim source text this node spans, or [null] for a node that was not parsed
+  /// from source code.
+  text: String?(isTerminal.implies(this != null))
+
+  /// The source location of this node.
+  span: Span?
+
+  /// Tells if this is a terminal node; i.e. a node that spans a single token of the grammar.
+  ///
+  /// A terminal never has [children], but not every node without [children] is a terminal.
+  fixed isTerminal: Boolean = type is TerminalNodeType
+
+  /// Returns this node with each of its children replaced by [operator]'s result for that child.
+  ///
+  /// [operator] decides for each child whether the walk goes on: returning the child leaves it and
+  /// its subtree as they are, while returning `child.transform(operator)` keeps rewriting below it.
+  /// A rewrite that must reach every node needs to recurse manually:
+  /// ```pkl
+  /// local upperCaseIdentifiers = (node: GenericNode) ->
+  ///   if (node.type == "identifier")
+  ///     (node) { text = node.text!!.toUpperCase() }
+  ///   else
+  ///     // keep going
+  ///     node.transform(upperCaseIdentifiers)
+  ///
+  /// module.transform(upperCaseIdentifiers)
+  /// ```
+  /// [operator] is *not* applied to this node. Rewriting this node too is the caller's to do, with
+  /// `operator.apply(node)`.
+  ///
+  /// [operator] is applied to a child only once that child is read.
+  ///
+  /// Constructed nodes must set their own [text] where it applies.
+  /// [text] and [span] are carried through unchanged unless set explicitly, so a rebuilt branch
+  /// still reports the source code it was parsed from.
+  external function transform(operator: (GenericNode) -> GenericNode): GenericNode
+
+  /// Fold [operator] over this node and its descendants, top-down in pre-order.
+  ///
+  /// Example:
+  /// ```
+  /// // count the if-expressions in a module
+  /// module.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc)
+  /// ```
+  external function fold<Result>(initial: Result, operator: (Result, GenericNode) -> Result): Result
+
+  /// Returns the first child matching [predicate], searching depth-first in pre-order,
+  /// or [null] if there is none.
+  ///
+  /// *Child* means any node below this one, at any depth.
+  /// This node itself is not considered.
+  /// The search stops at the first match.
+  ///
+  /// Example:
+  /// ```
+  /// // the name of the first class declared in a module
+  /// module.findChildWhere((n) -> n.type == "class")?.findChildOfType("identifier")?.text
+  /// ```
+  external function findChildWhere(predicate: (GenericNode) -> Boolean): GenericNode?
+
+  /// Returns every child matching [predicate], in depth-first pre-order.
+  ///
+  /// *Child* means any node below this one, at any depth.
+  /// This node itself is not considered.
+  /// A matching node is searched for further matches, so a match may contain another.
+  external function findChildrenWhere(predicate: (GenericNode) -> Boolean): List<GenericNode>
+
+  /// Returns the first child whose [type] is [type], or [null] if there is none.
+  external function findChildOfType(type: NodeType): GenericNode?
+
+  /// Returns every child whose [type] is [type], in depth-first pre-order.
+  external function findChildrenOfType(type: NodeType): List<GenericNode>
+
+  /// Returns this node with the first child matching [predicate] replaced by [replacer]'s result.
+  ///
+  /// The child replaced is the one [findChildWhere()] returns. If there is none, the tree is
+  /// returned unchanged.
+  /// The replacement is left as it is, so it is not searched for further matches.
+  external function replaceChildWhere(
+    predicate: (GenericNode) -> Boolean,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode
+
+  /// Returns this node with every child matching [predicate] replaced by [replacer]'s result.
+  ///
+  /// The children replaced are those [findChildrenWhere()] returns.
+  /// A replacement is left as it is, so a match nested in another match is left to [replacer].
+  external function replaceChildrenWhere(
+    predicate: (GenericNode) -> Boolean,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode
+
+  /// Returns this node with the first child whose [type] is [type] replaced by [replacer]'s result.
+  external function replaceChildOfType(
+    type: NodeType,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode
+
+  /// Returns this node with every child whose [type] is [type] replaced by [replacer]'s result.
+  external function replaceChildrenOfType(
+    type: NodeType,
+    replacer: (GenericNode) -> GenericNode,
+  ): GenericNode
+
+  /// Returns the nearest parent matching [predicate], or [null] if there is none.
+  external function findParentWhere(predicate: (GenericNode) -> Boolean): GenericNode?
+
+  /// Returns every parent matching [predicate], nearest first.
+  external function findParentsWhere(predicate: (GenericNode) -> Boolean): List<GenericNode>
+
+  /// Tells whether any parent matches [predicate].
+  external function hasParentWhere(predicate: (GenericNode) -> Boolean): Boolean
+
+  /// Tells whether any parent's [type] is [type].
+  external function hasParentOfType(type: NodeType): Boolean
+}
+
+/// A range of source code, spanning [start] (inclusive) to [end] (exclusive).
+class Span {
+  /// The start of this span.
+  start: SourceLocation
+
+  /// The end of this span.
+  end: SourceLocation
+
+  /// The display URI of this span.
+  ///
+  /// Rendered for the editor configured in the Pkl settings file, the same way a location is
+  /// rendered in a stack trace.
+  /// If no such rendering applies to the source's URI, this is that URI with the span appended as
+  /// a fragment, for example `file:///foo/bar.pkl#L3C5-L3C12`.
+  /// For nodes parsed from a [String], the URI of the source is unknown, so this is just the
+  /// span itself, for example `L3C5-L3C12`.
+  displayUri: String
+}
+
+/// A position in source code, given as a 1-based line and column.
+class SourceLocation {
+  /// The 1-based line number of this source location.
+  line: UInt
+
+  /// The 1-based column number of this source location.
+  column: UInt
+
+  /// A URI identifying this source location, suitable for display.
+  ///
+  /// The exact format depends on where this location came from and on the editor configured in the
+  /// Pkl settings file.
+  /// For locations obtained from [Parser], this is typically the URI of the source with the
+  /// location appended as a fragment, for example `file:///foo/bar.pkl#L3C5`.
+  /// If the URI of the source is unknown, as is the case for nodes parsed from a [String], this is
+  /// just the location itself, for example `L3C5`.
+  displayUri: String
+}
+
+/// The kinds of node in the Pkl syntax tree.
+typealias NodeType =
+  TerminalNodeType
+    | ExprNodeType
+    | TypeNodeType
+    | ObjectMemberNodeType
+    | ClassMemberNodeType
+    | ModuleMemberNodeType
+    // module structure
+    | "module"
+    | "doc_comment"
+    | "modifier_list"
+    | "amends_clause"
+    | "extends_clause"
+    | "module_declaration"
+    | "module_definition"
+    | "annotation"
+    | "qualified_identifier"
+    | "import"
+    | "import_alias"
+    | "import_list"
+    | "typealias_header"
+    | "typealias_body"
+    | "class_header"
+    | "class_header_extends"
+    | "class_body"
+    | "class_body_elements"
+    | "class_method_header"
+    | "class_method_body"
+    | "class_property_header"
+    | "class_property_header_begin"
+    | "class_property_body"
+    | "object_body"
+    | "object_member_list"
+    | "parameter"
+    | "type_annotation"
+    | "parameter_list"
+    | "parameter_list_elements"
+    | "type_parameter_list"
+    | "type_parameter_list_elements"
+    | "argument_list"
+    | "argument_list_elements"
+    | "type_argument_list"
+    | "type_argument_list_elements"
+    | "object_parameter_list"
+    | "type_parameter"
+    | "string_chars"
+    // parts of members
+    | "object_property_header"
+    | "object_property_header_begin"
+    | "object_property_body"
+    | "object_entry_header"
+    | "when_generator_header"
+    | "for_generator_header"
+    | "for_generator_header_definition"
+    | "for_generator_header_definition_header"
+    // parts of expressions
+    | "new_header"
+    | "function_literal_body"
+    | "parenthesized_expr_elements"
+    | "if_header"
+    | "if_condition"
+    | "if_condition_expr"
+    | "if_then_expr"
+    | "if_else_expr"
+    | "let_parameter_definition"
+    | "let_parameter"
+    // parts of types
+    | "function_type_parameters"
+    | "parenthesized_type_elements"
+    | "constrained_type_constraint"
+    | "constrained_type_elements"
+
+/// The [NodeType]s that describe a terminal: a node that spans a single token of the grammar, such
+/// as a keyword, a punctuation character, an identifier or a literal.
+///
+/// A terminal never has [GenericNode.children].
+typealias TerminalNodeType =
+  // keywords
+  "amends_keyword"
+    | "as_keyword"
+    | "class_keyword"
+    | "else_keyword"
+    | "extends_keyword"
+    | "for_keyword"
+    | "function_keyword"
+    | "if_keyword"
+    | "import_keyword"
+    | "import_star_keyword"
+    | "in_keyword"
+    | "let_keyword"
+    | "module_keyword"
+    | "new_keyword"
+    | "out_keyword"
+    | "read_keyword"
+    | "read_question_keyword"
+    | "read_star_keyword"
+    | "super_keyword"
+    | "throw_keyword"
+    | "trace_keyword"
+    | "typealias_keyword"
+    | "when_keyword"
+    // punctuation
+    | "arrow"
+    | "assign"
+    | "at"
+    | "colon"
+    | "comma"
+    | "dot"
+    | "gt"
+    | "lbrace"
+    | "lbrack"
+    | "lparen"
+    | "lpred"
+    | "lt"
+    | "minus"
+    | "not"
+    | "qspread"
+    | "question"
+    | "rbrace"
+    | "rbrack"
+    | "rparen"
+    | "spread"
+    | "star"
+    | "underscore"
+    | "union"
+    // string delimiters
+    | "interpolation_start"
+    | "string_start"
+    | "string_multi_start"
+    | "string_end"
+    // string content
+    | "string_newline"
+    | "string_continuation"
+    | "string_escape"
+    // affixes
+    | "shebang"
+    | "line_comment"
+    | "block_comment"
+    | "semicolon"
+    | "doc_comment_line"
+    // names, modifiers and operators
+    | "identifier"
+    | "modifier"
+    | "operator"
+    // literals
+    | "bool_literal_expr"
+    | "int_literal_expr"
+    | "float_literal_expr"
+    // expressions without operands
+    | "this_expr"
+    | "outer_expr"
+    | "module_expr"
+    | "null_expr"
+    // types without operands
+    | "unknown_type"
+    | "nothing_type"
+    | "module_type"
+
+/// The [NodeType]s that describe an expression.
+typealias ExprNodeType =
+  "this_expr"
+    | "outer_expr"
+    | "module_expr"
+    | "null_expr"
+    | "throw_expr"
+    | "trace_expr"
+    | "import_expr"
+    | "read_expr"
+    | "new_expr"
+    | "unary_minus_expr"
+    | "logical_not_expr"
+    | "function_literal_expr"
+    | "parenthesized_expr"
+    | "super_subscript_expr"
+    | "super_access_expr"
+    | "subscript_expr"
+    | "qualified_access_expr"
+    | "if_expr"
+    | "let_expr"
+    | "bool_literal_expr"
+    | "int_literal_expr"
+    | "float_literal_expr"
+    | "single_line_string_literal_expr"
+    | "multi_line_string_literal_expr"
+    | "unqualified_access_expr"
+    | "non_null_expr"
+    | "amends_expr"
+    | "binary_op_expr"
+
+/// The [NodeType]s that describe a type.
+typealias TypeNodeType =
+  "unknown_type"
+    | "nothing_type"
+    | "module_type"
+    | "union_type"
+    | "function_type"
+    | "parenthesized_type"
+    | "declared_type"
+    | "nullable_type"
+    | "string_constant_type"
+    | "constrained_type"
+
+/// The [NodeType]s that describe a member of an object body.
+typealias ObjectMemberNodeType =
+  "object_element"
+    | "object_property"
+    | "object_method"
+    | "member_predicate"
+    | "object_entry"
+    | "object_spread"
+    | "when_generator"
+    | "for_generator"
+
+/// The [NodeType]s that describe a member of a class body.
+typealias ClassMemberNodeType = "class_property" | "class_method"
+
+/// The [NodeType]s that describe a member of a module.
+typealias ModuleMemberNodeType = "class_property" | "class_method" | "class" | "typealias"

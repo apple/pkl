@@ -1,0 +1,116 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
+
+local renderer = new syntax.FormattingRenderer {}
+
+local function fmt(source: String): String = renderer.render(mod(source))
+
+local function transformFormat(
+  source: String,
+  operator: (syntax.GenericNode) -> syntax.GenericNode,
+): String = renderer.render(mod(source).transform(operator))
+
+local function intLiteral(value: Int): syntax.GenericNode =
+  new syntax.GenericNode {
+    type = "int_literal_expr"
+    text = value.toString()
+  }
+
+/// Keeps walking, changing nothing.
+local descend = (n: syntax.GenericNode) -> n.transform(descend)
+
+/// Renames every `foo` identifier to `bar`.
+local renameFoo = (n: syntax.GenericNode) ->
+  if (n.type == "identifier" && n.text == "foo") (n) { text = "bar" } else n.transform(renameFoo)
+
+facts {
+  ["a walk that changes nothing leaves the tree unchanged"] {
+    transformFormat("x = 1", descend) == fmt("x = 1")
+    transformFormat("x = if (cond) 1 else 2", descend) == fmt("x = if (cond) 1 else 2")
+  }
+
+  ["an operator that does not recurse only sees this node's children"] {
+    // the identifiers are grandchildren, so they are never reached
+    transformFormat("foo = foo", (n) ->
+      if (n.type == "identifier" && n.text == "foo") (n) { text = "bar" } else n)
+      == fmt("foo = foo")
+  }
+
+  ["rename identifiers everywhere"] {
+    transformFormat("foo = foo + 1", renameFoo) == fmt("bar = bar + 1")
+  }
+
+  ["the operator is not applied to this node"] {
+    local root = mod("x = 1")
+    local replaceEverything = (_) -> intLiteral(9)
+
+    // an operator replacing every node it sees still leaves this node in place
+    root.transform(replaceEverything).type == "module"
+
+    // rewriting this node too is the caller's to do
+    replaceEverything.apply(root).type == "int_literal_expr"
+  }
+
+  ["replace a leaf with a constructed node"] {
+    local replaceZero = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        intLiteral(100)
+      else
+        n.transform(replaceZero)
+    transformFormat("x = 0", replaceZero) == fmt("x = 100")
+  }
+
+  ["rebuilds ancestors of a changed node"] {
+    local bumpLiterals = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        intLiteral(n.text!!.toInt() + 1)
+      else
+        n.transform(bumpLiterals)
+    transformFormat("x = if (cond) 41 else 0", bumpLiterals) == fmt("x = if (cond) 42 else 1")
+  }
+
+  ["splice in a parsed subtree"] {
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        parser.parseExpression("foo.bar + 1")
+      else
+        n.transform(splice)
+    transformFormat("x = 0", splice) == fmt("x = foo.bar + 1")
+  }
+
+  ["recursing into a replacement keeps rewriting inside it"] {
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        // the spliced subtree holds a `1`, which this recursion reaches
+        parser.parseExpression("(1)").transform(splice)
+      else if (n.type == "int_literal_expr" && n.text == "1")
+        intLiteral(2)
+      else
+        n.transform(splice)
+    transformFormat("x = 0", splice) == fmt("x = (2)")
+  }
+
+  ["returning a replacement leaves its subtree untouched"] {
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr" && n.text == "0")
+        parser.parseExpression("(1)")
+      else if (n.type == "int_literal_expr" && n.text == "1")
+        intLiteral(2)
+      else
+        n.transform(splice)
+    transformFormat("x = 0", splice) == fmt("x = (1)")
+  }
+
+  ["an operator may recurse with a different operator"] {
+    // rename identifiers inside an if-expression, and leave those outside it alone
+    local outerOp = (n: syntax.GenericNode) ->
+      if (n.type == "if_expr") n.transform(renameFoo) else n.transform(outerOp)
+    transformFormat("x = foo + if (foo) foo else 1", outerOp)
+      == fmt("x = foo + if (bar) bar else 1")
+  }
+}

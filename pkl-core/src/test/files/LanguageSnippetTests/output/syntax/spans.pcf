@@ -1,0 +1,94 @@
+facts {
+  ["span positions are 1-based"] {
+    true
+    true
+  }
+  ["end is exclusive"] {
+    true
+    true
+    true
+    true
+  }
+  ["a span's displayUri combines those of its start and end"] {
+    true
+  }
+  ["a child's span is contained in its parent's"] {
+    true
+    true
+  }
+  ["nodes constructed from scratch have no span"] {
+    true
+  }
+  ["a spanless constructed node still renders"] {
+    true
+  }
+  ["parsing the same text from a string and a resource differs only in displayUri"] {
+    true
+    true
+    true
+    true
+    true
+  }
+}
+examples {
+  ["span of a module parsed from a string"] {
+    new {
+      start {
+        line = X
+        column = 1
+        displayUri = "L1C1"
+      }
+      end {
+        line = X
+        column = 2
+        displayUri = "L5C2"
+      }
+      displayUri = "L1C1-L5C2"
+    }
+  }
+  ["span of a leaf parsed from a string"] {
+    new {
+      start {
+        line = X
+        column = 3
+        displayUri = "L4C3"
+      }
+      end {
+        line = X
+        column = 14
+        displayUri = "L4C14"
+      }
+      displayUri = "L4C3-L4C14"
+    }
+  }
+  ["span of a module parsed from a resource carries the resource URI"] {
+    new {
+      start {
+        line = X
+        column = 1
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC1"
+      }
+      end {
+        line = X
+        column = 2
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC2"
+      }
+      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC1-L5C2"
+    }
+  }
+  ["span of a leaf parsed from a resource carries the resource URI"] {
+    new {
+      start {
+        line = X
+        column = 3
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC3"
+      }
+      end {
+        line = X
+        column = 14
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC14"
+      }
+      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC3-L4C14"
+    }
+  }
+}

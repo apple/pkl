@@ -102,6 +102,16 @@ class GenericParserImpl {
     return new Node(NodeType.MODULE, nodes);
   }
 
+  Node parseExpressionInput() {
+    ff();
+    var expr = parseExpr();
+    ff();
+    if (lookahead != Token.EOF) {
+      throw parserError("unexpectedToken", _lookahead.text(lexer), "end of file");
+    }
+    return expr;
+  }
+
   private Node parseModuleDecl(List<Node> preChildren) {
     var headerParts = getHeaderParts(preChildren);
     var children = new ArrayList<>(headerParts.preffixes);
@@ -139,7 +149,7 @@ class GenericParserImpl {
     children.add(parseIdentifier());
     while (lookahead() == Token.DOT) {
       ff(children);
-      children.add(new Node(NodeType.TERMINAL, next().span));
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseIdentifier());
     }
@@ -937,7 +947,9 @@ class GenericParserImpl {
       var token = next().token;
       ff();
       if (token == Token.RPAREN) {
-        return lookahead == Token.ARROW;
+        // `()` is only valid as an empty parameter list
+        // let `parseFunctionLiteral` report the missing `->`
+        return true;
       }
       if (token == Token.UNDERSCORE) {
         return true;
@@ -1072,11 +1084,6 @@ class GenericParserImpl {
   private Node parseParenthesizedExpr() {
     var children = new ArrayList<Node>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
-    if (lookahead() == Token.RPAREN) {
-      ff(children);
-      children.add(makeTerminal(next()));
-      return new Node(NodeType.PARENTHESIZED_EXPR, children);
-    }
     var elements = new ArrayList<Node>();
     ff(elements);
     elements.add(parseExpr(")"));
@@ -1380,14 +1387,14 @@ class GenericParserImpl {
     children.add(makeTerminal(startTk));
     while (lookahead != Token.STRING_END) {
       switch (lookahead) {
-        case STRING_PART,
-            STRING_ESCAPE_NEWLINE,
+        case STRING_PART -> children.add(make(NodeType.STRING_CHARS, next().span));
+        case STRING_ESCAPE_NEWLINE,
             STRING_ESCAPE_TAB,
             STRING_ESCAPE_QUOTE,
             STRING_ESCAPE_BACKSLASH,
             STRING_ESCAPE_RETURN,
             STRING_ESCAPE_UNICODE ->
-            children.add(makeTerminal(next()));
+            children.add(make(NodeType.STRING_ESCAPE, next().span));
         case EOF -> {
           var delimiter = new StringBuilder(startTk.text(lexer)).reverse().toString();
           throw parserError("missingDelimiter", delimiter);
@@ -1541,7 +1548,66 @@ class GenericParserImpl {
   }
 
   private Node makeTerminal(FullToken tk) {
-    return new Node(NodeType.TERMINAL, tk.span);
+    return new Node(nodeTypeForTerminal(tk.token), tk.span);
+  }
+
+  private NodeType nodeTypeForTerminal(Token token) {
+    return switch (token) {
+      // keywords
+      case AMENDS -> NodeType.AMENDS_KEYWORD;
+      case AS -> NodeType.AS_KEYWORD;
+      case CLASS -> NodeType.CLASS_KEYWORD;
+      case ELSE -> NodeType.ELSE_KEYWORD;
+      case EXTENDS -> NodeType.EXTENDS_KEYWORD;
+      case FOR -> NodeType.FOR_KEYWORD;
+      case FUNCTION -> NodeType.FUNCTION_KEYWORD;
+      case IF -> NodeType.IF_KEYWORD;
+      case IMPORT -> NodeType.IMPORT_KEYWORD;
+      case IMPORT_STAR -> NodeType.IMPORT_STAR_KEYWORD;
+      case IN -> NodeType.IN_KEYWORD;
+      case LET -> NodeType.LET_KEYWORD;
+      case MODULE -> NodeType.MODULE_KEYWORD;
+      case NEW -> NodeType.NEW_KEYWORD;
+      case OUT -> NodeType.OUT_KEYWORD;
+      case READ -> NodeType.READ_KEYWORD;
+      case READ_QUESTION -> NodeType.READ_QUESTION_KEYWORD;
+      case READ_STAR -> NodeType.READ_STAR_KEYWORD;
+      case SUPER -> NodeType.SUPER_KEYWORD;
+      case THROW -> NodeType.THROW_KEYWORD;
+      case TRACE -> NodeType.TRACE_KEYWORD;
+      case TYPE_ALIAS -> NodeType.TYPEALIAS_KEYWORD;
+      case WHEN -> NodeType.WHEN_KEYWORD;
+      // punctuation
+      case ARROW -> NodeType.ARROW;
+      case ASSIGN -> NodeType.ASSIGN;
+      case AT -> NodeType.AT;
+      case COLON -> NodeType.COLON;
+      case COMMA -> NodeType.COMMA;
+      case DOT -> NodeType.DOT;
+      case GT -> NodeType.GT;
+      case LBRACE -> NodeType.LBRACE;
+      case LBRACK -> NodeType.LBRACK;
+      case LPAREN -> NodeType.LPAREN;
+      case LPRED -> NodeType.LPRED;
+      case LT -> NodeType.LT;
+      case MINUS -> NodeType.MINUS;
+      case NOT -> NodeType.NOT;
+      case QSPREAD -> NodeType.QSPREAD;
+      case QUESTION -> NodeType.QUESTION;
+      case RBRACE -> NodeType.RBRACE;
+      case RBRACK -> NodeType.RBRACK;
+      case RPAREN -> NodeType.RPAREN;
+      case SPREAD -> NodeType.SPREAD;
+      case STAR -> NodeType.STAR;
+      case UNDERSCORE -> NodeType.UNDERSCORE;
+      case UNION -> NodeType.UNION;
+      // string delimiters
+      case INTERPOLATION_START -> NodeType.INTERPOLATION_START;
+      case STRING_START -> NodeType.STRING_START;
+      case STRING_MULTI_START -> NodeType.STRING_MULTI_START;
+      case STRING_END -> NodeType.STRING_END;
+      default -> throw new RuntimeException("Unreacheable code");
+    };
   }
 
   // fast-forward over affix tokens

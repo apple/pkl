@@ -889,22 +889,28 @@ public final class VmUtils {
   }
 
   public static String getDisplayUri(SourceSection section, StackFrameTransformer transformer) {
-    var sourceUri = section.getSource().getURI();
-    var frame =
-        new StackFrame(
-            sourceUri.toString(),
-            null,
-            List.of(),
-            section.getStartLine(),
-            section.getStartColumn(),
-            section.getEndLine(),
-            section.getEndColumn());
-    StackFrame transformed = transformer.apply(frame);
-    return transformed.getModuleUri();
+    return getDisplayUri(
+        section.getSource().getURI().toString(),
+        section.getStartLine(),
+        section.getStartColumn(),
+        section.getEndLine(),
+        section.getEndColumn(),
+        transformer);
   }
 
   public static String getDisplayUri(URI moduleUri, StackFrameTransformer transformer) {
-    var frame = new StackFrame(moduleUri.toString(), null, List.of(), 1, 1, 1, 1);
+    return getDisplayUri(moduleUri.toString(), 1, 1, 1, 1, transformer);
+  }
+
+  public static String getDisplayUri(
+      String moduleUri,
+      int startLine,
+      int startColumn,
+      int endLine,
+      int endColumn,
+      StackFrameTransformer transformer) {
+    var frame =
+        new StackFrame(moduleUri, null, List.of(), startLine, startColumn, endLine, endColumn);
     StackFrame transformed = transformer.apply(frame);
     return transformed.getModuleUri();
   }

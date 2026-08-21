@@ -1,0 +1,34 @@
+facts {
+  ["a walk that changes nothing leaves the tree unchanged"] {
+    true
+    true
+  }
+  ["an operator that does not recurse only sees this node's children"] {
+    true
+  }
+  ["rename identifiers everywhere"] {
+    true
+  }
+  ["the operator is not applied to this node"] {
+    true
+    true
+  }
+  ["replace a leaf with a constructed node"] {
+    true
+  }
+  ["rebuilds ancestors of a changed node"] {
+    true
+  }
+  ["splice in a parsed subtree"] {
+    true
+  }
+  ["recursing into a replacement keeps rewriting inside it"] {
+    true
+  }
+  ["returning a replacement leaves its subtree untouched"] {
+    true
+  }
+  ["an operator may recurse with a different operator"] {
+    true
+  }
+}

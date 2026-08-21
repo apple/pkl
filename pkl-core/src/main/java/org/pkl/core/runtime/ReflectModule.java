@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -100,10 +100,6 @@ public final class ReflectModule extends StdLibModule {
     return TypeVariableClass.instance;
   }
 
-  public static VmClass getSourceLocationClass() {
-    return SourceLocationClass.instance;
-  }
-
   private static final class ModuleClass {
     static final VmClass instance = loadClass("Module");
   }
@@ -166,10 +162,6 @@ public final class ReflectModule extends StdLibModule {
 
   private static final class TypeVariableClass {
     static final VmClass instance = loadClass("TypeVariable");
-  }
-
-  private static final class SourceLocationClass {
-    static final VmClass instance = loadClass("SourceLocation");
   }
 
   @TruffleBoundary
