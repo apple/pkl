@@ -278,9 +278,8 @@ public abstract class UnresolvedTypeNode extends PklNode {
           return FunctionNClassTypeNodeGen.create(sourceSection, resolvedTypeArgumentNodes);
         }
 
-        // erase `x: Class<Foo>` to `x: Class` for now (cf. function types)
         if (clazz.isClassClass()) {
-          return new FinalClassTypeNode(sourceSection, clazz);
+          return ClassClassTypeNodeGen.create(sourceSection, typeArgumentNodes[0].execute(frame));
         }
 
         if (clazz.isVarArgsClass()) {
