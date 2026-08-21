@@ -148,10 +148,6 @@ public final class SyntaxNodes {
     VmTyped span() {
       return spanFactory.create(new SpanData(node.span, sourceUri));
     }
-
-    boolean isLeaf() {
-      return node.children.isEmpty();
-    }
   }
 
   static final VmObjectFactory<GenericNodeData> genericNodeFactory =
@@ -160,8 +156,7 @@ public final class SyntaxNodes {
           .addListProperty("children", GenericNodeData::children)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
           .addProperty("text", GenericNodeData::text)
-          .addProperty("span", GenericNodeData::span)
-          .addProperty("isLeaf", GenericNodeData::isLeaf);
+          .addProperty("span", GenericNodeData::span);
 
   /** Create the Pkl {@code GenericNode} backed by {@code data}. */
   static VmTyped createNode(GenericNodeData data) {
@@ -318,8 +313,7 @@ public final class SyntaxNodes {
           .addListProperty("children", ViewData::children)
           .addProperty("parent", vd -> VmNull.lift(vd.parentVm))
           .addProperty("text", vd -> VmUtils.readMember(vd.basis, Identifier.TEXT))
-          .addProperty("span", vd -> VmUtils.readMember(vd.basis, Identifier.SPAN))
-          .addProperty("isLeaf", vd -> VmUtils.readMember(vd.basis, Identifier.IS_LEAF));
+          .addProperty("span", vd -> VmUtils.readMember(vd.basis, Identifier.SPAN));
 
   /** Create the Pkl {@code GenericNode} backed by {@code data}. */
   static VmTyped createView(ViewData data) {

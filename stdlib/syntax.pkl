@@ -58,20 +58,22 @@ class GenericNode {
   type: NodeType
 
   /// The child nodes, in source order. Empty for leaf nodes.
-  children: List<GenericNode>
+  children: List<GenericNode>(isTerminal.implies(isEmpty))
 
   /// The parent node, or [null] for the root and for nodes not attached to a tree.
   hidden parent: GenericNode?
 
   /// The verbatim source text this node spans, or [null] for a node that was not parsed
   /// from source code.
-  text: String?
+  text: String?(isTerminal.implies(this != null))
 
-  /// The source location of this node or [null].
+  /// The source location of this node.
   span: Span?
 
-  /// [true] if this node does not have children.
-  isLeaf: Boolean
+  /// Tells if this is a terminal node; i.e. a node that spans a single token of the grammar.
+  ///
+  /// A terminal never has [children], but not every node without [children] is a terminal.
+  fixed isTerminal: Boolean = type is TerminalNodeType
 
   /// Returns this node with each of its children replaced by [operator]'s result for that child.
   ///
@@ -218,16 +220,9 @@ class SourceLocation {
 
 typealias NodeType =
   TerminalNodeType
-    // affixes
-    | "shebang"
-    | "line_comment"
-    | "block_comment"
-    | "semicolon"
     // module structure
     | "module"
     | "doc_comment"
-    | "doc_comment_line"
-    | "modifier"
     | "modifier_list"
     | "amends_clause"
     | "extends_clause"
@@ -269,10 +264,6 @@ typealias NodeType =
     | "object_parameter_list"
     | "type_parameter"
     | "string_chars"
-    | "operator"
-    | "string_newline"
-    | "string_continuation"
-    | "string_escape"
     // members
     | "object_element"
     | "object_property"
@@ -291,10 +282,6 @@ typealias NodeType =
     | "for_generator_header_definition"
     | "for_generator_header_definition_header"
     // expressions
-    | "this_expr"
-    | "outer_expr"
-    | "module_expr"
-    | "null_expr"
     | "throw_expr"
     | "trace_expr"
     | "import_expr"
@@ -320,9 +307,6 @@ typealias NodeType =
     | "let_expr"
     | "let_parameter_definition"
     | "let_parameter"
-    | "bool_literal_expr"
-    | "int_literal_expr"
-    | "float_literal_expr"
     | "single_line_string_literal_expr"
     | "multi_line_string_literal_expr"
     | "unqualified_access_expr"
@@ -330,9 +314,6 @@ typealias NodeType =
     | "amends_expr"
     | "binary_op_expr"
     // types
-    | "unknown_type"
-    | "nothing_type"
-    | "module_type"
     | "union_type"
     | "function_type"
     | "function_type_parameters"
@@ -345,8 +326,10 @@ typealias NodeType =
     | "constrained_type_constraint"
     | "constrained_type_elements"
 
-/// The [NodeType]s that describe a terminal: a fixed token of the grammar, such as a keyword or a
-/// punctuation character.
+/// The [NodeType]s that describe a terminal: a node that spans a single token of the grammar, such
+/// as a keyword, a punctuation character, an identifier or a literal.
+///
+/// A terminal never has [GenericNode.children].
 typealias TerminalNodeType =
   // keywords
   "amends_keyword"
@@ -401,6 +384,33 @@ typealias TerminalNodeType =
     | "string_start"
     | "string_multi_start"
     | "string_end"
+    // string content
+    | "string_newline"
+    | "string_continuation"
+    | "string_escape"
+    // affixes
+    | "shebang"
+    | "line_comment"
+    | "block_comment"
+    | "semicolon"
+    | "doc_comment_line"
+    // names, modifiers and operators
+    | "identifier"
+    | "modifier"
+    | "operator"
+    // literals
+    | "bool_literal_expr"
+    | "int_literal_expr"
+    | "float_literal_expr"
+    // expressions without operands
+    | "this_expr"
+    | "outer_expr"
+    | "module_expr"
+    | "null_expr"
+    // types without operands
+    | "unknown_type"
+    | "nothing_type"
+    | "module_type"
 
 /// The [NodeType]s that describe an expression.
 typealias ExprNodeType =
