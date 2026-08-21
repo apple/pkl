@@ -201,7 +201,7 @@ external class Module extends Declaration {
   /// Map keys are the identifiers by which imports are accessed within this module.
   /// Map values are the URIs of the imported modules.
   ///
-  /// Does not cover import expressions.
+  /// Does not cover import expressions or glob imports.
   imports: Map<String, Uri>
 
   /// The classes declared in this module.
