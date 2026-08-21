@@ -218,8 +218,14 @@ class SourceLocation {
   displayUri: String
 }
 
+/// The kinds of node in the Pkl syntax tree.
 typealias NodeType =
   TerminalNodeType
+    | ExprNodeType
+    | TypeNodeType
+    | ObjectMemberNodeType
+    | ClassMemberNodeType
+    | ModuleMemberNodeType
     // module structure
     | "module"
     | "doc_comment"
@@ -229,23 +235,18 @@ typealias NodeType =
     | "module_declaration"
     | "module_definition"
     | "annotation"
-    | "identifier"
     | "qualified_identifier"
     | "import"
     | "import_alias"
     | "import_list"
-    | "typealias"
     | "typealias_header"
     | "typealias_body"
-    | "class"
     | "class_header"
     | "class_header_extends"
     | "class_body"
     | "class_body_elements"
-    | "class_method"
     | "class_method_header"
     | "class_method_body"
-    | "class_property"
     | "class_property_header"
     | "class_property_header_begin"
     | "class_property_body"
@@ -264,65 +265,29 @@ typealias NodeType =
     | "object_parameter_list"
     | "type_parameter"
     | "string_chars"
-    // members
-    | "object_element"
-    | "object_property"
+    // parts of members
     | "object_property_header"
     | "object_property_header_begin"
     | "object_property_body"
-    | "object_method"
-    | "member_predicate"
-    | "object_entry"
     | "object_entry_header"
-    | "object_spread"
-    | "when_generator"
     | "when_generator_header"
-    | "for_generator"
     | "for_generator_header"
     | "for_generator_header_definition"
     | "for_generator_header_definition_header"
-    // expressions
-    | "throw_expr"
-    | "trace_expr"
-    | "import_expr"
-    | "read_expr"
-    | "new_expr"
+    // parts of expressions
     | "new_header"
-    | "unary_minus_expr"
-    | "logical_not_expr"
-    | "function_literal_expr"
     | "function_literal_body"
-    | "parenthesized_expr"
     | "parenthesized_expr_elements"
-    | "super_subscript_expr"
-    | "super_access_expr"
-    | "subscript_expr"
-    | "qualified_access_expr"
-    | "if_expr"
     | "if_header"
     | "if_condition"
     | "if_condition_expr"
     | "if_then_expr"
     | "if_else_expr"
-    | "let_expr"
     | "let_parameter_definition"
     | "let_parameter"
-    | "single_line_string_literal_expr"
-    | "multi_line_string_literal_expr"
-    | "unqualified_access_expr"
-    | "non_null_expr"
-    | "amends_expr"
-    | "binary_op_expr"
-    // types
-    | "union_type"
-    | "function_type"
+    // parts of types
     | "function_type_parameters"
-    | "parenthesized_type"
     | "parenthesized_type_elements"
-    | "declared_type"
-    | "nullable_type"
-    | "string_constant_type"
-    | "constrained_type"
     | "constrained_type_constraint"
     | "constrained_type_elements"
 
