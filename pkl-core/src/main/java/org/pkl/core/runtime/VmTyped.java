@@ -26,7 +26,7 @@ import org.pkl.core.Composite;
 import org.pkl.core.PModule;
 import org.pkl.core.PObject;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.expression.unary.AbstractImportNode;
+import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.util.EconomicMaps;
 
@@ -115,8 +115,11 @@ public final class VmTyped extends VmObject {
         if (bodyNode instanceof WrapperNode wrapper) {
           bodyNode = (ExpressionNode) wrapper.getDelegateNode();
         }
-        builder.add(
-            member.getName().toString(), ((AbstractImportNode) bodyNode).getImportUri().toString());
+        // Glob imports (`import*`) don't import a type; they resolve to a mapping.
+        // Exclude them here, consistent with `imports` also not covering import expressions.
+        if (bodyNode instanceof ImportNode importNode) {
+          builder.add(member.getName().toString(), importNode.getImportUri().toString());
+        }
       }
     }
     return builder.build();

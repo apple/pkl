@@ -1,4 +1,4 @@
-res = Map("reflect", "pkl:reflect", "globbed", "file:///$snippetsDir/input-helper/globtest/child/*.pkl")
+res = Map("reflect", "pkl:reflect")
 globbedKeys {
   "../../input-helper/globtest/child/moduleC.pkl"
 }
