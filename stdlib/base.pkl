@@ -46,7 +46,7 @@ import "pkl:yaml"
 /// ```
 abstract external class Any {
   /// Returns the class of [this].
-  external function getClass(): Class
+  external function getClass(): Class<this>
 
   /// Returns a string representation of [this].
   ///
@@ -57,7 +57,7 @@ abstract external class Any {
   ///
   /// This method is the complement of the `??` operator and the equivalent of an `Option` type's
   /// `map` and `flatMap` methods.
-  external function ifNonNull<Result>(transform: (NonNull) -> Result): Result?
+  external function ifNonNull<Result>(transform: (this) -> Result): Result?
 }
 
 /// The type of [null] and null values created with [Null()].

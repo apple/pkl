@@ -1,0 +1,38 @@
+result = "ok"
+res1a = 1
+res1b = 2
+res1c = 3
+res1d = 2
+res11a = 2
+res11b = 3
+res11c = 4
+res11d = 4
+res12 = "Expected value of type `thisType1#Good`, but got type `thisType1`. Value: new ModuleClass { x = 1; res1 { x = 1; res1 { x = 1; res1 { x = 1; res1 { x =..."
+res14a = "Expected value of type `thisType1#Good`, but got type `thisType1`. Value: new ModuleClass { x = 1; res1 { x = 1; res1 { x = 1; res1 { x = 1; res1 { x =..."
+res16 = 5
+res16a = "Expected value of type `thisType1`, but got type `Dynamic`. Value: new Dynamic { x = ? }"
+res17 = 3
+res18 {
+  1
+}
+res19 {
+  baz {
+    x = 3
+  }
+}
+res22 {
+  "thisType1: 1"
+  "thisType1#Good: 2"
+  "thisType1: 3"
+  "thisType1#Good: 4"
+}
+res22a {
+  "thisType1#Good: 1"
+  "thisType1#Good: 2"
+  "thisType1#Good: 3"
+  "thisType1#Good: 4"
+}
+res23a = "thisType1#ThisAnnotation"
+res23b = "thisType1#ThisAnnotation"
+res24a = "thisType1#ThatAnnotation"
+res24b = "thisType1#ThisAnnotation"

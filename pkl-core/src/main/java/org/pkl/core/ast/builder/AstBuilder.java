@@ -131,6 +131,7 @@ import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetModuleOwnerNode;
 import org.pkl.core.ast.expression.primary.GetOwnerNode;
+import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
 import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
 import org.pkl.core.ast.expression.primary.OuterNode;
@@ -208,6 +209,7 @@ import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
 import org.pkl.core.stdlib.registry.MemberRegistryFactory;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
+import org.pkl.core.util.ErrorMessages;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
 import org.pkl.parser.Span;
@@ -279,6 +281,7 @@ import org.pkl.parser.syntax.Type.NothingType;
 import org.pkl.parser.syntax.Type.NullableType;
 import org.pkl.parser.syntax.Type.ParenthesizedType;
 import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.ThisType;
 import org.pkl.parser.syntax.Type.UnionType;
 import org.pkl.parser.syntax.Type.UnknownType;
 import org.pkl.parser.syntax.TypeAlias;
@@ -370,7 +373,104 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public UnresolvedTypeNode visitModuleType(ModuleType type) {
-    return new UnresolvedTypeNode.Module(createSourceSection(type));
+    var sourceSection = createSourceSection(type);
+    checkModuleType(type, sourceSection);
+    return new UnresolvedTypeNode.Module(sourceSection);
+  }
+
+  private void checkModuleType(ModuleType type, SourceSection sourceSection) {
+    // `class X extends module` is fine
+    if (type.parent() instanceof Class classNode && classNode.getSuperClass() == type) {
+      return;
+    }
+    var currentScope = symbolTable.getCurrentScope();
+    if (!currentScope.getConstLevel().isConst()) {
+      return;
+    }
+    String errorMessage = null;
+    // only classes/typealiases/annotations will apply "MODULE" const level
+    if (currentScope.getConstLevel() == ConstLevel.MODULE) {
+      for (var scope = currentScope; scope != null; scope = scope.getParent()) {
+        if (scope.isAnnotationScope()) {
+          errorMessage = ErrorMessages.create("invalidModuleTypeInAnnotation");
+          break;
+        } else if (scope.isClassScope()) {
+          errorMessage = ErrorMessages.create("invalidModuleTypeInClass");
+          break;
+        } else if (scope.isTypeAliasScope()) {
+          errorMessage = ErrorMessages.create("invalidModuleTypeInTypeAlias");
+          break;
+        }
+      }
+    }
+    // Only properties and methods will apply "ALL" const level
+    else {
+      for (var scope = currentScope; scope != null; scope = scope.getParent()) {
+        if (scope.isPropertyScope() || scope.isMethodScope()) {
+          var parentScope = scope.getParent();
+          assert parentScope != null;
+          // if the parent also has "ALL", we haven't found the originating const property/method
+          // yet.
+          if (parentScope.getConstLevel() == ConstLevel.ALL) {
+            continue;
+          }
+          var message =
+              scope.isPropertyScope() ? "invalidModuleTypeInProperty" : "invalidModuleTypeInMethod";
+          errorMessage = ErrorMessages.create(message, scope.getQualifiedName());
+        }
+      }
+    }
+    assert errorMessage != null;
+    // TODO: when making this an error, update comment on moduleClass in ReferenceTypeNode.eval
+    VmContext.get(null)
+        .getLogger()
+        .warn(
+            errorMessage + " This will be an error in a future release.",
+            VmUtils.createStackFrame(sourceSection, null));
+  }
+
+  @Override
+  public UnresolvedTypeNode visitThisType(ThisType type) {
+    var sourceSection = createSourceSection(type);
+    // need to pass explicit class name for property and method arg/return type annotations.
+    // this is because type annotations on class properties/methods are initialized when the
+    // ClassNode
+    // is executed, and the frame's receiver is the enclosing module rather than the class.
+    // do not need: when in any object or at the module level (where `this` is the receiver's class)
+    org.pkl.core.runtime.Identifier className = null;
+    for (var scope = symbolTable.getCurrentScope(); scope != null; scope = scope.getParent()) {
+      if (scope.isObjectScope() || scope.isCustomThisScope()) {
+        break;
+      }
+      if (scope instanceof ClassScope foundClassScope) {
+        className = foundClassScope.getName();
+        break;
+      }
+      // it's still safe to break on ObjectScope because this is valid:
+      // typealias Foo = List(any((it) -> it == new Dynamic { it is this })) // this == Dynamic
+      if (scope.isTypeAliasScope()) {
+        throw exceptionBuilder()
+            .withSourceSection(sourceSection)
+            .evalError("invalidThisTypeInTypeAlias")
+            .build();
+      }
+    }
+
+    ExpressionNode getClassNode;
+    if (isBaseModule && className != null) {
+      getClassNode = new GetBaseModuleClassNode(className);
+    } else if (className == null) {
+      getClassNode = new GetReceiverClassNode(sourceSection);
+    } else if (className.isLocalProp()) {
+      getClassNode =
+          new ReadQualifiedLocalPropertyNode(
+              sourceSection, className, false, new GetModuleNode(sourceSection));
+    } else {
+      getClassNode =
+          ReadPropertyNodeGen.create(
+              sourceSection, className, false, new GetModuleNode(sourceSection));
+    }
+    return new UnresolvedTypeNode.This(sourceSection, getClassNode);
   }
 
   @Override

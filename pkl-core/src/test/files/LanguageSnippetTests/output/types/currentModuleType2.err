@@ -1,0 +1,5 @@
+result = "ok"
+pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType2.pkl)
+pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType2.pkl)
+pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType2.pkl)
+pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType2.pkl)

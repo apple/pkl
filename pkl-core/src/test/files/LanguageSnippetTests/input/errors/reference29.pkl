@@ -1,0 +1,32 @@
+open module reference29
+
+// interactions between references and self types
+// module type in an open module
+
+import "pkl:ref"
+import "reference29.pkl"
+
+class D extends ref.Domain {
+  function renderReference(r: ref.Reference<this, Any>): String =
+    r.getPath().map((it) -> it.property ?? it.key.toString()).join(".")
+}
+
+hidden parent: module?
+hidden children: List<module>
+
+typealias R = ref.Reference<D, reference29?>
+
+res0 = ref.Reference(new D {}, getClass(), null)
+res1: R = res0.parent
+res2: R = res0.parent.parent
+res3: R = res0.children[0]
+res4: R = res0.children[0].parent
+res5: R = res0.children[0].children[0]
+
+output {
+  renderer {
+    converters {
+      [ref.Reference] = (it) -> it.toString()
+    }
+  }
+}

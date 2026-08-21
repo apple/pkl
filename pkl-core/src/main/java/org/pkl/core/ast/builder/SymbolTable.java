@@ -410,6 +410,18 @@ public final class SymbolTable {
       return curr;
     }
 
+    public final boolean isAnnotationScope() {
+      return this instanceof AnnotationScope;
+    }
+
+    public final boolean isPropertyScope() {
+      return this instanceof PropertyScope;
+    }
+
+    public final boolean isMethodScope() {
+      return this instanceof MethodScope;
+    }
+
     public final boolean isLetScope() {
       return this instanceof LetExpressionScope;
     }
@@ -420,6 +432,10 @@ public final class SymbolTable {
 
     public final boolean isClassScope() {
       return this instanceof ClassScope;
+    }
+
+    public final boolean isObjectScope() {
+      return this instanceof ObjectScope;
     }
 
     public final boolean isClassMemberScope() {
@@ -452,6 +468,10 @@ public final class SymbolTable {
 
     public final boolean isForGeneratorScope() {
       return this instanceof ForGeneratorScope;
+    }
+
+    public final boolean isTypeAliasScope() {
+      return this instanceof TypeAliasScope;
     }
 
     public ConstLevel getConstLevel() {
@@ -1010,7 +1030,6 @@ public final class SymbolTable {
 
     @Override
     public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
-
       var member = properties.get(name);
       if (member == null) return null;
       return new LexicalProperty(false, member.modifiers, levelsUp);
@@ -1018,7 +1037,6 @@ public final class SymbolTable {
 
     @Override
     public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
-
       var member = methods.get(name);
       if (member == null) return null;
       return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);

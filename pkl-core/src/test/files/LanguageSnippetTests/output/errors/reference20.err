@@ -1,8 +1,8 @@
 –– Pkl Error ––
 not supported
 
-x | function renderReference(reference: ref.Reference<D, Any>): String = throw("not supported")
-                                                                         ^^^^^^^^^^^^^^^^^^^^^^
+x | function renderReference(reference: ref.Reference<this, Any>): String = throw("not supported")
+                                                                            ^^^^^^^^^^^^^^^^^^^^^^
 at reference20#D.renderReference (file:///$snippetsDir/input/errors/reference20.pkl)
 
 xxx | function toString(): String = getDomain().renderReference(this)

@@ -58,8 +58,8 @@ public final class GetParentForTypeNode extends ExpressionNode {
     var defaultValue =
         typeNode.createDefaultValue(frame, VmLanguage.get(this), sourceSection, qualifiedName);
 
-    // can't cache default value for `module` type in a non-final module because it's a self-type
-    // (the default value changes when inherited).
+    // can't cache default value for `module`/`this` types in a non-final modules/classes because
+    // they're self types (the default value changes when inherited).
     if (typeNode.isFinalType() && defaultValue != null) {
       unresolvedTypeNode = null;
       this.defaultValue = defaultValue;
