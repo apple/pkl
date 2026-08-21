@@ -625,11 +625,11 @@ public final class Lexer {
     while (lookahead != EOF) {
       if (prev == '*' && lookahead == '/') {
         nextChar();
-        break;
+        return;
       }
       prev = nextChar();
     }
-    if (lookahead == EOF) throw unexpectedEndOfFile();
+    throw unexpectedEndOfFile();
   }
 
   private void lexHexNumber() {
