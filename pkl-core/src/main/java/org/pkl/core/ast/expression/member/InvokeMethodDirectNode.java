@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.member;
 
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -52,6 +53,7 @@ public final class InvokeMethodDirectNode extends ExpressionNode {
     args[0] = receiverNode.executeGeneric(frame);
     args[1] = owner;
     for (var i = 0; i < argumentNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 

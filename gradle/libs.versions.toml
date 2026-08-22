@@ -62,6 +62,8 @@ nullaway = "0.13.7"
 nullawayPlugin = "3.0.0"
 nuValidator = "26.7.3"
 paguro = "3.10.3"
+protobufPlugin = "0.10.0"
+protobuf = "4.35.1"
 shadowPlugin = "9.5.1"
 slf4j = "2.0.18"
 snakeYaml = "3.0.1"
@@ -117,6 +119,8 @@ nullaway = { group = "com.uber.nullaway", name = "nullaway", version.ref = "null
 nullawayPlugin = { group = "net.ltgt.gradle", name = "gradle-nullaway-plugin", version.ref = "nullawayPlugin" }
 # to be replaced with https://github.com/usethesource/capsule or https://github.com/lacuna/bifurcan
 paguro = { group = "org.organicdesign", name = "Paguro", version.ref = "paguro" }
+protobuf = { group = "com.google.protobuf", name = "protobuf-java", version.ref = "protobuf" }
+protoc = { group = "com.google.protobuf", name = "protoc", version.ref = "protobuf" }
 pklConfigJavaAll025 = { group = "org.pkl-lang", name = "pkl-config-java-all", version = "0.25.0" }
 shadowPlugin = { group = "com.gradleup.shadow", name = "com.gradleup.shadow.gradle.plugin", version.ref = "shadowPlugin" }
 slf4jApi = { group = "org.slf4j", name = "slf4j-api", version.ref = "slf4j" }
@@ -125,6 +129,7 @@ snakeYaml = { group = "org.snakeyaml", name = "snakeyaml-engine", version.ref = 
 spotlessPlugin = { group = "com.diffplug.spotless", name = "spotless-plugin-gradle", version.ref = "spotlessPlugin"}
 svm = { group = "org.graalvm.nativeimage", name = "svm", version.ref = "graalVmJdkVersion" }
 truffleApi = { group = "org.graalvm.truffle", name = "truffle-api", version.ref = "graalVm" }
+truffleProfiler = { group = "org.graalvm.tools", name = "profiler-tool", version.ref = "graalVm" }
 truffleDslProcessor = { group = "org.graalvm.truffle", name = "truffle-dsl-processor", version.ref = "graalVm" }
 truffleSvm = { group = "org.graalvm.nativeimage", name = "truffle-runtime-svm", version.ref = "graalVmJdkVersion" }
 truffleRuntime = { group = "org.graalvm.truffle", name = "truffle-runtime", version.ref = "graalVm" }
@@ -135,10 +140,11 @@ checksum = { id = "org.gradle.crypto.checksum", version.ref = "checksumPlugin" }
 #noinspection UnusedVersionCatalogEntry
 errorProne = { id = "net.ltgt.errorprone", version.ref = "errorPronePlugin" }
 ideaExt = { id = "org.jetbrains.gradle.plugin.idea-ext", version.ref = "ideaExtPlugin" }
+jextract = { id = "de.infolektuell.jextract", version.ref = "jextractPlugin" }
 jmh = { id = "me.champeau.jmh", version.ref = "jmhPlugin" }
 kotlinxSerialization = { id = "org.jetbrains.kotlin.plugin.serialization", version.ref = "kotlinToolchain" }
 nexusPublish = { id = "io.github.gradle-nexus.publish-plugin", version.ref = "nexusPublishPlugin" }
 #noinspection UnusedVersionCatalogEntry
 nullaway = { id = "net.ltgt.nullaway", version.ref = "nullawayPlugin" }
 shadow = { id = "com.gradleup.shadow", version.ref = "shadowPlugin" }
-jextract = { id = "de.infolektuell.jextract", version.ref = "jextractPlugin" }
+protobuf = { id = "com.google.protobuf", version.ref = "protobufPlugin" }

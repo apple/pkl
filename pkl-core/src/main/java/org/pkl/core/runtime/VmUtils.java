@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.*;
@@ -42,6 +43,7 @@ import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.FileOutput;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
+import org.pkl.core.ProfilerOptions;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrame;
@@ -76,8 +78,9 @@ public final class VmUtils {
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
 
-  private static final Engine PKL_ENGINE =
-      Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
+  // must be a singleton because stdlib modules are singletons; otherwise we get "invalid sharing of
+  // AST Nodes"
+  private static final Engine PKL_ENGINE = makePklEngine();
 
   private static final Pattern DOC_COMMENT_LINE_START =
       Pattern.compile(
@@ -100,6 +103,19 @@ public final class VmUtils {
   private static final Parser parser = new Parser();
 
   private VmUtils() {}
+
+  private static Engine makePklEngine() {
+    var builder = Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false");
+    var profilerOptions = ProfilerOptions.fromSystemProperties();
+    if (profilerOptions.cpu().isEnabled()) {
+      builder.option("pkl-cpu-profiler", "true");
+    }
+    return builder.build();
+  }
+
+  public static void closeEngine() {
+    PKL_ENGINE.close(true);
+  }
 
   static VmTyped createEmptyModule() {
     return new VmTyped(createEmptyMaterializedFrame(), null, EconomicMaps.create());
@@ -642,17 +658,18 @@ public final class VmUtils {
   }
 
   public static List<VmTyped> evaluateAnnotations(
-      VirtualFrame frame, ExpressionNode[] annotationNodes) {
+      VirtualFrame frame, Node node, ExpressionNode[] annotationNodes) {
     var result = new ArrayList<VmTyped>(annotationNodes.length);
-    evaluateAnnotations(frame, annotationNodes, result);
+    evaluateAnnotations(frame, node, annotationNodes, result);
     return result;
   }
 
   @ExplodeLoop
   public static void evaluateAnnotations(
-      VirtualFrame frame, ExpressionNode[] annotationNodes, List<VmTyped> result) {
+      VirtualFrame frame, Node node, ExpressionNode[] annotationNodes, List<VmTyped> result) {
 
     for (var annotationNode : annotationNodes) {
+      TruffleSafepoint.poll(node);
       var annotation = (VmTyped) annotationNode.executeGeneric(frame);
       // do not force annotations here because running other code
       // during class resolution will likely cause evaluation cycles

@@ -57,6 +57,8 @@ include("pkl-server")
 
 include("pkl-tools")
 
+include("pkl-profiler")
+
 include("stdlib")
 
 pluginManagement {
