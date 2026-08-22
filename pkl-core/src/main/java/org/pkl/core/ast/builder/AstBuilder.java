@@ -68,7 +68,7 @@ import org.pkl.core.ast.expression.binary.GreaterThanNodeGen;
 import org.pkl.core.ast.expression.binary.GreaterThanOrEqualNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanNodeGen;
 import org.pkl.core.ast.expression.binary.LessThanOrEqualNodeGen;
-import org.pkl.core.ast.expression.binary.LetExprNodeGen;
+import org.pkl.core.ast.expression.binary.LetExprNode;
 import org.pkl.core.ast.expression.binary.LogicalAndNodeGen;
 import org.pkl.core.ast.expression.binary.LogicalOrNodeGen;
 import org.pkl.core.ast.expression.binary.MultiplicationNodeGen;
@@ -109,6 +109,7 @@ import org.pkl.core.ast.expression.literal.MapLiteralNode;
 import org.pkl.core.ast.expression.literal.PropertiesLiteralNodeGen;
 import org.pkl.core.ast.expression.literal.SetLiteralNode;
 import org.pkl.core.ast.expression.literal.TrueLiteralNode;
+import org.pkl.core.ast.expression.member.InferParentWithinLetBindingNode;
 import org.pkl.core.ast.expression.member.InferParentWithinMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinObjectMethodNode;
 import org.pkl.core.ast.expression.member.InferParentWithinPropertyNodeGen;
@@ -947,16 +948,17 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private ExpressionNode doVisitNewExprWithInferredParent(NewExpr expr) {
+    var sourceSection = createSourceSection(expr.newSpan());
     ExpressionNode inferredParentNode;
 
     Node child = expr;
     var parent = expr.parent();
     var scope = symbolTable.getCurrentScope();
 
-    while (parent instanceof IfExpr
+    while (parent instanceof IfExpr ifExpr
+            && (ifExpr.getThen() == child || ifExpr.getEls() == child)
         || parent instanceof TraceExpr
         || parent instanceof LetExpr letExpr && letExpr.getExpr() == child) {
-
       child = parent;
       parent = parent.parent();
     }
@@ -964,15 +966,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (parent instanceof ClassProperty || parent instanceof ObjectProperty) {
       inferredParentNode =
           InferParentWithinPropertyNodeGen.create(
-              createSourceSection(expr.newSpan()), scope.getName(), new GetOwnerNode());
+              sourceSection, scope.getName(), new GetOwnerNode());
     } else if (parent instanceof ObjectElement
         || parent instanceof ObjectEntry objectEntry && objectEntry.getValue() == child) {
       inferredParentNode =
           ApplyVmFunction1NodeGen.create(
               ReadPropertyNodeGen.create(
-                  createSourceSection(expr.newSpan()),
-                  org.pkl.core.runtime.Identifier.DEFAULT,
-                  new GetReceiverNode()),
+                  sourceSection, org.pkl.core.runtime.Identifier.DEFAULT, new GetReceiverNode()),
               new GetMemberKeyNode());
     } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
       var isObjectMethod =
@@ -982,19 +982,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       inferredParentNode =
           isObjectMethod
               ? new InferParentWithinObjectMethodNode(
-                  createSourceSection(expr.newSpan()), language, scopeName, new GetOwnerNode())
+                  sourceSection, language, scopeName, new GetOwnerNode())
               : new InferParentWithinMethodNode(
-                  createSourceSection(expr.newSpan()), language, scopeName, new GetOwnerNode());
+                  sourceSection, language, scopeName, new GetOwnerNode());
     } else if (parent instanceof LetExpr letExpr && letExpr.getBindingExpr() == child) {
-      // TODO correctly infer parent, e.g. `let (x: Person = new {}) ...`
-      throw exceptionBuilder()
-          .evalError("cannotInferParent")
-          .withSourceSection(createSourceSection(expr.newSpan()))
-          .build();
+      inferredParentNode = new InferParentWithinLetBindingNode(sourceSection, language);
     } else {
       throw exceptionBuilder()
           .evalError("cannotInferParent")
-          .withSourceSection(createSourceSection(expr.newSpan()))
+          .withSourceSection(sourceSection)
           .build();
     }
 
@@ -1175,13 +1171,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         binding,
         scope -> {
           var bodyExpr = visitExpr(letExpr.getExpr());
-          return LetExprNodeGen.create(
+          return new LetExprNode(
               sourceSection,
               scope.getQualifiedName(),
               t,
+              bindingExpr,
               bodyExpr,
-              b == null ? -1 : b.slot(),
-              bindingExpr);
+              b == null ? -1 : b.slot());
         });
   }
 

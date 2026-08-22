@@ -1,4 +1,8 @@
+open module letTyped
+
 import "pkl:test"
+
+y: Int = 0
 
 res1 =
   let (x: Int = 42)
@@ -10,26 +14,75 @@ res2 =
 
 res3 =
   let (x: Duration(unit == "min") = 3.min + 2.min)
-    let (y: Float(isPositive) = 1.2 + 1.3)
-      x * y
+  let (y: Float(isPositive) = 1.2 + 1.3)
+    x * y
 
 res4 =
-  let (xs: List<Null|Boolean|"Pigeon"> = List("Pigeon", true, null))
+  let (xs: List<Null | Boolean | "Pigeon"> = List("Pigeon", true, null))
     xs
 
-res5 = test.catch(() ->
-  let (x: String = 42)
-    x + 1)
+res5 =
+  test.catch(() ->
+    let (x: String = 42)
+      x + 1
+  )
 
-res6 = test.catch(() ->
-  let (str: String(endsWith("A")) = "Pigeon".reverse())
-    str.reverse())
+res6 =
+  test.catch(() ->
+    let (str: String(endsWith("A")) = "Pigeon".reverse())
+      str.reverse()
+  )
 
-res7 = test.catch(() ->
-  let (x: Duration(unit == "min") = 3.min + 2.min)
+res7 =
+  test.catch(() ->
+    let (x: Duration(unit == "min") = 3.min + 2.min)
     let (y: Float(!isPositive) = 1.2 + 1.3)
-      x * y)
+      x * y
+  )
 
-res8 = test.catch(() ->
-  let (xs: List<Null|Boolean|"Pigeon"> = List("Barn Owl", true, null))
-    xs)
+res8 =
+  test.catch(() ->
+    let (xs: List<Null | Boolean | "Pigeon"> = List("Barn Owl", true, null))
+      xs
+  )
+
+// test basic `new {}` inference
+
+class Foo {
+  y: Int
+}
+
+res9 =
+  let (x: Foo = new { y = 1 })
+    x.y
+
+// test inference with let in binding expression
+
+res10 =
+  let (x: Foo = let (z = 0) new { y = z })
+    x.y
+
+// test inference against underscore binding
+
+res11 = test.catch(() -> let (_ = new { y = 1 }) null)
+
+// test inference of non-instantiable types
+
+abstract class Bar {
+  y: Int
+}
+
+res12a = test.catch(() -> let (x: Int = new { y = 1 }) x)
+res12b = test.catch(() -> let (x: Bar = new { y = 1 }) x)
+res12c = test.catch(() -> let (x: nothing = new { y = 1 }) x)
+
+// test inference of a self type
+
+function make(_y: Int): module =
+  let (z: module = new { y = _y })
+    z
+
+class Child extends module
+
+res13a = make(2).getClass().toString()
+res13b = new Child {}.make(3).getClass().toString()
