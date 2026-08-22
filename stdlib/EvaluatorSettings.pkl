@@ -300,6 +300,17 @@ class Http {
   /// <https://pkl-lang.org/main/current/language-reference/index.html#glob-patterns>.
   @Since { version = "0.32.0" }
   headers: Mapping<String(isGlobPattern), HttpHeaders>?
+
+  /// Returns parsed headers from the given netrc file contents.
+  ///
+  /// Example:
+  /// ```
+  /// headers = netRcHeaders(read("/path/to/.netrc"))
+  /// ```
+  @Since { version = "0.33.0" }
+  external function netRcHeaders(
+    contents: String | Resource,
+  ): Mapping<String(isGlobPattern), HttpHeaders>
 }
 
 /// Settings that control how Pkl talks to HTTP proxies.

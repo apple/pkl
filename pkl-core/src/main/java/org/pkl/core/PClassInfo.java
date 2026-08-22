@@ -38,6 +38,7 @@ public final class PClassInfo<T> implements Serializable {
   public static final URI pklBaseUri = URI.create("pkl:base");
   public static final URI pklSemverUri = URI.create("pkl:semver");
   public static final URI pklSettingsUri = URI.create("pkl:settings");
+  public static final URI pklEvaluatorSettingsUri = URI.create("pkl:EvaluatorSettings");
   public static final URI pklProjectUri = URI.create("pkl:Project");
   public static final URI pklRefUri = URI.create("pkl:ref");
 

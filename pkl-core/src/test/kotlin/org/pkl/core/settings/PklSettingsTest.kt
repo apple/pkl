@@ -175,6 +175,60 @@ class PklSettingsTest {
       )
   }
 
+  @Test
+  fun `load user settings with netRcHeaders`(@TempDir tempDir: Path) {
+    val netrcFile = tempDir.resolve(".netrc")
+    netrcFile.writeString(
+      """
+      machine github.com
+        login octocat
+        password secret_pass
+      """
+        .trimIndent()
+    )
+
+    val settingsPath = tempDir.resolve("settings.pkl")
+    settingsPath.writeString(
+      """
+      amends "pkl:settings"
+
+      http {
+        headers = netRcHeaders(read("${netrcFile.toUri()}"))
+      }
+      """
+        .trimIndent()
+    )
+
+    val settings = PklSettings.load(ModuleSource.path(settingsPath))
+    val expectedAuth =
+      "Basic " + java.util.Base64.getEncoder().encodeToString("octocat:secret_pass".toByteArray())
+    val expectedHttp =
+      PklEvaluatorSettings.Http(
+        null,
+        null,
+        mapOf("http{,s}://github.com/**" to mapOf("Authorization" to listOf(expectedAuth))),
+      )
+
+    assertThat(settings.http()).isEqualTo(expectedHttp)
+  }
+
+  @Test
+  fun `test import EvaluatorSettings`() {
+    val evaluator = Evaluator.preconfigured()
+    val module =
+      evaluator.evaluate(
+        ModuleSource.text(
+          """
+          import "pkl:EvaluatorSettings"
+
+          res = (new EvaluatorSettings.Http {}).netRcHeaders("")
+          """
+            .trimIndent()
+        )
+      )
+    assertThat(module.getProperty("res")).isNotNull
+  }
+
   private fun checkEquals(expected: Editor, actual: PObject) {
     assertThat(actual.getProperty("urlScheme") as String).isEqualTo(expected.urlScheme())
   }

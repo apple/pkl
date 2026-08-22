@@ -1,0 +1,216 @@
+examples {
+  ["netRcHeaders - basic"] {
+    new {
+      ["http{,s}://github.com/**"] {
+        ["Authorization"] {
+          "Basic b2N0b2NhdDpzZWNyZXRfcGFzcw=="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - quotes"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic YmFyIGJhcjpiYXo="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - trailing comments"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic YmFyOmZvbw=="
+        }
+      }
+      ["http{,s}://bar.com/**"] {
+        ["Authorization"] {
+          "Basic YmFyMjpmb28="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - hash inside quote"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic Zm9vICMgYmFyOnBhc3MjMQ=="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - tabs as whitespace"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic YmFyOmJheg=="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - crlf line endings"] {
+    new {
+      ["http{,s}://crlf.example.com/**"] {
+        ["Authorization"] {
+          "Basic Zm9vOmJhcg=="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - entry with login but no password"] {
+    new {
+      ["http{,s}://nologin.com/**"] {
+        ["Authorization"] {
+          "Basic Om9ubHlwYXNz"
+        }
+      }
+      ["http{,s}://nopass.com/**"] {
+        ["Authorization"] {
+          "Basic b25seWxvZ2luOg=="
+        }
+      }
+      ["http{,s}://valid.com/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjpwYXNz"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - duplicate machines"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic Zmlyc3RVc2VyOmZpcnN0UGFzcw=="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - machine that collides with keyword"] {
+    new {
+      ["http{,s}://machine/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjpwYXNz"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - machine default and default keyword"] {
+    new {
+      ["**"] {
+        ["Authorization"] {
+          "Basic ZGVmVXNlcjpkZWZQYXNz"
+        }
+      }
+      ["http{,s}://default/**"] {
+        ["Authorization"] {
+          "Basic bWFjaERlZlVzZXI6bWFjaERlZlBhc3M="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - machine with slash omitted"] {
+    new {
+      ["http{,s}://valid.com/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjpwYXNz"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - machine with glob characters escaped"] {
+    new {
+      ["http{,s}://foo[[]bar].com/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjpwYXNz"
+        }
+      }
+      ["http{,s}://star[*].com/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjpwYXNz"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - files with only comments or whitespace"] {
+    new {}
+    new {}
+    new {}
+  }
+  ["netRcHeaders - skipped macdef"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjE6cGFzczE="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - macdef as value"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic bWFjZGVmOnBhc3Mx"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - empty quotes"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic Og=="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - escaped quotes and chars"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic Zm9vOmZvbyB6"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - consecutive quotes"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic Zm9vOnBhc3M="
+        }
+      }
+    }
+  }
+  ["netRcHeaders - quoted keywords"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic dXNlcjpwYXNz"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - single line entry"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic YmFyOnBhc3Mx"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - trailing machine at EOF"] {
+    new {
+      ["http{,s}://foo.com/**"] {
+        ["Authorization"] {
+          "Basic YmFyOnBhc3Mx"
+        }
+      }
+    }
+  }
+  ["netRcHeaders - unterminated quote error"] {
+    "Cannot parse .netrc: unclosed quote."
+    "Cannot parse .netrc: unclosed quote."
+  }
+}
