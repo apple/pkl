@@ -16,6 +16,7 @@
 package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.nodes.ExplodeLoop;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -133,16 +134,17 @@ public final class SyntaxNodes {
       return node.text(source);
     }
 
+    @ExplodeLoop
     VmList children() {
       var childNodes = node.children;
       if (childNodes.isEmpty()) {
         return VmList.EMPTY;
       }
-      var children = new Object[childNodes.size()];
-      for (var i = 0; i < children.length; i++) {
-        children[i] = createNode(new GenericNodeData(childNodes.get(i), source, sourceUri, selfVm));
+      var builder = VmList.EMPTY.builder();
+      for (var childNode : childNodes) {
+        builder.add(createNode(new GenericNodeData(childNode, source, sourceUri, selfVm)));
       }
-      return VmList.create(children);
+      return builder.build();
     }
 
     VmTyped span() {
@@ -243,11 +245,9 @@ public final class SyntaxNodes {
     }
 
     @TruffleBoundary
-    static NodeSet of(VmList nodes) {
+    static NodeSet of(List<VmTyped> nodes) {
       Set<VmTyped> set = Collections.newSetFromMap(new IdentityHashMap<>());
-      for (var node : nodes) {
-        set.add((VmTyped) node);
-      }
+      set.addAll(nodes);
       return new NodeSet(set);
     }
 
