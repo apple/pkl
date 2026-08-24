@@ -140,4 +140,7 @@ facts {
   ["renderer honors the grammar version"] {
     true
   }
+  ["a malformed tree is reported as such"] {
+    true
+  }
 }
