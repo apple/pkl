@@ -213,7 +213,7 @@ public final class SyntaxNodes {
     }
   }
 
-  /** Replaces a fixed set of nodes, as {@code GenericNode.replaceChild*Where} do. */
+  /** Replaces a fixed set of nodes, as {@code GenericNode.replaceChild*} do. */
   static final class TargetRewriter implements Rewriter {
     private final NodeSet targets;
     private final VmFunction replacer;

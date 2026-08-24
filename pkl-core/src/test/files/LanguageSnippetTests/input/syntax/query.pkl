@@ -1,6 +1,7 @@
 amends "../snippetTest.pkl"
 
 import "pkl:syntax"
+import "pkl:test"
 
 local parser = new syntax.Parser {}
 
@@ -25,87 +26,120 @@ local sample: syntax.GenericNode =
     """)
 
 facts {
-  ["findChildWhere returns the first match in pre-order"] {
-    sample.findChildWhere((n) -> n.type == "identifier")!!.text == "Point"
-    sample.findChildWhere((n) -> n.type == "int_literal_expr")!!.text == "0"
+  ["findChild returns the first match in pre-order"] {
+    sample.findChild((n) -> n.type == "identifier").text == "Point"
+    sample.findChild((n) -> n.type == "int_literal_expr").text == "0"
   }
 
-  ["findChildWhere returns null when nothing matches"] {
-    sample.findChildWhere((n) -> n.type == "when_generator") == null
+  ["findChild throws when nothing matches"] {
+    test.catch(() -> sample.findChild((n) -> n.type == "when_generator"))
+      .contains("Cannot find a child node matching the predicate")
   }
 
-  ["findChildWhere does not consider this node"] {
-    sample.findChildWhere((n) -> n.type == "module") == null
+  ["findChildOrNull returns null when nothing matches"] {
+    sample.findChildOrNull((n) -> n.type == "when_generator") == null
+    sample.findChildOrNull((n) -> n.type == "identifier")!!.text == "Point"
+  }
+
+  ["findChild does not consider this node"] {
+    sample.findChildOrNull((n) -> n.type == "module") == null
     sample.type == "module"
   }
 
-  ["findChildrenWhere returns every match in pre-order"] {
-    sample.findChildrenWhere((n) -> n.type == "identifier").map((n) -> n.text)
+  ["findChildren returns every match in pre-order"] {
+    sample.findChildren((n) -> n.type == "identifier").map((n) -> n.text)
       == List("Point", "x", "Int", "y", "Int", "origin", "Point", "x", "y")
 
-    sample.findChildrenWhere((n) -> n.type == "when_generator") == List()
+    sample.findChildren((n) -> n.type == "when_generator") == List()
   }
 
-  ["findChildrenWhere searches a match for further matches"] {
+  ["findChildren searches a match for further matches"] {
     // the outer object body contains the two entries, which are themselves matches
-    mod("foo { bar { baz = 1 } }").findChildrenWhere((n) -> n.type == "object_body").length == 2
+    mod("foo { bar { baz = 1 } }").findChildren((n) -> n.type == "object_body").length == 2
   }
 
-  ["findChildOfType agrees with findChildWhere"] {
-    sample.findChildOfType("class")!!.text == sample.findChildWhere((n) -> n.type == "class")!!.text
+  ["findChildOfType agrees with findChild"] {
+    sample.findChildOfType("class").text == sample.findChild((n) -> n.type == "class").text
     sample.findChildrenOfType("identifier").length == 9
   }
 
-  ["findParentWhere returns the nearest match"] {
-    local inner = mod("foo { bar { baz = 1 } }").findChildWhere((n) -> n.text == "baz")!!
-    inner.findParentWhere((n) -> n.type == "object_body")!!.text == "{ baz = 1 }"
-    inner.findParentWhere((n) -> n.type == "module")!!.type == "module"
-    inner.findParentWhere((n) -> n.type == "class") == null
+  ["findChildOfType throws when nothing matches"] {
+    test.catch(() -> sample.findChildOfType("when_generator"))
+      .contains("Cannot find a child node of type `when_generator`")
   }
 
-  ["findParentsWhere returns every match, nearest first"] {
-    local inner = mod("foo { bar { baz = 1 } }").findChildWhere((n) -> n.text == "baz")!!
-    inner.findParentsWhere((n) -> n.type == "object_body").map((n) -> n.text)
+  ["findChildOfTypeOrNull returns null when nothing matches"] {
+    sample.findChildOfTypeOrNull("when_generator") == null
+    sample.findChildOfTypeOrNull("class")!!.text == sample.findChildOfType("class").text
+  }
+
+  ["findParent returns the nearest match"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
+    inner.findParent((n) -> n.type == "object_body").text == "{ baz = 1 }"
+    inner.findParent((n) -> n.type == "module").type == "module"
+    test.catch(() -> inner.findParent((n) -> n.type == "class"))
+      .contains("Cannot find a parent node matching the predicate")
+  }
+
+  ["findParentOrNull returns null when nothing matches"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
+    inner.findParentOrNull((n) -> n.type == "class") == null
+    inner.findParentOrNull((n) -> n.type == "object_body")!!.text == "{ baz = 1 }"
+  }
+
+  ["findParentOfType agrees with findParent"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
+    inner.findParentOfType("object_body").text == "{ baz = 1 }"
+    test.catch(() -> inner.findParentOfType("class"))
+      .contains("Cannot find a parent node of type `class`")
+  }
+
+  ["findParentOfTypeOrNull returns null when nothing matches"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
+    inner.findParentOfTypeOrNull("class") == null
+    inner.findParentOfTypeOrNull("object_body")!!.text == "{ baz = 1 }"
+  }
+
+  ["findParents returns every match, nearest first"] {
+    local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
+    inner.findParents((n) -> n.type == "object_body").map((n) -> n.text)
       == List("{ baz = 1 }", "{ bar { baz = 1 } }")
   }
 
   ["parent lookups do not consider this node"] {
-    sample.findParentWhere((n) -> n.type == "module") == null
-    sample.findParentsWhere((n) -> true) == List()
+    sample.findParentOrNull((n) -> n.type == "module") == null
+    sample.findParents((n) -> true) == List()
     !sample.hasParentOfType("module")
   }
 
-  ["hasParentWhere and hasParentOfType follow findParentWhere"] {
-    local inner = mod("foo { bar = 1 }").findChildWhere((n) -> n.text == "bar")!!
-    inner.hasParentWhere((n) -> n.type == "object_body")
+  ["hasParent and hasParentOfType follow findParent"] {
+    local inner = mod("foo { bar = 1 }").findChild((n) -> n.text == "bar")
+    inner.hasParent((n) -> n.type == "object_body")
     inner.hasParentOfType("class_property")
     !inner.hasParentOfType("class")
   }
 
-  ["replaceChildWhere replaces only the first match"] {
+  ["replaceChild replaces only the first match"] {
     renderer.render(
-      mod("x = 1 + 1").replaceChildWhere((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
+      mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
     ) == "x = 9 + 1\n"
   }
 
-  ["replaceChildWhere leaves the tree unchanged when nothing matches"] {
+  ["replaceChild leaves the tree unchanged when nothing matches"] {
     renderer.render(
-      mod("x = 1").replaceChildWhere((n) -> n.type == "when_generator", (_n) -> intLiteral(9))
+      mod("x = 1").replaceChild((n) -> n.type == "when_generator", (_n) -> intLiteral(9))
     ) == "x = 1\n"
   }
 
-  ["replaceChildrenWhere replaces every match"] {
+  ["replaceChildren replaces every match"] {
     renderer.render(
-      mod("x = 1 + 1").replaceChildrenWhere(
-        (n) -> n.type == "int_literal_expr",
-        (_n) -> intLiteral(9),
-      )
+      mod("x = 1 + 1").replaceChildren((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
     ) == "x = 9 + 9\n"
   }
 
   ["a replacer sees the node it replaces"] {
     renderer.render(
-      mod("x = 1 + 2").replaceChildrenWhere(
+      mod("x = 1 + 2").replaceChildren(
         (n) -> n.type == "int_literal_expr",
         (n) -> intLiteral(n.text!!.toInt() * 10),
       )
@@ -119,13 +153,10 @@ facts {
     ) == "fooBar = 1\n"
   }
 
-  ["replaceChildOfType agrees with replaceChildWhere"] {
+  ["replaceChildOfType agrees with replaceChild"] {
     renderer.render(mod("x = 1 + 1").replaceChildOfType("int_literal_expr", (_n) -> intLiteral(9)))
       == renderer.render(
-        mod("x = 1 + 1").replaceChildWhere(
-          (n) -> n.type == "int_literal_expr",
-          (_n) -> intLiteral(9),
-        )
+        mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
       )
   }
 
