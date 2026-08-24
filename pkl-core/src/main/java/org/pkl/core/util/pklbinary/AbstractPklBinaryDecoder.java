@@ -1,5 +1,5 @@
 /*
- * Copyright © 2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2025-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,10 +40,19 @@ import org.pkl.core.util.LateInit;
  */
 public abstract class AbstractPklBinaryDecoder {
   private final MessageUnpacker unpacker;
+  private final int collectionSizeLimit;
   @LateInit protected Deque<Object> currPath;
+
+  private static final int defaultCollectionSizeLimit = 65535; // 16k
 
   protected AbstractPklBinaryDecoder(MessageUnpacker unpacker) {
     this.unpacker = unpacker;
+    this.collectionSizeLimit = defaultCollectionSizeLimit;
+  }
+
+  protected AbstractPklBinaryDecoder(MessageUnpacker unpacker, int collectionSizeLimit) {
+    this.unpacker = unpacker;
+    this.collectionSizeLimit = collectionSizeLimit;
   }
 
   protected static class DecodeException extends RuntimeException {
@@ -176,6 +185,13 @@ public abstract class AbstractPklBinaryDecoder {
     };
   }
 
+  private void checkCollectionLength(int length, String collectionType) {
+    if (length <= collectionSizeLimit) return;
+    throw new DecodeException(
+        "Unable to decode %s of length %d, exceeded maximum collection size of %d",
+        collectionType, length, collectionSizeLimit);
+  }
+
   private Object decodeObject(int len) throws IOException {
     assertLength(PklBinaryCode.OBJECT, len, 3);
     currPath.push("'object");
@@ -201,7 +217,7 @@ public abstract class AbstractPklBinaryDecoder {
   private Object decodeMap(int len) throws IOException {
     assertLength(PklBinaryCode.MAP, len, 1);
     currPath.push("'map");
-    var result = doDecodeMap(new MapDecodeIterator(unpacker.unpackMapHeader()));
+    var result = doDecodeMap(new MapDecodeIterator(unpacker.unpackMapHeader(), "map"));
     unpacker.skipValue(len - 2);
     currPath.pop();
     return result;
@@ -210,7 +226,7 @@ public abstract class AbstractPklBinaryDecoder {
   private Object decodeMapping(int len) throws IOException {
     assertLength(PklBinaryCode.MAPPING, len, 1);
     currPath.push("'mapping");
-    var result = doDecodeMapping(new MapDecodeIterator(unpacker.unpackMapHeader()));
+    var result = doDecodeMapping(new MapDecodeIterator(unpacker.unpackMapHeader(), "mapping"));
     unpacker.skipValue(len - 2);
     currPath.pop();
     return result;
@@ -219,7 +235,7 @@ public abstract class AbstractPklBinaryDecoder {
   private Object decodeList(int len) throws IOException {
     assertLength(PklBinaryCode.LIST, len, 1);
     currPath.push("'list");
-    var result = doDecodeList(new CollectionDecodeIterator(unpacker.unpackArrayHeader()));
+    var result = doDecodeList(new CollectionDecodeIterator(unpacker.unpackArrayHeader(), "list"));
     unpacker.skipValue(len - 2);
     currPath.pop();
     return result;
@@ -228,7 +244,8 @@ public abstract class AbstractPklBinaryDecoder {
   private Object decodeListing(int len) throws IOException {
     assertLength(PklBinaryCode.LISTING, len, 1);
     currPath.push("'listing");
-    var result = doDecodeListing(new CollectionDecodeIterator(unpacker.unpackArrayHeader()));
+    var result =
+        doDecodeListing(new CollectionDecodeIterator(unpacker.unpackArrayHeader(), "listing"));
     unpacker.skipValue(len - 2);
     currPath.pop();
     return result;
@@ -237,7 +254,7 @@ public abstract class AbstractPklBinaryDecoder {
   private Object decodeSet(int len) throws IOException {
     assertLength(PklBinaryCode.SET, len, 1);
     currPath.push("'set");
-    var result = doDecodeSet(new CollectionDecodeIterator(unpacker.unpackArrayHeader()));
+    var result = doDecodeSet(new CollectionDecodeIterator(unpacker.unpackArrayHeader(), "set"));
     currPath.pop();
     unpacker.skipValue(len - 2);
     return result;
@@ -403,6 +420,7 @@ public abstract class AbstractPklBinaryDecoder {
   protected class ObjectDecodeIterator extends DecodeIterator<DecodedObjectMember> {
     ObjectDecodeIterator(int size) {
       super(size);
+      checkCollectionLength(size, "object");
     }
 
     @Override
@@ -441,8 +459,9 @@ public abstract class AbstractPklBinaryDecoder {
   }
 
   protected class CollectionDecodeIterator extends DecodeIterator<Object> {
-    CollectionDecodeIterator(int size) {
+    CollectionDecodeIterator(int size, String collectionType) {
       super(size);
+      checkCollectionLength(size, collectionType);
     }
 
     @Override
@@ -452,8 +471,9 @@ public abstract class AbstractPklBinaryDecoder {
   }
 
   protected class MapDecodeIterator extends DecodeIterator<Pair<Object, Object>> {
-    MapDecodeIterator(int size) {
+    MapDecodeIterator(int size, String collectionType) {
       super(size);
+      checkCollectionLength(size, collectionType);
     }
 
     @Override
