@@ -1,6 +1,7 @@
 amends "../snippetTest.pkl"
 
 import "pkl:syntax"
+import "pkl:test"
 
 local renderer = new syntax.FormattingRenderer {}
 
@@ -399,5 +400,14 @@ facts {
       parseNode("x = fn(argument1, argument2, argument3, argument4, argument5, argument6, argument7, argument8, argument9)")
     new syntax.FormattingRenderer { grammarVersion = "V1" }.render(node)
       != new syntax.FormattingRenderer { grammarVersion = "V2" }.render(node)
+  }
+
+  ["a malformed tree is reported as such"] {
+    local malformed = new syntax.GenericNode {
+      type = "object_element"
+      children = List()
+    }
+    test.catch(() -> renderer.render(malformed))
+      .contains("Could not render node of type `object_element` as Pkl source")
   }
 }

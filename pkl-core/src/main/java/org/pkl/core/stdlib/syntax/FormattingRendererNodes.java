@@ -33,7 +33,13 @@ public final class FormattingRendererNodes {
     protected String eval(VmTyped self, VmTyped nodeVm) {
       var grammarVersion = (String) VmUtils.readMember(self, Identifier.GRAMMAR_VERSION);
       var node = SyntaxNodes.convertVmToNode(nodeVm, SyntaxNodes.ZERO_SPAN);
-      return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
+      try {
+        return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
+      } catch (RuntimeException e) {
+        throw exceptionBuilder()
+            .evalError("cannotRenderSyntaxNode", VmUtils.readMember(nodeVm, Identifier.TYPE))
+            .build();
+      }
     }
   }
 }
