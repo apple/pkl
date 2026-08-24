@@ -66,8 +66,7 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected Object eval(VmTyped self, VmFunction predicate) {
-      return VmNull.lift(
-          findFirstChild(this, self, new PredicateMatcher(predicate, applyPredicate)));
+      return VmNull.lift(findFirstChild(self, new PredicateMatcher(predicate, applyPredicate)));
     }
   }
 
@@ -83,7 +82,7 @@ public final class GenericNodeNodes {
   public abstract static class findChildOfType extends ExternalMethod1Node {
     @Specialization
     protected Object eval(VmTyped self, String type) {
-      return VmNull.lift(findFirstChild(this, self, new TypeMatcher(type)));
+      return VmNull.lift(findFirstChild(self, new TypeMatcher(type)));
     }
   }
 
@@ -199,9 +198,17 @@ public final class GenericNodeNodes {
     }
   }
 
-  private static @Nullable VmTyped findFirstChild(Node owner, VmTyped self, NodeMatcher matcher) {
-    var matches = findChildren(owner, self, matcher, true);
-    return matches.isEmpty() ? null : (VmTyped) matches.getFirst();
+  private static @Nullable VmTyped findFirstChild(VmTyped self, NodeMatcher matcher) {
+    var pending = new ArrayDeque<VmTyped>();
+    pushChildren(pending, self);
+    while (!pending.isEmpty()) {
+      var node = pending.pop();
+      if (matcher.matches(node)) {
+        return node;
+      }
+      pushChildren(pending, node);
+    }
+    return null;
   }
 
   /**
