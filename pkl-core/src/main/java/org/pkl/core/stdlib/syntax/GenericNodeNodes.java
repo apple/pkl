@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.syntax;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
@@ -63,7 +64,21 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class findChildWhere extends ExternalMethod1Node {
+  public abstract static class findChild extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction predicate) {
+      var result = findFirstChild(self, new PredicateMatcher(predicate, applyPredicate));
+      if (result == null) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("cannotFindMatchingChildNode").build();
+      }
+      return result;
+    }
+  }
+
+  public abstract static class findChildOrNull extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
@@ -72,17 +87,29 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class findChildrenWhere extends ExternalMethod1Node {
+  public abstract static class findChildren extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
     protected VmList eval(VmTyped self, VmFunction predicate) {
       return VmList.create(
-          findChildren(this, self, new PredicateMatcher(predicate, applyPredicate), false));
+          findMatchingChildren(this, self, new PredicateMatcher(predicate, applyPredicate), false));
     }
   }
 
   public abstract static class findChildOfType extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(VmTyped self, String type) {
+      var result = findFirstChild(self, new TypeMatcher(type));
+      if (result == null) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("cannotFindChildNodeOfType", type).build();
+      }
+      return result;
+    }
+  }
+
+  public abstract static class findChildOfTypeOrNull extends ExternalMethod1Node {
     @Specialization
     protected Object eval(VmTyped self, String type) {
       return VmNull.lift(findFirstChild(self, new TypeMatcher(type)));
@@ -92,11 +119,11 @@ public final class GenericNodeNodes {
   public abstract static class findChildrenOfType extends ExternalMethod1Node {
     @Specialization
     protected VmList eval(VmTyped self, String type) {
-      return VmList.create(findChildren(this, self, new TypeMatcher(type), false));
+      return VmList.create(findMatchingChildren(this, self, new TypeMatcher(type), false));
     }
   }
 
-  public abstract static class replaceChildWhere extends ExternalMethod2Node {
+  public abstract static class replaceChild extends ExternalMethod2Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
@@ -106,7 +133,7 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class replaceChildrenWhere extends ExternalMethod2Node {
+  public abstract static class replaceChildren extends ExternalMethod2Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
@@ -132,7 +159,21 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class findParentWhere extends ExternalMethod1Node {
+  public abstract static class findParent extends ExternalMethod1Node {
+    @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
+
+    @Specialization
+    protected VmTyped eval(VmTyped self, VmFunction predicate) {
+      var result = findFirstParent(this, self, new PredicateMatcher(predicate, applyPredicate));
+      if (result == null) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("cannotFindMatchingParentNode").build();
+      }
+      return result;
+    }
+  }
+
+  public abstract static class findParentOrNull extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
@@ -142,7 +183,26 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class findParentsWhere extends ExternalMethod1Node {
+  public abstract static class findParentOfType extends ExternalMethod1Node {
+    @Specialization
+    protected VmTyped eval(VmTyped self, String type) {
+      var result = findFirstParent(this, self, new TypeMatcher(type));
+      if (result == null) {
+        CompilerDirectives.transferToInterpreter();
+        throw exceptionBuilder().evalError("cannotFindParentNodeOfType", type).build();
+      }
+      return result;
+    }
+  }
+
+  public abstract static class findParentOfTypeOrNull extends ExternalMethod1Node {
+    @Specialization
+    protected Object eval(VmTyped self, String type) {
+      return VmNull.lift(findFirstParent(this, self, new TypeMatcher(type)));
+    }
+  }
+
+  public abstract static class findParents extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
@@ -161,7 +221,7 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class hasParentWhere extends ExternalMethod1Node {
+  public abstract static class hasParent extends ExternalMethod1Node {
     @Child private ApplyVmFunction1Node applyPredicate = ApplyVmFunction1Node.create();
 
     @Specialization
@@ -229,7 +289,7 @@ public final class GenericNodeNodes {
    *
    * <p>A match is searched for further matches, so a match may contain another.
    */
-  private static List<VmTyped> findChildren(
+  private static List<VmTyped> findMatchingChildren(
       Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly) {
 
     List<VmTyped> matches = new ArrayList<>();
@@ -259,7 +319,7 @@ public final class GenericNodeNodes {
   private static NodeSet findTargets(
       Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly) {
 
-    return NodeSet.of(findChildren(owner, self, matcher, firstOnly));
+    return NodeSet.of(findMatchingChildren(owner, self, matcher, firstOnly));
   }
 
   private static @Nullable VmTyped findFirstParent(Node owner, VmTyped self, NodeMatcher matcher) {
