@@ -1,32 +1,55 @@
 facts {
-  ["findChildWhere returns the first match in pre-order"] {
+  ["findChild returns the first match in pre-order"] {
     true
     true
   }
-  ["findChildWhere returns null when nothing matches"] {
+  ["findChild throws when nothing matches"] {
     true
   }
-  ["findChildWhere does not consider this node"] {
-    true
-    true
-  }
-  ["findChildrenWhere returns every match in pre-order"] {
+  ["findChildOrNull returns null when nothing matches"] {
     true
     true
   }
-  ["findChildrenWhere searches a match for further matches"] {
-    true
-  }
-  ["findChildOfType agrees with findChildWhere"] {
+  ["findChild does not consider this node"] {
     true
     true
   }
-  ["findParentWhere returns the nearest match"] {
+  ["findChildren returns every match in pre-order"] {
+    true
+    true
+  }
+  ["findChildren searches a match for further matches"] {
+    true
+  }
+  ["findChildOfType agrees with findChild"] {
+    true
+    true
+  }
+  ["findChildOfType throws when nothing matches"] {
+    true
+  }
+  ["findChildOfTypeOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findParent returns the nearest match"] {
     true
     true
     true
   }
-  ["findParentsWhere returns every match, nearest first"] {
+  ["findParentOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findParentOfType agrees with findParent"] {
+    true
+    true
+  }
+  ["findParentOfTypeOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findParents returns every match, nearest first"] {
     true
   }
   ["parent lookups do not consider this node"] {
@@ -34,18 +57,18 @@ facts {
     true
     true
   }
-  ["hasParentWhere and hasParentOfType follow findParentWhere"] {
+  ["hasParent and hasParentOfType follow findParent"] {
     true
     true
     true
   }
-  ["replaceChildWhere replaces only the first match"] {
+  ["replaceChild replaces only the first match"] {
     true
   }
-  ["replaceChildWhere leaves the tree unchanged when nothing matches"] {
+  ["replaceChild leaves the tree unchanged when nothing matches"] {
     true
   }
-  ["replaceChildrenWhere replaces every match"] {
+  ["replaceChildren replaces every match"] {
     true
   }
   ["a replacer sees the node it replaces"] {
@@ -54,7 +77,7 @@ facts {
   ["a replacement is not searched for further matches"] {
     true
   }
-  ["replaceChildOfType agrees with replaceChildWhere"] {
+  ["replaceChildOfType agrees with replaceChild"] {
     true
   }
   ["a replacer sees where its node sits in the tree being built"] {
