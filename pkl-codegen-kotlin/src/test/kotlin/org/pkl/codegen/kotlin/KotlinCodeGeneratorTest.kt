@@ -2054,6 +2054,23 @@ class KotlinCodeGeneratorTest {
       )
   }
 
+  @Test
+  fun `block comment escaping in doc comments`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        class Person {
+          /// This doc coment needs */ escaping
+          foo: Int
+        }
+        """
+          .trimIndent(),
+        generateKdoc = true,
+      )
+
+    assertThat(kotlinCode).compilesSuccessfully().contains("*&#47;")
+  }
+
   private fun Map<String, String>.validateContents(
     @Suppress("RemoveRedundantQualifierName") vararg assertions: kotlin.Pair<String, List<String>>
   ) {
