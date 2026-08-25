@@ -5,7 +5,7 @@ x | res = parser.parseExpression("1 +")
           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at syntaxParseExpression#res (file:///$snippetsDir/input/errors/syntaxParseExpression.pkl)
 
-Unexpected end of file. at (1:4 - 1:4)
+Unexpected end of file. at (1:4)
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
