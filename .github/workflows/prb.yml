@@ -308,23 +308,12 @@ jobs:
 
         # install musl
         if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-          # Download musl tarball and signature
-          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
-          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
-
-          # Import musl GPG key
-          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
-
-          # Verify GPG signature
-          echo "Verifying musl GPG signature..."
-          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
-
-          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
-          cd "/tmp/dep_musl-${MUSL_VERSION}"
-
-          # shellcheck disable=SC2002
-          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
-
+          # Download musl git repo
+          cd /tmp
+          git clone https://git.musl-libc.org/git/musl /tmp/musl
+          cd /tmp/musl
+          git checkout "v$MUSL_VERSION"
+          
           echo "musl-${MUSL_VERSION}: configure..." 
           ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
 
@@ -626,23 +615,12 @@ jobs:
 
         # install musl
         if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-          # Download musl tarball and signature
-          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
-          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
-
-          # Import musl GPG key
-          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
-
-          # Verify GPG signature
-          echo "Verifying musl GPG signature..."
-          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
-
-          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
-          cd "/tmp/dep_musl-${MUSL_VERSION}"
-
-          # shellcheck disable=SC2002
-          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
-
+          # Download musl git repo
+          cd /tmp
+          git clone https://git.musl-libc.org/git/musl /tmp/musl
+          cd /tmp/musl
+          git checkout "v$MUSL_VERSION"
+          
           echo "musl-${MUSL_VERSION}: configure..." 
           ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
 
@@ -944,23 +922,12 @@ jobs:
 
         # install musl
         if [[ ! -f ~/staticdeps/bin/x86_64-linux-musl-gcc ]]; then
-          # Download musl tarball and signature
-          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz" -o /tmp/musl.tar.gz
-          curl -Lf "https://musl.libc.org/releases/musl-${MUSL_VERSION}.tar.gz.asc" -o /tmp/musl.tar.gz.asc
-
-          # Import musl GPG key
-          gpg --batch --keyserver keyserver.ubuntu.com --recv-keys 836489290BB6B70F99FFDA0556BCDB593020450F
-
-          # Verify GPG signature
-          echo "Verifying musl GPG signature..."
-          gpg --verify /tmp/musl.tar.gz.asc /tmp/musl.tar.gz
-
-          mkdir -p "/tmp/dep_musl-${MUSL_VERSION}"
-          cd "/tmp/dep_musl-${MUSL_VERSION}"
-
-          # shellcheck disable=SC2002
-          cat /tmp/musl.tar.gz | tar --strip-components=1 -xzC .
-
+          # Download musl git repo
+          cd /tmp
+          git clone https://git.musl-libc.org/git/musl /tmp/musl
+          cd /tmp/musl
+          git checkout "v$MUSL_VERSION"
+          
           echo "musl-${MUSL_VERSION}: configure..." 
           ./configure --disable-shared --prefix="$HOME"/staticdeps > /dev/null
 
