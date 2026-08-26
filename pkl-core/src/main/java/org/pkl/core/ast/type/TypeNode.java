@@ -3213,11 +3213,11 @@ public abstract class TypeNode extends PklNode {
 
       // clazz will be null iff the type arg is a not a valid class type
       if (clazz == null) {
-        throw new VmTypeMismatchException.Class(sourceSection, value, typeNode.doExport());
+        throw new VmTypeMismatchException.ClassType(sourceSection, value, typeNode.doExport());
       }
 
       if (!value.isSubclassOf(clazz)) {
-        throw new VmTypeMismatchException.Class(sourceSection, value, clazz);
+        throw new VmTypeMismatchException.ClassType(sourceSection, value, clazz);
       }
 
       return value;

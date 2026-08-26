@@ -169,18 +169,18 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
   }
 
-  public static final class Class extends VmTypeMismatchException {
+  public static final class ClassType extends VmTypeMismatchException {
 
     private final String renderedExpected;
     private final @Nullable VmClass expectedClass;
 
-    public Class(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
+    public ClassType(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
       super(sourceSection, actualClass);
       this.expectedClass = expectedClass;
       renderedExpected = "Class<" + expectedClass + ">";
     }
 
-    public Class(SourceSection sourceSection, VmClass actualClass, PType expectedType) {
+    public ClassType(SourceSection sourceSection, VmClass actualClass, PType expectedType) {
       super(sourceSection, actualClass);
       this.expectedClass = null;
       renderedExpected = "Class<" + expectedType + ">";
@@ -225,6 +225,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     }
 
     @Override
+    @TruffleBoundary
     public void buildHint(AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       if (expectedClass != null) return;
       builder.append(ErrorMessages.createIndented("classTypeMismatchHint", indent));
