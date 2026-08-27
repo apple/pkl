@@ -150,6 +150,16 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.url#Parser
   public static final Identifier BASE = get("base");
 
+  // members of pkl.url#Builder
+  public static final Identifier SCHEME = get("scheme");
+  public static final Identifier USERNAME = get("username");
+  public static final Identifier PASSWORD = get("password");
+  public static final Identifier HOST = get("host");
+  public static final Identifier PORT = get("port");
+  public static final Identifier SEGMENTS = get("segments");
+  public static final Identifier PARAMS = get("params");
+  public static final Identifier FRAGMENT = get("fragment");
+
   // members of pkl.Command
   public static final Identifier OPTIONS = get("options");
   public static final Identifier PARENT = get("parent");

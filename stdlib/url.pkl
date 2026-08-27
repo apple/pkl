@@ -164,6 +164,91 @@ class SearchParams {
   external function toMap(): Map<String, String>
 }
 
+/// Builds a [Url] from its parts.
+///
+/// Every part is given in its *decoded* form and is percent-encoded with the percent-encode set for
+/// its component.
+///
+/// The assembled URL is then parsed, so a built [Url] is normalized exactly like one from
+/// [Parser.parse()].
+///
+/// Only URLs that have an authority can be built. For an opaque URL such as
+/// `mailto:user@example.com`, use [Parser].
+///
+/// Facts:
+/// ```
+/// new Builder { scheme = "https"; host = "example.com" }.build().toString()
+///   == "https://example.com/"
+///
+/// new Builder {
+///   scheme = "https"
+///   host = "example.com"
+///   segments = List("a b", "c/d")
+///   params = Map("q", "1 2")
+///   fragment = "f g"
+/// }.build().toString() == "https://example.com/a%20b/c%2Fd?q=1+2#f%20g"
+/// ```
+class Builder {
+  /// The scheme, without the trailing `:`.
+  scheme: String
+
+  /// The username, or the empty string for none.
+  username: String = ""
+
+  /// The password, or the empty string for none.
+  password: String = ""
+
+  /// The host.
+  ///
+  /// An IPv6 address must be enclosed in brackets, as in `[::1]`.
+  /// The empty string is a valid host only for `file` and for non-special schemes.
+  host: String
+
+  /// The port, or [null] for the scheme's default port.
+  port: UInt16?
+
+  /// The path segments, in their decoded form.
+  ///
+  /// An empty [segments] produces the path `/` for a special scheme, and no path at all otherwise.
+  /// A trailing `""` produces a trailing slash.
+  ///
+  /// Facts:
+  /// ```
+  /// new Builder { scheme = "https"; host = "e.com"; segments = List("a", "b") }.build().path
+  ///   == "/a/b"
+  /// new Builder { scheme = "https"; host = "e.com"; segments = List("a", "") }.build().path
+  ///   == "/a/"
+  /// ```
+  segments: List<String> = List()
+
+  /// The query parameters, serialized as `application/x-www-form-urlencoded`.
+  ///
+  /// Treated exactly as in [buildQuery()]: a [null] value emits a bare name, and spaces become `+`.
+  /// An empty [params] produces no query at all.
+  params: Map<String, String?> | List<Pair<String, String?>> = List()
+
+  /// The fragment, in its decoded form, or [null] for none.
+  ///
+  /// The empty string produces a bare `#`.
+  fragment: String?
+
+  /// Builds the [Url].
+  ///
+  /// Throws if the parts do not form a valid URL, for example when [scheme] is not a valid scheme,
+  /// or [host] is unparseable or is empty for a scheme that requires one.
+  external function build(): Url
+
+  /// Like [build()], but returns [null] instead of throwing when the parts do not form a valid URL.
+  ///
+  /// Facts:
+  /// ```
+  /// new Builder { scheme = "https"; host = "" }.buildOrNull() == null
+  /// new Builder { scheme = "not a scheme"; host = "e.com" }.buildOrNull() == null
+  /// new Builder { scheme = "https"; host = "e.com/evil" }.buildOrNull() == null
+  /// ```
+  external function buildOrNull(): Url?
+}
+
 /// Percent-encodes [value] so that it can be interpolated into a URL component.
 ///
 /// Every code point other than an ASCII alphanumeric or one of `!'()*-._~` is percent-encoded as

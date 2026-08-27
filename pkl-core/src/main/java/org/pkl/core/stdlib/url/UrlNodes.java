@@ -17,11 +17,8 @@ package org.pkl.core.stdlib.url;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmMap;
-import org.pkl.core.runtime.VmNull;
-import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 
@@ -51,44 +48,13 @@ public final class UrlNodes {
     @Specialization
     @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, VmMap params) {
-      var out = new StringBuilder();
-      for (var param : params) {
-        appendParam(out, (String) param.getKey(), (String) VmNull.unwrap(param.getValue()));
-      }
-      return out.toString();
+      return FormUrlEncoder.serialize(params);
     }
 
     @Specialization
     @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, VmList params) {
-      var out = new StringBuilder();
-      for (var param : params) {
-        var pair = (VmPair) param;
-        appendParam(out, (String) pair.getFirst(), (String) VmNull.unwrap(pair.getSecond()));
-      }
-      return out.toString();
-    }
-
-    /**
-     * https://url.spec.whatwg.org/#concept-urlencoded-serializer - appends {@code name=value} to
-     * {@code out}, separated from any preceding parameter by {@code &}.
-     *
-     * <p>A {@code null} value emits a bare name.
-     */
-    @SuppressWarnings("JavadocLinkAsPlainText")
-    private static void appendParam(StringBuilder out, String name, @Nullable String value) {
-      if (!out.isEmpty()) {
-        out.append('&');
-      }
-      appendEncoded(out, name);
-      if (value != null) {
-        out.append('=');
-        appendEncoded(out, value);
-      }
-    }
-
-    private static void appendEncoded(StringBuilder out, String value) {
-      value.codePoints().forEach(cp -> PercentEncoder.encodeForm(cp, out));
+      return FormUrlEncoder.serialize(params);
     }
   }
 }

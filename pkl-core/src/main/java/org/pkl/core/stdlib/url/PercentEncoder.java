@@ -91,18 +91,13 @@ final class PercentEncoder {
 
   /** decodes percent-encoded bytes and interprets the result as UTF-8. */
   static String percentDecode(String input) {
-    var bytes = new ByteArrayOutputStream(input.length());
-    for (var i = 0; i < input.length(); i++) {
-      var c = input.charAt(i);
-      if (c != '%'
-          || i + 2 >= input.length()
-          || !isHexDigit(input.charAt(i + 1))
-          || !isHexDigit(input.charAt(i + 2))) {
-        for (var b : String.valueOf(c).getBytes(StandardCharsets.UTF_8)) {
-          bytes.write(b);
-        }
+    var in = input.getBytes(StandardCharsets.UTF_8);
+    var bytes = new ByteArrayOutputStream(in.length);
+    for (var i = 0; i < in.length; i++) {
+      if (in[i] != '%' || i + 2 >= in.length || !isHexDigit(in[i + 1]) || !isHexDigit(in[i + 2])) {
+        bytes.write(in[i]);
       } else {
-        bytes.write((hexValue(input.charAt(i + 1)) << 4) | hexValue(input.charAt(i + 2)));
+        bytes.write((hexValue(in[i + 1]) << 4) | hexValue(in[i + 2]));
         i += 2;
       }
     }
@@ -113,7 +108,7 @@ final class PercentEncoder {
     return (c >= '0' && c <= '9') || (c >= 'a' && c <= 'f') || (c >= 'A' && c <= 'F');
   }
 
-  private static int hexValue(char c) {
+  private static int hexValue(int c) {
     return Character.digit(c, 16);
   }
 }
