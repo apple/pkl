@@ -1,0 +1,174 @@
+amends "../snippetTest.pkl"
+
+import "pkl:url"
+
+local parser = new url.Parser {}
+
+local base = new url.Builder {
+  scheme = "https"
+  host = "example.com"
+}
+
+local function str(builder: url.Builder): String = builder.build().toString()
+
+local function roundTrips(builder: url.Builder): Boolean =
+  let (built = builder.build())
+    parser.parse(built.toString()) == built
+
+facts {
+  ["minimal"] {
+    str(base) == "https://example.com/"
+    str((base) { scheme = "http" }) == "http://example.com/"
+    str((base) { host = "1.2.3.4" }) == "https://1.2.3.4/"
+    str((base) { host = "[::1]" }) == "https://[::1]/"
+    // an empty host is valid for `file` and for non-special schemes, but not for `https`
+    str(new url.Builder { scheme = "file"; host = ""; segments = List("a", "b") }) == "file:///a/b"
+    str(new url.Builder { scheme = "foo"; host = "" }) == "foo://"
+  }
+
+  ["all parts"] {
+    str(new url.Builder {
+      scheme = "https"
+      username = "u"
+      password = "p w"
+      host = "example.com"
+      port = 8443
+      segments = List("a b", "c/d")
+      params = Map("q", "1 2")
+      fragment = "f g"
+    }) == "https://u:p%20w@example.com:8443/a%20b/c%2Fd?q=1+2#f%20g"
+  }
+
+  ["normalizes like parse()"] {
+    str((base) { scheme = "HTTPS"; host = "EXAMPLE.com" }) == "https://example.com/"
+    (base) { port = 443 }.build().port == null
+    (base) { port = 8443 }.build().port == 8443
+    str((base) { port = 443 }) == "https://example.com/"
+    str((base) { segments = List("a", "..", "b") }) == "https://example.com/b"
+    str((base) { segments = List("a", ".", "b") }) == "https://example.com/a/b"
+    str((base) { host = "0x7f.0.0.1" }) == "https://127.0.0.1/"
+    str((base) { host = "[2001:db8:0:0:0:0:0:1]" }) == "https://[2001:db8::1]/"
+  }
+
+  ["segments"] {
+    (base) { segments = List() }.build().path == "/"
+    (base) { segments = List("") }.build().path == "/"
+    (base) { segments = List("a", "b") }.build().path == "/a/b"
+    (base) { segments = List("a", "") }.build().path == "/a/"
+    (base) { segments = List("", "a") }.build().path == "//a"
+    new url.Builder { scheme = "foo"; host = "example.com" }.build().path == ""
+  }
+
+  ["params"] {
+    (base) { params = Map() }.build().search == null
+    (base) { params = List() }.build().search == null
+    (base) { params = Map("a", "1", "b c", "d&e") }.build().search == "a=1&b+c=d%26e"
+    (base) { params = Map("a", null, "b", "") }.build().search == "a&b="
+    (base) { params = List(Pair("a", "1"), Pair("a", "2")) }.build().search == "a=1&a=2"
+    (base) { params = Map("a", "1", "b c", "d&e") }.build().search
+      == url.buildQuery(Map("a", "1", "b c", "d&e"))
+  }
+
+  ["fragment"] {
+    (base) { fragment = null }.build().fragment == null
+    (base) { fragment = "" }.build().fragment == ""
+    str((base) { fragment = "" }) == "https://example.com/#"
+    (base) { fragment = "f g" }.build().fragment == "f%20g"
+    (base) { fragment = "a#b" }.build().fragment == "a#b"
+  }
+
+  ["parts cannot introduce a delimiter"] {
+    (base) { segments = List("a/b") }.build().path == "/a%2Fb"
+    (base) { segments = List("a\\b") }.build().path == "/a%5Cb"
+    (base) { segments = List("a?b") }.build().path == "/a%3Fb"
+    (base) { segments = List("a#b") }.build().path == "/a%23b"
+    (base) { segments = List("a/b") }.build().segments == List("a/b")
+    (base) { username = "u@evil.com" }.build().host == "example.com"
+    (base) { username = "u@evil.com" }.build().username == "u%40evil.com"
+    (base) { username = "u:p" }.build().password == ""
+    (base) { username = "u:p" }.build().username == "u%3Ap"
+    (base) { username = "u/a" }.build().path == "/"
+    (base) { params = Map("a", "1#f") }.build().fragment == null
+    (base) { params = Map("a", "1#f") }.build().search == "a=1%23f"
+  }
+
+  ["a literal `%` in a part is encoded"] {
+    (base) { segments = List("a%20b") }.build().path == "/a%2520b"
+    (base) { segments = List("a%20b") }.build().segments == List("a%20b")
+    (base) { segments = List("100%") }.build().segments == List("100%")
+    (base) { username = "a%20b" }.build().username == "a%2520b"
+    (base) { fragment = "a%20b" }.build().fragment == "a%2520b"
+    (base) { params = Map("a", "b%20c") }.build().search == "a=b%2520c"
+  }
+
+  ["non-ASCII is UTF-8 percent-encoded"] {
+    (base) { segments = List("münchen") }.build().path == "/m%C3%BCnchen"
+    (base) { segments = List("münchen") }.build().segments == List("münchen")
+    (base) { params = Map("q", "café") }.build().search == "q=caf%C3%A9"
+    (base) { fragment = "café" }.build().fragment == "caf%C3%A9"
+    (base) { username = "münchen" }.build().username == "m%C3%BCnchen"
+    // a non-special scheme's host percent-encodes rather than running IDNA
+    str(new url.Builder { scheme = "foo"; host = "münchen.de" }) == "foo://m%C3%BCnchen.de"
+  }
+
+  ["round-trips through parse()"] {
+    roundTrips(base)
+    roundTrips((base) { segments = List("a/b", "c d", "e%20f", "münchen") })
+    roundTrips((base) { username = "u@x"; password = "p:w" })
+    roundTrips((base) { params = Map("a b", "c&d=e#f") })
+    roundTrips((base) { fragment = "a b#c%20d" })
+    roundTrips((base) { port = 8443; segments = List("a", ""); params = Map("q", "1") })
+    roundTrips(new url.Builder { scheme = "file"; host = ""; segments = List("a b") })
+    roundTrips(new url.Builder { scheme = "foo"; host = "example.com"; segments = List("a") })
+  }
+
+  ["buildOrNull()"] {
+    (base) { host = "example.com" }.buildOrNull() != null
+    base.buildOrNull() == base.build()
+    (base) { host = "" }.buildOrNull() == null
+    (base) { scheme = "" }.buildOrNull() == null
+    (base) { scheme = "not a scheme" }.buildOrNull() == null
+    (base) { scheme = "1http" }.buildOrNull() == null
+    (base) { host = "example.com/evil" }.buildOrNull() == null
+    (base) { host = "example.com?evil" }.buildOrNull() == null
+    (base) { host = "example.com#evil" }.buildOrNull() == null
+    (base) { host = "user@example.com" }.buildOrNull() == null
+    (base) { host = "example.com:8443" }.buildOrNull() == null
+    (base) { host = "exa mple.com" }.buildOrNull() == null
+    (base) { host = "exa\tmple.com" }.buildOrNull() == null
+    (base) { host = "[::1" }.buildOrNull() == null
+    (base) { host = "[:::1]" }.buildOrNull() == null
+    (base) { host = "[::1]x" }.buildOrNull() == null
+    (base) { host = "1.2.3.4.5" }.buildOrNull() == null
+    // IDNA is not implemented, so a non-ASCII domain of a special scheme is rejected
+    (base) { host = "münchen.de" }.buildOrNull() == null
+  }
+
+  ["a host that cannot be assembled"] {
+    module.catch(() -> (base) { host = "example.com/evil" }.build())
+      .contains("Cannot use `example.com/evil` as `Builder.host`")
+    module.catch(() -> (base) { host = "user@example.com" }.build())
+      .contains("Cannot use `user@example.com` as `Builder.host`")
+    module.catch(() -> (base) { host = "example.com:8443" }.build())
+      .contains("Cannot use `example.com:8443` as `Builder.host`")
+    module.catch(() -> (base) { host = "[::1" }.build())
+      .contains("Cannot use `[::1` as `Builder.host`")
+  }
+
+  ["parts that do not form a valid URL"] {
+    module.catch(() -> (base) { host = "" }.build())
+      .contains("Cannot build a URL from these `Builder` parts")
+    module.catch(() -> (base) { host = "" }.build()).contains("assemble to `https://`")
+    module.catch(() -> (base) { scheme = "" }.build()).contains("assemble to `://example.com`")
+    module.catch(() -> (base) { scheme = "not a scheme" }.build())
+      .contains("assemble to `not a scheme://example.com`")
+    module.catch(() -> (base) { host = "1.2.3.4.5" }.build())
+      .contains("assemble to `https://1.2.3.4.5`")
+    module.catch(() -> (base) { host = "[:::1]" }.build())
+      .contains("assemble to `https://[:::1]`")
+    module.catch(() -> (base) { host = "münchen.de" }.build())
+      .contains("assemble to `https://münchen.de`")
+    module.catch(() -> (base) { host = ""; segments = List("a b") }.build())
+      .contains("assemble to `https:///a%20b`")
+  }
+}

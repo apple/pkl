@@ -1,5 +1,5 @@
 facts {
-  ["components"] {
+  ["minimal"] {
     true
     true
     true
@@ -7,83 +7,14 @@ facts {
     true
     true
   }
-  ["parse(): normalizing"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
+  ["all parts"] {
     true
   }
-  ["parse(): coercing"] {
+  ["normalizes like parse()"] {
     true
     true
     true
     true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["parse(): failing"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["parseStrict(): accepting well-formed input"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["parseStrict(): rejecting invalid URL units"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["Parser.base"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["origin"] {
     true
     true
     true
@@ -96,12 +27,8 @@ facts {
     true
     true
     true
-    true
-    true
   }
-  ["SearchParams.toList()"] {
-    true
-    true
+  ["params"] {
     true
     true
     true
@@ -109,48 +36,15 @@ facts {
     true
     true
   }
-  ["SearchParams.get()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["SearchParams.has()"] {
-    true
+  ["fragment"] {
     true
     true
     true
     true
     true
   }
-  ["SearchParams.toMap()"] {
+  ["parts cannot introduce a delimiter"] {
     true
-    true
-    true
-    true
-  }
-  ["toString()"] {
-    true
-  }
-  ["equality"] {
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["encodeComponent()"] {
-    true
-    true
-    true
-    true
-    true
-  }
-  ["decodeComponent()"] {
     true
     true
     true
@@ -163,7 +57,61 @@ facts {
     true
     true
   }
-  ["buildQuery()"] {
+  ["a literal `%` in a part is encoded"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["non-ASCII is UTF-8 percent-encoded"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["round-trips through parse()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["buildOrNull()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["a host that cannot be assembled"] {
+    true
+    true
+    true
+    true
+  }
+  ["parts that do not form a valid URL"] {
+    true
+    true
     true
     true
     true

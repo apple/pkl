@@ -31,6 +31,8 @@ local function roundTrips(input: String): Boolean = both(input) == List(input, i
 local function resolve(theBase: String, input: String): String? =
   new url.Parser { base = theBase }.parse(input)?.toString()
 
+local gClef = "\u{1D11E}"
+
 facts {
   ["components"] {
     componentsOf("https://user:pw@example.com:8080/a/b?q=1#f")
@@ -212,6 +214,7 @@ facts {
     url.encodeComponent("münchen") == "m%C3%BCnchen"
     url.encodeComponent("aZ09!'()*-._~") == "aZ09!'()*-._~"
     url.encodeComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
+    url.encodeComponent("a" + gClef + "b") == "a%F0%9D%84%9Eb"
   }
 
   ["decodeComponent()"] {
@@ -221,6 +224,11 @@ facts {
     url.decodeComponent("100%") == "100%"
     url.decodeComponent("%zz") == "%zz"
     url.decodeComponent(url.encodeComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
+    url.decodeComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
+    url.decodeComponent("a" + gClef + "b") == "a" + gClef + "b"
+    url.decodeComponent(gClef + "%20" + gClef) == gClef + " " + gClef
+    url.decodeComponent(url.encodeComponent(gClef)) == gClef
+    url.decodeComponent("%FF") == "\u{FFFD}"
   }
 
   ["buildQuery()"] {

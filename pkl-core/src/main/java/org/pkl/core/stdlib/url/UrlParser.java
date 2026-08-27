@@ -655,6 +655,7 @@ final class UrlParser {
     }
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   private static boolean isUrlUnit(int c, int next1, int next2) {
     return c == '%'
         ? PercentEncoder.isHexDigit(next1) && PercentEncoder.isHexDigit(next2)
@@ -1054,7 +1055,7 @@ final class UrlParser {
     return isWindowsDriveLetter(s) && s.charAt(1) == ':';
   }
 
-  private static boolean isForbiddenHostCodePoint(int c) {
+  static boolean isForbiddenHostCodePoint(int c) {
     return c == 0x00 || c == 0x09 || c == 0x0A || c == 0x0D || c == ' ' || c == '#' || c == '/'
         || c == ':' || c == '<' || c == '>' || c == '?' || c == '@' || c == '[' || c == '\\'
         || c == ']' || c == '^' || c == '|';
