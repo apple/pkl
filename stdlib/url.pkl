@@ -109,6 +109,27 @@ external class Url {
   /// ```
   external searchParams: SearchParams
 
+  /// Resolves [ref] against this URL.
+  ///
+  /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
+  /// which replaces it entirely.
+  ///
+  /// Returns [null] if [ref] cannot be resolved against this URL, which is the case for any relative
+  /// reference other than a fragment when this URL has an *opaque path*, such as
+  /// `mailto:user@example.com`.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a/b")!!.resolve("../c")!!.toString()
+  ///   == "https://example.com/c"
+  /// new Parser {}.parse("https://example.com/a?q#f")!!.resolve("#g")!!.toString()
+  ///   == "https://example.com/a?q#g"
+  /// new Parser {}.parse("https://example.com/a")!!.resolve("http://other.org/b")!!.toString()
+  ///   == "http://other.org/b"
+  /// new Parser {}.parse("mailto:user@example.com")!!.resolve("c") == null
+  /// ```
+  external function resolve(ref: String): Url?
+
   /// The serialization of this URL.
   external function toString(): String
 }
@@ -289,3 +310,5 @@ external function decodeComponent(value: String): String
 /// buildQuery(List(Pair("a", "1"), Pair("a", "2"))) == "a=1&a=2"
 /// ```
 external function buildQuery(params: Map<String, String?> | List<Pair<String, String?>>): String
+
+// TODO: parseQuery

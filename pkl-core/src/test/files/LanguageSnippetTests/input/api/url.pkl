@@ -31,6 +31,9 @@ local function roundTrips(input: String): Boolean = both(input) == List(input, i
 local function resolve(theBase: String, input: String): String? =
   new url.Parser { base = theBase }.parse(input)?.toString()
 
+local function resolved(theBase: String, ref: String): String? =
+  parser.parse(theBase)!!.resolve(ref)?.toString()
+
 local gClef = "\u{1D11E}"
 
 facts {
@@ -131,6 +134,26 @@ facts {
     resolve("http://example.org/foo/bar", "../c") == "http://example.org/c"
     new url.Parser { base = " http://example.org/foo\\bar " }.parseStrict("c")?.toString()
       == "http://example.org/foo/c"
+  }
+
+  ["resolve()"] {
+    resolved(base, "") == "http://example.org/foo/bar?q"
+    resolved(base, "c") == "http://example.org/foo/c"
+    resolved(base, "../c") == "http://example.org/c"
+    resolved(base, "/c") == "http://example.org/c"
+    resolved(base, "//other.org/c") == "http://other.org/c"
+    resolved(base, "?r") == "http://example.org/foo/bar?r"
+    resolved(base, "#y") == "http://example.org/foo/bar?q#y"
+    resolved(base, "https://example.com/a") == "https://example.com/a"
+    resolved(base, "c\\d") == "http://example.org/foo/c/d"
+    resolved(base, " c ") == "http://example.org/foo/c"
+    resolved("mailto:user@example.com", "#y") == "mailto:user@example.com#y"
+    resolved("mailto:user@example.com", "c") == null
+    resolved("foo://example.com/a/b", "../c") == "foo://example.com/c"
+    resolved("file:///a/b", "c") == "file:///a/c"
+    // resolving is `Parser.base` seen from the other side
+    local theBase = base
+    parser.parse(base)!!.resolve("../c") == new url.Parser { base = theBase }.parse("../c")
   }
 
   ["origin"] {

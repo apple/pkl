@@ -83,6 +83,23 @@ facts {
     true
     true
   }
+  ["resolve()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["origin"] {
     true
     true

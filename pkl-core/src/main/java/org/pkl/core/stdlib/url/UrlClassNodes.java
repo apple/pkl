@@ -21,6 +21,7 @@ import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod0Node;
+import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.stdlib.PklName;
 
@@ -49,6 +50,15 @@ public final class UrlClassNodes {
     @TruffleBoundary
     protected VmTyped eval(VmTyped self) {
       return SearchParamsFactory.create(recordOf(self).queryParams());
+    }
+  }
+
+  public abstract static class resolve extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, String ref) {
+      var record = UrlParser.parse(ref, recordOf(self), false);
+      return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
     }
   }
 
