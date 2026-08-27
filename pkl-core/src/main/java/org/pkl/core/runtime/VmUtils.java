@@ -353,9 +353,16 @@ public final class VmUtils {
     // can be re-used for all children in the amends chain.
     if (member.isConst() && owner != receiver) {
       assert member.isProp();
+      // `const` properties can possibly be declared on non-prototypes, but they must be also
+      // declared `local`; and that code path goes through `Read*LocalPropertyNode`.
+      // thus, this assertion is correct here.
       assert owner.isPrototype();
-      var result = readMemberOrNull(owner, memberKey, checkType, callNode);
-      assert result != null;
+      var cachedValue = owner.getCachedValue(memberKey);
+      if (cachedValue != null) {
+        receiver.setCachedValue(memberKey, cachedValue);
+        return cachedValue;
+      }
+      var result = doReadMember(owner, owner, memberKey, member, checkType, callNode);
       receiver.setCachedValue(memberKey, result);
       return result;
     }
