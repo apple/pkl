@@ -389,7 +389,7 @@ public final class VmUtils {
           && owner instanceof VmListingOrMapping) {
         // `owner instanceof VmListingOrMapping` guards against
         // PropertiesRenderer amending VmDynamic with VmListing (hack?)
-        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member, null);
+        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member);
       }
 
       receiver.setCachedValue(memberKey, result);

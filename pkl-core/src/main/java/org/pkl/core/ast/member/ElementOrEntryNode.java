@@ -51,7 +51,7 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
       @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
     var result = bodyNode.executeGeneric(frame);
     return VmUtils.shouldRunTypeCheck(frame)
-        ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null, null)
+        ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null)
         : result;
   }
 
@@ -62,7 +62,7 @@ public abstract class ElementOrEntryNode extends RegularMemberNode {
       @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
     var result = bodyNode.executeGeneric(frame);
     return VmUtils.shouldRunTypeCheck(frame)
-        ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null, null)
+        ? receiver.executeTypeCasts(result, VmUtils.getOwner(frame), callNode, null)
         : result;
   }
 
