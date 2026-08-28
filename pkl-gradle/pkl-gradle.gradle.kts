@@ -60,6 +60,16 @@ dependencies {
   testImplementation(libs.wiremock)
 }
 
+publishing {
+  publications.withType<MavenPublication>().configureEach {
+    // The `runtimeOnly` dependency above picks the shaded pkl-tools variant with a Gradle
+    // attribute, and a pom has no way to express that. Only Gradle consumes a Gradle plugin,
+    // and Gradle reads the module metadata where the attribute is still there, so the pom
+    // losing it costs nothing and the warning is only noise on every publish.
+    suppressPomMetadataWarningsFor("runtimeElements")
+  }
+}
+
 sourceSets {
   test {
     // Remove Gradle distribution JARs from test compile classpath.
