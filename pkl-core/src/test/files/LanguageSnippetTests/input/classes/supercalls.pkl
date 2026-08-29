@@ -1,7 +1,7 @@
 open class One {
   prefix = ""
   function say(msg) = prefix + msg
-  function sameMethod() = 1
+  open function sameMethod() = 1
   sameProp = "a"
 }
 
@@ -9,7 +9,7 @@ open class Two extends One {
   pigeon = super.say("Pigeon")
   function barnOwl() = super.say("Barn Owl")
   function say2(msg) = super.say(msg) + super.say(msg)
-  function sameMethod() = 2 + super.sameMethod()
+  override function sameMethod() = 2 + super.sameMethod()
   sameProp = super.sameProp + "b"
 }
 
@@ -17,7 +17,7 @@ class Three extends Two {
   pigeonBarnOwl = super.pigeon + super.barnOwl()
   function barnOwlPigeon() = super.barnOwl() + super.pigeon
   parrot = super.say("Parrot")
-  function sameMethod() = 3 + super.sameMethod()
+  override function sameMethod() = 3 + super.sameMethod()
   sameProp = super.sameProp + "c"
 }
 

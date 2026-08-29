@@ -125,7 +125,7 @@ external const function Reference<D, T>(
 ///
 /// class MyDomain extends ref.Domain {
 ///   // Define how this domain renders references to strings:
-///   function renderReference(reference: ref.Reference<MyDomain, Any>): String =
+/// override function renderReference(reference: ref.Reference<MyDomain, Any>): String =
 ///     reference.getData().toString()
 ///     + "/"
 ///     + reference.getPath().map((it) -> it.property ?? it.key.toString()).join("/")
@@ -144,7 +144,7 @@ external const function Reference<D, T>(
 /// import "pkl:ref"
 ///
 /// class Foo extends ref.Domain {
-///   function renderReference(reference: ref.Reference<Foo, Any>) =
+/// override function renderReference(reference: ref.Reference<Foo, Any>) =
 ///     "{{ "
 ///     + reference.getData().toString()
 ///     + reference
@@ -198,7 +198,7 @@ external class Reference<out D, out T> {
 
   /// Returns a string representation of this reference using its domain's
   /// [Domain.renderReference()] method.
-  function toString(): String = getDomain().renderReference(this)
+  override function toString(): String = getDomain().renderReference(this)
 }
 
 /// A configuration domain that a [Reference] may exist within.

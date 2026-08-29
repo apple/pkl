@@ -12,7 +12,7 @@ function method1(): Float = Undefined()
 function method2(): Float = Undefined()
 
 /// Method with single-line doc comment.
-function method3(): Float = Undefined()
+open function method3(): Float = Undefined()
 
 /// Method with
 /// multi-line

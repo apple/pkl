@@ -33,7 +33,7 @@ open class Foo {
   prefixed_with_foo: Int = 2
 
   @Prefix { prefix = "foo_" }
-  base_class_first: Int = 3
+  open base_class_first: Int = 3
 
   @MultiplyValue { factor = 2 }
   transform_value: Int = 4
@@ -50,7 +50,7 @@ open class Foo {
 
 class Bar extends Foo {
   @CamelCase
-  base_class_first: Int = 3
+  override base_class_first: Int = 3
 }
 
 output {

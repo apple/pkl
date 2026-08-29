@@ -46,7 +46,7 @@ class CliCommandRunnerTest {
     """
     extends "pkl:Command"
 
-    options: Options
+    override options: Options
 
     output {
       value = options
@@ -822,7 +822,7 @@ class CliCommandRunnerTest {
         """
         extends "pkl:Command"
 
-        options: Options
+        override options: Options
 
         output {
           value = (options) {
@@ -875,7 +875,7 @@ class CliCommandRunnerTest {
         """
         extends "pkl:Command"
 
-        options: Options
+        override options: Options
 
         output {
           value = (options) {
@@ -935,7 +935,7 @@ class CliCommandRunnerTest {
         extends "pkl:Command"
         import "base.pkl"
 
-        options: Options
+        override options: Options
 
         output {
           value = (options) {

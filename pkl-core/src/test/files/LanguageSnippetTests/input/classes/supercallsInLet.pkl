@@ -1,9 +1,9 @@
 open class A {
-  function foo() = "a"
+  open function foo() = "a"
 }
 
 class B extends A {
-  function foo() =
+  override function foo() =
     let (bar = "b")
       super.foo() + bar
 }
@@ -29,11 +29,11 @@ res2 = d.result
 
 // Test with nested let expressions
 open class E {
-  function getValue() = "e"
+  open function getValue() = "e"
 }
 
 class F extends E {
-  function getValue() =
+  override function getValue() =
     let (x = "f")
       let (y = " and " + x)
         super.getValue() + y

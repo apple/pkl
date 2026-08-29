@@ -1540,9 +1540,10 @@ final class Builder {
     var txt = modifier.text(source);
     return switch (txt) {
       case "abstract", "open" -> 0;
-      case "external" -> 1;
-      case "local", "hidden" -> 2;
-      case "fixed", "const" -> 3;
+      case "override" -> 1;
+      case "external" -> 2;
+      case "local", "hidden" -> 3;
+      case "fixed", "const" -> 4;
       default -> throw new RuntimeException("Unknown modifier `" + txt + "`");
     };
   }

@@ -1,7 +1,7 @@
 import "pkl:ref"
 
 class D extends ref.Domain {
-  function renderReference(_): String = throw("not implemented")
+override function renderReference(_): String = throw("not implemented")
 }
 
 class Bird {

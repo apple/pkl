@@ -36,7 +36,7 @@ class CommandSpecParserTest {
       extends "pkl:Command"
       import "pkl:Command"
 
-      options: Options
+      override options: Options
 
       output {
         value = options
@@ -144,7 +144,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         """
         extends "pkl:Command"
-        options: "nope" | "try again"
+        override options: "nope" | "try again"
         """
           .trimIndent(),
       )
@@ -164,7 +164,7 @@ class CommandSpecParserTest {
         "cmd.pkl",
         """
         extends "pkl:Command"
-        options: Options
+        override options: Options
         abstract class Options {}
         """
           .trimIndent(),
@@ -208,12 +208,12 @@ class CommandSpecParserTest {
             
             /// bar in BaseOptions
             @Flag { shortName = "b" }
-            bar: String
+            open bar: String
           }
           class Options extends BaseOptions {
             /// bar in Options
             @Flag { shortName = "x" }
-            bar: String
+            override bar: String
             
             /// baz in Options
             @Flag { shortName = "y" }

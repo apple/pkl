@@ -216,7 +216,7 @@ external class Module extends Declaration {
 /// A class or type alias declaration.
 abstract external class TypeDeclaration extends Declaration {
   /// The class or type alias reflected upon.
-  hidden reflectee: base.Class | base.TypeAlias
+  open hidden reflectee: base.Class | base.TypeAlias
 
   /// The module enclosing this type declaration.
   ///
@@ -224,18 +224,18 @@ abstract external class TypeDeclaration extends Declaration {
   hidden enclosingDeclaration: Module
 
   /// The type parameters of this type declaration.
-  typeParameters: List<TypeParameter>
+  open typeParameters: List<TypeParameter>
 }
 
 /// A class declaration.
 external class Class extends TypeDeclaration {
   /// The class reflected upon.
-  reflectee: base.Class
+  override reflectee: base.Class
 
   /// The type parameters of this class.
   ///
   /// Only standard library classes can have type parameters.
-  typeParameters: List<TypeParameter>
+  override typeParameters: List<TypeParameter>
 
   /// The superclass of this class.
   ///
@@ -274,10 +274,10 @@ external class Class extends TypeDeclaration {
 /// A type alias declaration.
 external class TypeAlias extends TypeDeclaration {
   /// The type alias reflected upon.
-  hidden reflectee: base.TypeAlias
+  override hidden reflectee: base.TypeAlias
 
   /// The type parameters of this type alias declaration.
-  typeParameters: List<TypeParameter>
+  override typeParameters: List<TypeParameter>
 
   /// The type that this type alias stands for.
   referent: Type
@@ -341,7 +341,7 @@ external class TypeParameter {
 }
 
 /// A modifier of a [Declaration].
-typealias Modifier = "abstract" | "external" | "hidden" | "open" | "fixed" | "const"
+typealias Modifier = "abstract" | "external" | "hidden" | "open" | "fixed" | "const" | "override"
 
 /// The variance of a [TypeParameter].
 ///

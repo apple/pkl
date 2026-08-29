@@ -56,10 +56,10 @@ class ClassInheritanceTest {
           """
           class Thing
           open class Base {
-            hidden thing: Thing
+            open hidden thing: Thing
           }
           class Derived extends Base {
-            thing: Thing = new {}
+            override thing: Thing = new {}
           }
           """
             .trimIndent()

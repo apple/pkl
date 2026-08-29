@@ -80,7 +80,7 @@ hidden command: CommandInfo = new {
 ///   path: Listing<String>
 /// }
 /// ```
-hidden options: Typed
+open hidden options: Typed
 
 /// The value of the parent command with parsed options.
 ///

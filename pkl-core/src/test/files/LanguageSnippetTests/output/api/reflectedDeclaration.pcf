@@ -87,7 +87,7 @@ alias {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -138,7 +138,7 @@ alias {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -223,7 +223,7 @@ alias {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -274,7 +274,7 @@ alias {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -381,7 +381,7 @@ alias {
             This method is used to convert the values of string interpolation expressions to strings.
             """
           annotations = List()
-          modifiers = Set()
+          modifiers = Set("open")
           name = "toString"
           typeParameters = List()
           parameters = Map()
@@ -536,7 +536,7 @@ alias {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -587,7 +587,7 @@ alias {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -672,7 +672,7 @@ alias {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -723,7 +723,7 @@ alias {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -2406,7 +2406,7 @@ alias {
             This method is used to convert the values of string interpolation expressions to strings.
             """
           annotations = List()
-          modifiers = Set()
+          modifiers = Set("open")
           name = "toString"
           typeParameters = List()
           parameters = Map()
@@ -3479,7 +3479,7 @@ rec {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -3530,7 +3530,7 @@ rec {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -3615,7 +3615,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -3666,7 +3666,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -3723,7 +3723,7 @@ rec {
             This method is used to convert the values of string interpolation expressions to strings.
             """
           annotations = List()
-          modifiers = Set()
+          modifiers = Set("open")
           name = "toString"
           typeParameters = List()
           parameters = Map()
@@ -3867,7 +3867,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -3918,7 +3918,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -4003,7 +4003,7 @@ rec {
                   This method is used to convert the values of string interpolation expressions to strings.
                   """
                 annotations = List()
-                modifiers = Set()
+                modifiers = Set("open")
                 name = "toString"
                 typeParameters = List()
                 parameters = Map()
@@ -4054,7 +4054,7 @@ rec {
                   This method is used to convert the values of string interpolation expressions to strings.
                   """
                 annotations = List()
-                modifiers = Set()
+                modifiers = Set("open")
                 name = "toString"
                 typeParameters = List()
                 parameters = Map()
@@ -4111,7 +4111,7 @@ rec {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -4242,7 +4242,7 @@ rec {
           This method is used to convert the values of string interpolation expressions to strings.
           """
         annotations = List()
-        modifiers = Set()
+        modifiers = Set("open")
         name = "toString"
         typeParameters = List()
         parameters = Map()
@@ -4476,7 +4476,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -4527,7 +4527,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -4612,7 +4612,7 @@ rec {
                   This method is used to convert the values of string interpolation expressions to strings.
                   """
                 annotations = List()
-                modifiers = Set()
+                modifiers = Set("open")
                 name = "toString"
                 typeParameters = List()
                 parameters = Map()
@@ -4663,7 +4663,7 @@ rec {
                   This method is used to convert the values of string interpolation expressions to strings.
                   """
                 annotations = List()
-                modifiers = Set()
+                modifiers = Set("open")
                 name = "toString"
                 typeParameters = List()
                 parameters = Map()
@@ -4720,7 +4720,7 @@ rec {
               This method is used to convert the values of string interpolation expressions to strings.
               """
             annotations = List()
-            modifiers = Set()
+            modifiers = Set("open")
             name = "toString"
             typeParameters = List()
             parameters = Map()
@@ -4864,7 +4864,7 @@ rec {
                   This method is used to convert the values of string interpolation expressions to strings.
                   """
                 annotations = List()
-                modifiers = Set()
+                modifiers = Set("open")
                 name = "toString"
                 typeParameters = List()
                 parameters = Map()
@@ -4915,7 +4915,7 @@ rec {
                   This method is used to convert the values of string interpolation expressions to strings.
                   """
                 annotations = List()
-                modifiers = Set()
+                modifiers = Set("open")
                 name = "toString"
                 typeParameters = List()
                 parameters = Map()
@@ -5000,7 +5000,7 @@ rec {
                     This method is used to convert the values of string interpolation expressions to strings.
                     """
                   annotations = List()
-                  modifiers = Set()
+                  modifiers = Set("open")
                   name = "toString"
                   typeParameters = List()
                   parameters = Map()
@@ -5051,7 +5051,7 @@ rec {
                     This method is used to convert the values of string interpolation expressions to strings.
                     """
                   annotations = List()
-                  modifiers = Set()
+                  modifiers = Set("open")
                   name = "toString"
                   typeParameters = List()
                   parameters = Map()
@@ -5108,7 +5108,7 @@ rec {
                 This method is used to convert the values of string interpolation expressions to strings.
                 """
               annotations = List()
-              modifiers = Set()
+              modifiers = Set("open")
               name = "toString"
               typeParameters = List()
               parameters = Map()
@@ -5239,7 +5239,7 @@ rec {
             This method is used to convert the values of string interpolation expressions to strings.
             """
           annotations = List()
-          modifiers = Set()
+          modifiers = Set("open")
           name = "toString"
           typeParameters = List()
           parameters = Map()
@@ -5394,7 +5394,7 @@ rec {
         This method is used to convert the values of string interpolation expressions to strings.
         """
       annotations = List()
-      modifiers = Set()
+      modifiers = Set("open")
       name = "toString"
       typeParameters = List()
       parameters = Map()

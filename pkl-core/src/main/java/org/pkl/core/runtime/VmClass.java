@@ -151,10 +151,8 @@ public final class VmClass extends VmValue {
     prototype.lateInitParent(superclass.getPrototype());
   }
 
-  @TruffleBoundary
   private void checkAbstractMethods() {
     if (isAbstract()) return;
-    // minimize allocations in the non-error case
     var abstractMethods = getAbstractMethods();
     if (abstractMethods.isEmpty()) return;
     if (abstractMethods.size() == 1) {
@@ -188,6 +186,67 @@ public final class VmClass extends VmValue {
       }
     }
     return result;
+  }
+
+  private static final boolean enforceMembersOpen = true;
+  private static final boolean enforceMembersOverride = true;
+
+  private void checkOverriddenMembers() {
+    if (superclass == null) return; // don't check for `pkl.base#Any`
+    doCheckOverriddenMembers(
+        declaredMethods,
+        superclass::getMethod,
+        it -> true,
+        "cannotOverrideFinalMethod",
+        "mustMarkMethodOverride",
+        "cannotMarkMethodOverride");
+    doCheckOverriddenMembers(
+        declaredProperties,
+        superclass::getProperty,
+        it ->
+            it.getTypeNode()
+                != null, // don't need to cover the "defined first without type annotation" because
+        // this only matter for overrides
+        "cannotOverrideFinalProperty",
+        "mustMarkPropertyOverride",
+        "cannotMarkPropertyOverride");
+  }
+
+  private <T extends ClassMember> void doCheckOverriddenMembers(
+      EconomicMap<Identifier, T> declaredMembers,
+      Function<Identifier, @Nullable T> getSuperMember,
+      Function<T, Boolean> isDefinition,
+      String errOpenMissing,
+      String errOverrideMissing,
+      String errOverrideUnnecessary) {
+    var memberCursor = declaredMembers.getEntries();
+    while (memberCursor.advance()) {
+      var member = memberCursor.getValue();
+      if (!isDefinition.apply(member)) continue;
+      var memberName = memberCursor.getKey();
+      var overriddenMember = getSuperMember.apply(memberName);
+      if (overriddenMember == null) {
+        if (member.isOverride()) {
+          throw new VmExceptionBuilder()
+              .withSourceSection(member.getHeaderSection())
+              .evalError(errOverrideUnnecessary, memberName)
+              .build();
+        }
+        continue;
+      }
+      if (enforceMembersOpen && overriddenMember.isClosed() && !overriddenMember.isOverride()) {
+        throw new VmExceptionBuilder()
+            .withSourceSection(member.getHeaderSection())
+            .evalError(errOpenMissing, memberName)
+            .build();
+      }
+      if (enforceMembersOverride && !member.isOverride()) {
+        throw new VmExceptionBuilder()
+            .withSourceSection(member.getHeaderSection())
+            .evalError(errOverrideMissing, memberName)
+            .build();
+      }
+    }
   }
 
   @TruffleBoundary
@@ -242,6 +301,7 @@ public final class VmClass extends VmValue {
   /** Called when the entire class hierarchy is completely initialized, including superclasses. */
   public void onFullyInitialized() {
     checkAbstractMethods();
+    checkOverriddenMembers();
   }
 
   public int getTypeParameterCount() {

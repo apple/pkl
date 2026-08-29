@@ -1850,6 +1850,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       case HIDDEN -> VmModifier.HIDDEN;
       case FIXED -> VmModifier.FIXED;
       case CONST -> VmModifier.CONST;
+      case OVERRIDE -> VmModifier.OVERRIDE;
     };
   }
 

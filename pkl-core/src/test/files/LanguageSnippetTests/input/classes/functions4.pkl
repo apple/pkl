@@ -1,13 +1,13 @@
 function a(x) = 2 * x
 
 open class X {
-  function a(x) = 3 * x
+  open function a(x) = 3 * x
   function compute() = a(c)
   c = 3
 }
 
 class Y extends X {
-  function a(x) = 4 * x
+  override function a(x) = 4 * x
   c = 5
 }
 

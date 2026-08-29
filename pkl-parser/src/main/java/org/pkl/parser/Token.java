@@ -46,6 +46,7 @@ public enum Token {
   OPEN,
   OUT,
   OUTER,
+  OVERRIDE,
   READ,
   READ_STAR,
   READ_QUESTION,
@@ -60,7 +61,6 @@ public enum Token {
 
   // reserved for future use
   PROTECTED,
-  OVERRIDE,
   RECORD,
   DELETE,
   CASE,
@@ -137,7 +137,7 @@ public enum Token {
   STRING_PART;
 
   private static final EnumSet<Token> modifiers =
-      EnumSet.of(EXTERNAL, ABSTRACT, OPEN, LOCAL, HIDDEN, FIXED, CONST);
+      EnumSet.of(EXTERNAL, ABSTRACT, OPEN, LOCAL, HIDDEN, FIXED, CONST, OVERRIDE);
 
   public boolean isModifier() {
     return modifiers.contains(this);

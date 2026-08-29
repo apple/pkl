@@ -1495,6 +1495,7 @@ final class ParserImpl {
       case HIDDEN -> new Modifier(Modifier.ModifierValue.HIDDEN, next().span);
       case FIXED -> new Modifier(Modifier.ModifierValue.FIXED, next().span);
       case CONST -> new Modifier(Modifier.ModifierValue.CONST, next().span);
+      case OVERRIDE -> new Modifier(Modifier.ModifierValue.OVERRIDE, next().span);
       default -> throw new RuntimeException("Unreacheable code");
     };
   }

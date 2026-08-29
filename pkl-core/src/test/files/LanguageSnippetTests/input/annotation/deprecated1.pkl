@@ -1,6 +1,6 @@
 open module deprecated1
 
-function f1(n) = n * 1000 + 1
+open function f1(n) = n * 1000 + 1
 
 @Deprecated
 function f2(n) = n * 1000 + 2
@@ -11,14 +11,14 @@ class A {
 }
 
 open class B {
-  function f1(n) = n * 1000 + 201
+  open function f1(n) = n * 1000 + 201
   @Deprecated
   function f2(n) = n * 1000 + 202
 }
 
 class C extends B {
   @Deprecated
-  function f1(n) = n * 1000 + 301
+  override function f1(n) = n * 1000 + 301
 }
 
 res1 = f1(100)
