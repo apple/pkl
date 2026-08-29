@@ -1,0 +1,9 @@
+open class Parent {
+  bb: *String | Int
+}
+
+class Example extends Parent {
+  bb {}
+}
+
+res: Example = new {}

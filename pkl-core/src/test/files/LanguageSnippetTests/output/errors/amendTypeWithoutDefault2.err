@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot instantiate type `*String | Int` because it has no default value.
+
+x | bb: *String | Int
+        ^^^^^^^^^^^^^
+at amendTypeWithoutDefault2#Example.bb (file:///$snippetsDir/input/errors/amendTypeWithoutDefault2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
