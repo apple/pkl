@@ -37,9 +37,11 @@ public abstract sealed class AbstractInvokeLexicalMethodNode extends AbstractInv
 
   @Override
   public final Object executeGeneric(VirtualFrame frame) {
-    var capturedFrame = VmUtils.getFrame(frame, levelsUp);
-    var owner = VmUtils.getOwner(capturedFrame);
-    var receiver = VmUtils.getReceiver(capturedFrame);
-    return invoke(frame, owner, receiver);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return invoke(frame, owner, VmUtils.getReceiver(frame));
+    }
+    var enclosingFrame = VmUtils.getEnclosingFrame(owner, levelsUp);
+    return invoke(frame, VmUtils.getOwner(enclosingFrame), VmUtils.getReceiver(enclosingFrame));
   }
 }

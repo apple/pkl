@@ -171,14 +171,31 @@ public final class VmUtils {
   }
 
   public static VmObjectLike getOwner(VirtualFrame frame, int levelsUp) {
-    return getOwner(getFrame(frame, levelsUp));
+    var owner = getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return owner;
+    }
+    return getOwner(getEnclosingFrame(owner, levelsUp));
   }
 
   public static Object getReceiver(VirtualFrame frame, int levelsUp) {
-    return getReceiver(getFrame(frame, levelsUp));
+    var owner = getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return getReceiver(frame);
+    }
+    return getReceiver(getEnclosingFrame(owner, levelsUp));
   }
 
-  public static VirtualFrame getFrame(VirtualFrame frame, int levelsUp) {
+  public static MaterializedFrame getEnclosingFrame(VmObjectLike owner, int levelsUp) {
+    assert !(levelsUp == 0 && !owner.isParseTimeInvisibleScope())
+        : "Must check for levelsUp == 0 && owner.isParseTimeInvisibleScope() before calling this method";
+    var isInvisibleScope = owner.isParseTimeInvisibleScope();
+    var enclosingFrame = owner.getEnclosingFrame();
+    var remainingLevels = isInvisibleScope ? levelsUp : levelsUp - 1;
+    return doGetFrame(enclosingFrame, remainingLevels);
+  }
+
+  private static MaterializedFrame doGetFrame(MaterializedFrame frame, int levelsUp) {
     frame = skipInvisibleScopes(frame);
     if (levelsUp == 0) {
       return frame;
@@ -194,7 +211,7 @@ public final class VmUtils {
     return frame;
   }
 
-  private static VirtualFrame skipInvisibleScopes(VirtualFrame frame) {
+  private static MaterializedFrame skipInvisibleScopes(MaterializedFrame frame) {
     var owner = getOwner(frame);
     while (owner.isParseTimeInvisibleScope()) {
       frame = owner.getEnclosingFrame();

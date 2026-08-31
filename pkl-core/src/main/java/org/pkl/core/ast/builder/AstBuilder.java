@@ -150,7 +150,6 @@ import org.pkl.core.ast.expression.unary.ReadOrNullNodeGen;
 import org.pkl.core.ast.expression.unary.ThrowNodeGen;
 import org.pkl.core.ast.expression.unary.TraceNode;
 import org.pkl.core.ast.expression.unary.UnaryMinusNodeGen;
-import org.pkl.core.ast.frame.GetEnclosingFrameNode;
 import org.pkl.core.ast.frame.ReadExactFrameSlotNodeGen;
 import org.pkl.core.ast.frame.ReadFrameSlotNodeGen;
 import org.pkl.core.ast.internal.GetBaseModuleClassNode;
@@ -743,11 +742,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       // }
       return p.levelsUp() == 0 && !p.needsFrameSkip()
           ? ReadExactFrameSlotNodeGen.create(sourceSection, p.slot())
-          : ReadFrameSlotNodeGen.create(
-              sourceSection, p.slot(), new GetEnclosingFrameNode(p.levelsUp()));
+          : ReadFrameSlotNodeGen.create(sourceSection, p.slot(), p.levelsUp());
     } else if (resolution instanceof Parameter p) {
-      return ReadFrameSlotNodeGen.create(
-          sourceSection, p.slot(), new GetEnclosingFrameNode(p.levelsUp()));
+      return ReadFrameSlotNodeGen.create(sourceSection, p.slot(), p.levelsUp());
     } else if (resolution instanceof ImplicitBaseProperty) {
       return ReadPropertyNodeGen.create(
           sourceSection,

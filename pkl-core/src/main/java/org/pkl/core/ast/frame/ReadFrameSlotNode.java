@@ -15,44 +15,65 @@
  */
 package org.pkl.core.ast.frame;
 
-import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameSlotTypeException;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.runtime.VmUtils;
 
-@NodeChild(value = "enclosingFrame", type = GetEnclosingFrameNode.class)
 public abstract class ReadFrameSlotNode extends ExpressionNode {
   private final int slot;
+  private final int levelsUp;
 
-  protected ReadFrameSlotNode(SourceSection sourceSection, int slot) {
+  protected ReadFrameSlotNode(SourceSection sourceSection, int slot, int levelsUp) {
     super(sourceSection);
     this.slot = slot;
+    this.levelsUp = levelsUp;
   }
 
   @Specialization(rewriteOn = FrameSlotTypeException.class)
   protected long evalInt(VirtualFrame frame) throws FrameSlotTypeException {
-    return frame.getLong(slot);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return frame.getLong(slot);
+    }
+    return VmUtils.getEnclosingFrame(owner, levelsUp).getLong(slot);
   }
 
   @Specialization(rewriteOn = FrameSlotTypeException.class)
   protected double evalFloat(VirtualFrame frame) throws FrameSlotTypeException {
-    return frame.getDouble(slot);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return frame.getDouble(slot);
+    }
+    return VmUtils.getEnclosingFrame(owner, levelsUp).getDouble(slot);
   }
 
   @Specialization(rewriteOn = FrameSlotTypeException.class)
   protected boolean evalBoolean(VirtualFrame frame) throws FrameSlotTypeException {
-    return frame.getBoolean(slot);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return frame.getBoolean(slot);
+    }
+    return VmUtils.getEnclosingFrame(owner, levelsUp).getBoolean(slot);
   }
 
   @Specialization(rewriteOn = FrameSlotTypeException.class)
   protected Object evalObject(VirtualFrame frame) throws FrameSlotTypeException {
-    return frame.getObject(slot);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return frame.getObject(slot);
+    }
+    return VmUtils.getEnclosingFrame(owner, levelsUp).getObject(slot);
   }
 
   @Specialization(replaces = {"evalInt", "evalFloat", "evalBoolean", "evalObject"})
   protected Object evalGeneric(VirtualFrame frame) {
-    return frame.getValue(slot);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return frame.getValue(slot);
+    }
+    return VmUtils.getEnclosingFrame(owner, levelsUp).getValue(slot);
   }
 }
