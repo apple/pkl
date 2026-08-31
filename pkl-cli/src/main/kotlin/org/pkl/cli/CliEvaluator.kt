@@ -37,7 +37,6 @@ import org.pkl.core.Evaluator
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource
 import org.pkl.core.PklException
-import org.pkl.core.ProfilerOptions
 import org.pkl.core.module.ModulePathResolver
 import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
@@ -113,8 +112,6 @@ constructor(
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
-      // Unset system properties so that we don't leave profiling enabled upon exit.
-      ProfilerOptions.clearSystemProperties()
       if (TruffleOptions.AOT) {
         VmUtils.closeEngine()
       }

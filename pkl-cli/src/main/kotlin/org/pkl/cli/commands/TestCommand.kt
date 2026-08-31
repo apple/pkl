@@ -26,6 +26,7 @@ import java.net.URI
 import org.pkl.cli.CliTestRunner
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.BaseOptions
+import org.pkl.commons.cli.commands.ProfileOptions
 import org.pkl.commons.cli.commands.ProjectOptions
 import org.pkl.commons.cli.commands.TestOptions
 
@@ -45,6 +46,8 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
 
   private val testOptions by TestOptions()
 
+  private val profileOptions by ProfileOptions()
+
   private val powerAssertionsEnabled: Boolean by
     option(
         names = arrayOf("--power-assertions"),
@@ -61,6 +64,7 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
             powerAssertionsEnabled = powerAssertionsEnabled,
           ),
         testOptions = testOptions.cliTestOptions,
+        profilerOptions = profileOptions.toOptions(),
       )
       .run()
   }

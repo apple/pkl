@@ -16,18 +16,16 @@
 package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.completion.CompletionCandidates
+import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
 import com.github.ajalt.clikt.parameters.options.validate
-import com.github.ajalt.clikt.parameters.types.long
-import com.github.ajalt.clikt.parameters.types.path
-import java.nio.file.Path
 import org.pkl.cli.CliEvaluator
 import org.pkl.cli.CliEvaluatorOptions
 import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.ProfileOptions
 import org.pkl.commons.cli.commands.single
-import org.pkl.core.ProfilerOptions
 
 class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
 
@@ -85,23 +83,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
       )
       .flag("--no-power-assertions", default = true, defaultForHelp = "enabled")
 
-  private val profileCpuOutput: Path? by
-    option(
-        names = arrayOf("--profile-cpu-output"),
-        help =
-          "The file to write CPU profiler output to. Omitting this option disables CPU profiling.",
-      )
-      .single()
-      .path()
-
-  private val profileCpuSamplePeriod: Long by
-    option(
-        names = arrayOf("--profile-cpu-sample-period"),
-        help = "Duration, in milliseconds, for the CPU profiler to poll for samples.",
-      )
-      .single()
-      .long()
-      .default(ProfilerOptions.DEFAULT.cpu.samplePeriod)
+  val profileOptions: ProfileOptions by ProfileOptions()
 
   override fun run() {
     val options =
@@ -118,8 +100,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
         moduleOutputSeparator = moduleOutputSeparator,
         multipleFileOutputPath = multipleFileOutputPath,
         expression = expression ?: CliEvaluatorOptions.defaults.expression,
-        profilerOptions =
-          ProfilerOptions(ProfilerOptions.Cpu(profileCpuOutput, profileCpuSamplePeriod)),
+        profilerOptions = profileOptions.toOptions(),
       )
     CliEvaluator(options).run()
   }

@@ -38,22 +38,13 @@ import org.junit.jupiter.api.io.TempDir
  * `-Dorg.pkl.cli.testJar=<path>`.
  */
 class ProfilerOutputTest {
-  @Test
-  fun `produces a valid pprof profile`(@TempDir tempDir: Path) {
+  private fun runTest(tempDir: Path, pklCode: String, command: Array<String>) {
     val jar =
       checkNotNull(System.getProperty("org.pkl.cli.testJar")) {
         "system property `org.pkl.cli.testJar` is not set"
       }
     val sourceFile =
-      tempDir.resolve("profiled.pkl").apply {
-        writeText(
-          """
-          function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
-          x = fib(30)
-          """
-            .trimIndent()
-        )
-      }
+      tempDir.resolve("profiled.pkl").also { it.writeText(pklCode) }
     val outputFile = tempDir.resolve("profile.pb.gz")
 
     val javaBin = ProcessHandle.current().info().command().orElseThrow()
@@ -62,7 +53,7 @@ class ProfilerOutputTest {
           javaBin,
           "-jar",
           jar,
-          "eval",
+          *command,
           "--profile-cpu-output",
           outputFile.absolutePathString(),
           "--profile-cpu-sample-period",
@@ -71,6 +62,7 @@ class ProfilerOutputTest {
         )
         .redirectErrorStream(true)
         .start()
+
     val output = process.inputStream.bufferedReader().readText()
     val exitCode = process.waitFor()
     assertThat(exitCode).withFailMessage { "process failed with output:\n$output" }.isZero()
@@ -78,6 +70,52 @@ class ProfilerOutputTest {
     // smoke test only
     val profile = GZIPInputStream(outputFile.inputStream()).use { Profile.parseFrom(it) }
     assertThat(profile.stringTableList.first()).isEmpty() // string_table[0] must be ""
-    assertThat(profile.sampleTypeList).isNotEmpty()
+    assertThat(profile.sampleTypeList).isNotEmpty
+    assertThat(profile.functionList).isNotEmpty
+  }
+
+  @Test
+  fun `pkl eval`(@TempDir tempDir: Path) {
+    val pklCode =
+      """
+      function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
+      x = fib(30)
+      """
+        .trimIndent()
+    runTest(tempDir, pklCode, arrayOf("eval"))
+  }
+
+  @Test
+  fun `pkl test`(@TempDir tempDir: Path) {
+    val pklCode =
+      """
+      amends "pkl:test"
+
+      local function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
+
+      facts {
+        ["fib"] {
+          fib(30) > 0
+        }
+      }
+      """
+        .trimIndent()
+    runTest(tempDir, pklCode, arrayOf("eval"))
+  }
+
+  @Test
+  fun `pkl run`(@TempDir tempDir: Path) {
+    val pklCode =
+      """
+      amends "pkl:Command"
+
+      local function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
+
+      output {
+        text = fib(30).toString()
+      }
+      """
+        .trimIndent()
+    runTest(tempDir, pklCode, arrayOf("run"))
   }
 }
