@@ -133,6 +133,6 @@ public abstract class VmListingOrMapping extends VmObject {
     if (typeCastNode == null) {
       return false;
     }
-    return typeCastNode.getTypeNode().isEquivalentTo(typeNode);
+    return typeCastNode.getTypeNode().getType().equals(typeNode.getType());
   }
 }

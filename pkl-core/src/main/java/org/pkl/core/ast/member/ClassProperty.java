@@ -101,4 +101,9 @@ public final class ClassProperty extends ClassMember {
         name.toString(),
         PropertyTypeNode.export(typeNode));
   }
+
+  public VmType getType() {
+    if (typeNode == null) return VmType.UNKNOWN;
+    return typeNode.getTypeNode().getType();
+  }
 }

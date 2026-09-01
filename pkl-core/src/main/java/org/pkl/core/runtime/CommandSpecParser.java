@@ -25,6 +25,7 @@ import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -175,12 +176,12 @@ public final class CommandSpecParser {
     }
     if (!(optionsTypeNode instanceof TypeNode.UserClassTypeNode node)) {
       throw exceptionBuilder()
-          .withSourceSection(optionsTypeNode.getSourceSection())
+          .withSourceSection(optionsPropertyTypeNode.getSourceSection())
           .evalError(
               "commandOptionsTypeNotClass", optionsTypeNode.getSourceSection().getCharacters())
           .build();
     }
-    var clazz = node.getVmClass();
+    var clazz = ((VmType.ClassType) node.getType()).getVmClass();
     if (clazz.isAbstract()) {
       throw exceptionBuilder()
           .withSourceSection(clazz.getHeaderSection())
@@ -308,14 +309,14 @@ public final class CommandSpecParser {
 
     // assert type is Boolean
     var typeInfo = resolveType(prop);
-    if (!(typeInfo.getFirst() instanceof TypeNode.BooleanTypeNode)) {
+    if (typeInfo.getFirst().getVmClass() != BaseModule.getBooleanClass()) {
       throw exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError(
               "commandFlagInvalidType",
               prop.getName(),
               "BooleanFlag",
-              typeInfo.getFirst().getSourceSection().getCharacters(),
+              typeInfo.getFirst().toString(),
               "Boolean")
           .build();
     }
@@ -342,7 +343,7 @@ public final class CommandSpecParser {
               "commandFlagInvalidType",
               prop.getName(),
               "CountedFlag",
-              typeInfo.getFirst().getSourceSection().getCharacters(),
+              typeInfo.getFirst().toString(),
               "Int")
           .build();
     }
@@ -385,10 +386,10 @@ public final class CommandSpecParser {
   }
 
   /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
-  private Pair<TypeNode, Boolean> resolveType(ClassProperty prop) {
+  private Pair<VmType, Boolean> resolveType(ClassProperty prop) {
     var propertyTypeNode = prop.getTypeNode();
     if (propertyTypeNode != null) {
-      return resolveType(propertyTypeNode.getTypeNode());
+      return resolveType(propertyTypeNode.getTypeNode().getType());
     }
     throw exceptionBuilder()
         .withSourceSection(prop.getHeaderSection())
@@ -397,23 +398,23 @@ public final class CommandSpecParser {
   }
 
   /** Unwrap nullables, constraints, and aliases and return Pair(underlying type, is nullable) */
-  private Pair<TypeNode, Boolean> resolveType(TypeNode typeNode) {
+  private Pair<VmType, Boolean> resolveType(VmType type) {
     var isNullable = false;
     while (true) {
-      if (typeNode instanceof TypeNode.NullableTypeNode nullableTypeNode) {
+      if (type instanceof VmType.NullableType nullableType) {
         isNullable = true;
-        typeNode = nullableTypeNode.getElementTypeNode();
-      } else if (typeNode instanceof TypeNode.ConstrainedTypeNode constrainedTypeNode) {
-        typeNode = constrainedTypeNode.getChildTypeNode();
-      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode) {
-        if (typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) break;
-        typeNode = typeAliasTypeNode.getAliasedTypeNode();
+        type = nullableType.getElementType();
+      } else if (type instanceof VmType.ConstrainedType constrainedType) {
+        type = constrainedType.getBaseType();
+      } else if (type instanceof VmType.AliasType aliasType) {
+        if (aliasType.getVmTypeAlias() == BaseModule.getCharTypeAlias()) break;
+        type = aliasType.getAliasedType();
       } else {
         break;
       }
     }
 
-    return Pair.of(typeNode, isNullable);
+    return Pair.of(type, isNullable);
   }
 
   // This sigil used to indicate that an option has a default value that is a non-constant expr.
@@ -447,10 +448,12 @@ public final class CommandSpecParser {
         // wrapped by a nullable, no default value
         return null;
       }
-      if (resolved.getFirst() instanceof TypeNode.UnionOfStringLiteralsTypeNode union
-          && union.getUnionDefault() != null) {
-        return union.getUnionDefault();
-      } else if (resolved.getFirst() instanceof TypeNode.StringLiteralTypeNode literal) {
+      if (resolved.getFirst() instanceof VmType.UnionType union
+          && union.getDefaultIndex() != -1
+          && union.isUnionOfStringLiterals()) {
+        return ((VmType.StringLiteralType) union.getElementTypes()[union.getDefaultIndex()])
+            .getLiteral();
+      } else if (resolved.getFirst() instanceof VmType.StringLiteralType literal) {
         return literal.getLiteral();
       }
     }
@@ -509,118 +512,90 @@ public final class CommandSpecParser {
 
     public OptionBehavior resolve(ClassProperty prop, boolean requireExplicitDefault) {
       var resolved = resolveType(prop);
-      var typeNode = resolved.getFirst();
+      var type = resolved.getFirst();
       isNullable = resolved.getSecond();
       defaultValue = CommandSpecParser.this.getDefaultValue(prop, requireExplicitDefault);
 
-      resolve(prop, typeNode);
+      resolve(prop, type);
       return this;
     }
 
-    private void resolve(ClassProperty prop, TypeNode typeNode) {
-      if (resolvePrimitive(typeNode)) {
+    private void resolve(ClassProperty prop, VmType type) {
+      if (resolvePrimitive(type)) {
         return;
       }
-      if (typeNode instanceof TypeNode.ListingTypeNode listingTypeNode) {
-        handleElement(listingTypeNode.getValueTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> {
-                    if (values.isEmpty()) return null;
-                    var builder = new VmObjectBuilder();
-                    values.forEach(builder::addElement);
-                    return builder.toListing();
-                  };
-      } else if (typeNode instanceof TypeNode.MappingTypeNode mappingTypeNode) {
-        assert mappingTypeNode.getKeyTypeNode() != null;
-        handleEntry(mappingTypeNode.getKeyTypeNode(), mappingTypeNode.getValueTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> {
-                    if (values.isEmpty()) return null;
-                    var builder = new VmObjectBuilder();
-                    values.forEach(
-                        (entry) ->
-                            builder.addEntry(
-                                ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
-                    return builder.toMapping();
-                  };
-      } else if (typeNode instanceof TypeNode.ListTypeNode listTypeNode) {
-        handleElement(listTypeNode.getElementTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> values.isEmpty() ? null : VmList.create(values);
-      } else if (typeNode instanceof TypeNode.SetTypeNode setTypeNode) {
-        handleElement(setTypeNode.getElementTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> values.isEmpty() ? null : VmSet.create(values);
-      } else if (typeNode instanceof TypeNode.MapTypeNode mapTypeNode) {
-        handleEntry(mapTypeNode.getKeyTypeNode(), mapTypeNode.getValueTypeNode(), prop);
-        if (multiple == null) multiple = true;
-        if (all == null)
-          all =
-              !multiple
-                  ? this::allChooseLast
-                  : (values, workingDirUri) -> {
-                    if (values.isEmpty()) return null;
-                    var builder = VmMap.builder();
-                    values.forEach(
-                        (entry) ->
-                            builder.add(((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
-                    return builder.build();
-                  };
-      } else if (typeNode instanceof TypeNode.PairTypeNode pairTypeNode) {
-        handleEntry(pairTypeNode.getFirstTypeNode(), pairTypeNode.getSecondTypeNode(), prop);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-      } else if (typeNode instanceof TypeNode.FinalClassTypeNode finalClassTypeNode
-          && (finalClassTypeNode.getVmClass() == BaseModule.getListingClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getMappingClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getListClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getSetClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getMapClass()
-              || finalClassTypeNode.getVmClass() == BaseModule.getPairClass())) {
-        // if a supported type is provided without type arguments
-        throw exceptionBuilder()
-            .withSourceSection(prop.getHeaderSection())
-            .evalError(
-                "commandOptionUnsupportedType",
-                prop.getName(),
-                "",
-                typeNode.getSourceSection().getCharacters())
-            .withHint(
-                finalClassTypeNode.getVmClass().getSimpleName()
-                    + " options must provide "
-                    + switch (finalClassTypeNode.getVmClass().getTypeParameterCount()) {
-                      case 1 -> "one type argument.";
-                      case 2 -> "two type arguments.";
-                      default -> throw PklBugException.unreachableCode();
-                    })
-            .build();
-      } else if (each == null && all == null) {
+      if (type instanceof VmType.ClassType ct) {
+        if (ct.getVmClass() == BaseModule.getListingClass()) {
+          handleElement(prop, ct);
+          if (multiple == null) multiple = true;
+          if (all == null)
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> {
+                      if (values.isEmpty()) return null;
+                      var builder = new VmObjectBuilder();
+                      values.forEach(builder::addElement);
+                      return builder.toListing();
+                    };
+        } else if (ct.getVmClass() == BaseModule.getMappingClass()) {
+          handleEntry(prop, ct);
+          if (multiple == null) multiple = true;
+          if (all == null)
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> {
+                      if (values.isEmpty()) return null;
+                      var builder = new VmObjectBuilder();
+                      values.forEach(
+                          (entry) ->
+                              builder.addEntry(
+                                  ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
+                      return builder.toMapping();
+                    };
+        } else if (ct.getVmClass() == BaseModule.getListClass()) {
+          handleElement(prop, ct);
+          if (multiple == null) multiple = true;
+          if (all == null)
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> values.isEmpty() ? null : VmList.create(values);
+        } else if (ct.getVmClass() == BaseModule.getSetClass()) {
+          handleElement(prop, ct);
+          if (multiple == null) multiple = true;
+          if (all == null)
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> values.isEmpty() ? null : VmSet.create(values);
+        } else if (ct.getVmClass() == BaseModule.getMapClass()) {
+          handleEntry(prop, ct);
+          if (multiple == null) multiple = true;
+          if (all == null)
+            all =
+                !multiple
+                    ? this::allChooseLast
+                    : (values, workingDirUri) -> {
+                      if (values.isEmpty()) return null;
+                      var builder = VmMap.builder();
+                      values.forEach(
+                          (entry) ->
+                              builder.add(
+                                  ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
+                      return builder.build();
+                    };
+        } else if (ct.getVmClass() == BaseModule.getPairClass()) {
+          handleEntry(prop, ct);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+        }
+      }
+
+      if (each == null && all == null) {
         // if another type and no transform functions are provided, that's an error
-        throw exceptionBuilder()
-            .withSourceSection(prop.getHeaderSection())
-            .evalError(
-                "commandOptionUnsupportedType",
-                prop.getName(),
-                "",
-                typeNode.getSourceSection().getCharacters())
-            .withHint("Use a supported type or define a transformEach and/or transformAll function")
-            .build();
+        throw unsupportedOptionNoTransform(prop, type);
       } else {
         // if we have at least one transform then allow the type and fill in reasonable defaults
         if (each == null) each = (rawValue, workingDirUri) -> rawValue;
@@ -630,9 +605,32 @@ public final class CommandSpecParser {
       }
     }
 
+    private VmException unsupportedOptionTypeArguments(ClassProperty prop, VmType.ClassType type) {
+      return exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionUnsupportedType", prop.getName(), "", type.toString())
+          .withHint(
+              type.getVmClass().getSimpleName()
+                  + " options must provide "
+                  + switch (type.getVmClass().getTypeParameterCount()) {
+                    case 1 -> "one type argument.";
+                    case 2 -> "two type arguments.";
+                    default -> throw PklBugException.unreachableCode();
+                  })
+          .build();
+    }
+
+    private VmException unsupportedOptionNoTransform(ClassProperty prop, VmType type) {
+      return exceptionBuilder()
+          .withSourceSection(prop.getHeaderSection())
+          .evalError("commandOptionUnsupportedType", prop.getName(), "", type.toString())
+          .withHint("Use a supported type or define a transformEach and/or transformAll function")
+          .build();
+    }
+
     private OptionBehavior resolveTypeArgument(
-        ClassProperty prop, TypeNode typeNode, String typeArgumentName) {
-      if (resolvePrimitive(typeNode)) {
+        ClassProperty prop, VmType type, String typeArgumentName) {
+      if (resolvePrimitive(type)) {
         return this;
       }
 
@@ -644,7 +642,7 @@ public final class CommandSpecParser {
                 "commandOptionUnsupportedType",
                 prop.getName(),
                 typeArgumentName + " ",
-                typeNode.getSourceSection().getCharacters())
+                type.toString())
             .withHint("Use a supported type or define a transformEach and/or transformAll function")
             .build();
       } else if (metavar == null) {
@@ -656,125 +654,131 @@ public final class CommandSpecParser {
       return this;
     }
 
-    private boolean resolvePrimitive(TypeNode typeNode) {
-      if (typeNode instanceof TypeNode.NumberTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                try {
-                  return Long.parseLong(rawValue);
-                } catch (NumberFormatException e) {
+    private boolean resolvePrimitive(VmType type) {
+      if (type instanceof VmType.ClassType ct) {
+        if (ct.getVmClass() == BaseModule.getNumberClass()) {
+          if (each == null)
+            each =
+                (rawValue, workingDirUri) -> {
+                  try {
+                    return Long.parseLong(rawValue);
+                  } catch (NumberFormatException e) {
+                    try {
+                      return Double.parseDouble(rawValue);
+                    } catch (NumberFormatException e2) {
+                      throw BadValue.invalid(rawValue, METAVAR_NUMBER);
+                    }
+                  }
+                };
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_NUMBER;
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getFloatClass()) {
+          if (each == null)
+            each =
+                (rawValue, workingDirUri) -> {
                   try {
                     return Double.parseDouble(rawValue);
-                  } catch (NumberFormatException e2) {
-                    throw BadValue.invalid(rawValue, METAVAR_NUMBER);
+                  } catch (NumberFormatException e) {
+                    throw BadValue.invalid(rawValue, METAVAR_FLOAT);
                   }
-                }
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_NUMBER;
-        return true;
-      } else if (typeNode instanceof TypeNode.FloatTypeNode) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                try {
-                  return Double.parseDouble(rawValue);
-                } catch (NumberFormatException e) {
-                  throw BadValue.invalid(rawValue, METAVAR_FLOAT);
-                }
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_FLOAT;
-        return true;
-      } else if (typeNode instanceof TypeNode.IntTypeNode) {
-        if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT;
-        return true;
-      } else if (typeNode instanceof TypeNode.Int8TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT8;
-        return true;
-      } else if (typeNode instanceof TypeNode.Int16TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT16;
-        return true;
-      } else if (typeNode instanceof TypeNode.Int32TypeAliasTypeNode) {
-        if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_INT32;
-        return true;
-      } else if (typeNode instanceof TypeNode.UIntTypeAliasTypeNode uIntTypeAliasTypeNode) {
-        var mask = uIntTypeAliasTypeNode.getMask();
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (mask == 0x000000000000FFFFL) {
-          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
-          if (metavar == null) metavar = METAVAR_UINT16;
-        } else if (mask == 0x00000000FFFFFFFFL) {
-          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
-          if (metavar == null) metavar = METAVAR_UINT32;
-        } else {
-          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
-          if (metavar == null) metavar = METAVAR_UINT;
+                };
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_FLOAT;
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getIntClass()) {
+          if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_INT;
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getBooleanClass()) {
+          if (each == null)
+            each =
+                (rawValue, workingDirUri) -> {
+                  var value = rawValue.toLowerCase(Locale.ROOT);
+                  if (TRUE_VALUES.contains(value)) {
+                    return true;
+                  } else if (FALSE_VALUES.contains(value)) {
+                    return false;
+                  }
+                  throw BadValue.invalid(rawValue, "boolean");
+                };
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_BOOLEAN;
+          return true;
+        } else if (ct.getVmClass() == BaseModule.getStringClass()) {
+          if (each == null) each = (rawValue, workingDirUri) -> rawValue;
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_STRING;
+          return true;
         }
-        return true;
-      } else if (typeNode instanceof TypeNode.UInt8TypeAliasTypeNode) {
-        if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_UINT8;
-        return true;
-      } else if (typeNode instanceof TypeNode.BooleanTypeNode) {
+      } else if (type instanceof VmType.AliasType at) {
+        if (at.getVmTypeAlias() == BaseModule.getInt8TypeAlias()) {
+          if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_INT8;
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getInt16TypeAlias()) {
+          if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_INT16;
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getInt32TypeAlias()) {
+          if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_INT32;
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getUInt8TypeAlias()) {
+          if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_UINT8;
+          return true;
+        } else if (at.getVmTypeAlias() == BaseModule.getUInt16TypeAlias()) {
+          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_UINT16;
+        } else if (at.getVmTypeAlias() == BaseModule.getUInt32TypeAlias()) {
+          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_UINT32;
+        } else if (at.getVmTypeAlias() == BaseModule.getUIntTypeAlias()) {
+          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_UINT;
+        } else if (at.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
+          if (each == null)
+            each =
+                (rawValue, workingDirUri) -> {
+                  if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
+                  return rawValue;
+                };
+          if (all == null) all = this::allChooseLast;
+          if (multiple == null) multiple = false;
+          if (metavar == null) metavar = METAVAR_CHAR;
+          return true;
+        }
+      } else if (type instanceof VmType.UnionType ut && ut.isUnionOfStringLiterals()) {
+        var choices =
+            Arrays.stream(ut.getElementTypes())
+                .map(it -> ((VmType.StringLiteralType) it).getLiteral())
+                .toList();
+        var choiceSet = new HashSet<>(choices);
         if (each == null)
           each =
               (rawValue, workingDirUri) -> {
-                var value = rawValue.toLowerCase(Locale.ROOT);
-                if (TRUE_VALUES.contains(value)) {
-                  return true;
-                } else if (FALSE_VALUES.contains(value)) {
-                  return false;
-                }
-                throw BadValue.invalid(rawValue, "boolean");
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_BOOLEAN;
-        return true;
-      } else if (typeNode instanceof TypeNode.StringTypeNode) {
-        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_STRING;
-        return true;
-      } else if (typeNode instanceof TypeNode.TypeAliasTypeNode typeAliasTypeNode
-          && typeAliasTypeNode.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
-                return rawValue;
-              };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_CHAR;
-        return true;
-      } else if (typeNode
-          instanceof TypeNode.UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
-        var choices = unionOfStringLiteralsTypeNode.getStringLiterals().stream().sorted().toList();
-        if (each == null)
-          each =
-              (rawValue, workingDirUri) -> {
-                if (!unionOfStringLiteralsTypeNode.getStringLiterals().contains(rawValue)) {
+                if (!choiceSet.contains(rawValue)) {
                   throw BadValue.invalidChoice(rawValue, choices);
                 }
                 return rawValue;
@@ -782,11 +786,10 @@ public final class CommandSpecParser {
         if (all == null) all = this::allChooseLast;
         if (multiple == null) multiple = false;
         if (metavar == null) metavar = "[" + String.join(", ", choices) + "]";
-        if (completionCandidates == null)
-          completionCandidates = new Fixed(unionOfStringLiteralsTypeNode.getStringLiterals());
+        if (completionCandidates == null) completionCandidates = new Fixed(choiceSet);
         return true;
-      } else if (typeNode instanceof TypeNode.StringLiteralTypeNode stringLiteralTypeNode) {
-        var choice = stringLiteralTypeNode.getLiteral();
+      } else if (type instanceof VmType.StringLiteralType slt) {
+        var choice = slt.getLiteral();
         if (each == null)
           each =
               (rawValue, workingDirUri) -> {
@@ -823,7 +826,10 @@ public final class CommandSpecParser {
     private static final Set<String> FALSE_VALUES = Set.of("false", "f", "0", "no", "n", "off");
 
     /** Sets each and metavar if they're not set */
-    private void handleElement(TypeNode valueType, ClassProperty prop) {
+    private void handleElement(ClassProperty prop, VmType.ClassType type) {
+      if (!type.isParametric()) throw unsupportedOptionTypeArguments(prop, type);
+      var valueType = type.getTypeArguments()[0];
+
       if (each != null && metavar != null) return;
       var transformValue =
           new OptionBehavior(each, all, multiple, metavar, completionCandidates)
@@ -833,7 +839,11 @@ public final class CommandSpecParser {
     }
 
     /** Sets each and metavar if they're not set */
-    private void handleEntry(TypeNode keyType, TypeNode valueType, ClassProperty prop) {
+    private void handleEntry(ClassProperty prop, VmType.ClassType type) {
+      if (!type.isParametric()) throw unsupportedOptionTypeArguments(prop, type);
+      var keyType = type.getTypeArguments()[0];
+      var valueType = type.getTypeArguments()[1];
+
       if (each != null && metavar != null) return;
       var transformKey =
           new OptionBehavior(each, all, multiple, metavar, completionCandidates)
