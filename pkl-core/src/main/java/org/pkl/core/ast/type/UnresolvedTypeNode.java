@@ -198,13 +198,13 @@ public abstract class UnresolvedTypeNode extends PklNode {
             case "Int16":
               return new Int16TypeAliasTypeNode();
             case "UInt16":
-              return new UIntTypeAliasTypeNode(alias, 0x000000000000FFFFL);
+              return new IntMaskSlotTypeNode(alias, 0x000000000000FFFFL);
             case "Int32":
               return new Int32TypeAliasTypeNode();
             case "UInt32":
-              return new UIntTypeAliasTypeNode(alias, 0x00000000FFFFFFFFL);
+              return new IntMaskSlotTypeNode(alias, 0x00000000FFFFFFFFL);
             case "UInt":
-              return new UIntTypeAliasTypeNode(alias, 0x7FFFFFFFFFFFFFFFL);
+              return new IntMaskSlotTypeNode(alias, 0x7FFFFFFFFFFFFFFFL);
           }
         }
 

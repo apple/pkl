@@ -18,7 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
@@ -27,12 +27,7 @@ import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
-import org.pkl.core.PClass;
-import org.pkl.core.PClassInfo;
-import org.pkl.core.PType;
-import org.pkl.core.PklBugException;
 import org.pkl.core.Reference;
-import org.pkl.core.TypeAlias;
 import org.pkl.core.util.paguro.RrbTree;
 import org.pkl.core.util.paguro.RrbTree.ImRrbt;
 
@@ -41,10 +36,11 @@ public final class VmReference extends VmValue {
   private final VmTyped domain;
   private final Object data;
   private final ImRrbt<VmTyped> path;
-  // candidate types can only be: PType.Class, PType.Alias (only preservedAliasTypes),
-  // PType.StringLiteral, PType.UNKNOWN, PType.Function, PType.TypeVariable, or PType.Union
+  // candidate types can only be: VmType.ClassType, VmType.AliasType (only preservedAliasTypes),
+  // VmType.StringLiteralType, VmType.UNKNOWN, VmType.FunctionType, VmType.TypeVariableTybe, or
+  // VmType.UnionType
   // (containing only the previous; flattened)
-  private final PType referentType;
+  private final VmType referentType;
 
   private boolean forced = false;
 
@@ -55,12 +51,15 @@ public final class VmReference extends VmValue {
         .toTyped(RefModule.getAccessClass());
   }
 
-  @TruffleBoundary
   public VmReference(VmTyped domain, VmClass clazz, Object data) {
-    this(domain, data, RrbTree.empty(), normalizeTypes(new PType.Class(clazz.export())));
+    this(
+        domain,
+        data,
+        RrbTree.empty(),
+        normalizeTypes(new VmType.ClassType(clazz), clazz, clazz.getModuleClass()));
   }
 
-  public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, PType referentType) {
+  public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, VmType referentType) {
     this.domain = domain;
     this.data = data;
     this.referentType = referentType;
@@ -79,7 +78,7 @@ public final class VmReference extends VmValue {
     return path;
   }
 
-  public PType getReferentType() {
+  public VmType getReferentType() {
     return referentType;
   }
 
@@ -88,71 +87,66 @@ public final class VmReference extends VmValue {
   // * transforming T? into T|Null
   // * dereferencing aliases (except for well-known stdlib alias types)
   // * flattening unions
-  // * drop PType.Function and PType.TypeVariable
-  private static PType normalizeTypes(
-      PType type, @Nullable PType thisClass, @Nullable PType moduleClass) {
-    var types = new HashSet<PType>();
-    normalizeTypes(type, types, thisClass, moduleClass);
+  // * replace VmType.ModuleType with appropriate VmType.ClassType
+  // * drop VmType.FunctionType and VmType.TypeVariableType
+  @TruffleBoundary
+  private static VmType normalizeTypes(VmType type, VmClass thisClass, VmClass moduleClass) {
+    var types = new HashSet<VmType>();
+    normalizeTypes(type, thisClass, moduleClass, types);
     return minimizeTypes(types);
   }
 
-  private static PType normalizeTypes(PType type) {
-    return normalizeTypes(type, null, null);
-  }
-
-  private static PType minimizeTypes(Set<PType> types) {
+  private static VmType minimizeTypes(Set<VmType> types) {
     if (types.size() == 1) return types.iterator().next();
     // optimization: unknown allows all references, erase all candidates to only unknown
-    if (types.contains(PType.UNKNOWN)) return PType.UNKNOWN;
+    if (types.contains(VmType.UNKNOWN)) return VmType.UNKNOWN;
     // optimization: All allows all references, erase all candidates to only All
-    if (containsClass(types, BaseModule.getAnyClass().export()))
-      return new PType.Class(BaseModule.getAnyClass().export());
-    var typesList = new ArrayList<>(types);
-    typesList.sort(Comparator.comparing(Object::toString));
-    return new PType.Union(typesList);
+    if (containsClass(types, BaseModule.getAnyClass()))
+      return new VmType.ClassType(BaseModule.getAnyClass());
+    var typeArray = types.toArray(new VmType[0]);
+    Arrays.sort(typeArray, Comparator.comparing(Object::toString));
+    return new VmType.UnionType(-1, typeArray);
   }
 
   private static void normalizeTypes(
-      PType type, Set<PType> result, @Nullable PType thisClass, @Nullable PType moduleClass) {
-    if (type == PType.UNKNOWN || type == PType.NOTHING || type instanceof PType.StringLiteral) {
+      VmType type, VmClass thisClass, VmClass moduleClass, Set<VmType> result) {
+    if (type == VmType.UNKNOWN
+        || type == VmType.NOTHING
+        || type instanceof VmType.StringLiteralType) {
       result.add(type);
-    } else if (type instanceof PType.Class clazz) {
-      if (clazz.getTypeArguments().isEmpty()) {
-        // if a generic type is used without type arguments, it needs to be normalized so all args
-        // are unknown; i.e. with bare List/Map/etc. type annotations (via FinalClassTypeNode).
-        var typeParameterCount = clazz.getPClass().getTypeParameters().size();
-        result.add(
-            typeParameterCount == 0
-                ? clazz
-                : new PType.Class(
-                    clazz.getPClass(), Collections.nCopies(typeParameterCount, PType.UNKNOWN)));
+    } else if (type instanceof VmType.ClassType ct) {
+      if (!ct.isParametric()) {
+        result.add(ct);
       } else {
-        var typeArgs = new ArrayList<PType>(clazz.getTypeArguments().size());
-        for (var arg : clazz.getTypeArguments()) {
-          typeArgs.add(normalizeTypes(arg, thisClass, moduleClass));
-        }
-        result.add(new PType.Class(clazz.getPClass(), typeArgs));
+        result.add(
+            ct.withTypeArguments(
+                Arrays.stream(ct.getTypeArguments())
+                    .map(arg -> normalizeTypes(arg, thisClass, moduleClass))
+                    .toArray(VmType[]::new)));
       }
     }
     // normalize `T?` to `T | Null`
-    else if (type instanceof PType.Nullable nullable) {
-      normalizeTypes(nullable.getBaseType(), result, thisClass, moduleClass);
-      result.add(new PType.Class(BaseModule.getNullClass().export()));
+    else if (type instanceof VmType.NullableType nullable) {
+      normalizeTypes(nullable.getElementType(), thisClass, moduleClass, result);
+      result.add(new VmType.ClassType(BaseModule.getNullClass()));
       // erase `T(someConstraint)` to `T`
-    } else if (type instanceof PType.Constrained constrained) {
-      normalizeTypes(constrained.getBaseType(), result, thisClass, moduleClass);
-    } else if (type instanceof PType.Alias alias) {
-      if (isPreservedTypeAlias(alias.getTypeAlias())) {
+    } else if (type instanceof VmType.ConstrainedType constrained) {
+      normalizeTypes(constrained.getBaseType(), thisClass, moduleClass, result);
+    } else if (type instanceof VmType.AliasType alias) {
+      if (isPreservedTypeAlias(alias.getVmTypeAlias())) {
         result.add(alias);
       } else {
-        normalizeTypes(alias.getAliasedType(), result, thisClass, moduleClass);
+        normalizeTypes(
+            alias.getAliasedType(),
+            alias.getVmTypeAlias().getModuleClass(),
+            alias.getVmTypeAlias().getModuleClass(),
+            result);
       }
-    } else if (type instanceof PType.Union union) {
+    } else if (type instanceof VmType.UnionType union) {
       for (var t : union.getElementTypes()) {
-        normalizeTypes(t, result, thisClass, moduleClass);
+        normalizeTypes(t, thisClass, moduleClass, result);
       }
-    } else if (type == PType.THIS) {
-      assert thisClass != null;
+    } else if (type instanceof VmType.ThisType) {
       // there are 4 entrypoints here:
       // 1. init via the Reference constructor can only normalize an unparameterized PType.Class
       // 2. typecheck via ReferenceTypeNode erases self types to their actual PType.Class
@@ -161,13 +155,11 @@ public final class VmReference extends VmValue {
       // 4. property access uses the enclosing receiver's class to substitute for these self types
       // only property access and typecheck can produce THIS or MODULE.
       // getCandidatePropertyType and referentTypeIsSubtypeOf always pass non-null `thisClass`.
-      result.add(thisClass);
-    } else if (type == PType.MODULE) {
+      result.add(new VmType.ClassType(thisClass));
+    } else if (type instanceof VmType.ModuleType) {
       // this can be incorrect for usage of the module type in a class's property type annotation,
       // which is deprecated!!
-      assert moduleClass != null;
-      // see PType.THIS case above
-      result.add(moduleClass);
+      result.add(new VmType.ClassType(moduleClass));
     } else {
       // remaining types: PType.Function, PType.TypeVariable. no normalizing needed; TypeVariable
       // gets replaced upon instantiation, and Function can bubble up to users as a reference error
@@ -177,9 +169,9 @@ public final class VmReference extends VmValue {
     }
   }
 
-  private static Iterable<PType> iterateTypes(PType t) {
-    if (t instanceof PType.Union union) return union.getElementTypes();
-    return Collections.singleton(t);
+  private static VmType[] iterateTypes(VmType t) {
+    if (t instanceof VmType.UnionType union) return union.getElementTypes();
+    return new VmType[] {t};
   }
 
   public VmReference withPropertyAccess(Identifier property) {
@@ -197,8 +189,8 @@ public final class VmReference extends VmValue {
 
   @TruffleBoundary
   private VmReference withAccess(
-      BiConsumer<PType, Set<PType>> checkCandidate, Supplier<VmTyped> makeAccess) {
-    Set<PType> candidates = new HashSet<>();
+      BiConsumer<VmType, Set<VmType>> checkCandidate, Supplier<VmTyped> makeAccess) {
+    Set<VmType> candidates = new HashSet<>();
     for (var t : iterateTypes(referentType)) {
       checkCandidate.accept(t, candidates);
     }
@@ -206,51 +198,51 @@ public final class VmReference extends VmValue {
   }
 
   @SuppressWarnings("DuplicatedCode")
-  private static void getCandidatePropertyType(PType type, String property, Set<PType> result) {
-    if (type == PType.UNKNOWN) {
+  private static void getCandidatePropertyType(VmType type, String property, Set<VmType> result) {
+    if (type == VmType.UNKNOWN) {
       result.add(type);
       return;
     }
     // restriction: only class types can have their properties referenced
-    if (!(type instanceof PType.Class clazz)) {
+    if (!(type instanceof VmType.ClassType ct)) {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
     }
-    if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
+    if (ct.getVmClass().isDynamicClass()) {
       if (property.equals("default")) {
         // restriction: cannot reference Dynamic.default
         throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.DEFAULT_MEMBER);
       }
-      result.add(PType.UNKNOWN);
+      result.add(VmType.UNKNOWN);
       return;
     }
     // restriction: cannot reference Listing/Mapping.default
-    if (clazz.getPClass().getInfo() == PClassInfo.Listing
-        || clazz.getPClass().getInfo() == PClassInfo.Mapping) {
+    if (ct.getVmClass().isListingClass() || ct.getVmClass().isMappingClass()) {
       var errorType =
           property.equals("default")
               ? VmReferenceAccessErrorType.DEFAULT_MEMBER
               : VmReferenceAccessErrorType.CANNOT_FIND_MEMBER;
       throw new VmReferenceAccessError(type, errorType);
     }
-    var baseModule = BaseModule.getModuleClass().export();
+    var baseModule = BaseModule.getModuleClass();
     // restriction: cannot reference Module.output.
     //   generalized: properties originally defined in external classes; the only extant example.
     // This is implemented specifically because this is the only case where an external class
     //   containing a property can be subclassed.
     // And this can't check prop.getOwner().isExternal() because fully overriding the property with
     //   a new type annotation means the owner isn't Module.
-    if (clazz.getPClass().isSubclassOf(baseModule) && property.equals("output")) {
+    if (ct.getVmClass().isSubclassOf(baseModule) && property.equals("output")) {
       throw new VmReferenceAccessError(
-          new PType.Class(baseModule), VmReferenceAccessErrorType.EXTERNAL_CLASS);
+          new VmType.ClassType(baseModule), VmReferenceAccessErrorType.EXTERNAL_CLASS);
     }
 
     // dot access on `Reference<D, Null>` gives `Reference<D, Null>`
-    if (clazz.getPClass().getInfo() == PClassInfo.Null) {
-      result.add(clazz);
+    if (ct.getVmClass().isNullClass()) {
+      result.add(ct);
       return;
     }
 
-    var prop = clazz.getPClass().getAllProperties().get(property);
+    var prop = ct.getVmClass().getAllProperties().get(Identifier.get(property));
+    //noinspection ConstantValue
     if (prop == null) {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
     }
@@ -260,58 +252,47 @@ public final class VmReference extends VmValue {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.EXTERNAL_MEMBER);
     }
 
-    normalizeTypes(
-        prop.getType(), result, clazz, new PType.Class(clazz.getPClass().getModuleClass()));
-  }
-
-  private static PClassInfo<?> getClassInfo(Object value) {
-    if (value instanceof VmValue vmValue) return vmValue.getVmClass().getPClassInfo();
-    if (value instanceof String) return PClassInfo.String;
-    if (value instanceof Boolean) return PClassInfo.Boolean;
-    if (value instanceof Long) return PClassInfo.Int;
-    if (value instanceof Double) return PClassInfo.Float;
-    throw new PklBugException("Not a Pkl value: " + value.getClass());
+    normalizeTypes(prop.getType(), ct.getVmClass(), ct.getVmClass().getModuleClass(), result);
   }
 
   @SuppressWarnings("DuplicatedCode")
-  private static void getCandidateSubscriptType(PType type, Object key, Set<PType> result) {
-    if (type == PType.UNKNOWN) {
+  private static void getCandidateSubscriptType(VmType type, Object key, Set<VmType> result) {
+    if (type == VmType.UNKNOWN) {
       result.add(type);
       return;
     }
-    if (!(type instanceof PType.Class clazz)) {
+    if (!(type instanceof VmType.ClassType ct)) {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
     }
-    if (clazz.getPClass().getInfo() == PClassInfo.Dynamic) {
-      result.add(PType.UNKNOWN);
+    var clazz = ct.getVmClass();
+    if (clazz.isDynamicClass()) {
+      result.add(VmType.UNKNOWN);
       return;
     }
-    if (clazz.getPClass().getInfo() == PClassInfo.Listing
-        || clazz.getPClass().getInfo() == PClassInfo.List) {
+    if (clazz.isListingClass() || clazz.isListClass()) {
       if (!(key instanceof Long)) {
         throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
       }
-      normalizeTypes(clazz.getTypeArguments().get(0), result, null, null);
+      normalizeTypes(ct.getTypeArguments()[0], clazz, clazz.getModuleClass(), result);
       return;
     }
-    if (clazz.getPClass().getInfo() == PClassInfo.Mapping
-        || clazz.getPClass().getInfo() == PClassInfo.Map) {
-      var typeArgs = clazz.getTypeArguments();
-      var keyTypes = normalizeTypes(typeArgs.get(0));
+    if (clazz.isMappingClass() || clazz.isMapClass()) {
+      var typeArgs = ct.getTypeArguments();
+      var keyTypes = normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass());
       for (var kt : iterateTypes(keyTypes)) {
-        if (kt == PType.UNKNOWN
-            || (kt instanceof PType.Class klazz && klazz.getPClass().getInfo() == getClassInfo(key))
-            || (kt instanceof PType.StringLiteral stringLiteral
+        if (kt == VmType.UNKNOWN
+            || (kt instanceof VmType.ClassType klazz && klazz.getVmClass() == VmUtils.getClass(key))
+            || (kt instanceof VmType.StringLiteralType stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
-          normalizeTypes(typeArgs.get(1), result, null, null);
+          normalizeTypes(typeArgs[1], clazz, clazz.getModuleClass(), result);
           return;
         }
       }
     }
 
     // subscript access on `Reference<D, Null>` gives `Reference<D, Null>`
-    if (clazz.getPClass().getInfo() == PClassInfo.Null) {
-      result.add(clazz);
+    if (clazz == BaseModule.getNullClass()) {
+      result.add(ct);
       return;
     }
 
@@ -321,151 +302,52 @@ public final class VmReference extends VmValue {
   /**
    * Tells if this reference's referent type is a subtype of {@code type}. Does not check domain.
    */
-  @TruffleBoundary
-  public boolean referentTypeIsSubtypeOf(PType type, PClass thisClass, PClass moduleClass) {
+  public boolean referentTypeIsSubtypeOf(VmType type, VmClass thisClass, VmClass moduleClass) {
     // fast path: if referent is unknown it can match any type check
-    if (referentType == PType.UNKNOWN) {
+    if (referentType == VmType.UNKNOWN) {
       return true;
     }
 
-    var checkType = normalizeTypes(type, new PType.Class(thisClass), new PType.Class(moduleClass));
+    var checkType = normalizeTypes(type, thisClass, moduleClass);
     // fast path: short circuit if any referent is accepted
-    if (checkType == PType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass().export())) {
+    if (checkType == VmType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass())) {
       return true;
     }
     // fast path: short circuit if nothing is accepted
-    if (checkType == PType.NOTHING) {
+    if (checkType == VmType.NOTHING) {
       return false;
     }
 
-    return isSubtype(referentType, checkType);
+    return doReferentTypeIsSubtypeOf(checkType);
   }
 
-  private static boolean containsClass(Set<PType> types, PClass pClass) {
+  @TruffleBoundary
+  private boolean doReferentTypeIsSubtypeOf(VmType checkType) {
+    return referentType.isSubtypeOf(checkType);
+  }
+
+  private static boolean containsClass(Set<VmType> types, VmClass clazz) {
     for (var t : types) {
-      if (isClass(t, pClass)) return true;
+      if (isClass(t, clazz)) return true;
     }
     return false;
   }
 
-  private static boolean isClass(PType t, PClass pClass) {
-    return t instanceof PType.Class clazz && clazz.getPClass() == pClass;
+  private static boolean isClass(VmType t, VmClass clazz) {
+    return t instanceof VmType.ClassType ct && ct.getVmClass() == clazz;
   }
 
-  private static boolean isSubtype(PType a, PType b) {
-    // checks if A is a subtype of B
-    // cases (A -> B)
-    // * A == B
-    // * StringLiteral -> StringLiteral: if literals are the same
-    // * StringLiteral -> Class: B is String
-    // * Char Alias -> Char Alias, StringLiteral (known single character)
-    // * Int Alias -> Class: B is a subtype of Number (Int|Float|Number)
-    // * Int Alias -> Alias
-    //   * same alias
-    //   * Int8 is Int16|Int32
-    //   * Int16 is Int32
-    //   * UInt8 is Int16|Int32|Uint16|UInt32|UInt
-    //   * UInt16 is Int32|UInt32|UInt
-    //   * UInt32 is UInt
-    // * Class -> Class: if same class or A is a subclass of B
-    //   * if type args are present, must have equal number of them
-    //   * for each pair of type args, check variance
-    //     * invariant: A_i must be identical to B_i
-    //     * covariant: A_i must be a subtype of B_i
-    //     * contravariant: B_i must be a subtype of A_i
-    // * Union -> Union: Each elem of A must be a subtype of at least one elem of B
-    // * Non-union -> Union: A must be a subtype of at least one elem of B
-    if (a == b) return true;
-
-    if (a instanceof PType.StringLiteral aStr) {
-      if (b instanceof PType.StringLiteral bStr) {
-        return aStr.getLiteral().equals(bStr.getLiteral());
-      } else if (b instanceof PType.Class bClass) {
-        return bClass.getPClass() == BaseModule.getStringClass().export();
-      }
-    } else if (a instanceof PType.Alias aAlias) {
-      var aa = aAlias.getTypeAlias();
-      if (isIntTypeAlias(aa)) {
-        // special casing for stdlib Int typealiases
-        if (b instanceof PType.Class bClass) {
-          // A is an int alias, B is a Number (sub)class
-          return bClass.getPClass().isSubclassOf(BaseModule.getNumberClass().export());
-        } else if (b instanceof PType.Alias bAlias) {
-          var bb = bAlias.getTypeAlias();
-          if (aa == bb) {
-            return true;
-          }
-          if (aa == BaseModule.getInt8TypeAlias().export()) {
-            return bb == BaseModule.getInt16TypeAlias().export()
-                || bb == BaseModule.getInt32TypeAlias().export();
-          } else if (aa == BaseModule.getInt16TypeAlias().export()) {
-            return bb == BaseModule.getInt32TypeAlias().export();
-          } else if (aa == BaseModule.getUInt8TypeAlias().export()) {
-            return bb == BaseModule.getInt16TypeAlias().export()
-                || bb == BaseModule.getInt32TypeAlias().export()
-                || bb == BaseModule.getUInt16TypeAlias().export()
-                || bb == BaseModule.getUInt32TypeAlias().export()
-                || bb == BaseModule.getUIntTypeAlias().export();
-          } else if (aa == BaseModule.getUInt16TypeAlias().export()) {
-            return bb == BaseModule.getInt32TypeAlias().export()
-                || bb == BaseModule.getUInt32TypeAlias().export()
-                || bb == BaseModule.getUIntTypeAlias().export();
-          } else if (aa == BaseModule.getUInt32TypeAlias().export()) {
-            return bb == BaseModule.getUIntTypeAlias().export();
-          }
-        }
-      }
-    } else if (a instanceof PType.Class aClass && b instanceof PType.Class bClass) {
-      if (!aClass.getPClass().isSubclassOf(bClass.getPClass())) {
-        return false;
-      }
-      var aArgs = aClass.getTypeArguments();
-      var bArgs = bClass.getTypeArguments();
-      var bParams = bClass.getPClass().getTypeParameters();
-      if (aArgs.size() != bArgs.size()) {
-        return false;
-      }
-      // check variance of type args pairwise
-      for (var i = 0; i < aArgs.size(); i++) {
-        if (!switch (bParams.get(i).getVariance()) {
-          case INVARIANT -> aArgs.get(i) == bArgs.get(i);
-          case COVARIANT -> isSubtype(aArgs.get(i), bArgs.get(i));
-          case CONTRAVARIANT -> isSubtype(bArgs.get(i), aArgs.get(i));
-        }) {
-          return false;
-        }
-      }
-      return true;
-    } else if (b instanceof PType.Union bUnion) {
-      if (a instanceof PType.Union aUnion) {
-        a:
-        for (var aElem : aUnion.getElementTypes()) {
-          for (var bElem : bUnion.getElementTypes()) {
-            if (isSubtype(aElem, bElem)) continue a;
-          }
-          return false;
-        }
-        return true;
-      } else {
-        for (var bElem : bUnion.getElementTypes()) {
-          if (isSubtype(a, bElem)) return true;
-        }
-      }
-    }
-    return false;
+  private static boolean isIntTypeAlias(VmTypeAlias t) {
+    return t == BaseModule.getInt8TypeAlias()
+        || t == BaseModule.getInt16TypeAlias()
+        || t == BaseModule.getInt32TypeAlias()
+        || t == BaseModule.getUInt8TypeAlias()
+        || t == BaseModule.getUInt16TypeAlias()
+        || t == BaseModule.getUInt32TypeAlias()
+        || t == BaseModule.getUIntTypeAlias();
   }
 
-  private static boolean isIntTypeAlias(TypeAlias t) {
-    return t == BaseModule.getInt8TypeAlias().export()
-        || t == BaseModule.getInt16TypeAlias().export()
-        || t == BaseModule.getInt32TypeAlias().export()
-        || t == BaseModule.getUInt8TypeAlias().export()
-        || t == BaseModule.getUInt16TypeAlias().export()
-        || t == BaseModule.getUInt32TypeAlias().export()
-        || t == BaseModule.getUIntTypeAlias().export();
-  }
-
-  private static boolean isPreservedTypeAlias(TypeAlias t) {
+  private static boolean isPreservedTypeAlias(VmTypeAlias t) {
     return isIntTypeAlias(t);
   }
 
@@ -494,13 +376,14 @@ public final class VmReference extends VmValue {
       pathList.add(elem.export());
     }
 
-    return new Reference(domain.export(), VmValue.export(data), pathList, getReferentType());
+    return new Reference(
+        domain.export(), VmValue.export(data), pathList, getReferentType().export());
   }
 
-  public PType exportType() {
-    return new PType.Class(
-        RefModule.getReferenceClass().export(),
-        new PType.Class(domain.getVmClass().export()),
+  public VmType getType() {
+    return new VmType.ClassType(
+        RefModule.getReferenceClass(),
+        new VmType.ClassType(domain.getVmClass()),
         getReferentType());
   }
 
@@ -554,15 +437,15 @@ public final class VmReference extends VmValue {
   }
 
   public static final class VmReferenceAccessError extends RuntimeException {
-    private final PType type;
+    private final VmType type;
     private final VmReferenceAccessErrorType errorType;
 
-    public VmReferenceAccessError(PType type, VmReferenceAccessErrorType errorType) {
+    public VmReferenceAccessError(VmType type, VmReferenceAccessErrorType errorType) {
       this.type = type;
       this.errorType = errorType;
     }
 
-    public PType getType() {
+    public VmType getType() {
       return type;
     }
 

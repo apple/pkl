@@ -129,7 +129,7 @@ public final class ClassNode extends ExpressionNode {
     try {
       if (unresolvedSupertypeNode != null) {
         var supertypeNode = unresolvedSupertypeNode.execute(frame);
-        var superclass = supertypeNode.getVmClass();
+        var superclass = supertypeNode.getType().getVmClass();
 
         checkSupertype(supertypeNode, superclass);
         cachedClass.initSupertype(supertypeNode, superclass);
