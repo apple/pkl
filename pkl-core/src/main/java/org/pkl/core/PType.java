@@ -15,6 +15,7 @@
  */
 package org.pkl.core;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.io.Serial;
 import java.io.Serializable;
 import java.util.*;
@@ -115,14 +116,17 @@ public abstract class PType implements Serializable {
       this.typeArguments = typeArguments;
     }
 
+    @TruffleBoundary
     public Class(PClass pClass) {
       this(pClass, List.of());
     }
 
+    @TruffleBoundary
     public Class(PClass pClass, PType typeArgument1) {
       this(pClass, List.of(typeArgument1));
     }
 
+    @TruffleBoundary
     public Class(PClass pClass, PType typeArgument1, PType typeArgument2) {
       this(pClass, List.of(typeArgument1, typeArgument2));
     }

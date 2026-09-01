@@ -47,9 +47,12 @@ public final class LocalTypedPropertyNode extends RegularMemberNode {
   public @Nullable Object getDefaultValue(VirtualFrame frame) {
     if (!defaultValueInitialized) {
       assert typeNode != null;
+      // typeNode.createDefaultValue() is a regular polymorphic call rather than a child node.
+      // passing a non-materialized frame will cause GraalVM to emit diagnostics that it failed
+      // to compile this call.
       defaultValue =
           typeNode.createDefaultValue(
-              frame, language, member.getHeaderSection(), member.getQualifiedName());
+              frame.materialize(), language, member.getHeaderSection(), member.getQualifiedName());
       defaultValueInitialized = true;
     }
     return defaultValue;

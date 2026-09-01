@@ -24,11 +24,13 @@ import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.FrameSlotKind;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.nodes.NodeUtil;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -200,6 +202,7 @@ public abstract class TypeNode extends PklNode {
   /** Visit child type nodes of this type. */
   protected abstract boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer);
 
+  @TruffleBoundary
   protected VmTypeMismatchException constraintException(Object value, SourceSection sourceSection) {
     throw new VmTypeMismatchException.Constraint(
         sourceSection,
@@ -376,7 +379,6 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      CompilerDirectives.transferToInterpreter();
       throw new VmTypeMismatchException.Nothing(sourceSection, value);
     }
 
@@ -568,6 +570,10 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName) {
+      return literal;
+    }
+
+    public String getLiteral() {
       return literal;
     }
   }
@@ -798,7 +804,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public static class UnionTypeNode extends WriteFrameSlotTypeNode {
+  public abstract static class UnionTypeNode extends WriteFrameSlotTypeNode {
     @Children final TypeNode[] elementTypeNodes;
     private final int defaultIndex;
 
@@ -820,16 +826,16 @@ public abstract class TypeNode extends PklNode {
       return MirrorFactories.unionTypeFactory.create(this);
     }
 
-    public VmList getElementTypeMirrors() {
+    public final VmList getElementTypeMirrors() {
       return getMirrors(elementTypeNodes);
     }
 
-    public TypeNode[] getElementTypeNodes() {
+    public final TypeNode[] getElementTypeNodes() {
       return elementTypeNodes;
     }
 
     @Override
-    public boolean isNoopTypeCheck() {
+    public final boolean isNoopTypeCheck() {
       for (var element : elementTypeNodes) {
         if (!element.isNoopTypeCheck()) return false;
       }
@@ -837,7 +843,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public @Nullable Object createDefaultValue(
+    public final @Nullable Object createDefaultValue(
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
@@ -849,27 +855,6 @@ public abstract class TypeNode extends PklNode {
               frame, language, headerSection, qualifiedName);
     }
 
-    @Override
-    @ExplodeLoop
-    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
-      if (!consumer.accept(this)) {
-        return false;
-      }
-      var ret = true;
-      // don't break early to ensure constant number of iterations
-      //noinspection ForLoopReplaceableByForEach
-      for (var i = 0; i < elementTypeNodes.length; i++) {
-        if (!ret) {
-          continue;
-        }
-        if (!elementTypeNodes[i].acceptTypeNode(visitTypeArguments, consumer)) {
-          ret = false;
-        }
-      }
-      LoopNode.reportLoopCount(this, elementTypeNodes.length);
-      return ret;
-    }
-
     /**
      * Tells if the union type should be eagerly checked or not (shallow-force members of
      * Listing/Mapping).
@@ -878,33 +863,120 @@ public abstract class TypeNode extends PklNode {
      * type; e.g. {@code Listing<Person>|Listing<Animal>}
      */
     @TruffleBoundary
-    private boolean shouldEagerCheck() {
+    protected final boolean shouldEagerCheck() {
       var seenParameterizedClasses = EconomicSets.<VmClass>create();
       var ret = new MutableBoolean(false);
-      acceptTypeNode(
+      this.acceptTypeNode(
           false,
           (typeNode) -> {
             if (!typeNode.getType().isParametric()) {
               return true;
             }
-            var typeClass = typeNode.getType().getVmClass();
-            if (typeClass == null) {
+            var typeNodeClass = typeNode.getType().getVmClass();
+            if (typeNodeClass == null) {
               return true;
             }
-            if (seenParameterizedClasses.contains(typeClass)) {
+            if (seenParameterizedClasses.contains(typeNodeClass)) {
               ret.set(true);
               return false;
             } else {
-              EconomicSets.add(seenParameterizedClasses, typeClass);
+              EconomicSets.add(seenParameterizedClasses, typeNodeClass);
               return true;
             }
           });
       return ret.get();
     }
 
-    @Fallback
+    // All members failed to type check; if enabled, re-execute type checks to generate power
+    // assertions.
+    //
+    // Intentionally no `@ExplodeLoop` because this is the error path (prevent error path code from
+    // exploding the compiled IR node count).
+    //
+    // Needs a `MaterializedFrame` (rather than VirtualFrame): this method is called from within an
+    // `@ExplodeLoop` caller, and passing a VirtualFrame into a separately-compiled method called
+    // from a loop makes Graal's escape analysis unable to prove the frame can stay virtual across
+    // the call, causing a permanent "must not let virtual object escape" bailout.
+    //
+    // Materializing here is fine; this only runs once all union members have already failed to type
+    // check.
+    protected final VmTypeMismatchException.Union computeLazyUnionMismatch(
+        MaterializedFrame frame,
+        Object value,
+        VmTypeMismatchException[] typeMismatches,
+        boolean shouldEagerCheck,
+        VmLocalContext localContext,
+        boolean wasInTypeTest) {
+      localContext.setInTypeTest(wasInTypeTest);
+      if (VmContext.get(this).getPowerAssertionsEnabled()
+          && (!wasInTypeTest || localContext.hasActiveTracker())) {
+        for (var i = 0; i < elementTypeNodes.length; i++) {
+          var elementTypeNode = elementTypeNodes[i];
+          try {
+            if (shouldEagerCheck) {
+              elementTypeNode.executeEagerly(frame, value);
+            } else {
+              elementTypeNode.executeLazily(frame, value);
+            }
+          } catch (VmTypeMismatchException e) {
+            typeMismatches[i] = e;
+          }
+        }
+      }
+      return new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
+    }
+
+    // All members failed to type check; if enabled, re-execute type checks to generate power
+    // assertions.
+    //
+    // Intentionally no `@ExplodeLoop` because this is the error path (prevent error path code from
+    // exploding the compiled IR node count).
+    //
+    // Needs a `MaterializedFrame`, see comment on `computeLazyUnionMismatch` for details.
+    protected final VmTypeMismatchException.Union computeEagerUnionMismatch(
+        MaterializedFrame frame,
+        Object value,
+        VmTypeMismatchException[] typeMismatches,
+        VmLocalContext localContext,
+        boolean wasInTypeTest) {
+      localContext.setInTypeTest(wasInTypeTest);
+      if (VmContext.get(this).getPowerAssertionsEnabled()
+          && (!wasInTypeTest || localContext.hasActiveTracker())) {
+        for (var i = 0; i < elementTypeNodes.length; i++) {
+          try {
+            elementTypeNodes[i].executeEagerly(frame, value);
+          } catch (VmTypeMismatchException e) {
+            typeMismatches[i] = e;
+          }
+        }
+      }
+      return new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
+    }
+  }
+
+  public static class UnionTypeNodeExploded extends UnionTypeNode {
+    public UnionTypeNodeExploded(
+        SourceSection sourceSection, int defaultIndex, TypeNode[] elementTypeNodes) {
+      super(sourceSection, defaultIndex, elementTypeNodes);
+    }
+
+    @Override
     @ExplodeLoop
-    protected Object executeLazily(VirtualFrame frame, Object value) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (!consumer.accept(this)) {
+        return false;
+      }
+      for (var elementTypeNode : elementTypeNodes) {
+        if (!elementTypeNode.acceptTypeNode(visitTypeArguments, consumer)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @ExplodeLoop
+    protected final Object executeLazily(VirtualFrame frame, Object value) {
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
@@ -931,30 +1003,17 @@ public abstract class TypeNode extends PklNode {
         }
       }
 
-      // all members failed to type check
-      // if enabled, re-execute type checks to generate power assertions
-      localContext.setInTypeTest(wasInTypeTest);
-      if (VmContext.get(this).getPowerAssertionsEnabled()
-          && (!wasInTypeTest || localContext.hasActiveTracker())) {
-        for (var i = 0; i < elementTypeNodes.length; i++) {
-          var elementTypeNode = elementTypeNodes[i];
-          try {
-            if (shouldEagerCheck) {
-              elementTypeNode.executeEagerly(frame, value);
-            } else {
-              elementTypeNode.executeLazily(frame, value);
-            }
-          } catch (VmTypeMismatchException e) {
-            typeMismatches[i] = e;
-          }
-        }
-      }
-
-      throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
+      throw computeLazyUnionMismatch(
+          frame.materialize(),
+          value,
+          typeMismatches,
+          shouldEagerCheck,
+          localContext,
+          wasInTypeTest);
     }
 
-    @Override
-    public Object executeEagerly(VirtualFrame frame, Object value) {
+    @ExplodeLoop
+    public final Object executeEagerly(VirtualFrame frame, Object value) {
       // escape analysis should remove this allocation in compiled code
       var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
 
@@ -974,21 +1033,91 @@ public abstract class TypeNode extends PklNode {
         }
       }
 
-      // all members failed to type check
-      // if enabled, re-execute type checks to generate power assertions
-      localContext.setInTypeTest(wasInTypeTest);
-      if (VmContext.get(this).getPowerAssertionsEnabled()
-          && (!wasInTypeTest || localContext.hasActiveTracker())) {
-        for (var i = 0; i < elementTypeNodes.length; i++) {
-          try {
-            elementTypeNodes[i].executeEagerly(frame, value);
-          } catch (VmTypeMismatchException e) {
-            typeMismatches[i] = e;
-          }
+      throw computeEagerUnionMismatch(
+          frame.materialize(), value, typeMismatches, localContext, wasInTypeTest);
+    }
+  }
+
+  public static class UnionTypeNodeLooped extends UnionTypeNode {
+    private final LoopConditionProfile loopConditionProfile = LoopConditionProfile.create();
+
+    public UnionTypeNodeLooped(
+        SourceSection sourceSection, int defaultIndex, TypeNode[] elementTypeNodes) {
+      super(sourceSection, defaultIndex, elementTypeNodes);
+    }
+
+    // keep in sync with UnionTypeNodeExploded.acceptTypeNode
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (!consumer.accept(this)) {
+        return false;
+      }
+      for (var i = 0; loopConditionProfile.inject(i < elementTypeNodes.length); i++) {
+        if (!elementTypeNodes[i].acceptTypeNode(visitTypeArguments, consumer)) {
+          return false;
+        }
+      }
+      return true;
+    }
+
+    @SuppressWarnings("DuplicatedCode")
+    @Override
+    protected Object executeLazily(VirtualFrame frame, Object value) {
+      // escape analysis should remove this allocation in compiled code
+      var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
+      var materializedFrame = frame.materialize();
+
+      // disallow power assertions from triggering in case one union member checks successfully
+      var localContext = VmLanguage.get(this).localContext.get();
+      var wasInTypeTest = localContext.isInTypeTest();
+      localContext.setInTypeTest(true);
+
+      // Do eager checks (shallow-force) if there are two listings or two mappings represented.
+      // (we can't know that `new Listing { 0; "hi" }[0]` fails for `Listing<Int>|Listing<String>`
+      // without checking both index 0 and index 1).
+      var shouldEagerCheck = shouldEagerCheck();
+      for (var i = 0; loopConditionProfile.inject(i < elementTypeNodes.length); i++) {
+        var elementTypeNode = elementTypeNodes[i];
+        try {
+          var result =
+              shouldEagerCheck
+                  ? elementTypeNode.executeEagerly(materializedFrame, value)
+                  : elementTypeNode.executeLazily(materializedFrame, value);
+          localContext.setInTypeTest(wasInTypeTest);
+          return result;
+        } catch (VmTypeMismatchException e) {
+          typeMismatches[i] = e;
         }
       }
 
-      throw new VmTypeMismatchException.Union(sourceSection, value, this, typeMismatches);
+      throw computeLazyUnionMismatch(
+          materializedFrame, value, typeMismatches, shouldEagerCheck, localContext, wasInTypeTest);
+    }
+
+    @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      // escape analysis should remove this allocation in compiled code
+      var typeMismatches = new VmTypeMismatchException[elementTypeNodes.length];
+      var materializedFrame = frame.materialize();
+
+      // disallow power assertions from triggering in case one union member checks successfully
+      var localContext = VmLanguage.get(this).localContext.get();
+      var wasInTypeTest = localContext.isInTypeTest();
+      localContext.setInTypeTest(true);
+
+      for (var i = 0; loopConditionProfile.inject(i < elementTypeNodes.length); i++) {
+        // eager checks
+        try {
+          var result = elementTypeNodes[i].executeEagerly(materializedFrame, value);
+          localContext.setInTypeTest(wasInTypeTest);
+          return result;
+        } catch (VmTypeMismatchException e) {
+          typeMismatches[i] = e;
+        }
+      }
+
+      throw computeEagerUnionMismatch(
+          materializedFrame, value, typeMismatches, localContext, wasInTypeTest);
     }
   }
 
@@ -1001,8 +1130,8 @@ public abstract class TypeNode extends PklNode {
         SourceSection sourceSection, int defaultIndex, Set<String> stringLiterals) {
       super(sourceSection);
       assert !stringLiterals.isEmpty();
-      this.stringLiterals = stringLiterals;
       this.defaultIndex = defaultIndex;
+      this.stringLiterals = stringLiterals;
       if (defaultIndex == -1) {
         unionDefault = null;
       } else {
@@ -1053,6 +1182,14 @@ public abstract class TypeNode extends PklNode {
         SourceSection headerSection,
         String qualifiedName) {
       return unionDefault;
+    }
+
+    public int getDefaultIndex() {
+      return defaultIndex;
+    }
+
+    public Set<String> getStringLiterals() {
+      return stringLiterals;
     }
   }
 
@@ -1207,7 +1344,6 @@ public abstract class TypeNode extends PklNode {
 
     @SuppressWarnings("DuplicatedCode")
     @Override
-    @ExplodeLoop
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (!(value instanceof VmList vmList)) {
         throw typeMismatch(value, BaseModule.getListClass());
@@ -1493,7 +1629,10 @@ public abstract class TypeNode extends PklNode {
     private final VmLanguage language;
     @Child protected @Nullable TypeNode keyTypeNode;
     @Child protected TypeNode valueTypeNode;
-    @Child @Nullable protected ListingOrMappingTypeCastNode valueTypeCastNode;
+    // Not a @Child: a RootNode must never be adopted as a child (it always has a null parent).
+    // It is only ever invoked indirectly, via an IndirectCallNode held by the VmListing/VmMapping
+    // values this type node produces (see ElementOrEntryNode).
+    @Nullable protected ListingOrMappingTypeCastNode valueTypeCastNode;
 
     protected ListingOrMappingTypeNode(
         SourceSection sourceSection,
@@ -1521,9 +1660,14 @@ public abstract class TypeNode extends PklNode {
     protected ListingOrMappingTypeCastNode getValueTypeCastNode(FrameDescriptor descriptor) {
       if (valueTypeCastNode == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
+        // `valueTypeNode` is already an adopted @Child of `this`, and is also executed directly
+        // by `this` (see executeEagerly()/executeLazily() below). It must not be reused as a
+        // @Child of a second, unrelated root node -- a node can only ever have one parent, and
+        // doing so corrupts `valueTypeNode.getRootNode()`, which breaks the compiler's ability to
+        // constant-fold context/language lookups reached through it.
         valueTypeCastNode =
             new ListingOrMappingTypeCastNode(
-                language, descriptor, valueTypeNode, getRootNode().getName());
+                language, descriptor, (TypeNode) valueTypeNode.deepCopy(), getRootNode().getName());
       }
       return valueTypeCastNode;
     }
@@ -1656,10 +1800,7 @@ public abstract class TypeNode extends PklNode {
             try {
               keyTypeNode.executeEagerly(frame, memberKey);
             } catch (VmTypeMismatchException e) {
-              CompilerDirectives.transferToInterpreter();
-              e.putInsertedStackFrame(
-                  getRootNode().getCallTarget(),
-                  VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
+              putStackFrame(member, e);
               throw e;
             }
           }
@@ -1680,6 +1821,13 @@ public abstract class TypeNode extends PklNode {
       }
 
       LoopNode.reportLoopCount(this, loopCount);
+    }
+
+    @TruffleBoundary
+    private void putStackFrame(ObjectMember member, VmTypeMismatchException e) {
+      e.putInsertedStackFrame(
+          getRootNode().getCallTarget(),
+          VmUtils.createStackFrame(member.getHeaderSection(), member.getQualifiedName()));
     }
   }
 
@@ -2057,7 +2205,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmNull) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
         throw constraintException(value, BaseModule.getNonNullTypeAlias().getConstraintSection());
       }
       return value;
@@ -2095,7 +2242,6 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if ((l & mask) == l) return value;
 
-        CompilerDirectives.transferToInterpreterAndInvalidate();
         var sourceSection = typeAlias.getConstraintSection();
         throw constraintException(value, sourceSection);
       }
@@ -2136,7 +2282,6 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.byteValue()) return value;
 
-        CompilerDirectives.transferToInterpreterAndInvalidate();
         var sourceSection = BaseModule.getInt8TypeAlias().getConstraintSection();
         throw constraintException(value, sourceSection);
       }
@@ -2171,7 +2316,6 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.shortValue()) return value;
 
-        CompilerDirectives.transferToInterpreterAndInvalidate();
         var sourceSection = BaseModule.getInt16TypeAlias().getConstraintSection();
         throw constraintException(value, sourceSection);
       }
@@ -2206,11 +2350,9 @@ public abstract class TypeNode extends PklNode {
       if (value instanceof Long l) {
         if (l == l.intValue()) return value;
 
-        CompilerDirectives.transferToInterpreterAndInvalidate();
         throw constraintException(value, BaseModule.getInt32TypeAlias().getConstraintSection());
       }
 
-      CompilerDirectives.transferToInterpreterAndInvalidate();
       throw new VmTypeMismatchException.Simple(
           BaseModule.getInt32TypeAlias().getBaseTypeSection(), value, BaseModule.getIntClass());
     }
@@ -2347,6 +2489,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this) && aliasedTypeNode.acceptTypeNode(visitTypeArguments, consumer);
+    }
+
+    public TypeNode getAliasedTypeNode() {
+      return aliasedTypeNode;
     }
   }
 
@@ -2696,12 +2842,10 @@ public abstract class TypeNode extends PklNode {
 
       // clazz will be null iff the type arg is a not a valid class type
       if (clazz == null) {
-        CompilerDirectives.transferToInterpreter();
         throw new VmTypeMismatchException.ClassType(sourceSection, value, getType());
       }
 
       if (!value.isSubclassOf(clazz)) {
-        CompilerDirectives.transferToInterpreter();
         throw new VmTypeMismatchException.ClassType(sourceSection, value, clazz);
       }
 

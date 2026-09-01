@@ -19,7 +19,9 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.LinkedHashSet;
 import java.util.Set;
+import org.pkl.core.PklBugException;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
@@ -366,6 +368,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
   public static final class Union extends UnresolvedTypeNode {
     @Children private final UnresolvedTypeNode[] unresolvedElementTypeNodes;
     private final int defaultIndex;
+    private static final int MAX_EXPLODE_LOOP = 20;
 
     public Union(
         SourceSection sourceSection, int defaultIndex, UnresolvedTypeNode[] elementTypeNodes) {
@@ -380,13 +383,70 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       var elementTypeNodes = new TypeNode[unresolvedElementTypeNodes.length];
+      var isUnionOfStringLiterals = true;
 
       for (var i = 0; i < elementTypeNodes.length; i++) {
         var elementTypeNode = unresolvedElementTypeNodes[i].execute(frame);
+        if (!isStringOrUnionOfStringLiterals(elementTypeNode)) {
+          isUnionOfStringLiterals = false;
+        }
         elementTypeNodes[i] = elementTypeNode;
       }
+      if (isUnionOfStringLiterals) {
+        return unionOfStringLiterals(elementTypeNodes);
+      }
 
-      return new UnionTypeNode(sourceSection, defaultIndex, elementTypeNodes);
+      // Don't use `@ExplodeLoop` variant of union type of union is too large;
+      // this can easily turn into too many IR nodes; the compiler will spend too much time
+      // compiling these code paths.
+      //
+      // This is especially true for typealiases of unions, because they get inlined into their
+      // usage sites.
+      return elementTypeNodes.length > MAX_EXPLODE_LOOP
+          ? new UnionTypeNodeLooped(sourceSection, defaultIndex, elementTypeNodes)
+          : new UnionTypeNodeExploded(sourceSection, defaultIndex, elementTypeNodes);
+    }
+
+    private boolean isStringOrUnionOfStringLiterals(TypeNode typeNode) {
+      return typeNode instanceof StringLiteralTypeNode
+          || typeNode instanceof UnionOfStringLiteralsTypeNode
+          || typeNode instanceof TypeAliasTypeNode typeAliasTypeNode
+              && isStringOrUnionOfStringLiterals(typeAliasTypeNode.getAliasedTypeNode());
+    }
+
+    /**
+     * Adds {@code typeNode}'s string literals to {@code literals}, and returns the corresponding
+     * default index.
+     */
+    private int collectStringLiteralAndGetDefaultIndex(TypeNode typeNode, Set<String> literals) {
+      if (typeNode instanceof StringLiteralTypeNode stringTypeNode) {
+        literals.add(stringTypeNode.getLiteral());
+        return 0;
+      }
+      if (typeNode instanceof UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
+        literals.addAll(unionOfStringLiteralsTypeNode.getStringLiterals());
+        return unionOfStringLiteralsTypeNode.getDefaultIndex();
+      }
+      if (typeNode instanceof TypeAliasTypeNode typeAliasTypeNode) {
+        return collectStringLiteralAndGetDefaultIndex(
+            typeAliasTypeNode.getAliasedTypeNode(), literals);
+      }
+      throw PklBugException.unreachableCode();
+    }
+
+    private TypeNode unionOfStringLiterals(TypeNode[] elementTypeNodes) {
+      var stringLiterals = new LinkedHashSet<String>(elementTypeNodes.length);
+      var computedDefaultIdx = -1;
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        var offsetBeforeElement = stringLiterals.size();
+        var elementDefaultIdx =
+            collectStringLiteralAndGetDefaultIndex(elementTypeNodes[i], stringLiterals);
+        if (i == defaultIndex) {
+          computedDefaultIdx =
+              elementDefaultIdx == -1 ? -1 : offsetBeforeElement + elementDefaultIdx;
+        }
+      }
+      return new UnionOfStringLiteralsTypeNode(sourceSection, computedDefaultIdx, stringLiterals);
     }
   }
 
