@@ -417,6 +417,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           var message =
               scope.isPropertyScope() ? "invalidModuleTypeInProperty" : "invalidModuleTypeInMethod";
           errorMessage = ErrorMessages.create(message, scope.getQualifiedName());
+          break;
         }
       }
     }

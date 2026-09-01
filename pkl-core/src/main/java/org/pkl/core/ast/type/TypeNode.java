@@ -455,10 +455,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean doIsEquivalentTo(TypeNode other) {
-      if (!(other instanceof FinalSelfTypeNode finalModuleTypeNode)) {
+      if (!(other instanceof FinalSelfTypeNode finalSelfTypeNode)) {
         return false;
       }
-      return clazz.equals(finalModuleTypeNode.clazz);
+      return clazz.equals(finalSelfTypeNode.clazz);
     }
 
     @Override
@@ -539,10 +539,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean doIsEquivalentTo(TypeNode other) {
-      if (!(other instanceof NonFinalSelfTypeNode nonFinalModuleTypeNode)) {
+      if (!(other instanceof NonFinalSelfTypeNode nonFinalSelfTypeNode)) {
         return false;
       }
-      return clazz.equals(nonFinalModuleTypeNode.clazz);
+      return clazz.equals(nonFinalSelfTypeNode.clazz);
     }
 
     @Override
@@ -2208,30 +2208,35 @@ public abstract class TypeNode extends PklNode {
         return value;
       }
 
-      var referentType = referentTypeNode.doExport();
-      var domainType = domainTypeNode.doExport();
       try {
         domainTypeNode.execute(frame, value.getDomain());
       } catch (VmTypeMismatchException e) {
         CompilerDirectives.transferToInterpreter();
-        throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+        throw new VmTypeMismatchException.Reference(
+            sourceSection, value, domainTypeNode.doExport(), referentTypeNode.doExport());
       }
 
       // NB: this is correct because the `this` type is not allowed in typealias bodies.
       // So `this` can only correspond to the receiver where the type check/annotation is written.
-      var thisClass = ((VmClass) getReceiverClassNode.executeGeneric(frame)).export();
+      var thisClass = ((VmClass) getReceiverClassNode.executeGeneric(frame));
 
       // NB: This will be wrong for deprecated usage of the `module` type in typealias bodies.
       // It will always resolve to the module where the type check/annotation is written
       // not the type itself. This is no _more_ broken than it was before.
-      var moduleClass = VmUtils.getClass(getModuleNode.executeGeneric(frame)).export();
+      var moduleClass = VmUtils.getClass(getModuleNode.executeGeneric(frame));
 
-      if (value.referentTypeIsSubtypeOf(referentType, thisClass, moduleClass)) {
+      return doEval(value, thisClass, moduleClass);
+    }
+
+    @TruffleBoundary
+    private Object doEval(VmReference value, VmClass thisClass, VmClass moduleClass) {
+      var referentType = referentTypeNode.doExport();
+      if (value.referentTypeIsSubtypeOf(referentType, thisClass.export(), moduleClass.export())) {
         return value;
       }
 
-      CompilerDirectives.transferToInterpreter();
-      throw new VmTypeMismatchException.Reference(sourceSection, value, domainType, referentType);
+      throw new VmTypeMismatchException.Reference(
+          sourceSection, value, domainTypeNode.doExport(), referentType);
     }
 
     @Fallback
