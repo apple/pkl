@@ -24,7 +24,7 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 
 public final class CheckIsAnnotationClassNode extends ExpressionNode {
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
   @Child private @Nullable TypeNode typeNode;
 
   public CheckIsAnnotationClassNode(UnresolvedTypeNode unresolvedTypeNode) {
@@ -37,6 +37,7 @@ public final class CheckIsAnnotationClassNode extends ExpressionNode {
     if (typeNode == null) {
       // invalidation is done by insert()
       CompilerDirectives.transferToInterpreter();
+      assert unresolvedTypeNode != null;
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }

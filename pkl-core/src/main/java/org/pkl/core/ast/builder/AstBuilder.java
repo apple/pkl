@@ -2224,17 +2224,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     var bodyCtx = annotation.getBody();
     if (bodyCtx == null) {
-      var currentScope = symbolTable.getCurrentScope();
-      //noinspection ConstantConditions
-      return PropertiesLiteralNodeGen.create(
-          createSourceSection(annotation),
-          language,
-          currentScope.getQualifiedName(),
-          currentScope.isCustomThisScope(),
-          null,
-          new UnresolvedTypeNode[0],
-          EconomicMaps.create(),
-          verifyNode);
+      return EmptyObjectLiteralNodeGen.create(createSourceSection(annotation), verifyNode);
     }
 
     return symbolTable.enterAnnotationScope(
