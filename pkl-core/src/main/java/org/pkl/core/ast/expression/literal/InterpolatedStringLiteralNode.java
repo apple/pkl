@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.literal;
 
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo;
@@ -36,6 +37,7 @@ public final class InterpolatedStringLiteralNode extends ExpressionNode {
   public String executeGeneric(VirtualFrame frame) {
     var builder = VmUtils.createBuilder();
     for (var part : parts) {
+      TruffleSafepoint.poll(this);
       VmUtils.appendToBuilder(builder, (String) part.executeGeneric(frame));
     }
     return VmUtils.builderToString(builder);

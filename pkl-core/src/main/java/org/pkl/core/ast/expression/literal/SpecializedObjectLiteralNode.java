@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.literal;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -230,6 +231,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
     for (var i = 0; i < keyNodes.length; i++) {
       long index;
       try {
+        TruffleSafepoint.poll(this);
         index = keyNodes[i].executeInt(frame);
       } catch (UnexpectedResultException e) {
         CompilerDirectives.transferToInterpreter();

@@ -16,6 +16,7 @@
 package org.pkl.cli
 
 import org.pkl.commons.cli.CliBaseOptions
+import org.pkl.core.ProfilerOptions
 
 /** Configuration options for [CliEvaluator]. */
 data class CliEvaluatorOptions(
@@ -77,6 +78,13 @@ data class CliEvaluatorOptions(
    * If unset, the module's `output.bytes` property is evaluated.
    */
   val expression: String? = null,
+
+  /**
+   * CPU/Memory profiling options.
+   *
+   * WARN: This is an internal option only. Profiling is currently only supported via CLI flags.
+   */
+  val profilerOptions: ProfilerOptions = ProfilerOptions.DEFAULT,
 ) {
 
   companion object {

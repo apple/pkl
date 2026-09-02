@@ -16,6 +16,7 @@
 package org.pkl.cli.commands
 
 import com.github.ajalt.clikt.completion.CompletionCandidates
+import com.github.ajalt.clikt.parameters.groups.provideDelegate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
@@ -23,6 +24,7 @@ import com.github.ajalt.clikt.parameters.options.validate
 import org.pkl.cli.CliEvaluator
 import org.pkl.cli.CliEvaluatorOptions
 import org.pkl.commons.cli.commands.ModulesCommand
+import org.pkl.commons.cli.commands.ProfileOptions
 import org.pkl.commons.cli.commands.single
 
 class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
@@ -81,6 +83,8 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
       )
       .flag("--no-power-assertions", default = true, defaultForHelp = "enabled")
 
+  val profileOptions: ProfileOptions by ProfileOptions()
+
   override fun run() {
     val options =
       CliEvaluatorOptions(
@@ -96,6 +100,7 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
         moduleOutputSeparator = moduleOutputSeparator,
         multipleFileOutputPath = multipleFileOutputPath,
         expression = expression ?: CliEvaluatorOptions.defaults.expression,
+        profilerOptions = profileOptions.toOptions(),
       )
     CliEvaluator(options).run()
   }

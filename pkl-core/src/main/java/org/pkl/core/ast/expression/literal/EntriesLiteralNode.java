@@ -17,6 +17,7 @@ package org.pkl.core.ast.expression.literal;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.*;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -162,6 +163,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
     EconomicMaps.putAll(result, members);
 
     for (var i = 0; i < keyNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       var key = keyNodes[i].executeGeneric(frame);
       var value = values[i];
       var previousValue = EconomicMaps.put(result, key, value);

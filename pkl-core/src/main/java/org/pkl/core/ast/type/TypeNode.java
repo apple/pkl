@@ -18,6 +18,7 @@ package org.pkl.core.ast.type;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -1272,6 +1273,7 @@ public abstract class TypeNode extends PklNode {
       var idx = 0;
 
       for (var elem : value) {
+        TruffleSafepoint.poll(this);
         var result = elementTypeNode.executeLazily(frame, elem);
         if (result != elem) {
           ret = ret.replace(idx, result);
@@ -1285,6 +1287,7 @@ public abstract class TypeNode extends PklNode {
 
     private Object evalListEagerly(VirtualFrame frame, VmList value) {
       for (var elem : value) {
+        TruffleSafepoint.poll(this);
         elementTypeNode.executeEagerly(frame, elem);
       }
 
@@ -1294,6 +1297,7 @@ public abstract class TypeNode extends PklNode {
 
     private Object evalSet(VirtualFrame frame, VmSet value) {
       for (var elem : value) {
+        TruffleSafepoint.poll(this);
         elementTypeNode.executeEagerly(frame, elem);
       }
 
@@ -1360,6 +1364,7 @@ public abstract class TypeNode extends PklNode {
       if (elementTypeNode.isNoopTypeCheck()) return vmList;
 
       for (var elem : vmList) {
+        TruffleSafepoint.poll(this);
         elementTypeNode.executeEagerly(frame, elem);
       }
 
@@ -1379,6 +1384,7 @@ public abstract class TypeNode extends PklNode {
       var idx = 0;
 
       for (var elem : vmList) {
+        TruffleSafepoint.poll(this);
         var result = elementTypeNode.executeLazily(frame, elem);
         if (result != elem) {
           ret = ret.replace(idx, result);
@@ -1461,6 +1467,7 @@ public abstract class TypeNode extends PklNode {
     protected Object eval(VirtualFrame frame, VmSet value) {
       if (elementTypeNode.isNoopTypeCheck()) return value;
       for (var elem : value) {
+        TruffleSafepoint.poll(this);
         // no point doing a lazy check because set members have their hash code computed, which
         // necessarily deep-forces them.
         elementTypeNode.executeEagerly(frame, elem);
@@ -1494,6 +1501,7 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (value instanceof VmMap vmMap) {
+        TruffleSafepoint.poll(this);
         return eval(frame, vmMap);
       }
       throw typeMismatch(value, BaseModule.getMapClass());
@@ -1502,6 +1510,7 @@ public abstract class TypeNode extends PklNode {
     @Override
     public Object executeEagerly(VirtualFrame frame, Object value) {
       if (value instanceof VmMap vmMap) {
+        TruffleSafepoint.poll(this);
         return evalEager(frame, vmMap);
       }
       throw typeMismatch(value, BaseModule.getMapClass());
@@ -1893,6 +1902,7 @@ public abstract class TypeNode extends PklNode {
       for (var owner = object; owner != null; owner = owner.getParent()) {
         var cursor = EconomicMaps.getEntries(owner.getMembers());
         while (cursor.advance()) {
+          TruffleSafepoint.poll(this);
           loopCount += 1;
           var member = cursor.getValue();
           if (member.isProp()) continue;

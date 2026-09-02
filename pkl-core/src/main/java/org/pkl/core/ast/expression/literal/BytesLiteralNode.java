@@ -16,6 +16,7 @@
 package org.pkl.core.ast.expression.literal;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.NodeInfo;
@@ -55,6 +56,7 @@ public final class BytesLiteralNode extends ExpressionNode {
     for (var i = 0; i < elements.length; i++) {
       var elem = elements[i];
       try {
+        TruffleSafepoint.poll(this);
         var result = (Long) typeNode.execute(frame, elem.executeGeneric(frame));
         bytes[i] = result.byteValue();
       } catch (VmTypeMismatchException err) {

@@ -145,7 +145,7 @@ public final class ClassNode extends ExpressionNode {
       // which is guaranteed to succeed (no impact on eager vs. lazy error reporting) and easy to
       // defer.
 
-      VmUtils.evaluateAnnotations(frame, annotationNodes, annotations);
+      VmUtils.evaluateAnnotations(frame, this, annotationNodes, annotations);
 
       for (var node : unresolvedPropertyNodes) {
         cachedClass.addProperty(node.execute(frame, cachedClass));

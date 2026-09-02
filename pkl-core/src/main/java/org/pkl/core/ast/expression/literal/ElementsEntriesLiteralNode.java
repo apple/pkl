@@ -160,6 +160,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
     addListEntries(frame, parentLength, result, keyNodes, values);
 
     for (var i = 0; i < elements.length; i++) {
+      // intentionally no `TruffleSafePoint.poll()` here; no truffle node execution happening
       EconomicMaps.put(result, (long) (parentLength + i), elements[i]);
     }
 

@@ -17,6 +17,7 @@ package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.RootCallTarget;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -92,6 +93,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     args[0] = receiver.getThisValue();
     args[1] = receiver;
     for (var i = 0; i < argumentNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
@@ -111,6 +113,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     args[0] = receiver.getThisValue();
     args[1] = receiver;
     for (var i = 0; i < argumentNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
@@ -131,6 +134,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     args[0] = receiver;
     args[1] = method.getOwner();
     for (var i = 0; i < argumentNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 
@@ -150,6 +154,7 @@ public abstract class InvokeMethodVirtualNode extends ExpressionNode {
     args[0] = receiver;
     args[1] = method.getOwner();
     for (var i = 0; i < argumentNodes.length; i++) {
+      TruffleSafepoint.poll(this);
       args[2 + i] = argumentNodes[i].executeGeneric(frame);
     }
 

@@ -158,7 +158,7 @@ public final class UnresolvedPropertyNode extends UnresolvedClassMemberNode {
   public ClassProperty execute(VirtualFrame frame, VmClass clazz) {
     CompilerDirectives.transferToInterpreter();
 
-    var annotations = VmUtils.evaluateAnnotations(frame, annotationNodes);
+    var annotations = VmUtils.evaluateAnnotations(frame, this, annotationNodes);
 
     var typeNode =
         unresolvedTypeNode == null
