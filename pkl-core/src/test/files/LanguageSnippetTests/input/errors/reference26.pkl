@@ -4,6 +4,6 @@ class D extends ref.Domain {
   function renderReference(_): String = throw("not implemented")
 }
 
-local myRef = ref.Reference(new D {}, Listing, null)
+local myRef = ref.Reference::<D, Listing>(new D {}, null)
 
 res = myRef.name

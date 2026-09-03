@@ -31,25 +31,13 @@
 @Since { version = "0.32.0" }
 module pkl.ref
 
-/// Creates a deferred [Reference] to a value of type [`class`] in the given [domain] and [data].
-///
-/// References may only be constructed for single, non-generic class types.
-/// To create a reference to other types (generic classes, union, nullable, constrained,
-/// typealiases, etc.), use a wrapper class with a property of the desired type.
+/// Creates a deferred [Reference] to a value of type [T] in the given [domain] and [data].
 ///
 /// Example:
 /// ```
-/// myReference: Reference<MyDomain, Listing<String>> = Reference(domain, Holder, data).$
-///
-/// class Holder {
-///   $: Listing<String>
-/// }
+/// myReference: Reference<MyDomain, Listing<String>> = Reference<MyDomain, Listing<String>>(domain, data)
 /// ```
-external const function Reference<D, T>(
-  domain: D(this is Domain),
-  `class`: Class<T>,
-  data: Any,
-): Reference<D, T>
+external const function Reference<D, T>(domain: D(this is Domain), data: Any): Reference<D, T>
 
 /// References are an advanced API design tool that enables library authors to express
 /// domain-specific values, whose actual underlying values are not known to Pkl during evaluation.

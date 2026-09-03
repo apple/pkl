@@ -9,7 +9,7 @@ class D extends ref.Domain {
 }
 local d: D = new {}
 
-local test = ref.Reference(d, A, "").foo
+local test = ref.Reference::<D, A>(d, "").foo
 testInterpolation = "test:\(test)"
 
 // this tests that the interpolation appears in the output when renderReference throws

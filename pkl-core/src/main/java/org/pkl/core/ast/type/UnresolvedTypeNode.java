@@ -22,7 +22,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
 import org.pkl.core.PklBugException;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
@@ -498,15 +497,15 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   public static final class TypeVariable extends UnresolvedTypeNode {
-    private final TypeParameter typeParameter;
+    private final VmTypeParameter typeParameter;
 
-    public TypeVariable(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariable(SourceSection sourceSection, VmTypeParameter typeParameter) {
       super(sourceSection);
       this.typeParameter = typeParameter;
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public VmTypeParameter getTypeParameter() {
+      return typeParameter;
     }
 
     @Override
