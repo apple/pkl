@@ -15,21 +15,19 @@
  */
 package org.pkl.core.ast.member;
 
-import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.runtime.VmObjectLike;
 
 public interface Method {
-  CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner);
+  FunctionNode getFunctionNode(@Nullable SourceSection callSite);
 
-  @Nullable TypeNode getParameterTypeNode(VirtualFrame frame, int idx);
-
-  @Nullable TypeNode getReturnTypeNode(VirtualFrame frame);
+  default FunctionNode getFunctionNode() {
+    return getFunctionNode(null);
+  }
 
   SourceSection getHeaderSection();
 
   String getQualifiedName();
+
+  boolean isChildOf(Method other);
 }
