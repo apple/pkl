@@ -116,7 +116,7 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static MaterializedFrame createEmptyMaterializedFrame() {
-    return Truffle.getRuntime().createMaterializedFrame(new @Nullable Object[] {null, null});
+    return Truffle.getRuntime().createMaterializedFrame(new @Nullable Object[] {null, null, null});
   }
 
   public static Context createContext(Runnable initializer) {

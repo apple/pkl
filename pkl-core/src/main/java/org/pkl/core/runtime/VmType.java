@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import java.util.Arrays;
 import java.util.List;
 import java.util.function.Function;
@@ -25,8 +26,9 @@ import org.pkl.core.PType.Constrained;
 import org.pkl.core.PType.StringLiteral;
 import org.pkl.core.PType.TypeVariable;
 import org.pkl.core.PType.Union;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ValueFormatter;
+import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.member.Method;
 
 public abstract sealed class VmType {
 
@@ -73,6 +75,15 @@ public abstract sealed class VmType {
         || (other instanceof ConstrainedType ct && isSupertypeOf(ct.baseType));
   }
 
+  /**
+   * Where possible, substitute types for their "real" type. Self types become {@link ClassType}.
+   * Where possible, {@link TypeVariableType} instances are replaced with the corresponding type
+   * argument type.
+   *
+   * <p>Contract: when no substitutions were made, returns the identical type (same object).
+   */
+  public abstract VmType reify(VirtualFrame frame);
+
   public static final class UnknownType extends VmType {
     public static final UnknownType INSTANCE = new UnknownType();
 
@@ -98,6 +109,11 @@ public abstract sealed class VmType {
     @Override
     public String toString() {
       return "unknown";
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      return this;
     }
   }
 
@@ -126,6 +142,11 @@ public abstract sealed class VmType {
     @Override
     public String toString() {
       return "nothing";
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      return this;
     }
   }
 
@@ -165,6 +186,11 @@ public abstract sealed class VmType {
     @Override
     public int hashCode() {
       return 31 * literal.hashCode();
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      return this;
     }
   }
 
@@ -340,6 +366,18 @@ public abstract sealed class VmType {
       return appendTypeArguments(new StringBuilder(clazz.getDisplayName()), typeArguments)
           .toString();
     }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      var typeArgs = new VmType[typeArguments.length];
+      var changed = false;
+      for (var i = 0; i < typeArgs.length; i++) {
+        typeArgs[i] = typeArguments[i].reify(frame);
+        changed = changed || typeArguments[i] != typeArgs[i];
+      }
+
+      return changed ? new ClassType(clazz, typeArgs) : this;
+    }
   }
 
   public static final class FinalModuleType extends AbstractClassType {
@@ -356,6 +394,11 @@ public abstract sealed class VmType {
     public String toString() {
       return "module";
     }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      return this;
+    }
   }
 
   public static final class FinalThisType extends AbstractClassType {
@@ -371,6 +414,11 @@ public abstract sealed class VmType {
     @Override
     public String toString() {
       return "this";
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      return this;
     }
   }
 
@@ -416,6 +464,14 @@ public abstract sealed class VmType {
     public String toString() {
       return "module";
     }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      var levelsUp = GetModuleNode.getLevelsUp(frame);
+      return new ClassType(
+          VmUtils.getClass(
+              levelsUp == 0 ? VmUtils.getReceiver(frame) : VmUtils.getReceiver(frame, levelsUp)));
+    }
   }
 
   public static final class NonFinalThisType extends NonFinalSelfType {
@@ -431,6 +487,11 @@ public abstract sealed class VmType {
     @Override
     public String toString() {
       return "this";
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      return new ClassType(VmUtils.getClass(VmUtils.getReceiver(frame)));
     }
   }
 
@@ -472,6 +533,12 @@ public abstract sealed class VmType {
     @Override
     public int hashCode() {
       return 31 * elementType.hashCode();
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      var elem = elementType.reify(frame);
+      return elem == elementType ? this : new NullableType(elem);
     }
   }
 
@@ -522,6 +589,12 @@ public abstract sealed class VmType {
     public int hashCode() {
       return 31 * identity;
     }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      var base = baseType.reify(frame);
+      return base == baseType ? this : new ConstrainedType(base, constraints, identity);
+    }
   }
 
   public static final class AliasType extends VmType {
@@ -551,6 +624,18 @@ public abstract sealed class VmType {
       this.typeAlias = typeAlias;
       this.typeArguments = typeArguments;
       this.clazz = aliasedType.getVmClass();
+      this.aliasedType = aliasedType;
+    }
+
+    /** For reification */
+    private AliasType(
+        VmTypeAlias typeAlias,
+        @Nullable VmClass clazz,
+        VmType[] typeArguments,
+        VmType aliasedType) {
+      this.typeAlias = typeAlias;
+      this.typeArguments = typeArguments;
+      this.clazz = clazz;
       this.aliasedType = aliasedType;
     }
 
@@ -617,6 +702,14 @@ public abstract sealed class VmType {
     @Override
     public int hashCode() {
       return aliasedType.hashCode();
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      var aliased = aliasedType.reify(frame);
+      return aliased == aliasedType
+          ? this
+          : new AliasType(typeAlias, clazz, typeArguments, aliased);
     }
   }
 
@@ -692,16 +785,28 @@ public abstract sealed class VmType {
       }
       return true;
     }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      var elems = new VmType[elementTypes.length];
+      var changed = false;
+      for (var i = 0; i < elems.length; i++) {
+        elems[i] = elementTypes[i].reify(frame);
+        changed = changed || elementTypes[i] != elems[i];
+      }
+
+      return changed ? new UnionType(defaultIndex, elems) : this;
+    }
   }
 
   public static final class TypeVariableType extends VmType {
-    private final TypeParameter typeParameter;
+    private final VmTypeParameter typeParameter;
 
-    public TypeVariableType(TypeParameter typeParameter) {
+    public TypeVariableType(VmTypeParameter typeParameter) {
       this.typeParameter = typeParameter;
     }
 
-    public TypeParameter getTypeParameter() {
+    public VmTypeParameter getTypeParameter() {
       return typeParameter;
     }
 
@@ -717,7 +822,7 @@ public abstract sealed class VmType {
 
     @Override
     public PType export() {
-      return new TypeVariable(typeParameter);
+      return new TypeVariable(typeParameter.export());
     }
 
     @Override
@@ -728,6 +833,17 @@ public abstract sealed class VmType {
     @Override
     public int hashCode() {
       return -318019;
+    }
+
+    @Override
+    public VmType reify(VirtualFrame frame) {
+      if (typeParameter.getOwner() instanceof Method && frame.getArguments()[2] != null) {
+        var methodTypeArgs = (VmTypeArgument[]) frame.getArguments()[2];
+        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+        return typeArg.resolveType();
+      }
+
+      return this;
     }
   }
 

@@ -9,4 +9,4 @@ class D extends ref.Domain {
 }
 local d: D = new {}
 
-test = ref.Reference(d, ModuleSubclass, "").output
+test = ref.Reference::<D, ModuleSubclass>(d, "").output

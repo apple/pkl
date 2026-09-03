@@ -6,4 +6,4 @@ class D extends ref.Domain {
 local d: D = new {}
 typealias Ref<T> = ref.Reference<D, T>
 
-test = ref.Reference(d, List, List())["hi"]
+test = ref.Reference::<D, List>(d, List())["hi"]

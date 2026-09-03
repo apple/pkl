@@ -17,23 +17,31 @@ package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmUtils;
 
-public abstract sealed class AbstractInvokeLexicalMethodNode
-    extends AbstractInvokeLexicalOrQualifiedMethodNode
-    permits InvokeLexicalClassMethodNode, InvokeLexicalObjectMethodNode {
+public abstract class AbstractInvokeLexicalMethodNode
+    extends AbstractInvokeLexicalOrQualifiedMethodNode {
   private final int levelsUp;
 
   public AbstractInvokeLexicalMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       int methodSlot) {
-    super(sourceSection, methodName, argumentNodes, needsConst, methodSlot);
+    super(
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        needsConst,
+        methodSlot);
     this.levelsUp = levelsUp;
   }
 

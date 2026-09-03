@@ -17,7 +17,9 @@ package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmTyped;
 
@@ -29,11 +31,18 @@ public abstract sealed class AbstractInvokeQualifiedMethodNode
   protected AbstractInvokeQualifiedMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       ExpressionNode getReceiverNode,
       int methodSlot) {
-    super(sourceSection, methodName, argumentNodes, needsConst, methodSlot);
+    super(
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        needsConst,
+        methodSlot);
     this.getReceiverNode = getReceiverNode;
   }
 
