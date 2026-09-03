@@ -87,6 +87,7 @@ public final class AmendFunctionNode extends PklNode {
               parameterTypeNodes,
               null,
               true,
+              0,
               new AmendFunctionBodyNode(
                   sourceSection,
                   hostNode.copy(

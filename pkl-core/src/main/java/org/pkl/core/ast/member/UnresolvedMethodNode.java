@@ -21,7 +21,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
@@ -29,7 +28,7 @@ import org.pkl.core.runtime.*;
 
 public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
   private final int parameterCount;
-  private final List<TypeParameter> typeParameters;
+  private final List<VmTypeParameter> typeParameters;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
   private final boolean isReturnTypeChecked;
@@ -46,7 +45,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
       Identifier name,
       String qualifiedName,
       int parameterCount,
-      List<TypeParameter> typeParameters,
+      List<VmTypeParameter> typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode,
       boolean isReturnTypeChecked,
@@ -124,6 +123,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
             parameterTypeNodes,
             returnTypeNode,
             isReturnTypeChecked,
+            typeParameters.size(),
             bodyNode);
 
     method.initFunctionNode(functionNode);

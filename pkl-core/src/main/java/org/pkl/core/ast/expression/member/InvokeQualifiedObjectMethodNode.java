@@ -16,10 +16,12 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMethodNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -28,11 +30,19 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
   public InvokeQualifiedObjectMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       ExpressionNode getReceiverNode,
       int methodSlot) {
-    super(sourceSection, methodName, argumentNodes, needsConst, getReceiverNode, methodSlot);
+    super(
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        needsConst,
+        getReceiverNode,
+        methodSlot);
   }
 
   @Override
@@ -50,6 +60,6 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
     assert member != null && member.isLocal();
     var method = (ObjectMethodNode) member.getMemberNode();
     assert method != null;
-    return method;
+    return method.reify(owner);
   }
 }

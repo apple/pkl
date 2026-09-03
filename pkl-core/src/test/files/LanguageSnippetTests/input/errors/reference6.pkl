@@ -10,4 +10,4 @@ class A {
   b: String
 }
 
-test = ref.Reference(d, String, new A {}).c
+test = ref.Reference::<D, String>(d, new A {}).c
