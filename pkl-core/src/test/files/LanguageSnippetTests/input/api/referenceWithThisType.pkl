@@ -22,14 +22,14 @@ open class Node2 {
 typealias R = ref.Reference<D, Node?>
 typealias R2 = ref.Reference<D, Node2?>
 
-res0: R = ref.Reference(new D {}, Node, null)
+res0: R = ref.Reference::<D, Node>(new D {}, null)
 res1: R = res0.parent
 res2: R = res0.parent.parent
 res3: R = res0.children[0]
 res4: R = res0.children[0].parent
 res5: R = res0.children[0].children[0]
 
-res0a: R2 = ref.Reference(new D {}, Node2, null)
+res0a: R2 = ref.Reference::<D, Node2>(new D {}, null)
 res1a: R2 = res0a.parent
 res2a: R2 = res0a.parent.parent
 res3a: R2 = res0a.children[0]

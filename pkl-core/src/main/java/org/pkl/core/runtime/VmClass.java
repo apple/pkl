@@ -29,7 +29,6 @@ import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
@@ -51,7 +50,7 @@ public final class VmClass extends VmValue {
   private final List<VmTyped> annotations;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<TypeParameter> typeParameters;
+  private final List<VmTypeParameter> typeParameters;
   private final VmTyped prototype;
 
   private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMaps.create();
@@ -127,7 +126,7 @@ public final class VmClass extends VmValue {
       List<VmTyped> annotations,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<TypeParameter> typeParameters,
+      List<VmTypeParameter> typeParameters,
       VmTyped prototype) {
 
     this.sourceSection = sourceSection;
@@ -137,6 +136,9 @@ public final class VmClass extends VmValue {
     this.modifiers = modifiers;
     this.classInfo = classInfo;
     this.typeParameters = typeParameters;
+    for (var parameter : typeParameters) {
+      parameter.initOwner(this);
+    }
 
     this.prototype = prototype;
     prototype.lateInitVmClass(this);
@@ -249,7 +251,7 @@ public final class VmClass extends VmValue {
     return typeParameters.size();
   }
 
-  public List<TypeParameter> getTypeParameters() {
+  public List<VmTypeParameter> getTypeParameters() {
     return typeParameters;
   }
 
@@ -723,12 +725,12 @@ public final class VmClass extends VmValue {
               VmModifier.export(modifiers, true),
               exportedAnnotations,
               classInfo,
-              typeParameters,
+              VmTypeParameter.export(typeParameters),
               properties,
               methods,
               moduleClass);
 
-      for (var parameter : typeParameters) {
+      for (var parameter : __pClass.getTypeParameters()) {
         parameter.initOwner(__pClass);
       }
 

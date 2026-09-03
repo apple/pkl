@@ -13,21 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.ast.member;
+package org.pkl.core.ast.expression.primary;
 
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.type.TypeNode;
 
-public interface Method {
-  FunctionNode getFunctionNode(@Nullable SourceSection callSite);
+public final class ExecuteTypeArgumentCheckNode extends ExpressionNode {
 
-  default FunctionNode getFunctionNode() {
-    return getFunctionNode(null);
+  @Child private TypeNode typeNode;
+
+  public ExecuteTypeArgumentCheckNode(SourceSection sourceSection, TypeNode typeNode) {
+    super(sourceSection);
+    this.typeNode = typeNode;
   }
 
-  SourceSection getHeaderSection();
+  @Override
+  public Object executeGeneric(VirtualFrame frame) {
+    return typeNode.execute(frame, frame.getArguments()[3]);
+  }
 
-  String getQualifiedName();
-
-  boolean isChildOf(Method other);
+  public TypeNode getTypeNode() {
+    return typeNode;
+  }
 }

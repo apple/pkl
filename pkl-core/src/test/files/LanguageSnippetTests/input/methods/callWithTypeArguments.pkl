@@ -1,0 +1,37 @@
+open module callWithTypeArguments
+
+import "pkl:test"
+
+directCall {
+  pair = Pair::<List<String>, Set<String>>(List("foo"), Set("bar"))
+  pairSelf = Pair::<module, module>(new module {}, new module {}).first.getClass().toString()
+  pairErr = test.catch(() -> Pair::<List<String>, Set<String>>(List(0), Set("bar")))
+  pairSelfErr = test.catch(() -> Pair::<module, module>(List(), new module {}))
+  listMap = List("hi", "foo", "a").map::<Int>((it) -> it.length)
+  listMapErr = test.catch(() -> List("hi", "foo", "a").map::<String>((it) -> it.length))
+  wrongTypeArgCount = test.catch(() -> Pair::<String, Int, Boolean> ("foo", 10))
+  nonGenericMethod = test.catch(() -> Regex::<String> ("foo"))
+}
+
+open class A {
+  function doIt<T>(arg: List): Boolean = arg.first is T
+}
+
+class B extends A {
+  function doIt<T>(arg: List): Boolean = super.doIt::<T>(arg) || super.doIt::<List<T>>(arg)
+}
+
+superCall {
+  local function doIt(a: A, arg: List): Boolean =
+    a.doIt::<String>(arg)
+
+// should be true:
+  doIt(new A {}, List(""))
+  doIt(new A {}, List(""))
+  doIt(new B {}, List(""))
+  doIt(new B {}, List(List("")))
+// should be false:
+  doIt(new A {}, List(0))
+  doIt(new A {}, List(List(0)))
+  doIt(new B {}, List(List(0)))
+}

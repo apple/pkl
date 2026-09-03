@@ -89,6 +89,7 @@ public enum Token {
   NOT,
   QUESTION,
   COLON,
+  DCOLON,
   ARROW,
   EQUAL,
   NOT_EQUAL,

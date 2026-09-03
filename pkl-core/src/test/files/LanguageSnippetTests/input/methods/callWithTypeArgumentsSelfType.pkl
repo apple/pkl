@@ -1,0 +1,55 @@
+open class A {
+  function foo<T, U, V>(val): List<Boolean> = List(val is T, val is U, val is V)
+  function a<T, U>(val): List<Boolean> = this.foo::<T, U, this>(val) 
+}
+
+open class B extends A {
+  function b1<T>(val): List<Boolean> = this.a::<T, this>(val)
+  function b2<T>(val): List<Boolean> = super.a::<T, this>(val)
+}
+
+class C extends B {
+  function c1(val): List<Boolean> = this.b1::<this>(val)
+  function c2(val): List<Boolean> = super.b1::<this>(val)
+  function c3(val): List<Boolean> = this.b2::<this>(val)
+  function c4(val): List<Boolean> = super.b2::<this>(val)
+}
+
+resAaA = new A {}.a(new A {})
+resAaB = new A {}.a(new B {})
+resAaC = new A {}.a(new C {})
+
+resBaA = new B {}.a(new A {})
+resBaB = new B {}.a(new B {})
+resBaC = new B {}.a(new C {})
+
+resBb1A = new B {}.b1(new A {})
+resBb1B = new B {}.b1(new B {})
+resBb1C = new B {}.b1(new C {})
+resBb2A = new B {}.b2(new A {})
+resBb2B = new B {}.b2(new B {})
+resBb2C = new B {}.b2(new C {})
+
+resCaA = new C {}.a(new A {})
+resCaB = new C {}.a(new B {})
+resCaC = new C {}.a(new C {})
+
+resCb1A = new C {}.b1(new A {})
+resCb1B = new C {}.b1(new B {})
+resCb1C = new C {}.b1(new C {})
+resCb2A = new C {}.b2(new A {})
+resCb2B = new C {}.b2(new B {})
+resCb2C = new C {}.b2(new C {})
+
+resCc1A = new C {}.c1(new A {})
+resCc1B = new C {}.c1(new B {})
+resCc1C = new C {}.c1(new C {})
+resCc2A = new C {}.c2(new A {})
+resCc2B = new C {}.c2(new B {})
+resCc2C = new C {}.c2(new C {})
+resCc3A = new C {}.c3(new A {})
+resCc3B = new C {}.c3(new B {})
+resCc3C = new C {}.c3(new C {})
+resCc4A = new C {}.c4(new A {})
+resCc4B = new C {}.c4(new B {})
+resCc4C = new C {}.c4(new C {})

@@ -56,12 +56,8 @@ public final class VmReference extends VmValue {
         .toTyped(RefModule.getAccessClass());
   }
 
-  public VmReference(VmTyped domain, VmClass clazz, Object data) {
-    this(
-        domain,
-        data,
-        RrbTree.empty(),
-        normalizeTypes(new VmType.ClassType(clazz), clazz, clazz.getModuleClass()));
+  public VmReference(VmTyped domain, VmType referentType, Object data) {
+    this(domain, data, RrbTree.empty(), normalizeTypes(referentType, null, null));
   }
 
   public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, VmType referentType) {
@@ -95,7 +91,8 @@ public final class VmReference extends VmValue {
   // * replace VmType.ModuleType with appropriate VmType.ClassType
   // * drop VmType.FunctionType and VmType.TypeVariableType
   @TruffleBoundary
-  private static VmType normalizeTypes(VmType type, VmClass thisClass, VmClass moduleClass) {
+  private static VmType normalizeTypes(
+      VmType type, @Nullable VmClass thisClass, @Nullable VmClass moduleClass) {
     var types = new HashSet<VmType>();
     normalizeTypes(type, thisClass, moduleClass, types);
     return minimizeTypes(types);
@@ -115,7 +112,7 @@ public final class VmReference extends VmValue {
   }
 
   private static void normalizeTypes(
-      VmType type, VmClass thisClass, VmClass moduleClass, Set<VmType> result) {
+      VmType type, @Nullable VmClass thisClass, @Nullable VmClass moduleClass, Set<VmType> result) {
     if (type == UnknownType.INSTANCE
         || type == NothingType.INSTANCE
         || type instanceof VmType.StringLiteralType) {
@@ -161,10 +158,12 @@ public final class VmReference extends VmValue {
       // 4. property access uses the enclosing receiver's class to substitute for these self types
       // only property access and typecheck can produce THIS or MODULE.
       // getCandidatePropertyType and referentTypeIsSubtypeOf always pass non-null `thisClass`.
+      assert thisClass != null;
       result.add(new VmType.ClassType(thisClass));
     } else if (type instanceof NonFinalModuleType) {
       // this can be incorrect for usage of the module type in a class's property type annotation,
       // which is deprecated!!
+      assert moduleClass != null;
       result.add(new VmType.ClassType(moduleClass));
     } else {
       // remaining types: PType.Function, PType.TypeVariable. no normalizing needed; TypeVariable
@@ -442,7 +441,7 @@ public final class VmReference extends VmValue {
     var toStringMethod = getVmClass().getDeclaredMethod(Identifier.TO_STRING);
     assert toStringMethod != null;
     var callNode = DirectCallNode.create(toStringMethod.getCallTarget());
-    return (String) callNode.call(this, getVmClass().getPrototype());
+    return (String) callNode.call(this, getVmClass().getPrototype(), null);
   }
 
   public enum VmReferenceAccessErrorType {
