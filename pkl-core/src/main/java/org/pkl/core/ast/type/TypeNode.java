@@ -40,7 +40,6 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PklBugException;
 import org.pkl.core.StackFrame;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
@@ -52,6 +51,7 @@ import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.ast.type.TypeNodeFactory.NonFinalClassTypeNodeGen;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.EconomicMaps;
@@ -404,8 +404,12 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
+  public interface SelfTypeNode {
+    TypeNode getReifiedTypeNode(VirtualFrame frame);
+  }
+
   /** The `module` or `this` type for a final module or class. */
-  public static final class FinalSelfTypeNode extends ObjectSlotTypeNode {
+  public static final class FinalSelfTypeNode extends ObjectSlotTypeNode implements SelfTypeNode {
     private final VmClass clazz;
     private final Function<VmClass, VmType> typeConstructor;
     private final VmObjectFactory<Void> mirrorFactory;
@@ -459,13 +463,20 @@ public abstract class TypeNode extends PklNode {
         String qualifiedName) {
       return TypeNode.createDefaultValue(clazz);
     }
+
+    @Override
+    public TypeNode getReifiedTypeNode(VirtualFrame frame) {
+      return new FinalClassTypeNode(sourceSection, clazz);
+    }
   }
 
   /** The `module` or `this` type for an open module or class. */
-  public static final class NonFinalSelfTypeNode extends ObjectSlotTypeNode {
+  public static final class NonFinalSelfTypeNode extends ObjectSlotTypeNode
+      implements SelfTypeNode {
     private final VmClass clazz; // only used by getVmClass()
     @Child private ExpressionNode getTargetNode;
     private final Function<VmClass, VmType> typeConstructor;
+    private final Function<VirtualFrame, VmClass> realClassResolver;
     private final VmObjectFactory<Void> mirrorFactory;
 
     private NonFinalSelfTypeNode(
@@ -473,11 +484,13 @@ public abstract class TypeNode extends PklNode {
         VmClass clazz,
         ExpressionNode getTargetNode,
         Function<VmClass, VmType> typeConstructor,
+        Function<VirtualFrame, VmClass> realClassResolver,
         VmObjectFactory<Void> mirrorFactory) {
       super(sourceSection);
       this.clazz = clazz;
       this.getTargetNode = getTargetNode;
       this.typeConstructor = typeConstructor;
+      this.realClassResolver = realClassResolver;
       this.mirrorFactory = mirrorFactory;
     }
 
@@ -487,6 +500,11 @@ public abstract class TypeNode extends PklNode {
           clazz,
           new GetModuleNode(sourceSection),
           VmType.NonFinalModuleType::new,
+          frame -> {
+            var levelsUp = GetModuleNode.getLevelsUp(frame);
+            return VmUtils.getClass(
+                levelsUp == 0 ? VmUtils.getReceiver(frame) : VmUtils.getReceiver(frame, levelsUp));
+          },
           MirrorFactories.moduleTypeFactory);
     }
 
@@ -496,6 +514,7 @@ public abstract class TypeNode extends PklNode {
           clazz,
           new GetReceiverNode(),
           VmType.NonFinalThisType::new,
+          frame -> VmUtils.getClass(VmUtils.getReceiver(frame)),
           MirrorFactories.thisTypeFactory);
     }
 
@@ -529,6 +548,11 @@ public abstract class TypeNode extends PklNode {
         String qualifiedName) {
       var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
       return TypeNode.createDefaultValue(clazz);
+    }
+
+    @Override
+    public TypeNode getReifiedTypeNode(VirtualFrame frame) {
+      return NonFinalClassTypeNodeGen.create(sourceSection, realClassResolver.apply(frame));
     }
   }
 
@@ -1830,6 +1854,10 @@ public abstract class TypeNode extends PklNode {
       validate();
     }
 
+    public TypeNode getReferentTypeNode() {
+      return referentTypeNode;
+    }
+
     @Override
     protected VmType doGetType() {
       return new VmType.ClassType(
@@ -2002,9 +2030,10 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
-    private final TypeParameter typeParameter;
+    private final VmTypeParameter typeParameter;
+    @CompilationFinal private int slot;
 
-    public TypeVariableNode(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariableNode(SourceSection sourceSection, VmTypeParameter typeParameter) {
       super(sourceSection);
       this.typeParameter = typeParameter;
     }
@@ -2014,8 +2043,20 @@ public abstract class TypeNode extends PklNode {
       return new VmType.TypeVariableType(typeParameter);
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public VmTypeParameter getTypeParameter() {
+      return typeParameter;
+    }
+
+    @Override
+    public TypeNode initWriteSlotNode(int slot) {
+      super.initWriteSlotNode(slot);
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      this.slot = slot;
+      return this;
+    }
+
+    public int getFrameSlot() {
+      return slot;
     }
 
     @Override

@@ -84,6 +84,7 @@ public abstract class ToStringNode extends UnaryExpressionNode {
     return InvokeMethodVirtualNodeGen.create(
         sourceSection,
         Identifier.TO_STRING,
+        null,
         new ExpressionNode[] {},
         MemberLookupMode.EXPLICIT_RECEIVER,
         false,

@@ -62,7 +62,7 @@ public abstract class InferParentWithinMethodArgumentNode
 
   @Override
   protected @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method) {
-    return method.getParameterTypeNode(frame, argIndex);
+    return method.getFunctionNode().getParameterTypeNode(argIndex);
   }
 
   // keep specializations in sync with other AbstractInferParentFromMethodNode subclasses

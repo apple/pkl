@@ -55,12 +55,12 @@ public abstract class InferParentWithinObjectMethodNode extends AbstractInferPar
 
     var methodNode = (ObjectMethodNode) member.getMemberNode();
     assert methodNode != null;
-    return methodNode;
+    return methodNode.reify(owner);
   }
 
   @Override
   protected @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method) {
-    return method.getReturnTypeNode(frame);
+    return method.getFunctionNode().getReturnTypeNode();
   }
 
   // keep specializations in sync with other AbstractInferParentFromMethodNode subclasses

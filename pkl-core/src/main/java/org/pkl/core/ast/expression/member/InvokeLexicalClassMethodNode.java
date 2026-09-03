@@ -15,30 +15,47 @@
  */
 package org.pkl.core.ast.expression.member;
 
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmUtils;
 
 /**
  * A non-virtual call of closed methods (methods whose enclosing class/module is not open nor
  * abstract, and is lexically scoped).
  */
-public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMethodNode {
-  public InvokeLexicalClassMethodNode(
+@ImportStatic(VmUtils.class)
+public abstract class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMethodNode {
+  protected InvokeLexicalClassMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       boolean argsRequireInference) {
-    super(sourceSection, methodName, levelsUp, argumentNodes, needsConst, argsRequireInference);
+    super(
+        sourceSection,
+        methodName,
+        levelsUp,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        needsConst,
+        argsRequireInference);
   }
 
   @Override
-  protected void doCheckConst(VmObjectLike owner) {
-    var method = owner.getVmClass().getDeclaredMethod(methodName);
+  protected void doCheckConst(Object owner) {
+    var method = VmUtils.getClass(owner).getDeclaredMethod(methodName);
     assert method != null;
     if (!method.isConst()) {
       throw exceptionBuilder().evalError("methodMustBeConst", methodName).build();
@@ -46,9 +63,49 @@ public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMet
   }
 
   @Override
-  protected Method getMethod(VmObjectLike owner) {
-    var method = owner.getVmClass().getDeclaredMethod(methodName);
+  protected Method getMethod(Object owner) {
+    var method = VmUtils.getClass(owner).getDeclaredMethod(methodName);
     assert method != null;
     return method;
+  }
+
+  // keep specializations in sync with other AbstractInvokeLexicalOrQualifiedMethodNode subclasses
+
+  @Specialization(guards = "unresolvedTypeArgumentNodes == null")
+  public final Object evalNoArgs(
+      VirtualFrame frame,
+      @Bind("getEffectiveFrame(frame)") @SuppressWarnings("unused") VirtualFrame effectiveFrame,
+      @Bind("getReceiver(effectiveFrame)") Object receiver,
+      @Bind("getOwner(effectiveFrame)") Object owner,
+      @Cached(value = "getMethod(owner)", neverDefault = true) Method method,
+      @Cached("create(method.getFunctionNode(sourceSection).getCallTarget())")
+          DirectCallNode callNode) {
+    return invoke(frame, owner, receiver, method, callNode);
+  }
+
+  @Specialization(
+      guards = {"unresolvedTypeArgumentNodes != null", "getTypeArgumentsAreFinal(frame)"})
+  public final Object evalArgsCached(
+      VirtualFrame frame,
+      @Bind("getEffectiveFrame(frame)") @SuppressWarnings("unused") VirtualFrame effectiveFrame,
+      @Bind("getReceiver(effectiveFrame)") Object receiver,
+      @Bind("getOwner(effectiveFrame)") Object owner,
+      @Cached(value = "getMethod(owner)", neverDefault = true) Method method,
+      @Cached(
+              "create(instantiateFunction(frame, method, method.getFunctionNode()).getCallTarget())")
+          DirectCallNode callNode) {
+    return invoke(frame, owner, receiver, method, callNode);
+  }
+
+  @Specialization(guards = "unresolvedTypeArgumentNodes != null", replaces = "evalArgsCached")
+  public final Object evalArgs(
+      VirtualFrame frame,
+      @Bind("getEffectiveFrame(frame)") @SuppressWarnings("unused") VirtualFrame effectiveFrame,
+      @Bind("getReceiver(effectiveFrame)") Object receiver,
+      @Bind("getOwner(effectiveFrame)") Object owner,
+      @Cached(value = "getMethod(owner)", neverDefault = true) Method method) {
+    var functionNode = instantiateFunction(frame, method, method.getFunctionNode());
+    var callNode = DirectCallNode.create(functionNode.getCallTarget());
+    return invoke(frame, owner, receiver, method, callNode);
   }
 }

@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Cannot find property `default` in object of type `pkl.ref#Reference<reference13#D, Mapping>`.
 
-x | test = ref.Reference(d, Mapping, "").default
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | test = ref.Reference::<D, Mapping>(d, "").default
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference13#test (file:///$snippetsDir/input/errors/reference13.pkl)
 
 Cannot reference property `default` in class `Mapping`.

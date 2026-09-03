@@ -1,0 +1,18 @@
+directCall {
+  pair = Pair(List("foo"), Set("bar"))
+  pairSelf = "callWithTypeArguments"
+  pairErr = "Expected value of type `String`, but got type `Int`. Value: 0"
+  pairSelfErr = "Expected value of type `callWithTypeArguments`, but got type `List`. Value: List()"
+  listMap = List(2, 3, 1)
+  listMapErr = "Expected value of type `String`, but got type `Int`. Value: 2"
+  nonGenericMethod = "Expected 0 type arguments but got 1."
+}
+superCall {
+  true
+  true
+  true
+  true
+  false
+  false
+  false
+}

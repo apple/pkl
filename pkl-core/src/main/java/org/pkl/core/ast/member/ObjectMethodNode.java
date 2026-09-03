@@ -18,18 +18,20 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 
-public final class ObjectMethodNode extends RegularMemberNode implements Method {
+public final class ObjectMethodNode extends RegularMemberNode {
   private final VmLanguage language;
   private final int parameterCount;
+  private final List<VmTypeParameter> typeParameters;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
 
@@ -41,36 +43,56 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
       ObjectMember member,
       ExpressionNode bodyNode,
       int parameterCount,
+      List<VmTypeParameter> typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode) {
-
     super(language, descriptor, member, bodyNode);
 
     this.language = language;
     this.parameterCount = parameterCount;
+    this.typeParameters = typeParameters;
     this.unresolvedParameterTypeNodes = unresolvedParameterTypeNodes;
     this.unresolvedReturnTypeNode = unresolvedReturnTypeNode;
   }
 
-  public @Nullable TypeNode getReturnTypeNode() {
-    // this method is only called from child nodes
-    assert functionNode != null;
-    return functionNode.getReturnTypeNode();
+  public ObjectMethod reify(VmObjectLike owner) {
+    var newFrame =
+        Truffle.getRuntime().createVirtualFrame(new Object[] {owner, owner}, getFrameDescriptor());
+    return new ObjectMethod(
+        getFunctionNode(newFrame, true), getSourceSection(), getQualifiedName());
   }
 
-  @Override
-  public @Nullable TypeNode getReturnTypeNode(VirtualFrame frame) {
-    return getFunctionNode(frame, true).getReturnTypeNode();
-  }
+  public static class ObjectMethod implements Method {
+    private final FunctionNode functionNode;
+    private final SourceSection headerSection;
+    private final String qualifiedName;
 
-  @Override
-  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
-    return (CallTarget) getCallTarget().call(owner, owner);
-  }
+    private ObjectMethod(
+        FunctionNode functionNode, SourceSection headerSection, String qualifiedName) {
+      this.functionNode = functionNode;
+      this.headerSection = headerSection;
+      this.qualifiedName = qualifiedName;
+    }
 
-  @Override
-  public @Nullable TypeNode getParameterTypeNode(VirtualFrame frame, int idx) {
-    return getFunctionNode(frame, true).getParameterTypeNode(idx);
+    @Override
+    public FunctionNode getFunctionNode(@Nullable SourceSection callSite) {
+      return functionNode;
+    }
+
+    @Override
+    public SourceSection getHeaderSection() {
+      return headerSection;
+    }
+
+    @Override
+    public String getQualifiedName() {
+      return qualifiedName;
+    }
+
+    @Override
+    public boolean isChildOf(Method other) {
+      return this == other;
+    }
   }
 
   @Override
@@ -101,6 +123,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
             parameterTypeNodes,
             returnTypeNode,
             true,
+            typeParameters.size(),
             bodyNode);
     return functionNode;
   }

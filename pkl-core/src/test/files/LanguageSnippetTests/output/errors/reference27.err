@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Cannot find property `name` in object of type `pkl.ref#Reference<reference27#D, (Int) -> Boolean>`.
 
-xx | res = myRef.name
-           ^^^^^^^^^^
+x | res = myRef.name
+          ^^^^^^^^^^
 at reference27#res (file:///$snippetsDir/input/errors/reference27.pkl)
 
 Cannot find property `name` in type `(Int) -> Boolean`.
