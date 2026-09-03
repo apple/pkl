@@ -25,9 +25,9 @@ local class OtherHolder {
   constrainedType: String(isEmpty)
 }
 
-local holderRef: Ref<Holder> = ref.Reference(d, Holder, null)
-local holderRef2: Ref<Holder> = ref.Reference(d, Holder, null)
-local otherHolderRef: Ref<OtherHolder> = ref.Reference(d, OtherHolder, null)
+local holderRef: Ref<Holder> = ref.Reference::<D, Holder>(d, null)
+local holderRef2: Ref<Holder> = ref.Reference::<D, Holder>(d, null)
+local otherHolderRef: Ref<OtherHolder> = ref.Reference::<D, OtherHolder>(d, null)
 
 facts {
   ["equality"] {

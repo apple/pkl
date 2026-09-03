@@ -40,7 +40,6 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PklBugException;
 import org.pkl.core.StackFrame;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
@@ -50,6 +49,7 @@ import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
+import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
@@ -189,6 +189,23 @@ public abstract class TypeNode extends PklNode {
         true,
         typeNode -> {
           if (typeNode instanceof NonFinalSelfTypeNode || typeNode instanceof FinalSelfTypeNode) {
+            ret.set(true);
+            return false;
+          }
+          return true;
+        });
+    return ret.get();
+  }
+
+  public final boolean getTypeArgumentRequiresFrame() {
+    var ret = new MutableBoolean(false);
+    acceptTypeNode(
+        true,
+        typeNode -> {
+          if (typeNode instanceof ConstrainedTypeNode
+              || typeNode instanceof NonFinalSelfTypeNode
+              || (typeNode instanceof TypeVariableNode typeVar
+                  && typeVar.getTypeParameter().getOwner() instanceof Method)) {
             ret.set(true);
             return false;
           }
@@ -1830,6 +1847,10 @@ public abstract class TypeNode extends PklNode {
       validate();
     }
 
+    public TypeNode getReferentTypeNode() {
+      return referentTypeNode;
+    }
+
     @Override
     protected VmType doGetType() {
       return new VmType.ClassType(
@@ -1869,22 +1890,23 @@ public abstract class TypeNode extends PklNode {
         return value;
       }
 
+      var realType = (VmType.ClassType) getType().reify(frame);
       try {
         domainTypeNode.execute(frame, value.getDomain());
       } catch (VmTypeMismatchException e) {
         CompilerDirectives.transferToInterpreter();
-        throw typeMismatch(value, getType());
+        throw typeMismatch(value, realType);
       }
 
       var module = (VmTyped) getModuleNode.executeGeneric(frame);
       if (value.referentTypeIsSubtypeOf(
-          referentTypeNode.getType(),
+          realType.getTypeArguments()[1],
           (VmClass) getReceiverClassNode.executeGeneric(frame),
           module.getVmClass())) {
         return value;
       }
 
-      throw typeMismatch(value, getType());
+      throw typeMismatch(value, realType);
     }
 
     @Fallback
@@ -2002,9 +2024,10 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
-    private final TypeParameter typeParameter;
+    private final VmTypeParameter typeParameter;
+    @CompilationFinal private int slot;
 
-    public TypeVariableNode(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariableNode(SourceSection sourceSection, VmTypeParameter typeParameter) {
       super(sourceSection);
       this.typeParameter = typeParameter;
     }
@@ -2014,13 +2037,25 @@ public abstract class TypeNode extends PklNode {
       return new VmType.TypeVariableType(typeParameter);
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public VmTypeParameter getTypeParameter() {
+      return typeParameter;
+    }
+
+    @Override
+    public TypeNode initWriteSlotNode(int slot) {
+      super.initWriteSlotNode(slot);
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      this.slot = slot;
+      return this;
+    }
+
+    public int getFrameSlot() {
+      return slot;
     }
 
     @Override
     public boolean isNoopTypeCheck() {
-      return true;
+      return !(typeParameter.getOwner() instanceof Method);
     }
 
     @Override
@@ -2034,6 +2069,12 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
+      if (typeParameter.getOwner() instanceof Method && frame.getArguments()[2] != null) {
+        var methodTypeArgs = (VmTypeArgument[]) frame.getArguments()[2];
+        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+        return typeArg.check(value);
+      }
+
       // do nothing
       return value;
     }

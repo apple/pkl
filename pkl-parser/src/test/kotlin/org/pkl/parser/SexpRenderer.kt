@@ -507,6 +507,10 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
+    if (expr.typeArgumentList !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(expr.typeArgumentList!!)
+    }
     if (expr.argumentList !== null) {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)
@@ -522,6 +526,10 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
+    if (expr.typeArgumentList !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(expr.typeArgumentList!!)
+    }
     if (expr.argumentList !== null) {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)
@@ -549,6 +557,10 @@ class SexpRenderer {
     buf.append('\n')
     buf.append(tab)
     buf.append("(identifier)")
+    if (expr.typeArgumentList !== null) {
+      buf.append('\n')
+      renderTypeArgumentList(expr.typeArgumentList!!)
+    }
     if (expr.argumentList !== null) {
       buf.append('\n')
       renderArgumentList(expr.argumentList!!)

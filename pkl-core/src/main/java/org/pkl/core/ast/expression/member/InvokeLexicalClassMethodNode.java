@@ -16,8 +16,10 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -30,10 +32,18 @@ public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMet
       SourceSection sourceSection,
       Identifier methodName,
       int levelsUp,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       int methodSlot) {
-    super(sourceSection, methodName, levelsUp, argumentNodes, needsConst, methodSlot);
+    super(
+        sourceSection,
+        methodName,
+        levelsUp,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        needsConst,
+        methodSlot);
   }
 
   @Override

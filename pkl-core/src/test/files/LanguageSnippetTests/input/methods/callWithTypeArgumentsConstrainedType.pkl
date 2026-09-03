@@ -1,0 +1,29 @@
+const function foo<T>(val): Boolean = val is T
+
+local prefix1 = "hi"
+hidden prefix2 = "hi"
+function prefix3() = "hi"
+local function prefix4() = "hi"
+
+class Bar {
+  x: Int = 10
+  function baz<T>(val): Boolean = foo::<T>(val)
+  function qux<T>(val): Boolean = foo::<T(length < x)>(val)
+}
+
+res {
+  res1a = foo::<String(startsWith(prefix1))>("high five")
+  res1b = foo::<String(startsWith(prefix2))>("high five")
+  res1c = foo::<String(startsWith(prefix3()))>("high five")
+  res1d = foo::<String(startsWith(prefix4()))>("high five")
+  
+  res2a = new Bar {}.baz::<String(startsWith(prefix1))>("high five")
+  res2b = new Bar {}.baz::<String(startsWith(prefix2))>("high five")
+  res2c = new Bar {}.baz::<String(startsWith(prefix3()))>("high five")
+  res2d = new Bar {}.baz::<String(startsWith(prefix4()))>("high five")
+  
+  res3a = new Bar {}.qux::<String(startsWith(prefix1))>("high five")
+  res3b = new Bar {}.qux::<String(startsWith(prefix2))>("high five")
+  res3c = new Bar {}.qux::<String(startsWith(prefix3()))>("high five")
+  res3d = new Bar {}.qux::<String(startsWith(prefix4()))>("high five")
+}

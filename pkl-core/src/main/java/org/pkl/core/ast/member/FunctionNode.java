@@ -44,14 +44,15 @@ public final class FunctionNode extends RegularMemberNode {
   // For VmObject receivers, the owner is the same as or an ancestor of the receiver.
   // For other receivers, the owner is the prototype of the receiver's class.
   // The chain of enclosing owners forms a function/property's lexical scope.
-  private static final int IMPLICIT_PARAM_COUNT = 2;
+  private static final int IMPLICIT_PARAM_COUNT = 3;
 
   private final int paramCount;
+  private final int typeParamCount;
   private final int totalParamCount;
 
   @Children private final TypeNode[] parameterTypeNodes;
   @Child private @Nullable TypeNode checkedReturnTypeNode;
-  private @Nullable TypeNode returnTypeNode;
+  @Child private @Nullable TypeNode returnTypeNode;
 
   @TruffleBoundary
   public FunctionNode(
@@ -62,6 +63,7 @@ public final class FunctionNode extends RegularMemberNode {
       TypeNode[] parameterTypeNodes,
       @Nullable TypeNode returnTypeNode,
       boolean isReturnTypeChecked,
+      int typeParamCount,
       ExpressionNode bodyNode) {
 
     super(language, descriptor, member, bodyNode);
@@ -71,6 +73,7 @@ public final class FunctionNode extends RegularMemberNode {
         || member instanceof Lambda;
 
     this.paramCount = paramCount;
+    this.typeParamCount = typeParamCount;
     this.parameterTypeNodes = parameterTypeNodes;
     this.checkedReturnTypeNode = isReturnTypeChecked ? returnTypeNode : null;
     this.returnTypeNode = returnTypeNode;
@@ -80,6 +83,10 @@ public final class FunctionNode extends RegularMemberNode {
 
   public int getParameterCount() {
     return paramCount;
+  }
+
+  public int getTypeParameterCount() {
+    return typeParamCount;
   }
 
   public @Nullable TypeNode getParameterTypeNode(int idx) {

@@ -9,4 +9,4 @@ class D extends ref.Domain {
 }
 local d: D = new {}
 
-test = ref.Reference(d, A, "").foo as ref.Reference<D, Int | Boolean>
+test = ref.Reference::<D, A>(d, "").foo as ref.Reference<D, Int | Boolean>

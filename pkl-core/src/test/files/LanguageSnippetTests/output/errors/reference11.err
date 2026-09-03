@@ -13,8 +13,8 @@ x | typealias Ref<T> = ref.Reference<D, T>
                        ^^^^^^^^^^^^^^^^^^^
 at reference11#Ref (file:///$snippetsDir/input/errors/reference11.pkl)
 
-x | test = ref.Reference(d, String, "") as Ref<Alias1>
-                                           ^^^^^^^^^^^
+x | test = ref.Reference::<D, String>(d, "") as Ref<Alias1>
+                                                ^^^^^^^^^^^
 at reference11#test (file:///$snippetsDir/input/errors/reference11.pkl)
 
 xxx | renderer.renderDocument(value)
