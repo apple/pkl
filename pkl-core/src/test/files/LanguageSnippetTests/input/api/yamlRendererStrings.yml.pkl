@@ -47,6 +47,8 @@ h10 = "one\u{85}two"
 h11 = "one\u{9f}two"
 h12 = "one\u{2028}two"
 h13 = "one\u{2029}two"
+h14 = "one\u{fffe}two"
+h15 = "one\u{ffff}two"
 
 // control characters in multiline strings
 i1 = "one\ttwo\nthree"

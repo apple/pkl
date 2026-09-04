@@ -73,6 +73,14 @@ public final class YamlEscaper extends AbstractCharEscaper {
   @Override
   protected @Nullable String findReplacement(char ch) {
     //noinspection UnnecessaryUnicodeEscape
-    return ch <= 0xA0 ? REPLACEMENTS[ch] : ch == '\u2028' ? "\\L" : ch == '\u2029' ? "\\P" : null;
+    return ch <= 0xA0
+        ? REPLACEMENTS[ch]
+        : ch == '\u2028'
+            ? "\\L"
+            : ch == '\u2029'
+                ? "\\P"
+                // U+FFFE and U+FFFF are not `c-printable` either (spec 5.1), and no named or 8-bit
+                // escape covers them; ns-esc-16-bit does.
+                : ch >= 0xFFFE ? IoUtils.toUnicodeEscape(ch) : null;
   }
 }

@@ -45,12 +45,12 @@ public abstract class YamlEmitter {
   /**
    * Tells if {@code ch} has to go through {@link YamlEscaper} instead of being emitted literally.
    *
-   * <p>0x7F and the C1 block are outside {@code c-printable} (YAML 1.2 spec 5.1), and NEL, LS and
-   * PS are line breaks in YAML 1.1. Note that 0x0A is handled by its own {@code case} in {@link
-   * #emit(String, StringBuilder, boolean)} and never reaches here.
+   * <p>0x7F, the C1 block, U+FFFE and U+FFFF are outside {@code c-printable} (YAML 1.2 spec 5.1),
+   * and NEL, LS and PS are line breaks in YAML 1.1. Note that 0x0A is handled by its own {@code
+   * case} in {@link #emit(String, StringBuilder, boolean)} and never reaches here.
    */
-  private static boolean mustEscape(char ch) {
-    return ch < 0x20 || ch >= 0x7F && ch <= 0x9F || ch == 0x2028 || ch == 0x2029;
+  private static boolean getNeedsEscaping(char ch) {
+    return ch < 0x20 || ch >= 0x7F && ch <= 0x9F || ch == 0x2028 || ch == 0x2029 || ch >= 0xFFFE;
   }
 
   public void emit(String str, StringBuilder currIndent, boolean isKey) {
@@ -113,7 +113,7 @@ public abstract class YamlEmitter {
       case 'o':
         break;
       default:
-        needsEscaping = mustEscape(first);
+        needsEscaping = getNeedsEscaping(first);
         hasNonNumberChar = true;
     }
 
@@ -180,7 +180,7 @@ public abstract class YamlEmitter {
             'o',
             'x' -> {}
         default -> {
-          needsEscaping = needsEscaping || mustEscape(ch);
+          needsEscaping = needsEscaping || getNeedsEscaping(ch);
           hasNonNumberChar = true;
         }
       }
