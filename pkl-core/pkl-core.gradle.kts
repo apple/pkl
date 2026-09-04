@@ -248,6 +248,36 @@ tasks.register<JavaExec>("generateWptUrlTests") {
   )
 }
 
+// Regenerates the Unicode data backing `pkl:url`'s IDNA implementation.
+// Downloaded on each run rather than vendored.
+// This is an on-demand task rather than a `compileJava` dependency.
+tasks.register<JavaExec>("generateIdnaTable") {
+  group = "build"
+  description =
+    "Regenerates IdnaTableData from the Unicode data files. Requires -Punicode.version=<version>."
+
+  val outputFile =
+    layout.projectDirectory.file("src/main/java/org/pkl/core/stdlib/url/IdnaTableData.java")
+  val unicodeVersion = providers.gradleProperty("unicode.version")
+
+  outputs.upToDateWhen { false }
+
+  classpath = generatorSourceSet.get().runtimeClasspath
+  mainClass = "org.pkl.core.generator.IdnaTableGenerator"
+
+  argumentProviders.add(
+    CommandLineArgumentProvider {
+      val version =
+        unicodeVersion.orNull
+          ?: throw GradleException(
+            "`generateIdnaTable` requires the Unicode version to generate from, " +
+              "for example `-Punicode.version=15.1.0`."
+          )
+      listOf(version, outputFile.asFile.absolutePath)
+    }
+  )
+}
+
 tasks.compileJava { dependsOn(generateBaseModuleMembers) }
 
 tasks.sourcesJar { dependsOn(generateBaseModuleMembers) }
