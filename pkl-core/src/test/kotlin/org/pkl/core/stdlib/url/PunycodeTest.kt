@@ -159,20 +159,7 @@ class PunycodeTest {
   }
 
   @ParameterizedTest
-  @ValueSource(
-    strings =
-      [
-        "münchen",
-        "faß",
-        "你好你好",
-        "☃",
-        "é",
-        "ドメイン名例",
-        "abc",
-        "𝐀𝐋",
-        "aé1你-b",
-      ]
-  )
+  @ValueSource(strings = ["münchen", "faß", "你好你好", "☃", "é", "ドメイン名例", "abc", "𝐀𝐋", "aé1你-b"])
   fun `round-trips`(input: String) {
     val encoded = Punycode.encode(input)
     assertThat(encoded).isNotNull()
