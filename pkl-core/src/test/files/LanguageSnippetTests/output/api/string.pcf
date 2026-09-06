@@ -213,18 +213,76 @@ examples {
     List()
     List(97, 98, 99, 100, 101, 102, 103)
   }
-  ["toInt()"] {
+  ["toInt() decimal"] {
+    123
+    -123
+    -123
+    123
+    123
     123
     -123
     123
-    -123
     0
     0
+    0
+    -9223372036854775808
+    9223372036854775807
+  }
+  ["toInt() hex"] {
+    291
+    291
+    -291
+    -291
+    291
+    291
+    291
+    -291
+    291
+    0
+    0
+    0
+    482
+  }
+  ["toInt() binary"] {
+    5
+    5
+    -5
+    -5
+    5
+    5
+    5
+    -5
+    5
+    0
+    0
+    0
+  }
+  ["toInt() octal"] {
+    83
+    83
+    -83
+    -83
+    83
+    83
+    83
+    -83
+    83
+    0
+    0
+    0
+  }
+  ["toInt() error cases"] {
     "Cannot parse string as `Int`. String: \"1.2\""
     "Cannot parse string as `Int`. String: \"9223372036854775808\""
     "Cannot parse string as `Int`. String: \"-9223372036854775809\""
     "Cannot parse string as `Int`. String: \"abc\""
     "Cannot parse string as `Int`. String: \"_1_000\""
+    "Cannot parse string as `Int`. String: \"0p0\""
+    "Cannot parse string as `Int`. String: \"0x-0\""
+    "Cannot parse string as `Int`. String: \"0x+0\""
+    "Cannot parse string as `Int`. String: \"0x0 + 0x1\""
+    "Cannot parse string as `Int`. String: \"\""
+    "Cannot parse string as `Int`. String: \"0o123e4\""
   }
   ["toIntOrNull()"] {
     123
@@ -233,6 +291,11 @@ examples {
     -123
     0
     0
+    null
+    null
+    null
+    null
+    null
     null
     null
     null

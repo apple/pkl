@@ -33,6 +33,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.runtime.VmExceptionBuilder.MultilineValue;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.LateInit;
@@ -151,6 +152,45 @@ public final class VmClass extends VmValue {
   }
 
   @TruffleBoundary
+  private void checkAbstractMethods() {
+    if (isAbstract()) return;
+    // minimize allocations in the non-error case
+    var abstractMethods = getAbstractMethods();
+    if (abstractMethods.isEmpty()) return;
+    if (abstractMethods.size() == 1) {
+      throw new VmExceptionBuilder()
+          .evalError(
+              "noImplementationForAbstractMethod",
+              getDisplayName(),
+              abstractMethods.get(0).getCallSignature())
+          .withSourceSection(getHeaderSection())
+          .build();
+    }
+    var methodList = new ArrayList<String>(abstractMethods.size());
+    for (var method : abstractMethods) {
+      methodList.add(method.getCallSignature());
+    }
+    throw new VmExceptionBuilder()
+        .evalError(
+            "noImplementationForAbstractMethods", getDisplayName(), MultilineValue.of(methodList))
+        .withSourceSection(getHeaderSection())
+        .build();
+  }
+
+  private List<ClassMethod> getAbstractMethods() {
+    assert this.superclass != null;
+    var result = new ArrayList<ClassMethod>();
+    var methodCursor = getAllMethods().getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isAbstract()) {
+        result.add(method);
+      }
+    }
+    return result;
+  }
+
+  @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
     EconomicMaps.put(declaredProperties, property.getName(), property);
@@ -190,9 +230,18 @@ public final class VmClass extends VmValue {
     }
   }
 
-  // Note: Superclasses may not have finished their initialization when this method is called.
-  public void notifyInitialized() {
+  /**
+   * Called when this class itself has been initialized.
+   *
+   * <p>Superclasses may not have been initialized yet.
+   */
+  public void onOwnClassInitialized() {
     isInitialized = true;
+  }
+
+  /** Called when the entire class hierarchy is completely initialized, including superclasses. */
+  public void onFullyInitialized() {
+    checkAbstractMethods();
   }
 
   public int getTypeParameterCount() {

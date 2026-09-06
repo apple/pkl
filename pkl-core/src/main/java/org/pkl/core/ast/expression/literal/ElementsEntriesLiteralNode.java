@@ -16,6 +16,7 @@
 package org.pkl.core.ast.expression.literal;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -36,7 +37,7 @@ import org.pkl.core.util.EconomicMaps;
  * Object literal that contains both elements and entries (and possibly properties). Example: `new
  * foo { "pigeon", [3] = "barn owl" }`
  */
-@ImportStatic(BaseModule.class)
+@ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLiteralNode {
   private final ObjectMember[] elements;
   @Children private final ExpressionNode[] keyNodes;
@@ -95,6 +96,14 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
         parent.getLength() + elements.length);
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isListingClass()", "checkIsValidListingAmendment()"})
+  protected Object evalNullWithListingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalListing(frame, (VmListing) defaultValue);
+  }
+
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     return new VmDynamic(
@@ -104,10 +113,11 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
         parent.getLength() + elements.length);
   }
 
-  @Specialization
-  protected Object evalNull(VirtualFrame frame, VmNull parent) {
-    // assumes that Graal PE can handle recursive call to same node
-    return executeWithParent(frame, parent.getDefaultValue());
+  @SuppressWarnings("unused")
+  @Specialization(guards = "getClass(defaultValue).isDynamicClass()")
+  protected Object evalNullWithDynamicDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalDynamic(frame, (VmDynamic) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidFunctionAmendment(parent)")
@@ -118,6 +128,18 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
           AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isFunction(defaultValue)", "checkIsValidFunctionAmendment(defaultValue)"})
+  protected Object evalNullWithFunctionDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
+    return evalFunction(frame, (VmFunction) defaultValue, amendFunctionNode);
   }
 
   @Specialization(guards = {"parent == getListingClass()", "checkIsValidListingAmendment()"})
@@ -145,7 +167,12 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   @Fallback
   @TruffleBoundary
   protected void fallback(Object parent) {
-    elementsEntriesFallback(parent, elements[0], true);
+    var value = parent;
+    // blame the non-null type (e.g. blame `Duration` instead of `Null` in the case of `Duration?`)
+    if (value instanceof VmNull vmNull) {
+      value = getNullDefaultValue(vmNull);
+    }
+    elementsEntriesFallback(value, elements[0], true);
   }
 
   @ExplodeLoop

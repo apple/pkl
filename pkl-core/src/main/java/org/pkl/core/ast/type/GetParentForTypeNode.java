@@ -16,31 +16,34 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.Bind;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.expression.member.AbstractInferParentNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.util.LateInit;
 
 /** Resolves `<type>` to the type's default value in `new <type> { ... }`. */
-public final class GetParentForTypeNode extends ExpressionNode {
-  @Child private UnresolvedTypeNode unresolvedTypeNode;
+public abstract class GetParentForTypeNode extends AbstractInferParentNode {
+  @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
   @Child private @Nullable TypeNode typeNode;
-  private final String qualifiedName;
+  protected final String qualifiedName;
 
-  @CompilationFinal @LateInit Object defaultValue;
-
-  public GetParentForTypeNode(
-      SourceSection sourceSection, UnresolvedTypeNode unresolvedTypeNode, String qualifiedName) {
-    super(sourceSection);
+  protected GetParentForTypeNode(
+      SourceSection sourceSection,
+      VmLanguage language,
+      UnresolvedTypeNode unresolvedTypeNode,
+      String qualifiedName) {
+    super(sourceSection, language);
     this.unresolvedTypeNode = unresolvedTypeNode;
     this.qualifiedName = qualifiedName;
   }
 
-  private TypeNode getTypeNode(VirtualFrame frame) {
+  protected TypeNode getTypeNode(VirtualFrame frame) {
     if (typeNode == null) {
+      assert unresolvedTypeNode != null;
       CompilerDirectives.transferToInterpreterAndInvalidate();
       typeNode = unresolvedTypeNode.execute(frame);
       adoptChildren();
@@ -48,33 +51,19 @@ public final class GetParentForTypeNode extends ExpressionNode {
     return typeNode;
   }
 
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    //noinspection ConstantValue
-    if (defaultValue != null) return defaultValue;
-    CompilerDirectives.transferToInterpreterAndInvalidate();
+  @Specialization(guards = {"typeNode.isFinalType()"})
+  protected final Object evalCached(
+      @SuppressWarnings("unused") VirtualFrame frame,
+      @Bind("getTypeNode(frame)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached(
+              value = "getDefaultValue(frame, typeNode, sourceSection, qualifiedName)",
+              neverDefault = true)
+          Object defaultValue) {
+    return defaultValue;
+  }
 
-    var typeNode = getTypeNode(frame);
-    var defaultValue =
-        typeNode.createDefaultValue(frame, VmLanguage.get(this), sourceSection, qualifiedName);
-
-    // can't cache default value for `module` type in a non-final module because it's a self-type
-    // (the default value changes when inherited).
-    if (typeNode.isFinalType() && defaultValue != null) {
-      unresolvedTypeNode = null;
-      this.defaultValue = defaultValue;
-    }
-
-    if (defaultValue != null) {
-      return defaultValue;
-    }
-
-    // try to produce a more specific error message than "cannotInstantiateType"
-    var clazz = typeNode.getVmClass();
-    if (clazz != null) VmUtils.checkIsInstantiable(clazz, typeNode);
-
-    throw exceptionBuilder()
-        .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
-        .build();
+  @Specialization(replaces = "evalCached")
+  protected final Object eval(VirtualFrame frame, @Bind("getTypeNode(frame)") TypeNode typeNode) {
+    return getDefaultValue(frame, typeNode, sourceSection, qualifiedName);
   }
 }

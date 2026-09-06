@@ -21,6 +21,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
 import com.oracle.truffle.api.TruffleStackTrace;
+import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.*;
 import com.oracle.truffle.api.nodes.*;
 import com.oracle.truffle.api.source.Source;
@@ -51,7 +52,6 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.builder.AstBuilder;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
@@ -75,6 +75,22 @@ public final class VmUtils {
   public static final String REPL_TEXT = "repl:text";
 
   public static final URI REPL_TEXT_URI = URI.create(REPL_TEXT);
+
+  public static final Object CUSTOM_THIS_FRAME_SLOT_ID =
+      new Object() {
+        @Override
+        public String toString() {
+          return "customThisSlot";
+        }
+      };
+
+  public static final Object METHOD_FRAME_SLOT_ID =
+      new Object() {
+        @Override
+        public String toString() {
+          return "method";
+        }
+      };
 
   private static final Engine PKL_ENGINE =
       Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
@@ -171,14 +187,31 @@ public final class VmUtils {
   }
 
   public static VmObjectLike getOwner(VirtualFrame frame, int levelsUp) {
-    return getOwner(getFrame(frame, levelsUp));
+    var owner = getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return owner;
+    }
+    return getOwner(getEnclosingFrame(owner, levelsUp));
   }
 
   public static Object getReceiver(VirtualFrame frame, int levelsUp) {
-    return getReceiver(getFrame(frame, levelsUp));
+    var owner = getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return getReceiver(frame);
+    }
+    return getReceiver(getEnclosingFrame(owner, levelsUp));
   }
 
-  public static VirtualFrame getFrame(VirtualFrame frame, int levelsUp) {
+  public static MaterializedFrame getEnclosingFrame(VmObjectLike owner, int levelsUp) {
+    assert !(levelsUp == 0 && !owner.isParseTimeInvisibleScope())
+        : "Must check for levelsUp == 0 && owner.isParseTimeInvisibleScope() before calling this method";
+    var isInvisibleScope = owner.isParseTimeInvisibleScope();
+    var enclosingFrame = owner.getEnclosingFrame();
+    var remainingLevels = isInvisibleScope ? levelsUp : levelsUp - 1;
+    return doGetFrame(enclosingFrame, remainingLevels);
+  }
+
+  private static MaterializedFrame doGetFrame(MaterializedFrame frame, int levelsUp) {
     frame = skipInvisibleScopes(frame);
     if (levelsUp == 0) {
       return frame;
@@ -194,7 +227,7 @@ public final class VmUtils {
     return frame;
   }
 
-  private static VirtualFrame skipInvisibleScopes(VirtualFrame frame) {
+  private static MaterializedFrame skipInvisibleScopes(MaterializedFrame frame) {
     var owner = getOwner(frame);
     while (owner.isParseTimeInvisibleScope()) {
       frame = owner.getEnclosingFrame();
@@ -353,9 +386,16 @@ public final class VmUtils {
     // can be re-used for all children in the amends chain.
     if (member.isConst() && owner != receiver) {
       assert member.isProp();
+      // `const` properties can possibly be declared on non-prototypes, but they must be also
+      // declared `local`; and that code path goes through `Read*LocalPropertyNode`.
+      // thus, this assertion is correct here.
       assert owner.isPrototype();
-      var result = readMemberOrNull(owner, memberKey, checkType, callNode);
-      assert result != null;
+      var cachedValue = owner.getCachedValue(memberKey);
+      if (cachedValue != null) {
+        receiver.setCachedValue(memberKey, cachedValue);
+        return cachedValue;
+      }
+      var result = doReadMember(owner, owner, memberKey, member, checkType, callNode);
       receiver.setCachedValue(memberKey, result);
       return result;
     }
@@ -389,7 +429,7 @@ public final class VmUtils {
           && owner instanceof VmListingOrMapping) {
         // `owner instanceof VmListingOrMapping` guards against
         // PropertiesRenderer amending VmDynamic with VmListing (hack?)
-        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member, null);
+        result = listingOrMapping.executeTypeCasts(constantValue, owner, callNode, member);
       }
 
       receiver.setCachedValue(memberKey, result);
@@ -504,6 +544,7 @@ public final class VmUtils {
   }
 
   // implements same behavior as AnyNodes#getClass
+  @Idempotent
   public static VmClass getClass(Object value) {
     if (value instanceof VmValue vmValue) {
       return vmValue.getVmClass();
@@ -1040,7 +1081,7 @@ public final class VmUtils {
   }
 
   public static int findCustomThisSlot(VirtualFrame frame) {
-    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CustomThisScope.FRAME_SLOT_ID);
+    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CUSTOM_THIS_FRAME_SLOT_ID);
     assert result != null;
     return result;
   }
@@ -1091,5 +1132,26 @@ public final class VmUtils {
     // if there's less than 100 truffle frames is due to our own doing.
     var truffleStackTraceElements = TruffleStackTrace.getStackTrace(e);
     return truffleStackTraceElements != null && truffleStackTraceElements.size() < 100;
+  }
+
+  /** Removes `_` from numbers to be parsed. Returns the string unmodified if it's invalid. */
+  public static String removeUnderscoresFromNumber(String number, boolean allowExponents) {
+    if (number.indexOf('_') < 0) return number;
+
+    var builder = new StringBuilder();
+    var numberStart = true;
+    for (var i = 0; i < number.length(); i++) {
+      var c = number.charAt(i);
+      if (c != '_') {
+        builder.append(c);
+      } else if (numberStart) {
+        // invalid: _ at start or after [.eE]
+        return number;
+      }
+
+      numberStart = c == '.' || (allowExponents && (c == 'e' || c == 'E'));
+    }
+
+    return builder.toString();
   }
 }

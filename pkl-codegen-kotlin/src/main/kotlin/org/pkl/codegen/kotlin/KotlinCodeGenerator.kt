@@ -609,7 +609,7 @@ class KotlinCodeGenerator(
 
   // do the minimum work necessary to avoid kotlin compile errors
   // generating idiomatic KDoc would require parsing doc comments, converting member links, etc.
-  private fun renderAsKdoc(docComment: String): String = docComment
+  private fun renderAsKdoc(docComment: String): String = docComment.replace("*/", "*&#47;")
 
   private fun PClass.toKotlinPoetName(): ClassName {
     val (packageName, moduleTypeName) = nameMapper.map(moduleName)
@@ -649,6 +649,12 @@ class KotlinCodeGenerator(
     when (this) {
       PType.UNKNOWN -> ANY_NULL
       PType.NOTHING -> NOTHING
+      PType.MODULE,
+      PType.THIS ->
+        // TODO: support self types: `class Foo<T extends Foo<T>>`
+        throw KotlinCodeGeneratorException(
+          "Pkl `${this}` types are not supported by the Kotlin code generator."
+        )
       is PType.StringLiteral -> STRING
       is PType.Class -> {
         // if in doubt, spell it out

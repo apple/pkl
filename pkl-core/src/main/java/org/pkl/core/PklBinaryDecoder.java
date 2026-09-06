@@ -41,14 +41,30 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
     super(unpacker);
   }
 
+  private PklBinaryDecoder(MessageUnpacker unpacker, int collectionSizeLimit) {
+    super(unpacker, collectionSizeLimit);
+  }
+
   /** Decode a value from the supplied byte array. */
   public static Object decode(byte[] bytes) {
     return new PklBinaryDecoder(MessagePack.newDefaultUnpacker(bytes)).decode();
   }
 
+  /** Decode a value from the supplied byte array. */
+  public static Object decode(byte[] bytes, int collectionSizeLimit) {
+    return new PklBinaryDecoder(MessagePack.newDefaultUnpacker(bytes), collectionSizeLimit)
+        .decode();
+  }
+
   /** Decode a value from the supplied {@link InputStream}. */
   public static Object decode(InputStream inputStream) {
     return new PklBinaryDecoder(MessagePack.newDefaultUnpacker(inputStream)).decode();
+  }
+
+  /** Decode a value from the supplied {@link InputStream}. */
+  public static Object decode(InputStream inputStream, int collectionSizeLimit) {
+    return new PklBinaryDecoder(MessagePack.newDefaultUnpacker(inputStream), collectionSizeLimit)
+        .decode();
   }
 
   @Override

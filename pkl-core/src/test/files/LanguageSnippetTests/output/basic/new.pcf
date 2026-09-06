@@ -139,18 +139,18 @@ one {
 res31 {
   name = "Other"
 }
-res32 = "Expected 1 function arguments but got 2."
+res32 = "Expected 1 function argument but got 2."
 res33 {
   name = "Override"
 }
-res34 = "Expected 1 function arguments but got 2."
+res34 = "Expected 1 function argument but got 2."
 res35 {
   name = "Other"
 }
-res36 = "Expected 1 function arguments but got 2."
+res36 = "Expected 1 function argument but got 2."
 res37 = "Expected value of type `new#Person`, but got type `Int`. Value: 1"
 res38 {
   name = "Override"
 }
-res39 = "Expected 1 function arguments but got 2."
+res39 = "Expected 1 function argument but got 2."
 res40 = "Expected value of type `new#Person`, but got type `Int`. Value: 1"

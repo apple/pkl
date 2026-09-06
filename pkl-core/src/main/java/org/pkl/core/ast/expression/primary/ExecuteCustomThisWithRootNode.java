@@ -21,7 +21,6 @@ import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmUtils;
 
@@ -41,6 +40,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
       new CustomThisNode(VmUtils.unavailableSourceSection());
   private @Child DirectCallNode callNode;
 
+  // shouldn't be marked `@Child` because this node is actually the child of the SimpleRootNode
+  // created in the constructor.
+  private final ExpressionNode expressionNode;
+
   public ExecuteCustomThisWithRootNode(
       SourceSection sourceSection,
       ExpressionNode expressionNode,
@@ -49,7 +52,8 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
       int[] forGeneratorSlots,
       int[] parameterSlots) {
     super(sourceSection);
-    frameDescriptor.findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
+    this.expressionNode = expressionNode;
+    frameDescriptor.findOrAddAuxiliarySlot(VmUtils.CUSTOM_THIS_FRAME_SLOT_ID);
     var rootNode =
         new SimpleRootNode(
             VmLanguage.get(this),
@@ -58,6 +62,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
             qualifiedName,
             new WithCustomThisExpression(expressionNode, forGeneratorSlots, parameterSlots));
     this.callNode = DirectCallNode.create(rootNode.getCallTarget());
+  }
+
+  public ExpressionNode getExpressionNode() {
+    return expressionNode;
   }
 
   @Override

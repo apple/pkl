@@ -15,66 +15,65 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
+import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
 
 /** Infers the parent to amend in `function createPerson(): Person = new { ... }`. */
-public final class InferParentWithinMethodNode extends ExpressionNode {
-  private final VmLanguage language;
+public abstract class InferParentWithinMethodNode extends AbstractInferParentFromMethodNode {
   private final Identifier methodName;
-  @Child private @Nullable ExpressionNode ownerNode;
-  @CompilationFinal private @Nullable Object inferredParent;
+  @Child private ExpressionNode ownerNode;
 
-  public InferParentWithinMethodNode(
+  protected InferParentWithinMethodNode(
       SourceSection sourceSection,
       VmLanguage language,
       Identifier methodName,
       ExpressionNode ownerNode) {
 
-    super(sourceSection);
-    this.language = language;
+    super(sourceSection, language);
     this.methodName = methodName;
     this.ownerNode = ownerNode;
   }
 
   @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    if (inferredParent != null) return inferredParent;
-
-    // remaining code only runs first time this node is executed
-    // (assuming evaluation isn't continued despite errors)
-
-    CompilerDirectives.transferToInterpreter();
-
-    assert ownerNode != null;
+  protected Method getMethod(VirtualFrame frame) {
     var owner = (VmObjectLike) ownerNode.executeGeneric(frame);
     assert owner.isPrototype();
 
     var method = owner.getVmClass().getDeclaredMethod(methodName);
     assert method != null;
+    return method;
+  }
 
-    var returnTypeNode = method.getReturnTypeNode();
-    if (returnTypeNode == null || returnTypeNode instanceof UnknownTypeNode) {
-      inferredParent = VmDynamic.empty();
-      ownerNode = null;
-      return inferredParent;
-    }
+  @Override
+  protected @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method) {
+    return method.getReturnTypeNode(frame);
+  }
 
-    var returnTypeDefaultValue =
-        returnTypeNode.createDefaultValue(
-            frame, language, method.getHeaderSection(), method.getQualifiedName());
-    if (returnTypeDefaultValue != null) {
-      inferredParent = returnTypeDefaultValue;
-      ownerNode = null;
-      return inferredParent;
-    }
+  // keep specializations in sync with other AbstractInferParentFromMethodNode subclasses
 
-    throw exceptionBuilder().evalError("cannotInferParent").build();
+  @Specialization(
+      guards = {"getMethod(frame) == cachedMethod", "isFinalType(cachedMethod, typeNode)"})
+  protected final Object evalCached(
+      @SuppressWarnings("unused") VirtualFrame frame,
+      @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
+      @Cached("getTypeNode(frame, cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached(
+              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName())")
+          Object defaultValue) {
+    return defaultValue;
+  }
+
+  @Specialization(replaces = "evalCached")
+  protected final Object eval(VirtualFrame frame) {
+    var method = getMethod(frame);
+    var typeNode = getTypeNode(frame, method);
+    return getDefaultValue(frame, typeNode, method.getHeaderSection(), method.getQualifiedName());
   }
 }

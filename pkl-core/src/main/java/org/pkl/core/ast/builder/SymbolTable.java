@@ -40,6 +40,7 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.ArrayUtils;
 import org.pkl.core.util.LateInit;
 import org.pkl.parser.Lexer;
@@ -410,6 +411,18 @@ public final class SymbolTable {
       return curr;
     }
 
+    public final boolean isAnnotationScope() {
+      return this instanceof AnnotationScope;
+    }
+
+    public final boolean isPropertyScope() {
+      return this instanceof PropertyScope;
+    }
+
+    public final boolean isMethodScope() {
+      return this instanceof MethodScope;
+    }
+
     public final boolean isLetScope() {
       return this instanceof LetExpressionScope;
     }
@@ -420,6 +433,10 @@ public final class SymbolTable {
 
     public final boolean isClassScope() {
       return this instanceof ClassScope;
+    }
+
+    public final boolean isObjectScope() {
+      return this instanceof ObjectScope;
     }
 
     public final boolean isClassMemberScope() {
@@ -452,6 +469,10 @@ public final class SymbolTable {
 
     public final boolean isForGeneratorScope() {
       return this instanceof ForGeneratorScope;
+    }
+
+    public final boolean isTypeAliasScope() {
+      return this instanceof TypeAliasScope;
     }
 
     public ConstLevel getConstLevel() {
@@ -1010,7 +1031,6 @@ public final class SymbolTable {
 
     @Override
     public @Nullable VariableResolution doResolveProperty(String name, int levelsUp) {
-
       var member = properties.get(name);
       if (member == null) return null;
       return new LexicalProperty(false, member.modifiers, levelsUp);
@@ -1018,7 +1038,6 @@ public final class SymbolTable {
 
     @Override
     public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
-
       var member = methods.get(name);
       if (member == null) return null;
       return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);
@@ -1048,16 +1067,9 @@ public final class SymbolTable {
    * A scope where {@code this} has a special meaning (type constraint, object member predicate).
    *
    * <p>Technically, a scope where {@code this} isn't {@code frame.getArguments()[0]}, but the value
-   * at an auxiliary slot identified by {@link CustomThisScope#FRAME_SLOT_ID}.
+   * at an auxiliary slot identified by {@link VmUtils#CUSTOM_THIS_FRAME_SLOT_ID}.
    */
   public static final class CustomThisScope extends Scope {
-    public static final Object FRAME_SLOT_ID =
-        new Object() {
-          @Override
-          public String toString() {
-            return "customThisSlot";
-          }
-        };
 
     public CustomThisScope(Scope parent, FrameDescriptorBuilder frameDescriptorBuilder) {
       super(

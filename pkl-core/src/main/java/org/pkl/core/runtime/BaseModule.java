@@ -19,6 +19,7 @@ import static org.pkl.core.PClassInfo.pklBaseUri;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Idempotent;
 
 public final class BaseModule extends StdLibModule {
   static final VmTyped instance = VmUtils.createEmptyModule();
@@ -91,6 +92,7 @@ public final class BaseModule extends StdLibModule {
     return SetClass.instance;
   }
 
+  @Idempotent
   public static VmClass getListingClass() {
     return ListingClass.instance;
   }
@@ -99,10 +101,12 @@ public final class BaseModule extends StdLibModule {
     return MapClass.instance;
   }
 
+  @Idempotent
   public static VmClass getMappingClass() {
     return MappingClass.instance;
   }
 
+  @Idempotent
   public static VmClass getDynamicClass() {
     return DynamicClass.instance;
   }
@@ -135,6 +139,7 @@ public final class BaseModule extends StdLibModule {
     return RegexMatchClass.instance;
   }
 
+  @Idempotent
   public static VmClass getFunctionClass() {
     return FunctionClass.instance;
   }

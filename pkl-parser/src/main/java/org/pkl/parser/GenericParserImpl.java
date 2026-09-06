@@ -1161,6 +1161,7 @@ class GenericParserImpl {
           case UNKNOWN -> make(NodeType.UNKNOWN_TYPE, next().span);
           case NOTHING -> make(NodeType.NOTHING_TYPE, next().span);
           case MODULE -> make(NodeType.MODULE_TYPE, next().span);
+          case THIS -> make(NodeType.THIS_TYPE, next().span);
           case LPAREN -> {
             var children = new ArrayList<Node>();
             children.add(makeTerminal(next()));

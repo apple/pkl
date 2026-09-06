@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -18,6 +18,7 @@ package org.pkl.core.ast.type;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
+import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
 
 public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeNode {
@@ -25,19 +26,22 @@ public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeN
   private final SourceSection typeNameSection;
   private final Identifier moduleName;
   private final Identifier typeName;
+  @Child private ExpressionNode getModuleNode;
 
   public ResolveQualifiedDeclaredTypeNode(
       SourceSection sourceSection,
       SourceSection moduleNameSection,
       SourceSection typeNameSection,
       Identifier moduleName,
-      Identifier typeName) {
+      Identifier typeName,
+      ExpressionNode getModuleNode) {
 
     super(sourceSection);
     this.moduleNameSection = moduleNameSection;
     this.typeNameSection = typeNameSection;
     this.moduleName = moduleName;
     this.typeName = typeName;
+    this.getModuleNode = getModuleNode;
 
     assert moduleName.isLocalProp();
     assert typeName.isRegular();
@@ -47,7 +51,7 @@ public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeN
   public Object executeGeneric(VirtualFrame frame) {
     CompilerDirectives.transferToInterpreter();
 
-    var enclosingModule = getEnclosingModule(VmUtils.getOwner(frame));
+    var enclosingModule = (VmTyped) getModuleNode.executeGeneric(frame);
     var importedModule = getImport(enclosingModule, moduleName, moduleNameSection);
 
     // search module hierarchy

@@ -64,7 +64,9 @@ Default: `null` +
 Example 1: `moduleCacheDir = layout.buildDirectory.dir("pkl-module-cache")` +
 Example 2: `moduleCacheDir.fileValue file("/absolute/path/to/cache")` +
 The cache directory for storing packages.
-If `null`, defaults to `~/.pkl/cache`.
+If `null`, defaults to `~/.cache/pkl` on Unix or `%LOCALAPPDATA%/pkl/Cache` on Windows.
+
+This setting can also be configured using the `$XDG_CACHE_HOME` environment variable.
 ====
 
 .color: Property<Boolean>

@@ -114,6 +114,52 @@ class LexerTest {
   }
 
   @Test
+  fun `block comment at EOF without trailing newline`() {
+    // A block comment that is the last thing in the file, with no trailing
+    // newline, must lex correctly and not be mistaken for an unterminated comment.
+    val lexer = Lexer("/*\nbar\n*/")
+    assertThat(lexer.next()).isEqualTo(Token.BLOCK_COMMENT)
+    assertThat(lexer.next()).isEqualTo(Token.EOF)
+  }
+
+  @Test
+  fun `block comment after code at EOF without trailing newline`() {
+    val lexer = Lexer("foo = 123\n/*\nbar\n*/")
+    assertThat(lexer.next()).isEqualTo(Token.IDENTIFIER)
+    assertThat(lexer.next()).isEqualTo(Token.ASSIGN)
+    assertThat(lexer.next()).isEqualTo(Token.INT)
+    assertThat(lexer.next()).isEqualTo(Token.BLOCK_COMMENT)
+    assertThat(lexer.next()).isEqualTo(Token.EOF)
+  }
+
+  @Test
+  fun `empty block comment at EOF without trailing newline`() {
+    val lexer = Lexer("/**/")
+    assertThat(lexer.next()).isEqualTo(Token.BLOCK_COMMENT)
+    assertThat(lexer.next()).isEqualTo(Token.EOF)
+  }
+
+  @Test
+  fun `plain code at EOF without trailing newline`() {
+    // Documents that code whose final line has no trailing newline lexes
+    // cleanly and terminates with EOF rather than erroring.
+    val lexer = Lexer("foo = 123")
+    assertThat(lexer.next()).isEqualTo(Token.IDENTIFIER)
+    assertThat(lexer.next()).isEqualTo(Token.ASSIGN)
+    assertThat(lexer.next()).isEqualTo(Token.INT)
+    assertThat(lexer.next()).isEqualTo(Token.EOF)
+  }
+
+  @Test
+  fun `unterminated block comment fails`() {
+    val thrown = assertThrows<ParserError> { Lexer("/* bar").next() }
+    assertThat(thrown).hasMessageContaining("Unexpected end of file")
+
+    val justOpener = assertThrows<ParserError> { Lexer("/*").next() }
+    assertThat(justOpener).hasMessageContaining("Unexpected end of file")
+  }
+
+  @Test
   fun acceptsAllUnicodeCodepointsInComments() {
     // Test valid Unicode codepoints can appear literally
     // without being misinterpreted as EOF.

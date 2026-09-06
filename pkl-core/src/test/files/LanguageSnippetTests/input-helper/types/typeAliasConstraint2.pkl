@@ -1,3 +1,8 @@
 class MyClass
 
 typealias MyTypeAlias = MyClass(getClass() == MyClass)
+
+typealias MyTypeAlias2 = MyClass(this is MyClass)
+
+// a let expression turns the constraint node into its own root node
+typealias MyTypeAlias3 = MyClass(let (_ = true) this is MyClass)

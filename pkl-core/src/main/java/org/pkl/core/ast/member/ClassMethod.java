@@ -18,6 +18,7 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
@@ -28,7 +29,7 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
 
-public final class ClassMethod extends ClassMember {
+public final class ClassMethod extends ClassMember implements Method {
   private final List<TypeParameter> typeParameters;
 
   // null = not deprecated, "" = no/empty message in the @Deprecated body
@@ -91,11 +92,21 @@ public final class ClassMethod extends ClassMember {
     return functionNode.getCallTarget();
   }
 
+  @Override
+  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
+    return getCallTarget(callSite);
+  }
+
   public int getParameterCount() {
     return functionNode.getParameterCount();
   }
 
   public @Nullable TypeNode getReturnTypeNode() {
+    return functionNode.getReturnTypeNode();
+  }
+
+  @Override
+  public @Nullable TypeNode getReturnTypeNode(VirtualFrame frame) {
     return functionNode.getReturnTypeNode();
   }
 
@@ -130,5 +141,9 @@ public final class ClassMethod extends ClassMember {
 
   public PClass.Method export(PClass owner) {
     return functionNode.export(owner, docComment, annotations, modifiers, typeParameters);
+  }
+
+  public @Nullable TypeNode getParameterTypeNode(VirtualFrame frame, int idx) {
+    return functionNode.getParameterTypeNode(idx);
   }
 }

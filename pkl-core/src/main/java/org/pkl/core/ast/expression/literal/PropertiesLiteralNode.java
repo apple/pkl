@@ -16,7 +16,9 @@
 package org.pkl.core.ast.expression.literal;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -31,6 +33,7 @@ import org.pkl.core.runtime.*;
 
 /** Object literal that contains properties but not elements or entries. */
 // IDEA: don't materialize frame when all members are constants
+@ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode {
   public PropertiesLiteralNode(
       SourceSection sourceSection,
@@ -82,14 +85,61 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
     return new VmTyped(frame.materialize(), parent, parent.getVmClass(), members);
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {
+        "parentClass == getClass(defaultValue)",
+        "isTypedObjectClass(parentClass)",
+        "checkIsValidTypedAmendment(parentClass)"
+      })
+  protected Object evalNullWithTypedObjectDefaultCached(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached("getClass(defaultValue)") VmClass parentClass) {
+    var parentTyped = (VmTyped) defaultValue;
+    return new VmTyped(frame.materialize(), parentTyped, parentTyped.getVmClass(), members);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {
+        "isTypedObjectClass(getClass(defaultValue))",
+        "checkIsValidTypedAmendment(defaultValue)"
+      })
+  protected Object evalNullWithTypedObjectDefaultUncached(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind(value = "getNullDefaultValue(parent)") Object defaultValue) {
+    var parentTyped = (VmTyped) defaultValue;
+    return new VmTyped(frame.materialize(), parentTyped, parentTyped.getVmClass(), members);
+  }
+
   @Specialization
   protected Object evalDynamic(VirtualFrame frame, VmDynamic parent) {
     return new VmDynamic(frame.materialize(), parent, members, parent.getLength());
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(guards = "getClass(defaultValue).isDynamicClass()")
+  protected Object evalNullWithDynamicDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalDynamic(frame, (VmDynamic) defaultValue);
+  }
+
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected Object evalListing(VirtualFrame frame, VmListing parent) {
     return new VmListing(frame.materialize(), parent, members, parent.getLength());
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isListingClass()", "checkIsValidListingAmendment()"})
+  protected Object evalNullWithListingDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind(value = "getNullDefaultValue(parent)") Object defaultValue) {
+    return evalListing(frame, (VmListing) defaultValue);
   }
 
   @ExplodeLoop
@@ -98,10 +148,14 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
     return new VmMapping(frame.materialize(), parent, members);
   }
 
-  @Specialization
-  protected Object evalNull(VirtualFrame frame, VmNull parent) {
-    // assumes that Graal PE can handle recursive call to same node
-    return executeWithParent(frame, parent.getDefaultValue());
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isMappingClass()", "checkIsValidMappingAmendment()"})
+  protected Object evalNullWithMappingDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind(value = "getNullDefaultValue(parent)") Object defaultValue) {
+    return evalMapping(frame, (VmMapping) defaultValue);
   }
 
   // Ultimately, this lambda or a lambda returned from it will call one of the other
@@ -119,6 +173,18 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
           AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isFunction(defaultValue)", "checkIsValidFunctionAmendment(defaultValue)"})
+  protected Object evalNullWithFunctionDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
+    return evalFunction(frame, (VmFunction) defaultValue, amendFunctionNode);
   }
 
   @Specialization(
@@ -199,8 +265,13 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
   @Specialization
   @TruffleBoundary
   protected void fallback(Object parent) {
+    var value = parent;
+    // blame the non-null type (e.g. blame `Duration` instead of `Null` in the case of `Duration?`)
+    if (value instanceof VmNull vmNull) {
+      value = getNullDefaultValue(vmNull);
+    }
     // should always throw
-    checkIsValidTypedAmendment(parent);
+    checkIsValidTypedAmendment(value);
 
     throw exceptionBuilder().unreachableCode().build();
   }

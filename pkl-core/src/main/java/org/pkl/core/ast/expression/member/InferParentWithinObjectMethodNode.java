@@ -15,34 +15,31 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMethodNode;
-import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
+import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmObjectLike;
 
 /** Infers the parent to amend in `obj { local function createPerson(): Person = new { ... } }`. */
-public final class InferParentWithinObjectMethodNode extends ExpressionNode {
-  private final VmLanguage language;
+public abstract class InferParentWithinObjectMethodNode extends AbstractInferParentFromMethodNode {
   private final Identifier localMethodName;
-  @Child private @Nullable ExpressionNode ownerNode;
-  @CompilationFinal private @Nullable Object inferredParent;
+  @Child private ExpressionNode ownerNode;
 
-  public InferParentWithinObjectMethodNode(
+  protected InferParentWithinObjectMethodNode(
       SourceSection sourceSection,
       VmLanguage language,
       Identifier localMethodName,
       ExpressionNode ownerNode) {
 
-    super(sourceSection);
-    this.language = language;
+    super(sourceSection, language);
     this.localMethodName = localMethodName;
     this.ownerNode = ownerNode;
 
@@ -50,15 +47,7 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
   }
 
   @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    if (inferredParent != null) return inferredParent;
-
-    // remaining code only runs first time this node is executed
-    // (assuming evaluation isn't continued despite errors)
-
-    CompilerDirectives.transferToInterpreter();
-
-    assert ownerNode != null;
+  protected Method getMethod(VirtualFrame frame) {
     var owner = (VmObjectLike) ownerNode.executeGeneric(frame);
 
     var member = owner.getMember(localMethodName);
@@ -66,23 +55,32 @@ public final class InferParentWithinObjectMethodNode extends ExpressionNode {
 
     var methodNode = (ObjectMethodNode) member.getMemberNode();
     assert methodNode != null;
+    return methodNode;
+  }
 
-    var returnTypeNode = methodNode.getReturnTypeNode();
-    if (returnTypeNode == null || returnTypeNode instanceof UnknownTypeNode) {
-      inferredParent = VmDynamic.empty();
-      ownerNode = null;
-      return inferredParent;
-    }
+  @Override
+  protected @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method) {
+    return method.getReturnTypeNode(frame);
+  }
 
-    Object defaultReturnTypeValue =
-        returnTypeNode.createDefaultValue(
-            frame, language, member.getHeaderSection(), member.getQualifiedName());
-    if (defaultReturnTypeValue != null) {
-      inferredParent = defaultReturnTypeValue;
-      ownerNode = null;
-      return inferredParent;
-    }
+  // keep specializations in sync with other AbstractInferParentFromMethodNode subclasses
 
-    throw exceptionBuilder().evalError("cannotInferParent").build();
+  @Specialization(
+      guards = {"getMethod(frame) == cachedMethod", "isFinalType(cachedMethod, typeNode)"})
+  protected final Object evalCached(
+      @SuppressWarnings("unused") VirtualFrame frame,
+      @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
+      @Cached("getTypeNode(frame, cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached(
+              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName())")
+          Object defaultValue) {
+    return defaultValue;
+  }
+
+  @Specialization(replaces = "evalCached")
+  protected final Object eval(VirtualFrame frame) {
+    var method = getMethod(frame);
+    var typeNode = getTypeNode(frame, method);
+    return getDefaultValue(frame, typeNode, method.getHeaderSection(), method.getQualifiedName());
   }
 }

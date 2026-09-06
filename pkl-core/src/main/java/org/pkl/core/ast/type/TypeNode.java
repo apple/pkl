@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.stream.Collectors;
 import org.jspecify.annotations.NonNull;
@@ -43,8 +44,9 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.StackFrame;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
-import org.pkl.core.ast.builder.SymbolTable.CustomThisScope;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
+import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
@@ -53,6 +55,7 @@ import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
@@ -61,7 +64,8 @@ import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
 
-  public interface ClassTypeNode {
+  /** Type node that corresponds to a user-defined class (or module class). */
+  public interface UserClassTypeNode {
     VmClass getVmClass();
   }
 
@@ -142,8 +146,22 @@ public abstract class TypeNode extends PklNode {
         true,
         typeNode -> {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
-          if (typeNode instanceof NonFinalModuleTypeNode) {
+          if (typeNode instanceof NonFinalSelfTypeNode) {
             ret.set(false);
+            return false;
+          }
+          return true;
+        });
+    return ret.get();
+  }
+
+  public final boolean isSelfType() {
+    var ret = new MutableBoolean(false);
+    acceptTypeNode(
+        true,
+        typeNode -> {
+          if (typeNode instanceof NonFinalSelfTypeNode || typeNode instanceof FinalSelfTypeNode) {
+            ret.set(true);
             return false;
           }
           return true;
@@ -409,44 +427,61 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  /** The `module` type for a final module. */
-  public static final class FinalModuleTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
-    private final VmClass moduleClass;
+  /** The `module` or `this` type for a final module or class. */
+  public static final class FinalSelfTypeNode extends ObjectSlotTypeNode {
+    private final VmClass clazz;
+    private final PType pType;
+    private final VmObjectFactory<Void> mirrorFactory;
 
-    public FinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
+    private FinalSelfTypeNode(
+        SourceSection sourceSection,
+        VmClass clazz,
+        PType pType,
+        VmObjectFactory<Void> mirrorFactory) {
       super(sourceSection);
-      this.moduleClass = moduleClass;
+      this.clazz = clazz;
+      this.pType = pType;
+      this.mirrorFactory = mirrorFactory;
+    }
+
+    public static FinalSelfTypeNode moduleType(SourceSection sourceSection, VmClass clazz) {
+      return new FinalSelfTypeNode(
+          sourceSection, clazz, PType.MODULE, MirrorFactories.moduleTypeFactory);
+    }
+
+    public static FinalSelfTypeNode thisType(SourceSection sourceSection, VmClass clazz) {
+      return new FinalSelfTypeNode(
+          sourceSection, clazz, PType.THIS, MirrorFactories.thisTypeFactory);
     }
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      if (value instanceof VmTyped typed && typed.getVmClass() == moduleClass) return value;
+      if (VmUtils.getClass(value) == clazz) return value;
 
-      throw typeMismatch(value, moduleClass);
+      throw typeMismatch(value, clazz);
     }
 
     @Override
     public VmTyped getMirror() {
-      return MirrorFactories.moduleTypeFactory.create(null);
+      return mirrorFactory.create(null);
     }
 
     @Override
     public boolean doIsEquivalentTo(TypeNode other) {
-      if (!(other instanceof FinalModuleTypeNode finalModuleTypeNode)) {
+      if (!(other instanceof FinalSelfTypeNode finalSelfTypeNode)) {
         return false;
       }
-      return moduleClass.equals(finalModuleTypeNode.moduleClass);
+      return clazz.equals(finalSelfTypeNode.clazz);
     }
 
     @Override
     protected PType doExport() {
-      return PType.MODULE;
+      return pType;
     }
 
     @Override
     public VmClass getVmClass() {
-      return moduleClass;
+      return clazz;
     }
 
     @Override
@@ -460,55 +495,77 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName) {
-      return TypeNode.createDefaultValue(moduleClass);
+      return TypeNode.createDefaultValue(clazz);
     }
   }
 
-  /** The `module` type for an open module. */
-  public static final class NonFinalModuleTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
-    private final VmClass moduleClass; // only used by getVmClass()
-    @Child private ExpressionNode getModuleNode;
+  /** The `module` or `this` type for an open module or class. */
+  public static final class NonFinalSelfTypeNode extends ObjectSlotTypeNode {
+    private final VmClass clazz; // only used by getVmClass()
+    @Child private ExpressionNode getTargetNode;
+    private final PType pType;
+    private final VmObjectFactory<Void> mirrorFactory;
 
-    public NonFinalModuleTypeNode(SourceSection sourceSection, VmClass moduleClass) {
+    private NonFinalSelfTypeNode(
+        SourceSection sourceSection,
+        VmClass clazz,
+        ExpressionNode getTargetNode,
+        PType pType,
+        VmObjectFactory<Void> mirrorFactory) {
       super(sourceSection);
-      this.moduleClass = moduleClass;
-      getModuleNode = new GetModuleNode(sourceSection);
+      this.clazz = clazz;
+      this.getTargetNode = getTargetNode;
+      this.pType = pType;
+      this.mirrorFactory = mirrorFactory;
+    }
+
+    public static NonFinalSelfTypeNode moduleType(SourceSection sourceSection, VmClass clazz) {
+      return new NonFinalSelfTypeNode(
+          sourceSection,
+          clazz,
+          new GetModuleNode(sourceSection),
+          PType.MODULE,
+          MirrorFactories.moduleTypeFactory);
+    }
+
+    public static NonFinalSelfTypeNode thisType(SourceSection sourceSection, VmClass clazz) {
+      return new NonFinalSelfTypeNode(
+          sourceSection, clazz, new GetReceiverNode(), PType.THIS, MirrorFactories.thisTypeFactory);
     }
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
+      var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
 
       if (value instanceof VmTyped typed) {
         var valueClass = typed.getVmClass();
-        if (moduleClass.isSuperclassOf(valueClass)) return value;
+        if (clazz.isSuperclassOf(valueClass)) return value;
       }
 
-      throw typeMismatch(value, moduleClass);
+      throw typeMismatch(value, clazz);
     }
 
     @Override
     public VmTyped getMirror() {
-      return MirrorFactories.moduleTypeFactory.create(null);
+      return mirrorFactory.create(null);
     }
 
     @Override
     public boolean doIsEquivalentTo(TypeNode other) {
-      if (!(other instanceof NonFinalModuleTypeNode nonFinalModuleTypeNode)) {
+      if (!(other instanceof NonFinalSelfTypeNode nonFinalSelfTypeNode)) {
         return false;
       }
-      return moduleClass.equals(nonFinalModuleTypeNode.moduleClass);
+      return clazz.equals(nonFinalSelfTypeNode.clazz);
     }
 
     @Override
     protected PType doExport() {
-      return PType.MODULE;
+      return pType;
     }
 
     @Override
     public VmClass getVmClass() {
-      return moduleClass;
+      return clazz;
     }
 
     @Override
@@ -522,8 +579,8 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName) {
-      var moduleClass = ((VmTyped) getModuleNode.executeGeneric(frame)).getVmClass();
-      return TypeNode.createDefaultValue(moduleClass);
+      var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
+      return TypeNode.createDefaultValue(clazz);
     }
   }
 
@@ -651,7 +708,8 @@ public abstract class TypeNode extends PklNode {
    * String/Boolean/Int/Float and their supertypes, only `VmValue`s can possibly pass its type
    * check.
    */
-  public static final class FinalClassTypeNode extends ObjectSlotTypeNode implements ClassTypeNode {
+  public static final class FinalClassTypeNode extends ObjectSlotTypeNode
+      implements UserClassTypeNode {
     private final VmClass clazz;
 
     public FinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -708,7 +766,7 @@ public abstract class TypeNode extends PklNode {
    * check.
    */
   public abstract static class NonFinalClassTypeNode extends ObjectSlotTypeNode
-      implements ClassTypeNode {
+      implements UserClassTypeNode {
     protected final VmClass clazz;
 
     public NonFinalClassTypeNode(SourceSection sourceSection, VmClass clazz) {
@@ -1953,7 +2011,7 @@ public abstract class TypeNode extends PklNode {
     protected final PType doExport() {
       var parameterTypes =
           Arrays.stream(parameterTypeNodes).map(TypeNode::export).collect(Collectors.toList());
-      return new PType.Function(parameterTypes, TypeNode.export(returnTypeNode));
+      return new PType.Function(parameterTypes, returnTypeNode.doExport());
     }
 
     @Override
@@ -2004,8 +2062,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected final PType doExport() {
-      return new PType.Class(
-          BaseModule.getFunctionClass().export(), TypeNode.export(typeArgumentNode));
+      return new PType.Class(BaseModule.getFunctionClass().export(), typeArgumentNode.doExport());
     }
 
     @Specialization
@@ -2118,6 +2175,7 @@ public abstract class TypeNode extends PklNode {
   public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
+    @Child private ExpressionNode getReceiverClassNode;
     @Child private ExpressionNode getModuleNode;
 
     public ReferenceTypeNode(
@@ -2125,6 +2183,7 @@ public abstract class TypeNode extends PklNode {
       super(sourceSection);
       this.domainTypeNode = domainTypeNode;
       this.referentTypeNode = referentTypeNode;
+      this.getReceiverClassNode = new GetReceiverClassNode(sourceSection);
       this.getModuleNode = new GetModuleNode(sourceSection);
       validate();
     }
@@ -2167,25 +2226,30 @@ public abstract class TypeNode extends PklNode {
       } catch (VmTypeMismatchException e) {
         CompilerDirectives.transferToInterpreter();
         throw new VmTypeMismatchException.Reference(
-            sourceSection,
-            value,
-            TypeNode.export(domainTypeNode),
-            TypeNode.export(referentTypeNode));
+            sourceSection, value, domainTypeNode.doExport(), referentTypeNode.doExport());
       }
 
-      var module = (VmTyped) getModuleNode.executeGeneric(frame);
-      return doEval(value, module);
+      // NB: this is correct because the `this` type is not allowed in typealias bodies.
+      // So `this` can only correspond to the receiver where the type check/annotation is written.
+      var thisClass = ((VmClass) getReceiverClassNode.executeGeneric(frame));
+
+      // NB: This will be wrong for deprecated usage of the `module` type in typealias bodies.
+      // It will always resolve to the module where the type check/annotation is written
+      // not the type itself. This is no _more_ broken than it was before.
+      var moduleClass = VmUtils.getClass(getModuleNode.executeGeneric(frame));
+
+      return doEval(value, thisClass, moduleClass);
     }
 
     @TruffleBoundary
-    private Object doEval(VmReference value, VmTyped module) {
-      var referentType = TypeNode.export(referentTypeNode);
-      if (value.referentTypeIsSubtypeOf(referentType, module.getVmClass().export())) {
+    private Object doEval(VmReference value, VmClass thisClass, VmClass moduleClass) {
+      var referentType = referentTypeNode.doExport();
+      if (value.referentTypeIsSubtypeOf(referentType, thisClass.export(), moduleClass.export())) {
         return value;
       }
 
       throw new VmTypeMismatchException.Reference(
-          sourceSection, value, TypeNode.export(domainTypeNode), referentType);
+          sourceSection, value, domainTypeNode.doExport(), referentType);
     }
 
     @Fallback
@@ -2738,6 +2802,7 @@ public abstract class TypeNode extends PklNode {
       return aliasedTypeNode.executeLazily(frame, value);
     }
 
+    /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
     @Override
     public Object executeEagerly(VirtualFrame frame, Object value) {
       return aliasedTypeNode.executeEagerly(frame, value);
@@ -2854,25 +2919,21 @@ public abstract class TypeNode extends PklNode {
       return this;
     }
 
+    @TruffleBoundary
+    private int getCustomThisSlot(FrameDescriptor frameDescriptor) {
+      // can't store the slot id as this node may be called from different root nodes
+      // (see constraints14 snippet)
+      return frameDescriptor.findOrAddAuxiliarySlot(VmUtils.CUSTOM_THIS_FRAME_SLOT_ID);
+    }
+
     @ExplodeLoop
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      int customThisSlot;
-      var numberOfAuxiliarySlots = frame.getFrameDescriptor().getNumberOfAuxiliarySlots();
-      if (numberOfAuxiliarySlots == 0) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        customThisSlot =
-            frame.getFrameDescriptor().findOrAddAuxiliarySlot(CustomThisScope.FRAME_SLOT_ID);
-      } else {
-        // assertion: we only use auxiliary slots for custom `this`.
-        assert numberOfAuxiliarySlots == 1;
-        customThisSlot = 0;
-      }
       var ret = childNode.executeLazily(frame, value);
 
       var localContext = language.localContext.get();
       var prevShouldTypeCheck = localContext.shouldEagerTypecheck();
       localContext.shouldEagerTypecheck(true);
-      frame.setAuxiliarySlot(customThisSlot, value);
+      frame.setAuxiliarySlot(getCustomThisSlot(frame.getFrameDescriptor()), value);
       try {
         for (var node : constraintNodes) {
           node.execute(frame);
@@ -3164,6 +3225,99 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
+  public abstract static class ClassClassTypeNode extends ObjectSlotTypeNode {
+
+    @Child private TypeNode typeNode;
+    @CompilationFinal private boolean initialized = false;
+    @CompilationFinal private @Nullable VmClass clazz = null;
+
+    public ClassClassTypeNode(SourceSection sourceSection, TypeNode typeNode) {
+      super(sourceSection);
+      this.typeNode = typeNode;
+    }
+
+    private void initVmClass() {
+      if (initialized) return;
+
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      initialized = true;
+
+      var node = typeNode;
+      while (node instanceof TypeAliasTypeNode typeAliasTypeNode) {
+        node = typeAliasTypeNode.getAliasedTypeNode();
+      }
+
+      if (node instanceof UnknownTypeNode || node instanceof TypeVariableNode) {
+        clazz = BaseModule.getAnyClass();
+      } else if (!node.isParametric()) {
+        clazz = node.getVmClass();
+      }
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return BaseModule.getClassClass();
+    }
+
+    @Specialization
+    protected Object eval(VmClass value) {
+      // safe to init clazz here (instead of on init and typealias instantiate)
+      // because in the typealias case this node will never execute prior to instantiation
+      initVmClass();
+
+      // Fast path: all classes match Class<Any> / Class<unknown> / Class<type arg>.
+      // In this case, skip the subclass check and behave like a bare `Class` type annotation.
+      if (clazz == BaseModule.getAnyClass()) {
+        return value;
+      }
+
+      // clazz will be null iff the type arg is a not a valid class type
+      if (clazz == null) {
+        CompilerDirectives.transferToInterpreter();
+        throw new VmTypeMismatchException.ClassType(sourceSection, value, typeNode.doExport());
+      }
+
+      if (!value.isSubclassOf(clazz)) {
+        CompilerDirectives.transferToInterpreter();
+        throw new VmTypeMismatchException.ClassType(sourceSection, value, clazz);
+      }
+
+      return value;
+    }
+
+    @Fallback
+    protected Object fallback(Object value) {
+      throw typeMismatch(value, BaseModule.getClassClass());
+    }
+
+    @Override
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      if (visitTypeArguments) {
+        return consumer.accept(this) && typeNode.acceptTypeNode(visitTypeArguments, consumer);
+      }
+      return consumer.accept(this);
+    }
+
+    @Override
+    protected boolean doIsEquivalentTo(TypeNode other) {
+      if (!(other instanceof ClassClassTypeNode classClassTypeNode)) {
+        return false;
+      }
+
+      return Objects.equals(clazz, classClassTypeNode.clazz);
+    }
+
+    @Override
+    public VmList getTypeArgumentMirrors() {
+      return VmList.of(typeNode.getMirror());
+    }
+
+    @Override
+    protected PType doExport() {
+      return new PType.Class(BaseModule.getClassClass().export(), typeNode.doExport());
+    }
+  }
+
   public abstract static class ValidatingObjectSlotTypeNode extends ObjectSlotTypeNode {
 
     protected ValidatingObjectSlotTypeNode(SourceSection sourceSection) {
@@ -3240,6 +3394,7 @@ public abstract class TypeNode extends PklNode {
     if (clazz.isInstantiable()) {
       if (clazz.isListingClass()) return VmListing.empty();
       if (clazz.isMappingClass()) return VmMapping.empty();
+      if (clazz.isDynamicClass()) return VmDynamic.empty();
       return clazz.getPrototype();
     }
 

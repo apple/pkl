@@ -144,7 +144,7 @@ class CliCommandTest {
     assertThat(cliTest.myRootDir).isNull()
     assertThat(builder.environmentVariables).isEqualTo(System.getenv())
     assertThat(builder.externalProperties).isEmpty()
-    assertThat(builder.moduleCacheDir).isEqualTo(IoUtils.getDefaultModuleCacheDir())
+    assertThat(builder.moduleCacheDir).isEqualTo(IoUtils.getSystemModuleCacheDir())
     assertThat(cliTest.myModulePath).isEmpty()
     assertThat(builder.color).isFalse
     assertThat(cliTest.myProxyAddress).isNull()

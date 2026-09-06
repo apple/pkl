@@ -1,0 +1,6 @@
+import "../../input-helper/types/typeAliasAmendModule.pkl"
+
+local const function isValid(s: String): Boolean = s.startsWith("Alice")
+
+res = typeAliasAmendModule.name
+

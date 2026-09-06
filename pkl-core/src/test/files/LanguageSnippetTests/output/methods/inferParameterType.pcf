@@ -1,0 +1,21 @@
+qualified = 1
+unqualifiedLexical {
+  call = 1
+}
+unqualifiedThis1 = 1
+unqualifiedThis2 = 8
+`super` = 16
+nestedMethodCalls = 26
+objectMethod {
+  call = 0
+  tooManyParams = "Expected 1 function argument but got 2."
+}
+intrinsicConstructor = "Cannot tell which parent to amend."
+genericMethod = "Cannot tell which parent to amend."
+fnApply = "Cannot tell which parent to amend."
+tooManyParams = "Expected 1 function argument but got 2."
+finalSelfType = "Cannot tell which parent to amend."
+nonFinalSelfType1 = "Cannot tell which parent to amend."
+nonFinalSelfType2 = "Cannot tell which parent to amend."
+polyCall1 = 1
+polyCall2 = 20

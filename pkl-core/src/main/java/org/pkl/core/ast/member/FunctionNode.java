@@ -81,6 +81,11 @@ public final class FunctionNode extends RegularMemberNode {
     return paramCount;
   }
 
+  public @Nullable TypeNode getParameterTypeNode(int idx) {
+    if (idx >= paramCount) return null;
+    return parameterTypeNodes[idx];
+  }
+
   public @Nullable TypeNode getReturnTypeNode() {
     return returnTypeNode;
   }
@@ -176,7 +181,7 @@ public final class FunctionNode extends RegularMemberNode {
     assert argCount != paramCount;
 
     return exceptionBuilder()
-        .evalError("wrongFunctionArgumentCount", paramCount, argCount)
+        .evalError("wrongFunctionArgumentCount", paramCount, argCount, paramCount == 1 ? "" : "s")
         .withSourceSection(member.getHeaderSection())
         .build();
   }

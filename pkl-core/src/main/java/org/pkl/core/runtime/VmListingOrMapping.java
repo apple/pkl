@@ -55,37 +55,35 @@ public abstract class VmListingOrMapping extends VmObject {
     this.typeCheckOwner = typeCheckOwner;
   }
 
-  // Recursively executes type casts between `owner` and `this` and returns the resulting value.
+  // Executes type casts for every parent between `owner` and `this` and returns the resulting
+  // value.
   public final Object executeTypeCasts(
       Object value,
       VmObjectLike owner,
       IndirectCallNode callNode,
       // if non-null, a stack frame for this member is inserted if a type cast fails
-      @Nullable ObjectMember member,
-      // Next type cast to be performed by the caller.
-      // Avoids repeating the same type cast in some cases.
-      @Nullable ListingOrMappingTypeCastNode nextTypeCastNode) {
-    var newNextTypeCastNode = typeCastNode != null ? typeCastNode : nextTypeCastNode;
-    Object result;
-    if (this == owner) {
-      result = value;
-    } else {
-      assert parent != null;
-      result =
-          ((VmListingOrMapping) parent)
-              .executeTypeCasts(value, owner, callNode, member, newNextTypeCastNode);
-    }
-    if (typeCastNode == null || typeCastNode == nextTypeCastNode) return result;
-    var callTarget = typeCastNode.getCallTarget();
-    try {
-      return callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
-    } catch (VmException e) {
-      CompilerDirectives.transferToInterpreter();
-      if (member != null) {
-        VmUtils.insertStackFrame(member, callTarget, e);
+      @Nullable ObjectMember member) {
+    var result = value;
+    VmObject parent = this;
+    ListingOrMappingTypeCastNode prevTypeCastNode = null;
+    while (parent != null && parent != owner) {
+      var obj = (VmListingOrMapping) parent;
+      if (obj.typeCastNode != null && obj.typeCastNode != prevTypeCastNode) {
+        var callTarget = obj.typeCastNode.getCallTarget();
+        try {
+          result = callNode.call(callTarget, obj.typeCheckReceiver, obj.typeCheckOwner, result);
+          prevTypeCastNode = obj.typeCastNode;
+        } catch (VmException e) {
+          CompilerDirectives.transferToInterpreter();
+          if (member != null) {
+            VmUtils.insertStackFrame(member, callTarget, e);
+          }
+          throw e;
+        }
       }
-      throw e;
+      parent = parent.parent;
     }
+    return result;
   }
 
   @Override

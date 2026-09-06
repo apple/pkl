@@ -1,0 +1,22 @@
+res1 {
+  ["a"] = 1
+  ["b"] = 2
+}
+res2 {
+  a = 1
+  ["b"] = 2
+}
+res3 {
+  "updated a"
+  "b"
+}
+res4 {
+  ["a"] = 1
+  ["b"] = 2
+}
+res5 = "Expected key of type `Int`, but got type `String`."
+res6 = "Element index `5` is out of range `0`..`0`."
+res7 = "Object of type `Mapping` cannot have a property (other than `default`)."
+res8 = "Duplicate definition of member `\"a\"`."
+res9 = "Expected a function with 1 parameters, but got 2."
+res10 = "Cannot instantiate, or amend an instance of, external class `String`."

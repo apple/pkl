@@ -32,7 +32,7 @@ import org.pkl.core.util.EconomicMaps;
  * Object literal that contains elements (and possibly properties) but not entries. Example: `new
  * foo { "pigeon" }`
  */
-@ImportStatic(BaseModule.class)
+@ImportStatic({BaseModule.class, VmUtils.class})
 public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
   private final ObjectMember[] elements;
 
@@ -94,10 +94,11 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
         parent.getLength() + elements.length);
   }
 
-  @Specialization
-  protected Object evalNull(VirtualFrame frame, VmNull parent) {
-    // assumes that Graal PE can handle recursive call to same node
-    return executeWithParent(frame, parent.getDefaultValue());
+  @SuppressWarnings("unused")
+  @Specialization(guards = "getClass(defaultValue).isDynamicClass()")
+  protected Object evalNullWithDynamicDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalDynamicUncached(frame, (VmDynamic) defaultValue);
   }
 
   @Specialization(guards = "checkIsValidFunctionAmendment(parent)")
@@ -108,6 +109,18 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
           AmendFunctionNode amendFunctionNode) {
 
     return amendFunctionNode.execute(frame, parent);
+  }
+
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"isFunction(defaultValue)", "checkIsValidFunctionAmendment(defaultValue)"})
+  protected Object evalNullWithFunctionDefault(
+      VirtualFrame frame,
+      VmNull parent,
+      @Bind("getNullDefaultValue(parent)") Object defaultValue,
+      @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
+          AmendFunctionNode amendFunctionNode) {
+    return evalFunction(frame, (VmFunction) defaultValue, amendFunctionNode);
   }
 
   @Specialization(
@@ -162,10 +175,23 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
         parent.getLength() + elements.length);
   }
 
+  @SuppressWarnings("unused")
+  @Specialization(
+      guards = {"getClass(defaultValue).isListingClass()", "checkIsValidListingAmendment()"})
+  protected Object evalNullWithListingDefault(
+      VirtualFrame frame, VmNull parent, @Bind("getNullDefaultValue(parent)") Object defaultValue) {
+    return evalListingUncached(frame, (VmListing) defaultValue);
+  }
+
   @Fallback
   @TruffleBoundary
   protected void fallback(Object parent) {
-    elementsEntriesFallback(parent, elements[0], true);
+    var value = parent;
+    // blame the non-null type (e.g. blame `Duration` instead of `Null` in the case of `Duration?`)
+    if (value instanceof VmNull vmNull) {
+      value = getNullDefaultValue(vmNull);
+    }
+    elementsEntriesFallback(value, elements[0], true);
   }
 
   // offset element keys according to parentLength

@@ -1,0 +1,18 @@
+res1 {
+  a = 1
+  "b"
+  "c"
+}
+res2 {
+  "a"
+  "b"
+  "c"
+}
+res3 {
+  "a"
+  "b"
+}
+res4 = "Object of type `Mapping` cannot have an element."
+res5 = "Object of type `Listing` cannot have a property (other than `default`)."
+res6 = "Expected a function with 1 parameters, but got 2."
+res7 = "Expected value of type `Object | Function<Object>`, but got type `Int`. Value: 42"

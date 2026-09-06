@@ -115,7 +115,11 @@ public final class VmTyped extends VmObject {
         if (bodyNode instanceof WrapperNode wrapper) {
           bodyNode = (ExpressionNode) wrapper.getDelegateNode();
         }
-        builder.add(member.getName().toString(), ((ImportNode) bodyNode).getImportUri().toString());
+        // Glob imports (`import*`) don't import a type; they resolve to a mapping.
+        // Exclude them here, consistent with `imports` also not covering import expressions.
+        if (bodyNode instanceof ImportNode importNode) {
+          builder.add(member.getName().toString(), importNode.getImportUri().toString());
+        }
       }
     }
     return builder.build();

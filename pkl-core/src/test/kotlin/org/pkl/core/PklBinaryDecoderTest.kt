@@ -230,4 +230,35 @@ class PklBinaryDecoderTest {
       "Unexpected blank typealias module URI",
     )
   }
+
+  @Test
+  fun `decode collections too large`() {
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.OBJECT.code) +
+        strFoo +
+        strFoo +
+        byteArrayOf(0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode object of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.MAP.code, 0xdf.toByte(), 0, 1, 0, 0),
+      "Unable to decode map of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.MAPPING.code, 0xdf.toByte(), 0, 1, 0, 0),
+      "Unable to decode mapping of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.LIST.code, 0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode list of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.LISTING.code, 0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode listing of length 65536, exceeded maximum collection size",
+    )
+    assertExceptionCauseMessageContains(
+      byteArrayOf(0x93.toByte(), PklBinaryCode.SET.code, 0xdd.toByte(), 0, 1, 0, 0),
+      "Unable to decode set of length 65536, exceeded maximum collection size",
+    )
+  }
 }

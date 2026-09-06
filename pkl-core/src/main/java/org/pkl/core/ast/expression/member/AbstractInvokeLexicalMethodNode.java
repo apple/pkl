@@ -21,7 +21,8 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmUtils;
 
-public abstract sealed class AbstractInvokeLexicalMethodNode extends AbstractInvokeMethodNode
+public abstract sealed class AbstractInvokeLexicalMethodNode
+    extends AbstractInvokeLexicalOrQualifiedMethodNode
     permits InvokeLexicalClassMethodNode, InvokeLexicalObjectMethodNode {
   private final int levelsUp;
 
@@ -30,16 +31,19 @@ public abstract sealed class AbstractInvokeLexicalMethodNode extends AbstractInv
       Identifier methodName,
       int levelsUp,
       ExpressionNode[] argumentNodes,
-      boolean needsConst) {
-    super(sourceSection, methodName, argumentNodes, needsConst);
+      boolean needsConst,
+      boolean argsRequireInference) {
+    super(sourceSection, methodName, argumentNodes, needsConst, argsRequireInference);
     this.levelsUp = levelsUp;
   }
 
   @Override
   public final Object executeGeneric(VirtualFrame frame) {
-    var capturedFrame = VmUtils.getFrame(frame, levelsUp);
-    var owner = VmUtils.getOwner(capturedFrame);
-    var receiver = VmUtils.getReceiver(capturedFrame);
-    return invoke(frame, owner, receiver);
+    var owner = VmUtils.getOwner(frame);
+    if (levelsUp == 0 && !owner.isParseTimeInvisibleScope()) {
+      return invoke(frame, owner, VmUtils.getReceiver(frame));
+    }
+    var enclosingFrame = VmUtils.getEnclosingFrame(owner, levelsUp);
+    return invoke(frame, VmUtils.getOwner(enclosingFrame), VmUtils.getReceiver(enclosingFrame));
   }
 }

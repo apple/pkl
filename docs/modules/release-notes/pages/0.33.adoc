@@ -13,7 +13,43 @@ include::partial$intro.adoc[]
 
 == Noteworthy [small]#🎶#
 
-=== XXX
+=== CLI Changes
+
+==== Default file locations
+
+For new setups, the CLI no longer stores anything under `~/.pkl` (https://github.com/apple/pkl/pull/1809[#1809]).
+
+It uses XDG-style locations on Unix and Known Folder locations on Windows:
+
+[cols="1,2,2,2",options="header"]
+|===
+| Concern | Unix (Linux/macOS) | Windows | Legacy fallback
+
+| Package cache
+| `~/.cache/pkl`
+| `$LOCALAPPDATA/pkl/Cache`
+| none
+
+| Settings file
+| `~/.config/pkl/settings.pkl`
+| `$APPDATA/pkl/settings.pkl`
+| `~/.pkl/settings.pkl`
+
+| CA certificates
+| `~/.config/pkl/cacerts`
+| `$APPDATA/pkl/cacerts`
+| `~/.pkl/cacerts`
+
+| REPL history
+| `~/.local/state/pkl/repl-history`
+| `$LOCALAPPDATA/pkl/repl-history`
+| none
+|===
+
+On every OS, these locations can be overridden with XDG-style env vars.
+For example, setting `XDG_CACHE_HOME` will configure the cache directory.
+
+Note that the existing `~/.pkl/cache` directory is ignored, so Pkl will download packages to populate its cache if configured to do so.
 
 == Breaking Changes [small]#💔#
 
@@ -22,6 +58,16 @@ include::partial$intro.adoc[]
 Native `pkl` and `pkldoc` binaries for Intel Mac systems are no longer published with Pkl releases.
 
 To continue running new Pkl releases on these systems, use an appropriate Java runtime and the `jpkl` and `jpkldoc` Java executables.
+
+=== Type check changes for `Class<T>`
+
+In prior versions of Pkl, type arguments to the `Class` type were erased.
+Any `Class` value would typecheck against `Class<T>` for any value of `T`.
+
+In Pkl 0.33, this erasure has been removed.
+A `Class` value typechecked against `Class<T>` must be a subclass of `T`.
+
+If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
 === JSON and YAML Parsers Reject the Object Key `default`
 

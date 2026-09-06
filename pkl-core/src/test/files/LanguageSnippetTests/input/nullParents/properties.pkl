@@ -1,0 +1,63 @@
+// Covers PropertiesLiteralNode's specializations for amending a `VmNull` whose default value is
+// each of the underlying parent types it supports.
+import "pkl:test"
+
+local class Person {
+  name: String
+  age: Int = 0
+}
+
+// evalNullWithTypedDefault
+local person = Null(new Person { name = "Pigeon" })
+res1 = (person) {
+  age = 3
+}
+
+// evalNullWithDynamicDefault
+local dynamic = Null(new Dynamic { name = "Pigeon" })
+res2 = (dynamic) {
+  age = 3
+}
+
+// evalNullWithListingDefault
+local listing = Null(new Listing { "one"; "two" })
+res3 = (listing) {
+  default = (_) -> "three"
+}.getOrDefault(5)
+
+// evalNullableMapping
+local mapping = Null(new Mapping { ["one"] = 1 })
+res4 = (mapping) {
+  default = (_) -> 0
+}.getOrDefault("missing")
+
+// evalNullWithFunctionDefault
+local fun = Null(() -> new Dynamic { zero = 0 })
+local amendedFun = (fun) {
+  amended = "amended"
+}
+res5 = amendedFun.apply()
+
+// error: typed object amendment with an unknown property
+res6 = test.catch(() -> (Null(new Person { name = "Pigeon" })) { nickname = "Pidge" })
+
+// error: listing cannot have a property (other than `default`)
+res7 = test.catch(() -> (Null(new Listing { "one" })) { foo = "bar" })
+
+// error: mapping cannot have a property (other than `default`)
+res8 = test.catch(() -> (Null(new Mapping { ["one"] = 1 })) { foo = "bar" })
+
+// error: function amendment with wrong parameter count
+local twoArgFun = (x, y) -> new Dynamic {}
+res9 = test.catch(() -> (Null(twoArgFun)) { x -> prop = x })
+
+hidden foo: "foo"?
+
+// error: default value's type has no matching specialization; falls back to the generic error
+res10 = test.catch(() -> (foo) { foo = "bar" })
+
+hidden clazz: Class?
+
+res11 = (clazz) {
+  x = 1
+}

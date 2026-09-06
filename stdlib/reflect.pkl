@@ -107,6 +107,9 @@ const bytesType: DeclaredType = DeclaredType(Class(Bytes))
 /// A mirror for the `module` type.
 external const moduleType: ModuleType
 
+/// A mirror for the `this` type.
+external const thisType: ThisType
+
 /// A mirror for the `unknown` type.
 external const unknownType: UnknownType
 
@@ -201,7 +204,7 @@ external class Module extends Declaration {
   /// Map keys are the identifiers by which imports are accessed within this module.
   /// Map values are the URIs of the imported modules.
   ///
-  /// Does not cover import expressions.
+  /// Does not cover import expressions or glob imports.
   imports: Map<String, Uri>
 
   /// The classes declared in this module.
@@ -430,6 +433,11 @@ external class FunctionType extends Type {
 ///
 /// [moduleType] is an instance of this class.
 class ModuleType extends Type
+
+/// The `this` type.
+///
+/// [thisType] is an instance of this class.
+class ThisType extends Type
 
 /// The `unknown` type.
 ///

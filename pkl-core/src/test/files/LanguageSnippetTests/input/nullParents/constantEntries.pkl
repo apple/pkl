@@ -1,0 +1,47 @@
+// Covers ConstantEntriesLiteralNode's specializations for amending a `VmNull` whose default value
+// is each of the underlying parent types it supports. All entry keys below are constants, so
+// these bodies compile to ConstantEntriesLiteralNode rather than EntriesLiteralNode.
+import "pkl:test"
+
+// evalNullWithMappingDefault
+local mapping = Null(new Mapping { ["a"] = 1 })
+res1 = (mapping) {
+  ["b"] = 2
+}
+
+// evalNullWithDynamicDefault
+local dynamic = Null(new Dynamic { a = 1 })
+res2 = (dynamic) {
+  ["b"] = 2
+}
+
+// evalNullWithListingDefault
+local listing = Null(new Listing { "a"; "b" })
+res3 = (listing) {
+  [0] = "updated a"
+}
+
+// evalNullWithFunctionDefault
+local fun = Null(() -> new Mapping { ["a"] = 1 })
+local amendedFun = (fun) {
+  ["b"] = 2
+}
+res4 = amendedFun.apply()
+
+// error: listing entry index out of range
+res5 = test.catch(() -> (Null(new Listing { "a" })) { [5] = "value" })
+
+// error: listing cannot have a property (other than `default`)
+res6 = test.catch(() -> (Null(new Listing { "a" })) { [0] = "updated a"; foo = "bar" })
+
+// error: mapping cannot have a property (other than `default`)
+res7 = test.catch(() -> (Null(new Mapping { ["a"] = 1 })) { ["b"] = 2; foo = "bar" })
+
+// error: function amendment with wrong parameter count
+local twoArgFun = (x, y) -> new Mapping {}
+res8 = test.catch(() -> (Null(twoArgFun)) { x -> ["a"] = 1 })
+
+hidden foo: "foo"?
+
+// error: default value's type has no matching specialization; falls back to the generic error
+res9 = test.catch(() -> (foo) { ["a"] = 1 })

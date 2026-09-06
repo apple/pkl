@@ -63,20 +63,20 @@ res8 {
 res9 {
   name = "Other"
 }
-res9b = "Expected 1 function arguments but got 2."
+res9b = "Expected 1 function argument but got 2."
 res9c {
   name = "Override"
 }
-res9d = "Expected 1 function arguments but got 2."
+res9d = "Expected 1 function argument but got 2."
 res10 {
   name = "Other"
 }
-res10b = "Expected 1 function arguments but got 2."
+res10b = "Expected 1 function argument but got 2."
 res10c = "Expected value of type `newType#Person`, but got type `Int`. Value: 1"
 res10d {
   name = "Override"
 }
-res10e = "Expected 1 function arguments but got 2."
+res10e = "Expected 1 function argument but got 2."
 res10f = "Expected value of type `newType#Person`, but got type `Int`. Value: 1"
 res11 {
   name = "Pigeon"

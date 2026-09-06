@@ -57,7 +57,7 @@ public final class IdentityMixinNode extends PklRootNode {
     if (arguments.length != 3) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
-          .evalError("wrongFunctionArgumentCount", 1, arguments.length - 2)
+          .evalError("wrongFunctionArgumentCount", 1, arguments.length - 2, "")
           .withSourceSection(sourceSection)
           .build();
     }

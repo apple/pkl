@@ -15,9 +15,9 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.member.Method;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -28,8 +28,15 @@ public final class InvokeQualifiedClassMethodNode extends AbstractInvokeQualifie
       Identifier methodName,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
-      ExpressionNode getReceiverNode) {
-    super(sourceSection, methodName, argumentNodes, needsConst, getReceiverNode);
+      ExpressionNode getReceiverNode,
+      boolean argsRequireInference) {
+    super(
+        sourceSection,
+        methodName,
+        argumentNodes,
+        needsConst,
+        getReceiverNode,
+        argsRequireInference);
   }
 
   @Override
@@ -42,9 +49,9 @@ public final class InvokeQualifiedClassMethodNode extends AbstractInvokeQualifie
   }
 
   @Override
-  protected CallTarget getCallTarget(VmObjectLike owner) {
+  protected Method getMethod(VmObjectLike owner) {
     var method = owner.getVmClass().getDeclaredMethod(methodName);
     assert method != null;
-    return method.getCallTarget(getSourceSection());
+    return method;
   }
 }

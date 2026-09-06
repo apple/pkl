@@ -1,0 +1,150 @@
+open module thisType1
+
+import "pkl:test"
+import "pkl:reflect"
+
+hidden x: Int = 1
+
+hidden res1: this = module
+
+res1a = res1.res2.x
+res1b = res1.res3.x
+res1c = res1.res5[1].x
+res1d = res1.res6a.x
+res1e = res1.res6b.x
+
+hidden res2: this = this
+hidden res3: this = (this) { x = super.x + 1 }
+res4: this? = null
+hidden res5: List<this> = List(this, (this) { x = super.x + 2 })
+hidden res6: List<this> = fun(this)
+hidden res6a: this = res6[0]
+hidden res6b: this = fun(new Good { x = 3 })[0]
+
+function fun(m: this): List<this> =
+  let (_x = x)
+    List((m) { x = super.x + _x })
+
+typealias Foo<T> = T
+
+function fun2(m: Foo<this>): List<this> =
+  let (_x = x)
+    List((m) { x = super.x + _x + 1 })
+
+class Bad {
+  res7: this = "abc"
+  res8: this = new Person {}
+  res9: this? = new Person {}
+  res10: List<this> = List(new Person {})
+}
+
+class Person
+
+res7 = test.catch(() -> new Bad {}.res7)
+res8 = test.catch(() -> new Bad {}.res8)
+res9 = test.catch(() -> new Bad {}.res9)
+res10 = test.catch(() -> new Bad {}.res10)
+
+class Good extends module {
+  x = 2
+}
+
+local res11 = new Good {}
+
+res11a = res11.res2.x
+res11b = res11.res3.x
+res11c = res11.res5[1].x
+res11d = res11.res6a.x
+
+res12 = test.catch(() -> res11.fun(module)[0].x)
+
+// this type not affected by custom this scope:
+hidden res13: List(this is List<this>) = List(module)
+res13a = res13[0].x
+
+// test generic typealias through inheritance from module
+res14 = fun2(this).map((it) -> it.x)
+res14a = test.catch(() -> res11.fun2(this))
+res14b = res11.fun2(res11)[0].x
+
+// test generic typealias without inheritance from module
+open class A {
+  x: Int = 1
+  function fun2(m: Foo<this>): List<this> =
+    let (_x = x)
+      List((m) { x = super.x + _x + 1 })
+}
+class B extends A
+
+local a = new A {}
+local b = new B {}
+res15 = a.fun2(a)
+res15a = test.catch(() -> b.fun2(a))
+res15b = b.fun2(b)
+
+// test function type, function literal param, object body param
+local c: (this) -> Dynamic = (xx: this) -> new Dynamic { x = xx.x * 2 }
+local d = (c) { xx: this ->
+  x = super.x + xx.x * 3
+}
+res16 = d.apply(this).x
+res16a = test.catch(() -> d.apply(new Dynamic { x = 1 }).x)
+
+// let expr binding type
+res17 =
+  let (xx: this = new module { x = 3 })
+    xx.x
+
+// for/when generator vars skip a level
+res18: Listing<Int> = new {
+  for (xx: this in List(module)) {
+    xx.x
+  }
+}
+
+// object property/method param/method return
+res19 = new Dynamic {
+  local foo: this = new Dynamic { x = 1 }
+  local function bar(a: this): this = new { x = foo.x + a.x }
+  baz = bar(new Dynamic { x = 2 })
+}
+
+// type cast, explicit new expr
+hidden res20 = new this { x = 6 } as this
+res20a = res20.x
+
+// constrained
+hidden res21: this(this.x > 5) = res20
+res21a = res21.x
+
+// lazy type check and default value
+hidden res22: Listing<this> = new {
+  new { x = 1 }
+  new Good {}
+  new { x = 3 }
+  new Good { x = 4 }
+}
+
+res22a = module.res22.toList().map((it) -> "\(it.getClass()): \(it.x)").toListing()
+res22b = new Good {}.res22.toList().map((it) -> "\(it.getClass()): \(it.x)").toListing()
+
+// annotation type
+
+open class ThisAnnotation extends Annotation {
+  @this { y = 1 }
+  y: Int
+}
+
+open class ThatAnnotation extends ThisAnnotation
+
+@ThisAnnotation { y = 2 }
+hidden annThis: Int = 1
+res23 = reflect.Class(getClass()).properties["annThis"].annotations.single
+res23a = res23.getClass().toString()
+res23b = reflect.Class(res23.getClass()).allProperties["y"].annotations.single.getClass().toString()
+
+@ThatAnnotation { y = 2 }
+hidden annThat: Int = 1
+res24 = reflect.Class(getClass()).properties["annThat"].annotations.single
+res24a = res24.getClass().toString()
+res24b = reflect.Class(res24.getClass()).allProperties["y"].annotations.single.getClass().toString()

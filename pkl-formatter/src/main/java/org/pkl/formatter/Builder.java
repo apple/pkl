@@ -69,6 +69,7 @@ final class Builder {
           MODULE_EXPR,
           NULL_EXPR,
           MODULE_TYPE,
+          THIS_TYPE,
           UNKNOWN_TYPE,
           NOTHING_TYPE,
           SHEBANG,

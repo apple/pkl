@@ -37,6 +37,11 @@ public final class YamlEscaper extends AbstractCharEscaper {
     for (var i = 0; i < 0x20; i++) {
       REPLACEMENTS[i] = IoUtils.toHexEscape(i);
     }
+    // 0x7F and the C1 block are not `c-printable` either (spec 5.1), so they cannot be emitted
+    // literally. ns-esc-8-bit covers them; 0x85 is overridden with its named escape below.
+    for (var i = 0x7F; i <= 0x9F; i++) {
+      REPLACEMENTS[i] = IoUtils.toHexEscape(i);
+    }
     // ns-esc-null
     REPLACEMENTS[0x00] = "\\0";
     // ns-esc-bell
@@ -68,6 +73,14 @@ public final class YamlEscaper extends AbstractCharEscaper {
   @Override
   protected @Nullable String findReplacement(char ch) {
     //noinspection UnnecessaryUnicodeEscape
-    return ch <= 0xA0 ? REPLACEMENTS[ch] : ch == '\u2028' ? "\\L" : ch == '\u2029' ? "\\P" : null;
+    return ch <= 0xA0
+        ? REPLACEMENTS[ch]
+        : ch == '\u2028'
+            ? "\\L"
+            : ch == '\u2029'
+                ? "\\P"
+                // U+FFFE and U+FFFF are not `c-printable` either (spec 5.1), and no named or 8-bit
+                // escape covers them; ns-esc-16-bit does.
+                : ch >= 0xFFFE ? IoUtils.toUnicodeEscape(ch) : null;
   }
 }

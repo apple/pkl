@@ -13,26 +13,21 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.ast.frame;
+package org.pkl.core.util;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.runtime.VmUtils;
+final class BaseDirectories {
+  public static final BaseDirectory config =
+      new BaseDirectory(
+          "XDG_CONFIG_HOME",
+          "XDG_CONFIG_DIRS",
+          "APPDATA",
+          null,
+          ".config",
+          new String[] {"/etc/xdg"});
 
-public final class GetEnclosingFrameNode extends ExpressionNode {
-  private final int levelsUp;
+  public static final BaseDirectory cache =
+      new BaseDirectory("XDG_CACHE_HOME", null, "LOCALAPPDATA", "Cache", ".cache", null);
 
-  public GetEnclosingFrameNode(int levelsUp) {
-    this.levelsUp = levelsUp;
-  }
-
-  @Override
-  public VirtualFrame executeGeneric(VirtualFrame frame) {
-    return VmUtils.getFrame(frame, levelsUp);
-  }
-
-  @Override
-  public boolean isInstrumentable() {
-    return false;
-  }
+  public static final BaseDirectory state =
+      new BaseDirectory("XDG_STATE_HOME", null, "LOCALAPPDATA", null, ".local/state", null);
 }
