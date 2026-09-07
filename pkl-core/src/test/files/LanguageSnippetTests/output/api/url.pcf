@@ -43,6 +43,33 @@ facts {
     true
     true
     true
+  }
+  ["IDNA"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
     true
     true
   }

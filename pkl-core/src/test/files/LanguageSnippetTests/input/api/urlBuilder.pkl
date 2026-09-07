@@ -109,6 +109,8 @@ facts {
     (base) { username = "münchen" }.build().username == "m%C3%BCnchen"
     // a non-special scheme's host percent-encodes rather than running IDNA
     str(new url.Builder { scheme = "foo"; host = "münchen.de" }) == "foo://m%C3%BCnchen.de"
+    // a special scheme's host is a domain, so it goes through IDNA
+    str((base) { host = "münchen.de" }) == "https://xn--mnchen-3ya.de/"
   }
 
   ["round-trips through parse()"] {
@@ -140,8 +142,8 @@ facts {
     (base) { host = "[:::1]" }.buildOrNull() == null
     (base) { host = "[::1]x" }.buildOrNull() == null
     (base) { host = "1.2.3.4.5" }.buildOrNull() == null
-    // IDNA is not implemented, so a non-ASCII domain of a special scheme is rejected
-    (base) { host = "münchen.de" }.buildOrNull() == null
+    // a domain UTS-46 rejects: U+FFFD is disallowed
+    (base) { host = "a\u{FFFD}b.com" }.buildOrNull() == null
   }
 
   ["a host that cannot be assembled"] {
@@ -166,8 +168,8 @@ facts {
       .contains("assemble to `https://1.2.3.4.5`")
     module.catch(() -> (base) { host = "[:::1]" }.build())
       .contains("assemble to `https://[:::1]`")
-    module.catch(() -> (base) { host = "münchen.de" }.build())
-      .contains("assemble to `https://münchen.de`")
+    module.catch(() -> (base) { host = "a\u{FFFD}b.com" }.build())
+      .contains("assemble to `https://a\u{FFFD}b.com`")
     module.catch(() -> (base) { host = ""; segments = List("a b") }.build())
       .contains("assemble to `https:///a%20b`")
   }
