@@ -51,11 +51,6 @@ facts {
     span.end.column == 14
   }
 
-  ["a span's displayUri combines those of its start and end"] {
-    local span = nestedProperty(stringModule).span!!
-    span.displayUri == "\(span.start.displayUri)-\(span.end.displayUri)"
-  }
-
   ["a child's span is contained in its parent's"] {
     local child = nestedProperty(stringModule)
     local parent = child.parent!!

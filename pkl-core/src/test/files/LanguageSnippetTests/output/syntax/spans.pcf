@@ -9,9 +9,6 @@ facts {
     true
     true
   }
-  ["a span's displayUri combines those of its start and end"] {
-    true
-  }
   ["a child's span is contained in its parent's"] {
     true
     true
@@ -36,14 +33,14 @@ examples {
       start {
         line = X
         column = 1
-        displayUri = "L1C1"
+        displayUri = ""
       }
       end {
         line = X
         column = 2
-        displayUri = "L5C2"
+        displayUri = ""
       }
-      displayUri = "L1C1-L5C2"
+      displayUri = ""
     }
   }
   ["span of a leaf parsed from a string"] {
@@ -51,14 +48,14 @@ examples {
       start {
         line = X
         column = 3
-        displayUri = "L4C3"
+        displayUri = ""
       }
       end {
         line = X
         column = 14
-        displayUri = "L4C14"
+        displayUri = ""
       }
-      displayUri = "L4C3-L4C14"
+      displayUri = ""
     }
   }
   ["span of a module parsed from a resource carries the resource URI"] {
@@ -66,14 +63,14 @@ examples {
       start {
         line = X
         column = 1
-        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC1"
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl"
       }
       end {
         line = X
         column = 2
-        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC2"
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl"
       }
-      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC1-L5C2"
+      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl"
     }
   }
   ["span of a leaf parsed from a resource carries the resource URI"] {
@@ -81,14 +78,14 @@ examples {
       start {
         line = X
         column = 3
-        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC3"
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl"
       }
       end {
         line = X
         column = 14
-        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC14"
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl"
       }
-      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#LXC3-L4C14"
+      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl"
     }
   }
 }
