@@ -91,7 +91,48 @@ facts {
     lenient("http://1.2.3.4.5/") == null
     lenient("https://example.com:99999/") == null
     lenient("https://example.com:port/") == null
-    lenient("http://münchen.de/") == null
+  }
+
+  ["IDNA"] {
+    lenient("http://münchen.de/") == "http://xn--mnchen-3ya.de/"
+    lenient("http://MÜNCHEN.de/") == "http://xn--mnchen-3ya.de/"
+    lenient("http://你好你好/") == "http://xn--6qqa088eba/"
+    lenient("http://é@é") == "http://%C3%A9@xn--9ca/"
+    lenient("https://faß.ExAmPlE/") == "https://xn--fa-hia.example/"
+    lenient("ftp://%e2%98%83") == "ftp://xn--n3h/"
+
+    // an ASCII domain is only lowercased: WHATWG skips UTS-46 for it entirely
+    roundTrips("http://xn--mnchen-3ya.de/")
+    lenient("http://XN--MNCHEN-3YA.de/") == "http://xn--mnchen-3ya.de/"
+    lenient("http://a.b.c.xn--pokxncvks/") == "http://a.b.c.xn--pokxncvks/"
+    lenient("https://xn--/") == "https://xn--/"
+    lenient("http://xn--mnchen-3ya.münchen.de/")
+      == "http://xn--mnchen-3ya.xn--mnchen-3ya.de/"
+    // invalid Punycode
+    lenient("http://xn--0.münchen.de/") == null
+    // Punycode that decodes to a disallowed code point
+    lenient("http://xn--a.münchen.de/") == null
+    // a doubly-encoded label
+    lenient("http://xn--xn---.münchen.de/") == null
+
+    // mapping alone can yield a pure-ASCII domain
+    lenient("http://example。com/") == "http://example.com/"
+    lenient("http://ＥＸＡＭＰＬＥ.com/") == "http://example.com/"
+    lenient("http://exa\u{200B}mple.com/") == "http://example.com/"
+    lenient("http://exa\u{AD}mple.com/") == "http://example.com/"
+    lenient("http://\u{1D400}bc.com/") == "http://abc.com/"
+    both("http://０Ｘｃ０．０２５０．０１/") == List("http://192.168.0.1/", null)
+
+    // every UTS-46 error is fatal, so strictness makes no difference either way
+    both("http://münchen.de/") == List("http://xn--mnchen-3ya.de/", "http://xn--mnchen-3ya.de/")
+    lenient("http://a\u{FFFD}b.com/") == null
+    lenient("http://\u{300}a.com/") == null
+    lenient("http://\u{AD}/") == null
+
+    lenient("http://مثال.example/") == "http://xn--mgbh0fb.example/"
+    lenient("http://مثال-.example/") == null
+
+    // an opaque host is percent-encoded instead, IDNA is for domains only
     lenient("foo://münchen.de") == "foo://m%C3%BCnchen.de"
   }
 

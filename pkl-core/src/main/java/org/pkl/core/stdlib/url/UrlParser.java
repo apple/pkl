@@ -17,7 +17,6 @@ package org.pkl.core.stdlib.url;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -27,9 +26,6 @@ import org.jspecify.annotations.Nullable;
  * {@link UrlRecord}. Parsing is lenient (matching {@code new URL()}); it returns {@code null} only
  * on genuine failure. When {@code strict} is set, any WHATWG <em>validation error</em> is also
  * treated as failure.
- *
- * <p>IDNA/UTS-46 {@code ToASCII} is not yet implemented: a non-ASCII domain (the host of a special
- * scheme) is rejected rather than passed through. See {@code .ai/pkl-url.md}.
  */
 @SuppressWarnings("JavadocLinkAsPlainText")
 final class UrlParser {
@@ -592,7 +588,7 @@ final class UrlParser {
       return parseOpaqueHost(input);
     }
     var domain = PercentEncoder.percentDecode(input);
-    var asciiDomain = domainToAscii(domain);
+    var asciiDomain = Idna.domainToAscii(domain);
     if (asciiDomain == null) {
       return null;
     }
@@ -603,19 +599,14 @@ final class UrlParser {
       }
     }
     if (endsInNumber(asciiDomain)) {
+      if (!Idna.isAscii(domain)) {
+        // IPv4-non-ASCII-input: only IDNA mapping can turn a non-ASCII domain into a number
+        validationError = true;
+      }
       var address = parseIpv4(asciiDomain);
       return address < 0 ? null : serializeIpv4(address);
     }
     return asciiDomain;
-  }
-
-  private @Nullable String domainToAscii(String domain) {
-    var allAscii = domain.chars().allMatch(c -> c < 0x80);
-    if (!allAscii) {
-      // IDNA/UTS-46 ToASCII is not yet implemented, return an error.
-      return null;
-    }
-    return domain.toLowerCase(Locale.ROOT);
   }
 
   private @Nullable String parseOpaqueHost(String input) {
