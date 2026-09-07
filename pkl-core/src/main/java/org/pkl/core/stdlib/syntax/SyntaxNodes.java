@@ -72,42 +72,28 @@ public final class SyntaxNodes {
               sd ->
                   displayUri(
                       sd.sourceUri(),
-                      position(sd.span().lineBegin(), sd.span().colBegin())
-                          + "-"
-                          + position(sd.span().lineEnd(), sd.span().colEnd()),
                       sd.span().lineBegin(),
                       sd.span().colBegin(),
                       sd.span().lineEnd(),
                       sd.span().colEnd()));
 
-  private static String position(int line, int column) {
-    return "L" + line + "C" + column;
-  }
-
   private static String displayUri(@Nullable String sourceUri, int line, int column) {
-    return displayUri(sourceUri, position(line, column), line, column, line, column);
+    return displayUri(sourceUri, line, column, line, column);
   }
 
   @TruffleBoundary
   private static String displayUri(
-      @Nullable String sourceUri,
-      String fragment,
-      int startLine,
-      int startColumn,
-      int endLine,
-      int endColumn) {
+      @Nullable String sourceUri, int startLine, int startColumn, int endLine, int endColumn) {
     if (sourceUri == null) {
-      return fragment;
+      return "";
     }
-    var transformed =
-        VmUtils.getDisplayUri(
-            sourceUri,
-            startLine,
-            startColumn,
-            endLine,
-            endColumn,
-            VmContext.get(null).getFrameTransformer());
-    return transformed.equals(sourceUri) ? sourceUri + "#" + fragment : transformed;
+    return VmUtils.getDisplayUri(
+        sourceUri,
+        startLine,
+        startColumn,
+        endLine,
+        endColumn,
+        VmContext.get(null).getFrameTransformer());
   }
 
   /** Extra storage backing a Pkl {@code GenericNode} parsed from source. */
