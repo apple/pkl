@@ -1,0 +1,118 @@
+facts {
+  ["binary operator precedence"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["binary operator associativity"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["prefix operators"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["postfix operators"] {
+    true
+    true
+    true
+    true
+  }
+  ["access chains"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["expressions that extend to the right"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["type operators"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["negative numeric literals"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["explicit parentheses are not duplicated"] {
+    true
+    true
+    true
+  }
+  ["bracketed slots are never parenthesized"] {
+    true
+    true
+    true
+    true
+    true
+  }
+  ["nullable types"] {
+    true
+    true
+    true
+    true
+  }
+  ["constrained types"] {
+    true
+    true
+    true
+    true
+  }
+  ["union types"] {
+    true
+    true
+    true
+    true
+  }
+  ["function types"] {
+    true
+    true
+    true
+    true
+  }
+  ["type arguments are never parenthesized"] {
+    true
+  }
+  ["parentheses are added when a parsed operand is replaced"] {
+    true
+  }
+  ["parentheses of a parsed operand are kept"] {
+    true
+  }
+}

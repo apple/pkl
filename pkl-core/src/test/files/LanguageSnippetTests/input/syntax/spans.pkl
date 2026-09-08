@@ -1,0 +1,89 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local stringModule = parser.parseModule("""
+  x = 1
+
+  foo {
+    bar = "baz"
+  }
+  """)
+
+local resourceModule = parser.parseModule(read(".../input-helper/syntax/spans/sample.pkl"))
+
+local function nestedProperty(mod: syntax.GenericNode): syntax.GenericNode =
+  mod
+    .fold(List(), (acc: List<syntax.GenericNode>, n) -> if (n.type == "object_property") acc.add(n) else acc)
+    .last
+
+examples {
+  ["span of a module parsed from a string"] {
+    stringModule.span
+  }
+
+  ["span of a leaf parsed from a string"] {
+    nestedProperty(stringModule).span
+  }
+
+  ["span of a module parsed from a resource carries the resource URI"] {
+    resourceModule.span
+  }
+
+  ["span of a leaf parsed from a resource carries the resource URI"] {
+    nestedProperty(resourceModule).span
+  }
+}
+
+facts {
+  ["span positions are 1-based"] {
+    stringModule.span!!.start.line == 1
+    stringModule.span!!.start.column == 1
+  }
+
+  ["end is exclusive"] {
+    local span = nestedProperty(stringModule).span!!
+    span.start.line == 4
+    span.start.column == 3
+    span.end.line == 4
+    span.end.column == 14
+  }
+
+  ["a span's displayUri combines those of its start and end"] {
+    local span = nestedProperty(stringModule).span!!
+    span.displayUri == "\(span.start.displayUri)-\(span.end.displayUri)"
+  }
+
+  ["a child's span is contained in its parent's"] {
+    local child = nestedProperty(stringModule)
+    local parent = child.parent!!
+    parent.span!!.start.line <= child.span!!.start.line
+    parent.span!!.end.line >= child.span!!.end.line
+  }
+
+  ["nodes constructed from scratch have no span"] {
+    new syntax.GenericNode { type = "int_literal_expr"; text = "42" }.span == null
+    new syntax.IntLiteralExprNode { value = 42 }?.genericNode?.span == null
+    new syntax.IntLiteralExprNode { value = 42 }.builtNode.span == null
+  }
+
+  ["a spanless constructed node still renders"] {
+    new syntax.Renderer {}
+      .render(new syntax.GenericNode { type = "int_literal_expr"; text = "42" })
+      .trim() == "42"
+    new syntax.Renderer {}.render(new syntax.IntLiteralExprNode { value = 42 }.builtNode).trim()
+      == "42"
+  }
+
+  ["parsing the same text from a string and a resource differs only in displayUri"] {
+    local fromString = stringModule.span!!
+    local fromResource = resourceModule.span!!
+    fromString.start.line == fromResource.start.line
+    fromString.start.column == fromResource.start.column
+    fromString.end.line == fromResource.end.line
+    fromString.end.column == fromResource.end.column
+    fromString.displayUri != fromResource.displayUri
+  }
+}
