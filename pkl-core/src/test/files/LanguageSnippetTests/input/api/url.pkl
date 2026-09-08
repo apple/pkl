@@ -104,6 +104,17 @@ facts {
     lenient("https://example.com:port/") == null
   }
 
+  ["portOrDefault"] {
+    parser.parse("https://example.com/a")!!.portOrDefault == 443
+    parser.parse("https://example.com:443/a")!!.portOrDefault == 443
+    parser.parse("https://example.com:8443/a")!!.portOrDefault == 8443
+    parser.parse("ftp://example.com/a")!!.portOrDefault == 21
+    parser.parse("file:///a")!!.portOrDefault == null
+    parser.parse("foo://example.com/a")!!.portOrDefault == null
+    parser.parse("foo://example.com:8080/a")!!.portOrDefault == 8080
+    parser.parse("mailto:user@example.com")!!.portOrDefault == null
+  }
+
   ["IDNA"] {
     lenient("http://münchen.de/") == "http://xn--mnchen-3ya.de/"
     lenient("http://MÜNCHEN.de/") == "http://xn--mnchen-3ya.de/"

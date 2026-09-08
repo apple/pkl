@@ -65,6 +65,11 @@ public record UrlRecord(
     };
   }
 
+  /** This URL's port, falling back to the default port of its scheme. */
+  public @Nullable Integer portOrDefault() {
+    return port != null ? port : defaultPort(scheme);
+  }
+
   /**
    * https://url.spec.whatwg.org/#concept-url-origin — the serialization of this URL's origin, or
    * {@code null} if it is an <a href="https://html.spec.whatwg.org/#concept-origin-opaque">opaque
