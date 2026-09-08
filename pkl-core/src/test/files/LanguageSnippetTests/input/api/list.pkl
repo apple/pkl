@@ -508,4 +508,9 @@ examples {
     List(1, "Pigeon", 3.d).reverse()
     List().reverse()
   }
+
+  ["join()"] {
+    List(1.s, 2.s).join(", ")
+    List(1.mb, 2.gb).join(", ")
+  }
 }

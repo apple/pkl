@@ -1125,6 +1125,18 @@ public final class VmUtils {
     return value;
   }
 
+  public static String toPklString(Object value) {
+    if (value instanceof VmValue vmValue) {
+      return vmValue.toPklString();
+    }
+    return toString(value);
+  }
+
+  @TruffleBoundary
+  private static String toString(Object value) {
+    return value.toString();
+  }
+
   public static boolean isPklBug(VmStackOverflowException e) {
     // There's no good way to tell if a StackOverflowError came from Pkl, or from our
     // implementation.

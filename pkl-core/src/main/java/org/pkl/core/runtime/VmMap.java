@@ -286,7 +286,8 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   }
 
   @TruffleBoundary
-  public String toString() {
+  @Override
+  public String toPklString() {
     return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
   }
 

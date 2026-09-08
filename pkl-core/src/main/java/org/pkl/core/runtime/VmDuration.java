@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.CompilerDirectives.ValueType;
 import java.util.*;
 import org.jspecify.annotations.Nullable;
@@ -152,7 +153,8 @@ public final class VmDuration extends VmValue implements Comparable<VmDuration> 
   }
 
   @Override
-  public String toString() {
+  @TruffleBoundary
+  public String toPklString() {
     return DurationUtils.toPklString(value, unit);
   }
 }

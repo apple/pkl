@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -40,8 +40,14 @@ public final class AnyNodes {
   public abstract static class toString extends ExternalMethod0Node {
     @Specialization
     @TruffleBoundary
+    protected String evalString(VmValue vmValue) {
+      return vmValue.toPklString();
+    }
+
+    @Specialization
+    @TruffleBoundary
     protected String evalString(Object self) {
-      return self.toString();
+      return VmUtils.toPklString(self);
     }
   }
 
@@ -50,7 +56,7 @@ public final class AnyNodes {
 
     @Specialization
     @SuppressWarnings("UnusedParameters")
-    protected VmNull eval(VmNull self, VmFunction function) {
+    protected VmNull eval(VmNull self, VmFunction ignored) {
       return self;
     }
 

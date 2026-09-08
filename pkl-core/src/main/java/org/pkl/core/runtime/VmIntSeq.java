@@ -127,7 +127,7 @@ public final class VmIntSeq extends VmValue implements Iterable<Long> {
 
   @Override
   @TruffleBoundary
-  public String toString() {
+  public String toPklString() {
     return step == 1
         ? "IntSeq(" + start + ", " + end + ")"
         : "IntSeq(" + start + ", " + end + ").step(" + step + ")";

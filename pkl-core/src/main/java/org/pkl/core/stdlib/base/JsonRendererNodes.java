@@ -93,7 +93,9 @@ public final class JsonRendererNodes {
     @Override
     public void visitFloat(Double value) {
       if (value.isNaN() || value.isInfinite()) {
-        throw new VmExceptionBuilder().evalError("cannotRenderValue", value, name).build();
+        throw new VmExceptionBuilder()
+            .evalError("cannotRenderValue", VmUtils.toPklString(value), name)
+            .build();
       }
       builder.append((double) value);
     }

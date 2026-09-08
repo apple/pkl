@@ -308,7 +308,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     return qualifiedName.startsWith("pkl.base#") ? simpleName : qualifiedName;
   }
 

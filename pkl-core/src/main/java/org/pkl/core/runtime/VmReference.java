@@ -539,7 +539,7 @@ public final class VmReference extends VmValue {
   // in-language calls _should_ all go through `ToStringNode`.
   // however, some calls escape through to here currently (e.g. `Listing.join`).
   @Override
-  public String toString() {
+  public String toPklString() {
     var toStringMethod = getVmClass().getDeclaredMethod(Identifier.TO_STRING);
     assert toStringMethod != null;
     var callNode = DirectCallNode.create(toStringMethod.getCallTarget());

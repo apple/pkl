@@ -440,4 +440,9 @@ examples {
     Set(1, "Pigeon", 3.d).reverse()
     Set().reverse()
   }
+
+  ["join()"] {
+    Set(1.s, 2.s).join(", ")
+    Set(1.mb, 2.gb).join(", ")
+  }
 }

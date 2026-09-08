@@ -119,7 +119,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
                 .map((l) -> valueFormatter.formatStringValue(l, ""))
                 .collect(Collectors.joining("|"));
       } else {
-        renderedType = expectedType.toString();
+        renderedType = VmUtils.toPklString(expectedType);
       }
 
       if (actualValue instanceof VmNull
@@ -156,7 +156,10 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       builder
           .append(
               ErrorMessages.createIndented(
-                  "typeMismatch", indent, renderedType, VmUtils.getClass(actualValue)))
+                  "typeMismatch",
+                  indent,
+                  renderedType,
+                  VmUtils.getClass(actualValue).toPklString()))
           .append("\n")
           .append(indent)
           .append("Value: ")
@@ -177,7 +180,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     public ClassType(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
       super(sourceSection, actualClass);
       this.expectedClass = expectedClass;
-      renderedExpected = "Class<" + expectedClass + ">";
+      renderedExpected = "Class<" + expectedClass.toPklString() + ">";
     }
 
     public ClassType(SourceSection sourceSection, VmClass actualClass, PType expectedType) {
@@ -191,7 +194,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     public void buildMessage(
         AnsiStringBuilder builder, String indent, boolean withPowerAssertions) {
       var actualClass = (VmClass) actualValue;
-      var renderedActualClass = "Class<" + actualClass + ">";
+      var renderedActualClass = "Class<" + actualClass.toPklString() + ">";
 
       // give better error than "expected Class<foo.Bar>, but got Class<foo.Bar>" in case of naming
       // conflict

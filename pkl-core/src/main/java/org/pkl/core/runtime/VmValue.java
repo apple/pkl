@@ -15,6 +15,7 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.jspecify.annotations.Nullable;
 
 public abstract class VmValue {
@@ -90,4 +91,7 @@ public abstract class VmValue {
   /** Enables calling `vmValue.equals()` when not behind a Truffle boundary. */
   @Override
   public abstract boolean equals(Object obj);
+
+  @TruffleBoundary
+  public abstract String toPklString();
 }

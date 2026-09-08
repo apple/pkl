@@ -83,7 +83,7 @@ public final class VmDynamic extends VmObject {
 
     iterateAlreadyForcedMemberValues(
         (key, member, value) -> {
-          properties.put(key.toString(), VmValue.export(value));
+          properties.put(VmUtils.toPklString(key), VmValue.export(value));
           return true;
         });
 

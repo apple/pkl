@@ -204,9 +204,19 @@ public abstract class VmObject extends VmObjectLike {
     force(allowUndefinedValues, true);
   }
 
-  public final String toString() {
+  @TruffleBoundary
+  public final String toPklString() {
     force(true, true);
     return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
+  }
+
+  /**
+   * Override default implementation because it calls {@link #hashCode()}, which will do object
+   * eval.
+   */
+  @Override
+  public final String toString() {
+    return getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(this));
   }
 
   /**

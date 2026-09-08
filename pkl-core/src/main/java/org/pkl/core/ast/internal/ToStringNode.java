@@ -17,7 +17,6 @@ package org.pkl.core.ast.internal;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
@@ -75,11 +74,10 @@ public abstract class ToStringNode extends UnaryExpressionNode {
     return (String) callNode.call(value, value.getVmClass().getPrototype());
   }
 
-  @Fallback
-  @Override
+  @Specialization
   @TruffleBoundary
-  protected Object fallback(Object value) {
-    return value.toString();
+  protected String evalVmValue(VmValue value) {
+    return value.toPklString();
   }
 
   protected InvokeMethodVirtualNode createInvokeNode() {
