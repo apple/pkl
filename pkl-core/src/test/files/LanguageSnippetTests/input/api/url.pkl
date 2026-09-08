@@ -36,6 +36,15 @@ local function resolve(theBase: String, input: String): String? =
 local function resolved(theBase: String, ref: String): String? =
   parser.parse(theBase)!!.resolve(ref)?.toString()
 
+local function withScheme(input: String, scheme: String): String? =
+  parser.parse(input)!!.withScheme(scheme)?.toString()
+
+local function withHost(input: String, host: String?): String? =
+  parser.parse(input)!!.withHost(host)?.toString()
+
+local function withPort(input: String, port: UInt16?): String? =
+  parser.parse(input)!!.withPort(port)?.toString()
+
 local gClef = "\u{1D11E}"
 
 facts {
@@ -197,6 +206,73 @@ facts {
     // resolving is `Parser.base` seen from the other side
     local theBase = base
     parser.parse(base)!!.resolve("../c") == new url.Parser { base = theBase }.parse("../c")
+  }
+
+  ["withScheme()"] {
+    withScheme("http://example.com/a", "HTTPS") == "https://example.com/a"
+    withScheme("http://example.com/a", "ws") == "ws://example.com/a"
+    withScheme("http://example.com:8080/a?q#f", "https") == "https://example.com:8080/a?q#f"
+    withScheme("mailto:user@example.com", "foo") == "foo:user@example.com"
+    withScheme("http://u:p@example.com/a", "https") == "https://u:p@example.com/a"
+    withScheme("file://server/a", "http") == "http://server/a"
+
+    // the port is dropped when it is the new scheme's default
+    withScheme("https://example.com:80/a", "http") == "http://example.com/a"
+
+    // a special scheme and a non-special one cannot replace each other
+    withScheme("http://example.com/a", "mailto") == null
+    withScheme("foo://example.com/a", "https") == null
+    // `file` has neither credentials nor a port, and needs a host to be given up
+    withScheme("http://u:p@example.com/a", "file") == null
+    withScheme("http://example.com:8080/a", "file") == null
+    withScheme("file:///a", "http") == null
+    // not a scheme
+    withScheme("http://example.com/a", "") == null
+    withScheme("http://example.com/a", "ht tps") == null
+    withScheme("http://example.com/a", "https:") == null
+  }
+
+  ["withHost()"] {
+    withHost("https://u:p@example.com:8080/a", "other.org")
+      == "https://u:p@other.org:8080/a"
+    withHost("https://example.com/a", "MÜNCHEN.de") == "https://xn--mnchen-3ya.de/a"
+    withHost("https://example.com/a", "0x7f.0.0.1") == "https://127.0.0.1/a"
+    withHost("https://example.com/a", "[2001:db8:0:0:0:0:0:1]") == "https://[2001:db8::1]/a"
+    withHost("foo://example.com/a", "münchen.de") == "foo://m%C3%BCnchen.de/a"
+    withHost("foo://example.com/a", "") == "foo:///a"
+    withHost("file:///a", "server") == "file://server/a"
+    withHost("file://server/a", "localhost") == "file:///a"
+    withHost("file://server/a", "") == "file:///a"
+
+    // removing the host
+    withHost("foo://example.com/a", null) == "foo:/a"
+    withHost("mailto:user@example.com", null) == "mailto:user@example.com"
+    withHost("https://example.com/a", null) == null
+    withHost("foo://example.com:8080/a", null) == null
+
+    // not a host, or one this URL cannot have
+    withHost("https://example.com/a", "") == null
+    withHost("https://example.com/a", "other.org:8080") == null
+    withHost("https://example.com/a", "other.org/evil") == null
+    withHost("https://example.com/a", "exa mple.com") == null
+    withHost("https://example.com/a", "[::1") == null
+    withHost("mailto:user@example.com", "example.com") == null
+  }
+
+  ["withPort()"] {
+    withPort("https://example.com/a?q#f", 8080) == "https://example.com:8080/a?q#f"
+    withPort("https://example.com:8080/a", 9090) == "https://example.com:9090/a"
+    withPort("https://example.com:8080/a", null) == "https://example.com/a"
+    withPort("https://example.com/a", 0) == "https://example.com:0/a"
+    withPort("foo://example.com/a", 8080) == "foo://example.com:8080/a"
+
+    // a port that is the scheme's default is normalized away
+    withPort("https://example.com:8080/a", 443) == "https://example.com/a"
+
+    // a URL without a host, or with an empty one, cannot have a port
+    withPort("file:///a", 8080) == null
+    withPort("file://server/a", 8080) == null
+    withPort("mailto:user@example.com", 8080) == null
   }
 
   ["origin"] {

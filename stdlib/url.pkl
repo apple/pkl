@@ -134,6 +134,60 @@ external class Url {
   /// ```
   external function resolve(ref: String): Url?
 
+  /// This URL with its scheme replaced by [scheme].
+  ///
+  /// [scheme] is lowercased, and [port] is dropped if it is the new scheme's default port.
+  ///
+  /// Returns [null] if [scheme] is not a valid scheme, or if this URL cannot have it.
+  /// A *special* scheme (`http`, `https`, `ws`, `wss`, `ftp`, or `file`) can only be replaced by
+  /// another special scheme, and a non-special one only by another non-special one.
+  /// Additionally, `file` cannot be given to a URL that has credentials or a [port], and cannot be
+  /// replaced on a URL whose [host] is empty.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("http://example.com:443/a")!!.withScheme("https")!!.toString()
+  ///   == "https://example.com/a"
+  /// new Parser {}.parse("http://example.com/a")!!.withScheme("mailto") == null
+  /// ```
+  external function withScheme(scheme: String): Url?
+
+  /// This URL with its host replaced by [host].
+  ///
+  /// A domain is lowercased and IDNA-encoded, an IPv4 or IPv6 address is normalized, and the host
+  /// of a non-special scheme is percent-encoded.
+  /// [null] removes the host.
+  ///
+  /// Returns [null] if [host] is not a valid host, or if this URL cannot have it.
+  /// A URL with an *opaque path* cannot have a host at all;
+  /// a URL whose scheme is *special* must have one, and, unless that scheme is `file`, a non-empty
+  /// one; and a URL with credentials or a [port] must have a non-empty one.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a")!!.withHost("MÜNCHEN.de")!!.toString()
+  ///   == "https://xn--mnchen-3ya.de/a"
+  /// new Parser {}.parse("https://example.com/a")!!.withHost("other.org:8080") == null
+  /// ```
+  external function withHost(host: String?): Url?
+
+  /// This URL with its port replaced by [port].
+  ///
+  /// [null] removes the port, as does a [port] that is the scheme's default.
+  ///
+  /// Returns [null] if this URL cannot have a port, which is the case when it has no [host], an
+  /// empty [host], or the scheme `file`.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a")!!.withPort(8080)!!.toString()
+  ///   == "https://example.com:8080/a"
+  /// new Parser {}.parse("https://example.com:8080/a")!!.withPort(443)!!.toString()
+  ///   == "https://example.com/a"
+  /// new Parser {}.parse("mailto:user@example.com")!!.withPort(8080) == null
+  /// ```
+  external function withPort(port: UInt16?): Url?
+
   /// The serialization of this URL.
   external function toString(): String
 }

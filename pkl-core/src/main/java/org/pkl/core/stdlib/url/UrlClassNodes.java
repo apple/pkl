@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.url;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
@@ -57,8 +58,32 @@ public final class UrlClassNodes {
     @Specialization
     @TruffleBoundary
     protected Object eval(VmTyped self, String ref) {
-      var record = UrlParser.parse(ref, recordOf(self), false);
-      return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
+      return lift(UrlParser.parse(ref, recordOf(self), false));
+    }
+  }
+
+  public abstract static class withScheme extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, String scheme) {
+      return lift(recordOf(self).withScheme(scheme));
+    }
+  }
+
+  public abstract static class withHost extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, Object host) {
+      return lift(recordOf(self).withHost((String) VmNull.unwrap(host)));
+    }
+  }
+
+  public abstract static class withPort extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, Object port) {
+      var value = (Long) VmNull.unwrap(port);
+      return lift(recordOf(self).withPort(value == null ? null : value.intValue()));
     }
   }
 
@@ -68,6 +93,10 @@ public final class UrlClassNodes {
     protected String eval(VmTyped self) {
       return recordOf(self).serialize();
     }
+  }
+
+  private static Object lift(@Nullable UrlRecord record) {
+    return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
   }
 
   private static UrlRecord recordOf(VmTyped self) {

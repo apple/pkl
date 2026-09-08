@@ -100,6 +100,72 @@ public record UrlRecord(
     return sb.toString();
   }
 
+  /** https://url.spec.whatwg.org/#cannot-have-a-username-password-port */
+  private boolean cannotHaveCredentialsOrPort() {
+    return host == null || host.isEmpty() || scheme.equals("file");
+  }
+
+  /** https://url.spec.whatwg.org/#dom-url-protocol */
+  public @Nullable UrlRecord withScheme(String newScheme) {
+    var parsed = UrlParser.parseScheme(newScheme);
+    if (parsed == null) {
+      return null;
+    }
+    if (parsed.equals(scheme)) {
+      return this;
+    }
+    // replacing a special scheme with a non-special one (or the reverse) would change how the rest
+    // of the URL is to be read, so the spec refuses both
+    if (isSpecialScheme(parsed) != isSpecial()) {
+      return null;
+    }
+    if (parsed.equals("file") && (includesCredentials() || port != null)) {
+      return null;
+    }
+    if (scheme.equals("file") && "".equals(host)) {
+      return null;
+    }
+    var newPort = port != null && port.equals(defaultPort(parsed)) ? null : port;
+    return new UrlRecord(
+        parsed, username, password, host, newPort, path, hasOpaquePath, query, fragment);
+  }
+
+  /** https://url.spec.whatwg.org/#dom-url-hostname */
+  public @Nullable UrlRecord withHost(@Nullable String newHost) {
+    if (hasOpaquePath) {
+      // a URL with an opaque path has no host, and cannot be given one
+      return newHost == null ? this : null;
+    }
+    String parsed;
+    if (newHost == null) {
+      if (isSpecial()) {
+        return null;
+      }
+      parsed = null;
+    } else {
+      parsed = UrlParser.parseHost(newHost, scheme);
+      if (parsed == null) {
+        return null;
+      }
+    }
+    // credentials and a port can only be serialized alongside a non-empty host
+    if ((parsed == null || parsed.isEmpty()) && (includesCredentials() || port != null)) {
+      return null;
+    }
+    return new UrlRecord(scheme, username, password, parsed, port, path, false, query, fragment);
+  }
+
+  /** https://url.spec.whatwg.org/#dom-url-port. */
+  public @Nullable UrlRecord withPort(@Nullable Integer newPort) {
+    if (cannotHaveCredentialsOrPort()) {
+      // such a URL always has a null port, so only removing one can succeed
+      return newPort == null ? this : null;
+    }
+    var normalized = newPort != null && newPort.equals(defaultPort(scheme)) ? null : newPort;
+    return new UrlRecord(
+        scheme, username, password, host, normalized, path, hasOpaquePath, query, fragment);
+  }
+
   /** The percent-decoded path segments, or an empty list if this URL has an opaque path. */
   public List<String> segments() {
     if (hasOpaquePath) {
