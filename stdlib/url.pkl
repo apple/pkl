@@ -200,6 +200,53 @@ external class Url {
   /// ```
   external function withPort(port: UInt16?): Url?
 
+  /// This URL with its path replaced by [path].
+  ///
+  /// [path] is normalized: `.` and `..` segments are resolved, a leading `/` is optional, and
+  /// anything that cannot appear in a path is percent-encoded.
+  ///
+  /// Returns [null] if this URL has an *opaque path*.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a?q#f")!!.withPath("/b/c")!!.toString()
+  ///   == "https://example.com/b/c?q#f"
+  /// new Parser {}.parse("https://example.com/a")!!.withPath("b/../c")!!.toString()
+  ///   == "https://example.com/c"
+  /// new Parser {}.parse("mailto:user@example.com")!!.withPath("a") == null
+  /// ```
+  external function withPath(path: String): Url?
+
+  /// This URL with its query replaced by [query].
+  ///
+  /// A [String] is serialized, without the leading `?`.
+  /// A [Map] is serialized as `application/x-www-form-urlencoded`.
+  /// [null] removes the query, whereas the empty string produces a bare `?`.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a?q#f")!!.withQuery("r=1").toString()
+  ///   == "https://example.com/a?r=1#f"
+  /// new Parser {}.parse("https://example.com/a")!!.withQuery(Map("q", "1 2")).toString()
+  ///   == "https://example.com/a?q=1+2"
+  /// new Parser {}.parse("https://example.com/a?q")!!.withQuery(null).toString()
+  ///   == "https://example.com/a"
+  /// ```
+  external function withQuery(query: (String | Map<String, String?>)?): Url
+
+  /// This URL with its fragment replaced by [fragment].
+  ///
+  /// [null] removes the fragment, whereas the empty string produces a bare `#`.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a#f")!!.withFragment("g").toString()
+  ///   == "https://example.com/a#g"
+  /// new Parser {}.parse("https://example.com/a#f")!!.withFragment(null).toString()
+  ///   == "https://example.com/a"
+  /// ```
+  external function withFragment(fragment: String?): Url
+
   /// The serialization of this URL.
   external function toString(): String
 }

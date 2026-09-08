@@ -186,6 +186,51 @@ facts {
     true
     true
   }
+  ["withPath()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["withQuery()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["withFragment()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["setters compose"] {
+    true
+    true
+  }
   ["origin"] {
     true
     true

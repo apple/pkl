@@ -34,10 +34,11 @@ final class UrlParser {
   private final int[] input;
   private final @Nullable UrlRecord base;
   private final boolean strict;
+  private final boolean stateOverride;
 
   private boolean validationError;
   private int pointer;
-  private State state = State.SCHEME_START;
+  private State state;
   private final StringBuilder buffer = new StringBuilder();
   private boolean atSignSeen;
   private boolean insideBrackets;
@@ -54,7 +55,7 @@ final class UrlParser {
   private @Nullable StringBuilder query;
   private @Nullable StringBuilder fragment;
 
-  private enum State {
+  enum State {
     SCHEME_START,
     SCHEME,
     NO_SCHEME,
@@ -77,13 +78,20 @@ final class UrlParser {
     FRAGMENT
   }
 
-  private UrlParser(String rawInput, @Nullable UrlRecord base, boolean strict) {
+  private UrlParser(
+      String rawInput,
+      @Nullable UrlRecord base,
+      boolean strict,
+      @Nullable UrlRecord url,
+      State startState) {
     this.base = base;
     this.strict = strict;
+    this.stateOverride = url != null;
+    this.state = startState;
 
-    // Remove leading/trailing C0 controls and spaces, then all ASCII tab/newline. Each removal is a
-    // validation error.
-    var trimmed = stripC0OrSpace(rawInput);
+    // Remove all ASCII tab/newline. When there is no state override, also remove leading/trailing
+    // C0 controls and spaces. Each removal is a validation error.
+    var trimmed = url == null ? stripC0OrSpace(rawInput) : rawInput;
     if (trimmed.length() != rawInput.length()) {
       validationError = true;
     }
@@ -92,6 +100,26 @@ final class UrlParser {
       validationError = true;
     }
     this.input = cleaned.codePoints().toArray();
+
+    if (url != null) {
+      seed(url);
+    }
+  }
+
+  /** Pre-loads the components of {@code url}, for a parse with a state override. */
+  private void seed(UrlRecord url) {
+    scheme = url.scheme();
+    username.append(url.username());
+    password.append(url.password());
+    host = url.host();
+    port = url.port();
+    if (url.hasOpaquePath()) {
+      opaquePath = new StringBuilder(url.path().isEmpty() ? "" : url.path().get(0));
+    } else {
+      path.addAll(url.path());
+    }
+    query = url.query() == null ? null : new StringBuilder(url.query());
+    fragment = url.fragment() == null ? null : new StringBuilder(url.fragment());
   }
 
   /** Parses {@code input} as an absolute URL. Returns {@code null} on failure. */
@@ -101,7 +129,12 @@ final class UrlParser {
 
   /** Parses {@code input}, resolving relative references against {@code base}. */
   static @Nullable UrlRecord parse(String input, @Nullable UrlRecord base, boolean strict) {
-    return new UrlParser(input, base, strict).run();
+    return new UrlParser(input, base, strict, null, State.SCHEME_START).run();
+  }
+
+  /** Parses {@code input} from {@code startState} into the components of {@code url}. */
+  static @Nullable UrlRecord parse(String input, UrlRecord url, State startState) {
+    return new UrlParser(input, null, false, url, startState).run();
   }
 
   private @Nullable UrlRecord run() {
@@ -428,10 +461,10 @@ final class UrlParser {
           if (c != '/' && c != '\\') {
             pointer--;
           }
-        } else if (c == '?') {
+        } else if (!stateOverride && c == '?') {
           query = new StringBuilder();
           state = State.QUERY;
-        } else if (c == '#') {
+        } else if (!stateOverride && c == '#') {
           fragment = new StringBuilder();
           state = State.FRAGMENT;
         } else if (c != EOF) {
@@ -439,11 +472,13 @@ final class UrlParser {
           if (c != '/') {
             pointer--;
           }
+        } else if (stateOverride && host == null) {
+          path.add("");
         }
       }
       case PATH -> {
         var isSlash = c == '/' || (isSpecial() && c == '\\');
-        if (c == EOF || isSlash || c == '?' || c == '#') {
+        if (c == EOF || isSlash || (!stateOverride && (c == '?' || c == '#'))) {
           if (isSpecial() && c == '\\') {
             validationError = true;
           }
@@ -500,7 +535,7 @@ final class UrlParser {
         }
       }
       case QUERY -> {
-        if (c == EOF || c == '#') {
+        if (c == EOF || (!stateOverride && c == '#')) {
           assert query != null;
           var set = isSpecial() ? PercentEncoder.SPECIAL_QUERY : PercentEncoder.QUERY;
           for (var cp : buffer.toString().codePoints().toArray()) {
@@ -604,7 +639,7 @@ final class UrlParser {
     if (isFile && isWindowsDriveLetter(input)) {
       return null;
     }
-    var host = new UrlParser("", null, false).parseHost(input, !isSpecial);
+    var host = new UrlParser("", null, false, null, State.HOST).parseHost(input, !isSpecial);
     return isFile && "localhost".equals(host) ? "" : host;
   }
 

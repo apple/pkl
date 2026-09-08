@@ -45,6 +45,15 @@ local function withHost(input: String, host: String?): String? =
 local function withPort(input: String, port: UInt16?): String? =
   parser.parse(input)!!.withPort(port)?.toString()
 
+local function withPath(input: String, path: String): String? =
+  parser.parse(input)!!.withPath(path)?.toString()
+
+local function withQuery(input: String, query: (String | Map<String, String?>)?): String =
+  parser.parse(input)!!.withQuery(query).toString()
+
+local function withFragment(input: String, fragment: String?): String =
+  parser.parse(input)!!.withFragment(fragment).toString()
+
 local gClef = "\u{1D11E}"
 
 facts {
@@ -284,6 +293,66 @@ facts {
     withPort("file:///a", 8080) == null
     withPort("file://server/a", 8080) == null
     withPort("mailto:user@example.com", 8080) == null
+  }
+
+  ["withPath()"] {
+    withPath("https://example.com/a?q#f", "/b/c") == "https://example.com/b/c?q#f"
+    withPath("https://example.com/a", "b/c") == "https://example.com/b/c"
+    withPath("https://example.com/a", "/b/../c") == "https://example.com/c"
+    withPath("https://example.com/a", "") == "https://example.com/"
+    withPath("https://example.com/a", "/b\\c") == "https://example.com/b/c"
+    withPath("foo://example.com/a", "") == "foo://example.com"
+    withPath("foo:/a", "") == "foo:/"
+    withPath("file:///a", "/b") == "file:///b"
+    withPath("https://example.com/a?q#f", "/b?r") == "https://example.com/b%3Fr?q#f"
+    withPath("https://example.com/a?q#f", "/b#g") == "https://example.com/b%23g?q#f"
+    withPath("https://example.com/a", "/b c") == "https://example.com/b%20c"
+    withPath("https://example.com/a", "/b%20c") == "https://example.com/b%20c"
+    withPath("mailto:user@example.com", "a") == null
+    withPath("foo:opaque", "a") == null
+  }
+
+  ["withQuery()"] {
+    withQuery("https://example.com/a?q#f", "r=1") == "https://example.com/a?r=1#f"
+    withQuery("https://example.com/a", "q=1&q=2") == "https://example.com/a?q=1&q=2"
+    withQuery("https://example.com/a?q#f", null) == "https://example.com/a#f"
+    withQuery("https://example.com/a", "") == "https://example.com/a?"
+    withQuery("mailto:user@example.com", "q=1") == "mailto:user@example.com?q=1"
+    withQuery("https://example.com/a", Map("q", "1 2")) == "https://example.com/a?q=1+2"
+    withQuery("https://example.com/a", Map("a", null, "b", "")) == "https://example.com/a?a&b="
+    withQuery("https://example.com/a", "r 1") == "https://example.com/a?r%201"
+    withQuery("https://example.com/a", "r%201") == "https://example.com/a?r%201"
+    withQuery("https://example.com/a", "q='") == "https://example.com/a?q=%27"
+    withQuery("foo://example.com/a", "q='") == "foo://example.com/a?q='"
+    withQuery("https://example.com/a#f", "r#g") == "https://example.com/a?r%23g#f"
+  }
+
+  ["withFragment()"] {
+    withFragment("https://example.com/a#f", "g") == "https://example.com/a#g"
+    withFragment("https://example.com/a?q", "g") == "https://example.com/a?q#g"
+    withFragment("https://example.com/a#f", null) == "https://example.com/a"
+    withFragment("https://example.com/a", "") == "https://example.com/a#"
+    withFragment("mailto:user@example.com", "f") == "mailto:user@example.com#f"
+    withFragment("https://example.com/a", "f/g?h") == "https://example.com/a#f/g?h"
+    withFragment("https://example.com/a", "f#g") == "https://example.com/a#f#g"
+    withFragment("https://example.com/a", "f g") == "https://example.com/a#f%20g"
+    withFragment("https://example.com/a", "münchen") == "https://example.com/a#m%C3%BCnchen"
+  }
+
+  ["setters compose"] {
+    parser.parse("http://example.com/a?q#f")!!.withScheme("https")!!.withHost("other.org")!!
+      .withPort(8443)!!.withPath("/b")!!
+      .withQuery(Map("r", "1"))
+      .withFragment(null)
+      .toString() == "https://other.org:8443/b?r=1"
+
+    let (u = parser.parse("https://user:pw@example.com:8443/a/b?q=1#f")!!)
+      u.withScheme(u.scheme) == u
+        && u.withHost(u.host) == u
+        && u.withPort(u.port) == u
+        && u.withPath(u.path) == u
+        && u.withQuery(u.search) == u
+        && u.withFragment(u.fragment) == u
   }
 
   ["origin"] {
