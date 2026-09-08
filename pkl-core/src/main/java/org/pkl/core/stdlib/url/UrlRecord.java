@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.url;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -169,6 +170,40 @@ public record UrlRecord(
     var normalized = newPort != null && newPort.equals(defaultPort(scheme)) ? null : newPort;
     return new UrlRecord(
         scheme, username, password, host, normalized, path, hasOpaquePath, query, fragment);
+  }
+
+  /** https://url.spec.whatwg.org/#dom-url-pathname. */
+  public @Nullable UrlRecord withPath(String newPath) {
+    if (hasOpaquePath) {
+      return null;
+    }
+    var cleared =
+        new UrlRecord(scheme, username, password, host, port, List.of(), false, query, fragment);
+    return UrlParser.parse(newPath, cleared, UrlParser.State.PATH_START);
+  }
+
+  /** https://url.spec.whatwg.org/#dom-url-search. */
+  public UrlRecord withQuery(@Nullable String newQuery) {
+    if (newQuery == null) {
+      return new UrlRecord(
+          scheme, username, password, host, port, path, hasOpaquePath, null, fragment);
+    }
+    var cleared =
+        new UrlRecord(scheme, username, password, host, port, path, hasOpaquePath, "", fragment);
+    // the query state cannot fail
+    return Objects.requireNonNull(UrlParser.parse(newQuery, cleared, UrlParser.State.QUERY));
+  }
+
+  /** https://url.spec.whatwg.org/#dom-url-hash. */
+  public UrlRecord withFragment(@Nullable String newFragment) {
+    if (newFragment == null) {
+      return new UrlRecord(
+          scheme, username, password, host, port, path, hasOpaquePath, query, null);
+    }
+    var cleared =
+        new UrlRecord(scheme, username, password, host, port, path, hasOpaquePath, query, "");
+    // the fragment state cannot fail
+    return Objects.requireNonNull(UrlParser.parse(newFragment, cleared, UrlParser.State.FRAGMENT));
   }
 
   /** The percent-decoded path segments, or an empty list if this URL has an opaque path. */

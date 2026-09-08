@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -93,6 +94,32 @@ public final class UrlClassNodes {
     protected Object eval(VmTyped self, Object port) {
       var value = (Long) VmNull.unwrap(port);
       return lift(recordOf(self).withPort(value == null ? null : value.intValue()));
+    }
+  }
+
+  public abstract static class withPath extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, String path) {
+      return lift(recordOf(self).withPath(path));
+    }
+  }
+
+  public abstract static class withQuery extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, Object query) {
+      var value = VmNull.unwrap(query);
+      var serialized = value instanceof VmMap map ? FormUrlEncoder.serialize(map) : (String) value;
+      return UrlFactory.create(recordOf(self).withQuery(serialized));
+    }
+  }
+
+  public abstract static class withFragment extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, Object fragment) {
+      return UrlFactory.create(recordOf(self).withFragment((String) VmNull.unwrap(fragment)));
     }
   }
 
