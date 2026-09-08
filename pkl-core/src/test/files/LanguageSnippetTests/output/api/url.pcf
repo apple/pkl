@@ -127,6 +127,55 @@ facts {
     true
     true
   }
+  ["withScheme()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["withHost()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["withPort()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["origin"] {
     true
     true

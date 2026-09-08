@@ -570,6 +570,44 @@ final class UrlParser {
     }
   }
 
+  /**
+   * Parses {@code input} as a scheme (<a href="https://url.spec.whatwg.org/#scheme-state">scheme
+   * state</a>), and returns it lowercased. Returns {@code null} if {@code input} is not a scheme.
+   * Unlike the state machine, the trailing {@code :} is neither expected nor accepted.
+   */
+  static @Nullable String parseScheme(String input) {
+    if (input.isEmpty() || !isAsciiAlpha(input.charAt(0))) {
+      return null;
+    }
+    var out = new StringBuilder(input.length());
+    for (var i = 0; i < input.length(); i++) {
+      var c = input.charAt(i);
+      if (!isAsciiAlphanumeric(c) && c != '+' && c != '-' && c != '.') {
+        return null;
+      }
+      out.append((char) toLowerAscii(c));
+    }
+    return out.toString();
+  }
+
+  /**
+   * Parses {@code input} as the entire host of a URL whose scheme is {@code scheme} (<a
+   * href="https://url.spec.whatwg.org/#host-state">host state</a>). Returns {@code null} on
+   * failure.
+   */
+  static @Nullable String parseHost(String input, String scheme) {
+    var isSpecial = UrlRecord.isSpecialScheme(scheme);
+    var isFile = scheme.equals("file");
+    if (input.isEmpty()) {
+      return isSpecial && !isFile ? null : "";
+    }
+    if (isFile && isWindowsDriveLetter(input)) {
+      return null;
+    }
+    var host = new UrlParser("", null, false).parseHost(input, !isSpecial);
+    return isFile && "localhost".equals(host) ? "" : host;
+  }
+
   // Host parsing (https://url.spec.whatwg.org/#host-parsing)
 
   private @Nullable String parseHost(String input, boolean isNotSpecial) {
