@@ -4,6 +4,8 @@ import "pkl:url"
 
 local parser = new url.Parser {}
 
+local strictParser = new url.Parser { strict = true }
+
 local base = "http://example.org/foo/bar?q#z"
 
 local function componentsOf(input: String): List<unknown> =
@@ -23,7 +25,7 @@ local function lenient(input: String): String? = parser.parse(input)?.toString()
 
 /// The lenient and strict serializations of [input].
 local function both(input: String): List<String?> =
-  List(lenient(input), parser.parseStrict(input)?.toString())
+  List(lenient(input), strictParser.parse(input)?.toString())
 
 /// Whether [input] parses to itself, both leniently and strictly.
 local function roundTrips(input: String): Boolean = both(input) == List(input, input)
@@ -136,7 +138,7 @@ facts {
     lenient("foo://münchen.de") == "foo://m%C3%BCnchen.de"
   }
 
-  ["parseStrict(): accepting well-formed input"] {
+  ["strict: accepting well-formed input"] {
     roundTrips("https://example.com/a?q=1#f")
     roundTrips("http://1.2.3.4/")
     roundTrips("http://[2001:db8::1]/")
@@ -146,7 +148,7 @@ facts {
     roundTrips("https://example.com/a%20b?q=%C3%A9#f%2F")
   }
 
-  ["parseStrict(): rejecting invalid URL units"] {
+  ["strict: rejecting invalid URL units"] {
     both("https://example.com/a<b") == List("https://example.com/a%3Cb", null)
     both("https://example.com/a%zz") == List("https://example.com/a%zz", null)
     both("https://example.com/a%2") == List("https://example.com/a%2", null)
@@ -173,7 +175,7 @@ facts {
     resolve("mailto:user@example.com", "#y") == "mailto:user@example.com#y"
     lenient("../c") == null
     resolve("http://example.org/foo/bar", "../c") == "http://example.org/c"
-    new url.Parser { base = " http://example.org/foo\\bar " }.parseStrict("c")?.toString()
+    new url.Parser { base = " http://example.org/foo\\bar "; strict = true }.parse("c")?.toString()
       == "http://example.org/foo/c"
   }
 

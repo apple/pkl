@@ -149,6 +149,7 @@ public final class Identifier implements Comparable<Identifier> {
 
   // members of pkl.url#Parser
   public static final Identifier BASE = get("base");
+  public static final Identifier STRICT = get("strict");
 
   // members of pkl.url#Builder
   public static final Identifier SCHEME = get("scheme");

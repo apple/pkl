@@ -73,7 +73,7 @@ facts {
     true
     true
   }
-  ["parseStrict(): accepting well-formed input"] {
+  ["strict: accepting well-formed input"] {
     true
     true
     true
@@ -82,7 +82,7 @@ facts {
     true
     true
   }
-  ["parseStrict(): rejecting invalid URL units"] {
+  ["strict: rejecting invalid URL units"] {
     true
     true
     true

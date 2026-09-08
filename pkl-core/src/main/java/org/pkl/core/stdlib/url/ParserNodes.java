@@ -46,21 +46,8 @@ public final class ParserNodes {
       if (base != null && baseRecord == null) {
         throw exceptionBuilder().evalError("invalidUrlParserBase", base).build();
       }
-      var record = UrlParser.parse(input, baseRecord, false);
-      return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
-    }
-  }
-
-  public abstract static class parseStrict extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected Object eval(VmTyped self, String input) {
-      var base = (String) VmNull.unwrap(VmUtils.readMember(self, Identifier.BASE));
-      var baseRecord = parseBase(base);
-      if (base != null && baseRecord == null) {
-        throw exceptionBuilder().evalError("invalidUrlParserBase", base).build();
-      }
-      var record = UrlParser.parse(input, baseRecord, true);
+      var strict = (boolean) VmUtils.readMember(self, Identifier.STRICT);
+      var record = UrlParser.parse(input, baseRecord, strict);
       return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
     }
   }
