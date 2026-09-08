@@ -44,6 +44,16 @@ facts {
     true
     true
   }
+  ["portOrDefault"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["IDNA"] {
     true
     true

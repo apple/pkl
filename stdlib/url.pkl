@@ -71,6 +71,18 @@ external class Url {
   /// The port of this URL, or [null] if it is not stated or is the scheme's default port.
   port: UInt16?
 
+  /// The port of this URL, or the default port of its [scheme] if it does not state one.
+  ///
+  /// [null] if this URL states no port and its scheme has no default port.
+  ///
+  /// Facts:
+  /// ```
+  /// new Parser {}.parse("https://example.com/a")!!.portOrDefault == 443
+  /// new Parser {}.parse("https://example.com:8443/a")!!.portOrDefault == 8443
+  /// new Parser {}.parse("foo://example.com/a")!!.portOrDefault == null
+  /// ```
+  external portOrDefault: UInt16?
+
   /// The path of this URL, in its serialized form.
   path: String
 

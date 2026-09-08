@@ -30,6 +30,15 @@ import org.pkl.core.stdlib.PklName;
 public final class UrlClassNodes {
   private UrlClassNodes() {}
 
+  public abstract static class portOrDefault extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self) {
+      var port = recordOf(self).portOrDefault();
+      return port == null ? VmNull.withoutDefault() : port.longValue();
+    }
+  }
+
   public abstract static class origin extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary
