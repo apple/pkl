@@ -32,15 +32,19 @@ class Parser {
   /// Throws if it is not a parseable absolute URL.
   base: String?
 
+  /// Tells whether any validation error is fatal.
+  ///
+  /// When [false], parsing is lenient: malformed input is coerced rather than rejected.
+  /// When [true], [parse()] returns [null] instead of coercing malformed input.
+  ///
+  /// [base] is always parsed leniently.
+  strict: Boolean = false
+
   /// Parses [input] as a URL.
   ///
-  /// Parsing is lenient: malformed input is coerced rather than
-  /// rejected. Returns [null] only when [input] cannot be parsed at all.
+  /// Returns [null] if [input] cannot be parsed, or if [strict] is [true] and the [input] is
+  /// malformed.
   external function parse(input: String): Url?
-
-  /// Like [parse()], but any validation error is fatal: returns [null] instead of coercing
-  /// malformed input.
-  external function parseStrict(input: String): Url?
 }
 
 /// A parsed URL.
@@ -273,7 +277,7 @@ class Builder {
 /// Percent-encodes [value] so that it can be interpolated into a URL component.
 ///
 /// Every code point other than an ASCII alphanumeric or one of `!'()*-._~` is percent-encoded as
-/// its UTF-8 bytes, which is what JavaScript's `encodeURIComponent` does.
+/// its UTF-8 bytes.
 ///
 /// Facts:
 /// ```
@@ -310,5 +314,3 @@ external function decodeComponent(value: String): String
 /// buildQuery(List(Pair("a", "1"), Pair("a", "2"))) == "a=1&a=2"
 /// ```
 external function buildQuery(params: Map<String, String?> | List<Pair<String, String?>>): String
-
-// TODO: parseQuery
