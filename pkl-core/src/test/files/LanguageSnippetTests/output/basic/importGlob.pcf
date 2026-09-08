@@ -19,6 +19,7 @@ examples {
       "../../input-helper/globtest/moduleA.pkl"
       "../../input-helper/globtest/moduleB.pkl"
       "../../input-helper/globtest/child/moduleC.pkl"
+      "../../input-helper/globtest/childlinked/moduleC.pkl"
     }
   }
   ["amended"] {
@@ -34,6 +35,9 @@ examples {
     ---
     name: child/moduleC
     
+    ---
+    name: child/moduleC
+    
     """
   }
   ["globstar then up one level"] {
@@ -41,6 +45,9 @@ examples {
       "../../input-helper/globtest/child/../module with [weird] ~!characters.pkl"
       "../../input-helper/globtest/child/../moduleA.pkl"
       "../../input-helper/globtest/child/../moduleB.pkl"
+      "../../input-helper/globtest/childlinked/../module with [weird] ~!characters.pkl"
+      "../../input-helper/globtest/childlinked/../moduleA.pkl"
+      "../../input-helper/globtest/childlinked/../moduleB.pkl"
     }
   }
   ["empty glob matches current directory"] {
