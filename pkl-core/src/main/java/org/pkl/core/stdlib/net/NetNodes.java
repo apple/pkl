@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.net;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
@@ -24,6 +25,18 @@ import org.pkl.core.stdlib.ExternalMethod2Node;
 /** Backing nodes for {@code pkl:net}'s module-level members. */
 public final class NetNodes {
   private NetNodes() {}
+
+  public abstract static class Url extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(@SuppressWarnings("unused") VmTyped self, String input) {
+      var parsed = UrlParser.parse(input);
+      if (parsed == null) {
+        return VmNull.withoutDefault();
+      }
+      return UrlFactory.create(parsed);
+    }
+  }
 
   public abstract static class encodeComponent extends ExternalMethod1Node {
     @Specialization
