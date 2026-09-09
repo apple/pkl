@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,13 +16,20 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.ImportStatic;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.*;
+import org.pkl.core.util.Pair;
 
-public final class ReadSuperPropertyNode extends ExpressionNode {
+@ImportStatic(VmUtils.class)
+public abstract class ReadSuperPropertyNode extends ExpressionNode {
 
   private final Identifier propertyName;
   private final boolean needsConst;
@@ -36,15 +43,43 @@ public final class ReadSuperPropertyNode extends ExpressionNode {
     this.needsConst = needsConst;
   }
 
-  // TODO: how can this be optimized?
-  // (result not cached and expensive lookups on every execution)
-  public Object executeGeneric(VirtualFrame frame) {
-    var receiver = VmUtils.getObjectReceiver(frame);
+  @SuppressWarnings("unused")
+  @Specialization(guards = "getObjectReceiver(frame) == receiver")
+  public Object evalCached(
+      VirtualFrame frame,
+      @Cached("getObjectReceiver(frame)") VmObjectLike receiver,
+      @Cached("getPropertyAndOwner(frame)")
+          @Nullable Pair<VmObjectLike, ObjectMember> ownerAndProperty,
+      @Cached("doEval(receiver, ownerAndProperty)") Object result) {
+    return result;
+  }
 
-    // start from the parent of the owner of the `super.<propertyName>` expression
-    // skip any function object owners (same as when resolving `this`)
-    // `receiver` must be passed on unchanged to make sure that overridden properties still take
-    // effect
+  @Specialization(replaces = "evalCached")
+  public Object evalUncached(VirtualFrame frame) {
+    return doEval(VmUtils.getObjectReceiver(frame), getPropertyAndOwner(frame));
+  }
+
+  protected Object doEval(
+      VmObjectLike receiver, @Nullable Pair<VmObjectLike, ObjectMember> ownerAndProperty) {
+    if (ownerAndProperty == null) {
+      // TODO: refine when to return VmDynamic.empty() and when to fail
+      return VmDynamic.empty();
+    }
+    var owner = ownerAndProperty.getFirst();
+    var property = ownerAndProperty.getSecond();
+    var constantValue = property.getConstantValue();
+    if (constantValue != null) return constantValue; // TODO: type check
+
+    return callNode.call(
+        property.getCallTarget(),
+        // TODO: should the marker only turn off constraint checking, not overall type checking?
+        receiver,
+        owner,
+        propertyName,
+        VmUtils.SKIP_TYPECHECK_MARKER);
+  }
+
+  protected @Nullable Pair<VmObjectLike, ObjectMember> getPropertyAndOwner(VirtualFrame frame) {
     var initialOwner = VmUtils.getOwner(frame);
     while (initialOwner instanceof VmFunction) {
       initialOwner = initialOwner.getEnclosingOwner();
@@ -59,21 +94,8 @@ public final class ReadSuperPropertyNode extends ExpressionNode {
         CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder().evalError("propertyMustBeConst", propertyName.toString()).build();
       }
-
-      var constantValue = property.getConstantValue();
-      if (constantValue != null) return constantValue; // TODO: type check
-
-      // caching the result of a super call is tricky (function of both receiver and owner)
-      return callNode.call(
-          property.getCallTarget(),
-          // TODO: should the marker only turn off constraint checking, not overall type checking?
-          receiver,
-          owner,
-          propertyName,
-          VmUtils.SKIP_TYPECHECK_MARKER);
+      return Pair.of(owner, property);
     }
-
-    // TODO: refine when to return VmDynamic.empty() and when to fail
-    return VmDynamic.empty();
+    return null;
   }
 }
