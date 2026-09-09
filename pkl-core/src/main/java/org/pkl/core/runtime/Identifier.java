@@ -147,6 +147,10 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
 
+  // members of pkl.net#Url
+  public static final Identifier USER_INFO = get("userInfo");
+  public static final Identifier QUERY = get("query");
+
   // members of pkl.url#Parser
   public static final Identifier BASE = get("base");
   public static final Identifier STRICT = get("strict");

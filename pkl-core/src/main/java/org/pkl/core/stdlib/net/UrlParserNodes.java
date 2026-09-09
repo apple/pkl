@@ -13,42 +13,42 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.stdlib.url;
+package org.pkl.core.stdlib.net;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 
-/** Backing nodes for {@code pkl:url}'s {@code Parser} class. */
-public final class ParserNodes {
-  private ParserNodes() {}
-
-  /**
-   * Parses {@code Parser.base}, or returns {@code null} if it is unset or does not parse.
-   *
-   * <p>The base is always parsed leniently.
-   */
-  private static @Nullable UrlRecord parseBase(@Nullable String base) {
-    return base == null ? null : WhatwgUrlParser.parse(base, false);
-  }
+/** Backing nodes for {@code pkl:net}'s {@code UrlParser} class. */
+public final class UrlParserNodes {
+  private UrlParserNodes() {}
 
   public abstract static class parse extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
     protected Object eval(VmTyped self, String input) {
       var base = (String) VmNull.unwrap(VmUtils.readMember(self, Identifier.BASE));
-      var baseRecord = parseBase(base);
-      if (base != null && baseRecord == null) {
-        throw exceptionBuilder().evalError("invalidUrlParserBase", base).build();
+      UrlParser.Parsed parsedBase = null;
+      if (base != null) {
+        parsedBase = UrlParser.parse(base);
+        if (parsedBase == null || parsedBase.scheme() == null) {
+          throw exceptionBuilder().evalError("invalidUrlParserBase", base).build();
+        }
       }
-      var strict = (boolean) VmUtils.readMember(self, Identifier.STRICT);
-      var record = WhatwgUrlParser.parse(input, baseRecord, strict);
-      return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
+      var parsed = UrlParser.parse(input);
+      if (parsed == null) {
+        return VmNull.withoutDefault();
+      }
+      if (parsedBase == null || parsed.scheme() != null) {
+        // an absolute URL stands on its own, and resolving it would only remove its dot segments;
+        // without a base, a relative reference is kept as one
+        return UrlFactory.create(parsed);
+      }
+      return UrlFactory.create(UrlParser.resolve(parsedBase, parsed));
     }
   }
 }

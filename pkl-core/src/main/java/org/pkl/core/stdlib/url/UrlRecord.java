@@ -85,7 +85,7 @@ public record UrlRecord(
   }
 
   private @Nullable String blobOrigin() {
-    var pathUrl = UrlParser.parse(serializedPath(), false);
+    var pathUrl = WhatwgUrlParser.parse(serializedPath(), false);
     if (pathUrl == null) {
       return null;
     }
@@ -113,7 +113,7 @@ public record UrlRecord(
 
   /** https://url.spec.whatwg.org/#dom-url-protocol */
   public @Nullable UrlRecord withScheme(String newScheme) {
-    var parsed = UrlParser.parseScheme(newScheme);
+    var parsed = WhatwgUrlParser.parseScheme(newScheme);
     if (parsed == null) {
       return null;
     }
@@ -149,7 +149,7 @@ public record UrlRecord(
       }
       parsed = null;
     } else {
-      parsed = UrlParser.parseHost(newHost, scheme);
+      parsed = WhatwgUrlParser.parseHost(newHost, scheme);
       if (parsed == null) {
         return null;
       }
@@ -179,7 +179,7 @@ public record UrlRecord(
     }
     var cleared =
         new UrlRecord(scheme, username, password, host, port, List.of(), false, query, fragment);
-    return UrlParser.parse(newPath, cleared, UrlParser.State.PATH_START);
+    return WhatwgUrlParser.parse(newPath, cleared, WhatwgUrlParser.State.PATH_START);
   }
 
   /** https://url.spec.whatwg.org/#dom-url-search. */
@@ -191,7 +191,8 @@ public record UrlRecord(
     var cleared =
         new UrlRecord(scheme, username, password, host, port, path, hasOpaquePath, "", fragment);
     // the query state cannot fail
-    return Objects.requireNonNull(UrlParser.parse(newQuery, cleared, UrlParser.State.QUERY));
+    return Objects.requireNonNull(
+        WhatwgUrlParser.parse(newQuery, cleared, WhatwgUrlParser.State.QUERY));
   }
 
   /** https://url.spec.whatwg.org/#dom-url-hash. */
@@ -203,7 +204,8 @@ public record UrlRecord(
     var cleared =
         new UrlRecord(scheme, username, password, host, port, path, hasOpaquePath, query, "");
     // the fragment state cannot fail
-    return Objects.requireNonNull(UrlParser.parse(newFragment, cleared, UrlParser.State.FRAGMENT));
+    return Objects.requireNonNull(
+        WhatwgUrlParser.parse(newFragment, cleared, WhatwgUrlParser.State.FRAGMENT));
   }
 
   /** The percent-decoded path segments, or an empty list if this URL has an opaque path. */

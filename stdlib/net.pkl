@@ -1,0 +1,133 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Utilities for networking, like URL parsing.
+@ModuleInfo { minPklVersion = "0.33.0" }
+module pkl.net
+
+/// A URL, as defined by [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+/// [RFC 6874](https://www.rfc-editor.org/rfc/rfc6874) IPv6 zone literals are also supported.
+class Url {
+  /// The scheme, without the trailing `:`, or [null] if this is a relative reference.
+  ///
+  /// [UrlParser.parse()] lowercases this, as schemes are case-insensitive.
+  scheme: String?(this == null || isValidScheme(this!!))
+
+  /// The userinfo, without the trailing `@`, or [null] if this URL has none.
+  ///
+  /// Only a URL with a [host] can have userinfo.
+  userInfo: String?(this == null || (host != null && isValidPercentEncoding(this!!)))
+
+  /// The host, or [null] if this URL has no authority.
+  ///
+  /// A [null] host is not the same as an empty one: `file:/tmp` has no host, `file:///tmp` has an
+  /// empty one.
+  ///
+  /// An IPv6 address must be enclosed in brackets, as in `[::1]`.
+  /// It may carry a zone identifier, as described in RFC 6874.
+  /// Anything else is a registered name, whose brackets, if it has any, must be percent-encoded.
+  host: String?(this == null || isValidHost(this!!))
+
+  /// The port, or [null] if this URL states none.
+  ///
+  /// Only a URL with a [host] can have a port.
+  port: UInt16?(this == null || host != null)
+
+  /// The path, or the empty string if this URL has none.
+  ///
+  /// A URL with a [host] has either an empty path or one starting with `/`.
+  /// A URL without one may also have a *rootless* path, as `mailto:user@example.com` does.
+  path: String(isValidPath(this, host != null)) = ""
+
+  /// The query, without the leading `?`, or [null] if this URL has none.
+  ///
+  /// The empty string is a URL ending in a bare `?`.
+  query: String?(this == null || isValidPercentEncoding(this!!))
+
+  /// The fragment, without the leading `#`, or [null] if this URL has none.
+  ///
+  /// The empty string is a URL ending in a bare `#`.
+  fragment: String?(this == null || isValidPercentEncoding(this!!))
+
+  /// The percent-decoded segments of [path].
+  ///
+  /// A leading `/` introduces the first segment rather than following an empty one, so the path `/`
+  /// has one empty segment. An empty [path] has no segments at all.
+  external fixed segments: List<String>
+
+  /// Resolves [ref] against this URL.
+  ///
+  /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
+  /// which replaces it entirely.
+  /// Dot segments are removed from the result's path, normalizing it.
+  ///
+  /// Returns [null] if [ref] cannot be parsed.
+  ///
+  /// Throws if this URL is itself a relative reference.
+  external function resolve(ref: String): Url?
+
+  /// The serialization of this URL.
+  ///
+  /// Every character that cannot appear literally in its component is percent-encoded as its UTF-8
+  /// bytes.
+  external function toString(): String
+}
+
+/// A URL parser, following [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+class UrlParser {
+  /// The URL to resolve relative references against.
+  ///
+  /// When set, a relative reference (for example `../c` or `//host/d`) is resolved against this
+  /// URL, so [parse()] always returns an absolute URL.
+  /// When [null], a relative reference is returned as one, with a [null] [Url.scheme].
+  ///
+  /// Throws if it is not a parseable absolute URL.
+  base: String?
+
+  /// Parses [input] as a URL.
+  ///
+  /// Both an absolute URL and a relative reference are accepted.
+  /// Because a relative reference may be a bare path, almost any input is one, so this returning
+  /// non-[null] does not on its own mean that [input] was a URL. Check [Url.scheme] for that.
+  ///
+  /// Returns [null] if [input] cannot be parsed.
+  external function parse(input: String): Url?
+}
+
+/// Percent-encodes [value] so that it can be interpolated into any URL component.
+///
+/// Every character other than an ASCII alphanumeric or one of `-._~`, the *unreserved* characters
+/// of RFC 3986, is percent-encoded as its UTF-8 bytes.
+external function encodeComponent(value: String): String
+
+/// Percent-decodes [value], interpreting the decoded bytes as UTF-8.
+///
+/// The inverse of [encodeComponent()].
+/// A `%` that does not begin a percent-encoded octet is kept as-is.
+external const function decodeComponent(value: String): String
+
+/// Whether every `%` in [value] begins a percent-encoded octet.
+external local const function isValidPercentEncoding(value: String): Boolean
+
+/// Whether [value] is a `scheme`.
+external local const function isValidScheme(value: String): Boolean
+
+/// Whether [value] is a `host`.
+external local const function isValidHost(value: String): Boolean
+
+/// Whether [value] is a path that can sit next to an authority, or, when [hasAuthority] is [false],
+/// next to no authority at all.
+external local const function isValidPath(value: String, hasAuthority: Boolean): Boolean
