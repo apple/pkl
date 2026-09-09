@@ -1,0 +1,345 @@
+amends "../snippetTest.pkl"
+
+import "pkl:net"
+
+local parser = new net.UrlParser {}
+
+local rfcBase = "http://a/b/c/d;p?q"
+
+local function componentsOf(input: String): List<unknown> =
+  let (result = parser.parse(input)!!)
+    List(
+      result.scheme,
+      result.userInfo,
+      result.host,
+      result.port,
+      result.path,
+      result.query,
+      result.fragment,
+    )
+
+local function parsed(input: String): String? = parser.parse(input)?.toString()
+
+/// Whether [input] parses to exactly itself.
+local function roundTrips(input: String): Boolean = parsed(input) == input
+
+local function resolved(ref: String): String? = parser.parse(rfcBase)!!.resolve(ref)?.toString()
+
+local function viaBase(ref: String): String? =
+  new net.UrlParser { base = rfcBase }.parse(ref)?.toString()
+
+local function resolvedBothWays(ref: String): String? =
+  let (byMethod = resolved(ref))
+    if (byMethod == viaBase(ref)) byMethod else "disagree: \(byMethod) vs \(viaBase(ref))"
+
+local gClef = "\u{1D11E}"
+
+facts {
+  ["components"] {
+    componentsOf("https://user:pw@example.com:8080/a/b?q=1#f")
+      == List("https", "user:pw", "example.com", 8080, "/a/b", "q=1", "f")
+    componentsOf("https://example.com")
+      == List("https", null, "example.com", null, "", null, null)
+    componentsOf("https://example.com/a?#")
+      == List("https", null, "example.com", null, "/a", "", "")
+    componentsOf("mailto:user@example.com")
+      == List("mailto", null, null, null, "user@example.com", null, null)
+
+    // a null host is not an empty one
+    componentsOf("file:/tmp") == List("file", null, null, null, "/tmp", null, null)
+    componentsOf("file:///tmp") == List("file", null, "", null, "/tmp", null, null)
+
+    componentsOf("http://example.com:/a") == List("http", null, "example.com", null, "/a", null, null)
+
+    // the userinfo runs to the last "@", so the extra one lands in it and is encoded on the way out
+    componentsOf("http://a@b@example.com/") == List("http", "a@b", "example.com", null, "/", null, null)
+  }
+
+  ["parse(): keeps components as they were written"] {
+    // RFC 3986 normalizes nothing but the scheme, which is defined to be case-insensitive
+    parser.parse("HTTPS://example.com")!!.scheme == "https"
+    parser.parse("http://EXAMPLE.com/A")!!.host == "EXAMPLE.com"
+    roundTrips("http://EXAMPLE.com/A")
+
+    parser.parse("https://example.com:443/a")!!.port == 443
+    roundTrips("https://example.com:443/a")
+    parser.parse("http://example.com/a/b/../c/./d")!!.path == "/a/b/../c/./d"
+    roundTrips("http://example.com/a/b/../c/./d")
+    parser.parse("http://example.com/%41%2Fb")!!.path == "/%41%2Fb"
+    roundTrips("http://example.com/%41%2fb")
+    roundTrips("http://0x7f.0.0.1/")
+    roundTrips("http://1.2.3.4./")
+    roundTrips("http://[2001:db8:0:0:0:0:0:1]/")
+  }
+
+  ["parse(): round-trips valid URIs"] {
+    roundTrips("https://example.com/a?q=1#f")
+    roundTrips("http://1.2.3.4/")
+    roundTrips("http://[2001:db8::1]/")
+    roundTrips("http://[v7.future]/")
+    roundTrips("file:///a/b")
+    roundTrips("foo://example.com/a")
+    roundTrips("mailto:user@example.com")
+    roundTrips("urn:isbn:0451450523")
+    roundTrips("https://example.com/a%20b?q=%C3%A9#f%2F")
+    roundTrips("https://example.com")
+    roundTrips("https://example.com/a?#")
+    roundTrips("http://a/b/c/d;p?q")
+    roundTrips("foo:")
+    // every sub-delim, ":" and "@" may appear literally in a path, query and fragment
+    roundTrips("http://example.com/!$&'()*+,;=:@?!$&'()*+,;=:@/?#!$&'()*+,;=:@/?")
+  }
+
+  ["parse(): encodes what it cannot keep"] {
+    parser.parse("http://example.com/a b")!!.path == "/a b"
+    parsed("http://example.com/a b") == "http://example.com/a%20b"
+    parsed("https://example.com/a<b>c") == "https://example.com/a%3Cb%3Ec"
+    parsed("https://example.com/?a b") == "https://example.com/?a%20b"
+    parsed("https://example.com/#a b") == "https://example.com/#a%20b"
+    parsed("https://example.com/münchen?q=café") == "https://example.com/m%C3%BCnchen?q=caf%C3%A9"
+    parsed("https://example.com/a" + gClef) == "https://example.com/a%F0%9D%84%9E"
+    parsed("http://münchen.de/") == "http://m%C3%BCnchen.de/"
+    parsed("http://exa mple.com/") == "http://exa%20mple.com/"
+    parsed("http://a@b@example.com/") == "http://a%40b@example.com/"
+    parsed("http://u:p@example.com/") == "http://u:p@example.com/"
+
+    // once encoded, the result round-trips
+    roundTrips("http://example.com/a%20b")
+    parsed(parsed("http://example.com/a b")!!) == "http://example.com/a%20b"
+  }
+
+  ["parse(): failing"] {
+    // a "%" that does not begin a percent-encoded octet
+    parsed("http://example.com/a%zz") == null
+    parsed("http://example.com/a%2") == null
+    parsed("http://example.com/a%") == null
+    parsed("http://example.com/?a%zz") == null
+    parsed("http://example.com/#a%zz") == null
+    parsed("http://u%zz@example.com/") == null
+    parsed("http://exa%zzmple.com/") == null
+
+    // a ":" in an authority always separates a port, so what follows has to be one
+    parsed("https://example.com:port/") == null
+    parsed("https://example.com:99999/") == null
+    parsed("https://example.com:-1/") == null
+
+    // a malformed IP literal
+    parsed("http://[::1") == null
+    parsed("http://[::1x]/") == null
+    parsed("http://[]/") == null
+    parsed("http://[::1]x/") == null
+
+    // the same holds for a relative reference, which is checked no less than an absolute URL
+    parsed("a/%zz") == null
+    parsed("//example.com:port/a") == null
+    parsed("//[::1x]/a") == null
+  }
+
+  ["parse(): RFC 6874 zone identifiers"] {
+    roundTrips("http://[fe80::1%25eth0]/")
+    roundTrips("http://[fe80::1%25eth0]:8080/a?q#f")
+    parser.parse("http://[fe80::1%25eth0]/")!!.host == "[fe80::1%25eth0]"
+    roundTrips("http://[fe80::1%25a-b._~1]/")
+    roundTrips("http://[fe80::1%25%41]/")
+    parsed("http://[fe80::1%eth0]/") == null
+    parsed("http://[fe80::1%65th0]/") == null
+    parsed("http://[fe80::1%25]/") == null
+    parsed("http://[%25eth0]/") == null
+    parsed("http://[fe80::1%25eth 0]/") == null
+    parsed("http://[fe80::1%25eth%zz]/") == null
+    parsed("http://[fe80::1%25a:b]/") == null
+    parsed("http://[v7.future%25eth0]/") == null
+    roundTrips("http://fe80--1%25eth0/")
+  }
+
+  ["parse(): relative references"] {
+    componentsOf("a/foo") == List(null, null, null, null, "a/foo", null, null)
+    componentsOf("../c") == List(null, null, null, null, "../c", null, null)
+    componentsOf("/a/b?q#f") == List(null, null, null, null, "/a/b", "q", "f")
+    componentsOf("//example.com/a") == List(null, null, "example.com", null, "/a", null, null)
+    componentsOf("?q") == List(null, null, null, null, "", "q", null)
+    componentsOf("#f") == List(null, null, null, null, "", null, "f")
+    componentsOf("") == List(null, null, null, null, "", null, null)
+
+    roundTrips("a/foo")
+    roundTrips("../c")
+    roundTrips("/a/b?q#f")
+    roundTrips("//example.com/a")
+    roundTrips("//user@example.com:8080")
+    roundTrips("?q")
+    roundTrips("#f")
+    roundTrips("")
+
+    // almost any text is a well-formed relative reference, so it is the scheme, and not parsing
+    // succeeding, that tells a URL apart from arbitrary text
+    parser.parse("not a url")!!.scheme == null
+    parsed("not a url") == "not%20a%20url"
+
+    // a hand-built relative URL is a parsed one
+    new net.Url { path = "a/foo" } == parser.parse("a/foo")
+    new net.Url { path = "a/foo" }.toString() == "a/foo"
+    new net.Url { path = "a/foo" }.segments == List("a", "foo")
+  }
+
+  ["resolve(): RFC 3986, section 5.4.1 normal examples"] {
+    resolvedBothWays("g:h") == "g:h"
+    resolvedBothWays("g") == "http://a/b/c/g"
+    resolvedBothWays("./g") == "http://a/b/c/g"
+    resolvedBothWays("g/") == "http://a/b/c/g/"
+    resolvedBothWays("/g") == "http://a/g"
+    resolvedBothWays("//g") == "http://g"
+    resolvedBothWays("?y") == "http://a/b/c/d;p?y"
+    resolvedBothWays("g?y") == "http://a/b/c/g?y"
+    resolvedBothWays("#s") == "http://a/b/c/d;p?q#s"
+    resolvedBothWays("g#s") == "http://a/b/c/g#s"
+    resolvedBothWays("g?y#s") == "http://a/b/c/g?y#s"
+    resolvedBothWays(";x") == "http://a/b/c/;x"
+    resolvedBothWays("g;x") == "http://a/b/c/g;x"
+    resolvedBothWays("g;x?y#s") == "http://a/b/c/g;x?y#s"
+    resolvedBothWays("") == "http://a/b/c/d;p?q"
+    resolvedBothWays(".") == "http://a/b/c/"
+    resolvedBothWays("./") == "http://a/b/c/"
+    resolvedBothWays("..") == "http://a/b/"
+    resolvedBothWays("../") == "http://a/b/"
+    resolvedBothWays("../g") == "http://a/b/g"
+    resolvedBothWays("../..") == "http://a/"
+    resolvedBothWays("../../") == "http://a/"
+    resolvedBothWays("../../g") == "http://a/g"
+  }
+
+  ["resolve(): RFC 3986, section 5.4.2 abnormal examples"] {
+    // a path cannot be backed out of its root
+    resolvedBothWays("../../../g") == "http://a/g"
+    resolvedBothWays("../../../../g") == "http://a/g"
+    resolvedBothWays("/./g") == "http://a/g"
+    resolvedBothWays("/../g") == "http://a/g"
+
+    // only a complete "." or ".." segment is a dot segment
+    resolvedBothWays("g.") == "http://a/b/c/g."
+    resolvedBothWays(".g") == "http://a/b/c/.g"
+    resolvedBothWays("g..") == "http://a/b/c/g.."
+    resolvedBothWays("..g") == "http://a/b/c/..g"
+
+    resolvedBothWays("./../g") == "http://a/b/g"
+    resolvedBothWays("./g/.") == "http://a/b/c/g/"
+    resolvedBothWays("g/./h") == "http://a/b/c/g/h"
+    resolvedBothWays("g/../h") == "http://a/b/c/h"
+    resolvedBothWays("g;x=1/./y") == "http://a/b/c/g;x=1/y"
+    resolvedBothWays("g;x=1/../y") == "http://a/b/c/y"
+
+    // dot segments are a path notion; a query or fragment keeps them
+    resolvedBothWays("g?y/./x") == "http://a/b/c/g?y/./x"
+    resolvedBothWays("g?y/../x") == "http://a/b/c/g?y/../x"
+    resolvedBothWays("g#s/./x") == "http://a/b/c/g#s/./x"
+    resolvedBothWays("g#s/../x") == "http://a/b/c/g#s/../x"
+
+    resolvedBothWays("http:g") == "http:g"
+  }
+
+  ["resolve(): other cases"] {
+    resolved("../c") == "http://a/b/c"
+    parser.parse("mailto:user@example.com")!!.resolve("#f")?.toString()
+      == "mailto:user@example.com#f"
+    parser.parse("foo://example.com/a/b")!!.resolve("../c")?.toString() == "foo://example.com/c"
+    parser.parse("file:///a/b")!!.resolve("c")?.toString() == "file:///a/c"
+    // a reference that cannot be parsed cannot be resolved
+    parser.parse(rfcBase)!!.resolve("%zz") == null
+  }
+
+  ["new Url"] {
+    new net.Url { scheme = "https"; host = "example.com" }.toString() == "https://example.com"
+    new net.Url { scheme = "https"; host = "example.com"; path = "/a/b" }.toString()
+      == "https://example.com/a/b"
+    new net.Url {
+      scheme = "https"
+      userInfo = "user:pw"
+      host = "example.com"
+      port = 8080
+      path = "/a/b"
+      query = "q=1"
+      fragment = "f"
+    }.toString() == "https://user:pw@example.com:8080/a/b?q=1#f"
+
+    // a part given in its decoded form is encoded on the way out
+    new net.Url { scheme = "https"; host = "example.com"; path = "/a b" }.toString()
+      == "https://example.com/a%20b"
+    new net.Url { scheme = "https"; host = "münchen.de" }.toString() == "https://m%C3%BCnchen.de"
+
+    // a URL without an authority
+    new net.Url { scheme = "mailto"; path = "user@example.com" }.toString() == "mailto:user@example.com"
+    new net.Url { scheme = "foo" }.toString() == "foo:"
+
+    new net.Url { scheme = "https"; host = "example.com"; path = "/a" }
+      == parser.parse("https://example.com/a")
+  }
+
+  ["amending a Url"] {
+    local url = parser.parse("https://user:pw@example.com:8080/a/b?q=1#f")!!
+
+    (url) { path = "/c" }.toString() == "https://user:pw@example.com:8080/c?q=1#f"
+    (url) { query = null }.toString() == "https://user:pw@example.com:8080/a/b#f"
+    (url) { fragment = null; query = null }.toString() == "https://user:pw@example.com:8080/a/b"
+    (url) { port = null }.toString() == "https://user:pw@example.com/a/b?q=1#f"
+    (url) { userInfo = null }.toString() == "https://example.com:8080/a/b?q=1#f"
+    (url) { scheme = "http" }.toString() == "http://user:pw@example.com:8080/a/b?q=1#f"
+
+    // the derived views follow the amendment
+    (url) { path = "/c/d e" }.segments == List("c", "d e")
+    // and so does a part given in its decoded form
+    (url) { path = "/a b" }.toString() == "https://user:pw@example.com:8080/a%20b?q=1#f"
+  }
+
+  ["segments"] {
+    parser.parse("https://example.com/a/b")!!.segments == List("a", "b")
+    parser.parse("https://example.com/")!!.segments == List("")
+    parser.parse("https://example.com/a/")!!.segments == List("a", "")
+    parser.parse("https://example.com")!!.segments == List()
+    parser.parse("https://example.com/a/b%20c")!!.segments == List("a", "b c")
+    parser.parse("https://example.com/m%C3%BCnchen")!!.segments == List("münchen")
+    // a path is split before its segments are decoded, so an encoded "/" stays in its segment
+    parser.parse("https://example.com/a%2Fb")!!.segments == List("a/b")
+    // a rootless path has segments too
+    parser.parse("mailto:user@example.com")!!.segments == List("user@example.com")
+    parser.parse("urn:isbn:0451450523")!!.segments == List("isbn:0451450523")
+  }
+
+  ["equality"] {
+    parser.parse("https://example.com/a") == parser.parse("https://example.com/a")
+    parser.parse("https://example.com/a") != parser.parse("https://example.com/b")
+    // nothing is normalized, so these are distinct URLs
+    parser.parse("https://example.com/a") != parser.parse("https://example.com:443/a")
+    parser.parse("https://example.com/a") != parser.parse("https://EXAMPLE.com/a")
+    parser.parse("https://example.com/%41") != parser.parse("https://example.com/A")
+    // but the scheme is
+    parser.parse("https://example.com/a") == parser.parse("HTTPS://example.com/a")
+  }
+
+  ["encodeComponent()"] {
+    net.encodeComponent("a b&c") == "a%20b%26c"
+    net.encodeComponent("münchen") == "m%C3%BCnchen"
+    // only the unreserved characters are left alone
+    net.encodeComponent("aZ09-._~") == "aZ09-._~"
+    net.encodeComponent("!'()*") == "%21%27%28%29%2A"
+    net.encodeComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
+    net.encodeComponent("a" + gClef + "b") == "a%F0%9D%84%9Eb"
+    // an encoded component is safe to drop into any component of a URL
+    new net.Url {
+      scheme = "https"
+      host = "example.com"
+      path = "/" + net.encodeComponent("a/b")
+    }.segments == List("a/b")
+  }
+
+  ["decodeComponent()"] {
+    net.decodeComponent("a%20b%26c") == "a b&c"
+    net.decodeComponent("m%C3%BCnchen") == "münchen"
+    // "+" is not a space; that is an application/x-www-form-urlencoded convention
+    net.decodeComponent("a+b") == "a+b"
+    net.decodeComponent("100%") == "100%"
+    net.decodeComponent("%zz") == "%zz"
+    net.decodeComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
+    net.decodeComponent("%FF") == "\u{FFFD}"
+    net.decodeComponent(net.encodeComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
+    net.decodeComponent(net.encodeComponent(gClef)) == gClef
+  }
+}

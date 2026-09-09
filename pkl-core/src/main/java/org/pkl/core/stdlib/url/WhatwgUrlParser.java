@@ -28,7 +28,7 @@ import org.jspecify.annotations.Nullable;
  * treated as failure.
  */
 @SuppressWarnings("JavadocLinkAsPlainText")
-final class UrlParser {
+final class WhatwgUrlParser {
   private static final int EOF = -1;
 
   private final int[] input;
@@ -78,7 +78,7 @@ final class UrlParser {
     FRAGMENT
   }
 
-  private UrlParser(
+  private WhatwgUrlParser(
       String rawInput,
       @Nullable UrlRecord base,
       boolean strict,
@@ -129,12 +129,12 @@ final class UrlParser {
 
   /** Parses {@code input}, resolving relative references against {@code base}. */
   static @Nullable UrlRecord parse(String input, @Nullable UrlRecord base, boolean strict) {
-    return new UrlParser(input, base, strict, null, State.SCHEME_START).run();
+    return new WhatwgUrlParser(input, base, strict, null, State.SCHEME_START).run();
   }
 
   /** Parses {@code input} from {@code startState} into the components of {@code url}. */
   static @Nullable UrlRecord parse(String input, UrlRecord url, State startState) {
-    return new UrlParser(input, null, false, url, startState).run();
+    return new WhatwgUrlParser(input, null, false, url, startState).run();
   }
 
   private @Nullable UrlRecord run() {
@@ -639,7 +639,7 @@ final class UrlParser {
     if (isFile && isWindowsDriveLetter(input)) {
       return null;
     }
-    var host = new UrlParser("", null, false, null, State.HOST).parseHost(input, !isSpecial);
+    var host = new WhatwgUrlParser("", null, false, null, State.HOST).parseHost(input, !isSpecial);
     return isFile && "localhost".equals(host) ? "" : host;
   }
 
@@ -776,7 +776,7 @@ final class UrlParser {
     if (last.isEmpty()) {
       return false;
     }
-    if (last.chars().allMatch(UrlParser::isAsciiDigit)) {
+    if (last.chars().allMatch(WhatwgUrlParser::isAsciiDigit)) {
       return true;
     }
     return parseIpv4Number(last) >= 0;

@@ -1,0 +1,3 @@
+import "pkl:net"
+
+res = new net.UrlParser {}.parse("a/foo")!!.resolve("b")

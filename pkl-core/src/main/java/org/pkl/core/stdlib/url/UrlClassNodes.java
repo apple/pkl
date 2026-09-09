@@ -68,7 +68,7 @@ public final class UrlClassNodes {
     @Specialization
     @TruffleBoundary
     protected Object eval(VmTyped self, String ref) {
-      return lift(UrlParser.parse(ref, recordOf(self), false));
+      return lift(WhatwgUrlParser.parse(ref, recordOf(self), false));
     }
   }
 

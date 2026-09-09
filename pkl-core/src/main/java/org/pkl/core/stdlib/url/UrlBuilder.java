@@ -84,7 +84,7 @@ final class UrlBuilder {
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   static boolean isAssemblableHost(String host) {
     if (!host.startsWith("[")) {
-      return host.codePoints().noneMatch(UrlParser::isForbiddenHostCodePoint);
+      return host.codePoints().noneMatch(WhatwgUrlParser::isForbiddenHostCodePoint);
     }
     if (host.length() < 3 || !host.endsWith("]")) {
       return false;

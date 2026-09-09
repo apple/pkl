@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Cannot resolve a reference against `a/foo`, which is a relative URL.
+
+x | res = new net.UrlParser {}.parse("a/foo")!!.resolve("b")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at cannotResolveAgainstRelativeUrl#res (file:///$snippetsDir/input/errors/cannotResolveAgainstRelativeUrl.pkl)
+
+Only a URL that states a scheme can be resolved against.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

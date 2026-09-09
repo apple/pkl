@@ -98,6 +98,8 @@ public final class ModuleCache {
           return JsonnetModule.getModule();
         case "math":
           return MathModule.getModule();
+        case "net":
+          return NetModule.getModule();
         case "pklbinary":
           return PklBinaryModule.getModule();
         case "platform":

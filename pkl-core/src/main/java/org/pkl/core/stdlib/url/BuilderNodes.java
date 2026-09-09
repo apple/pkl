@@ -39,7 +39,7 @@ public final class BuilderNodes {
         throw exceptionBuilder().evalError("invalidUrlBuilderHost", host).build();
       }
       var assembled = assemble(self, host);
-      var record = UrlParser.parse(assembled, false);
+      var record = WhatwgUrlParser.parse(assembled, false);
       if (record == null) {
         throw exceptionBuilder().evalError("cannotBuildUrl", assembled).build();
       }
@@ -55,7 +55,7 @@ public final class BuilderNodes {
       if (!UrlBuilder.isAssemblableHost(host)) {
         return VmNull.withoutDefault();
       }
-      var record = UrlParser.parse(assemble(self, host), false);
+      var record = WhatwgUrlParser.parse(assemble(self, host), false);
       return record == null ? VmNull.withoutDefault() : UrlFactory.create(record);
     }
   }
