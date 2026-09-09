@@ -6,19 +6,41 @@ facts {
     true
     true
     true
-  }
-  ["parse(): normalizing"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
     true
     true
   }
-  ["parse(): coercing"] {
+  ["parse(): keeps components as they were written"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parse(): round-trips valid URIs"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parse(): encodes what it cannot keep"] {
+    true
     true
     true
     true
@@ -43,9 +65,6 @@ facts {
     true
     true
     true
-  }
-  ["portOrDefault"] {
-    true
     true
     true
     true
@@ -54,20 +73,7 @@ facts {
     true
     true
   }
-  ["IDNA"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
+  ["parse(): RFC 6874 zone identifiers"] {
     true
     true
     true
@@ -83,78 +89,8 @@ facts {
     true
     true
   }
-  ["strict: accepting well-formed input"] {
+  ["parse(): relative references"] {
     true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["strict: rejecting invalid URL units"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["Parser.base"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["resolve()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["withScheme()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["withHost()"] {
     true
     true
     true
@@ -175,18 +111,7 @@ facts {
     true
     true
   }
-  ["withPort()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["withPath()"] {
+  ["resolve(): RFC 3986, section 5.4.1 normal examples"] {
     true
     true
     true
@@ -198,11 +123,6 @@ facts {
     true
     true
     true
-    true
-    true
-    true
-  }
-  ["withQuery()"] {
     true
     true
     true
@@ -216,7 +136,17 @@ facts {
     true
     true
   }
-  ["withFragment()"] {
+  ["resolve(): RFC 3986, section 5.4.2 abnormal examples"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
     true
     true
     true
@@ -227,11 +157,28 @@ facts {
     true
     true
   }
-  ["setters compose"] {
+  ["resolve(): other cases"] {
+    true
+    true
+    true
     true
     true
   }
-  ["origin"] {
+  ["new Url"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["amending a Url"] {
+    true
+    true
+    true
+    true
     true
     true
     true
@@ -246,41 +193,6 @@ facts {
     true
     true
     true
-  }
-  ["SearchParams.toList()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["SearchParams.get()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["SearchParams.has()"] {
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["SearchParams.toMap()"] {
-    true
-    true
-    true
-    true
-  }
-  ["toString()"] {
     true
   }
   ["equality"] {
@@ -297,21 +209,13 @@ facts {
     true
     true
     true
+    true
+    true
   }
   ["decodeComponent()"] {
     true
     true
     true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-    true
-  }
-  ["buildQuery()"] {
     true
     true
     true
