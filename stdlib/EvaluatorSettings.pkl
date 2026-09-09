@@ -307,6 +307,20 @@ class Http {
   /// ```
   /// headers = netRcHeaders(read("/path/to/.netrc"))
   /// ```
+  ///
+  /// This largely follows how [curl](https://everything.curl.dev/usingcurl/netrc.html) parses netrc
+  /// files:
+  ///
+  ///   * Values can optionally be quoted.
+  ///   * Quoted values can include `\"`, `\n`, `\r`, and `\t` to represent double quote, newline,
+  ///     carriage return, and tab.
+  ///   * Lines starting with `#` are treated as comments.
+  ///   * "macdef" sections are ignored.
+  ///
+  /// Additionally, the following rules are applied:
+  ///
+  ///   * The "default" section is ignored.
+  ///   * Machine names that contain `/` are ignored.
   @Since { version = "0.33.0" }
   external function netRcHeaders(
     contents: String | Resource,
