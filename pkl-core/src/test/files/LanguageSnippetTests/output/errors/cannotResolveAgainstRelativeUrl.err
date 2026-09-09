@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Cannot resolve a reference against `a/foo`, which is a relative URL.
 
-x | res = new net.UrlParser {}.parse("a/foo")!!.resolve("b")
-          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+x | res = net.Url("a/foo")!!.resolve("b")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at cannotResolveAgainstRelativeUrl#res (file:///$snippetsDir/input/errors/cannotResolveAgainstRelativeUrl.pkl)
 
 Only a URL that states a scheme can be resolved against.

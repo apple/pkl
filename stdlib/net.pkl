@@ -18,12 +18,15 @@
 @ModuleInfo { minPklVersion = "0.33.0" }
 module pkl.net
 
+/// Parse a string into a URL, following [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+external function Url(input: String): Url?
+
 /// A URL, as defined by [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
 /// [RFC 6874](https://www.rfc-editor.org/rfc/rfc6874) IPv6 zone literals are also supported.
 class Url {
   /// The scheme, without the trailing `:`, or [null] if this is a relative reference.
   ///
-  /// [UrlParser.parse()] lowercases this, as schemes are case-insensitive.
+  /// [Url()] lowercases this, as schemes are case-insensitive.
   scheme: String?(this == null || isValidScheme(this!!))
 
   /// The userinfo, without the trailing `@`, or [null] if this URL has none.
@@ -62,6 +65,9 @@ class Url {
   /// The empty string is a URL ending in a bare `#`.
   fragment: String?(this == null || isValidPercentEncoding(this!!))
 
+  /// Returns [true] if this URL is absolute
+  fixed isAbsolute: Boolean = scheme != null
+
   /// The percent-decoded segments of [path].
   ///
   /// A leading `/` introduces the first segment rather than following an empty one, so the path `/`
@@ -84,27 +90,6 @@ class Url {
   /// Every character that cannot appear literally in its component is percent-encoded as its UTF-8
   /// bytes.
   external function toString(): String
-}
-
-/// A URL parser, following [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
-class UrlParser {
-  /// The URL to resolve relative references against.
-  ///
-  /// When set, a relative reference (for example `../c` or `//host/d`) is resolved against this
-  /// URL, so [parse()] always returns an absolute URL.
-  /// When [null], a relative reference is returned as one, with a [null] [Url.scheme].
-  ///
-  /// Throws if it is not a parseable absolute URL.
-  base: String?
-
-  /// Parses [input] as a URL.
-  ///
-  /// Both an absolute URL and a relative reference are accepted.
-  /// Because a relative reference may be a bare path, almost any input is one, so this returning
-  /// non-[null] does not on its own mean that [input] was a URL. Check [Url.scheme] for that.
-  ///
-  /// Returns [null] if [input] cannot be parsed.
-  external function parse(input: String): Url?
 }
 
 /// Percent-encodes [value] so that it can be interpolated into any URL component.
