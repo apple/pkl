@@ -28,7 +28,6 @@ pkl:semver
 pkl:settings
 pkl:shell
 pkl:test
-pkl:url
 pkl:xml
 pkl:yaml
 

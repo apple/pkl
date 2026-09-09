@@ -119,8 +119,6 @@ public final class ModuleCache {
           return SettingsModule.getModule();
         case "test":
           return TestModule.getModule();
-        case "url":
-          return UrlModule.getModule();
         case "xml":
           return XmlModule.getModule();
         default:
