@@ -1084,7 +1084,8 @@ public final class VmUtils {
   public static int findCustomThisSlot(FrameDescriptor descriptor) {
     var prevSlotCount = descriptor.getNumberOfAuxiliarySlots();
     var idx = descriptor.findOrAddAuxiliarySlot(CUSTOM_THIS_FRAME_SLOT_ID);
-    assert descriptor.getNumberOfAuxiliarySlots() == prevSlotCount : "descriptor did not previously contain CUSTOM_THIS_FRAME_SLOT_ID";
+    assert descriptor.getNumberOfAuxiliarySlots() == prevSlotCount
+        : "descriptor did not previously contain CUSTOM_THIS_FRAME_SLOT_ID";
     return idx;
   }
 
