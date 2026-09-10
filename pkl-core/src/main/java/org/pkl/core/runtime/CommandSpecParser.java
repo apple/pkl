@@ -527,8 +527,10 @@ public final class CommandSpecParser {
       if (type instanceof VmType.ClassType ct) {
         if (ct.getVmClass() == BaseModule.getListingClass()) {
           handleElement(prop, ct);
-          if (multiple == null) multiple = true;
-          if (all == null)
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
             all =
                 !multiple
                     ? this::allChooseLast
@@ -538,10 +540,13 @@ public final class CommandSpecParser {
                       values.forEach(builder::addElement);
                       return builder.toListing();
                     };
+          }
         } else if (ct.getVmClass() == BaseModule.getMappingClass()) {
           handleEntry(prop, ct);
-          if (multiple == null) multiple = true;
-          if (all == null)
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
             all =
                 !multiple
                     ? this::allChooseLast
@@ -554,26 +559,35 @@ public final class CommandSpecParser {
                                   ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
                       return builder.toMapping();
                     };
+          }
         } else if (ct.getVmClass() == BaseModule.getListClass()) {
           handleElement(prop, ct);
-          if (multiple == null) multiple = true;
-          if (all == null)
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
             all =
                 !multiple
                     ? this::allChooseLast
                     : (values, workingDirUri) -> values.isEmpty() ? null : VmList.create(values);
+          }
         } else if (ct.getVmClass() == BaseModule.getSetClass()) {
           handleElement(prop, ct);
-          if (multiple == null) multiple = true;
-          if (all == null)
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
             all =
                 !multiple
                     ? this::allChooseLast
                     : (values, workingDirUri) -> values.isEmpty() ? null : VmSet.create(values);
+          }
         } else if (ct.getVmClass() == BaseModule.getMapClass()) {
           handleEntry(prop, ct);
-          if (multiple == null) multiple = true;
-          if (all == null)
+          if (multiple == null) {
+            multiple = true;
+          }
+          if (all == null) {
             all =
                 !multiple
                     ? this::allChooseLast
@@ -586,10 +600,15 @@ public final class CommandSpecParser {
                                   ((VmPair) entry).getFirst(), ((VmPair) entry).getSecond()));
                       return builder.build();
                     };
+          }
         } else if (ct.getVmClass() == BaseModule.getPairClass()) {
           handleEntry(prop, ct);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
         }
       }
 
@@ -598,25 +617,32 @@ public final class CommandSpecParser {
         throw unsupportedOptionNoTransform(prop, type);
       } else {
         // if we have at least one transform then allow the type and fill in reasonable defaults
-        if (each == null) each = (rawValue, workingDirUri) -> rawValue;
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = METAVAR_VALUE;
+        if (each == null) {
+          each = (rawValue, workingDirUri) -> rawValue;
+        }
+        if (all == null) {
+          all = this::allChooseLast;
+        }
+        if (multiple == null) {
+          multiple = false;
+        }
+        if (metavar == null) {
+          metavar = METAVAR_VALUE;
+        }
       }
     }
 
     private VmException unsupportedOptionTypeArguments(ClassProperty prop, VmType.ClassType type) {
+      var typeArgCountText =
+          switch (type.getVmClass().getTypeParameterCount()) {
+            case 1 -> "one type argument.";
+            case 2 -> "two type arguments.";
+            default -> throw PklBugException.unreachableCode();
+          };
       return exceptionBuilder()
           .withSourceSection(prop.getHeaderSection())
           .evalError("commandOptionUnsupportedType", prop.getName(), "", type.toString())
-          .withHint(
-              type.getVmClass().getSimpleName()
-                  + " options must provide "
-                  + switch (type.getVmClass().getTypeParameterCount()) {
-                    case 1 -> "one type argument.";
-                    case 2 -> "two type arguments.";
-                    default -> throw PklBugException.unreachableCode();
-                  })
+          .withHint(type.getVmClass().getSimpleName() + " options must provide " + typeArgCountText)
           .build();
     }
 
@@ -657,7 +683,7 @@ public final class CommandSpecParser {
     private boolean resolvePrimitive(VmType type) {
       if (type instanceof VmType.ClassType ct) {
         if (ct.getVmClass() == BaseModule.getNumberClass()) {
-          if (each == null)
+          if (each == null) {
             each =
                 (rawValue, workingDirUri) -> {
                   try {
@@ -670,12 +696,19 @@ public final class CommandSpecParser {
                     }
                   }
                 };
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_NUMBER;
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_NUMBER;
+          }
           return true;
         } else if (ct.getVmClass() == BaseModule.getFloatClass()) {
-          if (each == null)
+          if (each == null) {
             each =
                 (rawValue, workingDirUri) -> {
                   try {
@@ -684,18 +717,33 @@ public final class CommandSpecParser {
                     throw BadValue.invalid(rawValue, METAVAR_FLOAT);
                   }
                 };
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_FLOAT;
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_FLOAT;
+          }
           return true;
         } else if (ct.getVmClass() == BaseModule.getIntClass()) {
-          if (each == null) each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_INT;
+          if (each == null) {
+            each = eachLong(Long.MIN_VALUE, Long.MAX_VALUE, METAVAR_INT);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT;
+          }
           return true;
         } else if (ct.getVmClass() == BaseModule.getBooleanClass()) {
-          if (each == null)
+          if (each == null) {
             each =
                 (rawValue, workingDirUri) -> {
                   var value = rawValue.toLowerCase(Locale.ROOT);
@@ -706,67 +754,145 @@ public final class CommandSpecParser {
                   }
                   throw BadValue.invalid(rawValue, "boolean");
                 };
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_BOOLEAN;
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_BOOLEAN;
+          }
           return true;
         } else if (ct.getVmClass() == BaseModule.getStringClass()) {
-          if (each == null) each = (rawValue, workingDirUri) -> rawValue;
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_STRING;
+          if (each == null) {
+            each = (rawValue, workingDirUri) -> rawValue;
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_STRING;
+          }
           return true;
         }
       } else if (type instanceof VmType.AliasType at) {
         if (at.getVmTypeAlias() == BaseModule.getInt8TypeAlias()) {
-          if (each == null) each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_INT8;
+          if (each == null) {
+            each = eachLong(Byte.MIN_VALUE, Byte.MAX_VALUE, METAVAR_INT8);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT8;
+          }
           return true;
         } else if (at.getVmTypeAlias() == BaseModule.getInt16TypeAlias()) {
-          if (each == null) each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_INT16;
+          if (each == null) {
+            each = eachLong(Short.MIN_VALUE, Short.MAX_VALUE, METAVAR_INT16);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT16;
+          }
           return true;
         } else if (at.getVmTypeAlias() == BaseModule.getInt32TypeAlias()) {
-          if (each == null) each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_INT32;
+          if (each == null) {
+            each = eachLong(Integer.MIN_VALUE, Integer.MAX_VALUE, METAVAR_INT32);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_INT32;
+          }
           return true;
         } else if (at.getVmTypeAlias() == BaseModule.getUInt8TypeAlias()) {
-          if (each == null) each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_UINT8;
+          if (each == null) {
+            each = eachLong(0, 0x00000000000000FFL, METAVAR_UINT8);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT8;
+          }
           return true;
         } else if (at.getVmTypeAlias() == BaseModule.getUInt16TypeAlias()) {
-          if (each == null) each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_UINT16;
+          if (each == null) {
+            each = eachLong(0, 0x000000000000FFFFL, METAVAR_UINT16);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT16;
+          }
         } else if (at.getVmTypeAlias() == BaseModule.getUInt32TypeAlias()) {
-          if (each == null) each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_UINT32;
+          if (each == null) {
+            each = eachLong(0, 0x00000000FFFFFFFFL, METAVAR_UINT32);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT32;
+          }
         } else if (at.getVmTypeAlias() == BaseModule.getUIntTypeAlias()) {
-          if (each == null) each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_UINT;
+          if (each == null) {
+            each = eachLong(0, Long.MAX_VALUE, METAVAR_UINT);
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_UINT;
+          }
         } else if (at.getVmTypeAlias() == BaseModule.getCharTypeAlias()) {
-          if (each == null)
+          if (each == null) {
             each =
                 (rawValue, workingDirUri) -> {
                   if (rawValue.length() != 1) throw BadValue.invalid(rawValue, METAVAR_CHAR);
                   return rawValue;
                 };
-          if (all == null) all = this::allChooseLast;
-          if (multiple == null) multiple = false;
-          if (metavar == null) metavar = METAVAR_CHAR;
+          }
+          if (all == null) {
+            all = this::allChooseLast;
+          }
+          if (multiple == null) {
+            multiple = false;
+          }
+          if (metavar == null) {
+            metavar = METAVAR_CHAR;
+          }
           return true;
         }
       } else if (type instanceof VmType.UnionType ut && ut.isUnionOfStringLiterals()) {
@@ -775,7 +901,7 @@ public final class CommandSpecParser {
                 .map(it -> ((VmType.StringLiteralType) it).getLiteral())
                 .toList();
         var choiceSet = new HashSet<>(choices);
-        if (each == null)
+        if (each == null) {
           each =
               (rawValue, workingDirUri) -> {
                 if (!choiceSet.contains(rawValue)) {
@@ -783,14 +909,23 @@ public final class CommandSpecParser {
                 }
                 return rawValue;
               };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + String.join(", ", choices) + "]";
-        if (completionCandidates == null) completionCandidates = new Fixed(choiceSet);
+        }
+        if (all == null) {
+          all = this::allChooseLast;
+        }
+        if (multiple == null) {
+          multiple = false;
+        }
+        if (metavar == null) {
+          metavar = "[" + String.join(", ", choices) + "]";
+        }
+        if (completionCandidates == null) {
+          completionCandidates = new Fixed(choiceSet);
+        }
         return true;
       } else if (type instanceof VmType.StringLiteralType slt) {
         var choice = slt.getLiteral();
-        if (each == null)
+        if (each == null) {
           each =
               (rawValue, workingDirUri) -> {
                 if (!rawValue.equals(choice)) {
@@ -798,10 +933,19 @@ public final class CommandSpecParser {
                 }
                 return rawValue;
               };
-        if (all == null) all = this::allChooseLast;
-        if (multiple == null) multiple = false;
-        if (metavar == null) metavar = "[" + choice + "]";
-        if (completionCandidates == null) completionCandidates = new Fixed(Set.of(choice));
+        }
+        if (all == null) {
+          all = this::allChooseLast;
+        }
+        if (multiple == null) {
+          multiple = false;
+        }
+        if (metavar == null) {
+          metavar = "[" + choice + "]";
+        }
+        if (completionCandidates == null) {
+          completionCandidates = new Fixed(Set.of(choice));
+        }
         return true;
       }
       return false;
@@ -851,7 +995,7 @@ public final class CommandSpecParser {
       var transformValue =
           new OptionBehavior(each, all, multiple, metavar, completionCandidates)
               .resolveTypeArgument(prop, resolveType(valueType).getFirst(), "value");
-      if (each == null)
+      if (each == null) {
         each =
             (rawValue, workingDirUri) -> {
               var split = rawValue.split("=", 2);
@@ -862,7 +1006,10 @@ public final class CommandSpecParser {
                   transformKey.getEach().apply(split[0], workingDirUri),
                   transformValue.getEach().apply(split[1], workingDirUri));
             };
-      if (metavar == null) metavar = transformKey.getMetavar() + "=" + transformValue.getMetavar();
+      }
+      if (metavar == null) {
+        metavar = transformKey.getMetavar() + "=" + transformValue.getMetavar();
+      }
     }
 
     private @Nullable Object allChooseLast(List<Object> values, URI workingDirUri) {

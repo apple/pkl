@@ -28,6 +28,8 @@ import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.Reference;
+import org.pkl.core.runtime.VmType.NothingType;
+import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.util.paguro.RrbTree;
 import org.pkl.core.util.paguro.RrbTree.ImRrbt;
 
@@ -37,7 +39,8 @@ public final class VmReference extends VmValue {
   private final Object data;
   private final ImRrbt<VmTyped> path;
   // candidate types can only be: VmType.ClassType, VmType.AliasType (only preservedAliasTypes),
-  // VmType.StringLiteralType, VmType.UNKNOWN, VmType.FunctionType, VmType.TypeVariableTybe, or
+  // VmType.StringLiteralType, VmType.Unknown.INSTANCE, VmType.FunctionType,
+  // VmType.TypeVariableTybe, or
   // VmType.UnionType
   // (containing only the previous; flattened)
   private final VmType referentType;
@@ -99,10 +102,11 @@ public final class VmReference extends VmValue {
   private static VmType minimizeTypes(Set<VmType> types) {
     if (types.size() == 1) return types.iterator().next();
     // optimization: unknown allows all references, erase all candidates to only unknown
-    if (types.contains(VmType.UNKNOWN)) return VmType.UNKNOWN;
+    if (types.contains(UnknownType.INSTANCE)) return UnknownType.INSTANCE;
     // optimization: All allows all references, erase all candidates to only All
-    if (containsClass(types, BaseModule.getAnyClass()))
+    if (containsClass(types, BaseModule.getAnyClass())) {
       return new VmType.ClassType(BaseModule.getAnyClass());
+    }
     var typeArray = types.toArray(new VmType[0]);
     Arrays.sort(typeArray, Comparator.comparing(Object::toString));
     return new VmType.UnionType(-1, typeArray);
@@ -110,8 +114,8 @@ public final class VmReference extends VmValue {
 
   private static void normalizeTypes(
       VmType type, VmClass thisClass, VmClass moduleClass, Set<VmType> result) {
-    if (type == VmType.UNKNOWN
-        || type == VmType.NOTHING
+    if (type == UnknownType.INSTANCE
+        || type == NothingType.INSTANCE
         || type instanceof VmType.StringLiteralType) {
       result.add(type);
     } else if (type instanceof VmType.ClassType ct) {
@@ -199,7 +203,7 @@ public final class VmReference extends VmValue {
 
   @SuppressWarnings("DuplicatedCode")
   private static void getCandidatePropertyType(VmType type, String property, Set<VmType> result) {
-    if (type == VmType.UNKNOWN) {
+    if (type == UnknownType.INSTANCE) {
       result.add(type);
       return;
     }
@@ -212,7 +216,7 @@ public final class VmReference extends VmValue {
         // restriction: cannot reference Dynamic.default
         throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.DEFAULT_MEMBER);
       }
-      result.add(VmType.UNKNOWN);
+      result.add(UnknownType.INSTANCE);
       return;
     }
     // restriction: cannot reference Listing/Mapping.default
@@ -252,12 +256,22 @@ public final class VmReference extends VmValue {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.EXTERNAL_MEMBER);
     }
 
-    normalizeTypes(prop.getType(), ct.getVmClass(), ct.getVmClass().getModuleClass(), result);
+    // this handles the object-prop-in-class case because VmClass.getAllProperties() omits
+    // properties without type annotations that are defined in a superclass. e.g.:
+    // ```
+    // open class A { prop: String }
+    // class B extends A { prop = "foo" }
+    // ```
+    // In this case `VmClass[B].getAllProperties().get(<prop>)` will be A's prop, not B's
+    var propTypeNode = prop.getTypeNode();
+    var propType =
+        propTypeNode == null ? VmType.UnknownType.INSTANCE : propTypeNode.getTypeNode().getType();
+    normalizeTypes(propType, ct.getVmClass(), ct.getVmClass().getModuleClass(), result);
   }
 
   @SuppressWarnings("DuplicatedCode")
   private static void getCandidateSubscriptType(VmType type, Object key, Set<VmType> result) {
-    if (type == VmType.UNKNOWN) {
+    if (type == UnknownType.INSTANCE) {
       result.add(type);
       return;
     }
@@ -266,7 +280,7 @@ public final class VmReference extends VmValue {
     }
     var clazz = ct.getVmClass();
     if (clazz.isDynamicClass()) {
-      result.add(VmType.UNKNOWN);
+      result.add(UnknownType.INSTANCE);
       return;
     }
     if (clazz.isListingClass() || clazz.isListClass()) {
@@ -280,7 +294,7 @@ public final class VmReference extends VmValue {
       var typeArgs = ct.getTypeArguments();
       var keyTypes = normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass());
       for (var kt : iterateTypes(keyTypes)) {
-        if (kt == VmType.UNKNOWN
+        if (kt == UnknownType.INSTANCE
             || (kt instanceof VmType.ClassType klazz && klazz.getVmClass() == VmUtils.getClass(key))
             || (kt instanceof VmType.StringLiteralType stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
@@ -304,17 +318,17 @@ public final class VmReference extends VmValue {
    */
   public boolean referentTypeIsSubtypeOf(VmType type, VmClass thisClass, VmClass moduleClass) {
     // fast path: if referent is unknown it can match any type check
-    if (referentType == VmType.UNKNOWN) {
+    if (referentType == UnknownType.INSTANCE) {
       return true;
     }
 
     var checkType = normalizeTypes(type, thisClass, moduleClass);
     // fast path: short circuit if any referent is accepted
-    if (checkType == VmType.UNKNOWN || isClass(checkType, BaseModule.getAnyClass())) {
+    if (checkType == UnknownType.INSTANCE || isClass(checkType, BaseModule.getAnyClass())) {
       return true;
     }
     // fast path: short circuit if nothing is accepted
-    if (checkType == VmType.NOTHING) {
+    if (checkType == NothingType.INSTANCE) {
       return false;
     }
 
