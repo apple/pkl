@@ -1,0 +1,30 @@
+facts {
+  ["fold counts nodes by predicate"] {
+    true
+    true
+    true
+  }
+  ["fold accumulates into a collection"] {
+    true
+  }
+  ["fold visits a node before its children (pre-order)"] {
+    true
+  }
+  ["terminals have no children"] {
+    true
+  }
+  ["a parsed module is a branch"] {
+    true
+  }
+  ["identifiers are terminals"] {
+    true
+  }
+  ["terminals carry text"] {
+    true
+  }
+  ["branches carry the text of their entire subtree"] {
+    true
+    true
+    true
+  }
+}
