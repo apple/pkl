@@ -1696,8 +1696,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected VmType doGetType() {
-      return new VmType.FunctionType(
-          TypeNode.toTypes(parameterTypeNodes), returnTypeNode.getType());
+      var typeArguments = toTypes(parameterTypeNodes, parameterTypeNodes.length + 1);
+      typeArguments[parameterTypeNodes.length] = returnTypeNode.getType();
+      return new VmType.ClassType(
+          BaseModule.getFunctionNClass(parameterTypeNodes.length), typeArguments);
     }
 
     @Override
@@ -1719,7 +1721,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     protected VmClass getVmClass() {
-      return ((VmType.FunctionType) getType()).getVmClass();
+      return ((VmType.ClassType) getType()).getVmClass();
     }
 
     @SuppressWarnings("unused")
@@ -1731,7 +1733,7 @@ public abstract class TypeNode extends PklNode {
 
     @Fallback
     protected Object fallback(Object value) {
-      throw typeMismatch(value, ((VmType.FunctionType) getType()).getVmClass());
+      throw typeMismatch(value, ((VmType.ClassType) getType()).getVmClass());
     }
   }
 
@@ -1781,9 +1783,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected VmType doGetType() {
-      return new VmType.FunctionType(
-          toTypes(typeArgumentNodes, typeArgumentNodes.length - 1),
-          typeArgumentNodes[typeArgumentNodes.length - 1].getType());
+      return new VmType.ClassType(
+          BaseModule.getFunctionNClass(typeArgumentNodes.length - 1), toTypes(typeArgumentNodes));
     }
 
     public final VmList getTypeArgumentMirrors() {
@@ -1791,7 +1792,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     protected VmClass getVmClass() {
-      return ((VmType.FunctionType) getType()).getVmClass();
+      return ((VmType.ClassType) getType()).getVmClass();
     }
 
     @SuppressWarnings("unused")
@@ -2801,10 +2802,10 @@ public abstract class TypeNode extends PklNode {
     return toTypes(typeNodes, typeNodes.length);
   }
 
-  // this variant is used for truncating maps (e.g. FunctionNTypeNode -> FunctionType)
+  // this variant is used for maps that need to change length (e.g. FunctionTypeNode -> ClassType)
   static VmType[] toTypes(TypeNode[] typeNodes, int len) {
     var result = new VmType[len];
-    for (var i = 0; i < len; i++) {
+    for (var i = 0; i < typeNodes.length; i++) {
       result[i] = typeNodes[i].getType();
     }
     return result;
