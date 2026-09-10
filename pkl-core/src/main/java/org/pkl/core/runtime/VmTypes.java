@@ -22,6 +22,7 @@ import com.oracle.truffle.api.dsl.TypeSystem;
   long.class,
   double.class,
   boolean.class,
+  VmType.class,
   VmDuration.class,
   VmDataSize.class,
   VmIntSeq.class,

@@ -50,6 +50,7 @@ public abstract class VmType {
         .build();
   }
 
+  @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public boolean isParametric() {
     return false;
   }
@@ -286,6 +287,10 @@ public abstract class VmType {
       return typeArguments.length > 0;
     }
 
+    public boolean isFunctionNClass() {
+      return clazz.isFunctionNClass();
+    }
+
     @Override
     protected boolean doIsEquivalentTo(VmType other) {
       if (!(other instanceof ClassType t)) return false;
@@ -312,22 +317,6 @@ public abstract class VmType {
               || at.typeAlias == BaseModule.getUInt8TypeAlias()
               || at.typeAlias == BaseModule.getUInt16TypeAlias()
               || at.typeAlias == BaseModule.getUInt32TypeAlias())) return true;
-      // special case: FunctionN can be a subtype of a FunctionType
-      if (clazz.isFunctionNClass() && other instanceof FunctionType ft) {
-        if (typeArguments.length - 1 != ft.parameterTypes.length) return false;
-        return functionIsSupertype(
-            ft.parameterTypes.length,
-            typeArguments,
-            typeArguments[ft.parameterTypes.length],
-            ft.parameterTypes,
-            ft.returnType);
-      }
-      // special case: FunctionType is a subtype of class Function if return type is contravariant
-      if (clazz.isFunctionClass() && other instanceof FunctionType ft) {
-        if (typeArguments.length == 0) return true;
-        return typeArguments[0].isSupertypeOf(ft.returnType);
-      }
-      ;
 
       // standard case: other is a ClassType
       if (!(other instanceof ClassType ct)) return false;
@@ -387,11 +376,24 @@ public abstract class VmType {
 
     @Override
     public PType export() {
-      return new Class(clazz.export(), exportTypes(typeArguments));
+      return clazz.isFunctionNClass()
+          ? new PType.Function(
+              exportTypes(typeArguments, 1), typeArguments[typeArguments.length - 1].export())
+          : new PType.Class(clazz.export(), exportTypes(typeArguments));
     }
 
     @Override
     public String toString() {
+      if (clazz.isFunctionNClass()) {
+        return "("
+            + Arrays.stream(typeArguments)
+                .limit(typeArguments.length - 1)
+                .map(Object::toString)
+                .collect(Collectors.joining(", "))
+            + ") -> "
+            + typeArguments[typeArguments.length - 1];
+      }
+
       var result = clazz.getDisplayName();
       if (typeArguments.length > 0) {
         result +=
@@ -439,7 +441,8 @@ public abstract class VmType {
 
     @Override
     public String toString() {
-      return elementType instanceof FunctionType || elementType instanceof UnionType
+      return (elementType instanceof ClassType ct && ct.isFunctionNClass())
+              || elementType instanceof UnionType
           ? "(" + elementType + ")?"
           : elementType + "?";
     }
@@ -482,7 +485,8 @@ public abstract class VmType {
 
     @Override
     public String toString() {
-      return (baseType instanceof FunctionType || baseType instanceof UnionType
+      return ((baseType instanceof ClassType ct && ct.isFunctionNClass())
+                  || baseType instanceof UnionType
               ? "(" + baseType + ")"
               : baseType)
           + "("
@@ -604,78 +608,80 @@ public abstract class VmType {
     }
   }
 
-  public static final class FunctionType extends VmType {
-    private final VmType[] parameterTypes;
-    private final VmType returnType;
-
-    public FunctionType(VmType[] parameterTypes, VmType returnType) {
-      this.parameterTypes = parameterTypes;
-      this.returnType = returnType;
-    }
-
-    public VmType[] getParameterTypes() {
-      return parameterTypes;
-    }
-
-    public VmType getReturnType() {
-      return returnType;
-    }
-
-    @Override
-    public VmClass getVmClass() {
-      return BaseModule.getFunctionNClass(parameterTypes.length);
-    }
-
-    @Override
-    public boolean isParametric() {
-      return true;
-    }
-
-    @Override
-    protected boolean doIsEquivalentTo(VmType other) {
-      if (!(other instanceof FunctionType t)) return false;
-      if (!returnType.equals(t.returnType)) return false;
-      return typesEquals(parameterTypes, t.parameterTypes);
-    }
-
-    @Override
-    protected boolean doIsSupertypeOf(VmType other) {
-      if (other instanceof FunctionType ft) {
-        if (parameterTypes.length != ft.parameterTypes.length) return false;
-        return functionIsSupertype(
-            parameterTypes.length, parameterTypes, returnType, ft.parameterTypes, ft.returnType);
-      }
-      if (other instanceof ClassType ct
-          && (ct.clazz == BaseModule.getFunctionNClass(parameterTypes.length))) {
-        // check against specific FunctionN class avoids need to compare param lengths
-        return functionIsSupertype(
-            parameterTypes.length,
-            parameterTypes,
-            returnType,
-            ct.typeArguments,
-            ct.typeArguments[parameterTypes.length]);
-      }
-      return false;
-    }
-
-    @Override
-    public PType export() {
-      return new PType.Function(exportTypes(parameterTypes), returnType.export());
-    }
-
-    @Override
-    public String toString() {
-      return "("
-          + Arrays.stream(parameterTypes).map(Object::toString).collect(Collectors.joining(", "))
-          + ") -> "
-          + returnType;
-    }
-
-    @Override
-    public int hashCode() {
-      return 31 * Arrays.hashCode(parameterTypes) + returnType.hashCode();
-    }
-  }
+  //  public static final class FunctionType extends VmType {
+  //    private final VmType[] parameterTypes;
+  //    private final VmType returnType;
+  //
+  //    public FunctionType(VmType[] parameterTypes, VmType returnType) {
+  //      this.parameterTypes = parameterTypes;
+  //      this.returnType = returnType;
+  //    }
+  //
+  //    public VmType[] getParameterTypes() {
+  //      return parameterTypes;
+  //    }
+  //
+  //    public VmType getReturnType() {
+  //      return returnType;
+  //    }
+  //
+  //    @Override
+  //    public VmClass getVmClass() {
+  //      return BaseModule.getFunctionNClass(parameterTypes.length);
+  //    }
+  //
+  //    @Override
+  //    public boolean isParametric() {
+  //      return true;
+  //    }
+  //
+  //    @Override
+  //    protected boolean doIsEquivalentTo(VmType other) {
+  //      if (!(other instanceof FunctionType t)) return false;
+  //      if (!returnType.equals(t.returnType)) return false;
+  //      return typesEquals(parameterTypes, t.parameterTypes);
+  //    }
+  //
+  //    @Override
+  //    protected boolean doIsSupertypeOf(VmType other) {
+  //      if (other instanceof FunctionType ft) {
+  //        if (parameterTypes.length != ft.parameterTypes.length) return false;
+  //        return functionIsSupertype(
+  //            parameterTypes.length, parameterTypes, returnType, ft.parameterTypes,
+  // ft.returnType);
+  //      }
+  //      if (other instanceof ClassType ct
+  //          && (ct.clazz == BaseModule.getFunctionNClass(parameterTypes.length))) {
+  //        // check against specific FunctionN class avoids need to compare param lengths
+  //        return functionIsSupertype(
+  //            parameterTypes.length,
+  //            parameterTypes,
+  //            returnType,
+  //            ct.typeArguments,
+  //            ct.typeArguments[parameterTypes.length]);
+  //      }
+  //      return false;
+  //    }
+  //
+  //    @Override
+  //    public PType export() {
+  //      return new PType.Function(exportTypes(parameterTypes), returnType.export());
+  //    }
+  //
+  //    @Override
+  //    public String toString() {
+  //      return "("
+  //          + Arrays.stream(parameterTypes).map(Object::toString).collect(Collectors.joining(",
+  // "))
+  //          + ") -> "
+  //          + returnType;
+  //    }
+  //
+  //    @Override
+  //    public int hashCode() {
+  //      return 31 * Arrays.hashCode(parameterTypes) + returnType.hashCode();
+  //    }
+  //  }
 
   public static final class UnionType extends VmType {
     private final int defaultIndex;
@@ -792,18 +798,8 @@ public abstract class VmType {
     return Arrays.stream(types).map(VmType::export).toList();
   }
 
-  private static boolean functionIsSupertype(
-      int paramCount,
-      VmType[] thisParams,
-      VmType thisReturn,
-      VmType[] otherParams,
-      VmType otherReturn) {
-    // param types are contravariant
-    for (var i = 0; i < paramCount; i++) {
-      if (!thisParams[i].isSubtypeOf(otherParams[i])) return false;
-    }
-    // return type is covariant
-    return thisReturn.isSupertypeOf(otherReturn);
+  private static List<PType> exportTypes(VmType[] types, int drop) {
+    return Arrays.stream(types).limit(types.length - drop).map(VmType::export).toList();
   }
 
   private static VmType[] nUnknowns(int len) {
