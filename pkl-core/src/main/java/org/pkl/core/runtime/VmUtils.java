@@ -1080,10 +1080,12 @@ public final class VmUtils {
     }
   }
 
-  public static int findCustomThisSlot(VirtualFrame frame) {
-    var result = frame.getFrameDescriptor().getAuxiliarySlots().get(CUSTOM_THIS_FRAME_SLOT_ID);
-    assert result != null;
-    return result;
+  @TruffleBoundary
+  public static int findCustomThisSlot(FrameDescriptor descriptor) {
+    var prevSlotCount = descriptor.getNumberOfAuxiliarySlots();
+    var idx = descriptor.findOrAddAuxiliarySlot(CUSTOM_THIS_FRAME_SLOT_ID);
+    assert descriptor.getNumberOfAuxiliarySlots() == prevSlotCount : "descriptor did not previously contain CUSTOM_THIS_FRAME_SLOT_ID";
+    return idx;
   }
 
   @TruffleBoundary

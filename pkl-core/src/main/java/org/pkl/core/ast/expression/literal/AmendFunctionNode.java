@@ -103,7 +103,7 @@ public final class AmendFunctionNode extends PklNode {
   public VmFunction execute(VirtualFrame frame, VmFunction functionToAmend) {
     if (isCustomThisScope && customThisSlot == -1) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      customThisSlot = VmUtils.findCustomThisSlot(frame);
+      customThisSlot = VmUtils.findCustomThisSlot(frame.getFrameDescriptor());
     }
     return new VmFunction(
         frame.materialize(),

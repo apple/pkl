@@ -16,7 +16,6 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.NodeChild;
@@ -35,8 +34,6 @@ import org.pkl.core.runtime.VmUtils;
 @NodeChild(value = "bodyNode", type = ExpressionNode.class)
 public abstract class TypeConstraintNode extends PklNode {
 
-  @CompilationFinal private int customThisSlot = -1;
-
   protected TypeConstraintNode(SourceSection sourceSection) {
     super(sourceSection);
   }
@@ -51,7 +48,7 @@ public abstract class TypeConstraintNode extends PklNode {
 
   @Specialization
   protected void eval(VirtualFrame frame, boolean result) {
-    initConstraintSlot(frame);
+    var customThisSlot = VmUtils.findCustomThisSlot(frame.getFrameDescriptor());
 
     if (!result) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
@@ -84,8 +81,7 @@ public abstract class TypeConstraintNode extends PklNode {
       VirtualFrame frame,
       VmFunction function,
       @Cached(value = "createApplyNode()", neverDefault = true) ApplyVmFunction1Node applyNode) {
-    initConstraintSlot(frame);
-
+    var customThisSlot = VmUtils.findCustomThisSlot(frame.getFrameDescriptor());
     var value = frame.getAuxiliarySlot(customThisSlot);
     var result = applyNode.executeBoolean(function, value);
     if (!result) {
@@ -126,13 +122,5 @@ public abstract class TypeConstraintNode extends PklNode {
 
   protected static ApplyVmFunction1Node createApplyNode() {
     return ApplyVmFunction1Node.create();
-  }
-
-  private void initConstraintSlot(VirtualFrame frame) {
-    if (customThisSlot == -1) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
-      customThisSlot = VmUtils.findCustomThisSlot(frame);
-    }
   }
 }

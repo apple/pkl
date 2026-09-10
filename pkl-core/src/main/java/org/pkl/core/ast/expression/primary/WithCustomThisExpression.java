@@ -39,7 +39,7 @@ public final class WithCustomThisExpression extends ExpressionNode {
   public int getCustomThisSlot(VirtualFrame frame) {
     if (customThisSlot == -1) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      customThisSlot = VmUtils.findCustomThisSlot(frame);
+      customThisSlot = VmUtils.findCustomThisSlot(frame.getFrameDescriptor());
     }
     return customThisSlot;
   }

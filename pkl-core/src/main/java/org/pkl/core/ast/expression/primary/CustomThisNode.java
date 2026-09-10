@@ -15,8 +15,6 @@
  */
 package org.pkl.core.ast.expression.primary;
 
-import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
@@ -26,19 +24,13 @@ import org.pkl.core.runtime.VmUtils;
 /** `this` inside `CustomThisScope` (type constraint, object member predicate). */
 @NodeInfo(shortName = "this")
 public final class CustomThisNode extends ExpressionNode {
-  @CompilationFinal private int customThisSlot = -1;
-
   public CustomThisNode(SourceSection sourceSection) {
     super(sourceSection);
   }
 
   @Override
   public Object executeGeneric(VirtualFrame frame) {
-    if (customThisSlot == -1) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      // deferred until execution time s.t. nodes of inlined type aliases get the right frame slot
-      customThisSlot = VmUtils.findCustomThisSlot(frame);
-    }
+    var customThisSlot = VmUtils.findCustomThisSlot(frame.getFrameDescriptor());
     return frame.getAuxiliarySlot(customThisSlot);
   }
 }

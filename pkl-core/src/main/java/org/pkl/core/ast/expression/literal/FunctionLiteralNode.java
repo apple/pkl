@@ -47,7 +47,7 @@ public final class FunctionLiteralNode extends ExpressionNode {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       functionNode = unresolvedFunctionNode.execute(frame);
       if (isCustomThisScope) {
-        customThisSlot = VmUtils.findCustomThisSlot(frame);
+        customThisSlot = VmUtils.findCustomThisSlot(frame.getFrameDescriptor());
       }
     }
 
