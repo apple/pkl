@@ -211,15 +211,6 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   /**
-   * Override default implementation because it calls {@link #hashCode()}, which will do object
-   * eval.
-   */
-  @Override
-  public final String toString() {
-    return getClass().getName() + "@" + Integer.toHexString(System.identityHashCode(this));
-  }
-
-  /**
    * Exports this object's members. Skips local members, hidden members, class definitions, and type
    * aliases.
    *

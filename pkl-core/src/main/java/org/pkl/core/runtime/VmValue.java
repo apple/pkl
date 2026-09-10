@@ -19,6 +19,8 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.jspecify.annotations.Nullable;
 
 public abstract class VmValue {
+  private final VmValueRenderer vmValueRenderer = VmValueRenderer.singleLine(Integer.MAX_VALUE);
+
   public abstract VmClass getVmClass();
 
   public VmTyped getPrototype() {
@@ -94,4 +96,13 @@ public abstract class VmValue {
 
   @TruffleBoundary
   public abstract String toPklString();
+
+  /**
+   * Override default implementation because it calls {@link #hashCode()}, which will do object
+   * eval on certain types.
+   */
+  @Override
+  public final String toString() {
+    return vmValueRenderer.render(this);
+  }
 }
