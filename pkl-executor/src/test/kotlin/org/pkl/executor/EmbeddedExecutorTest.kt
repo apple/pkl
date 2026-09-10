@@ -530,8 +530,27 @@ class EmbeddedExecutorTest {
           timeout(Duration.ofSeconds(1))
         }
       }
+    assertThat(e.message)
+      .containsAnyOf(
+        "Evaluation timed out after 1 second.",
+        "Evaluation timed out after 1 second(s).",
+      )
 
-    assertThat(e.message).contains("Evaluation timed out after 1 second(s).")
+    val e2 =
+      assertThrows<ExecutorException> {
+        executor.evaluatePath(pklFile) {
+          allowedModules("file:")
+          allowedResources("prop:")
+          rootDir(tempDir)
+          timeout(Duration.ofMillis(1500))
+        }
+      }
+
+    assertThat(e2.message)
+      .containsAnyOf(
+        "Evaluation timed out after 1.5 seconds.",
+        "Evaluation timed out after 1.5 second(s).",
+      )
   }
 
   @Test
