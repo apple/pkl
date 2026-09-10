@@ -147,22 +147,12 @@ public final class Identifier implements Comparable<Identifier> {
   // members of pkl.yaml
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
 
-  // members of pkl.net#Url
+  // members of pkl.net
   public static final Identifier USER_INFO = get("userInfo");
   public static final Identifier QUERY = get("query");
-
-  // members of pkl.url#Parser
-  public static final Identifier BASE = get("base");
-  public static final Identifier STRICT = get("strict");
-
-  // members of pkl.url#Builder
   public static final Identifier SCHEME = get("scheme");
-  public static final Identifier USERNAME = get("username");
-  public static final Identifier PASSWORD = get("password");
   public static final Identifier HOST = get("host");
   public static final Identifier PORT = get("port");
-  public static final Identifier SEGMENTS = get("segments");
-  public static final Identifier PARAMS = get("params");
   public static final Identifier FRAGMENT = get("fragment");
 
   // members of pkl.Command

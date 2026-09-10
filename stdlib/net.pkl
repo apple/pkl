@@ -71,6 +71,15 @@ class Url {
   /// The percent-decoded segments of [path].
   external fixed segments: List<String>
 
+  /// The percent-decoded parameters of [query], or an empty map if this URL has no query.
+  ///
+  /// [query] is read as `application/x-www-form-urlencoded`: parameters are separated by `&`, a
+  /// name is separated from its value by the first `=`, and `+` means a space.
+  /// A parameter that states no `=` has a [null] value, which is not the same as the empty string
+  /// that a bare `=` gives it.
+  /// A name that repeats keeps the value of its first occurrence.
+  external fixed queryParameters: Map<String, String?>
+
   /// Resolves [ref] against this URL.
   ///
   /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
@@ -100,6 +109,15 @@ external const function encodeComponent(value: String): String
 /// The inverse of [encodeComponent()].
 /// A `%` that does not begin a percent-encoded octet is kept as-is.
 external const function decodeComponent(value: String): String
+
+/// Builds a query from [parameters], for use as a [Url.query].
+///
+/// The result is `application/x-www-form-urlencoded`: parameters are separated by `&`, a name is
+/// separated from its value by `=`, and a parameter whose value is [null] is written as a bare
+/// name.
+///
+/// [Url.queryParameters] reads back exactly the parameters given here.
+external const function buildQuery(parameters: Map<String, String?>): String
 
 /// Whether every `%` in [value] begins a percent-encoded octet.
 external local const function isValidPercentEncoding(value: String): Boolean

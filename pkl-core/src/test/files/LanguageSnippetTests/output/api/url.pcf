@@ -195,6 +195,16 @@ facts {
     true
     true
   }
+  ["queryParameters"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["equality"] {
     true
     true
@@ -213,6 +223,18 @@ facts {
     true
   }
   ["decodeComponent()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["buildQuery()"] {
+    true
     true
     true
     true

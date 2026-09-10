@@ -294,6 +294,17 @@ facts {
     net.Url("urn:isbn:0451450523")!!.segments == List("isbn:0451450523")
   }
 
+  ["queryParameters"] {
+    net.Url("https://example.com?a=1&&b=2")!!.queryParameters == Map("a", "1", "b", "2")
+    net.Url("https://example.com?")!!.queryParameters == Map()
+    net.Url("https://example.com?a")!!.queryParameters == Map("a", null)
+    net.Url("https://example.com?a=")!!.queryParameters == Map("a", "")
+    net.Url("https://example.com?=1")!!.queryParameters == Map("", "1")
+    net.Url("https://example.com?a=1&a=2")!!.queryParameters == Map("a", "1")
+    net.Url("https://example.com?a%20b=c%20d")!!.queryParameters == Map("a b", "c d")
+    net.Url("https://example.com?a+b=c+d")!!.queryParameters == Map("a b", "c d")
+  }
+
   ["equality"] {
     net.Url("https://example.com/a") == net.Url("https://example.com/a")
     net.Url("https://example.com/a") != net.Url("https://example.com/b")
@@ -332,5 +343,21 @@ facts {
     net.decodeComponent("%FF") == "\u{FFFD}"
     net.decodeComponent(net.encodeComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
     net.decodeComponent(net.encodeComponent(gClef)) == gClef
+  }
+
+  ["buildQuery()"] {
+    net.buildQuery(Map("a", "1", "b", "2")) == "a=1&b=2"
+    net.buildQuery(Map()) == ""
+    net.buildQuery(Map("a", null)) == "a"
+    net.buildQuery(Map("a", "")) == "a="
+    net.buildQuery(Map("", "1")) == "=1"
+    net.buildQuery(Map("a b", "c d")) == "a+b=c+d"
+    net.buildQuery(Map("a&b", "1=2")) == "a%26b=1%3D2"
+    net.buildQuery(Map("q", "aZ09-._~")) == "q=aZ09-._~"
+
+    local parameters = Map("a b", "c&d", "e", null, "f", "", "münchen", "a+b")
+    net.Url("https://example.com?" + net.buildQuery(parameters))!!.queryParameters == parameters
+    (net.Url("https://example.com/a?q=1")!!) { query = net.buildQuery(Map("a", "b c")) }.toString()
+      == "https://example.com/a?a=b+c"
   }
 }
