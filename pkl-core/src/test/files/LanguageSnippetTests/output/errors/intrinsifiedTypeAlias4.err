@@ -2,7 +2,7 @@
 Expected value of type `String`, but got type `Int`.
 Value: 42
 
-xxxx | typealias Uri = String
+xxxx | typealias Uri = String(isValidUrl)
                        ^^^^^^
 at intrinsifiedTypeAlias4#res1 (pkl:base)
 

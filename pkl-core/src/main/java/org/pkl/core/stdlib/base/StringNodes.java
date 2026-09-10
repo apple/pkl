@@ -28,6 +28,7 @@ import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction1NodeGen;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.*;
+import org.pkl.core.stdlib.net.UrlParser;
 import org.pkl.core.util.ByteArrayUtils;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
@@ -193,6 +194,14 @@ public final class StringNodes {
       } catch (IllegalArgumentException e) {
         return false;
       }
+    }
+  }
+
+  public abstract static class isValidUrl extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(String self) {
+      return UrlParser.isValidUrl(self);
     }
   }
 

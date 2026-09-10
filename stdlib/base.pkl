@@ -23,6 +23,7 @@ module pkl.base
 import "pkl:json"
 import "pkl:jsonnet"
 import "pkl:math"
+import "pkl:net"
 import "pkl:pklbinary"
 // noinspection Deprecated
 import "pkl:protobuf"
@@ -1340,6 +1341,22 @@ external class String extends Any {
   @Since { version = "0.29.0" }
   external isBase64: Boolean
 
+  /// Tells if this is a valid absolute URL according to
+  /// [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+  ///
+  /// Stricter than [net.Url()], which also parses a relative reference, and which percent-encodes
+  /// whatever cannot appear literally in a URL component.
+  ///
+  /// Facts:
+  /// ```
+  /// "https://example.com/a?q=1#f".isValidUrl
+  /// "mailto:user@example.com".isValidUrl
+  /// !"./foo".isValidUrl
+  /// !"http://example.com/some path".isValidUrl
+  /// ```
+  @Since { version = "0.33.0" }
+  external isValidUrl: Boolean
+
   /// The [MD5](https://en.wikipedia.org/wiki/MD5)
   /// hash of this string's UTF-8 byte sequence
   /// as hexadecimal string.
@@ -1704,7 +1721,7 @@ external class String extends Any {
 typealias Charset = "UTF-8" | "UTF-16" | "ISO-8859-1"
 
 /// A string representing a [URI](https://en.wikipedia.org/wiki/Uniform_Resource_Identifier).
-typealias Uri = String
+typealias Uri = String(isValidUrl)
 
 /// Constructs a regular expression described by [pattern].
 ///

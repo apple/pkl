@@ -959,6 +959,36 @@ alias {
           allAnnotations = List(new {
             version = "0.29.0"
           })
+        }, "isValidUrl", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this is a valid absolute URL according to
+            [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+            
+            Stricter than [net.Url()], which also parses a relative reference, and which percent-encodes
+            whatever cannot appear literally in a URL component.
+            
+            Facts:
+            ```
+            "https://example.com/a?q=1#f".isValidUrl
+            "mailto:user@example.com".isValidUrl
+            !"./foo".isValidUrl
+            !"http://example.com/some path".isValidUrl
+            ```
+            """
+          annotations = List(new {
+            version = "0.33.0"
+          })
+          modifiers = Set()
+          name = "isValidUrl"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.33.0"
+          })
         }, "md5", new {
           location {
             line = XXXX
@@ -1323,6 +1353,36 @@ alias {
           allModifiers = Set()
           allAnnotations = List(new {
             version = "0.29.0"
+          })
+        }, "isValidUrl", new {
+          location {
+            line = XXXX
+            column = 3
+            displayUri = "https://github.com/apple/pkl/blob/$commitId/stdlib/base.pkl#LXXXX"
+          }
+          docComment = """
+            Tells if this is a valid absolute URL according to
+            [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+            
+            Stricter than [net.Url()], which also parses a relative reference, and which percent-encodes
+            whatever cannot appear literally in a URL component.
+            
+            Facts:
+            ```
+            "https://example.com/a?q=1#f".isValidUrl
+            "mailto:user@example.com".isValidUrl
+            !"./foo".isValidUrl
+            !"http://example.com/some path".isValidUrl
+            ```
+            """
+          annotations = List(new {
+            version = "0.33.0"
+          })
+          modifiers = Set()
+          name = "isValidUrl"
+          allModifiers = Set()
+          allAnnotations = List(new {
+            version = "0.33.0"
           })
         }, "md5", new {
           location {

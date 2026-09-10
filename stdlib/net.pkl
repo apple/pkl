@@ -65,13 +65,10 @@ class Url {
   /// The empty string is a URL ending in a bare `#`.
   fragment: String?(this == null || isValidPercentEncoding(this!!))
 
-  /// Returns [true] if this URL is absolute
-  fixed isAbsolute: Boolean = scheme != null
+  /// Returns [true] if this URL is absolute: has a non-null scheme.
+  hidden fixed isAbsolute: Boolean = scheme != null
 
   /// The percent-decoded segments of [path].
-  ///
-  /// A leading `/` introduces the first segment rather than following an empty one, so the path `/`
-  /// has one empty segment. An empty [path] has no segments at all.
   external fixed segments: List<String>
 
   /// Resolves [ref] against this URL.
@@ -96,7 +93,7 @@ class Url {
 ///
 /// Every character other than an ASCII alphanumeric or one of `-._~`, the *unreserved* characters
 /// of RFC 3986, is percent-encoded as its UTF-8 bytes.
-external function encodeComponent(value: String): String
+external const function encodeComponent(value: String): String
 
 /// Percent-decodes [value], interpreting the decoded bytes as UTF-8.
 ///
