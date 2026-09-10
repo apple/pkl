@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.net;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
@@ -53,6 +54,26 @@ public final class NetNodes {
     @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, String value) {
       return PercentEncoder.decode(value);
+    }
+  }
+
+  public abstract static class buildQuery extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected String eval(@SuppressWarnings("unused") VmTyped self, VmMap parameters) {
+      var out = new StringBuilder();
+      for (var parameter : parameters) {
+        if (!out.isEmpty()) {
+          out.append('&');
+        }
+        PercentEncoder.encodeForm(out, (String) parameter.getKey());
+        var value = (String) VmNull.unwrap(parameter.getValue());
+        if (value != null) {
+          out.append('=');
+          PercentEncoder.encodeForm(out, value);
+        }
+      }
+      return out.toString();
     }
   }
 

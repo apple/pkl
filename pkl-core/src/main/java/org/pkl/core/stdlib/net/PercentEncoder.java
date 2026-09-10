@@ -147,4 +147,29 @@ final class PercentEncoder {
     }
     return bytes.toString(StandardCharsets.UTF_8);
   }
+
+  /** Percent-decodes {@code input} as an {@code application/x-www-form-urlencoded}. */
+  static String decodeForm(String input) {
+    return decode(input.replace('+', ' '));
+  }
+
+  /**
+   * Appends {@code value} to {@code out} as an {@code application/x-www-form-urlencoded}.
+   *
+   * <p>The inverse of {@link #decodeForm}.
+   */
+  static void encodeForm(StringBuilder out, String value) {
+    value
+        .codePoints()
+        .forEach(
+            codePoint -> {
+              if (isUnreserved(codePoint)) {
+                out.appendCodePoint(codePoint);
+              } else if (codePoint == ' ') {
+                out.append('+');
+              } else {
+                encodeUtf8(codePoint, out);
+              }
+            });
+  }
 }

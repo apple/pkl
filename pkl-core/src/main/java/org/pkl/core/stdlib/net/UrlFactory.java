@@ -70,4 +70,10 @@ final class UrlFactory {
         ? ((Parsed) url.getExtraStorage()).path()
         : (String) VmUtils.readMember(url, Identifier.PATH);
   }
+
+  static @Nullable String readQuery(VmObjectLike url) {
+    return url.hasExtraStorage()
+        ? ((Parsed) url.getExtraStorage()).query()
+        : readNullableString(url, Identifier.QUERY);
+  }
 }

@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.net;
 
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.function.IntPredicate;
 import org.jspecify.annotations.Nullable;
 
@@ -307,6 +309,41 @@ public final class UrlParser {
       segments.add(PercentEncoder.decode(path.substring(start, slash)));
       start = slash + 1;
     }
+  }
+
+  /**
+   * The percent-decoded parameters of {@code query}, which is read as {@code
+   * application/x-www-form-urlencoded}.
+   *
+   * <p>A parameter that states no {@code =} has a {@code null} value. A name that repeats keeps the
+   * value of its first occurrence.
+   */
+  static Map<String, @Nullable String> queryParameters(@Nullable String query) {
+    if (query == null || query.isEmpty()) {
+      return Map.of();
+    }
+    var parameters = new LinkedHashMap<String, @Nullable String>();
+    var start = 0;
+    while (start < query.length()) {
+      var end = query.indexOf('&', start);
+      if (end < 0) {
+        end = query.length();
+      }
+      // an empty pair ("a=1&&b=2") holds no parameters
+      if (end > start) {
+        var separator = query.indexOf('=', start);
+        var hasValue = separator >= 0 && separator < end;
+        var name = PercentEncoder.decodeForm(query.substring(start, hasValue ? separator : end));
+        var value =
+            hasValue ? PercentEncoder.decodeForm(query.substring(separator + 1, end)) : null;
+        // repeats are dropped
+        if (!parameters.containsKey(name)) {
+          parameters.put(name, value);
+        }
+      }
+      start = end + 1;
+    }
+    return parameters;
   }
 
   // Validation. These back the type constraints of `pkl:net`'s `Url`, so that a URL written or

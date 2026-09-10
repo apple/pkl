@@ -18,6 +18,7 @@ package org.pkl.core.stdlib.net;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import org.pkl.core.runtime.VmList;
+import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -33,6 +34,18 @@ public final class UrlNodes {
     @TruffleBoundary
     protected VmList eval(VmTyped self) {
       return VmList.create(UrlParser.segments(UrlFactory.readPath(self)));
+    }
+  }
+
+  public abstract static class queryParameters extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected VmMap eval(VmTyped self) {
+      var builder = VmMap.builder();
+      for (var parameter : UrlParser.queryParameters(UrlFactory.readQuery(self)).entrySet()) {
+        builder.add(parameter.getKey(), VmNull.lift(parameter.getValue()));
+      }
+      return builder.build();
     }
   }
 
