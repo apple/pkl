@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.net;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.function.IntPredicate;
 import org.jspecify.annotations.Nullable;
 
 /**
@@ -31,7 +32,7 @@ import org.jspecify.annotations.Nullable;
  * href="https://www.rfc-editor.org/rfc/rfc6874">RFC 6874</a>, as in {@code [fe80::1%25eth0]}..
  */
 @SuppressWarnings("JavadocLinkAsPlainText")
-final class UrlParser {
+public final class UrlParser {
   private UrlParser() {}
 
   /**
@@ -321,6 +322,39 @@ final class UrlParser {
       }
     }
     return true;
+  }
+
+  /**
+   * Whether {@code input} is an absolute URL that is already written the way RFC 3986 spells one
+   * out. Backs {@code String.isValidUrl}.
+   *
+   * <p>This is stricter than {@link #parse}, which is lenient in the two ways text taken from the
+   * outside world usually needs it to be:
+   *
+   * <ul>
+   *   <li>a relative reference, such as {@code ./foo}, parses but is not a URL
+   *   <li>nothing is encoded here, so a character that its component cannot hold literally has to
+   *       already be percent-encoded: {@code http://example.com/some path} is not a URL, but {@code
+   *       http://example.com/some%20path} is
+   * </ul>
+   */
+  public static boolean isValidUrl(String input) {
+    var parsed = parse(input);
+    if (parsed == null || parsed.scheme() == null) {
+      return false;
+    }
+    var host = parsed.host();
+    if (host != null && !isIpLiteral(host) && !isEncoded(host, PercentEncoder.REG_NAME)) {
+      return false;
+    }
+    return isEncoded(parsed.userInfo(), PercentEncoder.USERINFO)
+        && isEncoded(parsed.path(), PercentEncoder.PATH)
+        && isEncoded(parsed.query(), PercentEncoder.QUERY_OR_FRAGMENT)
+        && isEncoded(parsed.fragment(), PercentEncoder.QUERY_OR_FRAGMENT);
+  }
+
+  private static boolean isEncoded(@Nullable String component, IntPredicate allowed) {
+    return component == null || component.codePoints().allMatch(c -> c == '%' || allowed.test(c));
   }
 
   /** Whether {@code input} is a scheme. Unlike parsing, the trailing {@code :} is not accepted. */

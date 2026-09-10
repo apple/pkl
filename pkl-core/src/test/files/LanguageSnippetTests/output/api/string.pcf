@@ -24,6 +24,23 @@ facts {
     true
     true
   }
+  ["isValidUrl"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["lastIndex"] {
     true
     true

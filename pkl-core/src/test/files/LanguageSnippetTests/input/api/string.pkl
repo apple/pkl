@@ -36,6 +36,30 @@ facts {
     !"hello there".isBase64
   }
 
+  ["isValidUrl"] {
+    "mailto:user@example.com".isValidUrl
+    "urn:isbn:0451450523".isValidUrl
+    "file:///a/b".isValidUrl
+    "foo:".isValidUrl
+    "http://[fe80::1%25eth0]:8080/a?q#f".isValidUrl
+    "http://user:pw@EXAMPLE.com/!$&'()*+,;=:@?!$&'()*+,;=:@/?#!$&'()*+,;=:@/?".isValidUrl
+
+    // only absolute URLs are valid
+    !"./foo".isValidUrl
+    !"/a/b?q#f".isValidUrl
+    !"//example.com/a".isValidUrl
+    !"".isValidUrl
+    !"not a url".isValidUrl
+
+    // nothing is encoded
+    !"http://example.com/some path".isValidUrl
+    !"https://example.com/münchen?q=café".isValidUrl
+    "https://example.com/m%C3%BCnchen?q=caf%C3%A9".isValidUrl
+
+    // whatever the parser of `pkl:net` rejects is rejected here too
+    !"https://example.com:port/".isValidUrl
+  }
+
   ["lastIndex"] {
     for (s in List(str1, str2, str3)) {
       s.length == s.lastIndex + 1
