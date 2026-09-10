@@ -1,0 +1,10 @@
+res1 {
+  cond = true
+  res = List(new {
+    name = "Bobby"
+  }, "zzzzz")
+}
+res2 {
+  cond = false
+  res = List(null, "zzzzz")
+}

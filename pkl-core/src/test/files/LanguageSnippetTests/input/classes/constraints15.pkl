@@ -1,0 +1,25 @@
+// tests that reading from custom this gives the correct value
+typealias Foo = String(this.length > 3)
+
+class Person {
+  name: String
+}
+
+const function qux(b: Person) = b
+
+class MyTest {
+  cond: Boolean
+
+  res =
+    List(
+      // conditionally set auxiliary slot 0
+      if (cond) qux(new { name = "Bobby" }) else null,
+      // custom this written to:
+      //  * auxiliary slot 0 if `cond` is false
+      //  * auxiliary slot 1 if `cond` is true
+      "zzzzz" as Foo,
+    )
+}
+
+res1 = new MyTest { cond = true }
+res2 = new MyTest { cond = false }
