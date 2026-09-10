@@ -15,16 +15,12 @@
  */
 package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.function.Function;
-import java.util.stream.Collectors;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PType.Alias;
-import org.pkl.core.PType.Class;
 import org.pkl.core.PType.Constrained;
 import org.pkl.core.PType.StringLiteral;
 import org.pkl.core.PType.TypeVariable;
@@ -32,23 +28,13 @@ import org.pkl.core.PType.Union;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ValueFormatter;
 
-public abstract class VmType {
+public abstract sealed class VmType {
 
-  public PType export() {
-    var alias = getVmTypeAlias();
-    // needs to come before `clazz != null` check
-    if (alias != null) {
-      return new Alias(alias.export());
-    }
-    var clazz = getVmClass();
-    if (clazz != null) {
-      return new Class(clazz.export());
-    }
-    CompilerDirectives.transferToInterpreter();
-    throw new VmExceptionBuilder()
-        .bug("`%s` must override method `doExport()`.", getClass().getTypeName())
-        .build();
-  }
+  public abstract PType export();
+
+  protected abstract boolean doIsEquivalentTo(VmType other);
+
+  protected abstract boolean doIsSupertypeOf(VmType other);
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
   public boolean isParametric() {
@@ -65,11 +51,9 @@ public abstract class VmType {
 
   /** Tells if this type is the same typecheck as the other type. */
   @Override
-  public boolean equals(Object value) {
+  public final boolean equals(Object value) {
     return this == value || value instanceof VmType other && doIsEquivalentTo(other);
   }
-
-  protected abstract boolean doIsEquivalentTo(VmType other);
 
   public final boolean isSubtypeOf(VmType other) {
     return other.isSupertypeOf(this);
@@ -78,96 +62,101 @@ public abstract class VmType {
   public final boolean isSupertypeOf(VmType other) {
     return equals(other)
         || doIsSupertypeOf(other)
-        || other == UNKNOWN // all types are supertypes/subtypes of unknown
+        || other == UnknownType.INSTANCE // all types are supertypes/subtypes of unknown
+        || other == NothingType.INSTANCE
         || other instanceof TypeVariableType
         || (other instanceof UnionType ut && ut.allElementsMatch(this::isSupertypeOf))
         || (other instanceof AliasType at && isSupertypeOf(at.aliasedType))
         || (other instanceof ConstrainedType ct && isSupertypeOf(ct.baseType));
   }
 
-  protected abstract boolean doIsSupertypeOf(VmType other);
+  public static final class UnknownType extends VmType {
+    public static final UnknownType INSTANCE = new UnknownType();
 
-  public static VmType UNKNOWN =
-      new VmType() {
-        @Override
-        protected boolean doIsEquivalentTo(VmType other) {
-          // equality checked by equals()
-          return false;
-        }
+    private UnknownType() {}
 
-        @Override
-        protected boolean doIsSupertypeOf(VmType other) {
-          // unknown is supertype of everything!
-          return true;
-        }
+    @Override
+    protected boolean doIsEquivalentTo(VmType other) {
+      // equality checked by equals()
+      return false;
+    }
 
-        @Override
-        public PType export() {
-          return PType.UNKNOWN;
-        }
+    @Override
+    protected boolean doIsSupertypeOf(VmType other) {
+      // unknown is supertype of everything!
+      return true;
+    }
 
-        @Override
-        public String toString() {
-          return "unknown";
-        }
-      };
+    @Override
+    public PType export() {
+      return PType.UNKNOWN;
+    }
 
-  public static VmType NOTHING =
-      new VmType() {
-        @Override
-        protected boolean doIsEquivalentTo(VmType other) {
-          // equality checked by equals()
-          return false;
-        }
+    @Override
+    public String toString() {
+      return "unknown";
+    }
+  }
 
-        @Override
-        protected boolean doIsSupertypeOf(VmType other) {
-          // nothing is a supertype of nothing (except itself and unknown, handled by callers)
-          return false;
-        }
+  public static final class NothingType extends VmType {
+    public static final NothingType INSTANCE = new NothingType();
 
-        @Override
-        public PType export() {
-          return PType.NOTHING;
-        }
+    private NothingType() {}
 
-        @Override
-        public String toString() {
-          return "nothing";
-        }
-      };
+    @Override
+    protected boolean doIsEquivalentTo(VmType other) {
+      // equality checked by equals()
+      return false;
+    }
 
-  public abstract static class SelfType extends VmType {
-    protected final VmClass clazz;
+    @Override
+    protected boolean doIsSupertypeOf(VmType other) {
+      // nothing is a supertype of nothing (except itself and unknown, handled by callers)
+      return false;
+    }
+
+    @Override
+    public PType export() {
+      return PType.NOTHING;
+    }
+
+    @Override
+    public String toString() {
+      return "nothing";
+    }
+  }
+
+  public abstract static sealed class SelfType extends VmType {
+    private final VmClass clazz;
 
     protected SelfType(VmClass clazz) {
       this.clazz = clazz;
     }
 
     @Override
-    public @Nullable VmClass getVmClass() {
+    public VmClass getVmClass() {
       return clazz;
     }
 
     @Override
-    public int hashCode() {
-      return clazz.hashCode();
+    protected final boolean doIsEquivalentTo(VmType other) {
+      return other instanceof SelfType t && clazz == t.clazz;
+    }
+
+    @Override
+    protected final boolean doIsSupertypeOf(VmType other) {
+      return other instanceof SelfType mt && clazz.isSuperclassOf(mt.clazz);
+    }
+
+    @Override
+    public final int hashCode() {
+      return 31 * clazz.hashCode();
     }
   }
 
   public static final class ModuleType extends SelfType {
     public ModuleType(VmClass clazz) {
       super(clazz);
-    }
-
-    @Override
-    protected boolean doIsEquivalentTo(VmType other) {
-      return other instanceof ModuleType t && clazz == t.clazz;
-    }
-
-    @Override
-    protected boolean doIsSupertypeOf(VmType other) {
-      return other instanceof ModuleType mt && clazz.isSuperclassOf(mt.clazz);
     }
 
     @Override
@@ -184,16 +173,6 @@ public abstract class VmType {
   public static final class ThisType extends SelfType {
     public ThisType(VmClass clazz) {
       super(clazz);
-    }
-
-    @Override
-    protected boolean doIsEquivalentTo(VmType other) {
-      return other instanceof ThisType t && clazz == t.clazz;
-    }
-
-    @Override
-    protected boolean doIsSupertypeOf(VmType other) {
-      return other instanceof ThisType mt && clazz.isSuperclassOf(mt.clazz);
     }
 
     @Override
@@ -231,7 +210,8 @@ public abstract class VmType {
 
     @Override
     protected boolean doIsSupertypeOf(VmType other) {
-      return other instanceof StringLiteralType slt && literal.equals(slt.literal);
+      // equivalence handled by caller
+      return false;
     }
 
     @Override
@@ -241,7 +221,7 @@ public abstract class VmType {
 
     @Override
     public int hashCode() {
-      return literal.hashCode();
+      return 31 * literal.hashCode();
     }
   }
 
@@ -326,8 +306,7 @@ public abstract class VmType {
       if (clazz.getTypeParameterCount() == 0) return true;
 
       // check generic type args: walk ct.clazz to clazz, substituting type arguments as we go
-      // handles arbitrary generics, even though the stdlib only contains List<T>/Set<T> ->
-      // Collection<T>
+      // handles arbitrary generics like Function2<A, B, R> -> Function<R>
 
       var goalState =
           typeArguments.length > 0 ? typeArguments : nUnknowns(clazz.getTypeParameterCount());
@@ -385,25 +364,31 @@ public abstract class VmType {
     @Override
     public String toString() {
       if (clazz.isFunctionNClass()) {
-        return "("
-            + Arrays.stream(typeArguments)
-                .limit(typeArguments.length - 1)
-                .map(Object::toString)
-                .collect(Collectors.joining(", "))
-            + ") -> "
-            + typeArguments[typeArguments.length - 1];
+        var paramCount = typeArguments.length - 1;
+        var sb = new StringBuilder("(");
+        for (var i = 0; i < paramCount; i++) {
+          sb.append(typeArguments[i]);
+          if (i < paramCount - 1) {
+            sb.append(", ");
+          }
+        }
+        sb.append(") -> ");
+        sb.append(typeArguments[typeArguments.length - 1]);
+        return sb.toString();
       }
 
-      var result = clazz.getDisplayName();
-      if (typeArguments.length > 0) {
-        result +=
-            "<"
-                + Arrays.stream(typeArguments)
-                    .map(Object::toString)
-                    .collect(Collectors.joining(", "))
-                + ">";
+      if (typeArguments.length == 0) return clazz.getDisplayName();
+
+      var sb = new StringBuilder(clazz.getDisplayName());
+      sb.append('<');
+      for (var i = 0; i < typeArguments.length; i++) {
+        sb.append(typeArguments[i]);
+        if (i < typeArguments.length - 1) {
+          sb.append(", ");
+        }
       }
-      return result;
+      sb.append('>');
+      return sb.toString();
     }
 
     @Override
@@ -449,17 +434,19 @@ public abstract class VmType {
 
     @Override
     public int hashCode() {
-      return elementType.hashCode();
+      return 31 * elementType.hashCode();
     }
   }
 
   public static final class ConstrainedType extends VmType {
     private final VmType baseType;
     private final String[] constraints;
+    private final int identity;
 
-    public ConstrainedType(VmType baseType, String[] constraints) {
+    public ConstrainedType(VmType baseType, String[] constraints, int identity) {
       this.baseType = baseType;
       this.constraints = constraints;
+      this.identity = identity;
     }
 
     public VmType getBaseType() {
@@ -468,13 +455,13 @@ public abstract class VmType {
 
     @Override
     protected boolean doIsEquivalentTo(VmType other) {
-      // consider constrained types as always different
-      return false;
+      // consider constrained equivalent only on identity
+      return other instanceof ConstrainedType t && t.identity == identity;
     }
 
     @Override
     protected boolean doIsSupertypeOf(VmType other) {
-      // constrained types can never supertypes
+      // constrained types can never be supertypes (except when equal by identity, handled above)
       return false;
     }
 
@@ -590,16 +577,18 @@ public abstract class VmType {
 
     @Override
     public String toString() {
-      var result = typeAlias.getDisplayName();
-      if (typeArguments.length > 0) {
-        result +=
-            "<"
-                + Arrays.stream(typeArguments)
-                    .map(Object::toString)
-                    .collect(Collectors.joining(", "))
-                + ">";
+      if (typeArguments.length == 0) return typeAlias.getDisplayName();
+
+      var sb = new StringBuilder(typeAlias.getDisplayName());
+      sb.append('<');
+      for (var i = 0; i < typeArguments.length; i++) {
+        sb.append(typeArguments[i]);
+        if (i < typeArguments.length - 1) {
+          sb.append(", ");
+        }
       }
-      return result;
+      sb.append('>');
+      return sb.toString();
     }
 
     @Override
@@ -607,81 +596,6 @@ public abstract class VmType {
       return 31 * typeAlias.hashCode() + Arrays.hashCode(typeArguments);
     }
   }
-
-  //  public static final class FunctionType extends VmType {
-  //    private final VmType[] parameterTypes;
-  //    private final VmType returnType;
-  //
-  //    public FunctionType(VmType[] parameterTypes, VmType returnType) {
-  //      this.parameterTypes = parameterTypes;
-  //      this.returnType = returnType;
-  //    }
-  //
-  //    public VmType[] getParameterTypes() {
-  //      return parameterTypes;
-  //    }
-  //
-  //    public VmType getReturnType() {
-  //      return returnType;
-  //    }
-  //
-  //    @Override
-  //    public VmClass getVmClass() {
-  //      return BaseModule.getFunctionNClass(parameterTypes.length);
-  //    }
-  //
-  //    @Override
-  //    public boolean isParametric() {
-  //      return true;
-  //    }
-  //
-  //    @Override
-  //    protected boolean doIsEquivalentTo(VmType other) {
-  //      if (!(other instanceof FunctionType t)) return false;
-  //      if (!returnType.equals(t.returnType)) return false;
-  //      return typesEquals(parameterTypes, t.parameterTypes);
-  //    }
-  //
-  //    @Override
-  //    protected boolean doIsSupertypeOf(VmType other) {
-  //      if (other instanceof FunctionType ft) {
-  //        if (parameterTypes.length != ft.parameterTypes.length) return false;
-  //        return functionIsSupertype(
-  //            parameterTypes.length, parameterTypes, returnType, ft.parameterTypes,
-  // ft.returnType);
-  //      }
-  //      if (other instanceof ClassType ct
-  //          && (ct.clazz == BaseModule.getFunctionNClass(parameterTypes.length))) {
-  //        // check against specific FunctionN class avoids need to compare param lengths
-  //        return functionIsSupertype(
-  //            parameterTypes.length,
-  //            parameterTypes,
-  //            returnType,
-  //            ct.typeArguments,
-  //            ct.typeArguments[parameterTypes.length]);
-  //      }
-  //      return false;
-  //    }
-  //
-  //    @Override
-  //    public PType export() {
-  //      return new PType.Function(exportTypes(parameterTypes), returnType.export());
-  //    }
-  //
-  //    @Override
-  //    public String toString() {
-  //      return "("
-  //          + Arrays.stream(parameterTypes).map(Object::toString).collect(Collectors.joining(",
-  // "))
-  //          + ") -> "
-  //          + returnType;
-  //    }
-  //
-  //    @Override
-  //    public int hashCode() {
-  //      return 31 * Arrays.hashCode(parameterTypes) + returnType.hashCode();
-  //    }
-  //  }
 
   public static final class UnionType extends VmType {
     private final int defaultIndex;
@@ -716,6 +630,7 @@ public abstract class VmType {
     @Override
     protected boolean doIsEquivalentTo(VmType other) {
       if (!(other instanceof UnionType t)) return false;
+      // TODO: handle A | B as equivalent to B | A
       return typesEquals(elementTypes, t.elementTypes);
     }
 
@@ -733,7 +648,14 @@ public abstract class VmType {
 
     @Override
     public String toString() {
-      return Arrays.stream(elementTypes).map(Object::toString).collect(Collectors.joining(" | "));
+      var sb = new StringBuilder();
+      for (var i = 0; i < elementTypes.length; i++) {
+        sb.append(elementTypes[i]);
+        if (i < elementTypes.length - 1) {
+          sb.append(" | ");
+        }
+      }
+      return sb.toString();
     }
 
     @Override
@@ -782,7 +704,7 @@ public abstract class VmType {
 
     @Override
     public int hashCode() {
-      return typeParameter.hashCode();
+      return 31 * typeParameter.hashCode();
     }
   }
 
@@ -803,6 +725,8 @@ public abstract class VmType {
   }
 
   private static VmType[] nUnknowns(int len) {
-    return Collections.nCopies(len, VmType.UNKNOWN).toArray(new VmType[0]);
+    var ret = new VmType[len];
+    Arrays.fill(ret, UnknownType.INSTANCE);
+    return ret;
   }
 }
