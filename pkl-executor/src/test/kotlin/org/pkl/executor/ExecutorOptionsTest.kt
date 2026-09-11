@@ -30,9 +30,9 @@ class ExecutorOptionsTest {
     val original = System.getProperty("user.home")
     try {
       System.setProperty("user.home", home.toString())
-      assertThat(ExecutorOptions.defaultModuleCacheDir())
+      assertThat(ExecutorOptions.defaultModuleCacheDir(home, false, mapOf()))
         .isEqualTo(home.resolve(".cache").resolve("pkl"))
-      assertThat(ExecutorOptions.defaultModuleCacheDir())
+      assertThat(ExecutorOptions.defaultModuleCacheDir(home, false, mapOf()))
         .isEqualTo(IoUtils.getSystemModuleCacheDir())
     } finally {
       System.setProperty("user.home", original)
