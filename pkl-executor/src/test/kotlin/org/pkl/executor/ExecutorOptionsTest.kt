@@ -32,7 +32,7 @@ class ExecutorOptionsTest {
       System.setProperty("user.home", home.toString())
       assertThat(ExecutorOptions.defaultModuleCacheDir(home, false, mapOf()))
         .isEqualTo(home.resolve(".cache").resolve("pkl"))
-      assertThat(ExecutorOptions.defaultModuleCacheDir(home, false, mapOf()))
+      assertThat(ExecutorOptions.defaultModuleCacheDir())
         .isEqualTo(IoUtils.getSystemModuleCacheDir())
     } finally {
       System.setProperty("user.home", original)
