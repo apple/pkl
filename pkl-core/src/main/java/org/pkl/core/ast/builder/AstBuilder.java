@@ -1071,7 +1071,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var parent = expr.parent();
     var scope = symbolTable.getCurrentScope();
 
-    // keep in sync with isImplicitNewExpr
     while (parent instanceof IfExpr ifExpr
             && (ifExpr.getThen() == child || ifExpr.getEls() == child)
         || parent instanceof TraceExpr
