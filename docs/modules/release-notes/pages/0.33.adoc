@@ -69,6 +69,20 @@ A `Class` value typechecked against `Class<T>` must be a subclass of `T`.
 
 If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
+=== JSON and YAML Parsers Reject the Object Key `default`
+
+`Dynamic` declares a hidden `default` property, so an object key named `default` could not be represented as a `Dynamic` property.
+Previously, `json.Parser.parse()`, `yaml.Parser.parse()` and `yaml.Parser.parseAll()` silently produced an object that was missing the key, and reading `.default` on it failed with a confusing type error.
+
+These methods now throw, and the error message points at `useMapping = true`, which parses into a `Mapping` and preserves the key:
+
+[source,pkl]
+----
+new json.Parser { useMapping = true }.parse("""
+  {"default": "greeting"}
+  """)
+----
+
 === XXX
 
 == Bug Fixes [small]#🐜#

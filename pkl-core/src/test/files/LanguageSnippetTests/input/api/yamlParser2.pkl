@@ -91,3 +91,25 @@ res15 = parser.parseAll("""
   hobby: surfing
   ...
   """)
+
+// object key `default` cannot be represented as a `Dynamic` property
+// https://github.com/apple/pkl/issues/561
+res16 = test.catch(() -> parser.parse("""
+  default: null
+  """))
+
+// nested mappings are rejected too
+res17 = test.catch(() -> parser.parse("""
+  person:
+    default: null
+  """))
+
+// `parseAll` rejects it as well
+res18 = test.catch(() -> parser.parseAll("""
+  default: null
+  """))
+
+// parsing into a `Mapping` keeps working
+res19 = (parser) { useMapping = true }.parse("""
+  default: null
+  """)
