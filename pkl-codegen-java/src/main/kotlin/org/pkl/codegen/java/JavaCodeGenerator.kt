@@ -36,6 +36,7 @@ import kotlin.let
 import kotlin.takeIf
 import kotlin.to
 import org.pkl.commons.NameMapper
+import org.pkl.commons.isValidConfigurationPropertiesPrefix
 import org.pkl.core.*
 import org.pkl.core.util.CodeGeneratorUtils
 import org.pkl.core.util.IoUtils
@@ -540,7 +541,11 @@ class JavaCodeGenerator(
             }
             propertyType is PType.Class && propertyType.pClass == pClass
           }
-        if (modulePropertiesWithMatchingType.size == 1) {
+
+        val singleProperty = modulePropertiesWithMatchingType.singleOrNull()
+        if (
+          singleProperty != null && singleProperty.simpleName.isValidConfigurationPropertiesPrefix
+        ) {
           // exactly one module property has this type -> make it available for direct injection
           // (potential improvement: make type available for direct injection if it occurs exactly
           // once in property tree)
