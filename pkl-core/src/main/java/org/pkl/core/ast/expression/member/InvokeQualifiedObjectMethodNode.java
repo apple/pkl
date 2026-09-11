@@ -32,13 +32,7 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
       boolean needsConst,
       ExpressionNode getReceiverNode,
       int methodSlot) {
-    super(
-        sourceSection,
-        methodName,
-        argumentNodes,
-        needsConst,
-        getReceiverNode,
-        methodSlot);
+    super(sourceSection, methodName, argumentNodes, needsConst, getReceiverNode, methodSlot);
   }
 
   @Override

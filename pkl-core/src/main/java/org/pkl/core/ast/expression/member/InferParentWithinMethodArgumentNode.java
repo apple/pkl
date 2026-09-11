@@ -16,17 +16,14 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.runtime.VmUtils;
 
 public abstract class InferParentWithinMethodArgumentNode
     extends AbstractInferParentFromMethodNode {
@@ -39,7 +36,6 @@ public abstract class InferParentWithinMethodArgumentNode
     this.argIndex = argIndex;
     this.methodSlot = methodSlot;
   }
-
 
   @Override
   protected Method getMethod(VirtualFrame frame) {
