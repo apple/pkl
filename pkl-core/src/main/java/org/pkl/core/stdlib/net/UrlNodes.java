@@ -61,6 +61,17 @@ public final class UrlNodes {
     @Specialization
     @TruffleBoundary
     protected Object eval(VmTyped self, String ref) {
+      return resolve(self, ref);
+    }
+
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self, VmTyped ref) {
+      return resolve(self, UrlFactory.read(ref).serialize());
+    }
+
+    @SuppressWarnings("MethodNameSameAsClassName")
+    private Object resolve(VmTyped self, String ref) {
       var base = UrlFactory.read(self);
       if (base.scheme() == null) {
         throw exceptionBuilder()
@@ -72,6 +83,14 @@ public final class UrlNodes {
         return VmNull.withoutDefault();
       }
       return UrlFactory.create(UrlParser.resolve(base, parsedRef));
+    }
+  }
+
+  public abstract static class equals extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(VmTyped self, VmTyped other) {
+      return UrlParser.isEquivalent(UrlFactory.read(self), UrlFactory.read(other));
     }
   }
 }

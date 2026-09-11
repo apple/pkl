@@ -213,6 +213,26 @@ facts {
     true
     true
   }
+  ["equals()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["encodeComponent()"] {
     true
     true
