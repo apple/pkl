@@ -146,14 +146,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   @Override
   public WrapperNode createWrapper(ProbeNode probe) {
     return new InvokeMethodVirtualNodeWrapper(
-        sourceSection,
-        methodName,
-        argumentNodes,
-        lookupMode,
-        needsConst,
-        methodSlot,
-        this,
-        probe);
+        sourceSection, methodName, argumentNodes, lookupMode, needsConst, methodSlot, this, probe);
   }
 
   private void checkConst(ClassMethod method) {
