@@ -229,6 +229,8 @@ public abstract sealed class VmType {
     private final VmClass clazz;
     private final VmType[] typeArguments;
 
+    private static final ClassType ANY = new ClassType(BaseModule.getAnyClass());
+
     public ClassType(VmClass clazz) {
       this.clazz = clazz;
       typeArguments = new VmType[0];
@@ -309,11 +311,11 @@ public abstract sealed class VmType {
       // handles arbitrary generics like Function2<A, B, R> -> Function<R>
 
       var goalState =
-          typeArguments.length > 0 ? typeArguments : nUnknowns(clazz.getTypeParameterCount());
+          typeArguments.length > 0 ? typeArguments : nCopies(clazz.getTypeParameterCount(), ANY);
       var state =
           ct.typeArguments.length > 0
               ? ct.typeArguments
-              : nUnknowns(ct.clazz.getTypeParameterCount());
+              : nCopies(ct.clazz.getTypeParameterCount(), ANY);
       for (var c = ct.clazz; c != clazz; c = c.getSuperclass()) {
         assert c != null; // we know walking parents reaches clazz before null
         var cSuperclass = c.getSuperclass();
@@ -323,7 +325,7 @@ public abstract sealed class VmType {
 
         if (cSupertype.typeArguments.length == 0) {
           // supertype args could be omitted, e.g. class MyList<T> extends List
-          state = nUnknowns(cSuperclass.getTypeParameterCount());
+          state = nCopies(cSuperclass.getTypeParameterCount(), ANY);
           continue;
         } else if (state.length == 0) {
           // subclass may not have type args, e.g. class A extends B<Int>
@@ -724,9 +726,9 @@ public abstract sealed class VmType {
     return Arrays.stream(types).limit(types.length - drop).map(VmType::export).toList();
   }
 
-  private static VmType[] nUnknowns(int len) {
+  private static VmType[] nCopies(int len, VmType type) {
     var ret = new VmType[len];
-    Arrays.fill(ret, UnknownType.INSTANCE);
+    Arrays.fill(ret, type);
     return ret;
   }
 }
