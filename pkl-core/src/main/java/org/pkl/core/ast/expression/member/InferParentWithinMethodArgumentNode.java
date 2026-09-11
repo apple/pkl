@@ -31,26 +31,19 @@ import org.pkl.core.runtime.VmUtils;
 public abstract class InferParentWithinMethodArgumentNode
     extends AbstractInferParentFromMethodNode {
   private final int argIndex;
+  private final int methodSlot;
 
   public InferParentWithinMethodArgumentNode(
-      SourceSection sourceSection, VmLanguage language, int argIndex) {
+      SourceSection sourceSection, VmLanguage language, int argIndex, int methodSlot) {
     super(sourceSection, language);
     this.argIndex = argIndex;
+    this.methodSlot = methodSlot;
   }
 
-  @TruffleBoundary
-  private int getMethodSlot(FrameDescriptor frameDescriptor) {
-    var methodSlot = frameDescriptor.getAuxiliarySlots().get(VmUtils.METHOD_FRAME_SLOT_ID);
-    if (methodSlot == null) {
-      // used in intrinsic constructor e.g. pkl.base#List()
-      throw exceptionBuilder().evalError("cannotInferParent").build();
-    }
-    return methodSlot;
-  }
 
   @Override
   protected Method getMethod(VirtualFrame frame) {
-    var method = (Method) frame.getAuxiliarySlot(getMethodSlot(frame.getFrameDescriptor()));
+    var method = (Method) frame.getObject(methodSlot);
     if (method == null) {
       // used in FunctionN.apply()
       CompilerDirectives.transferToInterpreter();
