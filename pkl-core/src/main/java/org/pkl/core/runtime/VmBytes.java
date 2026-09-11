@@ -168,7 +168,7 @@ public final class VmBytes extends VmValue implements Iterable<Long> {
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     var sb = new StringBuilder("Bytes(");
     var isFirst = true;
     for (var byt : bytes) {

@@ -42,7 +42,7 @@ class ErrorMessagesTest {
 
     override fun equals(obj: Any?): Boolean = this === obj
 
-    override fun toString(): String {
+    override fun toPklString(): String {
       force(true)
       return "lazy"
     }

@@ -98,7 +98,7 @@ public final class VmUndefinedValueException extends VmEvalException {
         }
         builder.append(Lexer.maybeQuoteIdentifier(pathPart.toString()));
       } else {
-        builder.append('[').append(pathPart).append(']');
+        builder.append('[').append(VmUtils.toPklString(pathPart)).append(']');
       }
     }
   }

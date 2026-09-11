@@ -113,7 +113,7 @@ public final class VmPair extends VmValue implements Iterable<Object> {
 
   @Override
   @TruffleBoundary
-  public String toString() {
+  public String toPklString() {
     force(true);
     return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
   }

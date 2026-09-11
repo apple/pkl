@@ -204,7 +204,8 @@ public abstract class VmObject extends VmObjectLike {
     force(allowUndefinedValues, true);
   }
 
-  public final String toString() {
+  @TruffleBoundary
+  public final String toPklString() {
     force(true, true);
     return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
   }

@@ -534,31 +534,31 @@ public final class RendererNodes {
     @Override
     public void visitIntSeq(VmIntSeq value) {
       writePropertyName();
-      builder.append(value);
+      builder.append(value.toPklString());
     }
 
     @Override
     public void visitPair(VmPair value) {
       writePropertyName();
-      builder.append(value);
+      builder.append(value.toPklString());
     }
 
     @Override
     public void visitRegex(VmRegex value) {
       writePropertyName();
-      builder.append(value);
+      builder.append(value.toPklString());
     }
 
     @Override
     public void visitNull(VmNull value) {
       writePropertyName();
-      builder.append(value);
+      builder.append(value.toPklString());
     }
 
     @Override
     public void visitReference(VmReference value) {
       writePropertyName();
-      builder.append(value);
+      builder.append(value.toPklString());
     }
 
     /**

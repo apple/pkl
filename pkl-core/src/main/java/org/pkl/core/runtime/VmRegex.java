@@ -77,7 +77,8 @@ public final class VmRegex extends VmValue {
   }
 
   @Override
-  public String toString() {
+  @TruffleBoundary
+  public String toPklString() {
     var builder = new StringBuilder();
     builder.append("Regex(");
     ValueFormatter.withCustomStringDelimiters().formatStringValue(pattern.pattern(), "", builder);

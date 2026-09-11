@@ -748,7 +748,7 @@ public final class VmClass extends VmValue {
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     return getDisplayName();
   }
 

@@ -111,12 +111,12 @@ public final class VmValueRenderer {
 
     @Override
     public void visitDuration(VmDuration value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
     public void visitDataSize(VmDataSize value) {
-      append(value);
+      append(value.toPklString());
     }
 
     private void renderByteSize(VmDataSize size) {
@@ -169,12 +169,12 @@ public final class VmValueRenderer {
 
     @Override
     public void visitRegex(VmRegex value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
     public void visitIntSeq(VmIntSeq value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
@@ -258,12 +258,12 @@ public final class VmValueRenderer {
 
     @Override
     public void visitClass(VmClass value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
     public void visitTypeAlias(VmTypeAlias value) {
-      append(value);
+      append(value.toPklString());
     }
 
     @Override
@@ -296,7 +296,7 @@ public final class VmValueRenderer {
     }
 
     private void append(Object value) {
-      builder.append(value);
+      builder.append(VmUtils.toPklString(value));
       checkLengthLimit();
     }
 

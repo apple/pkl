@@ -200,13 +200,13 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
-  @TruffleBoundary
-  public String toString() {
-    return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
+  public boolean isParseTimeInvisibleScope() {
+    return isFunctionAmend && !hasObjectParams;
   }
 
   @Override
-  public boolean isParseTimeInvisibleScope() {
-    return isFunctionAmend && !hasObjectParams;
+  @TruffleBoundary
+  public String toPklString() {
+    return VmValueRenderer.singleLine(Integer.MAX_VALUE).render(this);
   }
 }

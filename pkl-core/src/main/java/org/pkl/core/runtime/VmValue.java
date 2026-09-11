@@ -15,9 +15,12 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.jspecify.annotations.Nullable;
 
 public abstract class VmValue {
+  private final VmValueRenderer vmValueRenderer = VmValueRenderer.multiLine(Integer.MAX_VALUE);
+
   public abstract VmClass getVmClass();
 
   public VmTyped getPrototype() {
@@ -90,4 +93,16 @@ public abstract class VmValue {
   /** Enables calling `vmValue.equals()` when not behind a Truffle boundary. */
   @Override
   public abstract boolean equals(Object obj);
+
+  @TruffleBoundary
+  public abstract String toPklString();
+
+  /**
+   * Override default implementation because it calls {@link #hashCode()}, which will do object eval
+   * on certain types.
+   */
+  @Override
+  public final String toString() {
+    return vmValueRenderer.render(this);
+  }
 }

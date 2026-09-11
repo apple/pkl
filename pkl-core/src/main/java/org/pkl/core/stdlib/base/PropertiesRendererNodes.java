@@ -307,7 +307,7 @@ public final class PropertiesRendererNodes {
                 } else {
                   builder.append(
                       PropertiesUtils.renderPropertiesKeyOrValue(
-                          path.toString(), true, restrictCharset));
+                          VmUtils.toPklString(path), true, restrictCharset));
                 }
                 isFollowing.set(true);
               });

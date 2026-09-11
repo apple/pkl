@@ -386,7 +386,7 @@ public final class SymbolTable {
             || value instanceof Boolean
             || value instanceof VmDuration
             || value instanceof VmDataSize) {
-          return "[" + value + "]";
+          return "[" + VmUtils.toPklString(value) + "]";
         }
       }
 

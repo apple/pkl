@@ -292,7 +292,8 @@ public final class ListingNodes {
             if (!key.equals(0L)) {
               builder.append(separator);
             }
-            builder.append(value);
+            // TODO: use ToStringNode
+            builder.append(VmUtils.toPklString(value));
             return true;
           });
       LoopNode.reportLoopCount(this, self.getLength());

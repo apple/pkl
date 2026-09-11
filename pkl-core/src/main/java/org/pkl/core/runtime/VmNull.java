@@ -87,7 +87,7 @@ public final class VmNull extends VmValue {
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     return "null";
   }
 }

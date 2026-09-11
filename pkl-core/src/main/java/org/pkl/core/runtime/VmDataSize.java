@@ -156,7 +156,7 @@ public final class VmDataSize extends VmValue implements Comparable<VmDataSize> 
   }
 
   @Override
-  public String toString() {
+  public String toPklString() {
     return MathUtils.isMathematicalInteger(value) ? (long) value + "." + unit : value + "." + unit;
   }
 

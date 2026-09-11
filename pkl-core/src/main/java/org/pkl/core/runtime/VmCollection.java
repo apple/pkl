@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -166,17 +166,19 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
 
     var iter = iterator();
     var builder = new StringBuilder();
-    builder.append(iter.next());
+    // TODO: use ToStringNode
+    builder.append(VmUtils.toPklString(iter.next()));
 
     while (iter.hasNext()) {
       builder.append(separator);
-      builder.append(iter.next());
+      builder.append(VmUtils.toPklString(iter.next()));
     }
 
     return builder.toString();
   }
 
-  public final String toString() {
+  @TruffleBoundary
+  public final String toPklString() {
     return VmValueRenderer.multiLine(Integer.MAX_VALUE).render(this);
   }
 }

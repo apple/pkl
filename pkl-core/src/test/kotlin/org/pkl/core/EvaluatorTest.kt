@@ -95,6 +95,13 @@ class EvaluatorTest {
   }
 
   @Test
+  fun `evaluate text with dynamic entry keyed by a non-identifier value`() {
+    val module = evaluator.evaluate(text("""result = new Dynamic { [5.s] = "value" }"""))
+    val result = module.getProperty("result") as PObject
+    assertThat(result.properties).containsEntry("5.s", "value")
+  }
+
+  @Test
   fun `evaluate text with relative import`() {
     val e = assertThrows<PklException> { evaluator.evaluate(text("import \"foo.bar\"")) }
     assertThat(e).hasMessageContaining("Module `repl:text` cannot have a relative import URI.")
