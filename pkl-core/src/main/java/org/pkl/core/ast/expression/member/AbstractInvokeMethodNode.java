@@ -39,7 +39,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
       VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
     Object prevMethod = null;
     if (methodSlot > -1) {
-      prevMethod = frame.getValue(methodSlot);
+      prevMethod = frame.getObject(methodSlot);
       frame.setObject(methodSlot, method);
     }
 
