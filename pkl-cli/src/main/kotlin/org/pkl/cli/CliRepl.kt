@@ -70,6 +70,7 @@ internal class CliRepl(private val options: CliEvaluatorOptions) : CliCommand(op
           stackFrameTransformer,
           options.base.color?.hasColor() ?: false,
           options.base.traceMode ?: TraceMode.COMPACT,
+          options.base.featureFlags?.asFeatureFlags("cli") ?: emptyMap(),
         )
       Repl(options.base.normalizedWorkingDir, server, options.base.color?.hasColor() ?: false).run()
     }
