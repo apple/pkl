@@ -19,10 +19,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 
 import java.lang.reflect.Type;
 import java.net.URI;
-import java.util.Map;
 import org.jspecify.annotations.Nullable;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.Test;
+import org.pkl.core.EvaluationContext;
 import org.pkl.core.ModuleSource;
 
 public final class ConfigEvaluatorTest extends AbstractConfigTest {
@@ -103,20 +103,30 @@ public final class ConfigEvaluatorTest extends AbstractConfigTest {
             .addExternalProperty("configured", "configured")
             .addExternalProperty("request", "default")
             .build()) {
-      var first = evaluator.evaluate(source, Map.of("request", "one"));
+      var first =
+          evaluator.evaluate(
+              source, EvaluationContext.builder().addExternalProperty("request", "one").build());
       assertThat(first.get("configured").as(String.class)).isEqualTo("configured");
       assertThat(first.get("request").as(String.class)).isEqualTo("one");
 
-      var second = evaluator.evaluate(source, Map.of("request", "two"));
+      var second =
+          evaluator.evaluate(
+              source, EvaluationContext.builder().addExternalProperty("request", "two").build());
       assertThat(second.get("request").as(String.class)).isEqualTo("two");
 
       var unscoped = evaluator.evaluate(source);
       assertThat(unscoped.get("request").as(String.class)).isEqualTo("default");
 
-      var outputValue = evaluator.evaluateOutputValue(source, Map.of("request", "three"));
+      var outputValue =
+          evaluator.evaluateOutputValue(
+              source, EvaluationContext.builder().addExternalProperty("request", "three").build());
       assertThat(outputValue.get("request").as(String.class)).isEqualTo("three");
 
-      var expression = evaluator.evaluateExpression(source, "request", Map.of("request", "four"));
+      var expression =
+          evaluator.evaluateExpression(
+              source,
+              "request",
+              EvaluationContext.builder().addExternalProperty("request", "four").build());
       assertThat(expression.as(String.class)).isEqualTo("four");
     }
   }

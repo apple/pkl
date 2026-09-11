@@ -149,8 +149,8 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   @Override
-  public PModule evaluate(ModuleSource moduleSource, Map<String, String> externalProperties) {
-    return doEvaluate(moduleSource, externalProperties, this::exportModule);
+  public PModule evaluate(ModuleSource moduleSource, EvaluationContext context) {
+    return doEvaluate(moduleSource, context, this::exportModule);
   }
 
   private PModule exportModule(VmTyped module) {
@@ -163,6 +163,11 @@ public final class EvaluatorImpl implements Evaluator {
     return doEvaluate(moduleSource, this::readModuleOutputText);
   }
 
+  @Override
+  public String evaluateOutputText(ModuleSource moduleSource, EvaluationContext context) {
+    return doEvaluate(moduleSource, context, this::readModuleOutputText);
+  }
+
   private String readModuleOutputText(VmTyped module) {
     var output = VmUtils.readModuleOutput(module);
     return VmUtils.readTextProperty(output);
@@ -170,6 +175,11 @@ public final class EvaluatorImpl implements Evaluator {
 
   public byte[] evaluateOutputBytes(ModuleSource moduleSource) {
     return doEvaluate(moduleSource, this::readModuleOutputBytes);
+  }
+
+  @Override
+  public byte[] evaluateOutputBytes(ModuleSource moduleSource, EvaluationContext context) {
+    return doEvaluate(moduleSource, context, this::readModuleOutputBytes);
   }
 
   private byte[] readModuleOutputBytes(VmTyped module) {
@@ -184,9 +194,8 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   @Override
-  public Object evaluateOutputValue(
-      ModuleSource moduleSource, Map<String, String> externalProperties) {
-    return doEvaluate(moduleSource, externalProperties, this::readModuleOutputValue);
+  public Object evaluateOutputValue(ModuleSource moduleSource, EvaluationContext context) {
+    return doEvaluate(moduleSource, context, this::readModuleOutputValue);
   }
 
   private Object readModuleOutputValue(VmTyped module) {
@@ -217,26 +226,20 @@ public final class EvaluatorImpl implements Evaluator {
 
   @Override
   public Object evaluateExpression(
-      ModuleSource moduleSource, String expression, Map<String, String> externalProperties) {
-    return doEvaluateExpression(moduleSource, expression, externalProperties);
+      ModuleSource moduleSource, String expression, EvaluationContext context) {
+    return doEvaluateExpression(moduleSource, expression, context);
   }
 
   private Object doEvaluateExpression(
-      ModuleSource moduleSource,
-      String expression,
-      @Nullable Map<String, String> externalProperties) {
+      ModuleSource moduleSource, String expression, @Nullable EvaluationContext context) {
     // optimization: if the expression is `output.text`, `output.value` or `output.bytes` (the
     // common cases), read members directly instead of creating new truffle nodes.
     return switch (expression) {
-      case "output.text" ->
-          doEvaluate(moduleSource, externalProperties, this::readModuleOutputText);
-      case "output.value" ->
-          doEvaluate(moduleSource, externalProperties, this::readModuleOutputValue);
-      case "output.bytes" ->
-          doEvaluate(moduleSource, externalProperties, this::readModuleOutputBytes);
+      case "output.text" -> doEvaluate(moduleSource, context, this::readModuleOutputText);
+      case "output.value" -> doEvaluate(moduleSource, context, this::readModuleOutputValue);
+      case "output.bytes" -> doEvaluate(moduleSource, context, this::readModuleOutputBytes);
       default ->
-          doEvaluate(
-              moduleSource, externalProperties, (module) -> evaluateExpression(module, expression));
+          doEvaluate(moduleSource, context, (module) -> evaluateExpression(module, expression));
     };
   }
 
@@ -397,7 +400,7 @@ public final class EvaluatorImpl implements Evaluator {
     return doEvaluate(null, supplier);
   }
 
-  private <T> T doEvaluate(@Nullable Map<String, String> externalProperties, Supplier<T> supplier) {
+  private <T> T doEvaluate(@Nullable EvaluationContext context, Supplier<T> supplier) {
     @Nullable TimeoutTask timeoutTask = null;
     logger.clear();
     if (timeout != null) {
@@ -418,8 +421,8 @@ public final class EvaluatorImpl implements Evaluator {
     // error,
     // report that instead of the timeout so as not to swallow a fundamental problem.
     try {
-      if (externalProperties != null) {
-        evaluationScope = VmContext.get(null).enterExternalPropertiesScope(externalProperties);
+      if (context != null) {
+        evaluationScope = VmContext.get(null).enterEvaluationScope(context);
       }
       evalResult = supplier.get();
     } catch (VmStackOverflowException e) {
@@ -507,10 +510,10 @@ public final class EvaluatorImpl implements Evaluator {
 
   private <T> T doEvaluate(
       ModuleSource moduleSource,
-      @Nullable Map<String, String> externalProperties,
+      @Nullable EvaluationContext context,
       Function<VmTyped, T> doEvaluate) {
     return doEvaluate(
-        externalProperties,
+        context,
         () -> {
           var moduleKey = moduleResolver.resolve(normalizeModuleSource(moduleSource));
           var module = VmLanguage.get(null).loadModule(moduleKey);

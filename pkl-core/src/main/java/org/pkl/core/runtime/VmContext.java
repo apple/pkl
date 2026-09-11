@@ -23,6 +23,7 @@ import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.EvaluationContext;
 import org.pkl.core.Logger;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.StackFrameTransformer;
@@ -36,10 +37,13 @@ public final class VmContext {
   private static final ContextReference<VmContext> REFERENCE =
       ContextReference.create(VmLanguage.class);
   private final VmValueTrackerFactory valueTrackerFactory;
-  private final ThreadLocal<@Nullable Map<String, String>> scopedExternalProperties =
-      new ThreadLocal<>();
-  private final ThreadLocal<@Nullable ModuleCache> scopedModuleCache = new ThreadLocal<>();
-  private final ThreadLocal<@Nullable ResourceManager> scopedResourceManager = new ThreadLocal<>();
+  private volatile @Nullable EvaluationState evaluationState;
+
+  private record EvaluationState(
+      Map<String, String> externalProperties,
+      Map<String, String> environmentVariables,
+      ModuleCache moduleCache,
+      ResourceManager resourceManager) {}
 
   public VmContext(VmLanguage vmLanguage, Env env) {
     this.valueTrackerFactory =
@@ -116,30 +120,23 @@ public final class VmContext {
     this.holder = holder;
   }
 
-  public EvaluationScope enterExternalPropertiesScope(Map<String, String> externalProperties) {
-    var previousExternalProperties = scopedExternalProperties.get();
-    var previousModuleCache = scopedModuleCache.get();
-    var previousResourceManager = scopedResourceManager.get();
+  public EvaluationScope enterEvaluationScope(EvaluationContext context) {
+    var previousState = evaluationState;
 
-    var props = new HashMap<>(holder.externalProperties);
-    props.putAll(externalProperties);
-    scopedExternalProperties.set(Map.copyOf(props));
-    scopedModuleCache.set(new ModuleCache());
-    scopedResourceManager.set(holder.resourceManager.withEmptyCache());
+    var properties = new HashMap<>(holder.externalProperties);
+    properties.putAll(context.externalProperties());
 
-    return () -> {
-      setOrRemove(scopedExternalProperties, previousExternalProperties);
-      setOrRemove(scopedModuleCache, previousModuleCache);
-      setOrRemove(scopedResourceManager, previousResourceManager);
-    };
-  }
+    var variables = new HashMap<>(holder.environmentVariables);
+    variables.putAll(context.environmentVariables());
 
-  private static <T> void setOrRemove(ThreadLocal<@Nullable T> threadLocal, @Nullable T value) {
-    if (value == null) {
-      threadLocal.remove();
-    } else {
-      threadLocal.set(value);
-    }
+    evaluationState =
+        new EvaluationState(
+            Map.copyOf(properties),
+            Map.copyOf(variables),
+            new ModuleCache(),
+            holder.resourceManager.withEmptyCache());
+
+    return () -> evaluationState = previousState;
   }
 
   public interface EvaluationScope extends AutoCloseable {
@@ -148,8 +145,12 @@ public final class VmContext {
   }
 
   public ModuleCache getModuleCache() {
-    var moduleCache = scopedModuleCache.get();
-    if (moduleCache != null) return moduleCache;
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.moduleCache();
+    }
+
     return holder.moduleCache;
   }
 
@@ -174,8 +175,12 @@ public final class VmContext {
   }
 
   public ResourceManager getResourceManager() {
-    var resourceManager = scopedResourceManager.get();
-    if (resourceManager != null) return resourceManager;
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.resourceManager();
+    }
+
     return holder.resourceManager;
   }
 
@@ -184,12 +189,22 @@ public final class VmContext {
   }
 
   public Map<String, String> getEnvironmentVariables() {
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.environmentVariables();
+    }
+
     return holder.environmentVariables;
   }
 
   public Map<String, String> getExternalProperties() {
-    var externalProperties = scopedExternalProperties.get();
-    if (externalProperties != null) return externalProperties;
+    var state = evaluationState;
+
+    if (state != null) {
+      return state.externalProperties();
+    }
+
     return holder.externalProperties;
   }
 

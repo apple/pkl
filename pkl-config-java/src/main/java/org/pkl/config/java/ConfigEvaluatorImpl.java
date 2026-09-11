@@ -17,8 +17,8 @@ package org.pkl.config.java;
 
 import static org.pkl.config.java.ConfigUtils.createConfig;
 
-import java.util.Map;
 import org.pkl.config.java.mapper.ValueMapper;
+import org.pkl.core.EvaluationContext;
 import org.pkl.core.Evaluator;
 import org.pkl.core.ModuleSource;
 
@@ -38,8 +38,8 @@ final class ConfigEvaluatorImpl implements ConfigEvaluator {
   }
 
   @Override
-  public Config evaluate(ModuleSource moduleSource, Map<String, String> externalProperties) {
-    var module = evaluator.evaluate(moduleSource, externalProperties);
+  public Config evaluate(ModuleSource moduleSource, EvaluationContext context) {
+    var module = evaluator.evaluate(moduleSource, context);
     return new CompositeConfig("", mapper, module);
   }
 
@@ -50,9 +50,8 @@ final class ConfigEvaluatorImpl implements ConfigEvaluator {
   }
 
   @Override
-  public Config evaluateOutputValue(
-      ModuleSource moduleSource, Map<String, String> externalProperties) {
-    var value = evaluator.evaluateOutputValue(moduleSource, externalProperties);
+  public Config evaluateOutputValue(ModuleSource moduleSource, EvaluationContext context) {
+    var value = evaluator.evaluateOutputValue(moduleSource, context);
     return createConfig(value, mapper);
   }
 
@@ -64,8 +63,8 @@ final class ConfigEvaluatorImpl implements ConfigEvaluator {
 
   @Override
   public Config evaluateExpression(
-      ModuleSource moduleSource, String expression, Map<String, String> externalProperties) {
-    var value = evaluator.evaluateExpression(moduleSource, expression, externalProperties);
+      ModuleSource moduleSource, String expression, EvaluationContext context) {
+    var value = evaluator.evaluateExpression(moduleSource, expression, context);
     return createConfig(value, mapper);
   }
 
