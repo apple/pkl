@@ -87,8 +87,6 @@ fun shlex(input: String): List<String> {
   return result
 }
 
-// 1. Must start with lowercase letter
-// 2. Followed by zero or more digits
 private val springPrefixRegex =
   Regex(
     """
@@ -104,6 +102,6 @@ private val springPrefixRegex =
     setOf(RegexOption.COMMENTS, RegexOption.MULTILINE),
   )
 
-/** Tells if */
+/** Tells if this string is a valid prefix in Spring Boot's `@ConfigurationProperties` annotation */
 val String.isValidConfigurationPropertiesPrefix: Boolean
   get() = matches(springPrefixRegex)
