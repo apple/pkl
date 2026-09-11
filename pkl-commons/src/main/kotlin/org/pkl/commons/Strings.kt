@@ -98,7 +98,7 @@ private val springPrefixRegex =
     (?:\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*)* # followed by dot-separated nested prefixes
     $
     """
-      .trimIndent(),
+      .trimIndent()
   )
 
 /** Tells if this string is a valid prefix in Spring Boot's `@ConfigurationProperties` annotation */
