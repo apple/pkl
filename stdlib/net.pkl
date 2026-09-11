@@ -84,12 +84,26 @@ class Url {
   ///
   /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
   /// which replaces it entirely.
+  /// A [Url] is serialized, as [toString()] does it, before it is resolved.
   /// Dot segments are removed from the result's path, normalizing it.
   ///
-  /// Returns [null] if [ref] cannot be parsed.
+  /// Returns [null] if [ref] is a string that cannot be parsed.
   ///
   /// Throws if this URL is itself a relative reference.
-  external function resolve(ref: String): Url?
+  external function resolve(ref: String | Url): Url?
+
+  /// Whether [other] identifies the same resource as this URL.
+  ///
+  /// Unlike `==`, this compares Urls as the *syntax-based normalization* of
+  /// [RFC 3986, section 6.2.2](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2) has it:
+  /// [scheme] and [host] are case-insensitive and percent-encoding is normalized.
+  /// An octet standing for a reserved character is kept as written.
+  ///
+  /// Dot segments are only removed from an absolute [path].
+  ///
+  /// Nothing that would take knowing the scheme is normalized: a default port, such as `:443` for
+  /// `https`, is not dropped.
+  external function equals(other: Url): Boolean
 
   /// The serialization of this URL.
   ///

@@ -346,6 +346,62 @@ public final class UrlParser {
     return parameters;
   }
 
+  /**
+   * Whether {@code left} and {@code right} identify the same resource
+   * (https://www.rfc-editor.org/rfc/rfc3986#section-6).
+   *
+   * <p>Both are put through the syntax-based normalization of section 6.2.2 first, so that two ways
+   * of writing the same URL compare equal. A default port is kept.
+   */
+  static boolean isEquivalent(Parsed left, Parsed right) {
+    return normalize(left).equals(normalize(right));
+  }
+
+  private static Parsed normalize(Parsed url) {
+    return new Parsed(
+        url.scheme() == null ? null : toLowerAscii(url.scheme()),
+        normalizeOptional(url.userInfo(), PercentEncoder.USERINFO),
+        url.host() == null ? null : normalizeHost(url.host()),
+        url.port(),
+        normalizePath(url),
+        normalizeOptional(url.query(), PercentEncoder.QUERY_OR_FRAGMENT),
+        normalizeOptional(url.fragment(), PercentEncoder.QUERY_OR_FRAGMENT));
+  }
+
+  private static String normalizeComponent(String component, IntPredicate allowed) {
+    var out = new StringBuilder(component.length());
+    PercentEncoder.normalize(out, component, allowed);
+    return out.toString();
+  }
+
+  private static @Nullable String normalizeOptional(
+      @Nullable String component, IntPredicate allowed) {
+    return component == null ? null : normalizeComponent(component, allowed);
+  }
+
+  private static String normalizeHost(String host) {
+    if (!isIpLiteral(host)) {
+      return toLowerAscii(normalizeComponent(host, PercentEncoder.REG_NAME));
+    }
+    // an IP literal holds nothing that may be encoded, and its zone identifier, unlike the address
+    // in front of it, names an interface and is case-sensitive
+    var zone = host.indexOf("%25");
+    return zone < 0
+        ? toLowerAscii(host)
+        : toLowerAscii(host.substring(0, zone)) + host.substring(zone);
+  }
+
+  private static String normalizePath(Parsed url) {
+    var path = normalizeComponent(url.path(), PercentEncoder.PATH);
+    if (path.isEmpty()) {
+      // a URL with an authority and no path names the same resource as one whose path is "/"
+      // (section 6.2.3)
+      return url.host() == null ? path : "/";
+    }
+    // dot segments are only removable from an absolute path
+    return path.charAt(0) == '/' ? removeDotSegments(path) : path;
+  }
+
   // Validation. These back the type constraints of `pkl:net`'s `Url`, so that a URL written or
   // amended by hand is held to the same standard as one the parser produced.
 

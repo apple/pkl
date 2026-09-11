@@ -95,6 +95,45 @@ final class PercentEncoder {
             });
   }
 
+  /**
+   * Appends {@code value} to {@code out} in the form section 6.2.2 compares it in.
+   *
+   * <p>This makes a component that was written in a different but equivalent way compare equal.
+   */
+  static void normalize(StringBuilder out, String value, IntPredicate allowed) {
+    var i = 0;
+    while (i < value.length()) {
+      var octet = octetAt(value, i);
+      if (octet < 0) {
+        var codePoint = value.codePointAt(i);
+        if (allowed.test(codePoint)) {
+          out.appendCodePoint(codePoint);
+        } else {
+          encodeUtf8(codePoint, out);
+        }
+        i += Character.charCount(codePoint);
+      } else {
+        if (isUnreserved(octet)) {
+          out.append((char) octet);
+        } else {
+          out.append('%').append(toUpperHexDigit(octet >> 4)).append(toUpperHexDigit(octet & 0xF));
+        }
+        i += 3;
+      }
+    }
+  }
+
+  private static int octetAt(String value, int index) {
+    if (value.charAt(index) != '%'
+        || index + 2 >= value.length()
+        || !isHexDigit(value.charAt(index + 1))
+        || !isHexDigit(value.charAt(index + 2))) {
+      return -1;
+    }
+    return (Character.digit(value.charAt(index + 1), 16) << 4)
+        | Character.digit(value.charAt(index + 2), 16);
+  }
+
   /** UTF-8 percent-encodes {@code codePoint} and appends the result to {@code out}. */
   static void encodeUtf8(int codePoint, StringBuilder out) {
     var bytes = new String(Character.toChars(codePoint)).getBytes(StandardCharsets.UTF_8);

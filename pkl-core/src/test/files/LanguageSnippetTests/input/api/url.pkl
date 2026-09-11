@@ -316,6 +316,45 @@ facts {
     net.Url("https://example.com/a") == net.Url("HTTPS://example.com/a")
   }
 
+  ["equals()"] {
+    local function equal(left: String, right: String): Boolean =
+      net.Url(left)!!.equals(net.Url(right)!!)
+
+    // the scheme and host are case-insensitive
+    equal("FILE:///foo%20bar/baz", "file:///foo bar/baz")
+    equal("https://EXAMPLE.com/a", "https://example.com/a")
+    equal("http://[2001:DB8::1]/a", "http://[2001:db8::1]/a")
+    // but nothing else is
+    !equal("https://example.com/A", "https://example.com/a")
+
+    // percent-encoding is normalized in every component
+    equal("https://u%20v@example.com/?q=a b#a b", "https://u v@example.com/?q=a%20b#a%20b")
+    equal("https://example.com/m%C3%BCnchen", "https://example.com/münchen")
+    // an octet standing for a reserved character means something else decoded, so it is kept
+    !equal("https://example.com/a%2Fb", "https://example.com/a/b")
+
+    // dot segments are removed from an absolute path
+    equal("file:///foo/bar", "file:///foo/./bar")
+    equal("file:///foo/bar", "file:///foo/baz/../bar")
+    equal("file:///foo/bar/", "file:///foo/bar/baz/../")
+    // percent-encoding is normalized first, so an encoded dot segment is one too
+    equal("file:///foo/%2E%2E/bar", "file:///bar")
+    // a trailing "/" is part of the path, and a path ending in ".." keeps one
+    !equal("file:///foo/bar", "file:///foo/bar/")
+    // a rootless path is compared as written
+    !equal("../a", "a")
+    !equal("../a", "../../a")
+    equal("a/b", "a/b")
+
+    // a URL with an authority and no path is one whose path is "/"
+    equal("https://example.com", "https://example.com/")
+    // but a URL without an authority is not
+    !equal("foo:", "foo:/")
+
+    // a default port is only dropped by scheme-based normalization, which this does not do
+    !equal("https://example.com:443/a", "https://example.com/a")
+  }
+
   ["encodeComponent()"] {
     net.encodeComponent("a b&c") == "a%20b%26c"
     net.encodeComponent("münchen") == "m%C3%BCnchen"
