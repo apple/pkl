@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -86,3 +86,24 @@ fun shlex(input: String): List<String> {
 
   return result
 }
+
+// 1. Must start with lowercase letter
+// 2. Followed by zero or more digits
+private val springPrefixRegex =
+  Regex(
+    """
+    (?m)
+    ^
+    [a-z] # starts with lowercase letter
+    [a-z0-9]* # followed by zero or more lowercase letters or digits
+    (?:-[a-z0-9]+)* # followed by possibly kebab-cased
+    (?:\.[a-z][a-z0-9]*(?:-[a-z0-9]+)*)* # followed by dot-separated nested prefixes
+    $
+    """
+      .trimIndent(),
+    setOf(RegexOption.COMMENTS, RegexOption.MULTILINE),
+  )
+
+/** Tells if */
+val String.isValidConfigurationPropertiesPrefix: Boolean
+  get() = matches(springPrefixRegex)

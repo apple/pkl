@@ -1471,6 +1471,56 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
+  fun `spring boot -- single module property has type but invalid prefix`() {
+    val javaCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        fooBar: FooBar
+
+        class FooBar
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+      )
+    // "fooBar" is not a valid prefix for `@ConfigurationProperties` annotations, so no
+    // annotation is added
+    assertThat(javaCode)
+      .contains(
+        """
+        |
+        |  data class FooBar
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- single module property has type and valid prefix`() {
+    val javaCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |  @ConfigurationProperties("server")
+        |  data class Server
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `import module`() {
     val library =
       PklModule(
