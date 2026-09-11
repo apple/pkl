@@ -31,14 +31,14 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       ExpressionNode getReceiverNode,
-      boolean argsRequireInference) {
+      int methodSlot) {
     super(
         sourceSection,
         methodName,
         argumentNodes,
         needsConst,
         getReceiverNode,
-        argsRequireInference);
+        methodSlot);
   }
 
   @Override

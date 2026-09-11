@@ -53,8 +53,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
       boolean needsConst,
-      boolean argsRequireInference) {
-    super(sourceSection, argumentNodes, argsRequireInference);
+      int methodSlot) {
+    super(sourceSection, argumentNodes, methodSlot);
     this.methodName = methodName;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
@@ -65,8 +65,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       Identifier methodName,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
-      boolean argsRequireInference) {
-    this(sourceSection, methodName, argumentNodes, lookupMode, false, argsRequireInference);
+      int methodSlot) {
+    this(sourceSection, methodName, argumentNodes, lookupMode, false, methodSlot);
   }
 
   /**
@@ -151,7 +151,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
         argumentNodes,
         lookupMode,
         needsConst,
-        argsRequireInference,
+        methodSlot,
         this,
         probe);
   }
