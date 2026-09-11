@@ -98,8 +98,15 @@ public final class UrlParser {
 
   // Parsing (https://www.rfc-editor.org/rfc/rfc3986#section-3)
 
-  /** Parses {@code input} as a URI reference. Returns {@code null} if it is not one. */
-  static @Nullable Parsed parse(String input) {
+  /** The outcome of parsing. */
+  sealed interface Result {
+    record Success(Parsed url) implements Result {}
+
+    record Failure(String hint) implements Result {}
+  }
+
+  /** Parses {@code input} as a URI reference. */
+  static Result parse(String input) {
     var length = input.length();
 
     // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":"
@@ -134,8 +141,9 @@ public final class UrlParser {
       var at = authority.lastIndexOf('@');
       if (at >= 0) {
         userInfo = authority.substring(0, at);
-        if (!hasValidPercentEncoding(userInfo)) {
-          return null;
+        var failure = percentEncodingFailure(userInfo);
+        if (failure != null) {
+          return failure;
         }
       }
       host = authority.substring(at + 1);
@@ -147,12 +155,14 @@ public final class UrlParser {
         if (!rawPort.isEmpty()) {
           port = parsePort(rawPort);
           if (port == null) {
-            return null;
+            return new Result.Failure(
+                "The port `" + rawPort + "` is not a number between 0 and 65535.");
           }
         }
       }
-      if (!isValidHost(host)) {
-        return null;
+      var failure = hostFailure(host);
+      if (failure != null) {
+        return failure;
       }
     }
 
@@ -161,8 +171,9 @@ public final class UrlParser {
       pathEnd++;
     }
     var path = input.substring(pointer, pathEnd);
-    if (!isValidPath(path, host != null)) {
-      return null;
+    var pathFailure = pathFailure(path, host != null);
+    if (pathFailure != null) {
+      return pathFailure;
     }
     pointer = pathEnd;
 
@@ -173,8 +184,9 @@ public final class UrlParser {
         end = length;
       }
       query = input.substring(pointer + 1, end);
-      if (!hasValidPercentEncoding(query)) {
-        return null;
+      var failure = percentEncodingFailure(query);
+      if (failure != null) {
+        return failure;
       }
       pointer = end;
     }
@@ -182,12 +194,13 @@ public final class UrlParser {
     String fragment = null;
     if (pointer < length && input.charAt(pointer) == '#') {
       fragment = input.substring(pointer + 1);
-      if (!hasValidPercentEncoding(fragment)) {
-        return null;
+      var failure = percentEncodingFailure(fragment);
+      if (failure != null) {
+        return failure;
       }
     }
 
-    return new Parsed(scheme, userInfo, host, port, path, query, fragment);
+    return new Result.Success(new Parsed(scheme, userInfo, host, port, path, query, fragment));
   }
 
   // Reference resolution (https://www.rfc-editor.org/rfc/rfc3986#section-5.2.2)
@@ -402,19 +415,20 @@ public final class UrlParser {
     return path.charAt(0) == '/' ? removeDotSegments(path) : path;
   }
 
-  // Validation. These back the type constraints of `pkl:net`'s `Url`, so that a URL written or
-  // amended by hand is held to the same standard as one the parser produced.
-
-  /** Whether every {@code %} in {@code input} begins a percent-encoded octet. */
-  static boolean hasValidPercentEncoding(String input) {
+  static Result.@Nullable Failure percentEncodingFailure(String input) {
     for (var i = input.indexOf('%'); i >= 0; i = input.indexOf('%', i + 3)) {
       if (i + 2 >= input.length()
           || !PercentEncoder.isHexDigit(input.charAt(i + 1))
           || !PercentEncoder.isHexDigit(input.charAt(i + 2))) {
-        return false;
+        var octet = input.substring(i, Math.min(i + 3, input.length()));
+        return new Result.Failure("`" + octet + "` is not a percent-encoded octet.");
       }
     }
-    return true;
+    return null;
+  }
+
+  static boolean hasValidPercentEncoding(String input) {
+    return percentEncodingFailure(input) == null;
   }
 
   /**
@@ -432,8 +446,11 @@ public final class UrlParser {
    * </ul>
    */
   public static boolean isValidUrl(String input) {
-    var parsed = parse(input);
-    if (parsed == null || parsed.scheme() == null) {
+    if (!(parse(input) instanceof Result.Success success)) {
+      return false;
+    }
+    var parsed = success.url();
+    if (parsed.scheme() == null) {
       return false;
     }
     var host = parsed.host();
@@ -463,27 +480,64 @@ public final class UrlParser {
     return true;
   }
 
-  /** Whether {@code host} can be serialized back out as a host. */
-  static boolean isValidHost(String host) {
+  static Result.@Nullable Failure hostFailure(String host) {
     if (isIpLiteral(host)) {
       if (host.length() < 3) {
-        return false;
+        return new Result.Failure("The IP literal `" + host + "` is empty.");
       }
       var address = host.substring(1, host.length() - 1);
       // "v" cannot begin an IPv6address, as it is not a hex digit, so it tells the two forms apart
       if (address.charAt(0) == 'v' || address.charAt(0) == 'V') {
-        return isIpvFuture(address);
+        return isIpvFuture(address)
+            ? null
+            : new Result.Failure("`" + address + "` is not an IPvFuture address.");
       }
       // IPv6addrz = IPv6address "%25" ZoneID (https://www.rfc-editor.org/rfc/rfc6874#section-2)
       var zone = address.indexOf("%25");
       if (zone < 0) {
-        return hasIpv6Characters(address);
+        if (hasIpv6Characters(address)) {
+          return null;
+        }
+        return address.indexOf('%') < 0
+            ? new Result.Failure("`" + address + "` is not an IPv6 address.")
+            : new Result.Failure(
+                "A zone identifier must be preceded by `%25`, as in `[fe80::1%25eth0]`.");
       }
-      return zone > 0
-          && hasIpv6Characters(address.substring(0, zone))
-          && isZoneId(address.substring(zone + 3));
+      if (zone == 0) {
+        return new Result.Failure(
+            "The IP literal `" + host + "` states a zone identifier but no address.");
+      }
+      var address6 = address.substring(0, zone);
+      if (!hasIpv6Characters(address6)) {
+        return new Result.Failure("`" + address6 + "` is not an IPv6 address.");
+      }
+      var zoneId = address.substring(zone + 3);
+      if (zoneId.isEmpty()) {
+        return new Result.Failure("The zone identifier of `" + host + "` is empty.");
+      }
+      return isZoneId(zoneId)
+          ? null
+          : new Result.Failure(
+              "The zone identifier `"
+                  + zoneId
+                  + "` may only hold unreserved characters and percent-encoded octets.");
     }
-    return host.indexOf('[') < 0 && host.indexOf(']') < 0 && hasValidPercentEncoding(host);
+    if (host.startsWith("[")) {
+      return host.indexOf(']') < 0
+          ? new Result.Failure("The IP literal `" + host + "` is missing a closing `]`.")
+          : new Result.Failure(
+              "The IP literal `" + host + "` has trailing characters after its `]`.");
+    }
+    if (host.indexOf('[') >= 0 || host.indexOf(']') >= 0) {
+      return new Result.Failure(
+          "A registered name cannot contain `[` or `]`; percent-encode them, or enclose an IP"
+              + " address in brackets.");
+    }
+    return percentEncodingFailure(host);
+  }
+
+  static boolean isValidHost(String host) {
+    return hostFailure(host) == null;
   }
 
   /** Whether every character of {@code address} is one an {@code IPv6address} is built from. */
@@ -538,19 +592,29 @@ public final class UrlParser {
     return true;
   }
 
+  static Result.@Nullable Failure pathFailure(String path, boolean hasAuthority) {
+    var failure = percentEncodingFailure(path);
+    if (failure != null) {
+      return failure;
+    }
+    if (hasAuthority) {
+      // path-abempty
+      return path.isEmpty() || path.charAt(0) == '/'
+          ? null
+          : new Result.Failure("A path that follows an authority must start with `/`.");
+    }
+    // path-absolute / path-rootless / path-empty
+    return path.startsWith("//")
+        ? new Result.Failure("A path that follows no authority cannot start with `//`.")
+        : null;
+  }
+
   /**
    * Whether {@code path} can sit next to an authority, or, when there is none, next to no authority
    * at all.
    */
   static boolean isValidPath(String path, boolean hasAuthority) {
-    if (!hasValidPercentEncoding(path)) {
-      return false;
-    }
-    return hasAuthority
-        // path-abempty
-        ? path.isEmpty() || path.charAt(0) == '/'
-        // path-absolute / path-rootless / path-empty
-        : !path.startsWith("//");
+    return pathFailure(path, hasAuthority) == null;
   }
 
   private static boolean isIpLiteral(String host) {
