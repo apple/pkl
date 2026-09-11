@@ -71,6 +71,8 @@ examples {
     0.ms.isoString
     0.0.ms.isoString
     (-0.0).ms.isoString
+    0.4.ns.isoString
+    (-0.4).ns.isoString
     100.d.isoString
     (-10.001).s.isoString
     (-3.1.h).isoString
