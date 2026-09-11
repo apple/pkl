@@ -18,12 +18,14 @@ package org.pkl.core.stdlib.net;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.NetModule;
+import org.pkl.core.runtime.VmExceptionBuilder;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.stdlib.net.UrlParser.Parsed;
+import org.pkl.core.stdlib.net.UrlParser.Result;
 
 /** Converts between a parsed URL and {@code pkl:net}'s {@code Url}. */
 final class UrlFactory {
@@ -43,6 +45,15 @@ final class UrlFactory {
 
   static VmTyped create(Parsed parsed) {
     return factory.create(parsed);
+  }
+
+  /** Parses {@code input} as a URI reference. */
+  static Parsed parseOrThrow(String input, VmExceptionBuilder exceptionBuilder) {
+    var result = UrlParser.parse(input);
+    if (result instanceof Result.Failure failure) {
+      throw exceptionBuilder.evalError("cannotParseUrl", input).withHint(failure.hint()).build();
+    }
+    return ((Result.Success) result).url();
   }
 
   /** Reads the components back off {@code url}. */

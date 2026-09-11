@@ -78,10 +78,7 @@ public final class UrlNodes {
             .evalError("cannotResolveAgainstRelativeUrl", base.serialize())
             .build();
       }
-      var parsedRef = UrlParser.parse(ref);
-      if (parsedRef == null) {
-        return VmNull.withoutDefault();
-      }
+      var parsedRef = UrlFactory.parseOrThrow(ref, exceptionBuilder());
       return UrlFactory.create(UrlParser.resolve(base, parsedRef));
     }
   }

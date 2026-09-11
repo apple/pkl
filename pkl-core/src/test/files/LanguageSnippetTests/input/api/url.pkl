@@ -4,8 +4,8 @@ import "pkl:net"
 
 local rfcBase = "http://a/b/c/d;p?q"
 
-local function componentsOf(input: String): List<unknown> =
-  let (result = net.Url(input)!!)
+local function componentsOf(input: String): List =
+  let (result = net.Url(input))
     List(
       result.scheme,
       result.userInfo,
@@ -16,12 +16,15 @@ local function componentsOf(input: String): List<unknown> =
       result.fragment,
     )
 
-local function parsed(input: String): String? = net.Url(input)?.toString()
+local function parsed(input: String): String = net.Url(input).toString()
 
 /// Whether [input] parses to exactly itself.
 local function roundTrips(input: String): Boolean = parsed(input) == input
 
-local function resolved(ref: String): String? = net.Url(rfcBase)!!.resolve(ref)?.toString()
+local function throws(input: String): Boolean =
+  module.catch(() -> net.Url(input)) == "Cannot parse `\(input)` as a URL."
+
+local function resolved(ref: String): String = net.Url(rfcBase).resolve(ref).toString()
 
 local gClef = "\u{1D11E}"
 
@@ -48,15 +51,15 @@ facts {
 
   ["parse(): keeps components as they were written"] {
     // RFC 3986 normalizes nothing but the scheme, which is defined to be case-insensitive
-    net.Url("HTTPS://example.com")!!.scheme == "https"
-    net.Url("http://EXAMPLE.com/A")!!.host == "EXAMPLE.com"
+    net.Url("HTTPS://example.com").scheme == "https"
+    net.Url("http://EXAMPLE.com/A").host == "EXAMPLE.com"
     roundTrips("http://EXAMPLE.com/A")
 
-    net.Url("https://example.com:443/a")!!.port == 443
+    net.Url("https://example.com:443/a").port == 443
     roundTrips("https://example.com:443/a")
-    net.Url("http://example.com/a/b/../c/./d")!!.path == "/a/b/../c/./d"
+    net.Url("http://example.com/a/b/../c/./d").path == "/a/b/../c/./d"
     roundTrips("http://example.com/a/b/../c/./d")
-    net.Url("http://example.com/%41%2Fb")!!.path == "/%41%2Fb"
+    net.Url("http://example.com/%41%2Fb").path == "/%41%2Fb"
     roundTrips("http://example.com/%41%2fb")
     roundTrips("http://0x7f.0.0.1/")
     roundTrips("http://1.2.3.4./")
@@ -82,7 +85,7 @@ facts {
   }
 
   ["parse(): encodes what it cannot keep"] {
-    net.Url("http://example.com/a b")!!.path == "/a b"
+    net.Url("http://example.com/a b").path == "/a b"
     parsed("http://example.com/a b") == "http://example.com/a%20b"
     parsed("https://example.com/a<b>c") == "https://example.com/a%3Cb%3Ec"
     parsed("https://example.com/?a b") == "https://example.com/?a%20b"
@@ -96,50 +99,50 @@ facts {
 
     // once encoded, the result round-trips
     roundTrips("http://example.com/a%20b")
-    parsed(parsed("http://example.com/a b")!!) == "http://example.com/a%20b"
+    parsed(parsed("http://example.com/a b")) == "http://example.com/a%20b"
   }
 
   ["parse(): failing"] {
     // a "%" that does not begin a percent-encoded octet
-    parsed("http://example.com/a%zz") == null
-    parsed("http://example.com/a%2") == null
-    parsed("http://example.com/a%") == null
-    parsed("http://example.com/?a%zz") == null
-    parsed("http://example.com/#a%zz") == null
-    parsed("http://u%zz@example.com/") == null
-    parsed("http://exa%zzmple.com/") == null
+    throws("http://example.com/a%zz")
+    throws("http://example.com/a%2")
+    throws("http://example.com/a%")
+    throws("http://example.com/?a%zz")
+    throws("http://example.com/#a%zz")
+    throws("http://u%zz@example.com/")
+    throws("http://exa%zzmple.com/")
 
     // a ":" in an authority always separates a port, so what follows has to be one
-    parsed("https://example.com:port/") == null
-    parsed("https://example.com:99999/") == null
-    parsed("https://example.com:-1/") == null
+    throws("https://example.com:port/")
+    throws("https://example.com:99999/")
+    throws("https://example.com:-1/")
 
     // a malformed IP literal
-    parsed("http://[::1") == null
-    parsed("http://[::1x]/") == null
-    parsed("http://[]/") == null
-    parsed("http://[::1]x/") == null
+    throws("http://[::1")
+    throws("http://[::1x]/")
+    throws("http://[]/")
+    throws("http://[::1]x/")
 
     // the same holds for a relative reference, which is checked no less than an absolute URL
-    parsed("a/%zz") == null
-    parsed("//example.com:port/a") == null
-    parsed("//[::1x]/a") == null
+    throws("a/%zz")
+    throws("//example.com:port/a")
+    throws("//[::1x]/a")
   }
 
   ["parse(): RFC 6874 zone identifiers"] {
     roundTrips("http://[fe80::1%25eth0]/")
     roundTrips("http://[fe80::1%25eth0]:8080/a?q#f")
-    net.Url("http://[fe80::1%25eth0]/")!!.host == "[fe80::1%25eth0]"
+    net.Url("http://[fe80::1%25eth0]/").host == "[fe80::1%25eth0]"
     roundTrips("http://[fe80::1%25a-b._~1]/")
     roundTrips("http://[fe80::1%25%41]/")
-    parsed("http://[fe80::1%eth0]/") == null
-    parsed("http://[fe80::1%65th0]/") == null
-    parsed("http://[fe80::1%25]/") == null
-    parsed("http://[%25eth0]/") == null
-    parsed("http://[fe80::1%25eth 0]/") == null
-    parsed("http://[fe80::1%25eth%zz]/") == null
-    parsed("http://[fe80::1%25a:b]/") == null
-    parsed("http://[v7.future%25eth0]/") == null
+    throws("http://[fe80::1%eth0]/")
+    throws("http://[fe80::1%65th0]/")
+    throws("http://[fe80::1%25]/")
+    throws("http://[%25eth0]/")
+    throws("http://[fe80::1%25eth 0]/")
+    throws("http://[fe80::1%25eth%zz]/")
+    throws("http://[fe80::1%25a:b]/")
+    throws("http://[v7.future%25eth0]/")
     roundTrips("http://fe80--1%25eth0/")
   }
 
@@ -163,7 +166,7 @@ facts {
 
     // almost any text is a well-formed relative reference, so it is the scheme, and not parsing
     // succeeding, that tells a URL apart from arbitrary text
-    net.Url("not a url")!!.scheme == null
+    net.Url("not a url").scheme == null
     parsed("not a url") == "not%20a%20url"
 
     // a hand-built relative URL is a parsed one
@@ -229,12 +232,14 @@ facts {
 
   ["resolve(): other cases"] {
     resolved("../c") == "http://a/b/c"
-    net.Url("mailto:user@example.com")!!.resolve("#f")?.toString()
+    net.Url("mailto:user@example.com").resolve("#f").toString()
       == "mailto:user@example.com#f"
-    net.Url("foo://example.com/a/b")!!.resolve("../c")?.toString() == "foo://example.com/c"
-    net.Url("file:///a/b")!!.resolve("c")?.toString() == "file:///a/c"
+    net.Url("foo://example.com/a/b").resolve("../c").toString() == "foo://example.com/c"
+    net.Url("file:///a/b").resolve("c").toString() == "file:///a/c"
     // a reference that cannot be parsed cannot be resolved
-    net.Url(rfcBase)!!.resolve("%zz") == null
+    module.catch(() -> net.Url(rfcBase).resolve("%zz")) == "Cannot parse `%zz` as a URL."
+    net.Url("http://a/b/c/").resolve(new net.Url { path = "d e" }).toString()
+      == "http://a/b/c/d%20e"
   }
 
   ["new Url"] {
@@ -265,7 +270,7 @@ facts {
   }
 
   ["amending a Url"] {
-    local url = net.Url("https://user:pw@example.com:8080/a/b?q=1#f")!!
+    local url = net.Url("https://user:pw@example.com:8080/a/b?q=1#f")
 
     (url) { path = "/c" }.toString() == "https://user:pw@example.com:8080/c?q=1#f"
     (url) { query = null }.toString() == "https://user:pw@example.com:8080/a/b#f"
@@ -281,28 +286,28 @@ facts {
   }
 
   ["segments"] {
-    net.Url("https://example.com/a/b")!!.segments == List("a", "b")
-    net.Url("https://example.com/")!!.segments == List("")
-    net.Url("https://example.com/a/")!!.segments == List("a", "")
-    net.Url("https://example.com")!!.segments == List()
-    net.Url("https://example.com/a/b%20c")!!.segments == List("a", "b c")
-    net.Url("https://example.com/m%C3%BCnchen")!!.segments == List("münchen")
+    net.Url("https://example.com/a/b").segments == List("a", "b")
+    net.Url("https://example.com/").segments == List("")
+    net.Url("https://example.com/a/").segments == List("a", "")
+    net.Url("https://example.com").segments == List()
+    net.Url("https://example.com/a/b%20c").segments == List("a", "b c")
+    net.Url("https://example.com/m%C3%BCnchen").segments == List("münchen")
     // a path is split before its segments are decoded, so an encoded "/" stays in its segment
-    net.Url("https://example.com/a%2Fb")!!.segments == List("a/b")
+    net.Url("https://example.com/a%2Fb").segments == List("a/b")
     // a rootless path has segments too
-    net.Url("mailto:user@example.com")!!.segments == List("user@example.com")
-    net.Url("urn:isbn:0451450523")!!.segments == List("isbn:0451450523")
+    net.Url("mailto:user@example.com").segments == List("user@example.com")
+    net.Url("urn:isbn:0451450523").segments == List("isbn:0451450523")
   }
 
   ["queryParameters"] {
-    net.Url("https://example.com?a=1&&b=2")!!.queryParameters == Map("a", "1", "b", "2")
-    net.Url("https://example.com?")!!.queryParameters == Map()
-    net.Url("https://example.com?a")!!.queryParameters == Map("a", null)
-    net.Url("https://example.com?a=")!!.queryParameters == Map("a", "")
-    net.Url("https://example.com?=1")!!.queryParameters == Map("", "1")
-    net.Url("https://example.com?a=1&a=2")!!.queryParameters == Map("a", "1")
-    net.Url("https://example.com?a%20b=c%20d")!!.queryParameters == Map("a b", "c d")
-    net.Url("https://example.com?a+b=c+d")!!.queryParameters == Map("a b", "c d")
+    net.Url("https://example.com?a=1&&b=2").queryParameters == Map("a", "1", "b", "2")
+    net.Url("https://example.com?").queryParameters == Map()
+    net.Url("https://example.com?a").queryParameters == Map("a", null)
+    net.Url("https://example.com?a=").queryParameters == Map("a", "")
+    net.Url("https://example.com?=1").queryParameters == Map("", "1")
+    net.Url("https://example.com?a=1&a=2").queryParameters == Map("a", "1")
+    net.Url("https://example.com?a%20b=c%20d").queryParameters == Map("a b", "c d")
+    net.Url("https://example.com?a+b=c+d").queryParameters == Map("a b", "c d")
   }
 
   ["equality"] {
@@ -318,7 +323,7 @@ facts {
 
   ["equals()"] {
     local function equal(left: String, right: String): Boolean =
-      net.Url(left)!!.equals(net.Url(right)!!)
+      net.Url(left).equals(net.Url(right))
 
     // the scheme and host are case-insensitive
     equal("FILE:///foo%20bar/baz", "file:///foo bar/baz")
@@ -395,8 +400,8 @@ facts {
     net.buildQuery(Map("q", "aZ09-._~")) == "q=aZ09-._~"
 
     local parameters = Map("a b", "c&d", "e", null, "f", "", "münchen", "a+b")
-    net.Url("https://example.com?" + net.buildQuery(parameters))!!.queryParameters == parameters
-    (net.Url("https://example.com/a?q=1")!!) { query = net.buildQuery(Map("a", "b c")) }.toString()
+    net.Url("https://example.com?" + net.buildQuery(parameters)).queryParameters == parameters
+    (net.Url("https://example.com/a?q=1")) { query = net.buildQuery(Map("a", "b c")) }.toString()
       == "https://example.com/a?a=b+c"
   }
 }

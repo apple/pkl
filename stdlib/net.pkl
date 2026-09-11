@@ -19,7 +19,12 @@
 module pkl.net
 
 /// Parse a string into a URL, following [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
-external function Url(input: String): Url?
+/// Accepts a URL reference (one without a scheme).
+///
+/// Throws if [input] is not a valid URL.
+///
+/// To test if [input] is a valid URL, use [String.isValidUrl].
+external function Url(input: String): Url
 
 /// A URL, as defined by [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
 /// [RFC 6874](https://www.rfc-editor.org/rfc/rfc6874) IPv6 zone literals are also supported.
@@ -87,10 +92,9 @@ class Url {
   /// A [Url] is serialized, as [toString()] does it, before it is resolved.
   /// Dot segments are removed from the result's path, normalizing it.
   ///
-  /// Returns [null] if [ref] is a string that cannot be parsed.
-  ///
-  /// Throws if this URL is itself a relative reference.
-  external function resolve(ref: String | Url): Url?
+  /// Throws if [ref] is a string that cannot be parsed, or if this URL is itself a relative
+  /// reference.
+  external function resolve(ref: String | Url): Url
 
   /// Whether [other] identifies the same resource as this URL.
   ///

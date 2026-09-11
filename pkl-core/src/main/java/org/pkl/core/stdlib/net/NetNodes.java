@@ -31,11 +31,7 @@ public final class NetNodes {
     @Specialization
     @TruffleBoundary
     protected Object eval(@SuppressWarnings("unused") VmTyped self, String input) {
-      var parsed = UrlParser.parse(input);
-      if (parsed == null) {
-        return VmNull.withoutDefault();
-      }
-      return UrlFactory.create(parsed);
+      return UrlFactory.create(UrlFactory.parseOrThrow(input, exceptionBuilder()));
     }
   }
 
