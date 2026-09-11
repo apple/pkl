@@ -90,7 +90,7 @@ fun shlex(input: String): List<String> {
 private val springPrefixRegex =
   Regex(
     """
-    (?m)
+    (?mx)
     ^
     [a-z] # starts with lowercase letter
     [a-z0-9]* # followed by zero or more lowercase letters or digits
@@ -99,7 +99,6 @@ private val springPrefixRegex =
     $
     """
       .trimIndent(),
-    setOf(RegexOption.COMMENTS, RegexOption.MULTILINE),
   )
 
 /** Tells if this string is a valid prefix in Spring Boot's `@ConfigurationProperties` annotation */
