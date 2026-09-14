@@ -42,6 +42,10 @@ public final class DefaultPropertyBodyNode extends ExpressionNode {
     return typeNode == null || typeNode.getDefaultValue(frame) == null;
   }
 
+  public @Nullable PropertyTypeNode getTypeNode() {
+    return typeNode;
+  }
+
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     if (typeNode != null) {

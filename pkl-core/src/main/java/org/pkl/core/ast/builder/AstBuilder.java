@@ -2086,7 +2086,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                     new ReadSuperPropertyNode(
                         unavailableSourceSection(),
                         scope.getName(),
-                        scope.getConstLevel() == ConstLevel.ALL));
+                        scope.getConstLevel() == ConstLevel.ALL,
+                        true));
           } else { // no value given
             if (isLocal) {
               assert typeAnnotation != null;
@@ -2702,7 +2703,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                         // to be const (the const-ness of a property cannot be changed)
                         // 2. if in a const scope (i.e. `const bar = new { foo { ... } }`),
                         // `super.foo` does not reference something outside the scope.
-                        false));
+                        false,
+                        true));
           } else { // foo = ...
             assert expr != null;
             bodyNode = visitExpr(expr);
