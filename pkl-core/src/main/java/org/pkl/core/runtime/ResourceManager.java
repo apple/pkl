@@ -58,11 +58,11 @@ public final class ResourceManager {
   }
 
   @TruffleBoundary
-  public ResourceReader getReader(URI resourceUri, Node readNode) {
+  public ResourceReader getReader(URI resourceUri, @Nullable Node readNode) {
     var reader = resourceReaders.get(resourceUri.getScheme());
     if (reader == null) {
       throw new VmExceptionBuilder()
-          .withLocation(readNode)
+          .withOptionalLocation(readNode)
           .evalError("noResourceReaderRegistered", resourceUri.getScheme())
           .build();
     }
@@ -95,7 +95,7 @@ public final class ResourceManager {
   }
 
   @TruffleBoundary
-  public Optional<Object> read(URI resourceUri, @Nullable Node readNode) {
+  public Optional<Object> read(URI readingModule, URI resourceUri, @Nullable Node readNode) {
     return resources.computeIfAbsent(
         resourceUri.normalize(),
         (uri) -> {
@@ -105,7 +105,7 @@ public final class ResourceManager {
           if (!(reader instanceof ResourceReaders.HttpResource)
               && !(reader instanceof ResourceReaders.HttpsResource)) {
             try {
-              securityManager.checkReadResource(uri);
+              securityManager.checkReadResource(readingModule, uri);
             } catch (SecurityManagerException e) {
               throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
             }

@@ -59,6 +59,10 @@ public final class CommandModule extends StdLibModule {
     return ImportClass.instance;
   }
 
+  public static VmClass getReadClass() {
+    return ReadClass.instance;
+  }
+
   private static final class CommandInfoClass {
     static final VmClass instance = loadClass("CommandInfo");
   }
@@ -85,6 +89,10 @@ public final class CommandModule extends StdLibModule {
 
   private static final class ImportClass {
     static final VmClass instance = loadClass("Import");
+  }
+
+  private static final class ReadClass {
+    static final VmClass instance = loadClass("Read");
   }
 
   @TruffleBoundary

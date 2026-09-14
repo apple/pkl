@@ -60,6 +60,7 @@ import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
+import org.pkl.core.http.HttpClientException;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.util.EconomicMaps;
@@ -487,14 +488,17 @@ public final class CommandSpecParser {
               ? null
               : VmUtils.readMember(annotation, Identifier.CONVERT) instanceof VmFunction func
                   ? (rawValue, workingDirUri) ->
-                      handleBadValue(() -> handleImports(func.apply(rawValue), workingDirUri))
+                      handleBadValue(
+                          () -> handleImportsAndReads(func.apply(rawValue), workingDirUri))
                   : null,
           annotation == null
               ? null
               : VmUtils.readMember(annotation, Identifier.TRANSFORM_ALL) instanceof VmFunction func
                   ? (values, workingDirUri) ->
                       handleBadValue(
-                          () -> handleImports(func.apply(VmList.create(values)), workingDirUri))
+                          () ->
+                              handleImportsAndReads(
+                                  func.apply(VmList.create(values)), workingDirUri))
                   : null,
           annotation == null
               ? null
@@ -1061,15 +1065,12 @@ public final class CommandSpecParser {
   }
 
   // endregion
-  // region dynamic import handling
+  // region dynamic import/read handling
 
-  private static boolean isImport(VmTyped value) {
-    return value.getVmClass() == CommandModule.getImportClass();
-  }
-
-  private static boolean isImport(Object value) {
+  private static boolean isImportOrRead(Object value) {
     return value instanceof VmTyped vmTyped
-        && vmTyped.getVmClass() == CommandModule.getImportClass();
+        && (vmTyped.getVmClass() == CommandModule.getImportClass()
+            || vmTyped.getVmClass() == CommandModule.getReadClass());
   }
 
   // handle errors from convert/transformAll and correctly format them for the CLI
@@ -1101,79 +1102,83 @@ public final class CommandSpecParser {
     }
   }
 
+  private Object handleImportOrRead(Object val, URI workingDirUri) {
+    if (!(val instanceof VmTyped vmTyped)) return val;
+    if (vmTyped.getVmClass() == CommandModule.getImportClass()) {
+      return handleImport(vmTyped, workingDirUri);
+    }
+    if (vmTyped.getVmClass() == CommandModule.getReadClass()) {
+      return handleRead(vmTyped, workingDirUri);
+    }
+    return val;
+  }
+
   // for convert, handle imports by replacing Command.Import values
   // with imported module or Mapping<String, Module> values
   // Command.Import instances in returned Pair, List, Set, or Map values are replaced as well
   // other types or nested instances of the above are not affected
-  private Object handleImports(Object result, URI workingDirUri) {
-    if (result instanceof VmTyped vmTyped && isImport(vmTyped)) {
-      return handleImport(vmTyped, workingDirUri);
-    } else if (result instanceof VmPair vmPair) {
-      if (!isImport(vmPair.getFirst()) && !isImport(vmPair.getSecond())) {
+  private Object handleImportsAndReads(Object result, URI workingDirUri) {
+    if (result instanceof VmPair vmPair) {
+      if (!isImportOrRead(vmPair.getFirst()) && !isImportOrRead(vmPair.getSecond())) {
         return vmPair;
       }
       return new VmPair(
-          isImport(vmPair.getFirst())
-              ? handleImport((VmTyped) vmPair.getFirst(), workingDirUri)
-              : vmPair.getFirst(),
-          isImport(vmPair.getSecond())
-              ? handleImport((VmTyped) vmPair.getSecond(), workingDirUri)
-              : vmPair.getSecond());
+          handleImportOrRead(vmPair.getFirst(), workingDirUri),
+          handleImportOrRead(vmPair.getSecond(), workingDirUri));
     } else if (result instanceof VmCollection vmCollection) {
       for (var elem : vmCollection) {
-        if (isImport(elem)) {
+        if (isImportOrRead(elem)) {
           var builder = vmCollection.builder();
-          vmCollection.forEach(
-              it -> builder.add(isImport(it) ? handleImport((VmTyped) it, workingDirUri) : it));
+          vmCollection.forEach(it -> builder.add(handleImportOrRead(it, workingDirUri)));
           return builder.build();
         }
       }
       return vmCollection;
     } else if (result instanceof VmMap vmMap) {
       for (var entry : vmMap) {
-        if (isImport(entry.getKey()) || isImport(entry.getValue())) {
+        if (isImportOrRead(entry.getKey()) || isImportOrRead(entry.getValue())) {
           var builder = VmMap.builder();
           vmMap.forEach(
               it ->
                   builder.add(
-                      isImport(it.getKey())
-                          ? handleImport((VmTyped) it.getKey(), workingDirUri)
-                          : it.getKey(),
-                      isImport(it.getValue())
-                          ? handleImport((VmTyped) it.getValue(), workingDirUri)
-                          : it.getValue()));
+                      handleImportOrRead(it.getKey(), workingDirUri),
+                      handleImportOrRead(it.getValue(), workingDirUri)));
           return builder.build();
         }
       }
     }
-    return result;
+    return handleImportOrRead(result, workingDirUri);
   }
 
-  private Object handleImport(VmTyped mport, URI workingDirUri) {
-    var moduleName = (String) VmUtils.readMember(mport, Identifier.URI);
-    String uriString;
+  private URI getModuleUriString(
+      VmTyped directive, URI workingDirUri, String errorKey, boolean checkTripleDot) {
+    var name = (String) VmUtils.readMember(directive, Identifier.URI);
+
+    if (checkTripleDot && name.startsWith("...")) {
+      throw exceptionBuilder().evalError("cannotGlobTripleDots").build();
+    }
+
     // Ported from org.pkl.cli.commons.cli.commands.BaseOptions:
     try {
       // Can't just use URI constructor, because URI(null, null, "C:/foo/bar", null) turns
       // into `URI("C", null, "/foo/bar", null)`.
       @SuppressWarnings("DuplicateExpressions")
       var uri =
-          IoUtils.isUriLike(moduleName)
-              ? new URI(moduleName)
-              : IoUtils.isWindows() && IoUtils.isWindowsAbsolutePath(moduleName)
-                  ? Path.of(moduleName).toUri()
-                  : new URI(null, null, IoUtils.toNormalizedPathString(Path.of(moduleName)), null);
-      uriString =
-          uri.isAbsolute() ? uri.toString() : IoUtils.resolve(workingDirUri, uri).toString();
+          IoUtils.isUriLike(name)
+              ? new URI(name)
+              : IoUtils.isWindows() && IoUtils.isWindowsAbsolutePath(name)
+                  ? Path.of(name).toUri()
+                  : new URI(null, null, IoUtils.toNormalizedPathString(Path.of(name)), null);
+      return uri.isAbsolute() ? uri : IoUtils.resolve(workingDirUri, uri);
     } catch (URISyntaxException e) {
-      throw exceptionBuilder()
-          .evalError("invalidModuleUri", moduleName)
-          .withHint(e.getReason())
-          .build();
+      throw exceptionBuilder().evalError(errorKey, name).withHint(e.getReason()).build();
     }
+  }
 
+  private Object handleImport(VmTyped mport, URI workingDirUri) {
+    var importUri = getModuleUriString(mport, workingDirUri, "invalidModuleUri", false);
+    var uriString = importUri.toString();
     var isGlob = (Boolean) VmUtils.readMember(mport, Identifier.GLOB);
-    var importUri = URI.create(uriString);
     var language = VmLanguage.get(null);
 
     // non-glob
@@ -1211,6 +1216,51 @@ public final class CommandSpecParser {
           .evalError("invalidGlobPattern", uriString)
           .withHint(e.getMessage())
           .build();
+    }
+  }
+
+  private Object handleRead(VmTyped read, URI workingDirUri) {
+    var type = (String) VmUtils.readMember(read, Identifier.TYPE);
+    var isGlob = "glob".equals(type);
+    var uri = getModuleUriString(read, workingDirUri, "invalidResourceUri", isGlob);
+    var uriString = uri.toString();
+    var context = VmContext.get(null);
+
+    // non-glob
+    if (!isGlob) {
+      var resource = context.getResourceManager().read(REPL_TEXT_URI, uri, null);
+      if ("nullable".equals(type)) return resource.orElse(VmNull.withoutDefault());
+      if (resource.isEmpty()) {
+        throw exceptionBuilder().evalError("cannotFindResource", uriString).build();
+      }
+      return resource.get();
+    }
+
+    // glob
+    try {
+      var reader = context.getResourceManager().getReader(uri, null);
+      if (!reader.isGlobbable()) {
+        throw exceptionBuilder().evalError("cannotGlobUri", uri, uri.getScheme()).build();
+      }
+      var resolvedElements =
+          GlobResolver.resolveGlob(context.getSecurityManager(), reader, null, null, uriString);
+
+      var builder = new VmObjectBuilder(resolvedElements.size());
+      for (var entry : resolvedElements.entrySet()) {
+        builder.addEntry(entry.getKey(), reader.read(entry.getValue().uri()));
+      }
+      return builder.toMapping(resolvedElements);
+    } catch (IOException e) {
+      throw exceptionBuilder().evalError("ioErrorResolvingGlob", uriString).withCause(e).build();
+    } catch (SecurityManagerException | HttpClientException | URISyntaxException e) {
+      throw exceptionBuilder().withCause(e).build();
+    } catch (InvalidGlobPatternException e) {
+      throw exceptionBuilder()
+          .evalError("invalidGlobPattern", uriString)
+          .withHint(e.getMessage())
+          .build();
+    } catch (ExternalReaderProcessException e) {
+      throw exceptionBuilder().evalError("externalReaderFailure").withCause(e).build();
     }
   }
 

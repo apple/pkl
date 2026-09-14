@@ -155,19 +155,29 @@ public final class SecurityManagers {
     }
 
     @Override
-    public void checkReadResource(URI uri) throws SecurityManagerException {
+    public void checkReadResource(URI readingModule, URI uri) throws SecurityManagerException {
+      var importingTrustLevel = trustLevels.apply(readingModule);
+      var importedTrustLevel = trustLevels.apply(uri);
+
+      if (importingTrustLevel < importedTrustLevel) {
+        var message =
+            ErrorMessages.create(
+                "insufficientTrustLevel", uri, readingModule, "read resource", "reading");
+        throw new SecurityManagerException(message);
+      }
+
       checkRead(uri, allowedResources, true);
     }
 
     @Override
-    public void checkImportModule(URI importingModule, URI importedModule)
-        throws SecurityManagerException {
+    public void checkImportModule(URI importingModule, URI uri) throws SecurityManagerException {
       var importingTrustLevel = trustLevels.apply(importingModule);
-      var importedTrustLevel = trustLevels.apply(importedModule);
+      var importedTrustLevel = trustLevels.apply(uri);
 
       if (importingTrustLevel < importedTrustLevel) {
         var message =
-            ErrorMessages.create("insufficientModuleTrustLevel", importedModule, importingModule);
+            ErrorMessages.create(
+                "insufficientTrustLevel", uri, importingModule, "import module", "importing");
         throw new SecurityManagerException(message);
       }
     }
