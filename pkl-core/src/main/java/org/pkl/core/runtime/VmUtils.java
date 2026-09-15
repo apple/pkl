@@ -84,14 +84,6 @@ public final class VmUtils {
         }
       };
 
-  public static final Object METHOD_FRAME_SLOT_ID =
-      new Object() {
-        @Override
-        public String toString() {
-          return "method";
-        }
-      };
-
   private static final Engine PKL_ENGINE =
       Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
 

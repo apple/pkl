@@ -35,8 +35,8 @@ public final class InvokeMethodDirectNode extends AbstractInvokeMethodNode {
       ClassMethod method,
       ExpressionNode receiverNode,
       ExpressionNode[] argumentNodes,
-      boolean argsRequireInference) {
-    super(sourceSection, argumentNodes, argsRequireInference);
+      int methodSlot) {
+    super(sourceSection, argumentNodes, methodSlot);
     this.method = method;
     this.owner = method.getOwner();
     this.receiverNode = receiverNode;

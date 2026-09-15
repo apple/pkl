@@ -16,41 +16,30 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.runtime.VmUtils;
 
 public abstract class InferParentWithinMethodArgumentNode
     extends AbstractInferParentFromMethodNode {
   private final int argIndex;
+  private final int methodSlot;
 
   public InferParentWithinMethodArgumentNode(
-      SourceSection sourceSection, VmLanguage language, int argIndex) {
+      SourceSection sourceSection, VmLanguage language, int argIndex, int methodSlot) {
     super(sourceSection, language);
     this.argIndex = argIndex;
-  }
-
-  @TruffleBoundary
-  private int getMethodSlot(FrameDescriptor frameDescriptor) {
-    var methodSlot = frameDescriptor.getAuxiliarySlots().get(VmUtils.METHOD_FRAME_SLOT_ID);
-    if (methodSlot == null) {
-      // used in intrinsic constructor e.g. pkl.base#List()
-      throw exceptionBuilder().evalError("cannotInferParent").build();
-    }
-    return methodSlot;
+    this.methodSlot = methodSlot;
   }
 
   @Override
   protected Method getMethod(VirtualFrame frame) {
-    var method = (Method) frame.getAuxiliarySlot(getMethodSlot(frame.getFrameDescriptor()));
+    var method = (Method) frame.getObject(methodSlot);
     if (method == null) {
       // used in FunctionN.apply()
       CompilerDirectives.transferToInterpreter();
