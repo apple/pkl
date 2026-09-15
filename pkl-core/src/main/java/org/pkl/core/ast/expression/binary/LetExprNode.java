@@ -36,7 +36,7 @@ public abstract class LetExprNode extends ExpressionNode {
   private @Child @Nullable TypeNode typeNode;
   private final int slot;
 
-  public LetExprNode(
+  protected LetExprNode(
       SourceSection sourceSection,
       String qualifiedName,
       @Nullable UnresolvedTypeNode unresolvedTypeNode,
