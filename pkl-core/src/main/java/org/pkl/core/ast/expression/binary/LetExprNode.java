@@ -49,21 +49,28 @@ public abstract class LetExprNode extends ExpressionNode {
     this.slot = slot;
   }
 
-  private TypeNode getTypeNode(VirtualFrame frame) {
-    if (typeNode == null) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      if (unresolvedTypeNode != null) {
-        typeNode = unresolvedTypeNode.execute(frame);
-      } else {
-        typeNode = new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
-      }
+  public TypeNode getTypeNode(VirtualFrame frame) {
+    if (typeNode != null) return typeNode;
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    if (unresolvedTypeNode != null && slot >= 0) {
+      typeNode = unresolvedTypeNode.execute(frame);
+    } else {
+      typeNode = new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
+    }
+    if (slot >= 0) {
       typeNode.initWriteSlotNode(slot);
       frame.getFrameDescriptor().setSlotKind(slot, typeNode.getFrameSlotKind());
-      insert(typeNode);
     }
     assert typeNode != null;
-    return typeNode;
+    return insert(typeNode);
   }
+
+  public String getQualifiedName() {
+    return qualifiedName;
+  }
+
+  public abstract ExpressionNode getBindingNode();
 
   @Specialization
   protected Object eval(VirtualFrame frame, Object value) {
