@@ -5,4 +5,4 @@ class D extends ref.Domain {
 }
 local d: D = new {}
 
-test = ref.Reference(d, Mapping, "").default
+test = ref.Reference::<D, Mapping>(d, "").default

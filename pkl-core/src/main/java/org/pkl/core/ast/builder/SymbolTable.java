@@ -21,7 +21,6 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import java.util.*;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
@@ -40,6 +39,7 @@ import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
+import org.pkl.core.runtime.VmTypeParameter;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.ArrayUtils;
 import org.pkl.core.util.LateInit;
@@ -59,8 +59,8 @@ public final class SymbolTable {
     return currentScope;
   }
 
-  public @Nullable TypeParameter findTypeParameter(String name) {
-    TypeParameter result;
+  public @Nullable VmTypeParameter findTypeParameter(String name) {
+    VmTypeParameter result;
     for (var scope = currentScope; scope != null; scope = scope.getParent()) {
       result = scope.getTypeParameter(name);
       if (result != null) return result;
@@ -71,7 +71,7 @@ public final class SymbolTable {
   public ObjectMember enterClass(
       Identifier name,
       int modifiers,
-      List<TypeParameter> typeParameters,
+      List<VmTypeParameter> typeParameters,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
         new ClassScope(
@@ -86,7 +86,7 @@ public final class SymbolTable {
 
   public ObjectMember enterTypeAlias(
       Identifier name,
-      List<TypeParameter> typeParameters,
+      List<VmTypeParameter> typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
     try {
       this.isInTypeAliasScope = true;
@@ -108,7 +108,7 @@ public final class SymbolTable {
       ConstLevel constLevel,
       FrameSlotVariable[] bindings,
       FrameDescriptorBuilder frameDescriptorBuilder,
-      List<TypeParameter> typeParameters,
+      List<VmTypeParameter> typeParameters,
       Function<MethodScope, T> nodeFactory) {
     return doEnter(
         new MethodScope(
@@ -326,7 +326,7 @@ public final class SymbolTable {
       return frameDescriptorBuilder.build();
     }
 
-    public @Nullable TypeParameter getTypeParameter(String name) {
+    public @Nullable VmTypeParameter getTypeParameter(String name) {
       return null;
     }
 
@@ -672,7 +672,7 @@ public final class SymbolTable {
   }
 
   public abstract static class TypeParameterizableScope extends Scope {
-    private final List<TypeParameter> typeParameters;
+    private final List<VmTypeParameter> typeParameters;
 
     public TypeParameterizableScope(
         Scope parent,
@@ -680,7 +680,7 @@ public final class SymbolTable {
         String qualifiedName,
         ConstLevel constLevel,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters,
+        List<VmTypeParameter> typeParameters,
         int[] forGeneratorSlots,
         int[] parameterSlots) {
       super(
@@ -695,7 +695,7 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable TypeParameter getTypeParameter(String name) {
+    public @Nullable VmTypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
         if (name.equals(param.getName())) return param;
       }
@@ -755,7 +755,7 @@ public final class SymbolTable {
         ConstLevel constLevel,
         FrameSlotVariable[] bindings,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        List<VmTypeParameter> typeParameters) {
       super(
           parent,
           name,
@@ -1016,7 +1016,7 @@ public final class SymbolTable {
         String qualifiedName,
         int modifiers,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        List<VmTypeParameter> typeParameters) {
       super(
           parent,
           name,
@@ -1050,7 +1050,7 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        List<VmTypeParameter> typeParameters) {
       super(
           parent,
           name,

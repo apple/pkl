@@ -291,8 +291,13 @@ public abstract sealed class Expr extends AbstractNode {
 
   public static final class UnqualifiedAccessExpr extends Expr {
     public UnqualifiedAccessExpr(
-        Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
-      super(span, Arrays.asList(identifier, argumentList));
+        Identifier identifier,
+        @Nullable TypeArgumentList typeArgumentList,
+        @Nullable ArgumentList argumentList,
+        Span span) {
+      super(span, Arrays.asList(identifier, typeArgumentList, argumentList));
+      assert typeArgumentList == null || argumentList != null
+          : "UnqualifiedAccessExpr created with typeArgumentList but no argumentList";
     }
 
     @Override
@@ -306,8 +311,12 @@ public abstract sealed class Expr extends AbstractNode {
       return ret;
     }
 
+    public @Nullable TypeArgumentList getTypeArgumentList() {
+      return (TypeArgumentList) children.get(1);
+    }
+
     public @Nullable ArgumentList getArgumentList() {
-      return (ArgumentList) children.get(1);
+      return (ArgumentList) children.get(2);
     }
   }
 
@@ -318,9 +327,12 @@ public abstract sealed class Expr extends AbstractNode {
         Expr expr,
         Identifier identifier,
         boolean isNullable,
+        @Nullable TypeArgumentList typeArgumentList,
         @Nullable ArgumentList argumentList,
         Span span) {
-      super(span, Arrays.asList(expr, identifier, argumentList));
+      super(span, Arrays.asList(expr, identifier, typeArgumentList, argumentList));
+      assert typeArgumentList == null || argumentList != null
+          : "QualifiedAccessExpr created with typeArgumentList but no argumentList";
       this.isNullable = isNullable;
     }
 
@@ -345,14 +357,24 @@ public abstract sealed class Expr extends AbstractNode {
       return isNullable;
     }
 
+    public @Nullable TypeArgumentList getTypeArgumentList() {
+      return (TypeArgumentList) children.get(2);
+    }
+
     public @Nullable ArgumentList getArgumentList() {
-      return (ArgumentList) children.get(2);
+      return (ArgumentList) children.get(3);
     }
   }
 
   public static final class SuperAccessExpr extends Expr {
-    public SuperAccessExpr(Identifier identifier, @Nullable ArgumentList argumentList, Span span) {
-      super(span, Arrays.asList(identifier, argumentList));
+    public SuperAccessExpr(
+        Identifier identifier,
+        @Nullable TypeArgumentList typeArgumentList,
+        @Nullable ArgumentList argumentList,
+        Span span) {
+      super(span, Arrays.asList(identifier, typeArgumentList, argumentList));
+      assert typeArgumentList == null || argumentList != null
+          : "SuperAccessExpr created with typeArgumentList but no argumentList";
     }
 
     @Override
@@ -366,8 +388,12 @@ public abstract sealed class Expr extends AbstractNode {
       return ret;
     }
 
+    public @Nullable TypeArgumentList getTypeArgumentList() {
+      return (TypeArgumentList) children.get(1);
+    }
+
     public @Nullable ArgumentList getArgumentList() {
-      return (ArgumentList) children.get(1);
+      return (ArgumentList) children.get(2);
     }
   }
 

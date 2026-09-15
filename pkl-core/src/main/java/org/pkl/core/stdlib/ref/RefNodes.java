@@ -16,18 +16,22 @@
 package org.pkl.core.stdlib.ref;
 
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
-import org.pkl.core.runtime.VmClass;
+import org.pkl.core.ast.member.FunctionNode;
+import org.pkl.core.ast.type.TypeNode.ReferenceTypeNode;
 import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.stdlib.ExternalMethod3Node;
+import org.pkl.core.stdlib.ExternalMethod2Node;
 
 public class RefNodes {
-  public abstract static class Reference extends ExternalMethod3Node {
+  public abstract static class Reference extends ExternalMethod2Node {
     @Specialization
     protected VmReference eval(
-        VirtualFrame frame, VmTyped self, VmTyped domain, VmClass clazz, Object data) {
-      return new VmReference(domain, clazz, data);
+        @SuppressWarnings("unused") VmTyped self, VmTyped domain, Object data) {
+      var fn = (FunctionNode) getParent();
+      var returnTypeNode = (ReferenceTypeNode) fn.getReturnTypeNode();
+      assert returnTypeNode != null;
+      var referentType = returnTypeNode.getReferentTypeNode().getType();
+      return new VmReference(domain, referentType, data);
     }
   }
 }

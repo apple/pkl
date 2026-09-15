@@ -23,8 +23,8 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmObjectLike;
 
 /**
  * A non-virtual (statically dispatched) method call.
@@ -34,35 +34,33 @@ import org.pkl.core.runtime.VmObjectLike;
  * InvokeLexicalObjectMethodNode}), or off of an explicit receiver expression ({@link
  * InvokeQualifiedClassMethodNode}, {@link InvokeQualifiedObjectMethodNode}).
  */
-public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
-    extends AbstractInvokeMethodNode
-    permits AbstractInvokeQualifiedMethodNode, AbstractInvokeLexicalMethodNode {
+public abstract class AbstractInvokeLexicalOrQualifiedMethodNode extends AbstractInvokeMethodNode {
 
   protected final Identifier methodName;
   private final boolean needsConst;
-  @Child private @Nullable DirectCallNode callNode;
   @CompilationFinal protected boolean isConstChecked;
 
   protected AbstractInvokeLexicalOrQualifiedMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       boolean argsRequireInference) {
-    super(sourceSection, argumentNodes, argsRequireInference);
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, argsRequireInference);
     this.methodName = methodName;
     this.needsConst = needsConst;
     this.isConstChecked = false;
   }
 
-  protected final Object invoke(VirtualFrame frame, VmObjectLike owner, Object receiver) {
+  protected Object invoke(
+      VirtualFrame frame, Object owner, Object receiver, Method method, DirectCallNode callNode) {
     checkConst(owner);
-    var method = getMethod(owner);
     var args = evalArgs(frame, method, owner, receiver);
-    return getCallNode(method, owner).call(args);
+    return callNode.call(args);
   }
 
-  private void checkConst(VmObjectLike owner) {
+  private void checkConst(Object owner) {
     if (!needsConst || isConstChecked) {
       return;
     }
@@ -71,17 +69,7 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
     isConstChecked = true;
   }
 
-  protected abstract Method getMethod(VmObjectLike owner);
+  protected abstract Method getMethod(Object owner);
 
-  protected abstract void doCheckConst(VmObjectLike owner);
-
-  protected DirectCallNode getCallNode(Method method, VmObjectLike owner) {
-    if (callNode == null) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      callNode = DirectCallNode.create(method.getCallTarget(getSourceSection(), owner));
-      insert(callNode);
-    }
-    assert callNode != null;
-    return callNode;
-  }
+  protected abstract void doCheckConst(Object owner);
 }

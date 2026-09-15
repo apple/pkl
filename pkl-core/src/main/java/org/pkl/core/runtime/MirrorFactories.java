@@ -16,7 +16,6 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.source.SourceSection;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.type.TypeNode;
@@ -46,7 +45,7 @@ public final class MirrorFactories {
   public static final VmObjectFactory<Pair<String, VmTyped>> methodParameterFactory =
       new VmObjectFactory<>(ReflectModule::getMethodParameterClass);
 
-  public static final VmObjectFactory<TypeParameter> typeParameterFactory =
+  public static final VmObjectFactory<VmTypeParameter> typeParameterFactory =
       new VmObjectFactory<>(ReflectModule::getTypeParameterClass);
 
   public static final VmObjectFactory<TypeNode> classTypeFactory =
@@ -209,7 +208,7 @@ public final class MirrorFactories {
         .addTypedProperty("type", Pair::getSecond);
 
     typeParameterFactory
-        .addStringProperty("name", TypeParameter::getName)
+        .addStringProperty("name", VmTypeParameter::getName)
         .addProperty(
             "variance",
             typeParameter ->
@@ -223,7 +222,7 @@ public final class MirrorFactories {
         .addTypedProperty(
             "referent",
             typeNode -> {
-              var clazz = typeNode.getVmClass();
+              var clazz = typeNode.getType().getVmClass();
               assert clazz != null;
               return clazz.getMirror();
             })
@@ -232,11 +231,7 @@ public final class MirrorFactories {
     typeAliasTypeFactory
         .addTypedProperty(
             "referent",
-            typeNode -> {
-              var alias = typeNode.getVmTypeAlias();
-              assert alias != null;
-              return alias.getMirror();
-            })
+            typeNode -> ((VmType.AliasType) typeNode.getType()).getVmTypeAlias().getMirror())
         .addListProperty("typeArguments", TypeNode::getTypeArgumentMirrors);
 
     declaredTypeFactory
@@ -251,7 +246,8 @@ public final class MirrorFactories {
         .addListProperty("parameterTypes", Pair::getFirst)
         .addTypedProperty("returnType", Pair::getSecond);
 
-    stringLiteralTypeFactory.addStringProperty("value", StringLiteralTypeNode::getLiteral);
+    stringLiteralTypeFactory.addStringProperty(
+        "value", typeNode -> ((VmType.StringLiteralType) typeNode.getType()).getLiteral());
 
     stringLiteralTypeFactory2.addStringProperty("value", Property.identity());
 

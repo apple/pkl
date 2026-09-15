@@ -41,9 +41,9 @@ public final class CheckIsAnnotationClassNode extends ExpressionNode {
       typeNode = insert(unresolvedTypeNode.execute(frame));
       unresolvedTypeNode = null;
     }
-    var clazz = typeNode.getVmClass();
+    var clazz = typeNode.getType().getVmClass();
     if (clazz != null && clazz.isSubclassOf(BaseModule.getAnnotationClass())) {
-      return typeNode.getVmClass();
+      return clazz;
     }
 
     CompilerDirectives.transferToInterpreter();

@@ -28,17 +28,20 @@ import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.internal.GetClassNode;
 import org.pkl.core.ast.member.ClassMethod;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmUtils;
 
 /** A virtual method call. */
 @SuppressWarnings("DuplicatedCode")
-@ImportStatic(Identifier.class)
+@ImportStatic({Identifier.class, VmUtils.class})
 @NodeChild(value = "receiverNode", type = ExpressionNode.class)
 @NodeChild(value = "receiverClassNode", type = GetClassNode.class, executeWith = "receiverNode")
 @GenerateWrapper
@@ -50,11 +53,12 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
       boolean needsConst,
       boolean argsRequireInference) {
-    super(sourceSection, argumentNodes, argsRequireInference);
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, argsRequireInference);
     this.methodName = methodName;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
@@ -63,10 +67,18 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
       boolean argsRequireInference) {
-    this(sourceSection, methodName, argumentNodes, lookupMode, false, argsRequireInference);
+    this(
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        lookupMode,
+        false,
+        argsRequireInference);
   }
 
   /**
@@ -84,6 +96,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       @Cached("receiver.getCallTarget()") @SuppressWarnings("unused")
           RootCallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
+    checkNoTypeParameters();
     var args = evalArgs(frame, null, receiver, receiver.getThisValue());
     return callNode.call(args);
   }
@@ -95,34 +108,64 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       VmFunction receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
+    checkNoTypeParameters();
     var args = evalArgs(frame, null, receiver, receiver.getThisValue());
     return callNode.call(receiver.getCallTarget(), args);
   }
 
-  @Specialization(guards = "receiverClass == cachedReceiverClass")
-  protected Object evalCached(
+  private void checkNoTypeParameters() {
+    if (unresolvedTypeArgumentNodes == null) return;
+    throw exceptionBuilder()
+        .evalError("wrongTypeArgumentCount", 0, unresolvedTypeArgumentNodes.length)
+        .build();
+  }
+
+  @Specialization(
+      guards = {"unresolvedTypeArgumentNodes == null", "receiverClass == cachedReceiverClass"})
+  protected Object evalNoArgsCached(
       VirtualFrame frame,
       Object receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
       @Cached("receiverClass") @SuppressWarnings("unused") VmClass cachedReceiverClass,
       @Cached("resolveMethod(receiverClass)") ClassMethod method,
-      @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
+      @Cached("create(method.getFunctionNode(sourceSection).getCallTarget())")
+          DirectCallNode callNode) {
     var args = evalArgs(frame, method, method.getOwner(), receiver);
     return callNode.call(args);
   }
 
-  @Specialization(replaces = "evalCached")
+  @Specialization(
+      guards = {
+        "unresolvedTypeArgumentNodes != null",
+        "getTypeArgumentsAreFinal(frame)",
+        "receiverClass == cachedReceiverClass"
+      })
+  protected Object evalArgsCached(
+      VirtualFrame frame,
+      Object receiver,
+      @SuppressWarnings("unused") VmClass receiverClass,
+      @Cached("receiverClass") @SuppressWarnings("unused") VmClass cachedReceiverClass,
+      @Cached("resolveMethod(receiverClass)") ClassMethod method,
+      @Cached(
+              "create(instantiateFunction(frame, method, method.getFunctionNode(sourceSection)).getCallTarget())")
+          DirectCallNode callNode) {
+    var args = evalArgs(frame, method, method.getOwner(), receiver);
+    return callNode.call(args);
+  }
+
+  @Specialization(replaces = {"evalNoArgsCached", "evalArgsCached"})
   protected Object eval(
       VirtualFrame frame,
       Object receiver,
       VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
     var method = resolveMethod(receiverClass);
+    var functionNode = instantiateFunction(frame, method, method.getFunctionNode());
     var args = evalArgs(frame, method, method.getOwner(), receiver);
 
     // Deprecation should not report here (getCallTarget(sourceSection)), as this happens for each
     // and every call.
-    return callNode.call(method.getCallTarget(), args);
+    return callNode.call(functionNode.getCallTarget(), args);
   }
 
   protected ClassMethod resolveMethod(VmClass receiverClass) {
@@ -148,6 +191,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
     return new InvokeMethodVirtualNodeWrapper(
         sourceSection,
         methodName,
+        unresolvedTypeArgumentNodes,
         argumentNodes,
         lookupMode,
         needsConst,

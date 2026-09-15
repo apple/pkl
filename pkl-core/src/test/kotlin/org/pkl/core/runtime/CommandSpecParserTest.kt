@@ -651,7 +651,8 @@ class CommandSpecParserTest {
 
     val exc = assertThrows<PklException> { parse(moduleUri) }
     assertThat(exc.message).contains("foo: Foo")
-    assertThat(exc.message).contains("Command option property `foo` has unsupported type `Foo`.")
+    assertThat(exc.message)
+      .contains("Command option property `foo` has unsupported type `cmd#Foo`.")
   }
 
   @Test
@@ -805,7 +806,7 @@ class CommandSpecParserTest {
     val spec = parse(moduleUri)
     val flag = spec.options.first() as CommandSpec.Flag
 
-    assertThat(flag.metavar()).isEqualTo("[json, toml, yaml]")
+    assertThat(flag.metavar()).isEqualTo("[json, yaml, toml]")
 
     val apply =
       assertThrows<CommandSpec.Option.BadValue> {

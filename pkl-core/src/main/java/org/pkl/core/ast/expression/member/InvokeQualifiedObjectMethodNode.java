@@ -15,34 +15,44 @@
  */
 package org.pkl.core.ast.expression.member;
 
+import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMethodNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
 /** A non-virtual call of an object method, invoked off of an explicit receiver. */
-public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifiedMethodNode {
-  public InvokeQualifiedObjectMethodNode(
+@NodeChild(value = "receiverNode", type = ExpressionNode.class)
+public abstract class InvokeQualifiedObjectMethodNode
+    extends AbstractInvokeLexicalOrQualifiedMethodNode {
+  protected InvokeQualifiedObjectMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
-      ExpressionNode getReceiverNode,
       boolean argsRequireInference) {
     super(
         sourceSection,
         methodName,
+        unresolvedTypeArgumentNodes,
         argumentNodes,
         needsConst,
-        getReceiverNode,
         argsRequireInference);
   }
 
   @Override
-  protected void doCheckConst(VmObjectLike owner) {
+  protected void doCheckConst(Object ownerObj) {
+    var owner = (VmObjectLike) ownerObj;
     var member = owner.getMember(methodName);
     assert member != null;
     if (!VmModifier.isConst(member.getModifiers())) {
@@ -51,11 +61,46 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
   }
 
   @Override
-  protected Method getMethod(VmObjectLike owner) {
+  protected Method getMethod(Object ownerObj) {
+    var owner = (VmObjectLike) ownerObj;
     var member = owner.getMember(methodName);
     assert member != null && member.isLocal();
-    var method = (ObjectMethodNode) member.getMemberNode();
-    assert method != null;
-    return method;
+    var methodNode = (ObjectMethodNode) member.getMemberNode();
+    assert methodNode != null;
+    return methodNode.reify(owner);
+  }
+
+  // keep specializations in sync with other AbstractInvokeLexicalOrQualifiedMethodNode subclasses
+
+  @Specialization(guards = "unresolvedTypeArgumentNodes == null")
+  public final Object evalNoArgs(
+      VirtualFrame frame,
+      VmObjectLike receiver,
+      @Cached(value = "getMethod(receiver)", neverDefault = true) Method method,
+      @Cached("create(method.getFunctionNode(sourceSection).getCallTarget())")
+          DirectCallNode callNode) {
+    return invoke(frame, receiver, receiver, method, callNode);
+  }
+
+  @Specialization(
+      guards = {"unresolvedTypeArgumentNodes != null", "getTypeArgumentsAreFinal(frame)"})
+  public final Object evalArgsCached(
+      VirtualFrame frame,
+      VmObjectLike receiver,
+      @Cached(value = "getMethod(receiver)", neverDefault = true) Method method,
+      @Cached(
+              "create(instantiateFunction(frame, method, method.getFunctionNode()).getCallTarget())")
+          DirectCallNode callNode) {
+    return invoke(frame, receiver, receiver, method, callNode);
+  }
+
+  @Specialization(guards = "unresolvedTypeArgumentNodes != null", replaces = "evalArgsCached")
+  public final Object evalArgs(
+      VirtualFrame frame,
+      VmObjectLike receiver,
+      @Cached(value = "getMethod(receiver)", neverDefault = true) Method method) {
+    var functionNode = instantiateFunction(frame, method, method.getFunctionNode());
+    var callNode = DirectCallNode.create(functionNode.getCallTarget());
+    return invoke(frame, receiver, receiver, method, callNode);
   }
 }

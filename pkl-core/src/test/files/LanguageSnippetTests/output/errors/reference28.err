@@ -1,0 +1,26 @@
+–– Pkl Error ––
+`Reference` referent type argument may not include type constraints.
+
+xx | test = test::<String(true)>(ref.Reference::<D, String>(d, ""))
+                   ^^^^^^^^^^^^
+at reference28#Ref (file:///$snippetsDir/input/errors/reference28.pkl)
+
+x | typealias Ref<T> = ref.Reference<D, T>
+                       ^^^^^^^^^^^^^^^^^^^
+at reference28#Ref (file:///$snippetsDir/input/errors/reference28.pkl)
+
+x | function test<T>(ref: Ref) = ref as Ref<T>
+                                        ^^^^^^
+at reference28#test (file:///$snippetsDir/input/errors/reference28.pkl)
+
+xx | test = test::<String(true)>(ref.Reference::<D, String>(d, ""))
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at reference28#test (file:///$snippetsDir/input/errors/reference28.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

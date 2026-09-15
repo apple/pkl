@@ -31,6 +31,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Pair;
 
@@ -46,11 +47,12 @@ public final class FunctionNode extends RegularMemberNode {
   private static final int IMPLICIT_PARAM_COUNT = 2;
 
   private final int paramCount;
+  private final int typeParamCount;
   private final int totalParamCount;
 
   @Children private final TypeNode[] parameterTypeNodes;
   @Child private @Nullable TypeNode checkedReturnTypeNode;
-  private @Nullable TypeNode returnTypeNode;
+  @Child private @Nullable TypeNode returnTypeNode;
 
   @TruffleBoundary
   public FunctionNode(
@@ -61,6 +63,7 @@ public final class FunctionNode extends RegularMemberNode {
       TypeNode[] parameterTypeNodes,
       @Nullable TypeNode returnTypeNode,
       boolean isReturnTypeChecked,
+      int typeParamCount,
       ExpressionNode bodyNode) {
 
     super(language, descriptor, member, bodyNode);
@@ -70,6 +73,7 @@ public final class FunctionNode extends RegularMemberNode {
         || member instanceof Lambda;
 
     this.paramCount = paramCount;
+    this.typeParamCount = typeParamCount;
     this.parameterTypeNodes = parameterTypeNodes;
     this.checkedReturnTypeNode = isReturnTypeChecked ? returnTypeNode : null;
     this.returnTypeNode = returnTypeNode;
@@ -81,9 +85,17 @@ public final class FunctionNode extends RegularMemberNode {
     return paramCount;
   }
 
+  public int getTypeParameterCount() {
+    return typeParamCount;
+  }
+
   public @Nullable TypeNode getParameterTypeNode(int idx) {
     if (idx >= paramCount) return null;
     return parameterTypeNodes[idx];
+  }
+
+  public VmType getReturnType() {
+    return returnTypeNode == null ? UnknownType.INSTANCE : returnTypeNode.getType();
   }
 
   public @Nullable TypeNode getReturnTypeNode() {
