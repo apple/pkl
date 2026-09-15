@@ -53,8 +53,6 @@ import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
-import org.pkl.core.runtime.VmType.NothingType;
-import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
@@ -335,7 +333,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected VmType doGetType() {
-      return UnknownType.INSTANCE;
+      return VmType.UnknownType.INSTANCE;
     }
 
     @Override
@@ -367,7 +365,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected VmType doGetType() {
-      return NothingType.INSTANCE;
+      return VmType.NothingType.INSTANCE;
     }
 
     @Override
@@ -425,12 +423,12 @@ public abstract class TypeNode extends PklNode {
 
     public static FinalSelfTypeNode moduleType(SourceSection sourceSection, VmClass clazz) {
       return new FinalSelfTypeNode(
-          sourceSection, clazz, VmType.ModuleType::new, MirrorFactories.moduleTypeFactory);
+          sourceSection, clazz, VmType.FinalModuleType::new, MirrorFactories.moduleTypeFactory);
     }
 
     public static FinalSelfTypeNode thisType(SourceSection sourceSection, VmClass clazz) {
       return new FinalSelfTypeNode(
-          sourceSection, clazz, VmType.ThisType::new, MirrorFactories.thisTypeFactory);
+          sourceSection, clazz, VmType.FinalThisType::new, MirrorFactories.thisTypeFactory);
     }
 
     @Override
@@ -488,7 +486,7 @@ public abstract class TypeNode extends PklNode {
           sourceSection,
           clazz,
           new GetModuleNode(sourceSection),
-          VmType.ModuleType::new,
+          VmType.NonFinalModuleType::new,
           MirrorFactories.moduleTypeFactory);
     }
 
@@ -497,7 +495,7 @@ public abstract class TypeNode extends PklNode {
           sourceSection,
           clazz,
           new GetReceiverNode(),
-          VmType.ThisType::new,
+          VmType.NonFinalThisType::new,
           MirrorFactories.thisTypeFactory);
     }
 
@@ -2677,7 +2675,7 @@ public abstract class TypeNode extends PklNode {
         type = typeAliasType.getAliasedType();
       }
 
-      if (type == UnknownType.INSTANCE || type instanceof VmType.TypeVariableType) {
+      if (type == VmType.UnknownType.INSTANCE || type instanceof VmType.TypeVariableType) {
         clazz = BaseModule.getAnyClass();
       } else if (!type.isParametric()) {
         clazz = type.getVmClass();

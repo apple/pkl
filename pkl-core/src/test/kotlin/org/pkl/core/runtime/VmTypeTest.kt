@@ -16,354 +16,435 @@
 package org.pkl.core.runtime
 
 import java.net.URI
+import java.nio.file.Path
+import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
-import org.pkl.core.PClassInfo
+import org.junit.jupiter.api.Disabled
+import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.io.TempDir
+import org.pkl.core.Loggers
+import org.pkl.core.SecurityManagers
+import org.pkl.core.StackFrameTransformers
 import org.pkl.core.TypeParameter
-import org.pkl.core.ast.VmModifier
-import org.pkl.core.ast.type.TypeNode
-import org.pkl.core.ast.type.TypeNodeFactory
+import org.pkl.core.evaluatorSettings.TraceMode
+import org.pkl.core.http.HttpClient
+import org.pkl.core.module.ModuleKey
+import org.pkl.core.module.ModuleKeyFactories
+import org.pkl.core.module.ModuleKeys.file
+import org.pkl.core.module.ModuleKeys.synthetic
 
 class VmTypeTest {
 
-  class SubtypeCase(
-    private val name: String,
-    val first: VmType,
-    val second: VmType,
-    val bidi: Boolean = false,
-  ) {
-    // for nice test output
-    override fun toString(): String = "$name: ($first ${if (bidi) "<->" else "->"} $second)"
+  companion object {
+    val stringClass = VmType.ClassType(BaseModule.getStringClass())
+    val boolClass = VmType.ClassType(BaseModule.getBooleanClass())
+    val intClass = VmType.ClassType(BaseModule.getIntClass())
+    val numberClass = VmType.ClassType(BaseModule.getNumberClass())
   }
 
-  companion object {
-    @JvmStatic
-    val subtypeCases by lazy {
-      val boolClass = VmType.ClassType(BaseModule.getBooleanClass())
-      val stringClass = VmType.ClassType(BaseModule.getStringClass())
-      val anyClass = VmType.ClassType(BaseModule.getAnyClass())
-      val intClass = VmType.ClassType(BaseModule.getIntClass())
-      val numberClass = VmType.ClassType(BaseModule.getNumberClass())
-      val typeVar =
-        VmType.TypeVariableType(TypeParameter(TypeParameter.Variance.INVARIANT, "Foo", 0))
-
-      val modA =
-        VmClass(
-          VmUtils.unavailableSourceSection(),
-          VmUtils.unavailableSourceSection(),
-          null,
-          emptyList(),
-          VmModifier.OPEN,
-          PClassInfo.forModuleClass("modA", URI("test:/modA.pkl")),
-          emptyList(),
-          VmUtils.createEmptyModule(),
-        )
-      modA.initSupertype(
-        TypeNode.AnyTypeNode(VmUtils.unavailableSourceSection()),
-        BaseModule.getAnyClass(),
+  private fun makeModule(rootDir: Path?, moduleKey: ModuleKey): VmTyped {
+    val securityManager =
+      SecurityManagers.standard(
+        SecurityManagers.defaultAllowedModules,
+        SecurityManagers.defaultAllowedResources,
+        SecurityManagers.defaultTrustLevels,
+        rootDir,
       )
-      val modB =
-        VmClass(
-          VmUtils.unavailableSourceSection(),
-          VmUtils.unavailableSourceSection(),
-          null,
-          emptyList(),
-          VmModifier.NONE,
-          PClassInfo.forModuleClass("modB", URI("test:/modB.pkl")),
-          emptyList(),
-          VmUtils.createEmptyModule(),
+    var ret: VmTyped? = null
+    VmUtils.createContext {
+        val vmContext = VmContext.get(null)
+        vmContext.initialize(
+          VmContext.Holder(
+            StackFrameTransformers.defaultTransformer,
+            securityManager,
+            HttpClient.dummyClient(),
+            ModuleResolver(
+              listOfNotNull(
+                ModuleKeyFactories.standardLibrary,
+                rootDir?.let { ModuleKeyFactories.file },
+              )
+            ),
+            ResourceManager(securityManager, listOf()),
+            Loggers.noop(),
+            mapOf(),
+            mapOf(),
+            null,
+            null,
+            null,
+            null,
+            TraceMode.COMPACT,
+            false,
+          )
         )
-      modB.initSupertype(
-        TypeNodeFactory.NonFinalClassTypeNodeGen.create(VmUtils.unavailableSourceSection(), modA),
-        modA,
+        ret = VmLanguage.get(null).loadModule(moduleKey)
+      }
+      .close()
+    return ret!!
+  }
+
+  private fun makeModule(text: String): VmTyped =
+    makeModule(null, synthetic(URI("repl:text"), text))
+
+  private fun makeModule(dir: Path, path: Path): VmTyped = makeModule(dir, file(path.toUri()))
+
+  private fun VmTyped.getTypeForProperty(property: String): VmType =
+    vmClass.getProperty(Identifier.get(property))!!.typeNode!!.typeNode.type
+
+  private fun VmTyped.getTypeForNestedProperty(prop1: String, prop2: String): VmType =
+    vmClass
+      .getProperty(Identifier.get(prop1))!!
+      .typeNode!!
+      .typeNode
+      .type
+      .vmClass!!
+      .getProperty(Identifier.get(prop2))!!
+      .typeNode!!
+      .typeNode
+      .type
+
+  /** Assert this is a subtype of [other] and [other] is a supertype of this, but not equivalent */
+  private fun VmType.sub(other: VmType) {
+    assertThat(this.isSubtypeOf(other)).isTrue
+    assertThat(other.isSupertypeOf(this)).isTrue
+    assertThat(other.isSubtypeOf(this)).isFalse
+    assertThat(this.isSupertypeOf(other)).isFalse
+    assertThat(this.equals(other)).isFalse
+    assertThat(other.equals(this)).isFalse
+  }
+
+  /**
+   * Assert this is a subtype of [other] and [other] is a supertype of this and they are equivalent
+   */
+  private fun VmType.eq(other: VmType) {
+    assertThat(this.isSubtypeOf(other)).isTrue
+    assertThat(other.isSupertypeOf(this)).isTrue
+    assertThat(other.isSubtypeOf(this)).isTrue
+    assertThat(this.isSupertypeOf(other)).isTrue
+    assertThat(this.equals(other)).isTrue
+    assertThat(other.equals(this)).isTrue
+  }
+
+  /** Assert this is a subtype of [other] and [other] is a subtype of this, but not equivalent */
+  private fun VmType.bidi(other: VmType) {
+    assertThat(this.isSubtypeOf(other)).isTrue
+    assertThat(other.isSupertypeOf(this)).isTrue
+    assertThat(other.isSubtypeOf(this)).isTrue
+    assertThat(this.isSupertypeOf(other)).isTrue
+    assertThat(this.equals(other)).isFalse
+    assertThat(other.equals(this)).isFalse
+  }
+
+  @Test
+  fun `unknown - equality (referential)`() {
+    VmType.UnknownType.INSTANCE.eq(VmType.UnknownType.INSTANCE)
+  }
+
+  @Test
+  fun `unknown - subtype and supertype of everything`() {
+    VmType.UnknownType.INSTANCE.bidi(VmType.ClassType(BaseModule.getStringClass()))
+  }
+
+  @Test
+  fun `nothing - equality (referential)`() {
+    VmType.NothingType.INSTANCE.eq(VmType.NothingType.INSTANCE)
+  }
+
+  @Test
+  fun `nothing - subtype of everything`() {
+    VmType.NothingType.INSTANCE.sub(VmType.ClassType(BaseModule.getStringClass()))
+    VmType.NothingType.INSTANCE.sub(VmType.StringLiteralType("foo"))
+  }
+
+  @Test
+  fun `final self - equality`(@TempDir tempDir: Path) {
+    val modPath = tempDir.resolve("test.pkl")
+    modPath.writeText(
+      """
+      module mod
+      import "test.pkl" as Declared
+
+      hidden moduleType: module
+      hidden moduleType2: module
+      hidden thisType: this
+      hidden thisType2: this
+      hidden declaredType: Declared
+      """
+        .trimIndent()
+    )
+    val mod = makeModule(tempDir, modPath)
+
+    assertThat(mod.vmClass.isOpen).isFalse
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForProperty("moduleType2"))
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForProperty("thisType"))
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForProperty("declaredType"))
+    mod.getTypeForProperty("thisType").eq(mod.getTypeForProperty("thisType2"))
+    mod.getTypeForProperty("thisType").eq(mod.getTypeForProperty("declaredType"))
+  }
+
+  @Test
+  fun `non-final self - equality`() {
+    val mod =
+      makeModule(
+        """
+        open module mod
+
+        hidden moduleType: module
+        hidden moduleType2: module
+        hidden thisType: this
+        hidden thisType2: this
+        """
+          .trimIndent()
       )
 
-      val aliasA =
-        VmTypeAlias(
-          VmUtils.unavailableSourceSection(),
-          VmUtils.unavailableSourceSection(),
-          null,
-          VmModifier.NONE,
-          emptyList(),
-          "AliasA",
-          modB.prototype,
-          "modB#AliasA",
-          emptyList(),
-          VmUtils.createEmptyMaterializedFrame(),
-        )
-      aliasA.initTypeCheckNode(TypeNode.IntTypeNode(VmUtils.unavailableSourceSection()))
-      val aliasB =
-        VmTypeAlias(
-          VmUtils.unavailableSourceSection(),
-          VmUtils.unavailableSourceSection(),
-          null,
-          VmModifier.NONE,
-          emptyList(),
-          "AliasB",
-          modB.prototype,
-          "modB#AliasB",
-          emptyList(),
-          VmUtils.createEmptyMaterializedFrame(),
-        )
-      aliasB.initTypeCheckNode(TypeNode.NumberTypeNode(VmUtils.unavailableSourceSection()))
+    assertThat(mod.vmClass.isOpen).isTrue
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForProperty("moduleType2"))
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForProperty("thisType"))
+    mod.getTypeForProperty("thisType").eq(mod.getTypeForProperty("thisType2"))
+  }
 
-      listOf(
-        // unknown
-        SubtypeCase(
-          "unknown: equality (referential)",
-          VmType.UnknownType.INSTANCE,
-          VmType.UnknownType.INSTANCE,
-          bidi = true,
-        ),
-        SubtypeCase(
-          "unknown: subtype and supertype of everything",
-          VmType.UnknownType.INSTANCE,
-          stringClass,
-          bidi = true,
-        ),
+  @Test
+  fun `non-final self - comparison to extended type`(@TempDir tempDir: Path) {
+    val parentPath = tempDir.resolve("parent.pkl")
+    parentPath.writeText(
+      """
+      open module parent
 
-        // nothing
-        SubtypeCase(
-          "nothing: equality (referential)",
-          VmType.NothingType.INSTANCE,
-          VmType.NothingType.INSTANCE,
-          bidi = true,
-        ),
-        SubtypeCase("nothing: subtype of everything", VmType.NothingType.INSTANCE, stringClass),
-        SubtypeCase("nothing: subtype of everything", VmType.NothingType.INSTANCE, boolClass),
+      moduleType: module
+      thisType: this
+      """
+        .trimIndent()
+    )
 
-        // module
-        SubtypeCase(
-          "module: equality (semantic)",
-          VmType.ModuleType(modA),
-          VmType.ModuleType(modA),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "module: equality to this (semantic)",
-          VmType.ModuleType(modA),
-          VmType.ThisType(modA),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "module: subtype to module of superclass",
-          VmType.ModuleType(modB),
-          VmType.ModuleType(modA),
-        ),
-        SubtypeCase(
-          "module: subtype to this of superclass",
-          VmType.ModuleType(modB),
-          VmType.ThisType(modA),
-        ),
+    val modPath = tempDir.resolve("test.pkl")
+    modPath.writeText(
+      """
+      open module mod
+      extends "parent.pkl"
+      import "parent.pkl" as Parent
 
-        // this
-        SubtypeCase(
-          "this: equality (semantic)",
-          VmType.ThisType(modA),
-          VmType.ThisType(modA),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "this: equality to module (semantic)",
-          VmType.ThisType(modA),
-          VmType.ModuleType(modA),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "this: subtype to this of superclass",
-          VmType.ThisType(modB),
-          VmType.ThisType(modA),
-        ),
-        SubtypeCase(
-          "this: subtype to module of superclass",
-          VmType.ThisType(modB),
-          VmType.ModuleType(modA),
-        ),
+      parent: Parent
+      child: Child
 
-        // string literal
-        SubtypeCase(
-          "string literal: equality (semantic)",
-          VmType.StringLiteralType("foo"),
-          VmType.StringLiteralType("foo"),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "string literal: subtype of String",
-          VmType.StringLiteralType("foo"),
-          stringClass,
-        ),
+      moduleType2: module
+      thisType2: this
 
-        // class
-        SubtypeCase(
-          "class: equality (semantic, unparameterized)",
-          boolClass,
-          VmType.ClassType(BaseModule.getBooleanClass()),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "class: equality (semantic, parameterized)",
-          VmType.ClassType(BaseModule.getMappingClass(), stringClass, boolClass),
-          VmType.ClassType(BaseModule.getMappingClass(), stringClass, boolClass),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "class: subtype (unparameterized)",
-          VmType.ClassType(BaseModule.getListClass()),
-          VmType.ClassType(BaseModule.getCollectionClass()),
-        ),
-        SubtypeCase(
-          "class: subtype of Any (unparameterized)",
-          VmType.ClassType(BaseModule.getListClass()),
-          anyClass,
-        ),
-        SubtypeCase(
-          "class: subtype (parameterized, direct inheritance)",
-          VmType.ClassType(BaseModule.getListClass()),
-          VmType.ClassType(BaseModule.getCollectionClass()),
-        ),
-        SubtypeCase(
-          "class: subtype (parameterized vs. unparametetized)",
-          VmType.ClassType(BaseModule.getListClass(), stringClass),
-          VmType.ClassType(BaseModule.getListClass()),
-        ),
-        SubtypeCase(
-          "class: subtype of Any (parameterized)",
-          VmType.ClassType(BaseModule.getListClass()),
-          anyClass,
-        ),
-        SubtypeCase(
-          "class: subtype (parameterized, type variable substitution)",
-          VmType.ClassType(BaseModule.getFunction1Class(), stringClass, boolClass),
-          VmType.ClassType(BaseModule.getFunctionClass(), boolClass),
-        ),
-        SubtypeCase(
-          "class: subtype (parameterized, type variable substitution, variance)",
-          VmType.ClassType(BaseModule.getFunction1Class(), stringClass, intClass),
-          VmType.ClassType(BaseModule.getFunctionClass(), numberClass),
-        ),
-        SubtypeCase(
-          "class: Char is a subtype of String",
-          VmType.AliasType(BaseModule.getCharTypeAlias()),
-          stringClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getInt8TypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getInt16TypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getInt32TypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getUIntTypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getUInt8TypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getUInt16TypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
-        SubtypeCase(
-          "class: Int alias is a subtype of Int",
-          VmType.AliasType(BaseModule.getUInt32TypeAlias(), BaseModule.getIntClass()),
-          intClass,
-        ),
+      open class Child extends module {
+        // no moduleType3 because module type usage in class bodies is deprecated
+        thisType3: this
+      }
+      """
+        .trimIndent()
+    )
 
-        // nullable
-        SubtypeCase(
-          "nullable: class is subtype of nullable class",
-          stringClass,
-          VmType.NullableType(stringClass),
-        ),
-        SubtypeCase(
-          "nullable: nullable class is subtype of nullable supertype",
-          VmType.NullableType(intClass),
-          VmType.NullableType(numberClass),
-        ),
+    val mod = makeModule(tempDir, modPath)
 
-        // constrained
-        SubtypeCase(
-          "constained: equality (identity)",
-          VmType.ConstrainedType(stringClass, arrayOf("true"), 0),
-          VmType.ConstrainedType(stringClass, arrayOf("true"), 0),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "constrained: subtype when base type is a subtype",
-          VmType.ConstrainedType(stringClass, arrayOf("true"), 0),
-          stringClass,
-        ),
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod.getTypeForProperty("thisType").eq(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod.getTypeForProperty("moduleType").eq(mod.getTypeForNestedProperty("parent", "thisType"))
+    mod.getTypeForProperty("thisType").eq(mod.getTypeForNestedProperty("parent", "thisType"))
+    mod.getTypeForProperty("moduleType2").sub(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod.getTypeForProperty("thisType2").sub(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod.getTypeForProperty("moduleType2").sub(mod.getTypeForNestedProperty("parent", "thisType"))
+    mod.getTypeForProperty("thisType2").sub(mod.getTypeForNestedProperty("parent", "thisType"))
 
-        // alias
-        SubtypeCase("alias: equality (unaliased)", VmType.AliasType(aliasA), intClass, bidi = true),
-        SubtypeCase(
-          "alias: equality (aliased)",
-          VmType.AliasType(aliasA),
-          VmType.AliasType(aliasA),
-          bidi = true,
-        ),
-        SubtypeCase(
-          "alias: subtype of plain class (aliased)",
-          VmType.AliasType(aliasA),
-          numberClass,
-        ),
-        SubtypeCase("alias: subtype of plain class (aliased)", intClass, VmType.AliasType(aliasB)),
+    mod
+      .getTypeForNestedProperty("child", "moduleType")
+      .eq(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod
+      .getTypeForNestedProperty("child", "thisType")
+      .eq(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod
+      .getTypeForNestedProperty("child", "moduleType")
+      .eq(mod.getTypeForNestedProperty("parent", "thisType"))
+    mod
+      .getTypeForNestedProperty("child", "thisType")
+      .eq(mod.getTypeForNestedProperty("parent", "thisType"))
+    mod
+      .getTypeForNestedProperty("child", "thisType3")
+      .sub(mod.getTypeForNestedProperty("parent", "moduleType"))
+    mod
+      .getTypeForNestedProperty("child", "thisType3")
+      .sub(mod.getTypeForNestedProperty("parent", "thisType"))
 
-        // union
-        SubtypeCase(
-          "union: equality (ignores default index)",
-          VmType.UnionType(-1, arrayOf("foo", "bar", "baz")),
-          VmType.UnionType(0, arrayOf("foo", "bar", "baz")),
-          bidi = true,
-        ),
-        //        SubtypeCase(
-        //          "union: equality (ignores order)", // TODO
-        //          VmType.UnionType(-1, arrayOf("foo", "bar", "baz")),
-        //          VmType.UnionType(-1, arrayOf("bar", "baz", "foo")),
-        //          bidi = true,
-        //        ),
-        SubtypeCase(
-          "union: subtype when all elements are subtype",
-          VmType.UnionType(-1, arrayOf("foo", "bar", "baz")),
-          stringClass,
-        ),
-        SubtypeCase(
-          "union: subtype of union when all elements are contained in supertype",
-          VmType.UnionType(-1, arrayOf("foo", "bar", "baz")),
-          VmType.UnionType(-1, arrayOf("foo", "bar", "baz", "qux")),
-        ),
+    mod.getTypeForNestedProperty("child", "moduleType").eq(mod.getTypeForProperty("moduleType"))
+    mod.getTypeForNestedProperty("child", "thisType").eq(mod.getTypeForProperty("moduleType"))
+    mod.getTypeForNestedProperty("child", "moduleType").eq(mod.getTypeForProperty("thisType"))
+    mod.getTypeForNestedProperty("child", "thisType").eq(mod.getTypeForProperty("thisType"))
+    mod.getTypeForNestedProperty("child", "thisType3").sub(mod.getTypeForProperty("moduleType2"))
+    mod.getTypeForNestedProperty("child", "thisType3").sub(mod.getTypeForProperty("thisType2"))
 
-        // type variable
-        SubtypeCase(
-          "type variable: treated like unknown, supertype and subtype to all",
-          boolClass,
-          typeVar,
-          bidi = true,
-        ),
-      )
+    // non-final self type subtype of declared type that is superclass of self type's "base"
+    // class types are never subtypes of non-final self types
+    mod.getTypeForProperty("moduleType").sub(mod.getTypeForProperty("parent"))
+    mod.getTypeForProperty("thisType").sub(mod.getTypeForProperty("parent"))
+    mod.getTypeForProperty("moduleType2").sub(mod.getTypeForProperty("parent"))
+    mod.getTypeForProperty("thisType2").sub(mod.getTypeForProperty("parent"))
+    mod.getTypeForNestedProperty("child", "thisType3").sub(mod.getTypeForProperty("parent"))
+  }
+
+  @Test
+  fun `string literal - equality`() {
+    VmType.StringLiteralType("foo").eq(VmType.StringLiteralType("foo"))
+  }
+
+  @Test
+  fun `string literal - subtype of String`() {
+    VmType.StringLiteralType("foo").sub(VmType.ClassType(BaseModule.getStringClass()))
+  }
+
+  @Test
+  fun `class - equality, unparameterized`() {
+    VmType.ClassType(BaseModule.getBooleanClass())
+      .eq(VmType.ClassType(BaseModule.getBooleanClass()))
+  }
+
+  @Test
+  fun `class - equality, unparameterized generic`() {
+    VmType.ClassType(BaseModule.getListClass()).eq(VmType.ClassType(BaseModule.getListClass()))
+  }
+
+  @Test
+  fun `class - equality, parameterized generic`() {
+    VmType.ClassType(BaseModule.getMappingClass(), stringClass, boolClass)
+      .eq(VmType.ClassType(BaseModule.getMappingClass(), stringClass, boolClass))
+  }
+
+  @Test
+  fun `class - subtype, unparameterized generic`() {
+    VmType.ClassType(BaseModule.getListClass())
+      .sub(VmType.ClassType(BaseModule.getCollectionClass()))
+  }
+
+  @Test
+  fun `class - subtype of any`() {
+    VmType.ClassType(BaseModule.getListClass()).sub(VmType.ClassType(BaseModule.getAnyClass()))
+    VmType.ClassType(BaseModule.getListClass(), stringClass)
+      .sub(VmType.ClassType(BaseModule.getAnyClass()))
+  }
+
+  @Test
+  fun `class - subtype of unparameterized`() {
+    VmType.ClassType(BaseModule.getListClass(), stringClass)
+      .sub(VmType.ClassType(BaseModule.getListClass()))
+  }
+
+  @Test
+  fun `class - subtype, generic with substitution`() {
+    VmType.ClassType(BaseModule.getFunction1Class(), stringClass, boolClass)
+      .sub(VmType.ClassType(BaseModule.getFunctionClass(), boolClass))
+    VmType.ClassType(BaseModule.getFunction1Class(), stringClass, intClass)
+      .sub(VmType.ClassType(BaseModule.getFunctionClass(), numberClass))
+  }
+
+  @Test
+  fun `class - special cases`() {
+    VmType.AliasType(BaseModule.getCharTypeAlias()).sub(stringClass)
+    for (cls in listOf(intClass, numberClass)) {
+      VmType.AliasType(BaseModule.getInt8TypeAlias()).sub(cls)
+      VmType.AliasType(BaseModule.getInt16TypeAlias()).sub(cls)
+      VmType.AliasType(BaseModule.getInt32TypeAlias()).sub(cls)
+      VmType.AliasType(BaseModule.getUIntTypeAlias()).sub(cls)
+      VmType.AliasType(BaseModule.getUInt8TypeAlias()).sub(cls)
+      VmType.AliasType(BaseModule.getUInt16TypeAlias()).sub(cls)
+      VmType.AliasType(BaseModule.getUInt32TypeAlias()).sub(cls)
     }
   }
 
-  @ParameterizedTest
-  @MethodSource("getSubtypeCases")
-  fun `subtype checking`(case: SubtypeCase) {
-    assertThat(case.first.isSubtypeOf(case.second)).isTrue
-    assertThat(case.second.isSupertypeOf(case.first)).isTrue
-    assertThat(case.first.isSupertypeOf(case.second)).isEqualTo(case.bidi)
-    assertThat(case.second.isSubtypeOf(case.first)).isEqualTo(case.bidi)
+  @Test
+  fun `nullable - class is subtype of nullable class`() {
+    stringClass.sub(VmType.NullableType(stringClass))
+    intClass.sub(VmType.NullableType(numberClass))
+  }
+
+  @Test
+  fun `nullable - subtype of nullable supertype`() {
+    VmType.NullableType(intClass).sub(VmType.NullableType(numberClass))
+  }
+
+  @Test
+  fun `constrained - equality (identity)`() {
+    VmType.ConstrainedType(stringClass, arrayOf("true"), 0)
+      .eq(VmType.ConstrainedType(stringClass, arrayOf("true"), 0))
+  }
+
+  @Test
+  fun `constrained - subtype when base type is supertype`() {
+    VmType.ConstrainedType(stringClass, arrayOf("true"), 0).sub(stringClass)
+    VmType.ConstrainedType(intClass, arrayOf("true"), 0).sub(numberClass)
+  }
+
+  @Test
+  fun `alias - equality`() {
+    val mod =
+      makeModule(
+        """
+        typealias A = Int
+        typealias B = A
+        typealias C = B
+
+        int: Int
+        a: A
+        b: B
+        c: C
+        """
+          .trimIndent()
+      )
+
+    mod.getTypeForProperty("int").eq(mod.getTypeForProperty("a"))
+    mod.getTypeForProperty("int").eq(mod.getTypeForProperty("b"))
+    mod.getTypeForProperty("int").eq(mod.getTypeForProperty("c"))
+    mod.getTypeForProperty("a").eq(mod.getTypeForProperty("b"))
+    mod.getTypeForProperty("a").eq(mod.getTypeForProperty("c"))
+    intClass.eq(mod.getTypeForProperty("b"))
+  }
+
+  @Test
+  fun `alias - subtype`() {
+    val mod =
+      makeModule(
+        """
+        typealias A = Int
+        typealias B = A
+        typealias C = B
+
+        int: Int
+        a: A
+        b: B
+        c: C
+        """
+          .trimIndent()
+      )
+
+    mod.getTypeForProperty("c").sub(numberClass)
+  }
+
+  @Test
+  fun `union - equality (ignores default index)`() {
+    VmType.UnionType(-1, arrayOf("foo", "bar", "baz"))
+      .eq(VmType.UnionType(0, arrayOf("foo", "bar", "baz")))
+  }
+
+  @Test
+  @Disabled("TODO: support order-independent union type equivalence")
+  fun `union - equality, order-independent`() {
+    VmType.UnionType(-1, arrayOf("foo", "bar", "baz"))
+      .eq(VmType.UnionType(-1, arrayOf("bar", "baz", "foo")))
+  }
+
+  @Test
+  fun `union - subtype when all elements are subtype`() {
+    VmType.UnionType(-1, arrayOf("foo", "bar", "baz")).sub(stringClass)
+  }
+
+  @Test
+  fun `union - subtype of union when all elements are contained in supertype`() {
+    VmType.UnionType(-1, arrayOf("foo", "bar", "baz"))
+      .sub(VmType.UnionType(-1, arrayOf("foo", "bar", "baz", "qux")))
+  }
+
+  @Test
+  fun `type variable - treated like unknown, supertype and subtype to all`() {
+    VmType.TypeVariableType(TypeParameter(TypeParameter.Variance.INVARIANT, "Foo", 0))
+      .bidi(stringClass)
   }
 }
