@@ -16,6 +16,8 @@
 package org.pkl.core.ast.expression.binary;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.NodeChild;
+import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
@@ -25,11 +27,11 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmUtils;
 
-public final class LetExprNode extends ExpressionNode {
+@NodeChild(value = "bindingNode", type = ExpressionNode.class)
+public abstract class LetExprNode extends ExpressionNode {
 
   private final String qualifiedName;
   private @Child @Nullable UnresolvedTypeNode unresolvedTypeNode;
-  private @Child ExpressionNode bindingNode;
   private @Child ExpressionNode bodyNode;
   private @Child @Nullable TypeNode typeNode;
   private final int slot;
@@ -38,45 +40,40 @@ public final class LetExprNode extends ExpressionNode {
       SourceSection sourceSection,
       String qualifiedName,
       @Nullable UnresolvedTypeNode unresolvedTypeNode,
-      ExpressionNode bindingNode,
       ExpressionNode bodyNode,
       int slot) {
     super(sourceSection);
     this.qualifiedName = qualifiedName;
     this.unresolvedTypeNode = unresolvedTypeNode;
-    this.bindingNode = bindingNode;
     this.bodyNode = bodyNode;
     this.slot = slot;
   }
 
   public TypeNode getTypeNode(VirtualFrame frame) {
-    if (slot == -1) return new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
-    if (typeNode == null) {
-      CompilerDirectives.transferToInterpreterAndInvalidate();
-      if (unresolvedTypeNode != null) {
-        typeNode = unresolvedTypeNode.execute(frame);
-      } else {
-        typeNode = new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
-      }
+    if (typeNode != null) return typeNode;
+
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    if (unresolvedTypeNode != null && slot >= 0) {
+      typeNode = unresolvedTypeNode.execute(frame);
+    } else {
+      typeNode = new TypeNode.UnknownTypeNode(VmUtils.unavailableSourceSection());
+    }
+    if (slot >= 0) {
       typeNode.initWriteSlotNode(slot);
       frame.getFrameDescriptor().setSlotKind(slot, typeNode.getFrameSlotKind());
-      insert(typeNode);
     }
     assert typeNode != null;
-    return typeNode;
+    return insert(typeNode);
   }
 
   public String getQualifiedName() {
     return qualifiedName;
   }
 
-  public ExpressionNode getBindingNode() {
-    return bindingNode;
-  }
+  public abstract ExpressionNode getBindingNode();
 
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    var value = bindingNode.executeGeneric(frame);
+  @Specialization
+  protected Object eval(VirtualFrame frame, Object value) {
     if (slot != -1) {
       getTypeNode(frame).executeAndSet(frame, value);
     }

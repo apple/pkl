@@ -15,8 +15,8 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
@@ -30,7 +30,7 @@ public abstract class InferParentWithinLetBindingNode extends AbstractInferParen
     super(sourceSection, language);
   }
 
-  protected LetExprNode getLetNode(VirtualFrame frame) {
+  protected LetExprNode getLetNode() {
     Node child = this;
     LetExprNode letNode = null;
     for (var node = getParent(); node != null; node = node.getParent()) {
@@ -50,8 +50,13 @@ public abstract class InferParentWithinLetBindingNode extends AbstractInferParen
   @Specialization(guards = {"typeNode.isFinalType()"})
   protected final Object evalCached(
       @SuppressWarnings("unused") VirtualFrame frame,
-      @Bind("getLetNode(frame)") LetExprNode letNode,
-      @Bind("letNode.getTypeNode(frame)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached(value = "getLetNode()", neverDefault = true, adopt = false)
+          @Shared
+          @SuppressWarnings("unused")
+          LetExprNode letNode,
+      @Cached(value = "letNode.getTypeNode(frame)", neverDefault = true, adopt = false)
+          @SuppressWarnings("unused")
+          TypeNode typeNode,
       @Cached(
               value =
                   "getDefaultValue(frame, typeNode, letNode.getSourceSection(), letNode.getQualifiedName())",
@@ -60,11 +65,13 @@ public abstract class InferParentWithinLetBindingNode extends AbstractInferParen
     return defaultValue;
   }
 
-  @Specialization(replaces = "evalCached")
+  @Specialization
   protected final Object eval(
       VirtualFrame frame,
-      @Bind("getLetNode(frame)") LetExprNode letNode,
-      @Bind("letNode.getTypeNode(frame)") TypeNode typeNode) {
+      @Cached(value = "getLetNode()", neverDefault = true, adopt = false) @Shared
+          LetExprNode letNode,
+      @Cached(value = "letNode.getTypeNode(frame)", neverDefault = true, adopt = false)
+          TypeNode typeNode) {
     return getDefaultValue(frame, typeNode, letNode.getSourceSection(), letNode.getQualifiedName());
   }
 }
