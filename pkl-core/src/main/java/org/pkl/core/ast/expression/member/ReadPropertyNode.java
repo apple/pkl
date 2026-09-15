@@ -24,7 +24,6 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.PType;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.member.ClassProperty;
@@ -77,7 +76,7 @@ public abstract class ReadPropertyNode extends ExpressionNode {
       case DEFAULT_MEMBER ->
           ErrorMessages.create(
               "cannotReferenceDefaultProperty",
-              ((PType.Class) err.getType()).getPClass().getSimpleName());
+              ((VmType.ClassType) err.getType()).getVmClass().getSimpleName());
       case EXTERNAL_CLASS ->
           ErrorMessages.create(
               "cannotReferencePropertyInExternalClass", propertyName, err.getType());
@@ -92,7 +91,7 @@ public abstract class ReadPropertyNode extends ExpressionNode {
     } catch (VmReferenceAccessError err) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
-          .evalError("cannotFindPropertyInObjectNoHint", propertyName, receiver.exportType())
+          .evalError("cannotFindPropertyInObjectNoHint", propertyName, receiver.getType())
           .withHint(getReferenceErrorHint(receiver, err))
           .build();
     }

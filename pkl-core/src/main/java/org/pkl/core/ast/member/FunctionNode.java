@@ -31,6 +31,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Pair;
 
@@ -84,6 +85,10 @@ public final class FunctionNode extends RegularMemberNode {
   public @Nullable TypeNode getParameterTypeNode(int idx) {
     if (idx >= paramCount) return null;
     return parameterTypeNodes[idx];
+  }
+
+  public VmType getReturnType() {
+    return returnTypeNode == null ? UnknownType.INSTANCE : returnTypeNode.getType();
   }
 
   public @Nullable TypeNode getReturnTypeNode() {

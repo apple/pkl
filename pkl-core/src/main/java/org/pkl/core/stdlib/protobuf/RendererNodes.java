@@ -62,6 +62,7 @@ import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmReference;
 import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
+import org.pkl.core.runtime.VmType;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.VmValue;
@@ -118,7 +119,9 @@ public final class RendererNodes {
     var clazz =
         value instanceof VmValue vmValue
             ? vmValue.getVmClass()
-            : value instanceof TypeNode typeNode ? typeNode.getVmClass() : value.getClass();
+            : value instanceof TypeNode typeNode
+                ? typeNode.getType().getVmClass()
+                : value.getClass();
     if (clazz == null) {
       throw new VmExceptionBuilder()
           .evalError("cannotResolveTypeForProtobuf")
@@ -345,7 +348,7 @@ public final class RendererNodes {
               return computedName;
             }
           } else if (type instanceof NonFinalClassTypeNode) {
-            var clazz = type.getVmClass();
+            var clazz = type.getType().getVmClass();
             if (value instanceof VmValue vmValue) {
               if (clazz == vmValue.getVmClass()) {
                 return clazz.getSimpleName();
@@ -402,9 +405,9 @@ public final class RendererNodes {
             hasCollection = true;
             collectionType = setType.getElementTypeNode();
           } else if (type instanceof NonFinalClassTypeNode) {
-            if (type.getVmClass() != clazz) {
+            if (type.getType().getVmClass() != clazz) {
               throw new VmExceptionBuilder()
-                  .evalError("cannotRenderSubtypeForProtobuf", type.getVmClass(), clazz)
+                  .evalError("cannotRenderSubtypeForProtobuf", type.getType().getVmClass(), clazz)
                   .build();
             }
           }
@@ -581,7 +584,8 @@ public final class RendererNodes {
       } else if (type instanceof NullableTypeNode nullableType) {
         return resolveType(nullableType.getElementTypeNode());
       } else if (type instanceof TypeAliasTypeNode typeAliasType) {
-        return resolveType(typeAliasType.getVmTypeAlias().getTypeNode());
+        return resolveType(
+            ((VmType.AliasType) typeAliasType.getType()).getVmTypeAlias().getTypeNode());
       } else if (type instanceof ListingTypeNode listingType) {
         var valueType = resolveType(listingType.getValueTypeNode());
         assert valueType != null : "Failed to resolve type node.";
@@ -633,8 +637,8 @@ public final class RendererNodes {
         elements.sort(
             (o1, o2) -> {
               if (o1 instanceof ObjectSlotTypeNode && o2 instanceof ObjectSlotTypeNode) {
-                var t1 = o1.getVmClass();
-                var t2 = o2.getVmClass();
+                var t1 = o1.getType().getVmClass();
+                var t2 = o2.getType().getVmClass();
                 if (t1 == null || t2 == null) return 0;
                 return t1.isSubclassOf(t2) ? -1 : t2.isSubclassOf(t1) ? 1 : 0;
               }

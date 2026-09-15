@@ -223,7 +223,7 @@ public final class MirrorFactories {
         .addTypedProperty(
             "referent",
             typeNode -> {
-              var clazz = typeNode.getVmClass();
+              var clazz = typeNode.getType().getVmClass();
               assert clazz != null;
               return clazz.getMirror();
             })
@@ -232,11 +232,7 @@ public final class MirrorFactories {
     typeAliasTypeFactory
         .addTypedProperty(
             "referent",
-            typeNode -> {
-              var alias = typeNode.getVmTypeAlias();
-              assert alias != null;
-              return alias.getMirror();
-            })
+            typeNode -> ((VmType.AliasType) typeNode.getType()).getVmTypeAlias().getMirror())
         .addListProperty("typeArguments", TypeNode::getTypeArgumentMirrors);
 
     declaredTypeFactory
@@ -251,7 +247,8 @@ public final class MirrorFactories {
         .addListProperty("parameterTypes", Pair::getFirst)
         .addTypedProperty("returnType", Pair::getSecond);
 
-    stringLiteralTypeFactory.addStringProperty("value", StringLiteralTypeNode::getLiteral);
+    stringLiteralTypeFactory.addStringProperty(
+        "value", typeNode -> ((VmType.StringLiteralType) typeNode.getType()).getLiteral());
 
     stringLiteralTypeFactory2.addStringProperty("value", Property.identity());
 
