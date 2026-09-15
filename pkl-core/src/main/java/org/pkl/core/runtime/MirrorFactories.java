@@ -232,11 +232,7 @@ public final class MirrorFactories {
     typeAliasTypeFactory
         .addTypedProperty(
             "referent",
-            typeNode -> {
-              var alias = typeNode.getType().getVmTypeAlias();
-              assert alias != null;
-              return alias.getMirror();
-            })
+            typeNode -> ((VmType.AliasType) typeNode.getType()).getVmTypeAlias().getMirror())
         .addListProperty("typeArguments", TypeNode::getTypeArgumentMirrors);
 
     declaredTypeFactory

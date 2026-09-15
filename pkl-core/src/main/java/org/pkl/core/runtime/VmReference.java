@@ -28,6 +28,8 @@ import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
 import org.pkl.core.Reference;
+import org.pkl.core.runtime.VmType.NonFinalModuleType;
+import org.pkl.core.runtime.VmType.NonFinalThisType;
 import org.pkl.core.runtime.VmType.NothingType;
 import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.util.paguro.RrbTree;
@@ -150,7 +152,7 @@ public final class VmReference extends VmValue {
       for (var t : union.getElementTypes()) {
         normalizeTypes(t, thisClass, moduleClass, result);
       }
-    } else if (type instanceof VmType.ThisType) {
+    } else if (type instanceof NonFinalThisType) {
       // there are 4 entrypoints here:
       // 1. init via the Reference constructor can only normalize an unparameterized PType.Class
       // 2. typecheck via ReferenceTypeNode erases self types to their actual PType.Class
@@ -160,7 +162,7 @@ public final class VmReference extends VmValue {
       // only property access and typecheck can produce THIS or MODULE.
       // getCandidatePropertyType and referentTypeIsSubtypeOf always pass non-null `thisClass`.
       result.add(new VmType.ClassType(thisClass));
-    } else if (type instanceof VmType.ModuleType) {
+    } else if (type instanceof NonFinalModuleType) {
       // this can be incorrect for usage of the module type in a class's property type annotation,
       // which is deprecated!!
       result.add(new VmType.ClassType(moduleClass));
@@ -208,7 +210,7 @@ public final class VmReference extends VmValue {
       return;
     }
     // restriction: only class types can have their properties referenced
-    if (!(type instanceof VmType.ClassType ct)) {
+    if (!(type instanceof VmType.AbstractClassType ct)) {
       throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
     }
     if (ct.getVmClass().isDynamicClass()) {

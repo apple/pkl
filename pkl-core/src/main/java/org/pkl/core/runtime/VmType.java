@@ -32,8 +32,10 @@ public abstract sealed class VmType {
 
   public abstract PType export();
 
+  /** Checks if two types are equivalent. {@code other} will never be an {@link AliasType}. */
   protected abstract boolean doIsEquivalentTo(VmType other);
 
+  /** Checks if this type is a supertype of {@code other}. */
   protected abstract boolean doIsSupertypeOf(VmType other);
 
   @SuppressWarnings("BooleanMethodIsAlwaysInverted")
@@ -45,14 +47,15 @@ public abstract sealed class VmType {
     return null;
   }
 
-  public @Nullable VmTypeAlias getVmTypeAlias() {
-    return null;
-  }
-
   /** Tells if this type is the same typecheck as the other type. */
   @Override
-  public final boolean equals(Object value) {
-    return this == value || value instanceof VmType other && doIsEquivalentTo(other);
+  public final boolean equals(@Nullable Object value) {
+    if (this == value) return true;
+    if (!(value instanceof VmType other)) return false;
+    while (other instanceof AliasType at) {
+      other = at.aliasedType;
+    }
+    return doIsEquivalentTo(other);
   }
 
   public final boolean isSubtypeOf(VmType other) {
@@ -126,66 +129,6 @@ public abstract sealed class VmType {
     }
   }
 
-  public abstract static sealed class SelfType extends VmType {
-    private final VmClass clazz;
-
-    protected SelfType(VmClass clazz) {
-      this.clazz = clazz;
-    }
-
-    @Override
-    public VmClass getVmClass() {
-      return clazz;
-    }
-
-    @Override
-    protected final boolean doIsEquivalentTo(VmType other) {
-      return other instanceof SelfType t && clazz == t.clazz;
-    }
-
-    @Override
-    protected final boolean doIsSupertypeOf(VmType other) {
-      return other instanceof SelfType mt && clazz.isSuperclassOf(mt.clazz);
-    }
-
-    @Override
-    public final int hashCode() {
-      return 31 * clazz.hashCode();
-    }
-  }
-
-  public static final class ModuleType extends SelfType {
-    public ModuleType(VmClass clazz) {
-      super(clazz);
-    }
-
-    @Override
-    public PType export() {
-      return PType.MODULE;
-    }
-
-    @Override
-    public String toString() {
-      return "module";
-    }
-  }
-
-  public static final class ThisType extends SelfType {
-    public ThisType(VmClass clazz) {
-      super(clazz);
-    }
-
-    @Override
-    public PType export() {
-      return PType.THIS;
-    }
-
-    @Override
-    public String toString() {
-      return "this";
-    }
-  }
-
   public static final class StringLiteralType extends VmType {
     private final String literal;
 
@@ -225,28 +168,11 @@ public abstract sealed class VmType {
     }
   }
 
-  public static final class ClassType extends VmType {
-    private final VmClass clazz;
-    private final VmType[] typeArguments;
+  public abstract static sealed class AbstractClassType extends VmType {
+    protected final VmClass clazz;
+    protected final VmType[] typeArguments;
 
-    private static final ClassType ANY = new ClassType(BaseModule.getAnyClass());
-
-    public ClassType(VmClass clazz) {
-      this.clazz = clazz;
-      typeArguments = new VmType[0];
-    }
-
-    public ClassType(VmClass clazz, VmType typeArgument) {
-      this.clazz = clazz;
-      typeArguments = new VmType[] {typeArgument};
-    }
-
-    public ClassType(VmClass clazz, VmType typeArgument1, VmType typeArgument2) {
-      this.clazz = clazz;
-      typeArguments = new VmType[] {typeArgument1, typeArgument2};
-    }
-
-    public ClassType(VmClass clazz, VmType[] typeArguments) {
+    protected AbstractClassType(VmClass clazz, VmType[] typeArguments) {
       this.clazz = clazz;
       this.typeArguments = typeArguments;
     }
@@ -275,7 +201,7 @@ public abstract sealed class VmType {
 
     @Override
     protected boolean doIsEquivalentTo(VmType other) {
-      if (!(other instanceof ClassType t)) return false;
+      if (!(other instanceof AbstractClassType t)) return false;
       if (clazz != t.clazz) return false;
       return typesEquals(typeArguments, t.typeArguments);
     }
@@ -290,7 +216,7 @@ public abstract sealed class VmType {
               || (other instanceof AliasType at && at.typeAlias == BaseModule.getCharTypeAlias())))
         return true;
       // special case: Int is a supertype of range-constrained aliases
-      if (clazz == BaseModule.getIntClass()
+      if ((clazz == BaseModule.getIntClass() || clazz == BaseModule.getNumberClass())
           && other instanceof AliasType at
           && (at.typeAlias == BaseModule.getInt8TypeAlias()
               || at.typeAlias == BaseModule.getInt16TypeAlias()
@@ -299,9 +225,13 @@ public abstract sealed class VmType {
               || at.typeAlias == BaseModule.getUInt8TypeAlias()
               || at.typeAlias == BaseModule.getUInt16TypeAlias()
               || at.typeAlias == BaseModule.getUInt32TypeAlias())) return true;
+      // special case: class types are the supertype of non-final self types "rooted" to a subclass
+      if (other instanceof NonFinalSelfType st) {
+        return clazz.isSuperclassOf(st.clazz);
+      }
 
-      // standard case: other is a ClassType
-      if (!(other instanceof ClassType ct)) return false;
+      // standard case: other is a AbstractClassType
+      if (!(other instanceof AbstractClassType ct)) return false;
       // if clazz isn't a superclass of other's we're not a supertype
       if (!clazz.isSuperclassOf(ct.clazz)) return false;
       // if our class has no type params, we are a supertype
@@ -311,21 +241,23 @@ public abstract sealed class VmType {
       // handles arbitrary generics like Function2<A, B, R> -> Function<R>
 
       var goalState =
-          typeArguments.length > 0 ? typeArguments : nCopies(clazz.getTypeParameterCount(), ANY);
+          typeArguments.length > 0
+              ? typeArguments
+              : nCopies(clazz.getTypeParameterCount(), ClassType.ANY);
       var state =
           ct.typeArguments.length > 0
               ? ct.typeArguments
-              : nCopies(ct.clazz.getTypeParameterCount(), ANY);
+              : nCopies(ct.clazz.getTypeParameterCount(), ClassType.ANY);
       for (var c = ct.clazz; c != clazz; c = c.getSuperclass()) {
         assert c != null; // we know walking parents reaches clazz before null
         var cSuperclass = c.getSuperclass();
         assert cSuperclass != null; // we know c has a superclass
-        var cSupertype = (ClassType) c.getSupertype();
+        var cSupertype = (AbstractClassType) c.getSupertype();
         assert cSupertype != null; // we know c has a supertype
 
         if (cSupertype.typeArguments.length == 0) {
           // supertype args could be omitted, e.g. class MyList<T> extends List
-          state = nCopies(cSuperclass.getTypeParameterCount(), ANY);
+          state = nCopies(cSuperclass.getTypeParameterCount(), ClassType.ANY);
           continue;
         } else if (state.length == 0) {
           // subclass may not have type args, e.g. class A extends B<Int>
@@ -356,6 +288,31 @@ public abstract sealed class VmType {
     }
 
     @Override
+    public int hashCode() {
+      return 31 * clazz.hashCode() + Arrays.hashCode(typeArguments);
+    }
+  }
+
+  public static final class ClassType extends AbstractClassType {
+    public ClassType(VmClass clazz) {
+      super(clazz, new VmType[0]);
+    }
+
+    public ClassType(VmClass clazz, VmType typeArgument) {
+      super(clazz, new VmType[] {typeArgument});
+    }
+
+    public ClassType(VmClass clazz, VmType typeArgument1, VmType typeArgument2) {
+      super(clazz, new VmType[] {typeArgument1, typeArgument2});
+    }
+
+    public ClassType(VmClass clazz, VmType[] typeArguments) {
+      super(clazz, typeArguments);
+    }
+
+    private static final ClassType ANY = new ClassType(BaseModule.getAnyClass());
+
+    @Override
     public PType export() {
       return clazz.isFunctionNClass()
           ? new PType.Function(
@@ -380,22 +337,100 @@ public abstract sealed class VmType {
       }
 
       if (typeArguments.length == 0) return clazz.getDisplayName();
+      return appendTypeArguments(new StringBuilder(clazz.getDisplayName()), typeArguments)
+          .toString();
+    }
+  }
 
-      var sb = new StringBuilder(clazz.getDisplayName());
-      sb.append('<');
-      for (var i = 0; i < typeArguments.length; i++) {
-        sb.append(typeArguments[i]);
-        if (i < typeArguments.length - 1) {
-          sb.append(", ");
-        }
-      }
-      sb.append('>');
-      return sb.toString();
+  public static final class FinalModuleType extends AbstractClassType {
+    public FinalModuleType(VmClass clazz) {
+      super(clazz, new VmType[0]);
     }
 
     @Override
-    public int hashCode() {
-      return 31 * clazz.hashCode() + Arrays.hashCode(typeArguments);
+    public PType export() {
+      return PType.MODULE;
+    }
+
+    @Override
+    public String toString() {
+      return "module";
+    }
+  }
+
+  public static final class FinalThisType extends AbstractClassType {
+    public FinalThisType(VmClass clazz) {
+      super(clazz, new VmType[0]);
+    }
+
+    @Override
+    public PType export() {
+      return PType.THIS;
+    }
+
+    @Override
+    public String toString() {
+      return "this";
+    }
+  }
+
+  private abstract static sealed class NonFinalSelfType extends VmType {
+    private final VmClass clazz;
+
+    protected NonFinalSelfType(VmClass clazz) {
+      this.clazz = clazz;
+    }
+
+    @Override
+    public VmClass getVmClass() {
+      return clazz;
+    }
+
+    @Override
+    protected final boolean doIsEquivalentTo(VmType other) {
+      return other instanceof NonFinalSelfType st && clazz == st.clazz;
+    }
+
+    @Override
+    protected final boolean doIsSupertypeOf(VmType other) {
+      return other instanceof NonFinalSelfType st && clazz.isSuperclassOf(st.clazz);
+    }
+
+    @Override
+    public final int hashCode() {
+      return 31 * clazz.hashCode();
+    }
+  }
+
+  public static final class NonFinalModuleType extends NonFinalSelfType {
+    public NonFinalModuleType(VmClass clazz) {
+      super(clazz);
+    }
+
+    @Override
+    public PType export() {
+      return PType.MODULE;
+    }
+
+    @Override
+    public String toString() {
+      return "module";
+    }
+  }
+
+  public static final class NonFinalThisType extends NonFinalSelfType {
+    public NonFinalThisType(VmClass clazz) {
+      super(clazz);
+    }
+
+    @Override
+    public PType export() {
+      return PType.THIS;
+    }
+
+    @Override
+    public String toString() {
+      return "this";
     }
   }
 
@@ -519,7 +554,6 @@ public abstract sealed class VmType {
       this.aliasedType = aliasedType;
     }
 
-    @Override
     public VmTypeAlias getVmTypeAlias() {
       return typeAlias;
     }
@@ -535,11 +569,7 @@ public abstract sealed class VmType {
 
     @Override
     protected boolean doIsEquivalentTo(VmType other) {
-      var o = other;
-      while (o instanceof AliasType aliasType) {
-        o = aliasType.aliasedType;
-      }
-      return aliasedType.equals(o);
+      return aliasedType.equals(other);
     }
 
     @Override
@@ -580,17 +610,8 @@ public abstract sealed class VmType {
     @Override
     public String toString() {
       if (typeArguments.length == 0) return typeAlias.getDisplayName();
-
-      var sb = new StringBuilder(typeAlias.getDisplayName());
-      sb.append('<');
-      for (var i = 0; i < typeArguments.length; i++) {
-        sb.append(typeArguments[i]);
-        if (i < typeArguments.length - 1) {
-          sb.append(", ");
-        }
-      }
-      sb.append('>');
-      return sb.toString();
+      return appendTypeArguments(new StringBuilder(typeAlias.getDisplayName()), typeArguments)
+          .toString();
     }
 
     @Override
@@ -730,5 +751,17 @@ public abstract sealed class VmType {
     var ret = new VmType[len];
     Arrays.fill(ret, type);
     return ret;
+  }
+
+  private static StringBuilder appendTypeArguments(StringBuilder sb, VmType[] typeArguments) {
+    sb.append('<');
+    for (var i = 0; i < typeArguments.length; i++) {
+      sb.append(typeArguments[i]);
+      if (i < typeArguments.length - 1) {
+        sb.append(", ");
+      }
+    }
+    sb.append('>');
+    return sb;
   }
 }
