@@ -1,0 +1,29 @@
+class Bird {
+  name: String
+}
+
+hidden birdTypes: Mapping<String, Bird> = new {
+  ["pigeon"] {
+    name = "Pigeon"
+  }
+  ["cormorant"] {
+    name = "Cormorant"
+  }
+}
+
+class Category {
+  tag: Mapping<String, Bird>
+}
+
+res1 =
+  birdTypes.fold(
+    new Category {},
+    (acc, name, birds) -> (acc) {
+      // on different reads, `super.tag` should give a different owner.
+      // however, the receiver is the same (receiver is `res1`)
+      tag = (super.tag) {
+        [name] = birds
+      }
+    },
+  )
+
