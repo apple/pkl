@@ -74,6 +74,8 @@ endif::[]
 :uri-stdlib-jsonnetModule: {uri-pkl-stdlib-docs}/jsonnet
 :uri-stdlib-reflectModule: {uri-pkl-stdlib-docs}/reflect
 :uri-stdlib-mathModule: {uri-pkl-stdlib-docs}/math
+:uri-stdlib-netModule: {uri-pkl-stdlib-docs}/net
+:uri-stdlib-net-Url: {uri-stdlib-netModule}/Url
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
 :uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary
