@@ -19,11 +19,15 @@ import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.expression.primary.ExecuteTypeArgumentCheckNode;
-import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.member.FunctionNode;
 
+/**
+ * Type argument information passed from a type argument (in a method call) as an argument to a
+ * {@link FunctionNode}.
+ */
 public class VmTypeArgument {
 
-  private final MaterializedFrame enclosingFrame;
+  private final @Nullable MaterializedFrame enclosingFrame;
   private final RootNode rootNode;
 
   public VmTypeArgument(RootNode rootNode, @Nullable MaterializedFrame enclosingFrame) {
@@ -33,6 +37,10 @@ public class VmTypeArgument {
   }
 
   public Object check(Object value) {
+    if (enclosingFrame == null) {
+      return rootNode.getCallTarget().call(null, null, null, value);
+    }
+
     return rootNode
         .getCallTarget()
         .call(
@@ -42,21 +50,16 @@ public class VmTypeArgument {
             value);
   }
 
-  public MaterializedFrame getEnclosingFrame() {
-    return enclosingFrame;
-  }
-
-  public TypeNode getTypeNode() {
-    // assumption: ExecuteTypeArgumentCheckNode is the only child of rootNode
-    return ((ExecuteTypeArgumentCheckNode) rootNode.getChildren().iterator().next()).getTypeNode();
-  }
-
   public VmType resolveType() {
-    var type = getTypeNode().getType();
-    var newType = type.reify(enclosingFrame);
+    // assumption: ExecuteTypeArgumentCheckNode is the only child of rootNode
+    var typeNode =
+        ((ExecuteTypeArgumentCheckNode) rootNode.getChildren().iterator().next()).getTypeNode();
+    var type = typeNode.getType();
+    var frame = enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
+    var newType = type.reify(frame);
     while (type != newType) {
       type = newType;
-      newType = type.reify(enclosingFrame);
+      newType = type.reify(frame);
     }
     return newType;
   }

@@ -36,11 +36,12 @@ import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Pair;
 
 public final class FunctionNode extends RegularMemberNode {
-  // Every function (and property) call passes two implicit arguments at positions
-  // frame.getArguments()[0] and [1]:
+  // Every function (and property) call passes three implicit arguments at positions
+  // frame.getArguments()[0], [1], and [2]:
   // - the receiver (target) of the call, of type Object (see VmUtils.getReceiver())
   // - the owner (lexically enclosing object) of the function/property definition, of type VmTyped
   // (see VmUtils.getOwner())
+  // - an array of VmTypeArgument instances (null if the call contains no explicit type args)
   // For VmObject receivers, the owner is the same as or an ancestor of the receiver.
   // For other receivers, the owner is the prototype of the receiver's class.
   // The chain of enclosing owners forms a function/property's lexical scope.

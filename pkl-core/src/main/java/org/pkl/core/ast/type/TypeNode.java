@@ -15,7 +15,6 @@
  */
 package org.pkl.core.ast.type;
 
-import com.oracle.truffle.api.CompilerAsserts;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
@@ -29,9 +28,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -40,8 +37,6 @@ import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PklBugException;
-import org.pkl.core.StackFrame;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
@@ -60,7 +55,6 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
   @CompilationFinal private @Nullable VmType type;
@@ -217,13 +211,7 @@ public abstract class TypeNode extends PklNode {
   }
 
   /** Visit child type nodes of this type. */
-  @SuppressWarnings("UnusedReturnValue")
-  protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
-    return acceptTypeNode(null, visitTypeArguments, consumer);
-  }
-
-  /** Visit child type nodes of this type, stepping into de-referenced {@link TypeVariableNode}s */
-  protected abstract boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer);
+  protected abstract boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer);
 
   protected VmTypeMismatchException constraintException(Object value, SourceSection sourceSection) {
     throw new VmTypeMismatchException.Constraint(
@@ -377,7 +365,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -424,7 +412,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -473,7 +461,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -543,7 +531,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -584,7 +572,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -616,7 +604,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -648,7 +636,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -696,7 +684,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -759,7 +747,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -819,8 +807,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
-      return consumer.accept(this) && elementTypeNode.acceptTypeNode(frame, visitTypeArguments, consumer);
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this) && elementTypeNode.acceptTypeNode(visitTypeArguments, consumer);
     }
   }
 
@@ -877,7 +865,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     @ExplodeLoop
-    protected boolean acceptTypeNode(VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (!consumer.accept(this)) {
         return false;
       }
@@ -888,7 +876,7 @@ public abstract class TypeNode extends PklNode {
         if (!ret) {
           continue;
         }
-        if (!elementTypeNodes[i].acceptTypeNode(frame, visitTypeArguments, consumer)) {
+        if (!elementTypeNodes[i].acceptTypeNode(visitTypeArguments, consumer)) {
           ret = false;
         }
       }
@@ -1068,7 +1056,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1133,9 +1121,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
-        return consumer.accept(this) && elementTypeNode.acceptTypeNode(frame, true, consumer);
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -1191,9 +1179,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
-        return consumer.accept(this) && elementTypeNode.acceptTypeNode(frame, true, consumer);
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -1287,9 +1275,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
-        return consumer.accept(this) && elementTypeNode.acceptTypeNode(frame, true, consumer);
+        return consumer.accept(this) && elementTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -1365,11 +1353,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
         return consumer.accept(this)
-            && keyTypeNode.acceptTypeNode(frame, true, consumer)
-            && valueTypeNode.acceptTypeNode(frame, true, consumer);
+            && keyTypeNode.acceptTypeNode(true, consumer)
+            && valueTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -1447,9 +1435,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
-        return consumer.accept(this) && valueTypeNode.acceptTypeNode(frame, true, consumer);
+        return consumer.accept(this) && valueTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -1506,10 +1494,10 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
         assert keyTypeNode != null;
-        return consumer.accept(this) && valueTypeNode.acceptTypeNode(frame, true, consumer);
+        return consumer.accept(this) && valueTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -1743,7 +1731,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
 
@@ -1794,7 +1782,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -1835,17 +1823,16 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
 
-  public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
+  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
     @Child private ExpressionNode getReceiverClassNode;
     @Child private ExpressionNode getModuleNode;
-    @CompilationFinal private boolean isValidated = false;
 
     public ReferenceTypeNode(
         SourceSection sourceSection, TypeNode domainTypeNode, TypeNode referentTypeNode) {
@@ -1865,44 +1852,12 @@ public abstract class TypeNode extends PklNode {
       return new VmType.ClassType(
           RefModule.getReferenceClass(), domainTypeNode.getType(), referentTypeNode.getType());
     }
-    
-    private void validate(VirtualFrame frame) {
-      if (isValidated) return;
-      
-      var violation = new MutableReference<Node>(null);
-      var foundParameter = new MutableBoolean(false);
-      acceptTypeNode(frame, true, typeNode -> {
-        if (typeNode instanceof ConstrainedTypeNode) {
-          violation.set(typeNode);
-          return false;
-        }
-        if (typeNode instanceof TypeVariableNode typeVariable && typeVariable.isMethodTypeParameter()) {
-          foundParameter.set(true);
-        }
-        return true;
-      });
-      
-      if (!violation.isNull()) {
-        CompilerDirectives.transferToInterpreter();
-        throw validationError(violation.get(), "invalidReferenceTypeAnnotationWithConstraint");
-      }
-      if (!foundParameter.get()) {
-        CompilerDirectives.transferToInterpreterAndInvalidate();
-        isValidated = true;
-      }
-    }
-
-    @Override
-    protected final boolean isIncludedInTrace(Node node) {
-      return node instanceof ReferenceTypeNode || node instanceof ConstrainedTypeNode;
-    }
 
     @Specialization
     protected Object eval(VirtualFrame frame, VmReference value) {
       if (domainTypeNode.isNoopTypeCheck() && referentTypeNode.isNoopTypeCheck()) {
         return value;
       }
-      validate(frame);
 
       var realType = (VmType.ClassType) getType().reify(frame);
       try {
@@ -1929,7 +1884,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments)
         return consumer.accept(this)
             && consumer.accept(domainTypeNode)
@@ -1989,11 +1944,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
         return consumer.accept(this)
-            && firstTypeNode.acceptTypeNode(frame, true, consumer)
-            && secondTypeNode.acceptTypeNode(frame, true, consumer);
+            && firstTypeNode.acceptTypeNode(true, consumer)
+            && secondTypeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -2032,7 +1987,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2081,17 +2036,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
-      if (frame != null && isMethodTypeParameter() && frame.getArguments()[2] != null) {
-        var methodTypeArgs = (VmTypeArgument[]) frame.getArguments()[2];
-        var typeArg = methodTypeArgs[typeParameter.getIndex()];
-        return consumer.accept(this) && typeArg.getTypeNode().acceptTypeNode(typeArg.getEnclosingFrame(), visitTypeArguments, consumer);
-      }
-      
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
-    
-    public boolean isMethodTypeParameter() {
+
+    private boolean isMethodTypeParameter() {
       return typeParameter.getOwner() instanceof Method;
     }
   }
@@ -2121,7 +2070,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2162,7 +2111,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected final boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected final boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2203,7 +2152,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2238,7 +2187,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2273,7 +2222,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2390,8 +2339,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
-      return consumer.accept(this) && aliasedTypeNode.acceptTypeNode(frame, visitTypeArguments, consumer);
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
+      return consumer.accept(this) && aliasedTypeNode.acceptTypeNode(visitTypeArguments, consumer);
     }
   }
 
@@ -2483,11 +2432,11 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (!consumer.accept(this)) {
         return false;
       }
-      return childNode.acceptTypeNode(frame, visitTypeArguments, consumer);
+      return childNode.acceptTypeNode(visitTypeArguments, consumer);
     }
 
     public VmTyped getMirror() {
@@ -2518,7 +2467,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2541,7 +2490,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2595,7 +2544,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2618,7 +2567,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2653,7 +2602,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2688,7 +2637,7 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
   }
@@ -2759,9 +2708,9 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    protected boolean acceptTypeNode(@Nullable VirtualFrame frame, boolean visitTypeArguments, TypeNodeConsumer consumer) {
+    protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       if (visitTypeArguments) {
-        return consumer.accept(this) && typeNode.acceptTypeNode(frame, true, consumer);
+        return consumer.accept(this) && typeNode.acceptTypeNode(true, consumer);
       }
       return consumer.accept(this);
     }
@@ -2769,54 +2718,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmList getTypeArgumentMirrors() {
       return VmList.of(typeNode.getMirror());
-    }
-  }
-
-  public abstract static class ValidatingObjectSlotTypeNode extends ObjectSlotTypeNode {
-
-    protected ValidatingObjectSlotTypeNode(SourceSection sourceSection) {
-      super(sourceSection);
-    }
-    
-    protected VmException validationError(Node violation, String errorKey, Object... args) {
-      return exceptionBuilder().evalError(errorKey, args).withLeadingStackFrames(buildLeadingFrames(violation, getSourceSection(), null)).build();
-    }
-
-    protected abstract boolean isIncludedInTrace(Node node);
-
-    private List<StackFrame> buildLeadingFrames(
-        Node violatingNode, SourceSection usageSection, @Nullable VmTypeAlias outermostAlias) {
-      var frames = new ArrayList<StackFrame>();
-      for (var node = violatingNode; node != null; node = node.getParent()) {
-        if (!(node instanceof TypeAliasTypeNode || isIncludedInTrace(node))) continue;
-        var section = node.getSourceSection();
-        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
-          continue;
-        }
-        var owner = ownerAlias(node, outermostAlias);
-        if (owner != null) {
-          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
-        }
-      }
-      return frames;
-    }
-
-    /**
-     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
-     * outermost alias being instantiated (which is {@code null} when no alias is used).
-     */
-    @SuppressWarnings("DataFlowIssue")
-    private static @Nullable VmTypeAlias ownerAlias(
-        Node node, @Nullable VmTypeAlias outermostAlias) {
-      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
-      //noinspection ConstantValue
-      return parent != null ? parent.getTypeAlias() : outermostAlias;
-    }
-
-    private static boolean isWithin(SourceSection outer, SourceSection inner) {
-      return inner.getSource().equals(outer.getSource())
-          && inner.getCharIndex() >= outer.getCharIndex()
-          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
   }
 
