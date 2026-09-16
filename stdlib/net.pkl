@@ -96,13 +96,10 @@ class Url {
 
   /// The percent-decoded parameters of [query], or an empty mapping if this URL has no query.
   ///
-  /// [query] is read as `application/x-www-form-urlencoded`: parameters are separated by `&`, a
-  /// name is separated from its value by the first `=`, and `+` means a space.
+  /// [query] is read as `application/x-www-form-urlencoded`.
   /// A name that repeats holds the values of all its occurrences, in the order they are written.
   /// A parameter that states no `=` holds no value at all, and is left out; this is not the same as
   /// a bare `=`, which gives it the empty string.
-  ///
-  /// This is [parseQuery()] applied to [query].
   ///
   /// Facts:
   /// ```
@@ -115,7 +112,6 @@ class Url {
   ///
   /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
   /// which replaces it entirely.
-  /// A [Url] is serialized, as [toString()] does it, before it is resolved.
   /// Dot segments are removed from the result's path, normalizing it.
   ///
   /// Throws if [ref] is a string that cannot be parsed, or if this URL is itself a relative
@@ -130,15 +126,13 @@ class Url {
 
   /// Whether [other] identifies the same resource as this URL.
   ///
-  /// Unlike `==`, this compares Urls as the *syntax-based normalization* of
-  /// [RFC 3986, section 6.2.2](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2) has it:
+  /// Unlike `==`, this compares Urls as the *syntax-based normalization* of RFC 3986:
   /// [scheme] and [host] are case-insensitive and percent-encoding is normalized.
   /// An octet standing for a reserved character is kept as written.
   ///
   /// Dot segments are only removed from an absolute [path].
   ///
-  /// Nothing that would take knowing the scheme is normalized: a default port, such as `:443` for
-  /// `https`, is not dropped.
+  /// Nothing that would take knowing the scheme is normalized.
   ///
   /// Facts:
   /// ```
@@ -207,8 +201,6 @@ external const function buildQuery(parameters: Mapping<String, Listing<String>>)
 /// [query] is read as `application/x-www-form-urlencoded`.
 /// A name that repeats holds the values of all its occurrences, in the order they are written.
 /// A parameter that states no `=` holds no value at all, and is left out.
-///
-/// This is how [Url.queryParameters] reads a query, and the inverse of [buildQuery()].
 ///
 /// Facts:
 /// ```
