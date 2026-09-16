@@ -19,7 +19,9 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.NetModule;
 import org.pkl.core.runtime.VmExceptionBuilder;
+import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -86,6 +88,19 @@ final class UrlFactory {
     return url.hasExtraStorage()
         ? ((Parsed) url.getExtraStorage()).query()
         : readNullableString(url, Identifier.QUERY);
+  }
+
+  /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
+  static VmMapping createQueryParameters(@Nullable String query) {
+    var builder = new VmObjectBuilder();
+    for (var parameter : UrlParser.queryParameters(query).entrySet()) {
+      var values = new VmObjectBuilder(parameter.getValue().size());
+      for (var value : parameter.getValue()) {
+        values.addElement(value);
+      }
+      builder.addEntry(parameter.getKey(), values.toListing());
+    }
+    return builder.toMapping();
   }
 
   /** Reads the authority off {@code url}, or {@code null} if it has none. */

@@ -17,8 +17,8 @@ package org.pkl.core.stdlib.net;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
-import org.pkl.core.runtime.VmMap;
-import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmListing;
+import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
@@ -56,20 +56,32 @@ public final class NetNodes {
   public abstract static class buildQuery extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(@SuppressWarnings("unused") VmTyped self, VmMap parameters) {
+    protected String eval(@SuppressWarnings("unused") VmTyped self, VmMapping parameters) {
       var out = new StringBuilder();
-      for (var parameter : parameters) {
-        if (!out.isEmpty()) {
-          out.append('&');
-        }
-        PercentEncoder.encodeForm(out, (String) parameter.getKey());
-        var value = (String) VmNull.unwrap(parameter.getValue());
-        if (value != null) {
-          out.append('=');
-          PercentEncoder.encodeForm(out, value);
-        }
-      }
+      parameters.forceAndIterateMemberValues(
+          (name, def, values) -> {
+            ((VmListing) values)
+                .forceAndIterateMemberValues(
+                    (index, valueDef, value) -> {
+                      if (!out.isEmpty()) {
+                        out.append('&');
+                      }
+                      PercentEncoder.encodeForm(out, (String) name);
+                      out.append('=');
+                      PercentEncoder.encodeForm(out, (String) value);
+                      return true;
+                    });
+            return true;
+          });
       return out.toString();
+    }
+  }
+
+  public abstract static class parseQuery extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected VmMapping eval(@SuppressWarnings("unused") VmTyped self, String query) {
+      return UrlFactory.createQueryParameters(query);
     }
   }
 

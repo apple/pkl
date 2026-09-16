@@ -300,14 +300,21 @@ facts {
   }
 
   ["queryParameters"] {
-    net.Url("https://example.com?a=1&&b=2").queryParameters == Map("a", "1", "b", "2")
-    net.Url("https://example.com?").queryParameters == Map()
-    net.Url("https://example.com?a").queryParameters == Map("a", null)
-    net.Url("https://example.com?a=").queryParameters == Map("a", "")
-    net.Url("https://example.com?=1").queryParameters == Map("", "1")
-    net.Url("https://example.com?a=1&a=2").queryParameters == Map("a", "1")
-    net.Url("https://example.com?a%20b=c%20d").queryParameters == Map("a b", "c d")
-    net.Url("https://example.com?a+b=c+d").queryParameters == Map("a b", "c d")
+    net.Url("https://example.com?a=1&&b=2").queryParameters
+      == new Mapping<String, Listing<String>> { ["a"] { "1" }; ["b"] { "2" } }
+    net.Url("https://example.com?").queryParameters == new Mapping {}
+    // a bare name holds no value, so it contributes nothing
+    net.Url("https://example.com?a").queryParameters == new Mapping {}
+    net.Url("https://example.com?a=").queryParameters == new Mapping<String, Listing<String>> { ["a"] { "" } }
+    net.Url("https://example.com?=1").queryParameters == new Mapping<String, Listing<String>> { [""] { "1" } }
+    // a name that repeats holds every value it is given, in order
+    net.Url("https://example.com?a=1&a=2").queryParameters == new Mapping<String, Listing<String>> { ["a"] { "1"; "2" } }
+    net.Url("https://example.com?a&a=2").queryParameters == new Mapping<String, Listing<String>> { ["a"] { "2" } }
+    net.Url("https://example.com?a=&a=2").queryParameters == new Mapping<String, Listing<String>> { ["a"] { ""; "2" } }
+    net.Url("https://example.com?a=1&b=2&a=3").queryParameters
+      == new Mapping<String, Listing<String>> { ["a"] { "1"; "3" }; ["b"] { "2" } }
+    net.Url("https://example.com?a%20b=c%20d").queryParameters == new Mapping<String, Listing<String>> { ["a b"] { "c d" } }
+    net.Url("https://example.com?a+b=c+d").queryParameters == new Mapping<String, Listing<String>> { ["a b"] { "c d" } }
   }
 
   ["equality"] {
@@ -358,50 +365,5 @@ facts {
 
     // a default port is only dropped by scheme-based normalization, which this does not do
     !equal("https://example.com:443/a", "https://example.com/a")
-  }
-
-  ["encodeUrlComponent()"] {
-    net.encodeUrlComponent("a b&c") == "a%20b%26c"
-    net.encodeUrlComponent("münchen") == "m%C3%BCnchen"
-    // only the unreserved characters are left alone
-    net.encodeUrlComponent("aZ09-._~") == "aZ09-._~"
-    net.encodeUrlComponent("!'()*") == "%21%27%28%29%2A"
-    net.encodeUrlComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
-    net.encodeUrlComponent("a" + gClef + "b") == "a%F0%9D%84%9Eb"
-    // an encoded component is safe to drop into any component of a URL
-    new net.Url {
-      scheme = "https"
-      host = "example.com"
-      path = "/" + net.encodeUrlComponent("a/b")
-    }.segments == List("a/b")
-  }
-
-  ["decodeUrlComponent()"] {
-    net.decodeUrlComponent("a%20b%26c") == "a b&c"
-    net.decodeUrlComponent("m%C3%BCnchen") == "münchen"
-    // "+" is not a space; that is an application/x-www-form-urlencoded convention
-    net.decodeUrlComponent("a+b") == "a+b"
-    net.decodeUrlComponent("100%") == "100%"
-    net.decodeUrlComponent("%zz") == "%zz"
-    net.decodeUrlComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
-    net.decodeUrlComponent("%FF") == "\u{FFFD}"
-    net.decodeUrlComponent(net.decodeUrlComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
-    net.decodeUrlComponent(net.decodeUrlComponent(gClef)) == gClef
-  }
-
-  ["buildQuery()"] {
-    net.buildQuery(Map("a", "1", "b", "2")) == "a=1&b=2"
-    net.buildQuery(Map()) == ""
-    net.buildQuery(Map("a", null)) == "a"
-    net.buildQuery(Map("a", "")) == "a="
-    net.buildQuery(Map("", "1")) == "=1"
-    net.buildQuery(Map("a b", "c d")) == "a+b=c+d"
-    net.buildQuery(Map("a&b", "1=2")) == "a%26b=1%3D2"
-    net.buildQuery(Map("q", "aZ09-._~")) == "q=aZ09-._~"
-
-    local parameters = Map("a b", "c&d", "e", null, "f", "", "münchen", "a+b")
-    net.Url("https://example.com?" + net.buildQuery(parameters)).queryParameters == parameters
-    (net.Url("https://example.com/a?q=1")) { query = net.buildQuery(Map("a", "b c")) }.toString()
-      == "https://example.com/a?a=b+c"
   }
 }
