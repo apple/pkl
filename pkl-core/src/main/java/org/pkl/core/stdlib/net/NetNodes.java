@@ -35,7 +35,7 @@ public final class NetNodes {
     }
   }
 
-  public abstract static class encodeComponent extends ExternalMethod1Node {
+  public abstract static class encodeUrlComponent extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, String value) {
@@ -45,7 +45,7 @@ public final class NetNodes {
     }
   }
 
-  public abstract static class decodeComponent extends ExternalMethod1Node {
+  public abstract static class decodeUrlComponent extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, String value) {

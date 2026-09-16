@@ -63,20 +63,7 @@ public final class UrlParser {
         sb.append(scheme).append(':');
       }
       if (host != null) {
-        sb.append("//");
-        if (userInfo != null) {
-          PercentEncoder.encode(sb, userInfo, PercentEncoder.USERINFO);
-          sb.append('@');
-        }
-        if (isIpLiteral(host)) {
-          // already validated, and none of its characters may be encoded
-          sb.append(host);
-        } else {
-          PercentEncoder.encode(sb, host, PercentEncoder.REG_NAME);
-        }
-        if (port != null) {
-          sb.append(':').append(port.intValue());
-        }
+        sb.append("//").append(serializeAuthority(userInfo, host, port));
       }
       if (scheme == null && host == null && startsWithColonSegment(path)) {
         // a relative reference whose first segment holds a ":" would be read back as a scheme, so
@@ -94,6 +81,32 @@ public final class UrlParser {
       }
       return sb.toString();
     }
+
+    @Nullable String authority() {
+      return host == null ? null : serializeAuthority(userInfo, host, port);
+    }
+  }
+
+  /**
+   * Serializes an authority (section 3.2), percent-encoding whatever cannot appear literally in its
+   * component.
+   */
+  static String serializeAuthority(@Nullable String userInfo, String host, @Nullable Integer port) {
+    var sb = new StringBuilder();
+    if (userInfo != null) {
+      PercentEncoder.encode(sb, userInfo, PercentEncoder.USERINFO);
+      sb.append('@');
+    }
+    if (isIpLiteral(host)) {
+      // already validated, and none of its characters may be encoded
+      sb.append(host);
+    } else {
+      PercentEncoder.encode(sb, host, PercentEncoder.REG_NAME);
+    }
+    if (port != null) {
+      sb.append(':').append(port.intValue());
+    }
+    return sb.toString();
   }
 
   // Parsing (https://www.rfc-editor.org/rfc/rfc3986#section-3)
