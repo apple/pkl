@@ -1160,6 +1160,52 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun `pkl_net Url`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module mod
+
+        import "pkl:net"
+
+        url: net.Url
+        nullableUrl: net.Url?
+        listing: Listing<net.Url>
+        mapping: Mapping<String, net.Url>
+
+        class Foo {
+          url: net.Url
+        }
+        """
+          .trimIndent()
+      )
+
+    assertThat(javaCode)
+      .compilesSuccessfully()
+      .contains("import java.net.URI;")
+      .contains(
+        """
+        |public final class Mod {
+        |  public final @NonNull URI url;
+        |
+        |  public final URI nullableUrl;
+        |
+        |  public final @NonNull List<@NonNull URI> listing;
+        |
+        |  public final @NonNull Map<@NonNull String, @NonNull URI> mapping;
+        """
+          .trimMargin()
+      )
+      .contains(
+        """
+        |  public static final class Foo {
+        |    public final @NonNull URI url;
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
   fun `nullable properties`() {
     var javaCode =
       generateJavaCode(

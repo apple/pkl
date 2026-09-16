@@ -88,6 +88,23 @@ public final class UrlParser {
   }
 
   /**
+   * Serializes the components of a URI reference (section 5.3), percent-encoding whatever cannot
+   * appear literally in its component.
+   *
+   * <p>Gives the same result as {@code pkl:net}'s {@code Url.toString()}.
+   */
+  public static String serialize(
+      @Nullable String scheme,
+      @Nullable String userInfo,
+      @Nullable String host,
+      @Nullable Integer port,
+      String path,
+      @Nullable String query,
+      @Nullable String fragment) {
+    return new Parsed(scheme, userInfo, host, port, path, query, fragment).serialize();
+  }
+
+  /**
    * Serializes an authority (section 3.2), percent-encoding whatever cannot appear literally in its
    * component.
    */

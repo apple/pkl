@@ -1,0 +1,16 @@
+import "pkl:net"
+
+absolute = net.Url("https://user:pw@example.com:8080/a/b?q=1#frag")
+literalSpace = net.Url("https://example.com/a b")
+encodedSpace = net.Url("https://example.com/a%20b")
+encodedSlash = net.Url("https://example.com/a%2Fb")
+nonAscii = net.Url("https://example.com/é")
+relative = net.Url("/foo/bar")
+rootless = net.Url("mailto:user@example.com")
+noAuthority = net.Url("file:/tmp")
+emptyAuthority = net.Url("file:///tmp")
+emptyQuery = net.Url("https://example.com/?")
+ipv6Zone = net.Url("http://[fe80::1%25eth0]/p")
+ipvFuture = net.Url("http://[v1.fe80::a+en1]/")
+constructed = new net.Url { scheme = "https"; host = "example.com"; path = "/a b"; query = "x y" }
+colonSegment = new net.Url { path = "a:b" }
