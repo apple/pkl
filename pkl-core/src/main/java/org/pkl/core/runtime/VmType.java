@@ -314,7 +314,7 @@ public abstract sealed class VmType {
 
     @Override
     public PType export() {
-      return clazz.isFunctionNClass()
+      return typeArguments.length > 0 && clazz.isFunctionNClass()
           ? new PType.Function(
               exportTypes(typeArguments, 1), typeArguments[typeArguments.length - 1].export())
           : new PType.Class(clazz.export(), exportTypes(typeArguments));
@@ -322,7 +322,7 @@ public abstract sealed class VmType {
 
     @Override
     public String toString() {
-      if (clazz.isFunctionNClass()) {
+      if (typeArguments.length > 0 && clazz.isFunctionNClass()) {
         var paramCount = typeArguments.length - 1;
         var sb = new StringBuilder("(");
         for (var i = 0; i < paramCount; i++) {
