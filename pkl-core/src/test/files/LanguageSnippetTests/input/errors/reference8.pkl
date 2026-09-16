@@ -1,9 +1,0 @@
-import "pkl:ref"
-
-class D extends ref.Domain {
-  function renderReference(reference: ref.Reference<this, Any>): String = throw("not supported")
-}
-typealias Ref<T> = ref.Reference<D, T>
-local d: D = new {}
-
-test = ref.Reference::<D, String>(d, "") as Ref<String(true)>
