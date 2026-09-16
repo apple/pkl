@@ -87,4 +87,18 @@ final class UrlFactory {
         ? ((Parsed) url.getExtraStorage()).query()
         : readNullableString(url, Identifier.QUERY);
   }
+
+  /** Reads the authority off {@code url}, or {@code null} if it has none. */
+  static @Nullable String readAuthority(VmObjectLike url) {
+    if (url.hasExtraStorage()) {
+      return ((Parsed) url.getExtraStorage()).authority();
+    }
+    var host = readNullableString(url, Identifier.HOST);
+    if (host == null) {
+      return null;
+    }
+    var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT));
+    return UrlParser.serializeAuthority(
+        readNullableString(url, Identifier.USER_INFO), host, port == null ? null : port.intValue());
+  }
 }

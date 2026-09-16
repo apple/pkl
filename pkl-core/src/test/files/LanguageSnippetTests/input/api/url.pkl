@@ -360,33 +360,33 @@ facts {
     !equal("https://example.com:443/a", "https://example.com/a")
   }
 
-  ["encodeComponent()"] {
-    net.encodeComponent("a b&c") == "a%20b%26c"
-    net.encodeComponent("münchen") == "m%C3%BCnchen"
+  ["encodeUrlComponent()"] {
+    net.encodeUrlComponent("a b&c") == "a%20b%26c"
+    net.encodeUrlComponent("münchen") == "m%C3%BCnchen"
     // only the unreserved characters are left alone
-    net.encodeComponent("aZ09-._~") == "aZ09-._~"
-    net.encodeComponent("!'()*") == "%21%27%28%29%2A"
-    net.encodeComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
-    net.encodeComponent("a" + gClef + "b") == "a%F0%9D%84%9Eb"
+    net.encodeUrlComponent("aZ09-._~") == "aZ09-._~"
+    net.encodeUrlComponent("!'()*") == "%21%27%28%29%2A"
+    net.encodeUrlComponent("/?#[]@:;=+$,%") == "%2F%3F%23%5B%5D%40%3A%3B%3D%2B%24%2C%25"
+    net.encodeUrlComponent("a" + gClef + "b") == "a%F0%9D%84%9Eb"
     // an encoded component is safe to drop into any component of a URL
     new net.Url {
       scheme = "https"
       host = "example.com"
-      path = "/" + net.encodeComponent("a/b")
+      path = "/" + net.encodeUrlComponent("a/b")
     }.segments == List("a/b")
   }
 
-  ["decodeComponent()"] {
-    net.decodeComponent("a%20b%26c") == "a b&c"
-    net.decodeComponent("m%C3%BCnchen") == "münchen"
+  ["decodeUrlComponent()"] {
+    net.decodeUrlComponent("a%20b%26c") == "a b&c"
+    net.decodeUrlComponent("m%C3%BCnchen") == "münchen"
     // "+" is not a space; that is an application/x-www-form-urlencoded convention
-    net.decodeComponent("a+b") == "a+b"
-    net.decodeComponent("100%") == "100%"
-    net.decodeComponent("%zz") == "%zz"
-    net.decodeComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
-    net.decodeComponent("%FF") == "\u{FFFD}"
-    net.decodeComponent(net.encodeComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
-    net.decodeComponent(net.encodeComponent(gClef)) == gClef
+    net.decodeUrlComponent("a+b") == "a+b"
+    net.decodeUrlComponent("100%") == "100%"
+    net.decodeUrlComponent("%zz") == "%zz"
+    net.decodeUrlComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
+    net.decodeUrlComponent("%FF") == "\u{FFFD}"
+    net.decodeUrlComponent(net.decodeUrlComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
+    net.decodeUrlComponent(net.decodeUrlComponent(gClef)) == gClef
   }
 
   ["buildQuery()"] {

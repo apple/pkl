@@ -29,6 +29,14 @@ import org.pkl.core.stdlib.ExternalPropertyNode;
 public final class UrlNodes {
   private UrlNodes() {}
 
+  public abstract static class authority extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected Object eval(VmTyped self) {
+      return VmNull.lift(UrlFactory.readAuthority(self));
+    }
+  }
+
   public abstract static class segments extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary
