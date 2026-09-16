@@ -1187,6 +1187,52 @@ class KotlinCodeGeneratorTest {
   }
 
   @Test
+  fun `pkl_net Url`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module mod
+
+        import "pkl:net"
+
+        url: net.Url
+        nullableUrl: net.Url?
+        listing: Listing<net.Url>
+        mapping: Mapping<String, net.Url>
+
+        class Foo {
+          url: net.Url
+        }
+        """
+          .trimIndent()
+      )
+
+    assertThat(kotlinCode)
+      .compilesSuccessfully()
+      .isEqualTo(
+        """
+        import java.net.URI
+        import kotlin.String
+        import kotlin.collections.List
+        import kotlin.collections.Map
+
+        data class Mod(
+          val url: URI,
+          val nullableUrl: URI?,
+          val listing: List<URI>,
+          val mapping: Map<String, URI>
+        ) {
+          data class Foo(
+            val url: URI
+          )
+        }
+
+        """
+          .trimIndent()
+      )
+  }
+
+  @Test
   fun `user defined type aliases`() {
     val kotlinCode =
       generateKotlinCode(
