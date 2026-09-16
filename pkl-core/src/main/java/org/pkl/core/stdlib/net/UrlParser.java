@@ -341,31 +341,26 @@ public final class UrlParser {
    * The percent-decoded parameters of {@code query}, which is read as {@code
    * application/x-www-form-urlencoded}.
    *
-   * <p>A parameter that states no {@code =} has a {@code null} value. A name that repeats keeps the
-   * value of its first occurrence.
+   * <p>A name that repeats collects the values of all its occurrences, in the order they are
+   * written. A parameter that states no {@code =} holds no value, and contributes nothing.
    */
-  static Map<String, @Nullable String> queryParameters(@Nullable String query) {
+  static Map<String, List<String>> queryParameters(@Nullable String query) {
     if (query == null || query.isEmpty()) {
       return Map.of();
     }
-    var parameters = new LinkedHashMap<String, @Nullable String>();
+    var parameters = new LinkedHashMap<String, List<String>>();
     var start = 0;
     while (start < query.length()) {
       var end = query.indexOf('&', start);
       if (end < 0) {
         end = query.length();
       }
-      // an empty pair ("a=1&&b=2") holds no parameters
-      if (end > start) {
-        var separator = query.indexOf('=', start);
-        var hasValue = separator >= 0 && separator < end;
-        var name = PercentEncoder.decodeForm(query.substring(start, hasValue ? separator : end));
-        var value =
-            hasValue ? PercentEncoder.decodeForm(query.substring(separator + 1, end)) : null;
-        // repeats are dropped
-        if (!parameters.containsKey(name)) {
-          parameters.put(name, value);
-        }
+      var separator = query.indexOf('=', start);
+      // an empty pair ("a=1&&b=2") and a bare name ("a=1&b") both hold no parameter
+      if (end > start && separator >= 0 && separator < end) {
+        var name = PercentEncoder.decodeForm(query.substring(start, separator));
+        var value = PercentEncoder.decodeForm(query.substring(separator + 1, end));
+        parameters.computeIfAbsent(name, ignored -> new ArrayList<>()).add(value);
       }
       start = end + 1;
     }
