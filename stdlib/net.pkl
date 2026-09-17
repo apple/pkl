@@ -90,9 +90,9 @@ class Url {
   ///
   /// Facts:
   /// ```
-  /// net.Url("https://example.com/a/b%20c").segments == List("a", "b c")
+  /// net.Url("https://example.com/a/b%20c").pathSegments == List("a", "b c")
   /// ```
-  external fixed segments: List<String>
+  external fixed pathSegments: List<String>
 
   /// The percent-decoded parameters of [query], or an empty mapping if this URL has no query.
   ///

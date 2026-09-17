@@ -185,7 +185,7 @@ facts {
     true
     true
   }
-  ["segments"] {
+  ["pathSegments"] {
     true
     true
     true

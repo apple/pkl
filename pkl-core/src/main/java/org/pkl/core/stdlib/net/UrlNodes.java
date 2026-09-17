@@ -37,7 +37,7 @@ public final class UrlNodes {
     }
   }
 
-  public abstract static class segments extends ExternalPropertyNode {
+  public abstract static class pathSegments extends ExternalPropertyNode {
     @Specialization
     @TruffleBoundary
     protected VmList eval(VmTyped self) {
