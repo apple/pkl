@@ -179,6 +179,19 @@ class Url {
   /// net.Url("HTTPS://example.com").toString() == "https://example.com"
   /// ```
   external function toString(): String
+
+  /// Whether every `%` in [value] begins a percent-encoded octet.
+  external local function isValidPercentEncoding(value: String): Boolean
+
+  /// Whether [value] is a `scheme`.
+  external local function isValidScheme(value: String): Boolean
+
+  /// Whether [value] is a `host`.
+  external local function isValidHost(value: String): Boolean
+
+  /// Whether [value] is a path that can sit next to an authority, or, when [hasAuthority] is
+  /// [false], next to no authority at all.
+  external local function isValidPath(value: String, hasAuthority: Boolean): Boolean
 }
 
 /// Percent-encodes [value] so that it can be interpolated into any URL component.
@@ -233,16 +246,3 @@ external const function buildQuery(parameters: Mapping<String, Listing<String>>)
 /// net.parseQuery("q=a+b&bare") == new Mapping { ["q"] = new Listing { "a b" } }
 /// ```
 external const function parseQuery(query: String): Mapping<String, Listing<String>>
-
-/// Whether every `%` in [value] begins a percent-encoded octet.
-external local const function isValidPercentEncoding(value: String): Boolean
-
-/// Whether [value] is a `scheme`.
-external local const function isValidScheme(value: String): Boolean
-
-/// Whether [value] is a `host`.
-external local const function isValidHost(value: String): Boolean
-
-/// Whether [value] is a path that can sit next to an authority, or, when [hasAuthority] is [false],
-/// next to no authority at all.
-external local const function isValidPath(value: String, hasAuthority: Boolean): Boolean

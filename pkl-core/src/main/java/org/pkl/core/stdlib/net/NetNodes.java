@@ -21,7 +21,6 @@ import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
-import org.pkl.core.stdlib.ExternalMethod2Node;
 
 /** Backing nodes for {@code pkl:net}'s module-level members. */
 public final class NetNodes {
@@ -82,42 +81,6 @@ public final class NetNodes {
     @TruffleBoundary
     protected VmMapping eval(@SuppressWarnings("unused") VmTyped self, String query) {
       return UrlFactory.createQueryParameters(query);
-    }
-  }
-
-  // The constraints of `Url`. Each one is the same check the parser makes, so that a URL written or
-  // amended by hand is held to exactly the parser's standard.
-
-  public abstract static class isValidPercentEncoding extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected boolean eval(@SuppressWarnings("unused") VmTyped self, String value) {
-      return UrlParser.hasValidPercentEncoding(value);
-    }
-  }
-
-  public abstract static class isValidScheme extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected boolean eval(@SuppressWarnings("unused") VmTyped self, String value) {
-      return UrlParser.isValidScheme(value);
-    }
-  }
-
-  public abstract static class isValidHost extends ExternalMethod1Node {
-    @Specialization
-    @TruffleBoundary
-    protected boolean eval(@SuppressWarnings("unused") VmTyped self, String value) {
-      return UrlParser.isValidHost(value);
-    }
-  }
-
-  public abstract static class isValidPath extends ExternalMethod2Node {
-    @Specialization
-    @TruffleBoundary
-    protected boolean eval(
-        @SuppressWarnings("unused") VmTyped self, String value, boolean hasAuthority) {
-      return UrlParser.isValidPath(value, hasAuthority);
     }
   }
 }
