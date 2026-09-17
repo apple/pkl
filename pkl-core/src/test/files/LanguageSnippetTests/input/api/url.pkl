@@ -117,6 +117,19 @@ facts {
     throws("https://example.com:99999/")
     throws("https://example.com:-1/")
 
+    // and only the last one separates it, so any earlier ":" is left in a registered name, which
+    // cannot hold one; an IPv6 address has to be bracketed
+    throws("http://::/foo")
+    throws("http://:::/foo")
+    throws("http://::1/foo")
+    throws("http://a:b:8080/")
+    // a single ":" still separates a port, and an empty one is no port at all
+    parsed("http://:/") == "http:///"
+    roundTrips("http://[::]/foo")
+    roundTrips("http://[::1]/foo")
+    // an encoded ":" is a registered name that holds one, and is left alone
+    roundTrips("http://%3A%3A/foo")
+
     // a malformed IP literal
     throws("http://[::1")
     throws("http://[::1x]/")
@@ -270,6 +283,15 @@ facts {
 
     new net.Url { scheme = "https"; host = "example.com"; path = "/a" }
       == net.Url("https://example.com/a")
+
+    // a host is held to the same rules as a parsed one: a registered name cannot hold a ":", but
+    // an IP literal and an encoded ":" are fine
+    module.catch(() -> new net.Url { scheme = "http"; host = ":" }.toString())
+      .startsWith("Type constraint `isValidHost(this)` violated.")
+    module.catch(() -> new net.Url { scheme = "http"; host = "::" }.toString())
+      .startsWith("Type constraint `isValidHost(this)` violated.")
+    new net.Url { scheme = "http"; host = "[::]" }.toString() == "http://[::]"
+    new net.Url { scheme = "http"; host = "%3A" }.toString() == "http://%3A"
   }
 
   ["amending a Url"] {

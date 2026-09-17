@@ -572,6 +572,10 @@ public final class UrlParser {
           "A registered name cannot contain `[` or `]`; percent-encode them, or enclose an IP"
               + " address in brackets.");
     }
+    if (host.indexOf(':') >= 0) {
+      return new Result.Failure(
+          "A registered name cannot contain `:`; percent-encode it, or enclose an IPv6 address in brackets.");
+    }
     return percentEncodingFailure(host);
   }
 
