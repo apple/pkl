@@ -22,63 +22,63 @@
 module pkl.math
 
 /// The minimum [Int] value: `-9223372036854775808`.
-external minInt: Int
+external const minInt: Int
 
 /// The minimum [Int8] value: -128.
-external minInt8: Int8
+external const minInt8: Int8
 
 /// The minimum [Int16] value: -32768.
-external minInt16: Int16
+external const minInt16: Int16
 
 /// The minimum [Int32] value: -2147483648.
-external minInt32: Int32
+external const minInt32: Int32
 
 /// The maximum [Int] value: `9223372036854775807`.
-external maxInt: Int
+external const maxInt: Int
 
 /// The maximum [Int8] value: 127.
-external maxInt8: Int8
+external const maxInt8: Int8
 
 /// The maximum [Int16] value: 32767.
-external maxInt16: Int16
+external const maxInt16: Int16
 
 /// The maximum [Int32] value: 2147483647.
-external maxInt32: Int32
+external const maxInt32: Int32
 
 /// The maximum [UInt] value: 9223372036854775807.
 ///
 /// Note that [maxUInt] is equal to [maxInt],
 /// not `maxInt * 2 + 1` as one might expect.
 /// That is, [UInt] has half the range of [Int].
-external maxUInt: UInt
+external const maxUInt: UInt
 
 /// The maximum [UInt8] value: 255.
-external maxUInt8: UInt8
+external const maxUInt8: UInt8
 
 /// The maximum [UInt16] value: 65535.
-external maxUInt16: UInt16
+external const maxUInt16: UInt16
 
 /// The maximum [UInt32] value: 4294967295.
-external maxUInt32: UInt32
+external const maxUInt32: UInt32
 
 /// The minimum finite [Float] value: `-1.7976931348623157e308`.
 ///
 /// Operations whose value is less than [minFiniteFloat] return -[Infinity].
-external minFiniteFloat: Float
+external const minFiniteFloat: Float
 
 /// The maximum finite [Float] value: `1.7976931348623157e308`.
 ///
 /// Operations whose value is greater than [maxFiniteFloat] return [Infinity].
-external maxFiniteFloat: Float
+external const maxFiniteFloat: Float
 
 /// The minimum positive [Float] value that is greater than zero: `4.9e-324`.
-external minPositiveFloat: Float
+external const minPositiveFloat: Float
 
 /// The number [e](https://en.wikipedia.org/wiki/E_(mathematical_constant)).
-external e: Float
+external const e: Float
 
 /// The number [π](https://en.wikipedia.org/wiki/Pi).
-external pi: Float
+external const pi: Float
 
 /// Returns e [raised to the power](https://en.wikipedia.org/wiki/Exponential_function) of
 /// [exponent].
