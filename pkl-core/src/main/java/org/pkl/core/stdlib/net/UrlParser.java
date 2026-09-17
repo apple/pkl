@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.net;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -57,6 +58,7 @@ public final class UrlParser {
      * Serializes these components (section 5.3), percent-encoding whatever cannot appear literally
      * in its component.
      */
+    @TruffleBoundary
     String serialize() {
       var sb = new StringBuilder();
       if (scheme != null) {
@@ -108,6 +110,7 @@ public final class UrlParser {
    * Serializes an authority (section 3.2), percent-encoding whatever cannot appear literally in its
    * component.
    */
+  @TruffleBoundary
   static String serializeAuthority(@Nullable String userInfo, String host, @Nullable Integer port) {
     var sb = new StringBuilder();
     if (userInfo != null) {
@@ -337,6 +340,7 @@ public final class UrlParser {
   // Derived views
 
   /** The percent-decoded segments of {@code path}. */
+  @TruffleBoundary
   static List<String> segments(String path) {
     if (path.isEmpty()) {
       return List.of();
@@ -391,6 +395,7 @@ public final class UrlParser {
    * <p>Both are put through the syntax-based normalization of section 6.2.2 first, so that two ways
    * of writing the same URL compare equal. A default port is kept.
    */
+  @TruffleBoundary
   static boolean isEquivalent(Parsed left, Parsed right) {
     return normalize(left).equals(normalize(right));
   }
@@ -401,6 +406,7 @@ public final class UrlParser {
    *
    * <p>Nothing that would take knowing the scheme is normalized, so a default port is kept.
    */
+  @TruffleBoundary
   static Parsed normalize(Parsed url) {
     return new Parsed(
         url.scheme() == null ? null : toLowerAscii(url.scheme()),

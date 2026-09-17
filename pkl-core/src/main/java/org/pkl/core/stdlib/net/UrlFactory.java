@@ -15,6 +15,8 @@
  */
 package org.pkl.core.stdlib.net;
 
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.NetModule;
@@ -50,32 +52,40 @@ final class UrlFactory {
   }
 
   /** Parses {@code input} as a URI reference. */
-  static Parsed parseOrThrow(String input, VmExceptionBuilder exceptionBuilder) {
+  static Parsed parseOrThrow(String input, Node node) {
     var result = UrlParser.parse(input);
     if (result instanceof Result.Failure failure) {
-      throw exceptionBuilder.evalError("cannotParseUrl", input).withHint(failure.hint()).build();
+      throw new VmExceptionBuilder()
+          .withLocation(node)
+          .evalError("cannotParseUrl", input)
+          .withHint(failure.hint())
+          .build();
     }
     return ((Result.Success) result).url();
   }
 
   /** Reads the components back off {@code url}. */
-  static Parsed read(VmObjectLike url) {
+  static Parsed read(VmTyped url, IndirectCallNode callNode) {
     if (url.hasExtraStorage()) {
       return (Parsed) url.getExtraStorage();
     }
-    var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT));
-    return new Parsed(
-        readNullableString(url, Identifier.SCHEME),
-        readNullableString(url, Identifier.USER_INFO),
-        readNullableString(url, Identifier.HOST),
-        port == null ? null : port.intValue(),
-        (String) VmUtils.readMember(url, Identifier.PATH),
-        readNullableString(url, Identifier.QUERY),
-        readNullableString(url, Identifier.FRAGMENT));
+    var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT, callNode));
+    var parsed =
+        new Parsed(
+            readNullableString(url, Identifier.SCHEME, callNode),
+            readNullableString(url, Identifier.USER_INFO, callNode),
+            readNullableString(url, Identifier.HOST, callNode),
+            port == null ? null : port.intValue(),
+            (String) VmUtils.readMember(url, Identifier.PATH),
+            readNullableString(url, Identifier.QUERY, callNode),
+            readNullableString(url, Identifier.FRAGMENT, callNode));
+    url.setExtraStorage(parsed);
+    return parsed;
   }
 
-  private static @Nullable String readNullableString(VmObjectLike url, Identifier name) {
-    return (String) VmNull.unwrap(VmUtils.readMember(url, name));
+  private static @Nullable String readNullableString(
+      VmObjectLike url, Identifier name, IndirectCallNode callNode) {
+    return (String) VmNull.unwrap(VmUtils.readMember(url, name, callNode));
   }
 
   static String readPath(VmObjectLike url) {
@@ -84,10 +94,10 @@ final class UrlFactory {
         : (String) VmUtils.readMember(url, Identifier.PATH);
   }
 
-  static @Nullable String readQuery(VmObjectLike url) {
+  static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {
     return url.hasExtraStorage()
         ? ((Parsed) url.getExtraStorage()).query()
-        : readNullableString(url, Identifier.QUERY);
+        : readNullableString(url, Identifier.QUERY, callNode);
   }
 
   /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
@@ -104,16 +114,18 @@ final class UrlFactory {
   }
 
   /** Reads the authority off {@code url}, or {@code null} if it has none. */
-  static @Nullable String readAuthority(VmObjectLike url) {
+  static @Nullable String readAuthority(VmObjectLike url, IndirectCallNode callNode) {
     if (url.hasExtraStorage()) {
       return ((Parsed) url.getExtraStorage()).authority();
     }
-    var host = readNullableString(url, Identifier.HOST);
+    var host = readNullableString(url, Identifier.HOST, callNode);
     if (host == null) {
       return null;
     }
     var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT));
     return UrlParser.serializeAuthority(
-        readNullableString(url, Identifier.USER_INFO), host, port == null ? null : port.intValue());
+        readNullableString(url, Identifier.USER_INFO, callNode),
+        host,
+        port == null ? null : port.intValue());
   }
 }
