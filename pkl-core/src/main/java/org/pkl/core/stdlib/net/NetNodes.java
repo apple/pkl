@@ -30,7 +30,7 @@ public final class NetNodes {
     @Specialization
     @TruffleBoundary
     protected Object eval(@SuppressWarnings("unused") VmTyped self, String input) {
-      return UrlFactory.create(UrlFactory.parseOrThrow(input, exceptionBuilder()));
+      return UrlFactory.create(UrlFactory.parseOrThrow(input, this));
     }
   }
 
