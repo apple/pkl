@@ -69,6 +69,19 @@ A `Class` value typechecked against `Class<T>` must be a subclass of `T`.
 
 If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
+=== Standard library `external` module properties are now marked `const`
+
+Previously, module properties in `pkl:math` and `pkl:release` could be overriden by amending the module.
+Doing this makes little sense—these value are constants and overriding them by amending their module would be odd.
+
+This is a breaking change for code that looks like this:
+[source,pkl]
+----
+bogusMath = (import("pkl:math")) {
+  minInt = -1
+}
+----
+
 === XXX
 
 == Bug Fixes [small]#🐜#
