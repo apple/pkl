@@ -77,7 +77,7 @@ public final class UrlNodes {
         VmTyped self,
         String ref,
         @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
-      return resolve(self, ref, callNode);
+      return resolve(self, UrlFactory.parseOrThrow(ref, this), callNode);
     }
 
     @Specialization
@@ -86,11 +86,11 @@ public final class UrlNodes {
         VmTyped self,
         VmTyped ref,
         @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
-      return resolve(self, UrlFactory.read(ref, callNode).serialize(), callNode);
+      return resolve(self, UrlFactory.read(ref, callNode), callNode);
     }
 
     @SuppressWarnings("MethodNameSameAsClassName")
-    private Object resolve(VmTyped self, String ref, IndirectCallNode callNode) {
+    private Object resolve(VmTyped self, Parsed ref, IndirectCallNode callNode) {
       var base = UrlFactory.read(self, callNode);
       if (base.scheme() == null) {
         CompilerDirectives.transferToInterpreter();
@@ -98,8 +98,7 @@ public final class UrlNodes {
             .evalError("cannotResolveAgainstRelativeUrl", base.serialize())
             .build();
       }
-      var parsedRef = UrlFactory.parseOrThrow(ref, this);
-      return UrlFactory.create(UrlParser.resolve(base, parsedRef));
+      return UrlFactory.create(UrlParser.resolve(base, ref));
     }
   }
 

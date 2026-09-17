@@ -240,6 +240,9 @@ facts {
     module.catch(() -> net.Url(rfcBase).resolve("%zz")) == "Cannot parse `%zz` as a URL."
     net.Url("http://a/b/c/").resolve(new net.Url { path = "d e" }).toString()
       == "http://a/b/c/d%20e"
+    // resolve a string or object should be the same
+    net.Url("http://a/b/c/").resolve("d e").path == "/b/c/d e"
+    net.Url("http://a/b/c/").resolve(new net.Url { path = "d e" }).path == "/b/c/d e"
   }
 
   ["new Url"] {
