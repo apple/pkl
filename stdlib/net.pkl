@@ -53,7 +53,7 @@ class Url {
   ///
   /// An IPv6 address must be enclosed in brackets, as in `[::1]`.
   /// It may carry a zone identifier, as described in RFC 6874.
-  /// Anything else is a registered name, whose brackets, if it has any, must be percent-encoded.
+  /// Anything else is a registered name, which cannot contain `[`, `]` or `:` literally.
   host: String(isValidHost(this))?
 
   /// The port, or [null] if this URL states none.

@@ -72,6 +72,14 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
   }
   ["parse(): RFC 6874 zone identifiers"] {
     true
@@ -168,6 +176,10 @@ facts {
     true
   }
   ["new Url"] {
+    true
+    true
+    true
+    true
     true
     true
     true
