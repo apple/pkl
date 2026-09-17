@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.net;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.Node;
 import org.jspecify.annotations.Nullable;
@@ -101,6 +102,7 @@ final class UrlFactory {
   }
 
   /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
+  @TruffleBoundary
   static VmMapping createQueryParameters(@Nullable String query) {
     var builder = new VmObjectBuilder();
     for (var parameter : UrlParser.queryParameters(query).entrySet()) {
