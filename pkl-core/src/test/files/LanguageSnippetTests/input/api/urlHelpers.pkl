@@ -18,7 +18,7 @@ facts {
       scheme = "https"
       host = "example.com"
       path = "/" + net.encodeUrlComponent("a/b")
-    }.segments == List("a/b")
+    }.pathSegments == List("a/b")
   }
 
   ["decodeUrlComponent()"] {

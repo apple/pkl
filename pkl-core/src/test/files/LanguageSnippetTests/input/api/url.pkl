@@ -172,7 +172,7 @@ facts {
     // a hand-built relative URL is a parsed one
     new net.Url { path = "a/foo" } == net.Url("a/foo")
     new net.Url { path = "a/foo" }.toString() == "a/foo"
-    new net.Url { path = "a/foo" }.segments == List("a", "foo")
+    new net.Url { path = "a/foo" }.pathSegments == List("a", "foo")
   }
 
   ["resolve(): RFC 3986, section 5.4.1 normal examples"] {
@@ -280,23 +280,23 @@ facts {
     (url) { scheme = "http" }.toString() == "http://user:pw@example.com:8080/a/b?q=1#f"
 
     // the derived views follow the amendment
-    (url) { path = "/c/d e" }.segments == List("c", "d e")
+    (url) { path = "/c/d e" }.pathSegments == List("c", "d e")
     // and so does a part given in its decoded form
     (url) { path = "/a b" }.toString() == "https://user:pw@example.com:8080/a%20b?q=1#f"
   }
 
-  ["segments"] {
-    net.Url("https://example.com/a/b").segments == List("a", "b")
-    net.Url("https://example.com/").segments == List("")
-    net.Url("https://example.com/a/").segments == List("a", "")
-    net.Url("https://example.com").segments == List()
-    net.Url("https://example.com/a/b%20c").segments == List("a", "b c")
-    net.Url("https://example.com/m%C3%BCnchen").segments == List("münchen")
+  ["pathSegments"] {
+    net.Url("https://example.com/a/b").pathSegments == List("a", "b")
+    net.Url("https://example.com/").pathSegments == List("")
+    net.Url("https://example.com/a/").pathSegments == List("a", "")
+    net.Url("https://example.com").pathSegments == List()
+    net.Url("https://example.com/a/b%20c").pathSegments == List("a", "b c")
+    net.Url("https://example.com/m%C3%BCnchen").pathSegments == List("münchen")
     // a path is split before its segments are decoded, so an encoded "/" stays in its segment
-    net.Url("https://example.com/a%2Fb").segments == List("a/b")
+    net.Url("https://example.com/a%2Fb").pathSegments == List("a/b")
     // a rootless path has segments too
-    net.Url("mailto:user@example.com").segments == List("user@example.com")
-    net.Url("urn:isbn:0451450523").segments == List("isbn:0451450523")
+    net.Url("mailto:user@example.com").pathSegments == List("user@example.com")
+    net.Url("urn:isbn:0451450523").pathSegments == List("isbn:0451450523")
   }
 
   ["queryParameters"] {
