@@ -395,7 +395,13 @@ public final class UrlParser {
     return normalize(left).equals(normalize(right));
   }
 
-  private static Parsed normalize(Parsed url) {
+  /**
+   * The syntax-based normalization of {@code url}
+   * (https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2).
+   *
+   * <p>Nothing that would take knowing the scheme is normalized, so a default port is kept.
+   */
+  static Parsed normalize(Parsed url) {
     return new Parsed(
         url.scheme() == null ? null : toLowerAscii(url.scheme()),
         normalizeOptional(url.userInfo(), PercentEncoder.USERINFO),
@@ -419,7 +425,9 @@ public final class UrlParser {
 
   private static String normalizeHost(String host) {
     if (!isIpLiteral(host)) {
-      return toLowerAscii(normalizeComponent(host, PercentEncoder.REG_NAME));
+      // the hex digits of a percent-encoded octet are uppercase even in a component that is
+      // otherwise folded to lower case (section 6.2.2.1)
+      return toLowerAsciiOutsideOctets(normalizeComponent(host, PercentEncoder.REG_NAME));
     }
     // an IP literal holds nothing that may be encoded, and its zone identifier, unlike the address
     // in front of it, names an interface and is case-sensitive
@@ -706,6 +714,21 @@ public final class UrlParser {
     for (var i = 0; i < input.length(); i++) {
       var c = input.charAt(i);
       out.append((char) ((c >= 'A' && c <= 'Z') ? c + 0x20 : c));
+    }
+    return out.toString();
+  }
+
+  /** Lowercases {@code input}, leaving the hex digits of its percent-encoded octets as written. */
+  private static String toLowerAsciiOutsideOctets(String input) {
+    var out = new StringBuilder(input.length());
+    for (var i = 0; i < input.length(); i++) {
+      var c = input.charAt(i);
+      if (c == '%') {
+        out.append(input, i, i + 3);
+        i += 2;
+      } else {
+        out.append((char) ((c >= 'A' && c <= 'Z') ? c + 0x20 : c));
+      }
     }
     return out.toString();
   }

@@ -217,6 +217,32 @@ facts {
     true
     true
   }
+  ["normalize()"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
   ["equals()"] {
     true
     true

@@ -328,6 +328,48 @@ facts {
     net.Url("https://example.com/a") == net.Url("HTTPS://example.com/a")
   }
 
+  ["normalize()"] {
+    local function normalized(input: String): String = net.Url(input).normalize().toString()
+
+    normalized("HTTPS://EXAMPLE.com/A") == "https://example.com/A"
+    normalized("http://[2001:DB8::1]/") == "http://[2001:db8::1]/"
+    normalized("http://[FE80::1%25eTH0]/") == "http://[fe80::1%25eTH0]/"
+    normalized("https://example.com/%7Euser") == "https://example.com/~user"
+    normalized("https://U%7Ev@example.com/?q=%7E#%7E") == "https://U~v@example.com/?q=~#~"
+    normalized("https://example.com/a%2fb") == "https://example.com/a%2Fb"
+    normalized("https://münchen.de/") == "https://m%C3%BCnchen.de/"
+    normalized("https://example.com/a/./b/../c") == "https://example.com/a/c"
+    normalized("foo:/bar/baz") == "foo:/bar/baz"
+    normalized("file:///../a") == "file:///a"
+    normalized("file:///foo/%2E%2E/bar") == "file:///bar"
+    normalized("a/../b") == "a/../b"
+    normalized("mailto:user@example.com") == "mailto:user@example.com"
+    normalized("https://example.com") == "https://example.com/"
+    normalized("foo:") == "foo:"
+    normalized("https://example.com:443/") == "https://example.com:443/"
+    normalized("https://example.com/?#") == "https://example.com/?#"
+    normalized("//EXAMPLE.com/a/../b") == "//example.com/b"
+    normalized("") == ""
+    // normalizing is idempotent
+    net.Url("HTTPS://Example.com/a/../%7Eb c").normalize().normalize()
+      == net.Url("HTTPS://Example.com/a/../%7Eb c").normalize()
+
+    net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user").normalize()
+    net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user")
+    net.Url("https://example.com/a%2Fb").normalize() != net.Url("https://example.com/a/b").normalize()
+
+    net.Url("HTTPS://User%7E@EXAMPLE.com:8080/a/../%7Eb?q=%7E#%7E").normalize()
+      == new net.Url {
+        scheme = "https"
+        userInfo = "User~"
+        host = "example.com"
+        port = 8080
+        path = "/~b"
+        query = "q=~"
+        fragment = "~"
+      }
+  }
+
   ["equals()"] {
     local function equal(left: String, right: String): Boolean =
       net.Url(left).equals(net.Url(right))

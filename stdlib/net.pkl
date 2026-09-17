@@ -124,6 +124,31 @@ class Url {
   /// ```
   external function resolve(ref: String | Url): Url
 
+  /// Returns this URL in the *syntax-based normalization* of
+  /// [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2).
+  ///
+  /// [scheme] and [host] are lowercased, as they are case-insensitive.
+  /// Percent-encoding is normalized: an octet standing for an unreserved character is decoded, and
+  /// any other octet is kept, with its hex digits uppercased.
+  /// A character that cannot appear literally in its component is encoded.
+  ///
+  /// Dot segments are only removed from an absolute [path].
+  /// A URL with a [host] and no path is given the path `/`, which names the same resource.
+  ///
+  /// Nothing that would take knowing the scheme is normalized; in particular, a default port is
+  /// kept.
+  ///
+  /// Two URLs identify the same resource exactly when their normalizations are equal; this is what
+  /// [equals()] compares.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user")
+  /// net.Url("https://example.com/a/b/../c").normalize().path == "/a/c"
+  /// net.Url("https://example.com").normalize().path == "/"
+  /// ```
+  external function normalize(): Url
+
   /// Whether [other] identifies the same resource as this URL.
   ///
   /// Unlike `==`, this compares Urls as the *syntax-based normalization* of RFC 3986:
