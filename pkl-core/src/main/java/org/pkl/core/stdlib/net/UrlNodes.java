@@ -87,6 +87,14 @@ public final class UrlNodes {
     }
   }
 
+  public abstract static class normalize extends ExternalMethod0Node {
+    @Specialization
+    @TruffleBoundary
+    protected VmTyped eval(VmTyped self) {
+      return UrlFactory.create(UrlParser.normalize(UrlFactory.read(self)));
+    }
+  }
+
   public abstract static class equals extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
