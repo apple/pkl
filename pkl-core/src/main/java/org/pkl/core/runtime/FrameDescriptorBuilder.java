@@ -33,6 +33,7 @@ public class FrameDescriptorBuilder {
 
   private static final int DEFAULT_CAPACITY = 8;
   private int methodSlot = -1;
+  private int state = 0;
 
   public FrameDescriptorBuilder() {
     this(DEFAULT_CAPACITY);
@@ -54,11 +55,22 @@ public class FrameDescriptorBuilder {
     ensureCapacity(1);
     names[size] = name;
     size++;
+    state++;
     var slot = underlying.addSlot(kind, name, info);
     return new FrameSlotVariable(name.toString(), slot);
   }
 
+  /**
+   * A monotonically increasing number representing the "virtual" state of the frame descriptor; a
+   * higher number means that something tried to modify the descriptor (but did not necessarily
+   * change the actual descriptor).
+   */
+  public int state() {
+    return state;
+  }
+
   public int getOrAddMethodSlot() {
+    state++;
     if (methodSlot != -1) {
       return methodSlot;
     }

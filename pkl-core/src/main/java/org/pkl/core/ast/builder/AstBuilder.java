@@ -528,14 +528,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           var exprs = type.getExprs();
           var constraints = new TypeConstraintNode[exprs.size()];
           for (var i = 0; i < constraints.length; i++) {
-            var currentFrameDescriptorSize = scope.frameDescriptorBuilder.getSize();
+            var initialState = scope.frameDescriptorBuilder.state();
             var expr = visitExpr(exprs.get(i));
-            var writesFrameSlotVars =
-                scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
-            // if a constraint expression writes to frame slots (only known case: is a `let` expr),
-            // create a new root node and execute the constraint within this root node
-            // e.g. String(let (x = this) x.length > 5)
-            if (writesFrameSlotVars) {
+            var needsFrameSlots = scope.frameDescriptorBuilder.state() > initialState;
+            // If a constraint expression writes to frame slots, create a new root node and execute
+            // the constraint within this root node.
+            //
+            // This can happen if the constraint contains a let expression, or if it contains a
+            // method call argument with an inferred `new {}`, e.g.
+            //
+            //   * String(let (x = this) x.length > 5)
+            //   * String(isFoo(new {}))
+            //
+            // We only need to do this if we are in a typealias because they get inlined into their
+            // usage site (they don't influence the frame descriptor of where they are inlined).
+            if (needsFrameSlots && symbolTable.isInTypeAliasScope) {
               expr = getExprWithinCustomThis(scope, expr);
             }
             constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
@@ -1472,18 +1479,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public GeneratorMemberNode visitMemberPredicate(MemberPredicate ctx) {
     var keyNode =
         symbolTable.enterEagerGenerator(
-            (scp) ->
-                symbolTable.enterCustomThisScope(
-                    scope -> {
-                      var currentFrameDescriptorSize = scope.frameDescriptorBuilder.getSize();
-                      var expr = visitExpr(ctx.getPred());
-                      var writesFrameSlotVars =
-                          scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
-                      if (writesFrameSlotVars) {
-                        return getExprWithinCustomThis(scope, expr);
-                      }
-                      return expr;
-                    }));
+            (scp) -> symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred())));
     var member =
         doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
     var isFrameStored =
@@ -2172,6 +2168,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   .build();
             }
           }
+          var parameterTypes = doVisitParameterTypes(paramListCtx);
 
           return new UnresolvedMethodNode(
               language,
@@ -2185,7 +2182,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               scope.getQualifiedName(),
               paramCount,
               typeParameters,
-              doVisitParameterTypes(paramListCtx),
+              parameterTypes,
               visitTypeAnnotation(entry.getTypeAnnotation()),
               isMethodReturnTypeChecked,
               bodyNode);
@@ -2325,12 +2322,18 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public ArgInfo visitArgumentList(ArgumentList argumentList) {
     var args = argumentList.getArguments();
     var arguments = new ExpressionNode[args.size()];
+    var frameDescriptorBuilder = symbolTable.getCurrentScope().frameDescriptorBuilder;
+    var initialState = frameDescriptorBuilder.state();
     for (var i = 0; i < arguments.length; i++) {
       var expr = args.get(i);
       arguments[i] = visitExpr(expr);
     }
-    return new ArgInfo(
-        arguments, symbolTable.getCurrentScope().frameDescriptorBuilder.getMethodSlot());
+    var argsRequiresInference = frameDescriptorBuilder.state() > initialState;
+    var methodSlot =
+        argsRequiresInference
+            ? symbolTable.getCurrentScope().frameDescriptorBuilder.getMethodSlot()
+            : -1;
+    return new ArgInfo(arguments, methodSlot);
   }
 
   @Override

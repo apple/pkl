@@ -5,9 +5,16 @@ res4 {
   new {
     name = "bob"
   }
+  new {
+    name = "bob"
+  }
 }
 res5 {
   new {
     name = "bob"
   }
+  new {
+    name = "quxxey"
+  }
 }
+res6 = 5

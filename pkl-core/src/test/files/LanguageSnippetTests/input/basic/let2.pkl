@@ -15,10 +15,16 @@ hidden bar {
   new {
     name = "fooey"
   }
+  new {
+    name = "quxxey"
+  }
 }
 
 res4 = (bar) {
   [[let (x = "foo") this.name.startsWith(x)]] {
+    name = "bob"
+  }
+  [[let (y = "qux") this.name.startsWith(y)]] {
     name = "bob"
   }
 }
@@ -28,3 +34,7 @@ res5 = (bar) {
     name = "bob"
   }
 }
+
+function isPositive(num: Int(let (q = 0) this > q)) = true
+
+res6: Int(isPositive(this)) = 5
