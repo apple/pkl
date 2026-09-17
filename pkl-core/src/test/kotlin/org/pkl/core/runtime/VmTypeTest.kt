@@ -104,34 +104,34 @@ class VmTypeTest {
 
   /** Assert this is a subtype of [other] and [other] is a supertype of this, but not equivalent */
   private fun VmType.sub(other: VmType) {
-    assertThat(this.isSubtypeOf(other)).isTrue
-    assertThat(other.isSupertypeOf(this)).isTrue
-    assertThat(other.isSubtypeOf(this)).isFalse
-    assertThat(this.isSupertypeOf(other)).isFalse
-    assertThat(this.equals(other)).isFalse
-    assertThat(other.equals(this)).isFalse
+    assertThat(this.isSubtypeOf(other)).`as`("%s isSubtypeOf %s", this, other).isTrue
+    assertThat(other.isSupertypeOf(this)).`as`("%s isSupertypeOf %s", other, this).isTrue
+    assertThat(other.isSubtypeOf(this)).`as`("%s isSubtypeOf %s", other, this).isFalse
+    assertThat(this.isSupertypeOf(other)).`as`("%s isSupertypeOf %s", this, other).isFalse
+    assertThat(this == other).`as`("%s == %s", this, other).isFalse
+    assertThat(other == this).`as`("%s == %s", other, this).isFalse
   }
 
   /**
    * Assert this is a subtype of [other] and [other] is a supertype of this and they are equivalent
    */
   private fun VmType.eq(other: VmType) {
-    assertThat(this.isSubtypeOf(other)).isTrue
-    assertThat(other.isSupertypeOf(this)).isTrue
-    assertThat(other.isSubtypeOf(this)).isTrue
-    assertThat(this.isSupertypeOf(other)).isTrue
-    assertThat(this.equals(other)).isTrue
-    assertThat(other.equals(this)).isTrue
+    assertThat(this.isSubtypeOf(other)).`as`("%s isSubtypeOf %s", this, other).isTrue
+    assertThat(other.isSupertypeOf(this)).`as`("%s isSupertypeOf %s", other, this).isTrue
+    assertThat(other.isSubtypeOf(this)).`as`("%s isSubtypeOf %s", other, this).isTrue
+    assertThat(this.isSupertypeOf(other)).`as`("%s isSupertypeOf %s", this, other).isTrue
+    assertThat(this == other).`as`("%s == %s", this, other).isTrue
+    assertThat(other == this).`as`("%s == %s", other, this).isTrue
   }
 
   /** Assert this is a subtype of [other] and [other] is a subtype of this, but not equivalent */
   private fun VmType.bidi(other: VmType) {
-    assertThat(this.isSubtypeOf(other)).isTrue
-    assertThat(other.isSupertypeOf(this)).isTrue
-    assertThat(other.isSubtypeOf(this)).isTrue
-    assertThat(this.isSupertypeOf(other)).isTrue
-    assertThat(this.equals(other)).isFalse
-    assertThat(other.equals(this)).isFalse
+    assertThat(this.isSubtypeOf(other)).`as`("%s isSubtypeOf %s", this, other).isTrue
+    assertThat(other.isSupertypeOf(this)).`as`("%s isSupertypeOf %s", other, this).isTrue
+    assertThat(other.isSubtypeOf(this)).`as`("%s isSubtypeOf %s", other, this).isTrue
+    assertThat(this.isSupertypeOf(other)).`as`("%s isSupertypeOf %s", this, other).isTrue
+    assertThat(this == other).`as`("%s == %s", this, other).isFalse
+    assertThat(other == this).`as`("%s == %s", other, this).isFalse
   }
 
   @Test

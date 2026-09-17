@@ -177,37 +177,33 @@ public abstract sealed class VmType {
       this.typeArguments = typeArguments;
     }
 
-    public VmType[] getTypeArguments() {
+    public final VmType[] getTypeArguments() {
       return typeArguments;
     }
 
-    public VmType.ClassType withTypeArguments(VmType[] typeArguments) {
-      return new VmType.ClassType(clazz, typeArguments);
-    }
-
     @Override
-    public VmClass getVmClass() {
+    public final VmClass getVmClass() {
       return clazz;
     }
 
     @Override
-    public boolean isParametric() {
+    public final boolean isParametric() {
       return typeArguments.length > 0;
     }
 
-    public boolean isFunctionNClass() {
+    public final boolean isFunctionNClass() {
       return clazz.isFunctionNClass();
     }
 
     @Override
-    protected boolean doIsEquivalentTo(VmType other) {
+    protected final boolean doIsEquivalentTo(VmType other) {
       if (!(other instanceof AbstractClassType t)) return false;
       if (clazz != t.clazz) return false;
       return typesEquals(typeArguments, t.typeArguments);
     }
 
     @Override
-    protected boolean doIsSupertypeOf(VmType other) {
+    protected final boolean doIsSupertypeOf(VmType other) {
       // special case: Any is a supertype of everything
       if (clazz == BaseModule.getAnyClass()) return true;
       // special case: String is a supertype of all string literals and also Char
@@ -288,7 +284,7 @@ public abstract sealed class VmType {
     }
 
     @Override
-    public int hashCode() {
+    public final int hashCode() {
       return 31 * clazz.hashCode() + Arrays.hashCode(typeArguments);
     }
   }
@@ -311,6 +307,10 @@ public abstract sealed class VmType {
     }
 
     private static final ClassType ANY = new ClassType(BaseModule.getAnyClass());
+
+    public VmType.ClassType withTypeArguments(VmType[] typeArguments) {
+      return new VmType.ClassType(clazz, typeArguments);
+    }
 
     @Override
     public PType export() {
@@ -382,7 +382,7 @@ public abstract sealed class VmType {
     }
 
     @Override
-    public VmClass getVmClass() {
+    public final VmClass getVmClass() {
       return clazz;
     }
 
@@ -520,7 +520,7 @@ public abstract sealed class VmType {
 
     @Override
     public int hashCode() {
-      return 31 * baseType.hashCode() + Arrays.hashCode(constraints);
+      return 31 * identity;
     }
   }
 
@@ -616,7 +616,7 @@ public abstract sealed class VmType {
 
     @Override
     public int hashCode() {
-      return 31 * typeAlias.hashCode() + Arrays.hashCode(typeArguments);
+      return aliasedType.hashCode();
     }
   }
 
@@ -727,7 +727,7 @@ public abstract sealed class VmType {
 
     @Override
     public int hashCode() {
-      return 31 * typeParameter.hashCode();
+      return -318019;
     }
   }
 
