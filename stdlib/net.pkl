@@ -180,17 +180,17 @@ class Url {
   external function toString(): String
 
   /// Whether every `%` in [value] begins a percent-encoded octet.
-  external local function isValidPercentEncoding(value: String): Boolean
+  external function isValidPercentEncoding(value: String): Boolean
 
   /// Whether [value] is a `scheme`.
-  external local function isValidScheme(value: String): Boolean
+  external function isValidScheme(value: String): Boolean
 
   /// Whether [value] is a `host`.
-  external local function isValidHost(value: String): Boolean
+  external function isValidHost(value: String): Boolean
 
   /// Whether [value] is a path that can sit next to an authority, or, when [hasAuthority] is
   /// [false], next to no authority at all.
-  external local function isValidPath(value: String, hasAuthority: Boolean): Boolean
+  external function isValidPath(value: String, hasAuthority: Boolean): Boolean
 }
 
 /// Percent-encodes [value] so that it can be interpolated into any URL component.
