@@ -1,0 +1,33 @@
+local f = (a, b) -> new Dynamic {
+  x = a
+  y = b
+}
+
+res =
+  (f) { p, q: Int(let (z = 0) this > z) ->
+    x = p
+    y = q
+  }.apply("hi", 9)
+
+local g = (a, b: Int(let (z = 0) this > z)) -> new Dynamic {
+  x = a
+  y = b
+}
+
+res2 = g.apply("hi", 9)
+
+res3 = new Dynamic {
+  local function h(a, b: Int(let (z = 0) this > z)) = new Dynamic {
+    x = a
+    y = b
+  }
+  `out` = h("hi", 9)
+}
+
+res4 =
+  (f) { p, q: Int(let (z = 0) this > z) ->
+    when (true) {
+      x = p
+      y = q
+    }
+  }.apply("hi", 9)

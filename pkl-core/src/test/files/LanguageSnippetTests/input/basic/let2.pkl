@@ -1,16 +1,3 @@
-// let expr inside custom this scopes
-typealias Foo = String(let (x = this) this == x)
-
-typealias Foo2 = String(let (x = "foo") this.startsWith(x), let (y = "o") this.endsWith(y))
-
-typealias Foo3 = String(let (x = "foo") this.startsWith(x))(let (y = "o") this.endsWith(y))
-
-res1: Foo = "foo"
-
-res2: Foo2 = "foo"
-
-res3: Foo3 = "foo"
-
 hidden bar {
   new {
     name = "fooey"
@@ -20,7 +7,7 @@ hidden bar {
   }
 }
 
-res4 = (bar) {
+res1 = (bar) {
   [[let (x = "foo") this.name.startsWith(x)]] {
     name = "bob"
   }
@@ -29,7 +16,7 @@ res4 = (bar) {
   }
 }
 
-res5 = (bar) {
+res2 = (bar) {
   [[let (x = this) x.name.startsWith("foo")]] {
     name = "bob"
   }
@@ -37,4 +24,4 @@ res5 = (bar) {
 
 function isPositive(num: Int(let (q = 0) this > q)) = true
 
-res6: Int(isPositive(this)) = 5
+res3: Int(isPositive(this)) = 5

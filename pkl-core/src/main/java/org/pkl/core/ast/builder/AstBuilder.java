@@ -1340,13 +1340,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         descriptorBuilder,
         scope -> {
           var exprNode = visitExpr(expr.getExpr());
+          var parameterTypeNodes = doVisitParameterTypes(params);
           var functionNode =
               new UnresolvedFunctionNode(
                   language,
                   scope.buildFrameDescriptor(),
                   new Lambda(sourceSection, scope.getQualifiedName()),
                   paramCount,
-                  doVisitParameterTypes(params),
+                  parameterTypeNodes,
                   null,
                   exprNode);
 
@@ -2169,6 +2170,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             }
           }
           var parameterTypes = doVisitParameterTypes(paramListCtx);
+          var typeAnnotationNode = visitTypeAnnotation(entry.getTypeAnnotation());
 
           return new UnresolvedMethodNode(
               language,
@@ -2183,7 +2185,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               paramCount,
               typeParameters,
               parameterTypes,
-              visitTypeAnnotation(entry.getTypeAnnotation()),
+              typeAnnotationNode,
               isMethodReturnTypeChecked,
               bodyNode);
         });
@@ -2418,9 +2420,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         parametersDescriptorAndBindings == null
             ? new FrameSlotVariable[0]
             : parametersDescriptorAndBindings.second;
+    var parametersFrameDescriptorBuilder =
+        parametersDescriptorAndBindings == null ? null : parametersDescriptorAndBindings.first;
 
     return symbolTable.enterObjectScope(
         bindings,
+        parametersFrameDescriptorBuilder,
         (scope) -> {
           addObjectNamesToScope(scope, body);
           var objectMembers = body.getMembers();
@@ -2430,11 +2435,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           }
           var sourceSection = createSourceSection(body.parent());
 
+          // must visit parameter types before building the parameters frame descriptor, since
+          // constraints (e.g. containing `let` expressions) may add further slots to it
+          var parameterTypes = doVisitParameterTypes(body);
           var parametersDescriptor =
               parametersDescriptorAndBindings == null
                   ? null
                   : parametersDescriptorAndBindings.first.build();
-          var parameterTypes = doVisitParameterTypes(body);
 
           var members = EconomicMaps.<Object, ObjectMember>create();
           var elements = new ArrayList<ObjectMember>();
@@ -2475,7 +2482,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 || memberCtx instanceof ObjectSpread;
             // bail out and create GeneratorObjectLiteralNode instead
             // (but can't we easily reuse members/elements/keyNodes/values?)
-            return doVisitGeneratorObjectBody(body, parentNode);
+            return doVisitGeneratorObjectBody(
+                body, parentNode, parametersDescriptor, parameterTypes);
           }
 
           var currentScope = symbolTable.getCurrentScope();
@@ -2656,6 +2664,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   .build();
             }
           }
+          var typeAnnotation = visitTypeAnnotation(typeAnn);
 
           ExpressionNode bodyNode;
           if (body != null && !body.isEmpty()) { // foo { ... }
@@ -2692,7 +2701,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.buildFrameDescriptor(),
                   modifiers,
                   bodyNode,
-                  visitTypeAnnotation(typeAnn))
+                  typeAnnotation)
               : VmUtils.createObjectProperty(
                   language,
                   sourceSection,
@@ -2815,6 +2824,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.getName(),
                   scope.getQualifiedName());
           var body = visitExpr(expr);
+          var typeNode = visitTypeAnnotation(typeAnnotation);
+          var parameterTypeNodes = doVisitParameterTypes(paramList);
           var node =
               new ObjectMethodNode(
                   language,
@@ -2822,8 +2833,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   member,
                   body,
                   paramList.getParameters().size(),
-                  doVisitParameterTypes(paramList),
-                  visitTypeAnnotation(typeAnnotation));
+                  parameterTypeNodes,
+                  typeNode);
 
           member.initMemberNode(node);
           return member;
@@ -2831,10 +2842,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private GeneratorObjectLiteralNode doVisitGeneratorObjectBody(
-      ObjectBody body, ExpressionNode parentNode) {
-    var parametersDescriptorBuilderAndFrameSlotVariables =
-        createFrameDescriptorBuilderAndSlotVariables(body);
-    var parameterTypes = doVisitParameterTypes(body);
+      ObjectBody body,
+      ExpressionNode parentNode,
+      @Nullable FrameDescriptor parametersDescriptor,
+      UnresolvedTypeNode[] parameterTypes) {
     var memberNodes = doVisitGeneratorMemberNodes(body.getMembers());
     var currentScope = symbolTable.getCurrentScope();
     //noinspection ConstantConditions
@@ -2843,9 +2854,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         language,
         currentScope.getQualifiedName(),
         currentScope.isCustomThisScope(),
-        parametersDescriptorBuilderAndFrameSlotVariables == null
-            ? null
-            : parametersDescriptorBuilderAndFrameSlotVariables.first.build(),
+        parametersDescriptor,
         parameterTypes,
         memberNodes,
         parentNode);
