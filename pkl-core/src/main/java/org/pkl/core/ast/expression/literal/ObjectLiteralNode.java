@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -40,6 +41,7 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
   protected final VmLanguage language;
   protected final String qualifiedScopeName;
   protected final boolean isCustomThisScope;
+  protected final boolean needsCapture;
   protected final @Nullable FrameDescriptor parametersDescriptor;
   @Children protected final UnresolvedTypeNode[] parameterTypes;
   @Child protected @Nullable AmendFunctionNode amendFunctionNode;
@@ -49,6 +51,7 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes) {
 
@@ -56,6 +59,7 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
     this.language = language;
     this.qualifiedScopeName = qualifiedScopeName;
     this.isCustomThisScope = isCustomThisScope;
+    this.needsCapture = needsCapture;
     this.parametersDescriptor = parametersDescriptor;
     this.parameterTypes = parameterTypes;
   }
@@ -117,6 +121,10 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
     }
     LoopNode.reportLoopCount(this, count);
     return value;
+  }
+
+  protected final @Nullable MaterializedFrame materializedFrame(VirtualFrame frame) {
+    return needsCapture ? frame.materialize() : null;
   }
 
   @Override

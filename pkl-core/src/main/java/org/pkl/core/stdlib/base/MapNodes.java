@@ -257,12 +257,7 @@ public final class MapNodes {
 
       VmUtils.checkIsInstantiable(clazz, null);
 
-      var result =
-          new VmTyped(
-              VmUtils.createEmptyMaterializedFrame(),
-              clazz.getPrototype(),
-              clazz,
-              clazz.getMapToTypedMembers());
+      var result = new VmTyped(null, clazz.getPrototype(), clazz, clazz.getMapToTypedMembers());
       result.setExtraStorage(self);
       return result;
     }

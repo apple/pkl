@@ -110,12 +110,7 @@ public final class DynamicNodes {
 
       VmUtils.checkIsInstantiable(clazz, this);
 
-      var result =
-          new VmTyped(
-              VmUtils.createEmptyMaterializedFrame(),
-              clazz.getPrototype(),
-              clazz,
-              clazz.getDynamicToTypedMembers());
+      var result = new VmTyped(null, clazz.getPrototype(), clazz, clazz.getDynamicToTypedMembers());
       result.setExtraStorage(self);
       return result;
     }

@@ -72,7 +72,7 @@ public final class TypedNodes {
     protected VmObjectLike eval(VmTyped self) {
       var result =
           new VmDynamic(
-              VmUtils.createEmptyMaterializedFrame(),
+              null,
               BaseModule.getDynamicClass().getPrototype(),
               self.getVmClass().getTypedToDynamicMembers(),
               0);

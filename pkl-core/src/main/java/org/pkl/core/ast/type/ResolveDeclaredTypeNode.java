@@ -20,7 +20,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
-import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
 
 public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
@@ -28,19 +27,6 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
 
   protected ResolveDeclaredTypeNode(SourceSection sourceSection) {
     super(sourceSection);
-  }
-
-  protected VmTyped getEnclosingModule(VmObjectLike initialOwner) {
-    var curr = initialOwner;
-    var next = curr.getEnclosingOwner();
-
-    while (next != null) {
-      curr = next;
-      next = next.getEnclosingOwner();
-    }
-
-    assert curr.isModuleObject();
-    return (VmTyped) curr;
   }
 
   protected VmTyped getImport(
@@ -78,7 +64,14 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     return (VmTyped) result;
   }
 
-  protected @Nullable Object getType(
+  protected final Object getType(
+      VmTyped module, Identifier typeName, SourceSection typeNameSection) {
+    var result = getTypeOrNull(module, typeName, typeNameSection);
+    assert result != null;
+    return result;
+  }
+
+  protected @Nullable Object getTypeOrNull(
       VmTyped module, Identifier typeName, SourceSection typeNameSection) {
     var member = module.getMember(typeName);
     if (member == null) return null;

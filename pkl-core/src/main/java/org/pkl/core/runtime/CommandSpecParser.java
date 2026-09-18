@@ -1165,6 +1165,7 @@ public final class CommandSpecParser {
               language,
               "",
               false,
+              true,
               null,
               new UnresolvedTypeNode[] {},
               parent.members,

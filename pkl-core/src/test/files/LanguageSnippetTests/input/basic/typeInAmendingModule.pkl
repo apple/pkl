@@ -1,0 +1,5 @@
+amends "baseModule.pkl"
+
+foo {
+  prop = new Bird { name = "the bird" }
+}

@@ -1,0 +1,10 @@
+// ideally, should be able to suggest "quxxy" as a lookup item.
+// we currently don't because `foo` does not capture a closure.
+quxxy = 2
+foo {
+  a = 2
+  bar {
+    baz = qux
+    sss = a
+  }
+}
