@@ -15,6 +15,7 @@
  */
 package org.pkl.core.ast.expression.member;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Executed;
 import com.oracle.truffle.api.dsl.ImportStatic;
@@ -53,7 +54,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
         "getObjectReceiver(frame) == receiver",
         "getOwner(frame) == initialOwner",
         // fine to use `Object.equals` here because an object key is deep-forced upon lookup anyway
-        "key.equals(cachedKey)"
+        "equals(key, cachedKey)"
       })
   protected Object evalCached(
       VirtualFrame frame,
@@ -73,6 +74,11 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
     var initialOwner = VmUtils.getOwner(frame);
     var ownerAndMember = getOwnerAndMember(initialOwner, key);
     return doEval(key, receiver, ownerAndMember);
+  }
+
+  @TruffleBoundary
+  protected final boolean equals(Object obj1, Object obj2) {
+    return obj1.equals(obj2);
   }
 
   protected final Object doEval(
