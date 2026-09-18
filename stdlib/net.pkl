@@ -44,7 +44,7 @@ class Url {
   /// The userinfo, without the trailing `@`, or [null] if this URL has none.
   ///
   /// Only a URL with a [host] can have userinfo.
-  userInfo: String(host != null && isValidPercentEncoding(this))?
+  userInfo: String(host != null, isValidPercentEncoding(this))?
 
   /// The host, or [null] if this URL has no authority.
   ///
@@ -112,7 +112,7 @@ class Url {
   ///
   /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
   /// which replaces it entirely.
-  /// Dot segments are removed from the result's path, normalizing it.
+  /// Dot segments (`./` and `../`) are removed from the result's path, normalizing it.
   ///
   /// Throws if [ref] is a string that cannot be parsed, or if this URL is itself a relative
   /// reference.
@@ -132,11 +132,10 @@ class Url {
   /// any other octet is kept, with its hex digits uppercased.
   /// A character that cannot appear literally in its component is encoded.
   ///
-  /// Dot segments are only removed from an absolute [path].
+  /// Dot segments (`./` and `../`) are only removed from an absolute [path].
   /// A URL with a [host] and no path is given the path `/`, which names the same resource.
   ///
-  /// Nothing that would take knowing the scheme is normalized; in particular, a default port is
-  /// kept.
+  /// Normalization that would require knowing the scheme is not performed.
   ///
   /// Two URLs identify the same resource exactly when their normalizations are equal; this is what
   /// [equals()] compares.
@@ -155,9 +154,9 @@ class Url {
   /// [scheme] and [host] are case-insensitive and percent-encoding is normalized.
   /// An octet standing for a reserved character is kept as written.
   ///
-  /// Dot segments are only removed from an absolute [path].
+  /// Dot segments (`./` and `../`) are only removed from an absolute [path].
   ///
-  /// Nothing that would take knowing the scheme is normalized.
+  /// Normalization that would require knowing the scheme is not performed.
   ///
   /// Facts:
   /// ```

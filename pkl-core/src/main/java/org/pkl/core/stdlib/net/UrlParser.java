@@ -170,7 +170,7 @@ public final class UrlParser {
       var authority = input.substring(pointer, end);
       pointer = end;
 
-      // the userinfo runs to the last "@", because "@" may appear literally in a host
+      // the userinfo runs to the last "@", because "@" cannot appear literally in a host
       var at = authority.lastIndexOf('@');
       if (at >= 0) {
         userInfo = authority.substring(0, at);
