@@ -125,8 +125,8 @@ import org.pkl.core.ast.expression.member.ReadAmbiguousLocalityPropertyNode;
 import org.pkl.core.ast.expression.member.ReadLexicalLocalPropertyNode;
 import org.pkl.core.ast.expression.member.ReadPropertyNodeGen;
 import org.pkl.core.ast.expression.member.ReadQualifiedLocalPropertyNode;
-import org.pkl.core.ast.expression.member.ReadSuperEntryNode;
-import org.pkl.core.ast.expression.member.ReadSuperPropertyNode;
+import org.pkl.core.ast.expression.member.ReadSuperEntryNodeGen;
+import org.pkl.core.ast.expression.member.ReadSuperPropertyNodeGen;
 import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.expression.primary.GetEnclosingReceiverNode;
 import org.pkl.core.ast.expression.primary.GetMemberKeyNode;
@@ -1164,12 +1164,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
 
     // superproperty call
-    return new ReadSuperPropertyNode(createSourceSection(expr), memberName, needsConst);
+    return ReadSuperPropertyNodeGen.create(createSourceSection(expr), memberName, needsConst);
   }
 
   @Override
   public ExpressionNode visitSuperSubscriptExpr(SuperSubscriptExpr expr) {
-    return new ReadSuperEntryNode(createSourceSection(expr), visitExpr(expr.getArg()));
+    return ReadSuperEntryNodeGen.create(createSourceSection(expr), visitExpr(expr.getArg()));
   }
 
   @Override
@@ -2078,7 +2078,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             bodyNode =
                 doVisitObjectBody(
                     objectBodies,
-                    new ReadSuperPropertyNode(
+                    ReadSuperPropertyNodeGen.create(
                         unavailableSourceSection(),
                         scope.getName(),
                         scope.getConstLevel() == ConstLevel.ALL));
@@ -2689,7 +2689,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             bodyNode =
                 doVisitObjectBody(
                     body,
-                    new ReadSuperPropertyNode(
+                    ReadSuperPropertyNodeGen.create(
                         unavailableSourceSection(),
                         scope.getName(),
                         // Never need a const check for amends declarations. In `foo { ... }`:
@@ -3099,7 +3099,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             var objectBody =
                 doVisitObjectBody(
                     objectBodyCtxs,
-                    new ReadSuperEntryNode(unavailableSourceSection(), new GetMemberKeyNode()));
+                    ReadSuperEntryNodeGen.create(
+                        unavailableSourceSection(), new GetMemberKeyNode()));
             if (isForGeneratorScope) {
               objectBody =
                   new RestoreForBindingsNode(
