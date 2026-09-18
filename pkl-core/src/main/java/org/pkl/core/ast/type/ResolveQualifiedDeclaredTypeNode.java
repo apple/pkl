@@ -57,7 +57,7 @@ public final class ResolveQualifiedDeclaredTypeNode extends ResolveDeclaredTypeN
     // search module hierarchy
     // (type declared in base module is accessible through extending and amending modules)
     for (var currModule = importedModule; currModule != null; currModule = currModule.getParent()) {
-      var result = getType(currModule, typeName, sourceSection);
+      var result = getTypeOrNull(currModule, typeName, sourceSection);
       if (result != null) return result;
     }
 

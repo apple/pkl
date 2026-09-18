@@ -112,8 +112,7 @@ public final class VmObjectFactory<E> {
   public VmTyped create(@Nullable E extraStorage) {
     var clazz = classSupplier.get();
 
-    var result =
-        new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    var result = new VmTyped(null, clazz.getPrototype(), clazz, members);
     result.setExtraStorage(extraStorage);
     return result;
   }

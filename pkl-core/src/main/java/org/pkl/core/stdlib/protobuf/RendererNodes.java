@@ -353,7 +353,7 @@ public final class RendererNodes {
             }
           }
           try {
-            type.execute(VmUtils.createEmptyMaterializedFrame(), value);
+            type.execute(null, value);
           } catch (VmTypeMismatchException e) {
             continue;
           }

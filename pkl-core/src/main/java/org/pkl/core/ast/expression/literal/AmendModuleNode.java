@@ -40,7 +40,7 @@ public abstract class AmendModuleNode extends SpecializedObjectLiteralNode {
       EconomicMap<Object, ObjectMember> properties,
       ModuleInfo moduleInfo) {
 
-    super(sourceSection, language, "", false, null, new UnresolvedTypeNode[0], properties);
+    super(sourceSection, language, "", false, false, null, new UnresolvedTypeNode[0], properties);
     this.annotationNodes = annotationNodes;
     this.moduleInfo = moduleInfo;
   }

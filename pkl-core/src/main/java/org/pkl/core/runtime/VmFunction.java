@@ -34,7 +34,7 @@ public final class VmFunction extends VmObjectLike {
   private final boolean isFunctionAmend;
 
   public VmFunction(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       Object thisValue,
       int paramCount,
       PklRootNode rootNode,
@@ -43,7 +43,7 @@ public final class VmFunction extends VmObjectLike {
   }
 
   public VmFunction(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       Object thisValue,
       int paramCount,
       PklRootNode rootNode,

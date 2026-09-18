@@ -48,6 +48,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       // contains local properties and default property (if present)
@@ -61,6 +62,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes,
         members);
@@ -79,6 +81,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         null, // copied node no longer has parameters
         new UnresolvedTypeNode[0], // ditto
         members,
@@ -89,7 +92,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   @Specialization(guards = "checkIsValidMappingAmendment()")
   protected VmMapping evalMapping(VirtualFrame frame, VmMapping parent) {
-    return new VmMapping(frame.materialize(), parent, createMapMembers(frame));
+    return new VmMapping(materializedFrame(frame), parent, createMapMembers(frame));
   }
 
   @SuppressWarnings("unused")
@@ -102,7 +105,8 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(frame.materialize(), parent, createMapMembers(frame), parent.getLength());
+    return new VmDynamic(
+        materializedFrame(frame), parent, createMapMembers(frame), parent.getLength());
   }
 
   @SuppressWarnings("unused")
@@ -115,7 +119,7 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     return new VmListing(
-        frame.materialize(),
+        materializedFrame(frame),
         parent,
         createListMembers(frame, parent.getLength()),
         // `[x] = y` overrides existing element and doesn't increase length
@@ -136,8 +140,23 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
       VmFunction parent,
       @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
           AmendFunctionNode amendFunctionNode) {
-
-    return amendFunctionNode.execute(frame, parent);
+    // capture analysis in AstBuilder is not reliable here. AstBuilder thinks this doesn't need a
+    // capture, which is normally correct;
+    //
+    // ```
+    // function myFunc(res) = res
+    //
+    // foo {
+    //   [myFunc("foo")] = 1
+    // }
+    // ```
+    //
+    // Normally, the entry member gets created before the object is created, so `foo` isn't
+    // dependent on a closure.
+    //
+    // However, in the case of function amends, the entry creation runs _inside_ the function body.
+    // AstBuilder doesn't know whether `foo` is a function or not, and assumes that it is not.
+    return amendFunctionNode.execute(frame, parent, true);
   }
 
   @SuppressWarnings("unused")
@@ -156,14 +175,16 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   protected VmMapping evalMappingClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
     return new VmMapping(
-        frame.materialize(), BaseModule.getMappingClass().getPrototype(), createMapMembers(frame));
+        materializedFrame(frame),
+        BaseModule.getMappingClass().getPrototype(),
+        createMapMembers(frame));
   }
 
   @Specialization(guards = "parent == getDynamicClass()")
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
     return new VmDynamic(
-        frame.materialize(),
+        materializedFrame(frame),
         BaseModule.getDynamicClass().getPrototype(),
         createMapMembers(frame),
         0);

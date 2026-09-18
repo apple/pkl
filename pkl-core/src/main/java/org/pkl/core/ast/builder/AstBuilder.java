@@ -52,6 +52,7 @@ import org.pkl.core.ast.builder.MethodResolution.ImplicitThisMethod;
 import org.pkl.core.ast.builder.MethodResolution.LexicalMethod;
 import org.pkl.core.ast.builder.SymbolTable.AnnotationScope;
 import org.pkl.core.ast.builder.SymbolTable.ClassScope;
+import org.pkl.core.ast.builder.SymbolTable.LambdaScope;
 import org.pkl.core.ast.builder.SymbolTable.LetExpressionScope;
 import org.pkl.core.ast.builder.SymbolTable.ModuleScope;
 import org.pkl.core.ast.builder.SymbolTable.ObjectScope;
@@ -170,6 +171,7 @@ import org.pkl.core.ast.member.UnresolvedFunctionNode;
 import org.pkl.core.ast.member.UnresolvedMethodNode;
 import org.pkl.core.ast.member.UnresolvedPropertyNode;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.ast.type.GetBaseModuleTypeNode;
 import org.pkl.core.ast.type.GetParentForTypeNodeGen;
 import org.pkl.core.ast.type.ResolveDeclaredTypeNode;
 import org.pkl.core.ast.type.ResolveQualifiedDeclaredTypeNode;
@@ -187,6 +189,7 @@ import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
 import org.pkl.core.packages.PackageLoadError;
 import org.pkl.core.runtime.BaseModule;
+import org.pkl.core.runtime.BaseModuleMembers;
 import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.ModuleInfo;
@@ -376,6 +379,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public UnresolvedTypeNode visitModuleType(ModuleType type) {
     var sourceSection = createSourceSection(type);
     checkModuleType(type, sourceSection);
+    symbolTable.getCurrentScope().markCapture(symbolTable.getModuleScope());
     return new UnresolvedTypeNode.Module(sourceSection);
   }
 
@@ -619,15 +623,18 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   // also, consider interpreting `x = ... x ...` as `x = ... outer.x ...`
   @Override
   public OuterNode visitOuterExpr(OuterExpr expr) {
+    var outerScope = getOuterScope();
     if (!(expr.parent() instanceof QualifiedAccessExpr)) {
       var constLevel = symbolTable.getCurrentScope().getConstLevel();
-      var outerScope = getParentLexicalScope();
       if (outerScope != null && constLevel.bigger(outerScope.getConstLevel())) {
         throw exceptionBuilder()
             .evalError("outerIsNotConst")
             .withSourceSection(createSourceSection(expr))
             .build();
       }
+    }
+    if (outerScope != null) {
+      symbolTable.getCurrentScope().markCapture(outerScope);
     }
     return new OuterNode(createSourceSection(expr));
   }
@@ -656,6 +663,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           .withSourceSection(createSourceSection(expr))
           .build();
     }
+    currentScope.markCapture(symbolTable.getModuleScope());
     return symbolTable.isInTypeAliasScope
         ? new GetTypeAliasModuleNode(createSourceSection(expr))
         : new GetModuleNode(createSourceSection(expr));
@@ -1149,7 +1157,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var currentScope = symbolTable.getCurrentScope();
     var needsConst =
         currentScope.getConstLevel() == ConstLevel.ALL && currentScope.getConstDepth() == -1;
-
+    var lexicalScope = currentScope.getLexicalScope();
+    // edge case: `super` inside a function needs to see its enclosing object (see
+    // ReadSuperPropertyNode.java)
+    if (lexicalScope instanceof LambdaScope) {
+      currentScope.markCapture(lexicalScope.getObjectLikeScope());
+    }
     if (argCtx != null) { // supermethod call
       if (!symbolTable.getCurrentScope().isClassMemberScope()) {
         throw exceptionBuilder()
@@ -1169,6 +1182,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ExpressionNode visitSuperSubscriptExpr(SuperSubscriptExpr expr) {
+    var currentScope = symbolTable.getCurrentScope();
+    var lexicalScope = currentScope.getLexicalScope();
+    // edge case: `super` inside a function needs to see its enclosing object (see
+    // ReadSuperEntryNode.java)
+    if (lexicalScope instanceof LambdaScope) {
+      currentScope.markCapture(currentScope.getObjectLikeScope());
+    }
     return ReadSuperEntryNodeGen.create(createSourceSection(expr), visitExpr(expr.getArg()));
   }
 
@@ -1350,7 +1370,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   null,
                   exprNode);
 
-          return new FunctionLiteralNode(sourceSection, functionNode, isCustomThisScope);
+          return new FunctionLiteralNode(
+              sourceSection, functionNode, isCustomThisScope, scope.needsCapture());
         });
   }
 
@@ -2366,6 +2387,23 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return symbolTable.getCurrentScope().buildFrameDescriptor();
   }
 
+  private ResolveDeclaredTypeNode resolveSimpleDeclaredTypeNode(
+      Identifier parseNodeIdentifier, ExpressionNode getModuleNode) {
+    var sourceSection = createSourceSection(parseNodeIdentifier);
+    var name = parseNodeIdentifier.getValue();
+    var scope = symbolTable.getCurrentScope();
+    var isBaseModuleType =
+        !symbolTable.getModuleScope().properties.containsKey(name)
+            && BaseModuleMembers.hasProperty(name);
+    if (!isBaseModuleType) {
+      scope.markCapture(symbolTable.getModuleScope());
+    }
+    var identifier = org.pkl.core.runtime.Identifier.get(name);
+    return isBaseModuleType
+        ? new GetBaseModuleTypeNode(sourceSection, identifier)
+        : new ResolveSimpleDeclaredTypeNode(sourceSection, identifier, getModuleNode);
+  }
+
   private ResolveDeclaredTypeNode doVisitTypeName(QualifiedIdentifier ctx) {
     var identifiers = ctx.getIdentifiers();
     var getModuleNode =
@@ -2375,18 +2413,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 ? new GetTypeAliasModuleNode(VmUtils.unavailableSourceSection())
                 : new GetModuleOwnerNode(VmUtils.unavailableSourceSection());
     return switch (identifiers.size()) {
-      case 1 -> {
-        var identifier = identifiers.get(0);
-        var sourceSection = createSourceSection(identifier);
-        yield new ResolveSimpleDeclaredTypeNode(
-            sourceSection,
-            org.pkl.core.runtime.Identifier.get(identifier.getValue()),
-            isBaseModule,
-            getModuleNode);
-      }
+      case 1 -> resolveSimpleDeclaredTypeNode(identifiers.get(0), getModuleNode);
       case 2 -> {
         var identifier1 = identifiers.get(0);
         var identifier2 = identifiers.get(1);
+        // using a qualified type always needs to capture the module itself
+        // (qualified types are always resolved off of imports).
+        symbolTable.getCurrentScope().markCapture(symbolTable.getModuleScope());
         yield new ResolveQualifiedDeclaredTypeNode(
             createSourceSection(ctx),
             createSourceSection(identifier1),
@@ -2509,6 +2542,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   language,
                   currentScope.getQualifiedName(),
                   currentScope.isCustomThisScope(),
+                  currentScope.needsCapture(),
                   parametersDescriptor,
                   parameterTypes,
                   members,
@@ -2521,6 +2555,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 language,
                 currentScope.getQualifiedName(),
                 currentScope.isCustomThisScope(),
+                currentScope.needsCapture(),
                 parametersDescriptor,
                 parameterTypes,
                 members,
@@ -2539,6 +2574,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   language,
                   currentScope.getQualifiedName(),
                   currentScope.isCustomThisScope(),
+                  currentScope.needsCapture(),
                   parametersDescriptor,
                   parameterTypes,
                   members,
@@ -2550,6 +2586,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 language,
                 currentScope.getQualifiedName(),
                 currentScope.isCustomThisScope(),
+                currentScope.needsCapture(),
                 parametersDescriptor,
                 parameterTypes,
                 members,
@@ -2563,6 +2600,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               language,
               currentScope.getQualifiedName(),
               currentScope.isCustomThisScope(),
+              currentScope.needsCapture(),
               parametersDescriptor,
               parameterTypes,
               members,
@@ -2864,6 +2902,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         language,
         currentScope.getQualifiedName(),
         currentScope.isCustomThisScope(),
+        currentScope.needsCapture(),
         parametersDescriptorBuilderAndFrameSlotVariables == null
             ? null
             : parametersDescriptorBuilderAndFrameSlotVariables.first.build(),
@@ -3120,7 +3159,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var constLevel = scope.getConstLevel();
     var needsConst = false;
     if (receiver instanceof OuterNode) {
-      var outerScope = getParentLexicalScope();
+      var outerScope = getOuterScope();
       if (outerScope != null) {
         needsConst =
             switch (constLevel) {
@@ -3206,10 +3245,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         .withMemberName(symbolTable.getCurrentScope().getQualifiedName());
   }
 
-  private SymbolTable.@Nullable Scope getParentLexicalScope() {
-    var parent = symbolTable.getCurrentScope().getLexicalScope().getParent();
-    if (parent != null) return parent.getLexicalScope();
-    return null;
+  private SymbolTable.@Nullable Scope getOuterScope() {
+    var enclosingObjectScope = symbolTable.getCurrentScope().getObjectLikeScope();
+    var parent = enclosingObjectScope.getParent();
+    if (parent == null) {
+      return null;
+    }
+    return parent.getObjectLikeScope();
   }
 
   private org.pkl.core.runtime.Identifier toIdentifier(String text) {

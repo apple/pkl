@@ -29,16 +29,21 @@ import org.pkl.core.runtime.VmUtils;
 public final class FunctionLiteralNode extends ExpressionNode {
   private @Child UnresolvedFunctionNode unresolvedFunctionNode;
   private final boolean isCustomThisScope;
+  private final boolean needsClosure;
 
   @CompilationFinal private @Nullable FunctionNode functionNode;
   @CompilationFinal private int customThisSlot = -1;
 
   public FunctionLiteralNode(
-      SourceSection sourceSection, UnresolvedFunctionNode functionNode, boolean isCustomThisScope) {
+      SourceSection sourceSection,
+      UnresolvedFunctionNode functionNode,
+      boolean isCustomThisScope,
+      boolean needsClosure) {
 
     super(sourceSection);
     this.unresolvedFunctionNode = functionNode;
     this.isCustomThisScope = isCustomThisScope;
+    this.needsClosure = needsClosure;
   }
 
   @Override
@@ -52,7 +57,7 @@ public final class FunctionLiteralNode extends ExpressionNode {
     }
 
     return new VmFunction(
-        frame.materialize(),
+        needsClosure ? frame.materialize() : null,
         isCustomThisScope ? frame.getAuxiliarySlot(customThisSlot) : VmUtils.getReceiver(frame),
         functionNode.getParameterCount(),
         functionNode,

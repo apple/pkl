@@ -28,11 +28,7 @@ import org.pkl.core.util.EconomicMaps;
 public final class VmListing extends VmListingOrMapping {
   private static final class EmptyHolder {
     private static final VmListing EMPTY =
-        new VmListing(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getListingClass().getPrototype(),
-            EconomicMaps.create(),
-            0);
+        new VmListing(null, BaseModule.getListingClass().getPrototype(), EconomicMaps.create(), 0);
   }
 
   private final int length;
@@ -42,7 +38,7 @@ public final class VmListing extends VmListingOrMapping {
   }
 
   public VmListing(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {
@@ -51,7 +47,7 @@ public final class VmListing extends VmListingOrMapping {
   }
 
   public VmListing(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length,

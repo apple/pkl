@@ -31,11 +31,7 @@ public final class VmDynamic extends VmObject {
 
   private static final class EmptyHolder {
     private static final VmDynamic EMPTY =
-        new VmDynamic(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getDynamicClass().getPrototype(),
-            EconomicMaps.create(),
-            0);
+        new VmDynamic(null, BaseModule.getDynamicClass().getPrototype(), EconomicMaps.create(), 0);
   }
 
   private final int length;
@@ -45,7 +41,7 @@ public final class VmDynamic extends VmObject {
   }
 
   public VmDynamic(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       int length) {

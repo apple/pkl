@@ -1,0 +1,5 @@
+foo {
+  prop {
+    name = "the bird"
+  }
+}

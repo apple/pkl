@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Cannot find property `qux`.
+
+x | baz = qux
+          ^^^
+at propertyNotFound3#foo.bar.baz (file:///$snippetsDir/input/errors/propertyNotFound3.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

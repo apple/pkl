@@ -27,24 +27,40 @@ import org.pkl.core.ast.member.ObjectMember;
  * `VmObjectLike` instances.
  */
 public abstract class VmObjectLike extends VmValue {
-  /** The frame that was active when this object was instantiated. * */
-  protected final MaterializedFrame enclosingFrame;
+  /**
+   * The frame that was active when this object was instantiated.
+   *
+   * <p>{@code null} if this object doesn't need to read anything off the frame.
+   */
+  protected final @Nullable MaterializedFrame enclosingFrame;
 
   protected @Nullable Object extraStorage;
 
-  protected VmObjectLike(MaterializedFrame enclosingFrame) {
+  protected VmObjectLike(@Nullable MaterializedFrame enclosingFrame) {
     this.enclosingFrame = enclosingFrame;
   }
 
+  public final @Nullable MaterializedFrame getEnclosingFrameOrNull() {
+    return enclosingFrame;
+  }
+
   public final MaterializedFrame getEnclosingFrame() {
+    // it's an error if this is called when `enclosingFrame` is null; it shows that there's a bug
+    // inside AstBuilder (we determined code inside a function or object didn't need to read the
+    // enclosing frame, but it actually does)
+    assert enclosingFrame != null : "getEnclosingFrame() called when enclosing frame is null";
     return enclosingFrame;
   }
 
   public final @Nullable Object getEnclosingReceiver() {
+    // see comment for getEnclosingFrame
+    assert enclosingFrame != null : "getEnclosingReceiver() called when enclosingFrame is null";
     return VmUtils.getReceiverOrNull(enclosingFrame);
   }
 
   public final @Nullable VmObjectLike getEnclosingOwner() {
+    // see comment for getEnclosingFrame
+    assert enclosingFrame != null : "getEnclosingOwner() called when enclosingFrame is null";
     return VmUtils.getOwnerOrNull(enclosingFrame);
   }
 

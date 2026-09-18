@@ -278,12 +278,7 @@ public final class PropertiesRendererNodes {
     private void visitKeyedValue(Object value) {
       // Edge-case: Dynamics are implicitly converted to Listing.
       if (value instanceof VmDynamic dynamic && dynamic.hasElements()) {
-        var newValue =
-            new VmListing(
-                VmUtils.createEmptyMaterializedFrame(),
-                dynamic,
-                EconomicMaps.create(),
-                dynamic.getLength());
+        var newValue = new VmListing(null, dynamic, EconomicMaps.create(), dynamic.getLength());
         visit(converter.convert(newValue, currPath));
       } else {
         visit(value);

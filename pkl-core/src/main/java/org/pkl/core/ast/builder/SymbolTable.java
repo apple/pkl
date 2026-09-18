@@ -48,11 +48,18 @@ import org.pkl.parser.Lexer;
 public final class SymbolTable {
 
   private Scope currentScope;
+  private ModuleScope moduleScope;
+
   // consider having each scope keep track of this individually rather than set on SymbolTable.
   public boolean isInTypeAliasScope;
 
   public SymbolTable(ModuleInfo moduleInfo, boolean isBaseModule) {
-    currentScope = new ModuleScope(moduleInfo, isBaseModule);
+    moduleScope = new ModuleScope(moduleInfo, isBaseModule);
+    currentScope = moduleScope;
+  }
+
+  public ModuleScope getModuleScope() {
+    return moduleScope;
   }
 
   public Scope getCurrentScope() {
@@ -251,6 +258,7 @@ public final class SymbolTable {
     protected final Map<String, Member> properties = new HashMap<>();
     // The methods defined on this (lexical) scope
     protected final Map<String, Member> methods = new HashMap<>();
+    protected boolean needsCapture;
 
     static int[] getSlots(FrameSlotVariable[] bindings) {
       if (bindings.length == 0) {
@@ -285,6 +293,10 @@ public final class SymbolTable {
               : constLevel;
       this.forGeneratorSlots = forGeneratorSlots;
       this.parameterSlots = parameterSlots;
+    }
+
+    public @Nullable Member getProperty(String name) {
+      return properties.get(name);
     }
 
     public final @Nullable Scope getParent() {
@@ -335,6 +347,27 @@ public final class SymbolTable {
       while (!scope.isLexicalScope()) {
         scope = scope.parent;
         assert scope != null;
+      }
+      // eager scopes belong to the lexical scope one level higher
+      if (this instanceof EagerGeneratorScope) {
+        var parentScope = scope.parent;
+        assert parentScope != null;
+        return parentScope.getLexicalScope();
+      }
+      return scope;
+    }
+
+    public final Scope getObjectLikeScope() {
+      var scope = this;
+      while (!(scope instanceof ObjectLikeScope)) {
+        assert scope.getParent() != null;
+        scope = scope.getParent();
+      }
+      // eager scopes belong to the scope one level higher
+      if (this instanceof EagerGeneratorScope) {
+        // impossible to create generators that belong to a module.
+        assert scope.parent != null;
+        return scope.parent.getObjectLikeScope();
       }
       return scope;
     }
@@ -534,6 +567,16 @@ public final class SymbolTable {
       @Nullable T apply(LexicalScope scope, int levelUp);
     }
 
+    /** Mark every scope from this scope until {@code parentScope} (not inclusive) as capturing. */
+    public void markCapture(Scope parentScope) {
+      var currentScope = this;
+      while (currentScope != parentScope) {
+        currentScope.needsCapture = true;
+        assert currentScope.parent != null;
+        currentScope = currentScope.parent;
+      }
+    }
+
     private @Nullable <R> R resolveLexical(ResolutionFunction<R> fun) {
       var levelsUp = 0;
       var shouldSkip = false;
@@ -555,6 +598,7 @@ public final class SymbolTable {
               // are one level higher than the body itself.
               var result = fun.apply(objectScope, levelsUp);
               if (result instanceof Parameter parameter) {
+                markCapture(scope);
                 //noinspection unchecked
                 return (R) new Parameter(parameter.slot(), parameter.levelsUp() - 1);
               }
@@ -572,6 +616,9 @@ public final class SymbolTable {
           }
           var result = fun.apply(lex, levelsUp);
           if (result != null) {
+            if (levelsUp > 0) {
+              markCapture(scope);
+            }
             if (result instanceof ForGeneratorVariableOrLetBinding p && skippedObjectScope) {
               //noinspection unchecked
               return (R) new ForGeneratorVariableOrLetBinding(p.slot(), p.levelsUp(), true);
@@ -592,7 +639,13 @@ public final class SymbolTable {
       }
       return null;
     }
+
+    public boolean needsCapture() {
+      return needsCapture;
+    }
   }
+
+  public interface ObjectLikeScope {}
 
   public interface LexicalScope {
     @Nullable VariableResolution doResolveProperty(String name, int levelsUp);
@@ -600,7 +653,7 @@ public final class SymbolTable {
     @Nullable MethodResolution doResolveMethod(String name, int levelsUp);
   }
 
-  public static class ObjectScope extends Scope implements LexicalScope {
+  public static class ObjectScope extends Scope implements LexicalScope, ObjectLikeScope {
     private final FrameSlotVariable[] bindings;
 
     /**
@@ -654,6 +707,9 @@ public final class SymbolTable {
       }
       for (var binding : bindings) {
         if (binding.name().equals(name)) {
+          // edge case -- make sure this scope is captured (the generic logic in `resolveLexical`
+          // doesn't know that the returned levels up might be higher).
+          this.needsCapture = true;
           // params are on a higher level than the properties
           return new VariableResolution.Parameter(binding.slot(), levelsUp + 1);
         }
@@ -703,7 +759,7 @@ public final class SymbolTable {
     }
   }
 
-  public static final class ModuleScope extends Scope implements LexicalScope {
+  public static final class ModuleScope extends Scope implements LexicalScope, ObjectLikeScope {
 
     private final ModuleInfo moduleInfo;
     @LateInit private boolean isClosed;
@@ -1007,7 +1063,8 @@ public final class SymbolTable {
     }
   }
 
-  public static final class ClassScope extends TypeParameterizableScope implements LexicalScope {
+  public static final class ClassScope extends TypeParameterizableScope
+      implements LexicalScope, ObjectLikeScope {
     private final boolean isClosed;
 
     public ClassScope(

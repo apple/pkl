@@ -2,7 +2,10 @@ import "pkl:test"
 
 example1 {
   local f = (x) -> new Dynamic {}
-  result = (f) { x: Int -> prop = x + 1 }.apply(1)
+  result =
+    (f) { x: Int ->
+      prop = x + 1
+    }.apply(1)
 }
 
 example2 {
