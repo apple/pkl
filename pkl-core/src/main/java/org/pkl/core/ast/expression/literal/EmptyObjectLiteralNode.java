@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -82,11 +82,14 @@ public abstract class EmptyObjectLiteralNode extends ExpressionNode {
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       // include object amendment in the error message if error found during eval of parent
-      if (e.getSourceSection() != null && !e.getSourceSection().equals(sourceSection)) {
+      if (e.getSourceSection() != null
+          && !e.getSourceSection().equals(sourceSection)
+          // don't include if the originating error's source section is within the bounds of our own
+          // source section.
+          && !(VmUtils.sourceSectionContains(sourceSection, e.getSourceSection()))) {
         e.getInsertedStackFrames()
-          .putIfAbsent(
-            getRootNode().getCallTarget(),
-            VmUtils.createStackFrame(sourceSection, null));
+            .putIfAbsent(
+                getRootNode().getCallTarget(), VmUtils.createStackFrame(sourceSection, null));
       }
       throw e;
     }

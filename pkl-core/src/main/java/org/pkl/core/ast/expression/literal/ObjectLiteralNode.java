@@ -23,7 +23,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.organicdesign.fp.collections.Equator.Comp;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
@@ -127,7 +126,11 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       // include object amendment in the error message if error found during eval of parent
-      if (e.getSourceSection() != null && !e.getSourceSection().equals(sourceSection)) {
+      if (e.getSourceSection() != null
+          && !e.getSourceSection().equals(sourceSection)
+          // don't include if the originating error's source section is within the bounds of our own
+          // source section.
+          && !(VmUtils.sourceSectionContains(sourceSection, e.getSourceSection()))) {
         e.getInsertedStackFrames()
             .putIfAbsent(
                 getRootNode().getCallTarget(),
