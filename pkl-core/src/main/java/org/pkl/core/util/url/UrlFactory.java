@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.stdlib.net;
+package org.pkl.core.util.url;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
@@ -29,11 +29,11 @@ import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.VmObjectFactory;
-import org.pkl.core.stdlib.net.UrlParser.Parsed;
-import org.pkl.core.stdlib.net.UrlParser.Result;
+import org.pkl.core.util.url.UrlParser.Parsed;
+import org.pkl.core.util.url.UrlParser.Result;
 
 /** Converts between a parsed URL and {@code pkl:net}'s {@code Url}. */
-final class UrlFactory {
+public final class UrlFactory {
   private UrlFactory() {}
 
   private static final VmObjectFactory<Parsed> factory =
@@ -48,12 +48,12 @@ final class UrlFactory {
           .addProperty("query", parsed -> VmNull.lift(parsed.query()))
           .addProperty("fragment", parsed -> VmNull.lift(parsed.fragment()));
 
-  static VmTyped create(Parsed parsed) {
+  public static VmTyped create(Parsed parsed) {
     return factory.create(parsed);
   }
 
   /** Parses {@code input} as a URI reference. */
-  static Parsed parseOrThrow(String input, Node node) {
+  public static Parsed parseOrThrow(String input, Node node) {
     var result = UrlParser.parse(input);
     if (result instanceof Result.Failure failure) {
       throw new VmExceptionBuilder()
@@ -66,7 +66,7 @@ final class UrlFactory {
   }
 
   /** Reads the components back off {@code url}. */
-  static Parsed read(VmTyped url, IndirectCallNode callNode) {
+  public static Parsed read(VmTyped url, IndirectCallNode callNode) {
     if (url.hasExtraStorage()) {
       return (Parsed) url.getExtraStorage();
     }
@@ -89,13 +89,13 @@ final class UrlFactory {
     return (String) VmNull.unwrap(VmUtils.readMember(url, name, callNode));
   }
 
-  static String readPath(VmObjectLike url) {
+  public static String readPath(VmObjectLike url) {
     return url.hasExtraStorage()
         ? ((Parsed) url.getExtraStorage()).path()
         : (String) VmUtils.readMember(url, Identifier.PATH);
   }
 
-  static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {
+  public static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {
     return url.hasExtraStorage()
         ? ((Parsed) url.getExtraStorage()).query()
         : readNullableString(url, Identifier.QUERY, callNode);
@@ -103,7 +103,7 @@ final class UrlFactory {
 
   /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
   @TruffleBoundary
-  static VmMapping createQueryParameters(@Nullable String query) {
+  public static VmMapping createQueryParameters(@Nullable String query) {
     var builder = new VmObjectBuilder();
     for (var parameter : UrlParser.queryParameters(query).entrySet()) {
       var values = new VmObjectBuilder(parameter.getValue().size());
@@ -116,7 +116,7 @@ final class UrlFactory {
   }
 
   /** Reads the authority off {@code url}, or {@code null} if it has none. */
-  static @Nullable String readAuthority(VmObjectLike url, IndirectCallNode callNode) {
+  public static @Nullable String readAuthority(VmObjectLike url, IndirectCallNode callNode) {
     if (url.hasExtraStorage()) {
       return ((Parsed) url.getExtraStorage()).authority();
     }

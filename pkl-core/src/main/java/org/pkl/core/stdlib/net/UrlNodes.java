@@ -29,7 +29,9 @@ import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
-import org.pkl.core.stdlib.net.UrlParser.Parsed;
+import org.pkl.core.util.url.UrlFactory;
+import org.pkl.core.util.url.UrlParser;
+import org.pkl.core.util.url.UrlParser.Parsed;
 
 /** Backing nodes for {@code pkl:net}'s {@code Url} class. */
 public final class UrlNodes {

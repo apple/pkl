@@ -21,6 +21,8 @@ import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod1Node;
+import org.pkl.core.util.url.PercentEncoder;
+import org.pkl.core.util.url.UrlFactory;
 
 /** Backing nodes for {@code pkl:net}'s module-level members. */
 public final class NetNodes {

@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.stdlib.net;
+package org.pkl.core.util.url;
 
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
@@ -26,7 +26,7 @@ import java.util.function.IntPredicate;
  * <p>Each {@code IntPredicate} here holds for the characters that may appear literally in a
  * component. Anything else has to be percent-encoded to appear there at all.
  */
-final class PercentEncoder {
+public final class PercentEncoder {
   private PercentEncoder() {}
 
   /** unreserved = ALPHA / DIGIT / "-" / "." / "_" / "~" */
@@ -151,7 +151,7 @@ final class PercentEncoder {
    * <p>Unlike {@link #encode}, this treats its input as entirely undecoded, which is what a value
    * that is about to be interpolated into a URL component is.
    */
-  static void encodeComponent(StringBuilder out, String value) {
+  public static void encodeComponent(StringBuilder out, String value) {
     value
         .codePoints()
         .forEach(
@@ -173,7 +173,7 @@ final class PercentEncoder {
    *
    * <p>A {@code %} that does not begin a percent-encoded octet is kept as-is.
    */
-  static String decode(String input) {
+  public static String decode(String input) {
     var in = input.getBytes(StandardCharsets.UTF_8);
     var bytes = new ByteArrayOutputStream(in.length);
     for (var i = 0; i < in.length; i++) {
@@ -197,7 +197,7 @@ final class PercentEncoder {
    *
    * <p>The inverse of {@link #decodeForm}.
    */
-  static void encodeForm(StringBuilder out, String value) {
+  public static void encodeForm(StringBuilder out, String value) {
     value
         .codePoints()
         .forEach(
