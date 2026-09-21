@@ -84,7 +84,7 @@ public final class UrlParser {
       return sb.toString();
     }
 
-    @Nullable String authority() {
+    public @Nullable String authority() {
       return host == null ? null : serializeAuthority(userInfo, host, port);
     }
   }
