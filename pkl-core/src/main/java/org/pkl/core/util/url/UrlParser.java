@@ -13,7 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.stdlib.net;
+package org.pkl.core.util.url;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.ArrayList;
@@ -45,7 +45,7 @@ public final class UrlParser {
    * the reference has no authority. {@code userInfo} and {@code port} are only ever set alongside a
    * host.
    */
-  record Parsed(
+  public record Parsed(
       @Nullable String scheme,
       @Nullable String userInfo,
       @Nullable String host,
@@ -59,7 +59,7 @@ public final class UrlParser {
      * in its component.
      */
     @TruffleBoundary
-    String serialize() {
+    public String serialize() {
       var sb = new StringBuilder();
       if (scheme != null) {
         sb.append(scheme).append(':');
@@ -247,7 +247,7 @@ public final class UrlParser {
    * <p>{@code base} is expected to state a scheme, as section 5.1 requires. Resolving against one
    * that does not is not defined, and would only produce another relative reference.
    */
-  static Parsed resolve(Parsed base, Parsed ref) {
+  public static Parsed resolve(Parsed base, Parsed ref) {
     if (ref.scheme() != null) {
       return new Parsed(
           ref.scheme(),
@@ -341,7 +341,7 @@ public final class UrlParser {
 
   /** The percent-decoded segments of {@code path}. */
   @TruffleBoundary
-  static List<String> segments(String path) {
+  public static List<String> segments(String path) {
     if (path.isEmpty()) {
       return List.of();
     }
@@ -396,7 +396,7 @@ public final class UrlParser {
    * of writing the same URL compare equal. A default port is kept.
    */
   @TruffleBoundary
-  static boolean isEquivalent(Parsed left, Parsed right) {
+  public static boolean isEquivalent(Parsed left, Parsed right) {
     return normalize(left).equals(normalize(right));
   }
 
@@ -407,7 +407,7 @@ public final class UrlParser {
    * <p>Nothing that would take knowing the scheme is normalized, so a default port is kept.
    */
   @TruffleBoundary
-  static Parsed normalize(Parsed url) {
+  public static Parsed normalize(Parsed url) {
     return new Parsed(
         url.scheme() == null ? null : toLowerAscii(url.scheme()),
         normalizeOptional(url.userInfo(), PercentEncoder.USERINFO),
@@ -466,7 +466,7 @@ public final class UrlParser {
     return null;
   }
 
-  static boolean hasValidPercentEncoding(String input) {
+  public static boolean hasValidPercentEncoding(String input) {
     return percentEncodingFailure(input) == null;
   }
 
@@ -507,7 +507,7 @@ public final class UrlParser {
   }
 
   /** Whether {@code input} is a scheme. Unlike parsing, the trailing {@code :} is not accepted. */
-  static boolean isValidScheme(String input) {
+  public static boolean isValidScheme(String input) {
     if (input.isEmpty() || !PercentEncoder.isAlpha(input.charAt(0))) {
       return false;
     }
@@ -579,7 +579,7 @@ public final class UrlParser {
     return percentEncodingFailure(host);
   }
 
-  static boolean isValidHost(String host) {
+  public static boolean isValidHost(String host) {
     return hostFailure(host) == null;
   }
 
@@ -656,7 +656,7 @@ public final class UrlParser {
    * Whether {@code path} can sit next to an authority, or, when there is none, next to no authority
    * at all.
    */
-  static boolean isValidPath(String path, boolean hasAuthority) {
+  public static boolean isValidPath(String path, boolean hasAuthority) {
     return pathFailure(path, hasAuthority) == null;
   }
 

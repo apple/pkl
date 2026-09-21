@@ -27,7 +27,7 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.*;
 import org.pkl.core.*;
-import org.pkl.core.stdlib.net.UrlParser;
+import org.pkl.core.util.url.UrlParser;
 
 /** Predefined conversions for scalar types. */
 public final class Conversions {
