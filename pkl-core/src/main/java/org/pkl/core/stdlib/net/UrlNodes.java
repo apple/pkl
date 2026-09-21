@@ -38,6 +38,12 @@ public final class UrlNodes {
   private UrlNodes() {}
 
   public abstract static class authority extends ExternalPropertyNode {
+    @Specialization(guards = "self.hasExtraStorage()")
+    protected Object evalCached(VmTyped self) {
+      var parsed = (Parsed) self.getExtraStorage();
+      return VmNull.lift(parsed.authority());
+    }
+
     @Specialization
     protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return VmNull.lift(UrlFactory.readAuthority(self, callNode));
@@ -45,6 +51,12 @@ public final class UrlNodes {
   }
 
   public abstract static class pathSegments extends ExternalPropertyNode {
+    @Specialization(guards = "self.hasExtraStorage()")
+    protected VmList evalCached(VmTyped self) {
+      var parsed = (Parsed) self.getExtraStorage();
+      return VmList.create(UrlParser.segments(parsed.path()));
+    }
+
     @Specialization
     protected VmList eval(VmTyped self) {
       return VmList.create(UrlParser.segments(UrlFactory.readPath(self)));
@@ -52,6 +64,12 @@ public final class UrlNodes {
   }
 
   public abstract static class queryParameters extends ExternalPropertyNode {
+    @Specialization(guards = "self.hasExtraStorage()")
+    protected VmMapping evalCached(VmTyped self) {
+      var parsed = (Parsed) self.getExtraStorage();
+      return UrlFactory.createQueryParameters(parsed.query());
+    }
+
     @Specialization
     protected VmMapping eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return UrlFactory.createQueryParameters(UrlFactory.readQuery(self, callNode));

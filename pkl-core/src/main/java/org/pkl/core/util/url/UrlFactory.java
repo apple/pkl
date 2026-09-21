@@ -90,15 +90,11 @@ public final class UrlFactory {
   }
 
   public static String readPath(VmObjectLike url) {
-    return url.hasExtraStorage()
-        ? ((Parsed) url.getExtraStorage()).path()
-        : (String) VmUtils.readMember(url, Identifier.PATH);
+    return (String) VmUtils.readMember(url, Identifier.PATH);
   }
 
   public static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {
-    return url.hasExtraStorage()
-        ? ((Parsed) url.getExtraStorage()).query()
-        : readNullableString(url, Identifier.QUERY, callNode);
+    return readNullableString(url, Identifier.QUERY, callNode);
   }
 
   /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
@@ -117,9 +113,6 @@ public final class UrlFactory {
 
   /** Reads the authority off {@code url}, or {@code null} if it has none. */
   public static @Nullable String readAuthority(VmObjectLike url, IndirectCallNode callNode) {
-    if (url.hasExtraStorage()) {
-      return ((Parsed) url.getExtraStorage()).authority();
-    }
     var host = readNullableString(url, Identifier.HOST, callNode);
     if (host == null) {
       return null;
