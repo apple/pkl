@@ -28,6 +28,7 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.VmClass;
+import org.pkl.core.runtime.VmException;
 import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmNull;
@@ -57,6 +58,8 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
     this.parametersDescriptor = parametersDescriptor;
     this.parameterTypes = parameterTypes;
   }
+
+  protected abstract Object executeWithParent(VirtualFrame frame, Object parent);
 
   protected abstract ExpressionNode getParentNode();
 
@@ -113,5 +116,28 @@ public abstract class ObjectLiteralNode extends ExpressionNode {
     }
     LoopNode.reportLoopCount(this, count);
     return value;
+  }
+
+  @Override
+  public final Object executeGeneric(VirtualFrame frame) {
+    Object parent;
+    try {
+      parent = getParentNode().executeGeneric(frame);
+    } catch (VmException e) {
+      CompilerDirectives.transferToInterpreter();
+      // include object amendment in the error message if error found during eval of parent
+      if (e.getSourceSection() != null
+          && !e.getSourceSection().equals(sourceSection)
+          // don't include if the originating error's source section is within the bounds of our own
+          // source section.
+          && !(VmUtils.sourceSectionContains(sourceSection, e.getSourceSection()))) {
+        e.getInsertedStackFrames()
+            .putIfAbsent(
+                getRootNode().getCallTarget(),
+                VmUtils.createStackFrame(sourceSection, qualifiedScopeName));
+      }
+      throw e;
+    }
+    return executeWithParent(frame, parent);
   }
 }

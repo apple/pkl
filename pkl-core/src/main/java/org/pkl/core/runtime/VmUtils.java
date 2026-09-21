@@ -1166,4 +1166,12 @@ public final class VmUtils {
 
     return builder.toString();
   }
+
+  public static boolean sourceSectionContains(SourceSection thisSource, SourceSection otherSource) {
+    if (!thisSource.getSource().equals(otherSource.getSource())) {
+      return false;
+    }
+    return thisSource.getCharIndex() <= otherSource.getCharIndex()
+        && thisSource.getCharEndIndex() >= otherSource.getCharEndIndex();
+  }
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,11 +15,13 @@
  */
 package org.pkl.core.ast.expression.literal;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Fallback;
 import com.oracle.truffle.api.dsl.ImportStatic;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
@@ -31,6 +33,8 @@ public abstract class EmptyObjectLiteralNode extends ExpressionNode {
   protected EmptyObjectLiteralNode(SourceSection sourceSection) {
     super(sourceSection);
   }
+
+  protected abstract Object executeWithParent(VirtualFrame frame, Object parent);
 
   protected abstract ExpressionNode getParentNode();
 
@@ -68,5 +72,27 @@ public abstract class EmptyObjectLiteralNode extends ExpressionNode {
     assert !(parent instanceof VmClass);
     VmUtils.checkIsInstantiable(VmUtils.getClass(parent), getParentNode());
     throw exceptionBuilder().unreachableCode().build();
+  }
+
+  @Override
+  public final Object executeGeneric(VirtualFrame frame) {
+    Object parent;
+    try {
+      parent = getParentNode().executeGeneric(frame);
+    } catch (VmException e) {
+      CompilerDirectives.transferToInterpreter();
+      // include object amendment in the error message if error found during eval of parent
+      if (e.getSourceSection() != null
+          && !e.getSourceSection().equals(sourceSection)
+          // don't include if the originating error's source section is within the bounds of our own
+          // source section.
+          && !(VmUtils.sourceSectionContains(sourceSection, e.getSourceSection()))) {
+        e.getInsertedStackFrames()
+            .putIfAbsent(
+                getRootNode().getCallTarget(), VmUtils.createStackFrame(sourceSection, null));
+      }
+      throw e;
+    }
+    return executeWithParent(frame, parent);
   }
 }

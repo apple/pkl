@@ -1,0 +1,20 @@
+–– Pkl Error ––
+Tried to read property `aa` but its value is undefined.
+
+x | aa: Listing<String> | String
+    ^^
+at amendPropertyWithNoDefault1#Example.aa (file:///$snippetsDir/input/errors/amendPropertyWithNoDefault1.pkl)
+
+The above error occurred when rendering path `res.aa` of module `file:///$snippetsDir/input/errors/amendPropertyWithNoDefault1.pkl`.
+
+x | aa { "hello" }
+    ^^^^^^^^^^^^^^
+at amendPropertyWithNoDefault1#res.aa (file:///$snippetsDir/input/errors/amendPropertyWithNoDefault1.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
