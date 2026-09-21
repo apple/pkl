@@ -15,6 +15,7 @@
  */
 package org.pkl.core.stdlib.syntax;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
@@ -37,17 +38,16 @@ public final class ParserNodes {
 
   public abstract static class parseModule extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseModuleNode(source, null);
       } catch (GenericParserError e) {
+        CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
       }
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object evalResource(
         VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(source, Identifier.TEXT, callNode);
@@ -55,6 +55,7 @@ public final class ParserNodes {
       try {
         return parseModuleNode(text, uri);
       } catch (GenericParserError e) {
+        CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
       }
     }
@@ -62,7 +63,6 @@ public final class ParserNodes {
 
   public abstract static class parseModuleOrNull extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseModuleNode(source, null);
@@ -72,10 +72,9 @@ public final class ParserNodes {
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object evalResource(
         VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT, callNode);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
         return parseModuleNode(text, uri);
@@ -87,24 +86,24 @@ public final class ParserNodes {
 
   public abstract static class parseExpression extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseExpressionNode(source, null);
       } catch (GenericParserError e) {
+        CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
       }
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object evalResource(
         VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT, callNode);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
         return parseExpressionNode(text, uri);
       } catch (GenericParserError e) {
+        CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder().evalError("parserError").withHint(e.toString()).build();
       }
     }
@@ -112,7 +111,6 @@ public final class ParserNodes {
 
   public abstract static class parseExpressionOrNull extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected Object evalString(VmTyped ignored, String source) {
       try {
         return parseExpressionNode(source, null);
@@ -122,10 +120,9 @@ public final class ParserNodes {
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object evalResource(
         VmTyped ignored, VmTyped source, @Cached("create()") IndirectCallNode callNode) {
-      var text = (String) VmUtils.readMember(source, Identifier.TEXT);
+      var text = (String) VmUtils.readMember(source, Identifier.TEXT, callNode);
       var uri = (String) VmUtils.readMember(source, Identifier.URI, callNode);
       try {
         return parseExpressionNode(text, uri);
@@ -135,11 +132,13 @@ public final class ParserNodes {
     }
   }
 
+  @TruffleBoundary
   private static VmTyped parseModuleNode(String src, @Nullable String sourceUri) {
     var root = parser.parseModule(src);
     return SyntaxNodes.createNode(new GenericNodeData(root, src.toCharArray(), sourceUri, null));
   }
 
+  @TruffleBoundary
   private static VmTyped parseExpressionNode(String src, @Nullable String sourceUri) {
     var root = parser.parseExpressionInput(src);
     return SyntaxNodes.createNode(new GenericNodeData(root, src.toCharArray(), sourceUri, null));
