@@ -128,7 +128,15 @@ external const function Reference<D, T>(
 ///   function renderReference(reference: ref.Reference<MyDomain, Any>): String =
 ///     reference.getData().toString()
 ///     + "/"
-///     + reference.getPath().map((it) -> it.property ?? it.key.toString()).join("/")
+///     + reference
+///         .getPath()
+///         .map((it) ->
+///           if (it is ref.PropertyAccess)
+///             it.property
+///           else
+///             (it as ref.SubscriptAccess).key.toString()
+///         )
+///         .join("/")
 /// }
 /// ```
 ///
@@ -149,7 +157,12 @@ external const function Reference<D, T>(
 ///     + reference.getData().toString()
 ///     + reference
 ///         .getPath()
-///         .map((it) -> if (it.isProperty) "/\(it.property)" else "[\(it.key)]")
+///         .map((it) -> 
+///           if (it is ref.PropertyAccess)
+///             "/\(it.property)"
+///           else
+///             "[\((it as ref.SubsciptAccess).key)]
+///         )
 ///         .join("")
 ///     + " }}"
 /// }
@@ -213,22 +226,23 @@ abstract class Domain {
   abstract function renderReference(reference: Reference<this, Any>): String
 }
 
-/// A property or subscript access as part of a [Reference]'s path.
-class Access {
-  /// Tells if this represents a property access.
-  fixed isProperty: Boolean = property != null
+/// An operation as part of a [Reference]'s path.
+abstract class Access {
+  fixed kind: String
+}
 
-  /// Tells if this represents a subscript access.
-  fixed isSubscript: Boolean = property == null
+/// An property access as part of a [Reference]'s path.
+class PropertyAccess extends Access {
+  fixed kind = "property"
 
   /// The property that was accessed.
-  ///
-  /// If non-null, this is a property access. If `null` this is a subscript access.
-  property: String(key == null)?
+  property: String
+}
+
+/// An subscript access as part of a [Reference]'s path.
+class SubscriptAccess extends Access {
+  fixed kind = "subscript"
 
   /// The subscript key that was accessed.
-  ///
-  /// May be null even when [property] is null, which represents a subscript access with key `null`
-  /// (e.g. `foo[null]`).
   key: Any
 }

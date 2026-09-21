@@ -8,7 +8,7 @@ import "reference29.pkl"
 
 class D extends ref.Domain {
   function renderReference(r: ref.Reference<this, Any>): String =
-    r.getPath().map((it) -> it.property ?? it.key.toString()).join(".")
+    r.getPath().map((it) -> if (it is ref.PropertyAccess) it.property else it.key.toString()).join(".")
 }
 
 hidden parent: module?

@@ -10,7 +10,12 @@ class D extends ref.Domain {
       path =
         reference
           .getPath()
-          .map((elem) -> if (elem.isProperty) ".\(elem.property)" else "[\(elem.key)]")
+          .map((elem) -> 
+            if (elem is ref.PropertyAccess)
+              ".\(elem.property)"
+            else
+              "[\((elem as ref.SubscriptAccess).key)]"
+          )
     )
       "${\(root)\(path.join(""))}"
 }

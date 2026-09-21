@@ -29,16 +29,24 @@ public class RefModule extends StdLibModule {
     return ReferenceClass.instance;
   }
 
-  public static VmClass getAccessClass() {
-    return AccessClass.instance;
+  public static VmClass getPropertyAccessClass() {
+    return PropertyAccessClass.instance;
+  }
+
+  public static VmClass getSubscriptAccessClass() {
+    return SubscriptAccessClass.instance;
   }
 
   private static final class ReferenceClass {
     static final VmClass instance = loadClass("Reference");
   }
 
-  private static final class AccessClass {
-    static final VmClass instance = loadClass("Access");
+  private static final class PropertyAccessClass {
+    static final VmClass instance = loadClass("PropertyAccess");
+  }
+
+  private static final class SubscriptAccessClass {
+    static final VmClass instance = loadClass("SubscriptAccess");
   }
 
   @TruffleBoundary

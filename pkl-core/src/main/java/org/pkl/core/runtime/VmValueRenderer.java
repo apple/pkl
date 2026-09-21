@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import java.util.ArrayDeque;
 import java.util.Deque;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.util.MutableBoolean;
 import org.pkl.parser.Lexer;
@@ -282,14 +283,16 @@ public final class VmValueRenderer {
       visit(value.getData());
       append(")");
       for (var elem : value.getPath()) {
-        var property = VmUtils.readMember(elem, Identifier.PROPERTY);
-        if (property instanceof String propName) {
+        if (elem.getVmClass() == RefModule.getPropertyAccessClass()) {
           append(".");
-          writeIdentifier(propName);
-        } else {
+          writeIdentifier((String) VmUtils.readMember(elem, Identifier.PROPERTY));
+        } else if (elem.getVmClass() == RefModule.getSubscriptAccessClass()) {
           append("[");
           visit(VmUtils.readMember(elem, Identifier.KEY));
           append("]");
+        } else {
+          // TODO: support user-defined access types here, e.g. `.withAccess(<rendered value>)`
+          throw PklBugException.unreachableCode();
         }
       }
       contexts.pop();

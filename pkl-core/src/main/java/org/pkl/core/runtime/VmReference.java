@@ -48,11 +48,16 @@ public final class VmReference extends VmValue {
 
   private boolean forced = false;
 
-  private static VmTyped newAccess(@Nullable String property, @Nullable Object key) {
+  private static VmTyped newPropertyAccess(String property) {
     return new VmObjectBuilder()
-        .addProperty(Identifier.PROPERTY, property == null ? VmNull.withoutDefault() : property)
-        .addProperty(Identifier.KEY, key == null ? VmNull.withoutDefault() : key)
-        .toTyped(RefModule.getAccessClass());
+        .addProperty(Identifier.PROPERTY, property)
+        .toTyped(RefModule.getPropertyAccessClass());
+  }
+
+  private static VmTyped newSubscriptAccess(Object key) {
+    return new VmObjectBuilder()
+        .addProperty(Identifier.KEY, key)
+        .toTyped(RefModule.getSubscriptAccessClass());
   }
 
   @TruffleBoundary
@@ -186,13 +191,13 @@ public final class VmReference extends VmValue {
     var propString = property.toString();
     return withAccess(
         (t, candidates) -> getCandidatePropertyType(t, propString, candidates),
-        () -> newAccess(property.toString(), null));
+        () -> newPropertyAccess(property.toString()));
   }
 
   public VmReference withSubscriptAccess(Object key) {
     return withAccess(
         (t, candidates) -> getCandidateSubscriptType(t, key, candidates),
-        () -> newAccess(null, key));
+        () -> newSubscriptAccess(key));
   }
 
   @TruffleBoundary
