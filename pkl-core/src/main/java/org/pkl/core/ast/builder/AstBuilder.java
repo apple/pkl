@@ -528,14 +528,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           var exprs = type.getExprs();
           var constraints = new TypeConstraintNode[exprs.size()];
           for (var i = 0; i < constraints.length; i++) {
-            var currentFrameDescriptorSize = scope.frameDescriptorBuilder.getSize();
+            var initialState = scope.frameDescriptorBuilder.state();
             var expr = visitExpr(exprs.get(i));
-            var writesFrameSlotVars =
-                scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
-            // if a constraint expression writes to frame slots (only known case: is a `let` expr),
-            // create a new root node and execute the constraint within this root node
-            // e.g. String(let (x = this) x.length > 5)
-            if (writesFrameSlotVars) {
+            var needsFrameSlots = scope.frameDescriptorBuilder.state() > initialState;
+            // If a constraint expression writes to frame slots, create a new root node and execute
+            // the constraint within this root node.
+            //
+            // This can happen if the constraint contains a let expression, or if it contains a
+            // method call argument with an inferred `new {}`, e.g.
+            //
+            //   * String(let (x = this) x.length > 5)
+            //   * String(isFoo(new {}))
+            //
+            // We only need to do this if we are in a typealias because they get inlined into their
+            // usage site (they don't influence the frame descriptor of where they are inlined).
+            if (needsFrameSlots && symbolTable.isInTypeAliasScope) {
               expr = getExprWithinCustomThis(scope, expr);
             }
             constraints[i] = TypeConstraintNodeGen.create(expr.getSourceSection(), expr);
@@ -894,55 +901,45 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           return new InvokeQualifiedObjectMethodNode(
               sourceSection,
               identifier,
-              argInfo.getFirst(),
+              argInfo.arguments,
               needsConst,
               getModuleNode,
-              argInfo.getSecond());
+              argInfo.methodSlot);
         }
         if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
           return new InvokeQualifiedClassMethodNode(
               sourceSection,
               identifier,
-              argInfo.getFirst(),
+              argInfo.arguments,
               needsConst,
               getModuleNode,
-              argInfo.getSecond());
+              argInfo.methodSlot);
         }
         return InvokeMethodVirtualNodeGen.create(
             sourceSection,
             identifier,
-            argInfo.getFirst(),
+            argInfo.arguments,
             MemberLookupMode.IMPLICIT_LEXICAL,
             needsConst,
-            argInfo.getSecond(),
+            argInfo.methodSlot,
             getModuleNode,
             GetClassNodeGen.create(null));
       }
       if (method.isObjectMethod()) {
         return new InvokeLexicalObjectMethodNode(
-            sourceSection,
-            identifier,
-            levelsUp,
-            argInfo.getFirst(),
-            needsConst,
-            argInfo.getSecond());
+            sourceSection, identifier, levelsUp, argInfo.arguments, needsConst, argInfo.methodSlot);
       }
       if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
         return new InvokeLexicalClassMethodNode(
-            sourceSection,
-            identifier,
-            levelsUp,
-            argInfo.getFirst(),
-            needsConst,
-            argInfo.getSecond());
+            sourceSection, identifier, levelsUp, argInfo.arguments, needsConst, argInfo.methodSlot);
       }
       return InvokeMethodVirtualNodeGen.create(
           sourceSection,
           identifier,
-          argInfo.getFirst(),
+          argInfo.arguments,
           MemberLookupMode.IMPLICIT_LEXICAL,
           needsConst,
-          argInfo.getSecond(),
+          argInfo.methodSlot,
           levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
           GetClassNodeGen.create(null));
     } else if (resolution instanceof ImplicitBaseMethod) {
@@ -969,20 +966,22 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             createSourceSection(expr),
             method,
             new ConstantValueNode(baseModule),
-            argInfo.getFirst(),
-            argInfo.getSecond());
+            argInfo.arguments,
+            argInfo.methodSlot);
       }
     } else if (resolution instanceof ImplicitThisMethod) {
       var isCustomThis = scope.isCustomThisScope();
       var needsConst = constLevel == ConstLevel.ALL && constDepth == -1 && !isCustomThis;
       var argInfo = visitArgumentList(argList);
+      var arguments = argInfo.arguments;
+      var methodSlot = argInfo.methodSlot;
       return InvokeMethodVirtualNodeGen.create(
           sourceSection,
           org.pkl.core.runtime.Identifier.get(name),
-          argInfo.getFirst(),
+          arguments,
           MemberLookupMode.IMPLICIT_THIS,
           needsConst,
-          argInfo.getSecond(),
+          methodSlot,
           VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThis),
           GetClassNodeGen.create(null));
     } else {
@@ -1081,7 +1080,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var parent = expr.parent();
     var scope = symbolTable.getCurrentScope();
 
-    // keep in sync with isImplicitNewExpr
     while (parent instanceof IfExpr ifExpr
             && (ifExpr.getThen() == child || ifExpr.getEls() == child)
         || parent instanceof TraceExpr
@@ -1122,8 +1120,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       // - generic methods: pkl.base#Pair(), etc.
       // these will throw cannotInferParent at runtime
       var argIndex = argumentList.getArguments().indexOf(child);
+      var methodSlot = symbolTable.getCurrentScope().frameDescriptorBuilder.getOrAddMethodSlot();
       inferredParentNode =
-          InferParentWithinMethodArgumentNodeGen.create(sourceSection, language, argIndex);
+          InferParentWithinMethodArgumentNodeGen.create(
+              sourceSection, language, argIndex, methodSlot);
     } else {
       throw exceptionBuilder()
           .evalError("cannotInferParent")
@@ -1160,7 +1160,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
       var argInfo = visitArgumentList(argCtx);
       return InvokeSuperMethodNodeGen.create(
-          sourceSection, memberName, argInfo.getFirst(), needsConst, argInfo.getSecond());
+          sourceSection, memberName, argInfo.arguments, needsConst, argInfo.methodSlot);
     }
 
     // superproperty call
@@ -1340,13 +1340,14 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         descriptorBuilder,
         scope -> {
           var exprNode = visitExpr(expr.getExpr());
+          var parameterTypeNodes = doVisitParameterTypes(params);
           var functionNode =
               new UnresolvedFunctionNode(
                   language,
                   scope.buildFrameDescriptor(),
                   new Lambda(sourceSection, scope.getQualifiedName()),
                   paramCount,
-                  doVisitParameterTypes(params),
+                  parameterTypeNodes,
                   null,
                   exprNode);
 
@@ -1479,18 +1480,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   public GeneratorMemberNode visitMemberPredicate(MemberPredicate ctx) {
     var keyNode =
         symbolTable.enterEagerGenerator(
-            (scp) ->
-                symbolTable.enterCustomThisScope(
-                    scope -> {
-                      var currentFrameDescriptorSize = scope.frameDescriptorBuilder.getSize();
-                      var expr = visitExpr(ctx.getPred());
-                      var writesFrameSlotVars =
-                          scope.frameDescriptorBuilder.getSize() > currentFrameDescriptorSize;
-                      if (writesFrameSlotVars) {
-                        return getExprWithinCustomThis(scope, expr);
-                      }
-                      return expr;
-                    }));
+            (scp) -> symbolTable.enterCustomThisScope(scope -> visitExpr(ctx.getPred())));
     var member =
         doVisitObjectEntryBody(createSourceSection(ctx), keyNode, ctx.getExpr(), ctx.getBodyList());
     var isFrameStored =
@@ -2179,6 +2169,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   .build();
             }
           }
+          var parameterTypes = doVisitParameterTypes(paramListCtx);
+          var typeAnnotationNode = visitTypeAnnotation(entry.getTypeAnnotation());
 
           return new UnresolvedMethodNode(
               language,
@@ -2192,8 +2184,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               scope.getQualifiedName(),
               paramCount,
               typeParameters,
-              doVisitParameterTypes(paramListCtx),
-              visitTypeAnnotation(entry.getTypeAnnotation()),
+              parameterTypes,
+              typeAnnotationNode,
               isMethodReturnTypeChecked,
               bodyNode);
         });
@@ -2329,32 +2321,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public Pair<ExpressionNode[], Boolean> visitArgumentList(ArgumentList argumentList) {
+  public ArgInfo visitArgumentList(ArgumentList argumentList) {
     var args = argumentList.getArguments();
-    var res = new ExpressionNode[args.size()];
-    var argsRequireInference = false;
-    for (int i = 0; i < res.length; i++) {
+    var arguments = new ExpressionNode[args.size()];
+    var frameDescriptorBuilder = symbolTable.getCurrentScope().frameDescriptorBuilder;
+    var initialState = frameDescriptorBuilder.state();
+    for (var i = 0; i < arguments.length; i++) {
       var expr = args.get(i);
-      res[i] = visitExpr(expr);
-      argsRequireInference = argsRequireInference || isImplicitNewExpr(expr);
+      arguments[i] = visitExpr(expr);
     }
-    return Pair.of(res, argsRequireInference);
-  }
-
-  private static boolean isImplicitNewExpr(Expr expr) {
-    // keep in sync with doVisitNewExprWithInferredParent
-    if (expr instanceof NewExpr newExpr && newExpr.getType() == null) {
-      return true;
-    } else if (expr instanceof IfExpr ifExpr) {
-      return isImplicitNewExpr(ifExpr.getThen()) || isImplicitNewExpr(ifExpr.getEls());
-    } else if (expr instanceof TraceExpr traceExpr) {
-      return isImplicitNewExpr(traceExpr.getExpr());
-    } else if (expr instanceof ParenthesizedExpr parenthesizedExpr) {
-      return isImplicitNewExpr(parenthesizedExpr.getExpr());
-    } else if (expr instanceof LetExpr letExpr) {
-      return isImplicitNewExpr(letExpr.getExpr());
-    }
-    return false;
+    var argsRequiresInference = frameDescriptorBuilder.state() > initialState;
+    var methodSlot =
+        argsRequiresInference
+            ? symbolTable.getCurrentScope().frameDescriptorBuilder.getMethodSlot()
+            : -1;
+    return new ArgInfo(arguments, methodSlot);
   }
 
   @Override
@@ -2439,9 +2420,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         parametersDescriptorAndBindings == null
             ? new FrameSlotVariable[0]
             : parametersDescriptorAndBindings.second;
+    var parametersFrameDescriptorBuilder =
+        parametersDescriptorAndBindings == null ? null : parametersDescriptorAndBindings.first;
 
     return symbolTable.enterObjectScope(
         bindings,
+        parametersFrameDescriptorBuilder,
         (scope) -> {
           addObjectNamesToScope(scope, body);
           var objectMembers = body.getMembers();
@@ -2451,11 +2435,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           }
           var sourceSection = createSourceSection(body.parent());
 
+          // must visit parameter types before building the parameters frame descriptor, since
+          // constraints (e.g. containing `let` expressions) may add further slots to it
+          var parameterTypes = doVisitParameterTypes(body);
           var parametersDescriptor =
               parametersDescriptorAndBindings == null
                   ? null
                   : parametersDescriptorAndBindings.first.build();
-          var parameterTypes = doVisitParameterTypes(body);
 
           var members = EconomicMaps.<Object, ObjectMember>create();
           var elements = new ArrayList<ObjectMember>();
@@ -2496,7 +2482,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                 || memberCtx instanceof ObjectSpread;
             // bail out and create GeneratorObjectLiteralNode instead
             // (but can't we easily reuse members/elements/keyNodes/values?)
-            return doVisitGeneratorObjectBody(body, parentNode);
+            return doVisitGeneratorObjectBody(
+                body, parentNode, parametersDescriptor, parameterTypes);
           }
 
           var currentScope = symbolTable.getCurrentScope();
@@ -2677,6 +2664,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   .build();
             }
           }
+          var typeAnnotation = visitTypeAnnotation(typeAnn);
 
           ExpressionNode bodyNode;
           if (body != null && !body.isEmpty()) { // foo { ... }
@@ -2713,7 +2701,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.buildFrameDescriptor(),
                   modifiers,
                   bodyNode,
-                  visitTypeAnnotation(typeAnn))
+                  typeAnnotation)
               : VmUtils.createObjectProperty(
                   language,
                   sourceSection,
@@ -2836,6 +2824,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   scope.getName(),
                   scope.getQualifiedName());
           var body = visitExpr(expr);
+          var typeNode = visitTypeAnnotation(typeAnnotation);
+          var parameterTypeNodes = doVisitParameterTypes(paramList);
           var node =
               new ObjectMethodNode(
                   language,
@@ -2843,8 +2833,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   member,
                   body,
                   paramList.getParameters().size(),
-                  doVisitParameterTypes(paramList),
-                  visitTypeAnnotation(typeAnnotation));
+                  parameterTypeNodes,
+                  typeNode);
 
           member.initMemberNode(node);
           return member;
@@ -2852,10 +2842,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   private GeneratorObjectLiteralNode doVisitGeneratorObjectBody(
-      ObjectBody body, ExpressionNode parentNode) {
-    var parametersDescriptorBuilderAndFrameSlotVariables =
-        createFrameDescriptorBuilderAndSlotVariables(body);
-    var parameterTypes = doVisitParameterTypes(body);
+      ObjectBody body,
+      ExpressionNode parentNode,
+      @Nullable FrameDescriptor parametersDescriptor,
+      UnresolvedTypeNode[] parameterTypes) {
     var memberNodes = doVisitGeneratorMemberNodes(body.getMembers());
     var currentScope = symbolTable.getCurrentScope();
     //noinspection ConstantConditions
@@ -2864,9 +2854,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         language,
         currentScope.getQualifiedName(),
         currentScope.isCustomThisScope(),
-        parametersDescriptorBuilderAndFrameSlotVariables == null
-            ? null
-            : parametersDescriptorBuilderAndFrameSlotVariables.first.build(),
+        parametersDescriptor,
         parameterTypes,
         memberNodes,
         parentNode);
@@ -2944,10 +2932,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           InvokeMethodVirtualNodeGen.create(
               sourceSection,
               functionName,
-              argInfo.getFirst(),
+              argInfo.arguments,
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
-              argInfo.getSecond(),
+              argInfo.methodSlot,
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -2956,10 +2944,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return InvokeMethodVirtualNodeGen.create(
         sourceSection,
         functionName,
-        argInfo.getFirst(),
+        argInfo.arguments,
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
-        argInfo.getSecond(),
+        argInfo.methodSlot,
         receiver,
         GetClassNodeGen.create(null));
   }
@@ -3340,4 +3328,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
     return false;
   }
+
+  public record ArgInfo(ExpressionNode[] arguments, int methodSlot) {}
 }

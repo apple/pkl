@@ -1,0 +1,18 @@
+res {
+  x = "hi"
+  y = 9
+}
+res2 {
+  x = "hi"
+  y = 9
+}
+res3 {
+  `out` {
+    x = "hi"
+    y = 9
+  }
+}
+res4 {
+  x = "hi"
+  y = 9
+}

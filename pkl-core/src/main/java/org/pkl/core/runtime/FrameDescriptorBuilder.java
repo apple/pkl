@@ -20,7 +20,10 @@ import com.oracle.truffle.api.frame.FrameSlotKind;
 import java.util.Arrays;
 import org.jspecify.annotations.Nullable;
 
-/** A wrapper for Truffle's {@link FrameDescriptor.Builder}, but also gives us the current size. */
+/**
+ * A wrapper for Truffle's {@link FrameDescriptor.Builder}, but also helps track size, identifiers,
+ * and other metadata.
+ */
 public class FrameDescriptorBuilder {
 
   private @Nullable Identifier[] names;
@@ -29,6 +32,8 @@ public class FrameDescriptorBuilder {
   private final FrameDescriptor.Builder underlying;
 
   private static final int DEFAULT_CAPACITY = 8;
+  private int methodSlot = -1;
+  private int state = 0;
 
   public FrameDescriptorBuilder() {
     this(DEFAULT_CAPACITY);
@@ -50,8 +55,34 @@ public class FrameDescriptorBuilder {
     ensureCapacity(1);
     names[size] = name;
     size++;
+    state++;
     var slot = underlying.addSlot(kind, name, info);
     return new FrameSlotVariable(name.toString(), slot);
+  }
+
+  /**
+   * A monotonically increasing number representing the "virtual" state of the frame descriptor; a
+   * higher number means that something tried to modify the descriptor (but did not necessarily
+   * change the actual descriptor).
+   */
+  public int state() {
+    return state;
+  }
+
+  public int getOrAddMethodSlot() {
+    state++;
+    if (methodSlot != -1) {
+      return methodSlot;
+    }
+    ensureCapacity(1);
+    names[size] = null;
+    size++;
+    methodSlot = underlying.addSlot(FrameSlotKind.Object, null, null);
+    return methodSlot;
+  }
+
+  public int getMethodSlot() {
+    return methodSlot;
   }
 
   public FrameDescriptor build() {

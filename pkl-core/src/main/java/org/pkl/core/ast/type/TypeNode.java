@@ -1401,7 +1401,7 @@ public abstract class TypeNode extends PklNode {
           vmListing,
           EconomicMaps.emptyMap(),
           vmListing.getLength(),
-          getValueTypeCastNode(),
+          getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
           VmUtils.getOwner(frame));
     }
@@ -1459,7 +1459,7 @@ public abstract class TypeNode extends PklNode {
           vmMapping.getEnclosingFrame(),
           vmMapping,
           EconomicMaps.emptyMap(),
-          getValueTypeCastNode(),
+          getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
           VmUtils.getOwner(frame));
     }
@@ -1518,12 +1518,12 @@ public abstract class TypeNode extends PklNode {
       return valueTypeNode;
     }
 
-    protected ListingOrMappingTypeCastNode getValueTypeCastNode() {
+    protected ListingOrMappingTypeCastNode getValueTypeCastNode(FrameDescriptor descriptor) {
       if (valueTypeCastNode == null) {
         CompilerDirectives.transferToInterpreterAndInvalidate();
         valueTypeCastNode =
             new ListingOrMappingTypeCastNode(
-                language, new FrameDescriptor(), valueTypeNode, getRootNode().getName());
+                language, descriptor, valueTypeNode, getRootNode().getName());
       }
       return valueTypeCastNode;
     }

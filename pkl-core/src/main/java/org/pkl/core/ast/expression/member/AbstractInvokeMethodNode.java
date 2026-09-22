@@ -15,44 +15,32 @@
  */
 package org.pkl.core.ast.expression.member;
 
-import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
-import org.pkl.core.runtime.VmUtils;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
   @Children protected final ExpressionNode[] argumentNodes;
-  protected final boolean argsRequireInference;
+  protected final int methodSlot;
 
   public AbstractInvokeMethodNode(
-      SourceSection sourceSection, ExpressionNode[] argumentNodes, boolean argsRequireInference) {
+      SourceSection sourceSection, ExpressionNode[] argumentNodes, int methodSlot) {
     super(sourceSection);
     this.argumentNodes = argumentNodes;
-    this.argsRequireInference = argsRequireInference;
-  }
-
-  @TruffleBoundary
-  private int getMethodSlot(FrameDescriptor frameDescriptor) {
-    // can't store the slot id as this node may be called from different root nodes
-    // (see constraints14 snippet)
-    return frameDescriptor.findOrAddAuxiliarySlot(VmUtils.METHOD_FRAME_SLOT_ID);
+    this.methodSlot = methodSlot;
   }
 
   @ExplodeLoop
   protected Object[] evalArgs(
       VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
-    int methodSlot = -1;
     Object prevMethod = null;
-    if (argsRequireInference) {
-      methodSlot = getMethodSlot(frame.getFrameDescriptor());
-      prevMethod = frame.getAuxiliarySlot(methodSlot);
-      frame.setAuxiliarySlot(methodSlot, method);
+    if (methodSlot > -1) {
+      prevMethod = frame.getObject(methodSlot);
+      frame.setObject(methodSlot, method);
     }
 
     var args = new Object[2 + argumentNodes.length];
@@ -64,8 +52,8 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
         args[2 + i] = argumentNodes[i].executeGeneric(frame);
       }
     } finally {
-      if (argsRequireInference) {
-        frame.setAuxiliarySlot(methodSlot, prevMethod);
+      if (methodSlot > -1) {
+        frame.setObject(methodSlot, prevMethod);
       }
     }
 

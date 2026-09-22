@@ -1,0 +1,20 @@
+class Foo {
+  bar: Int
+}
+const function isOk(f: Foo): Boolean = f.bar > 0
+const function and(a: Boolean, b: Boolean) = a && b
+
+function m(p: Int(isOk(new { bar = 1 }))): Int = p
+
+function n(
+  // outer method call does not have implicit new, but inner method call does
+  p: Int(
+    and(
+      isOk(new { bar = 1 }),
+      true,
+    ),
+  ),
+): Int = p
+
+res1 = m(3)
+res2 = n(3)

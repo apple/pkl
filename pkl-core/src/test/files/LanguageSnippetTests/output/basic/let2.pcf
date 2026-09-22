@@ -1,13 +1,17 @@
-res1 = "foo"
-res2 = "foo"
-res3 = "foo"
-res4 {
+res1 {
+  new {
+    name = "bob"
+  }
   new {
     name = "bob"
   }
 }
-res5 {
+res2 {
   new {
     name = "bob"
   }
+  new {
+    name = "quxxey"
+  }
 }
+res3 = 5

@@ -1,0 +1,29 @@
+class Foo {
+  bar: Int
+}
+const function isOk(f: Foo): Boolean = f.bar > 0
+const function and(a: Boolean, b: Boolean) = a && b
+
+typealias Okay = Int(isOk(new { bar = 1 }))
+
+typealias Okay2 =
+  Int(
+    // no inferred new arg
+    and(
+      // nested call has inferred new arg
+      isOk(new { bar = 1 }),
+      true,
+    ),
+  )
+
+typealias Okay3 =
+  Int(
+    // no inferred new arg
+    isOk(new Foo { bar = 1 }),
+    // inferred new arg
+    isOk(new { bar = 1 }),
+  )
+
+res1: Okay = 3
+res2: Okay2 = 3
+res3: Okay3 = 3

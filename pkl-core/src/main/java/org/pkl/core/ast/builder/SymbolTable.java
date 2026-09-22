@@ -211,9 +211,14 @@ public final class SymbolTable {
   }
 
   public <T> T enterObjectScope(
-      FrameSlotVariable[] bindings, Function<ObjectScope, T> nodeFactory) {
-    return doEnter(
-        new ObjectScope(currentScope, bindings, currentScope.frameDescriptorBuilder), nodeFactory);
+      FrameSlotVariable[] bindings,
+      @Nullable FrameDescriptorBuilder parametersFrameDescriptorBuilder,
+      Function<ObjectScope, T> nodeFactory) {
+    var frameDescriptorBuilder =
+        parametersFrameDescriptorBuilder != null
+            ? parametersFrameDescriptorBuilder
+            : currentScope.frameDescriptorBuilder;
+    return doEnter(new ObjectScope(currentScope, bindings, frameDescriptorBuilder), nodeFactory);
   }
 
   private <T, S extends Scope> T doEnter(S scope, Function<S, T> nodeFactory) {
@@ -861,6 +866,9 @@ public final class SymbolTable {
   // A generator scope that is resolved eagerly and one level above
   public static final class EagerGeneratorScope extends Scope {
     private static FrameDescriptorBuilder getFrameDescriptorBuilder(Scope parent) {
+      if (parent instanceof ObjectScope objectScope && objectScope.hasParams()) {
+        return parent.frameDescriptorBuilder;
+      }
       var grandParent = parent.parent;
       assert grandParent != null;
       return grandParent.frameDescriptorBuilder;
