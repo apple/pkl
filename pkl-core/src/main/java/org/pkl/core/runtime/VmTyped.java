@@ -34,7 +34,7 @@ public final class VmTyped extends VmObject {
   @CompilationFinal private @Nullable VmClass clazz;
 
   public VmTyped(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       @Nullable VmTyped parent,
       VmClass clazz,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
@@ -44,7 +44,7 @@ public final class VmTyped extends VmObject {
 
   /** Constructs a VmTyped whose clazz will be initialized using lateInitVmClass() later. */
   public VmTyped(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       @Nullable VmTyped parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame, parent, members);

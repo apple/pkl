@@ -33,7 +33,7 @@ public abstract class VmListingOrMapping extends VmObject {
   private final @Nullable VmObjectLike typeCheckOwner;
 
   public VmListingOrMapping(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame, parent, members);
@@ -43,7 +43,7 @@ public abstract class VmListingOrMapping extends VmObject {
   }
 
   public VmListingOrMapping(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,

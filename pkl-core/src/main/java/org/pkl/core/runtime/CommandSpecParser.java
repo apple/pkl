@@ -1095,8 +1095,7 @@ public final class CommandSpecParser {
       var identifier = Identifier.get(key);
       members.put(identifier, VmUtils.createSyntheticObjectProperty(identifier, "", value));
     }
-    return new VmTyped(
-        VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    return new VmTyped(null, clazz.getPrototype(), clazz, members);
   }
 
   private record SubcommandState(VmTyped module, EconomicMap<Object, ObjectMember> members) {}
@@ -1120,6 +1119,7 @@ public final class CommandSpecParser {
               language,
               "",
               false,
+              true,
               null,
               new UnresolvedTypeNode[] {},
               parent.members,

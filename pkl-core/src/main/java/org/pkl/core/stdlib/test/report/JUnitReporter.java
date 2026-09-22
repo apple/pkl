@@ -199,10 +199,7 @@ public final class JUnitReporter implements TestReporter {
                 VmUtils.createSyntheticObjectProperty(Identifier.IS_BLOCK_FORMAT, "", true));
     gen.accept(members);
     return new VmDynamic(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getDynamicClass().getPrototype(),
-        members,
-        members.size() - 4);
+        null, BaseModule.getDynamicClass().getPrototype(), members, members.size() - 4);
   }
 
   private VmMapping buildAttributes(@Nullable Object... attributes) {
@@ -215,8 +212,7 @@ public final class JUnitReporter implements TestReporter {
       }
       attrs.put(key, VmUtils.createSyntheticObjectEntry(key.toString(), value));
     }
-    return new VmMapping(
-        VmUtils.createEmptyMaterializedFrame(), BaseModule.getMappingClass().getPrototype(), attrs);
+    return new VmMapping(null, BaseModule.getMappingClass().getPrototype(), attrs);
   }
 
   private ObjectMember syntheticElement(Object constantValue) {
@@ -229,7 +225,7 @@ public final class JUnitReporter implements TestReporter {
     // a `Invalid sharing of AST nodes detected` error will be thrown.
     EconomicMap<Object, ObjectMember> attrs =
         EconomicMaps.of(Identifier.TEXT, VmUtils.createSyntheticObjectProperty(null, "", text));
-    return new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, attrs);
+    return new VmTyped(null, clazz.getPrototype(), clazz, attrs);
   }
 
   private String stripColors(String str) {

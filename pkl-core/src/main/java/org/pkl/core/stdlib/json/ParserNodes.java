@@ -120,7 +120,7 @@ public final class ParserNodes {
       assert members != null;
       value =
           new VmListing(
-              VmUtils.createEmptyMaterializedFrame(),
+              null,
               BaseModule.getListingClass().getPrototype(),
               members,
               EconomicMaps.size(members));
@@ -151,18 +151,9 @@ public final class ParserNodes {
     public void endObject(@Nullable EconomicMap<Object, ObjectMember> members) {
       assert members != null;
       if (useMapping) {
-        value =
-            new VmMapping(
-                VmUtils.createEmptyMaterializedFrame(),
-                BaseModule.getMappingClass().getPrototype(),
-                members);
+        value = new VmMapping(null, BaseModule.getMappingClass().getPrototype(), members);
       } else {
-        value =
-            new VmDynamic(
-                VmUtils.createEmptyMaterializedFrame(),
-                BaseModule.getDynamicClass().getPrototype(),
-                members,
-                0);
+        value = new VmDynamic(null, BaseModule.getDynamicClass().getPrototype(), members, 0);
       }
     }
 

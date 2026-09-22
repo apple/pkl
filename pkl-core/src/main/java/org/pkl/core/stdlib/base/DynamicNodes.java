@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -103,12 +103,7 @@ public final class DynamicNodes {
 
       VmUtils.checkIsInstantiable(clazz, this);
 
-      var result =
-          new VmTyped(
-              VmUtils.createEmptyMaterializedFrame(),
-              clazz.getPrototype(),
-              clazz,
-              clazz.getDynamicToTypedMembers());
+      var result = new VmTyped(null, clazz.getPrototype(), clazz, clazz.getDynamicToTypedMembers());
       result.setExtraStorage(self);
       return result;
     }

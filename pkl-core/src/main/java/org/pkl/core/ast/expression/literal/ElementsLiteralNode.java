@@ -41,6 +41,7 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       UnmodifiableEconomicMap<Object, ObjectMember> properties,
@@ -51,6 +52,7 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes,
         properties);
@@ -67,6 +69,7 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         null, // copied node no longer has parameters
         new UnresolvedTypeNode[0], // ditto
         members,
@@ -82,13 +85,13 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached("createMembers(parentLength)")
           UnmodifiableEconomicMap<Object, ObjectMember> members) {
 
-    return new VmDynamic(frame.materialize(), parent, members, parentLength + elements.length);
+    return new VmDynamic(materializedFrame(frame), parent, members, parentLength + elements.length);
   }
 
   @Specialization
   protected VmDynamic evalDynamicUncached(VirtualFrame frame, VmDynamic parent) {
     return new VmDynamic(
-        frame.materialize(),
+        materializedFrame(frame),
         parent,
         createMembers(parent.getLength()),
         parent.getLength() + elements.length);
@@ -108,7 +111,7 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
           AmendFunctionNode amendFunctionNode) {
 
-    return amendFunctionNode.execute(frame, parent);
+    return amendFunctionNode.execute(frame, parent, needsCapture);
   }
 
   @SuppressWarnings("unused")
@@ -136,7 +139,10 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
           UnmodifiableEconomicMap<Object, ObjectMember> members) {
 
     return new VmListing(
-        frame.materialize(), BaseModule.getListingClass().getPrototype(), members, elements.length);
+        materializedFrame(frame),
+        BaseModule.getListingClass().getPrototype(),
+        members,
+        elements.length);
   }
 
   @Specialization(guards = "parent == getDynamicClass()")
@@ -146,7 +152,10 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached(value = "createMembers(0)", neverDefault = true)
           UnmodifiableEconomicMap<Object, ObjectMember> members) {
     return new VmDynamic(
-        frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, elements.length);
+        materializedFrame(frame),
+        BaseModule.getDynamicClass().getPrototype(),
+        members,
+        elements.length);
   }
 
   @Specialization(
@@ -162,14 +171,15 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
       @Cached("createMembers(parentLength)")
           UnmodifiableEconomicMap<Object, ObjectMember> properties) {
 
-    return new VmListing(frame.materialize(), parent, properties, parentLength + elements.length);
+    return new VmListing(
+        materializedFrame(frame), parent, properties, parentLength + elements.length);
   }
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListingUncached(VirtualFrame frame, VmListing parent) {
     checkMaxListingMemberIndex(parent.getLength());
     return new VmListing(
-        frame.materialize(),
+        materializedFrame(frame),
         parent,
         createMembers(parent.getLength()),
         parent.getLength() + elements.length);

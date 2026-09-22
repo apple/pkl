@@ -1397,7 +1397,7 @@ public abstract class TypeNode extends PklNode {
         return vmListing;
       }
       return new VmListing(
-          vmListing.getEnclosingFrame(),
+          vmListing.getEnclosingFrameOrNull(),
           vmListing,
           EconomicMaps.emptyMap(),
           vmListing.getLength(),
@@ -1456,7 +1456,7 @@ public abstract class TypeNode extends PklNode {
         return vmMapping;
       }
       return new VmMapping(
-          vmMapping.getEnclosingFrame(),
+          vmMapping.getEnclosingFrameOrNull(),
           vmMapping,
           EconomicMaps.emptyMap(),
           getValueTypeCastNode(),
@@ -1532,30 +1532,25 @@ public abstract class TypeNode extends PklNode {
     private Object newEmptyListingOrMapping() {
       if (isListing()) {
         return new VmListing(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getListingClass().getPrototype(),
-            EconomicMaps.create(),
-            0);
+            null, BaseModule.getListingClass().getPrototype(), EconomicMaps.create(), 0);
       }
 
       return new VmMapping(
-          VmUtils.createEmptyMaterializedFrame(),
-          BaseModule.getMappingClass().getPrototype(),
-          EconomicMaps.create());
+          null, BaseModule.getMappingClass().getPrototype(), EconomicMaps.create());
     }
 
     @TruffleBoundary
     private Object newEmptyListingOrMapping(ObjectMember defaultMember) {
       if (isListing()) {
         return new VmListing(
-            VmUtils.createEmptyMaterializedFrame(),
+            null,
             BaseModule.getListingClass().getPrototype(),
             EconomicMaps.of(Identifier.DEFAULT, defaultMember),
             0);
       }
 
       return new VmMapping(
-          VmUtils.createEmptyMaterializedFrame(),
+          null,
           BaseModule.getMappingClass().getPrototype(),
           EconomicMaps.of(Identifier.DEFAULT, defaultMember));
     }
@@ -1581,9 +1576,9 @@ public abstract class TypeNode extends PklNode {
         //noinspection ConstantConditions
         defaultMember.initConstantValue(
             new VmFunction(
-                // Assumption: don't need to set the correct `thisValue`
-                // because it is guaranteed to be never accessed.
-                VmUtils.createEmptyMaterializedFrame(),
+                // Assumption: don't need to set the correct `enclosingFrame` nor `thisValue`
+                // because they are guaranteed to be never accessed.
+                null,
                 null,
                 1,
                 new SimpleRootNode(
@@ -2312,9 +2307,9 @@ public abstract class TypeNode extends PklNode {
     private VmFunction newMixin(VmLanguage language, String qualifiedName) {
       //noinspection ConstantConditions
       return new VmFunction(
-          VmUtils.createEmptyMaterializedFrame(),
-          // Assumption: don't need to set the correct `thisValue`
-          // because it is guaranteed to be never accessed.
+          // Assumption: don't need to set the correct `enclosingFrame` nor `thisValue`
+          // because they are guaranteed to be never accessed.
+          null,
           null,
           1,
           new IdentityMixinNode(

@@ -36,10 +36,7 @@ public final class VmMapping extends VmListingOrMapping {
 
   private static final class EmptyHolder {
     private static final VmMapping EMPTY =
-        new VmMapping(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getMappingClass().getPrototype(),
-            EconomicMaps.create());
+        new VmMapping(null, BaseModule.getMappingClass().getPrototype(), EconomicMaps.create());
   }
 
   public static VmMapping empty() {
@@ -47,14 +44,14 @@ public final class VmMapping extends VmListingOrMapping {
   }
 
   public VmMapping(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     super(enclosingFrame, parent, members);
   }
 
   public VmMapping(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,

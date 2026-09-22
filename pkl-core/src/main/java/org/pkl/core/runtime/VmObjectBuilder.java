@@ -60,18 +60,11 @@ public final class VmObjectBuilder {
   }
 
   public VmListing toListing() {
-    return new VmListing(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getListingClass().getPrototype(),
-        members,
-        elementCount);
+    return new VmListing(null, BaseModule.getListingClass().getPrototype(), members, elementCount);
   }
 
   public VmMapping toMapping() {
-    return new VmMapping(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getMappingClass().getPrototype(),
-        members);
+    return new VmMapping(null, BaseModule.getMappingClass().getPrototype(), members);
   }
 
   public VmMapping toMapping(Object extraStorage) {
@@ -81,15 +74,10 @@ public final class VmObjectBuilder {
   }
 
   public VmDynamic toDynamic() {
-    return new VmDynamic(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getDynamicClass().getPrototype(),
-        members,
-        elementCount);
+    return new VmDynamic(null, BaseModule.getDynamicClass().getPrototype(), members, elementCount);
   }
 
   public VmTyped toTyped(VmClass clazz) {
-    return new VmTyped(
-        VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    return new VmTyped(null, clazz.getPrototype(), clazz, members);
   }
 }

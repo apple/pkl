@@ -53,11 +53,16 @@ public final class MemberLookupSuggestions {
     candidates.clear();
 
     if (isImplicitReceiver) {
-      for (var curr = composite; curr != null; curr = curr.getEnclosingOwner()) {
+      var curr = composite;
+      while (curr != null) {
         addPropertyCandidates(curr, true);
         if (curr.isPrototype()) {
           addMethodCandidates(curr.getVmClass().getDeclaredMethods(), true);
         }
+        if (curr.enclosingFrame == null) {
+          break;
+        }
+        curr = curr.getEnclosingOwner();
       }
       addPropertyCandidates(BaseModule.getModule(), false);
       addMethodCandidates(BaseModule.getModule().getVmClass().getMethods(), false);

@@ -1,0 +1,29 @@
+hidden bar = 3
+hidden list = List(1, 2, 3)
+
+res1 {
+  foo {
+    [outer.bar] = 3
+  }
+}
+
+res2 {
+  bar {
+    for (i in outer.list) {
+      i + 2
+    }
+  }
+}
+
+res3 {
+  num = 3
+  prop {
+    for (i in list) {
+      when (i % 2 == 0) {
+        ["foo"] {
+          [outer.num] = 3
+        }
+      }
+    }
+  }
+}

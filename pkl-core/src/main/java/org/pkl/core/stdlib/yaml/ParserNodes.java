@@ -336,11 +336,7 @@ public final class ParserNodes {
         var members = EconomicMaps.<Object, ObjectMember>create(size);
 
         var result =
-            new VmListing(
-                VmUtils.createEmptyMaterializedFrame(),
-                BaseModule.getListingClass().getPrototype(),
-                members,
-                size);
+            new VmListing(null, BaseModule.getListingClass().getPrototype(), members, size);
 
         if (!node.isRecursive()) {
           addMembers(sequenceNode, result);
@@ -382,11 +378,7 @@ public final class ParserNodes {
         var members = EconomicMaps.<Object, ObjectMember>create(size);
 
         var result =
-            new VmListing(
-                VmUtils.createEmptyMaterializedFrame(),
-                BaseModule.getListingClass().getPrototype(),
-                members,
-                size);
+            new VmListing(null, BaseModule.getListingClass().getPrototype(), members, size);
 
         if (!node.isRecursive()) {
           addMembers(mappingNode, result);
@@ -431,18 +423,9 @@ public final class ParserNodes {
 
         VmObject result;
         if (useMapping) {
-          result =
-              new VmMapping(
-                  VmUtils.createEmptyMaterializedFrame(),
-                  BaseModule.getMappingClass().getPrototype(),
-                  members);
+          result = new VmMapping(null, BaseModule.getMappingClass().getPrototype(), members);
         } else {
-          result =
-              new VmDynamic(
-                  VmUtils.createEmptyMaterializedFrame(),
-                  BaseModule.getDynamicClass().getPrototype(),
-                  members,
-                  0);
+          result = new VmDynamic(null, BaseModule.getDynamicClass().getPrototype(), members, 0);
         }
 
         if (!node.isRecursive()) {

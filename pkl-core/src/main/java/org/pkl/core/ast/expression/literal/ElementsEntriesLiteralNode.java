@@ -48,6 +48,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       UnmodifiableEconomicMap<Object, ObjectMember> properties,
@@ -60,6 +61,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes,
         properties);
@@ -78,6 +80,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         null, // copied node no longer has parameters
         new UnresolvedTypeNode[0], // ditto
         members,
@@ -90,7 +93,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     return new VmListing(
-        frame.materialize(),
+        materializedFrame(frame),
         parent,
         createMembers(frame, parent.getLength()),
         parent.getLength() + elements.length);
@@ -107,7 +110,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
     return new VmDynamic(
-        frame.materialize(),
+        materializedFrame(frame),
         parent,
         createMembers(frame, parent.getLength()),
         parent.getLength() + elements.length);
@@ -126,8 +129,9 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
       VmFunction parent,
       @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
           AmendFunctionNode amendFunctionNode) {
-
-    return amendFunctionNode.execute(frame, parent);
+    // Strictly needs to be `true`.
+    // See org.pkl.core.ast.expression.literal.EntriesLiteralNode.evalFunction
+    return amendFunctionNode.execute(frame, parent, true);
   }
 
   @SuppressWarnings("unused")
@@ -147,7 +151,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
 
     return new VmListing(
-        frame.materialize(),
+        materializedFrame(frame),
         BaseModule.getListingClass().getPrototype(),
         createMembers(frame, 0),
         elements.length);
@@ -158,7 +162,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
 
     return new VmDynamic(
-        frame.materialize(),
+        materializedFrame(frame),
         BaseModule.getDynamicClass().getPrototype(),
         createMembers(frame, 0),
         elements.length);

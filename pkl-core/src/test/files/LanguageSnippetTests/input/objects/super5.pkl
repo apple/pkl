@@ -9,3 +9,15 @@ res2 = (res1) {
 res3 = (res2) {
   x = (() -> (() -> super.x).apply()).apply() + 1
 }
+
+res4 {
+  ["x"] = 142
+}
+
+res5 = (res4) {
+  ["x"] = (() -> super["x"]).apply() + 1
+}
+
+res6 = (res5) {
+  ["x"] = (() -> (() -> super["x"]).apply()).apply() + 1
+}
