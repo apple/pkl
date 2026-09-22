@@ -6,6 +6,12 @@ local set2 = Set(1, 2, 3, 4, 5)
 local comparator = (x, y) -> x < y
 local deprecatedComparator = (x, y) -> if (x < y) -1 else if (x == y) 0 else 1
 
+local class Bird {
+  name: String
+
+  function toString() = "{ The bird named \(name) }"
+}
+
 facts {
   ["isEmpty"] {
     Set().isEmpty
@@ -60,8 +66,8 @@ examples {
 
   ["filter()"] {
     set1.filter((x) -> x > 1)
-    set1. filter((x) -> x > 3)
-    module.catch(() -> set1. filter((x) -> "wrong type"))
+    set1.filter((x) -> x > 3)
+    module.catch(() -> set1.filter((x) -> "wrong type"))
   }
 
   ["map()"] {
@@ -232,10 +238,11 @@ examples {
 
   ["toMap()"] {
     set1.toMap((x) -> x, (x) -> 2 * x)
-    local persons = Set(
-      new Dynamic { name = "Pigeon"; age = 40 },
-      new Dynamic { name = "Parrot"; age = 30 }
-    )
+    local persons =
+      Set(
+        new Dynamic { name = "Pigeon"; age = 40 },
+        new Dynamic { name = "Parrot"; age = 30 },
+      )
     persons.toMap((p) -> p.name, (p) -> p)
   }
 
@@ -287,7 +294,8 @@ examples {
 
   ["mapNonNullIndexed()"] {
     Set(1, 2, 3, 4, 4, 3, 2, 1).mapNonNullIndexed((i, n) -> if (n.isOdd) null else n * i)
-    Set(1, 2, 3, 4, null, 4, 3, 2, 1).mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i)
+    Set(1, 2, 3, 4, null, 4, 3, 2, 1)
+      .mapNonNullIndexed((i, n) -> if (n?.isOdd ?? true) null else n * i)
   }
 
   ["flatMapIndexed()"] {
@@ -444,5 +452,7 @@ examples {
   ["join()"] {
     Set(1.s, 2.s).join(", ")
     Set(1.mb, 2.gb).join(", ")
+    Set(new Bird { name = "Sally" }, new Bird { name = "Bob" }).join("\n")
+    Set(1, true, 1.ms, new Bird { name = "Sally" }, new Bird { name = "Bob" }).join("\n")
   }
 }

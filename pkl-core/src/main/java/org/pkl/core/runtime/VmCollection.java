@@ -161,23 +161,6 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
   }
 
   @TruffleBoundary
-  public final String join(String separator) {
-    if (isEmpty()) return "";
-
-    var iter = iterator();
-    var builder = new StringBuilder();
-    // TODO: use ToStringNode
-    builder.append(VmUtils.toPklString(iter.next()));
-
-    while (iter.hasNext()) {
-      builder.append(separator);
-      builder.append(VmUtils.toPklString(iter.next()));
-    }
-
-    return builder.toString();
-  }
-
-  @TruffleBoundary
   public final String toPklString() {
     return VmValueRenderer.multiLine(Integer.MAX_VALUE).render(this);
   }

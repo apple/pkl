@@ -18,9 +18,12 @@ package org.pkl.core.stdlib.base;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.PklNode;
+import org.pkl.core.ast.internal.ToStringNode;
+import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -282,22 +285,29 @@ public final class ListingNodes {
   }
 
   public abstract static class join extends ExternalMethod1Node {
+    @Child ToStringNode toStringNode = ToStringNodeGen.create(sourceSection, null);
+
     @Specialization
-    protected Object eval(VmListing self, String separator) {
+    protected Object eval(VirtualFrame frame, VmListing self, String separator) {
       if (self.isEmpty()) return "";
 
       var builder = new StringBuilder();
+      var materializedFrame = frame.materialize();
       self.forceAndIterateMemberValues(
           (key, member, value) -> {
             if (!key.equals(0L)) {
               builder.append(separator);
             }
-            // TODO: use ToStringNode
-            builder.append(VmUtils.toPklString(value));
+            builder.append(toStringNode.executeWith(materializedFrame, value));
             return true;
           });
       LoopNode.reportLoopCount(this, self.getLength());
       return builder.toString();
+    }
+
+    @Override
+    public final boolean isInstrumentable() {
+      return false;
     }
   }
 
