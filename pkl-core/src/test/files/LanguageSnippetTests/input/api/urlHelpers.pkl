@@ -26,12 +26,12 @@ facts {
     net.decodeUrlComponent("m%C3%BCnchen") == "münchen"
     // "+" is not a space; that is an application/x-www-form-urlencoded convention
     net.decodeUrlComponent("a+b") == "a+b"
-    net.decodeUrlComponent("100%") == "100%"
-    net.decodeUrlComponent("%zz") == "%zz"
+    // a literal "%" has to be written as "%25"
+    net.decodeUrlComponent("100%25") == "100%"
     net.decodeUrlComponent("a%F0%9D%84%9Eb") == "a" + gClef + "b"
     net.decodeUrlComponent("%FF") == "\u{FFFD}"
-    net.decodeUrlComponent(net.decodeUrlComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
-    net.decodeUrlComponent(net.decodeUrlComponent(gClef)) == gClef
+    net.decodeUrlComponent(net.encodeUrlComponent("a b&c=d?e#f/münchen+%")) == "a b&c=d?e#f/münchen+%"
+    net.decodeUrlComponent(net.encodeUrlComponent(gClef)) == gClef
   }
 
   ["buildQuery()"] {
