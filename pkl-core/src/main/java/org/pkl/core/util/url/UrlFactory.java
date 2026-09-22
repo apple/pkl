@@ -53,6 +53,7 @@ public final class UrlFactory {
   }
 
   /** Parses {@code input} as a URI reference. */
+  @TruffleBoundary
   public static Parsed parseOrThrow(String input, Node node) {
     var result = UrlParser.parse(input);
     if (result instanceof Result.Failure failure) {
@@ -65,6 +66,7 @@ public final class UrlFactory {
     return ((Result.Success) result).url();
   }
 
+  @TruffleBoundary
   public static void checkPercentEncoding(String value, String messageKey, Node node) {
     var failure = UrlParser.percentEncodingFailure(value);
     if (failure != null) {
@@ -100,8 +102,8 @@ public final class UrlFactory {
     return (String) VmNull.unwrap(VmUtils.readMember(url, name, callNode));
   }
 
-  public static String readPath(VmObjectLike url) {
-    return (String) VmUtils.readMember(url, Identifier.PATH);
+  public static String readPath(VmObjectLike url, IndirectCallNode callNode) {
+    return (String) VmUtils.readMember(url, Identifier.PATH, callNode);
   }
 
   public static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {

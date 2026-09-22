@@ -30,7 +30,6 @@ public final class NetNodes {
 
   public abstract static class Url extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected Object eval(@SuppressWarnings("unused") VmTyped self, String input) {
       return UrlFactory.create(UrlFactory.parseOrThrow(input, this));
     }
@@ -48,7 +47,6 @@ public final class NetNodes {
 
   public abstract static class decodeUrlComponent extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, String value) {
       UrlFactory.checkPercentEncoding(value, "cannotDecodeUrlComponent", this);
       return PercentEncoder.decode(value);
@@ -81,7 +79,6 @@ public final class NetNodes {
 
   public abstract static class parseQuery extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
     protected VmMapping eval(@SuppressWarnings("unused") VmTyped self, String query) {
       UrlFactory.checkPercentEncoding(query, "cannotParseQuery", this);
       return UrlFactory.createQueryParameters(query);

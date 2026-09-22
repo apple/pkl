@@ -15,6 +15,7 @@
  */
 package org.pkl.core.util.url;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.io.ByteArrayOutputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.function.IntPredicate;
@@ -174,7 +175,11 @@ public final class PercentEncoder {
    * <p>Callers are expected to have checked that every {@code %} begins a percent-encoded octet;
    * see {@link UrlParser#hasValidPercentEncoding}. One that does not is kept as-is.
    */
+  @TruffleBoundary
   public static String decode(String input) {
+    if (input.indexOf('%') < 0) {
+      return input;
+    }
     var in = input.getBytes(StandardCharsets.UTF_8);
     var bytes = new ByteArrayOutputStream(in.length);
     for (var i = 0; i < in.length; i++) {

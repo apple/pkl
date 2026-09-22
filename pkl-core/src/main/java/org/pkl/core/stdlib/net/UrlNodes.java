@@ -58,8 +58,8 @@ public final class UrlNodes {
     }
 
     @Specialization
-    protected VmList eval(VmTyped self) {
-      return VmList.create(UrlParser.segments(UrlFactory.readPath(self)));
+    protected VmList eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
+      return VmList.create(UrlParser.segments(UrlFactory.readPath(self, callNode)));
     }
   }
 
