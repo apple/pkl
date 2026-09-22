@@ -866,6 +866,9 @@ public final class SymbolTable {
   // A generator scope that is resolved eagerly and one level above
   public static final class EagerGeneratorScope extends Scope {
     private static FrameDescriptorBuilder getFrameDescriptorBuilder(Scope parent) {
+      if (parent instanceof ObjectScope objectScope && objectScope.hasParams()) {
+        return parent.frameDescriptorBuilder;
+      }
       var grandParent = parent.parent;
       assert grandParent != null;
       return grandParent.frameDescriptorBuilder;
