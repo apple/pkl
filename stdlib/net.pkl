@@ -208,12 +208,14 @@ external const function encodeUrlComponent(value: String): String
 /// Percent-decodes [value], interpreting the decoded bytes as UTF-8.
 ///
 /// The inverse of [encodeUrlComponent()].
-/// A `%` that does not begin a percent-encoded octet is kept as-is.
+///
+/// Throws if any `%` in [value] does not begin a percent-encoded octet.
+/// To write a literal `%`, encode it as `%25`.
 ///
 /// Facts:
 /// ```
 /// net.decodeUrlComponent("a%20b%26c") == "a b&c"
-/// net.decodeUrlComponent("50%") == "50%"
+/// net.decodeUrlComponent("50%25") == "50%"
 /// ```
 external const function decodeUrlComponent(value: String): String
 
@@ -238,6 +240,8 @@ external const function buildQuery(parameters: Mapping<String, Listing<String>>)
 /// [query] is read as `application/x-www-form-urlencoded`.
 /// A name that repeats holds the values of all its occurrences, in the order they are written.
 /// A parameter that states no `=` holds no value at all, and is left out.
+///
+/// Throws if any `%` in [query] does not begin a percent-encoded octet.
 ///
 /// Facts:
 /// ```

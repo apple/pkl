@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Cannot parse `a=1&b=100%` as a query.
+
+x | res = net.parseQuery("a=1&b=100%")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at cannotParseQuery#res (file:///$snippetsDir/input/errors/cannotParseQuery.pkl)
+
+`%` is not a percent-encoded octet.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

@@ -65,6 +65,17 @@ public final class UrlFactory {
     return ((Result.Success) result).url();
   }
 
+  public static void checkPercentEncoding(String value, String messageKey, Node node) {
+    var failure = UrlParser.percentEncodingFailure(value);
+    if (failure != null) {
+      throw new VmExceptionBuilder()
+          .withLocation(node)
+          .evalError(messageKey, value)
+          .withHint(failure.hint())
+          .build();
+    }
+  }
+
   /** Reads the components back off {@code url}. */
   public static Parsed read(VmTyped url, IndirectCallNode callNode) {
     if (url.hasExtraStorage()) {

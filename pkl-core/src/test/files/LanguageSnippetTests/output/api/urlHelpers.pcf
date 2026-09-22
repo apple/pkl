@@ -17,7 +17,6 @@ facts {
     true
     true
     true
-    true
   }
   ["buildQuery()"] {
     true

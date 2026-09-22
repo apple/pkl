@@ -50,6 +50,7 @@ public final class NetNodes {
     @Specialization
     @TruffleBoundary
     protected String eval(@SuppressWarnings("unused") VmTyped self, String value) {
+      UrlFactory.checkPercentEncoding(value, "cannotDecodeUrlComponent", this);
       return PercentEncoder.decode(value);
     }
   }
@@ -82,6 +83,7 @@ public final class NetNodes {
     @Specialization
     @TruffleBoundary
     protected VmMapping eval(@SuppressWarnings("unused") VmTyped self, String query) {
+      UrlFactory.checkPercentEncoding(query, "cannotParseQuery", this);
       return UrlFactory.createQueryParameters(query);
     }
   }

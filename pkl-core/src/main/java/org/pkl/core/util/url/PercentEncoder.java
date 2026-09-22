@@ -171,7 +171,8 @@ public final class PercentEncoder {
   /**
    * Percent-decodes {@code input} and interprets the decoded bytes as UTF-8.
    *
-   * <p>A {@code %} that does not begin a percent-encoded octet is kept as-is.
+   * <p>Callers are expected to have checked that every {@code %} begins a percent-encoded octet;
+   * see {@link UrlParser#hasValidPercentEncoding}. One that does not is kept as-is.
    */
   public static String decode(String input) {
     var in = input.getBytes(StandardCharsets.UTF_8);
