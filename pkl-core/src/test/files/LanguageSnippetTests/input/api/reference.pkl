@@ -134,6 +134,9 @@ class BadResource extends Resource {
 
 badThisRef = test.catch(() -> new BadResource { name = "bad" }.$.toString())
 
+// test that a bare function type toStrings/exports okay
+bareFunctionType = test.catch(() -> ref.Reference(d, Function4, null) as Ref<String>)
+
 output {
   renderer {
     converters {

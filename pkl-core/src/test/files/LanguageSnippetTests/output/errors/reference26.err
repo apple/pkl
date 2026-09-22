@@ -1,11 +1,11 @@
 –– Pkl Error ––
-Cannot find property `name` in object of type `pkl.ref#Reference<reference26#D, Listing<unknown>>`.
+Cannot find property `name` in object of type `pkl.ref#Reference<reference26#D, Listing>`.
 
 x | res = myRef.name
           ^^^^^^^^^^
 at reference26#res (file:///$snippetsDir/input/errors/reference26.pkl)
 
-Cannot find property `name` in type `Listing<unknown>`.
+Cannot find property `name` in type `Listing`.
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

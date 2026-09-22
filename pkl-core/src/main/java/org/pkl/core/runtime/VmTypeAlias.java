@@ -137,6 +137,10 @@ public final class VmTypeAlias extends VmValue {
     return annotations;
   }
 
+  public VmClass getModuleClass() {
+    return module.getVmClass();
+  }
+
   public String getModuleName() {
     return module.getVmClass().getModuleName();
   }
