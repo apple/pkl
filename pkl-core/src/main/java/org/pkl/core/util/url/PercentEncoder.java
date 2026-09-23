@@ -76,14 +76,17 @@ public final class PercentEncoder {
   }
 
   /**
-   * Appends {@code value} to {@code out}, percent-encoding every character that is not {@code
-   * allowed}.
+   * Percent-encodes every character of {@code value} that is not {@code allowed}.
    *
    * <p>A {@code %} is passed through rather than encoded, so this leaves an already percent-encoded
    * value alone. Callers are expected to have checked that every {@code %} begins a percent-encoded
-   * octet; see {@link UrlParser#hasValidPercentEncoding}.
+   * octet; see {@link UrlParser#percentEncodingFailure}.
    */
-  static void encode(StringBuilder out, String value, IntPredicate allowed) {
+  static String encode(String value, IntPredicate allowed) {
+    if (isEncoded(value, allowed)) {
+      return value;
+    }
+    var out = new StringBuilder(value.length());
     value
         .codePoints()
         .forEach(
@@ -94,25 +97,29 @@ public final class PercentEncoder {
                 encodeUtf8(codePoint, out);
               }
             });
+    return out.toString();
+  }
+
+  static boolean isEncoded(String value, IntPredicate allowed) {
+    return value.codePoints().allMatch(c -> c == '%' || allowed.test(c));
   }
 
   /**
-   * Appends {@code value} to {@code out} in the form section 6.2.2 compares it in.
+   * Returns the percent-encoded {@code value} in the form section 6.2.2 compares it in.
    *
    * <p>This makes a component that was written in a different but equivalent way compare equal.
    */
-  static void normalize(StringBuilder out, String value, IntPredicate allowed) {
+  static String normalize(String value) {
+    if (value.indexOf('%') < 0) {
+      return value;
+    }
+    var out = new StringBuilder(value.length());
     var i = 0;
     while (i < value.length()) {
       var octet = octetAt(value, i);
       if (octet < 0) {
-        var codePoint = value.codePointAt(i);
-        if (allowed.test(codePoint)) {
-          out.appendCodePoint(codePoint);
-        } else {
-          encodeUtf8(codePoint, out);
-        }
-        i += Character.charCount(codePoint);
+        out.append(value.charAt(i));
+        i++;
       } else {
         if (isUnreserved(octet)) {
           out.append((char) octet);
@@ -122,6 +129,7 @@ public final class PercentEncoder {
         i += 3;
       }
     }
+    return out.toString();
   }
 
   private static int octetAt(String value, int index) {
@@ -173,7 +181,7 @@ public final class PercentEncoder {
    * Percent-decodes {@code input} and interprets the decoded bytes as UTF-8.
    *
    * <p>Callers are expected to have checked that every {@code %} begins a percent-encoded octet;
-   * see {@link UrlParser#hasValidPercentEncoding}. One that does not is kept as-is.
+   * see {@link UrlParser#percentEncodingFailure}. One that does not is kept as-is.
    */
   @TruffleBoundary
   public static String decode(String input) {

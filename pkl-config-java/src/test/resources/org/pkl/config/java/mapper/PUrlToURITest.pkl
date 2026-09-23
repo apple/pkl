@@ -12,5 +12,5 @@ emptyAuthority = net.Url("file:///tmp")
 emptyQuery = net.Url("https://example.com/?")
 ipv6Zone = net.Url("http://[fe80::1%25eth0]/p")
 ipvFuture = net.Url("http://[v1.fe80::a+en1]/")
-constructed = new net.Url { scheme = "https"; host = "example.com"; path = "/a b"; query = "x y" }
+constructed = new net.Url { scheme = "https"; host = "example.com"; path = "/a%20b"; query = "x%20y" }
 colonSegment = new net.Url { path = "a:b" }

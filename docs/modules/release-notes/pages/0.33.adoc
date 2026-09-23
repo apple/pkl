@@ -20,7 +20,7 @@ A string is parsed with `net.Url()`, which accepts an absolute URL as well as a 
 ----
 import "pkl:net"
 
-local url = net.Url("https://user:pw@example.com:8080/a/b%20c?q=1&q=2#f")
+local url = net.Url("https://user:pw@example.com:8080/a/b c?q=1&q=2#f")
 
 scheme = url.scheme                   // "https"
 userInfo = url.userInfo               // "user:pw"
@@ -28,24 +28,27 @@ authority = url.authority             // "user:pw@example.com:8080"
 host = url.host                       // "example.com"
 port = url.port                       // 8080
 path = url.path                       // "/a/b%20c"
-segments = url.segments               // List("a", "b c")
+rawPath = url.rawPath                 // "/a/b c"
+pathSegments = url.pathSegments       // List("a", "b c")
 query = url.query                     // "q=1&q=2"
 queryParameters = url.queryParameters // Mapping { ["q"] = Listing { "1"; "2" } }
 fragment = url.fragment               // "f"
 ----
 
-Components are kept exactly as written, apart from the scheme, which RFC 3986 defines to be case-insensitive.
-The derived `segments` and `queryParameters` are percent-decoded.
+Parsing is lenient: whatever cannot appear literally in a component is percent-encoded as its UTF-8 bytes, and whatever is already encoded is kept as written.
+The scheme is lowercased, as RFC 3986 defines it to be case-insensitive.
+Every component is held percent-encoded, whether the input was encoded or not; the percent-decoded form of each is available as `rawUserInfo`, `rawHost`, `rawPath`, `rawQuery` and `rawFragment`.
+The derived `pathSegments` and `queryParameters` are percent-decoded too.
 
 A URL can also be built from its components, or derived from another URL by amending it.
-Whatever cannot appear literally in a component is percent-encoded as its UTF-8 bytes when the URL is stringified:
+A component given this way has to be percent-encoded already:
 
 [source,pkl]
 ----
 built = new net.Url {
   scheme = "https"
   host = "example.com"
-  path = "/a b"
+  path = "/a%20b"
 }.toString() // "https://example.com/a%20b"
 
 local base = net.Url("https://example.com/a?q=1")
@@ -54,7 +57,8 @@ amended = (base) { query = null }.toString() // "https://example.com/a"
 ----
 
 Each component is type-checked, so a URL built this way cannot be malformed.
-For example, a `port` is a `UInt16`, and only a URL with a `host` can have one.
+For example, a `port` is a `UInt16`, only a URL with a `host` can have one, and a `path` of `"/a b"` is rejected.
+The `raw` components are `fixed`, so they cannot be amended.
 
 A relative reference can be resolved against an absolute URL, which also removes dot segments from the result's path:
 

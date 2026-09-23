@@ -45,11 +45,11 @@ facts {
 
     componentsOf("http://example.com:/a") == List("http", null, "example.com", null, "/a", null, null)
 
-    // the userinfo runs to the last "@", so the extra one lands in it and is encoded on the way out
-    componentsOf("http://a@b@example.com/") == List("http", "a@b", "example.com", null, "/", null, null)
+    // the userinfo runs to the last "@", so the extra one lands in it and is encoded
+    componentsOf("http://a@b@example.com/") == List("http", "a%40b", "example.com", null, "/", null, null)
   }
 
-  ["parse(): keeps components as they were written"] {
+  ["parse(): keeps what is already encoded as it was written"] {
     // RFC 3986 normalizes nothing but the scheme, which is defined to be case-insensitive
     net.Url("HTTPS://example.com").scheme == "https"
     net.Url("http://EXAMPLE.com/A").host == "EXAMPLE.com"
@@ -85,7 +85,8 @@ facts {
   }
 
   ["parse(): encodes what it cannot keep"] {
-    net.Url("http://example.com/a b").path == "/a b"
+    net.Url("http://example.com/a b").path == "/a%20b"
+    net.Url("http://example.com/a%20b").path == "/a%20b"
     parsed("http://example.com/a b") == "http://example.com/a%20b"
     parsed("https://example.com/a<b>c") == "https://example.com/a%3Cb%3Ec"
     parsed("https://example.com/?a b") == "https://example.com/?a%20b"
@@ -96,10 +97,50 @@ facts {
     parsed("http://exa mple.com/") == "http://exa%20mple.com/"
     parsed("http://a@b@example.com/") == "http://a%40b@example.com/"
     parsed("http://u:p@example.com/") == "http://u:p@example.com/"
+    // a "#" after the one that starts the fragment is part of it
+    net.Url("https://example.com/#a#b").fragment == "a%23b"
+
+    // the components are encoded, not just their serialization
+    componentsOf("https://u v@exa mple.com/a b?c d#e f")
+      == List("https", "u%20v", "exa%20mple.com", null, "/a%20b", "c%20d", "e%20f")
 
     // once encoded, the result round-trips
     roundTrips("http://example.com/a%20b")
     parsed(parsed("http://example.com/a b")) == "http://example.com/a%20b"
+    net.Url("http://example.com/a b") == net.Url("http://example.com/a%20b")
+  }
+
+  ["raw components"] {
+    local url = net.Url("https://u%20v@m%C3%BCnchen.de/a%20b/c?q=a%20b+c#f%20g")
+    url.rawUserInfo == "u v"
+    url.rawHost == "münchen.de"
+    url.rawPath == "/a b/c"
+    // a query is not read as a form here, so a "+" is kept
+    url.rawQuery == "q=a b+c"
+    url.rawFragment == "f g"
+
+    // it makes no difference whether the input was encoded
+    net.Url("https://example.com/a b").rawPath == "/a b"
+    net.Url("https://example.com/a%20b").rawPath == "/a b"
+
+    // an absent component has no raw form either
+    local bare = net.Url("mailto:user@example.com")
+    bare.rawUserInfo == null
+    bare.rawHost == null
+    bare.rawPath == "user@example.com"
+    bare.rawQuery == null
+    bare.rawFragment == null
+    net.Url("https://example.com").rawPath == ""
+
+    // an encoded "/" decodes to one, which only pathSegments tells apart
+    net.Url("https://example.com/a%2Fb").rawPath == "/a/b"
+    net.Url("https://example.com/a%2Fb").pathSegments == List("a/b")
+
+    net.Url("http://[fe80::1%25eth0]/").rawHost == "[fe80::1%eth0]"
+
+    // the raw components follow an amendment
+    (url) { path = "/x%20y" }.rawPath == "/x y"
+    (url) { query = null }.rawQuery == null
   }
 
   ["parse(): failing"] {
@@ -251,11 +292,13 @@ facts {
     net.Url("file:///a/b").resolve("c").toString() == "file:///a/c"
     // a reference that cannot be parsed cannot be resolved
     module.catch(() -> net.Url(rfcBase).resolve("%zz")) == "Cannot parse `%zz` as a URL."
-    net.Url("http://a/b/c/").resolve(new net.Url { path = "d e" }).toString()
+    net.Url("http://a/b/c/").resolve(new net.Url { path = "d%20e" }).toString()
       == "http://a/b/c/d%20e"
     // resolve a string or object should be the same
-    net.Url("http://a/b/c/").resolve("d e").path == "/b/c/d e"
-    net.Url("http://a/b/c/").resolve(new net.Url { path = "d e" }).path == "/b/c/d e"
+    net.Url("http://a/b/c/").resolve("d e").path == "/b/c/d%20e"
+    net.Url("http://a/b/c/").resolve(new net.Url { path = "d%20e" }).path == "/b/c/d%20e"
+    // resolving is the way to set a component without encoding it first
+    net.Url("http://a/b/c/").resolve("/x y").toString() == "http://a/x%20y"
   }
 
   ["new Url"] {
@@ -272,10 +315,22 @@ facts {
       fragment = "f"
     }.toString() == "https://user:pw@example.com:8080/a/b?q=1#f"
 
-    // a part given in its decoded form is encoded on the way out
-    new net.Url { scheme = "https"; host = "example.com"; path = "/a b" }.toString()
+    // a part has to be given encoded
+    new net.Url { scheme = "https"; host = "example.com"; path = "/a%20b" }.toString()
       == "https://example.com/a%20b"
-    new net.Url { scheme = "https"; host = "münchen.de" }.toString() == "https://m%C3%BCnchen.de"
+    new net.Url { scheme = "https"; host = "m%C3%BCnchen.de" }.toString() == "https://m%C3%BCnchen.de"
+    module.catch(() -> new net.Url { scheme = "https"; host = "example.com"; path = "/a b" }.toString())
+      .startsWith("Type constraint `isValidPath(this, host != null)` violated.")
+    module.catch(() -> new net.Url { scheme = "https"; host = "münchen.de" }.toString())
+      .startsWith("Type constraint `isValidHost(this)` violated.")
+    module.catch(() -> new net.Url { scheme = "https"; host = "example.com"; userInfo = "a@b" }.toString())
+      .startsWith("Type constraint `isValidUserInfo(this)` violated.")
+    module.catch(() -> new net.Url { scheme = "https"; host = "example.com"; query = "a b" }.toString())
+      .startsWith("Type constraint `isValidQuery(this)` violated.")
+    module.catch(() -> new net.Url { scheme = "https"; host = "example.com"; fragment = "a#b" }.toString())
+      .startsWith("Type constraint `isValidFragment(this)` violated.")
+    module.catch(() -> new net.Url { scheme = "https"; host = "example.com"; path = "/a%zz" }.toString())
+      .startsWith("Type constraint `isValidPath(this, host != null)` violated.")
 
     // a URL without an authority
     new net.Url { scheme = "mailto"; path = "user@example.com" }.toString() == "mailto:user@example.com"
@@ -305,9 +360,11 @@ facts {
     (url) { scheme = "http" }.toString() == "http://user:pw@example.com:8080/a/b?q=1#f"
 
     // the derived views follow the amendment
-    (url) { path = "/c/d e" }.pathSegments == List("c", "d e")
-    // and so does a part given in its decoded form
-    (url) { path = "/a b" }.toString() == "https://user:pw@example.com:8080/a%20b?q=1#f"
+    (url) { path = "/c/d%20e" }.pathSegments == List("c", "d e")
+    // an amended part has to be encoded
+    module.catch(() -> (url) { path = "/a b" }.toString())
+      .startsWith("Type constraint `isValidPath(this, host != null)` violated.")
+    (url) { path = "/a%20b" }.toString() == "https://user:pw@example.com:8080/a%20b?q=1#f"
   }
 
   ["pathSegments"] {
