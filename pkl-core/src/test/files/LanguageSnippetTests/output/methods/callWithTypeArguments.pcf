@@ -17,3 +17,6 @@ superCall {
   false
   false
 }
+obj {
+  res = "Type constraint `length > num` violated. Value: \"hi\""
+}

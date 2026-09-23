@@ -35,3 +35,10 @@ superCall {
   doIt(new A {}, List(List(0)))
   doIt(new B {}, List(List(0)))
 }
+
+local num = 5
+
+obj {
+  local function foo<T>(): T = "hi"
+  res = test.catch(() -> foo::<String(length > num)>())
+}

@@ -44,10 +44,12 @@ import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
+import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.ast.member.ObjectMethodNode;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.VmObjectFactory;
@@ -2041,7 +2043,8 @@ public abstract class TypeNode extends PklNode {
     }
 
     private boolean isMethodTypeParameter() {
-      return typeParameter.getOwner() instanceof Method;
+      var owner = typeParameter.getOwner();
+      return owner instanceof ClassMethod || owner instanceof ObjectMethodNode;
     }
   }
 
