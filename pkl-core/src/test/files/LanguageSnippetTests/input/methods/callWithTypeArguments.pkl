@@ -51,3 +51,21 @@ lazyTypeCheck {
   res2 = test.catch(() -> lazy2::<String>(5).toString())
   res3 = test.catch(() -> lazy3::<String>(5).toString())
 }
+
+class Person {
+  name: String
+}
+
+typeDefaults {
+  local function makeNamed<T>(val: String): T = new { name = val }
+  local function makeNamedListing<T>(val: String): Listing<T> = new {
+    new { name = val }
+  }
+  local function makeFromParam<T>(val: T): Listing<T> = new { val }
+  res1 = makeNamed::<Person>("bob")
+  res1a = res1.getClass().toString()
+  res2 = makeNamedListing::<Person>("bob")
+  res2a = res2.first.getClass().toString()
+  res3 = makeFromParam::<Person>(new { name = "bob" })
+  res3a = res3.first.getClass().toString()
+}
