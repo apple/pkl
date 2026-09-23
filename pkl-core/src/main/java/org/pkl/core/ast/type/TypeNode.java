@@ -2043,6 +2043,21 @@ public abstract class TypeNode extends PklNode {
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
+      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
+        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+        return typeArg.createDefaultValue(language, headerSection, qualifiedName);
+      }
+
+      return null;
+    }
   }
 
   public static final class NonNullTypeAliasTypeNode extends WriteFrameSlotTypeNode {

@@ -21,9 +21,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.expression.member.AbstractInvokeMethodNode.MethodCall;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmTypeArgument;
 
 public abstract class InferParentWithinMethodArgumentNode
     extends AbstractInferParentFromMethodNode {
@@ -39,14 +41,28 @@ public abstract class InferParentWithinMethodArgumentNode
 
   @Override
   protected Method getMethod(VirtualFrame frame) {
-    var method = (Method) frame.getObject(methodSlot);
+    var methodCall = (MethodCall) frame.getObject(methodSlot);
+    if (methodCall == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+
+    var method = methodCall.method();
     if (method == null) {
-      // used in FunctionN.apply()
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("cannotInferParent").build();
     }
 
     return method;
+  }
+
+  protected VmTypeArgument @Nullable [] getTypeArgumentOverrides(VirtualFrame frame) {
+    var methodCall = (MethodCall) frame.getObject(methodSlot);
+    if (methodCall == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+    return methodCall.typeArguments();
   }
 
   @Override
@@ -63,7 +79,7 @@ public abstract class InferParentWithinMethodArgumentNode
       @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
       @Cached("getTypeNode(frame, cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
       @Cached(
-              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName())")
+              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName(), getTypeArgumentOverrides(frame))")
           Object defaultValue) {
     return defaultValue;
   }
@@ -72,7 +88,12 @@ public abstract class InferParentWithinMethodArgumentNode
   protected final Object eval(VirtualFrame frame) {
     var method = getMethod(frame);
     var typeNode = getTypeNode(frame, method);
-    return getDefaultValue(frame, typeNode, method.getHeaderSection(), method.getQualifiedName());
+    return getDefaultValue(
+        frame,
+        typeNode,
+        method.getHeaderSection(),
+        method.getQualifiedName(),
+        getTypeArgumentOverrides(frame));
   }
 
   @Override
@@ -80,12 +101,14 @@ public abstract class InferParentWithinMethodArgumentNode
       VirtualFrame frame,
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
-      String qualifiedName) {
+      String qualifiedName,
+      VmTypeArgument @Nullable [] typeArgumentOverrides) {
     if (typeNode != null && typeNode.isSelfType()) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("cannotInferParent").build();
     }
 
-    return super.getDefaultValue(frame, typeNode, headerSection, qualifiedName);
+    return super.getDefaultValue(
+        frame, typeNode, headerSection, qualifiedName, typeArgumentOverrides);
   }
 }
