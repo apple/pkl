@@ -9,7 +9,7 @@ facts {
     true
     true
   }
-  ["parse(): keeps components as they were written"] {
+  ["parse(): keeps what is already encoded as it was written"] {
     true
     true
     true
@@ -40,6 +40,30 @@ facts {
     true
   }
   ["parse(): encodes what it cannot keep"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["raw components"] {
+    true
+    true
+    true
+    true
+    true
     true
     true
     true
@@ -174,6 +198,7 @@ facts {
     true
     true
     true
+    true
   }
   ["new Url"] {
     true
@@ -188,8 +213,15 @@ facts {
     true
     true
     true
+    true
+    true
+    true
+    true
+    true
+    true
   }
   ["amending a Url"] {
+    true
     true
     true
     true

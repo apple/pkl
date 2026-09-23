@@ -134,14 +134,31 @@ public final class UrlNodes {
     }
   }
 
-  // The constraints of `Url`. Each one is the same check the parser makes, so that a URL written or
-  // amended by hand is held to exactly the parser's standard.
+  // The constraints of `Url`. Each one only accepts a component that is already percent-encoded,
+  // and is otherwise the same check the parser makes, so that a URL written or amended by hand is
+  // held to exactly the standard of the parser's output.
 
-  public abstract static class isValidPercentEncoding extends ExternalMethod1Node {
+  public abstract static class isValidUserInfo extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
     protected boolean eval(@SuppressWarnings("unused") VmTyped self, String value) {
-      return UrlParser.hasValidPercentEncoding(value);
+      return UrlParser.isValidUserInfo(value);
+    }
+  }
+
+  public abstract static class isValidQuery extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(@SuppressWarnings("unused") VmTyped self, String value) {
+      return UrlParser.isValidQueryOrFragment(value);
+    }
+  }
+
+  public abstract static class isValidFragment extends ExternalMethod1Node {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(@SuppressWarnings("unused") VmTyped self, String value) {
+      return UrlParser.isValidQueryOrFragment(value);
     }
   }
 

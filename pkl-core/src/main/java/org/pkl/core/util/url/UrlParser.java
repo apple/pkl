@@ -39,7 +39,8 @@ public final class UrlParser {
   private UrlParser() {}
 
   /**
-   * The components of a URI reference, each holding the raw text that was written for it.
+   * The components of a URI reference, each percent-encoded, so that it holds nothing that cannot
+   * appear literally in it.
    *
    * <p>{@code scheme} is {@code null} for a relative reference. {@code host} is {@code null} when
    * the reference has no authority. {@code userInfo} and {@code port} are only ever set alongside a
@@ -54,10 +55,7 @@ public final class UrlParser {
       @Nullable String query,
       @Nullable String fragment) {
 
-    /**
-     * Serializes these components (section 5.3), percent-encoding whatever cannot appear literally
-     * in its component.
-     */
+    /** Serializes these components (section 5.3). */
     @TruffleBoundary
     public String serialize() {
       var sb = new StringBuilder();
@@ -72,14 +70,12 @@ public final class UrlParser {
         // it has to be preceded by a dot-segment (section 4.2)
         sb.append("./");
       }
-      PercentEncoder.encode(sb, path, PercentEncoder.PATH);
+      sb.append(path);
       if (query != null) {
-        sb.append('?');
-        PercentEncoder.encode(sb, query, PercentEncoder.QUERY_OR_FRAGMENT);
+        sb.append('?').append(query);
       }
       if (fragment != null) {
-        sb.append('#');
-        PercentEncoder.encode(sb, fragment, PercentEncoder.QUERY_OR_FRAGMENT);
+        sb.append('#').append(fragment);
       }
       return sb.toString();
     }
@@ -90,8 +86,7 @@ public final class UrlParser {
   }
 
   /**
-   * Serializes the components of a URI reference (section 5.3), percent-encoding whatever cannot
-   * appear literally in its component.
+   * Serializes the percent-encoded components of a URI reference (section 5.3).
    *
    * <p>Gives the same result as {@code pkl:net}'s {@code Url.toString()}.
    */
@@ -106,23 +101,14 @@ public final class UrlParser {
     return new Parsed(scheme, userInfo, host, port, path, query, fragment).serialize();
   }
 
-  /**
-   * Serializes an authority (section 3.2), percent-encoding whatever cannot appear literally in its
-   * component.
-   */
+  /** Serializes an authority (section 3.2) from its percent-encoded components. */
   @TruffleBoundary
   static String serializeAuthority(@Nullable String userInfo, String host, @Nullable Integer port) {
     var sb = new StringBuilder();
     if (userInfo != null) {
-      PercentEncoder.encode(sb, userInfo, PercentEncoder.USERINFO);
-      sb.append('@');
+      sb.append(userInfo).append('@');
     }
-    if (isIpLiteral(host)) {
-      // already validated, and none of its characters may be encoded
-      sb.append(host);
-    } else {
-      PercentEncoder.encode(sb, host, PercentEncoder.REG_NAME);
-    }
+    sb.append(host);
     if (port != null) {
       sb.append(':').append(port.intValue());
     }
@@ -138,8 +124,19 @@ public final class UrlParser {
     record Failure(String hint) implements Result {}
   }
 
-  /** Parses {@code input} as a URI reference. */
+  private static @Nullable String encodeOptional(@Nullable String component, IntPredicate allowed) {
+    return component == null ? null : PercentEncoder.encode(component, allowed);
+  }
+
+  /**
+   * Parses {@code input} as a URI reference, percent-encoding whatever its components cannot hold
+   * literally.
+   */
   static Result parse(String input) {
+    return parseAsWritten(input, true);
+  }
+
+  private static Result parseAsWritten(String input, boolean encode) {
     var length = input.length();
 
     // scheme = ALPHA *( ALPHA / DIGIT / "+" / "-" / "." ) ":"
@@ -233,6 +230,20 @@ public final class UrlParser {
       }
     }
 
+    if (encode) {
+      return new Result.Success(
+          new Parsed(
+              scheme,
+              encodeOptional(userInfo, PercentEncoder.USERINFO),
+              // an IP literal has already been validated, and none of its characters may be encoded
+              host == null || isIpLiteral(host)
+                  ? host
+                  : PercentEncoder.encode(host, PercentEncoder.REG_NAME),
+              port,
+              PercentEncoder.encode(path, PercentEncoder.PATH),
+              encodeOptional(query, PercentEncoder.QUERY_OR_FRAGMENT),
+              encodeOptional(fragment, PercentEncoder.QUERY_OR_FRAGMENT)));
+    }
     return new Result.Success(new Parsed(scheme, userInfo, host, port, path, query, fragment));
   }
 
@@ -410,30 +421,23 @@ public final class UrlParser {
   public static Parsed normalize(Parsed url) {
     return new Parsed(
         url.scheme() == null ? null : toLowerAscii(url.scheme()),
-        normalizeOptional(url.userInfo(), PercentEncoder.USERINFO),
+        normalizeOptional(url.userInfo()),
         url.host() == null ? null : normalizeHost(url.host()),
         url.port(),
         normalizePath(url),
-        normalizeOptional(url.query(), PercentEncoder.QUERY_OR_FRAGMENT),
-        normalizeOptional(url.fragment(), PercentEncoder.QUERY_OR_FRAGMENT));
+        normalizeOptional(url.query()),
+        normalizeOptional(url.fragment()));
   }
 
-  private static String normalizeComponent(String component, IntPredicate allowed) {
-    var out = new StringBuilder(component.length());
-    PercentEncoder.normalize(out, component, allowed);
-    return out.toString();
-  }
-
-  private static @Nullable String normalizeOptional(
-      @Nullable String component, IntPredicate allowed) {
-    return component == null ? null : normalizeComponent(component, allowed);
+  private static @Nullable String normalizeOptional(@Nullable String component) {
+    return component == null ? null : PercentEncoder.normalize(component);
   }
 
   private static String normalizeHost(String host) {
     if (!isIpLiteral(host)) {
       // the hex digits of a percent-encoded octet are uppercase even in a component that is
       // otherwise folded to lower case (section 6.2.2.1)
-      return toLowerAsciiOutsideOctets(normalizeComponent(host, PercentEncoder.REG_NAME));
+      return toLowerAsciiOutsideOctets(PercentEncoder.normalize(host));
     }
     // an IP literal holds nothing that may be encoded, and its zone identifier, unlike the address
     // in front of it, names an interface and is case-sensitive
@@ -444,7 +448,7 @@ public final class UrlParser {
   }
 
   private static String normalizePath(Parsed url) {
-    var path = normalizeComponent(url.path(), PercentEncoder.PATH);
+    var path = PercentEncoder.normalize(url.path());
     if (path.isEmpty()) {
       // a URL with an authority and no path names the same resource as one whose path is "/"
       // (section 6.2.3)
@@ -466,8 +470,25 @@ public final class UrlParser {
     return null;
   }
 
-  public static boolean hasValidPercentEncoding(String input) {
-    return percentEncodingFailure(input) == null;
+  /**
+   * Whether {@code input} is already percent-encoded for a component that holds {@code allowed}
+   * literally: it holds nothing else, and every {@code %} begins a percent-encoded octet.
+   */
+  private static boolean isEncodedComponent(String input, IntPredicate allowed) {
+    return PercentEncoder.isEncoded(input, allowed) && percentEncodingFailure(input) == null;
+  }
+
+  // The checks below are stricter than parsing, which encodes whatever a component cannot hold
+  // literally: each of them only accepts a component that is already encoded.
+
+  /** Whether {@code input} is a percent-encoded {@code userinfo}. */
+  public static boolean isValidUserInfo(String input) {
+    return isEncodedComponent(input, PercentEncoder.USERINFO);
+  }
+
+  /** Whether {@code input} is a percent-encoded {@code query} or {@code fragment}. */
+  public static boolean isValidQueryOrFragment(String input) {
+    return isEncodedComponent(input, PercentEncoder.QUERY_OR_FRAGMENT);
   }
 
   /**
@@ -485,25 +506,16 @@ public final class UrlParser {
    * </ul>
    */
   public static boolean isValidUrl(String input) {
-    if (!(parse(input) instanceof Result.Success success)) {
+    if (!(parseAsWritten(input, false) instanceof Result.Success success)) {
       return false;
     }
     var parsed = success.url();
-    if (parsed.scheme() == null) {
-      return false;
-    }
-    var host = parsed.host();
-    if (host != null && !isIpLiteral(host) && !isEncoded(host, PercentEncoder.REG_NAME)) {
-      return false;
-    }
-    return isEncoded(parsed.userInfo(), PercentEncoder.USERINFO)
-        && isEncoded(parsed.path(), PercentEncoder.PATH)
-        && isEncoded(parsed.query(), PercentEncoder.QUERY_OR_FRAGMENT)
-        && isEncoded(parsed.fragment(), PercentEncoder.QUERY_OR_FRAGMENT);
-  }
-
-  private static boolean isEncoded(@Nullable String component, IntPredicate allowed) {
-    return component == null || component.codePoints().allMatch(c -> c == '%' || allowed.test(c));
+    return parsed.scheme() != null
+        && (parsed.userInfo() == null || isValidUserInfo(parsed.userInfo()))
+        && (parsed.host() == null || isValidHost(parsed.host()))
+        && isValidPath(parsed.path(), parsed.host() != null)
+        && (parsed.query() == null || isValidQueryOrFragment(parsed.query()))
+        && (parsed.fragment() == null || isValidQueryOrFragment(parsed.fragment()));
   }
 
   /** Whether {@code input} is a scheme. Unlike parsing, the trailing {@code :} is not accepted. */
@@ -579,8 +591,10 @@ public final class UrlParser {
     return percentEncodingFailure(host);
   }
 
+  /** Whether {@code host} is a percent-encoded {@code host}. */
   public static boolean isValidHost(String host) {
-    return hostFailure(host) == null;
+    return hostFailure(host) == null
+        && (isIpLiteral(host) || PercentEncoder.isEncoded(host, PercentEncoder.REG_NAME));
   }
 
   /** Whether every character of {@code address} is one an {@code IPv6address} is built from. */
@@ -653,11 +667,12 @@ public final class UrlParser {
   }
 
   /**
-   * Whether {@code path} can sit next to an authority, or, when there is none, next to no authority
-   * at all.
+   * Whether {@code path} is percent-encoded, and can sit next to an authority, or, when there is
+   * none, next to no authority at all.
    */
   public static boolean isValidPath(String path, boolean hasAuthority) {
-    return pathFailure(path, hasAuthority) == null;
+    return pathFailure(path, hasAuthority) == null
+        && PercentEncoder.isEncoded(path, PercentEncoder.PATH);
   }
 
   private static boolean isIpLiteral(String host) {
