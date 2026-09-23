@@ -47,7 +47,9 @@ facts {
     net.buildQuery(new Mapping<String, Listing<String>> { [""] { "1" } }) == "=1"
     net.buildQuery(new Mapping<String, Listing<String>> { ["a b"] { "c d" } }) == "a+b=c+d"
     net.buildQuery(new Mapping<String, Listing<String>> { ["a&b"] { "1=2" } }) == "a%26b=1%3D2"
-    net.buildQuery(new Mapping<String, Listing<String>> { ["q"] { "aZ09-._~" } }) == "q=aZ09-._~"
+    // only the ASCII alphanumerics and "*-._" are left alone, as WHATWG's serializer does
+    net.buildQuery(new Mapping<String, Listing<String>> { ["q"] { "aZ09*-._" } }) == "q=aZ09*-._"
+    net.buildQuery(new Mapping<String, Listing<String>> { ["q"] { "~!'()" } }) == "q=%7E%21%27%28%29"
 
     local parameters = new Mapping<String, Listing<String>> {
       ["a b"] { "c&d" }
@@ -79,6 +81,7 @@ facts {
     net.parseQuery("a%20b=c%20d") == new Mapping<String, Listing<String>> { ["a b"] { "c d" } }
     net.parseQuery("a+b=c+d") == new Mapping<String, Listing<String>> { ["a b"] { "c d" } }
     net.parseQuery("q=m%C3%BCnchen") == new Mapping<String, Listing<String>> { ["q"] { "münchen" } }
+    net.parseQuery("q=%7E*") == new Mapping<String, Listing<String>> { ["q"] { "~*" } }
 
     // this is how a Url reads its own query
     local url = net.Url("https://example.com?a=1&a=2&b=3")

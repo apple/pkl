@@ -32,8 +32,10 @@ facts {
     true
     true
     true
+    true
   }
   ["parseQuery()"] {
+    true
     true
     true
     true

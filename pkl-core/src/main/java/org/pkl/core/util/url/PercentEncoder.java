@@ -17,6 +17,8 @@ package org.pkl.core.util.url;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.io.ByteArrayOutputStream;
+import java.net.URLDecoder;
+import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.util.function.IntPredicate;
 
@@ -201,9 +203,15 @@ public final class PercentEncoder {
     return bytes.toString(StandardCharsets.UTF_8);
   }
 
-  /** Percent-decodes {@code input} as an {@code application/x-www-form-urlencoded}. */
+  /**
+   * Percent-decodes {@code input} as an {@code application/x-www-form-urlencoded}.
+   *
+   * <p>Callers are expected to have checked that every {@code %} begins a percent-encoded octet;
+   * see {@link UrlParser#percentEncodingFailure}. {@link URLDecoder} throws on one that does not.
+   */
+  @TruffleBoundary
   static String decodeForm(String input) {
-    return decode(input.replace('+', ' '));
+    return URLDecoder.decode(input, StandardCharsets.UTF_8);
   }
 
   /**
@@ -211,18 +219,8 @@ public final class PercentEncoder {
    *
    * <p>The inverse of {@link #decodeForm}.
    */
+  @TruffleBoundary
   public static void encodeForm(StringBuilder out, String value) {
-    value
-        .codePoints()
-        .forEach(
-            codePoint -> {
-              if (isUnreserved(codePoint)) {
-                out.appendCodePoint(codePoint);
-              } else if (codePoint == ' ') {
-                out.append('+');
-              } else {
-                encodeUtf8(codePoint, out);
-              }
-            });
+    out.append(URLEncoder.encode(value, StandardCharsets.UTF_8));
   }
 }
