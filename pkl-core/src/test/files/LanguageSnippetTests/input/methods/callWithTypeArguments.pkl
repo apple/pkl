@@ -38,7 +38,16 @@ superCall {
 
 local num = 5
 
-obj {
+objectMethod {
   local function foo<T>(): T = "hi"
   res = test.catch(() -> foo::<String(length > num)>())
+}
+
+function lazy1<T>(it): Listing<T> = new Listing { it }
+local function lazy2<T>(it): Listing<T> = new Listing { it }
+lazyTypeCheck {
+  local function lazy3<T>(it): Listing<T> = new Listing { it }
+  res1 = test.catch(() -> lazy1::<String>(5).toString())
+  res2 = test.catch(() -> lazy2::<String>(5).toString())
+  res3 = test.catch(() -> lazy3::<String>(5).toString())
 }

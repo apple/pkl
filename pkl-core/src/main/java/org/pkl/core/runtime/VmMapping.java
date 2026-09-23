@@ -59,8 +59,16 @@ public final class VmMapping extends VmListingOrMapping {
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,
       Object typeCheckReceiver,
-      VmObjectLike typeCheckOwner) {
-    super(enclosingFrame, parent, members, typeCastNode, typeCheckReceiver, typeCheckOwner);
+      VmObjectLike typeCheckOwner,
+      VmTypeArgument @Nullable [] typeCheckTypeArguments) {
+    super(
+        enclosingFrame,
+        parent,
+        members,
+        typeCastNode,
+        typeCheckReceiver,
+        typeCheckOwner,
+        typeCheckTypeArguments);
   }
 
   public static boolean isDefaultProperty(Object propertyKey) {

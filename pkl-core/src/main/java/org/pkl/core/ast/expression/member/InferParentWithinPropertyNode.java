@@ -42,7 +42,9 @@ public abstract class InferParentWithinPropertyNode extends ExpressionNode {
     }
 
     try {
-      var result = VmUtils.readMemberOrNull(owner.getPrototype(), ownPropertyName, false);
+      var result =
+          VmUtils.readMemberOrNull(
+              owner.getPrototype(), ownPropertyName, false, VmUtils.getTypeArgumentsOrNull(frame));
       assert result != null : "every property has a default";
       return result;
     } catch (VmUndefinedValueException e) {

@@ -74,6 +74,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
     // can't pass a non-materialized frame as an argument into a call node (truffle compiler will
     // error)
     return callNode.call(
-        VmUtils.getReceiver(frame), VmUtils.getOwner(frame), customThis, frame.materialize());
+        VmUtils.getReceiver(frame),
+        VmUtils.getOwner(frame),
+        VmUtils.getTypeArgumentsOrNull(frame),
+        customThis,
+        frame.materialize());
   }
 }
