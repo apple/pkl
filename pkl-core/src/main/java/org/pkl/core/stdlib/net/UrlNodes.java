@@ -15,12 +15,11 @@
  */
 package org.pkl.core.stdlib.net;
 
-import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
-import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import org.pkl.core.ast.internal.GetParsedUrlNode;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
@@ -91,29 +90,23 @@ public final class UrlNodes {
   }
 
   public abstract static class resolve extends ExternalMethod1Node {
+    @Child private GetParsedUrlNode getSelfNode = GetParsedUrlNode.create();
+
     @Specialization
-    @TruffleBoundary
-    protected Object evalString(
-        VmTyped self,
-        String ref,
-        @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
-      return resolve(self, UrlFactory.parseOrThrow(ref, this), callNode);
+    protected Object evalString(VmTyped self, String ref) {
+      return resolve(getSelfNode.execute(self), UrlFactory.parseOrThrow(ref, this));
     }
 
     @Specialization
-    @TruffleBoundary
     protected Object eval(
-        VmTyped self,
-        VmTyped ref,
-        @Cached("create()") @Shared("callNode") IndirectCallNode callNode) {
-      return resolve(self, UrlFactory.read(ref, callNode), callNode);
+        VmTyped self, VmTyped ref, @Cached("create()") GetParsedUrlNode getRefNode) {
+      return resolve(getSelfNode.execute(self), getRefNode.execute(ref));
     }
 
     @SuppressWarnings("MethodNameSameAsClassName")
-    private Object resolve(VmTyped self, Parsed ref, IndirectCallNode callNode) {
-      var base = UrlFactory.read(self, callNode);
+    @TruffleBoundary
+    private Object resolve(Parsed base, Parsed ref) {
       if (base.scheme() == null) {
-        CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder()
             .evalError("cannotResolveAgainstRelativeUrl", base.serialize())
             .build();
@@ -123,18 +116,21 @@ public final class UrlNodes {
   }
 
   public abstract static class normalize extends ExternalMethod0Node {
+    @Child private GetParsedUrlNode getSelfNode = GetParsedUrlNode.create();
+
     @Specialization
-    protected VmTyped eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
-      return UrlFactory.create(UrlParser.normalize(UrlFactory.read(self, callNode)));
+    protected VmTyped eval(VmTyped self) {
+      return UrlFactory.create(UrlParser.normalize(getSelfNode.execute(self)));
     }
   }
 
   public abstract static class equals extends ExternalMethod1Node {
+    @Child private GetParsedUrlNode getSelfNode = GetParsedUrlNode.create();
+    @Child private GetParsedUrlNode getOtherNode = GetParsedUrlNode.create();
+
     @Specialization
-    protected boolean eval(
-        VmTyped self, VmTyped other, @Cached("create()") IndirectCallNode callNode) {
-      return UrlParser.isEquivalent(
-          UrlFactory.read(self, callNode), UrlFactory.read(other, callNode));
+    protected boolean eval(VmTyped self, VmTyped other) {
+      return UrlParser.isEquivalent(getSelfNode.execute(self), getOtherNode.execute(other));
     }
   }
 
