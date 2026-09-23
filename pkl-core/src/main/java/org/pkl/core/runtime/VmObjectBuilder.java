@@ -22,6 +22,7 @@ import org.pkl.core.ast.member.SharedMemberNode;
 import org.pkl.core.util.EconomicMaps;
 
 /** A builder for {@link VmObject}s whose {@link ObjectMember}s are determined at run time. */
+@SuppressWarnings("UnusedReturnValue")
 public final class VmObjectBuilder {
   private final EconomicMap<Object, ObjectMember> members;
   private int elementCount = 0;
@@ -60,18 +61,24 @@ public final class VmObjectBuilder {
   }
 
   public VmListing toListing() {
-    return new VmListing(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getListingClass().getPrototype(),
-        members,
-        elementCount);
+    var ret =
+        new VmListing(
+            VmUtils.createEmptyMaterializedFrame(),
+            BaseModule.getListingClass().getPrototype(),
+            members,
+            elementCount);
+    setCachedValues(ret);
+    return ret;
   }
 
   public VmMapping toMapping() {
-    return new VmMapping(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getMappingClass().getPrototype(),
-        members);
+    var ret =
+        new VmMapping(
+            VmUtils.createEmptyMaterializedFrame(),
+            BaseModule.getMappingClass().getPrototype(),
+            members);
+    setCachedValues(ret);
+    return ret;
   }
 
   public VmMapping toMapping(Object extraStorage) {
@@ -81,15 +88,31 @@ public final class VmObjectBuilder {
   }
 
   public VmDynamic toDynamic() {
-    return new VmDynamic(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getDynamicClass().getPrototype(),
-        members,
-        elementCount);
+    var ret =
+        new VmDynamic(
+            VmUtils.createEmptyMaterializedFrame(),
+            BaseModule.getDynamicClass().getPrototype(),
+            members,
+            elementCount);
+    setCachedValues(ret);
+    return ret;
   }
 
   public VmTyped toTyped(VmClass clazz) {
-    return new VmTyped(
-        VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    var ret =
+        new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    setCachedValues(ret);
+    return ret;
+  }
+
+  private void setCachedValues(VmObject object) {
+    var cursor = EconomicMaps.getEntries(members);
+    while (cursor.advance()) {
+      var member = cursor.getValue();
+      var constantValue = member.getConstantValue();
+      if (constantValue != null) {
+        object.setCachedValue(cursor.getKey(), constantValue);
+      }
+    }
   }
 }
