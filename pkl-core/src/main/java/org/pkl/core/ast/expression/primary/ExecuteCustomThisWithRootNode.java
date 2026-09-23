@@ -71,6 +71,11 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     var customThis = customThisNode.executeGeneric(frame);
-    return callNode.call(VmUtils.getReceiver(frame), VmUtils.getOwner(frame), customThis, frame);
+    return callNode.call(
+        VmUtils.getReceiver(frame),
+        VmUtils.getOwner(frame),
+        VmUtils.getTypeArgumentsOrNull(frame),
+        customThis,
+        frame);
   }
 }

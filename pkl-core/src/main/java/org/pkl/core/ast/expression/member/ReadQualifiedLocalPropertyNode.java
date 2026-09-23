@@ -20,6 +20,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.runtime.VmUtils;
 
 /** Reads a local property off of the receiver node. */
 public final class ReadQualifiedLocalPropertyNode extends AbstractReadLocalPropertyNode {
@@ -45,7 +46,9 @@ public final class ReadQualifiedLocalPropertyNode extends AbstractReadLocalPrope
 
     var result = receiver.getCachedValue(property);
     if (result == null) {
-      result = getCallNode(property).call(receiver, receiver, property.getName());
+      result =
+          getCallNode(property)
+              .call(receiver, receiver, VmUtils.getTypeArgumentsOrNull(frame), property.getName());
       receiver.setCachedValue(property, result);
     }
     return result;

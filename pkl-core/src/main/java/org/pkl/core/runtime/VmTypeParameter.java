@@ -19,6 +19,8 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.TypeParameter.Variance;
+import org.pkl.core.ast.member.ClassMethod;
+import org.pkl.core.ast.member.ObjectMethodNode;
 
 public class VmTypeParameter {
 
@@ -63,5 +65,9 @@ public class VmTypeParameter {
 
   public static List<TypeParameter> export(List<VmTypeParameter> typeParameters) {
     return typeParameters.stream().map(VmTypeParameter::export).toList();
+  }
+
+  public boolean isMethodTypeParameter() {
+    return owner instanceof ClassMethod || owner instanceof ObjectMethodNode;
   }
 }

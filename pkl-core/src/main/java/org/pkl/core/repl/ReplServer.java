@@ -309,7 +309,7 @@ public class ReplServer implements AutoCloseable {
 
     var property =
         (org.pkl.core.ast.member.ClassProperty)
-            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
+            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module, null);
 
     replState.module.getVmClass().addProperty(property);
     return property.getInitializer();
@@ -330,7 +330,7 @@ public class ReplServer implements AutoCloseable {
 
     var method =
         (ClassMethod)
-            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
+            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module, null);
 
     replState.module.getVmClass().addMethod(method);
   }
@@ -342,7 +342,7 @@ public class ReplServer implements AutoCloseable {
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
 
-    var result = callNode.call(rootNode.getCallTarget(), replState.module, replState.module);
+    var result = callNode.call(rootNode.getCallTarget(), replState.module, replState.module, null);
 
     if (forceResults) VmValue.force(result, false);
     results.add(result);
@@ -354,7 +354,7 @@ public class ReplServer implements AutoCloseable {
     var result =
         memberDef.getConstantValue() != null
             ? memberDef.getConstantValue()
-            : callNode.call(memberDef.getCallTarget(), replState.module, replState.module);
+            : callNode.call(memberDef.getCallTarget(), replState.module, replState.module, null);
 
     if (forceResults) VmValue.force(result, false);
     results.add(result);

@@ -17,6 +17,11 @@ superCall {
   false
   false
 }
-obj {
+objectMethod {
   res = "Type constraint `length > num` violated. Value: \"hi\""
+}
+lazyTypeCheck {
+  res1 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  res3 = "Expected value of type `String`, but got type `Int`. Value: 5"
 }

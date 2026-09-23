@@ -970,6 +970,7 @@ class SexpRenderer {
     buf.append("(identifier)")
     val tparList = method.typeParameterList
     if (tparList !== null) {
+      buf.append('\n')
       renderTypeParameterList(tparList)
     }
     buf.append('\n')

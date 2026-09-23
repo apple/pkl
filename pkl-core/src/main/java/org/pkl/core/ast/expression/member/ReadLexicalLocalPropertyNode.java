@@ -47,7 +47,9 @@ public final class ReadLexicalLocalPropertyNode extends AbstractReadLocalPropert
     var receiver = (VmObjectLike) VmUtils.getReceiver(frame, levelsUp);
     var result = receiver.getCachedValue(property);
     if (result == null) {
-      result = getCallNode(property).call(receiver, owner, property.getName());
+      result =
+          getCallNode(property)
+              .call(receiver, owner, VmUtils.getTypeArgumentsOrNull(frame), property.getName());
       receiver.setCachedValue(property, result);
     }
     return result;

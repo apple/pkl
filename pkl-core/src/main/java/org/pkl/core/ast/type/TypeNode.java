@@ -44,12 +44,10 @@ import org.pkl.core.ast.expression.primary.GetReceiverNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNode;
 import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
-import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.ast.member.ObjectMethodNode;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.VmObjectFactory;
@@ -1419,7 +1417,8 @@ public abstract class TypeNode extends PklNode {
           vmListing.getLength(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
-          VmUtils.getOwner(frame));
+          VmUtils.getOwner(frame),
+          VmUtils.getTypeArgumentsOrNull(frame));
     }
 
     @Override
@@ -1477,7 +1476,8 @@ public abstract class TypeNode extends PklNode {
           EconomicMaps.emptyMap(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
-          VmUtils.getOwner(frame));
+          VmUtils.getOwner(frame),
+          VmUtils.getTypeArgumentsOrNull(frame));
     }
 
     @Override
@@ -1686,7 +1686,9 @@ public abstract class TypeNode extends PklNode {
               memberValue = member.getConstantValue();
               if (memberValue == null) {
                 var callTarget = member.getCallTarget();
-                memberValue = callTarget.call(object, owner, memberKey);
+                memberValue =
+                    callTarget.call(
+                        object, owner, VmUtils.getTypeArgumentsOrNull(frame), memberKey);
               }
               object.setCachedValue(memberKey, memberValue);
             }
@@ -2013,7 +2015,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isNoopTypeCheck() {
-      return !(typeParameter.getOwner() instanceof Method);
+      return !typeParameter.isMethodTypeParameter();
     }
 
     @Override
@@ -2027,8 +2029,8 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      if (isMethodTypeParameter() && frame.getArguments()[2] != null) {
-        var methodTypeArgs = (VmTypeArgument[]) frame.getArguments()[2];
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
+      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.getIndex()];
         return typeArg.check(value);
       }
@@ -2040,11 +2042,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
-    }
-
-    private boolean isMethodTypeParameter() {
-      var owner = typeParameter.getOwner();
-      return owner instanceof ClassMethod || owner instanceof ObjectMethodNode;
     }
   }
 

@@ -135,7 +135,7 @@ public final class FunctionNode extends RegularMemberNode {
 
     if (checkedReturnTypeNode != null) {
       return checkedReturnTypeNode.execute(frame, result);
-    } else if (returnTypeNode != null && frame.getArguments()[2] != null) {
+    } else if (returnTypeNode != null && VmUtils.getTypeArgumentsOrNull(frame) != null) {
       return returnTypeNode.execute(frame, result);
     }
 

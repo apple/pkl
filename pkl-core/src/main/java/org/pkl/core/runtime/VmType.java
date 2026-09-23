@@ -28,7 +28,6 @@ import org.pkl.core.PType.TypeVariable;
 import org.pkl.core.PType.Union;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
-import org.pkl.core.ast.member.Method;
 
 public abstract sealed class VmType {
 
@@ -837,8 +836,8 @@ public abstract sealed class VmType {
 
     @Override
     public VmType reify(VirtualFrame frame) {
-      if (typeParameter.getOwner() instanceof Method && frame.getArguments()[2] != null) {
-        var methodTypeArgs = (VmTypeArgument[]) frame.getArguments()[2];
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
+      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.getIndex()];
         return typeArg.resolveType();
       }
