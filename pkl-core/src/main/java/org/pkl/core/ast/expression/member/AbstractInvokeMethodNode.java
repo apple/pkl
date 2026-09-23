@@ -110,16 +110,17 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
   @ExplodeLoop
   protected Object[] evalArgs(
       VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
+    var typeArgs = getTypeArguments(frame, method);
     Object prevMethod = null;
     if (methodSlot > -1) {
       prevMethod = frame.getObject(methodSlot);
-      frame.setObject(methodSlot, method);
+      frame.setObject(methodSlot, new MethodCall(method, typeArgs));
     }
 
     var args = new Object[3 + argumentNodes.length];
     args[0] = receiver;
     args[1] = owner;
-    args[2] = getTypeArguments(frame, method);
+    args[2] = typeArgs;
 
     try {
       for (var i = 0; i < argumentNodes.length; i++) {
@@ -133,4 +134,6 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
     return args;
   }
+
+  public record MethodCall(@Nullable Method method, VmTypeArgument @Nullable [] typeArguments) {}
 }
