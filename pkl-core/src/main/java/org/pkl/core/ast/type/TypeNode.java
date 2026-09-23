@@ -2146,10 +2146,12 @@ public abstract class TypeNode extends PklNode {
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
     private final VmTypeParameter typeParameter;
+    @Child private EvalTypeArgumentNode evalTypeArgumentNode;
 
     public TypeVariableNode(SourceSection sourceSection, VmTypeParameter typeParameter) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      evalTypeArgumentNode = EvalTypeArgumentNodeGen.create(sourceSection);
     }
 
     @Override
@@ -2180,7 +2182,7 @@ public abstract class TypeNode extends PklNode {
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
       if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.getIndex()];
-        return typeArg.check(value);
+        return evalTypeArgumentNode.execute(frame, typeArg, value);
       }
 
       // do nothing
