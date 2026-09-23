@@ -25,3 +25,21 @@ lazyTypeCheck {
   res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
   res3 = "Expected value of type `String`, but got type `Int`. Value: 5"
 }
+typeDefaults {
+  res1 {
+    name = "bob"
+  }
+  res1a = "callWithTypeArguments#Person"
+  res2 {
+    new {
+      name = "bob"
+    }
+  }
+  res2a = "callWithTypeArguments#Person"
+  res3 {
+    new {
+      name = "bob"
+    }
+  }
+  res3a = "callWithTypeArguments#Person"
+}

@@ -17,9 +17,11 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
+import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.expression.primary.ExecuteTypeArgumentCheckNode;
 import org.pkl.core.ast.member.FunctionNode;
+import org.pkl.core.ast.type.TypeNode;
 
 /**
  * Type argument information passed from a type argument (in a method call) as an argument to a
@@ -50,11 +52,13 @@ public class VmTypeArgument {
             value);
   }
 
+  private TypeNode getTypeNode() {
+    return ((ExecuteTypeArgumentCheckNode) rootNode.getChildren().iterator().next()).getTypeNode();
+  }
+
   public VmType resolveType() {
     // assumption: ExecuteTypeArgumentCheckNode is the only child of rootNode
-    var typeNode =
-        ((ExecuteTypeArgumentCheckNode) rootNode.getChildren().iterator().next()).getTypeNode();
-    var type = typeNode.getType();
+    var type = getTypeNode().getType();
     var frame = enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
     var newType = type.reify(frame);
     while (type != newType) {
@@ -62,5 +66,11 @@ public class VmTypeArgument {
       newType = type.reify(frame);
     }
     return newType;
+  }
+
+  public @Nullable Object createDefaultValue(
+      VmLanguage language, SourceSection headerSection, String qualifiedName) {
+    var frame = enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
+    return getTypeNode().createDefaultValue(frame, language, headerSection, qualifiedName);
   }
 }
