@@ -15,6 +15,8 @@
  */
 package org.pkl.core.runtime;
 
+import com.oracle.truffle.api.CallTarget;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -38,20 +40,15 @@ public class VmTypeArgument {
     this.rootNode = rootNode;
   }
 
-  public Object check(Object value) {
-    if (enclosingFrame == null) {
-      return rootNode.getCallTarget().call(null, null, null, value);
-    }
-
-    return rootNode
-        .getCallTarget()
-        .call(
-            enclosingFrame.getArguments()[0],
-            enclosingFrame.getArguments()[1],
-            enclosingFrame.getArguments()[2],
-            value);
+  public @Nullable MaterializedFrame getEnclosingFrame() {
+    return enclosingFrame;
   }
 
+  public CallTarget getCallTarget() {
+    return rootNode.getCallTarget();
+  }
+
+  @TruffleBoundary
   private TypeNode getTypeNode() {
     return ((ExecuteTypeArgumentCheckNode) rootNode.getChildren().iterator().next()).getTypeNode();
   }
