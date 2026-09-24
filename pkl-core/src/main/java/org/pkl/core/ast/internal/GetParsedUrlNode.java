@@ -16,6 +16,7 @@
 package org.pkl.core.ast.internal;
 
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.NeverDefault;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.ast.PklNode;
@@ -24,6 +25,7 @@ import org.pkl.core.util.url.UrlFactory;
 import org.pkl.core.util.url.UrlParser.Parsed;
 
 public abstract class GetParsedUrlNode extends PklNode {
+  @NeverDefault
   public static GetParsedUrlNode create() {
     return GetParsedUrlNodeGen.create();
   }
