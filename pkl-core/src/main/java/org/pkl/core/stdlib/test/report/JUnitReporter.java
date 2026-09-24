@@ -20,23 +20,19 @@ import java.io.Writer;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.function.Consumer;
-import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.TestResults;
 import org.pkl.core.TestResults.Error;
 import org.pkl.core.TestResults.TestResult;
 import org.pkl.core.TestResults.TestSectionResults;
-import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmMapping;
+import org.pkl.core.runtime.VmObjectBuilder;
 import org.pkl.core.runtime.VmTyped;
-import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.runtime.XmlModule;
 import org.pkl.core.stdlib.PklConverter;
 import org.pkl.core.stdlib.xml.RendererNodes.Renderer;
-import org.pkl.core.util.EconomicMaps;
 
 public final class JUnitReporter implements TestReporter {
 
@@ -94,7 +90,7 @@ public final class JUnitReporter implements TestReporter {
           buildXmlElement(
               "system-err",
               VmMapping.empty(),
-              members -> members.put("body", syntheticElement(makeCdata(results.logs()))));
+              builder -> builder.addElement(makeCdata(results.logs())));
       testCases.add(err);
     }
 
@@ -131,32 +127,24 @@ public final class JUnitReporter implements TestReporter {
 
   private ArrayList<VmDynamic> failures(TestResult res) {
     var list = new ArrayList<VmDynamic>();
-    long i = 0;
     for (var fail : res.failures()) {
       var attrs = buildAttributes("message", fail.kind());
-      long element = i++;
       list.add(
           buildXmlElement(
-              "failure",
-              attrs,
-              members -> members.put(element, syntheticElement(stripColors(fail.message())))));
+              "failure", attrs, builder -> builder.addElement(stripColors(fail.message()))));
     }
     return list;
   }
 
   private ArrayList<VmDynamic> errors(TestResult res) {
     var list = new ArrayList<VmDynamic>();
-    long i = 0;
     for (var error : res.errors()) {
       var attrs = buildAttributes("message", error.message());
-      long element = i++;
       list.add(
           buildXmlElement(
               "error",
               attrs,
-              members ->
-                  members.put(
-                      element, syntheticElement(stripColors(error.exception().getMessage())))));
+              builder -> builder.addElement(stripColors(error.exception().getMessage()))));
     }
     return list;
   }
@@ -168,9 +156,7 @@ public final class JUnitReporter implements TestReporter {
         buildXmlElement(
             "error",
             attrs,
-            members ->
-                members.put(
-                    1, syntheticElement(stripColors("\n" + error.exception().getMessage())))));
+            builder -> builder.addElement(stripColors("\n" + error.exception().getMessage()))));
     return list;
   }
 
@@ -178,58 +164,42 @@ public final class JUnitReporter implements TestReporter {
     return buildXmlElement(
         name,
         attributes,
-        members -> {
-          long i = 0;
+        builder -> {
           for (var element : elements) {
-            members.put(i++, syntheticElement(element));
+            builder.addElement(element);
           }
         });
   }
 
   private VmDynamic buildXmlElement(
-      String name, VmMapping attributes, Consumer<EconomicMap<Object, ObjectMember>> gen) {
-    EconomicMap<Object, ObjectMember> members =
-        EconomicMaps.of(
-            Identifier.IS_XML_ELEMENT,
-                VmUtils.createSyntheticObjectProperty(Identifier.IS_XML_ELEMENT, "", true),
-            Identifier.NAME, VmUtils.createSyntheticObjectProperty(Identifier.NAME, "", name),
-            Identifier.ATTRIBUTES,
-                VmUtils.createSyntheticObjectProperty(Identifier.ATTRIBUTES, "", attributes),
-            Identifier.IS_BLOCK_FORMAT,
-                VmUtils.createSyntheticObjectProperty(Identifier.IS_BLOCK_FORMAT, "", true));
-    gen.accept(members);
-    return new VmDynamic(
-        VmUtils.createEmptyMaterializedFrame(),
-        BaseModule.getDynamicClass().getPrototype(),
-        members,
-        members.size() - 4);
+      String name, VmMapping attributes, Consumer<VmObjectBuilder> gen) {
+    var builder =
+        new VmObjectBuilder()
+            .addProperty(Identifier.IS_XML_ELEMENT, true)
+            .addProperty(Identifier.NAME, name)
+            .addProperty(Identifier.ATTRIBUTES, attributes)
+            .addProperty(Identifier.IS_BLOCK_FORMAT, true);
+    gen.accept(builder);
+    return builder.toDynamic();
   }
 
   private VmMapping buildAttributes(@Nullable Object... attributes) {
-    EconomicMap<Object, ObjectMember> attrs = EconomicMaps.create(attributes.length);
+    var builder = new VmObjectBuilder();
     for (var i = 0; i < attributes.length; i += 2) {
       var key = attributes[i];
       var value = attributes[i + 1];
       if (key == null || value == null) {
         continue;
       }
-      attrs.put(key, VmUtils.createSyntheticObjectEntry(key.toString(), value));
+      builder.addEntry(key, value);
     }
-    return new VmMapping(
-        VmUtils.createEmptyMaterializedFrame(), BaseModule.getMappingClass().getPrototype(), attrs);
-  }
-
-  private ObjectMember syntheticElement(Object constantValue) {
-    return VmUtils.createSyntheticObjectElement("", constantValue);
+    return builder.toMapping();
   }
 
   private VmTyped makeCdata(String text) {
-    var clazz = XmlModule.getCDataClass();
-    // HACK: The property identifier here has to be `null` instead of `Identifier.TEXT` or
-    // a `Invalid sharing of AST nodes detected` error will be thrown.
-    EconomicMap<Object, ObjectMember> attrs =
-        EconomicMaps.of(Identifier.TEXT, VmUtils.createSyntheticObjectProperty(null, "", text));
-    return new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, attrs);
+    return new VmObjectBuilder(1)
+        .addProperty(Identifier.TEXT, text)
+        .toTyped(XmlModule.getCDataClass());
   }
 
   private String stripColors(String str) {

@@ -1087,16 +1087,13 @@ public final class CommandSpecParser {
    * <p>Transforms List into VmList, Set into VmSet, and Map into VmMap.
    */
   private VmTyped buildObject(VmClass clazz, Map<String, @Nullable Object> properties) {
-    EconomicMap<Object, ObjectMember> members = EconomicMaps.create(properties.size());
+    var builder = new VmObjectBuilder();
     for (var prop : properties.entrySet()) {
-      var key = prop.getKey();
       var value = prop.getValue();
       if (value == null) continue;
-      var identifier = Identifier.get(key);
-      members.put(identifier, VmUtils.createSyntheticObjectProperty(identifier, "", value));
+      builder.addProperty(Identifier.get(prop.getKey()), value);
     }
-    return new VmTyped(
-        VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    return builder.toTyped(clazz);
   }
 
   private record SubcommandState(VmTyped module, EconomicMap<Object, ObjectMember> members) {}

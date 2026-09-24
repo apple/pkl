@@ -316,6 +316,10 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static @Nullable Object readMemberOrNull(VmObjectLike receiver, Object memberKey) {
+    var cachedValue = receiver.getCachedValue(memberKey);
+    if (cachedValue != null) {
+      return cachedValue;
+    }
     return readMemberOrNull(receiver, memberKey, true, IndirectCallNode.getUncached());
   }
 
