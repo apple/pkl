@@ -32,6 +32,7 @@ import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -545,6 +546,10 @@ public abstract class TypeNode extends PklNode {
       return new VmType.StringLiteralType(literal);
     }
 
+    public String getLiteral() {
+      return literal;
+    }
+
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (literal.equals(value)) return value;
@@ -993,37 +998,52 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class UnionOfStringLiteralsTypeNode extends ObjectSlotTypeNode {
-    private final Set<String> stringLiterals;
-    private final @Nullable String unionDefault;
     private final int defaultIndex;
+    private final List<String> declaredStringLiterals;
+    private final @Nullable TypeNode originalUnionTypeNode;
+    private final Set<String> stringLiterals;
 
     UnionOfStringLiteralsTypeNode(
-        SourceSection sourceSection, int defaultIndex, Set<String> stringLiterals) {
+        SourceSection sourceSection,
+        int defaultIndex,
+        List<String> declaredStringLiterals,
+        @Nullable TypeNode originalUnionTypeNode) {
       super(sourceSection);
-      assert !stringLiterals.isEmpty();
-      this.stringLiterals = stringLiterals;
+      assert !declaredStringLiterals.isEmpty();
       this.defaultIndex = defaultIndex;
-      if (defaultIndex == -1) {
-        unionDefault = null;
-      } else {
-        unionDefault = stringLiterals.toArray(new String[0])[defaultIndex];
-      }
+      this.declaredStringLiterals = declaredStringLiterals;
+      this.originalUnionTypeNode = originalUnionTypeNode;
+      this.stringLiterals = new HashSet<>(declaredStringLiterals);
+    }
+
+    public int getDefaultIndex() {
+      return defaultIndex;
+    }
+
+    public List<String> getDeclaredStringLiterals() {
+      return declaredStringLiterals;
     }
 
     @Override
     @TruffleBoundary
     protected VmType doGetType() {
-      return new VmType.UnionType(defaultIndex, stringLiterals.toArray(new String[0]));
+      if (originalUnionTypeNode != null) {
+        return originalUnionTypeNode.getType();
+      }
+      return new VmType.UnionType(defaultIndex, declaredStringLiterals.toArray(new String[0]));
     }
 
     @Override
     public VmTyped getMirror() {
+      if (originalUnionTypeNode != null) {
+        return originalUnionTypeNode.getMirror();
+      }
       return MirrorFactories.unionOfStringLiteralsTypeFactory.create(this);
     }
 
     public VmList getElementTypeMirrors() {
       var builder = VmList.EMPTY.builder();
-      for (var literal : stringLiterals) {
+      for (var literal : declaredStringLiterals) {
         builder.add(MirrorFactories.stringLiteralTypeFactory2.create(literal));
       }
       return builder.build();
@@ -1032,7 +1052,7 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (contains(value)) return value;
-      throw typeMismatch(value, stringLiterals);
+      throw typeMismatch(value, declaredStringLiterals);
     }
 
     @TruffleBoundary
@@ -1047,12 +1067,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
-    public @Nullable Object createDefaultValue(
+    public @Nullable String createDefaultValue(
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName) {
-      return unionDefault;
+      if (defaultIndex == -1) {
+        return null;
+      }
+      return declaredStringLiterals.get(defaultIndex);
     }
   }
 
@@ -2266,6 +2289,10 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected VmType doGetType() {
       return new VmType.AliasType(typeAlias, toTypes(typeArgumentNodes), aliasedTypeNode.getType());
+    }
+
+    public TypeNode getAliasedTypeNode() {
+      return aliasedTypeNode;
     }
 
     public VmTypeAlias getTypeAlias() {

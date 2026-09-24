@@ -1,0 +1,13 @@
+import "pkl:reflect"
+
+typealias X = *"b"|"c"
+typealias Y = "c"|*Z
+typealias Z = "a"|*"z"|"c"
+
+hidden foo: "a"|*X
+
+local fooType = reflect.Module(module).moduleClass.properties["foo"].type
+
+res1 = fooType is reflect.UnionType
+res2 = (fooType as reflect.UnionType).members[1] is reflect.DeclaredType
+res3 = ((fooType as reflect.UnionType).members[1] as reflect.DeclaredType).referent is reflect.TypeAlias

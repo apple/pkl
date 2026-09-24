@@ -19,7 +19,9 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
+import org.pkl.core.PklBugException;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
@@ -380,22 +382,69 @@ public abstract class UnresolvedTypeNode extends PklNode {
       CompilerDirectives.transferToInterpreter();
 
       var elementTypeNodes = new TypeNode[unresolvedElementTypeNodes.length];
+      var isUnionOfStringLiterals = true;
 
       for (var i = 0; i < elementTypeNodes.length; i++) {
         var elementTypeNode = unresolvedElementTypeNodes[i].execute(frame);
+        if (!isStringOrUnionOfStringLiterals(elementTypeNode)) {
+          isUnionOfStringLiterals = false;
+        }
         elementTypeNodes[i] = elementTypeNode;
       }
+      var ret = new UnionTypeNode(sourceSection, defaultIndex, elementTypeNodes);
+      return isUnionOfStringLiterals ? unionOfStringLiterals(elementTypeNodes, ret) : ret;
+    }
 
-      return new UnionTypeNode(sourceSection, defaultIndex, elementTypeNodes);
+    private boolean isStringOrUnionOfStringLiterals(TypeNode typeNode) {
+      return typeNode instanceof StringLiteralTypeNode
+          || typeNode instanceof UnionOfStringLiteralsTypeNode
+          || typeNode instanceof TypeAliasTypeNode typeAliasTypeNode
+              && isStringOrUnionOfStringLiterals(typeAliasTypeNode.getAliasedTypeNode());
+    }
+
+    /**
+     * Adds {@code typeNode}'s string literals to {@code literals}, and returns the corresponding
+     * default index.
+     */
+    private int collectStringLiteralAndGetDefaultIndex(TypeNode typeNode, List<String> literals) {
+      if (typeNode instanceof StringLiteralTypeNode stringTypeNode) {
+        literals.add(stringTypeNode.getLiteral());
+        return 0;
+      }
+      if (typeNode instanceof UnionOfStringLiteralsTypeNode unionOfStringLiteralsTypeNode) {
+        literals.addAll(unionOfStringLiteralsTypeNode.getDeclaredStringLiterals());
+        return unionOfStringLiteralsTypeNode.getDefaultIndex();
+      }
+      if (typeNode instanceof TypeAliasTypeNode typeAliasTypeNode) {
+        return collectStringLiteralAndGetDefaultIndex(
+            typeAliasTypeNode.getAliasedTypeNode(), literals);
+      }
+      throw PklBugException.unreachableCode();
+    }
+
+    private TypeNode unionOfStringLiterals(TypeNode[] elementTypeNodes, TypeNode originalTypeNode) {
+      var stringLiterals = new ArrayList<String>(elementTypeNodes.length);
+      var computedDefaultIdx = -1;
+      for (var i = 0; i < elementTypeNodes.length; i++) {
+        var offsetBeforeElement = stringLiterals.size();
+        var elementDefaultIdx =
+            collectStringLiteralAndGetDefaultIndex(elementTypeNodes[i], stringLiterals);
+        if (i == defaultIndex) {
+          computedDefaultIdx =
+              elementDefaultIdx == -1 ? -1 : offsetBeforeElement + elementDefaultIdx;
+        }
+      }
+      return new UnionOfStringLiteralsTypeNode(
+          sourceSection, computedDefaultIdx, stringLiterals, originalTypeNode);
     }
   }
 
   public static final class UnionOfStringLiterals extends UnresolvedTypeNode {
-    private final Set<String> stringLiterals;
+    private final List<String> stringLiterals;
     private final int defaultIndex;
 
     public UnionOfStringLiterals(
-        SourceSection sourceSection, int defaultIndex, Set<String> stringLiterals) {
+        SourceSection sourceSection, int defaultIndex, List<String> stringLiterals) {
       super(sourceSection);
       this.stringLiterals = stringLiterals;
       this.defaultIndex = defaultIndex;
@@ -405,7 +454,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new UnionOfStringLiteralsTypeNode(sourceSection, defaultIndex, stringLiterals);
+      return new UnionOfStringLiteralsTypeNode(sourceSection, defaultIndex, stringLiterals, null);
     }
   }
 
