@@ -248,13 +248,17 @@ public final class Project {
         .addResourceReader(ResourceReaders.pkg());
   }
 
+  @SuppressWarnings("unchecked")
+  private static Map<String, PObject> getDependencies(PObject module) {
+    return (Map<String, PObject>) module.getProperty("dependencies");
+  }
+
   private static DeclaredDependencies parseDependencies(
       PObject module, URI projectFileUri, @Nullable PackageUri packageUri)
       throws URISyntaxException {
     var remoteDependencies = new HashMap<String, RemoteDependency>();
     var localDependencies = new HashMap<String, DeclaredDependencies>();
-    //noinspection unchecked
-    var dependencies = (Map<String, PObject>) module.getProperty("dependencies");
+    var dependencies = getDependencies(module);
     for (var entry : dependencies.entrySet()) {
       var value = entry.getValue();
       if (value.getClassInfo().equals(PClassInfo.Project)) {
@@ -332,8 +336,7 @@ public final class Project {
 
   private static Map<String, Project> parseLocalProjectDependencies(PObject module)
       throws URISyntaxException {
-    //noinspection unchecked
-    var dependencies = (Map<String, PObject>) module.getProperty("dependencies");
+    var dependencies = getDependencies(module);
     var result = new HashMap<String, Project>();
     for (var entry : dependencies.entrySet()) {
       var value = entry.getValue();
