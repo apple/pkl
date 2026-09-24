@@ -58,7 +58,7 @@ facts {
     true
     true
   }
-  ["raw components"] {
+  ["decoded components"] {
     true
     true
     true

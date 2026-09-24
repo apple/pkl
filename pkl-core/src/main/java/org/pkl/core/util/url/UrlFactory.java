@@ -39,14 +39,14 @@ public final class UrlFactory {
   private static final VmObjectFactory<Parsed> factory =
       new VmObjectFactory<Parsed>(NetModule::getUrlClass)
           .addProperty("scheme", parsed -> VmNull.lift(parsed.scheme()))
-          .addProperty("userInfo", parsed -> VmNull.lift(parsed.userInfo()))
-          .addProperty("host", parsed -> VmNull.lift(parsed.host()))
+          .addProperty("rawUserInfo", parsed -> VmNull.lift(parsed.userInfo()))
+          .addProperty("rawHost", parsed -> VmNull.lift(parsed.host()))
           .addProperty(
               "port",
               parsed -> parsed.port() == null ? VmNull.withoutDefault() : parsed.port().longValue())
-          .addStringProperty("path", Parsed::path)
-          .addProperty("query", parsed -> VmNull.lift(parsed.query()))
-          .addProperty("fragment", parsed -> VmNull.lift(parsed.fragment()));
+          .addStringProperty("rawPath", Parsed::path)
+          .addProperty("rawQuery", parsed -> VmNull.lift(parsed.query()))
+          .addProperty("rawFragment", parsed -> VmNull.lift(parsed.fragment()));
 
   public static VmTyped create(Parsed parsed) {
     return factory.create(parsed);
@@ -87,12 +87,12 @@ public final class UrlFactory {
     var parsed =
         new Parsed(
             readNullableString(url, Identifier.SCHEME, callNode),
-            readNullableString(url, Identifier.USER_INFO, callNode),
-            readNullableString(url, Identifier.HOST, callNode),
+            readNullableString(url, Identifier.RAW_USER_INFO, callNode),
+            readNullableString(url, Identifier.RAW_HOST, callNode),
             port == null ? null : port.intValue(),
-            (String) VmUtils.readMember(url, Identifier.PATH),
-            readNullableString(url, Identifier.QUERY, callNode),
-            readNullableString(url, Identifier.FRAGMENT, callNode));
+            (String) VmUtils.readMember(url, Identifier.RAW_PATH),
+            readNullableString(url, Identifier.RAW_QUERY, callNode),
+            readNullableString(url, Identifier.RAW_FRAGMENT, callNode));
     url.setExtraStorage(parsed);
     return parsed;
   }
@@ -103,11 +103,11 @@ public final class UrlFactory {
   }
 
   public static String readPath(VmObjectLike url, IndirectCallNode callNode) {
-    return (String) VmUtils.readMember(url, Identifier.PATH, callNode);
+    return (String) VmUtils.readMember(url, Identifier.RAW_PATH, callNode);
   }
 
   public static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {
-    return readNullableString(url, Identifier.QUERY, callNode);
+    return readNullableString(url, Identifier.RAW_QUERY, callNode);
   }
 
   /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
@@ -126,13 +126,13 @@ public final class UrlFactory {
 
   /** Reads the authority off {@code url}, or {@code null} if it has none. */
   public static @Nullable String readAuthority(VmObjectLike url, IndirectCallNode callNode) {
-    var host = readNullableString(url, Identifier.HOST, callNode);
+    var host = readNullableString(url, Identifier.RAW_HOST, callNode);
     if (host == null) {
       return null;
     }
     var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT));
     return UrlParser.serializeAuthority(
-        readNullableString(url, Identifier.USER_INFO, callNode),
+        readNullableString(url, Identifier.RAW_USER_INFO, callNode),
         host,
         port == null ? null : port.intValue());
   }

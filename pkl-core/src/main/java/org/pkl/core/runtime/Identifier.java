@@ -148,12 +148,13 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier MAX_COLLECTION_ALIASES = get("maxCollectionAliases");
 
   // members of pkl.net
-  public static final Identifier USER_INFO = get("userInfo");
-  public static final Identifier QUERY = get("query");
+  public static final Identifier RAW_USER_INFO = get("rawUserInfo");
+  public static final Identifier RAW_PATH = get("rawPath");
+  public static final Identifier RAW_QUERY = get("rawQuery");
   public static final Identifier SCHEME = get("scheme");
-  public static final Identifier HOST = get("host");
+  public static final Identifier RAW_HOST = get("rawHost");
   public static final Identifier PORT = get("port");
-  public static final Identifier FRAGMENT = get("fragment");
+  public static final Identifier RAW_FRAGMENT = get("rawFragment");
 
   // members of pkl.Command
   public static final Identifier OPTIONS = get("options");
