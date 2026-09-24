@@ -84,7 +84,7 @@ for ((key, value) in relocations) {
   }
 }
 
-val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/", "org/jspecify")
+val nonRelocations = listOf("com/oracle/truffle/", "org/graalvm/", "org/jspecify/")
 
 tasks.shadowJar {
   inputs.property("relocations", relocations)

@@ -356,6 +356,7 @@ final class Builder {
    * Split a function call node to extract its identifier into the leading group. For example,
    * {@code foo.bar(5)} becomes: leading gets {@code foo.bar}, rest gets {@code (5)}.
    */
+  @SuppressWarnings("unchecked")
   private List<Node>[] splitFunctionCallNode(List<Node> nodes) {
     assert !nodes.isEmpty();
     var lastNode = nodes.get(nodes.size() - 1);
@@ -369,7 +370,6 @@ final class Builder {
     var leading = new ArrayList<>(nodes.subList(0, nodes.size() - 1));
     leading.addAll(lastNode.children.subList(0, argListIdx));
     var trailing = lastNode.children.subList(argListIdx, lastNode.children.size());
-    //noinspection unchecked
     return new List[] {leading, trailing};
   }
 

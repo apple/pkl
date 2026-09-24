@@ -45,6 +45,7 @@ configurations {
 tasks.withType<JavaCompile>().configureEach {
   javaCompiler = buildInfo.javaCompiler
   options.release = buildInfo.jvmTarget
+  options.compilerArgs.add("-Xlint:unchecked")
 }
 
 plugins.withType(IdeaPlugin::class).configureEach {

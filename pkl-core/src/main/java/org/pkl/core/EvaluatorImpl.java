@@ -312,6 +312,7 @@ public final class EvaluatorImpl implements Evaluator {
   }
 
   @Override
+  @SuppressWarnings("unchecked")
   public <T> T evaluateOutputValueAs(ModuleSource moduleSource, PClassInfo<T> classInfo) {
     return doEvaluate(
         moduleSource,
@@ -322,10 +323,8 @@ public final class EvaluatorImpl implements Evaluator {
           if (valueClassInfo.equals(classInfo)) {
             if (value instanceof VmValue vmValue) {
               vmValue.force(false);
-              //noinspection unchecked
               return (T) vmValue.export();
             }
-            //noinspection unchecked
             return (T) value;
           }
           throw moduleOutputValueTypeMismatch(module, classInfo, value, output);

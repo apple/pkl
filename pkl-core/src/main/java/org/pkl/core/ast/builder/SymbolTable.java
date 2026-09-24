@@ -539,6 +539,7 @@ public final class SymbolTable {
       @Nullable T apply(LexicalScope scope, int levelUp);
     }
 
+    @SuppressWarnings("unchecked")
     private @Nullable <R> R resolveLexical(ResolutionFunction<R> fun) {
       var levelsUp = 0;
       var shouldSkip = false;
@@ -560,7 +561,6 @@ public final class SymbolTable {
               // are one level higher than the body itself.
               var result = fun.apply(objectScope, levelsUp);
               if (result instanceof Parameter parameter) {
-                //noinspection unchecked
                 return (R) new Parameter(parameter.slot(), parameter.levelsUp() - 1);
               }
               levelsUp++;
@@ -578,7 +578,6 @@ public final class SymbolTable {
           var result = fun.apply(lex, levelsUp);
           if (result != null) {
             if (result instanceof ForGeneratorVariableOrLetBinding p && skippedObjectScope) {
-              //noinspection unchecked
               return (R) new ForGeneratorVariableOrLetBinding(p.slot(), p.levelsUp(), true);
             }
             return result;
