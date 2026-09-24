@@ -296,12 +296,12 @@ public final class Conversions {
     var port = (Long) url.get("port");
     return UrlParser.serialize(
         (String) url.get("scheme"),
-        (String) url.get("userInfo"),
-        (String) url.get("host"),
+        (String) url.get("rawUserInfo"),
+        (String) url.get("rawHost"),
         port == null ? null : port.intValue(),
-        (String) url.getProperty("path"),
-        (String) url.get("query"),
-        (String) url.get("fragment"));
+        (String) url.getProperty("rawPath"),
+        (String) url.get("rawQuery"),
+        (String) url.get("rawFragment"));
   }
 
   /**

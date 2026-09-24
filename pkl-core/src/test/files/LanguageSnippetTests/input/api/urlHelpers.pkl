@@ -16,8 +16,8 @@ facts {
     // an encoded component is safe to drop into any component of a URL
     new net.Url {
       scheme = "https"
-      host = "example.com"
-      path = "/" + net.encodeUrlComponent("a/b")
+      rawHost = "example.com"
+      rawPath = "/" + net.encodeUrlComponent("a/b")
     }.pathSegments == List("a/b")
   }
 
@@ -59,7 +59,7 @@ facts {
     }
     net.Url("https://example.com?" + net.buildQuery(parameters)).queryParameters == parameters
     (net.Url("https://example.com/a?q=1")) {
-      query = net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "b c" } })
+      rawQuery = net.buildQuery(new Mapping<String, Listing<String>> { ["a"] { "b c" } })
     }.toString() == "https://example.com/a?a=b+c"
   }
 
@@ -85,7 +85,7 @@ facts {
 
     // this is how a Url reads its own query
     local url = net.Url("https://example.com?a=1&a=2&b=3")
-    net.parseQuery(url.query!!) == url.queryParameters
+    net.parseQuery(url.rawQuery!!) == url.queryParameters
     // and the inverse of buildQuery()
     local parameters = new Mapping<String, Listing<String>> {
       ["a b"] { "c&d" }
