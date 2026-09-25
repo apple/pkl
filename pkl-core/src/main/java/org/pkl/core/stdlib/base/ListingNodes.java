@@ -19,8 +19,6 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.instrumentation.GenerateWrapper;
-import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.PklNode;
@@ -258,7 +256,6 @@ public final class ListingNodes {
     }
   }
 
-  @GenerateWrapper
   public abstract static class contains extends ExternalMethod1Node {
     @Child
     private EqualNode equalNode =
@@ -277,11 +274,6 @@ public final class ListingNodes {
         }
       }
       return false;
-    }
-
-    @Override
-    public WrapperNode createWrapper(ProbeNode probeNode) {
-      return new containsWrapper(this, probeNode);
     }
   }
 

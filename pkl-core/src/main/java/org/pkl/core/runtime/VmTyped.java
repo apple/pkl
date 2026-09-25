@@ -208,32 +208,32 @@ public final class VmTyped extends VmObject {
 
   @Override
   public VmObjectCursor elements() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor elements(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override

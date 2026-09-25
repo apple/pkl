@@ -175,6 +175,10 @@ public abstract class VmObjectCursor {
   public abstract int getLength();
 
   static final class EmptyCursor extends VmObjectCursor {
+    public static final EmptyCursor INSTANCE = new EmptyCursor();
+
+    private EmptyCursor() {}
+
     @Override
     public boolean advance() {
       return false;

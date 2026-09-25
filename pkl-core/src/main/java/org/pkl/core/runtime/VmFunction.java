@@ -148,52 +148,52 @@ public final class VmFunction extends VmObjectLike {
 
   @Override
   public VmObjectCursor properties() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor properties(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor elements() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor elements(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor members() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor members(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override

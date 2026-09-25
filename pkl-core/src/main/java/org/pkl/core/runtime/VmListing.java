@@ -144,27 +144,27 @@ public final class VmListing extends VmListingOrMapping {
 
   @Override
   public VmObjectCursor properties() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor properties(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries() {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries(CursorOption option) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
   public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
-    return new EmptyCursor();
+    return EmptyCursor.INSTANCE;
   }
 
   @Override
