@@ -490,6 +490,10 @@ public abstract sealed class VmType {
       return baseType;
     }
 
+    public String[] getConstraints() {
+      return constraints;
+    }
+
     @Override
     protected boolean doIsEquivalentTo(VmType other) {
       // consider constrained equivalent only on identity
@@ -556,6 +560,10 @@ public abstract sealed class VmType {
 
     public VmTypeAlias getVmTypeAlias() {
       return typeAlias;
+    }
+
+    public VmType[] getTypeArguments() {
+      return typeArguments;
     }
 
     public VmType getAliasedType() {
