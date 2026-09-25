@@ -9,7 +9,23 @@ include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
-=== XXX
+=== Support for `.netrc` HTTP authentication
+
+Pkl now supports parsing `.netrc` files to configure HTTP Basic authentication headers (https://github.com/apple/pkl/pull/1817[#1817]).
+
+Through the new `netRcHeaders` method on `pkl:EvaluatorSettings#Http`, credentials can be read directly from a local `.netrc` file and mapped into glob-scoped `Authorization` headers:
+
+.~/.config/pkl/settings.pkl
+[source,pkl]
+----
+amends "pkl:settings"
+
+http {
+  headers = netRcHeaders(read?("file:~/.netrc"))
+}
+----
+
+It follows standard `curl` parsing rules (supporting comments, quoted values, escaped characters, and macro definitions) while safely omitting `default` wildcard entries and invalid machine hostnames containing slashes.
 
 == Noteworthy [small]#🎶#
 
@@ -50,6 +66,12 @@ On every OS, these locations can be overridden with XDG-style env vars.
 For example, setting `XDG_CACHE_HOME` will configure the cache directory.
 
 Note that the existing `~/.pkl/cache` directory is ignored, so Pkl will download packages to populate its cache if configured to do so.
+
+=== Standard Library Changes
+
+==== `pkl:EvaluatorSettings`
+
+* New method: link:{uri-stdlib-evaluatorSettingsHttpClass}#netRcHeaders()[`EvaluatorSettings#Http.netRcHeaders()`] (https://github.com/apple/pkl/pull/1817[#1817], https://github.com/apple/pkl/pull/1854[#1854])
 
 == Breaking Changes [small]#💔#
 
@@ -134,4 +156,4 @@ res = """
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/ayashjorden[@ayashjorden]
