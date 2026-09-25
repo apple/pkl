@@ -48,8 +48,8 @@ public final class WithCustomThisExpression extends ExpressionNode {
   public Object executeGeneric(VirtualFrame frame) {
     var customThisSlot = getCustomThisSlot(frame);
     // arguments passed in by `ExecuteCustomThisWithRootNode`
-    frame.setAuxiliarySlot(customThisSlot, frame.getArguments()[2]);
-    var originalFrame = (VirtualFrame) frame.getArguments()[3];
+    frame.setAuxiliarySlot(customThisSlot, frame.getArguments()[3]);
+    var originalFrame = (VirtualFrame) frame.getArguments()[4];
     VmUtils.copyLocals(originalFrame, frame, slotsToCopy);
     return expressionNode.executeGeneric(frame);
   }

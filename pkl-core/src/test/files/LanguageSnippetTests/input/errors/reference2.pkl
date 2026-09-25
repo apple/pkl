@@ -6,4 +6,4 @@ class D extends ref.Domain {
 local d: D = new {}
 typealias Ref<T> = ref.Reference<D, T>
 
-test = ref.Reference(d, String, "") as Ref<Boolean | Int>
+test = ref.Reference::<D, String>(d, "") as Ref<Boolean | Int>

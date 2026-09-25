@@ -261,6 +261,11 @@ final class Builder {
    * {@code foo.bar.baz(
    *   new { qux = 1 }
    * )}
+   * {@code foo.bar.baz::<
+   *   Quux
+   * >(
+   *   new { qux = 1 }
+   * )}
    * </pre>
    *
    * <p>Case 2: Dot calls, then method calls: group the leading access together.
@@ -306,15 +311,14 @@ final class Builder {
       // lift argument list into its own node
       var splitResult = splitFunctionCallNode(flat);
       var callChain = splitResult[0];
-      var argsList = splitResult[1];
+      var typeArgList = splitResult[1];
+      var argsList = splitResult[2];
       var leadingNodes = indentAfterFirstNewline(formatGeneric(callChain, leadingSeparator), true);
+      List<FormatNode> middleNodes =
+          typeArgList.isEmpty() ? null : formatGeneric(typeArgList, trailingSeparator);
       var trailingNodes = formatGeneric(argsList, trailingSeparator);
       var sep = getBaseSeparator(callChain.get(callChain.size() - 1), argsList.get(0));
-      if (sep != null) {
-        nodes = concat(leadingNodes, sep, trailingNodes);
-      } else {
-        nodes = concat(leadingNodes, trailingNodes);
-      }
+      nodes = concat(leadingNodes, sep, middleNodes, sep, trailingNodes);
     } else if (methodCallCount[0] > 0 && indexBeforeFirstMethodCall[0] > 0) {
       var leading = flat.subList(0, indexBeforeFirstMethodCall[0]);
       var trailing = flat.subList(indexBeforeFirstMethodCall[0], flat.size());
@@ -360,17 +364,26 @@ final class Builder {
   private List<Node>[] splitFunctionCallNode(List<Node> nodes) {
     assert !nodes.isEmpty();
     var lastNode = nodes.get(nodes.size() - 1);
+    var typeArgListIdx = -1;
     var argListIdx = -1;
     for (var i = 0; i < lastNode.children.size(); i++) {
-      if (lastNode.children.get(i).type == NodeType.ARGUMENT_LIST) {
+      var node = lastNode.children.get(i);
+      if (node.type == NodeType.TERMINAL && node.text(source).equals("::")) {
+        typeArgListIdx = i;
+        continue;
+      }
+      if (node.type == NodeType.ARGUMENT_LIST) {
         argListIdx = i;
         break;
       }
     }
+
     var leading = new ArrayList<>(nodes.subList(0, nodes.size() - 1));
-    leading.addAll(lastNode.children.subList(0, argListIdx));
+    leading.addAll(lastNode.children.subList(0, typeArgListIdx < 0 ? argListIdx : typeArgListIdx));
+    var middle =
+        typeArgListIdx < 0 ? List.of() : lastNode.children.subList(typeArgListIdx, argListIdx);
     var trailing = lastNode.children.subList(argListIdx, lastNode.children.size());
-    return new List[] {leading, trailing};
+    return new List[] {leading, middle, trailing};
   }
 
   private static boolean isMethodCall(@Nullable Node node) {
@@ -1723,11 +1736,36 @@ final class Builder {
     return result;
   }
 
-  private static <T> List<T> concat(List<T> a, T elem, List<T> b) {
+  private static <T> List<T> concat(List<T> a, @Nullable T elem, List<T> b) {
     var result = new ArrayList<T>(a.size() + 1 + b.size());
     result.addAll(a);
-    result.add(elem);
+    if (elem != null) {
+      result.add(elem);
+    }
     result.addAll(b);
+    return result;
+  }
+
+  private static <T> List<T> concat(
+      List<T> a, @Nullable T elem, @Nullable List<T> b, @Nullable T elem2, List<T> c) {
+    var result =
+        new ArrayList<T>(
+            a.size()
+                + (elem != null ? 1 : 0)
+                + (b != null ? b.size() : 0)
+                + (elem2 != null ? 1 : 0)
+                + c.size());
+    result.addAll(a);
+    if (elem != null) {
+      result.add(elem);
+    }
+    if (b != null) {
+      result.addAll(b);
+      if (elem2 != null) {
+        result.add(elem2);
+      }
+    }
+    result.addAll(c);
     return result;
   }
 

@@ -7,4 +7,4 @@ class D extends ref.Domain {
 }
 local d: D = new {}
 
-test = ref.Reference(d, ReferencedModuleWithOutputOverride.getClass(), "").output
+test = ref.Reference::<D, ReferencedModuleWithOutputOverride>(d, "").output

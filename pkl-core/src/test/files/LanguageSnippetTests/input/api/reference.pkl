@@ -17,10 +17,11 @@ class D extends ref.Domain {
 
 local const d: D = new {}
 typealias Ref<T> = ref.Reference<D, T>
+const function Ref<T>(data: Any): Ref<T> = ref.Reference::<D, T>(d, data)
 
 abstract class Resource {
   name: String
-  hidden fixed $: Ref<this> = ref.Reference(d, getClass(), this)
+  hidden fixed $: Ref<this> = Ref::<this>(this)
 }
 
 class A extends Resource {
@@ -122,20 +123,24 @@ kInterpolation = "\(k)"
 aValuesJoined = k.aValues.join("\n")
 
 // ensure that type arguments that are unions are handled correctly
-typeArgs = ref.Reference(d, TypeHolder, null).prop as Ref<Listing<Number | Boolean | String>>
+typeArgs = Ref::<TypeHolder>(null).prop as Ref<Listing<Number | Boolean | String>>
 class TypeHolder {
   prop: Listing<String | Boolean | Number>
 }
+typeArgs2 = Ref::<Listing<Number | Boolean | String>>(null) as Ref<Listing<Number | Boolean | String>>
 
 class BadResource extends Resource {
   // return a reference with referent that isn't `this`
-  fixed $ = ref.Reference(d, A, this)
+  fixed $ = Ref::<A>(this)
 }
 
 badThisRef = test.catch(() -> new BadResource { name = "bad" }.$.toString())
 
 // test that a bare function type toStrings/exports okay
-bareFunctionType = test.catch(() -> ref.Reference(d, Function4, null) as Ref<String>)
+bareFunctionType = test.catch(() -> ref.Reference::<D, Function4>(d, null) as Ref<String>)
+
+// test for allowing constraints during reference construction
+constraintInConstructor = Ref::<String(length > 5)>(null)
 
 output {
   renderer {

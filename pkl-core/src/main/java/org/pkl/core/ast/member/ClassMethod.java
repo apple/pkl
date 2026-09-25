@@ -18,19 +18,16 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClass;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
 
 public final class ClassMethod extends ClassMember implements Method {
-  private final List<TypeParameter> typeParameters;
+  private final List<VmTypeParameter> typeParameters;
 
   // null = not deprecated, "" = no/empty message in the @Deprecated body
   private final @Nullable String deprecation;
@@ -46,7 +43,7 @@ public final class ClassMethod extends ClassMember implements Method {
       SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       VmTyped owner,
-      List<TypeParameter> typeParameters,
+      List<VmTypeParameter> typeParameters,
       @Nullable String deprecation) {
 
     super(
@@ -59,6 +56,9 @@ public final class ClassMethod extends ClassMember implements Method {
         annotations,
         owner);
     this.typeParameters = typeParameters;
+    for (var parameter : typeParameters) {
+      parameter.initOwner(this);
+    }
     this.deprecation = deprecation;
   }
 
@@ -66,6 +66,14 @@ public final class ClassMethod extends ClassMember implements Method {
     //noinspection ConstantValue
     assert this.functionNode == null;
     this.functionNode = functionNode;
+  }
+
+  @Override
+  public FunctionNode getFunctionNode(@Nullable SourceSection callSite) {
+    if (callSite != null && deprecation != null) {
+      reportDeprecation(callSite);
+    }
+    return functionNode;
   }
 
   public CallTarget getCallTarget() {
@@ -92,22 +100,8 @@ public final class ClassMethod extends ClassMember implements Method {
     return functionNode.getCallTarget();
   }
 
-  @Override
-  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
-    return getCallTarget(callSite);
-  }
-
   public int getParameterCount() {
     return functionNode.getParameterCount();
-  }
-
-  public @Nullable TypeNode getReturnTypeNode() {
-    return functionNode.getReturnTypeNode();
-  }
-
-  @Override
-  public @Nullable TypeNode getReturnTypeNode(VirtualFrame frame) {
-    return functionNode.getReturnTypeNode();
   }
 
   @Override
@@ -140,10 +134,21 @@ public final class ClassMethod extends ClassMember implements Method {
   }
 
   public PClass.Method export(PClass owner) {
-    return functionNode.export(owner, docComment, annotations, modifiers, typeParameters);
+    return functionNode.export(
+        owner, docComment, annotations, modifiers, VmTypeParameter.export(typeParameters));
   }
 
-  public @Nullable TypeNode getParameterTypeNode(VirtualFrame frame, int idx) {
-    return functionNode.getParameterTypeNode(idx);
+  @Override
+  public boolean isChildOf(Method other) {
+    if (this == other) return true;
+    if (!(other instanceof ClassMethod)) return false;
+
+    assert name != null;
+    for (var clazz = getDeclaringClass().getSuperclass();
+        clazz != null;
+        clazz = clazz.getSuperclass()) {
+      if (other == clazz.getMethod(name)) return true;
+    }
+    return false;
   }
 }

@@ -23,6 +23,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -34,9 +35,7 @@ import org.pkl.core.runtime.VmObjectLike;
  * InvokeLexicalObjectMethodNode}), or off of an explicit receiver expression ({@link
  * InvokeQualifiedClassMethodNode}, {@link InvokeQualifiedObjectMethodNode}).
  */
-public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
-    extends AbstractInvokeMethodNode
-    permits AbstractInvokeQualifiedMethodNode, AbstractInvokeLexicalMethodNode {
+public abstract class AbstractInvokeLexicalOrQualifiedMethodNode extends AbstractInvokeMethodNode {
 
   protected final Identifier methodName;
   private final boolean needsConst;
@@ -46,10 +45,11 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
   protected AbstractInvokeLexicalOrQualifiedMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       int methodSlot) {
-    super(sourceSection, argumentNodes, methodSlot);
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot);
     this.methodName = methodName;
     this.needsConst = needsConst;
     this.isConstChecked = false;
@@ -59,7 +59,7 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
     checkConst(owner);
     var method = getMethod(owner);
     var args = evalArgs(frame, method, owner, receiver);
-    return getCallNode(method, owner).call(args);
+    return getCallNode(method).call(args);
   }
 
   private void checkConst(VmObjectLike owner) {
@@ -75,10 +75,10 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
 
   protected abstract void doCheckConst(VmObjectLike owner);
 
-  protected DirectCallNode getCallNode(Method method, VmObjectLike owner) {
+  protected DirectCallNode getCallNode(Method method) {
     if (callNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      callNode = DirectCallNode.create(method.getCallTarget(getSourceSection(), owner));
+      callNode = DirectCallNode.create(method.getFunctionNode(getSourceSection()).getCallTarget());
       insert(callNode);
     }
     assert callNode != null;

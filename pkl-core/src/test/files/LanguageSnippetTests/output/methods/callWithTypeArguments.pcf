@@ -1,0 +1,45 @@
+directCall {
+  pair = Pair(List("foo"), Set("bar"))
+  pairSelf = "callWithTypeArguments"
+  pairErr = "Expected value of type `String`, but got type `Int`. Value: 0"
+  pairSelfErr = "Expected value of type `callWithTypeArguments`, but got type `List`. Value: List()"
+  listMap = List(2, 3, 1)
+  listMapErr = "Expected value of type `String`, but got type `Int`. Value: 2"
+  wrongTypeArgCount = "Expected 2 type arguments but got 3."
+  nonGenericMethod = "Expected 0 type arguments but got 1."
+}
+superCall {
+  true
+  true
+  true
+  true
+  false
+  false
+  false
+}
+objectMethod {
+  res = "Type constraint `length > num` violated. Value: \"hi\""
+}
+lazyTypeCheck {
+  res1 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  res3 = "Expected value of type `String`, but got type `Int`. Value: 5"
+}
+typeDefaults {
+  res1 {
+    name = "bob"
+  }
+  res1a = "callWithTypeArguments#Person"
+  res2 {
+    new {
+      name = "bob"
+    }
+  }
+  res2a = "callWithTypeArguments#Person"
+  res3 {
+    new {
+      name = "bob"
+    }
+  }
+  res3a = "callWithTypeArguments#Person"
+}

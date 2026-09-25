@@ -29,8 +29,18 @@ import org.pkl.core.runtime.*;
 @NodeInfo(language = "Pkl")
 @TypeSystemReference(VmTypes.class)
 public abstract class PklRootNode extends RootNode {
+  private final boolean propagateTypeMismatchExceptions;
+
   protected PklRootNode(@Nullable VmLanguage language, FrameDescriptor descriptor) {
+    this(language, descriptor, false);
+  }
+
+  protected PklRootNode(
+      @Nullable VmLanguage language,
+      FrameDescriptor descriptor,
+      boolean propagateTypeMismatchExceptions) {
     super(language, descriptor);
+    this.propagateTypeMismatchExceptions = propagateTypeMismatchExceptions;
   }
 
   public abstract SourceSection getSourceSection();
@@ -46,7 +56,7 @@ public abstract class PklRootNode extends RootNode {
       return executeImpl(frame);
     } catch (VmTypeMismatchException e) {
       CompilerDirectives.transferToInterpreter();
-      throw e.toVmException();
+      throw propagateTypeMismatchExceptions ? e : e.toVmException();
     } catch (VmException e) {
       CompilerDirectives.transferToInterpreter();
       throw e;

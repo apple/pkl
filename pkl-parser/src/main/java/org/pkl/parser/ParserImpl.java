@@ -831,16 +831,31 @@ final class ParserImpl {
         case DOT, QDOT -> {
           var rhs = parseIdentifier();
           var isNullable = op == Operator.QDOT;
+          TypeArgumentList typeArgumentList = null;
+          if (lookahead == Token.DCOLON
+              && !precededBySemicolon
+              && _lookahead.newLinesBetween == 0) {
+            next();
+            typeArgumentList = parseTypeArgumentList();
+          }
           ArgumentList argumentList = null;
           if (lookahead == Token.LPAREN
               && !precededBySemicolon
               && _lookahead.newLinesBetween == 0) {
             argumentList = parseArgumentList();
+          } else if (typeArgumentList != null) {
+            // type args but no args
+            throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
           }
           var lastSpan = argumentList != null ? argumentList.span() : rhs.span();
           expr =
               new QualifiedAccessExpr(
-                  expr, rhs, isNullable, argumentList, expr.span().endWith(lastSpan));
+                  expr,
+                  rhs,
+                  isNullable,
+                  typeArgumentList,
+                  argumentList,
+                  expr.span().endWith(lastSpan));
         }
         default -> {
           var nextMinPrec = op.isLeftAssoc() ? op.getPrec() + 1 : op.getPrec();
@@ -977,13 +992,24 @@ final class ParserImpl {
             if (lookahead == Token.DOT) {
               next();
               var identifier = parseIdentifier();
+              TypeArgumentList typeArgs = null;
+              if (lookahead == Token.DCOLON
+                  && !precededBySemicolon
+                  && _lookahead.newLinesBetween == 0) {
+                next();
+                typeArgs = parseTypeArgumentList();
+              }
               if (lookahead == Token.LPAREN
                   && !precededBySemicolon
                   && _lookahead.newLinesBetween == 0) {
                 var args = parseArgumentList();
-                yield new SuperAccessExpr(identifier, args, start.endWith(args.span()));
+                yield new SuperAccessExpr(identifier, typeArgs, args, start.endWith(args.span()));
+              }
+              if (typeArgs != null) {
+                // type args but no args
+                throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
               } else {
-                yield new SuperAccessExpr(identifier, null, start.endWith(identifier.span()));
+                yield new SuperAccessExpr(identifier, null, null, start.endWith(identifier.span()));
               }
             } else {
               expect(Token.LBRACK, "unexpectedToken", "[");
@@ -1026,14 +1052,25 @@ final class ParserImpl {
           case STRING_MULTI_START -> parseMultiLineStringLiteralExpr();
           case IDENTIFIER -> {
             var identifier = parseIdentifier();
+            TypeArgumentList typeArgs = null;
+            if (lookahead == Token.DCOLON
+                && !precededBySemicolon
+                && _lookahead.newLinesBetween == 0) {
+              next();
+              typeArgs = parseTypeArgumentList();
+            }
             if (lookahead == Token.LPAREN
                 && !precededBySemicolon
                 && _lookahead.newLinesBetween == 0) {
               var args = parseArgumentList();
               yield new UnqualifiedAccessExpr(
-                  identifier, args, identifier.span().endWith(args.span()));
+                  identifier, typeArgs, args, identifier.span().endWith(args.span()));
+            }
+            if (typeArgs != null) {
+              // type args but no args
+              throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
             } else {
-              yield new UnqualifiedAccessExpr(identifier, null, identifier.span());
+              yield new UnqualifiedAccessExpr(identifier, null, null, identifier.span());
             }
           }
           case EOF ->
@@ -1072,14 +1109,27 @@ final class ParserImpl {
     if (lookahead == Token.DOT || lookahead == Token.QDOT) {
       var isNullable = next().token == Token.QDOT;
       var identifier = parseIdentifier();
+      TypeArgumentList typeArgumentList = null;
+      if (lookahead == Token.DCOLON && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+        next();
+        typeArgumentList = parseTypeArgumentList();
+      }
       ArgumentList argumentList = null;
       if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
         argumentList = parseArgumentList();
+      } else if (typeArgumentList != null) {
+        // type args but no args
+        throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
       }
       var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
       var res =
           new QualifiedAccessExpr(
-              expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan));
+              expr,
+              identifier,
+              isNullable,
+              typeArgumentList,
+              argumentList,
+              expr.span().endWith(lastSpan));
       return parseExprRest(res);
     }
     // subscript (needs to be in the same line as the expression)
@@ -1317,7 +1367,7 @@ final class ParserImpl {
           var paramList = new ParameterList(params, start.endWith(end));
           yield new FunctionLiteralExpr(paramList, expr, start.endWith(expr.span()));
         } else {
-          var exp = new UnqualifiedAccessExpr(identifier, null, identifier.span());
+          var exp = new UnqualifiedAccessExpr(identifier, null, null, identifier.span());
           yield new ParenthesizedExpr(exp, start.endWith(end));
         }
       }

@@ -31,6 +31,7 @@ public abstract class VmListingOrMapping extends VmObject {
   private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
   private final @Nullable Object typeCheckReceiver;
   private final @Nullable VmObjectLike typeCheckOwner;
+  private final VmTypeArgument @Nullable [] typeCheckTypeArguments;
 
   public VmListingOrMapping(
       MaterializedFrame enclosingFrame,
@@ -40,6 +41,7 @@ public abstract class VmListingOrMapping extends VmObject {
     typeCastNode = null;
     typeCheckReceiver = null;
     typeCheckOwner = null;
+    typeCheckTypeArguments = null;
   }
 
   public VmListingOrMapping(
@@ -48,11 +50,13 @@ public abstract class VmListingOrMapping extends VmObject {
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,
       Object typeCheckReceiver,
-      VmObjectLike typeCheckOwner) {
+      VmObjectLike typeCheckOwner,
+      VmTypeArgument @Nullable [] typeCheckTypeArguments) {
     super(enclosingFrame, parent, members);
     this.typeCastNode = typeCastNode;
     this.typeCheckReceiver = typeCheckReceiver;
     this.typeCheckOwner = typeCheckOwner;
+    this.typeCheckTypeArguments = typeCheckTypeArguments;
   }
 
   // Executes type casts for every parent between `owner` and `this` and returns the resulting
@@ -71,7 +75,13 @@ public abstract class VmListingOrMapping extends VmObject {
       if (obj.typeCastNode != null && obj.typeCastNode != prevTypeCastNode) {
         var callTarget = obj.typeCastNode.getCallTarget();
         try {
-          result = callNode.call(callTarget, obj.typeCheckReceiver, obj.typeCheckOwner, result);
+          result =
+              callNode.call(
+                  callTarget,
+                  obj.typeCheckReceiver,
+                  obj.typeCheckOwner,
+                  typeCheckTypeArguments,
+                  result);
           prevTypeCastNode = obj.typeCastNode;
         } catch (VmException e) {
           CompilerDirectives.transferToInterpreter();
@@ -109,7 +119,9 @@ public abstract class VmListingOrMapping extends VmObject {
       var callNode = IndirectCallNode.getUncached();
       var callTarget = typeCastNode.getCallTarget();
       try {
-        result = callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+        result =
+            callNode.call(
+                callTarget, typeCheckReceiver, typeCheckOwner, typeCheckTypeArguments, result);
       } catch (VmException e) {
         var member = VmUtils.findMember(parent, key);
         assert member != null; // already found the member's cached value

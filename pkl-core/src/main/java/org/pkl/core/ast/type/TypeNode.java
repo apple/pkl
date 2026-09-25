@@ -28,9 +28,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
@@ -39,8 +37,6 @@ import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PklBugException;
-import org.pkl.core.StackFrame;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
@@ -50,6 +46,7 @@ import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
+import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
@@ -58,7 +55,6 @@ import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
   @CompilationFinal private @Nullable VmType type;
@@ -189,6 +185,23 @@ public abstract class TypeNode extends PklNode {
         true,
         typeNode -> {
           if (typeNode instanceof NonFinalSelfTypeNode || typeNode instanceof FinalSelfTypeNode) {
+            ret.set(true);
+            return false;
+          }
+          return true;
+        });
+    return ret.get();
+  }
+
+  public final boolean getTypeArgumentRequiresFrame() {
+    var ret = new MutableBoolean(false);
+    acceptTypeNode(
+        true,
+        typeNode -> {
+          if (typeNode instanceof ConstrainedTypeNode
+              || typeNode instanceof NonFinalSelfTypeNode
+              || (typeNode instanceof TypeVariableNode typeVar
+                  && typeVar.getTypeParameter().getOwner() instanceof Method)) {
             ret.set(true);
             return false;
           }
@@ -447,6 +460,7 @@ public abstract class TypeNode extends PklNode {
       return mirrorFactory.create(null);
     }
 
+    @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
@@ -1403,7 +1417,8 @@ public abstract class TypeNode extends PklNode {
           vmListing.getLength(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
-          VmUtils.getOwner(frame));
+          VmUtils.getOwner(frame),
+          VmUtils.getTypeArgumentsOrNull(frame));
     }
 
     @Override
@@ -1461,7 +1476,8 @@ public abstract class TypeNode extends PklNode {
           EconomicMaps.emptyMap(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
-          VmUtils.getOwner(frame));
+          VmUtils.getOwner(frame),
+          VmUtils.getTypeArgumentsOrNull(frame));
     }
 
     @Override
@@ -1670,7 +1686,9 @@ public abstract class TypeNode extends PklNode {
               memberValue = member.getConstantValue();
               if (memberValue == null) {
                 var callTarget = member.getCallTarget();
-                memberValue = callTarget.call(object, owner, memberKey);
+                memberValue =
+                    callTarget.call(
+                        object, owner, VmUtils.getTypeArgumentsOrNull(frame), memberKey);
               }
               object.setCachedValue(memberKey, memberValue);
             }
@@ -1814,7 +1832,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
+  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
     @Child private ExpressionNode getReceiverClassNode;
@@ -1827,7 +1845,10 @@ public abstract class TypeNode extends PklNode {
       this.referentTypeNode = referentTypeNode;
       this.getReceiverClassNode = new GetReceiverClassNode(sourceSection);
       this.getModuleNode = new GetModuleNode(sourceSection);
-      validate();
+    }
+
+    public TypeNode getReferentTypeNode() {
+      return referentTypeNode;
     }
 
     @Override
@@ -1836,55 +1857,29 @@ public abstract class TypeNode extends PklNode {
           RefModule.getReferenceClass(), domainTypeNode.getType(), referentTypeNode.getType());
     }
 
-    @Override
-    public final String getValidationErrorKey() {
-      return "invalidReferenceTypeAnnotationWithConstraint";
-    }
-
-    @Override
-    protected final @Nullable Node getViolatingNode() {
-      // constraints may not be used in Reference type annotation referents
-      // walk the type and throw if any part of the referent is constrained
-      var violation = new MutableReference<Node>(null);
-      referentTypeNode.acceptTypeNode(
-          true,
-          (typeNode) -> {
-            if (typeNode instanceof ConstrainedTypeNode) {
-              violation.set(typeNode);
-              return false;
-            }
-            return true;
-          });
-      return violation.getOrNull();
-    }
-
-    @Override
-    protected final boolean isIncludedInTrace(Node node) {
-      return node instanceof ReferenceTypeNode || node instanceof ConstrainedTypeNode;
-    }
-
     @Specialization
     protected Object eval(VirtualFrame frame, VmReference value) {
       if (domainTypeNode.isNoopTypeCheck() && referentTypeNode.isNoopTypeCheck()) {
         return value;
       }
 
+      var realType = (VmType.ClassType) getType().reify(frame);
       try {
         domainTypeNode.execute(frame, value.getDomain());
       } catch (VmTypeMismatchException e) {
         CompilerDirectives.transferToInterpreter();
-        throw typeMismatch(value, getType());
+        throw typeMismatch(value, realType);
       }
 
       var module = (VmTyped) getModuleNode.executeGeneric(frame);
       if (value.referentTypeIsSubtypeOf(
-          referentTypeNode.getType(),
+          realType.getTypeArguments()[1],
           (VmClass) getReceiverClassNode.executeGeneric(frame),
           module.getVmClass())) {
         return value;
       }
 
-      throw typeMismatch(value, getType());
+      throw typeMismatch(value, realType);
     }
 
     @Fallback
@@ -2002,11 +1997,13 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
-    private final TypeParameter typeParameter;
+    private final VmTypeParameter typeParameter;
+    @Child private EvalTypeArgumentNode evalTypeArgumentNode;
 
-    public TypeVariableNode(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariableNode(SourceSection sourceSection, VmTypeParameter typeParameter) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      evalTypeArgumentNode = EvalTypeArgumentNodeGen.create(sourceSection);
     }
 
     @Override
@@ -2014,13 +2011,13 @@ public abstract class TypeNode extends PklNode {
       return new VmType.TypeVariableType(typeParameter);
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public VmTypeParameter getTypeParameter() {
+      return typeParameter;
     }
 
     @Override
     public boolean isNoopTypeCheck() {
-      return true;
+      return !typeParameter.isMethodTypeParameter();
     }
 
     @Override
@@ -2034,6 +2031,12 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
+      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
+        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+        return evalTypeArgumentNode.execute(frame, typeArg, value);
+      }
+
       // do nothing
       return value;
     }
@@ -2041,6 +2044,21 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName) {
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
+      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
+        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+        return typeArg.createDefaultValue(language, headerSection, qualifiedName);
+      }
+
+      return null;
     }
   }
 
@@ -2254,13 +2272,6 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
-      aliasedTypeNode.accept(
-          node -> {
-            if (node instanceof ValidatingObjectSlotTypeNode typeNode) {
-              typeNode.validate(this);
-            }
-            return true;
-          });
     }
 
     @Override
@@ -2724,78 +2735,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmList getTypeArgumentMirrors() {
       return VmList.of(typeNode.getMirror());
-    }
-  }
-
-  public abstract static class ValidatingObjectSlotTypeNode extends ObjectSlotTypeNode {
-
-    protected ValidatingObjectSlotTypeNode(SourceSection sourceSection) {
-      super(sourceSection);
-    }
-
-    protected abstract String getValidationErrorKey();
-
-    protected abstract @Nullable Node getViolatingNode();
-
-    protected final void validate() {
-      var violation = getViolatingNode();
-      if (violation == null) return;
-      throw exceptionBuilder()
-          .evalError(getValidationErrorKey())
-          .withLeadingStackFrames(buildLeadingFrames(violation, getSourceSection(), null))
-          .build();
-    }
-
-    public final void validate(TypeAliasTypeNode outermostAliasNode) {
-      var violation = getViolatingNode();
-      if (violation == null) return;
-
-      throw exceptionBuilder()
-          .withLocation(outermostAliasNode)
-          .evalError(getValidationErrorKey())
-          .withLeadingStackFrames(
-              buildLeadingFrames(
-                  violation,
-                  outermostAliasNode.getSourceSection(),
-                  outermostAliasNode.getTypeAlias()))
-          .build();
-    }
-
-    protected abstract boolean isIncludedInTrace(Node node);
-
-    private List<StackFrame> buildLeadingFrames(
-        Node violatingNode, SourceSection usageSection, @Nullable VmTypeAlias outermostAlias) {
-      var frames = new ArrayList<StackFrame>();
-      for (var node = violatingNode; node != null; node = node.getParent()) {
-        if (!(node instanceof TypeAliasTypeNode || isIncludedInTrace(node))) continue;
-        var section = node.getSourceSection();
-        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
-          continue;
-        }
-        var owner = ownerAlias(node, outermostAlias);
-        if (owner != null) {
-          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
-        }
-      }
-      return frames;
-    }
-
-    /**
-     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
-     * outermost alias being instantiated (which is {@code null} when no alias is used).
-     */
-    @SuppressWarnings("DataFlowIssue")
-    private static @Nullable VmTypeAlias ownerAlias(
-        Node node, @Nullable VmTypeAlias outermostAlias) {
-      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
-      //noinspection ConstantValue
-      return parent != null ? parent.getTypeAlias() : outermostAlias;
-    }
-
-    private static boolean isWithin(SourceSection outer, SourceSection inner) {
-      return inner.getSource().equals(outer.getSource())
-          && inner.getCharIndex() >= outer.getCharIndex()
-          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
   }
 
