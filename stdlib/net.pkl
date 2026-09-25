@@ -143,6 +143,32 @@ class Url {
   /// This is [rawUserInfo], [rawHost] and [port] joined back together.
   external fixed authority: String?
 
+  /// What [rawHost] is, or [null] if this URL has no authority.
+  ///
+  /// - `"ipv6"`: an IPv6 address, such as `[::1]`
+  /// - `"ipvFuture"`: an IP address of a version that RFC 3986 leaves for the future
+  /// - `"ipv4"`: an IPv4 address in dotted-decimal form, such as `192.0.2.1`
+  /// - `"name"`: any other host, a *registered name*
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/").hostKind == "name"
+  /// net.Url("https://192.0.2.1/").hostKind == "ipv4"
+  /// net.Url("https://[::1]/").hostKind == "ipv6"
+  /// net.Url("/foo").hostKind == null
+  /// ```
+  external fixed hostKind: ("name" | "ipv4" | "ipv6" | "ipvFuture")?
+
+  /// The percent-decoded zone identifier of an IPv6 [rawHost], as described in RFC 6874, or [null]
+  /// if it states none.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("http://[fe80::1%25eth0]/").zoneId == "eth0"
+  /// net.Url("http://[fe80::1]/").zoneId == null
+  /// ```
+  external fixed zoneId: String?
+
   /// The percent-decoded segments of [rawPath].
   ///
   /// Facts:
