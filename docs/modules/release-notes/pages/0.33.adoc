@@ -9,7 +9,77 @@ include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
-=== XXX
+=== New standard library module: `pkl:net`
+
+This release introduces a new standard library module, link:{uri-stdlib-netModule}[`pkl:net`], which brings native URL support to Pkl (https://github.com/apple/pkl/pull/1834[#1834]).
+
+Its centerpiece is link:{uri-stdlib-net-Url}[`net.Url`], a URL as defined by https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
+A string is parsed with `net.Url()`, which accepts an absolute URL as well as a relative reference, and which throws if the string cannot be parsed:
+
+[source,pkl]
+----
+import "pkl:net"
+
+local url = net.Url("https://user:pw@example.com:8080/a/b c?q=1&q=2#f")
+
+scheme = url.scheme                   // "https"
+rawUserInfo = url.rawUserInfo         // "user:pw"
+authority = url.authority             // "user:pw@example.com:8080"
+rawHost = url.rawHost                 // "example.com"
+port = url.port                       // 8080
+rawPath = url.rawPath                 // "/a/b%20c"
+path = url.path                       // "/a/b c"
+pathSegments = url.pathSegments       // List("a", "b c")
+rawQuery = url.rawQuery               // "q=1&q=2"
+queryParameters = url.queryParameters // Mapping { ["q"] = Listing { "1"; "2" } }
+rawFragment = url.rawFragment         // "f"
+----
+
+Parsing is lenient: whatever cannot appear literally in a component is percent-encoded as its UTF-8 bytes, and whatever is already encoded is kept as written.
+The scheme is lowercased, as RFC 3986 defines it to be case-insensitive.
+Every component is held percent-encoded in its `raw` property, whether the input was encoded or not; the percent-decoded form of each is available as `userInfo`, `host`, `path`, `query` and `fragment`.
+The derived `pathSegments` and `queryParameters` are percent-decoded too.
+
+A URL can also be built from its components, or derived from another URL by amending it.
+A component given this way has to be percent-encoded already:
+
+[source,pkl]
+----
+built = new net.Url {
+  scheme = "https"
+  rawHost = "example.com"
+  rawPath = "/a%20b"
+}.toString() // "https://example.com/a%20b"
+
+local base = net.Url("https://example.com/a?q=1")
+
+amended = (base) { rawQuery = null }.toString() // "https://example.com/a"
+----
+
+Each component is type-checked, so a URL built this way cannot be malformed.
+For example, a `port` is a `UInt16`, only a URL with a `rawHost` can have one, and a `rawPath` of `"/a b"` is rejected.
+The decoded components are `fixed`, so they cannot be amended.
+
+A relative reference can be resolved against an absolute URL, which also removes dot segments from the result's path:
+
+[source,pkl]
+----
+resolved = net.Url("https://example.com/a/b").resolve("../c").toString() // "https://example.com/c"
+----
+
+Comparing two URLs with `==` compares their components as written.
+To instead compare them as the *syntax-based normalization* of RFC 3986, where scheme and host are case-insensitive and percent-encoding is normalized, use `equals()`:
+
+[source,pkl]
+----
+same = net.Url("HTTPS://Example.com/%7Euser").equals(net.Url("https://example.com/~user")) // true
+----
+
+The module also provides standalone helpers: `net.encodeUrlComponent()` and `net.decodeUrlComponent()` for percent-encoding, and `net.buildQuery()` and `net.parseQuery()` for `application/x-www-form-urlencoded` queries.
+
+Alongside this module, `pkl:base` gains link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`], which tells whether a string is a valid absolute URL.
+It is stricter than `net.Url()`, which also parses a relative reference, and which percent-encodes whatever cannot appear literally in a URL component.
+The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,breaking change>>.
 
 == Noteworthy [small]#🎶#
 
@@ -51,6 +121,30 @@ For example, setting `XDG_CACHE_HOME` will configure the cache directory.
 
 Note that the existing `~/.pkl/cache` directory is ignored, so Pkl will download packages to populate its cache if configured to do so.
 
+=== Java Library Changes
+
+==== `pkl.net#Url` maps to `java.net.URI`
+
+The JVM bindings now understand the new `pkl.net#Url` class (https://github.com/apple/pkl/pull/1834[#1834]).
+
+The Java and Kotlin code generators generate a `java.net.URI` for a property whose type is `net.Url`.
+
+Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part of the preconfigured set:
+
+* `pUrlToString` -- gives the same result as `Url.toString()`
+* `pUrlToURI` -- throws `ConversionException` if the URL cannot be represented as a `java.net.URI`
+
+=== Standard Library Changes
+
+==== `pkl:net`
+
+* New module introduced.
+
+==== `pkl:base`
+
+* New property: link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`]
+* Changed typealias: link:{uri-stdlib-Uri}[`Uri`] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
+
 == Breaking Changes [small]#💔#
 
 === Removal of macOS amd64 (Intel) Binaries
@@ -81,6 +175,26 @@ bogusMath = (import("pkl:math")) {
   minInt = -1
 }
 ----
+
+[[uri-validates]]
+=== `Uri` validates its value
+
+The link:{uri-stdlib-Uri}[`Uri`] typealias in `pkl:base` is now `String(isValidUrl)` instead of a plain `String` (https://github.com/apple/pkl/pull/1834[#1834]).
+
+A value typed as `Uri` must be a valid absolute URL according to https://www.rfc-editor.org/rfc/rfc3986[RFC 3986].
+This means that a relative reference, or a URL containing a character that must be percent-encoded, no longer type-checks:
+
+[source,pkl]
+----
+good: Uri = "https://example.com/some%20path"
+
+bad1: Uri = "./some/path"                   // throws: not absolute
+bad2: Uri = "https://example.com/some path" // throws: space must be percent-encoded
+----
+
+This affects every standard library member typed as `Uri`, among them link:{uri-stdlib-Resource}#uri[`Resource.uri`], link:{uri-stdlib-analyzeModule}#importGraph()[`analyze.importGraph()`], and the URI-valued properties of `pkl:Project`, `pkl:EvaluatorSettings` and `pkl:DocPackageInfo`.
+
+As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
 === XXX
 

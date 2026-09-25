@@ -1,0 +1,339 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// Utilities for networking, like URL parsing.
+@ModuleInfo { minPklVersion = "0.33.0" }
+module pkl.net
+
+/// Parse a string into a URL, following [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+/// Accepts a URL reference (one without a scheme).
+///
+/// This is lenient: whatever a component cannot hold literally is percent-encoded, and whatever is
+/// already percent-encoded is kept as is.
+///
+/// Throws if [input] is not a valid URL.
+///
+/// To test if [input] is a valid URL, use [String.isValidUrl].
+///
+/// Facts:
+/// ```
+/// net.Url("https://example.com/foo?a=1").host == "example.com"
+/// net.Url("https://example.com/foo?a=1").query == "a=1"
+/// net.Url("https://example.com/a b").rawPath == "/a%20b"
+/// net.Url("/foo").scheme == null
+/// ```
+external const function Url(input: String): Url
+
+/// A URL, as defined by [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+/// [RFC 6874](https://www.rfc-editor.org/rfc/rfc6874) IPv6 zone literals are also supported.
+///
+/// Every component is held percent-encoded, in its `raw` property, such as [rawPath]:
+/// [Url()] encodes whatever a component cannot hold literally, and a component that is set by hand,
+/// or amended, has to be encoded already.
+/// The percent-decoded form of each component is available without the `raw` prefix, such as
+/// [path].
+///
+/// Facts:
+/// ```
+/// net.Url("https://example.com/a b").rawPath == "/a%20b"
+/// net.Url("https://example.com/a b").path == "/a b"
+/// net.Url("https://example.com/a%20b").rawPath == "/a%20b"
+/// ```
+class Url {
+  /// The scheme, without the trailing `:`, or [null] if this is a relative reference.
+  ///
+  /// [Url()] lowercases this, as schemes are case-insensitive.
+  scheme: String(isValidScheme(this))?
+
+  /// The percent-encoded userinfo, without the trailing `@`, or [null] if this URL has none.
+  ///
+  /// Only a URL with a [rawHost] can have userinfo.
+  rawUserInfo: String(rawHost != null, isValidUserInfo(this))?
+
+  /// The percent-encoded host, or [null] if this URL has no authority.
+  ///
+  /// A [null] host is not the same as an empty one: `file:/tmp` has no host, `file:///tmp` has an
+  /// empty one.
+  ///
+  /// An IPv6 address must be enclosed in brackets, as in `[::1]`.
+  /// It may carry a zone identifier, as described in RFC 6874.
+  /// Anything else is a registered name, which cannot contain `[`, `]` or `:` literally.
+  rawHost: String(isValidHost(this))?
+
+  /// The port, or [null] if this URL states none.
+  ///
+  /// Only a URL with a [rawHost] can have a port.
+  port: UInt16(rawHost != null)?
+
+  /// The percent-encoded path, or the empty string if this URL has none.
+  ///
+  /// A URL with a [rawHost] has either an empty path or one starting with `/`.
+  /// A URL without one may also have a *rootless* path, as `mailto:user@example.com` does.
+  ///
+  /// To change the path without encoding it first, use [resolve()], which is as lenient as [Url()].
+  /// Unlike amending, this drops [rawQuery] and [rawFragment].
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/a?q=1#f").resolve("/b c").toString() == "https://example.com/b%20c"
+  /// ```
+  rawPath: String(isValidPath(this, rawHost != null)) = ""
+
+  /// The percent-encoded query, without the leading `?`, or [null] if this URL has none.
+  ///
+  /// The empty string is a URL ending in a bare `?`.
+  rawQuery: String(isValidQuery(this))?
+
+  /// The percent-encoded fragment, without the leading `#`, or [null] if this URL has none.
+  ///
+  /// The empty string is a URL ending in a bare `#`.
+  rawFragment: String(isValidFragment(this))?
+
+  /// The percent-decoded [rawUserInfo].
+  hidden fixed userInfo: String? =
+    if (rawUserInfo != null) decodeUrlComponent(rawUserInfo) else null
+
+  /// The percent-decoded [rawHost].
+  hidden fixed host: String? = if (rawHost != null) decodeUrlComponent(rawHost) else null
+
+  /// The percent-decoded [rawPath].
+  ///
+  /// An encoded `/` is decoded like any other octet, so it cannot be distinguished from a `/` that
+  /// separates segments.
+  /// [pathSegments] disambiguates between separator and literal `/` characters.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/a%2Fb/c").path == "/a/b/c"
+  /// net.Url("https://example.com/a%2Fb/c").pathSegments == List("a/b", "c")
+  /// ```
+  hidden fixed path: String = decodeUrlComponent(rawPath)
+
+  /// The percent-decoded [rawQuery].
+  ///
+  /// Unlike [queryParameters], this does not read [rawQuery] as
+  /// `application/x-www-form-urlencoded`, so a `+` is kept as is.
+  hidden fixed query: String? = if (rawQuery != null) decodeUrlComponent(rawQuery) else null
+
+  /// The percent-decoded [rawFragment].
+  hidden fixed fragment: String? =
+    if (rawFragment != null) decodeUrlComponent(rawFragment) else null
+
+  /// Tells if this URL is absolute, that is, has a non-null scheme.
+  hidden fixed isAbsolute: Boolean = scheme != null
+
+  /// Tells if this URL's path is absolute, that is, starts with `/`.
+  hidden fixed hasAbsolutePath: Boolean = rawPath.startsWith("/")
+
+  /// The authority, without the leading `//`, or [null] if this URL has none.
+  ///
+  /// A URL has an authority exactly when it has a [rawHost].
+  /// This is [rawUserInfo], [rawHost] and [port] joined back together.
+  external fixed authority: String?
+
+  /// What [rawHost] is, or [null] if this URL has no authority.
+  ///
+  /// - `"ipv6"`: an IPv6 address, such as `[::1]`
+  /// - `"ipvFuture"`: an IP address of a version that RFC 3986 leaves for the future
+  /// - `"ipv4"`: an IPv4 address in dotted-decimal form, such as `192.0.2.1`
+  /// - `"name"`: any other host, a *registered name*
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/").hostKind == "name"
+  /// net.Url("https://192.0.2.1/").hostKind == "ipv4"
+  /// net.Url("https://[::1]/").hostKind == "ipv6"
+  /// net.Url("/foo").hostKind == null
+  /// ```
+  external fixed hostKind: ("name" | "ipv4" | "ipv6" | "ipvFuture")?
+
+  /// The percent-decoded zone identifier of an IPv6 [rawHost], as described in RFC 6874, or [null]
+  /// if it states none.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("http://[fe80::1%25eth0]/").zoneId == "eth0"
+  /// net.Url("http://[fe80::1]/").zoneId == null
+  /// ```
+  external fixed zoneId: String?
+
+  /// The percent-decoded segments of [rawPath].
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/a/b%20c").pathSegments == List("a", "b c")
+  /// net.Url("https://example.com/a/b%2Fc").pathSegments == List("a", "b/c")
+  /// ```
+  external fixed pathSegments: List<String>
+
+  /// The percent-decoded parameters of [rawQuery], or `null` if this URL has no query.
+  ///
+  /// [rawQuery] is read as `application/x-www-form-urlencoded`.
+  /// A name that repeats holds the values of all its occurrences, in the order they are written.
+  /// A parameter that states no `=` holds no value at all, and is left out; this is not the same as
+  /// a bare `=`, which gives it the empty string.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/?q=a+b&q=c").queryParameters["q"] == new Listing { "a b"; "c" }
+  /// net.Url("https://example.com/?").queryParameters.isEmpty
+  /// net.Url("https://example.com/").queryParameters == null
+  /// ```
+  external fixed queryParameters: Mapping<String, Listing<String>>?
+
+  /// Resolves [ref] against this URL.
+  ///
+  /// [ref] is either a relative reference, which is resolved against this URL, or an absolute URL,
+  /// which replaces it entirely.
+  /// Dot segments (`./` and `../`) are removed from the result's path, normalizing it.
+  ///
+  /// Throws if [ref] is a string that cannot be parsed, or if this URL is itself a relative
+  /// reference.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/a/b").resolve("../c").toString() == "https://example.com/c"
+  /// net.Url("https://example.com/a/b").resolve("#top").toString() == "https://example.com/a/b#top"
+  /// ```
+  external function resolve(ref: String | Url): Url
+
+  /// Returns this URL in the *syntax-based normalization* of
+  /// [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2).
+  ///
+  /// [scheme] and [rawHost] are lowercased, as they are case-insensitive.
+  /// Percent-encoding is normalized: an octet standing for an unreserved character is decoded, and
+  /// any other octet is kept, with its hex digits uppercased.
+  ///
+  /// Dot segments (`./` and `../`) are only removed from an absolute [rawPath].
+  /// A URL with a [rawHost] and no path is given the path `/`, which names the same resource.
+  ///
+  /// Normalization that would require knowing the scheme is not performed.
+  ///
+  /// Two URLs identify the same resource exactly when their normalizations are equal; this is what
+  /// [equals()] compares.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user")
+  /// net.Url("https://example.com/a/b/../c").normalize().rawPath == "/a/c"
+  /// net.Url("https://example.com").normalize().rawPath == "/"
+  /// ```
+  external function normalize(): Url
+
+  /// Whether [other] identifies the same resource as this URL.
+  ///
+  /// Unlike `==`, this compares Urls as the *syntax-based normalization* of RFC 3986:
+  /// [scheme] and [rawHost] are case-insensitive and percent-encoding is normalized.
+  /// An octet standing for a reserved character is kept as written.
+  ///
+  /// Dot segments (`./` and `../`) are only removed from an absolute [rawPath].
+  ///
+  /// Normalization that would require knowing the scheme is not performed.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("HTTPS://Example.com/%7Euser").equals(net.Url("https://example.com/~user"))
+  /// !(net.Url("https://example.com/a%2Fb").equals(net.Url("https://example.com/a/b")))
+  /// !(net.Url("https://example.com:443/").equals(net.Url("https://example.com/")))
+  /// ```
+  external function equals(other: Url): Boolean
+
+  /// The serialization of this URL.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com/a b").toString() == "https://example.com/a%20b"
+  /// net.Url("https://example.com/é").toString() == "https://example.com/%C3%A9"
+  /// net.Url("HTTPS://example.com").toString() == "https://example.com"
+  /// ```
+  external function toString(): String
+
+  /// Whether [value] is a percent-encoded `userinfo`.
+  external function isValidUserInfo(value: String): Boolean
+
+  /// Whether [value] is a `scheme`.
+  external function isValidScheme(value: String): Boolean
+
+  /// Whether [value] is a percent-encoded `host`.
+  external function isValidHost(value: String): Boolean
+
+  /// Whether [value] is a percent-encoded path that can sit next to an authority, or, when
+  /// [hasAuthority] is [false], next to no authority at all.
+  external function isValidPath(value: String, hasAuthority: Boolean): Boolean
+
+  /// Whether [value] is a percent-encoded `query`.
+  external function isValidQuery(value: String): Boolean
+
+  /// Whether [value] is a percent-encoded `fragment`.
+  external function isValidFragment(value: String): Boolean
+}
+
+/// Percent-encodes [value] so that it can be interpolated into any URL component.
+///
+/// Every character other than an ASCII alphanumeric or one of `-._~`, the *unreserved* characters
+/// of RFC 3986, is percent-encoded as its UTF-8 bytes.
+///
+/// Facts:
+/// ```
+/// net.encodeUrlComponent("a b&c") == "a%20b%26c"
+/// net.encodeUrlComponent("50%") == "50%25"
+/// ```
+external const function encodeUrlComponent(value: String): String
+
+/// Percent-decodes [value], interpreting the decoded bytes as UTF-8.
+///
+/// The inverse of [encodeUrlComponent()].
+///
+/// Throws if any `%` in [value] does not begin a percent-encoded octet.
+/// To write a literal `%`, encode it as `%25`.
+///
+/// Facts:
+/// ```
+/// net.decodeUrlComponent("a%20b%26c") == "a b&c"
+/// net.decodeUrlComponent("50%25") == "50%"
+/// ```
+external const function decodeUrlComponent(value: String): String
+
+/// Builds a query from [parameters], for use as a [Url.rawQuery].
+///
+/// The result is `application/x-www-form-urlencoded`.
+/// A name is written once per value it holds; one that holds no values is left out entirely.
+///
+/// [Url.queryParameters] reads back exactly the parameters given here, less any name that holds no
+/// values.
+///
+/// Facts:
+/// ```
+/// net.buildQuery(new Mapping { ["q"] = new Listing { "a b" } }) == "q=a+b"
+/// net.buildQuery(new Mapping { ["a"] = new Listing { "1"; "2" } }) == "a=1&a=2"
+/// net.buildQuery(new Mapping { ["a"] = new Listing { "1" }; ["b"] = new Listing {} }) == "a=1"
+/// ```
+external const function buildQuery(parameters: Mapping<String, Listing<String>>): String
+
+/// Reads [query] back into its parameters.
+///
+/// [query] is read as `application/x-www-form-urlencoded`.
+/// A name that repeats holds the values of all its occurrences, in the order they are written.
+/// A parameter that states no `=` holds no value at all, and is left out.
+///
+/// Throws if any `%` in [query] does not begin a percent-encoded octet.
+///
+/// Facts:
+/// ```
+/// net.parseQuery("a=1&a=2") == new Mapping { ["a"] = new Listing { "1"; "2" } }
+/// net.parseQuery("q=a+b&bare") == new Mapping { ["q"] = new Listing { "a b" } }
+/// ```
+external const function parseQuery(query: String): Mapping<String, Listing<String>>

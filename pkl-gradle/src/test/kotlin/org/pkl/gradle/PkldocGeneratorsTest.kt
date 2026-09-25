@@ -54,8 +54,8 @@ class PkldocGeneratorsTest : AbstractTest() {
       version = "1.0.0"
       importUri = "https://pkl-lang.org/"
       authors { "publisher@apple.com" }
-      sourceCode = "sources.apple.com/"
-      issueTracker = "issues.apple.com"
+      sourceCode = "https://sources.apple.com/"
+      issueTracker = "https://issues.apple.com"
       """
         .trimIndent(),
     )
