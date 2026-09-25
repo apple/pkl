@@ -1,0 +1,27 @@
+facts {
+  ["a parsed module converts to a ModuleNode"] {
+    true
+    true
+  }
+  ["a parsed expression converts to its ExprNode subclass"] {
+    true
+    true
+    true
+  }
+  ["any node in the tree converts, not just the root"] {
+    true
+    true
+    true
+    true
+  }
+  ["a node built from scratch converts"] {
+    true
+    true
+  }
+  ["a transformed tree converts"] {
+    true
+  }
+  ["conversion round-trips through builtNode"] {
+    true
+  }
+}
