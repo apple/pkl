@@ -151,13 +151,13 @@ public final class VmReference extends VmValue {
       }
     } else if (type instanceof NonFinalThisType) {
       // there are 4 entrypoints here:
-      // 1. init via the Reference constructor can only normalize an unparameterized PType.Class
-      // 2. typecheck via ReferenceTypeNode erases self types to their actual PType.Class
+      // 1. init via the Reference constructor, which pre-reifies the VmType
+      // 2. typecheck via ReferenceTypeNode, which pre-reifies the VmType
       // 3. subscript access can only be achieved by first performing property access, at which time
       // self types are erased
       // 4. property access uses the enclosing receiver's class to substitute for these self types
       // only property access and typecheck can produce THIS or MODULE.
-      // getCandidatePropertyType and referentTypeIsSubtypeOf always pass non-null `thisClass`.
+      // getCandidatePropertyType always passes non-null `thisClass`.
       assert thisClass != null;
       result.add(new VmType.ClassType(thisClass));
     } else if (type instanceof NonFinalModuleType) {
