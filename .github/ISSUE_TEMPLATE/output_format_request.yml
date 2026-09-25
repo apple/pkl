@@ -1,0 +1,45 @@
+# This file is GENERATED and should not be edited manually.  Edit output_format_request.pkl instead.
+name: Output Format Request
+description: Request for a output format to be added to Pkl
+title: '[Output Format Request]: '
+labels:
+- output-formats
+- enhancement
+body:
+- type: markdown
+  attributes:
+    value: |-
+      ## Output Format Request
+      Thank you for your interest in expanding the compatibility of Pkl!
+      Before you fill out this request form, please do the following:
+        -  Check the [documentation](https://pkl-lang.org/main/current/pkl-cli/index.html#options) (under `-f`, `--format`) to confirm that this format isn't already supported.
+        -  Search for [existing issues and pull requests](https://github.com/apple/pkl/issues?q="label%3Arender-formats+) to ensure this output format request has not already been submitted."
+- type: checkboxes
+  id: readiness
+  attributes:
+    label: Confirmation
+    description: Please confirm the following items before submitting a new request.
+    options:
+    - label: I have checked the documentation to confirm this format isn't already supported.
+      required: true
+    - label: I have searched for existing issues and pull requests to ensure this rendering request has not already been submitted.
+      required: true
+- type: input
+  id: format-name
+  attributes:
+    label: Format Name
+    description: What is the name of the configuration format that you are requesting to be added?
+  validations:
+    required: true
+- type: textarea
+  id: pitch
+  attributes:
+    label: Pitch
+    description: Why should we add support for this format?
+- type: textarea
+  id: additional-info
+  attributes:
+    label: Additional Information (Optional)
+    description: Any other information you'd like to add
+  validations:
+    required: false
