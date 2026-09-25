@@ -34,6 +34,7 @@ public final class ResolvedModuleKeys {
    * loaded from that file path and cached using the given URI as cache key.
    *
    * @param nofollow if true, the file will be opened with {@link LinkOption#NOFOLLOW_LINKS}.
+   * @return a resolved module key backed by {@code path}
    */
   public static ResolvedModuleKey file(ModuleKey original, URI uri, Path path, boolean nofollow) {
     return new FileKey(original, uri, path, nofollow);
@@ -42,6 +43,8 @@ public final class ResolvedModuleKeys {
   /**
    * Creates a resolved module key backed by the given file path. The resulting module will be
    * loaded from that file path and cached using the given URI as cache key.
+   *
+   * @return a resolved module key backed by {@code path}
    */
   public static ResolvedModuleKey file(ModuleKey original, URI uri, Path path) {
     return new FileKey(original, uri, path, false);
@@ -50,6 +53,8 @@ public final class ResolvedModuleKeys {
   /**
    * Creates a resolved module key backed by the given URL. The resulting module will be loaded from
    * that URL and cached using the given URI as cache key.
+   *
+   * @return a resolved module key backed by {@code url}
    */
   public static ResolvedModuleKey url(ModuleKey original, URI uri, URL url) {
     return new Url(original, uri, url);
@@ -58,6 +63,8 @@ public final class ResolvedModuleKeys {
   /**
    * Creates a resolved module key backed by the given source code. If {@code cached} is {@code
    * true}, the resulting module will be cached using the given URI as cache key.
+   *
+   * @return a resolved module key backed by {@code sourceText}
    */
   public static ResolvedModuleKey virtual(
       ModuleKey original, URI uri, String sourceText, boolean cached) {
@@ -67,6 +74,8 @@ public final class ResolvedModuleKeys {
   /**
    * Creates a resolved module key that behaves like {@code delegate}, except with {@code original}
    * as its original module key.
+   *
+   * @return a resolved module key backed by {@code delegate}
    */
   public static ResolvedModuleKey delegated(ResolvedModuleKey delegate, ModuleKey original) {
     return new Delegated(delegate, original);

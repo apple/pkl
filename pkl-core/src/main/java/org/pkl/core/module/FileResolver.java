@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -26,13 +26,29 @@ import java.util.Collections;
 import java.util.List;
 import org.pkl.core.util.IoUtils;
 
+/** Utilities for inspecting file-system paths while resolving module glob imports. */
 public final class FileResolver {
   private FileResolver() {}
 
+  /**
+   * Returns the immediate, non-symbolic-link children of the directory identified by {@code
+   * baseUri}.
+   *
+   * <p>Returns an empty list if {@code baseUri} does not exist or does not identify a directory.
+   *
+   * @throws IOException if the directory cannot be read
+   */
   public static List<PathElement> listElements(URI baseUri) throws IOException {
     return listElements(IoUtils.pathOf(baseUri));
   }
 
+  /**
+   * Returns the immediate, non-symbolic-link children of {@code path}.
+   *
+   * <p>Returns an empty list if {@code path} does not exist or is not a directory.
+   *
+   * @throws IOException if the directory cannot be read
+   */
   public static List<PathElement> listElements(Path path) throws IOException {
     try (var stream = Files.newDirectoryStream(path)) {
       var ret = new ArrayList<PathElement>();
@@ -49,10 +65,12 @@ public final class FileResolver {
     }
   }
 
+  /** Returns whether the file-system path identified by {@code elementUri} exists. */
   public static boolean hasElement(URI elementUri) {
     return Files.exists(IoUtils.pathOf(elementUri));
   }
 
+  /** Returns whether {@code path} exists. */
   public static boolean hasElement(Path path) {
     return Files.exists(path);
   }
