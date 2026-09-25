@@ -1,0 +1,35 @@
+import "pkl:test"
+
+typealias A = "a"
+typealias B = "a" | "b"
+typealias C = E | B
+typealias D = B | E
+typealias E = *"b" | "c"
+typealias F = "c" | *G
+typealias G = "a" | *"g" | "c"
+
+res1: "a" | "b" = "a"
+res2: "a" | "b" | *"a"
+res3: "a" | *E
+res4: "b" | *E
+res5: "a" | *F
+res6: "c" | *A | E
+res7: B | *"a"
+res8: E | B | *"a"
+res9: "x" | *G | "a"
+res10: C | *"a"
+res11: "a" | *F | "a"
+res12: *F | "a"
+res13: D | *"q"
+
+class NoDefaults {
+  prop1: C | "z"
+  prop2: E | "z"
+  prop3: *C | "a"
+}
+
+local noDefaults: NoDefaults = new {}
+
+res14 = test.catch(() -> noDefaults.prop1)
+res15 = test.catch(() -> noDefaults.prop2)
+res16 = test.catch(() -> noDefaults.prop3)

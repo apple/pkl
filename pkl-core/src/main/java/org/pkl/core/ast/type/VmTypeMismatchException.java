@@ -96,7 +96,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
           || expectedType instanceof VmTypeAlias
           || expectedType instanceof VmType
           || expectedType instanceof String // string literal type
-          || expectedType instanceof Set; // union of string literal types
+          || expectedType instanceof List; // union of string literal types
 
       this.expectedType = expectedType;
     }
@@ -110,10 +110,10 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       if (expectedType instanceof String string) {
         // string literal type
         renderedType = valueFormatter.formatStringValue(string, "");
-      } else if (expectedType instanceof Set) {
+      } else if (expectedType instanceof List) {
         // union of string literal types
         @SuppressWarnings("unchecked")
-        var stringLiterals = (Set<String>) expectedType;
+        var stringLiterals = (List<String>) expectedType;
         renderedType =
             stringLiterals.stream()
                 .map((l) -> valueFormatter.formatStringValue(l, ""))
@@ -123,7 +123,7 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
       }
 
       if (actualValue instanceof VmNull
-          || actualValue instanceof String && expectedType instanceof Set) {
+          || actualValue instanceof String && expectedType instanceof List) {
         builder.append(
             ErrorMessages.createIndented(
                 "typeMismatchValue", indent, renderedType, new ProgramValue("", actualValue)));
