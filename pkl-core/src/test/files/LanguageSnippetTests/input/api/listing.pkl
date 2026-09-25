@@ -1,6 +1,9 @@
 amends "../snippetTest.pkl"
 
-local class Person { name: String }
+local class Person {
+  name: String
+  function toString() = "{ The person named \(name) }"
+}
 
 local empty = new Listing {}
 
@@ -97,7 +100,7 @@ facts {
     !altered.isDistinctBy((it) -> it.getClass())
     !computedIndex.isDistinctBy((it) -> it.getClass())
   }
-  
+
   ["getOrNull"] {
     empty.getOrNull(-1) == null
     empty.getOrNull(0) == null
@@ -107,7 +110,7 @@ facts {
     }
     base.getOrNull(base.length) == null
   }
-  
+
   ["first"] {
     module.catch(() -> empty.first) == "Expected a non-empty Listing."
     base.first == base[0]
@@ -115,7 +118,7 @@ facts {
     altered.first != base[0]
     computedIndex.first == altered.first
   }
-  
+
   ["firstOrNull"] {
     empty.firstOrNull == null
     base.firstOrNull == base[0]
@@ -157,7 +160,7 @@ facts {
     base.every((it) -> !it.name.isBlank)
     !((base) { new { name = "EEEEE" } }).every((it) -> it.name.contains("rot"))
   }
-  
+
   ["any"] {
     base.any((it) -> it.name.contains("rot"))
     !base.any((it) -> it.name.contains("inch"))
@@ -182,7 +185,7 @@ examples {
     derived.length
     altered.length
     computedIndex.length
-    
+
     local elementsAndEntries = (base) {
       new { name = "" }
       [2] { name = "" }
@@ -265,7 +268,6 @@ examples {
     computedIndex.foldIndexed(List(), (i, l, e) -> l.add(Pair(i, e)))
   }
 
-
   local baseNum = new Listing { 1; 2; 3 }
   local baseString = new Listing { "Pigeon"; "Barn Owl"; "Parrot" }
   local derivedString = (baseString) { "Albatross"; "Elf Owl" }
@@ -284,5 +286,10 @@ examples {
     alteredString.join("\n")
     computedIndexString.join("")
     computedIndexString.join("\n")
+    new Listing {
+      1
+      1.ms
+      new Person { name = "Bob" }
+    }.join("\n")
   }
 }

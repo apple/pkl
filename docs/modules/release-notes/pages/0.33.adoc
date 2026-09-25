@@ -82,7 +82,49 @@ bogusMath = (import("pkl:math")) {
 }
 ----
 
-=== XXX
+=== Changes to `join` method on `List`, `Set`, and `Listing`
+
+The `join` method in `List`, `Set`, and `Listing` will now call the `toString()` method if overridden on an object (https://github.com/apple/pkl/pull/1872[#1872]).
+
+This is a breaking change, but is also considered a bugfix.
+
+The following snippet will produce different results:
+
+[source,pkl]
+----
+class Bird {
+  name: String
+
+  function toString() = "{ My name is \(name) }"
+}
+
+hidden birds: Listing<Bird> = new {
+  new { name = "Osprey" }
+  new { name = "Eagle" }
+}
+
+res = birds.join("\n")
+----
+
+Currently, Pkl ignores the `toString()` override, and produces:
+
+[source,pkl]
+----
+res = """
+  new Bird { name = "Osprey" }
+  new Bird { name = "Eagle" }
+  """
+----
+
+In Pkl 0.33, the overridden `toString()` will be called, and produces:
+
+[source,pkl]
+----
+res = """
+  { My name is Osprey }
+  { My name is Eagle }
+  """
+----
 
 == Bug Fixes [small]#🐜#
 

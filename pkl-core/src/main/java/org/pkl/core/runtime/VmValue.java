@@ -47,6 +47,10 @@ public abstract class VmValue {
     return this instanceof VmTyped;
   }
 
+  public boolean isReference() {
+    return this instanceof VmReference;
+  }
+
   /**
    * Tells if this value is a {@link VmCollection}, {@link VmListing}, or {@link VmDynamic} with
    * {@link VmDynamic#hasElements() elements}.

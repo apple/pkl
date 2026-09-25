@@ -6,6 +6,12 @@ local list3 = List(1, 2, 3, 2, 1)
 local comparator = (x, y) -> x < y
 local comparator1 = (x, y) -> x <= y
 
+local class Bird {
+  name: String
+
+  function toString() = "{ The bird named \(name) }"
+}
+
 facts {
   ["isEmpty"] {
     List().isEmpty
@@ -512,5 +518,7 @@ examples {
   ["join()"] {
     List(1.s, 2.s).join(", ")
     List(1.mb, 2.gb).join(", ")
+    List(new Bird { name = "Sally" }, new Bird { name = "Bob" }).join("\n")
+    List(1, true, 1.ms, new Bird { name = "Sally" }, new Bird { name = "Bob" }).join("\n")
   }
 }

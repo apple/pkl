@@ -34,6 +34,12 @@ public abstract class ToStringNode extends UnaryExpressionNode {
     super(sourceSection);
   }
 
+  /**
+   * When only using this execute method, pass `null` for `operandNode` to {@link
+   * ToStringNodeGen#create}.
+   */
+  public abstract String executeWith(VirtualFrame frame, Object value);
+
   @Specialization
   protected String evalString(String value) {
     return value;
@@ -74,7 +80,7 @@ public abstract class ToStringNode extends UnaryExpressionNode {
     return (String) callNode.call(value, value.getVmClass().getPrototype());
   }
 
-  @Specialization
+  @Specialization(guards = {"!value.isTyped()", "!value.isReference()"})
   @TruffleBoundary
   protected String evalVmValue(VmValue value) {
     return value.toPklString();
@@ -95,5 +101,10 @@ public abstract class ToStringNode extends UnaryExpressionNode {
     var toStringMethod = reference.getVmClass().getDeclaredMethod(Identifier.TO_STRING);
     assert toStringMethod != null;
     return DirectCallNode.create(toStringMethod.getCallTarget());
+  }
+
+  @Override
+  public final boolean isInstrumentable() {
+    return false;
   }
 }

@@ -20,10 +20,13 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
+import org.pkl.core.ast.internal.ToStringNode;
+import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.*;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.UInt8TypeAliasTypeNode;
@@ -1272,9 +1275,23 @@ public final class ListNodes {
   }
 
   public abstract static class join extends ExternalMethod1Node {
+    @Child ToStringNode toStringNode = ToStringNodeGen.create(sourceSection, null);
+    private final LoopConditionProfile loopConditionProfile = LoopConditionProfile.create();
+
     @Specialization
-    protected String eval(VmList self, String separator) {
-      return self.join(separator);
+    protected String eval(VirtualFrame frame, VmList self, String separator) {
+      if (self.isEmpty()) return "";
+
+      var iter = self.iterator();
+      var builder = VmUtils.createBuilder();
+      VmUtils.appendToBuilder(builder, toStringNode.executeWith(frame, iter.next()));
+
+      while (loopConditionProfile.profile(iter.hasNext())) {
+        VmUtils.appendToBuilder(builder, separator);
+        VmUtils.appendToBuilder(builder, toStringNode.executeWith(frame, iter.next()));
+      }
+
+      return VmUtils.builderToString(builder);
     }
   }
 
