@@ -106,6 +106,10 @@ public final class UrlFactory {
     return (String) VmUtils.readMember(url, Identifier.RAW_PATH, callNode);
   }
 
+  public static @Nullable String readHost(VmObjectLike url, IndirectCallNode callNode) {
+    return readNullableString(url, Identifier.RAW_HOST, callNode);
+  }
+
   public static @Nullable String readQuery(VmObjectLike url, IndirectCallNode callNode) {
     return readNullableString(url, Identifier.RAW_QUERY, callNode);
   }

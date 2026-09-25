@@ -546,7 +546,7 @@ public final class UrlParser {
       // IPv6addrz = IPv6address "%25" ZoneID (https://www.rfc-editor.org/rfc/rfc6874#section-2)
       var zone = address.indexOf("%25");
       if (zone < 0) {
-        if (hasIpv6Characters(address)) {
+        if (isIpv6Address(address)) {
           return null;
         }
         return address.indexOf('%') < 0
@@ -559,7 +559,7 @@ public final class UrlParser {
             "The IP literal `" + host + "` states a zone identifier but no address.");
       }
       var address6 = address.substring(0, zone);
-      if (!hasIpv6Characters(address6)) {
+      if (!isIpv6Address(address6)) {
         return new Result.Failure("`" + address6 + "` is not an IPv6 address.");
       }
       var zoneId = address.substring(zone + 3);
@@ -591,21 +591,123 @@ public final class UrlParser {
     return percentEncodingFailure(host);
   }
 
+  /**
+   * What {@code host} is: {@code "ipv6"} or {@code "ipvFuture"} for an IP literal, {@code "ipv4"}
+   * for an {@code IPv4address}, and {@code "name"} for any other, registered, name (section 3.2.2).
+   */
+  public static String hostKind(String host) {
+    if (isIpLiteral(host)) {
+      var c = host.charAt(1);
+      return c == 'v' || c == 'V' ? "ipvFuture" : "ipv6";
+    }
+    return isIpv4Address(host) ? "ipv4" : "name";
+  }
+
+  /**
+   * The percent-decoded zone identifier of {@code host}, or {@code null} if it is not an IPv6
+   * address that states one.
+   */
+  @TruffleBoundary
+  public static @Nullable String zoneId(String host) {
+    if (!isIpLiteral(host)) {
+      return null;
+    }
+    // "%" cannot appear in an IPvFuture, so it can only begin a zone identifier
+    var zone = host.indexOf("%25");
+    return zone < 0 ? null : PercentEncoder.decode(host.substring(zone + 3, host.length() - 1));
+  }
+
   /** Whether {@code host} is a percent-encoded {@code host}. */
   public static boolean isValidHost(String host) {
     return hostFailure(host) == null
         && (isIpLiteral(host) || PercentEncoder.isEncoded(host, PercentEncoder.REG_NAME));
   }
 
-  /** Whether every character of {@code address} is one an {@code IPv6address} is built from. */
-  private static boolean hasIpv6Characters(String address) {
-    for (var i = 0; i < address.length(); i++) {
-      var c = address.charAt(i);
-      if (!PercentEncoder.isHexDigit(c) && c != ':' && c != '.') {
+  /**
+   * Whether {@code address} is an {@code IPv6address}: eight 16-bit pieces, the last two of which
+   * may be written as an {@code IPv4address}, and a single {@code "::"} that stands for one or more
+   * pieces of zeros (section 3.2.2).
+   */
+  private static boolean isIpv6Address(String address) {
+    var elision = address.indexOf("::");
+    if (elision < 0) {
+      return countIpv6Pieces(address) == 8;
+    }
+    if (address.indexOf("::", elision + 1) >= 0) {
+      return false;
+    }
+    var head = address.substring(0, elision);
+    var tail = address.substring(elision + 2);
+    // an IPv4address can only end the address, so it cannot sit in front of the "::"
+    var headPieces = head.isEmpty() ? 0 : head.indexOf('.') >= 0 ? -1 : countIpv6Pieces(head);
+    var tailPieces = tail.isEmpty() ? 0 : countIpv6Pieces(tail);
+    return headPieces >= 0 && tailPieces >= 0 && headPieces + tailPieces <= 7;
+  }
+
+  private static int countIpv6Pieces(String input) {
+    var pieces = 0;
+    var start = 0;
+    while (true) {
+      var colon = input.indexOf(':', start);
+      if (colon < 0) {
+        if (input.indexOf('.', start) >= 0) {
+          return isIpv4Address(input.substring(start)) ? pieces + 2 : -1;
+        }
+        return isH16(input, start, input.length()) ? pieces + 1 : -1;
+      }
+      if (!isH16(input, start, colon)) {
+        return -1;
+      }
+      pieces++;
+      start = colon + 1;
+    }
+  }
+
+  private static boolean isH16(String input, int start, int end) {
+    if (end <= start || end - start > 4) {
+      return false;
+    }
+    for (var i = start; i < end; i++) {
+      if (!PercentEncoder.isHexDigit(input.charAt(i))) {
         return false;
       }
     }
     return true;
+  }
+
+  /** IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet */
+  private static boolean isIpv4Address(String input) {
+    var octets = 0;
+    var start = 0;
+    while (true) {
+      var dot = input.indexOf('.', start);
+      var end = dot < 0 ? input.length() : dot;
+      if (!isDecOctet(input, start, end)) {
+        return false;
+      }
+      octets++;
+      if (dot < 0) {
+        return octets == 4;
+      }
+      start = dot + 1;
+    }
+  }
+
+  /** A decimal number between 0 and 255, with no leading zeros. */
+  private static boolean isDecOctet(String input, int start, int end) {
+    var length = end - start;
+    if (length < 1 || length > 3 || (length > 1 && input.charAt(start) == '0')) {
+      return false;
+    }
+    var value = 0;
+    for (var i = start; i < end; i++) {
+      var c = input.charAt(i);
+      if (!PercentEncoder.isDigit(c)) {
+        return false;
+      }
+      value = value * 10 + (c - '0');
+    }
+    return value <= 255;
   }
 
   /** Whether {@code zoneId} is a {@code ZoneID}: {@code 1*( unreserved / pct-encoded )}. */

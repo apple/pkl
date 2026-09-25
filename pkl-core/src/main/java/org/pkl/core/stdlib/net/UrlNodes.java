@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.internal.GetParsedUrlNode;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmMapping;
@@ -46,6 +47,40 @@ public final class UrlNodes {
     @Specialization
     protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return VmNull.lift(UrlFactory.readAuthority(self, callNode));
+    }
+  }
+
+  public abstract static class hostKind extends ExternalPropertyNode {
+    @Specialization(guards = "self.hasExtraStorage()")
+    protected Object evalCached(VmTyped self) {
+      var parsed = (Parsed) self.getExtraStorage();
+      return getHostKind(parsed.host());
+    }
+
+    @Specialization
+    protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
+      return getHostKind(UrlFactory.readHost(self, callNode));
+    }
+
+    private static Object getHostKind(@Nullable String host) {
+      return host == null ? VmNull.withoutDefault() : UrlParser.hostKind(host);
+    }
+  }
+
+  public abstract static class zoneId extends ExternalPropertyNode {
+    @Specialization(guards = "self.hasExtraStorage()")
+    protected Object evalCached(VmTyped self) {
+      var parsed = (Parsed) self.getExtraStorage();
+      return getZoneId(parsed.host());
+    }
+
+    @Specialization
+    protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
+      return getZoneId(UrlFactory.readHost(self, callNode));
+    }
+
+    private static Object getZoneId(@Nullable String host) {
+      return VmNull.lift(host == null ? null : UrlParser.zoneId(host));
     }
   }
 

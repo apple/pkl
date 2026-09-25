@@ -177,6 +177,12 @@ facts {
     throws("http://[]/")
     throws("http://[::1]x/")
 
+    // an IPv6 address is held to its grammar, not just to the characters it is built from
+    roundTrips("http://[::ffff:192.0.2.1]/")
+    throws("http://[1]/")
+    throws("http://[1::2::3]/")
+    throws("http://[1:2:3:4:5:6:7:8:9]/")
+    throws("http://[::192.0.2.256]/")
     // the same holds for a relative reference, which is checked no less than an absolute URL
     throws("a/%zz")
     throws("//example.com:port/a")
@@ -365,6 +371,14 @@ facts {
     module.catch(() -> (url) { rawPath = "/a b" }.toString())
       .startsWith("Type constraint `isValidPath(this, rawHost != null)` violated.")
     (url) { rawPath = "/a%20b" }.toString() == "https://user:pw@example.com:8080/a%20b?q=1#f"
+  }
+
+  ["hostKind and zoneId"] {
+    net.Url("http://[v1.fe80::a+en1]/").hostKind == "ipvFuture"
+    net.Url("http://192.0.2.256/").hostKind == "name"
+    net.Url("file:///tmp").hostKind == "name"
+    net.Url("http://[fe80::1%25en%2F1]/").zoneId == "en/1"
+    new net.Url { scheme = "http"; rawHost = "[fe80::1%25eth0]" }.zoneId == "eth0"
   }
 
   ["pathSegments"] {
