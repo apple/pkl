@@ -1000,6 +1000,7 @@ public abstract class TypeNode extends PklNode {
   public static final class UnionOfStringLiteralsTypeNode extends ObjectSlotTypeNode {
     private final int defaultIndex;
     private final List<String> declaredStringLiterals;
+    // intentionally not marked `@Child` because this only used for metadata, and never executed.
     private final @Nullable TypeNode originalUnionTypeNode;
     private final Set<String> stringLiterals;
 
