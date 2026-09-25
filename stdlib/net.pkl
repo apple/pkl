@@ -111,8 +111,9 @@ class Url {
 
   /// The percent-decoded [rawPath].
   ///
-  /// An encoded `/` is decoded like any other octet, so it cannot be told apart from a `/` that
-  /// separates segments; [pathSegments] keeps the two apart.
+  /// An encoded `/` is decoded like any other octet, so it cannot be distinguished from a `/` that
+  /// separates segments.
+  /// [pathSegments] disambiguates between separator and literal `/` characters.
   ///
   /// Facts:
   /// ```
@@ -174,6 +175,7 @@ class Url {
   /// Facts:
   /// ```
   /// net.Url("https://example.com/a/b%20c").pathSegments == List("a", "b c")
+  /// net.Url("https://example.com/a/b%2Fc").pathSegments == List("a", "b/c")
   /// ```
   external fixed pathSegments: List<String>
 
