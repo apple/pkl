@@ -1,0 +1,96 @@
+facts {
+  ["findChild returns the first match in pre-order"] {
+    true
+    true
+  }
+  ["findChild throws when nothing matches"] {
+    true
+  }
+  ["findChildOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findChild does not consider this node"] {
+    true
+    true
+  }
+  ["findChildren returns every match in pre-order"] {
+    true
+    true
+  }
+  ["findChildren searches a match for further matches"] {
+    true
+  }
+  ["findChildOfType agrees with findChild"] {
+    true
+    true
+  }
+  ["findChildOfType throws when nothing matches"] {
+    true
+  }
+  ["findChildOfTypeOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findParent returns the nearest match"] {
+    true
+    true
+    true
+  }
+  ["findParentOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findParentOfType agrees with findParent"] {
+    true
+    true
+  }
+  ["findParentOfTypeOrNull returns null when nothing matches"] {
+    true
+    true
+  }
+  ["findParents returns every match, nearest first"] {
+    true
+  }
+  ["parent lookups do not consider this node"] {
+    true
+    true
+    true
+  }
+  ["hasParent and hasParentOfType follow findParent"] {
+    true
+    true
+    true
+  }
+  ["replaceChild replaces only the first match"] {
+    true
+  }
+  ["replaceChild leaves the tree unchanged when nothing matches"] {
+    true
+  }
+  ["replaceChildren replaces every match"] {
+    true
+  }
+  ["a replacer sees the node it replaces"] {
+    true
+  }
+  ["a replacement is not searched for further matches"] {
+    true
+  }
+  ["replaceChildOfType agrees with replaceChild"] {
+    true
+  }
+  ["a replacer sees where its node sits in the tree being built"] {
+    true
+  }
+  ["a replace does not change the tree it walks"] {
+    true
+  }
+  ["the root of a replaced tree has no parent"] {
+    true
+    true
+  }
+  ["only the root of a replaced tree has no parent"] {
+    true
+  }
+}

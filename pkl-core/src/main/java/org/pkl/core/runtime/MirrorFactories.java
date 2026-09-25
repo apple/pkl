@@ -107,7 +107,7 @@ public final class MirrorFactories {
       new VmObjectFactory<>(ReflectModule::getNothingTypeClass);
 
   public static final VmObjectFactory<SourceSection> sourceLocationFactory =
-      new VmObjectFactory<>(ReflectModule::getSourceLocationClass);
+      new VmObjectFactory<>(SyntaxModule::getSourceLocationClass);
 
   static {
     moduleFactory
