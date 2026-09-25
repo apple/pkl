@@ -22,7 +22,6 @@ import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.internal.GetParsedUrlNode;
 import org.pkl.core.runtime.VmList;
-import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod0Node;
@@ -99,14 +98,18 @@ public final class UrlNodes {
 
   public abstract static class queryParameters extends ExternalPropertyNode {
     @Specialization(guards = "self.hasExtraStorage()")
-    protected VmMapping evalCached(VmTyped self) {
+    protected Object evalCached(VmTyped self) {
       var parsed = (Parsed) self.getExtraStorage();
-      return UrlFactory.createQueryParameters(parsed.query());
+      return getQueryParameters(parsed.query());
     }
 
     @Specialization
-    protected VmMapping eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
-      return UrlFactory.createQueryParameters(UrlFactory.readQuery(self, callNode));
+    protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
+      return getQueryParameters(UrlFactory.readQuery(self, callNode));
+    }
+
+    private static Object getQueryParameters(@Nullable String query) {
+      return query == null ? VmNull.withoutDefault() : UrlFactory.createQueryParameters(query);
     }
   }
 

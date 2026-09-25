@@ -179,7 +179,7 @@ class Url {
   /// ```
   external fixed pathSegments: List<String>
 
-  /// The percent-decoded parameters of [rawQuery], or an empty mapping if this URL has no query.
+  /// The percent-decoded parameters of [rawQuery], or `null` if this URL has no query.
   ///
   /// [rawQuery] is read as `application/x-www-form-urlencoded`.
   /// A name that repeats holds the values of all its occurrences, in the order they are written.
@@ -189,9 +189,10 @@ class Url {
   /// Facts:
   /// ```
   /// net.Url("https://example.com/?q=a+b&q=c").queryParameters["q"] == new Listing { "a b"; "c" }
-  /// net.Url("https://example.com/").queryParameters.isEmpty
+  /// net.Url("https://example.com/?").queryParameters.isEmpty
+  /// net.Url("https://example.com/").queryParameters == null
   /// ```
-  external fixed queryParameters: Mapping<String, Listing<String>>
+  external fixed queryParameters: Mapping<String, Listing<String>>?
 
   /// Resolves [ref] against this URL.
   ///

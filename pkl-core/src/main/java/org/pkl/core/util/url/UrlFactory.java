@@ -116,7 +116,7 @@ public final class UrlFactory {
 
   /** The parameters of {@code query}, as {@code Mapping<String, Listing<String>>}. */
   @TruffleBoundary
-  public static VmMapping createQueryParameters(@Nullable String query) {
+  public static VmMapping createQueryParameters(String query) {
     var builder = new VmObjectBuilder();
     for (var parameter : UrlParser.queryParameters(query).entrySet()) {
       var values = new VmObjectBuilder(parameter.getValue().size());
