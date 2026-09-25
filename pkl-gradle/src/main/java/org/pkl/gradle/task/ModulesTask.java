@@ -170,6 +170,7 @@ public abstract class ModulesTask extends BasePklTask {
         toExternalReaderMap(getExternalModuleReaders().get().values()),
         toExternalReaderMap(getExternalResourceReaders().get().values()),
         null,
-        getPowerAssertions().getOrElse(false));
+        getPowerAssertions().getOrElse(false),
+        getFeatureFlags().getOrNull());
   }
 }
