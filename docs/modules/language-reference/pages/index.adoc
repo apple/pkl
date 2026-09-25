@@ -2100,6 +2100,8 @@ The xref:blog:ROOT:class-as-a-function.adoc[Class-as-a-function] pattern may be 
 TIP: In most cases, methods without parameters should not be defined.
 Instead, use <<fixed-properties,`fixed` properties>> on the module or class.
 
+Methods may also be <<generic-methods,generic>>.
+
 [[modules]]
 == Modules
 
@@ -3282,7 +3284,8 @@ This section discusses language features that are generally more relevant to tem
 <<projects,Projects>> +
 <<external-readers,External Readers>> +
 <<mirroring_packages,Mirroring packages>> +
-<<references,References>>
+<<references,References>> +
+<<generic-methods,Generic Methods>>
 
 [[meaning-of-new]]
 === Meaning of `new`
@@ -5994,31 +5997,12 @@ There are some restrictions on properties that may be referenced; attempting to 
 * Properties originally defined in `external` classes (this only includes `Module.output`)
 
 pkldoc:Reference[pkl:ref] instances are created using the constructor method pkldoc:#Reference()[pkl:ref].
-This method accepts three parameters:
+This method accepts two type arguments and two parameters:
 
-* `domain` - An instance of a `ref.Domain` subclass; its type becomes the `D` type argument of the resulting `Reference` instance.
-* `class` - A `Class` instance that will be the referent type of the returned `Reference`; it is the `T` type argument of the resulting instance.
+* `D` - The type of the reference's domain. Must be a subclass of `ref.Domain`.
+* `Referent` - The type the reference refers to.
+* `domain` - An instance of `D` that becomes the domain resulting `Reference` instance.
 * `data` - A domain-specific value used to identify the root or context of the reference.
-
-[NOTE]
-====
-It is only possible to construct new references with a referent type that is a simple (non-generic) class type.
-To obtain a reference to values of other types (generic, typealias, nullable, union, etc.), libraries must wrap those types in a class:
-
-[source%parsed,pkl]
-----
-import "pkl:ref"
-
-class TypeHolder {
-  $: *Listing<String>? | Mapping<UInt, String> // <1>
-}
-
-local r: ref.Reference<MyDomain, Listing<String>? | Mapping<UInt, String>> =
-  ref.Reference(myDomain, TypeHolder, null).$ // <2>
-----
-<1> Define a "holder" class with a property of the desired type.
-<2> Access the `$` property of the reference to get a reference to the desired non-class type.
-====
 
 Here's a realistic example of how references might be used:
 
@@ -6038,18 +6022,20 @@ class Domain extends ref.Domain { // <1>
 
 typealias Ref<T> = ref.Reference<Domain, T> // <2>
 
-abstract class Task { // <3>
+const function Ref<T>(data: Any): Ref<T> = ref.Reference::<Domain, T>(new Domain {}, data) // <3>
+
+abstract class Task { // <4>
   name: String
 }
 
 class TaskA extends Task {
-  input1: String | Ref<String> // <4>
+  input1: String | Ref<String> // <5>
   input2: Int | Ref<Int>
 
-  hidden fixed outputs: Ref<TaskAOutputs> = ref.Reference(new Domain {}, TaskAOutputs, this) // <5>
+  hidden fixed outputs: Ref<TaskAOutputs> = Ref::<TaskAOutputs>(this) // <6>
 }
 
-abstract class TaskAOutputs { // <6>
+abstract class TaskAOutputs { // <7>
   foo: String
   bar: Int
 }
@@ -6059,24 +6045,25 @@ class TaskB extends Task {
   inputY: Int | Ref<Int>
 }
 
-tasks: Listing<Task>(isDistinctBy((it) -> it.name)) // <7>
+tasks: Listing<Task>(isDistinctBy((it) -> it.name)) // <8>
 
 output {
   renderer {
     converters {
-      [ref.Reference] = (it) -> it.toString() // <8>
+      [ref.Reference] = (it) -> it.toString() // <9>
     }
   }
 }
 ----
 <1> Define a `ref.Domain` subclass that determines how `Reference` instances are rendered as strings.
 <2> For convenience, create a type alias for references of this domain.
-<3> Create a new base class that can be referenced. `Task` instances will be identified by their `name` value.
-<4> In a specific `Task` subclass, input values accept both literal values and references to the same type.
-<5> `Task` subclasses that provide output values define an `outputs` property where the referent type is `TaskAOutputs`.
-<6> The `TaskAOutputs` class defines the possible runtime outputs of `TaskA` tasks. It is `abstract` and never instantiated, only used for producing references.
-<7> Users provide `Task` instances with unique `name` values.
-<8> Delegate to `Domain` for rendering `Reference` values.
+<3> For convenience, wrap the `Reference` constructor to pass appropriate the domain type and value.
+<4> Create a new base class that can be referenced. `Task` instances will be identified by their `name` value.
+<5> In a specific `Task` subclass, input values accept both literal values and references to the same type.
+<6> `Task` subclasses that provide output values define an `outputs` property where the referent type is `TaskAOutputs`.
+<7> The `TaskAOutputs` class defines the possible runtime outputs of `TaskA` tasks. It is `abstract` and never instantiated, only used for producing references.
+<8> Users provide `Task` instances with unique `name` values.
+<9> Delegate to `Domain` for rendering `Reference` values.
 
 [source,pkl]
 .myWorkflow.pkl
@@ -6119,3 +6106,37 @@ tasks {
   }
 }
 ----
+
+[[generic-methods]]
+=== Generic Methods
+
+Methods may be declared as "generic", with types that are themselves parameters.
+Method type parameters may be used within the method anywhere else a type may be used: in a parameter's type, in the return type, or within the method body (e.g. <<defining-objects,object instantiation>>, <<type-tests,type tests>>, <<type-casts,type casts>>).
+
+When calling a generic method, a caller may manually specify type arguments by writing `methodName::<TypeArg1, TypeArg2>(arg1, arg2)`.
+When no type arguments are provided, type checks of parameter types behave like <<unknown-type,`unknown`>> and always succeed.
+
+[source,pkl]
+----
+class Pigeon {
+  name: String
+}
+
+class Hawk {
+ name: String
+}
+
+function makeFlock<Bird>(names: Listing<String>): Listing<Bird> = new {
+  for (n in names) {
+    new { name = n }
+  }
+}
+
+pigeonFlock = makeFlock::<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // <1>
+hawkFlock = makeFlock::<Hawk>(new { "Florence"; "Holly"; "Jim" }) // <2>
+----
+<1> Result: a `Listing` where every element is a `Pigeon`.
+<2> Result: a `Listing` where every element is a `Hawk`.
+
+NOTE: The `::<>` syntax is colloquially known as the "turbofish", after https://doc.rust-lang.org/reference/glossary.html#turbofish[the same syntax in Rust].
+Pkl requires this syntax for the same reason as Rust: to avoid parser ambiguity.
