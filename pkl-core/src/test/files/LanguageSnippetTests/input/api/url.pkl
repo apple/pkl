@@ -399,6 +399,7 @@ facts {
     net.Url("https://example.com?a=1&&b=2").queryParameters
       == new Mapping<String, Listing<String>> { ["a"] { "1" }; ["b"] { "2" } }
     net.Url("https://example.com?").queryParameters == new Mapping {}
+    net.Url("https://example.com").queryParameters == null
     // a bare name holds no value, so it contributes nothing
     net.Url("https://example.com?a").queryParameters == new Mapping {}
     net.Url("https://example.com?a=").queryParameters == new Mapping<String, Listing<String>> { ["a"] { "" } }

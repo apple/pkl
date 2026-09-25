@@ -376,8 +376,8 @@ public final class UrlParser {
    * <p>A name that repeats collects the values of all its occurrences, in the order they are
    * written. A parameter that states no {@code =} holds no value, and contributes nothing.
    */
-  static Map<String, List<String>> queryParameters(@Nullable String query) {
-    if (query == null || query.isEmpty()) {
+  static Map<String, List<String>> queryParameters(String query) {
+    if (query.isEmpty()) {
       return Map.of();
     }
     var parameters = new LinkedHashMap<String, List<String>>();
@@ -676,6 +676,7 @@ public final class UrlParser {
   }
 
   /** IPv4address = dec-octet "." dec-octet "." dec-octet "." dec-octet */
+  @TruffleBoundary
   private static boolean isIpv4Address(String input) {
     var octets = 0;
     var start = 0;
