@@ -131,8 +131,11 @@ class Url {
   hidden fixed fragment: String? =
     if (rawFragment != null) decodeUrlComponent(rawFragment) else null
 
-  /// Returns [true] if this URL is absolute: has a non-null scheme.
+  /// Tells if this URL is absolute, that is, has a non-null scheme.
   hidden fixed isAbsolute: Boolean = scheme != null
+
+  /// Tells if this URL's path is absolute, that is, starts with `/`.
+  hidden fixed hasAbsolutePath: Boolean = rawPath.startsWith("/")
 
   /// The authority, without the leading `//`, or [null] if this URL has none.
   ///
