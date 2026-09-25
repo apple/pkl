@@ -259,6 +259,9 @@ class Argument extends Annotation {
 
 /// A value used in [Flag.convert], [Flag.transformAll], [Argument.convert], and
 /// [Argument.transformAll] functions to trigger a dynamic module import.
+///
+/// Imports are evaluated as if running in the Pkl REPL, so typical restrictions on remote modules
+/// importing local modules do not apply.
 class Import {
   /// The URI of the module to import.
   ///
@@ -270,6 +273,25 @@ class Import {
   /// When `false`, the replacement value is the value of the specified module.
   /// When `true`, the replacement value is a [Mapping] from [String] keys to matched module values. 
   glob: Boolean = false
+}
+
+/// A value used in [Flag.convert], [Flag.transformAll], [Argument.convert], and
+/// [Argument.transformAll] functions to trigger a dynamic resource read.
+///
+/// Reads are evaluated as if running in the Pkl REPL, so typical restrictions on remote modules
+/// reading local resources do not apply.
+class Read {
+  /// The URI of the resource to read.
+  ///
+  /// Relative paths are resolved relative to the current working directory.
+  uri: String
+
+  /// Resource read behavior.
+  ///
+  /// When `null`, the replacement is a [Resource] or [String]. Replacement fails if the resource does not exist.
+  /// When `"nullable"`, the replacement is a [Resource] or [String] if the resource exists and `null` if it does not.
+  /// When `"glob"`, the replacement value is a [Mapping] from [String] keys to matched [Resource] or [String] values.
+  type: ("glob" | "nullable")?
 }
 
 local const quantityRegex = Regex(#"([0-9]+(?:\.[0-9]+)?)\.?([A-Za-z]+)"#)

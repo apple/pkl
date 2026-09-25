@@ -58,7 +58,7 @@ public abstract class ReadGlobNode extends AbstractReadNode {
               "",
               language,
               new FrameDescriptor(),
-              new ReadGlobMemberBodyNode(sourceSection));
+              new ReadGlobMemberBodyNode(sourceSection, currentModule));
     }
     return memberNode;
   }
