@@ -364,6 +364,8 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   public static final class Union extends UnresolvedTypeNode {
+    private static final int MAX_EXPLODE_LOOP = 20;
+
     @Children private final UnresolvedTypeNode[] unresolvedElementTypeNodes;
     private final int defaultIndex;
 
@@ -386,7 +388,15 @@ public abstract class UnresolvedTypeNode extends PklNode {
         elementTypeNodes[i] = elementTypeNode;
       }
 
-      return new UnionTypeNode(sourceSection, defaultIndex, elementTypeNodes);
+      // Don't use `@ExplodeLoop` variant of union type of union is too large;
+      // this can easily turn into too many IR nodes; the compiler will spend too much time
+      // compiling these code paths.
+      //
+      // This is especially true for typealiases of unions, because they get inlined into their
+      // usage sites.
+      return elementTypeNodes.length > MAX_EXPLODE_LOOP
+          ? new UnionTypeNodeLooped(sourceSection, defaultIndex, elementTypeNodes)
+          : new UnionTypeNodeExploded(sourceSection, defaultIndex, elementTypeNodes);
     }
   }
 

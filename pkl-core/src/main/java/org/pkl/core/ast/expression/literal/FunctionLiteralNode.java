@@ -46,6 +46,9 @@ public final class FunctionLiteralNode extends ExpressionNode {
     if (functionNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       functionNode = unresolvedFunctionNode.execute(frame);
+      // pre-initialize the function node's call target so that the first call to this function
+      // won't invalidate again.
+      functionNode.getCallTarget();
       if (isCustomThisScope) {
         customThisSlot = VmUtils.findCustomThisSlot(frame);
       }

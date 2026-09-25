@@ -41,7 +41,7 @@ import org.pkl.core.util.IoUtils;
 @NodeInfo(shortName = "read*")
 public abstract class ReadGlobNode extends AbstractReadNode {
   private final EconomicMap<String, VmMapping> cachedResults = EconomicMap.create();
-  @Child private @Nullable SharedMemberNode memberNode;
+  private @Nullable SharedMemberNode memberNode;
 
   protected ReadGlobNode(SourceSection sourceSection, ModuleKey currentModule) {
     super(sourceSection, currentModule);

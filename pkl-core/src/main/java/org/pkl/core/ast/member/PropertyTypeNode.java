@@ -28,6 +28,7 @@ import org.pkl.core.runtime.*;
 
 public final class PropertyTypeNode extends PklRootNode {
   private final String qualifiedPropertyName;
+  private final VmLanguage language;
   @Child private TypeNode typeNode;
 
   private @Nullable Object defaultValue;
@@ -43,6 +44,7 @@ public final class PropertyTypeNode extends PklRootNode {
     super(language, descriptor);
     this.qualifiedPropertyName = qualifiedPropertyName;
     this.typeNode = childNode;
+    this.language = language;
   }
 
   public TypeNode getTypeNode() {
@@ -65,15 +67,18 @@ public final class PropertyTypeNode extends PklRootNode {
   }
 
   public @Nullable Object getDefaultValue(VirtualFrame frame) {
-    if (defaultValueInitialized) return defaultValue;
-
-    defaultValue =
-        typeNode.createDefaultValue(
-            frame, VmLanguage.get(this), getSourceSection(), qualifiedPropertyName);
-    // can't cache default value for `module` type in a non-final module because it's a self-type
-    // (the default value changes when inherited).
-    if (typeNode.isFinalType()) {
-      defaultValueInitialized = true;
+    if (!defaultValueInitialized) {
+      // typeNode.createDefaultValue() is a regular polymorphic call rather than a child node.
+      // passing a non-materialized frame will cause GraalVM to emit diagnostics that it failed
+      // to compile this call.
+      defaultValue =
+          typeNode.createDefaultValue(
+              frame.materialize(), language, getSourceSection(), qualifiedPropertyName);
+      // can't cache default value for `module` type in a non-final module because it's a self-type
+      // (the default value changes when inherited).
+      if (typeNode.isFinalType()) {
+        defaultValueInitialized = true;
+      }
     }
     return defaultValue;
   }
