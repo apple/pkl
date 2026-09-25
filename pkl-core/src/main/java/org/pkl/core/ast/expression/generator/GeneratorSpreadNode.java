@@ -202,10 +202,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
     var counted = isCounted(cursor);
     while (advance(cursor, counted)) {
       var member = cursor.member();
-      var value = cursor.cachedValueOrNull();
-      if (value == null) {
-        value = readCursorValueNode.execute(frame, cursor);
-      }
+      var value = readCursorValueNode.execute(frame, cursor);
       if (member.isElement()) {
         data.addElement(frame, createMember(member, value), this);
       } else {

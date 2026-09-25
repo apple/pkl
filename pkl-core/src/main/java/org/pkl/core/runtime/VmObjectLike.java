@@ -164,9 +164,11 @@ public abstract class VmObjectLike extends VmValue {
   /**
    * Iterates over member definitions in order of their definition, from the top of the prototype
    * chain downwards. If a member is defined multiple times, each occurrence is visited. Local
-   * properties are not visited. If an invocation of `consumer` returns `false`, the remaining
-   * members are not visited, and `false` is returned. Otherwise, all members are visited, and
-   * `true` is returned.
+   * properties are not visited. If an invocation of {@code consumer} returns {@code false}, the
+   * remaining members are not visited, and {@code false} is returned. Otherwise, all members are
+   * visited, and {@code true} is returned.
+   *
+   * <p>Unlike {@link #members()}, this will also visit hidden properties.
    */
   public abstract boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer);
 
