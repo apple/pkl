@@ -399,9 +399,10 @@ public abstract class UnresolvedTypeNode extends PklNode {
       //
       // This is especially true for typealiases of unions, because they get inlined into their
       // usage sites.
-      var ret = elementTypeNodes.length > MAX_EXPLODE_LOOP
-          ? new UnionTypeNodeLooped(sourceSection, defaultIndex, elementTypeNodes)
-          : new UnionTypeNodeExploded(sourceSection, defaultIndex, elementTypeNodes);
+      var ret =
+          elementTypeNodes.length > MAX_EXPLODE_LOOP
+              ? new UnionTypeNodeLooped(sourceSection, defaultIndex, elementTypeNodes)
+              : new UnionTypeNodeExploded(sourceSection, defaultIndex, elementTypeNodes);
       return isUnionOfStringLiterals ? unionOfStringLiterals(elementTypeNodes, ret) : ret;
     }
 

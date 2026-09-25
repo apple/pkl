@@ -1,8 +1,6 @@
 import "pkl:reflect"
 
 typealias X = *"b"|"c"
-typealias Y = "c"|*Z
-typealias Z = "a"|*"z"|"c"
 
 hidden foo: "a"|*X
 

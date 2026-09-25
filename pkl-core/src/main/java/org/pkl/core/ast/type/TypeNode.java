@@ -548,10 +548,6 @@ public abstract class TypeNode extends PklNode {
       return new VmType.StringLiteralType(literal);
     }
 
-    public String getLiteral() {
-      return literal;
-    }
-
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       if (literal.equals(value)) return value;
@@ -1129,6 +1125,7 @@ public abstract class TypeNode extends PklNode {
   public static final class UnionOfStringLiteralsTypeNode extends ObjectSlotTypeNode {
     private final int defaultIndex;
     private final List<String> declaredStringLiterals;
+    // intentionally not marked `@Child` because this only used for metadata, and never executed.
     private final @Nullable TypeNode originalUnionTypeNode;
     private final Set<String> stringLiterals;
 
@@ -1143,14 +1140,6 @@ public abstract class TypeNode extends PklNode {
       this.declaredStringLiterals = declaredStringLiterals;
       this.originalUnionTypeNode = originalUnionTypeNode;
       this.stringLiterals = new HashSet<>(declaredStringLiterals);
-    }
-
-    public int getDefaultIndex() {
-      return defaultIndex;
-    }
-
-    public List<String> getDeclaredStringLiterals() {
-      return declaredStringLiterals;
     }
 
     @Override
@@ -1211,8 +1200,8 @@ public abstract class TypeNode extends PklNode {
       return defaultIndex;
     }
 
-    public Set<String> getStringLiterals() {
-      return stringLiterals;
+    public List<String> getDeclaredStringLiterals() {
+      return declaredStringLiterals;
     }
   }
 
@@ -2431,10 +2420,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected VmType doGetType() {
       return new VmType.AliasType(typeAlias, toTypes(typeArgumentNodes), aliasedTypeNode.getType());
-    }
-
-    public TypeNode getAliasedTypeNode() {
-      return aliasedTypeNode;
     }
 
     public VmTypeAlias getTypeAlias() {
