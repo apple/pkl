@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -90,10 +90,18 @@ public final class VmSafeMath {
   }
 
   public static long remainder(long x, long y) {
+    if (y == 0) {
+      CompilerDirectives.transferToInterpreter();
+      throw divisionByZero();
+    }
     return x % y;
   }
 
   public static double remainder(double x, double y) {
+    if (y == 0) {
+      CompilerDirectives.transferToInterpreter();
+      throw divisionByZero();
+    }
     return x % y;
   }
 
