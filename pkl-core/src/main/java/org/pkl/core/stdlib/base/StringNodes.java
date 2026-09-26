@@ -333,14 +333,13 @@ public final class StringNodes {
 
     @TruffleBoundary
     @Specialization
-    // inefficient but at least correct
     protected boolean eval(String self, VmRegex regex) {
-      var matcher = regex.matcher(self);
-      var end = -1;
-      while (matcher.find()) {
-        end = matcher.end();
+      // try every suffix; `find()` would skip matches that overlap an earlier one
+      var matcher = regex.matcher(self).useTransparentBounds(true).useAnchoringBounds(false);
+      for (var start = self.length(); ; start = self.offsetByCodePoints(start, -1)) {
+        if (matcher.region(start, self.length()).matches()) return true;
+        if (start == 0) return false;
       }
-      return end == self.length();
     }
   }
 
