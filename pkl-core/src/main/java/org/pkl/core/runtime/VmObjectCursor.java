@@ -116,7 +116,7 @@ public abstract class VmObjectCursor {
    */
   public abstract Object value(IndirectCallNode callNode);
 
-  /** Returns the cached value for this member, if it exists. */
+  /** Returns the cached value for this member, or {@code null} if it does not exist. */
   public abstract @Nullable Object cachedValueOrNull();
 
   /** Returns the cached value for this member, asserting that it exists. */

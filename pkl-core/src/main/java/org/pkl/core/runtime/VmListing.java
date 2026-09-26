@@ -18,6 +18,7 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import java.util.ArrayList;
+import java.util.EnumSet;
 import java.util.List;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
@@ -126,15 +127,15 @@ public final class VmListing extends VmListingOrMapping {
   }
 
   @Override
-  public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
-    var anyOrder = option1 == CursorOption.ANY_ORDER || option2 == CursorOption.ANY_ORDER;
-    var allValues = option1 == CursorOption.ALL_VALUES || option2 == CursorOption.ALL_VALUES;
-    if (anyOrder) {
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    var anyOrder = options.contains(CursorOption.ANY_ORDER);
+    var allValues = options.contains(CursorOption.ALL_VALUES);
+    var lazyRequired = options.contains(CursorOption.LAZY_REQUIRED);
+    if (anyOrder && !lazyRequired) {
       if (isShallowForced()) {
         return new CachedElementCursor(this);
       }
       if (allValues) {
-        // assertion: does not have LAZY_REQUIRED because there is no option3
         force(false, false);
         return new CachedElementCursor(this);
       }
@@ -163,7 +164,7 @@ public final class VmListing extends VmListingOrMapping {
   }
 
   @Override
-  public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
     return EmptyCursor.INSTANCE;
   }
 
