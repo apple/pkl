@@ -76,7 +76,12 @@ facts {
   ["endsWith()"] {
     str1.endsWith("")
     str1.endsWith("efg")
+    str1.endsWith(Regex(#"\w"#))
+    "aaa".endsWith(Regex("aa"))
     !str1.endsWith("efx")
+    !str1.endsWith(Regex(#"\d"#))
+    !str1.endsWith(Regex(#"\bfg"#))
+    !str1.endsWith(Regex("^fg"))
   }
 
   ["isRegex"] {
