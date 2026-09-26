@@ -48,6 +48,7 @@ public abstract class VmObject extends VmObjectLike {
       EconomicMap<Object, Object> cachedValues) {
     super(enclosingFrame);
     depth = parent == null ? 0 : parent.depth + 1;
+    this.parent = parent;
     this.members = members;
     this.cachedValues = cachedValues;
 

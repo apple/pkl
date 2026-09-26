@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import java.util.EnumSet;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
@@ -217,7 +218,7 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
-  public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
     return EmptyCursor.INSTANCE;
   }
 
@@ -232,7 +233,7 @@ public final class VmTyped extends VmObject {
   }
 
   @Override
-  public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
     return EmptyCursor.INSTANCE;
   }
 

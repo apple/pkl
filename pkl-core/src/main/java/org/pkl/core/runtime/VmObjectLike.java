@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
 import java.util.function.BiFunction;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
@@ -149,13 +150,13 @@ public abstract class VmObjectLike extends VmValue {
 
   public abstract VmObjectCursor elements(CursorOption option);
 
-  public abstract VmObjectCursor elements(CursorOption option1, CursorOption option2);
+  public abstract VmObjectCursor elements(EnumSet<CursorOption> options);
 
   public abstract VmObjectCursor entries();
 
   public abstract VmObjectCursor entries(CursorOption option);
 
-  public abstract VmObjectCursor entries(CursorOption option1, CursorOption option2);
+  public abstract VmObjectCursor entries(EnumSet<CursorOption> options);
 
   public abstract VmObjectCursor members();
 

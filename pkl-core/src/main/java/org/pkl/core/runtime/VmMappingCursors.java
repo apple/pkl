@@ -55,7 +55,7 @@ final class VmMappingCursors {
 
     @Override
     public int getLength() {
-      return (int) iteratee.getLength();
+      return -1;
     }
   }
 

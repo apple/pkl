@@ -17,6 +17,7 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
 import java.util.Objects;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
@@ -132,9 +133,9 @@ public final class VmDynamic extends VmObject {
   }
 
   @Override
-  public VmObjectCursor elements(CursorOption option1, CursorOption option2) {
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
     // never shallow-force because it's impossible to only force elements
-    var anyOrder = option1 == CursorOption.ANY_ORDER || option2 == CursorOption.ANY_ORDER;
+    var anyOrder = options.contains(CursorOption.ANY_ORDER);
     return anyOrder && isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
   }
 
@@ -154,9 +155,9 @@ public final class VmDynamic extends VmObject {
   }
 
   @Override
-  public VmObjectCursor entries(CursorOption option1, CursorOption option2) {
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
     // never shallow-force because it's impossible to only force entries
-    var anyOrder = option1 == CursorOption.ANY_ORDER || option2 == CursorOption.ANY_ORDER;
+    var anyOrder = options.contains(CursorOption.ANY_ORDER);
     if (anyOrder) {
       return isShallowForced() ? new CachedEntryCursor(this) : new UnorderedEntryCursor(this);
     }
