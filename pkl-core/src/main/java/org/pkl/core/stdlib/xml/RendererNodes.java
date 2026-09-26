@@ -16,9 +16,12 @@
 package org.pkl.core.stdlib.xml;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
@@ -28,7 +31,8 @@ import org.pkl.core.util.xml.XmlValidator;
 public final class RendererNodes {
   private RendererNodes() {}
 
-  private static Renderer createRenderer(VmTyped self, StringBuilder builder) {
+  private static Renderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
     var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
     var xmlVersion = (String) VmUtils.readMember(self, Identifier.XML_VERSION);
     var rootElementName = (String) VmUtils.readMember(self, Identifier.ROOT_ELEMENT_NAME);
@@ -40,15 +44,17 @@ public final class RendererNodes {
         xmlVersion,
         rootElementName,
         rootElementAttributes,
-        PklConverter.fromRenderer(self));
+        PklConverter.fromRenderer(self, callNode),
+        callNode);
   }
 
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -56,9 +62,10 @@ public final class RendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
@@ -79,6 +86,7 @@ public final class RendererNodes {
     private final String rootElementName;
     private final VmMapping rootElementAttributes;
     private final XmlValidator validator;
+    private final IndirectCallNode callNode;
 
     private int lineNumber = 0;
     private @Nullable Object deferredKey;
@@ -89,12 +97,14 @@ public final class RendererNodes {
         String version,
         String rootElementName,
         VmMapping rootElementAttributes,
-        PklConverter converter) {
+        PklConverter converter,
+        IndirectCallNode callNode) {
       super("XML", builder, indent, converter, true, true);
       this.version = version;
       this.rootElementName = rootElementName;
       this.rootElementAttributes = rootElementAttributes;
       validator = XmlValidator.create(version);
+      this.callNode = callNode;
     }
 
     @Override
@@ -414,27 +424,24 @@ public final class RendererNodes {
       }
       builder.append("<").append(name);
       if (attributes != null) {
-        attributes.forceAndIterateMemberValues(
-            (key, member, value) -> {
-              builder.append(' ');
-              // this check will be unnecessary once we have an XmlElement Pkl class
-              if (!(key instanceof String string)) {
-                throw new VmExceptionBuilder()
-                    .typeMismatch(name, BaseModule.getStringClass())
-                    .build();
-              }
-              validateName(string, "attribute");
-              builder.append(string).append("=\"");
-              // this check will be unnecessary once we have an XmlElement Pkl class
-              if (!isScalar(value)) {
-                throw new VmExceptionBuilder()
-                    // can only report two expected types for now
-                    .typeMismatch(name, BaseModule.getStringClass(), BaseModule.getBooleanClass())
-                    .build();
-              }
-              builder.append(stringEscaper.escape(value.toString())).append("\"");
-              return true;
-            });
+        for (var cursor = attributes.entries(); cursor.advance(); ) {
+          builder.append(' ');
+          // this check will be unnecessary once we have an XmlElement Pkl class
+          if (!(cursor.key() instanceof String string)) {
+            throw new VmExceptionBuilder().typeMismatch(name, BaseModule.getStringClass()).build();
+          }
+          validateName(string, "attribute");
+          builder.append(string).append("=\"");
+          var value = cursor.value(callNode);
+          // this check will be unnecessary once we have an XmlElement Pkl class
+          if (!isScalar(value)) {
+            throw new VmExceptionBuilder()
+                // can only report two expected types for now
+                .typeMismatch(name, BaseModule.getStringClass(), BaseModule.getBooleanClass())
+                .build();
+          }
+          builder.append(stringEscaper.escape(value.toString())).append("\"");
+        }
       }
       builder.append(">");
 
@@ -444,12 +451,10 @@ public final class RendererNodes {
       if (isXmlElement(content)) {
         // this special casing is necessary because renderXmlElement() is implemented in terms of
         // this method
-        ((VmDynamic) content)
-            .forceAndIterateMemberValues(
-                (key, member, value) -> {
-                  if (member.isElement()) doVisitElement(value);
-                  return true;
-                });
+        for (var cursor = ((VmDynamic) content).elements(CursorOption.ALL_VALUES);
+            cursor.advance(); ) {
+          doVisitElement(cursor.value(callNode));
+        }
       } else {
         visit(content);
       }

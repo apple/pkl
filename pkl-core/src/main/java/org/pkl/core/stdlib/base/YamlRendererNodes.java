@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmCollection;
@@ -30,6 +32,7 @@ import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.runtime.VmPair;
 import org.pkl.core.runtime.VmRegex;
 import org.pkl.core.runtime.VmSet;
@@ -38,7 +41,6 @@ import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.AbstractStringRenderer;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
-import org.pkl.core.util.MutableBoolean;
 import org.pkl.core.util.yaml.YamlEmitter;
 
 public final class YamlRendererNodes {
@@ -47,9 +49,10 @@ public final class YamlRendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -57,29 +60,35 @@ public final class YamlRendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
 
-  private static YamlRenderer createRenderer(VmTyped self, StringBuilder builder) {
-    var mode = ((String) VmUtils.readMember(self, Identifier.MODE));
-    var indentWidth = ((Long) VmUtils.readMember(self, Identifier.INDENT_WIDTH)).intValue();
-    var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
-    var isStream = (boolean) VmUtils.readMember(self, Identifier.IS_STREAM);
+  private static YamlRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
+    var mode = ((String) VmUtils.readMember(self, Identifier.MODE, callNode));
+    var indentWidth =
+        ((Long) VmUtils.readMember(self, Identifier.INDENT_WIDTH, callNode)).intValue();
+    var omitNullProperties =
+        (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES, callNode);
+    var isStream = (boolean) VmUtils.readMember(self, Identifier.IS_STREAM, callNode);
     return new YamlRenderer(
         builder,
         " ".repeat(indentWidth),
-        PklConverter.fromRenderer(self),
+        PklConverter.fromRenderer(self, callNode),
         omitNullProperties,
         mode,
-        isStream);
+        isStream,
+        callNode);
   }
 
   private static final class YamlRenderer extends AbstractStringRenderer {
     private final boolean isStream;
+    private final IndirectCallNode callNode;
     private final YamlEmitter emitter;
     private final String elementIndent;
 
@@ -89,10 +98,12 @@ public final class YamlRendererNodes {
         PklConverter converter,
         boolean omitNullProperties,
         String mode,
-        boolean isStream) {
+        boolean isStream,
+        IndirectCallNode callNode) {
       super("YAML", builder, indent, converter, omitNullProperties, omitNullProperties);
 
       this.isStream = isStream;
+      this.callNode = callNode;
       this.emitter = YamlEmitter.create(builder, mode, indent);
       elementIndent = indent.substring(1);
     }
@@ -109,16 +120,14 @@ public final class YamlRendererNodes {
 
     private void visitStream(Object value) {
       if (value instanceof VmListing listing) {
-        var isFirst = new MutableBoolean(true);
-        listing.forceAndIterateMemberValues(
-            ((key, member, element) -> {
-              if (!isFirst.getAndSetFalse()) {
-                startNewLine();
-                builder.append("---");
-              }
-              visit(element);
-              return true;
-            }));
+        var cursor = listing.elements(CursorOption.ALL_VALUES);
+        if (!cursor.advance()) return;
+        visit(cursor.value(callNode));
+        while (cursor.advance()) {
+          startNewLine();
+          builder.append("---");
+          visit(cursor.value(callNode));
+        }
         return;
       }
 

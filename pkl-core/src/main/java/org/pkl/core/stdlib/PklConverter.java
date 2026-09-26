@@ -15,10 +15,12 @@
  */
 package org.pkl.core.stdlib;
 
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.*;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.Pair;
 
 public final class PklConverter implements VmValueConverter<Object> {
@@ -49,13 +51,16 @@ public final class PklConverter implements VmValueConverter<Object> {
   private final @Nullable VmFunction referenceConverter;
 
   private PklConverter(
-      VmMapping converters, VmMapping convertPropertyTransformers, Object rendererOrParser) {
+      VmMapping converters,
+      VmMapping convertPropertyTransformers,
+      Object rendererOrParser,
+      @Nullable IndirectCallNode callNode) {
     converters.force(false, false);
     convertPropertyTransformers.force(false, false);
-    typeConverters = createTypeConverters(converters);
+    typeConverters = createTypeConverters(converters, callNode);
     this.convertPropertyTransformers =
-        createConvertPropertyTransformers(convertPropertyTransformers);
-    pathConverters = createPathConverters(converters);
+        createConvertPropertyTransformers(convertPropertyTransformers, callNode);
+    pathConverters = createPathConverters(converters, callNode);
     this.rendererOrParser = rendererOrParser;
 
     stringConverter = typeConverters.get(BaseModule.getStringClass());
@@ -81,19 +86,19 @@ public final class PklConverter implements VmValueConverter<Object> {
   }
 
   public static final PklConverter NOOP =
-      new PklConverter(VmMapping.empty(), VmMapping.empty(), VmNull.withoutDefault());
+      new PklConverter(VmMapping.empty(), VmMapping.empty(), VmNull.withoutDefault(), null);
 
-  public static PklConverter fromRenderer(VmTyped renderer) {
-    var converters = (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERTERS);
+  public static PklConverter fromRenderer(VmTyped renderer, IndirectCallNode callNode) {
+    var converters = (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERTERS, callNode);
     var convertPropertyTransformers =
         (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERT_PROPERTY_TRANSFORMERS);
-    return new PklConverter(converters, convertPropertyTransformers, renderer);
+    return new PklConverter(converters, convertPropertyTransformers, renderer, callNode);
   }
 
-  public static PklConverter fromParser(VmTyped parser) {
-    var converters = (VmMapping) VmUtils.readMember(parser, Identifier.CONVERTERS);
+  public static PklConverter fromParser(VmTyped parser, IndirectCallNode callNode) {
+    var converters = (VmMapping) VmUtils.readMember(parser, Identifier.CONVERTERS, callNode);
     return new PklConverter(
-        converters, VmMapping.empty(), parser); // no annotation converters in parsers
+        converters, VmMapping.empty(), parser, callNode); // no annotation converters in parsers
   }
 
   @Override
@@ -234,44 +239,38 @@ public final class PklConverter implements VmValueConverter<Object> {
     return Pair.of(Identifier.get((String) prop.getFirst()), prop.getSecond());
   }
 
-  private Map<VmClass, VmFunction> createTypeConverters(VmMapping converters) {
+  private Map<VmClass, VmFunction> createTypeConverters(
+      VmMapping converters, @Nullable IndirectCallNode callNode) {
     var result = new HashMap<VmClass, VmFunction>();
-    converters.iterateMemberValues(
-        (key, member, value) -> {
-          assert value != null; // forced in ctor
-          if (key instanceof VmClass vmClass) {
-            result.put(vmClass, (VmFunction) value);
-          }
-          return true;
-        });
+    for (var cursor = converters.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
+      if (cursor.key() instanceof VmClass vmClass) {
+        result.put(vmClass, (VmFunction) cursor.value(callNode));
+      }
+    }
     return result;
   }
 
   private Map<VmClass, VmFunction> createConvertPropertyTransformers(
-      VmMapping convertPropertyTransformers) {
+      VmMapping convertPropertyTransformers, @Nullable IndirectCallNode callNode) {
     var result = new HashMap<VmClass, VmFunction>();
-    convertPropertyTransformers.iterateMemberValues(
-        (key, member, value) -> {
-          assert value != null; // forced in ctor
-          result.put((VmClass) key, ((VmFunction) value));
-          return true;
-        });
-
+    for (var cursor = convertPropertyTransformers.members(CursorOption.ALL_VALUES);
+        cursor.advance(); ) {
+      var value = cursor.value(callNode);
+      result.put((VmClass) cursor.key(), (VmFunction) value);
+    }
     return result;
   }
 
   @SuppressWarnings("unchecked")
-  private Pair<Object[], VmFunction>[] createPathConverters(VmMapping converters) {
+  private Pair<Object[], VmFunction>[] createPathConverters(
+      VmMapping converters, @Nullable IndirectCallNode callNode) {
     var result = new ArrayList<Pair<Object[], VmFunction>>();
     var parser = new PathSpecParser();
-    converters.iterateMemberValues(
-        (key, member, value) -> {
-          assert value != null; // forced in ctor
-          if (key instanceof String string) {
-            result.add(Pair.of(parser.parse(string), (VmFunction) value));
-          }
-          return true;
-        });
+    for (var cursor = converters.entries(); cursor.advance(); ) {
+      if (cursor.key() instanceof String string) {
+        result.add(Pair.of(parser.parse(string), (VmFunction) cursor.value(callNode)));
+      }
+    }
     return result.toArray(new Pair[0]);
   }
 

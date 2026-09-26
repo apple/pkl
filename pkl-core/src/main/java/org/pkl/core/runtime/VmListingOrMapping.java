@@ -42,7 +42,7 @@ public abstract class VmListingOrMapping extends VmObject {
     typeCheckOwner = null;
   }
 
-  public VmListingOrMapping(
+  protected VmListingOrMapping(
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,

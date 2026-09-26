@@ -22,22 +22,31 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
+import org.pkl.core.ast.internal.ReadCursorValueNodeGen;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.Iterators.TruffleIterator;
 import org.pkl.core.util.ArrayUtils;
 
 public abstract class GeneratorForNode extends GeneratorMemberNode {
   private final FrameDescriptor generatorDescriptor;
+  private final LoopConditionProfile loopConditionProfile = LoopConditionProfile.create();
   @Child private ExpressionNode iterableNode;
   @Child private @Nullable UnresolvedTypeNode unresolvedKeyTypeNode;
   @Child private @Nullable UnresolvedTypeNode unresolvedValueTypeNode;
   @Children private final GeneratorMemberNode[] childNodes;
   @Child private @Nullable TypeNode keyTypeNode;
   @Child private @Nullable TypeNode valueTypeNode;
+
+  @Child
+  private ReadCursorValueNode readCursorValueNode = ReadCursorValueNodeGen.create(sourceSection);
+
   private final int keySlot;
   private final int valueSlot;
   private final int[] slotsToCopy;
@@ -100,7 +109,8 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
 
   @Specialization
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmList iterable) {
-    long idx = 0;
+    var idx = 0L;
+    loopConditionProfile.profileCounted(iterable.getLength());
     for (var element : iterable) {
       executeIteration(frame, parent, data, idx++, element);
     }
@@ -108,15 +118,21 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
 
   @Specialization
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmMap iterable) {
-    for (var entry : iterable) {
+    loopConditionProfile.profileCounted(iterable.getLength());
+    var iterator = new TruffleIterator<>(iterable);
+    while (loopConditionProfile.inject(iterator.hasNext())) {
+      var entry = iterator.next();
       executeIteration(frame, parent, data, VmUtils.getKey(entry), VmUtils.getValue(entry));
     }
   }
 
   @Specialization
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmSet iterable) {
-    long idx = 0;
-    for (var element : iterable) {
+    var idx = 0L;
+    loopConditionProfile.profileCounted(iterable.getLength());
+    var iterator = new TruffleIterator<>(iterable);
+    while (loopConditionProfile.inject(iterator.hasNext())) {
+      var element = iterator.next();
       executeIteration(frame, parent, data, idx++, element);
     }
   }
@@ -124,16 +140,20 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   @Specialization
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmIntSeq iterable) {
     var length = iterable.getLength();
-    for (long key = 0, value = iterable.start; key < length; key++, value += iterable.step) {
+    loopConditionProfile.profileCounted(iterable.getLength());
+    for (long key = 0, value = iterable.start;
+        loopConditionProfile.inject(key < length);
+        key++, value += iterable.step) {
       executeIteration(frame, parent, data, key, value);
     }
   }
 
   @Specialization
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmBytes iterable) {
-    long idx = 0;
-    for (var byt : iterable.getBytes()) {
-      executeIteration(frame, parent, data, idx++, (long) byt);
+    var bytes = iterable.getBytes();
+    loopConditionProfile.profileCounted(bytes.length);
+    for (var idx = 0; loopConditionProfile.inject(idx < bytes.length); idx++) {
+      executeIteration(frame, parent, data, (long) idx, (long) bytes[idx]);
     }
   }
 
@@ -149,16 +169,32 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
   }
 
   private void doEvalObject(VirtualFrame frame, VmObject iterable, Object parent, ObjectData data) {
-    var materializedFrame = frame.materialize();
-    iterable.forceAndIterateMemberValues(
-        (key, member, value) -> {
-          var convertedKey = member.isProp() ? key.toString() : key;
-          // TODO: Executing iteration behind a Truffle boundary is bad for performance.
-          // This and similar cases will be fixed in an upcoming PR that replaces method
-          // `(forceAnd)iterateMemberValues` with cursor-based external iterators.
-          executeIteration(materializedFrame, parent, data, convertedKey, value);
-          return true;
-        });
+    // TODO: skip types for module objects?
+    var cursor = iterable.members();
+    if (cursor.getLength() == -1) {
+      doEvalObjectProfiled(frame, parent, data, cursor);
+    } else {
+      doEvalObjectCounted(frame, parent, data, cursor);
+    }
+  }
+
+  private void doEvalObjectCounted(
+      VirtualFrame frame, Object parent, ObjectData data, VmObjectCursor cursor) {
+    loopConditionProfile.profileCounted(cursor.getLength());
+    while (loopConditionProfile.inject(cursor.advance())) {
+      var key = cursor.isProperty() ? cursor.keyToString() : cursor.key();
+      var value = readCursorValueNode.execute(frame, cursor);
+      executeIteration(frame, parent, data, key, value);
+    }
+  }
+
+  private void doEvalObjectProfiled(
+      VirtualFrame frame, Object parent, ObjectData data, VmObjectCursor cursor) {
+    while (loopConditionProfile.profile(cursor.advance())) {
+      var key = cursor.isProperty() ? cursor.keyToString() : cursor.key();
+      var value = readCursorValueNode.execute(frame, cursor);
+      executeIteration(frame, parent, data, key, value);
+    }
   }
 
   @ExplodeLoop

@@ -36,6 +36,10 @@ public final class BaseModule extends StdLibModule {
     return AnyClass.instance;
   }
 
+  public static VmClass getObjectClass() {
+    return ObjectClass.instance;
+  }
+
   public static VmClass getTypedClass() {
     return TypedClass.instance;
   }
@@ -254,6 +258,10 @@ public final class BaseModule extends StdLibModule {
 
   private static final class AnyClass {
     static final VmClass instance = loadClass("Any");
+  }
+
+  private static final class ObjectClass {
+    static final VmClass instance = loadClass("Object");
   }
 
   private static final class TypedClass {

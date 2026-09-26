@@ -15,6 +15,7 @@
  */
 package org.pkl.core;
 
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
@@ -195,7 +196,9 @@ public final class EvaluatorImpl implements Evaluator {
         (module) -> {
           var output = VmUtils.readModuleOutput(module);
           return VmUtils.readFilesProperty(
-              output, (fileOutput) -> new FileOutputImpl(this, fileOutput));
+              output,
+              (fileOutput) -> new FileOutputImpl(this, fileOutput),
+              IndirectCallNode.getUncached());
         });
   }
 

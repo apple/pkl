@@ -148,7 +148,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
         "checkIsValidListingAmendment()",
         "checkMaxListingMemberIndex(0)"
       })
-  protected void evalListingClass(@SuppressWarnings("unused") VmClass parent) {
+  protected Object evalListingClass(@SuppressWarnings("unused") VmClass parent) {
     CompilerDirectives.transferToInterpreter();
     throw exceptionBuilder().unreachableCode().build();
   }

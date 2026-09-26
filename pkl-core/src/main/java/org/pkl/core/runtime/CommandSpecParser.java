@@ -19,6 +19,7 @@ import static org.pkl.core.runtime.VmUtils.REPL_TEXT;
 import static org.pkl.core.runtime.VmUtils.REPL_TEXT_URI;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.io.IOException;
 import java.io.UncheckedIOException;
 import java.net.URI;
@@ -63,6 +64,7 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKeys;
 import org.pkl.core.module.ResolvedModuleKey;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
@@ -135,23 +137,21 @@ public final class CommandSpecParser {
     var subcommandNames = new HashSet<String>();
     var subcommandsProperty = (VmObject) VmUtils.readMember(commandInfo, Identifier.SUBCOMMANDS);
     subcommandsProperty.force(false, false);
-    subcommandsProperty.iterateAlreadyForcedMemberValues(
-        (key, member, value) -> {
-          var spec = parse((VmTyped) value);
-          if (subcommandNames.contains(spec.name())) {
-            throw exceptionBuilder()
-                .withSourceSection(member.getSourceSection())
-                .evalError(
-                    "commandSubcommandConflict",
-                    VmUtils.readMember(commandInfo, Identifier.NAME),
-                    spec.name())
-                .build();
-          }
-          subcommandNames.add(spec.name());
-          subcommands.add(spec);
-          return true;
-        });
-
+    var callNode = IndirectCallNode.getUncached();
+    for (var cursor = subcommandsProperty.members(CursorOption.ALL_VALUES); cursor.advance(); ) {
+      var value = (VmTyped) cursor.value(callNode);
+      var spec = parse(value);
+      if (!subcommandNames.add(spec.name())) {
+        throw exceptionBuilder()
+            .withSourceSection(cursor.member().getSourceSection())
+            .evalError(
+                "commandSubcommandConflict",
+                VmUtils.readMember(commandInfo, Identifier.NAME),
+                spec.name())
+            .build();
+      }
+      subcommands.add(spec);
+    }
     return subcommands;
   }
 
@@ -1041,7 +1041,10 @@ public final class CommandSpecParser {
       // otherwise value is Listing<String> so will export to List<String>
       if (!(value instanceof VmListing vmListing)) throw PklBugException.unreachableCode();
       var result = new HashSet<String>(vmListing.getLength());
-      vmListing.forceAndIterateMemberValues((key, member, val) -> result.add((String) val));
+      var callNode = IndirectCallNode.getUncached();
+      for (var cursor = vmListing.members(); cursor.advance(); ) {
+        result.add((String) cursor.value(callNode));
+      }
       return new Fixed(result);
     }
 
@@ -1211,7 +1214,7 @@ public final class CommandSpecParser {
     var output = VmUtils.readModuleOutput(evaluated);
     return new CommandSpec.Result(
         VmUtils.readBytesProperty(output).export(),
-        VmUtils.readFilesProperty(output, makeFileOutput));
+        VmUtils.readFilesProperty(output, makeFileOutput, IndirectCallNode.getUncached()));
   }
 
   // endregion

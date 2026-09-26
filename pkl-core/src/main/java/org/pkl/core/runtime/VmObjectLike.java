@@ -17,10 +17,12 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
 import java.util.function.BiFunction;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 
 /**
  * Corresponds to `pkl.base#Object|pkl.base#Function`. The lexical scope is a chain of
@@ -140,35 +142,34 @@ public abstract class VmObjectLike extends VmValue {
   @TruffleBoundary
   public abstract boolean hasCachedValue(Object key);
 
-  /**
-   * Iterates over member definitions and their values in order of their definition, from the top of
-   * the prototype chain downwards. If a member value has not yet been evaluated, a `null` `value`
-   * is passed to `consumer`. If a member is defined in multiple objects in the prototype chain,
-   * i.e., is overridden along the way, it is visited only once, with the initial (i.e., upmost)
-   * `member` and the final (i.e., downmost) `value`. (This peculiar behavior serves two purposes in
-   * the current implementation: it guarantees that a `hidden` property is still recognized as such
-   * when overridden, and that an element is still recognized as such when overridden with entry
-   * syntax. It also means that members are visited in order of (first) definition.) Local, hidden,
-   * and external properties are not visited. If an invocation of `consumer` returns `false`, the
-   * remaining members are not visited, and `false` is returned. Otherwise, all members are visited,
-   * and `true` is returned.
-   */
-  public abstract boolean iterateMemberValues(MemberValueConsumer consumer);
+  public abstract VmObjectCursor properties();
 
-  /**
-   * Same as {@link #iterateMemberValues} except that it first performs a shallow {@link #force}. As
-   * a consequence, values passed to {@code consumer} are guaranteed to be non-null.
-   */
-  public abstract boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer);
+  public abstract VmObjectCursor properties(CursorOption option);
 
-  public abstract boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer);
+  public abstract VmObjectCursor elements();
+
+  public abstract VmObjectCursor elements(CursorOption option);
+
+  public abstract VmObjectCursor elements(EnumSet<CursorOption> options);
+
+  public abstract VmObjectCursor entries();
+
+  public abstract VmObjectCursor entries(CursorOption option);
+
+  public abstract VmObjectCursor entries(EnumSet<CursorOption> options);
+
+  public abstract VmObjectCursor members();
+
+  public abstract VmObjectCursor members(CursorOption option);
 
   /**
    * Iterates over member definitions in order of their definition, from the top of the prototype
    * chain downwards. If a member is defined multiple times, each occurrence is visited. Local
-   * properties are not visited. If an invocation of `consumer` returns `false`, the remaining
-   * members are not visited, and `false` is returned. Otherwise, all members are visited, and
-   * `true` is returned.
+   * properties are not visited. If an invocation of {@code consumer} returns {@code false}, the
+   * remaining members are not visited, and {@code false} is returned. Otherwise, all members are
+   * visited, and {@code true} is returned.
+   *
+   * <p>Unlike {@link #members()}, this will also visit hidden properties.
    */
   public abstract boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer);
 
@@ -180,22 +181,4 @@ public abstract class VmObjectLike extends VmValue {
    * properties
    */
   public abstract Object export();
-
-  @FunctionalInterface
-  public interface MemberValueConsumer {
-    /**
-     * Returns true if {@link #iterateMemberValues} should continue calling this method for the
-     * remaining members, and false otherwise.
-     */
-    boolean accept(Object key, ObjectMember member, @Nullable Object value);
-  }
-
-  @FunctionalInterface
-  public interface ForcedMemberValueConsumer {
-    /**
-     * Returns true if {@link #forceAndIterateMemberValues} should continue calling this method for
-     * the remaining members, and false otherwise.
-     */
-    boolean accept(Object key, ObjectMember member, Object value);
-  }
 }
