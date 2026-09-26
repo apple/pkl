@@ -26,6 +26,7 @@ import java.util.regex.Pattern;
 import org.jspecify.annotations.Nullable;
 import org.msgpack.core.MessagePack;
 import org.msgpack.core.MessageUnpacker;
+import org.pkl.core.TypeParameter.Variance;
 import org.pkl.core.runtime.BaseModule;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.pklbinary.AbstractPklBinaryDecoder;
@@ -35,7 +36,7 @@ import org.pkl.core.util.pklbinary.AbstractPklBinaryDecoder;
  *
  * <p>For how pkl-binary turns Java, see {@link Value}.
  */
-public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
+public class PklBinaryDecoder extends AbstractPklBinaryDecoder<PType, Composite> {
 
   private PklBinaryDecoder(MessageUnpacker unpacker) {
     super(unpacker);
@@ -198,5 +199,72 @@ public class PklBinaryDecoder extends AbstractPklBinaryDecoder {
   @Override
   protected Object doDecodeBytes(byte[] bytes) {
     return bytes;
+  }
+
+  @Override
+  protected Object doDecodeReference(
+      Object domain, Object data, List<Composite> path, PType referent) {
+    return new Reference((Composite) domain, data, path, referent);
+  }
+
+  @Override
+  protected PType doDecodeTypeUnknown() {
+    return PType.UNKNOWN;
+  }
+
+  @Override
+  protected PType doDecodeTypeNothing() {
+    return PType.NOTHING;
+  }
+
+  @Override
+  protected PType doDecodeTypeStringLiteral(String literal) {
+    return new PType.StringLiteral(literal);
+  }
+
+  @Override
+  protected PType doDecodeTypeClass(Object clazz, List<PType> typeArguments) {
+    return new PType.Class((PClass) clazz, typeArguments);
+  }
+
+  @Override
+  protected PType doDecodeTypeModule(Object clazz, boolean isFinal) {
+    return PType.MODULE;
+  }
+
+  @Override
+  protected PType doDecodeTypeThis(Object clazz, boolean isFinal) {
+    return PType.THIS;
+  }
+
+  @Override
+  protected PType doDecodeTypeNullable(PType baseType) {
+    return new PType.Nullable(baseType);
+  }
+
+  @Override
+  protected PType doDecodeTypeConstrained(PType baseType, List<String> constraints) {
+    return new PType.Constrained(baseType, constraints);
+  }
+
+  @Override
+  protected PType doDecodeTypeTypeAlias(
+      Object typeAlias, List<PType> typeArguments, PType aliasedType) {
+    return new PType.Alias((TypeAlias) typeAlias, typeArguments, aliasedType);
+  }
+
+  @Override
+  protected PType doDecodeTypeUnion(List<PType> elementTypes, int defaultIndex) {
+    return new PType.Union(elementTypes);
+  }
+
+  @Override
+  protected PType doDecodeTypeVariable(Object typeParameter) {
+    return new PType.TypeVariable((TypeParameter) typeParameter);
+  }
+
+  @Override
+  protected Object doDecodeTypeParameter(Variance variance, String name, int index) {
+    return new TypeParameter(variance, name, index);
   }
 }

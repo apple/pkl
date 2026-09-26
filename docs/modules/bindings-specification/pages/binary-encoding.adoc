@@ -49,9 +49,9 @@ Additional slots may be added to types in future Pkl releases. Decoders *must* b
 The array's length is the number of slots that are filled. For example, xref:{uri-stdlib-List}[List] is encoded as an MessagePack array with two elements.
 
 |===
-|Pkl type |Slot 1 2+|Slot 2 2+|Slot 3 2+|Slot 4
+|Pkl type |Slot 1 2+|Slot 2 2+|Slot 3 2+|Slot 4 2+|Slot 5
 
-||code |type |description |type |description |type |description
+||code |type |description |type |description |type |description |type |description 
 
 |link:{uri-stdlib-Typed}[Typed], link:{uri-stdlib-Dynamic}[Dynamic]
 |`0x01`
@@ -61,11 +61,15 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Enclosing module URI
 |link:{uri-messagepack-array}[array]
 |Array of <<object-members,object members>>
+|
+|
 
 |link:{uri-stdlib-Map}[Map]
 |`0x02`
 |link:{uri-messagepack-map}[map]
 |Map of `<value>` to `<value>`
+|
+|
 |
 |
 |
@@ -79,11 +83,15 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+|
+|
 
 |link:{uri-stdlib-List}[List]
 |`0x04`
 |link:{uri-messagepack-array}[array]
 |Array of `<value>`
+|
+|
 |
 |
 |
@@ -97,11 +105,15 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+|
+|
 
 |link:{uri-stdlib-Set}[Set]
 |`0x06`
 |link:{uri-messagepack-array}[array]
 |Array of `<value>`
+|
+|
 |
 |
 |
@@ -115,6 +127,8 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |link:{uri-stdlib-DurationUnit}[Duration unit] (`"ns"`, `"ms"`, etc.)
 |
 |
+|
+|
 
 |link:{uri-stdlib-DataSize}[DataSize]
 |`0x08`
@@ -122,6 +136,8 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Value (float64)
 |link:{uri-messagepack-str}[str]
 |link:{uri-stdlib-DataSizeUnit}[DataSize unit] (`"b"`, `"kb"`, etc.)
+|
+|
 |
 |
 
@@ -133,6 +149,8 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Second value
 |
 |
+|
+|
 
 |link:{uri-stdlib-IntSeq}[IntSeq]
 |`0x0A`
@@ -142,6 +160,8 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |End
 |link:{uri-messagepack-int}[int]
 |Step
+|
+|
 
 |link:{uri-stdlib-Regex}[Regex]
 |`0x0B`
@@ -151,7 +171,10 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+|
+|
 
+[[class]]
 |link:{uri-stdlib-Class}[Class]
 |`0x0C`
 |link:{uri-messagepack-str}[str]
@@ -160,7 +183,10 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Module URI
 |
 |
+|
+|
 
+[[typealias]]
 |link:{uri-stdlib-TypeAlias}[TypeAlias]
 |`0x0D`
 |link:{uri-messagepack-str}[str]
@@ -169,9 +195,13 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Module URI
 |
 |
+|
+|
 
 |link:{uri-stdlib-Function}[Function]
 |`0x0E`
+|
+|
 |
 |
 |
@@ -187,6 +217,8 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |
 |
 |
+|
+|
 
 |link:{uri-stdlib-ref-Reference}[Reference]
 |`0x20`
@@ -196,6 +228,8 @@ The array's length is the number of slots that are filled. For example, xref:{ur
 |Data
 |link:{uri-messagepack-array}[array]
 |Array of link:{uri-stdlib-ref-Access}[`pkl.ref#Access`] values
+|<<types, Type>>
+|Referent type
 |===
 
 [[type-name-encoding]]
@@ -224,21 +258,132 @@ Like non-primitive values, object members are encoded as MessagePack arrays, whe
 |Property
 |`0x10`
 |link:{uri-messagepack-str}[str]
-|key
+|Key
 |`<value>`
-|property value
+|Property value
 
 |Entry
 |`0x11`
 |`<value>`
-|entry key
+|Entry key
 |`<value>`
-|entry value
+|Entry value
 
 |Element
 |`0x12`
 |link:{uri-messagepack-int}[int]
-|index
+|Index
 |`<value>`
-|element value
+|Element value
+|===
+
+[[types]]
+== Types
+
+Like non-primitive values, types are encoded as MessagePack arrays, where the first slot designates the type of the type.
+
+|===
+|Type |Slot 1 2+|Slot 2 2+|Slot 3 2+|Slot 4
+
+| |code |type |description |type |description |type |description
+
+|`unknown`
+|`0x40`
+|
+|
+|
+|
+|
+|
+
+|`nothing`
+|`0x41`
+|
+|
+|
+|
+|
+|
+
+|String literal
+|`0x42`
+|link:{uri-messagepack-str}[str]
+|Literal string value
+|
+|
+|
+|
+
+|Class
+|`0x43`
+|`<class>`
+|<<class,Class>> type declaration
+|link:{uri-messagepack-array}[array]
+|Array of type arguments
+|
+|
+
+|`module`
+|`0x44`
+|`<class>`
+|<<class,Class>> of the module where the `module` type was used
+|link:{uri-messagepack-bool}[bool]
+|Whether the class is final or not
+|
+|
+
+|`this`
+|`0x45`
+|`<class>`
+|<<class,Class>> where the `this` type was used
+|link:{uri-messagepack-bool}[bool]
+|Whether the class is final or not
+|
+|
+
+|Nullable
+|`0x46`
+|`<type>`
+|Base type
+|
+|
+|
+|
+
+|Constrained
+|`0x47`
+|`<type>`
+|Base type
+|link:{uri-messagepack-array}[array]
+|Array of link:{uri-messagepack-str}[str] value representations of the type's constraints
+|
+|
+
+|TypeAlias
+|`0x48`
+|`<typealias>`
+|<<typealias,Type Alias>> type declaration
+|link:{uri-messagepack-array}[array]
+|Array of type arguments
+|`<type>`
+|"Instantiated" aliased type
+
+|Union
+|`0x49`
+|link:{uri-messagepack-array}[array]
+|Array of element types
+|link:{uri-messagepack-int}[int]
+|Index of default element type (`-1` if no default)
+|
+|
+
+|Type Variable
+|`0x4A`
+|link:{uri-messagepack-int}[int]
+|Type parameter Variance (0=invariant, 1=covariant, 2=contravariant)
+|link:{uri-messagepack-str}[str]
+|Type parameter Name
+|link:{uri-messagepack-int}[int]
+|Type parameter Index (within owner's type parameters)
+
 |===

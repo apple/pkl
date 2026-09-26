@@ -17,6 +17,7 @@ package org.pkl.core;
 
 import java.io.Serial;
 import java.util.List;
+import org.jspecify.annotations.Nullable;
 
 public class Reference implements Value {
   @Serial private static final long serialVersionUID = 0L;
@@ -69,7 +70,7 @@ public class Reference implements Value {
   }
 
   @Override
-  public final boolean equals(Object o) {
+  public final boolean equals(@Nullable Object o) {
     if (!(o instanceof Reference reference)) {
       return false;
     }
@@ -96,6 +97,27 @@ public class Reference implements Value {
 
   @Override
   public String toString() {
-    return super.toString();
+    var builder = new StringBuilder("Reference::<");
+    builder.append(domain.getClassInfo().getDisplayName()).append(", ");
+    builder.append(referentType).append(">(");
+    builder.append(domain).append(", ");
+    builder.append(data).append(")");
+    for (var elem : path) {
+      var prop = elem.get("property");
+      if (prop != null) {
+        builder.append('.').append(prop);
+      } else {
+        var key = elem.get("key");
+        builder.append('[');
+        if (key instanceof String) {
+          builder.append('"').append(key).append('"');
+        } else {
+          builder.append(key);
+        }
+        builder.append(']');
+      }
+    }
+
+    return builder.toString();
   }
 }

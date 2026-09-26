@@ -2,6 +2,10 @@ open module encoding1
 
 import "pkl:pklbinary"
 import "pkl:base"
+import "pkl:ref"
+import "pklbinary1.msgpack.yaml.pkl" as mod
+
+const local forPklBinaryDecoderTest = read?("prop:forPklBinaryDecoderTest")?.toBoolean() ?? false
 
 class Foo {
   dynamic: Dynamic = new {
@@ -23,26 +27,83 @@ class Foo {
   func: ((String, Int) -> Boolean)? =
     (a, b) -> a.sha256Int + b % 2 == 0
   bytes = Bytes(0x01, 0x02, 0x03)
-  moduleClass: Class
-  baseModuleClass: Class = base.getClass()
-  pklbinaryModuleClass: Class = pklbinary.getClass()
-  stdlibClass: Class = PcfRenderer
-  someClass: Class = Foo
-  stdlibTypealias: TypeAlias = UInt 
-  someTypealias: TypeAlias = Bar
+  moduleClass: Class?
+  baseModuleClass: Class? = base.getClass()
+  pklbinaryModuleClass: Class? = pklbinary.getClass()
+  stdlibClass: Class? = PcfRenderer
+  someClass: Class? = Foo
+  stdlibTypealias: TypeAlias? = UInt 
+  someTypealias: TypeAlias? = Bar
   something: Any = new PcfRenderer {} // a non-external class from pkl:base
+  reference {
+    `unknown` = ref.Reference(d, Referent, null).`unknown`
+    `nothing` = ref.Reference(d, Referent, null).`nothing`
+    stringLiteral = ref.Reference(d, Referent, null).stringLiteral
+    `class` = ref.Reference(d, Referent, null).`class`
+    openModule = ref.Reference(d, mod.getClass(), null).openModule
+    openThis = ref.Reference(d, mod.getClass(), null).openThis
+    finalThis = ref.Reference(d, Referent, null).finalThis
+    nullable = ref.Reference(d, Referent, null).nullable
+    constrained = ref.Reference(d, Referent, null).constrained
+    alias = ref.Reference(d, Referent, null).alias
+    alias2 = ref.Reference(d, Referent, null).alias2
+    union = ref.Reference(d, Referent, null).union
+  }
+}
+
+hidden const d: D = new {}
+class D extends ref.Domain {
+  function renderReference(reference: ref.Reference) = throw("not supported")
+}
+
+hidden openModule: module
+hidden openThis: this
+
+class Referent {
+  `unknown`: unknown
+  `nothing`: nothing
+  stringLiteral: "foo"
+  `class`: Mapping<String, String>
+  finalThis: this
+  nullable: "foo"?
+  constrained: "foo"(length < 5)
+  alias: Bar
+  alias2: Baz<Int>
+  union: "foo" | "bar" | *"baz"
+  // TODO: type variable?
 }
 
 typealias Bar = Mapping<String, String>
+typealias Baz<T> = Mapping<String, T>
 
 classInstance: Foo = new {
-  moduleClass = Map(true, module.getClass())[true]
+  moduleClass = if (forPklBinaryDecoderTest) null else Map(true, module.getClass())[true]
 }
 
 hidden noFunc: Foo = (classInstance) { func = null }
 
 hidden encoded: Bytes = new pklbinary.Renderer {}.renderValue(noFunc)
 
+hidden encodedForPklBinaryDecoderTest = new pklbinary.Renderer {}.renderValue((noFunc) {
+  intSeq = null
+  moduleClass = null
+  baseModuleClass = null
+  pklbinaryModuleClass = null
+  stdlibClass = null
+  stdlibTypealias = null
+  someClass = null
+  someTypealias = null
+  reference {
+    `class` = null
+    openModule = null
+    openThis = null
+    finalThis = null
+    nullable = null
+    alias = null
+    alias2 = null
+  }
+})
+
 output {
-  bytes = encoded
+  bytes = if (forPklBinaryDecoderTest) encodedForPklBinaryDecoderTest else encoded
 }
