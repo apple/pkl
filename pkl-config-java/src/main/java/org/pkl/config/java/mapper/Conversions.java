@@ -27,7 +27,6 @@ import java.nio.file.Path;
 import java.util.*;
 import java.util.regex.*;
 import org.pkl.core.*;
-import org.pkl.core.util.url.UrlParser;
 
 /** Predefined conversions for scalar types. */
 public final class Conversions {
@@ -293,15 +292,7 @@ public final class Conversions {
           });
 
   private static String serializeUrl(PObject url) {
-    var port = (Long) url.get("port");
-    return UrlParser.serialize(
-        (String) url.get("scheme"),
-        (String) url.get("rawUserInfo"),
-        (String) url.get("rawHost"),
-        port,
-        (String) url.getProperty("rawPath"),
-        (String) url.get("rawQuery"),
-        (String) url.get("rawFragment"));
+    return (String) url.getProperty("stringValue");
   }
 
   /**

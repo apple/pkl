@@ -125,6 +125,9 @@ class Url {
   hidden fixed fragment: String? =
     if (rawFragment != null) decodeUrlComponent(rawFragment) else null
 
+  /// The serialization of this URL.
+  fixed stringValue: String = toString()
+
   /// Tells if this URL is absolute, that is, has a non-null scheme.
   hidden fixed isAbsolute: Boolean = scheme != null
 
