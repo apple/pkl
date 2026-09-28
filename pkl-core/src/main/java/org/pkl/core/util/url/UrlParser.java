@@ -149,7 +149,7 @@ public final class UrlParser {
         end++;
       }
       if (end < length && input.charAt(end) == ':') {
-        scheme = toLowerAscii(input.substring(0, end));
+        scheme = input.substring(0, end);
         pointer = end + 1;
       }
     }

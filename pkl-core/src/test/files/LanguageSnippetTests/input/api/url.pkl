@@ -50,8 +50,7 @@ facts {
   }
 
   ["parse(): keeps what is already encoded as it was written"] {
-    // RFC 3986 normalizes nothing but the scheme, which is defined to be case-insensitive
-    net.Url("HTTPS://example.com").scheme == "https"
+    net.Url("HTTPS://example.com").scheme == "HTTPS"
     net.Url("http://EXAMPLE.com/A").rawHost == "EXAMPLE.com"
     roundTrips("http://EXAMPLE.com/A")
 
@@ -421,8 +420,7 @@ facts {
     net.Url("https://example.com/a") != net.Url("https://example.com:443/a")
     net.Url("https://example.com/a") != net.Url("https://EXAMPLE.com/a")
     net.Url("https://example.com/%41") != net.Url("https://example.com/A")
-    // but the scheme is
-    net.Url("https://example.com/a") == net.Url("HTTPS://example.com/a")
+    net.Url("https://example.com/a") != net.Url("HTTPS://example.com/a")
   }
 
   ["normalize()"] {

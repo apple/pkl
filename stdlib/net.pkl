@@ -54,8 +54,6 @@ external const function Url(input: String): Url
 /// ```
 class Url {
   /// The scheme, without the trailing `:`, or [null] if this is a relative reference.
-  ///
-  /// [Url()] lowercases this, as schemes are case-insensitive.
   scheme: String(isValidScheme(this))?
 
   /// The percent-encoded userinfo, without the trailing `@`, or [null] if this URL has none.
@@ -85,11 +83,6 @@ class Url {
   ///
   /// To change the path without encoding it first, use [resolve()], which is as lenient as [Url()].
   /// Unlike amending, this drops [rawQuery] and [rawFragment].
-  ///
-  /// Facts:
-  /// ```
-  /// net.Url("https://example.com/a?q=1#f").resolve("/b c").toString() == "https://example.com/b%20c"
-  /// ```
   rawPath: String(isValidPath(this, rawHost != null)) = ""
 
   /// The percent-encoded query, without the leading `?`, or [null] if this URL has none.
@@ -172,6 +165,10 @@ class Url {
 
   /// The percent-decoded segments of [rawPath].
   ///
+  /// [pathSegments] does not tell if the path is absolute or not.
+  /// A relative URL reference `"a/b"` also has path segments `List("a", "b")`.
+  /// To disambiguate between the two, use [hasAbsolutePath].
+  ///
   /// Facts:
   /// ```
   /// net.Url("https://example.com/a/b%20c").pathSegments == List("a", "b c")
@@ -210,8 +207,8 @@ class Url {
   /// ```
   external function resolve(ref: String | Url): Url
 
-  /// Returns this URL in the *syntax-based normalization* of
-  /// [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986#section-6.2.2).
+  /// Returns this URL in the *syntax-based normalization* as described in
+  /// [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of RFC-3986.
   ///
   /// [scheme] and [rawHost] are lowercased, as they are case-insensitive.
   /// Percent-encoding is normalized: an octet standing for an unreserved character is decoded, and
