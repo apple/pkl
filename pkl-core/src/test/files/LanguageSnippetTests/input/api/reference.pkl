@@ -51,7 +51,11 @@ class BProperties {
   someListing: Listing<String>
   someList: List<String>
   nonString: Int
+  nullableUnion: (U1 | U2?)?
 }
+
+class U1 { a: String? }
+class U2 { a: Int }
 
 class MapKey {
   k: Int
@@ -64,10 +68,10 @@ class K {
   bId: String | *Ref<String>?
   aProperties: AProperties | *Ref<AProperties>?
   bProperties: BProperties | *Ref<BProperties>?
-  nullProp: Ref<Null>?
   aValues: Listing<Int | Ref<Int?>>?
   bValues: Listing<String | Ref<String?>>?
   splitUnion: Ref<Listing<String> | Listing<Int>>?
+  nullableUnion: Ref<(String | Int)?>?
 }
 
 a: A = new {
@@ -92,7 +96,6 @@ k: K = new {
   bId = bRef.id
   aProperties = aRef.outputs
   bProperties = bRef.outputs
-  nullProp = aRef.outputs.nullProp.prop1.prop2["foo"].prop3
   aValues {
     aRef.outputs.foo
     aRef.outputs.someMapping["key"]
@@ -109,6 +112,7 @@ k: K = new {
     bRef.outputs.someList[math.maxInt]
     aRef.outputs.nonInt
   }
+  nullableUnion = bRef.outputs.nullableUnion.a
 }
 
 j: K = new {
@@ -120,6 +124,8 @@ j: K = new {
 refInterpolation = "\(aRef.outputs.someListing[1])"
 kInterpolation = "\(k)"
 aValuesJoined = k.aValues.join("\n")
+nullProp = test.catch(() -> aRef.outputs.nullProp.prop1.prop2["foo"].prop3["bar"].prop4)
+nullSub = test.catch(() -> aRef.outputs.nullProp["foo"].prop1.prop2["bar"].prop3)
 
 // ensure that type arguments that are unions are handled correctly
 typeArgs = ref.Reference(d, TypeHolder, null).prop as Ref<Listing<Number | Boolean | String>>

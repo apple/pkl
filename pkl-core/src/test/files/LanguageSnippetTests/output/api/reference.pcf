@@ -20,7 +20,6 @@ k {
   bId = "${b.id}"
   aProperties = "${a.outputs}"
   bProperties = "${b.outputs}"
-  nullProp = "${a.outputs.nullProp.prop1.prop2[foo].prop3}"
   aValues {
     "${a.outputs.foo}"
     "${a.outputs.someMapping[key]}"
@@ -38,19 +37,20 @@ k {
     "${a.outputs.nonInt}"
   }
   splitUnion = null
+  nullableUnion = "${b.outputs.nullableUnion.a}"
 }
 j {
   aId = null
   bId = null
   aProperties = "${a.outputs}"
   bProperties = null
-  nullProp = null
   aValues = null
   bValues = null
   splitUnion = "${a.outputs.someListing}"
+  nullableUnion = null
 }
 refInterpolation = "${a.outputs.someListing[1]}"
-kInterpolation = "new K { aId = Reference(new D {}, String, new A { name = \"a\"; id = \"some-a-value\" }).id; bId = Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).id; aProperties = Reference(new D {}, reference#AProperties, new A { name = \"a\"; id = \"some-a-value\" }).outputs; bProperties = Reference(new D {}, reference#BProperties, new B { name = \"b\"; id = \"some-b-value\" }).outputs; nullProp = Reference(new D {}, Null, new A { name = \"a\"; id = \"some-a-value\" }).outputs.nullProp.prop1.prop2[\"foo\"].prop3; aValues { Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.foo; Reference(new D {}, Int | Null, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someMapping[\"key\"]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someMap[new MapKey { k = 123 }]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someListing[0]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someList[9223372036854775807]; Reference(new D {}, Int, new B { name = \"b\"; id = \"some-b-value\" }).outputs.nonString }; bValues { Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.foo; Reference(new D {}, Null | String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someMapping[\"key\"]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someMap[new MapKey { k = 123 }]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someListing[0]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someList[9223372036854775807]; Reference(new D {}, String, new A { name = \"a\"; id = \"some-a-value\" }).outputs.nonInt }; splitUnion = null }"
+kInterpolation = "new K { aId = Reference(new D {}, String, new A { name = \"a\"; id = \"some-a-value\" }).id; bId = Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).id; aProperties = Reference(new D {}, reference#AProperties, new A { name = \"a\"; id = \"some-a-value\" }).outputs; bProperties = Reference(new D {}, reference#BProperties, new B { name = \"b\"; id = \"some-b-value\" }).outputs; aValues { Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.foo; Reference(new D {}, Int?, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someMapping[\"key\"]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someMap[new MapKey { k = 123 }]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someListing[0]; Reference(new D {}, Int, new A { name = \"a\"; id = \"some-a-value\" }).outputs.someList[9223372036854775807]; Reference(new D {}, Int, new B { name = \"b\"; id = \"some-b-value\" }).outputs.nonString }; bValues { Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.foo; Reference(new D {}, String?, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someMapping[\"key\"]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someMap[new MapKey { k = 123 }]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someListing[0]; Reference(new D {}, String, new B { name = \"b\"; id = \"some-b-value\" }).outputs.someList[9223372036854775807]; Reference(new D {}, String, new A { name = \"a\"; id = \"some-a-value\" }).outputs.nonInt }; splitUnion = null; nullableUnion = Reference(new D {}, Int? | String?, new B { name = \"b\"; id = \"some-b-value\" }).outputs.nullableUnion.a }"
 aValuesJoined = """
   ${a.outputs.foo}
   ${a.outputs.someMapping[key]}
@@ -59,6 +59,8 @@ aValuesJoined = """
   ${a.outputs.someList[9223372036854775807]}
   ${b.outputs.nonString}
   """
+nullProp = "Cannot find property `prop1` in object of type `pkl.ref#Reference<reference#D, Null>`."
+nullSub = "Operator `[]` is not defined for operand types `pkl.ref#Reference<reference#D, Null>` and `String`. Left operand : Reference(new D {}, Null, new A { name = \"a\"; id = \"some-a-value\" }).outputs.... Right operand: \"foo\""
 typeArgs = "${null.prop}"
 badThisRef = "Expected value of type `pkl.ref#Reference<reference#D, this>`, but got type `pkl.ref#Reference<reference#D, reference#A>`. Value: Reference(new D {}, reference#A, new BadResource { name = ? })"
 bareFunctionType = "Expected value of type `pkl.ref#Reference<reference#D, String>`, but got type `pkl.ref#Reference<reference#D, Function4>`. Value: Reference(new D {}, Function4, null)"

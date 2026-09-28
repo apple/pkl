@@ -23,7 +23,6 @@ import java.util.Comparator;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
-import java.util.function.BiConsumer;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.Composite;
@@ -41,10 +40,8 @@ public final class VmReference extends VmValue {
   private final Object data;
   private final ImRrbt<VmTyped> path;
   // candidate types can only be: VmType.ClassType, VmType.AliasType (only preservedAliasTypes),
-  // VmType.StringLiteralType, VmType.Unknown.INSTANCE, VmType.FunctionType,
-  // VmType.TypeVariableTybe, or
-  // VmType.UnionType
-  // (containing only the previous; flattened)
+  // VmType.StringLiteralType, VmType.Unknown.INSTANCE, VmType.NullableType
+  // VmType.TypeVariableTybe, or VmType.UnionType (containing only the previous; flattened)
   private final VmType referentType;
 
   private boolean forced = false;
@@ -61,7 +58,7 @@ public final class VmReference extends VmValue {
         domain,
         data,
         RrbTree.empty(),
-        normalizeTypes(new VmType.ClassType(clazz), clazz, clazz.getModuleClass()));
+        normalizeTypes(new VmType.ClassType(clazz), clazz, clazz.getModuleClass(), false));
   }
 
   public VmReference(VmTyped domain, Object data, ImRrbt<VmTyped> path, VmType referentType) {
@@ -89,15 +86,15 @@ public final class VmReference extends VmValue {
 
   // simplifies a type by:
   // * erasing constraints
-  // * transforming T? into T|Null
   // * dereferencing aliases (except for well-known stdlib alias types)
   // * flattening unions
   // * replace VmType.ModuleType with appropriate VmType.ClassType
   // * drop VmType.FunctionType and VmType.TypeVariableType
   @TruffleBoundary
-  private static VmType normalizeTypes(VmType type, VmClass thisClass, VmClass moduleClass) {
+  private static VmType normalizeTypes(
+      VmType type, VmClass thisClass, VmClass moduleClass, boolean isNullable) {
     var types = new HashSet<VmType>();
-    normalizeTypes(type, thisClass, moduleClass, types);
+    normalizeTypes(type, thisClass, moduleClass, types, isNullable);
     return minimizeTypes(types);
   }
 
@@ -115,7 +112,7 @@ public final class VmReference extends VmValue {
   }
 
   private static void normalizeTypes(
-      VmType type, VmClass thisClass, VmClass moduleClass, Set<VmType> result) {
+      VmType type, VmClass thisClass, VmClass moduleClass, Set<VmType> result, boolean isNullable) {
     if (type == UnknownType.INSTANCE
         || type == NothingType.INSTANCE
         || type instanceof VmType.StringLiteralType) {
@@ -127,17 +124,16 @@ public final class VmReference extends VmValue {
         result.add(
             ct.withTypeArguments(
                 Arrays.stream(ct.getTypeArguments())
-                    .map(arg -> normalizeTypes(arg, thisClass, moduleClass))
+                    .map(arg -> normalizeTypes(arg, thisClass, moduleClass, false))
                     .toArray(VmType[]::new)));
       }
-    }
-    // normalize `T?` to `T | Null`
-    else if (type instanceof VmType.NullableType nullable) {
-      normalizeTypes(nullable.getElementType(), thisClass, moduleClass, result);
-      result.add(new VmType.ClassType(BaseModule.getNullClass()));
-      // erase `T(someConstraint)` to `T`
+    } else if (type instanceof VmType.NullableType nullable) {
+      // normalize `T?` and `T??` to `(T'normalized)?`
+      var elem = normalizeTypes(nullable.getElementType(), thisClass, moduleClass, true);
+      result.add(isNullable ? elem : new VmType.NullableType(elem));
     } else if (type instanceof VmType.ConstrainedType constrained) {
-      normalizeTypes(constrained.getBaseType(), thisClass, moduleClass, result);
+      // erase `T(someConstraint)` to `T`
+      normalizeTypes(constrained.getBaseType(), thisClass, moduleClass, result, false);
     } else if (type instanceof VmType.AliasType alias) {
       if (isPreservedTypeAlias(alias.getVmTypeAlias())) {
         result.add(alias);
@@ -146,11 +142,12 @@ public final class VmReference extends VmValue {
             alias.getAliasedType(),
             alias.getVmTypeAlias().getModuleClass(),
             alias.getVmTypeAlias().getModuleClass(),
-            result);
+            result,
+            false);
       }
     } else if (type instanceof VmType.UnionType union) {
       for (var t : union.getElementTypes()) {
-        normalizeTypes(t, thisClass, moduleClass, result);
+        normalizeTypes(t, thisClass, moduleClass, result, false);
       }
     } else if (type instanceof NonFinalThisType) {
       // there are 4 entrypoints here:
@@ -183,28 +180,48 @@ public final class VmReference extends VmValue {
   public VmReference withPropertyAccess(Identifier property) {
     var propString = property.toString();
     return withAccess(
-        (t, candidates) -> getCandidatePropertyType(t, propString, candidates),
+        (t, isNullable, candidates) ->
+            getCandidatePropertyType(t, isNullable, propString, candidates),
         () -> newAccess(property.toString(), null));
   }
 
   public VmReference withSubscriptAccess(Object key) {
     return withAccess(
-        (t, candidates) -> getCandidateSubscriptType(t, key, candidates),
+        (t, isNullable, candidates) -> getCandidateSubscriptType(t, isNullable, key, candidates),
         () -> newAccess(null, key));
   }
 
+  @FunctionalInterface
+  private interface CandidateChecker {
+    void gather(VmType type, boolean isNullable, Set<VmType> result);
+  }
+
   @TruffleBoundary
-  private VmReference withAccess(
-      BiConsumer<VmType, Set<VmType>> checkCandidate, Supplier<VmTyped> makeAccess) {
+  private VmReference withAccess(CandidateChecker checkCandidate, Supplier<VmTyped> makeAccess) {
     Set<VmType> candidates = new HashSet<>();
-    for (var t : iterateTypes(referentType)) {
-      checkCandidate.accept(t, candidates);
-    }
+    doWithAccess(checkCandidate, referentType, false, candidates);
     return new VmReference(domain, data, path.append(makeAccess.get()), minimizeTypes(candidates));
   }
 
+  private void doWithAccess(
+      CandidateChecker checkCandidate, VmType type, boolean isNullable, Set<VmType> candidates) {
+    if (type instanceof VmType.NullableType nullableType) {
+      type = nullableType.getElementType();
+      isNullable = true;
+    }
+    if (type instanceof VmType.UnionType unionType) {
+      for (var t : unionType.getElementTypes()) {
+        doWithAccess(checkCandidate, t, isNullable, candidates);
+      }
+      return;
+    }
+
+    checkCandidate.gather(type, isNullable, candidates);
+  }
+
   @SuppressWarnings("DuplicatedCode")
-  private static void getCandidatePropertyType(VmType type, String property, Set<VmType> result) {
+  private static void getCandidatePropertyType(
+      VmType type, boolean isNullable, String property, Set<VmType> result) {
     if (type == UnknownType.INSTANCE) {
       result.add(type);
       return;
@@ -241,12 +258,6 @@ public final class VmReference extends VmValue {
           new VmType.ClassType(baseModule), VmReferenceAccessErrorType.EXTERNAL_CLASS);
     }
 
-    // dot access on `Reference<D, Null>` gives `Reference<D, Null>`
-    if (ct.getVmClass().isNullClass()) {
-      result.add(ct);
-      return;
-    }
-
     var prop = ct.getVmClass().getAllProperties().get(Identifier.get(property));
     //noinspection ConstantValue
     if (prop == null) {
@@ -267,12 +278,15 @@ public final class VmReference extends VmValue {
     // In this case `VmClass[B].getAllProperties().get(<prop>)` will be A's prop, not B's
     var propTypeNode = prop.getTypeNode();
     var propType =
-        propTypeNode == null ? VmType.UnknownType.INSTANCE : propTypeNode.getTypeNode().getType();
-    normalizeTypes(propType, ct.getVmClass(), ct.getVmClass().getModuleClass(), result);
+        propTypeNode == null
+            ? VmType.UnknownType.INSTANCE
+            : wrapNullable(isNullable, propTypeNode.getTypeNode().getType());
+    normalizeTypes(propType, ct.getVmClass(), ct.getVmClass().getModuleClass(), result, false);
   }
 
   @SuppressWarnings("DuplicatedCode")
-  private static void getCandidateSubscriptType(VmType type, Object key, Set<VmType> result) {
+  private static void getCandidateSubscriptType(
+      VmType type, boolean isNullable, Object key, Set<VmType> result) {
     if (type == UnknownType.INSTANCE) {
       result.add(type);
       return;
@@ -289,30 +303,36 @@ public final class VmReference extends VmValue {
       if (!(key instanceof Long)) {
         throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
       }
-      normalizeTypes(ct.getTypeArguments()[0], clazz, clazz.getModuleClass(), result);
+      normalizeTypes(
+          wrapNullable(isNullable, ct.getTypeArguments()[0]),
+          clazz,
+          clazz.getModuleClass(),
+          result,
+          false);
       return;
     }
     if (clazz.isMappingClass() || clazz.isMapClass()) {
       var typeArgs = ct.getTypeArguments();
-      var keyTypes = normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass());
+      var keyTypes = normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass(), false);
       for (var kt : iterateTypes(keyTypes)) {
         if (kt == UnknownType.INSTANCE
             || (kt instanceof VmType.ClassType klazz && klazz.getVmClass() == VmUtils.getClass(key))
             || (kt instanceof VmType.StringLiteralType stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
-          normalizeTypes(typeArgs[1], clazz, clazz.getModuleClass(), result);
+          normalizeTypes(
+              wrapNullable(isNullable, typeArgs[1]), clazz, clazz.getModuleClass(), result, false);
           return;
         }
       }
     }
 
-    // subscript access on `Reference<D, Null>` gives `Reference<D, Null>`
-    if (clazz == BaseModule.getNullClass()) {
-      result.add(ct);
-      return;
-    }
-
     throw new VmReferenceAccessError(type, VmReferenceAccessErrorType.CANNOT_FIND_MEMBER);
+  }
+
+  private static VmType wrapNullable(boolean isNullable, VmType orig) {
+    if (!isNullable || orig == VmType.UnknownType.INSTANCE || orig instanceof VmType.NullableType)
+      return orig;
+    return new VmType.NullableType(orig);
   }
 
   /**
@@ -324,7 +344,7 @@ public final class VmReference extends VmValue {
       return true;
     }
 
-    var checkType = normalizeTypes(type, thisClass, moduleClass);
+    var checkType = normalizeTypes(type, thisClass, moduleClass, false);
     // fast path: short circuit if any referent is accepted
     if (checkType == UnknownType.INSTANCE || isClass(checkType, BaseModule.getAnyClass())) {
       return true;
