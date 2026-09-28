@@ -61,6 +61,10 @@ class Url {
   /// Only a URL with a [rawHost] can have userinfo.
   rawUserInfo: String(rawHost != null, isValidUserInfo(this))?
 
+  /// The percent-decoded [rawUserInfo].
+  hidden fixed userInfo: String? =
+    if (rawUserInfo != null) decodeUrlComponent(rawUserInfo) else null
+
   /// The percent-encoded host, or [null] if this URL has no authority.
   ///
   /// A [null] host is not the same as an empty one: `file:/tmp` has no host, `file:///tmp` has an
@@ -70,6 +74,9 @@ class Url {
   /// It may carry a zone identifier, as described in RFC 6874.
   /// Anything else is a registered name, which cannot contain `[`, `]` or `:` literally.
   rawHost: String(isValidHost(this))?
+
+  /// The percent-decoded [rawHost].
+  hidden fixed host: String? = if (rawHost != null) decodeUrlComponent(rawHost) else null
 
   /// The port, or [null] if this URL states none.
   ///
@@ -85,23 +92,6 @@ class Url {
   /// Unlike amending, this drops [rawQuery] and [rawFragment].
   rawPath: String(isValidPath(this, rawHost != null)) = ""
 
-  /// The percent-encoded query, without the leading `?`, or [null] if this URL has none.
-  ///
-  /// The empty string is a URL ending in a bare `?`.
-  rawQuery: String(isValidQuery(this))?
-
-  /// The percent-encoded fragment, without the leading `#`, or [null] if this URL has none.
-  ///
-  /// The empty string is a URL ending in a bare `#`.
-  rawFragment: String(isValidFragment(this))?
-
-  /// The percent-decoded [rawUserInfo].
-  hidden fixed userInfo: String? =
-    if (rawUserInfo != null) decodeUrlComponent(rawUserInfo) else null
-
-  /// The percent-decoded [rawHost].
-  hidden fixed host: String? = if (rawHost != null) decodeUrlComponent(rawHost) else null
-
   /// The percent-decoded [rawPath].
   ///
   /// An encoded `/` is decoded like any other octet, so it cannot be distinguished from a `/` that
@@ -115,11 +105,21 @@ class Url {
   /// ```
   hidden fixed path: String = decodeUrlComponent(rawPath)
 
+  /// The percent-encoded query, without the leading `?`, or [null] if this URL has none.
+  ///
+  /// The empty string is a URL ending in a bare `?`.
+  rawQuery: String(isValidQuery(this))?
+
   /// The percent-decoded [rawQuery].
   ///
   /// Unlike [queryParameters], this does not read [rawQuery] as
   /// `application/x-www-form-urlencoded`, so a `+` is kept as is.
   hidden fixed query: String? = if (rawQuery != null) decodeUrlComponent(rawQuery) else null
+
+  /// The percent-encoded fragment, without the leading `#`, or [null] if this URL has none.
+  ///
+  /// The empty string is a URL ending in a bare `#`.
+  rawFragment: String(isValidFragment(this))?
 
   /// The percent-decoded [rawFragment].
   hidden fixed fragment: String? =
@@ -217,10 +217,8 @@ class Url {
   /// Dot segments (`./` and `../`) are only removed from an absolute [rawPath].
   /// A URL with a [rawHost] and no path is given the path `/`, which names the same resource.
   ///
-  /// Normalization that would require knowing the scheme is not performed.
-  ///
-  /// Two URLs identify the same resource exactly when their normalizations are equal; this is what
-  /// [equals()] compares.
+  /// Does not perform *scheme-based normalization* as described in
+  /// [section 6.2.3](https://www.rfc-editor.org/info/rfc3986/#section-6.2.3).
   ///
   /// Facts:
   /// ```
@@ -230,15 +228,12 @@ class Url {
   /// ```
   external function normalize(): Url
 
-  /// Whether [other] identifies the same resource as this URL.
+  /// Tells whether this url is equal to [other] according to *syntax-based normalization* as
+  /// described in [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of
+  /// RFC-3986.
   ///
-  /// Unlike `==`, this compares Urls as the *syntax-based normalization* of RFC 3986:
-  /// [scheme] and [rawHost] are case-insensitive and percent-encoding is normalized.
-  /// An octet standing for a reserved character is kept as written.
-  ///
-  /// Dot segments (`./` and `../`) are only removed from an absolute [rawPath].
-  ///
-  /// Normalization that would require knowing the scheme is not performed.
+  /// This will return [true] if the [normalized][normalize] versions of [this] and [other] are the
+  /// same, and [false] otherwise.
   ///
   /// Facts:
   /// ```
@@ -258,23 +253,23 @@ class Url {
   /// ```
   external function toString(): String
 
-  /// Whether [value] is a percent-encoded `userinfo`.
+  /// Tells if [value] is a percent-encoded `userinfo`.
   external function isValidUserInfo(value: String): Boolean
 
-  /// Whether [value] is a `scheme`.
+  /// Tells if [value] is a `scheme`.
   external function isValidScheme(value: String): Boolean
 
-  /// Whether [value] is a percent-encoded `host`.
+  /// Tells if [value] is a percent-encoded `host`.
   external function isValidHost(value: String): Boolean
 
-  /// Whether [value] is a percent-encoded path that can sit next to an authority, or, when
+  /// Tells if [value] is a percent-encoded path that can sit next to an authority, or, when
   /// [hasAuthority] is [false], next to no authority at all.
   external function isValidPath(value: String, hasAuthority: Boolean): Boolean
 
-  /// Whether [value] is a percent-encoded `query`.
+  /// Tells if [value] is a percent-encoded `query`.
   external function isValidQuery(value: String): Boolean
 
-  /// Whether [value] is a percent-encoded `fragment`.
+  /// Tells if [value] is a percent-encoded `fragment`.
   external function isValidFragment(value: String): Boolean
 }
 
