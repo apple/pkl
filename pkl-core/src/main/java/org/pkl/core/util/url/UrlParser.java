@@ -50,7 +50,7 @@ public final class UrlParser {
       @Nullable String scheme,
       @Nullable String userInfo,
       @Nullable String host,
-      @Nullable Integer port,
+      @Nullable Long port,
       String path,
       @Nullable String query,
       @Nullable String fragment) {
@@ -94,7 +94,7 @@ public final class UrlParser {
       @Nullable String scheme,
       @Nullable String userInfo,
       @Nullable String host,
-      @Nullable Integer port,
+      @Nullable Long port,
       String path,
       @Nullable String query,
       @Nullable String fragment) {
@@ -103,7 +103,7 @@ public final class UrlParser {
 
   /** Serializes an authority (section 3.2) from its percent-encoded components. */
   @TruffleBoundary
-  static String serializeAuthority(@Nullable String userInfo, String host, @Nullable Integer port) {
+  static String serializeAuthority(@Nullable String userInfo, String host, @Nullable Long port) {
     var sb = new StringBuilder();
     if (userInfo != null) {
       sb.append(userInfo).append('@');
@@ -157,7 +157,7 @@ public final class UrlParser {
     // authority = [ userinfo "@" ] host [ ":" port ]
     String userInfo = null;
     String host = null;
-    Integer port = null;
+    Long port = null;
     if (input.startsWith("//", pointer)) {
       pointer += 2;
       var end = pointer;
@@ -810,8 +810,8 @@ public final class UrlParser {
   }
 
   /** Returns the port, or {@code null} if it is not a number that fits in 16 bits. */
-  private static @Nullable Integer parsePort(String input) {
-    var port = 0;
+  private static @Nullable Long parsePort(String input) {
+    var port = 0L;
     for (var i = 0; i < input.length(); i++) {
       if (!PercentEncoder.isDigit(input.charAt(i))) {
         return null;

@@ -298,7 +298,7 @@ public final class Conversions {
         (String) url.get("scheme"),
         (String) url.get("rawUserInfo"),
         (String) url.get("rawHost"),
-        port == null ? null : port.intValue(),
+        port,
         (String) url.getProperty("rawPath"),
         (String) url.get("rawQuery"),
         (String) url.get("rawFragment"));

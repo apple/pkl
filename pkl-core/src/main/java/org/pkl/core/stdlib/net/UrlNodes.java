@@ -43,7 +43,7 @@ public final class UrlNodes {
       return VmNull.lift(parsed.authority());
     }
 
-    @Specialization
+    @Specialization(guards = "!self.hasExtraStorage()")
     protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return VmNull.lift(UrlFactory.readAuthority(self, callNode));
     }
@@ -56,7 +56,7 @@ public final class UrlNodes {
       return getHostKind(parsed.host());
     }
 
-    @Specialization
+    @Specialization(guards = "!self.hasExtraStorage()")
     protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return getHostKind(UrlFactory.readHost(self, callNode));
     }
@@ -73,7 +73,7 @@ public final class UrlNodes {
       return getZoneId(parsed.host());
     }
 
-    @Specialization
+    @Specialization(guards = "!self.hasExtraStorage()")
     protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return getZoneId(UrlFactory.readHost(self, callNode));
     }
@@ -90,7 +90,7 @@ public final class UrlNodes {
       return VmList.create(UrlParser.segments(parsed.path()));
     }
 
-    @Specialization
+    @Specialization(guards = "!self.hasExtraStorage()")
     protected VmList eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return VmList.create(UrlParser.segments(UrlFactory.readPath(self, callNode)));
     }
@@ -103,7 +103,7 @@ public final class UrlNodes {
       return getQueryParameters(parsed.query());
     }
 
-    @Specialization
+    @Specialization(guards = "!self.hasExtraStorage()")
     protected Object eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       return getQueryParameters(UrlFactory.readQuery(self, callNode));
     }
@@ -120,7 +120,7 @@ public final class UrlNodes {
       return parsed.serialize();
     }
 
-    @Specialization
+    @Specialization(guards = "!self.hasExtraStorage()")
     protected String eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
       var parsed = UrlFactory.read(self, callNode);
       return parsed.serialize();

@@ -295,8 +295,6 @@ external const function encodeUrlComponent(value: String): String
 
 /// Percent-decodes [value], interpreting the decoded bytes as UTF-8.
 ///
-/// The inverse of [encodeUrlComponent()].
-///
 /// Throws if any `%` in [value] does not begin a percent-encoded octet.
 /// To write a literal `%`, encode it as `%25`.
 ///

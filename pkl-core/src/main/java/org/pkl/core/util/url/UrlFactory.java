@@ -89,8 +89,8 @@ public final class UrlFactory {
             readNullableString(url, Identifier.SCHEME, callNode),
             readNullableString(url, Identifier.RAW_USER_INFO, callNode),
             readNullableString(url, Identifier.RAW_HOST, callNode),
-            port == null ? null : port.intValue(),
-            (String) VmUtils.readMember(url, Identifier.RAW_PATH),
+            port,
+            (String) VmUtils.readMember(url, Identifier.RAW_PATH, callNode),
             readNullableString(url, Identifier.RAW_QUERY, callNode),
             readNullableString(url, Identifier.RAW_FRAGMENT, callNode));
     url.setExtraStorage(parsed);
@@ -136,8 +136,6 @@ public final class UrlFactory {
     }
     var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT));
     return UrlParser.serializeAuthority(
-        readNullableString(url, Identifier.RAW_USER_INFO, callNode),
-        host,
-        port == null ? null : port.intValue());
+        readNullableString(url, Identifier.RAW_USER_INFO, callNode), host, port);
   }
 }
