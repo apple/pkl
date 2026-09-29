@@ -54,7 +54,7 @@ public final class PklConverter implements VmValueConverter<Object> {
       VmMapping converters,
       VmMapping convertPropertyTransformers,
       Object rendererOrParser,
-      @Nullable IndirectCallNode callNode) {
+      IndirectCallNode callNode) {
     converters.force(false, false);
     convertPropertyTransformers.force(false, false);
     typeConverters = createTypeConverters(converters, callNode);
@@ -86,7 +86,11 @@ public final class PklConverter implements VmValueConverter<Object> {
   }
 
   public static final PklConverter NOOP =
-      new PklConverter(VmMapping.empty(), VmMapping.empty(), VmNull.withoutDefault(), null);
+      new PklConverter(
+          VmMapping.empty(),
+          VmMapping.empty(),
+          VmNull.withoutDefault(),
+          IndirectCallNode.getUncached());
 
   public static PklConverter fromRenderer(VmTyped renderer, IndirectCallNode callNode) {
     var converters = (VmMapping) VmUtils.readMember(renderer, Identifier.CONVERTERS, callNode);
@@ -240,7 +244,7 @@ public final class PklConverter implements VmValueConverter<Object> {
   }
 
   private Map<VmClass, VmFunction> createTypeConverters(
-      VmMapping converters, @Nullable IndirectCallNode callNode) {
+      VmMapping converters, IndirectCallNode callNode) {
     var result = new HashMap<VmClass, VmFunction>();
     for (var cursor = converters.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
       if (cursor.key() instanceof VmClass vmClass) {
@@ -251,7 +255,7 @@ public final class PklConverter implements VmValueConverter<Object> {
   }
 
   private Map<VmClass, VmFunction> createConvertPropertyTransformers(
-      VmMapping convertPropertyTransformers, @Nullable IndirectCallNode callNode) {
+      VmMapping convertPropertyTransformers, IndirectCallNode callNode) {
     var result = new HashMap<VmClass, VmFunction>();
     for (var cursor = convertPropertyTransformers.members(CursorOption.ALL_VALUES);
         cursor.advance(); ) {
@@ -263,7 +267,7 @@ public final class PklConverter implements VmValueConverter<Object> {
 
   @SuppressWarnings("unchecked")
   private Pair<Object[], VmFunction>[] createPathConverters(
-      VmMapping converters, @Nullable IndirectCallNode callNode) {
+      VmMapping converters, IndirectCallNode callNode) {
     var result = new ArrayList<Pair<Object[], VmFunction>>();
     var parser = new PathSpecParser();
     for (var cursor = converters.entries(); cursor.advance(); ) {

@@ -131,11 +131,11 @@ public final class VmListing extends VmListingOrMapping {
     var anyOrder = options.contains(CursorOption.ANY_ORDER);
     var allValues = options.contains(CursorOption.ALL_VALUES);
     var lazyRequired = options.contains(CursorOption.LAZY_REQUIRED);
-    if (anyOrder && !lazyRequired) {
+    if (anyOrder) {
       if (isShallowForced()) {
         return new CachedElementCursor(this);
       }
-      if (allValues) {
+      if (allValues && !lazyRequired) {
         force(false, false);
         return new CachedElementCursor(this);
       }

@@ -118,6 +118,9 @@ final class VmDynamicCursors {
 
     @Override
     public boolean shouldVisit(ObjectMember member) {
+      if (member.isProp()) {
+        return false;
+      }
       return !(key() instanceof Long l) || l >= iteratee.getLength();
     }
 
@@ -134,6 +137,9 @@ final class VmDynamicCursors {
 
     @Override
     public boolean shouldVisit(ObjectMember member) {
+      if (member.isProp()) {
+        return false;
+      }
       return !(key() instanceof Long l) || l >= iteratee.getLength();
     }
 
@@ -263,12 +269,13 @@ final class VmDynamicCursors {
 
     protected final VmDynamic iteratee;
     private VmObject currentObject;
-    private @LateInit UnmodifiableMapCursor<Object, ObjectMember> currentMember;
+    private UnmodifiableMapCursor<Object, ObjectMember> currentMember;
     private final EconomicSet<Object> seenKeys = EconomicSets.create();
 
     public AbstractUnorderedMemberCursor(VmDynamic iteratee) {
       this.iteratee = iteratee;
       currentObject = iteratee;
+      currentMember = currentObject.members.getEntries();
     }
 
     @Override
@@ -282,8 +289,8 @@ final class VmDynamicCursors {
     public final boolean advance() {
       while (true) {
         while (currentMember.advance()) {
-          if (shouldVisit(currentMember.getValue())
-              && EconomicSets.add(seenKeys, currentMember.getKey())) return true;
+          if (EconomicSets.add(seenKeys, currentMember.getKey())
+              && shouldVisit(currentMember.getValue())) return true;
         }
         var parent = currentObject.parent;
         if (parent == dynamicPrototype) return false;
@@ -309,11 +316,6 @@ final class VmDynamicCursors {
     @Override
     public final @Nullable Object cachedValueOrNull() {
       return iteratee.getCachedValue(key());
-    }
-
-    @Override
-    public final ObjectMember member() {
-      return currentMember.getValue();
     }
 
     @Override
