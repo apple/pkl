@@ -128,17 +128,16 @@ public final class UrlNodes {
   }
 
   public abstract static class resolve extends ExternalMethod1Node {
-    @Child private GetParsedUrlNode getSelfNode = GetParsedUrlNode.create();
+    @Child private GetParsedUrlNode getParsedNode = GetParsedUrlNode.create();
 
     @Specialization
     protected Object evalString(VmTyped self, String ref) {
-      return resolve(getSelfNode.execute(self), UrlFactory.parseOrThrow(ref, this));
+      return resolve(getParsedNode.execute(self), UrlFactory.parseOrThrow(ref, this));
     }
 
     @Specialization
-    protected Object eval(
-        VmTyped self, VmTyped ref, @Cached("create()") GetParsedUrlNode getRefNode) {
-      return resolve(getSelfNode.execute(self), getRefNode.execute(ref));
+    protected Object eval(VmTyped self, VmTyped ref) {
+      return resolve(getParsedNode.execute(self), getParsedNode.execute(ref));
     }
 
     @SuppressWarnings("MethodNameSameAsClassName")
@@ -163,12 +162,11 @@ public final class UrlNodes {
   }
 
   public abstract static class equals extends ExternalMethod1Node {
-    @Child private GetParsedUrlNode getSelfNode = GetParsedUrlNode.create();
-    @Child private GetParsedUrlNode getOtherNode = GetParsedUrlNode.create();
+    @Child private GetParsedUrlNode getParsedNode = GetParsedUrlNode.create();
 
     @Specialization
     protected boolean eval(VmTyped self, VmTyped other) {
-      return UrlParser.isEquivalent(getSelfNode.execute(self), getOtherNode.execute(other));
+      return UrlParser.isEquivalent(getParsedNode.execute(self), getParsedNode.execute(other));
     }
   }
 
