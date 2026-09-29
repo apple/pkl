@@ -244,8 +244,8 @@ final class VmDynamicCursors {
     public boolean advance() {
       while (true) {
         while (currentMembers.advance()) {
-          if (shouldVisit(currentMembers.getValue())
-              && EconomicSets.add(seenKeys, currentMembers.getKey())) return true;
+          if (EconomicSets.add(seenKeys, currentMembers.getKey())
+              && shouldVisit(currentMembers.getValue())) return true;
         }
         allMembersIndex -= 1;
         if (allMembersIndex < 0) return false;

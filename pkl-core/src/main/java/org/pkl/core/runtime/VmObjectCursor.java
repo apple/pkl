@@ -154,7 +154,7 @@ public abstract class VmObjectCursor {
    *   <li>{@link VmObjectLike#members}
    * </ul>
    */
-  public ObjectMember member() {
+  public final ObjectMember member() {
     var key = key();
     var iteratee = iteratee();
     var ret = iteratee.getRootFirstMember(key);
@@ -233,7 +233,7 @@ public abstract class VmObjectCursor {
     }
 
     @Override
-    public final Object value(@Nullable IndirectCallNode callNode) {
+    public final Object value(IndirectCallNode callNode) {
       var key = key();
       var value = iteratee.getCachedValue(key);
       if (value != null) return value;
@@ -243,9 +243,6 @@ public abstract class VmObjectCursor {
           object = object.parent) {
         var member = object.getMember(key);
         if (member != null) {
-          if (callNode == null) {
-            throw new IllegalStateException("Received null for callNode but member was not forced");
-          }
           return VmUtils.doReadMember(iteratee, object, key, member, true, callNode);
         }
       }
