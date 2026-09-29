@@ -110,7 +110,7 @@ public abstract class VmException extends AbstractTruffleException {
   }
 
   public void setHintBuilder(BiConsumer<AnsiStringBuilder, Boolean> hintBuilder) {
-    this.hintBuilder = hintBuilder; 
+    this.hintBuilder = hintBuilder;
   }
 
   public void setHint(String hint) {

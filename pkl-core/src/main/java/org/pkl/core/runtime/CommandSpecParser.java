@@ -158,8 +158,6 @@ public final class CommandSpecParser {
       }
 
       throw e;
-    } catch (PklBugException e) {
-      throw e;
     }
   }
 
@@ -1209,7 +1207,13 @@ public final class CommandSpecParser {
             new ExpressionNode[] {},
             parent.members,
             moduleInfo,
-            new ConstantValueNode(VmUtils.unavailableSourceSection(), module));
+            module.isModuleObject()
+                ? new ImportNode(
+                    language,
+                    VmUtils.unavailableSourceSection(),
+                    resolvedModule,
+                    module.getModuleInfo().getResolvedModuleKey().getUri())
+                : new ConstantValueNode(VmUtils.unavailableSourceSection(), module));
 
     var moduleNode =
         new ModuleNode(

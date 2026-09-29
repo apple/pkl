@@ -40,7 +40,7 @@ local commandModule = reflect.Module(Command)
 
 /// Command configuration.
 hidden command: CommandInfo = new {
-  name = // choose the name of the module if the command is a module or the class otherwise
+  name =
     if (commandClass == commandModule.moduleClass)
       throw("Commands amending `pkl:Command` must override `command.name`")
     else if (commandClass.name == "ModuleClass")

@@ -839,4 +839,35 @@ class CommandSpecParserTest {
       assertThat(this.showAsRequired).isFalse()
     }
   }
+
+  @Test
+  fun `amend-only command parses without error and has empty description`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        """
+        amends "pkl:Command"
+        import "sub.pkl"
+
+        command {
+          name = "root"
+          subcommands {
+            new sub { target = "foo" }
+          }
+        }
+        """
+          .trimIndent(),
+      )
+    writePklFile(
+      "sub.pkl",
+      """
+      extends "pkl:Command"
+      target: String
+      """
+        .trimIndent(),
+    )
+
+    val spec = parse(moduleUri)
+    assertThat(spec.helpText).isEmpty()
+  }
 }
