@@ -35,7 +35,12 @@ import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 
 public final class VmMapping extends VmListingOrMapping {
+  private static final EnumSet<CursorOption> isEmptyComputationCursor =
+      EnumSet.of(CursorOption.ANY_ORDER, CursorOption.LAZY_REQUIRED);
+
   @CompilationFinal private long cachedLength = -1;
+  @CompilationFinal private boolean isEmptyComputed;
+  @CompilationFinal private boolean isEmpty;
 
   @GuardedBy("this")
   private @Nullable VmSet __allKeys;
@@ -166,11 +171,11 @@ public final class VmMapping extends VmListingOrMapping {
     var anyOrder = options.contains(CursorOption.ANY_ORDER);
     var allValues = options.contains(CursorOption.ALL_VALUES);
     var lazyRequired = options.contains(CursorOption.LAZY_REQUIRED);
-    if (anyOrder && !lazyRequired) {
+    if (anyOrder) {
       if (isShallowForced()) {
         return new CachedEntryCursor(this);
       }
-      if (allValues) {
+      if (allValues && !lazyRequired) {
         force(false, false);
         return new CachedEntryCursor(this);
       }
@@ -249,6 +254,11 @@ public final class VmMapping extends VmListingOrMapping {
   }
 
   public boolean isEmpty() {
-    return !entries(EnumSet.of(CursorOption.ANY_ORDER, CursorOption.LAZY_REQUIRED)).advance();
+    if (!isEmptyComputed) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      isEmptyComputed = true;
+      isEmpty = !entries(isEmptyComputationCursor).advance();
+    }
+    return isEmpty;
   }
 }

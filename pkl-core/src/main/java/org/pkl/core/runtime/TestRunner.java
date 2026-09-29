@@ -294,7 +294,7 @@ public final class TestRunner {
     var allSucceeded = true;
     var callNode = IndirectCallNode.getUncached();
     for (var cursor = examples.entries(); cursor.advance(); ) {
-      var testName = (String) cursor.key();
+      var testName = cursor.keyToString();
       var groupMember = cursor.member();
       var listing = (VmListing) cursor.value(callNode);
       var testResultBuilder = new TestResult.Builder(testName);
