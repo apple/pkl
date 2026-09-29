@@ -119,8 +119,8 @@ public final class CommandSpecParser {
       return new CommandSpec(
           commandName,
           exportNullableString(commandInfo, Identifier.DESCRIPTION),
-          (Boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
-          (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
+          (boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
+          (boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
           optionSpecs,
           collectSubcommands(commandInfo, path),
           (options, parent) ->
@@ -313,7 +313,7 @@ public final class CommandSpecParser {
     boolean hide = false;
     if (flagAnnotation != null) {
       shortName = exportNullableString(flagAnnotation, Identifier.SHORT_NAME);
-      hide = (Boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
+      hide = (boolean) VmUtils.readMember(flagAnnotation, Identifier.HIDE);
     }
     checkFlagNames(prop, name, shortName);
 
