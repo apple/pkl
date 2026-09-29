@@ -24,8 +24,11 @@ import java.io.UncheckedIOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.nio.file.Path;
+import java.util.ArrayDeque;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Deque;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
@@ -69,7 +72,6 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
-import org.pkl.core.util.paguro.RrbTree;
 
 /** Runs commands. */
 public final class CommandSpecParser {
@@ -100,46 +102,14 @@ public final class CommandSpecParser {
   }
 
   public CommandSpec parse(VmTyped command) {
-    return doParse(command, RrbTree.<String>empty().append("<root>"));
-  }
-
-  private CommandSpec doParse(VmTyped command, RrbTree<String> path) {
-    VmUtils.checkAmends(command, CommandModule.getModule().getVmClass());
-    checkPropertyIsUndefined(command, Identifier.OPTIONS);
-    checkPropertyIsUndefined(command, Identifier.PARENT);
-
+    var path = new ArrayDeque<String>();
+    path.push("[root]");
     try {
-      var optionsClass = getOptionsClass(command);
-      var commandInfo =
-          VmUtils.checkAmends(
-              VmUtils.readMember(command, Identifier.COMMAND), CommandModule.getCommandInfoClass());
-      var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
-      var optionSpecs = collectOptions(optionsClass);
-
-      return new CommandSpec(
-          commandName,
-          exportNullableString(commandInfo, Identifier.DESCRIPTION),
-          (boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
-          (boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
-          optionSpecs,
-          collectSubcommands(commandInfo, path),
-          (options, parent) ->
-              new CommandSpec.State(
-                  buildExecutionModule(
-                      command,
-                      buildObject(optionsClass, options),
-                      // NB: these next two lines are the only place where we lose type safety.
-                      // SubcommandState is type-erased to Object in the public API to hide
-                      // internals.
-                      // Consumers of this API must ensure CommandSpec.apply is only ever passed an
-                      // instance of CommandSpec.State previously returned from a prior invocation
-                      // of CommandSpec.apply.
-                      parent == null ? null : (SubcommandState) parent.contents()),
-                  (it) -> handleErrors(() -> evaluateResult(command, (SubcommandState) it))));
+      return doParse(command, path);
     } catch (VmException e) {
       var hint = new StringBuilder("Error occurred while parsing command definition: ");
       assert !path.isEmpty();
-      var iter = path.iterator();
+      var iter = path.descendingIterator();
       hint.append(iter.next());
       while (iter.hasNext()) {
         hint.append(" > ").append(iter.next());
@@ -161,24 +131,69 @@ public final class CommandSpecParser {
     }
   }
 
-  private List<CommandSpec> collectSubcommands(VmTyped commandInfo, RrbTree<String> path) {
+  private CommandSpec doParse(VmTyped command, Deque<String> path) {
+    VmUtils.checkAmends(command, CommandModule.getModule().getVmClass());
+    checkPropertyIsUndefined(command, Identifier.OPTIONS);
+    checkPropertyIsUndefined(command, Identifier.PARENT);
+
+    var optionsClass = getOptionsClass(command);
+    var commandInfo =
+        VmUtils.checkAmends(
+            VmUtils.readMember(command, Identifier.COMMAND), CommandModule.getCommandInfoClass());
+    var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
+    if (path.size() > 1) {
+      path.pop();
+      path.push(commandName);
+    }
+    var optionSpecs = collectOptions(optionsClass);
+
+    return new CommandSpec(
+        commandName,
+        exportNullableString(commandInfo, Identifier.DESCRIPTION),
+        (boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
+        (boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
+        optionSpecs,
+        collectSubcommands(commandInfo, path),
+        (options, parent) ->
+            new CommandSpec.State(
+                buildExecutionModule(
+                    command,
+                    buildObject(optionsClass, options),
+                    // NB: these next two lines are the only place where we lose type safety.
+                    // SubcommandState is type-erased to Object in the public API to hide
+                    // internals.
+                    // Consumers of this API must ensure CommandSpec.apply is only ever passed an
+                    // instance of CommandSpec.State previously returned from a prior invocation
+                    // of CommandSpec.apply.
+                    parent == null ? null : (SubcommandState) parent.contents()),
+                (it) -> handleErrors(() -> evaluateResult(command, (SubcommandState) it))));
+  }
+
+  private List<CommandSpec> collectSubcommands(VmTyped commandInfo, Deque<String> path) {
     var subcommands = new ArrayList<CommandSpec>();
-    var subcommandNames = new HashSet<String>();
+    var subcommandNames = new HashMap<String, Object>();
     var subcommandsProperty = (VmObject) VmUtils.readMember(commandInfo, Identifier.SUBCOMMANDS);
     subcommandsProperty.force(false, false);
     subcommandsProperty.iterateAlreadyForcedMemberValues(
         (key, member, value) -> {
-          var spec = doParse((VmTyped) value, path.append(key.toString()));
-          if (subcommandNames.contains(spec.name())) {
+          // track the subcommand index at first
+          // replaced by subcommand name in doParse if reading name succeeds
+          path.push("subcommands[" + key + "]");
+          var spec = doParse((VmTyped) value, path);
+          path.pop();
+          var existingNameIndex = subcommandNames.get(spec.name());
+          if (existingNameIndex != null) {
             throw exceptionBuilder()
                 .withSourceSection(member.getSourceSection())
                 .evalError(
                     "commandSubcommandConflict",
                     VmUtils.readMember(commandInfo, Identifier.NAME),
-                    spec.name())
+                    spec.name(),
+                    existingNameIndex,
+                    key)
                 .build();
           }
-          subcommandNames.add(spec.name());
+          subcommandNames.put(spec.name(), key);
           subcommands.add(spec);
           return true;
         });

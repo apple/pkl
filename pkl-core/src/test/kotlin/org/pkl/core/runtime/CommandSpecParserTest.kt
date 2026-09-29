@@ -699,7 +699,10 @@ class CommandSpecParserTest {
       )
 
     val exc = assertThrows<PklException> { parse(moduleUri) }
-    assertThat(exc.message).contains("Command `cmd` has subcommands with conflicting name \"foo\".")
+    assertThat(exc.message)
+      .contains(
+        "Command `cmd` has subcommands with conflicting name \"foo\" at index `0` and index `1`."
+      )
   }
 
   @Test
@@ -869,5 +872,42 @@ class CommandSpecParserTest {
 
     val spec = parse(moduleUri)
     assertThat(spec.helpText).isNull()
+  }
+
+  @Test
+  fun `command parsing output includes command path`() {
+    val moduleUri =
+      writePklFile(
+        "cmd.pkl",
+        """
+        extends "pkl:Command"
+        import "pkl:Command"
+
+        command {
+          name = "root"
+          subcommands {
+            new Sub1 {
+              command {
+                subcommands {
+                  new Sub2 {
+                    command {
+                      name = throw("oops")
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+
+        class Sub1 extends Command
+        class Sub2 extends Command
+        """
+          .trimIndent(),
+      )
+
+    val exc = assertThrows<PklException> { parse(moduleUri) }
+    assertThat(exc.message)
+      .contains("Error occurred while parsing command definition: [root] > Sub1 > subcommands[0]")
   }
 }
