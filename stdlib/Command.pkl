@@ -36,12 +36,18 @@ import "pkl:Command"
 import "pkl:reflect"
 
 local commandClass = reflect.Class(getClass())
+local commandModule = reflect.Module(Command)
 
 /// Command configuration.
 hidden command: CommandInfo = new {
   name = // choose the name of the module if the command is a module or the class otherwise
-    if (commandClass.name == "ModuleClass") reflect.Module(module).name else commandClass.name
-  description = commandClass.docComment // works for both classes and module classes
+    if (commandClass == commandModule.moduleClass)
+      throw("Commands amending `pkl:Command` must override `command.name`")
+    else if (commandClass.name == "ModuleClass")
+      reflect.moduleOf(module).name
+    else
+      commandClass.name
+  description = if (commandClass == commandModule.moduleClass) "" else commandClass.docComment
 }
 
 /// Command line options.

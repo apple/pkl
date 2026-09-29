@@ -49,6 +49,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrameTransformer;
+import org.pkl.core.ast.ConstantValueNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.expression.literal.AmendModuleNodeGen;
@@ -68,6 +69,7 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.IoUtils;
 import org.pkl.core.util.Pair;
+import org.pkl.core.util.paguro.RrbTree;
 
 /** Runs commands. */
 public final class CommandSpecParser {
@@ -98,46 +100,77 @@ public final class CommandSpecParser {
   }
 
   public CommandSpec parse(VmTyped command) {
+    return doParse(command, RrbTree.<String>empty().append("<root>"));
+  }
+
+  private CommandSpec doParse(VmTyped command, RrbTree<String> path) {
     VmUtils.checkAmends(command, CommandModule.getModule().getVmClass());
     checkPropertyIsUndefined(command, Identifier.OPTIONS);
     checkPropertyIsUndefined(command, Identifier.PARENT);
 
-    var optionsClass = getOptionsClass(command);
-    var commandInfo =
-        VmUtils.checkAmends(
-            VmUtils.readMember(command, Identifier.COMMAND), CommandModule.getCommandInfoClass());
-    var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
-    var optionSpecs = collectOptions(optionsClass);
+    try {
+      var optionsClass = getOptionsClass(command);
+      var commandInfo =
+          VmUtils.checkAmends(
+              VmUtils.readMember(command, Identifier.COMMAND), CommandModule.getCommandInfoClass());
+      var commandName = (String) VmUtils.readMember(commandInfo, Identifier.NAME);
+      var optionSpecs = collectOptions(optionsClass);
 
-    return new CommandSpec(
-        commandName,
-        exportNullableString(commandInfo, Identifier.DESCRIPTION),
-        (Boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
-        (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
-        optionSpecs,
-        collectSubcommands(commandInfo),
-        (options, parent) ->
-            new CommandSpec.State(
-                buildExecutionModule(
-                    command,
-                    buildObject(optionsClass, options),
-                    // NB: these next two lines are the only place where we lose type safety.
-                    // SubcommandState is type-erased to Object in the public API to hide internals.
-                    // Consumers of this API must ensure CommandSpec.apply is only ever passed an
-                    // instance of CommandSpec.State previously returned from a prior invocation
-                    // of CommandSpec.apply.
-                    parent == null ? null : (SubcommandState) parent.contents()),
-                (it) -> handleErrors(() -> evaluateResult(command, (SubcommandState) it))));
+      return new CommandSpec(
+          commandName,
+          exportNullableString(commandInfo, Identifier.DESCRIPTION),
+          (Boolean) VmUtils.readMember(commandInfo, Identifier.HIDE),
+          (Boolean) VmUtils.readMember(commandInfo, Identifier.NOOP),
+          optionSpecs,
+          collectSubcommands(commandInfo, path),
+          (options, parent) ->
+              new CommandSpec.State(
+                  buildExecutionModule(
+                      command,
+                      buildObject(optionsClass, options),
+                      // NB: these next two lines are the only place where we lose type safety.
+                      // SubcommandState is type-erased to Object in the public API to hide
+                      // internals.
+                      // Consumers of this API must ensure CommandSpec.apply is only ever passed an
+                      // instance of CommandSpec.State previously returned from a prior invocation
+                      // of CommandSpec.apply.
+                      parent == null ? null : (SubcommandState) parent.contents()),
+                  (it) -> handleErrors(() -> evaluateResult(command, (SubcommandState) it))));
+    } catch (VmException e) {
+      var hint = new StringBuilder("Error occurred while parsing command definition: ");
+      assert !path.isEmpty();
+      var iter = path.iterator();
+      hint.append(iter.next());
+      while (iter.hasNext()) {
+        hint.append(" > ").append(iter.next());
+      }
+
+      var hintBuilder = e.getHintBuilder();
+      if (hintBuilder != null) {
+        e.setHintBuilder(
+            (builder, flag) -> {
+              hintBuilder.accept(builder, flag);
+              builder.append("\n\n");
+              builder.append(hint);
+            });
+      } else {
+        e.setHint(hint.toString());
+      }
+
+      throw e;
+    } catch (PklBugException e) {
+      throw e;
+    }
   }
 
-  private List<CommandSpec> collectSubcommands(VmTyped commandInfo) {
+  private List<CommandSpec> collectSubcommands(VmTyped commandInfo, RrbTree<String> path) {
     var subcommands = new ArrayList<CommandSpec>();
     var subcommandNames = new HashSet<String>();
     var subcommandsProperty = (VmObject) VmUtils.readMember(commandInfo, Identifier.SUBCOMMANDS);
     subcommandsProperty.force(false, false);
     subcommandsProperty.iterateAlreadyForcedMemberValues(
         (key, member, value) -> {
-          var spec = parse((VmTyped) value);
+          var spec = doParse((VmTyped) value, path.append(key.toString()));
           if (subcommandNames.contains(spec.name())) {
             throw exceptionBuilder()
                 .withSourceSection(member.getSourceSection())
@@ -1176,11 +1209,7 @@ public final class CommandSpecParser {
             new ExpressionNode[] {},
             parent.members,
             moduleInfo,
-            new ImportNode(
-                language,
-                VmUtils.unavailableSourceSection(),
-                resolvedModule,
-                module.getModuleInfo().getResolvedModuleKey().getUri()));
+            new ConstantValueNode(VmUtils.unavailableSourceSection(), module));
 
     var moduleNode =
         new ModuleNode(

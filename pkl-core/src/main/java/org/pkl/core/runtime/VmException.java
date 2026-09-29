@@ -37,7 +37,7 @@ public abstract class VmException extends AbstractTruffleException {
   private final List<StackFrame> leadingStackFrames;
   @Nullable private final BiConsumer<AnsiStringBuilder, Boolean> messageBuilder;
   @Nullable protected BiConsumer<AnsiStringBuilder, Boolean> hintBuilder;
-  private boolean forExpressionInput;
+  private boolean forExpressionInput = false;
 
   public VmException(
       @Nullable String message,
@@ -63,7 +63,6 @@ public abstract class VmException extends AbstractTruffleException {
     this.insertedStackFrames = insertedStackFrames;
     this.leadingStackFrames = leadingStackFrames;
     this.hintBuilder = hintBuilder;
-    this.forExpressionInput = forExpressionInput;
   }
 
   public final boolean isExternalMessage() {
@@ -108,6 +107,10 @@ public abstract class VmException extends AbstractTruffleException {
 
   public @Nullable BiConsumer<AnsiStringBuilder, Boolean> getHintBuilder() {
     return hintBuilder;
+  }
+
+  public void setHintBuilder(BiConsumer<AnsiStringBuilder, Boolean> hintBuilder) {
+    this.hintBuilder = hintBuilder; 
   }
 
   public void setHint(String hint) {
