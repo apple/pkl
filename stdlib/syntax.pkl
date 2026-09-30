@@ -294,7 +294,6 @@ typealias NodeType =
     // parts of expressions
     | "new_header"
     | "function_literal_body"
-    | "parenthesized_expr_elements"
     | "if_header"
     | "if_condition"
     | "if_condition_expr"
