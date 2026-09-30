@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.IdentityHashMap;
@@ -329,7 +330,7 @@ public final class SyntaxNodes {
    * them.
    */
   @TruffleBoundary
-  static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan) {
+  static Node convertVmToNode(VmTyped nodeVm, FullSpan fallbackSpan, IndirectCallNode callNode) {
     if (nodeVm.hasExtraStorage()) {
       var storage = nodeVm.getExtraStorage();
       // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
@@ -339,47 +340,49 @@ public final class SyntaxNodes {
       }
       // a pass-through view presents its basis unchanged
       if (storage instanceof ViewData view && view.isPassThrough()) {
-        return convertVmToNode(view.basis, fallbackSpan);
+        return convertVmToNode(view.basis, fallbackSpan, callNode);
       }
     }
 
-    var typeStr = (String) VmUtils.readMember(nodeVm, Identifier.TYPE);
+    var typeStr = (String) VmUtils.readMember(nodeVm, Identifier.TYPE, callNode);
     var nodeType = NodeType.valueOf(typeStr.toUpperCase(Locale.ROOT));
 
-    var ownSpan = readSpan(optSpan(nodeVm));
+    var ownSpan = readSpan(optSpan(nodeVm, callNode), callNode);
     // a constructed node that did not set its own span inherits the insertion point's span
     var span = ownSpan.equals(ZERO_SPAN) ? fallbackSpan : ownSpan;
 
-    var childrenVm = (VmList) VmUtils.readMember(nodeVm, Identifier.CHILDREN);
+    var childrenVm = (VmList) VmUtils.readMember(nodeVm, Identifier.CHILDREN, callNode);
     var children = new ArrayList<Node>(childrenVm.getLength());
     for (var i = 0; i < childrenVm.getLength(); i++) {
-      children.add(convertVmToNode((VmTyped) childrenVm.get(i), span));
+      children.add(convertVmToNode((VmTyped) childrenVm.get(i), span, callNode));
     }
 
-    return makeJavaNode(nodeType, span, children, VmUtils.readMember(nodeVm, Identifier.TEXT));
+    return makeJavaNode(
+        nodeType, span, children, VmUtils.readMember(nodeVm, Identifier.TEXT, callNode));
   }
 
-  private static @Nullable VmTyped optSpan(VmTyped nodeVm) {
-    return (VmTyped) VmNull.unwrap(VmUtils.readMember(nodeVm, Identifier.SPAN));
+  private static @Nullable VmTyped optSpan(VmTyped nodeVm, IndirectCallNode callNode) {
+    return (VmTyped) VmNull.unwrap(VmUtils.readMember(nodeVm, Identifier.SPAN, callNode));
   }
 
-  private static FullSpan readSpan(@Nullable VmTyped spanVm) {
+  private static FullSpan readSpan(@Nullable VmTyped spanVm, IndirectCallNode callNode) {
     if (spanVm == null) {
       return ZERO_SPAN;
     }
-    var start = (VmTyped) VmUtils.readMember(spanVm, Identifier.START);
-    var end = (VmTyped) VmUtils.readMember(spanVm, Identifier.END);
+    var start = (VmTyped) VmUtils.readMember(spanVm, Identifier.START, callNode);
+    var end = (VmTyped) VmUtils.readMember(spanVm, Identifier.END, callNode);
     return new FullSpan(
         0,
         0,
-        readPosition(start, Identifier.LINE),
-        readPosition(start, Identifier.COLUMN),
-        readPosition(end, Identifier.LINE),
-        readPosition(end, Identifier.COLUMN));
+        readPosition(start, Identifier.LINE, callNode),
+        readPosition(start, Identifier.COLUMN, callNode),
+        readPosition(end, Identifier.LINE, callNode),
+        readPosition(end, Identifier.COLUMN, callNode));
   }
 
-  private static int readPosition(VmTyped sourceLocationVm, Identifier name) {
-    return ((Long) VmUtils.readMember(sourceLocationVm, name)).intValue();
+  private static int readPosition(
+      VmTyped sourceLocationVm, Identifier name, IndirectCallNode callNode) {
+    return ((Long) VmUtils.readMember(sourceLocationVm, name, callNode)).intValue();
   }
 
   private static Node makeJavaNode(
