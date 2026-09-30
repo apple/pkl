@@ -279,7 +279,7 @@ import org.pkl.parser.syntax.Type.ModuleType;
 import org.pkl.parser.syntax.Type.NothingType;
 import org.pkl.parser.syntax.Type.NullableType;
 import org.pkl.parser.syntax.Type.ParenthesizedType;
-import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.StringLiteralType;
 import org.pkl.parser.syntax.Type.ThisType;
 import org.pkl.parser.syntax.Type.UnionType;
 import org.pkl.parser.syntax.Type.UnknownType;
@@ -474,7 +474,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public UnresolvedTypeNode visitStringConstantType(StringConstantType type) {
+  public UnresolvedTypeNode visitStringLiteralType(StringLiteralType type) {
     return new UnresolvedTypeNode.StringLiteral(
         createSourceSection(type), type.getStr().getString());
   }
@@ -565,7 +565,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
     boolean isUnionOfStringLiterals = true;
     for (var typ : elementTypes) {
-      if (!(typ instanceof StringConstantType)) {
+      if (!(typ instanceof StringLiteralType)) {
         isUnionOfStringLiterals = false;
         break;
       }
@@ -576,7 +576,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       return new UnresolvedTypeNode.UnionOfStringLiterals(
           createSourceSection(type),
           defaultIndex,
-          elementTypes.stream().map(it -> ((StringConstantType) it).getStr().getString()).toList());
+          elementTypes.stream().map(it -> ((StringLiteralType) it).getStr().getString()).toList());
     }
 
     var elements = new UnresolvedTypeNode[elementTypes.size()];

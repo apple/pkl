@@ -79,7 +79,7 @@ import org.pkl.parser.syntax.StringPart.StringChars;
 import org.pkl.parser.syntax.Type;
 import org.pkl.parser.syntax.Type.DeclaredType;
 import org.pkl.parser.syntax.Type.ParenthesizedType;
-import org.pkl.parser.syntax.Type.StringConstantType;
+import org.pkl.parser.syntax.Type.StringLiteralType;
 import org.pkl.parser.syntax.TypeAlias;
 import org.pkl.parser.syntax.TypeAnnotation;
 import org.pkl.parser.syntax.TypeArgumentList;
@@ -1427,7 +1427,7 @@ final class ParserImpl {
       }
       case STRING_START -> {
         var str = parseStringConstant();
-        typ = new StringConstantType(str, str.span());
+        typ = new StringLiteralType(str, str.span());
       }
       default -> {
         var text = _lookahead.text(lexer);
