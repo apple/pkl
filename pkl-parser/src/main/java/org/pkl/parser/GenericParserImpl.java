@@ -17,6 +17,7 @@ package org.pkl.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
@@ -37,10 +38,14 @@ class GenericParserImpl {
 
   GenericParserImpl(String source) {
     this.lexer = new Lexer(source);
-    while (true) {
-      var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.getNewLinesBetween());
-      tokens.add(ft);
-      if (ft.token == Token.EOF) break;
+    try {
+      while (true) {
+        var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.getNewLinesBetween());
+        tokens.add(ft);
+        if (ft.token == Token.EOF) break;
+      }
+    } catch (ParserError e) {
+      throw parserError(Objects.requireNonNull(e.getMessage()), lexer.fullSpan());
     }
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -353,7 +358,7 @@ class GenericParserImpl {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
+    children.add(new Node(NodeType.METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
       children.add(parseTypeParameterList());
@@ -370,7 +375,7 @@ class GenericParserImpl {
       var body = new ArrayList<Node>();
       ff(body);
       body.add(parseExpr());
-      children.add(new Node(NodeType.CLASS_METHOD_BODY, body));
+      children.add(new Node(NodeType.METHOD_BODY, body));
     }
     return new Node(NodeType.CLASS_METHOD, children);
   }
@@ -525,7 +530,7 @@ class GenericParserImpl {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
+    children.add(new Node(NodeType.METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
       children.add(parseTypeParameterList());
@@ -541,7 +546,7 @@ class GenericParserImpl {
     var body = new ArrayList<Node>();
     ff(body);
     body.add(parseExpr());
-    children.add(new Node(NodeType.CLASS_METHOD_BODY, body));
+    children.add(new Node(NodeType.METHOD_BODY, body));
     return new Node(NodeType.OBJECT_METHOD, children);
   }
 
