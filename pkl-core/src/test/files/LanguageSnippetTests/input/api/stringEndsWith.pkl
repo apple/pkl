@@ -1,0 +1,31 @@
+res1 =
+  """
+  aa
+  zz
+  """.endsWith(Regex("(?m)aa"))
+
+res2 =
+  """
+  aa
+  zz
+  """.endsWith("aa")
+
+res3 =
+  """
+  aa
+  zz
+  """.endsWith("zz")
+
+res4 =
+  """
+  aa
+  zz
+  """.endsWith(Regex("""
+    (?x)
+    zz # this is the comment for zz
+    """))
+
+res5 =
+  """
+  aabbcc
+  """.endsWith(Regex("aa|zz"))

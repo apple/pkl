@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import java.io.UnsupportedEncodingException;
@@ -331,15 +332,53 @@ public final class StringNodes {
       return self.endsWith(pattern);
     }
 
+    @Specialization(guards = {"regex.equals(cachedRegex)", "!isMultiline(regex)"})
+    protected boolean evalRegexCached(
+        String self,
+        VmRegex regex,
+        @Cached("regex") VmRegex cachedRegex,
+        @Cached("computedPattern(cachedRegex)") Pattern computedPattern) {
+      return computedPattern.matcher(self).find();
+    }
+
+    @Specialization(replaces = "evalRegexCached", guards = "!isMultiline(regex)")
+    protected boolean evalRegex(String self, VmRegex regex) {
+      var computedPattern = computedPattern(regex);
+      return computedPattern.matcher(self).matches();
+    }
+
+    // a multiline regex changes the meaning of `$`, so we can't use the normal `evalRegexCached`
+    // or `evalRegex`.
     @TruffleBoundary
-    @Specialization
-    protected boolean eval(String self, VmRegex regex) {
+    @Specialization(guards = "isMultiline(regex)")
+    protected boolean evalMultilineRegex(String self, VmRegex regex) {
       // try every suffix; `find()` would skip matches that overlap an earlier one
       var matcher = regex.matcher(self).useTransparentBounds(true).useAnchoringBounds(false);
       for (var start = self.length(); ; start = self.offsetByCodePoints(start, -1)) {
         if (matcher.region(start, self.length()).matches()) return true;
         if (start == 0) return false;
       }
+    }
+
+    // incorrect warning; non-capture group here is used to ensure correct precedence (e.g. prevent
+    // constructing a regex like `foo|bar$`
+    @SuppressWarnings("RegExpUnnecessaryNonCapturingGroup")
+    protected Pattern computedPattern(VmRegex regex) {
+      var existingPattern = regex.getPattern();
+      if (isCommentsEnabled(regex)) {
+        // if comments are enabled, need to insert some newlines here so that a trailing comment
+        // can't comment out the rest of this pattern.
+        return Pattern.compile("(?:\n" + existingPattern.pattern() + "\n)$");
+      }
+      return Pattern.compile("(?:" + existingPattern.pattern() + ")$", existingPattern.flags());
+    }
+
+    public boolean isMultiline(VmRegex regex) {
+      return (regex.getPattern().flags() & Pattern.MULTILINE) != 0;
+    }
+
+    public boolean isCommentsEnabled(VmRegex regex) {
+      return (regex.getPattern().flags() & Pattern.COMMENTS) != 0;
     }
   }
 
