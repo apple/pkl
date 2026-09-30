@@ -15,31 +15,41 @@
  */
 package org.pkl.core.stdlib.syntax;
 
+import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.formatter.Formatter;
 import org.pkl.formatter.GrammarVersion;
+import org.pkl.parser.syntax.generic.Node;
 
 public final class FormattingRendererNodes {
   private FormattingRendererNodes() {}
 
   public abstract static class render extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
-    protected String eval(VmTyped self, VmTyped nodeVm) {
-      var grammarVersion = (String) VmUtils.readMember(self, Identifier.GRAMMAR_VERSION);
-      var node = SyntaxNodes.convertVmToNode(nodeVm, SyntaxNodes.ZERO_SPAN);
+    protected String eval(
+        VmTyped self, VmTyped nodeVm, @Cached("create()") IndirectCallNode callNode) {
+      var grammarVersion = (String) VmUtils.readMember(self, Identifier.GRAMMAR_VERSION, callNode);
+      var node = SyntaxNodes.convertVmToNode(nodeVm, SyntaxNodes.ZERO_SPAN, callNode);
       try {
-        return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
+        return format(grammarVersion, node);
       } catch (RuntimeException e) {
+        CompilerDirectives.transferToInterpreter();
         throw exceptionBuilder()
             .evalError("cannotRenderSyntaxNode", VmUtils.readMember(nodeVm, Identifier.TYPE))
             .build();
       }
+    }
+
+    @TruffleBoundary
+    private static String format(String grammarVersion, Node node) {
+      return new Formatter(GrammarVersion.valueOf(grammarVersion)).format(node);
     }
   }
 }
