@@ -4,6 +4,12 @@ res1 =
   zz
   """.endsWith(Regex("(?m)aa"))
 
+res1a =
+    """
+    zz
+    aaa
+    """.endsWith(Regex("(?m)aa"))
+
 res2 =
   """
   aa

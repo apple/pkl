@@ -332,19 +332,20 @@ public final class StringNodes {
       return self.endsWith(pattern);
     }
 
+    @TruffleBoundary
     @Specialization(guards = {"regex.equals(cachedRegex)", "!isMultiline(regex)"})
     protected boolean evalRegexCached(
         String self,
         VmRegex regex,
         @Cached("regex") VmRegex cachedRegex,
-        @Cached("computedPattern(cachedRegex)") Pattern computedPattern) {
-      return computedPattern.matcher(self).find();
+        @Cached("computePattern(cachedRegex)") Pattern pattern) {
+      return pattern.matcher(self).find();
     }
 
+    @TruffleBoundary
     @Specialization(replaces = "evalRegexCached", guards = "!isMultiline(regex)")
     protected boolean evalRegex(String self, VmRegex regex) {
-      var computedPattern = computedPattern(regex);
-      return computedPattern.matcher(self).matches();
+      return computePattern(regex).matcher(self).find();
     }
 
     // a multiline regex changes the meaning of `$`, so we can't use the normal `evalRegexCached`
@@ -352,18 +353,18 @@ public final class StringNodes {
     @TruffleBoundary
     @Specialization(guards = "isMultiline(regex)")
     protected boolean evalMultilineRegex(String self, VmRegex regex) {
-      // try every suffix; `find()` would skip matches that overlap an earlier one
-      var matcher = regex.matcher(self).useTransparentBounds(true).useAnchoringBounds(false);
-      for (var start = self.length(); ; start = self.offsetByCodePoints(start, -1)) {
-        if (matcher.region(start, self.length()).matches()) return true;
-        if (start == 0) return false;
+      var matcher = computePattern(regex).matcher(self);
+      var end = -1;
+      while (matcher.find()) {
+        end = matcher.end();
       }
+      return end == self.length();
     }
 
     // incorrect warning; non-capture group here is used to ensure correct precedence (e.g. prevent
     // constructing a regex like `foo|bar$`
     @SuppressWarnings("RegExpUnnecessaryNonCapturingGroup")
-    protected Pattern computedPattern(VmRegex regex) {
+    protected Pattern computePattern(VmRegex regex) {
       var existingPattern = regex.getPattern();
       if (isCommentsEnabled(regex)) {
         // if comments are enabled, need to insert some newlines here so that a trailing comment
