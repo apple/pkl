@@ -68,6 +68,7 @@ import org.pkl.parser.syntax.ReplInput;
 import org.pkl.parser.syntax.StringConstant;
 import org.pkl.parser.syntax.StringPart;
 import org.pkl.parser.syntax.Type;
+import org.pkl.parser.syntax.Type.StringLiteralType;
 import org.pkl.parser.syntax.TypeAlias;
 import org.pkl.parser.syntax.TypeAnnotation;
 import org.pkl.parser.syntax.TypeArgumentList;
@@ -84,7 +85,7 @@ public interface ParserVisitor<Result> {
 
   Result visitThisType(Type.ThisType type);
 
-  Result visitStringConstantType(Type.StringConstantType type);
+  Result visitStringLiteralType(StringLiteralType type);
 
   Result visitDeclaredType(Type.DeclaredType type);
 

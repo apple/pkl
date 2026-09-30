@@ -1223,7 +1223,7 @@ class GenericParserImpl {
             yield new Node(NodeType.DECLARED_TYPE, children);
           }
           case STRING_START ->
-              new Node(NodeType.STRING_CONSTANT_TYPE, List.of(parseStringConstant()));
+              new Node(NodeType.STRING_LITERAL_TYPE, List.of(parseStringConstant()));
           default -> {
             var text = _lookahead.text(lexer);
             if (expectation != null) {
