@@ -147,7 +147,6 @@ final class Builder {
       case SUBSCRIPT_EXPR, SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node);
       case TRACE_EXPR, THROW_EXPR, READ_EXPR -> formatTraceThrowReadExpr(node);
       case PARENTHESIZED_EXPR -> formatParenthesizedExpr(node);
-      case PARENTHESIZED_EXPR_ELEMENTS -> formatParenthesizedExprElements(node);
       case LET_EXPR -> formatLetExpr(node);
       case LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node);
       case LET_PARAMETER -> formatLetParameter(node);
@@ -1030,12 +1029,11 @@ final class Builder {
         formatGenericWithGen(
             node.children,
             (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine(),
-            (n, next) -> n.type.isExpression() ? indent(format(n)) : format(n));
+            (n, next) ->
+                (n.type == NodeType.LPAREN || n.type == NodeType.RPAREN)
+                    ? format(n)
+                    : indent(format(n)));
     return new Group(newId(), nodes);
-  }
-
-  private FormatNode formatParenthesizedExprElements(Node node) {
-    return indent(new Group(newId(), formatGeneric(node.children, (FormatNode) null)));
   }
 
   private FormatNode formatFunctionLiteralExpr(Node node) {
