@@ -268,7 +268,7 @@ typealias NodeType =
     | "class_property_header_begin"
     | "class_property_body"
     | "object_body"
-    | "object_member_list"
+    | "object_member_elements"
     | "parameter"
     | "type_annotation"
     | "parameter_list"
