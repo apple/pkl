@@ -48,6 +48,7 @@ public final class ClassNode extends ExpressionNode {
   @Children private final UnresolvedMethodNode[] unresolvedMethodNodes;
 
   @CompilationFinal @LateInit private VmClass cachedClass;
+  private final VmLanguage language;
 
   public ClassNode(
       SourceSection section,
@@ -61,7 +62,8 @@ public final class ClassNode extends ExpressionNode {
       @Nullable UnresolvedTypeNode unresolvedSupertypeNode,
       EconomicMap<Object, ObjectMember> prototypeMembers,
       UnresolvedPropertyNode[] unresolvedPropertyNodes,
-      UnresolvedMethodNode[] unresolvedMethodNodes) {
+      UnresolvedMethodNode[] unresolvedMethodNodes,
+      VmLanguage language) {
 
     super(section);
     this.headerSection = headerSection;
@@ -75,6 +77,7 @@ public final class ClassNode extends ExpressionNode {
     this.prototypeMembers = prototypeMembers;
     this.unresolvedPropertyNodes = unresolvedPropertyNodes;
     this.unresolvedMethodNodes = unresolvedMethodNodes;
+    this.language = language;
   }
 
   @Override
@@ -88,7 +91,6 @@ public final class ClassNode extends ExpressionNode {
     if (cachedClass != null) return cachedClass;
 
     CompilerDirectives.transferToInterpreter();
-
     var module = VmUtils.getTypedObjectReceiver(frame);
 
     VmTyped prototype;
@@ -123,12 +125,12 @@ public final class ClassNode extends ExpressionNode {
             typeParameters,
             prototype);
 
-    var localContext = VmLanguage.get(this).localContext.get();
+    var localContext = language.localContext.get();
     localContext.beginClassInit(cachedClass);
 
     try {
       if (unresolvedSupertypeNode != null) {
-        var supertypeNode = unresolvedSupertypeNode.execute(frame);
+        var supertypeNode = insert(unresolvedSupertypeNode.execute(frame));
         var superclass = supertypeNode.getType().getVmClass();
 
         checkSupertype(supertypeNode, superclass);

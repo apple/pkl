@@ -1268,7 +1268,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   @Override
   public ExpressionNode visitTypeCheckExpr(TypeCheckExpr expr) {
     return new TypeTestNode(
-        createSourceSection(expr), visitExpr(expr.getExpr()), visitType(expr.getType()));
+        createSourceSection(expr), language, visitExpr(expr.getExpr()), visitType(expr.getType()));
   }
 
   @Override
@@ -1697,7 +1697,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               supertypeNode,
               moduleProperties,
               unresolvedPropertyNodes,
-              doVisitMethodDefs(mod.getMethods()));
+              doVisitMethodDefs(mod.getMethods()),
+              language);
 
       return new ModuleNode(
           language, moduleInfo.getSourceSection(), moduleInfo.getModuleName(), classNode);
@@ -1930,7 +1931,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   supertypeNode,
                   EconomicMaps.create(),
                   doVisitClassProperties(properties, propertyNames),
-                  doVisitMethodDefs(methods));
+                  doVisitMethodDefs(methods),
+                  language);
 
           var result =
               new ObjectMember(

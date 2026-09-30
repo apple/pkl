@@ -175,12 +175,14 @@ public abstract class VmTypeMismatchException extends ControlFlowException {
     private final String renderedExpected;
     private final @Nullable VmClass expectedClass;
 
+    @TruffleBoundary
     public ClassType(SourceSection sourceSection, VmClass actualClass, VmClass expectedClass) {
       super(sourceSection, actualClass);
       this.expectedClass = expectedClass;
       renderedExpected = "Class<" + expectedClass.toPklString() + ">";
     }
 
+    @TruffleBoundary
     public ClassType(SourceSection sourceSection, VmClass actualClass, VmType expectedType) {
       super(sourceSection, actualClass);
       this.expectedClass = null;

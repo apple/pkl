@@ -43,6 +43,7 @@ import org.pkl.core.ast.type.TypeNode.StringTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeAliasTypeNode;
 import org.pkl.core.ast.type.TypeNode.UnionOfStringLiteralsTypeNode;
 import org.pkl.core.ast.type.TypeNode.UnionTypeNode;
+import org.pkl.core.ast.type.TypeNode.UnionTypeNodeExploded;
 import org.pkl.core.ast.type.VmTypeMismatchException;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmBytes;
@@ -648,7 +649,7 @@ public final class RendererNodes {
         type =
             hasString && elements.size() == 1
                 ? elements.get(0)
-                : new UnionTypeNode(
+                : new UnionTypeNodeExploded(
                     VmUtils.unavailableSourceSection(), -1, elements.toArray(new TypeNode[0]));
         return type;
       }

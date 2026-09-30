@@ -40,7 +40,8 @@ import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 @NodeInfo(shortName = "import*")
 public class ImportGlobNode extends AbstractImportNode {
   private final String globPattern;
-  @Child private @Nullable SharedMemberNode memberNode;
+  // Not a @Child: a RootNode must never be adopted as a child (it always has a null parent).
+  private @Nullable SharedMemberNode memberNode;
   @CompilationFinal private @Nullable VmMapping cachedResult;
 
   public ImportGlobNode(

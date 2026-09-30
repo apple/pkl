@@ -28,12 +28,15 @@ public final class TypeTestNode extends ExpressionNode {
   @Child private ExpressionNode valueNode;
   @Child private @Nullable UnresolvedTypeNode unresolvedTypeNode;
   @Child private @Nullable TypeNode typeNode;
+  private final VmLanguage language;
 
   public TypeTestNode(
       SourceSection sourceSection,
+      VmLanguage language,
       ExpressionNode valueNode,
       UnresolvedTypeNode unresolvedTypeNode) {
     super(sourceSection);
+    this.language = language;
     this.valueNode = valueNode;
     this.unresolvedTypeNode = unresolvedTypeNode;
   }
@@ -57,8 +60,8 @@ public final class TypeTestNode extends ExpressionNode {
     // TODO: throw if typeNode is FunctionTypeNode (it's impossible to check)
     // https://github.com/apple/pkl/issues/639
     Object value = valueNode.executeGeneric(frame);
-    var localContext = VmLanguage.get(this).localContext.get();
-    boolean wasInTypeTest = localContext.isInTypeTest();
+    var localContext = language.localContext.get();
+    var wasInTypeTest = localContext.isInTypeTest();
     localContext.setInTypeTest(true);
     try {
       typeNode.executeEagerly(frame, value);

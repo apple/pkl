@@ -71,6 +71,9 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
   @Override
   public Object executeGeneric(VirtualFrame frame) {
     var customThis = customThisNode.executeGeneric(frame);
-    return callNode.call(VmUtils.getReceiver(frame), VmUtils.getOwner(frame), customThis, frame);
+    // can't pass a non-materialized frame as an argument into a call node (truffle compiler will
+    // error)
+    return callNode.call(
+        VmUtils.getReceiver(frame), VmUtils.getOwner(frame), customThis, frame.materialize());
   }
 }

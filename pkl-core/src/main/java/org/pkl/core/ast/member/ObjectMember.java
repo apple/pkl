@@ -58,6 +58,9 @@ public final class ObjectMember extends Member {
     assert memberNode == null;
 
     memberNode = node;
+    // pre-initialize the call target so that later calls to `getCallTarget()` does not invalidate
+    // the caller's compiled code
+    node.getCallTarget();
   }
 
   /**
