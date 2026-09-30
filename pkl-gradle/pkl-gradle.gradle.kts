@@ -123,6 +123,10 @@ tasks.test {
 publishing {
   publications {
     withType<MavenPublication>().configureEach {
+      if (name == "pluginMaven") {
+        // Maven cannot express the shadowed bundling attribute on the pkl-tools dependency.
+        suppressPomMetadataWarningsFor("runtimeElements")
+      }
       pom {
         name = "pkl-gradle plugin"
         url = "https://github.com/apple/pkl/tree/main/pkl-gradle"
