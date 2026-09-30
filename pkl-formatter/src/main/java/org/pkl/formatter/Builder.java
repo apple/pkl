@@ -115,8 +115,8 @@ final class Builder {
           formatClassPropertyHeaderBegin(node);
       case CLASS_PROPERTY_BODY, OBJECT_PROPERTY_BODY -> formatClassPropertyBody(node);
       case CLASS_METHOD, OBJECT_METHOD -> formatClassMethod(node);
-      case CLASS_METHOD_HEADER -> formatClassMethodHeader(node);
-      case CLASS_METHOD_BODY -> formatClassMethodBody(node);
+      case METHOD_HEADER -> formatClassMethodHeader(node);
+      case METHOD_BODY -> formatClassMethodBody(node);
       case OBJECT_BODY -> formatObjectBody(node);
       case OBJECT_ELEMENT -> format(node.children.get(0)); // has a single element
       case OBJECT_ENTRY_HEADER -> formatObjectEntryHeader(node);
@@ -504,12 +504,12 @@ final class Builder {
   private FormatNode formatClassMethod(Node node) {
     var prefixes = new ArrayList<FormatNode>();
     List<Node> methodNodes;
-    if (node.children.get(0).type == NodeType.CLASS_METHOD_HEADER) {
+    if (node.children.get(0).type == NodeType.METHOD_HEADER) {
       methodNodes = node.children;
     } else {
       var idx = -1;
       for (var i = 0; i < node.children.size(); i++) {
-        if (node.children.get(i).type == NodeType.CLASS_METHOD_HEADER) {
+        if (node.children.get(i).type == NodeType.METHOD_HEADER) {
           idx = i;
           break;
         }
@@ -525,7 +525,7 @@ final class Builder {
     // Separate header (before =) and body (= and after)
     var bodyIdx = -1;
     for (var i = 0; i < methodNodes.size(); i++) {
-      if (methodNodes.get(i).type == NodeType.CLASS_METHOD_BODY) {
+      if (methodNodes.get(i).type == NodeType.METHOD_BODY) {
         bodyIdx = i - 1;
         break;
       }
