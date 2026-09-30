@@ -1089,11 +1089,9 @@ class GenericParserImpl {
   private Node parseParenthesizedExpr() {
     var children = new ArrayList<Node>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
-    var elements = new ArrayList<Node>();
-    ff(elements);
-    elements.add(parseExpr(")"));
-    ff(elements);
-    children.add(new Node(NodeType.PARENTHESIZED_EXPR_ELEMENTS, elements));
+    ff(children);
+    children.add(parseExpr(")"));
+    ff(children);
     expect(Token.RPAREN, children, "unexpectedToken", ")");
     return new Node(NodeType.PARENTHESIZED_EXPR, children);
   }
