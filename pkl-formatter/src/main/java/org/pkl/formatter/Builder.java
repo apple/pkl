@@ -156,7 +156,7 @@ final class Builder {
       case CONSTRAINED_TYPE -> formatConstrainedType(node);
       case UNION_TYPE -> formatUnionType(node);
       case FUNCTION_TYPE -> formatFunctionType(node);
-      case STRING_CONSTANT_TYPE -> format(node.children.get(0));
+      case STRING_LITERAL_TYPE -> format(node.children.get(0));
       case PARENTHESIZED_TYPE -> formatParenthesizedType(node);
       case PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node);
       default -> throw new RuntimeException("Unknown node type: " + node.type);

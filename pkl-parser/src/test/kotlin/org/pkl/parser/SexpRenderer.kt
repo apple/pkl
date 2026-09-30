@@ -777,7 +777,7 @@ class SexpRenderer {
         buf.append(tab)
         buf.append("(thisType)")
       }
-      is StringConstantType -> renderStringConstantType(type)
+      is StringLiteralType -> renderStringLiteralType(type)
       is DeclaredType -> renderDeclaredType(type)
       is ParenthesizedType -> renderParenthesizedType(type)
       is NullableType -> renderNullableType(type)
@@ -787,9 +787,9 @@ class SexpRenderer {
     }
   }
 
-  fun renderStringConstantType(type: StringConstantType) {
+  fun renderStringLiteralType(type: StringLiteralType) {
     buf.append(tab)
-    buf.append("(stringConstantType")
+    buf.append("(stringLiteralType")
     val oldTab = increaseTab()
     buf.append('\n')
     renderStringConstant(type.str)

@@ -435,7 +435,7 @@ typealias TypeNodeType =
     | "parenthesized_type"
     | "declared_type"
     | "nullable_type"
-    | "string_constant_type"
+    | "string_literal_type"
     | "constrained_type"
 
 /// The [NodeType]s that describe a member of an object body.
