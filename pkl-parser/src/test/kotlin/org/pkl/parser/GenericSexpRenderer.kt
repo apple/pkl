@@ -218,7 +218,7 @@ class GenericSexpRenderer(code: String) {
         NodeType.CLASS_BODY_ELEMENTS,
         NodeType.MODIFIER_LIST,
         NodeType.NEW_HEADER,
-        NodeType.OBJECT_MEMBER_LIST,
+        NodeType.OBJECT_MEMBER_ELEMENTS,
         NodeType.OBJECT_ENTRY_HEADER,
         NodeType.OBJECT_PROPERTY_HEADER,
         NodeType.OBJECT_PROPERTY_HEADER_BEGIN,

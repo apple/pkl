@@ -833,7 +833,7 @@ final class Builder {
               return spaceOrLine();
             },
             (n, next) ->
-                n.type == NodeType.OBJECT_MEMBER_LIST
+                n.type == NodeType.OBJECT_MEMBER_ELEMENTS
                     ? formatObjectMemberList(n, groupId)
                     : format(n));
     return new Group(groupId, nodes);

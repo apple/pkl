@@ -406,7 +406,7 @@ class GenericParserImpl {
       ff(members);
     }
     if (!members.isEmpty()) {
-      children.add(new Node(NodeType.OBJECT_MEMBER_LIST, members));
+      children.add(new Node(NodeType.OBJECT_MEMBER_ELEMENTS, members));
     }
     children.add(makeTerminal(next())); // RBRACE
     return new Node(NodeType.OBJECT_BODY, children);
