@@ -38,11 +38,6 @@ public final class VmMapping extends VmListingOrMapping {
   private static final EnumSet<CursorOption> isEmptyComputationCursor =
       EnumSet.of(CursorOption.ANY_ORDER, CursorOption.LAZY_REQUIRED);
 
-  @TruffleBoundary
-  private static EnumSet<CursorOption> isEmptyComputationCursor() {
-    return isEmptyComputationCursor;
-  }
-
   private static final class EmptyHolder {
     private static final VmMapping EMPTY =
         new VmMapping(
@@ -173,9 +168,9 @@ public final class VmMapping extends VmListingOrMapping {
 
   @Override
   public VmObjectCursor entries(EnumSet<CursorOption> options) {
-    var anyOrder = options.contains(CursorOption.ANY_ORDER);
-    var allValues = options.contains(CursorOption.ALL_VALUES);
-    var lazyRequired = options.contains(CursorOption.LAZY_REQUIRED);
+    var anyOrder = VmUtils.setContains(options, CursorOption.ANY_ORDER);
+    var allValues = VmUtils.setContains(options, CursorOption.ALL_VALUES);
+    var lazyRequired = VmUtils.setContains(options, CursorOption.LAZY_REQUIRED);
     if (anyOrder) {
       if (isShallowForced()) {
         return new CachedEntryCursor(this);
