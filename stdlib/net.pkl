@@ -219,7 +219,7 @@ class Url {
   /// ```
   external function resolve(ref: String | Url): Url
 
-  /// Returns this URL in the *syntax-based normalization* as described in
+  /// This URL in the *syntax-based normalization* as described in
   /// [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of RFC-3986.
   ///
   /// [scheme] and [rawHost] are lowercased, as they are case-insensitive.
@@ -234,17 +234,17 @@ class Url {
   ///
   /// Facts:
   /// ```
-  /// net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user")
-  /// net.Url("https://example.com/a/b/../c").normalize().rawPath == "/a/c"
-  /// net.Url("https://example.com").normalize().rawPath == "/"
+  /// net.Url("HTTPS://Example.com/%7Euser").normalized == net.Url("https://example.com/~user")
+  /// net.Url("https://example.com/a/b/../c").normalized.rawPath == "/a/c"
+  /// net.Url("https://example.com").normalized.rawPath == "/"
   /// ```
-  external function normalize(): Url
+  external hidden fixed normalized: Url
 
   /// Tells whether this url is equal to [other] according to *syntax-based normalization* as
   /// described in [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of
   /// RFC-3986.
   ///
-  /// This will return [true] if the [normalized][normalize] versions of [this] and [other] are the
+  /// This will return [true] if the [normalized] versions of [this] and [other] are the
   /// same, and [false] otherwise.
   ///
   /// Facts:

@@ -282,7 +282,7 @@ facts {
     true
     true
   }
-  ["normalize()"] {
+  ["normalized"] {
     true
     true
     true

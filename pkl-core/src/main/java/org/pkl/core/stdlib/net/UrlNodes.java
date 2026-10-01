@@ -152,7 +152,7 @@ public final class UrlNodes {
     }
   }
 
-  public abstract static class normalize extends ExternalMethod0Node {
+  public abstract static class normalized extends ExternalPropertyNode {
     @Child private GetParsedUrlNode getSelfNode = GetParsedUrlNode.create();
 
     @Specialization

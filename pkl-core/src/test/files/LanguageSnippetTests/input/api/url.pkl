@@ -432,8 +432,8 @@ facts {
     net.Url("https://example.com/a") != net.Url("HTTPS://example.com/a")
   }
 
-  ["normalize()"] {
-    local function normalized(input: String): String = net.Url(input).normalize().toString()
+  ["normalized"] {
+    local function normalized(input: String): String = net.Url(input).normalized.toString()
 
     normalized("HTTPS://EXAMPLE.com/A") == "https://example.com/A"
     normalized("http://[2001:DB8::1]/") == "http://[2001:db8::1]/"
@@ -455,14 +455,14 @@ facts {
     normalized("//EXAMPLE.com/a/../b") == "//example.com/b"
     normalized("") == ""
     // normalizing is idempotent
-    net.Url("HTTPS://Example.com/a/../%7Eb c").normalize().normalize()
-      == net.Url("HTTPS://Example.com/a/../%7Eb c").normalize()
+    net.Url("HTTPS://Example.com/a/../%7Eb c").normalized.normalized
+      == net.Url("HTTPS://Example.com/a/../%7Eb c").normalized
 
-    net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user").normalize()
-    net.Url("HTTPS://Example.com/%7Euser").normalize() == net.Url("https://example.com/~user")
-    net.Url("https://example.com/a%2Fb").normalize() != net.Url("https://example.com/a/b").normalize()
+    net.Url("HTTPS://Example.com/%7Euser").normalized == net.Url("https://example.com/~user").normalized
+    net.Url("HTTPS://Example.com/%7Euser").normalized == net.Url("https://example.com/~user")
+    net.Url("https://example.com/a%2Fb").normalized != net.Url("https://example.com/a/b").normalized
 
-    net.Url("HTTPS://User%7E@EXAMPLE.com:8080/a/../%7Eb?q=%7E#%7E").normalize()
+    net.Url("HTTPS://User%7E@EXAMPLE.com:8080/a/../%7Eb?q=%7E#%7E").normalized
       == new net.Url {
         scheme = "https"
         rawUserInfo = "User~"
