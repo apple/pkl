@@ -35,7 +35,7 @@ jobs:
     - name: github/codeql-action/init@v4
       uses: github/codeql-action/init@2892aa5e19bbd11bc0cff5427e3b750a04d9e3c2 # v4
     - name: gradle/actions/dependency-submission@v6
-      uses: gradle/actions/dependency-submission@50e97c2cd7a37755bbfafc9c5b7cafaece252f6e # v6
+      uses: gradle/actions/dependency-submission@9c971963bec38e04b3d30dcc455b5382be2fdbfb # v6
     - name: gradle/actions/setup-gradle@v5
       uses: gradle/actions/setup-gradle@0723195856401067f7a2779048b490ace7a47d7c # v5
     - name: ilammy/msvc-dev-cmd@v1
