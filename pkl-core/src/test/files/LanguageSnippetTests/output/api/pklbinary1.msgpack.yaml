@@ -194,3 +194,528 @@
           - 16
           - 'useCustomStringDelimiters'
           - false
+  - 
+    - 16
+    - 'reference'
+    - 
+      - 1
+      - 'Dynamic'
+      - 'pkl:base'
+      - 
+        - 
+          - 16
+          - 'unknown'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'unknown'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 64
+        - 
+          - 16
+          - 'nothing'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'nothing'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 65
+        - 
+          - 16
+          - 'stringLiteral'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'stringLiteral'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 66
+              - 'foo'
+        - 
+          - 16
+          - 'class'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'class'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 67
+              - 
+                - 12
+                - 'Mapping'
+                - 'pkl:base'
+              - 
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'String'
+                    - 'pkl:base'
+                  - []
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'String'
+                    - 'pkl:base'
+                  - []
+        - 
+          - 16
+          - 'openModule'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'openModule'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 67
+              - 
+                - 12
+                - 'encoding1'
+                - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+        - 
+          - 16
+          - 'openThis'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'openThis'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 67
+              - 
+                - 12
+                - 'encoding1'
+                - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+        - 
+          - 16
+          - 'finalThis'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'finalThis'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 69
+              - 
+                - 12
+                - 'encoding1#Referent'
+                - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - true
+        - 
+          - 16
+          - 'nullable'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'nullable'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 73
+              - 
+                - 
+                  - 66
+                  - 'foo'
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'Null'
+                    - 'pkl:base'
+                  - []
+              - -1
+        - 
+          - 16
+          - 'constrained'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'constrained'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 66
+              - 'foo'
+        - 
+          - 16
+          - 'alias'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'alias'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 67
+              - 
+                - 12
+                - 'Mapping'
+                - 'pkl:base'
+              - 
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'String'
+                    - 'pkl:base'
+                  - []
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'String'
+                    - 'pkl:base'
+                  - []
+        - 
+          - 16
+          - 'alias2'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'alias2'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 67
+              - 
+                - 12
+                - 'Mapping'
+                - 'pkl:base'
+              - 
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'String'
+                    - 'pkl:base'
+                  - []
+                - 
+                  - 67
+                  - 
+                    - 12
+                    - 'Int'
+                    - 'pkl:base'
+                  - []
+        - 
+          - 16
+          - 'union'
+          - 
+            - 32
+            - 
+              - 1
+              - 'encoding1#D'
+              - 'file:///$snippetsDir/input/api/pklbinary1.msgpack.yaml.pkl'
+              - []
+            - null
+            - 
+              - 
+                - 1
+                - 'pkl.ref#Access'
+                - 'pkl:ref'
+                - 
+                  - 
+                    - 16
+                    - 'isProperty'
+                    - true
+                  - 
+                    - 16
+                    - 'isSubscript'
+                    - false
+                  - 
+                    - 16
+                    - 'property'
+                    - 'union'
+                  - 
+                    - 16
+                    - 'key'
+                    - null
+            - 
+              - 73
+              - 
+                - 
+                  - 66
+                  - 'bar'
+                - 
+                  - 66
+                  - 'baz'
+                - 
+                  - 66
+                  - 'foo'
+              - -1

@@ -31,6 +31,7 @@ import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.DataSizeUnit;
 import org.pkl.core.DurationUnit;
 import org.pkl.core.Pair;
+import org.pkl.core.TypeParameter.Variance;
 import org.pkl.core.util.LateInit;
 
 /**
@@ -38,7 +39,7 @@ import org.pkl.core.util.LateInit;
  * href="https://pkl-lang.org/main/current/bindings-specification/binary-encoding.html"><code>
  * pkl-binary</code></a> encoding.
  */
-public abstract class AbstractPklBinaryDecoder {
+public abstract class AbstractPklBinaryDecoder<Type, ReferencePathElement> {
   private final MessageUnpacker unpacker;
   private final int collectionSizeLimit;
   @LateInit protected Deque<Object> currPath;
@@ -129,6 +130,34 @@ public abstract class AbstractPklBinaryDecoder {
 
   protected abstract Object doDecodeBytes(byte[] bytes);
 
+  protected abstract Object doDecodeReference(
+      Object domain, Object data, List<ReferencePathElement> path, Type referent);
+
+  protected abstract Type doDecodeTypeUnknown();
+
+  protected abstract Type doDecodeTypeNothing();
+
+  protected abstract Type doDecodeTypeStringLiteral(String literal);
+
+  protected abstract Type doDecodeTypeClass(Object clazz, List<Type> typeArguments);
+
+  protected abstract Type doDecodeTypeModule(Object clazz, boolean isFinal);
+
+  protected abstract Type doDecodeTypeThis(Object clazz, boolean isFinal);
+
+  protected abstract Type doDecodeTypeNullable(Type baseType);
+
+  protected abstract Type doDecodeTypeConstrained(Type baseType, List<String> constraints);
+
+  protected abstract Type doDecodeTypeTypeAlias(
+      Object typeAlias, List<Type> typeArguments, Type aliasedType);
+
+  protected abstract Type doDecodeTypeUnion(List<Type> elementTypes, int defaultIndex);
+
+  protected abstract Type doDecodeTypeVariable(Object typeParameter);
+
+  protected abstract Object doDecodeTypeParameter(Variance variance, String name, int index);
+
   private Object doDecode() throws IOException {
     if (!unpacker.hasNext()) {
       throw new DecodeException("Unexpected EOF");
@@ -181,6 +210,7 @@ public abstract class AbstractPklBinaryDecoder {
       case TYPEALIAS -> decodeTypeAlias(len);
       case FUNCTION -> decodeFunction(len);
       case BYTES -> decodeBytes(len);
+      case REFERENCE -> decodeReference(len);
       default -> throw new DecodeException("Unrecognized object code %s", code);
     };
   }
@@ -190,6 +220,34 @@ public abstract class AbstractPklBinaryDecoder {
     throw new DecodeException(
         "Unable to decode %s of length %d, exceeded maximum collection size of %d",
         collectionType, length, collectionSizeLimit);
+  }
+
+  @SuppressWarnings("unchecked")
+  private Object decodeReference(int len) throws IOException {
+    assertLength(PklBinaryCode.REFERENCE, len, 4);
+    currPath.push("'reference");
+    currPath.push("'domain");
+    var domain = doDecode();
+    currPath.pop();
+    currPath.push("'data");
+    var data = doDecode();
+    currPath.pop();
+    currPath.push("'path");
+    var pathLen = unpacker.unpackArrayHeader();
+    var path = new ArrayList<ReferencePathElement>(pathLen);
+    for (var i = 0; i < pathLen; i++) {
+      currPath.push(i);
+      path.add((ReferencePathElement) doDecode());
+      currPath.pop();
+    }
+    currPath.pop();
+    currPath.push("'referent");
+    var referent = decodeType();
+    currPath.pop();
+    var result = doDecodeReference(domain, data, path, referent);
+    unpacker.skipValue(len - 5);
+    currPath.pop();
+    return result;
   }
 
   private Object decodeObject(int len) throws IOException {
@@ -380,6 +438,163 @@ public abstract class AbstractPklBinaryDecoder {
     currPath.push("'bytes");
     var result = doDecodeBytes(unpacker.readPayload(unpacker.unpackBinaryHeader()));
     unpacker.skipValue(len - 2);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeType() throws IOException {
+    currPath.push("'type");
+    var len = unpacker.unpackArrayHeader();
+    if (len < 1) {
+      throw new DecodeException("Unexpected empty type array value");
+    }
+
+    var codeInt = unpacker.unpackInt();
+    var code = PklBinaryCode.fromInt(codeInt);
+    if (code == null) {
+      throw new DecodeException("Unrecognized code 0x%x", (byte) codeInt);
+    }
+
+    var result =
+        switch (code) {
+          case TYPE_UNKNOWN -> decodeTypeUnknown(len);
+          case TYPE_NOTHING -> decodeTypeNothing(len);
+          case TYPE_STRING_LITERAL -> decodeTypeStringLiteral(len);
+          case TYPE_CLASS -> decodeTypeClass(len);
+          case TYPE_MODULE -> decodeTypeModule(len);
+          case TYPE_THIS -> decodeTypeThis(len);
+          case TYPE_NULLABLE -> decodeTypeNullable(len);
+          case TYPE_CONSTRAINED -> decodeTypeConstrained(len);
+          case TYPE_TYPEALIAS -> decodeTypeTypeAlias(len);
+          case TYPE_UNION -> decodeTypeUnion(len);
+          case TYPE_VARIABLE -> decodeTypeVariable(len);
+          default -> throw new DecodeException("Unrecognized type code %s", code);
+        };
+    currPath.pop();
+
+    return result;
+  }
+
+  private Type decodeTypeUnknown(int len) throws IOException {
+    currPath.push("'unknown");
+    var result = doDecodeTypeUnknown();
+    unpacker.skipValue(len - 1);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeNothing(int len) throws IOException {
+    currPath.push("'nothing");
+    var result = doDecodeTypeNothing();
+    unpacker.skipValue(len - 1);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeStringLiteral(int len) throws IOException {
+    currPath.push("'string_literal");
+    var result = doDecodeTypeStringLiteral(unpacker.unpackString());
+    unpacker.skipValue(len - 2);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeClass(int len) throws IOException {
+    currPath.push("'class");
+    var result = doDecodeTypeClass(doDecode(), decodeTypes("'type_arguments"));
+    unpacker.skipValue(len - 3);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeModule(int len) throws IOException {
+    currPath.push("'module");
+    var result = doDecodeTypeModule(doDecode(), unpacker.unpackBoolean());
+    unpacker.skipValue(len - 3);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeThis(int len) throws IOException {
+    currPath.push("'this");
+    var result = doDecodeTypeThis(doDecode(), unpacker.unpackBoolean());
+    unpacker.skipValue(len - 3);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeNullable(int len) throws IOException {
+    currPath.push("'nullable");
+    var result = doDecodeTypeNullable(decodeType());
+    unpacker.skipValue(len - 2);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeConstrained(int len) throws IOException {
+    currPath.push("'constrained");
+    var baseType = decodeType();
+    var constraintCount = unpacker.unpackArrayHeader();
+    checkCollectionLength(constraintCount, "type constraints");
+    var constraints = new ArrayList<String>(constraintCount);
+    for (var i = 0; i < constraintCount; i++) {
+      currPath.push(i);
+      constraints.add(unpacker.unpackString());
+      currPath.pop();
+    }
+
+    var result = doDecodeTypeConstrained(baseType, constraints);
+    unpacker.skipValue(len - 3);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeTypeAlias(int len) throws IOException {
+    currPath.push("'constrained");
+    var result = doDecodeTypeTypeAlias(doDecode(), decodeTypes("'type_arguments"), decodeType());
+    unpacker.skipValue(len - 4);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeUnion(int len) throws IOException {
+    currPath.push("'union");
+    var result = doDecodeTypeUnion(decodeTypes("'element_types"), unpacker.unpackInt());
+    unpacker.skipValue(len - 3);
+    currPath.pop();
+    return result;
+  }
+
+  private Type decodeTypeVariable(int len) throws IOException {
+    currPath.push("'type_variable");
+    var result = doDecodeTypeVariable(decodeTypeParameter(len - 1));
+    currPath.pop();
+    return result;
+  }
+
+  private Object decodeTypeParameter(int len) throws IOException {
+    currPath.push("'type_parameter");
+    var varianceCode = unpacker.unpackInt();
+    var variance = Variance.fromInt(varianceCode);
+    if (variance == null) {
+      throw new DecodeException("Unrecognized variance code 0x%x", (byte) varianceCode);
+    }
+
+    var result = doDecodeTypeParameter(variance, unpacker.unpackString(), unpacker.unpackInt());
+    unpacker.skipValue(len - 3);
+    currPath.pop();
+    return result;
+  }
+
+  private List<Type> decodeTypes(String position) throws IOException {
+    currPath.push(position);
+    var len = unpacker.unpackArrayHeader();
+    var result = new ArrayList<Type>(len);
+    for (var i = 0; i < len; i++) {
+      currPath.push(i);
+      result.add(decodeType());
+      currPath.pop();
+    }
     currPath.pop();
     return result;
   }

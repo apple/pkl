@@ -72,10 +72,29 @@ public final class TypeParameter implements Serializable {
 
   /** The variance of a type parameter. */
   public enum Variance {
-    INVARIANT,
+    INVARIANT(0),
     /** An `out` parameter. */
-    COVARIANT,
+    COVARIANT(1),
     /** An `in` parameter. */
-    CONTRAVARIANT
+    CONTRAVARIANT(2);
+
+    private final int code;
+
+    Variance(int code) {
+      this.code = code;
+    }
+
+    public int getCode() {
+      return code;
+    }
+
+    public static @Nullable Variance fromInt(int value) {
+      return switch (value) {
+        case 0 -> INVARIANT;
+        case 1 -> COVARIANT;
+        case 2 -> CONTRAVARIANT;
+        default -> null;
+      };
+    }
   }
 }

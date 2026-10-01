@@ -327,7 +327,7 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
   @Override
   public void visitReference(VmReference value) {
     try {
-      packer.packArrayHeader(4);
+      packer.packArrayHeader(5);
       packCode(PklBinaryCode.REFERENCE);
       visit(value.getDomain());
       visit(value.getData());
@@ -335,8 +335,80 @@ public class VmPklBinaryEncoder extends AbstractRenderer {
       for (var access : value.getPath()) {
         visit(access);
       }
+      packType(value.getReferentType());
     } catch (IOException e) {
       throw PklBugException.unreachableCode();
+    }
+  }
+
+  private void packTypeHeader(PklBinaryCode type, int len) throws IOException {
+    packer.packArrayHeader(len + 1);
+    packer.packByte(type.getCode());
+  }
+
+  private void packType(VmType type) throws IOException {
+    if (type == VmType.UnknownType.INSTANCE) {
+      packTypeHeader(PklBinaryCode.TYPE_UNKNOWN, 0);
+    } else if (type == VmType.NothingType.INSTANCE) {
+      packTypeHeader(PklBinaryCode.TYPE_NOTHING, 0);
+    } else if (type instanceof VmType.StringLiteralType stringLiteralType) {
+      packTypeHeader(PklBinaryCode.TYPE_STRING_LITERAL, 1);
+      packer.packString(stringLiteralType.getLiteral());
+    } else if (type instanceof VmType.ClassType classType) {
+      packTypeHeader(PklBinaryCode.TYPE_CLASS, 2);
+      visit(classType.getVmClass());
+      packTypes(classType.getTypeArguments());
+    } else if (type instanceof VmType.FinalModuleType finalModuleType) {
+      packTypeHeader(PklBinaryCode.TYPE_MODULE, 2);
+      visit(finalModuleType.getVmClass());
+      packer.packBoolean(true);
+    } else if (type instanceof VmType.FinalThisType finalThisType) {
+      packTypeHeader(PklBinaryCode.TYPE_THIS, 2);
+      visit(finalThisType.getVmClass());
+      packer.packBoolean(true);
+    } else if (type instanceof VmType.NonFinalModuleType nonFinalModuleType) {
+      packTypeHeader(PklBinaryCode.TYPE_MODULE, 2);
+      visit(nonFinalModuleType.getVmClass());
+      packer.packBoolean(false);
+    } else if (type instanceof VmType.NonFinalThisType nonFinalThisType) {
+      packTypeHeader(PklBinaryCode.TYPE_THIS, 2);
+      visit(nonFinalThisType.getVmClass());
+      packer.packBoolean(false);
+    } else if (type instanceof VmType.NullableType nullableType) {
+      packTypeHeader(PklBinaryCode.TYPE_NULLABLE, 1);
+      packType(nullableType.getElementType());
+    } else if (type instanceof VmType.ConstrainedType constrainedType) {
+      packTypeHeader(PklBinaryCode.TYPE_CONSTRAINED, 2);
+      packType(constrainedType.getBaseType());
+      packer.packArrayHeader(constrainedType.getConstraints().length);
+      for (var constraint : constrainedType.getConstraints()) {
+        packer.packString(constraint);
+      }
+    } else if (type instanceof VmType.AliasType aliasType) {
+      packTypeHeader(PklBinaryCode.TYPE_TYPEALIAS, 3);
+      visit(aliasType.getVmTypeAlias());
+      packTypes(aliasType.getTypeArguments());
+      packType(aliasType.getAliasedType());
+    } else if (type instanceof VmType.UnionType unionType) {
+      packTypeHeader(PklBinaryCode.TYPE_UNION, 2);
+      packTypes(unionType.getElementTypes());
+      packer.packInt(unionType.getDefaultIndex());
+    } else if (type instanceof VmType.TypeVariableType typeVariableType) {
+      packTypeHeader(PklBinaryCode.TYPE_VARIABLE, 3);
+      var typeParam = typeVariableType.getTypeParameter();
+      packer.packInt(typeParam.getVariance().getCode());
+      packer.packString(typeParam.getName());
+      packer.packInt(typeParam.getIndex());
+    } else {
+      // must add above when adding new VmType subclasses
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  private void packTypes(VmType[] types) throws IOException {
+    packer.packArrayHeader(types.length);
+    for (var type : types) {
+      packType(type);
     }
   }
 

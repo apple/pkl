@@ -29,9 +29,37 @@ class PklBinaryDecoderTest {
     // based on pkl-core/src/test/files/LanguageSnippetTests/input/api/encoding1.msgpack.yaml.pkl
     // but Class, TypeAlias, and IntSeq values are nil'd
     // and any module URIs are normalized to use $snippetsDir instead of an absoulute path
+    // regenerate with:
+    /*
+      ./pkl-cli/build/executable/jpkl eval \
+        pkl-core/src/test/files/LanguageSnippetTests/input/api/pklbinary1.msgpack.yaml.pkl \
+        -p forPklBinaryDecoderTest=true \
+        | python3 -c 'import re; import os; i=open("/dev/stdin","rb").read(); cwd=os.getcwd().encode("utf-8"); o=re.sub(cwd,b"a"*len(cwd),i); open("/dev/stdout","wb").write(o)' \
+        > pkl-core/src/test/resources/org/pkl/core/pklBinaryDecoderTest.msgpack
+    */
     val inputStream = javaClass.getResourceAsStream("pklBinaryDecoderTest.msgpack")
     assertThat(inputStream).isNotNull
     val decoded = PklBinaryDecoder.decode(inputStream!!.readAllBytes())
+
+    fun ref(key: String, type: PType): kotlin.Pair<String, Reference> =
+      key to
+        Reference(
+          PObject(PClassInfo.get("encoding1", "D", moduleUri), emptyMap()),
+          PNull.getInstance(),
+          listOf(
+            PObject(
+              PClassInfo.get("pkl.ref", "Access", URI.create("pkl:ref")),
+              mapOf<String, Any>(
+                "isProperty" to true,
+                "isSubscript" to false,
+                "property" to key,
+                "key" to PNull.getInstance(),
+              ),
+            )
+          ),
+          type,
+        )
+
     val expected =
       PObject(
         PClassInfo.get("encoding1", "Foo", moduleUri),
@@ -54,7 +82,7 @@ class PklBinaryDecoderTest {
             decoded.getProperty("bytes"), // asserted below == byteArrayOf(0x01, 0x02, 0x03)
           "moduleClass" to PNull.getInstance(), // PClass is not decodable
           "baseModuleClass" to PNull.getInstance(), // PClass is not decodable
-          "encodingModuleClass" to PNull.getInstance(), // PClass is not decodable
+          "pklbinaryModuleClass" to PNull.getInstance(), // PClass is not decodable
           "stdlibClass" to PNull.getInstance(), // PClass is not decodable
           "someClass" to PNull.getInstance(), // PClass is not decodable
           "stdlibTypealias" to PNull.getInstance(), // TypeAlias is not decodable
@@ -64,10 +92,44 @@ class PklBinaryDecoderTest {
               PClassInfo.get("pkl.base", "PcfRenderer", PClassInfo.pklBaseUri),
               mapOf(
                 "converters" to emptyMap<Any, Any>(),
+                "convertPropertyTransformers" to emptyMap<Any, Any>(),
                 "extension" to "pcf",
                 "indent" to "  ",
                 "omitNullProperties" to false,
                 "useCustomStringDelimiters" to false,
+              ),
+            ),
+          "reference" to
+            PObject(
+              PClassInfo.Dynamic,
+              mapOf(
+                ref("unknown", PType.UNKNOWN),
+                ref("nothing", PType.NOTHING),
+                ref("stringLiteral", PType.StringLiteral("foo")),
+                "class" to PNull.getInstance(), // PClass is not decodable
+                "openModule" to PNull.getInstance(), // PClass is not decodable
+                "openThis" to PNull.getInstance(), // PClass is not decodable
+                "finalThis" to PNull.getInstance(), // PClass is not decodable
+                "nullable" to
+                  PNull.getInstance(), // PClass is not decodable (Foo? is erased to Foo | Null)
+                ref(
+                  "constrained",
+                  // NB: VmReference erases constraints
+                  PType.StringLiteral("foo"),
+                ),
+                "alias" to PNull.getInstance(), // TypeAlias is not decodable
+                "alias2" to PNull.getInstance(), // TypeAlias is not decodable
+                ref(
+                  "union",
+                  PType.Union(
+                    listOf(
+                      // NB: order changes because VmReference normalization sorts by string repr
+                      PType.StringLiteral("bar"),
+                      PType.StringLiteral("baz"),
+                      PType.StringLiteral("foo"),
+                    )
+                  ),
+                ),
               ),
             ),
         ),
