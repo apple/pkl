@@ -108,6 +108,10 @@ class ProfilerOutputTest {
       """
       amends "pkl:Command"
 
+      command {
+        name = "do-run"
+      }
+
       local function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
 
       output {
