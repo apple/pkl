@@ -60,6 +60,7 @@ final class Builder {
           MODIFIER,
           IDENTIFIER,
           STRING_CHARS,
+          STRING_CONSTANT,
           STRING_ESCAPE,
           INT_LITERAL_EXPR,
           FLOAT_LITERAL_EXPR,
@@ -1434,9 +1435,9 @@ final class Builder {
   }
 
   private String getImportUrl(Node node) {
-    var strChars = node.findChildByType(NodeType.STRING_CHARS);
-    assert strChars != null;
-    var txt = strChars.text(source);
+    var strConst = node.findChildByType(NodeType.STRING_CONSTANT);
+    assert strConst != null;
+    var txt = strConst.text(source);
     return txt.substring(1, txt.length() - 1);
   }
 
@@ -1796,8 +1797,8 @@ final class Builder {
 
     @Override
     public int compare(Node o1, Node o2) {
-      var import1 = o1.findChildByType(NodeType.STRING_CHARS);
-      var import2 = o2.findChildByType(NodeType.STRING_CHARS);
+      var import1 = o1.findChildByType(NodeType.STRING_CONSTANT);
+      var import2 = o2.findChildByType(NodeType.STRING_CONSTANT);
       if (import1 == null || import2 == null) {
         // should never happen
         throw new RuntimeException("ImportComparator: not an import");
