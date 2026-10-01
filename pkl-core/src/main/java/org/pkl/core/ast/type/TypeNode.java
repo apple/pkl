@@ -49,7 +49,6 @@ import org.pkl.core.ast.frame.WriteFrameSlotNodeGen;
 import org.pkl.core.ast.internal.SyntheticNode;
 import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
-import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
@@ -173,7 +172,9 @@ public abstract class TypeNode extends PklNode {
         true,
         typeNode -> {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
-          if (typeNode instanceof NonFinalSelfTypeNode) {
+          if (typeNode instanceof NonFinalSelfTypeNode
+              || (typeNode instanceof TypeVariableNode typeVariable
+                  && typeVariable.typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD)) {
             ret.set(false);
             return false;
           }
@@ -204,7 +205,7 @@ public abstract class TypeNode extends PklNode {
           if (typeNode instanceof ConstrainedTypeNode
               || typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVar
-                  && typeVar.getTypeParameter().getOwner() instanceof Method)) {
+                  && typeVar.getTypeParameter().ownerType() == VmTypeParameter.OwnerType.METHOD)) {
             ret.set(true);
             return false;
           }
@@ -2177,7 +2178,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isNoopTypeCheck() {
-      return !typeParameter.isMethodTypeParameter();
+      return typeParameter.ownerType() != VmTypeParameter.OwnerType.METHOD;
     }
 
     @Override
@@ -2192,8 +2193,8 @@ public abstract class TypeNode extends PklNode {
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
-        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+      if (typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+        var typeArg = methodTypeArgs[typeParameter.index()];
         return evalTypeArgumentNode.execute(frame, typeArg, value);
       }
 
@@ -2213,8 +2214,8 @@ public abstract class TypeNode extends PklNode {
         SourceSection headerSection,
         String qualifiedName) {
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
-        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+      if (typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+        var typeArg = methodTypeArgs[typeParameter.index()];
         return typeArg.createDefaultValue(language, headerSection, qualifiedName);
       }
 

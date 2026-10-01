@@ -34,14 +34,16 @@ public abstract class AbstractInvokeLexicalMethodNode
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
-      int methodSlot) {
+      int methodSlot,
+      String qualifiedName) {
     super(
         sourceSection,
         methodName,
         unresolvedTypeArgumentNodes,
         argumentNodes,
         needsConst,
-        methodSlot);
+        methodSlot,
+        qualifiedName);
     this.levelsUp = levelsUp;
   }
 

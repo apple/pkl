@@ -51,9 +51,6 @@ public final class ObjectMethodNode extends RegularMemberNode {
     this.language = language;
     this.parameterCount = parameterCount;
     this.typeParameters = typeParameters;
-    for (var parameter : typeParameters) {
-      parameter.initOwner(this);
-    }
     this.unresolvedParameterTypeNodes = unresolvedParameterTypeNodes;
     this.unresolvedReturnTypeNode = unresolvedReturnTypeNode;
   }
@@ -90,11 +87,6 @@ public final class ObjectMethodNode extends RegularMemberNode {
     @Override
     public String getQualifiedName() {
       return qualifiedName;
-    }
-
-    @Override
-    public boolean isChildOf(Method other) {
-      return this == other;
     }
   }
 

@@ -915,7 +915,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               argInfo.arguments,
               needsConst,
               getModuleNode,
-              argInfo.methodSlot);
+              argInfo.methodSlot,
+              scope.getQualifiedName());
         }
         if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
           return new InvokeQualifiedClassMethodNode(
@@ -925,7 +926,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               argInfo.arguments,
               needsConst,
               getModuleNode,
-              argInfo.methodSlot);
+              argInfo.methodSlot,
+              scope.getQualifiedName());
         }
         return InvokeMethodVirtualNodeGen.create(
             sourceSection,
@@ -935,6 +937,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             MemberLookupMode.IMPLICIT_LEXICAL,
             needsConst,
             argInfo.methodSlot,
+            scope.getQualifiedName(),
             getModuleNode,
             GetClassNodeGen.create(null));
       }
@@ -946,7 +949,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             typeArgs,
             argInfo.arguments,
             needsConst,
-            argInfo.methodSlot);
+            argInfo.methodSlot,
+            scope.getQualifiedName());
       }
       if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
         return new InvokeLexicalClassMethodNode(
@@ -956,7 +960,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             typeArgs,
             argInfo.arguments,
             needsConst,
-            argInfo.methodSlot);
+            argInfo.methodSlot,
+            scope.getQualifiedName());
       }
       return InvokeMethodVirtualNodeGen.create(
           sourceSection,
@@ -966,6 +971,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           MemberLookupMode.IMPLICIT_LEXICAL,
           needsConst,
           argInfo.methodSlot,
+          scope.getQualifiedName(),
           levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
           GetClassNodeGen.create(null));
     } else if (resolution instanceof ImplicitBaseMethod) {
@@ -994,7 +1000,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             new ConstantValueNode(baseModule),
             typeArgs,
             argInfo.arguments,
-            argInfo.methodSlot);
+            argInfo.methodSlot,
+            scope.getQualifiedName());
       }
     } else if (resolution instanceof ImplicitThisMethod) {
       var isCustomThis = scope.isCustomThisScope();
@@ -1010,6 +1017,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           MemberLookupMode.IMPLICIT_THIS,
           needsConst,
           methodSlot,
+          scope.getQualifiedName(),
           VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThis),
           GetClassNodeGen.create(null));
     } else {
@@ -1189,7 +1197,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       var typeArgs = doVisitMethodTypeArguments(expr.getTypeArgumentList());
       var argInfo = visitArgumentList(argCtx);
       return InvokeSuperMethodNodeGen.create(
-          sourceSection, memberName, typeArgs, argInfo.arguments, needsConst, argInfo.methodSlot);
+          sourceSection,
+          memberName,
+          typeArgs,
+          argInfo.arguments,
+          needsConst,
+          argInfo.methodSlot,
+          currentScope.getQualifiedName());
     }
 
     // superproperty call
@@ -2322,6 +2336,19 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var params = ctx.getParameters();
     var size = params.size();
     var result = new ArrayList<VmTypeParameter>(size);
+
+    var parent = ctx.parent();
+    VmTypeParameter.OwnerType ownerType;
+    if (parent instanceof Class) {
+      ownerType = VmTypeParameter.OwnerType.CLASS;
+    } else if (parent instanceof TypeAlias) {
+      ownerType = VmTypeParameter.OwnerType.TYPEALIAS;
+    } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
+      ownerType = VmTypeParameter.OwnerType.METHOD;
+    } else {
+      throw PklBugException.unreachableCode();
+    }
+
     for (var i = 0; i < size; i++) {
       var paramCtx = params.get(i);
       Variance variance;
@@ -2336,13 +2363,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             };
       }
       var parameterName = paramCtx.getIdentifier().getValue();
-      if (result.stream().anyMatch(it -> it.getName().equals(parameterName))) {
+      if (result.stream().anyMatch(it -> it.name().equals(parameterName))) {
         throw exceptionBuilder()
             .evalError("duplicateTypeParameter", parameterName)
             .withSourceSection(createSourceSection(paramCtx))
             .build();
       }
-      result.add(new VmTypeParameter(variance, parameterName, i));
+      result.add(new VmTypeParameter(variance, parameterName, i, ownerType));
     }
     return result;
   }
@@ -2966,6 +2993,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
               argInfo.methodSlot,
+              symbolTable.getCurrentScope().getQualifiedName(),
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -2979,6 +3007,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
         argInfo.methodSlot,
+        symbolTable.getCurrentScope().getQualifiedName(),
         receiver,
         GetClassNodeGen.create(null));
   }

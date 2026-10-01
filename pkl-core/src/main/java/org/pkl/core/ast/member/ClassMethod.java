@@ -56,9 +56,6 @@ public final class ClassMethod extends ClassMember implements Method {
         annotations,
         owner);
     this.typeParameters = typeParameters;
-    for (var parameter : typeParameters) {
-      parameter.initOwner(this);
-    }
     this.deprecation = deprecation;
   }
 
@@ -136,19 +133,5 @@ public final class ClassMethod extends ClassMember implements Method {
   public PClass.Method export(PClass owner) {
     return functionNode.export(
         owner, docComment, annotations, modifiers, VmTypeParameter.export(typeParameters));
-  }
-
-  @Override
-  public boolean isChildOf(Method other) {
-    if (this == other) return true;
-    if (!(other instanceof ClassMethod)) return false;
-
-    assert name != null;
-    for (var clazz = getDeclaringClass().getSuperclass();
-        clazz != null;
-        clazz = clazz.getSuperclass()) {
-      if (other == clazz.getMethod(name)) return true;
-    }
-    return false;
   }
 }
