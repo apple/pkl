@@ -43,8 +43,7 @@ class ProfilerOutputTest {
       checkNotNull(System.getProperty("org.pkl.cli.testJar")) {
         "system property `org.pkl.cli.testJar` is not set"
       }
-    val sourceFile =
-      tempDir.resolve("profiled.pkl").also { it.writeText(pklCode) }
+    val sourceFile = tempDir.resolve("profiled.pkl").also { it.writeText(pklCode) }
     val outputFile = tempDir.resolve("profile.pb.gz")
 
     val javaBin = ProcessHandle.current().info().command().orElseThrow()
