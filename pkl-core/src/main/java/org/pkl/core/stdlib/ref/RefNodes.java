@@ -17,10 +17,10 @@ package org.pkl.core.stdlib.ref;
 
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
-import org.pkl.core.ast.member.FunctionNode;
-import org.pkl.core.ast.type.TypeNode.ReferenceTypeNode;
 import org.pkl.core.runtime.VmReference;
+import org.pkl.core.runtime.VmType;
 import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 
 public class RefNodes {
@@ -28,10 +28,9 @@ public class RefNodes {
     @Specialization
     protected VmReference eval(
         VirtualFrame frame, @SuppressWarnings("unused") VmTyped self, VmTyped domain, Object data) {
-      var fn = (FunctionNode) getParent();
-      var returnTypeNode = (ReferenceTypeNode) fn.getReturnTypeNode();
-      assert returnTypeNode != null;
-      var referentType = returnTypeNode.getReferentTypeNode().getType().reify(frame);
+      var typeArguments = VmUtils.getTypeArgumentsOrNull(frame);
+      var referentType =
+          typeArguments == null ? VmType.UnknownType.INSTANCE : typeArguments[1].resolveType();
       return new VmReference(domain, referentType, data);
     }
   }

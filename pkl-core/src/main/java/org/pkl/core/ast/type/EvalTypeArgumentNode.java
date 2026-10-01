@@ -16,15 +16,12 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.CallTarget;
-import com.oracle.truffle.api.dsl.Bind;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.runtime.VmTypeArgument;
 
@@ -36,46 +33,32 @@ public abstract class EvalTypeArgumentNode extends PklNode {
 
   public abstract Object execute(VirtualFrame frame, VmTypeArgument typeArgument, Object value);
 
-  @Specialization(
-      guards = {"enclosingFrame == null", "typeArgument.getCallTarget() == cachedCallTarget"})
+  @Specialization(guards = {"typeArgument.getCallTarget() == cachedCallTarget"})
   protected Object evalDirect(
       @SuppressWarnings("unused") VmTypeArgument typeArgument,
       Object value,
-      @Bind("typeArgument.getEnclosingFrame()") @SuppressWarnings("unused")
-          @Nullable MaterializedFrame enclosingFrame,
       @Cached("typeArgument.getCallTarget()") @SuppressWarnings("unused")
           CallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
-    return callNode.call(null, null, null, value);
+    var frame = typeArgument.getEnclosingFrame();
+    if (frame == null) {
+      return callNode.call(null, null, null, value);
+    }
+
+    var arguments = frame.getArguments();
+    return callNode.call(arguments[0], arguments[1], arguments[2], value);
   }
 
-  @Specialization(
-      guards = {"enclosingFrame != null", "typeArgument.getCallTarget() == cachedCallTarget"})
-  protected Object evalDirectCapturing(
-      @SuppressWarnings("unused") VmTypeArgument typeArgument,
-      Object value,
-      @Bind("typeArgument.getEnclosingFrame()") MaterializedFrame enclosingFrame,
-      @Cached("typeArgument.getCallTarget()") @SuppressWarnings("unused")
-          CallTarget cachedCallTarget,
-      @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
-    return callNode.call(
-        enclosingFrame.getArguments()[0],
-        enclosingFrame.getArguments()[1],
-        enclosingFrame.getArguments()[2],
-        value);
-  }
-
-  @Specialization(replaces = {"evalDirect", "evalDirectCapturing"})
+  @Specialization(replaces = "evalDirect")
   protected Object eval(
       VmTypeArgument typeArgument, Object value, @Cached("create()") IndirectCallNode callNode) {
     var frame = typeArgument.getEnclosingFrame();
-    return frame == null
-        ? callNode.call(typeArgument.getCallTarget(), null, null, null, value)
-        : callNode.call(
-            typeArgument.getCallTarget(),
-            frame.getArguments()[0],
-            frame.getArguments()[1],
-            frame.getArguments()[2],
-            value);
+    if (frame == null) {
+      return callNode.call(typeArgument.getCallTarget(), null, null, null, value);
+    }
+
+    var arguments = frame.getArguments();
+    return callNode.call(
+        typeArgument.getCallTarget(), arguments[0], arguments[1], arguments[2], value);
   }
 }
