@@ -98,7 +98,7 @@ class GenericSexpRenderer(code: String) {
         res
       }
       // a string constant is rendered as a single leaf
-      NodeType.STRING_CHARS,
+      NodeType.STRING_CONSTANT,
       NodeType.DOC_COMMENT -> listOf()
       else -> {
         val nodes = mutableListOf<Node>()
@@ -114,7 +114,8 @@ class GenericSexpRenderer(code: String) {
       }
     }
 
-  private fun NodeType.isIgnored(): Boolean = isTerminal || this in IGNORED_CHILDREN
+  private fun NodeType.isIgnored(): Boolean =
+    this != NodeType.STRING_CHARS && (isTerminal || this in IGNORED_CHILDREN)
 
   private fun NodeType.isStringData(): Boolean =
     this == NodeType.STRING_CHARS || this == NodeType.STRING_ESCAPE
@@ -129,6 +130,7 @@ class GenericSexpRenderer(code: String) {
       NodeType.EXTENDS_CLAUSE,
       NodeType.AMENDS_CLAUSE -> "extendsOrAmendsClause"
       NodeType.TYPEALIAS -> "typeAlias"
+      NodeType.STRING_CONSTANT,
       NodeType.STRING_ESCAPE -> "stringChars"
       NodeType.QUALIFIED_ACCESS_EXPR -> {
         val op = node.findChildByType(NodeType.OPERATOR)!!

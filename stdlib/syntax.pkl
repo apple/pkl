@@ -281,7 +281,7 @@ typealias NodeType =
     | "type_argument_list_elements"
     | "object_parameter_list"
     | "type_parameter"
-    | "string_chars"
+    | "string_constant"
     // parts of members
     | "object_property_header"
     | "object_property_header_begin"
@@ -366,6 +366,7 @@ typealias TerminalNodeType =
     | "string_multi_start"
     | "string_end"
     // string content
+    | "string_chars"
     | "string_newline"
     | "string_continuation"
     | "string_escape"

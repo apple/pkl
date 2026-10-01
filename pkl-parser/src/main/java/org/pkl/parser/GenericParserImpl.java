@@ -1409,7 +1409,7 @@ class GenericParserImpl {
       }
     }
     children.add(makeTerminal(next())); // string end
-    return new Node(NodeType.STRING_CHARS, children);
+    return new Node(NodeType.STRING_CONSTANT, children);
   }
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {

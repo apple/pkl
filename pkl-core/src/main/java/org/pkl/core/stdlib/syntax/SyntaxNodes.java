@@ -401,8 +401,8 @@ public final class SyntaxNodes {
    * reused verbatim from a parse must carry its own text by the time it is handed over.
    */
   private static void materializeText(Node node, char[] source) {
-    // `string_chars` is read by the formatter but is not always a leaf
-    if (node.children.isEmpty() || node.type == NodeType.STRING_CHARS) {
+    // `string_constant` is read by the formatter but is not a leaf
+    if (node.children.isEmpty() || node.type == NodeType.STRING_CONSTANT) {
       node.text(source);
     }
     for (var child : node.children) {
