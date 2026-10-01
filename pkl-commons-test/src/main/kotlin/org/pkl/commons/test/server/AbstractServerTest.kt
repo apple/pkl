@@ -1141,6 +1141,8 @@ abstract class AbstractServerTest {
     project: Project? = null,
     cacheDir: Path? = null,
     http: Http? = null,
+    externalResourceReaders: Map<String, ExternalReader>? = null,
+    externalModuleReaders: Map<String, ExternalReader>? = null,
   ): Long {
     val message =
       CreateEvaluatorRequest(
@@ -1158,8 +1160,8 @@ abstract class AbstractServerTest {
         null,
         project,
         http,
-        null,
-        null,
+        externalModuleReaders,
+        externalResourceReaders,
         null,
       )
 

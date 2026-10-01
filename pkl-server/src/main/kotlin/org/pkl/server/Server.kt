@@ -89,9 +89,10 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
    */
   override fun close() {
     transport.closeQuietly()
-    for ((_, evaluator) in evaluators) {
+    for ((evaluatorId, evaluator) in evaluators) {
       // if currently in use, blocks until cancellation complete
       evaluator.closeQuietly()
+      externalReaderProcesses[evaluatorId]?.values?.forEach { it.closeQuietly() }
     }
     executor.shutdown()
   }
