@@ -1788,11 +1788,14 @@ external class Duration extends Any {
   ///
   /// The ISO representation has the format `[-]PT{hours}H{minutes}M{seconds}S`, where
   ///
-  /// - negative durations have a leading minus sign,
+  /// - negative durations have a leading minus sign, except as noted below,
   /// - `{hours}` and `{minutes}` are positive integers,
   /// - `{seconds}` is a positive integer or a positive decimal with decimal point (`.`),
   /// - zero-valued components are omitted, and
-  /// - durations with length zero are represented as `PT0S`.
+  /// - a duration with no nonzero component is represented as `PT0S`, without a sign.
+  ///   This covers both a zero-length duration and any duration whose magnitude is below
+  ///   one nanosecond, which has no component left to render once converted;
+  ///   for example, `(-0.4).ns.isoString` is `"PT0S"`, not `"-PT0S"`.
   ///
   /// Facts:
   /// ```
@@ -1800,6 +1803,8 @@ external class Duration extends Any {
   /// -1.5.h.isoString == "-PT1H30M"
   /// 1.23.s.isoString == "PT1.23S"
   /// 0.ms.isoString == "PT0S"
+  /// (-0.4).ns.isoString == "PT0S"
+  /// 0.9.ns.isoString == "PT0S"
   /// ```
   external isoString: String(matches(Regex(#"-?PT(\d+H)?(\d+M)?(\d+([.]\d+)?S)?"#)))
 
