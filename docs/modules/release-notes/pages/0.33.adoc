@@ -37,8 +37,7 @@ rawFragment = url.rawFragment         // "f"
 ----
 
 Parsing is lenient: whatever cannot appear literally in a component is percent-encoded as its UTF-8 bytes, and whatever is already encoded is kept as written.
-The scheme is lowercased, as RFC 3986 defines it to be case-insensitive.
-Every component is held percent-encoded in its `raw` property, whether the input was encoded or not; the percent-decoded form of each is available as `userInfo`, `host`, `path`, `query` and `fragment`.
+Every component is held percent-encoded in its `raw` property, whether the input was encoded or not; the percent-decoded form of each is available as `userInfo`, `host`, `path`, `query`, and `fragment`.
 The derived `pathSegments` and `queryParameters` are percent-decoded too.
 
 A URL can also be built from its components, or derived from another URL by amending it.
