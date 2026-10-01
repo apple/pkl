@@ -50,7 +50,7 @@ public final class UrlParser {
       @Nullable String scheme,
       @Nullable String userInfo,
       @Nullable String host,
-      @Nullable Long port,
+      @Nullable String port,
       String path,
       @Nullable String query,
       @Nullable String fragment) {
@@ -87,14 +87,14 @@ public final class UrlParser {
 
   /** Serializes an authority (section 3.2) from its percent-encoded components. */
   @TruffleBoundary
-  static String serializeAuthority(@Nullable String userInfo, String host, @Nullable Long port) {
+  static String serializeAuthority(@Nullable String userInfo, String host, @Nullable String port) {
     var sb = new StringBuilder();
     if (userInfo != null) {
       sb.append(userInfo).append('@');
     }
     sb.append(host);
     if (port != null) {
-      sb.append(':').append(port.intValue());
+      sb.append(':').append(port);
     }
     return sb.toString();
   }
@@ -141,7 +141,7 @@ public final class UrlParser {
     // authority = [ userinfo "@" ] host [ ":" port ]
     String userInfo = null;
     String host = null;
-    Long port = null;
+    String port = null;
     if (input.startsWith("//", pointer)) {
       pointer += 2;
       var end = pointer;
@@ -164,14 +164,10 @@ public final class UrlParser {
 
       var colon = portSeparator(host);
       if (colon >= 0) {
-        var rawPort = host.substring(colon + 1);
+        port = host.substring(colon + 1);
         host = host.substring(0, colon);
-        if (!rawPort.isEmpty()) {
-          port = parsePort(rawPort);
-          if (port == null) {
-            return new Result.Failure(
-                "The port `" + rawPort + "` is not a number between 0 and 65535.");
-          }
+        if (!isPort(port)) {
+          return new Result.Failure("The port `" + port + "` can only hold digits.");
         }
       }
       var failure = hostFailure(host);
@@ -793,19 +789,17 @@ public final class UrlParser {
     return hostAndPort.lastIndexOf(':');
   }
 
-  /** Returns the port, or {@code null} if it is not a number that fits in 16 bits. */
-  private static @Nullable Long parsePort(String input) {
-    var port = 0L;
+  /**
+   * Whether {@code input} is a {@code port}: {@code *DIGIT}, so it may be empty, and its leading
+   * zeros are part of it.
+   */
+  private static boolean isPort(String input) {
     for (var i = 0; i < input.length(); i++) {
       if (!PercentEncoder.isDigit(input.charAt(i))) {
-        return null;
-      }
-      port = port * 10 + (input.charAt(i) - '0');
-      if (port > 65535) {
-        return null;
+        return false;
       }
     }
-    return port;
+    return true;
   }
 
   private static boolean isSchemeChar(int c) {

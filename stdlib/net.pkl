@@ -78,10 +78,19 @@ class Url {
   /// The percent-decoded [rawHost].
   hidden fixed host: String? = if (rawHost != null) decodeUrlComponent(rawHost) else null
 
-  /// The port, or [null] if this URL states none.
+  /// The port, without the leading `:`, or [null] if this URL states none.
   ///
   /// Only a URL with a [rawHost] can have a port.
-  port: UInt16(rawHost != null)?
+  rawPort: String(rawHost != null, matches(Regex(#"\d*"#)))?
+
+  /// The number that [rawPort] states, or [null] if it states none.
+  ///
+  /// Facts:
+  /// ```
+  /// net.Url("https://example.com:8080/").port == 8080
+  /// net.Url("https://example.com:/").port == null
+  /// ```
+  hidden fixed port: UInt16? = rawPort?.toIntOrNull()
 
   /// The percent-encoded path, or the empty string if this URL has none.
   ///
@@ -137,7 +146,7 @@ class Url {
   /// The authority, without the leading `//`, or [null] if this URL has none.
   ///
   /// A URL has an authority exactly when it has a [rawHost].
-  /// This is [rawUserInfo], [rawHost] and [port] joined back together.
+  /// This is [rawUserInfo], [rawHost] and [rawPort] joined back together.
   external fixed authority: String?
 
   /// What [rawHost] is, or [null] if this URL has no authority.

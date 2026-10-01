@@ -10,7 +10,7 @@ local function componentsOf(input: String): List =
       result.scheme,
       result.rawUserInfo,
       result.rawHost,
-      result.port,
+      result.rawPort,
       result.rawPath,
       result.rawQuery,
       result.rawFragment,
@@ -31,7 +31,7 @@ local gClef = "\u{1D11E}"
 facts {
   ["components"] {
     componentsOf("https://user:pw@example.com:8080/a/b?q=1#f")
-      == List("https", "user:pw", "example.com", 8080, "/a/b", "q=1", "f")
+      == List("https", "user:pw", "example.com", "8080", "/a/b", "q=1", "f")
     componentsOf("https://example.com")
       == List("https", null, "example.com", null, "", null, null)
     componentsOf("https://example.com/a?#")
@@ -43,7 +43,8 @@ facts {
     componentsOf("file:/tmp") == List("file", null, null, null, "/tmp", null, null)
     componentsOf("file:///tmp") == List("file", null, "", null, "/tmp", null, null)
 
-    componentsOf("http://example.com:/a") == List("http", null, "example.com", null, "/a", null, null)
+    // an empty port is still one
+    componentsOf("http://example.com:/a") == List("http", null, "example.com", "", "/a", null, null)
 
     // the userinfo runs to the last "@", so the extra one lands in it and is encoded
     componentsOf("http://a@b@example.com/") == List("http", "a%40b", "example.com", null, "/", null, null)
@@ -56,6 +57,9 @@ facts {
 
     net.Url("https://example.com:443/a").port == 443
     roundTrips("https://example.com:443/a")
+    // a port is held as written, leading zeros and all
+    net.Url("x://foo:001").rawPort == "001"
+    net.Url("x://foo:001").port == 1
     net.Url("http://example.com/a/b/../c/./d").rawPath == "/a/b/../c/./d"
     roundTrips("http://example.com/a/b/../c/./d")
     net.Url("http://example.com/%41%2Fb").rawPath == "/%41%2Fb"
@@ -154,8 +158,8 @@ facts {
 
     // a ":" in an authority always separates a port, so what follows has to be one
     throws("https://example.com:port/")
-    throws("https://example.com:99999/")
     throws("https://example.com:-1/")
+    throws("https://example.com:+1/")
 
     // and only the last one separates it, so any earlier ":" is left in a registered name, which
     // cannot hold one; an IPv6 address has to be bracketed
@@ -163,8 +167,9 @@ facts {
     throws("http://:::/foo")
     throws("http://::1/foo")
     throws("http://a:b:8080/")
-    // a single ":" still separates a port, and an empty one is no port at all
-    parsed("http://:/") == "http:///"
+    // a single ":" still separates a port, which may be empty
+    roundTrips("http://:/")
+    net.Url("http://:/").port == null
     roundTrips("http://[::]/foo")
     roundTrips("http://[::1]/foo")
     // an encoded ":" is a registered name that holds one, and is left alone
@@ -314,7 +319,7 @@ facts {
       scheme = "https"
       rawUserInfo = "user:pw"
       rawHost = "example.com"
-      port = 8080
+      rawPort = "8080"
       rawPath = "/a/b"
       rawQuery = "q=1"
       rawFragment = "f"
@@ -336,6 +341,9 @@ facts {
       .startsWith("Type constraint `isValidFragment(this)` violated.")
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawPath = "/a%zz" }.toString())
       .startsWith("Type constraint `isValidPath(this, rawHost != null)` violated.")
+    module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawPort = "8a" }.toString())
+      .startsWith(##"Type constraint `matches(Regex(#"\d*"#))` violated."##)
+    new net.Url { scheme = "x"; rawHost = "foo"; rawPort = "001" }.toString() == "x://foo:001"
 
     // a URL without an authority
     new net.Url { scheme = "mailto"; rawPath = "user@example.com" }.toString() == "mailto:user@example.com"
@@ -360,7 +368,7 @@ facts {
     (url) { rawPath = "/c" }.toString() == "https://user:pw@example.com:8080/c?q=1#f"
     (url) { rawQuery = null }.toString() == "https://user:pw@example.com:8080/a/b#f"
     (url) { rawFragment = null; rawQuery = null }.toString() == "https://user:pw@example.com:8080/a/b"
-    (url) { port = null }.toString() == "https://user:pw@example.com/a/b?q=1#f"
+    (url) { rawPort = "0080" }.port == 80
     (url) { rawUserInfo = null }.toString() == "https://example.com:8080/a/b?q=1#f"
     (url) { scheme = "http" }.toString() == "http://user:pw@example.com:8080/a/b?q=1#f"
 
@@ -418,6 +426,7 @@ facts {
     net.Url("https://example.com/a") != net.Url("https://example.com/b")
     // nothing is normalized, so these are distinct URLs
     net.Url("https://example.com/a") != net.Url("https://example.com:443/a")
+    net.Url("x://foo:001") != net.Url("x://foo:1")
     net.Url("https://example.com/a") != net.Url("https://EXAMPLE.com/a")
     net.Url("https://example.com/%41") != net.Url("https://example.com/A")
     net.Url("https://example.com/a") != net.Url("HTTPS://example.com/a")
@@ -458,7 +467,7 @@ facts {
         scheme = "https"
         rawUserInfo = "User~"
         rawHost = "example.com"
-        port = 8080
+        rawPort = "8080"
         rawPath = "/~b"
         rawQuery = "q=~"
         rawFragment = "~"

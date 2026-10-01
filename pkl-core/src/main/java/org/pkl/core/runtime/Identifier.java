@@ -153,7 +153,7 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier RAW_QUERY = get("rawQuery");
   public static final Identifier SCHEME = get("scheme");
   public static final Identifier RAW_HOST = get("rawHost");
-  public static final Identifier PORT = get("port");
+  public static final Identifier RAW_PORT = get("rawPort");
   public static final Identifier RAW_FRAGMENT = get("rawFragment");
 
   // members of pkl.Command

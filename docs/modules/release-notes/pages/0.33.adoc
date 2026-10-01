@@ -26,6 +26,7 @@ scheme = url.scheme                   // "https"
 rawUserInfo = url.rawUserInfo         // "user:pw"
 authority = url.authority             // "user:pw@example.com:8080"
 rawHost = url.rawHost                 // "example.com"
+rawPort = url.rawPort                 // "8080"
 port = url.port                       // 8080
 rawPath = url.rawPath                 // "/a/b%20c"
 path = url.path                       // "/a/b c"
@@ -57,7 +58,7 @@ amended = (base) { rawQuery = null }.toString() // "https://example.com/a"
 ----
 
 Each component is type-checked, so a URL built this way cannot be malformed.
-For example, a `port` is a `UInt16`, only a URL with a `rawHost` can have one, and a `rawPath` of `"/a b"` is rejected.
+For example, a `rawPort` can only hold digits, only a URL with a `rawHost` can have one, and a `rawPath` of `"/a b"` is rejected.
 The decoded components are `fixed`, so they cannot be amended.
 
 A relative reference can be resolved against an absolute URL, which also removes dot segments from the result's path:

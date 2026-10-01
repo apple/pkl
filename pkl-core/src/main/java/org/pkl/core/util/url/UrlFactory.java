@@ -41,9 +41,7 @@ public final class UrlFactory {
           .addProperty("scheme", parsed -> VmNull.lift(parsed.scheme()))
           .addProperty("rawUserInfo", parsed -> VmNull.lift(parsed.userInfo()))
           .addProperty("rawHost", parsed -> VmNull.lift(parsed.host()))
-          .addProperty(
-              "port",
-              parsed -> parsed.port() == null ? VmNull.withoutDefault() : parsed.port().longValue())
+          .addProperty("rawPort", parsed -> VmNull.lift(parsed.port()))
           .addStringProperty("rawPath", Parsed::path)
           .addProperty("rawQuery", parsed -> VmNull.lift(parsed.query()))
           .addProperty("rawFragment", parsed -> VmNull.lift(parsed.fragment()));
@@ -83,13 +81,12 @@ public final class UrlFactory {
     if (url.hasExtraStorage()) {
       return (Parsed) url.getExtraStorage();
     }
-    var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT, callNode));
     var parsed =
         new Parsed(
             readNullableString(url, Identifier.SCHEME, callNode),
             readNullableString(url, Identifier.RAW_USER_INFO, callNode),
             readNullableString(url, Identifier.RAW_HOST, callNode),
-            port,
+            readNullableString(url, Identifier.RAW_PORT, callNode),
             (String) VmUtils.readMember(url, Identifier.RAW_PATH, callNode),
             readNullableString(url, Identifier.RAW_QUERY, callNode),
             readNullableString(url, Identifier.RAW_FRAGMENT, callNode));
@@ -134,8 +131,9 @@ public final class UrlFactory {
     if (host == null) {
       return null;
     }
-    var port = (Long) VmNull.unwrap(VmUtils.readMember(url, Identifier.PORT));
     return UrlParser.serializeAuthority(
-        readNullableString(url, Identifier.RAW_USER_INFO, callNode), host, port);
+        readNullableString(url, Identifier.RAW_USER_INFO, callNode),
+        host,
+        readNullableString(url, Identifier.RAW_PORT, callNode));
   }
 }
