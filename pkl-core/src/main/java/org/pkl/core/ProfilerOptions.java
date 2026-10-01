@@ -27,11 +27,6 @@ public record ProfilerOptions(Cpu cpu) {
     return new ProfilerOptions(new Cpu(cpuOutputFile, cpuSamplePeriod));
   }
 
-  public static void clearSystemProperties() {
-    System.clearProperty(CPU_OUTPUT_FILE);
-    System.clearProperty(CPU_SAMPLE_PERIOD);
-  }
-
   public static ProfilerOptions DEFAULT = new ProfilerOptions(Cpu.DEFAULT);
 
   public record Cpu(@Nullable Path outputFile, long samplePeriod) {
