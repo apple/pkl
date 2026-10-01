@@ -43,3 +43,11 @@ typeDefaults {
   }
   res3a = "callWithTypeArguments#Person"
 }
+polymorphism {
+  res1 {
+    name = "fred"
+  }
+  res2 {
+    name = "fred"
+  }
+}

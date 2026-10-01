@@ -701,7 +701,7 @@ public final class SymbolTable {
     @Override
     public @Nullable VmTypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
-        if (name.equals(param.getName())) return param;
+        if (name.equals(param.name())) return param;
       }
       return null;
     }
