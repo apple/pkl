@@ -135,7 +135,7 @@ public final class VmDynamic extends VmObject {
   @Override
   public VmObjectCursor elements(EnumSet<CursorOption> options) {
     // never shallow-force because it's impossible to only force elements
-    var anyOrder = options.contains(CursorOption.ANY_ORDER);
+    var anyOrder = VmUtils.setContains(options, CursorOption.ANY_ORDER);
     return anyOrder && isShallowForced() ? new CachedElementCursor(this) : new ElementCursor(this);
   }
 
@@ -157,7 +157,7 @@ public final class VmDynamic extends VmObject {
   @Override
   public VmObjectCursor entries(EnumSet<CursorOption> options) {
     // never shallow-force because it's impossible to only force entries
-    var anyOrder = options.contains(CursorOption.ANY_ORDER);
+    var anyOrder = VmUtils.setContains(options, CursorOption.ANY_ORDER);
     if (anyOrder) {
       return isShallowForced() ? new CachedEntryCursor(this) : new UnorderedEntryCursor(this);
     }
