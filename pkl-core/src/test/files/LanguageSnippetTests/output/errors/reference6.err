@@ -1,8 +1,8 @@
 –– Pkl Error ––
 Cannot find property `c` in object of type `pkl.ref#Reference<reference6#D, String>`.
 
-xx | test = ref.Reference(d, String, new A {}).c
-            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+xx | test = ref.Reference::<D, String>(d, new A {}).c
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at reference6#test (file:///$snippetsDir/input/errors/reference6.pkl)
 
 Cannot find property `c` in type `String`.

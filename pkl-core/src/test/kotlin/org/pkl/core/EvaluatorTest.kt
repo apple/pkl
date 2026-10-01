@@ -814,6 +814,22 @@ class EvaluatorTest {
     exceptions.firstOrNull()?.let { throw it }
   }
 
+  @Test
+  fun `method call type args are obeyed for stdlib methods when test mode is off`() {
+    val evaluator = Evaluator.preconfigured()
+    assertThatCode {
+        evaluator.evaluateOutputText(
+          text(
+            """
+            res = List(1, 2, 3).map::<String>((it) -> it + 1)
+            """
+              .trimIndent()
+          )
+        )
+      }
+      .hasMessageContaining("Expected value of type `String`, but got type `Int`.")
+  }
+
   private fun checkModule(module: PModule) {
     assertThat(module.properties.size).isEqualTo(2)
     assertThat(module.getProperty("name")).isEqualTo("pigeon")

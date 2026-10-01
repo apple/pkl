@@ -204,6 +204,7 @@ import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmSet;
+import org.pkl.core.runtime.VmTypeParameter;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.LanguageAwareNode;
 import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
@@ -287,6 +288,7 @@ import org.pkl.parser.syntax.Type.UnionType;
 import org.pkl.parser.syntax.Type.UnknownType;
 import org.pkl.parser.syntax.TypeAlias;
 import org.pkl.parser.syntax.TypeAnnotation;
+import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameterList;
 
 public class AstBuilder extends AbstractAstBuilder<Object> {
@@ -876,8 +878,20 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     }
   }
 
+  private UnresolvedTypeNode @Nullable [] doVisitMethodTypeArguments(
+      @Nullable TypeArgumentList typeArgumentList) {
+    if (typeArgumentList == null) return null;
+    var types = typeArgumentList.getTypes();
+    var res = new UnresolvedTypeNode[types.size()];
+    for (var i = 0; i < res.length; i++) {
+      res[i] = visitType(types.get(i));
+    }
+    return res;
+  }
+
   private ExpressionNode resolvedMethodCall(UnqualifiedAccessExpr expr, ArgumentList argList) {
     var name = expr.getIdentifier().getValue();
+    var typeArgs = doVisitMethodTypeArguments(expr.getTypeArgumentList());
     var scope = symbolTable.getCurrentScope();
     var sourceSection = createSourceSection(expr);
     var constLevel = scope.getConstLevel();
@@ -901,45 +915,67 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           return new InvokeQualifiedObjectMethodNode(
               sourceSection,
               identifier,
+              typeArgs,
               argInfo.arguments,
               needsConst,
               getModuleNode,
-              argInfo.methodSlot);
+              argInfo.methodSlot,
+              scope.getQualifiedName());
         }
         if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
           return new InvokeQualifiedClassMethodNode(
               sourceSection,
               identifier,
+              typeArgs,
               argInfo.arguments,
               needsConst,
               getModuleNode,
-              argInfo.methodSlot);
+              argInfo.methodSlot,
+              scope.getQualifiedName());
         }
         return InvokeMethodVirtualNodeGen.create(
             sourceSection,
             identifier,
+            typeArgs,
             argInfo.arguments,
             MemberLookupMode.IMPLICIT_LEXICAL,
             needsConst,
             argInfo.methodSlot,
+            scope.getQualifiedName(),
             getModuleNode,
             GetClassNodeGen.create(null));
       }
       if (method.isObjectMethod()) {
         return new InvokeLexicalObjectMethodNode(
-            sourceSection, identifier, levelsUp, argInfo.arguments, needsConst, argInfo.methodSlot);
+            sourceSection,
+            identifier,
+            levelsUp,
+            typeArgs,
+            argInfo.arguments,
+            needsConst,
+            argInfo.methodSlot,
+            scope.getQualifiedName());
       }
       if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
         return new InvokeLexicalClassMethodNode(
-            sourceSection, identifier, levelsUp, argInfo.arguments, needsConst, argInfo.methodSlot);
+            sourceSection,
+            identifier,
+            levelsUp,
+            typeArgs,
+            argInfo.arguments,
+            needsConst,
+            argInfo.methodSlot,
+            scope.getQualifiedName());
       }
       return InvokeMethodVirtualNodeGen.create(
           sourceSection,
           identifier,
+          typeArgs,
           argInfo.arguments,
           MemberLookupMode.IMPLICIT_LEXICAL,
           needsConst,
           argInfo.methodSlot,
+          scope.getQualifiedName(),
           levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
           GetClassNodeGen.create(null));
     } else if (resolution instanceof ImplicitBaseMethod) {
@@ -966,8 +1002,10 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             createSourceSection(expr),
             method,
             new ConstantValueNode(baseModule),
+            typeArgs,
             argInfo.arguments,
-            argInfo.methodSlot);
+            argInfo.methodSlot,
+            scope.getQualifiedName());
       }
     } else if (resolution instanceof ImplicitThisMethod) {
       var isCustomThis = scope.isCustomThisScope();
@@ -978,10 +1016,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       return InvokeMethodVirtualNodeGen.create(
           sourceSection,
           org.pkl.core.runtime.Identifier.get(name),
+          typeArgs,
           arguments,
           MemberLookupMode.IMPLICIT_THIS,
           needsConst,
           methodSlot,
+          scope.getQualifiedName(),
           VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThis),
           GetClassNodeGen.create(null));
     } else {
@@ -1158,9 +1198,16 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             .build();
       }
 
+      var typeArgs = doVisitMethodTypeArguments(expr.getTypeArgumentList());
       var argInfo = visitArgumentList(argCtx);
       return InvokeSuperMethodNodeGen.create(
-          sourceSection, memberName, argInfo.arguments, needsConst, argInfo.methodSlot);
+          sourceSection,
+          memberName,
+          typeArgs,
+          argInfo.arguments,
+          needsConst,
+          argInfo.methodSlot,
+          currentScope.getQualifiedName());
     }
 
     // superproperty call
@@ -1859,10 +1906,18 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
 
   @Override
   public ObjectMember visitClass(Class clazz) {
+
     var sourceSection = createSourceSection(clazz);
     var headerSection = createSourceSection(clazz.getHeaderSpan());
 
-    var typeParameters = visitTypeParameterList(clazz.getTypeParameterList());
+    var typeParameterList = clazz.getTypeParameterList();
+    if (clazz.getTypeParameterList() != null && !isStdLibModule) {
+      throw exceptionBuilder()
+          .evalError("cannotDeclareTypeParameter")
+          .withSourceSection(createSourceSection(typeParameterList.getParameters().get(0)))
+          .build();
+    }
+    var typeParameters = visitTypeParameterList(typeParameterList);
 
     var modifiers =
         doVisitModifiers(
@@ -2279,19 +2334,25 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public List<TypeParameter> visitTypeParameterList(@Nullable TypeParameterList ctx) {
+  public List<VmTypeParameter> visitTypeParameterList(@Nullable TypeParameterList ctx) {
     if (ctx == null) return List.of();
-
-    if (!(ctx.parent() instanceof TypeAlias) && !isStdLibModule) {
-      throw exceptionBuilder()
-          .evalError("cannotDeclareTypeParameter")
-          .withSourceSection(createSourceSection(ctx.getParameters().get(0)))
-          .build();
-    }
 
     var params = ctx.getParameters();
     var size = params.size();
-    var result = new ArrayList<TypeParameter>(size);
+    var result = new ArrayList<VmTypeParameter>(size);
+
+    var parent = ctx.parent();
+    VmTypeParameter.OwnerType ownerType;
+    if (parent instanceof Class) {
+      ownerType = VmTypeParameter.OwnerType.CLASS;
+    } else if (parent instanceof TypeAlias) {
+      ownerType = VmTypeParameter.OwnerType.TYPEALIAS;
+    } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
+      ownerType = VmTypeParameter.OwnerType.METHOD;
+    } else {
+      throw PklBugException.unreachableCode();
+    }
+
     for (var i = 0; i < size; i++) {
       var paramCtx = params.get(i);
       Variance variance;
@@ -2306,13 +2367,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             };
       }
       var parameterName = paramCtx.getIdentifier().getValue();
-      if (result.stream().anyMatch(it -> it.getName().equals(parameterName))) {
+      if (result.stream().anyMatch(it -> it.name().equals(parameterName))) {
         throw exceptionBuilder()
             .evalError("duplicateTypeParameter", parameterName)
             .withSourceSection(createSourceSection(paramCtx))
             .build();
       }
-      result.add(new TypeParameter(variance, parameterName, i));
+      result.add(new VmTypeParameter(variance, parameterName, i, ownerType));
     }
     return result;
   }
@@ -2786,6 +2847,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       Expr expr,
       @Nullable TypeAnnotation typeAnnotation,
       boolean isModuleMethod) {
+    var typeParameters = visitTypeParameterList(typeParamList);
+
     var modifiers =
         doVisitModifiers(
             modifierNodes, VmModifier.VALID_OBJECT_MEMBER_MODIFIERS, "invalidObjectMemberModifier");
@@ -2809,15 +2872,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         getConstLevel(modifiers),
         bindings,
         frameDescriptorBuilder,
-        List.of(),
+        typeParameters,
         scope -> {
-          if (typeParamList != null) {
-            throw exceptionBuilder()
-                .evalError("cannotDeclareTypeParameter")
-                .withSourceSection(createSourceSection(typeParamList))
-                .build();
-          }
-
           var member =
               new ObjectMember(
                   createSourceSection(method),
@@ -2835,6 +2891,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   member,
                   body,
                   paramList.getParameters().size(),
+                  typeParameters,
                   parameterTypeNodes,
                   typeNode);
 
@@ -2923,6 +2980,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private ExpressionNode doVisitMethodAccessExpr(QualifiedAccessExpr expr, ArgumentList argList) {
     var sourceSection = createSourceSection(expr);
     var functionName = toIdentifier(expr.getIdentifier().getValue());
+    var typeArgs = doVisitMethodTypeArguments(expr.getTypeArgumentList());
     var receiver = visitExpr(expr.getExpr());
     var needsConst = needsConst(receiver);
     var argInfo = visitArgumentList(argList);
@@ -2934,10 +2992,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           InvokeMethodVirtualNodeGen.create(
               sourceSection,
               functionName,
+              typeArgs,
               argInfo.arguments,
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
               argInfo.methodSlot,
+              symbolTable.getCurrentScope().getQualifiedName(),
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -2946,10 +3006,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return InvokeMethodVirtualNodeGen.create(
         sourceSection,
         functionName,
+        typeArgs,
         argInfo.arguments,
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
         argInfo.methodSlot,
+        symbolTable.getCurrentScope().getQualifiedName(),
         receiver,
         GetClassNodeGen.create(null));
   }

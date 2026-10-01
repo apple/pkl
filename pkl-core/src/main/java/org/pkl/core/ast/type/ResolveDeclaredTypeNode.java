@@ -93,7 +93,7 @@ public abstract class ResolveDeclaredTypeNode extends ExpressionNode {
     assert member.getConstantValue() == null;
     var result = module.getCachedValue(typeName);
     if (result == null) {
-      result = callNode.call(member.getCallTarget(), module, module, typeName);
+      result = callNode.call(member.getCallTarget(), module, module, null, typeName);
       module.setCachedValue(typeName, result);
     }
     return result;

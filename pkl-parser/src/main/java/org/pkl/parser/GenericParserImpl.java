@@ -723,12 +723,30 @@ class GenericParserImpl {
 
   private Node parseUnqualifiedAccessExpr() {
     var children = new ArrayList<Node>();
+    parseAccess(children);
+    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
+  }
+
+  private void parseAccess(List<Node> children) {
     children.add(parseIdentifier());
-    if (lookahead() == Token.LPAREN && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+    if (lookahead() == Token.DCOLON && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+      children.add(makeTerminal(next()));
+      ff(children);
+      children.add(parseTypeArgumentList());
+      if (lookahead() == Token.LPAREN
+          && noSemicolonInbetween()
+          && _lookahead.newLinesBetween == 0) {
+        ff(children);
+        children.add(parseArgumentList());
+      } else {
+        throw parserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
+      }
+    } else if (lookahead() == Token.LPAREN
+        && noSemicolonInbetween()
+        && _lookahead.newLinesBetween == 0) {
       ff(children);
       children.add(parseArgumentList());
     }
-    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -828,11 +846,7 @@ class GenericParserImpl {
             if (lookahead == Token.DOT) {
               children.add(makeTerminal(next()));
               ff(children);
-              children.add(parseIdentifier());
-              if (lookahead() == Token.LPAREN) {
-                ff(children);
-                children.add(parseArgumentList());
-              }
+              parseAccess(children);
               yield new Node(NodeType.SUPER_ACCESS_EXPR, children);
             } else {
               expect(Token.LBRACK, children, "unexpectedToken", "[");

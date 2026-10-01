@@ -70,13 +70,13 @@ public final class VmFunction extends VmObjectLike {
   // if call site is a node, use ApplyVmFunction1Node.execute() or DirectCallNode.call() instead of
   // this method
   public Object apply(Object arg1) {
-    return getCallTarget().call(thisValue, this, arg1);
+    return getCallTarget().call(thisValue, this, null, arg1);
   }
 
   // if call site is a node, use ApplyVmFunction2Node.execute() or DirectCallNode.call() instead of
   // this method
   public Object apply(Object arg1, Object arg2) {
-    return getCallTarget().call(thisValue, this, arg1, arg2);
+    return getCallTarget().call(thisValue, this, null, arg1, arg2);
   }
 
   public VmFunction copy(

@@ -4,10 +4,6 @@ class D extends ref.Domain {
   function renderReference(_): String = throw("not implemented")
 }
 
-class Holder {
-  $: Duration | Listing<String>
-}
-
-local myRef = ref.Reference(new D {}, Holder, null).$
+local myRef = ref.Reference::<D, Duration | Listing<String>>(new D {}, null)
 
 res = myRef[0]

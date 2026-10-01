@@ -52,17 +52,20 @@ public abstract class ReadSuperPropertyNode extends ExpressionNode {
       @Cached("getOwner(frame)") VmObjectLike initialOwner,
       @Cached("getPropertyAndOwner(initialOwner)")
           @Nullable Pair<VmObjectLike, ObjectMember> ownerAndProperty,
-      @Cached("doEval(receiver, ownerAndProperty)") Object result) {
+      @Cached("doEval(frame, receiver, ownerAndProperty)") Object result) {
     return result;
   }
 
   @Specialization(replaces = "evalCached")
   public Object evalUncached(VirtualFrame frame) {
-    return doEval(VmUtils.getObjectReceiver(frame), getPropertyAndOwner(VmUtils.getOwner(frame)));
+    return doEval(
+        frame, VmUtils.getObjectReceiver(frame), getPropertyAndOwner(VmUtils.getOwner(frame)));
   }
 
   protected Object doEval(
-      VmObjectLike receiver, @Nullable Pair<VmObjectLike, ObjectMember> ownerAndProperty) {
+      VirtualFrame frame,
+      VmObjectLike receiver,
+      @Nullable Pair<VmObjectLike, ObjectMember> ownerAndProperty) {
     if (ownerAndProperty == null) {
       // TODO: refine when to return VmDynamic.empty() and when to fail
       return VmDynamic.empty();
@@ -77,6 +80,7 @@ public abstract class ReadSuperPropertyNode extends ExpressionNode {
         // TODO: should the marker only turn off constraint checking, not overall type checking?
         receiver,
         owner,
+        VmUtils.getTypeArgumentsOrNull(frame),
         propertyName,
         VmUtils.SKIP_TYPECHECK_MARKER);
   }
