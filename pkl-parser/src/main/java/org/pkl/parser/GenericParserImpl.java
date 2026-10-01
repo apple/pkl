@@ -237,13 +237,13 @@ class GenericParserImpl {
     headers.add(makeTerminal(next()));
     ff(headers);
     headers.add(parseIdentifier());
-    ff(headers);
-    if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList());
+    if (lookahead() == Token.LT) {
       ff(headers);
+      headers.add(parseTypeParameterList());
     }
-    expect(Token.ASSIGN, headers, "unexpectedToken", "=");
     children.add(new Node(NodeType.TYPEALIAS_HEADER, headers));
+    ff(children);
+    expect(Token.ASSIGN, children, "unexpectedToken", "=");
     var body = new ArrayList<Node>();
     ff(body);
     body.add(parseType());
@@ -584,16 +584,14 @@ class GenericParserImpl {
     ff(header);
     header.add(parseExpr());
     expect(Token.RBRACK, header, "unexpectedToken", "]");
-    if (lookahead() == Token.ASSIGN) {
-      ff(header);
-      header.add(makeTerminal(next()));
-      children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
+    children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
+    ff(children);
+    if (lookahead == Token.ASSIGN) {
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseExpr());
       return new Node(NodeType.OBJECT_ENTRY, children);
     }
-    children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
-    ff(children);
     children.addAll(parseBodyList());
     return new Node(NodeType.OBJECT_ENTRY, children);
   }
