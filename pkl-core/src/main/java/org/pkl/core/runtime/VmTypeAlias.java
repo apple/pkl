@@ -81,9 +81,6 @@ public final class VmTypeAlias extends VmValue {
     this.module = module;
     this.qualifiedName = qualifiedName;
     this.typeParameters = typeParameters;
-    for (var parameter : typeParameters) {
-      parameter.initOwner(this);
-    }
     this.enclosingFrame = enclosingFrame;
   }
 
@@ -199,7 +196,7 @@ public final class VmTypeAlias extends VmValue {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameter().getIndex()];
+          : typeArgumentNodes[typeVarNode.getTypeParameter().index()];
     }
 
     var clone = (TypeNode) typeNode.deepCopy();

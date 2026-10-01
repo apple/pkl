@@ -16,49 +16,10 @@
 package org.pkl.core.runtime;
 
 import java.util.List;
-import org.jspecify.annotations.Nullable;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.TypeParameter.Variance;
-import org.pkl.core.ast.member.ClassMethod;
-import org.pkl.core.ast.member.ObjectMethodNode;
 
-public class VmTypeParameter {
-
-  private final Variance variance;
-  private final String name;
-  private final int index;
-
-  private volatile @Nullable Object owner;
-
-  public VmTypeParameter(Variance variance, String name, int index) {
-    this.variance = variance;
-    this.name = name;
-    this.index = index;
-  }
-
-  public Variance getVariance() {
-    return variance;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getIndex() {
-    return index;
-  }
-
-  public Object getOwner() {
-    assert owner != null;
-    //noinspection DataFlowIssue
-    return owner;
-  }
-
-  public void initOwner(Object owner) {
-    assert this.owner == null;
-    this.owner = owner;
-  }
-
+public record VmTypeParameter(Variance variance, String name, int index, OwnerType ownerType) {
   public TypeParameter export() {
     return new TypeParameter(variance, name, index);
   }
@@ -67,7 +28,9 @@ public class VmTypeParameter {
     return typeParameters.stream().map(VmTypeParameter::export).toList();
   }
 
-  public boolean isMethodTypeParameter() {
-    return owner instanceof ClassMethod || owner instanceof ObjectMethodNode;
+  public enum OwnerType {
+    CLASS,
+    METHOD,
+    TYPEALIAS
   }
 }

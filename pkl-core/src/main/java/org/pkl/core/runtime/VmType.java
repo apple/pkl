@@ -290,7 +290,7 @@ public abstract sealed class VmType {
         var newState = cSupertype.typeArguments.clone();
         for (var i = 0; i < newState.length; i++) {
           if (!(newState[i] instanceof TypeVariableType tvt)) continue;
-          newState[i] = state[tvt.typeParameter.getIndex()];
+          newState[i] = state[tvt.typeParameter.index()];
         }
         state = newState;
       }
@@ -299,7 +299,7 @@ public abstract sealed class VmType {
       assert goalState.length == state.length;
       var params = clazz.getTypeParameters();
       for (var i = 0; i < goalState.length; i++) {
-        if (!switch (params.get(i).getVariance()) {
+        if (!switch (params.get(i).variance()) {
           case INVARIANT -> state[i].equals(goalState[i]);
           case COVARIANT -> state[i].isSubtypeOf(goalState[i]);
           case CONTRAVARIANT -> state[i].isSupertypeOf(goalState[i]);
@@ -826,7 +826,7 @@ public abstract sealed class VmType {
 
     @Override
     public String toString() {
-      return typeParameter.getName();
+      return typeParameter.name();
     }
 
     @Override
@@ -837,8 +837,8 @@ public abstract sealed class VmType {
     @Override
     public VmType reify(VirtualFrame frame) {
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (typeParameter.isMethodTypeParameter() && methodTypeArgs != null) {
-        var typeArg = methodTypeArgs[typeParameter.getIndex()];
+      if (typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+        var typeArg = methodTypeArgs[typeParameter.index()];
         return typeArg.resolveType();
       }
 

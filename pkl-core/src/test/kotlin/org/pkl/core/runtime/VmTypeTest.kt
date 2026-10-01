@@ -444,7 +444,14 @@ class VmTypeTest {
 
   @Test
   fun `type variable - treated like unknown, supertype and subtype to all`() {
-    VmType.TypeVariableType(VmTypeParameter(TypeParameter.Variance.INVARIANT, "Foo", 0))
+    VmType.TypeVariableType(
+        VmTypeParameter(
+          TypeParameter.Variance.INVARIANT,
+          "Foo",
+          0,
+          VmTypeParameter.OwnerType.METHOD,
+        )
+      )
       .bidi(stringClass)
   }
 }

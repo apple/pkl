@@ -35,7 +35,8 @@ public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMet
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
-      int methodSlot) {
+      int methodSlot,
+      String qualifiedName) {
     super(
         sourceSection,
         methodName,
@@ -43,7 +44,8 @@ public final class InvokeLexicalClassMethodNode extends AbstractInvokeLexicalMet
         unresolvedTypeArgumentNodes,
         argumentNodes,
         needsConst,
-        methodSlot);
+        methodSlot,
+        qualifiedName);
   }
 
   @Override

@@ -28,6 +28,4 @@ public interface Method {
   SourceSection getHeaderSection();
 
   String getQualifiedName();
-
-  boolean isChildOf(Method other);
 }
