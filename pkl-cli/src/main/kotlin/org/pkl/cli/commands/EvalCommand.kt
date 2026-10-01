@@ -86,21 +86,22 @@ class EvalCommand : ModulesCommand(name = "eval", helpLink = helpLink) {
   val profileOptions: ProfileOptions by ProfileOptions()
 
   override fun run() {
+    val cliBaseOptions =
+      baseOptions.baseOptions(
+        modules,
+        projectOptions,
+        testMode = testMode,
+        powerAssertionsEnabled = powerAssertionsEnabled,
+      )
     val options =
       CliEvaluatorOptions(
-        base =
-          baseOptions.baseOptions(
-            modules,
-            projectOptions,
-            testMode = testMode,
-            powerAssertionsEnabled = powerAssertionsEnabled,
-          ),
+        base = cliBaseOptions,
         outputPath = outputPath,
         outputFormat = baseOptions.format,
         moduleOutputSeparator = moduleOutputSeparator,
         multipleFileOutputPath = multipleFileOutputPath,
         expression = expression ?: CliEvaluatorOptions.defaults.expression,
-        profilerOptions = profileOptions.toOptions(),
+        profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
       )
     CliEvaluator(options).run()
   }

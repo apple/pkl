@@ -56,15 +56,16 @@ class TestCommand : BaseCommand(name = "test", helpLink = helpLink) {
       .flag("--no-power-assertions", default = true, defaultForHelp = "enabled")
 
   override fun run() {
+    val cliBaseOptions =
+      baseOptions.baseOptions(
+        modules,
+        projectOptions,
+        powerAssertionsEnabled = powerAssertionsEnabled,
+      )
     CliTestRunner(
-        options =
-          baseOptions.baseOptions(
-            modules,
-            projectOptions,
-            powerAssertionsEnabled = powerAssertionsEnabled,
-          ),
+        options = cliBaseOptions,
         testOptions = testOptions.cliTestOptions,
-        profilerOptions = profileOptions.toOptions(),
+        profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
       )
       .run()
   }

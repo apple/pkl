@@ -78,12 +78,13 @@ class RunCommand : BaseCommand(name = "run", helpLink = helpLink) {
         else reservedFlagShortNames.add(it.trimStart('-'))
       }
     }
+    val cliBaseOptions = baseOptions.baseOptions(listOf(module!!), projectOptions)
     CliCommandRunner(
-        baseOptions.baseOptions(listOf(module!!), projectOptions),
+        cliBaseOptions,
         reservedFlagNames,
         reservedFlagShortNames,
         if (showHelp) args + listOf("--help") else args,
-        profilerOptions = profileOptions.toOptions(),
+        profilerOptions = profileOptions.toOptions(cliBaseOptions.normalizedWorkingDir),
       )
       .run()
   }

@@ -42,6 +42,8 @@ class ProfileOptions : OptionGroup() {
       .long()
       .default(ProfilerOptions.DEFAULT.cpu.samplePeriod)
 
-  fun toOptions(): ProfilerOptions =
-    ProfilerOptions(ProfilerOptions.Cpu(profileCpuOutput, profileCpuSamplePeriod))
+  fun toOptions(workingDir: Path): ProfilerOptions =
+    ProfilerOptions(
+      ProfilerOptions.Cpu(profileCpuOutput?.let(workingDir::resolve), profileCpuSamplePeriod)
+    )
 }
