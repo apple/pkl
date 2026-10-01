@@ -333,7 +333,7 @@ public final class StringNodes {
     }
 
     @TruffleBoundary
-    @Specialization(guards = {"regex.equals(cachedRegex)", "!isMultiline(regex)"})
+    @Specialization(guards = "regex.equals(cachedRegex)")
     protected boolean evalRegexCached(
         String self,
         VmRegex regex,
@@ -343,42 +343,32 @@ public final class StringNodes {
     }
 
     @TruffleBoundary
-    @Specialization(replaces = "evalRegexCached", guards = "!isMultiline(regex)")
+    @Specialization(replaces = "evalRegexCached")
     protected boolean evalRegex(String self, VmRegex regex) {
       return computePattern(regex).matcher(self).find();
     }
 
-    // a multiline regex changes the meaning of `$`, so we can't use the normal `evalRegexCached`
-    // or `evalRegex`.
-    @TruffleBoundary
-    @Specialization(guards = "isMultiline(regex)")
-    protected boolean evalMultilineRegex(String self, VmRegex regex) {
-      var matcher = computePattern(regex).matcher(self);
-      var end = -1;
-      while (matcher.find()) {
-        end = matcher.end();
-      }
-      return end == self.length();
-    }
-
     // incorrect warning; non-capture group here is used to ensure correct precedence (e.g. prevent
-    // constructing a regex like `foo|bar$`
-    @SuppressWarnings("RegExpUnnecessaryNonCapturingGroup")
-    protected Pattern computePattern(VmRegex regex) {
+    // constructing a regex like `foo|bar$`)
+    @SuppressWarnings({"RegExpUnnecessaryNonCapturingGroup", "RegExpUnexpectedAnchor"})
+    protected final Pattern computePattern(VmRegex regex) {
       var existingPattern = regex.getPattern();
-      if (isCommentsEnabled(regex)) {
-        // if comments are enabled, need to insert some newlines here so that a trailing comment
-        // can't comment out the rest of this pattern.
-        return Pattern.compile("(?:\n" + existingPattern.pattern() + "\n)$");
+      var suffix = isCommentsEnabled(regex) ? "\n)\\z" : ")\\z";
+      try {
+        return Pattern.compile("(?:" + existingPattern.pattern() + suffix, existingPattern.flags());
+      } catch (PatternSyntaxException e) {
+        if (e.getMessage().contains("Unclosed group")) {
+          // incorrect regex error diagnostic here but not suppressable.
+          return Pattern.compile(
+              "(?:" + existingPattern.pattern() + "\\E" + suffix, existingPattern.flags());
+        } else {
+          CompilerDirectives.transferToInterpreter();
+          throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
+        }
       }
-      return Pattern.compile("(?:" + existingPattern.pattern() + ")$", existingPattern.flags());
     }
 
-    public boolean isMultiline(VmRegex regex) {
-      return (regex.getPattern().flags() & Pattern.MULTILINE) != 0;
-    }
-
-    public boolean isCommentsEnabled(VmRegex regex) {
+    private boolean isCommentsEnabled(VmRegex regex) {
       return (regex.getPattern().flags() & Pattern.COMMENTS) != 0;
     }
   }
