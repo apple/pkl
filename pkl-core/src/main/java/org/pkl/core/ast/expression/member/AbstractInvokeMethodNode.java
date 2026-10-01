@@ -39,6 +39,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
   @Children protected final ExpressionNode[] argumentNodes;
   protected final int methodSlot;
+  protected final String qualifiedName;
 
   @Children protected UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes;
 
@@ -51,11 +52,13 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
       SourceSection sourceSection,
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
-      int methodSlot) {
+      int methodSlot,
+      String qualifiedName) {
     super(sourceSection);
     this.unresolvedTypeArgumentNodes = unresolvedTypeArgumentNodes;
     this.argumentNodes = argumentNodes;
     this.methodSlot = methodSlot;
+    this.qualifiedName = qualifiedName;
   }
 
   protected RootNode @Nullable [] getTypeArgumentRootNodes(
@@ -82,7 +85,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
                   language,
                   FrameDescriptor.newBuilder().build(),
                   sourceSection,
-                  "TODO",
+                  qualifiedName + ".<typearg#" + (i + 1) + ">",
                   new ExecuteTypeArgumentCheckNode(sourceSection, typeNode),
                   true);
           typeArgumentsNeedMaterializedFrame =

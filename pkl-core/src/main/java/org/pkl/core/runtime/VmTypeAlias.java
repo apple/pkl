@@ -79,9 +79,6 @@ public final class VmTypeAlias extends VmValue {
     this.module = module;
     this.qualifiedName = qualifiedName;
     this.typeParameters = typeParameters;
-    for (var parameter : typeParameters) {
-      parameter.initOwner(this);
-    }
     this.enclosingFrame = enclosingFrame;
   }
 
@@ -197,14 +194,14 @@ public final class VmTypeAlias extends VmValue {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameter().getIndex()];
+          : typeArgumentNodes[typeVarNode.getTypeParameter().index()];
     }
 
     var clone = (TypeNode) typeNode.deepCopy();
     clone.accept(
         node -> {
           if (node instanceof TypeVariableNode typeVarNode) {
-            var index = typeVarNode.getTypeParameter().getIndex();
+            var index = typeVarNode.getTypeParameter().index();
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnknownTypeNode(sourceSection)
@@ -213,7 +210,7 @@ public final class VmTypeAlias extends VmValue {
             // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
             // are still unresolved at instantiation time. Replace them with a resolved
             // unresolved type node that returns the concrete type argument.
-            var index = unresolvedTypeVar.getTypeParameter().getIndex();
+            var index = unresolvedTypeVar.getTypeParameter().index();
             node.replace(
                 typeArgumentNodes.length == 0
                     ? new UnresolvedTypeNode.Unknown(sourceSection)

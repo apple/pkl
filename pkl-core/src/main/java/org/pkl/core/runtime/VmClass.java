@@ -136,9 +136,6 @@ public final class VmClass extends VmValue {
     this.modifiers = modifiers;
     this.classInfo = classInfo;
     this.typeParameters = typeParameters;
-    for (var parameter : typeParameters) {
-      parameter.initOwner(this);
-    }
 
     this.prototype = prototype;
     prototype.lateInitVmClass(this);

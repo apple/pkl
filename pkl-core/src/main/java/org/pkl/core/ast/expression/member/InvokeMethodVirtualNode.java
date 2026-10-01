@@ -56,8 +56,9 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
       boolean needsConst,
-      int methodSlot) {
-    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot);
+      int methodSlot,
+      String qualifiedName) {
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
     this.methodName = methodName;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
@@ -69,7 +70,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
-      int methodSlot) {
+      int methodSlot,
+      String qualifiedName) {
     this(
         sourceSection,
         methodName,
@@ -77,7 +79,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
         argumentNodes,
         lookupMode,
         false,
-        methodSlot);
+        methodSlot,
+        qualifiedName);
   }
 
   /**
@@ -164,6 +167,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
         lookupMode,
         needsConst,
         methodSlot,
+        qualifiedName,
         this,
         probe);
   }

@@ -69,3 +69,14 @@ typeDefaults {
   res3 = makeFromParam::<Person>(new { name = "bob" })
   res3a = res3.first.getClass().toString()
 }
+
+class Bird {
+  name: String
+}
+
+polymorphism {
+  // test that method type parameters are considered non-final
+  local function make<T>(): T = new T { name = "fred" }
+  res1 = make::<Person>()
+  res2 = make::<Bird>()
+}

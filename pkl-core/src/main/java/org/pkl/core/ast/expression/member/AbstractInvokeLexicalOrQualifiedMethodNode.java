@@ -48,8 +48,9 @@ public abstract class AbstractInvokeLexicalOrQualifiedMethodNode extends Abstrac
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
-      int methodSlot) {
-    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot);
+      int methodSlot,
+      String qualifiedName) {
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
     this.methodName = methodName;
     this.needsConst = needsConst;
     this.isConstChecked = false;
