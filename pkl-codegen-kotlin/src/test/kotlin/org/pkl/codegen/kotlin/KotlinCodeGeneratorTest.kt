@@ -142,6 +142,7 @@ class KotlinCodeGeneratorTest {
       generateKdoc: Boolean = false,
       generateSpringBootConfig: Boolean = false,
       implementSerializable: Boolean = false,
+      springBootConfigurationProperties: Map<String, String> = emptyMap(),
     ): KotlinSourceCode {
 
       val module = Evaluator.preconfigured().evaluateSchema(ModuleSource.text(pklCode))
@@ -153,6 +154,7 @@ class KotlinCodeGeneratorTest {
             generateKdoc = generateKdoc,
             generateSpringBootConfig = generateSpringBootConfig,
             implementSerializable = implementSerializable,
+            springBootConfigurationProperties = springBootConfigurationProperties,
           ),
         )
       return KotlinSourceCode(generator.kotlinFile)
@@ -1518,6 +1520,42 @@ class KotlinCodeGeneratorTest {
         """
           .trimMargin()
       )
+  }
+
+  @Test
+  fun `spring boot -- explicitly configured ConfigurationProperties`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        class Server
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+        springBootConfigurationProperties =
+          mapOf("my.mod" to "", "my.mod#Server" to "myServerPrefix"),
+      )
+    assertThat(kotlinCode).contains("@ConfigurationProperties\ndata class Mod")
+    assertThat(kotlinCode).contains("@ConfigurationProperties(\"myServerPrefix\")")
+  }
+
+  @Test
+  fun `spring boot -- explicitly configured properties disables inference`() {
+    val kotlinCode =
+      generateKotlinCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        generateSpringBootConfig = true,
+        springBootConfigurationProperties = mapOf("foo" to "foo"),
+      )
+    assertThat(kotlinCode).doesNotContain("@ConfigurationProperties")
   }
 
   @Test
