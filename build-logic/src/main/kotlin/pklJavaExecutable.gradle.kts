@@ -13,6 +13,8 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.runtimeClasspath
+import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.shadowJar
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 import org.gradle.kotlin.dsl.support.serviceOf
@@ -25,6 +27,32 @@ plugins {
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)
 val buildInfo = project.extensions.getByType<BuildInfo>()
+
+// ideally we'd configure this automatically based on project dependencies
+val firstPartySourcesJarsConfiguration: Configuration =
+  configurations.create("firstPartySourcesJars")
+
+val resolveSourcesJars =
+  tasks.register<ResolveSourcesJars>("resolveSourcesJars") {
+    configuration.set(configurations.runtimeClasspath)
+    outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
+  }
+
+val executableSourcesJar =
+  tasks.register<MergeSourcesJars>("executableSourcesJar") {
+    dependsOn(javaExecutable)
+    dependsOn(tasks.named("sourcesJar"))
+    plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
+    plugins.withId("pklKotlinLibrary") { inputJars.from(tasks.named("sourcesJar")) }
+    inputJars.from(firstPartySourcesJarsConfiguration)
+    inputJars.from(resolveSourcesJars.map { fileTree(it.outputDir) })
+
+    mergedBinaryJars.from(tasks.shadowJar)
+    outputJar =
+      layout.buildDirectory.file("libs/${project.name}-${project.version}-all-sources.jar")
+    relocatedPackages = mapOf("commonMain." to "", "jvmMain." to "")
+    relocatedPathPatterns = mapOf("jvmMain/(jdk\\d+)/(.*)" to "$2/$1")
+  }
 
 val javaExecutable =
   tasks.register<ExecutableJar>("javaExecutable") {
