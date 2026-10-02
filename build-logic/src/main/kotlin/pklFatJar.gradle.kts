@@ -203,6 +203,15 @@ val fatSourcesJar =
     )
   }
 
+val sourceBundle =
+  tasks.register<BuildSourceBundle>("sourceBundle") {
+    plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
+    inputJars.from(firstPartySourcesJarsConfiguration)
+    inputJars.from(resolveSourcesJars.map { fileTree(it.outputDir) })
+
+    outputZip = layout.buildDirectory.file("${project.name}-${project.version}-sourcebundle.zip")
+  }
+
 artifacts { add("fatJar", tasks.shadowJar) }
 
 publishing {
