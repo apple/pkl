@@ -25,14 +25,12 @@ import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
 import java.util.ArrayList;
-import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Objects;
 import java.util.Set;
 import java.util.function.BiFunction;
 import java.util.function.Supplier;
-import java.util.stream.Collectors;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
@@ -578,9 +576,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       return new UnresolvedTypeNode.UnionOfStringLiterals(
           createSourceSection(type),
           defaultIndex,
-          elementTypes.stream()
-              .map(it -> ((StringConstantType) it).getStr().getString())
-              .collect(Collectors.toCollection(LinkedHashSet::new)));
+          elementTypes.stream().map(it -> ((StringConstantType) it).getStr().getString()).toList());
     }
 
     var elements = new UnresolvedTypeNode[elementTypes.size()];
