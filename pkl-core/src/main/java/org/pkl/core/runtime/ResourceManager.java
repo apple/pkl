@@ -57,6 +57,16 @@ public final class ResourceManager {
             .addProperty("bytes", resource -> new VmBytes(resource.bytes()));
   }
 
+  private ResourceManager(ResourceManager other) {
+    securityManager = other.securityManager;
+    resourceReaders.putAll(other.resourceReaders);
+    resourceFactory = other.resourceFactory;
+  }
+
+  public ResourceManager withEmptyCache() {
+    return new ResourceManager(this);
+  }
+
   @TruffleBoundary
   public ResourceReader getReader(URI resourceUri, Node readNode) {
     var reader = resourceReaders.get(resourceUri.getScheme());
