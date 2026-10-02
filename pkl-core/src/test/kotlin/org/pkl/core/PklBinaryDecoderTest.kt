@@ -20,6 +20,7 @@ import java.util.regex.Pattern
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.assertThrows
+import org.msgpack.core.MessagePack
 import org.pkl.core.util.pklbinary.PklBinaryCode
 
 class PklBinaryDecoderTest {
@@ -260,5 +261,15 @@ class PklBinaryDecoderTest {
       byteArrayOf(0x93.toByte(), PklBinaryCode.SET.code, 0xdd.toByte(), 0, 1, 0, 0),
       "Unable to decode set of length 65536, exceeded maximum collection size",
     )
+  }
+
+  @Test
+  fun `decode regex preserves Pkl's implicit flags`() {
+    val packer = MessagePack.newDefaultBufferPacker()
+    packer.packArrayHeader(2)
+    packer.packByte(0x0B)
+    packer.packString("(?i)é")
+    val decoded = PklBinaryDecoder.decode(packer.toByteArray()) as Pattern
+    assertThat(decoded.matcher("É")).matches()
   }
 }

@@ -84,6 +84,8 @@ public final class VmUtils {
         }
       };
 
+  public static final int REGEX_FLAGS = Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE;
+
   private static final Engine PKL_ENGINE =
       Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
 
