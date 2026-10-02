@@ -16,6 +16,7 @@ pkl:EvaluatorSettings
 pkl:json
 pkl:jsonnet
 pkl:math
+pkl:net
 pkl:pklbinary
 pkl:platform
 pkl:Project

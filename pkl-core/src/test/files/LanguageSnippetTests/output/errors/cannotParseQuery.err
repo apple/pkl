@@ -1,14 +1,11 @@
 –– Pkl Error ––
-Expected value of type `String`, but got type `Int`.
-Value: 42
+Cannot parse `a=1&b=100%` as a query.
 
-xxxx | typealias Uri = String(isValidUrl)
-                       ^^^^^^
-at intrinsifiedTypeAlias4#res1 (pkl:base)
+x | res = net.parseQuery("a=1&b=100%")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at cannotParseQuery#res (file:///$snippetsDir/input/errors/cannotParseQuery.pkl)
 
-x | res1: Uri = 42
-                ^^
-at intrinsifiedTypeAlias4#res1 (file:///$snippetsDir/input/errors/intrinsifiedTypeAlias4.pkl)
+`%` is not a percent-encoded octet.
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

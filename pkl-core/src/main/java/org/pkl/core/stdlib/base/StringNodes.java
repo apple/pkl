@@ -33,6 +33,7 @@ import org.pkl.core.util.GlobResolver;
 import org.pkl.core.util.GlobResolver.InvalidGlobPatternException;
 import org.pkl.core.util.Pair;
 import org.pkl.core.util.StringUtils;
+import org.pkl.core.util.url.UrlParser;
 import org.pkl.parser.Lexer;
 import org.pkl.parser.ParserError;
 import org.pkl.parser.Token;
@@ -193,6 +194,14 @@ public final class StringNodes {
       } catch (IllegalArgumentException e) {
         return false;
       }
+    }
+  }
+
+  public abstract static class isValidUrl extends ExternalPropertyNode {
+    @Specialization
+    @TruffleBoundary
+    protected boolean eval(String self) {
+      return UrlParser.isValidUrl(self);
     }
   }
 
