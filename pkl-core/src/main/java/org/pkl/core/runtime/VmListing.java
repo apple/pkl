@@ -28,6 +28,7 @@ import org.pkl.core.runtime.VmListingCursors.CachedElementCursor;
 import org.pkl.core.runtime.VmListingCursors.ElementCursor;
 import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
+import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
 
 public final class VmListing extends VmListingOrMapping {
@@ -128,9 +129,9 @@ public final class VmListing extends VmListingOrMapping {
 
   @Override
   public VmObjectCursor elements(EnumSet<CursorOption> options) {
-    var anyOrder = VmUtils.setContains(options, CursorOption.ANY_ORDER);
-    var allValues = VmUtils.setContains(options, CursorOption.ALL_VALUES);
-    var lazyRequired = VmUtils.setContains(options, CursorOption.LAZY_REQUIRED);
+    var anyOrder = CollectionUtils.contains(options, CursorOption.ANY_ORDER);
+    var allValues = CollectionUtils.contains(options, CursorOption.ALL_VALUES);
+    var lazyRequired = CollectionUtils.contains(options, CursorOption.LAZY_REQUIRED);
     if (anyOrder) {
       if (isShallowForced()) {
         return new CachedElementCursor(this);

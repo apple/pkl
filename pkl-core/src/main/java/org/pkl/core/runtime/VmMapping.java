@@ -168,9 +168,9 @@ public final class VmMapping extends VmListingOrMapping {
 
   @Override
   public VmObjectCursor entries(EnumSet<CursorOption> options) {
-    var anyOrder = VmUtils.setContains(options, CursorOption.ANY_ORDER);
-    var allValues = VmUtils.setContains(options, CursorOption.ALL_VALUES);
-    var lazyRequired = VmUtils.setContains(options, CursorOption.LAZY_REQUIRED);
+    var anyOrder = CollectionUtils.contains(options, CursorOption.ANY_ORDER);
+    var allValues = CollectionUtils.contains(options, CursorOption.ALL_VALUES);
+    var lazyRequired = CollectionUtils.contains(options, CursorOption.LAZY_REQUIRED);
     if (anyOrder) {
       if (isShallowForced()) {
         return new CachedEntryCursor(this);
