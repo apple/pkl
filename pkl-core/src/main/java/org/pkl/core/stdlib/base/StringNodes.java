@@ -350,17 +350,23 @@ public final class StringNodes {
 
     // incorrect warning; non-capture group here is used to ensure correct precedence (e.g. prevent
     // constructing a regex like `foo|bar$`)
-    @SuppressWarnings({"RegExpUnnecessaryNonCapturingGroup", "RegExpUnexpectedAnchor"})
+    @SuppressWarnings({
+      "RegExpUnnecessaryNonCapturingGroup",
+      "RegExpUnexpectedAnchor",
+      "MagicConstant"
+    })
     protected final Pattern computePattern(VmRegex regex) {
       var existingPattern = regex.getPattern();
       var suffix = isCommentsEnabled(regex) ? "\n)\\z" : ")\\z";
       try {
-        return Pattern.compile("(?:" + existingPattern.pattern() + suffix, existingPattern.flags());
+        return Pattern.compile("(?:" + existingPattern.pattern() + suffix, VmUtils.REGEX_FLAGS);
       } catch (PatternSyntaxException e) {
+        // if we have an unclosed group, the issue here must be that there was a quote start with
+        // an unmatched quote end (e.g. `foo\Qs`)
         if (e.getMessage().contains("Unclosed group")) {
           // incorrect regex error diagnostic here but not suppressable.
           return Pattern.compile(
-              "(?:" + existingPattern.pattern() + "\\E" + suffix, existingPattern.flags());
+              "(?:" + existingPattern.pattern() + "\\E" + suffix, VmUtils.REGEX_FLAGS);
         } else {
           CompilerDirectives.transferToInterpreter();
           throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
