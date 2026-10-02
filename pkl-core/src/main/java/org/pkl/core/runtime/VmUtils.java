@@ -1173,9 +1173,4 @@ public final class VmUtils {
     return thisSource.getCharIndex() <= otherSource.getCharIndex()
         && thisSource.getCharEndIndex() >= otherSource.getCharEndIndex();
   }
-
-  @TruffleBoundary
-  public static <E> boolean setContains(Set<E> set, E value) {
-    return set.contains(value);
-  }
 }

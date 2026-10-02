@@ -65,4 +65,9 @@ public final class CollectionUtils {
   public static <K, V> @Nullable V put(Map<K, V> map, K key, V value) {
     return map.put(key, value);
   }
+
+  @TruffleBoundary
+  public static <E> boolean contains(Collection<E> collection, E value) {
+    return collection.contains(value);
+  }
 }
