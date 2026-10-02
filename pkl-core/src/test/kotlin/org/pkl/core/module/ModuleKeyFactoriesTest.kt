@@ -17,7 +17,6 @@ package org.pkl.core.module
 
 import java.io.File
 import java.net.URI
-import java.nio.file.Files
 import java.nio.file.Path
 import java.util.regex.Pattern
 import kotlin.io.path.createDirectories
@@ -27,7 +26,7 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Assumptions.assumeTrue
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
-import org.pkl.commons.test.FileTestUtils
+import org.pkl.commons.test.Executables
 import org.pkl.commons.toPath
 import org.pkl.commons.writeString
 import org.pkl.core.EvaluatorBuilder
@@ -38,29 +37,14 @@ import org.pkl.core.externalreader.ExternalReaderProcess
 import org.pkl.core.externalreader.TestExternalModuleReader
 import org.pkl.core.externalreader.TestExternalReaderProcess
 import org.pkl.core.resource.ResourceReaders
-import org.pkl.core.util.IoUtils
 
 class ModuleKeyFactoriesTest {
   companion object {
-    private val externalReaderFixture by lazy {
-      val readerPath =
-        "pkl-core/build/fixtures/externalreader".let { if (IoUtils.isWindows()) "$it.bat" else it }
-
-      FileTestUtils.rootProjectDir.resolve(readerPath).also { path ->
-        if (!Files.exists(path)) {
-          throw AssertionError(
-            "Fixture `externalreader` not found. To fix this problem, first run" +
-              " `./gradlew pkl-core:externalReaderFixture`."
-          )
-        }
-      }
-    }
-
     @JvmStatic
     private fun pathEnvIsSet(): Boolean {
       return System.getenv("PATH")
         ?.split(File.pathSeparator)
-        ?.contains(externalReaderFixture.toAbsolutePath().toString()) ?: false
+        ?.contains(Executables.externalReaderFixture.toAbsolutePath().toString()) ?: false
     }
   }
 
@@ -184,7 +168,7 @@ class ModuleKeyFactoriesTest {
 
   @Test
   fun `external process -- spawning an executable using a path`() {
-    testExternalReader(externalReaderFixture.toAbsolutePath().toString())
+    testExternalReader(Executables.externalReaderFixture.toAbsolutePath().toString())
   }
 
   @Test

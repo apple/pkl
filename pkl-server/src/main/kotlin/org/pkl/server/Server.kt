@@ -146,7 +146,7 @@ class Server(private val transport: MessageTransport) : AutoCloseable {
     evaluator.close()
 
     // close any running ExternalProcess instances for the closed evaluator
-    externalReaderProcesses[message.evaluatorId]?.values?.forEach { it.close() }
+    externalReaderProcesses.remove(message.evaluatorId)?.values?.forEach { it.close() }
   }
 
   private fun buildDeclaredDependencies(

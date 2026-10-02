@@ -19,6 +19,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.exists
 import org.pkl.commons.test.FileTestUtils.rootProjectDir
+import org.pkl.core.util.IoUtils
 
 sealed class ExecutablePaths(protected val gradleProject: String) {
   abstract val allNative: List<Path>
@@ -79,5 +80,21 @@ object Executables {
     // order (aarch64 before amd64, linux before alpine) affects [firstExisting]
     override val allNative: List<Path> =
       listOf(macAarch64, linuxAarch64, linuxAmd64, alpineAmd64, windowsAmd64)
+  }
+
+  val externalReaderFixture by lazy {
+    val readerPath =
+      System.getProperty("org.pkl.core.testExternalReaderPath")
+        ?: "pkl-core/build/fixtures/externalreader"
+          .let { if (IoUtils.isWindows()) "$it.bat" else it }
+
+    rootProjectDir.resolve(readerPath).also { path ->
+      if (!Files.exists(path)) {
+        throw AssertionError(
+          "Fixture `${readerPath.substringAfterLast('/')}` not found. To fix this problem, first run" +
+            " `./gradlew pkl-core:externalReaderFixture`."
+        )
+      }
+    }
   }
 }

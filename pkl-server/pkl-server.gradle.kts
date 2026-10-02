@@ -19,6 +19,8 @@ plugins {
   id("pklNativeLifecycle")
 }
 
+val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
+
 dependencies {
   implementation(projects.pklCore)
   implementation(libs.msgpack)
@@ -26,14 +28,34 @@ dependencies {
 
   testImplementation(projects.pklCommonsTest)
   testImplementation(libs.wiremock)
+
+  externalReaderFixtureConfiguration(project(":pkl-core", "externalReaderFixture"))
 }
 
-tasks.test { exclude("**/NativeServerTest.*") }
+tasks.test {
+  configureTest()
+  exclude("**/NativeServerTest.*")
+}
+
+private fun Test.configureTest() {
+  dependsOn(externalReaderFixtureConfiguration)
+
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixtureConfiguration.files.single().absolutePath,
+  )
+}
 
 private fun Test.configureNativeTest() {
+  configureTest()
   testClassesDirs = files(tasks.test.get().testClassesDirs)
   classpath = tasks.test.get().classpath
   include("**/NativeServerTest.*")
+
+  systemProperty(
+    "org.pkl.core.testExternalReaderPath",
+    externalReaderFixtureConfiguration.files.single().absolutePath,
+  )
 }
 
 val testMacExecutableAarch64 =
