@@ -53,6 +53,14 @@ dependencies {
   testImplementation(projects.pklConfigKotlin)
   testImplementation(projects.pklCommonsTest)
   testRuntimeOnly(libs.kotlinScripting)
+
+  // used by `pklJavaExecutable` plugin (ideally this would be inferred automatically)
+  firstPartySourcesJars(project(":pkl-codegen-kotlin", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-formatter", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
 }
 
 executable {
