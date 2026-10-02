@@ -1,0 +1,121 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+import "pkl:test"
+
+local parser = new syntax.Parser {}
+
+local renderer = new syntax.FormattingRenderer {}
+
+local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
+
+local function intLiteral(value: Int): syntax.GenericNode =
+  new syntax.GenericNode {
+    type = "int_literal_expr"
+    text = value.toString()
+  }
+
+local function identifiersOf(node: syntax.GenericNode): List<String> =
+  node.fold(List(), (acc: List<String>, n) ->
+    if (n.type == "identifier") acc.add(n.text!!) else acc)
+
+local function intLiteralsOf(node: syntax.GenericNode): List<String> =
+  node.fold(List(), (acc: List<String>, n) ->
+    if (n.type == "int_literal_expr") acc.add(n.text!!) else acc)
+
+local function rootOf(node: syntax.GenericNode): syntax.GenericNode =
+  if (node.parent == null) node else rootOf(node.parent!!)
+
+local original = mod("""
+  x = 1
+  y = 2
+  """)
+
+local renameX = (n: syntax.GenericNode) ->
+  if (n.type == "identifier" && n.text == "x") (n) { text = "z" } else n.transform(renameX)
+
+local renamed = original.transform(renameX)
+
+local yProperty: syntax.GenericNode =
+  original
+    .fold(List(), (acc: List<syntax.GenericNode>, n) ->
+      if (n.type == "class_property" && n.text == "y = 2") acc.add(n) else acc)
+    .first
+
+// a node built from scratch, whose children have no parent of their own
+local constructedAccess = new syntax.GenericNode {
+  type = "unqualified_access_expr"
+  children = List(new syntax.GenericNode { type = "identifier"; text = "foo" })
+}
+
+local explode = (n: syntax.GenericNode) ->
+  if (n.type == "identifier") throw("boom") else n.transform(explode)
+
+local exploding = mod("x = 1").transform(explode)
+
+facts {
+  ["a transform does not re-parent the nodes of the tree it walks"] {
+    // force the whole rewritten tree, then check that the walked tree is unchanged
+    local rendered = renderer.render(renamed)
+    rendered == "z = 1\ny = 2\n" && identifiersOf(rootOf(yProperty)) == List("x", "y")
+  }
+
+  ["transforming a node does not detach it from its own tree"] {
+    local detached = yProperty.transform((n) -> n)
+    detached.parent == null && yProperty.parent != null
+  }
+
+  ["only the root of a transformed tree has no parent"] {
+    // the constructed node's child has no parent of its own, so the result tree must supply one
+    local replaceLiterals = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr") constructedAccess else n.transform(replaceLiterals)
+    mod("x = 0")
+      .transform(replaceLiterals)
+      .fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
+  }
+
+  ["a node inside a spliced subtree sees where it was spliced in"] {
+    local markFoo = (n: syntax.GenericNode) ->
+      if (n.type == "identifier" && n.text == "foo")
+        (n) { text = if (n.hasParentOfType("class_property")) "yes" else "no" }
+      else
+        n.transform(markFoo)
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        parser.parseExpression("foo").transform(markFoo)
+      else
+        n.transform(splice)
+    renderer.render(mod("x = 0").transform(splice)) == "x = yes\n"
+  }
+
+  ["a node spliced in by an earlier transform sees where it was spliced in"] {
+    local splice = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr") parser.parseExpression("foo") else n.transform(splice)
+    local markFoo = (n: syntax.GenericNode) ->
+      if (n.type == "identifier" && n.text == "foo")
+        (n) { text = if (n.hasParentOfType("class_property")) "yes" else "no" }
+      else
+        n.transform(markFoo)
+    renderer.render(mod("x = 0").transform(splice).transform(markFoo)) == "x = yes\n"
+  }
+
+  ["reading a node's children inside the operator does not rewrite them"] {
+    local rewrite = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        intLiteral(1)
+      // a class_property's subtree must read as parsed, not as rewritten
+      else if (n.type == "class_property" && intLiteralsOf(n) != List("0"))
+        intLiteral(9)
+      else
+        n.transform(rewrite)
+    renderer.render(mod("x = 0").transform(rewrite)) == "x = 1\n"
+  }
+
+  ["a transform does not apply the operator until the tree is read"] {
+    test.catchOrNull(() -> exploding.type) == null
+  }
+
+  ["the operator's failure surfaces once the tree is read"] {
+    test.catch(() -> exploding.fold(0, (acc, _n) -> acc + 1)).contains("boom")
+  }
+}

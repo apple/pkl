@@ -42,6 +42,7 @@ final class Builder {
   }
 
   FormatNode format(Node node) {
+    if (node.type.isTerminal()) return new Text(node.text(source));
     return switch (node.type) {
       case MODULE -> formatModule(node);
       case DOC_COMMENT,
@@ -56,10 +57,10 @@ final class Builder {
       case DOC_COMMENT_LINE -> formatDocComment(node);
       case LINE_COMMENT,
           BLOCK_COMMENT,
-          TERMINAL,
           MODIFIER,
           IDENTIFIER,
           STRING_CHARS,
+          STRING_CONSTANT,
           STRING_ESCAPE,
           INT_LITERAL_EXPR,
           FLOAT_LITERAL_EXPR,
@@ -115,8 +116,8 @@ final class Builder {
           formatClassPropertyHeaderBegin(node);
       case CLASS_PROPERTY_BODY, OBJECT_PROPERTY_BODY -> formatClassPropertyBody(node);
       case CLASS_METHOD, OBJECT_METHOD -> formatClassMethod(node);
-      case CLASS_METHOD_HEADER -> formatClassMethodHeader(node);
-      case CLASS_METHOD_BODY -> formatClassMethodBody(node);
+      case METHOD_HEADER -> formatClassMethodHeader(node);
+      case METHOD_BODY -> formatClassMethodBody(node);
       case OBJECT_BODY -> formatObjectBody(node);
       case OBJECT_ELEMENT -> format(node.children.get(0)); // has a single element
       case OBJECT_ENTRY_HEADER -> formatObjectEntryHeader(node);
@@ -147,7 +148,6 @@ final class Builder {
       case SUBSCRIPT_EXPR, SUPER_SUBSCRIPT_EXPR -> formatSubscriptExpr(node);
       case TRACE_EXPR, THROW_EXPR, READ_EXPR -> formatTraceThrowReadExpr(node);
       case PARENTHESIZED_EXPR -> formatParenthesizedExpr(node);
-      case PARENTHESIZED_EXPR_ELEMENTS -> formatParenthesizedExprElements(node);
       case LET_EXPR -> formatLetExpr(node);
       case LET_PARAMETER_DEFINITION -> formatLetParameterDefinition(node);
       case LET_PARAMETER -> formatLetParameter(node);
@@ -156,7 +156,7 @@ final class Builder {
       case CONSTRAINED_TYPE -> formatConstrainedType(node);
       case UNION_TYPE -> formatUnionType(node);
       case FUNCTION_TYPE -> formatFunctionType(node);
-      case STRING_CONSTANT_TYPE -> format(node.children.get(0));
+      case STRING_LITERAL_TYPE -> format(node.children.get(0));
       case PARENTHESIZED_TYPE -> formatParenthesizedType(node);
       case PARENTHESIZED_TYPE_ELEMENTS -> formatParenthesizedTypeElements(node);
       default -> throw new RuntimeException("Unknown node type: " + node.type);
@@ -231,7 +231,7 @@ final class Builder {
     first.add(format(node.children.get(0)));
     first.add(line());
     var rest = node.children.subList(1, node.children.size());
-    var nodes = formatGeneric(rest, (n1, next) -> n1.type == NodeType.TERMINAL ? null : line());
+    var nodes = formatGeneric(rest, (n1, next) -> n1.type.isTerminal() ? null : line());
     first.add(new Indent(nodes));
     return new Group(newId(), first);
   }
@@ -397,7 +397,7 @@ final class Builder {
         formatGenericWithGen(
             node.children,
             spaceOrLine(),
-            (n, next) -> isTerminal(n, "import") ? format(n) : indent(format(n))));
+            (n, next) -> n.type == NodeType.IMPORT_KEYWORD ? format(n) : indent(format(n))));
   }
 
   private FormatNode formatAnnotation(Node node) {
@@ -504,12 +504,12 @@ final class Builder {
   private FormatNode formatClassMethod(Node node) {
     var prefixes = new ArrayList<FormatNode>();
     List<Node> methodNodes;
-    if (node.children.get(0).type == NodeType.CLASS_METHOD_HEADER) {
+    if (node.children.get(0).type == NodeType.METHOD_HEADER) {
       methodNodes = node.children;
     } else {
       var idx = -1;
       for (var i = 0; i < node.children.size(); i++) {
-        if (node.children.get(i).type == NodeType.CLASS_METHOD_HEADER) {
+        if (node.children.get(i).type == NodeType.METHOD_HEADER) {
           idx = i;
           break;
         }
@@ -525,7 +525,7 @@ final class Builder {
     // Separate header (before =) and body (= and after)
     var bodyIdx = -1;
     for (var i = 0; i < methodNodes.size(); i++) {
-      if (methodNodes.get(i).type == NodeType.CLASS_METHOD_BODY) {
+      if (methodNodes.get(i).type == NodeType.METHOD_BODY) {
         bodyIdx = i - 1;
         break;
       }
@@ -594,8 +594,8 @@ final class Builder {
         formatGeneric(
             node.children,
             (prev, next) -> {
-              if (isTerminal(prev, "(") || isTerminal(next, ")")) {
-                if (isTerminal(next, ")")) {
+              if (insideParens(prev, next)) {
+                if (next.type == NodeType.RPAREN) {
                   // trailing comma
                   if (grammarVersion == GrammarVersion.V1) {
                     return line();
@@ -618,9 +618,9 @@ final class Builder {
         formatGenericWithGen(
             node.children,
             (prev, next) -> {
-              if (isTerminal(prev, "(") || isTerminal(next, ")")) {
+              if (insideParens(prev, next)) {
                 var lineNode = hasTrailingLambda ? Empty.INSTANCE : line();
-                if (isTerminal(next, ")") && !hasTrailingLambda) {
+                if (next.type == NodeType.RPAREN && !hasTrailingLambda) {
                   // trailing comma
                   if (grammarVersion == GrammarVersion.V1) {
                     return lineNode;
@@ -642,7 +642,7 @@ final class Builder {
   private FormatNode formatArgumentListElements(
       Node node, boolean hasTrailingLambda, boolean twoBy2) {
     var children = node.children;
-    var shouldMultiline = shouldMultilineNodes(node, n -> isTerminal(n, ","));
+    var shouldMultiline = shouldMultilineNodes(node, n -> n.type == NodeType.COMMA);
     BiFunction<Node, Node, @Nullable FormatNode> sep =
         (prev, next) -> shouldMultiline ? forceSpaceyLine() : spaceOrLine();
     if (twoBy2) {
@@ -698,7 +698,7 @@ final class Builder {
     while (!node.children.isEmpty()) {
       node = node.children.get(node.children.size() - 1);
     }
-    return isTerminalSingle(node, "}");
+    return node.type == NodeType.RBRACE;
   }
 
   /**
@@ -741,7 +741,8 @@ final class Builder {
         return false;
       }
     }
-    return properArgCount <= 2 || !shouldMultilineNodes(elementsNode, n -> isTerminal(n, ","));
+    return properArgCount <= 2
+        || !shouldMultilineNodes(elementsNode, n -> n.type == NodeType.COMMA);
   }
 
   private List<Node> pairArguments(List<Node> nodes) {
@@ -749,7 +750,7 @@ final class Builder {
     var tmp = new ArrayList<Node>();
     var commas = 0;
     for (var node : nodes) {
-      if (isTerminalSingle(node, ",")) {
+      if (node.type == NodeType.COMMA) {
         commas++;
         if (commas == 2) {
           var suffixes = new ArrayList<Node>();
@@ -791,8 +792,8 @@ final class Builder {
         formatGeneric(
             node.children,
             (prev, next) -> {
-              if (isTerminal(prev, "<") || isTerminal(next, ">")) {
-                if (isTerminal(next, ">")) {
+              if (prev.type == NodeType.LT || next.type == NodeType.GT) {
+                if (next.type == NodeType.GT) {
                   // trailing comma
                   if (grammarVersion == GrammarVersion.V1) {
                     return new Line();
@@ -825,14 +826,14 @@ final class Builder {
             node.children,
             (prev, next) -> {
               if (next.type == NodeType.OBJECT_PARAMETER_LIST) return Empty.INSTANCE;
-              if (isTerminal(prev, "{") || isTerminal(next, "}")) {
+              if (prev.type == NodeType.LBRACE || next.type == NodeType.RBRACE) {
                 var lines = linesBetween(prev, next);
                 return lines == 0 ? spaceOrLine() : forceSpaceyLine();
               }
               return spaceOrLine();
             },
             (n, next) ->
-                n.type == NodeType.OBJECT_MEMBER_LIST
+                n.type == NodeType.OBJECT_MEMBER_ELEMENTS
                     ? formatObjectMemberList(n, groupId)
                     : format(n));
     return new Group(groupId, nodes);
@@ -869,9 +870,7 @@ final class Builder {
 
   private FormatNode formatForGeneratorHeader(Node node) {
     var nodes =
-        formatGeneric(
-            node.children,
-            (prev, next) -> isTerminal(prev, "(") || isTerminal(next, ")") ? line() : null);
+        formatGeneric(node.children, (prev, next) -> insideParens(prev, next) ? line() : null);
     return new Group(newId(), nodes);
   }
 
@@ -897,8 +896,9 @@ final class Builder {
             node.children,
             (prev, next) ->
                 prev.type == NodeType.WHEN_GENERATOR_HEADER
-                        || isTerminal(prev, "when", "else")
-                        || isTerminal(next, "else")
+                        || prev.type == NodeType.WHEN_KEYWORD
+                        || prev.type == NodeType.ELSE_KEYWORD
+                        || next.type == NodeType.ELSE_KEYWORD
                     ? Space.INSTANCE
                     : spaceOrLine());
     return new Group(newId(), nodes);
@@ -908,9 +908,8 @@ final class Builder {
     var nodes =
         formatGenericWithGen(
             node.children,
-            (prev, next) -> isTerminal(prev, "(") || isTerminal(next, ")") ? line() : spaceOrLine(),
-            (n, next) ->
-                !n.type.isAffix() && n.type != NodeType.TERMINAL ? indent(format(n)) : format(n));
+            (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine(),
+            (n, next) -> isProper(n) ? indent(format(n)) : format(n));
     return new Group(newId(), nodes);
   }
 
@@ -932,7 +931,7 @@ final class Builder {
     while (cursor.hasNext()) {
       if (isInStringInterpolation) {
         var prevNoNewlines = noNewlines;
-        var elems = cursor.takeUntilBefore(n -> isTerminalSingle(n, ")"));
+        var elems = cursor.takeUntilBefore(n -> n.type == NodeType.RPAREN);
         noNewlines = !isMultilineList(elems);
         //noinspection ConstantValue
         assert prev != null;
@@ -946,7 +945,7 @@ final class Builder {
         continue;
       }
       var elem = cursor.next();
-      if (elem.type == NodeType.TERMINAL && text(elem).endsWith("(")) {
+      if (elem.type == NodeType.INTERPOLATION_START) {
         isInStringInterpolation = true;
       }
       var formatted = format(elem);
@@ -996,9 +995,7 @@ final class Builder {
   private FormatNode formatIfCondition(Node node) {
     var nodes =
         formatGeneric(
-            node.children,
-            (prev, next) ->
-                isTerminal(prev, "(") || isTerminal(next, ")") ? line() : spaceOrLine());
+            node.children, (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine());
     return new Group(newId(), nodes);
   }
 
@@ -1029,21 +1026,19 @@ final class Builder {
   }
 
   private FormatNode formatParenthesizedExpr(Node node) {
-    if (node.children.size() == 2) return new Text("()");
     var nodes =
         formatGenericWithGen(
             node.children,
-            (prev, next) -> isTerminal(prev, "(") || isTerminal(next, ")") ? line() : spaceOrLine(),
-            (n, next) -> n.type.isExpression() ? indent(format(n)) : format(n));
+            (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine(),
+            (n, next) ->
+                (n.type == NodeType.LPAREN || n.type == NodeType.RPAREN)
+                    ? format(n)
+                    : indent(format(n)));
     return new Group(newId(), nodes);
   }
 
-  private FormatNode formatParenthesizedExprElements(Node node) {
-    return indent(new Group(newId(), formatGeneric(node.children, (FormatNode) null)));
-  }
-
   private FormatNode formatFunctionLiteralExpr(Node node) {
-    var splitResult = splitOn(node.children, n -> isTerminalSingle(n, "->"));
+    var splitResult = splitOn(node.children, n -> n.type == NodeType.ARROW);
     var params = splitResult[0];
     var rest = splitResult[1];
     Node bodyNode = null;
@@ -1112,9 +1107,7 @@ final class Builder {
   private FormatNode formatLetParameterDefinition(Node node) {
     var nodes =
         formatGeneric(
-            node.children,
-            (prev, next) ->
-                isTerminal(prev, "(") || isTerminal(next, ")") ? line() : spaceOrLine());
+            node.children, (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine());
     return new Group(newId(), nodes);
   }
 
@@ -1160,7 +1153,7 @@ final class Builder {
     var nodes =
         formatGenericWithGen(
             node.children,
-            (prev, next) -> isTerminal(prev, "(") || isTerminal(next, ")") ? line() : null,
+            (prev, next) -> insideParens(prev, next) ? line() : null,
             (n, next) -> n.type.isExpression() ? indent(format(n)) : format(n));
     return new Group(newId(), nodes);
   }
@@ -1183,8 +1176,8 @@ final class Builder {
         formatGeneric(
             node.children,
             (prev, next) -> {
-              if (isTerminal(next, "|")) return spaceOrLine();
-              if (isTerminal(prev, "|")) return Space.INSTANCE;
+              if (next.type == NodeType.UNION) return spaceOrLine();
+              if (prev.type == NodeType.UNION) return Space.INSTANCE;
               return null;
             });
     return new Group(newId(), indentAfterFirstNewline(nodes, false));
@@ -1194,7 +1187,7 @@ final class Builder {
     var nodes =
         formatGenericWithGen(
             node.children,
-            (prev, next) -> isTerminal(prev, "(") || isTerminal(next, ")") ? line() : spaceOrLine(),
+            (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine(),
             (n, next) -> next == null ? indent(format(n)) : format(n));
     return new Group(newId(), nodes);
   }
@@ -1204,9 +1197,7 @@ final class Builder {
     var groupId = newId();
     var nodes =
         formatGeneric(
-            node.children,
-            (prev, next) ->
-                isTerminal(prev, "(") || isTerminal(next, ")") ? line() : spaceOrLine());
+            node.children, (prev, next) -> insideParens(prev, next) ? line() : spaceOrLine());
     return new Group(groupId, nodes);
   }
 
@@ -1288,9 +1279,7 @@ final class Builder {
     var regularImports = new ArrayList<ImportWithComments>();
     var globImports = new ArrayList<ImportWithComments>();
     for (var entry : allImportsWithComments) {
-      var terminalNode = entry.importNode.findChildByType(NodeType.TERMINAL);
-      var terminalText = terminalNode != null ? terminalNode.text(source) : null;
-      if ("import*".equals(terminalText)) {
+      if (entry.importNode.findChildByType(NodeType.IMPORT_STAR_KEYWORD) != null) {
         globImports.add(entry);
       } else {
         regularImports.add(entry);
@@ -1417,7 +1406,7 @@ final class Builder {
   }
 
   private boolean isSemicolon(Node node) {
-    return node.type.isAffix() && text(node).equals(";");
+    return node.type == NodeType.SEMICOLON;
   }
 
   /** Groups all non prefixes (comments, doc comments, annotations) of this node together. */
@@ -1446,9 +1435,9 @@ final class Builder {
   }
 
   private String getImportUrl(Node node) {
-    var strChars = node.findChildByType(NodeType.STRING_CHARS);
-    assert strChars != null;
-    var txt = strChars.text(source);
+    var strConst = node.findChildByType(NodeType.STRING_CONSTANT);
+    assert strConst != null;
+    var txt = strConst.text(source);
     return txt.substring(1, txt.length() - 1);
   }
 
@@ -1476,13 +1465,11 @@ final class Builder {
     if (prev.type == NodeType.BLOCK_COMMENT) {
       return linesBetween(prev, next) > 0 ? forceSpaceyLine() : Space.INSTANCE;
     }
-    if (EMPTY_SUFFIXES.contains(next.type)
-        || isTerminal(prev, "[", "!", "@", "[[")
-        || isTerminal(next, "]", "?", ",")) {
+    if (EMPTY_SUFFIXES.contains(next.type) || EMPTY_PREFIXES.contains(prev.type)) {
       return Empty.INSTANCE;
     }
-    if (isTerminal(prev, "class", "function", "new")
-        || isTerminal(next, "=", "{", "->", "class", "function")
+    if (SPACE_PREFIXES.contains(prev.type)
+        || SPACE_SUFFIXES.contains(next.type)
         || next.type == NodeType.OBJECT_BODY
         || prev.type == NodeType.MODIFIER_LIST) {
       return Space.INSTANCE;
@@ -1642,17 +1629,8 @@ final class Builder {
     return node.text(source);
   }
 
-  private boolean isTerminal(Node node, String... texts) {
-    if (node.type != NodeType.TERMINAL) return false;
-    var t = node.text(source);
-    for (var text : texts) {
-      if (t.equals(text)) return true;
-    }
-    return false;
-  }
-
-  private boolean isTerminalSingle(Node node, String text) {
-    return node.type == NodeType.TERMINAL && node.text(source).equals(text);
+  private static boolean insideParens(Node prev, Node next) {
+    return prev.type == NodeType.LPAREN || next.type == NodeType.RPAREN;
   }
 
   private int newId() {
@@ -1687,7 +1665,7 @@ final class Builder {
 
   // returns true if this node is not an affix or terminal
   private static boolean isProper(Node node) {
-    return !node.type.isAffix() && node.type != NodeType.TERMINAL;
+    return !node.type.isAffix() && !node.type.isTerminal();
   }
 
   private static boolean isMultiline(Node node) {
@@ -1788,7 +1766,24 @@ final class Builder {
           NodeType.TYPE_ARGUMENT_LIST,
           NodeType.TYPE_ANNOTATION,
           NodeType.TYPE_PARAMETER_LIST,
-          NodeType.PARAMETER_LIST);
+          NodeType.PARAMETER_LIST,
+          NodeType.RBRACK,
+          NodeType.QUESTION,
+          NodeType.COMMA);
+
+  private static final EnumSet<NodeType> EMPTY_PREFIXES =
+      EnumSet.of(NodeType.LBRACK, NodeType.NOT, NodeType.AT, NodeType.LPRED);
+
+  private static final EnumSet<NodeType> SPACE_PREFIXES =
+      EnumSet.of(NodeType.CLASS_KEYWORD, NodeType.FUNCTION_KEYWORD, NodeType.NEW_KEYWORD);
+
+  private static final EnumSet<NodeType> SPACE_SUFFIXES =
+      EnumSet.of(
+          NodeType.ASSIGN,
+          NodeType.LBRACE,
+          NodeType.ARROW,
+          NodeType.CLASS_KEYWORD,
+          NodeType.FUNCTION_KEYWORD);
 
   private static final EnumSet<NodeType> SAME_LINE_EXPRS =
       EnumSet.of(NodeType.NEW_EXPR, NodeType.AMENDS_EXPR, NodeType.FUNCTION_LITERAL_EXPR);
@@ -1802,8 +1797,8 @@ final class Builder {
 
     @Override
     public int compare(Node o1, Node o2) {
-      var import1 = o1.findChildByType(NodeType.STRING_CHARS);
-      var import2 = o2.findChildByType(NodeType.STRING_CHARS);
+      var import1 = o1.findChildByType(NodeType.STRING_CONSTANT);
+      var import2 = o2.findChildByType(NodeType.STRING_CONSTANT);
       if (import1 == null || import2 == null) {
         // should never happen
         throw new RuntimeException("ImportComparator: not an import");
