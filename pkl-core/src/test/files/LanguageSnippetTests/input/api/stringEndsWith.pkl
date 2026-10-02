@@ -54,6 +54,7 @@ res12 = !"foo\r\n".endsWith(Regex("foo"))
 res13 = "a\nb".endsWith(Regex(#"(?m)a(?:\nb)??"#))
 
 res14 = "x)".endsWith(Regex(#"x\Q)"#))
+res14a = "x # some comment".endsWith(Regex(#"(?x)x\Q # some comment"#))
 
 res15 = !"Ab".endsWith(Regex("a(?i)b"))
 res16 = !"x\n".endsWith(Regex("x.(?s)"))
