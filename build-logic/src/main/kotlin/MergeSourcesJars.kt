@@ -37,6 +37,8 @@ open class MergeSourcesJars : DefaultTask() {
 
   @get:Input val relocatedPackages: MapProperty<String, String> = project.objects.mapProperty()
 
+  @get:Input val relocatedPathPatterns: MapProperty<String, String> = project.objects.mapProperty()
+
   @get:Input
   var sourceFileExtensions: ListProperty<String> =
     project.objects.listProperty<String>().convention(listOf(".java", ".kt"))
@@ -52,6 +54,8 @@ open class MergeSourcesJars : DefaultTask() {
 
     val relocatedPaths =
       relocatedPkgs.entries.associate { (key, value) -> toPath(key) to toPath(value) }
+    val relocatedPatterns =
+      relocatedPathPatterns.get().entries.associate { (key, value) -> Regex(key) to value }
 
     // use negative lookbehind to match any that don't precede with
     // a word or a period character. should catch most cases.
@@ -71,10 +75,14 @@ open class MergeSourcesJars : DefaultTask() {
         if (details.isDirectory) return@visit
 
         var path = details.relativePath.parent!!.pathString
+        for ((pattern, replacement) in relocatedPatterns) {
+          path = path.replace(pattern, replacement)
+        }
         val relocatedPath = relocatedPaths.keys.find { path.startsWith(it) }
         if (relocatedPath != null) {
           path = path.replace(relocatedPath, relocatedPaths.getValue(relocatedPath))
         }
+
         // conservative shrinking
         if (!binaryPaths.contains(path)) return@visit
 
@@ -117,7 +125,7 @@ open class MergeSourcesJars : DefaultTask() {
     val buffer = StringBuffer()
     logger.debug("Inspecting file: {}", details.relativePath)
     while (matcher.find()) {
-      val newStat = relocatedPkgs[matcher.group(2)]
+      val newStat = relocatedPkgs[matcher.group(2)] ?: continue
       logger.debug("Old: {}", matcher.group())
       logger.debug("New: {}", newStat)
       matcher.appendReplacement(buffer, Matcher.quoteReplacement(newStat))
