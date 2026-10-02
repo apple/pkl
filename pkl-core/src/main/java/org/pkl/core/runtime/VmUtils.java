@@ -84,13 +84,14 @@ public final class VmUtils {
         }
       };
 
+  public static final int REGEX_FLAGS = Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE;
+
   private static final Engine PKL_ENGINE =
       Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
 
+  @SuppressWarnings("MagicConstant")
   private static final Pattern DOC_COMMENT_LINE_START =
-      Pattern.compile(
-          "(?:^|\n|\r\n?)[ \t\f]*///[ \t\f]?",
-          Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE);
+      Pattern.compile("(?:^|\n|\r\n?)[ \t\f]*///[ \t\f]?", REGEX_FLAGS);
 
   private static final SourceSection UNAVAILABLE_SOURCE_SECTION =
       Source.newBuilder("pkl", "", "unavailable")
@@ -906,7 +907,8 @@ public final class VmUtils {
   @TruffleBoundary
   public static Pattern compilePattern(String pattern, Node location) {
     try {
-      return Pattern.compile(pattern, Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE);
+      //noinspection MagicConstant
+      return Pattern.compile(pattern, REGEX_FLAGS);
     } catch (PatternSyntaxException e) {
       throw new VmExceptionBuilder()
           .withLocation(location)
