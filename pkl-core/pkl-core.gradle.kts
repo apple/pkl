@@ -40,6 +40,8 @@ val externalReaderFixtureImplementation: Configuration =
     extendsFrom(configurations.testImplementation.get())
   }
 
+val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
+
 idea {
   module {
     // mark generated/truffle as generated source dir
@@ -170,6 +172,13 @@ val externalReaderFixture =
     }
   }
 
+artifacts {
+  add(
+    externalReaderFixtureConfiguration.name,
+    externalReaderFixture.map { it.outputs.files.singleFile },
+  )
+}
+
 tasks.test {
   configureTest()
   dependsOn(externalReaderFixture)
@@ -191,7 +200,7 @@ tasks.test {
 
   systemProperty(
     "org.pkl.core.testExternalReaderPath",
-    externalReaderFixture.map { it.outputs.files.singleFile.absolutePath },
+    externalReaderFixture.map { it.outputs.files.singleFile.absolutePath }.get(),
   )
 }
 

@@ -48,6 +48,8 @@ val nativeTestRuntimeOnly: Configuration =
     extendsFrom(configurations.testRuntimeOnly.get())
   }
 
+val externalReaderFixtureConfiguration = configurations.create("externalReaderFixture")
+
 dependencies {
   compileOnly(libs.graalSdk)
 
@@ -62,6 +64,8 @@ dependencies {
   nativeTestImplementation(libs.jna)
   nativeTestImplementation(libs.jnaPlatform)
   nativeTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
+
+  externalReaderFixtureConfiguration(project(":pkl-core", "externalReaderFixture"))
 }
 
 tasks.withType(CCompile::class) {
@@ -344,6 +348,7 @@ val processFiles =
 val testNativeJava =
   tasks.register<Test>("testNativeJava") {
     dependsOn(tasks.assembleNative)
+    dependsOn(externalReaderFixtureConfiguration)
 
     description = "Test native libraries from Java"
     group = "verification"
@@ -366,6 +371,11 @@ val testNativeJava =
     environment("LD_LIBRARY_PATH", buildInfo.targetMachine.libraryDir.get().asFile.absolutePath)
 
     useJUnitPlatform()
+
+    systemProperty(
+      "org.pkl.core.testExternalReaderPath",
+      externalReaderFixtureConfiguration.files.single().absolutePath,
+    )
   }
 
 // link to static library

@@ -35,6 +35,7 @@ import org.junit.jupiter.api.Disabled
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 import org.msgpack.core.MessagePack
+import org.pkl.commons.test.Executables
 import org.pkl.commons.test.PackageServer
 import org.pkl.commons.test.debugRendering
 import org.pkl.core.messaging.Messages.*
@@ -238,9 +239,6 @@ abstract class AbstractServerTest {
     assertThat(value.asStringValue().asString()).isEqualTo("my bahumbug")
   }
 
-  @Disabled(
-    "Unable to construct ReadResourceResponse with null contents due to Kotlin compiler bug"
-  )
   @Test
   fun `read resource -- null contents and null error`() {
     val reader = ResourceReaderSpec("bahumbug", true, false)
@@ -260,18 +258,10 @@ abstract class AbstractServerTest {
     assertThat(readResourceMsg.uri.toString()).isEqualTo("bahumbug:/foo.pkl")
     assertThat(readResourceMsg.evaluatorId).isEqualTo(evaluatorId)
 
-    client.send(ReadResourceResponse(readResourceMsg.requestId, evaluatorId, byteArrayOf(), null))
-    // for this test to be correct this should actually be:
-    // client.send(ReadResourceResponse(readResourceMsg.requestId, evaluatorId, null, null))
-    // this should be evaluated again once https://github.com/apple/pkl/issues/698 is addressed
-    // see conversation here https://github.com/apple/pkl/pull/660#discussion_r1819545811
+    client.send(ReadResourceResponse(readResourceMsg.requestId, evaluatorId, null, null))
 
     val evaluateResponse = client.receive<EvaluateResponse>()
-    assertThat(evaluateResponse.error).isNull()
-
-    val unpacker = MessagePack.newDefaultUnpacker(evaluateResponse.result)
-    val value = unpacker.unpackValue()
-    assertThat(value.asStringValue().asString()).isEqualTo("")
+    assertThat(evaluateResponse.error).contains("Cannot find resource `bahumbug:/foo.pkl`.")
   }
 
   @Test
@@ -1133,6 +1123,40 @@ abstract class AbstractServerTest {
       .contains("Rewrite rule must end with '/', but was 'https://example.com'")
   }
 
+  @Test
+  fun `test external reader`() {
+    val evaluatorId =
+      client.sendCreateEvaluatorRequest(
+        externalResourceReaders =
+          mapOf(
+            "foo" to ExternalReader(Executables.externalReaderFixture.toString(), emptyList(), null)
+          )
+      )
+    val requestId = 234L
+
+    client.send(
+      EvaluateRequest(
+        requestId,
+        evaluatorId,
+        URI("repl:text"),
+        """
+        res = read("foo:bar")
+        """
+          .trimIndent(),
+        "res.text",
+      )
+    )
+
+    val response = client.receive<EvaluateResponse>()
+    assertThat(response.error).isNull()
+    assertThat(response.result).isNotNull
+    assertThat(response.requestId()).isEqualTo(requestId)
+
+    val unpacker = MessagePack.newDefaultUnpacker(response.result)
+    val value = unpacker.unpackValue()
+    assertThat(value.asStringValue().asString()).isEqualTo("hello")
+  }
+
   protected fun TestTransport.sendCreateEvaluatorRequest(
     requestId: Long = 123,
     resourceReaders: List<ResourceReaderSpec> = listOf(),
@@ -1141,6 +1165,8 @@ abstract class AbstractServerTest {
     project: Project? = null,
     cacheDir: Path? = null,
     http: Http? = null,
+    externalResourceReaders: Map<String, ExternalReader>? = null,
+    externalModuleReaders: Map<String, ExternalReader>? = null,
   ): Long {
     val message =
       CreateEvaluatorRequest(
@@ -1158,8 +1184,8 @@ abstract class AbstractServerTest {
         null,
         project,
         http,
-        null,
-        null,
+        externalModuleReaders,
+        externalResourceReaders,
         null,
       )
 
