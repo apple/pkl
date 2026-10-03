@@ -1534,10 +1534,10 @@ class KotlinCodeGeneratorTest {
           .trimIndent(),
         generateSpringBootConfig = true,
         springBootConfigurationProperties =
-          mapOf("my.mod" to "", "my.mod#Server" to "myServerPrefix"),
+          mapOf("my.mod" to "", "my.mod#Server" to "my-server-prefix"),
       )
     assertThat(kotlinCode).contains("@ConfigurationProperties\ndata class Mod")
-    assertThat(kotlinCode).contains("@ConfigurationProperties(\"myServerPrefix\")")
+    assertThat(kotlinCode).contains("@ConfigurationProperties(\"my-server-prefix\")")
   }
 
   @Test

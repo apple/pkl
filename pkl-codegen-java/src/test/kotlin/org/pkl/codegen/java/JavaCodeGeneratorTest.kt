@@ -1618,7 +1618,7 @@ class JavaCodeGeneratorTest {
         JavaCodeGeneratorOptions(
           generateSpringBootConfig = true,
           springBootConfigurationProperties =
-            mapOf("my.mod" to "", "my.mod#Server" to "myServerPrefix"),
+            mapOf("my.mod" to "", "my.mod#Server" to "my-server-prefix"),
         ),
       )
     assertThat(javaCode)
@@ -1634,7 +1634,7 @@ class JavaCodeGeneratorTest {
     assertThat(javaCode)
       .contains(
         """
-        |  @ConfigurationProperties("myServerPrefix")
+        |  @ConfigurationProperties("my-server-prefix")
         |  public static final class Server {
         """
           .trimMargin()

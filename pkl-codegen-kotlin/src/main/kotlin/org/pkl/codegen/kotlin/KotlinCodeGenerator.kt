@@ -154,7 +154,10 @@ class KotlinCodeGenerator(
 
       val hasModuleProperties = pModuleClass.properties.any { !it.value.isHidden }
       val isGenerateModuleClass =
-        hasModuleProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+        hasModuleProperties ||
+          pModuleClass.isOpen ||
+          pModuleClass.isAbstract ||
+          options.springBootConfigurationProperties.containsKey(pModuleClass.displayName)
 
       fun generateCompanionRelatedCode(
         builder: TypeSpec.Builder,
