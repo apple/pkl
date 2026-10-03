@@ -53,7 +53,25 @@ data class KotlinCodeGeneratorOptions(
    * from the corresponding name derived from the Pkl module declaration .
    */
   val renames: Map<String, String> = emptyMap(),
-)
+
+  /**
+   * Explicitly configures `@ConfigurationProperties` on generated classes.
+   *
+   * The key is the Pkl class name (e.g. `my.mod` for a module class, `my.mod#Server` for a nested
+   * class), and the value is the prefix. An empty prefix generates a bare annotation.
+   *
+   * If non-empty, no `@ConfigurationProperties` annotations are inferred.
+   */
+  val springBootConfigurationProperties: Map<String, String> = emptyMap(),
+) {
+  init {
+    for (value in springBootConfigurationProperties.values) {
+      require(value.isEmpty() || value.isValidConfigurationPropertiesPrefix) {
+        "Invalid value in `springBootConfigurationProperties`: expected a valid ConfigurationProperties prefix, but got '$value'."
+      }
+    }
+  }
+}
 
 class KotlinCodeGeneratorException(message: String) : RuntimeException(message)
 
@@ -136,7 +154,10 @@ class KotlinCodeGenerator(
 
       val hasModuleProperties = pModuleClass.properties.any { !it.value.isHidden }
       val isGenerateModuleClass =
-        hasModuleProperties || pModuleClass.isOpen || pModuleClass.isAbstract
+        hasModuleProperties ||
+          pModuleClass.isOpen ||
+          pModuleClass.isAbstract ||
+          options.springBootConfigurationProperties.containsKey(pModuleClass.displayName)
 
       fun generateCompanionRelatedCode(
         builder: TypeSpec.Builder,
@@ -420,7 +441,21 @@ class KotlinCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      if (isModuleClass) {
+      if (options.springBootConfigurationProperties.isNotEmpty()) {
+        // explicit configuration: the user is in total control, so don't infer anything
+        val prefix = options.springBootConfigurationProperties[pClass.displayName] ?: return
+        val annotation =
+          AnnotationSpec.builder(
+              ClassName("org.springframework.boot.context.properties", "ConfigurationProperties")
+            )
+            .apply {
+              if (prefix.isNotEmpty()) {
+                addMember("%S", prefix)
+              }
+            }
+            .build()
+        builder.addAnnotation(annotation)
+      } else if (isModuleClass) {
         builder.addAnnotation(
           ClassName("org.springframework.boot.context.properties", "ConfigurationProperties")
         )

@@ -16,6 +16,7 @@
 package org.pkl.gradle;
 
 import java.io.File;
+import java.util.Collections;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
@@ -367,6 +368,8 @@ public class PklPlugin implements Plugin<Project> {
 
     spec.getGenerateSpringBootConfig().convention(false);
 
+    spec.getSpringBootConfigurationProperties().convention(Collections.emptyMap());
+
     spec.getImplementSerializable().convention(false);
 
     spec.getAddGeneratedAnnotation().convention(false);
@@ -480,6 +483,7 @@ public class PklPlugin implements Plugin<Project> {
     task.getIndent().set(spec.getIndent());
     task.getOutputDir().set(spec.getOutputDir());
     task.getGenerateSpringBootConfig().set(spec.getGenerateSpringBootConfig());
+    task.getSpringBootConfigurationProperties().set(spec.getSpringBootConfigurationProperties());
     task.getImplementSerializable().set(spec.getImplementSerializable());
     task.getAddGeneratedAnnotation().set(spec.getAddGeneratedAnnotation());
     task.getRenames().set(spec.getRenames());

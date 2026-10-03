@@ -22,12 +22,14 @@ import com.github.ajalt.clikt.parameters.options.associate
 import com.github.ajalt.clikt.parameters.options.default
 import com.github.ajalt.clikt.parameters.options.flag
 import com.github.ajalt.clikt.parameters.options.option
+import com.github.ajalt.clikt.parameters.options.validate
 import com.github.ajalt.clikt.parameters.types.path
 import java.nio.file.Path
 import org.pkl.commons.cli.CliBaseOptions
 import org.pkl.commons.cli.cliMain
 import org.pkl.commons.cli.commands.ModulesCommand
 import org.pkl.commons.cli.commands.installCommonOptions
+import org.pkl.commons.isValidConfigurationPropertiesPrefix
 import org.pkl.commons.toPath
 import org.pkl.core.Release
 
@@ -72,6 +74,29 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", help
       )
       .flag()
 
+  private val springBootConfigurationProperties: Map<String, String> by
+    option(
+        names = arrayOf("--spring-boot-configuration-properties"),
+        metavar = "pkl_class_name=prefix_value",
+        help =
+          """
+          Turn the specified Pkl classes into Kotlin classes with the `@ConfigurationProperties`
+          annotation.
+
+          If this setting is omitted, the `@ConfigurationProperties` annotation is inferred
+          according to the structure of the input modules.
+          """
+            .trimIndent(),
+      )
+      .associate()
+      .validate { map ->
+        for (prefix in map.values) {
+          require(prefix.isEmpty() || prefix.isValidConfigurationPropertiesPrefix) {
+            "value must be a valid spring boot config prefix, but got '$prefix'"
+          }
+        }
+      }
+
   private val implementSerializable: Boolean by
     option(
         names = arrayOf("--implement-serializable"),
@@ -113,6 +138,7 @@ class PklKotlinCodegenCommand : ModulesCommand(name = "pkl-codegen-kotlin", help
         implementSerializable = implementSerializable,
         addGeneratedAnnotation = addGeneratedAnnotation,
         renames = renames,
+        springBootConfigurationProperties = springBootConfigurationProperties,
       )
     CliKotlinCodeGenerator(options).run()
   }

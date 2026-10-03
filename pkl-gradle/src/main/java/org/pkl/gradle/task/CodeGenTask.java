@@ -39,6 +39,9 @@ public abstract class CodeGenTask extends ModulesTask {
   public abstract Property<Boolean> getGenerateSpringBootConfig();
 
   @Input
+  public abstract MapProperty<String, String> getSpringBootConfigurationProperties();
+
+  @Input
   public abstract Property<Boolean> getImplementSerializable();
 
   @Input

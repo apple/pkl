@@ -22,6 +22,24 @@ Default: (not set) +
 Flag that indicates to generate config classes for use with Spring Boot.
 ====
 
+.--spring-boot-configuration-properties
+[%collapsible]
+====
+Default: (none) +
+Example: `my.mod#Server=server` +
+Explicitly configures which generated classes receive the Spring Boot `@ConfigurationProperties` annotation, and with what prefix.
+Only applies if `--generate-spring-boot` is set.
+
+The key is the Pkl class name (for example, `my.mod` for a module class, or `my.mod#Server` for a class within a module), and the value is the annotation's prefix.
+An empty value generates a bare `@ConfigurationProperties` annotation.
+
+If this option is omitted, the annotations are inferred from the structure of the input modules.
+If this option is set, no annotations are inferred, and only the specified classes are annotated.
+
+Repeat this option to define multiple mappings.
+Values must be valid Spring Boot configuration properties prefixes.
+====
+
 .--implement-serializable
 [%collapsible]
 ====
