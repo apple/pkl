@@ -161,6 +161,7 @@ public final class Identifier implements Comparable<Identifier> {
   public static final Identifier CONVERT = get("convert");
   public static final Identifier TRANSFORM_ALL = get("transformAll");
   public static final Identifier GLOB = get("glob");
+  public static final Identifier TYPE = get("type");
   public static final Identifier COMPLETION_CANDIDATES = get("completionCandidates");
 
   public static final Identifier ILLEGAL = get("`");

@@ -198,13 +198,13 @@ final class PackageResolvers {
       }
 
       // treat package assets as resources instead of modules
-      securityManager.checkReadResource(uri);
+      securityManager.checkResolveResource(uri);
       var request = HttpRequest.newBuilder(uri).build();
       HttpResponse<InputStream> response;
       try {
         response =
             httpClient.send(
-                request, BodyHandlers.ofInputStream(), securityManager::checkReadResource);
+                request, BodyHandlers.ofInputStream(), securityManager::checkResolveResource);
       } catch (IOException e) {
         throw new PackageLoadError(e, "ioErrorMakingHttpGet", uri, e.getMessage());
       }

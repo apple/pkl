@@ -35,8 +35,8 @@ public interface SecurityManager {
   /** Checks if the given importing module may import the given imported module. */
   void checkImportModule(URI importingModule, URI importedModule) throws SecurityManagerException;
 
-  /** Checks if the given resource may be read. */
-  void checkReadResource(URI resource) throws SecurityManagerException;
+  /** Checks if the given reading module may read the given resource . */
+  void checkReadResource(URI readingModule, URI resource) throws SecurityManagerException;
 
   /**
    * Checks if the given resource may be resolved. This check is required before any attempt is made
