@@ -69,6 +69,11 @@ val relocations =
 
     // pkl-codegen-kotlin dependencies
     "com.squareup.kotlinpoet." to "org.pkl.thirdparty.kotlinpoet.",
+
+    // pkl-profiler dependencies
+    "com.google.protobuf." to "org.pkl.thirdparty.com.google.protobuf.",
+    "com.google.perftools." to "org.pkl.thirdparty.com.google.perftools.",
+    "google.protobuf." to "org.pkl.thirdparty.google.protobuf.",
   )
 
 for ((key, value) in relocations) {
