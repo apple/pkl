@@ -223,6 +223,7 @@ class Url {
   /// ```
   /// net.Url("https://example.com/a/b").resolve("../c").toString() == "https://example.com/c"
   /// net.Url("https://example.com/a/b").resolve("#top").toString() == "https://example.com/a/b#top"
+  /// net.Url("foo:/a").resolve("..//x").toString() == "foo:/.//x"
   /// ```
   external function resolve(ref: String | Url): Url
 

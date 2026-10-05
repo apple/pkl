@@ -240,7 +240,7 @@ public final class UrlParser {
           ref.userInfo(),
           ref.host(),
           ref.port(),
-          removeDotSegments(ref.path()),
+          removeDotSegments(ref.path(), ref.host() != null),
           ref.query(),
           ref.fragment());
     }
@@ -261,9 +261,9 @@ public final class UrlParser {
       query = ref.query() != null ? ref.query() : base.query();
     } else {
       path =
-          ref.path().charAt(0) == '/'
-              ? removeDotSegments(ref.path())
-              : removeDotSegments(merge(base, ref.path()));
+          removeDotSegments(
+              ref.path().charAt(0) == '/' ? ref.path() : merge(base, ref.path()),
+              base.host() != null);
       query = ref.query();
     }
     return new Parsed(
@@ -277,6 +277,11 @@ public final class UrlParser {
     }
     var lastSlash = base.path().lastIndexOf('/');
     return lastSlash < 0 ? path : base.path().substring(0, lastSlash + 1) + path;
+  }
+
+  private static String removeDotSegments(String path, boolean hasAuthority) {
+    var result = removeDotSegments(path);
+    return !hasAuthority && result.startsWith("//") ? "/." + result : result;
   }
 
   /** https://www.rfc-editor.org/rfc/rfc3986#section-5.2.4 */
@@ -430,7 +435,7 @@ public final class UrlParser {
       return url.host() == null ? path : "/";
     }
     // dot segments are only removable from an absolute path
-    return path.charAt(0) == '/' ? removeDotSegments(path) : path;
+    return path.charAt(0) == '/' ? removeDotSegments(path, url.host() != null) : path;
   }
 
   static Result.@Nullable Failure percentEncodingFailure(String input) {

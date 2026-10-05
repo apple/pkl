@@ -311,6 +311,9 @@ facts {
     net.Url("http://a/b/c/").resolve(new net.Url { rawPath = "d%20e" }).rawPath == "/b/c/d%20e"
     // resolving is the way to set a component without encoding it first
     net.Url("http://a/b/c/").resolve("/x y").toString() == "http://a/x%20y"
+    // a path without an authority that would start with "//" is prefixed with "/."
+    net.Url("foo:/a").resolve("..//x").toString() == "foo:/.//x"
+    net.Url("foo:/a").resolve("..//x") == new net.Url { scheme = "foo"; rawPath = "/.//x" }
   }
 
   ["new Url"] {
@@ -456,6 +459,7 @@ facts {
     normalized("https://example.com/?#") == "https://example.com/?#"
     normalized("//EXAMPLE.com/a/../b") == "//example.com/b"
     normalized("") == ""
+    normalized("foo:/..//x") == "foo:/.//x"
     // normalizing is idempotent
     net.Url("HTTPS://Example.com/a/../%7Eb c").normalized.normalized
       == net.Url("HTTPS://Example.com/a/../%7Eb c").normalized

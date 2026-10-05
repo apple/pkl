@@ -208,6 +208,8 @@ facts {
     true
     true
     true
+    true
+    true
   }
   ["new Url"] {
     true
@@ -284,6 +286,7 @@ facts {
     true
   }
   ["normalized"] {
+    true
     true
     true
     true
