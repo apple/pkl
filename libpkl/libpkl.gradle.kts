@@ -23,6 +23,7 @@ plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
+  id("pklSourceBundle")
 }
 
 val stagedMacAarch64NativeLibrary: Configuration =
@@ -66,6 +67,11 @@ dependencies {
   nativeTestRuntimeOnly("org.junit.platform:junit-platform-launcher")
 
   externalReaderFixtureConfiguration(project(":pkl-core", "externalReaderFixture"))
+
+  //  firstPartySourcesJars(project(":pkl-formatter", "sourcesJar")) // TODO when syntax merges
+  firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-server", "sourcesJar"))
 }
 
 tasks.withType(CCompile::class) {

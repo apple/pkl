@@ -1,5 +1,3 @@
-import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.runtimeClasspath
-
 /*
  * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
@@ -95,25 +93,4 @@ val buildNative =
   tasks.register("buildNative") {
     group = "build"
     dependsOn(checkNative)
-  }
-
-// ideally we'd configure this automatically based on project dependencies
-val firstPartySourcesJarsConfiguration: Configuration =
-  configurations.maybeCreate("firstPartySourcesJars")
-
-val resolveNativeSourcesJars =
-  tasks.register<ResolveSourcesJars>("resolveNativeSourcesJars") {
-    configuration.set(configurations.runtimeClasspath)
-    outputDir.set(layout.buildDirectory.dir("resolveNativeSourcesJars"))
-  }
-
-val nativeSourceBundle =
-  tasks.register<BuildSourceBundle>("nativeSourceBundle") {
-    dependsOn(tasks.named("sourcesJar"))
-    plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    plugins.withId("pklKotlinLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    inputJars.from(firstPartySourcesJarsConfiguration)
-    inputJars.from(resolveNativeSourcesJars.map { fileTree(it.outputDir) })
-
-    outputZip = layout.buildDirectory.file("${project.name}-${project.version}-native-sourcebundle.zip")
   }

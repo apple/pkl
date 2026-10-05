@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.runtimeClasspath
 import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.shadowJar
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
@@ -23,31 +22,11 @@ plugins {
   id("pklJavaLibrary")
   //  id("pklPublishLibrary")
   id("com.gradleup.shadow")
+  id("pklSourceBundle")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)
 val buildInfo = project.extensions.getByType<BuildInfo>()
-
-// ideally we'd configure this automatically based on project dependencies
-val firstPartySourcesJarsConfiguration: Configuration =
-  configurations.create("firstPartySourcesJars")
-
-val resolveSourcesJars =
-  tasks.register<ResolveSourcesJars>("resolveSourcesJars") {
-    configuration.set(configurations.runtimeClasspath)
-    outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
-  }
-
-val sourceBundle =
-  tasks.register<BuildSourceBundle>("sourceBundle") {
-    dependsOn(tasks.named("sourcesJar"))
-    plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    plugins.withId("pklKotlinLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    inputJars.from(firstPartySourcesJarsConfiguration)
-    inputJars.from(resolveSourcesJars.map { fileTree(it.outputDir) })
-
-    outputZip = layout.buildDirectory.file("${project.name}-${project.version}-sourcebundle.zip")
-  }
 
 val javaExecutable =
   tasks.register<ExecutableJar>("javaExecutable") {
