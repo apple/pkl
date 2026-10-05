@@ -1,0 +1,97 @@
+facts {
+  ["span positions are 1-based"] {
+    true
+    true
+  }
+  ["end is exclusive"] {
+    true
+    true
+    true
+    true
+  }
+  ["a span's displayUri combines those of its start and end"] {
+    true
+  }
+  ["a child's span is contained in its parent's"] {
+    true
+    true
+  }
+  ["nodes constructed from scratch have no span"] {
+    true
+    true
+    true
+  }
+  ["a spanless constructed node still renders"] {
+    true
+    true
+  }
+  ["parsing the same text from a string and a resource differs only in displayUri"] {
+    true
+    true
+    true
+    true
+    true
+  }
+}
+examples {
+  ["span of a module parsed from a string"] {
+    new {
+      start {
+        line = X
+        column = 1
+        displayUri = "1:1"
+      }
+      end {
+        line = X
+        column = 2
+        displayUri = "5:2"
+      }
+      displayUri = "1:1-5:2"
+    }
+  }
+  ["span of a leaf parsed from a string"] {
+    new {
+      start {
+        line = X
+        column = 3
+        displayUri = "4:3"
+      }
+      end {
+        line = X
+        column = 14
+        displayUri = "4:14"
+      }
+      displayUri = "4:3-4:14"
+    }
+  }
+  ["span of a module parsed from a resource carries the resource URI"] {
+    new {
+      start {
+        line = X
+        column = 1
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#1:1"
+      }
+      end {
+        line = X
+        column = 2
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#5:2"
+      }
+      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#1:1-5:2"
+    }
+  }
+  ["span of a leaf parsed from a resource carries the resource URI"] {
+    new {
+      start {
+        line = X
+        column = 3
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#4:3"
+      }
+      end {
+        line = X
+        column = 14
+        displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#4:14"
+      }
+      displayUri = "file:///$snippetsDir/input-helper/syntax/spans/sample.pkl#4:3-4:14"
+    }
+  }
+}

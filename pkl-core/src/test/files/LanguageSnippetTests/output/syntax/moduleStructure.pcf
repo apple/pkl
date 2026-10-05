@@ -1,0 +1,155 @@
+facts {
+  ["module declaration"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["module with modifiers and doc comment"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["amends clause"] {
+    true
+    true
+    true
+    true
+  }
+  ["extends clause"] {
+    true
+    true
+    true
+    true
+  }
+  ["imports"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["class declaration"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["class with extends and type parameters"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["typealias"] {
+    true
+    true
+    true
+    true
+  }
+  ["top-level properties and methods"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["parameter variations"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["quoted identifiers"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["quoted identifiers in object bodies and accesses"] {
+    true
+    true
+    true
+    true
+  }
+  ["parser error"] {
+    true
+  }
+  ["members keep source order"] {
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+  ["building a module keeps member order"] {
+    true
+  }
+  ["empty module"] {
+    true
+    true
+    true
+    true
+    true
+    true
+  }
+}

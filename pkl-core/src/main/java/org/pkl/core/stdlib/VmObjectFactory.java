@@ -68,6 +68,10 @@ public final class VmObjectFactory<E> {
     return doAddProperty(name, new PropertyNode<>(impl));
   }
 
+  public VmObjectFactory<E> addListingProperty(String name, Property<E, VmListing> impl) {
+    return doAddProperty(name, new PropertyNode<>(impl));
+  }
+
   public VmObjectFactory<E> addSetProperty(String name, Property<E, VmSet> impl) {
     return doAddProperty(name, new PropertyNode<>(impl));
   }
