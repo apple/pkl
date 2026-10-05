@@ -365,7 +365,7 @@ final class ParserImpl {
     var identifier = parseIdentifier();
     TypeParameterList typePars = null;
     if (lookahead == Token.LT) {
-      typePars = parseTypeParameterList();
+      typePars = parseTypeParameterList(false);
     }
     expect(Token.ASSIGN, "unexpectedToken", "=");
     var type = parseType();
@@ -398,7 +398,7 @@ final class ParserImpl {
     TypeParameterList typePars = null;
     var end = name.span();
     if (lookahead == Token.LT) {
-      typePars = parseTypeParameterList();
+      typePars = parseTypeParameterList(true);
       end = typePars.span();
     }
     children.add(typePars);
@@ -500,7 +500,7 @@ final class ParserImpl {
     children.add(name);
     TypeParameterList typePars = null;
     if (lookahead == Token.LT) {
-      typePars = parseTypeParameterList();
+      typePars = parseTypeParameterList(false);
     }
     children.add(typePars);
     var parameterList = parseParameterList();
@@ -693,7 +693,7 @@ final class ParserImpl {
     var identifier = parseIdentifier();
     TypeParameterList params = null;
     if (lookahead == Token.LT) {
-      params = parseTypeParameterList();
+      params = parseTypeParameterList(false);
     }
     var args = parseParameterList();
     TypeAnnotation typeAnnotation = null;
@@ -1582,9 +1582,9 @@ final class ParserImpl {
     return bodies;
   }
 
-  private TypeParameterList parseTypeParameterList() {
+  private TypeParameterList parseTypeParameterList(boolean allowVarianceModifiers) {
     var start = expect(Token.LT, "unexpectedToken", "<").span;
-    var pars = parseListOf(Token.COMMA, Token.GT, this::parseTypeParameter);
+    var pars = parseListOf(Token.COMMA, Token.GT, () -> parseTypeParameter(allowVarianceModifiers));
     var end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
     return new TypeParameterList(pars, start.endWith(end));
   }
@@ -1606,15 +1606,17 @@ final class ParserImpl {
     return new ArgumentList(exprs, start.endWith(end));
   }
 
-  private TypeParameter parseTypeParameter() {
+  private TypeParameter parseTypeParameter(boolean allowVarianceModifier) {
     TypeParameter.Variance variance = null;
     var start = spanLookahead;
-    if (lookahead == Token.IN) {
-      next();
-      variance = TypeParameter.Variance.IN;
-    } else if (lookahead == Token.OUT) {
-      next();
-      variance = TypeParameter.Variance.OUT;
+    if (allowVarianceModifier) {
+      if (lookahead == Token.IN) {
+        next();
+        variance = TypeParameter.Variance.IN;
+      } else if (lookahead == Token.OUT) {
+        next();
+        variance = TypeParameter.Variance.OUT;
+      }
     }
     var identifier = parseIdentifier();
     return new TypeParameter(variance, identifier, start.endWith(identifier.span()));
