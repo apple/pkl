@@ -190,6 +190,40 @@ public final class VmClass extends VmValue {
   }
 
   @TruffleBoundary
+  private void checkMethodOverrides() {
+    var methodCursor = declaredMethods.getEntries();
+    while (methodCursor.advance()) {
+      var name = methodCursor.getKey();
+      ClassMethod parent = null;
+      for (var clazz = superclass; clazz != null; clazz = clazz.superclass) {
+        parent = clazz.getDeclaredMethod(name);
+        if (parent != null) break;
+      }
+      if (parent == null) continue;
+
+      var method = methodCursor.getValue();
+      checkMethodOverride(method, parent);
+    }
+  }
+
+  private void checkMethodOverride(ClassMethod method, ClassMethod parent) {
+    var typeParamCount = method.getTypeParameterCount();
+    var parentTypeParamCount = parent.getTypeParameterCount();
+
+    if (typeParamCount != parentTypeParamCount) {
+      throw new VmExceptionBuilder()
+          .evalError(
+              "methodTypeParameterCountMismatch",
+              method.getQualifiedName(),
+              parent.getQualifiedName(),
+              parentTypeParamCount,
+              typeParamCount)
+          .withSourceSection(method.getHeaderSection())
+          .build();
+    }
+  }
+
+  @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
     EconomicMaps.put(declaredProperties, property.getName(), property);
@@ -241,6 +275,7 @@ public final class VmClass extends VmValue {
   /** Called when the entire class hierarchy is completely initialized, including superclasses. */
   public void onFullyInitialized() {
     checkAbstractMethods();
+    checkMethodOverrides();
   }
 
   @TruffleBoundary
