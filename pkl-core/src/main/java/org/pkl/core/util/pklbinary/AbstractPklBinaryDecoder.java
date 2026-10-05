@@ -31,6 +31,7 @@ import org.msgpack.core.MessageUnpacker;
 import org.pkl.core.DataSizeUnit;
 import org.pkl.core.DurationUnit;
 import org.pkl.core.Pair;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.LateInit;
 
 /**
@@ -317,10 +318,11 @@ public abstract class AbstractPklBinaryDecoder {
     return result;
   }
 
+  @SuppressWarnings("MagicConstant")
   private Object decodeRegex(int len) throws IOException {
     assertLength(PklBinaryCode.REGEX, len, 1);
     currPath.push("'regex");
-    var result = doDecodeRegex(Pattern.compile(unpacker.unpackString()));
+    var result = doDecodeRegex(Pattern.compile(unpacker.unpackString(), VmUtils.REGEX_FLAGS));
     unpacker.skipValue(len - 2);
     currPath.pop();
     return result;
