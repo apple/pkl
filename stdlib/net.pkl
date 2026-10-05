@@ -16,9 +16,11 @@
 
 /// Utilities for networking, like URL parsing.
 @ModuleInfo { minPklVersion = "0.33.0" }
+@Since { version = "0.33.0" }
 module pkl.net
 
-/// Parse a string into a URL, following [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
+/// Constructs a Url as described by [input], following
+/// [RFC 3986](https://www.rfc-editor.org/rfc/rfc3986).
 /// Accepts a URL reference (one without a scheme).
 ///
 /// This is lenient: whatever a component cannot hold literally is percent-encoded, and whatever is
@@ -83,14 +85,18 @@ class Url {
   /// Only a URL with a [rawHost] can have a port.
   rawPort: String(rawHost != null, matches(Regex(#"\d*"#)))?
 
-  /// The number that [rawPort] states, or [null] if it states none.
+  /// The number that [rawPort] states.
+  ///
+  /// This is [null] if [rawPort] is [null], or if [rawPort] is not parseable as a [UInt16].
   ///
   /// Facts:
   /// ```
   /// net.Url("https://example.com:8080/").port == 8080
   /// net.Url("https://example.com:/").port == null
   /// ```
-  hidden fixed port: UInt16? = rawPort?.toIntOrNull()
+  hidden fixed port: UInt16? =
+    let (parsed = rawPort?.toIntOrNull())
+      if (parsed is UInt16) parsed else null
 
   /// The percent-encoded path, or the empty string if this URL has none.
   ///
@@ -188,7 +194,7 @@ class Url {
   /// ```
   external fixed pathSegments: List<String>
 
-  /// The percent-decoded parameters of [rawQuery], or `null` if this URL has no query.
+  /// The percent-decoded parameters of [rawQuery], or [null] if this URL has no query.
   ///
   /// [rawQuery] is read as `application/x-www-form-urlencoded`.
   /// A name that repeats holds the values of all its occurrences, in the order they are written.
@@ -219,8 +225,8 @@ class Url {
   /// ```
   external function resolve(ref: String | Url): Url
 
-  /// This URL in the *syntax-based normalization* as described in
-  /// [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of RFC-3986.
+  /// The normalized version of this URL, following *syntax-based normalization* as described in
+  /// [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of RFC 3986.
   ///
   /// [scheme] and [rawHost] are lowercased, as they are case-insensitive.
   /// Percent-encoding is normalized: an octet standing for an unreserved character is decoded, and
@@ -240,11 +246,11 @@ class Url {
   /// ```
   external hidden fixed normalized: Url
 
-  /// Tells whether this url is equal to [other] according to *syntax-based normalization* as
+  /// Tells if this URL is equal to [other] according to *syntax-based normalization* as
   /// described in [section 6.2.2](https://www.rfc-editor.org/info/rfc3986/#section-6.2.2) of
-  /// RFC-3986.
+  /// RFC 3986.
   ///
-  /// This will return [true] if the [normalized] versions of [this] and [other] are the
+  /// Returns [true] if the [normalized] versions of [this] and [other] are the
   /// same, and [false] otherwise.
   ///
   /// Facts:
@@ -261,7 +267,7 @@ class Url {
   /// ```
   /// net.Url("https://example.com/a b").toString() == "https://example.com/a%20b"
   /// net.Url("https://example.com/é").toString() == "https://example.com/%C3%A9"
-  /// net.Url("HTTPS://example.com").toString() == "https://example.com"
+  /// net.Url("HTTPS://example.com").toString() == "HTTPS://example.com"
   /// ```
   external function toString(): String
 
