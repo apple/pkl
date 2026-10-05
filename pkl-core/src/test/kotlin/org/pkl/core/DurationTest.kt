@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -99,6 +99,10 @@ class DurationTest {
     // savings transition,
     // when added to "now" (at the time of evaluation).
     assertThat(Duration(100.0, DAYS).toIsoString()).isEqualTo("PT2400H")
+    // below nanosecond precision, there is nothing left to render but zero
+    assertThat(Duration(0.4, NANOS).toIsoString()).isEqualTo("PT0S")
+    assertThat(Duration(-0.4, NANOS).toIsoString()).isEqualTo("PT0S")
+    assertThat(Duration(4e-10, SECONDS).toIsoString()).isEqualTo("PT0S")
   }
 
   @Test
