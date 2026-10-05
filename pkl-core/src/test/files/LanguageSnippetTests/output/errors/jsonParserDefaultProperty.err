@@ -1,0 +1,17 @@
+–– Pkl Error ––
+Error parsing JSON document.
+
+x | res = new json.Parser {}.parse("""
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at jsonParserDefaultProperty#res (file:///$snippetsDir/input/errors/jsonParserDefaultProperty.pkl)
+
+Cannot parse an object with key `"default"` into a `Dynamic`.
+Try parsing into a `Mapping` instead, by setting `useMapping = true` in the `pkl.json#Parser`. at 3:14
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
