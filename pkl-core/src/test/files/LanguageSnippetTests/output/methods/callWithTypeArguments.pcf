@@ -50,4 +50,7 @@ polymorphism {
   res2 {
     name = "fred"
   }
+  res3 = "hi fred"
+  res4 = "Expected 1 type argument but got 2."
+  res5 = "hi bob"
 }
