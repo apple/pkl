@@ -1,0 +1,463 @@
+//===----------------------------------------------------------------------===//
+// Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     https://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+//===----------------------------------------------------------------------===//
+
+/// A [Starlark](https://github.com/bazelbuild/starlark) renderer.
+@ModuleInfo { minPklVersion = "0.31.0" }
+module pkl.starlark
+
+import "pkl:reflect"
+
+/// Renders values as [Starlark](https://github.com/bazelbuild/starlark/blob/master/spec.md).
+///
+/// Pkl values are mapped to Starlark values as follows:
+///
+/// | Pkl type       | Starlark type    |
+/// | -------------- | ---------------- |
+/// | [Null]         | None             |
+/// | [Boolean]      | bool             |
+/// | [Int]          | int              |
+/// | [Float]        | float            |
+/// | [String]       | string           |
+/// | [List]         | list             |
+/// | [Set]          | set              |
+/// | [Map]          | dict             |
+/// | [Listing]      | list             |
+/// | [Mapping]      | dict             |
+/// | [Dynamic]      | struct (if properties) or list (if elements) |
+/// | [Typed]        | function call    |
+/// | [Pair]         | tuple            |
+///
+/// Some Pkl types, such as [Duration] and [DataSize], don't have a Starlark equivalent.
+/// To render values of such types, define _output converters_ (see [Renderer.converters]).
+///
+/// When rendering module output, [Typed] properties are rendered as rule instantiations
+/// (function calls) with an injected `name` argument derived from the property name.
+/// All other properties are rendered as variable assignments.
+///
+/// Example:
+/// ```
+/// import "pkl:starlark"
+///
+/// class CcLibrary {
+///   srcs: Listing<String>
+///   deps: Listing<String>
+/// }
+///
+/// myLib = new CcLibrary {
+///   srcs { "foo.cc" }
+///   deps { ":bar" }
+/// }
+///
+/// output {
+///   renderer = new starlark.Renderer {}
+/// }
+/// ```
+///
+/// The above renders as:
+/// ```
+/// cc_library(
+///     name = "myLib",
+///     srcs = [
+///         "foo.cc",
+///     ],
+///     deps = [
+///         ":bar",
+///     ],
+/// )
+/// ```
+class Renderer extends ValueRenderer {
+  extension = "starlark"
+
+  /// The characters to use for indenting output.
+  ///
+  /// If empty (`""`), renders everything on a single line.
+  indent: String = "    "
+
+  /// Whether to omit properties and map entries whose value is `null`.
+  omitNullProperties: Boolean = true
+
+  /// Renders [value] as a Starlark document.
+  ///
+  /// If [value] is a [Typed] or [Dynamic] object, its properties are rendered
+  /// as top-level Starlark statements. Otherwise, the value is rendered directly.
+  function renderDocument(value: Any): String =
+    renderLoadStatements(value) +
+      (if (value is Typed | Dynamic)
+        renderModuleObject(value)
+      else
+        renderValue(value))
+
+  function renderValue(value: Any): String = renderAny(value, 0)
+
+  // --- Converter support ---
+
+  local convertersMap: Map = converters.toMap()
+
+  local function getConvertersForValue(value: Any): List =
+    new Listing {
+      when (convertersMap.containsKey(value.getClass())) {
+        convertersMap[value.getClass()]
+      }
+      when (convertersMap.containsKey("*")) {
+        convertersMap["*"]
+      }
+    }.toList()
+
+  local function applyConverters(value: Any): Any =
+    if (value == null)
+      null
+    else
+      let (convs = getConvertersForValue(value))
+        convs.fold(value, (acc, c) -> c.apply(acc))
+
+  // --- String rendering (leverage JsonRenderer for escaping) ---
+
+  local jsonRenderer = new JsonRenderer {}
+
+  local function renderString(s: String): String = jsonRenderer.renderValue(s)
+
+  // --- Indentation ---
+
+  local isInline: Boolean = indent.isEmpty
+
+  local function indentStr(depth: Int): String = indent.repeat(depth)
+
+  // --- Core renderer: apply converters, then dispatch ---
+
+  local function renderAny(value: Any, depth: Int): String =
+    renderConverted(applyConverters(value), depth)
+
+  local function renderConverted(value: Any, depth: Int): String =
+    if (value == null)
+      "None"
+    else if (value is RenderDirective)
+      value.text
+    else if (value is Boolean)
+      if (value) "True" else "False"
+    else if (value is Int | Float)
+      "\(value)"
+    else if (value is String)
+      renderString(value)
+    else if (value is Pair)
+      renderPair(value, depth)
+    else if (value is Set)
+      "set(\(renderList(value.toList(), depth)))"
+    else if (value is List | Listing)
+      renderList(toListValue(value), depth)
+    else if (value is Map | Mapping)
+      renderDict(toMapValue(value), depth)
+    else if (value is Dynamic)
+      renderDynamic(value, depth)
+    else if (value is Typed)
+      renderTypedFunctionCall(value.getClass().simpleName, value.toMap(), depth)
+    else
+      throw(
+        "Cannot render value of type `\(value.getClass().simpleName)` as Starlark. Value: \(value)"
+      )
+
+  // --- Type coercions ---
+
+  local function toListValue(value: List | Listing): List =
+    if (value is List) value else value.toList()
+
+  local function toMapValue(value: Map | Mapping): Map = if (value is Map) value else value.toMap()
+
+  // --- List / Listing → [...] ---
+
+  local function renderList(items: List, depth: Int): String =
+    if (items.isEmpty)
+      "[]"
+    else if (isInline)
+      "[\(items.map((it) -> renderAny(it, depth)).join(", "))]"
+    else
+      "[\n\(items.map((it) -> "\(indentStr(depth + 1))\(renderAny(it, depth + 1))").join(",\n")),\n\(indentStr(depth))]"
+
+  // --- Map / Mapping → {...} ---
+
+  local function renderDict(entries: Map, depth: Int): String =
+    let (filtered = if (omitNullProperties) entries.filter((_, v) -> v != null) else entries)
+      if (filtered.isEmpty)
+        "{}"
+      else if (isInline)
+        "{\(new Listing { for (k, v in filtered) { "\(renderDictKey(k)): \(renderAny(v, depth))" } }.join(", "))}"
+      else
+        let (
+          lines =
+            new Listing {
+              for (k, v in filtered) {
+                "\(indentStr(depth + 1))\(renderDictKey(k)): \(renderAny(v, depth + 1))"
+              }
+            }.toList()
+        )
+          "{\n\(lines.join(",\n")),\n\(indentStr(depth))}"
+
+  local function renderDictKey(key: Any): String =
+    if (key is String)
+      renderString(key)
+    else if (key is RenderDirective)
+      key.text
+    else
+      throw("Cannot render non-string dict key: \(key)")
+
+  // --- Pair → tuple ---
+
+  local function renderPair(pair: Pair, depth: Int): String =
+    "(\(renderAny(pair.first, depth)), \(renderAny(pair.second, depth)))"
+
+  // --- Dynamic → struct(...) or [...] ---
+
+  local function renderDynamic(value: Dynamic, depth: Int): String =
+    if (value.toList().isEmpty)
+      renderFunctionCall("struct", value.toMap(), depth)
+    else
+      renderList(value.toList(), depth)
+
+  // --- Function call: name(key = val, ...) ---
+  //
+  // Dynamic/struct: arguments sorted alphabetically by key.
+  // Typed: `name` argument always first, remaining arguments sorted alphabetically.
+
+  local function renderFunctionCall(callName: String, props: Map, depth: Int): String =
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+    let (sorted = filtered.entries.sortBy((e) -> "\(e.first)"))
+      if (filtered.isEmpty)
+        "\(callName)()"
+      else if (isInline)
+        "\(callName)(\(new Listing { for (e in sorted) { "\(e.first) = \(renderAny(e.second, depth))" } }.join(", ")))"
+      else
+        let (
+          lines =
+            new Listing {
+              for (e in sorted) {
+                "\(indentStr(depth + 1))\(e.first) = \(renderAny(e.second, depth + 1))"
+              }
+            }.toList()
+        )
+          "\(callName)(\n\(lines.join(",\n")),\n\(indentStr(depth)))"
+
+  local function renderTypedFunctionCall(callName: String, props: Map, depth: Int): String =
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+    let (sorted = filtered.entries.sortBy((e) -> if ("\(e.first)" == "name") "" else "\(e.first)"))
+      if (filtered.isEmpty)
+        "\(callName)()"
+      else if (isInline)
+        "\(callName)(\(new Listing { for (e in sorted) { "\(e.first) = \(renderAny(e.second, depth))" } }.join(", ")))"
+      else
+        let (
+          lines =
+            new Listing {
+              for (e in sorted) {
+                "\(indentStr(depth + 1))\(e.first) = \(renderAny(e.second, depth + 1))"
+              }
+            }.toList()
+        )
+          "\(callName)(\n\(lines.join(",\n")),\n\(indentStr(depth)))"
+
+  // --- load() statement collection ---
+
+  local function loadLabelOf(clazz: Class): String? =
+    let (annotation = reflect.Class(clazz).annotations.findOrNull((it) -> it is Load))
+      if (annotation is Load) annotation.label else null
+
+  local function mergeLoads(
+    a: Map<String, Set<String>>,
+    b: Map<String, Set<String>>
+  ): Map<String, Set<String>> =
+    b.entries.fold(a, (acc, e) -> acc.put(e.first, (acc.getOrNull(e.first) ?? Set()) + e.second))
+
+  // Collects the labels and symbols declared via [Load] annotations on the classes of all
+  // [Typed] values rendered as part of [value].
+  local function collectLoads(value: Any): Map<String, Set<String>> =
+    let (v = applyConverters(value))
+      if (v is RenderDirective)
+        Map()
+      else if (v is Commented)
+        collectLoads(v.value)
+      else if (v is Typed)
+        v.toMap().values.fold(
+          let (label = loadLabelOf(v.getClass()))
+            if (label == null) Map() else Map(label, Set(v.getClass().simpleName)),
+          (acc, elem) -> mergeLoads(acc, collectLoads(elem))
+        )
+      else if (v is Dynamic)
+        (v.toMap().values + v.toList()).fold(Map(), (acc, elem) -> mergeLoads(acc, collectLoads(elem)))
+      else if (v is List | Listing | Set)
+        (if (v is Set) v.toList() else toListValue(v))
+          .fold(Map(), (acc, elem) -> mergeLoads(acc, collectLoads(elem)))
+      else if (v is Map | Mapping)
+        toMapValue(v).values.fold(Map(), (acc, elem) -> mergeLoads(acc, collectLoads(elem)))
+      else if (v is Pair)
+        mergeLoads(collectLoads(v.first), collectLoads(v.second))
+      else
+        Map()
+
+  // Parses a load label into repository, package, and target, mirroring buildtools'
+  // `labels.ParseRelative`. Relative labels get a pseudo-package that sorts after all real
+  // package names so that they go last.
+  local function parseLoadLabel(label: String): Dynamic =
+    if (!label.startsWith("@") && !label.startsWith("//"))
+      new Dynamic {
+        repository = ""
+        packagePath = "\u{7F}"
+        target = label.replaceFirst(Regex("^:+"), "")
+      }
+    else if (label.startsWith("@") && !label.replaceFirst(Regex("^@+"), "").contains("/"))
+      // "@foo" refers to "@foo//:foo".
+      let (repo = label.replaceFirst(Regex("^@+"), ""))
+        new Dynamic { repository = repo; packagePath = ""; target = repo }
+    else
+      let (repo = if (label.startsWith("@")) label.replaceFirst(Regex("^@+"), "").splitLimit("/", 2).first else "")
+      let (rest = if (label.startsWith("@")) "/" + label.replaceFirst(Regex("^@+"), "").splitLimit("/", 2)[1] else label)
+      let (parts = rest.splitLimit(":", 2))
+      let (pkg = parts.first.replaceFirst(Regex("^//"), ""))
+        if (parts.length == 2 && !parts[1].isEmpty)
+          new Dynamic { repository = repo; packagePath = pkg; target = parts[1] }
+        else if (!rest.startsWith("//"))
+          // Maybe not really a label; store everything in the target.
+          new Dynamic { repository = repo; packagePath = ""; target = rest }
+        else
+          new Dynamic { repository = repo; packagePath = pkg; target = pkg.split("/").last }
+
+  // Mirrors buildtools' `comparePaths`: compares paths segment by segment, case-insensitively,
+  // falling back to a case-sensitive comparison for determinism.
+  local function comparePaths(path1: String, path2: String): Boolean =
+    if (path1 == path2)
+      false
+    else
+      let (chunks1 = path1.split("/").map((c) -> c.toLowerCase()))
+      let (chunks2 = path2.split("/").map((c) -> c.toLowerCase()))
+      let (firstDiff = chunks1.zip(chunks2).findOrNull((p) -> p.first != p.second))
+        if (firstDiff != null)
+          firstDiff.first < firstDiff.second
+        else if (chunks1.length > chunks2.length)
+          false
+        else
+          path1 <= path2
+
+  // Mirrors buildifier's `compareLoadLabels`: labels with an explicit repository go first;
+  // ties are broken by repository, then package (empty goes first, relative goes last),
+  // then file name.
+  local function compareLoadLabels(label1: String, label2: String): Boolean =
+    if (label1.startsWith("@") != label2.startsWith("@"))
+      label1.startsWith("@")
+    else
+      let (parsed1 = parseLoadLabel(label1))
+      let (parsed2 = parseLoadLabel(label2))
+        if (parsed1.repository != parsed2.repository)
+          parsed1.repository < parsed2.repository
+        else if (parsed1.packagePath.isEmpty != parsed2.packagePath.isEmpty)
+          parsed1.packagePath.isEmpty
+        else if (parsed1.packagePath != parsed2.packagePath)
+          comparePaths(parsed1.packagePath, parsed2.packagePath)
+        else
+          comparePaths(parsed1.target, parsed2.target)
+
+  local function renderLoadStatements(value: Any): String =
+    let (loads = collectLoads(value))
+      if (loads.isEmpty)
+        ""
+      else
+        loads.entries
+          .sortWith((a, b) -> compareLoadLabels(a.first, b.first))
+          .map((e) ->
+            "load(\(renderString(e.first)), \(e.second.toList().sort().map((s) -> renderString(s)).join(", ")))"
+          )
+          .join("\n") + "\n\n"
+
+  // --- Module-level / document-level rendering ---
+
+  local function renderModuleObject(value: Typed | Dynamic): String =
+    let (props = value.toMap())
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+      filtered.entries
+        .map((e) -> renderTopLevelStatement(e.first.toString(), applyConverters(e.second)))
+        .join("\n")
+
+  local function renderTopLevelStatement(name: String, value: Any): String =
+    if (value is Commented)
+      "\(renderCommentLines(value.comment))\n\(renderStatement(name, applyConverters(value.value)))"
+    else
+      renderStatement(name, value)
+
+  local function renderStatement(name: String, value: Any): String =
+    if (value is RenderDirective)
+      "\(value.text)\n"
+    else if (value is Typed)
+      renderRuleCall(name, value)
+    else
+      "\(name) = \(renderConverted(value, 0))\n"
+
+  local function renderCommentLines(comment: String): String =
+    comment.split("\n").map((line) -> if (line.isEmpty) "#" else "# \(line)").join("\n")
+
+  local function renderRuleCall(name: String, value: Typed): String =
+    let (props = value.toMap())
+    let (filtered = if (omitNullProperties) props.filter((_, v) -> v != null) else props)
+    let (withoutName = filtered.filter((k, _) -> k != "name"))
+    let (sortedRest = withoutName.entries.sortBy((e) -> "\(e.first)"))
+      if (isInline)
+        let (
+          inlineArgs =
+            List("name = \"\(name)\"")
+              + new Listing { for (e in sortedRest) { "\(e.first) = \(renderAny(e.second, 0))" } }
+                .toList()
+        )
+          "\(value.getClass().simpleName)(\(inlineArgs.join(", ")))\n"
+      else
+        let (
+          lines =
+            List("\(indent)name = \"\(name)\"")
+              + new Listing {
+                for (e in sortedRest) { "\(indent)\(e.first) = \(renderAny(e.second, 1))" }
+              }.toList()
+        )
+          "\(value.getClass().simpleName)(\n\(lines.join(",\n")),\n)\n"
+}
+
+/// A top-level statement with attached comment lines.
+///
+/// When rendered as part of a module or document, [comment] is emitted as `#`-prefixed lines
+/// directly above [value]. Useful for attaching documentation to generated rule instantiations.
+///
+/// Only meaningful at the top level of a module or document; in nested value positions,
+/// instances render like any other [Typed] value.
+class Commented {
+  /// The comment text, without the leading `# `.
+  comment: String
+
+  /// The annotated value.
+  value: Any
+}
+
+/// Declares the Bazel `load()` statement that makes the annotated class's rule or macro
+/// available in a BUILD file.
+///
+/// When rendering a document, [Renderer] collects this annotation from the classes of all
+/// rendered [Typed] values and emits the deduplicated `load()` statements at the top of the
+/// document, ordered the same way `buildifier` sorts them. The loaded symbol is the annotated
+/// class's simple name.
+///
+/// Example:
+/// ```
+/// @starlark.Load { label = "@rules_cc//cc:defs.bzl" }
+/// class cc_library {
+///   srcs: Listing<String>
+/// }
+/// ```
+class Load extends Annotation {
+  /// The label of the `.bzl` file that declares the symbol.
+  label: String
+}
