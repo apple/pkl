@@ -54,6 +54,8 @@ lazyTypeCheck {
 
 class Person {
   name: String
+  
+  function greet<A, B>() = "hi \(name)"
 }
 
 typeDefaults {
@@ -72,6 +74,8 @@ typeDefaults {
 
 class Bird {
   name: String
+
+  function greet<A>() = "hi \(name)"
 }
 
 polymorphism {
@@ -79,4 +83,9 @@ polymorphism {
   local function make<T>(): T = new T { name = "fred" }
   res1 = make::<Person>()
   res2 = make::<Bird>()
+
+  local function call(obj: Bird | Person) = obj.greet::<Int, String>()
+  res3 = call(new Person { name = "fred" })
+  res4 = test.catch(() -> call(new Bird { name = "pigeon" }))
+  res5 = call(new Person { name = "bob" })
 }
