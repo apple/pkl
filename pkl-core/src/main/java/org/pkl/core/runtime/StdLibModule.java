@@ -21,6 +21,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.net.URI;
 import java.util.List;
 import java.util.Map;
+import org.pkl.core.FeatureFlag;
 import org.pkl.core.Loggers;
 import org.pkl.core.SecurityManagers;
 import org.pkl.core.StackFrameTransformers;
@@ -33,6 +34,8 @@ import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.resource.ResourceReaders;
 
 public abstract class StdLibModule {
+  private static final Map<FeatureFlag, Boolean> stdLibFeatureFlags = Map.of();
+
   @TruffleBoundary
   protected static void loadModule(URI uri, VmTyped instance) {
     doLoad(uri, instance);
@@ -64,7 +67,8 @@ public abstract class StdLibModule {
                       null,
                       null,
                       TraceMode.COMPACT,
-                      false));
+                      false,
+                      stdLibFeatureFlags));
               var language = VmLanguage.get(null);
               var moduleKey = ModuleKeys.standardLibrary(uri);
               var source = VmUtils.loadSource((ResolvedModuleKey) moduleKey);
