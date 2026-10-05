@@ -213,7 +213,7 @@ abstract class NativeImageBuild : DefaultTask() {
         add("--color=always")
         // must be emitted before any experimental options are used
         add("-H:+UnlockExperimentalVMOptions")
-        // emit `reports/universe_compilation_*.txt`, listing all compiled methods
+        // enable build reports documenting compiled content
         add("-H:+PrintUniverse")
         // currently gives a deprecation warning, but we've been told
         // that the "initialize everything at build time" *CLI* option is likely here to stay
