@@ -57,10 +57,19 @@ public final class ModulePathResolver implements AutoCloseable {
 
   private static final ModulePathResolver EMPTY = new ModulePathResolver(Collections.emptyList());
 
+  /** Returns a resolver whose module path contains no entries. */
   public static ModulePathResolver empty() {
     return EMPTY;
   }
 
+  /**
+   * Creates a resolver for the given module path entries.
+   *
+   * <p>Each entry can be a directory, JAR file, or ZIP file. Entries are searched in iteration
+   * order; if more than one entry contains the same path, the first entry wins.
+   *
+   * @param modulePath the module path entries to search
+   */
   public ModulePathResolver(Iterable<Path> modulePath) {
     this.modulePath = modulePath;
   }
@@ -103,6 +112,13 @@ public final class ModulePathResolver implements AutoCloseable {
     }
   }
 
+  /**
+   * Resolves a {@code modulepath:} URI to the path containing its source.
+   *
+   * @throws FileNotFoundException if the module path contains no matching file
+   * @throws IOException if a module path entry cannot be read
+   * @throws IllegalStateException if this resolver has been closed
+   */
   public Path resolve(URI uri) throws IOException {
     var modulePath = getModulePath(uri);
     var result = getFileCache().get(modulePath);
@@ -111,6 +127,12 @@ public final class ModulePathResolver implements AutoCloseable {
     throw new FileNotFoundException();
   }
 
+  /**
+   * Returns whether the module path contains the element identified by {@code elementUri}.
+   *
+   * @throws UncheckedIOException if a module path entry cannot be read
+   * @throws IllegalStateException if this resolver has been closed
+   */
   public boolean hasElement(URI elementUri) {
     var path = elementUri.getPath();
     try {
@@ -121,6 +143,11 @@ public final class ModulePathResolver implements AutoCloseable {
     }
   }
 
+  /**
+   * Closes file systems opened for JAR and ZIP entries.
+   *
+   * <p>Calling this method more than once has no effect.
+   */
   @Override
   public void close() {
     synchronized (lock) {
