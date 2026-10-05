@@ -57,21 +57,11 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
     this.qualifiedName = qualifiedName;
   }
 
-  protected RootNode @Nullable [] getTypeArgumentRootNodes(
-      VirtualFrame frame, @Nullable Method method) {
+  protected RootNode @Nullable [] getTypeArgumentRootNodes(VirtualFrame frame) {
     if (typeArgumentRootNodes == null) {
       if (unresolvedTypeArgumentNodes != null) {
         var language = VmLanguage.get(this);
         CompilerDirectives.transferToInterpreterAndInvalidate();
-
-        var typeParameterCount =
-            method == null ? 0 : method.getFunctionNode().getTypeParameterCount();
-        if (unresolvedTypeArgumentNodes.length != typeParameterCount) {
-          throw exceptionBuilder()
-              .evalError(
-                  "wrongTypeArgumentCount", typeParameterCount, unresolvedTypeArgumentNodes.length)
-              .build();
-        }
 
         var rootNodes = new RootNode[unresolvedTypeArgumentNodes.length];
         for (var i = 0; i < rootNodes.length; i++) {
@@ -98,8 +88,15 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
   protected VmTypeArgument @Nullable [] getTypeArguments(
       VirtualFrame frame, @Nullable Method method) {
-    var rootNodes = getTypeArgumentRootNodes(frame, method);
+    var rootNodes = getTypeArgumentRootNodes(frame);
     if (rootNodes == null) return null;
+
+    var typeParameterCount = method == null ? 0 : method.getFunctionNode().getTypeParameterCount();
+    if (rootNodes.length != typeParameterCount) {
+      throw exceptionBuilder()
+          .evalError("wrongTypeArgumentCount", typeParameterCount, rootNodes.length)
+          .build();
+    }
 
     var argFrame = typeArgumentsNeedMaterializedFrame ? frame.materialize() : null;
     var typeArgs = new VmTypeArgument[rootNodes.length];
