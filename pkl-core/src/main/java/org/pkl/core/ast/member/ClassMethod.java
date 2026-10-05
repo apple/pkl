@@ -101,6 +101,10 @@ public final class ClassMethod extends ClassMember implements Method {
     return functionNode.getParameterCount();
   }
 
+  public int getTypeParameterCount() {
+    return functionNode.getTypeParameterCount();
+  }
+
   @Override
   public String getCallSignature() {
     return functionNode.getCallSignature();
