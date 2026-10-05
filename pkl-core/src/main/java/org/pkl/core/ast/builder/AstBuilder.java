@@ -1242,7 +1242,6 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       case EQ_EQ ->
           EqualNodeGen.create(
               createSourceSection(expr),
-              false,
               visitExpr(expr.getLeft()),
               visitExpr(expr.getRight()));
       case NOT_EQ ->

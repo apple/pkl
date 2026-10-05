@@ -30,8 +30,10 @@ import org.pkl.core.util.EconomicMaps;
 
 /** Corresponds to `pkl.base#Object`. */
 public abstract class VmObject extends VmObjectLike {
-  private static final byte SHALLOW_FORCE_FLAG = 0x1;
-  private static final byte DEEP_FORCE_FLAG = 0x2;
+  private static final byte START_SHALLOW_FORCE_FLAG = 0x1;
+  private static final byte START_DEEP_FORCE_FLAG = 0x2;
+  private static final byte SHALLOW_FORCE_FLAG = 0x4;
+  private static final byte DEEP_FORCE_FLAG = 0x8;
 
   @CompilationFinal protected @Nullable VmObject parent;
   protected final UnmodifiableEconomicMap<Object, ObjectMember> members;
@@ -130,11 +132,19 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   protected boolean isShallowForced() {
-    return (flags & SHALLOW_FORCE_FLAG) != 0;
+    return (flags & (SHALLOW_FORCE_FLAG | DEEP_FORCE_FLAG)) != 0;
   }
 
   protected boolean isDeepForced() {
     return (flags & DEEP_FORCE_FLAG) != 0;
+  }
+
+  protected boolean isStartDeepForce() {
+    return (flags & START_DEEP_FORCE_FLAG) != 0;
+  }
+
+  protected boolean isStartShallowForce() {
+    return (flags & (START_SHALLOW_FORCE_FLAG | START_DEEP_FORCE_FLAG)) != 0;
   }
 
   /** Evaluates this object's members. Skips local, hidden, and external members. */
@@ -142,11 +152,11 @@ public abstract class VmObject extends VmObjectLike {
   public final void force(boolean allowUndefinedValues, boolean recurse) {
     var oldFlags = flags;
     if (recurse) {
-      if (isDeepForced()) return;
-      flags |= (DEEP_FORCE_FLAG | SHALLOW_FORCE_FLAG);
+      if (isStartDeepForce()) return;
+      flags |= (START_DEEP_FORCE_FLAG | START_SHALLOW_FORCE_FLAG);
     } else {
-      if (isShallowForced()) return;
-      flags |= SHALLOW_FORCE_FLAG;
+      if (isStartShallowForce()) return;
+      flags |= START_SHALLOW_FORCE_FLAG;
     }
 
     var fullyForced = true;
@@ -187,7 +197,11 @@ public abstract class VmObject extends VmObjectLike {
     }
 
     // make sure uncached values are not marked as forced
-    if (recurse && !fullyForced) flags = 0;
+    if (recurse && !fullyForced) {
+      flags = 0;
+    } else {
+      flags |= recurse ? DEEP_FORCE_FLAG : SHALLOW_FORCE_FLAG;
+    }
   }
 
   @Override

@@ -79,9 +79,6 @@ public final class MappingNodes {
   }
 
   public abstract static class containsValue extends ExternalMethod1Node {
-    @Child
-    EqualNode equalNode = EqualNodeGen.create(VmUtils.unavailableSourceSection(), true, null, null);
-
     @Specialization
     protected boolean eval(
         VirtualFrame frame,
@@ -90,7 +87,8 @@ public final class MappingNodes {
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       for (var cursor = self.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var cursorValue = readCursorValueNode.execute(frame, cursor);
-        if (equalNode.executeWith(frame, value, cursorValue)) {
+        // TODO replace with EqualNode
+        if (value.equals(cursorValue)) {
           return true;
         }
       }
