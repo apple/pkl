@@ -224,7 +224,7 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     ff(headers);
     if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList());
+      headers.add(parseTypeParameterList(false));
       ff(headers);
     }
     expect(Token.ASSIGN, headers, "unexpectedToken", "=");
@@ -249,7 +249,7 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     if (lookahead() == Token.LT) {
       ff(headers);
-      headers.add(parseTypeParameterList());
+      headers.add(parseTypeParameterList(true));
     }
     if (lookahead() == Token.EXTENDS) {
       var extend = new ArrayList<Node>();
@@ -346,7 +346,7 @@ class GenericParserImpl {
     children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
+      children.add(parseTypeParameterList(false));
       ff(children);
     }
     children.add(parseParameterList());
@@ -518,7 +518,7 @@ class GenericParserImpl {
     children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
+      children.add(parseTypeParameterList(false));
       ff(children);
     }
     children.add(parseParameterList());
@@ -1321,12 +1321,12 @@ class GenericParserImpl {
     return bodies;
   }
 
-  private Node parseTypeParameterList() {
+  private Node parseTypeParameterList(boolean allowVarianceModifies) {
     var children = new ArrayList<Node>();
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     var elements = new ArrayList<Node>();
-    parseListOf(Token.GT, elements, this::parseTypeParameter);
+    parseListOf(Token.GT, elements, () -> parseTypeParameter(allowVarianceModifies));
     children.add(new Node(NodeType.TYPE_PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new Node(NodeType.TYPE_PARAMETER_LIST, children);
@@ -1360,12 +1360,14 @@ class GenericParserImpl {
     return new Node(NodeType.ARGUMENT_LIST, children);
   }
 
-  private Node parseTypeParameter() {
+  private Node parseTypeParameter(boolean allowVarianceModifier) {
     var children = new ArrayList<Node>();
-    if (lookahead == Token.IN) {
-      children.add(makeTerminal(next()));
-    } else if (lookahead == Token.OUT) {
-      children.add(makeTerminal(next()));
+    if (allowVarianceModifier) {
+      if (lookahead == Token.IN) {
+        children.add(makeTerminal(next()));
+      } else if (lookahead == Token.OUT) {
+        children.add(makeTerminal(next()));
+      }
     }
     children.add(parseIdentifier());
     return new Node(NodeType.TYPE_PARAMETER, children);

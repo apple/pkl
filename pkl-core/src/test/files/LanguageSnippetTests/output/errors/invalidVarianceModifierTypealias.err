@@ -1,0 +1,8 @@
+–– Pkl Error ––
+Keyword `in` is not allowed here.
+
+If you must use this name as identifier, enclose it in backticks.
+
+x | typealias Foo<in T> = Int
+                  ^^
+at invalidVarianceModifierTypealias (file:///$snippetsDir/input/errors/invalidVarianceModifierTypealias.pkl)
