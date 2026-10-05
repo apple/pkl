@@ -35,7 +35,7 @@ public abstract class GetParsedUrlNode extends PklNode {
     return (Parsed) url.getExtraStorage();
   }
 
-  @Specialization(guards = "!url.hasExtraStorage()")
+  @Specialization(replaces = "evalCached")
   protected Parsed eval(VmTyped url, @Cached("create()") IndirectCallNode callNode) {
     return UrlFactory.read(url, callNode);
   }

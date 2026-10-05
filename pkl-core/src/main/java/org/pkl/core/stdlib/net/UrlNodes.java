@@ -21,6 +21,7 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.internal.GetParsedUrlNode;
+import org.pkl.core.ast.internal.GetParsedUrlNodeGen;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
@@ -114,15 +115,11 @@ public final class UrlNodes {
   }
 
   public abstract static class toString extends ExternalMethod0Node {
-    @Specialization(guards = "self.hasExtraStorage()")
-    protected String evalCached(VmTyped self) {
-      var parsed = (Parsed) self.getExtraStorage();
-      return parsed.serialize();
-    }
+    @Child private GetParsedUrlNode getParsedUrlNode = GetParsedUrlNodeGen.create();
 
-    @Specialization(guards = "!self.hasExtraStorage()")
-    protected String eval(VmTyped self, @Cached("create()") IndirectCallNode callNode) {
-      var parsed = UrlFactory.read(self, callNode);
+    @Specialization
+    protected String eval(VmTyped self) {
+      var parsed = getParsedUrlNode.execute(self);
       return parsed.serialize();
     }
   }
