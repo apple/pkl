@@ -65,11 +65,6 @@ public final class UrlParser {
       if (host != null) {
         sb.append("//").append(serializeAuthority(userInfo, host, port));
       }
-      if (scheme == null && host == null && startsWithColonSegment(path)) {
-        // a relative reference whose first segment holds a ":" would be read back as a scheme, so
-        // it has to be preceded by a dot-segment (section 4.2)
-        sb.append("./");
-      }
       sb.append(path);
       if (query != null) {
         sb.append('?').append(query);
@@ -181,7 +176,7 @@ public final class UrlParser {
       pathEnd++;
     }
     var path = input.substring(pointer, pathEnd);
-    var pathFailure = pathFailure(path, host != null);
+    var pathFailure = pathFailure(path, scheme != null, host != null);
     if (pathFailure != null) {
       return pathFailure;
     }
@@ -493,7 +488,7 @@ public final class UrlParser {
     return parsed.scheme() != null
         && (parsed.userInfo() == null || isValidUserInfo(parsed.userInfo()))
         && (parsed.host() == null || isValidHost(parsed.host()))
-        && isValidPath(parsed.path(), parsed.host() != null)
+        && isValidPath(parsed.path(), true, parsed.host() != null)
         && (parsed.query() == null || isValidQueryOrFragment(parsed.query()))
         && (parsed.fragment() == null || isValidQueryOrFragment(parsed.fragment()));
   }
@@ -732,7 +727,8 @@ public final class UrlParser {
     return true;
   }
 
-  static Result.@Nullable Failure pathFailure(String path, boolean hasAuthority) {
+  static Result.@Nullable Failure pathFailure(
+      String path, boolean hasScheme, boolean hasAuthority) {
     var failure = percentEncodingFailure(path);
     if (failure != null) {
       return failure;
@@ -743,18 +739,25 @@ public final class UrlParser {
           ? null
           : new Result.Failure("A path that follows an authority must start with `/`.");
     }
+    if (path.startsWith("//")) {
+      return new Result.Failure("A path that follows no authority cannot start with `//`.");
+    }
+    if (!hasScheme && startsWithColonSegment(path)) {
+      // path-noscheme (section 4.2)
+      return new Result.Failure(
+          "The first segment of a relative path cannot contain `:`; precede it with `./`, as in"
+              + " `./a:b`.");
+    }
     // path-absolute / path-rootless / path-empty
-    return path.startsWith("//")
-        ? new Result.Failure("A path that follows no authority cannot start with `//`.")
-        : null;
+    return null;
   }
 
   /**
-   * Whether {@code path} is percent-encoded, and can sit next to an authority, or, when there is
-   * none, next to no authority at all.
+   * Whether {@code path} is percent-encoded, and can sit next to a scheme and an authority, or next
+   * to no scheme and no authority, as {@code hasScheme} and {@code hasAuthority} say.
    */
-  public static boolean isValidPath(String path, boolean hasAuthority) {
-    return pathFailure(path, hasAuthority) == null
+  public static boolean isValidPath(String path, boolean hasScheme, boolean hasAuthority) {
+    return pathFailure(path, hasScheme, hasAuthority) == null
         && PercentEncoder.isEncoded(path, PercentEncoder.PATH);
   }
 

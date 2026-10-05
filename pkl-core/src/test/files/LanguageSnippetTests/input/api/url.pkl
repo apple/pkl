@@ -237,6 +237,8 @@ facts {
     new net.Url { rawPath = "a/foo" } == net.Url("a/foo")
     new net.Url { rawPath = "a/foo" }.toString() == "a/foo"
     new net.Url { rawPath = "a/foo" }.pathSegments == List("a", "foo")
+    module.catch(() -> new net.Url { rawPath = "a:b" }.toString())
+      .startsWith("Type constraint `isValidPath(this, scheme != null, rawHost != null)` violated.")
   }
 
   ["resolve(): RFC 3986, section 5.4.1 normal examples"] {
@@ -330,7 +332,7 @@ facts {
       == "https://example.com/a%20b"
     new net.Url { scheme = "https"; rawHost = "m%C3%BCnchen.de" }.toString() == "https://m%C3%BCnchen.de"
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawPath = "/a b" }.toString())
-      .startsWith("Type constraint `isValidPath(this, rawHost != null)` violated.")
+      .startsWith("Type constraint `isValidPath(this, scheme != null, rawHost != null)` violated.")
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "münchen.de" }.toString())
       .startsWith("Type constraint `isValidHost(this)` violated.")
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawUserInfo = "a@b" }.toString())
@@ -340,7 +342,7 @@ facts {
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawFragment = "a#b" }.toString())
       .startsWith("Type constraint `isValidFragment(this)` violated.")
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawPath = "/a%zz" }.toString())
-      .startsWith("Type constraint `isValidPath(this, rawHost != null)` violated.")
+      .startsWith("Type constraint `isValidPath(this, scheme != null, rawHost != null)` violated.")
     module.catch(() -> new net.Url { scheme = "https"; rawHost = "example.com"; rawPort = "8a" }.toString())
       .startsWith(##"Type constraint `matches(Regex(#"\d*"#))` violated."##)
     new net.Url { scheme = "x"; rawHost = "foo"; rawPort = "001" }.toString() == "x://foo:001"
@@ -376,7 +378,7 @@ facts {
     (url) { rawPath = "/c/d%20e" }.pathSegments == List("c", "d e")
     // an amended part has to be encoded
     module.catch(() -> (url) { rawPath = "/a b" }.toString())
-      .startsWith("Type constraint `isValidPath(this, rawHost != null)` violated.")
+      .startsWith("Type constraint `isValidPath(this, scheme != null, rawHost != null)` violated.")
     (url) { rawPath = "/a%20b" }.toString() == "https://user:pw@example.com:8080/a%20b?q=1#f"
   }
 

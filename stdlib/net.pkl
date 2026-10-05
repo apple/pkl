@@ -100,12 +100,13 @@ class Url {
 
   /// The percent-encoded path, or the empty string if this URL has none.
   ///
-  /// A URL with a [rawHost] has either an empty path or one starting with `/`.
-  /// A URL without one may also have a *rootless* path, as `mailto:user@example.com` does.
+  /// With a [rawHost], the path is empty or starts with `/`.
+  /// Without one, it may be *rootless*, as in `mailto:user@example.com`.
+  /// Without a [scheme], its first segment cannot contain `:`.
   ///
   /// To change the path without encoding it first, use [resolve()], which is as lenient as [Url()].
   /// Unlike amending, this drops [rawQuery] and [rawFragment].
-  rawPath: String(isValidPath(this, rawHost != null)) = ""
+  rawPath: String(isValidPath(this, scheme != null, rawHost != null)) = ""
 
   /// The percent-decoded [rawPath].
   ///
@@ -280,9 +281,9 @@ class Url {
   /// Tells if [value] is a percent-encoded `host`.
   external function isValidHost(value: String): Boolean
 
-  /// Tells if [value] is a percent-encoded path that can sit next to an authority, or, when
-  /// [hasAuthority] is [false], next to no authority at all.
-  external function isValidPath(value: String, hasAuthority: Boolean): Boolean
+  /// Tells if [value] is a percent-encoded path that can sit next to a scheme and an authority, or,
+  /// when [hasScheme] or [hasAuthority] is [false], next to no scheme or no authority.
+  external function isValidPath(value: String, hasScheme: Boolean, hasAuthority: Boolean): Boolean
 
   /// Tells if [value] is a percent-encoded `query`.
   external function isValidQuery(value: String): Boolean

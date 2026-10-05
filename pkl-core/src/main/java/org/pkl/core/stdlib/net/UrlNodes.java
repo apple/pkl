@@ -26,7 +26,7 @@ import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
-import org.pkl.core.stdlib.ExternalMethod2Node;
+import org.pkl.core.stdlib.ExternalMethod3Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
 import org.pkl.core.util.url.UrlFactory;
 import org.pkl.core.util.url.UrlParser;
@@ -214,12 +214,15 @@ public final class UrlNodes {
     }
   }
 
-  public abstract static class isValidPath extends ExternalMethod2Node {
+  public abstract static class isValidPath extends ExternalMethod3Node {
     @Specialization
     @TruffleBoundary
     protected boolean eval(
-        @SuppressWarnings("unused") VmTyped self, String value, boolean hasAuthority) {
-      return UrlParser.isValidPath(value, hasAuthority);
+        @SuppressWarnings("unused") VmTyped self,
+        String value,
+        boolean hasScheme,
+        boolean hasAuthority) {
+      return UrlParser.isValidPath(value, hasScheme, hasAuthority);
     }
   }
 }

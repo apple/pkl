@@ -56,7 +56,8 @@ public class PUrlToURITest {
   @Test
   public void relative() {
     assertThat(map("relative")).isEqualTo(URI.create("/foo/bar"));
-    // a first segment holding a ":" is preceded by a dot-segment so that it isn't read as a scheme
+    // a first segment holding a ":" has to be preceded by a dot-segment, or it would be read as a
+    // scheme
     assertThat(map("colonSegment")).isEqualTo(URI.create("./a:b"));
   }
 

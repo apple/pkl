@@ -150,6 +150,7 @@ facts {
     true
     true
     true
+    true
   }
   ["resolve(): RFC 3986, section 5.4.1 normal examples"] {
     true
