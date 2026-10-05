@@ -129,5 +129,13 @@ examples {
     "Tried to read property `age` but its value is undefined."
     "Class `Int` is not a subtype of `Typed`."
     "Cannot instantiate abstract class `map#Abstract`."
+    new {
+      name = "Pigeon"
+      id = 1
+    }
+    new {
+      name = "Pigeon"
+      id = 1
+    }
   }
 }
