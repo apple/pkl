@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.LoopNode;
 import java.io.UnsupportedEncodingException;
@@ -332,14 +333,49 @@ public final class StringNodes {
     }
 
     @TruffleBoundary
-    @Specialization
-    protected boolean eval(String self, VmRegex regex) {
-      // try every suffix; `find()` would skip matches that overlap an earlier one
-      var matcher = regex.matcher(self).useTransparentBounds(true).useAnchoringBounds(false);
-      for (var start = self.length(); ; start = self.offsetByCodePoints(start, -1)) {
-        if (matcher.region(start, self.length()).matches()) return true;
-        if (start == 0) return false;
+    @Specialization(guards = "regex.equals(cachedRegex)")
+    protected boolean evalRegexCached(
+        String self,
+        VmRegex regex,
+        @Cached("regex") VmRegex cachedRegex,
+        @Cached("computePattern(cachedRegex)") Pattern pattern) {
+      return pattern.matcher(self).find();
+    }
+
+    @TruffleBoundary
+    @Specialization(replaces = "evalRegexCached")
+    protected boolean evalRegex(String self, VmRegex regex) {
+      return computePattern(regex).matcher(self).find();
+    }
+
+    // incorrect warning; non-capture group here is used to ensure correct precedence (e.g. prevent
+    // constructing a regex like `foo|bar$`)
+    @SuppressWarnings({
+      "RegExpUnnecessaryNonCapturingGroup",
+      "RegExpUnexpectedAnchor",
+      "MagicConstant"
+    })
+    protected final Pattern computePattern(VmRegex regex) {
+      var existingPattern = regex.getPattern();
+      var suffix = isCommentsEnabled(regex) ? "\n)\\z" : ")\\z";
+      try {
+        return Pattern.compile("(?:" + existingPattern.pattern() + suffix, VmUtils.REGEX_FLAGS);
+      } catch (PatternSyntaxException e) {
+        // if we have an unclosed group, the issue here must be that there was a quote start with
+        // an unmatched quote end (e.g. `foo\Qs`)
+        if (e.getMessage().contains("Unclosed group")) {
+          // incorrect regex error diagnostic here but not suppressable.
+          return Pattern.compile(
+              "(?:" + existingPattern.pattern() + "\\E" + suffix, VmUtils.REGEX_FLAGS);
+        } else {
+          CompilerDirectives.transferToInterpreter();
+          throw exceptionBuilder().bug(e.getMessage()).withCause(e).build();
+        }
       }
+    }
+
+    private boolean isCommentsEnabled(VmRegex regex) {
+      return (regex.getPattern().flags() & Pattern.COMMENTS) != 0;
     }
   }
 
