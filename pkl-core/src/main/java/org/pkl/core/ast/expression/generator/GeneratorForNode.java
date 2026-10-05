@@ -109,10 +109,9 @@ public abstract class GeneratorForNode extends GeneratorMemberNode {
 
   @Specialization
   protected void eval(VirtualFrame frame, Object parent, ObjectData data, VmList iterable) {
-    var idx = 0L;
     loopConditionProfile.profileCounted(iterable.getLength());
-    for (var element : iterable) {
-      executeIteration(frame, parent, data, idx++, element);
+    for (var idx = 0L; loopConditionProfile.inject(idx < iterable.getLength()); idx++) {
+      executeIteration(frame, parent, data, idx, iterable.get(idx));
     }
   }
 

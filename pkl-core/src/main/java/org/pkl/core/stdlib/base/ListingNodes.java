@@ -22,8 +22,6 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.LoopNode;
 import org.pkl.core.ast.PklNode;
-import org.pkl.core.ast.expression.binary.EqualNode;
-import org.pkl.core.ast.expression.binary.EqualNodeGen;
 import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.ast.internal.ToStringNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
@@ -257,10 +255,6 @@ public final class ListingNodes {
   }
 
   public abstract static class contains extends ExternalMethod1Node {
-    @Child
-    private EqualNode equalNode =
-        EqualNodeGen.create(VmUtils.unavailableSourceSection(), true, null, null);
-
     @Specialization
     protected boolean eval(
         VirtualFrame frame,
@@ -269,7 +263,8 @@ public final class ListingNodes {
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       for (var cursor = self.elements(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var value = readCursorValueNode.execute(frame, cursor);
-        if (equalNode.executeWith(frame, element, value)) {
+        // TODO replace with EqualNode
+        if (value.equals(element)) {
           return true;
         }
       }

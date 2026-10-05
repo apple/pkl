@@ -31,12 +31,8 @@ import org.pkl.core.runtime.*;
 @NodeChild(value = "rightNode", type = ExpressionNode.class)
 // not extending BinaryExpressionNode because we don't want the latter's fallback
 public abstract class EqualNode extends ExpressionNode {
-
-  private final boolean isIntrinsic;
-
-  protected EqualNode(SourceSection sourceSection, boolean isIntrinsic) {
+  protected EqualNode(SourceSection sourceSection) {
     super(sourceSection);
-    this.isIntrinsic = isIntrinsic;
   }
 
   /** When using this method, pass {@code null} in for {@code leftNode} and {@code rightNode}. */
@@ -115,10 +111,5 @@ public abstract class EqualNode extends ExpressionNode {
     return leftClass == Long.class || leftClass == Double.class
         ? rightClass != Long.class && rightClass != Double.class
         : leftClass != rightClass;
-  }
-
-  @Override
-  public boolean isInstrumentable() {
-    return !isIntrinsic;
   }
 }
