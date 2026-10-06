@@ -237,8 +237,8 @@ class Url {
   /// Dot segments (`./` and `../`) are only removed from an absolute [rawPath].
   /// A URL with a [rawHost] and no path is given the path `/`, which names the same resource.
   ///
-  /// Does not perform *scheme-based normalization* as described in
-  /// [section 6.2.3](https://www.rfc-editor.org/info/rfc3986/#section-6.2.3).
+  /// Does not perform normalization that requires knowing the scheme, such as removing a default
+  /// port (see [section 6.2.3](https://www.rfc-editor.org/info/rfc3986/#section-6.2.3)).
   ///
   /// Facts:
   /// ```
