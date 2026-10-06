@@ -6,7 +6,7 @@ open module referenceWithOpenModuleType
 import "pkl:ref"
 import "referenceWithOpenModuleType.pkl"
 
-class D extends ref.Domain {
+class D extends ref.AbstractDomain {
   function renderReference(r: ref.Reference<this, Any>): String =
     r.getPath().map((it) -> it.property ?? it.key.toString()).join(".")
 }
