@@ -20,6 +20,7 @@ import static org.pkl.core.stdlib.benchmark.BenchmarkUtils.runBenchmark;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.source.SourceSection;
@@ -38,7 +39,7 @@ public final class MicrobenchmarkNodes {
   public abstract static class run extends ExternalMethod0Node {
     @TruffleBoundary
     @Specialization
-    protected VmTyped eval(VmTyped self) {
+    protected VmTyped eval(MaterializedFrame frame, VmTyped self) {
       var codeMember = VmUtils.findMember(self, Identifier.EXPRESSION);
       assert codeMember != null;
       var codeMemberNode = codeMember.getMemberNode();
@@ -51,7 +52,8 @@ public final class MicrobenchmarkNodes {
               codeMemberNode.getFrameDescriptor(),
               (ExpressionNode) codeMemberNode.getBodyNode().deepCopy());
       var callTarget = runIterationsNode.getCallTarget();
-      return runBenchmark(self, (iterations) -> callTarget.call(self, self, iterations));
+      return runBenchmark(
+          self, (iterations) -> callTarget.call(self, self, frame.getArguments()[2], iterations));
     }
   }
 
@@ -82,7 +84,7 @@ public final class MicrobenchmarkNodes {
 
     @Override
     protected @Nullable Object executeImpl(VirtualFrame frame) {
-      var repetitions = (long) frame.getArguments()[2];
+      var repetitions = (long) frame.getArguments()[3];
       for (long i = 0; i < repetitions; i++) {
         blackholeNode.executeGeneric(frame);
       }
