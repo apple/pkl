@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -13,31 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+import java.time.LocalDateTime
+import java.time.Month
 import java.util.zip.ZipEntry
 import java.util.zip.ZipOutputStream
+import javax.inject.Inject
 import org.gradle.api.DefaultTask
+import org.gradle.api.file.ArchiveOperations
 import org.gradle.api.file.ConfigurableFileCollection
 import org.gradle.api.file.RegularFileProperty
+import org.gradle.api.tasks.CacheableTask
 import org.gradle.api.tasks.InputFiles
 import org.gradle.api.tasks.OutputFile
+import org.gradle.api.tasks.PathSensitive
+import org.gradle.api.tasks.PathSensitivity
 import org.gradle.api.tasks.TaskAction
 
-open class BuildSourceBundle : DefaultTask() {
-  @get:InputFiles val inputJars: ConfigurableFileCollection = project.objects.fileCollection()
+@CacheableTask
+abstract class BuildSourceBundle : DefaultTask() {
+  private companion object {
+    // Same date Gradle uses in `org.gradle.api.internal.file.archive.ZipCopyAction`
+    val ZIP_ENTRY_MTIME: LocalDateTime = LocalDateTime.of(1980, Month.FEBRUARY, 1, 0, 0)
+  }
 
-  @get:OutputFile val outputZip: RegularFileProperty = project.objects.fileProperty()
+  @get:InputFiles
+  @get:PathSensitive(PathSensitivity.NAME_ONLY)
+  abstract val inputJars: ConfigurableFileCollection
+
+  @get:OutputFile abstract val outputZip: RegularFileProperty
+
+  @get:Inject protected abstract val archives: ArchiveOperations
 
   @TaskAction
   @Suppress("unused")
   fun merge() {
-    val zipFile = outputZip.asFile.get()
-    if (!zipFile.getParentFile().exists()) zipFile.getParentFile().mkdirs()
-    ZipOutputStream(zipFile.outputStream()).use { zip ->
-      for (jar in inputJars) {
-        val jarName = jar.toPath().fileName.toString().removeSuffix(".jar")
-        project.zipTree(jar).visit {
+    ZipOutputStream(outputZip.asFile.get().outputStream()).use { zip ->
+      for (jar in inputJars.files.sortedBy { it.name }) {
+        val jarName = jar.nameWithoutExtension
+        archives.zipTree(jar).visit {
           if (isDirectory) return@visit
-          zip.putNextEntry(ZipEntry("$jarName/$relativePath"))
+          zip.putNextEntry(ZipEntry("$jarName/$relativePath").apply { timeLocal = ZIP_ENTRY_MTIME })
           copyTo(zip)
           zip.closeEntry()
         }

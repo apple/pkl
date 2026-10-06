@@ -13,24 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.runtimeClasspath
-
-// ideally we'd configure this automatically based on project dependencies
-val firstPartySourcesJarsConfiguration: Configuration =
-  configurations.maybeCreate("firstPartySourcesJars")
-
-val resolveBundleSourcesJars =
-  tasks.register<ResolveSourcesJars>("resolveBundleSourcesJars") {
-    configuration.set(configurations.runtimeClasspath)
-    outputDir.set(layout.buildDirectory.dir("resolveBundleSourcesJars"))
-  }
-
 val sourceBundle =
   tasks.register<BuildSourceBundle>("sourceBundle") {
     plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
     plugins.withId("pklKotlinLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    inputJars.from(firstPartySourcesJarsConfiguration)
-    inputJars.from(resolveBundleSourcesJars.map { fileTree(it.outputDir) })
+    inputJars.from(configurations.named("firstPartySourcesJars"))
+    inputJars.from(
+      tasks.named("resolveSourcesJars").map { fileTree((it as ResolveSourcesJars).outputDir) }
+    )
 
-    outputZip = layout.buildDirectory.file("${project.name}-${project.version}-sourcebundle.zip")
+    outputZip =
+      layout.buildDirectory.file("sourceBundle/${project.name}-${project.version}-sourcebundle.zip")
   }

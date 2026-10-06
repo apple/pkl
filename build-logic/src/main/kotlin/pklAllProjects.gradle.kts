@@ -156,3 +156,13 @@ spotless {
     }
   }
 }
+
+// ideally we'd configure this automatically based on project dependencies
+val firstPartySourcesJarsConfiguration: Configuration =
+  configurations.maybeCreate("firstPartySourcesJars")
+
+val resolveSourcesJars =
+  tasks.register<ResolveSourcesJars>("resolveSourcesJars") {
+    configuration.set(configurations.named("runtimeClasspath"))
+    outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
+  }
