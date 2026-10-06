@@ -497,16 +497,16 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   public static final class TypeVariable extends UnresolvedTypeNode {
-    private final VmTypeParameter typeParameter;
+    private final TypeParameter typeParameter;
     private final int levelsUp;
 
-    public TypeVariable(SourceSection sourceSection, VmTypeParameter typeParameter, int levelsUp) {
+    public TypeVariable(SourceSection sourceSection, TypeParameter typeParameter, int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
       this.levelsUp = levelsUp;
     }
 
-    public VmTypeParameter getTypeParameter() {
+    public TypeParameter getTypeParameter() {
       return typeParameter;
     }
 
