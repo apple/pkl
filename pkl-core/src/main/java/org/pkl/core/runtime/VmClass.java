@@ -50,7 +50,7 @@ public final class VmClass extends VmValue {
   private final List<VmTyped> annotations;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<VmTypeParameter> typeParameters;
+  private final List<TypeParameter> typeParameters;
   private final VmTyped prototype;
 
   private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMaps.create();
@@ -126,7 +126,7 @@ public final class VmClass extends VmValue {
       List<VmTyped> annotations,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       VmTyped prototype) {
 
     this.sourceSection = sourceSection;
@@ -283,7 +283,7 @@ public final class VmClass extends VmValue {
     return typeParameters.size();
   }
 
-  public List<VmTypeParameter> getTypeParameters() {
+  public List<TypeParameter> getTypeParameters() {
     return typeParameters;
   }
 
@@ -757,7 +757,7 @@ public final class VmClass extends VmValue {
               VmModifier.export(modifiers, true),
               exportedAnnotations,
               classInfo,
-              VmTypeParameter.export(typeParameters),
+              TypeParameter.export(typeParameters),
               properties,
               methods,
               moduleClass);

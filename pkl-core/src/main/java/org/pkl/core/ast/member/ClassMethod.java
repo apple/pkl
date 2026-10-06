@@ -27,7 +27,7 @@ import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
 
 public final class ClassMethod extends ClassMember implements Method {
-  private final List<VmTypeParameter> typeParameters;
+  private final List<TypeParameter> typeParameters;
 
   // null = not deprecated, "" = no/empty message in the @Deprecated body
   private final @Nullable String deprecation;
@@ -43,7 +43,7 @@ public final class ClassMethod extends ClassMember implements Method {
       SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       VmTyped owner,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       @Nullable String deprecation) {
 
     super(
@@ -136,6 +136,6 @@ public final class ClassMethod extends ClassMember implements Method {
 
   public PClass.Method export(PClass owner) {
     return functionNode.export(
-        owner, docComment, annotations, modifiers, VmTypeParameter.export(typeParameters));
+        owner, docComment, annotations, modifiers, TypeParameter.export(typeParameters));
   }
 }

@@ -31,17 +31,7 @@ public final class SimpleRootNode extends PklRootNode {
       SourceSection sourceSection,
       String qualifiedName,
       ExpressionNode bodyNode) {
-    this(language, descriptor, sourceSection, qualifiedName, bodyNode, false);
-  }
-
-  public SimpleRootNode(
-      VmLanguage language,
-      FrameDescriptor descriptor,
-      SourceSection sourceSection,
-      String qualifiedName,
-      ExpressionNode bodyNode,
-      boolean propagateTypeMismatchExceptions) {
-    super(language, descriptor, propagateTypeMismatchExceptions);
+    super(language, descriptor, false);
     this.sourceSection = sourceSection;
     this.qualifiedName = qualifiedName;
     this.bodyNode = bodyNode;

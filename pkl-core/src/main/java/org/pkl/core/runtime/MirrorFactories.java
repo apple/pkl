@@ -45,7 +45,7 @@ public final class MirrorFactories {
   public static final VmObjectFactory<Pair<String, VmTyped>> methodParameterFactory =
       new VmObjectFactory<>(ReflectModule::getMethodParameterClass);
 
-  public static final VmObjectFactory<VmTypeParameter> typeParameterFactory =
+  public static final VmObjectFactory<TypeParameter> typeParameterFactory =
       new VmObjectFactory<>(ReflectModule::getTypeParameterClass);
 
   public static final VmObjectFactory<TypeNode> classTypeFactory =
@@ -208,7 +208,7 @@ public final class MirrorFactories {
         .addTypedProperty("type", Pair::getSecond);
 
     typeParameterFactory
-        .addStringProperty("name", VmTypeParameter::name)
+        .addStringProperty("name", TypeParameter::name)
         .addProperty(
             "variance",
             typeParameter ->
