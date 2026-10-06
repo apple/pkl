@@ -33,6 +33,6 @@ public final class DelegateToExtraStorageMapOrParentNode extends ExpressionNode 
     if (result != null) return result;
     var parent = owner.getParent();
     assert parent != null;
-    return VmUtils.readMember(parent, memberKey, VmUtils.getTypeArgumentsOrNull(frame));
+    return VmUtils.readMember(parent, memberKey);
   }
 }

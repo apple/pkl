@@ -85,6 +85,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
     var typeParameterCount = method == null ? 0 : method.getFunctionNode().getTypeParameterCount();
     if (rootNodes.length != typeParameterCount) {
+      CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
           .evalError("wrongTypeArgumentCount", typeParameterCount, rootNodes.length)
           .build();
