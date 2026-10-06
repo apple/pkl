@@ -498,10 +498,12 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   public static final class TypeVariable extends UnresolvedTypeNode {
     private final VmTypeParameter typeParameter;
+    private final int levelsUp;
 
-    public TypeVariable(SourceSection sourceSection, VmTypeParameter typeParameter) {
+    public TypeVariable(SourceSection sourceSection, VmTypeParameter typeParameter, int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.levelsUp = levelsUp;
     }
 
     public VmTypeParameter getTypeParameter() {
@@ -512,7 +514,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new TypeVariableNode(sourceSection, typeParameter);
+      return new TypeVariableNode(sourceSection, typeParameter, levelsUp);
     }
   }
 

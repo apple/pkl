@@ -54,7 +54,7 @@ lazyTypeCheck {
 
 class Person {
   name: String
-  
+
   function greet<A, B>() = "hi \(name)"
 }
 
@@ -88,4 +88,32 @@ polymorphism {
   res3 = call(new Person { name = "fred" })
   res4 = test.catch(() -> call(new Bird { name = "pigeon" }))
   res5 = call(new Person { name = "bob" })
+}
+
+lexical {
+  local function f<T>(): Dynamic = new { res = 5 as T }
+  res1 = test.catch(() -> f::<String>().res)
+
+  local function g<T>(): Dynamic = new {
+    local myProp: T = 5
+    res = myProp
+  }
+  res2 = test.catch(() -> g::<String>().res)
+}
+
+typeCast {
+  local function cast<U>(l: Listing<Any>): Listing<U> = l
+
+  res1 = cast::<String(startsWith("Bob"))>(new Listing { "Bobbert" })
+
+  res2 = test.catch(() -> cast::<String(length > 10)>(res1).toString())
+}
+
+nestedWithIndexOffset {
+  local function make<T>(): Listing<T> = new Listing<T> { 1; 2 }
+  local function amend<T, U>(l: Listing<Any>): Listing<U> = (l) { 3 } as Listing<U>
+
+  local parent = make::<Int>()
+  local child = amend::<String, Int>(parent)
+  res = child[0]
 }

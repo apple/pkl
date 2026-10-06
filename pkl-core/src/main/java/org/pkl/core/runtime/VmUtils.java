@@ -172,6 +172,13 @@ public final class VmUtils {
     return (VmTypeArgument[]) frame.getArguments()[2];
   }
 
+  public static VmTypeArgument @Nullable [] getTypeArgumentsOrNull(Frame frame, int levelsUp) {
+    if (levelsUp == 0) {
+      return getTypeArgumentsOrNull(frame);
+    }
+    return getTypeArgumentsOrNull(getEnclosingFrame(getOwner(frame), levelsUp));
+  }
+
   /** Returns the owner of the currently executing code. */
   public static @Nullable VmObjectLike getOwnerOrNull(Frame frame) {
     return (VmObjectLike) frame.getArguments()[1];

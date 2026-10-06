@@ -59,11 +59,19 @@ public final class SymbolTable {
     return currentScope;
   }
 
-  public @Nullable VmTypeParameter findTypeParameter(String name) {
+  public record TypeParameterResolution(VmTypeParameter typeParameter, int levelsUp) {}
+
+  public @Nullable TypeParameterResolution resolveTypeParameter(String name) {
     VmTypeParameter result;
+    var levelsUp = 0;
     for (var scope = currentScope; scope != null; scope = scope.getParent()) {
       result = scope.getTypeParameter(name);
-      if (result != null) return result;
+      if (result != null) {
+        return new TypeParameterResolution(result, scope.isMethodScope() ? levelsUp : -1);
+      }
+      if (scope.isLexicalScope()) {
+        levelsUp++;
+      }
     }
     return null;
   }

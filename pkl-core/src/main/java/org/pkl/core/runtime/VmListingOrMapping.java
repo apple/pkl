@@ -80,7 +80,7 @@ public abstract class VmListingOrMapping extends VmObject {
                   callTarget,
                   obj.typeCheckReceiver,
                   obj.typeCheckOwner,
-                  typeCheckTypeArguments,
+                  obj.typeCheckTypeArguments,
                   result);
           prevTypeCastNode = obj.typeCastNode;
         } catch (VmException e) {
@@ -145,6 +145,9 @@ public abstract class VmListingOrMapping extends VmObject {
     if (typeCastNode == null) {
       return false;
     }
-    return typeCastNode.getTypeNode().getType().equals(typeNode.getType());
+    var castTypeNode = typeCastNode.getTypeNode();
+    // if cast type is not final, we can't know if typeNode is a subtype
+    if (!castTypeNode.isFinalType()) return false;
+    return castTypeNode.getType().equals(typeNode.getType());
   }
 }

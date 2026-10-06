@@ -2159,11 +2159,14 @@ public abstract class TypeNode extends PklNode {
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
     private final VmTypeParameter typeParameter;
+    private final int levelsUp;
     @Child private EvalTypeArgumentNode evalTypeArgumentNode;
 
-    public TypeVariableNode(SourceSection sourceSection, VmTypeParameter typeParameter) {
+    public TypeVariableNode(
+        SourceSection sourceSection, VmTypeParameter typeParameter, int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.levelsUp = levelsUp;
       evalTypeArgumentNode = EvalTypeArgumentNodeGen.create(sourceSection);
     }
 
@@ -2178,7 +2181,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isNoopTypeCheck() {
-      return typeParameter.ownerType() != VmTypeParameter.OwnerType.METHOD;
+      return levelsUp < 0 || typeParameter.ownerType() != VmTypeParameter.OwnerType.METHOD;
     }
 
     @Override
@@ -2192,8 +2195,10 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+      if (levelsUp < 0) return value;
+
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
+      if (methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
         return evalTypeArgumentNode.execute(frame, typeArg, value);
       }
@@ -2213,8 +2218,10 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName) {
-      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+      if (levelsUp < 0) return null;
+
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
+      if (methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
         return typeArg.createDefaultValue(language, headerSection, qualifiedName);
       }
