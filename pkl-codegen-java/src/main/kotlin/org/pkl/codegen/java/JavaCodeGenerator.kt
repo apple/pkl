@@ -845,6 +845,7 @@ class JavaCodeGenerator(
           PClassInfo.Class -> PCLASS.nullableIf(nullable)
           PClassInfo.Regex -> PATTERN.nullableIf(nullable)
           PClassInfo.Version -> VERSION.nullableIf(nullable)
+          PClassInfo.Url -> URI.nullableIf(nullable)
           else ->
             when {
               !classInfo.isStandardLibraryClass -> pClass.toJavaPoetName().nullableIf(nullable)

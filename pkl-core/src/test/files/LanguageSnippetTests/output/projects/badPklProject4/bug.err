@@ -1,6 +1,15 @@
 –– Pkl Error ––
-URI `file:///not a valid uri` has invalid syntax.
+Type constraint `isValidUrl` violated.
+Value: "file:///not a valid uri"
 
-xxx | moduleCacheDir = resolvePath(enclosingUri, module.moduleCacheDir!!, forWindows)
-                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-at pkl.EvaluatorSettings#resolveForOs.moduleCacheDir (pkl:EvaluatorSettings)
+    isValidUrl
+    │
+    false
+
+xxxx | typealias Uri = String(isValidUrl)
+                              ^^^^^^^^^^
+at pkl.EvaluatorSettings#resolve (pkl:base)
+
+xxx | fixed resolvedEvaluatorSettings: EvaluatorSettingsModule = evaluatorSettings.resolve(projectFileUri)
+                                                                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.Project#resolvedEvaluatorSettings (pkl:Project)

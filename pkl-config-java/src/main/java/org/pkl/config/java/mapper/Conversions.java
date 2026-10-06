@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -266,6 +266,36 @@ public final class Conversions {
           });
 
   /**
+   * Conversion from {@code pkl.net#Url} to {@link String}. Gives the same result as {@code
+   * Url.toString()}.
+   */
+  public static final Conversion<PObject, String> pUrlToString =
+      Conversion.of(PClassInfo.Url, String.class, (value, mapper) -> serializeUrl(value));
+
+  /**
+   * Conversion from {@code pkl.net#Url} to {@link URI}. Throws {@link ConversionException} if the
+   * URL cannot be represented as a {@link URI}, which is the case for a host that is an IPvFuture
+   * address.
+   */
+  public static final Conversion<PObject, URI> pUrlToURI =
+      Conversion.of(
+          PClassInfo.Url,
+          URI.class,
+          (value, mapper) -> {
+            var url = serializeUrl(value);
+            try {
+              return new URI(url);
+            } catch (URISyntaxException e) {
+              throw new ConversionException(
+                  String.format("Failed to convert `pkl.net#Url` `%s` to `java.net.URI`.", url), e);
+            }
+          });
+
+  private static String serializeUrl(PObject url) {
+    return (String) url.getProperty("stringValue");
+  }
+
+  /**
    * Identity conversions used when the Java representation of the Pkl type matches the target type
    * or when the target type is {@link Object}.
    */
@@ -323,7 +353,9 @@ public final class Conversions {
           pDurationToDuration,
           pVersionToVersion,
           pVersionToString,
-          pStringToVersion);
+          pStringToVersion,
+          pUrlToString,
+          pUrlToURI);
 
   /** All conversions defined in this class. */
   public static final Collection<Conversion<?, ?>> all = collectAll();

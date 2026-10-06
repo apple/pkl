@@ -1,14 +1,11 @@
 –– Pkl Error ––
-Expected value of type `String`, but got type `Int`.
-Value: 42
+Cannot resolve a reference against `a/foo`, which is a relative URL.
 
-xxxx | typealias Uri = String(isValidUrl)
-                       ^^^^^^
-at intrinsifiedTypeAlias4#res1 (pkl:base)
+x | res = net.Url("a/foo")!!.resolve("b")
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at cannotResolveAgainstRelativeUrl#res (file:///$snippetsDir/input/errors/cannotResolveAgainstRelativeUrl.pkl)
 
-x | res1: Uri = 42
-                ^^
-at intrinsifiedTypeAlias4#res1 (file:///$snippetsDir/input/errors/intrinsifiedTypeAlias4.pkl)
+Only a URL that states a scheme can be resolved against.
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^

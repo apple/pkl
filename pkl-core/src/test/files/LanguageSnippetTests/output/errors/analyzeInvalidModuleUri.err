@@ -1,11 +1,18 @@
 –– Pkl Error ––
-Module URI `foo <>` has invalid syntax.
+Type constraint `isValidUrl` violated.
+Value: "foo <>"
+
+    isValidUrl
+    │
+    false
+
+xxxx | typealias Uri = String(isValidUrl)
+                              ^^^^^^^^^^
+at pkl.analyze#importGraph (pkl:base)
 
 x | result = analyze.importGraph(Set("foo <>"))
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at analyzeInvalidModuleUri#result (file:///$snippetsDir/input/errors/analyzeInvalidModuleUri.pkl)
-
-Illegal character in path at index 3: foo <>
 
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
