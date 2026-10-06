@@ -53,10 +53,20 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
    * <p>If neither file exists, returns default settings defined by module {@code pkl.settings}.
    */
   public static PklSettings loadFromSystem() throws VmEvalException {
+    return loadFromSystem(IoUtils.getSystemModuleCacheDir());
+  }
+
+  /**
+   * Loads the user settings file, using the given module cache directory.
+   *
+   * @param moduleCacheDir the directory where packages are cached; {@code null} disables caching
+   * @see #loadFromSystem()
+   */
+  public static PklSettings loadFromSystem(@Nullable Path moduleCacheDir) throws VmEvalException {
     var file = IoUtils.getSystemSettingsFile();
     if (Files.exists(file)) {
       DebugLogger.log("Loading settings file from " + file.normalize().toAbsolutePath());
-      return load(ModuleSource.path(file));
+      return load(ModuleSource.path(file), moduleCacheDir);
     }
     return defaultInstance;
   }
@@ -89,6 +99,16 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
 
   /** Loads a settings file from the given path. */
   public static PklSettings load(ModuleSource moduleSource) throws VmEvalException {
+    return load(moduleSource, IoUtils.getSystemModuleCacheDir());
+  }
+
+  /**
+   * Loads a settings file from the given path, using the given module cache directory.
+   *
+   * @param moduleCacheDir the directory where packages are cached; {@code null} disables caching
+   */
+  public static PklSettings load(ModuleSource moduleSource, @Nullable Path moduleCacheDir)
+      throws VmEvalException {
     try (var evaluator =
         EvaluatorBuilder.unconfigured()
             .setSecurityManager(
@@ -100,6 +120,7 @@ public record PklSettings(Editor editor, PklEvaluatorSettings.@Nullable Http htt
             .addResourceReader(ResourceReaders.environmentVariable())
             .addResourceReader(ResourceReaders.file())
             .addEnvironmentVariables(System.getenv())
+            .setModuleCacheDir(moduleCacheDir)
             .build()) {
       var module = evaluator.evaluateOutputValueAs(moduleSource, PClassInfo.Settings);
       return parseSettings(module, moduleSource);

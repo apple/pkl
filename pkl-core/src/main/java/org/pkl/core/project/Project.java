@@ -84,6 +84,34 @@ public final class Project {
       StackFrameTransformer stackFrameTransformer,
       Map<String, String> envVars,
       boolean powerAssertionsEnabled) {
+    return loadFromPath(
+        path,
+        securityManager,
+        timeout,
+        stackFrameTransformer,
+        envVars,
+        powerAssertionsEnabled,
+        IoUtils.getSystemModuleCacheDir());
+  }
+
+  /**
+   * Loads Project data from the given {@link Path}.
+   *
+   * <p>Evaluates a module's {@code output.value} to allow for embedding a project within a
+   * template.
+   *
+   * @param moduleCacheDir the directory where packages imported by the project file are cached;
+   *     {@code null} disables caching
+   * @throws PklException if an error occurred while evaluating the project file.
+   */
+  public static Project loadFromPath(
+      Path path,
+      SecurityManager securityManager,
+      java.time.@Nullable Duration timeout,
+      StackFrameTransformer stackFrameTransformer,
+      Map<String, String> envVars,
+      boolean powerAssertionsEnabled,
+      @Nullable Path moduleCacheDir) {
     try (var evaluator =
         EvaluatorBuilder.unconfigured()
             .setSecurityManager(securityManager)
@@ -97,6 +125,7 @@ public final class Project {
             .addEnvironmentVariables(envVars)
             .setTimeout(timeout)
             .setPowerAssertionsEnabled(powerAssertionsEnabled)
+            .setModuleCacheDir(moduleCacheDir)
             .build()) {
       return load(evaluator, ModuleSource.path(path));
     }

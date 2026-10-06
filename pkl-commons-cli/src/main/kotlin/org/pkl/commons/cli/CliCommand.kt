@@ -69,9 +69,9 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
   protected val settings: PklSettings by lazy {
     try {
       if (cliOptions.normalizedSettingsModule != null) {
-        PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule))
+        PklSettings.load(ModuleSource.uri(cliOptions.normalizedSettingsModule), cliModuleCacheDir)
       } else {
-        PklSettings.loadFromSystem()
+        PklSettings.loadFromSystem(cliModuleCacheDir)
       }
     } catch (e: PklException) {
       // do not use `errorRenderer` because it depends on `settings`
@@ -107,7 +107,17 @@ abstract class CliCommand(protected val cliOptions: CliBaseOptions) {
       stackFrameTransformer,
       envVars,
       cliOptions.powerAssertionsEnabled,
+      cliModuleCacheDir,
     )
+  }
+
+  /**
+   * The module cache dir as determined by CLI options alone. Used to evaluate the settings and
+   * project files, which are loaded before project evaluator settings are known.
+   */
+  private val cliModuleCacheDir: Path? by lazy {
+    if (cliOptions.noCache) null
+    else cliOptions.normalizedModuleCacheDir ?: IoUtils.getSystemModuleCacheDir()
   }
 
   private val evaluatorSettings: PklEvaluatorSettings? by lazy {

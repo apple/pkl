@@ -362,4 +362,56 @@ class ProjectTest {
     assertThat(project.evaluatorSettings.externalModuleReaders?.get("foo")!!.executable())
       .isEqualTo("my-command")
   }
+
+  @Test
+  fun `loadFromPath uses the given module cache dir`(@TempDir tempDir: Path) {
+    val cacheDir = tempDir.resolve("cache").also(PackageServer::populateCacheDir)
+    val pklProject = tempDir.resolve("PklProject").writeString(PROJECT_IMPORTING_PACKAGE)
+    val project =
+      Project.loadFromPath(
+        pklProject,
+        SecurityManagers.defaultManager,
+        null,
+        StackFrameTransformers.empty,
+        mapOf(),
+        false,
+        cacheDir,
+      )
+    assertThat(project.evaluatorSettings.externalProperties).containsEntry("fruit", "Apple")
+  }
+
+  @Test
+  fun `loadFromPath does not use a cache if module cache dir is null`(@TempDir tempDir: Path) {
+    val pklProject = tempDir.resolve("PklProject").writeString(PROJECT_IMPORTING_PACKAGE)
+    assertThrows<PklException> {
+      Project.loadFromPath(
+        pklProject,
+        SecurityManagers.defaultManager,
+        null,
+        StackFrameTransformers.empty,
+        mapOf(),
+        false,
+        null,
+      )
+    }
+  }
+
+  companion object {
+    // `localhost:0` is never reachable without a test HTTP client, so this package can only be
+    // resolved from a pre-populated cache dir.
+    private val PROJECT_IMPORTING_PACKAGE =
+      // language=pkl
+      """
+      amends "pkl:Project"
+
+      import "package://localhost:0/fruit@1.0.5#/catalog/apple.pkl"
+
+      evaluatorSettings {
+        externalProperties {
+          ["fruit"] = apple.name
+        }
+      }
+      """
+        .trimIndent()
+  }
 }

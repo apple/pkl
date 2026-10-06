@@ -125,7 +125,9 @@ public final class ExecutorSpiImpl implements ExecutorSpi {
                 securityManager,
                 null,
                 transformer,
-                options.getEnvironmentVariables());
+                options.getEnvironmentVariables(),
+                false,
+                options.getModuleCacheDir());
         builder.setProjectDependencies(project.getDependencies());
       }
 
