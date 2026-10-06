@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.shadowJar
 import kotlin.io.path.createDirectories
 import kotlin.io.path.writeText
 import org.gradle.kotlin.dsl.support.serviceOf
@@ -22,7 +21,7 @@ plugins {
   id("pklJavaLibrary")
   //  id("pklPublishLibrary")
   id("com.gradleup.shadow")
-  id("pklSourceBundle")
+  id("pklJvmSourceBundle")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)

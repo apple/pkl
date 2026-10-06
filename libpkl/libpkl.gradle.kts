@@ -23,7 +23,7 @@ plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
-  id("pklSourceBundle")
+  id("pklNativeSourceBundle")
 }
 
 val stagedMacAarch64NativeLibrary: Configuration =
@@ -152,19 +152,20 @@ val windowsNativeImageAmd64 =
     extraNativeImageArgs.addAll("-Dfile.encoding=UTF-8", "-H:-CheckToolchain")
   }
 
+val nativeImageBuildTask =
+  when (buildInfo.targetMachine) {
+    Target.MacosAarch64 -> macNativeImageAarch64
+    Target.LinuxAarch64 -> linuxNativeImageAarch64
+    Target.LinuxAmd64 -> linuxNativeImageAmd64
+    Target.WindowsAmd64 -> windowsNativeImageAmd64
+    Target.AlpineLinuxAmd64 -> alpineLinuxNativeImageAmd64
+  }
+
 val buildNativeImageLibrary =
   tasks.register("buildNativeImageLibrary") {
     group = "build"
-    val underlyingTask =
-      when (buildInfo.targetMachine) {
-        Target.MacosAarch64 -> macNativeImageAarch64
-        Target.LinuxAarch64 -> linuxNativeImageAarch64
-        Target.LinuxAmd64 -> linuxNativeImageAmd64
-        Target.WindowsAmd64 -> windowsNativeImageAmd64
-        Target.AlpineLinuxAmd64 -> alpineLinuxNativeImageAmd64
-      }
-    dependsOn(underlyingTask)
-    outputs.files(underlyingTask)
+    dependsOn(nativeImageBuildTask)
+    outputs.files(nativeImageBuildTask)
   }
 
 val buildPklObjectFile =
@@ -287,6 +288,17 @@ val buildSharedLibrary =
       linkerFlags.add("--version-script=${versionScriptFile.absolutePath}")
     }
   }
+
+// Source bundles for each target are registered by `pklNativeSourceBundle`. libpkl additionally
+// includes its own C sources, which are the same for all targets.
+val libpklNativeSourcesJar =
+  tasks.register<Zip>("libpklNativeSourcesJar") {
+    archiveFileName = "libpkl-native-sources.jar"
+    destinationDirectory = layout.buildDirectory.dir("tmp/nativeImageSources")
+    from("src/main/c")
+  }
+
+sourceBundleSpec { extraNativeSources.from(libpklNativeSourcesJar) }
 
 val Target.outputDir
   get() = layout.buildDirectory.dir("native-libs/$targetName")

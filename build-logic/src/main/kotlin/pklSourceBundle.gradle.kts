@@ -13,24 +13,37 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-import gradle.kotlin.dsl.accessors._838481aba483a75943d3cbc72e5f5c7e.runtimeClasspath
+plugins { id("pklAllProjects") }
 
-// ideally we'd configure this automatically based on project dependencies
-val firstPartySourcesJarsConfiguration: Configuration =
-  configurations.maybeCreate("firstPartySourcesJars")
+// Sources jars of the first-party projects that this project depends on.
+// Ideally we'd configure this automatically based on project dependencies.
+val firstPartySourcesJars: Configuration = configurations.create("firstPartySourcesJars")
 
-val resolveBundleSourcesJars =
-  tasks.register<ResolveSourcesJars>("resolveBundleSourcesJars") {
-    configuration.set(configurations.runtimeClasspath)
-    outputDir.set(layout.buildDirectory.dir("resolveBundleSourcesJars"))
+// Sources jars of third-party dependencies. Project dependencies are not covered by this; they
+// are added to `firstPartySourcesJars` instead.
+val resolveSourcesJars =
+  tasks.register<ResolveSourcesJars>("resolveSourcesJars") {
+    configuration.set(configurations.named("runtimeClasspath"))
+    outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
   }
 
-val sourceBundle =
-  tasks.register<BuildSourceBundle>("sourceBundle") {
-    plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    plugins.withId("pklKotlinLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    inputJars.from(firstPartySourcesJarsConfiguration)
-    inputJars.from(resolveBundleSourcesJars.map { fileTree(it.outputDir) })
+val sourceBundleSpec = extensions.create<SourceBundleSpec>("sourceBundleSpec")
 
-    outputZip = layout.buildDirectory.file("${project.name}-${project.version}-sourcebundle.zip")
-  }
+sourceBundleSpec.staticMuslLibc.convention(false)
+
+plugins.withId("pklJavaLibrary") { sourceBundleSpec.firstPartyJars.from(tasks.named("sourcesJar")) }
+
+plugins.withId("pklKotlinLibrary") {
+  sourceBundleSpec.firstPartyJars.from(tasks.named("sourcesJar"))
+}
+
+sourceBundleSpec.firstPartyJars.from(firstPartySourcesJars)
+
+sourceBundleSpec.dependencyJars.from(resolveSourcesJars.map { fileTree(it.outputDir) })
+
+// Builds every source bundle of this project; there is one for each variant that the project is
+// distributed as. The variants are registered by `pklJvmSourceBundle` and `pklNativeSourceBundle`.
+tasks.register("sourceBundle") {
+  group = "build"
+  description = "Builds the source bundles of all variants of this project."
+}

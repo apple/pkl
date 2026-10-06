@@ -59,7 +59,6 @@ dependencies {
   firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
-  firstPartySourcesJars(project(":pkl-formatter", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
 }
 
