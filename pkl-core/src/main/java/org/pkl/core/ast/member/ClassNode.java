@@ -38,7 +38,7 @@ public final class ClassNode extends ExpressionNode {
   @Children private final ExpressionNode[] annotationNodes;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<VmTypeParameter> typeParameters;
+  private final List<TypeParameter> typeParameters;
   private final @Nullable ModuleInfo moduleInfo;
   // null iff this class is pkl.base#Any
   @Child private @Nullable UnresolvedTypeNode unresolvedSupertypeNode;
@@ -56,7 +56,7 @@ public final class ClassNode extends ExpressionNode {
       ExpressionNode[] annotationNodes,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       @Nullable ModuleInfo moduleInfo,
       @Nullable UnresolvedTypeNode unresolvedSupertypeNode,
       EconomicMap<Object, ObjectMember> prototypeMembers,

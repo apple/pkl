@@ -30,7 +30,7 @@ public class RefNodes {
         VirtualFrame frame, @SuppressWarnings("unused") VmTyped self, VmTyped domain, Object data) {
       var typeArguments = VmUtils.getTypeArgumentsOrNull(frame);
       var referentType =
-          typeArguments == null ? VmType.UnknownType.INSTANCE : typeArguments[1].resolveType();
+          typeArguments == null ? VmType.UnknownType.INSTANCE : typeArguments[1].reify();
       return new VmReference(domain, referentType, data);
     }
   }

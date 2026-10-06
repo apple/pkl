@@ -46,7 +46,7 @@ public final class VmTypeAlias extends VmValue {
   private final String simpleName;
   private final VmTyped module;
   private final String qualifiedName;
-  private final List<VmTypeParameter> typeParameters;
+  private final List<TypeParameter> typeParameters;
   private final MaterializedFrame enclosingFrame;
 
   private @Nullable TypeNode typeNode;
@@ -70,7 +70,7 @@ public final class VmTypeAlias extends VmValue {
       String simpleName,
       VmTyped module,
       String qualifiedName,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       MaterializedFrame enclosingFrame) {
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
@@ -257,7 +257,7 @@ public final class VmTypeAlias extends VmValue {
                 simpleName,
                 getModuleName(),
                 qualifiedName,
-                VmTypeParameter.export(typeParameters),
+                TypeParameter.export(typeParameters),
                 module.getVmClass().export());
 
         for (var parameter : __pTypeAlias.getTypeParameters()) {
