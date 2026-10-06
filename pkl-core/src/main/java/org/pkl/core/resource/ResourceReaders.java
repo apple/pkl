@@ -357,7 +357,7 @@ public final class ResourceReaders {
         var request = HttpRequest.newBuilder(uri).build();
         var response =
             httpClient.send(
-                request, BodyHandlers.ofByteArray(), securityManager::checkReadResource);
+                request, BodyHandlers.ofByteArray(), securityManager::checkResolveResource);
         if (response.statusCode() == 404) return Optional.empty();
         HttpUtils.checkHasStatusCode200(response);
         return Optional.of(new Resource(uri, response.body()));
@@ -550,7 +550,7 @@ public final class ResourceReaders {
       if (local != null) {
         var resourceManager = VmContext.get(null).getResourceManager();
         var securityManager = VmContext.get(null).getSecurityManager();
-        securityManager.checkReadResource(local);
+        securityManager.checkResolveResource(local);
         var reader = resourceManager.getResourceReader(local);
         if (reader == null) {
           throw new VmExceptionBuilder()
