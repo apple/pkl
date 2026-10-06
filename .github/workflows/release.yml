@@ -244,6 +244,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-cli-linux-amd64
         path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-linux-amd64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -295,6 +300,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-cli-linux-aarch64
         path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-linux-aarch64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -345,6 +355,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-cli-macOS-aarch64
         path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-macOS-aarch64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -452,6 +467,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-cli-alpine-linux-amd64
         path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-alpine-linux-amd64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -498,6 +518,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-cli-windows-amd64
         path: pkl-cli*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-cli-windows-amd64
+        path: pkl-cli*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -547,6 +572,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-doc-linux-amd64
         path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-linux-amd64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -598,6 +628,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-doc-linux-aarch64
         path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-linux-aarch64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -648,6 +683,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-doc-macOS-aarch64
         path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-macOS-aarch64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -755,6 +795,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-doc-alpine-linux-amd64
         path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-alpine-linux-amd64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -801,6 +846,11 @@ jobs:
       with:
         name: deploy-artifacts-pkl-doc-windows-amd64
         path: pkl-doc*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-pkl-doc-windows-amd64
+        path: pkl-doc*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -850,6 +900,11 @@ jobs:
       with:
         name: deploy-artifacts-libpkl-linux-amd64
         path: libpkl/build/native-libs/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-linux-amd64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -901,6 +956,11 @@ jobs:
       with:
         name: deploy-artifacts-libpkl-linux-aarch64
         path: libpkl/build/native-libs/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-linux-aarch64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -951,6 +1011,11 @@ jobs:
       with:
         name: deploy-artifacts-libpkl-macOS-aarch64
         path: libpkl*/build/executable/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-macOS-aarch64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -1058,6 +1123,11 @@ jobs:
       with:
         name: deploy-artifacts-libpkl-alpine-linux-amd64
         path: libpkl*/build/distributions/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-alpine-linux-amd64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
@@ -1106,6 +1176,11 @@ jobs:
       with:
         name: deploy-artifacts-libpkl-windows-amd64
         path: libpkl*/build/distributions/**/*
+    - name: Upload compiled classes list
+      uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5
+      with:
+        name: compiled-classes-libpkl-windows-amd64
+        path: libpkl*/build/compiled-classes/**/*
     - name: Upload Test Result XML
       if: '!cancelled()'
       uses: actions/upload-artifact@330a01c490aca151604b8cf639adc76d48f6c5d4 # v5

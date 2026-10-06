@@ -253,7 +253,7 @@ val buildSharedLibrary =
 
     if (buildInfo.os.isMacOS) {
       frameworks.addAll("Foundation", "CoreServices")
-      linkerFlags.addAll("-current_version", project.version.toString())
+      linkerFlags.addAll("-current_version", project.version.toString().substringBefore("-"))
       linkerFlags.addAll("-compatibility_version", "0.1.0")
       // prevent JNI symbols from being exported and clobbering the symbol table
       val exportedSymbolsFile = file("src/main/c/pkl.exported_symbols")
