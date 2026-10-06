@@ -30,11 +30,10 @@ public final class DelegateToExtraStorageObjOrParentNode extends ExpressionNode 
     var owner = VmUtils.getOwner(frame);
     var delegate = (VmObjectLike) owner.getExtraStorage();
     var memberKey = VmUtils.getMemberKey(frame);
-    var result =
-        VmUtils.readMemberOrNull(delegate, memberKey, VmUtils.getTypeArgumentsOrNull(frame));
+    var result = VmUtils.readMemberOrNull(delegate, memberKey);
     if (result != null) return result;
     var parent = owner.getParent();
     assert parent != null;
-    return VmUtils.readMember(parent, memberKey, VmUtils.getTypeArgumentsOrNull(frame));
+    return VmUtils.readMember(parent, memberKey);
   }
 }

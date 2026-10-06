@@ -326,13 +326,7 @@ public final class VmUtils {
   }
 
   public static Object readMember(VmObjectLike receiver, Object memberKey) {
-    return readMember(receiver, memberKey, IndirectCallNode.getUncached(), null);
-  }
-
-  @TruffleBoundary
-  public static Object readMember(
-      VmObjectLike receiver, Object memberKey, VmTypeArgument @Nullable [] frameTypeArguments) {
-    var result = readMemberOrNull(receiver, memberKey, frameTypeArguments);
+    var result = readMemberOrNull(receiver, memberKey);
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();
@@ -340,32 +334,13 @@ public final class VmUtils {
   }
 
   public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver,
-      Object memberKey,
-      boolean checkType,
-      VmTypeArgument @Nullable [] frameTypeArguments) {
-    return readMemberOrNull(
-        receiver, memberKey, checkType, IndirectCallNode.getUncached(), frameTypeArguments);
-  }
-
-  @TruffleBoundary
-  public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, boolean checkType) {
-    return readMemberOrNull(receiver, memberKey, checkType, IndirectCallNode.getUncached(), null);
+    return readMemberOrNull(receiver, memberKey, checkType, IndirectCallNode.getUncached());
   }
 
   public static @Nullable Object readMemberOrNull(
       VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
-    return readMemberOrNull(receiver, memberKey, true, callNode, null);
-  }
-
-  @TruffleBoundary
-  public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver,
-      Object memberKey,
-      IndirectCallNode callNode,
-      VmTypeArgument @Nullable [] frameTypeArguments) {
-    return readMemberOrNull(receiver, memberKey, true, callNode, frameTypeArguments);
+    return readMemberOrNull(receiver, memberKey, true, callNode);
   }
 
   public static @Nullable Object readMemberOrNull(VmObjectLike receiver, Object memberKey) {
@@ -373,39 +348,7 @@ public final class VmUtils {
     if (cachedValue != null) {
       return cachedValue;
     }
-    return readMemberOrNull(receiver, memberKey, IndirectCallNode.getUncached(), null);
-  }
-
-  @TruffleBoundary
-  public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver, Object memberKey, VmTypeArgument @Nullable [] frameTypeArguments) {
-    var cachedValue = receiver.getCachedValue(memberKey);
-    if (cachedValue != null) {
-      return cachedValue;
-    }
-    return readMemberOrNull(
-        receiver, memberKey, true, IndirectCallNode.getUncached(), frameTypeArguments);
-  }
-
-  /**
-   * Before calling this method, always try `VmObject.getCachedValue()`. (This method writes to the
-   * cache, but doesn't read from it.)
-   */
-  @TruffleBoundary
-  public static Object doReadMember(
-      VmObjectLike receiver,
-      VmObjectLike owner,
-      Object memberKey,
-      ObjectMember member,
-      VmTypeArgument @Nullable [] frameTypeArguments) {
-    return doReadMember(
-        receiver,
-        owner,
-        memberKey,
-        member,
-        true,
-        IndirectCallNode.getUncached(),
-        frameTypeArguments);
+    return readMemberOrNull(receiver, memberKey, true, IndirectCallNode.getUncached());
   }
 
   /**
@@ -414,22 +357,12 @@ public final class VmUtils {
    */
   public static Object doReadMember(
       VmObjectLike receiver, VmObjectLike owner, Object memberKey, ObjectMember member) {
-    return doReadMember(
-        receiver, owner, memberKey, member, true, IndirectCallNode.getUncached(), null);
+    return doReadMember(receiver, owner, memberKey, member, true, IndirectCallNode.getUncached());
   }
 
   public static Object readMember(
       VmObjectLike receiver, Object memberKey, IndirectCallNode callNode) {
-    return readMember(receiver, memberKey, callNode, null);
-  }
-
-  @TruffleBoundary
-  public static Object readMember(
-      VmObjectLike receiver,
-      Object memberKey,
-      IndirectCallNode callNode,
-      VmTypeArgument @Nullable [] frameTypeArguments) {
-    var result = readMemberOrNull(receiver, memberKey, true, callNode, frameTypeArguments);
+    var result = readMemberOrNull(receiver, memberKey, true, callNode);
     if (result != null) return result;
     CompilerDirectives.transferToInterpreter();
 
@@ -440,11 +373,7 @@ public final class VmUtils {
   }
 
   public static @Nullable Object readMemberOrNull(
-      VmObjectLike receiver,
-      Object memberKey,
-      boolean checkType,
-      IndirectCallNode callNode,
-      VmTypeArgument @Nullable [] frameTypeArguments) {
+      VmObjectLike receiver, Object memberKey, boolean checkType, IndirectCallNode callNode) {
     assert (!(memberKey instanceof Identifier identifier) || !identifier.isLocalProp())
         : "Must use ReadLocalPropertyNode for local properties.";
 
@@ -454,8 +383,7 @@ public final class VmUtils {
     for (var owner = receiver; owner != null; owner = owner.getParent()) {
       var member = owner.getMember(memberKey);
       if (member == null) continue;
-      return doReadMember(
-          receiver, owner, memberKey, member, checkType, callNode, frameTypeArguments);
+      return doReadMember(receiver, owner, memberKey, member, checkType, callNode);
     }
 
     return null;
@@ -471,8 +399,7 @@ public final class VmUtils {
       Object memberKey,
       ObjectMember member,
       boolean checkType,
-      IndirectCallNode callNode,
-      VmTypeArgument @Nullable [] frameTypeArguments) {
+      IndirectCallNode callNode) {
 
     final var constantValue = member.getConstantValue();
 
@@ -489,8 +416,7 @@ public final class VmUtils {
         receiver.setCachedValue(memberKey, cachedValue);
         return cachedValue;
       }
-      var result =
-          doReadMember(owner, owner, memberKey, member, checkType, callNode, frameTypeArguments);
+      var result = doReadMember(owner, owner, memberKey, member, checkType, callNode);
       receiver.setCachedValue(memberKey, result);
       return result;
     }
@@ -505,15 +431,14 @@ public final class VmUtils {
           try {
             if (checkType) {
               result =
-                  callNode.call(
-                      callTarget, receiver, property.getOwner(), frameTypeArguments, constantValue);
+                  callNode.call(callTarget, receiver, property.getOwner(), null, constantValue);
             } else {
               result =
                   callNode.call(
                       callTarget,
                       receiver,
                       property.getOwner(),
-                      frameTypeArguments,
+                      null,
                       constantValue,
                       VmUtils.SKIP_TYPECHECK_MARKER);
             }
@@ -537,16 +462,11 @@ public final class VmUtils {
     var callTarget = member.getCallTarget();
     Object result;
     if (checkType) {
-      result = callNode.call(callTarget, receiver, owner, frameTypeArguments, memberKey);
+      result = callNode.call(callTarget, receiver, owner, null, memberKey);
     } else {
       result =
           callNode.call(
-              callTarget,
-              receiver,
-              owner,
-              frameTypeArguments,
-              memberKey,
-              VmUtils.SKIP_TYPECHECK_MARKER);
+              callTarget, receiver, owner, null, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
     }
     receiver.setCachedValue(memberKey, result);
     return result;

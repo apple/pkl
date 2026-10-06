@@ -89,9 +89,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
     if (ownerAndMember == null) {
       // not found -> apply lambda contained in `default` property
       var defaultFunction =
-          (VmFunction)
-              VmUtils.readMemberOrNull(
-                  receiver, Identifier.DEFAULT, callNode, VmUtils.getTypeArgumentsOrNull(frame));
+          (VmFunction) VmUtils.readMemberOrNull(receiver, Identifier.DEFAULT, callNode);
       assert defaultFunction != null;
       return applyLambdaNode.execute(defaultFunction, key);
     }
