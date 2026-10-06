@@ -1,6 +1,6 @@
 import "pkl:ref"
 
-class D extends ref.Domain {
+class D extends ref.AbstractDomain {
   function renderReference(reference: ref.Reference<this, Any>): String = throw("not supported")
 }
 local d: D = new {}
