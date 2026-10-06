@@ -54,3 +54,16 @@ polymorphism {
   res4 = "Expected 1 type argument but got 2."
   res5 = "hi bob"
 }
+lexical {
+  res1 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
+}
+typeCast {
+  res1 {
+    "Bobbert"
+  }
+  res2 = "Type constraint `length > 10` violated. Value: \"Bobbert\""
+}
+nestedWithIndexOffset {
+  res = 1
+}

@@ -489,9 +489,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (args == null) {
       if (identifier.getIdentifiers().size() == 1) {
         var text = identifier.getIdentifiers().get(0).getValue();
-        var typeParameter = symbolTable.findTypeParameter(text);
-        if (typeParameter != null) {
-          return new UnresolvedTypeNode.TypeVariable(createSourceSection(type), typeParameter);
+        var typeParameterResolution = symbolTable.resolveTypeParameter(text);
+        if (typeParameterResolution != null) {
+          return new UnresolvedTypeNode.TypeVariable(
+              createSourceSection(type),
+              typeParameterResolution.typeParameter(),
+              typeParameterResolution.levelsUp());
         }
       }
 
