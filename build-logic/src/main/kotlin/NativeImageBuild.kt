@@ -77,6 +77,8 @@ abstract class NativeImageBuild : DefaultTask() {
 
   @get:InputFile @get:Optional abstract val nativeCompilerPath: RegularFileProperty
 
+  @get:Internal abstract val compiledClassesFile: RegularFileProperty
+
   @get:Internal abstract val outputDir: DirectoryProperty
 
   @get:Inject protected abstract val execOperations: ExecOperations
@@ -194,6 +196,12 @@ abstract class NativeImageBuild : DefaultTask() {
         .asFile
         .toPath()
         .also { it.createDirectories() }
+    val reportsDir = workingDir.resolve("reports")
+    // reports are timestamped and never cleaned up by native-image; make sure we read a fresh one
+    reportsDir
+      .toFile()
+      .listFiles { f -> f.name.startsWith(COMPILATION_REPORT_PREFIX) }
+      ?.forEach { it.delete() }
     val execResult = execOperations.exec {
       val exclusions =
         listOf(buildInfo.libs.findLibrary("graalSdk").get()).map { it.get().module.name }
@@ -205,6 +213,8 @@ abstract class NativeImageBuild : DefaultTask() {
         add("--color=always")
         // must be emitted before any experimental options are used
         add("-H:+UnlockExperimentalVMOptions")
+        // emit `reports/universe_compilation_*.txt`, listing all compiled methods
+        add("-H:+PrintUniverse")
         // currently gives a deprecation warning, but we've been told
         // that the "initialize everything at build time" *CLI* option is likely here to stay
         add("--initialize-at-build-time=")
@@ -293,6 +303,36 @@ abstract class NativeImageBuild : DefaultTask() {
         targetDir.deleteRecursively()
         sourceDir.copyRecursively(targetDir, overwrite = true)
       }
+      writeCompiledClasses(reportsDir.toFile())
     }
+  }
+
+  private fun writeCompiledClasses(reportsDir: java.io.File) {
+    val report =
+      reportsDir
+        .listFiles { f -> f.name.startsWith(COMPILATION_REPORT_PREFIX) }
+        ?.maxByOrNull { it.lastModified() }
+        ?: throw GradleException("Expected to find $COMPILATION_REPORT_PREFIX*.txt in $reportsDir")
+    // Method lines look like `336 2232 apple.security.AppleProvider$Service.newInstance(...): ...`
+    // (offset, size, qualified method name, signature).
+    val methodLine = Regex("""^\s*\d+\s+\d+\s+([^\s(]+)\(""")
+    val classNames = sortedSetOf<String>()
+    report.useLines { lines ->
+      for (line in lines) {
+        val method = methodLine.find(line)?.groupValues?.get(1) ?: continue
+        // Nested, hidden, and lambda classes all live in their top-level class' source file.
+        classNames.add(method.substringBeforeLast('.').substringBefore('$').substringBefore('/'))
+      }
+    }
+    if (classNames.isEmpty()) {
+      throw GradleException("Found no compiled methods in $report")
+    }
+    val file = compiledClassesFile.get().asFile
+    file.parentFile.mkdirs()
+    file.writeText(classNames.joinToString("\n", postfix = "\n"))
+  }
+
+  private companion object {
+    const val COMPILATION_REPORT_PREFIX = "universe_compilation_"
   }
 }

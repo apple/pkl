@@ -76,3 +76,11 @@ val installGraalVmAmd64 =
     dependsOn(verifyGraalVmAmd64)
     graalVm = buildInfo.graalVmAmd64
   }
+
+// Picked up by GitHub Actions and uploaded as a build artifact
+tasks.withType<NativeImageBuild>().configureEach {
+  compiledClassesFile =
+    layout.buildDirectory.file(
+      "compiled-classes/${project.name}-${project.version}-${buildInfo.targetMachine.targetName}.txt"
+    )
+}
