@@ -1609,14 +1609,18 @@ final class ParserImpl {
   private TypeParameter parseTypeParameter(boolean allowVarianceModifier) {
     TypeParameter.Variance variance = null;
     var start = spanLookahead;
-    if (allowVarianceModifier) {
-      if (lookahead == Token.IN) {
-        next();
-        variance = TypeParameter.Variance.IN;
-      } else if (lookahead == Token.OUT) {
-        next();
-        variance = TypeParameter.Variance.OUT;
+    if (lookahead == Token.IN) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
       }
+      next();
+      variance = TypeParameter.Variance.IN;
+    } else if (lookahead == Token.OUT) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
+      }
+      next();
+      variance = TypeParameter.Variance.OUT;
     }
     var identifier = parseIdentifier();
     return new TypeParameter(variance, identifier, start.endWith(identifier.span()));

@@ -174,7 +174,7 @@ public abstract class TypeNode extends PklNode {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
           if (typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVariable
-                  && typeVariable.typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD)) {
+                  && typeVariable.typeParameter.ownerType() == TypeParameter.OwnerType.METHOD)) {
             ret.set(false);
             return false;
           }
@@ -205,7 +205,7 @@ public abstract class TypeNode extends PklNode {
           if (typeNode instanceof ConstrainedTypeNode
               || typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVar
-                  && typeVar.getTypeParameter().ownerType() == VmTypeParameter.OwnerType.METHOD)) {
+                  && typeVar.getTypeParameter().ownerType() == TypeParameter.OwnerType.METHOD)) {
             ret.set(true);
             return false;
           }
@@ -2158,16 +2158,16 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
-    private final VmTypeParameter typeParameter;
+    private final TypeParameter typeParameter;
     private final int levelsUp;
-    @Child private EvalTypeArgumentNode evalTypeArgumentNode;
+    @Child private CallTypeArgumentNode callTypeArgumentNode;
 
     public TypeVariableNode(
-        SourceSection sourceSection, VmTypeParameter typeParameter, int levelsUp) {
+        SourceSection sourceSection, TypeParameter typeParameter, int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
       this.levelsUp = levelsUp;
-      evalTypeArgumentNode = EvalTypeArgumentNodeGen.create(sourceSection);
+      callTypeArgumentNode = CallTypeArgumentNodeGen.create(sourceSection);
     }
 
     @Override
@@ -2175,13 +2175,13 @@ public abstract class TypeNode extends PklNode {
       return new VmType.TypeVariableType(typeParameter);
     }
 
-    public VmTypeParameter getTypeParameter() {
+    public TypeParameter getTypeParameter() {
       return typeParameter;
     }
 
     @Override
     public boolean isNoopTypeCheck() {
-      return levelsUp < 0 || typeParameter.ownerType() != VmTypeParameter.OwnerType.METHOD;
+      return levelsUp < 0 || typeParameter.ownerType() != TypeParameter.OwnerType.METHOD;
     }
 
     @Override
@@ -2200,7 +2200,7 @@ public abstract class TypeNode extends PklNode {
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
       if (methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
-        return evalTypeArgumentNode.execute(frame, typeArg, value);
+        return callTypeArgumentNode.execute(frame, typeArg, value);
       }
 
       // do nothing

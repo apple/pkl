@@ -25,9 +25,9 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.runtime.VmTypeArgument;
 
-public abstract class EvalTypeArgumentNode extends PklNode {
+public abstract class CallTypeArgumentNode extends PklNode {
 
-  public EvalTypeArgumentNode(SourceSection sourceSection) {
+  public CallTypeArgumentNode(SourceSection sourceSection) {
     super(sourceSection);
   }
 

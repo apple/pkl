@@ -799,13 +799,13 @@ public abstract sealed class VmType {
   }
 
   public static final class TypeVariableType extends VmType {
-    private final VmTypeParameter typeParameter;
+    private final TypeParameter typeParameter;
 
-    public TypeVariableType(VmTypeParameter typeParameter) {
+    public TypeVariableType(TypeParameter typeParameter) {
       this.typeParameter = typeParameter;
     }
 
-    public VmTypeParameter getTypeParameter() {
+    public TypeParameter getTypeParameter() {
       return typeParameter;
     }
 
@@ -837,9 +837,9 @@ public abstract sealed class VmType {
     @Override
     public VmType reify(VirtualFrame frame) {
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (typeParameter.ownerType() == VmTypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+      if (typeParameter.ownerType() == TypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
-        return typeArg.resolveType();
+        return typeArg.reify();
       }
 
       return this;

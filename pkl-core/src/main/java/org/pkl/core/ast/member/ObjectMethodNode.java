@@ -31,7 +31,7 @@ import org.pkl.core.runtime.*;
 public final class ObjectMethodNode extends RegularMemberNode {
   private final VmLanguage language;
   private final int parameterCount;
-  private final List<VmTypeParameter> typeParameters;
+  private final List<TypeParameter> typeParameters;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
 
@@ -43,7 +43,7 @@ public final class ObjectMethodNode extends RegularMemberNode {
       ObjectMember member,
       ExpressionNode bodyNode,
       int parameterCount,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode) {
     super(language, descriptor, member, bodyNode);

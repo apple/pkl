@@ -1,7 +1,5 @@
 –– Pkl Error ––
-Keyword `in` is not allowed here.
-
-If you must use this name as identifier, enclose it in backticks.
+Variance modifiers may only be applied to type parameters on classes.
 
 x | function foo<in T>() = null
                  ^^

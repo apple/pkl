@@ -1362,12 +1362,16 @@ class GenericParserImpl {
 
   private Node parseTypeParameter(boolean allowVarianceModifier) {
     var children = new ArrayList<Node>();
-    if (allowVarianceModifier) {
-      if (lookahead == Token.IN) {
-        children.add(makeTerminal(next()));
-      } else if (lookahead == Token.OUT) {
-        children.add(makeTerminal(next()));
+    if (lookahead == Token.IN) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
       }
+      children.add(makeTerminal(next()));
+    } else if (lookahead == Token.OUT) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
+      }
+      children.add(makeTerminal(next()));
     }
     children.add(parseIdentifier());
     return new Node(NodeType.TYPE_PARAMETER, children);

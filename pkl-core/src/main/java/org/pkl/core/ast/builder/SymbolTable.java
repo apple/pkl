@@ -37,9 +37,9 @@ import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
-import org.pkl.core.runtime.VmTypeParameter;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.util.ArrayUtils;
 import org.pkl.core.util.LateInit;
@@ -59,10 +59,10 @@ public final class SymbolTable {
     return currentScope;
   }
 
-  public record TypeParameterResolution(VmTypeParameter typeParameter, int levelsUp) {}
+  public record TypeParameterResolution(TypeParameter typeParameter, int levelsUp) {}
 
   public @Nullable TypeParameterResolution resolveTypeParameter(String name) {
-    VmTypeParameter result;
+    TypeParameter result;
     var levelsUp = 0;
     for (var scope = currentScope; scope != null; scope = scope.getParent()) {
       result = scope.getTypeParameter(name);
@@ -79,7 +79,7 @@ public final class SymbolTable {
   public ObjectMember enterClass(
       Identifier name,
       int modifiers,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
         new ClassScope(
@@ -94,7 +94,7 @@ public final class SymbolTable {
 
   public ObjectMember enterTypeAlias(
       Identifier name,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
     try {
       this.isInTypeAliasScope = true;
@@ -116,7 +116,7 @@ public final class SymbolTable {
       ConstLevel constLevel,
       FrameSlotVariable[] bindings,
       FrameDescriptorBuilder frameDescriptorBuilder,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       Function<MethodScope, T> nodeFactory) {
     return doEnter(
         new MethodScope(
@@ -339,7 +339,7 @@ public final class SymbolTable {
       return frameDescriptorBuilder.build();
     }
 
-    public @Nullable VmTypeParameter getTypeParameter(String name) {
+    public @Nullable TypeParameter getTypeParameter(String name) {
       return null;
     }
 
@@ -684,7 +684,7 @@ public final class SymbolTable {
   }
 
   public abstract static class TypeParameterizableScope extends Scope {
-    private final List<VmTypeParameter> typeParameters;
+    private final List<TypeParameter> typeParameters;
 
     public TypeParameterizableScope(
         Scope parent,
@@ -692,7 +692,7 @@ public final class SymbolTable {
         String qualifiedName,
         ConstLevel constLevel,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<VmTypeParameter> typeParameters,
+        List<TypeParameter> typeParameters,
         int[] forGeneratorSlots,
         int[] parameterSlots) {
       super(
@@ -707,7 +707,7 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable VmTypeParameter getTypeParameter(String name) {
+    public @Nullable TypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
         if (name.equals(param.name())) return param;
       }
@@ -767,7 +767,7 @@ public final class SymbolTable {
         ConstLevel constLevel,
         FrameSlotVariable[] bindings,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<VmTypeParameter> typeParameters) {
+        List<TypeParameter> typeParameters) {
       super(
           parent,
           name,
@@ -1031,7 +1031,7 @@ public final class SymbolTable {
         String qualifiedName,
         int modifiers,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<VmTypeParameter> typeParameters) {
+        List<TypeParameter> typeParameters) {
       super(
           parent,
           name,
@@ -1065,7 +1065,7 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<VmTypeParameter> typeParameters) {
+        List<TypeParameter> typeParameters) {
       super(
           parent,
           name,

@@ -36,7 +36,6 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PklBugException;
 import org.pkl.core.SecurityManagerException;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.TypeParameter.Variance;
 import org.pkl.core.ast.ByteConstantValueNode;
 import org.pkl.core.ast.ConstantNode;
@@ -189,6 +188,7 @@ import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.ModuleResolver;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmContext;
@@ -202,7 +202,6 @@ import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmSet;
-import org.pkl.core.runtime.VmTypeParameter;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.LanguageAwareNode;
 import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
@@ -2333,21 +2332,21 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   @Override
-  public List<VmTypeParameter> visitTypeParameterList(@Nullable TypeParameterList ctx) {
+  public List<TypeParameter> visitTypeParameterList(@Nullable TypeParameterList ctx) {
     if (ctx == null) return List.of();
 
     var params = ctx.getParameters();
     var size = params.size();
-    var result = new ArrayList<VmTypeParameter>(size);
+    var result = new ArrayList<TypeParameter>(size);
 
     var parent = ctx.parent();
-    VmTypeParameter.OwnerType ownerType;
+    TypeParameter.OwnerType ownerType;
     if (parent instanceof Class) {
-      ownerType = VmTypeParameter.OwnerType.CLASS;
+      ownerType = TypeParameter.OwnerType.CLASS;
     } else if (parent instanceof TypeAlias) {
-      ownerType = VmTypeParameter.OwnerType.TYPEALIAS;
+      ownerType = TypeParameter.OwnerType.TYPEALIAS;
     } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
-      ownerType = VmTypeParameter.OwnerType.METHOD;
+      ownerType = TypeParameter.OwnerType.METHOD;
     } else {
       throw PklBugException.unreachableCode();
     }
@@ -2357,12 +2356,15 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       Variance variance;
       var nodeVariance = paramCtx.getVariance();
       if (nodeVariance == null) {
-        variance = TypeParameter.Variance.INVARIANT;
+        variance = org.pkl.core.TypeParameter.Variance.INVARIANT;
+      } else if (ownerType != TypeParameter.OwnerType.CLASS) {
+        throw new PklBugException(
+            "found type parameter variance modifier found on declaration that is not a class");
       } else {
         variance =
             switch (nodeVariance) {
-              case IN -> TypeParameter.Variance.CONTRAVARIANT;
-              case OUT -> TypeParameter.Variance.COVARIANT;
+              case IN -> org.pkl.core.TypeParameter.Variance.CONTRAVARIANT;
+              case OUT -> org.pkl.core.TypeParameter.Variance.COVARIANT;
             };
       }
       var parameterName = paramCtx.getIdentifier().getValue();
@@ -2372,7 +2374,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             .withSourceSection(createSourceSection(paramCtx))
             .build();
       }
-      result.add(new VmTypeParameter(variance, parameterName, i, ownerType));
+      result.add(new TypeParameter(variance, parameterName, i, ownerType));
     }
     return result;
   }

@@ -28,7 +28,7 @@ import org.pkl.core.runtime.*;
 
 public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
   private final int parameterCount;
-  private final List<VmTypeParameter> typeParameters;
+  private final List<TypeParameter> typeParameters;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
   private final boolean isReturnTypeChecked;
@@ -45,7 +45,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
       Identifier name,
       String qualifiedName,
       int parameterCount,
-      List<VmTypeParameter> typeParameters,
+      List<TypeParameter> typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode,
       boolean isReturnTypeChecked,

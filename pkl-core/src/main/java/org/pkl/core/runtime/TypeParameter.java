@@ -13,28 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.ast.expression.primary;
+package org.pkl.core.runtime;
 
-import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
-import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.type.TypeNode;
+import java.util.List;
+import org.pkl.core.TypeParameter.Variance;
 
-public final class ExecuteTypeArgumentCheckNode extends ExpressionNode {
-
-  @Child private TypeNode typeNode;
-
-  public ExecuteTypeArgumentCheckNode(SourceSection sourceSection, TypeNode typeNode) {
-    super(sourceSection);
-    this.typeNode = typeNode;
+public record TypeParameter(Variance variance, String name, int index, OwnerType ownerType) {
+  public org.pkl.core.TypeParameter export() {
+    return new org.pkl.core.TypeParameter(variance, name, index);
   }
 
-  @Override
-  public Object executeGeneric(VirtualFrame frame) {
-    return typeNode.execute(frame, frame.getArguments()[3]);
+  public static List<org.pkl.core.TypeParameter> export(List<TypeParameter> typeParameters) {
+    return typeParameters.stream().map(TypeParameter::export).toList();
   }
 
-  public TypeNode getTypeNode() {
-    return typeNode;
+  public enum OwnerType {
+    CLASS,
+    METHOD,
+    TYPEALIAS
   }
 }

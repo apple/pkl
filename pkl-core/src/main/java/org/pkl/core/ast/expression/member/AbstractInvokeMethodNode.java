@@ -17,16 +17,13 @@ package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.SimpleRootNode;
-import org.pkl.core.ast.expression.primary.ExecuteTypeArgumentCheckNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.TypeArgumentTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTypeArgument;
@@ -40,7 +37,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
   @Children protected UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes;
 
   @CompilationFinal(dimensions = 1)
-  protected RootNode @Nullable [] typeArgumentRootNodes;
+  protected TypeArgumentTypeNode @Nullable [] typeArgumentRootNodes;
 
   @CompilationFinal boolean typeArgumentsNeedMaterializedFrame = false;
 
@@ -57,23 +54,18 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
     this.qualifiedName = qualifiedName;
   }
 
-  protected RootNode @Nullable [] getTypeArgumentRootNodes(VirtualFrame frame) {
+  protected TypeArgumentTypeNode @Nullable [] getTypeArgumentRootNodes(VirtualFrame frame) {
     if (typeArgumentRootNodes == null) {
       if (unresolvedTypeArgumentNodes != null) {
         var language = VmLanguage.get(this);
         CompilerDirectives.transferToInterpreterAndInvalidate();
 
-        var rootNodes = new RootNode[unresolvedTypeArgumentNodes.length];
+        var rootNodes = new TypeArgumentTypeNode[unresolvedTypeArgumentNodes.length];
         for (var i = 0; i < rootNodes.length; i++) {
           var typeNode = unresolvedTypeArgumentNodes[i].execute(frame);
           rootNodes[i] =
-              new SimpleRootNode(
-                  language,
-                  FrameDescriptor.newBuilder().build(),
-                  sourceSection,
-                  qualifiedName + ".<typearg#" + (i + 1) + ">",
-                  new ExecuteTypeArgumentCheckNode(sourceSection, typeNode),
-                  true);
+              new TypeArgumentTypeNode(
+                  language, sourceSection, qualifiedName + ".<typearg#" + (i + 1) + ">", typeNode);
           typeArgumentsNeedMaterializedFrame =
               typeArgumentsNeedMaterializedFrame || typeNode.getTypeArgumentRequiresFrame();
         }

@@ -18,11 +18,10 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import com.oracle.truffle.api.nodes.RootNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.ast.expression.primary.ExecuteTypeArgumentCheckNode;
 import org.pkl.core.ast.member.FunctionNode;
+import org.pkl.core.ast.type.TypeArgumentTypeNode;
 import org.pkl.core.ast.type.TypeNode;
 
 /**
@@ -32,9 +31,9 @@ import org.pkl.core.ast.type.TypeNode;
 public class VmTypeArgument {
 
   private final @Nullable MaterializedFrame enclosingFrame;
-  private final RootNode rootNode;
+  private final TypeArgumentTypeNode rootNode;
 
-  public VmTypeArgument(RootNode rootNode, @Nullable MaterializedFrame enclosingFrame) {
+  public VmTypeArgument(TypeArgumentTypeNode rootNode, @Nullable MaterializedFrame enclosingFrame) {
     this.enclosingFrame =
         enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
     this.rootNode = rootNode;
@@ -50,19 +49,14 @@ public class VmTypeArgument {
 
   @TruffleBoundary
   private TypeNode getTypeNode() {
-    return ((ExecuteTypeArgumentCheckNode) rootNode.getChildren().iterator().next()).getTypeNode();
+    return rootNode.getTypeNode();
   }
 
-  public VmType resolveType() {
+  public VmType reify() {
     // assumption: ExecuteTypeArgumentCheckNode is the only child of rootNode
     var type = getTypeNode().getType();
     var frame = enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
-    var newType = type.reify(frame);
-    while (type != newType) {
-      type = newType;
-      newType = type.reify(frame);
-    }
-    return newType;
+    return type.reify(frame);
   }
 
   public @Nullable Object createDefaultValue(
