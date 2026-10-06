@@ -20,7 +20,6 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Cached.Exclusive;
 import com.oracle.truffle.api.dsl.Specialization;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
@@ -80,13 +79,9 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected Object eval(
-      VirtualFrame frame,
-      VmListing listing,
-      long index,
-      @Exclusive @Cached("create()") IndirectCallNode callNode) {
+      VmListing listing, long index, @Exclusive @Cached("create()") IndirectCallNode callNode) {
 
-    var result =
-        VmUtils.readMemberOrNull(listing, index, callNode, VmUtils.getTypeArgumentsOrNull(frame));
+    var result = VmUtils.readMemberOrNull(listing, index, callNode);
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();
@@ -97,20 +92,14 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
 
   @Specialization
   protected Object eval(
-      VirtualFrame frame,
-      VmMapping mapping,
-      Object key,
-      @Exclusive @Cached("create()") IndirectCallNode callNode) {
-    return readMember(mapping, key, callNode, VmUtils.getTypeArgumentsOrNull(frame));
+      VmMapping mapping, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
+    return readMember(mapping, key, callNode);
   }
 
   @Specialization
   protected Object eval(
-      VirtualFrame frame,
-      VmDynamic dynamic,
-      Object key,
-      @Exclusive @Cached("create()") IndirectCallNode callNode) {
-    return readMember(dynamic, key, callNode, VmUtils.getTypeArgumentsOrNull(frame));
+      VmDynamic dynamic, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
+    return readMember(dynamic, key, callNode);
   }
 
   private @Nullable String getReferenceHint(
@@ -153,12 +142,8 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
     return receiver.get(index);
   }
 
-  private Object readMember(
-      VmObject object,
-      Object key,
-      IndirectCallNode callNode,
-      VmTypeArgument @Nullable [] typeArgs) {
-    var result = VmUtils.readMemberOrNull(object, key, callNode, typeArgs);
+  private Object readMember(VmObject object, Object key, IndirectCallNode callNode) {
+    var result = VmUtils.readMemberOrNull(object, key, callNode);
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();

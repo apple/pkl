@@ -103,16 +103,13 @@ public abstract class ReadPropertyNode extends ExpressionNode {
   // https://www.graalvm.org/22.0/graalvm-as-a-platform/language-implementation-framework/TruffleLibraries/#strategy-2-java-interfaces
   @Specialization(guards = "receiver.getClass() == cachedClass", limit = "99")
   protected Object evalObject(
-      VirtualFrame frame,
       Object receiver,
       @Cached("getVmObjectSubclassOrNull(receiver)") Class<? extends VmObjectLike> cachedClass,
       @Cached("create()") IndirectCallNode callNode) {
 
     var object = cachedClass.cast(receiver);
     checkConst(object);
-    var result =
-        VmUtils.readMemberOrNull(
-            object, propertyName, true, callNode, VmUtils.getTypeArgumentsOrNull(frame));
+    var result = VmUtils.readMemberOrNull(object, propertyName, true, callNode);
     if (result != null) return result;
 
     CompilerDirectives.transferToInterpreter();
