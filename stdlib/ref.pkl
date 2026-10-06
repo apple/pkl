@@ -31,16 +31,16 @@
 @Since { version = "0.32.0" }
 module pkl.ref
 
-/// Creates a deferred [Reference] to a value of type [Referent] in the given [domain] and [data].
+/// Creates a deferred [Reference] to a value of type [Type] in the given [domain] and [data].
 ///
 /// Example:
 /// ```
 /// myReference: Reference<MyDomain, Listing<String>> = Reference::<MyDomain, Listing<String>>(domain, data)
 /// ```
-external const function Reference<D, Referent>(
-  domain: D(this is Domain),
+external const function Reference<Domain, Type>(
+  domain: Domain(this is AbstractDomain),
   data: Any,
-): Reference<D, Referent>
+): Reference<Domain, Type>
 
 /// References are an advanced API design tool that enables library authors to express
 /// domain-specific values, whose actual underlying values are not known to Pkl during evaluation.
@@ -107,14 +107,14 @@ external const function Reference<D, Referent>(
 ///
 /// ## Domain
 ///
-/// The [Domain] parameter identifies the system that this reference exists inside.
+/// The domain identifies the system that this reference exists inside.
 /// Additionally, it defines how references should be rendered when Pkl produces textual output.
 ///
 /// Example:
 /// ```
 /// import "pkl:ref"
 ///
-/// class MyDomain extends ref.Domain {
+/// class MyDomain extends ref.AbstractDomain {
 ///   // Define how this domain renders references to strings:
 ///   function renderReference(reference: ref.Reference<MyDomain, Any>): String =
 ///     reference.getData().toString()
@@ -134,7 +134,7 @@ external const function Reference<D, Referent>(
 /// ```
 /// import "pkl:ref"
 ///
-/// class Foo extends ref.Domain {
+/// class Foo extends ref.AbstractDomain {
 ///   function renderReference(reference: ref.Reference<Foo, Any>) =
 ///     "{{ "
 ///     + reference.getData().toString()
@@ -175,9 +175,9 @@ external const function Reference<D, Referent>(
 /// myFile = "{{ outputs/file }}"
 /// myProperty = "{{ outputs/properties[myProperty] }}"
 /// ```
-external class Reference<out D, out Referent> {
+external class Reference<out Domain, out Type> {
   /// Returns the domain this reference belongs to.
-  external function getDomain(): D
+  external function getDomain(): Domain
 
   /// Returns arbitrary data attached to the reference during creation.
   ///
@@ -188,17 +188,17 @@ external class Reference<out D, out Referent> {
   external function getPath(): List<Access>
 
   /// Returns a string representation of this reference using its domain's
-  /// [Domain.renderReference()] method.
+  /// [AbstractDomain.renderReference()] method.
   function toString(): String = getDomain().renderReference(this)
 }
 
 /// A configuration domain that a [Reference] may exist within.
 ///
-/// Only references with the same [Domain] are compatible with each other.
+/// Only references with the same [AbstractDomain] are compatible with each other.
 ///
 /// A domain also determines how [Reference] values are transformed into strings; see
 /// [renderReference()].
-abstract class Domain {
+abstract class AbstractDomain {
   /// Determines how [Reference] instances are transformed to strings by [Reference.toString()] and
   /// string interpolation.
   abstract function renderReference(reference: Reference<this, Any>): String
