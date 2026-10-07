@@ -193,6 +193,8 @@ public final class VmClass extends VmValue {
   private void checkMethodOverrides() {
     var methodCursor = declaredMethods.getEntries();
     while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isLocal()) continue;
       var name = methodCursor.getKey();
       ClassMethod parent = null;
       for (var clazz = superclass; clazz != null; clazz = clazz.superclass) {
@@ -201,7 +203,6 @@ public final class VmClass extends VmValue {
       }
       if (parent == null) continue;
 
-      var method = methodCursor.getValue();
       checkMethodOverride(method, parent);
     }
   }

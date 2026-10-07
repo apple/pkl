@@ -57,8 +57,17 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       MemberLookupMode lookupMode,
       boolean needsConst,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
-    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
+    super(
+        sourceSection,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        methodSlot,
+        parameterSlots,
+        forGeneratorSlots,
+        qualifiedName);
     this.methodName = methodName;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
@@ -71,6 +80,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
     this(
         sourceSection,
@@ -80,6 +91,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
         lookupMode,
         false,
         methodSlot,
+        parameterSlots,
+        forGeneratorSlots,
         qualifiedName);
   }
 
@@ -167,6 +180,9 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
         lookupMode,
         needsConst,
         methodSlot,
+        slotsToCopy, // hack: parameterSlots just concats these two args, no need to store/pass them
+        // separately
+        new int[0],
         qualifiedName,
         this,
         probe);
