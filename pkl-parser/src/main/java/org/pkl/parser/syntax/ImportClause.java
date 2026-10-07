@@ -25,8 +25,12 @@ public final class ImportClause extends AbstractNode {
   private final boolean isGlob;
 
   public ImportClause(
-      StringConstant importStr, boolean isGlob, @Nullable Identifier alias, Span span) {
-    super(span, Arrays.asList(importStr, alias));
+      StringConstant importStr,
+      boolean isGlob,
+      @Nullable Identifier alias,
+      @Nullable ImportDeconstructionList deconstructions,
+      Span span) {
+    super(span, Arrays.asList(importStr, alias, deconstructions));
     this.isGlob = isGlob;
   }
 
@@ -47,6 +51,10 @@ public final class ImportClause extends AbstractNode {
 
   public @Nullable Identifier getAlias() {
     return (Identifier) children.get(1);
+  }
+
+  public @Nullable ImportDeconstructionList getDeconstructions() {
+    return (ImportDeconstructionList) children.get(2);
   }
 
   @Override

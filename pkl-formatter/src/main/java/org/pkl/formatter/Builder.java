@@ -95,11 +95,14 @@ final class Builder {
       case PARAMETER_LIST_ELEMENTS,
           TYPE_PARAMETER_LIST_ELEMENTS,
           TYPE_ARGUMENT_LIST_ELEMENTS,
-          CONSTRAINED_TYPE_ELEMENTS ->
+          CONSTRAINED_TYPE_ELEMENTS,
+          IMPORT_DECONSTRUCTION_LIST_ELEMENTS ->
           formatParameterListElements(node);
       case TYPE_PARAMETER_LIST, TYPE_ARGUMENT_LIST -> formatTypeParameterList(node);
       case TYPE_PARAMETER, IMPORT_ALIAS ->
           new Group(newId(), formatGeneric(node.children, spaceOrLine()));
+      case IMPORT_DECONSTRUCTION_LIST -> formatImportDeconstructionList(node);
+      case IMPORT_DECONSTRUCTION -> formatImportDeconstruction(node);
       case PARAMETER -> formatParameter(node);
       case EXTENDS_CLAUSE, AMENDS_CLAUSE -> formatAmendsExtendsClause(node);
       case IMPORT_LIST -> formatImportList(node);
@@ -396,8 +399,25 @@ final class Builder {
         newId(),
         formatGenericWithGen(
             node.children,
-            spaceOrLine(),
+            (prev, next) ->
+                prev.type == NodeType.IMPORT_ALIAS
+                        && next.type == NodeType.IMPORT_DECONSTRUCTION_LIST
+                    ? null
+                    : spaceOrLine(),
             (n, next) -> isTerminal(n, "import") ? format(n) : indent(format(n))));
+  }
+
+  private FormatNode formatImportDeconstructionList(Node node) {
+    return new Group(newId(), formatGeneric(node.children, spaceOrLine()));
+  }
+
+  private FormatNode formatImportDeconstruction(Node node) {
+    return new Group(
+        newId(),
+        formatGenericWithGen(
+            node.children,
+            spaceOrLine(),
+            (elem, next) -> elem == firstProperChild(node) ? format(elem) : indent(format(elem))));
   }
 
   private FormatNode formatAnnotation(Node node) {
