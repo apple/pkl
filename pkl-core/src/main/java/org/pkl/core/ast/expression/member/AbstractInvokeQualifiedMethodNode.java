@@ -36,6 +36,8 @@ public abstract sealed class AbstractInvokeQualifiedMethodNode
       boolean needsConst,
       ExpressionNode getReceiverNode,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
     super(
         sourceSection,
@@ -44,6 +46,8 @@ public abstract sealed class AbstractInvokeQualifiedMethodNode
         argumentNodes,
         needsConst,
         methodSlot,
+        parameterSlots,
+        forGeneratorSlots,
         qualifiedName);
     this.getReceiverNode = getReceiverNode;
   }

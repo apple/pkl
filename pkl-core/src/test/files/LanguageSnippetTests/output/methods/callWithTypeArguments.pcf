@@ -57,6 +57,16 @@ polymorphism {
 lexical {
   res1 = "Expected value of type `String`, but got type `Int`. Value: 5"
   res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  nestedInMethodParam {
+    res1 {
+      new {
+        name = "x"
+      }
+    }
+    res2 {
+      name = "x"
+    }
+  }
 }
 typeCast {
   res1 {
@@ -66,4 +76,12 @@ typeCast {
 }
 nestedWithIndexOffset {
   res = 1
+}
+constraintReadsFrameSlot {
+  res1 = true
+  res2 = true
+  res3 = true
+  res4 {
+    true
+  }
 }

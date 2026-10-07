@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Expected method `overrideMethodTypeParameterCount#B.foo` overriding `overrideMethodTypeParameterCount#A.foo` to have 1 type parameters, but got 2.
+Expected method `overrideMethodTypeParameterCount#B.foo` overriding `overrideMethodTypeParameterCount#A.foo` to have 1 type parameter, but got 2.
 
 x | function foo<A, B>() = null
     ^^^^^^^^^^^^^^^^^^^^

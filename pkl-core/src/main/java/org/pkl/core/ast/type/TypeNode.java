@@ -162,8 +162,20 @@ public abstract class TypeNode extends PklNode {
       // header section of the property or method that carries the type annotation
       SourceSection headerSection,
       // qualified name of the property or method that carries the type annotation
-      String qualifiedName) {
+      String qualifiedName,
+      boolean inMethodArgument) {
     return null;
+  }
+
+  // method arguments are used when default value contains a root node
+  public final @Nullable Object createDefaultValue(
+      VirtualFrame frame,
+      VmLanguage language,
+      // header section of the property or method that carries the type annotation
+      SourceSection headerSection,
+      // qualified name of the property or method that carries the type annotation
+      String qualifiedName) {
+    return createDefaultValue(frame, language, headerSection, qualifiedName, false);
   }
 
   @Idempotent
@@ -475,7 +487,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return TypeNode.createDefaultValue(clazz);
     }
   }
@@ -545,7 +558,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
       return TypeNode.createDefaultValue(clazz);
     }
@@ -586,7 +600,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return literal;
     }
 
@@ -640,7 +655,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return VmDynamic.empty();
     }
 
@@ -687,7 +703,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
 
       return TypeNode.createDefaultValue(clazz);
     }
@@ -751,7 +768,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return TypeNode.createDefaultValue(clazz);
     }
 
@@ -792,9 +810,11 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return VmNull.withDefault(
-          elementTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName));
+          elementTypeNode.createDefaultValue(
+              frame, language, headerSection, qualifiedName, inMethodArgument));
     }
 
     @Override
@@ -864,12 +884,13 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
 
       return defaultIndex == -1
           ? null
           : elementTypeNodes[defaultIndex].createDefaultValue(
-              frame, language, headerSection, qualifiedName);
+              frame, language, headerSection, qualifiedName, inMethodArgument);
     }
 
     /**
@@ -1205,7 +1226,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       if (defaultIndex == -1) {
         return null;
       }
@@ -1262,7 +1284,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return VmList.EMPTY;
     }
 
@@ -1345,7 +1368,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return VmList.EMPTY;
     }
 
@@ -1416,7 +1440,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       return VmSet.EMPTY;
     }
 
@@ -1496,7 +1521,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
 
       return VmMap.EMPTY;
     }
@@ -1792,14 +1818,16 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
 
       if (valueTypeNode instanceof UnknownTypeNode) {
         return newEmptyListingOrMapping();
       }
 
       var defaultMemberValue =
-          valueTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+          valueTypeNode.createDefaultValue(
+              frame, language, headerSection, qualifiedName, inMethodArgument);
 
       var defaultMember = createDefaultMember(headerSection, qualifiedName, defaultMemberValue);
 
@@ -2147,7 +2175,8 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
           .evalError("internalStdLibClass", "VarArgs")
@@ -2227,10 +2256,13 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       if (levelsUp < 0) return null;
 
-      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
+      var effectiveLevelsUp = (inMethodArgument && levelsUp > 0) ? levelsUp - 1 : levelsUp;
+      //      var effectiveLevelsUp = levelsUp;
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, effectiveLevelsUp);
       if (methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
         return typeArg.createDefaultValue(language, headerSection, qualifiedName);
@@ -2540,12 +2572,14 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean inMethodArgument) {
       if (typeAlias == BaseModule.getMixinTypeAlias()) {
         return newMixin(language, qualifiedName);
       }
 
-      return aliasedTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+      return aliasedTypeNode.createDefaultValue(
+          frame, language, headerSection, qualifiedName, inMethodArgument);
     }
 
     @Override
@@ -2632,9 +2666,10 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
-
-      return childNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+        String qualifiedName,
+        boolean inMethodArgument) {
+      return childNode.createDefaultValue(
+          frame, language, headerSection, qualifiedName, inMethodArgument);
     }
 
     public SourceSection getBaseTypeSection() {
