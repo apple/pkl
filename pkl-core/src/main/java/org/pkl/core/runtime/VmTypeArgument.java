@@ -34,8 +34,7 @@ public class VmTypeArgument {
   private final TypeArgumentTypeNode rootNode;
 
   public VmTypeArgument(TypeArgumentTypeNode rootNode, @Nullable MaterializedFrame enclosingFrame) {
-    this.enclosingFrame =
-        enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
+    this.enclosingFrame = enclosingFrame;
     this.rootNode = rootNode;
   }
 

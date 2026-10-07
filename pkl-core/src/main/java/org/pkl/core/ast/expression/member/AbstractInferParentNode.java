@@ -58,11 +58,15 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
     var effectiveFrame = frame;
     if (typeArgumentOverrides != null) {
       effectiveFrame = VmUtils.createEmptyMaterializedFrame();
-      effectiveFrame.getArguments()[2] = typeArgumentOverrides;
+      var newArgs = effectiveFrame.getArguments();
+      //      newArgs[1] = new VirtualOwner(frame.materialize());
+      newArgs[1] = VmUtils.getOwner(frame);
+      newArgs[2] = typeArgumentOverrides;
     }
 
     var defaultValue =
-        typeNode.createDefaultValue(effectiveFrame, language, headerSection, qualifiedName);
+        typeNode.createDefaultValue(
+            effectiveFrame, language, headerSection, qualifiedName, typeArgumentOverrides != null);
     if (defaultValue != null) {
       return defaultValue;
     }
@@ -83,4 +87,106 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
         .evalError("cannotInstantiateType", typeNode.getSourceSection().getCharacters())
         .build();
   }
+
+  //    private static final class VirtualOwner extends VmObjectLike {
+  //
+  //      public VirtualOwner(MaterializedFrame enclosingFrame) {
+  //        super(enclosingFrame);
+  //      }
+  //
+  //      @Override
+  //      public @Nullable VmObjectLike getParent() {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean hasMember(Object key) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public @Nullable ObjectMember getMember(Object key) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public UnmodifiableEconomicMap<Object, ObjectMember> getMembers() {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public @Nullable Object getCachedValue(Object key) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public void setCachedValue(Object key, Object value) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean hasCachedValue(Object key) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean iterateMemberValues(MemberValueConsumer consumer) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public void force(boolean allowUndefinedValues, boolean recurse) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public VmClass getVmClass() {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public void force(boolean allowUndefinedValues) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public Object export() {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public void accept(VmValueVisitor visitor) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public boolean equals(Object obj) {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //
+  //      @Override
+  //      public String toPklString() {
+  //        throw PklBugException.unreachableCode();
+  //      }
+  //    }
 }

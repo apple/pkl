@@ -35,30 +35,39 @@ public abstract class CallTypeArgumentNode extends PklNode {
 
   @Specialization(guards = {"typeArgument.getCallTarget() == cachedCallTarget"})
   protected Object evalDirect(
+      VirtualFrame frame,
       @SuppressWarnings("unused") VmTypeArgument typeArgument,
       Object value,
       @Cached("typeArgument.getCallTarget()") @SuppressWarnings("unused")
           CallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
-    var frame = typeArgument.getEnclosingFrame();
-    if (frame == null) {
-      return callNode.call(null, null, null, value);
+    var enclosingFrame = typeArgument.getEnclosingFrame();
+    if (enclosingFrame == null) {
+      return callNode.call(null, null, null, null, value);
     }
 
-    var arguments = frame.getArguments();
-    return callNode.call(arguments[0], arguments[1], arguments[2], value);
+    var arguments = enclosingFrame.getArguments();
+    return callNode.call(arguments[0], arguments[1], arguments[2], enclosingFrame, value);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
-      VmTypeArgument typeArgument, Object value, @Cached("create()") IndirectCallNode callNode) {
-    var frame = typeArgument.getEnclosingFrame();
-    if (frame == null) {
-      return callNode.call(typeArgument.getCallTarget(), null, null, null, value);
+      VirtualFrame frame,
+      VmTypeArgument typeArgument,
+      Object value,
+      @Cached("create()") IndirectCallNode callNode) {
+    var enclosingFrame = typeArgument.getEnclosingFrame();
+    if (enclosingFrame == null) {
+      return callNode.call(typeArgument.getCallTarget(), null, null, null, null, value);
     }
 
-    var arguments = frame.getArguments();
+    var arguments = enclosingFrame.getArguments();
     return callNode.call(
-        typeArgument.getCallTarget(), arguments[0], arguments[1], arguments[2], value);
+        typeArgument.getCallTarget(),
+        arguments[0],
+        arguments[1],
+        arguments[2],
+        enclosingFrame,
+        value);
   }
 }

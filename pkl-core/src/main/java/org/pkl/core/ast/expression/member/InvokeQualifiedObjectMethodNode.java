@@ -35,6 +35,8 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
       boolean needsConst,
       ExpressionNode getReceiverNode,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
     super(
         sourceSection,
@@ -44,6 +46,8 @@ public final class InvokeQualifiedObjectMethodNode extends AbstractInvokeQualifi
         needsConst,
         getReceiverNode,
         methodSlot,
+        parameterSlots,
+        forGeneratorSlots,
         qualifiedName);
   }
 

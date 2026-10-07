@@ -40,8 +40,17 @@ public abstract class InvokeSuperMethodNode extends AbstractInvokeMethodNode {
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
-    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
+    super(
+        sourceSection,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        methodSlot,
+        parameterSlots,
+        forGeneratorSlots,
+        qualifiedName);
     this.needsConst = needsConst;
 
     assert !methodName.isLocalMethod();

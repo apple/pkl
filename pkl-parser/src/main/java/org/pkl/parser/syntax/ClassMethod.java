@@ -20,7 +20,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.parser.ParserVisitor;
 import org.pkl.parser.Span;
 
-public final class ClassMethod extends AbstractNode {
+public final class ClassMethod extends AbstractNode implements Method {
   private final int modifiersOffset;
   private final int nameOffset;
   private final Span headerSpan;

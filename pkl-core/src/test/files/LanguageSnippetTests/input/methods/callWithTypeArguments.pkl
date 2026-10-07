@@ -99,6 +99,14 @@ lexical {
     res = myProp
   }
   res2 = test.catch(() -> g::<String>().res)
+
+  local function outr<T>() = new Dynamic {
+    local function inner<U>(x: Listing<T>, y: U) = x
+    local function inner2<U>(x: T, y: U) = x
+    res1 = inner::<Int>(new { new { name = "x" } }, 1)
+    res2 = inner2::<Int>(new { name = "x" }, 1)
+  }
+  nestedInMethodParam = outr::<Person>()
 }
 
 typeCast {
@@ -116,4 +124,18 @@ nestedWithIndexOffset {
   local parent = make::<Int>()
   local child = amend::<String, Int>(parent)
   res = child[0]
+}
+
+constraintReadsFrameSlot {
+  local function id<T>(x) = x is T
+  local function f(n: Int) = id::<String(length > n)>("hi")
+
+  res1 = f(1)
+  res2 = let (n = 1) id::<String(length > n)>("hi")
+  res3 = ((n) -> id::<String(length > n)>("hi")).apply(1)
+  res4 = new Listing {
+    for (n in List(1)) {
+      id::<String(length > n)>("hi")
+    }
+  }
 }

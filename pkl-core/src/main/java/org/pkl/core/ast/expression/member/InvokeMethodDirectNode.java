@@ -39,8 +39,17 @@ public final class InvokeMethodDirectNode extends AbstractInvokeMethodNode {
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
-    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
+    super(
+        sourceSection,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        methodSlot,
+        parameterSlots,
+        forGeneratorSlots,
+        qualifiedName);
     this.method = method;
     this.owner = method.getOwner();
     this.receiverNode = receiverNode;
