@@ -26,6 +26,7 @@ import org.junit.jupiter.api.condition.JRE
 import org.junit.jupiter.api.io.TempDir
 import org.pkl.commons.cli.commands.BaseCommand
 import org.pkl.commons.cli.commands.ProjectOptions
+import org.pkl.commons.test.PackageServer
 import org.pkl.commons.writeString
 import org.pkl.core.SecurityManagers
 import org.pkl.core.evaluatorSettings.PklEvaluatorSettings
@@ -134,7 +135,9 @@ class CliCommandTest {
   @DisabledOnJre(JRE.JAVA_22, JRE.JAVA_23, JRE.JAVA_24)
   fun `test that --omit-project-settings actually omits project settings`(@TempDir tempDir: Path) {
     val project = tempDir.resolve("PklProject").writeString(projectWithAllEvaluatorSettings)
-    cmd.parse(arrayOf("--working-dir=$tempDir", "--omit-project-settings"))
+    cmd.parse(
+      arrayOf("--working-dir=$tempDir", "--omit-project-settings", "--settings=pkl:settings")
+    )
     val opts =
       cmd.baseOptions.baseOptions(listOf(project.toUri()), cmd.projectOptions, testMode = true)
     val cliTest = CliTest(opts)
@@ -199,5 +202,32 @@ class CliCommandTest {
     val cliTest = CliTest(opts)
     assertThat(cliTest.myExternalModuleReaders)
       .isEqualTo(mapOf("bar" to PklEvaluatorSettings.ExternalReader("bar", listOf(), null)))
+  }
+
+  @Test
+  fun `--cache-dir is used when loading the project`(@TempDir tempDir: Path) {
+    val cacheDir = tempDir.resolve("cache").also(PackageServer::populateCacheDir)
+    tempDir
+      .resolve("PklProject")
+      .writeString(
+        // language=pkl
+        """
+        amends "pkl:Project"
+
+        import "package://localhost:0/fruit@1.0.5#/catalog/apple.pkl"
+
+        evaluatorSettings {
+          externalProperties {
+            ["fruit"] = apple.name
+          }
+        }
+        """
+          .trimIndent()
+      )
+    cmd.parse(arrayOf("--working-dir=$tempDir", "--cache-dir=$cacheDir"))
+    val opts = cmd.baseOptions.baseOptions(emptyList(), cmd.projectOptions, testMode = true)
+    val cliTest = CliTest(opts)
+    assertThat(cliTest.myProjectEvaluatorSettings!!.externalProperties)
+      .containsEntry("fruit", "Apple")
   }
 }
