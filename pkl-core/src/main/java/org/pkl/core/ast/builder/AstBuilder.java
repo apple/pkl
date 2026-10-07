@@ -918,6 +918,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               needsConst,
               getModuleNode,
               argInfo.methodSlot,
+              scope.parameterSlots,
+              scope.forGeneratorSlots,
               scope.getQualifiedName());
         }
         if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
@@ -929,6 +931,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               needsConst,
               getModuleNode,
               argInfo.methodSlot,
+              scope.parameterSlots,
+              scope.forGeneratorSlots,
               scope.getQualifiedName());
         }
         return InvokeMethodVirtualNodeGen.create(
@@ -939,6 +943,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             MemberLookupMode.IMPLICIT_LEXICAL,
             needsConst,
             argInfo.methodSlot,
+            scope.parameterSlots,
+            scope.forGeneratorSlots,
             scope.getQualifiedName(),
             getModuleNode,
             GetClassNodeGen.create(null));
@@ -952,6 +958,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             argInfo.arguments,
             needsConst,
             argInfo.methodSlot,
+            scope.parameterSlots,
+            scope.forGeneratorSlots,
             scope.getQualifiedName());
       }
       if (method.isOnClosedClass() || method.isLocal() || method.isExternal()) {
@@ -963,6 +971,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             argInfo.arguments,
             needsConst,
             argInfo.methodSlot,
+            scope.parameterSlots,
+            scope.forGeneratorSlots,
             scope.getQualifiedName());
       }
       return InvokeMethodVirtualNodeGen.create(
@@ -973,6 +983,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           MemberLookupMode.IMPLICIT_LEXICAL,
           needsConst,
           argInfo.methodSlot,
+          scope.parameterSlots,
+          scope.forGeneratorSlots,
           scope.getQualifiedName(),
           levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp),
           GetClassNodeGen.create(null));
@@ -1003,6 +1015,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             typeArgs,
             argInfo.arguments,
             argInfo.methodSlot,
+            scope.parameterSlots,
+            scope.forGeneratorSlots,
             scope.getQualifiedName());
       }
     } else if (resolution instanceof ImplicitThisMethod) {
@@ -1019,6 +1033,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           MemberLookupMode.IMPLICIT_THIS,
           needsConst,
           methodSlot,
+          scope.parameterSlots,
+          scope.forGeneratorSlots,
           scope.getQualifiedName(),
           VmUtils.createThisNode(VmUtils.unavailableSourceSection(), isCustomThis),
           GetClassNodeGen.create(null));
@@ -1205,6 +1221,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           argInfo.arguments,
           needsConst,
           argInfo.methodSlot,
+          currentScope.parameterSlots,
+          currentScope.forGeneratorSlots,
           currentScope.getQualifiedName());
     }
 
@@ -2985,6 +3003,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var receiver = visitExpr(expr.getExpr());
     var needsConst = needsConst(receiver);
     var argInfo = visitArgumentList(argList);
+    var currentScope = symbolTable.getCurrentScope();
 
     if (expr.isNullable()) {
       //noinspection ConstantConditions
@@ -2998,7 +3017,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               MemberLookupMode.EXPLICIT_RECEIVER,
               needsConst,
               argInfo.methodSlot,
-              symbolTable.getCurrentScope().getQualifiedName(),
+              currentScope.parameterSlots,
+              currentScope.forGeneratorSlots,
+              currentScope.getQualifiedName(),
               PropagateNullReceiverNodeGen.create(unavailableSourceSection(), receiver),
               GetClassNodeGen.create(null)));
     }
@@ -3012,7 +3033,9 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         MemberLookupMode.EXPLICIT_RECEIVER,
         needsConst,
         argInfo.methodSlot,
-        symbolTable.getCurrentScope().getQualifiedName(),
+        currentScope.parameterSlots,
+        currentScope.forGeneratorSlots,
+        currentScope.getQualifiedName(),
         receiver,
         GetClassNodeGen.create(null));
   }

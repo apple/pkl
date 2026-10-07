@@ -94,6 +94,8 @@ public abstract class ToStringNode extends UnaryExpressionNode {
         new ExpressionNode[] {},
         MemberLookupMode.EXPLICIT_RECEIVER,
         -1,
+        new int[0],
+        new int[0],
         "",
         null,
         null);

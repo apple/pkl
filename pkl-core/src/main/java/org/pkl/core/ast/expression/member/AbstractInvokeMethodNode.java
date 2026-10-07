@@ -28,6 +28,7 @@ import org.pkl.core.ast.type.TypeArgumentTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTypeArgument;
+import org.pkl.core.util.ArrayUtils;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
@@ -35,6 +36,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
   protected final int methodSlot;
   protected final String qualifiedName;
 
+  protected final int[] slotsToCopy;
   @Children protected UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes;
 
   @CompilationFinal(dimensions = 1)
@@ -47,11 +49,14 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       int methodSlot,
+      int[] parameterSlots,
+      int[] forGeneratorSlots,
       String qualifiedName) {
     super(sourceSection);
     this.unresolvedTypeArgumentNodes = unresolvedTypeArgumentNodes;
     this.argumentNodes = argumentNodes;
     this.methodSlot = methodSlot;
+    this.slotsToCopy = ArrayUtils.concat(parameterSlots, forGeneratorSlots);
     this.qualifiedName = qualifiedName;
   }
 
@@ -59,6 +64,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
     if (typeArgumentRootNodes == null) {
       if (unresolvedTypeArgumentNodes != null) {
         var language = VmLanguage.get(this);
+        var frameDescriptor = frame.getFrameDescriptor();
         CompilerDirectives.transferToInterpreterAndInvalidate();
 
         var rootNodes = new TypeArgumentTypeNode[unresolvedTypeArgumentNodes.length];
@@ -66,7 +72,12 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
           var typeNode = unresolvedTypeArgumentNodes[i].execute(frame);
           rootNodes[i] =
               new TypeArgumentTypeNode(
-                  language, sourceSection, qualifiedName + ".<typearg#" + (i + 1) + ">", typeNode);
+                  language,
+                  frameDescriptor,
+                  sourceSection,
+                  qualifiedName + ".<typearg#" + (i + 1) + ">",
+                  typeNode,
+                  slotsToCopy);
           typeArgumentsNeedMaterializedFrame =
               typeArgumentsNeedMaterializedFrame || typeNode.getTypeArgumentRequiresFrame();
         }
