@@ -55,6 +55,8 @@ import org.pkl.parser.syntax.Expr.UnqualifiedAccessExpr;
 import org.pkl.parser.syntax.ExtendsOrAmendsClause;
 import org.pkl.parser.syntax.Identifier;
 import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.ImportDeconstruction;
+import org.pkl.parser.syntax.ImportDeconstructionList;
 import org.pkl.parser.syntax.Keyword;
 import org.pkl.parser.syntax.Modifier;
 import org.pkl.parser.syntax.Module;
@@ -183,6 +185,10 @@ public interface ParserVisitor<Result> {
   Result visitExtendsOrAmendsClause(ExtendsOrAmendsClause decl);
 
   Result visitImportClause(ImportClause imp);
+
+  Result visitImportDeconstructionList(ImportDeconstructionList importDeconstructionList);
+
+  Result visitImportDeconstruction(ImportDeconstruction importDeconstruction);
 
   Result visitClass(Class clazz);
 

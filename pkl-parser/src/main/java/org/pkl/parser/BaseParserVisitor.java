@@ -55,6 +55,8 @@ import org.pkl.parser.syntax.Expr.UnqualifiedAccessExpr;
 import org.pkl.parser.syntax.ExtendsOrAmendsClause;
 import org.pkl.parser.syntax.Identifier;
 import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.ImportDeconstruction;
+import org.pkl.parser.syntax.ImportDeconstructionList;
 import org.pkl.parser.syntax.Keyword;
 import org.pkl.parser.syntax.Modifier;
 import org.pkl.parser.syntax.ModuleDecl;
@@ -361,6 +363,16 @@ public abstract class BaseParserVisitor<T> implements ParserVisitor<T> {
   @Override
   public T visitImportClause(ImportClause imp) {
     return visitChildren(imp);
+  }
+
+  @Override
+  public T visitImportDeconstructionList(ImportDeconstructionList importDeconstructionList) {
+    return visitChildren(importDeconstructionList);
+  }
+
+  @Override
+  public T visitImportDeconstruction(ImportDeconstruction importDeconstruction) {
+    return defaultValue();
   }
 
   @Override

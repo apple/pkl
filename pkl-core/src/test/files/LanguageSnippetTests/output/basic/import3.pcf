@@ -2,10 +2,18 @@ foo {
   bar {
     foo = 6
     bar = 3
+    baz {
+      qux = 4
+      quux = 12
+    }
   }
   baz {
     foo = 6
     bar = 3
+    baz {
+      qux = 4
+      quux = 12
+    }
   }
   bak = 6
 }

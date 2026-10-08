@@ -213,13 +213,17 @@ public abstract class UnresolvedTypeNode extends PklNode {
         return new TypeAliasTypeNode(sourceSection, alias, new TypeNode[0]);
       }
 
-      var module = (VmTyped) type;
-      assert module.isModuleObject();
-      var clazz = module.getVmClass();
-      if (!module.isPrototype()) {
-        throw exceptionBuilder().evalError("notAModuleType", clazz.getModuleName()).build();
+      var moduleOrClass = (VmTyped) type;
+      var clazz = moduleOrClass.getVmClass();
+      if (!moduleOrClass.isPrototype()) {
+        throw exceptionBuilder()
+            .evalError(
+                "notAModuleOrClassType",
+                moduleOrClass.isModuleObject() ? "Module" : "Class",
+                clazz.getDisplayName())
+            .build();
       }
-      return TypeNode.forClass(sourceSection, module.getVmClass());
+      return TypeNode.forClass(sourceSection, clazz);
     }
   }
 

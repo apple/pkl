@@ -1,0 +1,5 @@
+import "imported.pkl" as { Widget as _Widget }
+
+class _Widget {}
+
+a = new _Widget {}
