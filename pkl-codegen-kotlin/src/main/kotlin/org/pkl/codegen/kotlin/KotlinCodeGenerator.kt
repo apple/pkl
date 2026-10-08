@@ -157,7 +157,8 @@ class KotlinCodeGenerator(
         hasModuleProperties ||
           pModuleClass.isOpen ||
           pModuleClass.isAbstract ||
-          options.springBootConfigurationProperties.containsKey(pModuleClass.displayName)
+          options.generateSpringBootConfig &&
+            options.springBootConfigurationProperties.containsKey(pModuleClass.displayName)
 
       fun generateCompanionRelatedCode(
         builder: TypeSpec.Builder,
@@ -802,8 +803,9 @@ class KotlinCodeGenerator(
       else -> throw AssertionError("Encountered unexpected PType subclass: $this")
     }
 
-  private fun List<PType>.toKotlinPoet(): Array<TypeName> =
-    map { it.toKotlinPoetName() }.toTypedArray()
+  private fun List<PType>.toKotlinPoet(): Array<TypeName> = map {
+    it.toKotlinPoetName()
+  }.toTypedArray()
 
   private val nameMapper = NameMapper(options.renames)
 }
