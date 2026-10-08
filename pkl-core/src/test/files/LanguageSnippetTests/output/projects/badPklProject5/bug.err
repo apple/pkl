@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Type constraint `(externalModuleReaders != null).implies(isFileBasedProject)` violated.
-Value: new ModuleClass { externalProperties = ?; env = ?; allowedModules = ?; allowe...
+Value: new pkl.EvaluatorSettings { externalProperties = ?; env = ?; allowedModules =...
 
     (externalModuleReaders != null).implies(isFileBasedProject)
      │                     │        │       │
