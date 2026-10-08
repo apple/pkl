@@ -9,6 +9,11 @@ include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
+=== Generic Methods
+
+https://github.com/apple/pkl/pull/1849
+https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0032-generic-methods.adoc
+
 === New standard library module: `pkl:net`
 
 This release introduces a new standard library module, link:{uri-stdlib-netModule}[`pkl:net`], which brings native URL support to Pkl (https://github.com/apple/pkl/pull/1834[#1834]).
@@ -81,9 +86,69 @@ Alongside this module, `pkl:base` gains link:{uri-stdlib-String}#isValidUrl[`Str
 It is stricter than `net.Url()`, which also parses a relative reference, and which percent-encodes whatever cannot appear literally in a URL component.
 The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,breaking change>>.
 
+=== New standard library module: `pkl:syntax`
+
+https://github.com/apple/pkl/pull/1821
+
+=== libpkl
+
+https://github.com/apple/pkl/pull/1238
+https://github.com/apple/pkl/pull/1799
+https://github.com/apple/pkl/pull/1801
+https://github.com/apple/pkl/pull/1805
+https://github.com/apple/pkl/pull/1812
+
+=== CPU Profiler
+
+https://github.com/apple/pkl/pull/1823
+
+
 == Noteworthy [small]#🎶#
 
+=== New type: `this`
+
+https://github.com/apple/pkl/pull/1708
+https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0029-self-type.adoc
+
+The `this` type has also been <<this-adoption,adopted in the standard library>>. 
+
+=== Implicitly typed `new {}` can be inferred in more locations
+
+https://github.com/apple/pkl/pull/1768
+https://github.com/apple/pkl/pull/1845
+https://github.com/apple/pkl/pull/1847
+https://github.com/apple/pkl/pull/1857
+
+https://github.com/apple/pkl/pull/1824
+
+
+=== Support for `.netrc` HTTP authentication
+
+Pkl now supports parsing `.netrc` files to configure HTTP Basic authentication headers (https://github.com/apple/pkl/pull/1817[#1817], https://github.com/apple/pkl/pull/1854[#1854]).
+
+Through the new `netRcHeaders` method on `pkl.EvaluatorSettings#Http`, credentials can be read directly from a local `.netrc` file and mapped to `Authorization` headers:
+
+.~/.config/pkl/settings.pkl
+[source,pkl]
+----
+amends "pkl:settings"
+
+http {
+  headers = netRcHeaders(read?("file:\(read("env:HOME"))/.netrc"))
+}
+----
+
+It follows standard `curl` parsing rules, supporting comments, quoted values, and escaped characters.
+
 === CLI Changes
+
+==== Package installation to the local cache
+
+The `pkl project package` command has gained a new `--install` command that triggers installation of the built package(s) into the module cache (pr:https://github.com/apple/pkl/pull/1795[]).
+
+Local cache installation is useful for local end-to-end testing of dependency trees.
+This functionality is also available via pkl-gradle.
+
 
 ==== Default file locations
 
@@ -140,10 +205,22 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 
 * New module introduced.
 
+==== `pkl:syntax`
+
+* New module introduced.
+
 ==== `pkl:base`
 
 * New property: link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`]
 * Changed typealias: link:{uri-stdlib-Uri}[`Uri`] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
+[[this-adoption]]
+* pkldoc:Any.getClass()[] now returns `Class<this>`
+* pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) -> Result`
+* pkldoc:Domain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
+
+==== `pkl:protobuf`
+
+* Module deprecated for removal in Pkl 0.34 (pr:https://github.com/apple/pkl/pull/1778[]).
 
 == Breaking Changes [small]#💔#
 
@@ -159,7 +236,7 @@ In prior versions of Pkl, type arguments to the `Class` type were erased.
 Any `Class` value would typecheck against `Class<T>` for any value of `T`.
 
 In Pkl 0.33, this erasure has been removed.
-A `Class` value typechecked against `Class<T>` must be a subclass of `T`.
+A `Class` value typechecked against `Class<T>` must be a subclass of `T` (pr:https://github.com/apple/pkl/pull/1698[]).
 
 If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
@@ -167,6 +244,7 @@ If `T` does not resolve to a class type (i.e. it is a union type, nullable type,
 
 Previously, module properties in `pkl:math` and `pkl:release` could be overriden by amending the module.
 Doing this makes little sense—these value are constants and overriding them by amending their module would be odd.
+These properties are now marked `const` (pr:https://github.com/apple/pkl/pull/1864[]).
 
 This is a breaking change for code that looks like this:
 [source,pkl]
@@ -240,12 +318,63 @@ This affects every standard library member typed as `Uri`, among them link:{uri-
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
+== Miscellaneous [small]#🐸#
+
+* The `abstract` modifier is now a no-op for properties. (pr:https://github.com/apple/pkl/pull/1781[]).
+* Absract method in non-abstract classes and modules are now rejected (pr:https://github.com/apple/pkl/pull/1647[], pr:https://github.com/apple/pkl/pull/1780[]).
+* Enforce that non-abstract classes implement all abstract methods from superclasses (pr:https://github.com/apple/pkl/pull/1785[]).
+* Introduce a new internal representation for type metadata (pr:https://github.com/apple/pkl/pull/1838[]).
+* Improve error message when amending a property with no value set (pr:https://github.com/apple/pkl/pull/1867[]).
+* Use `EnumSet` for token categories (pr:https://github.com/apple/pkl/pull/1803[]).
+* `String.toInt()` now supports all hexadecimal, octal, and binary formats (pr:https://github.com/apple/pkl/pull/1808[]).
+* Handle conditional pluralization in error message (pr:https://github.com/apple/pkl/pull/1848[]).
+* Avoid using Java `Object.toString()` to present language-facing string representations (pr:https://github.com/apple/pkl/pull/1850[]).
+* Unify internal construction of objects (pr:https://github.com/apple/pkl/pull/1873[]). 
+* Use module cache directory configured via the CLI or Gradle while evaluating `PklProject` and `settings.pkl` files (pr:https://github.com/apple/pkl/pull/1900[]).
+* Typed values are rendered with more helpful type names in error messages and `Any.toString()` (pr:https://github.com/apple/pkl/pull/1412[]).
+* Add support for customizing spring boot `@ConfigurationProperties` in generated Java/Kotlin code (pr:https://github.com/apple/pkl/pull/1897[]).
+* Improve performance of reading `const` members (pr:https://github.com/apple/pkl/pull/1835[]).
+* Improve performance of `Listing` and `Mapping` type casts (pr:https://github.com/apple/pkl/pull/1837[]).
+* Improve performance of lexical frame resolution (pr:https://github.com/apple/pkl/pull/1842[]).
+* Improve performance of amending `null` parents (pr:https://github.com/apple/pkl/pull/1836[]).
+* Improve performance of annotations without object bodies (pr:https://github.com/apple/pkl/pull/1843[]).
+* Improve performance of `for` and `when` generators (pr:https://github.com/apple/pkl/pull/1844[]).
+* Improve performance of parent property and subscript access (pr:https://github.com/apple/pkl/pull/1853[]).
+* Improve performance of typechecking (pr:https://github.com/apple/pkl/pull/1871[]).
+* Improve performance of string literal union types in more cases (pr:https://github.com/apple/pkl/pull/1875[]).
+* Improve performance of iterating object members (pr:https://github.com/apple/pkl/pull/1879[]).
+* Improve performance of capturing closures in objects and functions (pr:https://github.com/apple/pkl/pull/1869[])
+
 == Bug Fixes [small]#🐜#
 
-* XXX
+* Fix error when rendering error messages for multi-line expressions (pr:https://github.com/apple/pkl/pull/1793[]).
+* Fix incorrect behavior when objects are partially forced (pr:https://github.com/apple/pkl/pull/1790[]).
+* Fix issues publishing pkl-gradle (pr:https://github.com/apple/pkl/pull/1777[], pr:https://github.com/apple/pkl/pull/1807[]).
+* Fix resolution of the `module` type in typealias bodies (pr:https://github.com/apple/pkl/pull/1796[]).
+* Don't fail when loading known-malformed CA certs (pr:https://github.com/apple/pkl/pull/1806[]).
+* Fix resolution of type names in typealias constraints (pr:https://github.com/apple/pkl/pull/1826[]).
+* Fix parsing of block comments at the end of a file (pr:https://github.com/apple/pkl/pull/1828[]).
+* Sanitize block comment endings in generated Kotlin doc comments (pr:https://github.com/apple/pkl/pull/1830[]).
+* Enforce max collection size when decoding pkl-binary data (pr:https://github.com/apple/pkl/pull/1831[]).
+* Correctly omit glob imports from reflected imports (pr:https://github.com/apple/pkl/pull/1816[]).
+* Escape characters that cannot appear literally in rendered YAML (pr:https://github.com/apple/pkl/pull/1846[]).
+* Fix invalid prefix when generating spring boot config (pr:https://github.com/apple/pkl/pull/1862[]).
+* Fix `pkl run` behaviors where (sub)commands amend `pkl:Command` without extending it (pr:https://github.com/apple/pkl/pull/1882[]).
+* Fix `String.endsWith()` for overlapping regex matches (pr:https://github.com/apple/pkl/pull/1880[], pr:https://github.com/apple/pkl/pull/1884[]).
+* Fix leak of external reader processes in the language binding server (pr:https://github.com/apple/pkl/pull/1885[]).
+* Fix decoding of `Regex` values from pkl-binary data (pr:https://github.com/apple/pkl/pull/1895[]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/bioball[@bioball]
+* https://github.com/dylanpulver[@dylanpulver]
+* https://github.com/henriquejsza[@henriquejsza]
+* https://github.com/HT154[@HT154]
+* https://github.com/kwy404[@kwy404]
+* https://github.com/protobufel2[@protobufel2]
+* https://github.com/RushikeshGandhmal[@RushikeshGandhmal]
+* https://github.com/sergiosalvi[@sergiosalvi]
+* https://github.com/stackoverflow[@stackoverflow]
+* https://github.com/vinayakj592[@vinayakj592]
