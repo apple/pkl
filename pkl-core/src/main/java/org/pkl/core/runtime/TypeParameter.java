@@ -18,7 +18,7 @@ package org.pkl.core.runtime;
 import java.util.List;
 import org.pkl.core.TypeParameter.Variance;
 
-public record TypeParameter(Variance variance, String name, int index, OwnerType ownerType) {
+public record TypeParameter(Variance variance, String name, int index) {
   public org.pkl.core.TypeParameter export() {
     return new org.pkl.core.TypeParameter(variance, name, index);
   }

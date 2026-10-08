@@ -67,6 +67,14 @@ lexical {
       name = "x"
     }
   }
+  inEagerScope {
+    "Expected value of type `Int`, but got type `String`. Value: \"key\""
+    new {
+      ["key"] = "value"
+      ["keykey"] = "value"
+      ["keykeykey"] = "value"
+    }
+  }
 }
 typeCast {
   res1 {
