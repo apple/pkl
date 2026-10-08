@@ -9,21 +9,28 @@ local renderer = new syntax.FormattingRenderer {}
 
 local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
 
-local function intLiteral(value: Int): syntax.GenericNode =
-  new syntax.GenericNode {
-    type = "int_literal_expr"
-    text = value.toString()
-  }
+local function intLiteral(value: Int): syntax.GenericNode = new syntax.GenericNode {
+  type = "int_literal_expr"
+  text = value.toString()
+}
+
+// a node built from scratch, whose children have no parent of their own
+local constructedAccess = new syntax.GenericNode {
+  type = "unqualified_access_expr"
+  children = List(new syntax.GenericNode { type = "identifier"; text = "foo" })
+}
 
 local sample: syntax.GenericNode =
-  mod("""
+  mod(
+    """
     class Point {
       x: Int
       y: Int
     }
 
     origin = new Point { x = 0; y = 0 }
-    """)
+    """,
+  )
 
 facts {
   ["findChild returns the first match in pre-order"] {
@@ -32,7 +39,8 @@ facts {
   }
 
   ["findChild throws when nothing matches"] {
-    test.catch(() -> sample.findChild((n) -> n.type == "when_generator"))
+    test
+      .catch(() -> sample.findChild((n) -> n.type == "when_generator"))
       .contains("Cannot find a child node matching the predicate")
   }
 
@@ -47,7 +55,9 @@ facts {
   }
 
   ["findChildren returns every match in pre-order"] {
-    sample.findChildren((n) -> n.type == "identifier").map((n) -> n.text)
+    sample
+      .findChildren((n) -> n.type == "identifier")
+      .map((n) -> n.text)
       == List("Point", "x", "Int", "y", "Int", "origin", "Point", "x", "y")
 
     sample.findChildren((n) -> n.type == "when_generator") == List()
@@ -64,7 +74,8 @@ facts {
   }
 
   ["findChildOfType throws when nothing matches"] {
-    test.catch(() -> sample.findChildOfType("when_generator"))
+    test
+      .catch(() -> sample.findChildOfType("when_generator"))
       .contains("Cannot find a child node of type `when_generator`")
   }
 
@@ -77,7 +88,8 @@ facts {
     local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
     inner.findParent((n) -> n.type == "object_body").text == "{ baz = 1 }"
     inner.findParent((n) -> n.type == "module").type == "module"
-    test.catch(() -> inner.findParent((n) -> n.type == "class"))
+    test
+      .catch(() -> inner.findParent((n) -> n.type == "class"))
       .contains("Cannot find a parent node matching the predicate")
   }
 
@@ -90,7 +102,8 @@ facts {
   ["findParentOfType agrees with findParent"] {
     local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
     inner.findParentOfType("object_body").text == "{ baz = 1 }"
-    test.catch(() -> inner.findParentOfType("class"))
+    test
+      .catch(() -> inner.findParentOfType("class"))
       .contains("Cannot find a parent node of type `class`")
   }
 
@@ -102,7 +115,9 @@ facts {
 
   ["findParents returns every match, nearest first"] {
     local inner = mod("foo { bar { baz = 1 } }").findChild((n) -> n.text == "baz")
-    inner.findParents((n) -> n.type == "object_body").map((n) -> n.text)
+    inner
+      .findParents((n) -> n.type == "object_body")
+      .map((n) -> n.text)
       == List("{ baz = 1 }", "{ bar { baz = 1 } }")
   }
 
@@ -121,49 +136,52 @@ facts {
 
   ["replaceChild replaces only the first match"] {
     renderer.render(
-      mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
+      mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9)),
     ) == "x = 9 + 1\n"
   }
 
   ["replaceChild leaves the tree unchanged when nothing matches"] {
     renderer.render(
-      mod("x = 1").replaceChild((n) -> n.type == "when_generator", (_n) -> intLiteral(9))
+      mod("x = 1").replaceChild((n) -> n.type == "when_generator", (_n) -> intLiteral(9)),
     ) == "x = 1\n"
   }
 
   ["replaceChildren replaces every match"] {
     renderer.render(
-      mod("x = 1 + 1").replaceChildren((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
+      mod("x = 1 + 1").replaceChildren((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9)),
     ) == "x = 9 + 9\n"
   }
 
   ["a replacer sees the node it replaces"] {
     renderer.render(
-      mod("x = 1 + 2").replaceChildren(
-        (n) -> n.type == "int_literal_expr",
-        (n) -> intLiteral(n.text!!.toInt() * 10),
-      )
+      mod("x = 1 + 2")
+        .replaceChildren(
+          (n) -> n.type == "int_literal_expr",
+          (n) -> intLiteral(n.text!!.toInt() * 10),
+        ),
     ) == "x = 10 + 20\n"
   }
 
   ["a replacement is not searched for further matches"] {
     // replacing an identifier with an identifier terminates instead of looping
     renderer.render(
-      mod("foo = 1").replaceChildrenOfType("identifier", (n) -> (n) { text = "\(n.text!!)Bar" })
+      mod("foo = 1").replaceChildrenOfType("identifier", (n) -> (n) { text = "\(n.text!!)Bar" }),
     ) == "fooBar = 1\n"
   }
 
   ["replaceChildOfType agrees with replaceChild"] {
     renderer.render(mod("x = 1 + 1").replaceChildOfType("int_literal_expr", (_n) -> intLiteral(9)))
       == renderer.render(
-        mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9))
+        mod("x = 1 + 1").replaceChild((n) -> n.type == "int_literal_expr", (_n) -> intLiteral(9)),
       )
   }
 
   ["a replacer sees where its node sits in the tree being built"] {
     local result =
-      mod("x = 1").replaceChildOfType("int_literal_expr", (n) ->
-        if (n.hasParentOfType("class_property")) intLiteral(9) else intLiteral(0))
+      mod("x = 1")
+        .replaceChildOfType("int_literal_expr", (n) ->
+          if (n.hasParentOfType("class_property")) intLiteral(9) else intLiteral(0)
+        )
     renderer.render(result) == "x = 9\n"
   }
 
@@ -183,5 +201,57 @@ facts {
     mod("x = 1")
       .replaceChildrenOfType("int_literal_expr", (_n) -> intLiteral(9))
       .fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
+    // the constructed node's child has no parent of its own, so the returned tree must supply one
+    mod("x = 1")
+      .replaceChildrenOfType("int_literal_expr", (_) -> constructedAccess)
+      .fold(0, (acc, n) -> if (n.parent == null) acc + 1 else acc) == 1
+  }
+
+  ["replacing below a node does not detach it from its own tree"] {
+    local property = mod("x = 1").findChildOfType("class_property")
+    local replaced = property.replaceChildrenOfType("int_literal_expr", (_) -> intLiteral(9))
+    replaced.parent == null && property.parent != null
+  }
+
+  ["a replacer sees this tree, not the one being built"] {
+    // both literals see their unreplaced sibling
+    local sumOfSiblings = (n: syntax.GenericNode) ->
+      intLiteral(
+        n.parent!!
+          .findChildrenOfType("int_literal_expr")
+          .fold(0, (acc, c) -> acc + c.text!!.toInt()),
+      )
+    renderer.render(mod("x = 1 + 2").replaceChildrenOfType("int_literal_expr", sumOfSiblings))
+      == "x = 3 + 3\n"
+  }
+
+  ["the children of an amended replacement are parented at the replacement"] {
+    mod("x = 1 + 2")
+      .replaceChildOfType("binary_op_expr", (n) -> (n) { text = "changed" })
+      .findChildOfType("int_literal_expr")
+      .parent!!.text
+      == "changed"
+  }
+
+  ["rebuilds ancestors of a replacement"] {
+    renderer.render(
+      mod("x = if (cond) 41 else 0")
+        .replaceChildrenOfType("int_literal_expr", (n) -> intLiteral(n.text!!.toInt() + 1)),
+    ) == "x = if (cond) 42 else 1\n"
+  }
+
+  ["a match is not searched for further matches"] {
+    local predicate = (n: syntax.GenericNode) ->
+      if (n.type == "int_literal_expr")
+        throw("searched inside a match")
+      else
+        n.type == "parenthesized_expr"
+    renderer.render(mod("x = (1)").replaceChildren(predicate, (_) -> intLiteral(9))) == "x = 9\n"
+  }
+
+  ["replacement is eager"] {
+    test
+      .catch(() -> mod("x = 1").replaceChildrenOfType("int_literal_expr", (_) -> throw("boom")))
+      .contains("boom")
   }
 }

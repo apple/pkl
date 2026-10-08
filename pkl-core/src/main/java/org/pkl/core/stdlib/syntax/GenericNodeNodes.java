@@ -16,6 +16,7 @@
 package org.pkl.core.stdlib.syntax;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -35,8 +36,7 @@ import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
-import org.pkl.core.stdlib.syntax.SyntaxNodes.NodeSet;
-import org.pkl.core.stdlib.syntax.SyntaxNodes.ViewData;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.Rebuild;
 
 /** Backs the methods of {@code pkl.syntax#GenericNode}. */
 public final class GenericNodeNodes {
@@ -100,7 +100,7 @@ public final class GenericNodeNodes {
     protected VmList eval(VmTyped self, VmFunction predicate) {
       return VmList.create(
           findMatchingChildren(
-              this, self, new PredicateMatcher(predicate, applyPredicate), false, callNode));
+              this, self, new PredicateMatcher(predicate, applyPredicate), callNode));
     }
   }
 
@@ -132,8 +132,7 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected VmList eval(VmTyped self, String type) {
-      return VmList.create(
-          findMatchingChildren(this, self, new TypeMatcher(type), false, callNode));
+      return VmList.create(findMatchingChildren(this, self, new TypeMatcher(type), callNode));
     }
   }
 
@@ -144,8 +143,7 @@ public final class GenericNodeNodes {
     @Specialization
     protected VmTyped eval(VmTyped self, VmFunction predicate, VmFunction replacer) {
       var matcher = new PredicateMatcher(predicate, applyPredicate);
-      return SyntaxNodes.replaceTargets(
-          self, findTargets(this, self, matcher, true, callNode), replacer);
+      return replaceMatchingChildren(self, matcher, true, replacer, callNode);
     }
   }
 
@@ -156,8 +154,7 @@ public final class GenericNodeNodes {
     @Specialization
     protected VmTyped eval(VmTyped self, VmFunction predicate, VmFunction replacer) {
       var matcher = new PredicateMatcher(predicate, applyPredicate);
-      return SyntaxNodes.replaceTargets(
-          self, findTargets(this, self, matcher, false, callNode), replacer);
+      return replaceMatchingChildren(self, matcher, false, replacer, callNode);
     }
   }
 
@@ -166,8 +163,7 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected VmTyped eval(VmTyped self, String type, VmFunction replacer) {
-      var targets = findTargets(this, self, new TypeMatcher(type), true, callNode);
-      return SyntaxNodes.replaceTargets(self, targets, replacer);
+      return replaceMatchingChildren(self, new TypeMatcher(type), true, replacer, callNode);
     }
   }
 
@@ -176,8 +172,7 @@ public final class GenericNodeNodes {
 
     @Specialization
     protected VmTyped eval(VmTyped self, String type, VmFunction replacer) {
-      var targets = findTargets(this, self, new TypeMatcher(type), false, callNode);
-      return SyntaxNodes.replaceTargets(self, targets, replacer);
+      return replaceMatchingChildren(self, new TypeMatcher(type), false, replacer, callNode);
     }
   }
 
@@ -259,16 +254,6 @@ public final class GenericNodeNodes {
     }
   }
 
-  public abstract static class transform extends ExternalMethod1Node {
-    @Specialization
-    protected VmTyped eval(VmTyped self, VmFunction operator) {
-      // the operator is applied to a child only when that child is read, it is never applied to
-      // `self`, so an operator that recurses with `node.transform(operator)` terminates
-      return SyntaxNodes.createView(
-          new ViewData(self, new SyntaxNodes.OperatorRewriter(operator), null));
-    }
-  }
-
   /** Decides whether a node is a match for a search. */
   private interface NodeMatcher {
     boolean matches(VmTyped node);
@@ -308,12 +293,12 @@ public final class GenericNodeNodes {
 
   /**
    * Collect the descendants of {@code self} matching {@code matcher}, searching depth-first in
-   * pre-order and stopping at the first match if {@code firstOnly}.
+   * pre-order.
    *
    * <p>A match is searched for further matches, so a match may contain another.
    */
   private static List<VmTyped> findMatchingChildren(
-      Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly, IndirectCallNode callNode) {
+      Node owner, VmTyped self, NodeMatcher matcher, IndirectCallNode callNode) {
 
     List<VmTyped> matches = new ArrayList<>();
     var pending = new ArrayDeque<VmTyped>();
@@ -324,7 +309,6 @@ public final class GenericNodeNodes {
       visited += 1;
       if (matcher.matches(node)) {
         matches.add(node);
-        if (firstOnly) break;
       }
       pushChildren(pending, node, callNode);
     }
@@ -340,10 +324,70 @@ public final class GenericNodeNodes {
     }
   }
 
-  private static NodeSet findTargets(
-      Node owner, VmTyped self, NodeMatcher matcher, boolean firstOnly, IndirectCallNode callNode) {
+  /**
+   * Returns {@code self} rebuilt with the descendants matching {@code matcher} replaced by {@code
+   * replacer}'s results, searching depth-first in pre-order and stopping at the first match if
+   * {@code firstOnly}.
+   *
+   * <p>A match is not searched for further matches.
+   */
+  private static VmTyped replaceMatchingChildren(
+      VmTyped self,
+      NodeMatcher matcher,
+      boolean firstOnly,
+      VmFunction replacer,
+      IndirectCallNode callNode) {
 
-    return NodeSet.of(findMatchingChildren(owner, self, matcher, firstOnly, callNode));
+    var search = new ReplaceSearch(matcher, firstOnly, replacer, callNode);
+    return SyntaxNodes.rebuild(self, search.replaceBelow(self));
+  }
+
+  /** Finds and replaces the matches of a {@code GenericNode.replaceChild*} call. */
+  private static final class ReplaceSearch {
+    private final NodeMatcher matcher;
+    private final boolean firstOnly;
+    private final VmFunction replacer;
+    private final IndirectCallNode callNode;
+
+    private boolean done;
+
+    private ReplaceSearch(
+        NodeMatcher matcher, boolean firstOnly, VmFunction replacer, IndirectCallNode callNode) {
+      this.matcher = matcher;
+      this.firstOnly = firstOnly;
+      this.replacer = replacer;
+      this.callNode = callNode;
+    }
+
+    /**
+     * Returns the children of {@code node} with the matches below it replaced, or {@code null} if
+     * nothing below it matches.
+     *
+     * <p>Each element is either a {@link Rebuild} or a node to keep as it is.
+     */
+    @TruffleBoundary
+    private Object @Nullable [] replaceBelow(VmTyped node) {
+      var children = (VmList) VmUtils.readMember(node, Identifier.CHILDREN, callNode);
+      Object[] result = null;
+      for (var i = 0; i < children.getLength() && !done; i++) {
+        var child = (VmTyped) children.get(i);
+        Object replacement;
+        if (matcher.matches(child)) {
+          replacement = replacer.apply(child);
+          done = firstOnly;
+        } else {
+          var grandchildren = replaceBelow(child);
+          replacement = grandchildren == null ? null : new Rebuild(child, grandchildren);
+        }
+        if (replacement != null) {
+          if (result == null) {
+            result = children.toArray();
+          }
+          result[i] = replacement;
+        }
+      }
+      return result;
+    }
   }
 
   private static @Nullable VmTyped findFirstParent(Node owner, VmTyped self, NodeMatcher matcher) {

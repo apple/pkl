@@ -19,16 +19,12 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import java.util.ArrayList;
-import java.util.Collections;
-import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Locale;
-import java.util.Set;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.SyntaxModule;
 import org.pkl.core.runtime.VmContext;
-import org.pkl.core.runtime.VmFunction;
 import org.pkl.core.runtime.VmList;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
@@ -155,170 +151,74 @@ public final class SyntaxNodes {
   }
 
   /**
-   * What a node becomes in a tree being built.
+   * A node to rebuild with new children.
    *
-   * <p>{@code below} is the rewriter to apply to {@link #node}'s children, or {@code null} to leave
-   * them as they are.
+   * <p>Each of {@code children} is either a {@code Rebuild} or a node to keep as it is.
    */
-  record Rewrite(VmTyped node, @Nullable Rewriter below) {}
+  record Rebuild(VmTyped basis, Object[] children) {}
 
-  /** Decides what each node of a tree being built becomes. */
-  interface Rewriter {
-    /**
-     * Rewrite {@code basis}, which sits at the position {@code input} presents.
-     *
-     * <p>{@code input} is what a Pkl callback is given: {@code basis} positioned in the tree being
-     * built, so that the callback sees the parents the result will have.
-     */
-    Rewrite rewrite(VmTyped basis, VmTyped input);
-  }
-
-  /** Present the result of a Pkl rewrite callback at the position it was returned for. */
-  private static Rewrite unwrapRewriteRoot(VmTyped result) {
-    if (result.hasExtraStorage()
-        && result.getExtraStorage() instanceof ViewData view
-        && view.parentVm == null) {
-      return new Rewrite(view.basis, view.rewriter);
-    }
-    return new Rewrite(result, null);
-  }
-
-  /** Applies the operator of {@code GenericNode.transform}. */
-  static final class OperatorRewriter implements Rewriter {
-    private final VmFunction operator;
-
-    OperatorRewriter(VmFunction operator) {
-      this.operator = operator;
-    }
-
-    @Override
-    public Rewrite rewrite(VmTyped basis, VmTyped input) {
-      // the operator recurses on its own, so whatever it returns is final for this position
-      var rewrite = unwrapRewriteRoot((VmTyped) operator.apply(input));
-      // an unchanged node is presented directly; wrapping its input view would only add a layer
-      return rewrite.node() == input ? new Rewrite(basis, rewrite.below()) : rewrite;
-    }
-  }
-
-  /** Replaces a fixed set of nodes, as {@code GenericNode.replaceChild*} do. */
-  static final class TargetRewriter implements Rewriter {
-    private final NodeSet targets;
-    private final VmFunction replacer;
-
-    TargetRewriter(NodeSet targets, VmFunction replacer) {
-      this.targets = targets;
-      this.replacer = replacer;
-    }
-
-    @Override
-    public Rewrite rewrite(VmTyped basis, VmTyped input) {
-      if (!targets.contains(basis)) {
-        return new Rewrite(basis, this);
-      }
-      // a replacement is not searched for further matches, so a match nested in a match is not
-      // visited
-      return unwrapRewriteRoot((VmTyped) replacer.apply(input));
-    }
-  }
-
-  /* A set that holds nodes by identity rather than by their content. */
-  static final class NodeSet {
-    private final Set<VmTyped> nodes;
-    private final boolean isEmpty;
-
-    private NodeSet(Set<VmTyped> nodes) {
-      this.nodes = nodes;
-      this.isEmpty = nodes.isEmpty();
-    }
-
-    @TruffleBoundary
-    static NodeSet of(List<VmTyped> nodes) {
-      Set<VmTyped> set = Collections.newSetFromMap(new IdentityHashMap<>());
-      set.addAll(nodes);
-      return new NodeSet(set);
-    }
-
-    boolean isEmpty() {
-      return isEmpty;
-    }
-
-    @TruffleBoundary
-    boolean contains(VmTyped node) {
-      return nodes.contains(node);
-    }
-  }
-
-  /**
-   * Extra storage backing a Pkl {@code GenericNode} that presents another node at a position in a
-   * tree being built by a rewrite.
-   */
-  static final class ViewData {
-    final VmTyped basis;
-    private final @Nullable Rewriter rewriter;
+  /** Extra storage backing a Pkl {@code GenericNode} rebuilt from {@link #basis}. */
+  private static final class BuiltNodeData {
+    private final VmTyped basis;
     private final @Nullable VmTyped parentVm;
 
-    private @Nullable VmTyped selfVm;
+    // set right after the node is created, so that the children can be parented at it
+    private VmList children = VmList.EMPTY;
 
-    ViewData(VmTyped basis, @Nullable Rewriter rewriter, @Nullable VmTyped parentVm) {
+    private BuiltNodeData(VmTyped basis, @Nullable VmTyped parentVm) {
       this.basis = basis;
-      this.rewriter = rewriter;
       this.parentVm = parentVm;
-    }
-
-    /** Whether this view presents its basis unchanged, all the way down. */
-    boolean isPassThrough() {
-      return rewriter == null;
-    }
-
-    VmList children() {
-      var basisChildren = (VmList) VmUtils.readMember(basis, Identifier.CHILDREN);
-      if (basisChildren.isEmpty()) {
-        return VmList.EMPTY;
-      }
-      var children = new Object[basisChildren.getLength()];
-      for (var i = 0; i < children.length; i++) {
-        children[i] = child((VmTyped) basisChildren.get(i));
-      }
-      return VmList.create(children);
-    }
-
-    private VmTyped child(VmTyped basisChild) {
-      var rewriter = this.rewriter;
-      // a pass-through view only repositions its basis' children
-      var input = createView(new ViewData(basisChild, null, selfVm));
-      if (rewriter == null) {
-        return input;
-      }
-      var rewrite = rewriter.rewrite(basisChild, input);
-      return createView(new ViewData(rewrite.node(), rewrite.below(), selfVm));
     }
   }
 
-  private static final VmObjectFactory<ViewData> viewFactory =
-      new VmObjectFactory<ViewData>(SyntaxModule::getGenericNodeClass)
-          .addStringProperty("type", vd -> (String) VmUtils.readMember(vd.basis, Identifier.TYPE))
-          .addListProperty("children", ViewData::children)
-          .addProperty("parent", vd -> VmNull.lift(vd.parentVm))
-          .addProperty("text", vd -> VmUtils.readMember(vd.basis, Identifier.TEXT))
-          .addProperty("span", vd -> VmUtils.readMember(vd.basis, Identifier.SPAN));
+  private static final VmObjectFactory<BuiltNodeData> builtNodeFactory =
+      new VmObjectFactory<BuiltNodeData>(SyntaxModule::getGenericNodeClass)
+          .addStringProperty("type", bd -> (String) VmUtils.readMember(bd.basis, Identifier.TYPE))
+          .addListProperty("children", bd -> bd.children)
+          .addProperty("parent", bd -> VmNull.lift(bd.parentVm))
+          .addProperty("text", bd -> VmUtils.readMember(bd.basis, Identifier.TEXT))
+          .addProperty("span", bd -> VmUtils.readMember(bd.basis, Identifier.SPAN));
 
-  /** Create the Pkl {@code GenericNode} backed by {@code data}. */
-  static VmTyped createView(ViewData data) {
-    var result = viewFactory.create(data);
-    data.selfVm = result;
+  /**
+   * Build the tree rooted at {@code root}, with its children replaced by {@code children} if not
+   * {@code null}.
+   *
+   * <p>The returned root has no parent, and every other node is parented in the returned tree. The
+   * tree {@code root} is left untouched.
+   */
+  @TruffleBoundary
+  static VmTyped rebuild(VmTyped root, Object @Nullable [] children) {
+    return children == null ? reparent(root, null) : build(root, children, null);
+  }
+
+  private static VmTyped build(VmTyped basis, Object[] children, @Nullable VmTyped parent) {
+    var data = new BuiltNodeData(basis, parent);
+    var result = builtNodeFactory.create(data);
+    var builtChildren = new Object[children.length];
+    for (var i = 0; i < children.length; i++) {
+      builtChildren[i] =
+          children[i] instanceof Rebuild rebuild
+              ? build(rebuild.basis(), rebuild.children(), result)
+              : reparent((VmTyped) children[i], result);
+    }
+    // A node and its children point at each other, so neither can be complete before the other is
+    // created. This node is therefore created first, without children, so its children can be built
+    // with it as their parent, and only then are they set here.
+    // This is safe because factory properties are evaluated lazily, on first read, and no Pkl code
+    // can see this node before `build` returns, so `children` can't be read before it's set.
+    data.children = VmList.create(builtChildren);
     return result;
   }
 
-  /**
-   * Build the tree rooted at {@code self} with {@code targets} replaced by {@code replacer}'s
-   * results.
-   *
-   * <p>As with {@code transform}, the returned root has no parent and the tree {@code self} belongs
-   * to is left untouched.
-   */
-  static VmTyped replaceTargets(VmTyped self, NodeSet targets, VmFunction replacer) {
-    var rewriter = targets.isEmpty() ? null : new TargetRewriter(targets, replacer);
-    return createView(new ViewData(self, rewriter, null));
+  /** Copy {@code node} and its subtree to sit below {@code parent}. */
+  private static VmTyped reparent(VmTyped node, @Nullable VmTyped parent) {
+    // a parsed node's subtree is created lazily from its parse-time node, so only the node is
+    // copied
+    if (node.hasExtraStorage() && node.getExtraStorage() instanceof GenericNodeData data) {
+      return createNode(new GenericNodeData(data.node, data.source, data.sourceUri, parent));
+    }
+    var children = (VmList) VmUtils.readMember(node, Identifier.CHILDREN);
+    return build(node, children.toArray(), parent);
   }
 
   /**
@@ -337,10 +237,6 @@ public final class SyntaxNodes {
       if (storage instanceof GenericNodeData data) {
         materializeText(data.node, data.source);
         return data.node;
-      }
-      // a pass-through view presents its basis unchanged
-      if (storage instanceof ViewData view && view.isPassThrough()) {
-        return convertVmToNode(view.basis, fallbackSpan, callNode);
       }
     }
 
