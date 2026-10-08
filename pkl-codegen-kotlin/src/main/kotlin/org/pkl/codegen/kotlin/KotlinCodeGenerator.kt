@@ -803,9 +803,8 @@ class KotlinCodeGenerator(
       else -> throw AssertionError("Encountered unexpected PType subclass: $this")
     }
 
-  private fun List<PType>.toKotlinPoet(): Array<TypeName> = map {
-    it.toKotlinPoetName()
-  }.toTypedArray()
+  private fun List<PType>.toKotlinPoet(): Array<TypeName> =
+    map { it.toKotlinPoetName() }.toTypedArray()
 
   private val nameMapper = NameMapper(options.renames)
 }
