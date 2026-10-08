@@ -1652,6 +1652,65 @@ class JavaCodeGeneratorTest {
   }
 
   @Test
+  fun `spring boot -- explicitly configured ConfigurationProperties`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+
+        class Server
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(
+          generateSpringBootConfig = true,
+          springBootConfigurationProperties =
+            mapOf("my.mod" to "", "my.mod#Server" to "my-server-prefix"),
+        ),
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |@ConfigurationProperties
+        |public final class Mod {
+        |  private Mod() {
+        |  }
+        """
+          .trimMargin()
+      )
+    assertThat(javaCode)
+      .contains(
+        """
+        |  @ConfigurationProperties("my-server-prefix")
+        |  public static final class Server {
+        """
+          .trimMargin()
+      )
+  }
+
+  @Test
+  fun `spring boot -- explicity configured properties means no interface`() {
+    val javaCode =
+      generateJavaCode(
+        """
+        module my.mod
+
+        server: Server
+
+        class Server
+        """
+          .trimIndent(),
+        JavaCodeGeneratorOptions(
+          generateSpringBootConfig = true,
+          springBootConfigurationProperties = mapOf("foo" to "foo"),
+        ),
+      )
+    // normally this would generate `@ConfigurationProperties` annotations through inference.
+    // but setting this option means that the user is in total control of how these annotations
+    // get produced.
+    assertThat(javaCode).doesNotContain("@ConfigurationProperties")
+  }
+
+  @Test
   fun `import module`() {
     val library =
       PklModule(

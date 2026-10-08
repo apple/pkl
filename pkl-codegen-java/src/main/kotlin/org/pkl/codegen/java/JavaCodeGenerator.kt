@@ -97,7 +97,24 @@ data class JavaCodeGeneratorOptions(
    * from the corresponding name derived from the Pkl module declaration .
    */
   val renames: Map<String, String> = emptyMap(),
-)
+
+  /**
+   * The mapping of Pkl class names to the spring boot `@ConfigurationProperties` prefix name, when
+   * [generateSpringBootConfig] is enabled.
+   *
+   * Setting this field is optional, and by default is inferred through the schema of the input
+   * modules.
+   */
+  val springBootConfigurationProperties: Map<String, String> = emptyMap(),
+) {
+  init {
+    for (value in springBootConfigurationProperties.values) {
+      require(value.isEmpty() || value.isValidConfigurationPropertiesPrefix) {
+        "Invalid value in `springBootConfigurationProperties`: expected a valid ConfigurationProperties prefix, but got '$value'."
+      }
+    }
+  }
+}
 
 /** Entrypoint for the Java code generator API. */
 class JavaCodeGenerator(
@@ -523,7 +540,25 @@ class JavaCodeGenerator(
     }
 
     fun generateSpringBootAnnotations(builder: TypeSpec.Builder) {
-      if (isModuleClass) {
+      if (codegenOptions.springBootConfigurationProperties.isNotEmpty()) {
+        val configurationPropertyPrefix =
+          codegenOptions.springBootConfigurationProperties[pClass.displayName] ?: return
+        val annotation =
+          with(
+            AnnotationSpec.builder(
+              ClassName.get(
+                "org.springframework.boot.context.properties",
+                "ConfigurationProperties",
+              )
+            )
+          ) {
+            if (!configurationPropertyPrefix.isEmpty()) {
+              addMember("value", "\$S", configurationPropertyPrefix)
+            }
+            build()
+          }
+        builder.addAnnotation(annotation)
+      } else if (isModuleClass) {
         builder.addAnnotation(
           ClassName.get("org.springframework.boot.context.properties", "ConfigurationProperties")
         )
