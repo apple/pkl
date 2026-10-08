@@ -22,6 +22,7 @@ plugins {
   id("pklGraalVm")
   id("pklJavaLibrary")
   id("pklNativeLifecycle")
+  id("pklNativeSourceBundle")
   id("pklPublishLibrary")
   id("com.gradleup.shadow")
 }
@@ -29,6 +30,9 @@ plugins {
 // assumes that `pklJavaExecutable` is also applied
 val executableSpec = project.extensions.getByType<ExecutableSpec>()
 val buildInfo = project.extensions.getByType<BuildInfo>()
+
+// musl executables are linked with `--static`, so musl and zlib become part of the executable
+extensions.getByType<SourceBundleSpec>().staticMuslLibc = true
 
 val stagedMacAarch64Executable: Configuration = configurations.create("stagedMacAarch64Executable")
 val stagedLinuxAmd64Executable: Configuration = configurations.create("stagedLinuxAmd64Executable")

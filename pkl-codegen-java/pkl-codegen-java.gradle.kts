@@ -30,6 +30,13 @@ dependencies {
 
   testImplementation(projects.pklConfigJava)
   testImplementation(projects.pklCommonsTest)
+
+  // used by `pklJavaExecutable` plugin (ideally this would be inferred automatically)
+  firstPartySourcesJars(project(":pkl-codegen-java", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
 }
 
 executable {

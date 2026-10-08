@@ -21,6 +21,7 @@ plugins {
   id("pklJavaLibrary")
   //  id("pklPublishLibrary")
   id("com.gradleup.shadow")
+  id("pklJvmSourceBundle")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)
