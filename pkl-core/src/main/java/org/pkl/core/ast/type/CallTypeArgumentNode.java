@@ -35,7 +35,6 @@ public abstract class CallTypeArgumentNode extends PklNode {
 
   @Specialization(guards = {"typeArgument.getCallTarget() == cachedCallTarget"})
   protected Object evalDirect(
-      VirtualFrame frame,
       @SuppressWarnings("unused") VmTypeArgument typeArgument,
       Object value,
       @Cached("typeArgument.getCallTarget()") @SuppressWarnings("unused")
@@ -52,10 +51,7 @@ public abstract class CallTypeArgumentNode extends PklNode {
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
-      VirtualFrame frame,
-      VmTypeArgument typeArgument,
-      Object value,
-      @Cached("create()") IndirectCallNode callNode) {
+      VmTypeArgument typeArgument, Object value, @Cached("create()") IndirectCallNode callNode) {
     var enclosingFrame = typeArgument.getEnclosingFrame();
     if (enclosingFrame == null) {
       return callNode.call(typeArgument.getCallTarget(), null, null, null, null, value);

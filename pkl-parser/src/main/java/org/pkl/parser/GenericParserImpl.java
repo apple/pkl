@@ -224,7 +224,7 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     ff(headers);
     if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList(false));
+      headers.add(parseTypeParameterList(true));
       ff(headers);
     }
     expect(Token.ASSIGN, headers, "unexpectedToken", "=");
@@ -1321,12 +1321,12 @@ class GenericParserImpl {
     return bodies;
   }
 
-  private Node parseTypeParameterList(boolean allowVarianceModifies) {
+  private Node parseTypeParameterList(boolean allowVarianceModifiers) {
     var children = new ArrayList<Node>();
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     var elements = new ArrayList<Node>();
-    parseListOf(Token.GT, elements, () -> parseTypeParameter(allowVarianceModifies));
+    parseListOf(Token.GT, elements, () -> parseTypeParameter(allowVarianceModifiers));
     children.add(new Node(NodeType.TYPE_PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new Node(NodeType.TYPE_PARAMETER_LIST, children);

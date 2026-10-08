@@ -13,23 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.pkl.core.runtime;
+package org.pkl.core.ast.builder;
 
-import java.util.List;
-import org.pkl.core.TypeParameter.Variance;
+import org.pkl.core.runtime.TypeParameter;
 
-public record TypeParameter(Variance variance, String name, int index) {
-  public org.pkl.core.TypeParameter export() {
-    return new org.pkl.core.TypeParameter(variance, name, index);
-  }
-
-  public static List<org.pkl.core.TypeParameter> export(List<TypeParameter> typeParameters) {
-    return typeParameters.stream().map(TypeParameter::export).toList();
-  }
-
-  public enum OwnerType {
-    CLASS,
-    METHOD,
-    TYPEALIAS
-  }
-}
+public record TypeParameterResolution(
+    TypeParameter typeParameter, int levelsUp, TypeParameter.OwnerType ownerType) {}

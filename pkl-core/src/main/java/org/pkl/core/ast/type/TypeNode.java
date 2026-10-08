@@ -186,7 +186,7 @@ public abstract class TypeNode extends PklNode {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
           if (typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVariable
-                  && typeVariable.typeParameter.ownerType() == TypeParameter.OwnerType.METHOD)) {
+                  && typeVariable.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(false);
             return false;
           }
@@ -217,7 +217,7 @@ public abstract class TypeNode extends PklNode {
           if (typeNode instanceof ConstrainedTypeNode
               || typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVar
-                  && typeVar.getTypeParameter().ownerType() == TypeParameter.OwnerType.METHOD)) {
+                  && typeVar.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(true);
             return false;
           }
@@ -2189,19 +2189,24 @@ public abstract class TypeNode extends PklNode {
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
     private final TypeParameter typeParameter;
     private final int levelsUp;
+    private final TypeParameter.OwnerType ownerType;
     @Child private CallTypeArgumentNode callTypeArgumentNode;
 
     public TypeVariableNode(
-        SourceSection sourceSection, TypeParameter typeParameter, int levelsUp) {
+        SourceSection sourceSection,
+        TypeParameter typeParameter,
+        int levelsUp,
+        TypeParameter.OwnerType ownerType) {
       super(sourceSection);
       this.typeParameter = typeParameter;
       this.levelsUp = levelsUp;
+      this.ownerType = ownerType;
       callTypeArgumentNode = CallTypeArgumentNodeGen.create(sourceSection);
     }
 
     @Override
     protected VmType doGetType() {
-      return new VmType.TypeVariableType(typeParameter);
+      return new VmType.TypeVariableType(typeParameter, ownerType);
     }
 
     public TypeParameter getTypeParameter() {
@@ -2210,7 +2215,7 @@ public abstract class TypeNode extends PklNode {
 
     @Override
     public boolean isNoopTypeCheck() {
-      return levelsUp < 0 || typeParameter.ownerType() != TypeParameter.OwnerType.METHOD;
+      return levelsUp < 0 || ownerType != TypeParameter.OwnerType.METHOD;
     }
 
     @Override

@@ -52,7 +52,6 @@ public class VmTypeArgument {
   }
 
   public VmType reify() {
-    // assumption: ExecuteTypeArgumentCheckNode is the only child of rootNode
     var type = getTypeNode().getType();
     var frame = enclosingFrame != null ? enclosingFrame : VmUtils.createEmptyMaterializedFrame();
     return type.reify(frame);

@@ -488,12 +488,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     if (args == null) {
       if (identifier.getIdentifiers().size() == 1) {
         var text = identifier.getIdentifiers().get(0).getValue();
-        var typeParameterResolution = symbolTable.resolveTypeParameter(text);
+        var typeParameterResolution = symbolTable.getCurrentScope().resolveTypeParameter(text);
         if (typeParameterResolution != null) {
           return new UnresolvedTypeNode.TypeVariable(
               createSourceSection(type),
               typeParameterResolution.typeParameter(),
-              typeParameterResolution.levelsUp());
+              typeParameterResolution.levelsUp(),
+              typeParameterResolution.ownerType());
         }
       }
 
@@ -2357,27 +2358,12 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     var size = params.size();
     var result = new ArrayList<TypeParameter>(size);
 
-    var parent = ctx.parent();
-    TypeParameter.OwnerType ownerType;
-    if (parent instanceof Class) {
-      ownerType = TypeParameter.OwnerType.CLASS;
-    } else if (parent instanceof TypeAlias) {
-      ownerType = TypeParameter.OwnerType.TYPEALIAS;
-    } else if (parent instanceof ClassMethod || parent instanceof ObjectMethod) {
-      ownerType = TypeParameter.OwnerType.METHOD;
-    } else {
-      throw PklBugException.unreachableCode();
-    }
-
     for (var i = 0; i < size; i++) {
       var paramCtx = params.get(i);
       Variance variance;
       var nodeVariance = paramCtx.getVariance();
       if (nodeVariance == null) {
         variance = org.pkl.core.TypeParameter.Variance.INVARIANT;
-      } else if (ownerType != TypeParameter.OwnerType.CLASS) {
-        throw new PklBugException(
-            "found type parameter variance modifier found on declaration that is not a class");
       } else {
         variance =
             switch (nodeVariance) {
@@ -2392,7 +2378,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
             .withSourceSection(createSourceSection(paramCtx))
             .build();
       }
-      result.add(new TypeParameter(variance, parameterName, i, ownerType));
+      result.add(new TypeParameter(variance, parameterName, i));
     }
     return result;
   }

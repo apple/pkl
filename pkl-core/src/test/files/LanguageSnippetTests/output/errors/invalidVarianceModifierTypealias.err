@@ -1,6 +1,0 @@
-–– Pkl Error ––
-Variance modifiers may only be applied to type parameters on classes.
-
-x | typealias Foo<in T> = Int
-                  ^^
-at invalidVarianceModifierTypealias (file:///$snippetsDir/input/errors/invalidVarianceModifierTypealias.pkl)

@@ -99,7 +99,6 @@ class ParserComparisonTest {
         "errors/invalidCharacterEscape.pkl",
         "errors/invalidCharacterEscape2.pkl",
         "errors/invalidUnicodeEscape.pkl",
-        "errors/invalidVarianceModifierTypealias.pkl",
         "errors/invalidVarianceModifierClassMethod.pkl",
         "errors/invalidVarianceModifierObjectMethod.pkl",
         "errors/letExpressionError3.pkl",

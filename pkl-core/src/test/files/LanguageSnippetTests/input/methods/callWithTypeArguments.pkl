@@ -107,6 +107,20 @@ lexical {
     res2 = inner2::<Int>(new { name = "x" }, 1)
   }
   nestedInMethodParam = outr::<Person>()
+
+  inEagerScope {
+    local function k1<T>() = new {
+      [let (elem = "key" as T) elem] = "value"
+    }
+    test.catch(() -> k1::<Int>())
+
+    local function k2<T>() = new {
+      for (i in List(1, 2, 3)) {
+        [let (elem = "key".repeat(i) as T) elem as T] = "value"
+      }
+    }
+    k2::<String(length < 10)>()
+  } 
 }
 
 typeCast {

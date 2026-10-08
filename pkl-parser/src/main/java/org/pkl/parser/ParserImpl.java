@@ -365,7 +365,7 @@ final class ParserImpl {
     var identifier = parseIdentifier();
     TypeParameterList typePars = null;
     if (lookahead == Token.LT) {
-      typePars = parseTypeParameterList(false);
+      typePars = parseTypeParameterList(true);
     }
     expect(Token.ASSIGN, "unexpectedToken", "=");
     var type = parseType();
