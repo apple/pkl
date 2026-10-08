@@ -92,5 +92,24 @@ facts {
   }
   ["only the root of a replaced tree has no parent"] {
     true
+    true
+  }
+  ["replacing below a node does not detach it from its own tree"] {
+    true
+  }
+  ["a replacer sees this tree, not the one being built"] {
+    true
+  }
+  ["the children of an amended replacement are parented at the replacement"] {
+    true
+  }
+  ["rebuilds ancestors of a replacement"] {
+    true
+  }
+  ["a match is not searched for further matches"] {
+    true
+  }
+  ["replacement is eager"] {
+    true
   }
 }
