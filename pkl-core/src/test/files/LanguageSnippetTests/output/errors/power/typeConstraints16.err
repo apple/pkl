@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Type constraint `name?.contains("Bob") ?? false` violated.
-Value: new Bird { name = "Pigeon" }
+Value: new typeConstraints16#Bird { name = "Pigeon" }
 
     name?.contains("Bob") ?? false
     │     │               │

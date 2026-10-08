@@ -15,5 +15,5 @@ res3 {
   modName = "currentModuleType6#ModuleSubclass"
   mod2x = -1
 }
-res4 = "Expected value of type `currentModuleType6#ModuleSubclass`, but got type `moduleTypeProperty`. Value: new ModuleClass { x = ?; y = ?; modName = ? }"
+res4 = "Expected value of type `currentModuleType6#ModuleSubclass`, but got type `moduleTypeProperty`. Value: new moduleTypeProperty { x = ?; y = ?; modName = ? }"
 pkl: WARN: Cannot reference `module` type within a class body. This will be an error in a future release. (file:///$snippetsDir/input/types/currentModuleType6.pkl)

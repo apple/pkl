@@ -1,6 +1,6 @@
 –– Pkl Error ––
 Expected value of type `pkl.ref#Reference<reference1#D, Int>`, but got type `pkl.ref#Reference<reference1#D, String>`.
-Value: Reference(new D {}, String, "")
+Value: Reference(new reference1#D {}, String, "")
 
 x | typealias Ref<T> = ref.Reference<D, T>
                        ^^^^^^^^^^^^^^^^^^^
