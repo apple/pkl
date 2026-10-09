@@ -46,7 +46,6 @@ public class VmTypeArgument {
     return rootNode.getCallTarget();
   }
 
-  @TruffleBoundary
   private TypeNode getTypeNode() {
     return rootNode.getTypeNode();
   }
