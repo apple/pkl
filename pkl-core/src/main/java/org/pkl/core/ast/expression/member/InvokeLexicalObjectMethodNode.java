@@ -62,6 +62,6 @@ public final class InvokeLexicalObjectMethodNode extends AbstractInvokeLexicalMe
     assert member != null && member.isLocal();
     var method = (ObjectMethodNode) member.getMemberNode();
     assert method != null;
-    return method.reify(owner);
+    return method;
   }
 }
