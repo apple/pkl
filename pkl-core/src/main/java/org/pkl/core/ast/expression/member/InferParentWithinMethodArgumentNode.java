@@ -79,7 +79,7 @@ public abstract class InferParentWithinMethodArgumentNode
       @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
       @Cached("getTypeNode(frame, cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
       @Cached(
-              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName(), getTypeArgumentOverrides(frame))")
+              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName(), true, getTypeArgumentOverrides(frame))")
           Object defaultValue) {
     return defaultValue;
   }
@@ -93,6 +93,7 @@ public abstract class InferParentWithinMethodArgumentNode
         typeNode,
         method.getHeaderSection(),
         method.getQualifiedName(),
+        true,
         getTypeArgumentOverrides(frame));
   }
 
@@ -102,6 +103,7 @@ public abstract class InferParentWithinMethodArgumentNode
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
       String qualifiedName,
+      boolean isPreCall,
       VmTypeArgument @Nullable [] typeArgumentOverrides) {
     if (typeNode != null && typeNode.isSelfType()) {
       CompilerDirectives.transferToInterpreter();
@@ -109,6 +111,6 @@ public abstract class InferParentWithinMethodArgumentNode
     }
 
     return super.getDefaultValue(
-        frame, typeNode, headerSection, qualifiedName, typeArgumentOverrides);
+        frame, typeNode, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
   }
 }
