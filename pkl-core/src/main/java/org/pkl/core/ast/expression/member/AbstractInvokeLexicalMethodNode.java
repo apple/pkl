@@ -35,8 +35,6 @@ public abstract class AbstractInvokeLexicalMethodNode
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       int methodSlot,
-      int[] parameterSlots,
-      int[] forGeneratorSlots,
       String qualifiedName) {
     super(
         sourceSection,
@@ -45,8 +43,6 @@ public abstract class AbstractInvokeLexicalMethodNode
         argumentNodes,
         needsConst,
         methodSlot,
-        parameterSlots,
-        forGeneratorSlots,
         qualifiedName);
     this.levelsUp = levelsUp;
   }

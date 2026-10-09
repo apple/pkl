@@ -21,27 +21,23 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.runtime.VmLanguage;
-import org.pkl.core.runtime.VmUtils;
 
 public final class TypeArgumentTypeNode extends PklRootNode {
 
   private final SourceSection sourceSection;
   private final String qualifiedName;
   @Child private TypeNode typeNode;
-  private final int[] slotsToCopy;
 
   public TypeArgumentTypeNode(
       VmLanguage language,
       FrameDescriptor frameDescriptor,
       SourceSection sourceSection,
       String qualifiedName,
-      TypeNode typeNode,
-      int[] slotsToCopy) {
+      TypeNode typeNode) {
     super(language, frameDescriptor, true);
     this.sourceSection = sourceSection;
     this.qualifiedName = qualifiedName;
     this.typeNode = typeNode;
-    this.slotsToCopy = slotsToCopy;
   }
 
   @Override
@@ -61,9 +57,7 @@ public final class TypeArgumentTypeNode extends PklRootNode {
   @Override
   protected Object executeImpl(VirtualFrame frame) {
     var enclosingFrame = (MaterializedFrame) frame.getArguments()[3];
-    if (enclosingFrame != null) {
-      VmUtils.copyLocals(enclosingFrame, frame, slotsToCopy);
-    }
-    return typeNode.execute(frame, frame.getArguments()[4]);
+    var effectiveFrame = enclosingFrame == null ? frame : enclosingFrame;
+    return typeNode.execute(effectiveFrame, frame.getArguments()[4]);
   }
 }
