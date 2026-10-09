@@ -35,8 +35,6 @@ public final class InvokeLexicalObjectMethodNode extends AbstractInvokeLexicalMe
       ExpressionNode[] argumentNodes,
       boolean needsConst,
       int methodSlot,
-      int[] parameterSlots,
-      int[] forGeneratorSlots,
       String qualifiedName) {
     super(
         sourceSection,
@@ -46,8 +44,6 @@ public final class InvokeLexicalObjectMethodNode extends AbstractInvokeLexicalMe
         argumentNodes,
         needsConst,
         methodSlot,
-        parameterSlots,
-        forGeneratorSlots,
         qualifiedName);
   }
 
