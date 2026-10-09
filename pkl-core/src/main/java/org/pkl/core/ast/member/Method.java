@@ -15,8 +15,10 @@
  */
 package org.pkl.core.ast.member;
 
+import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.runtime.VmObjectLike;
 
 public interface Method {
   FunctionNode getFunctionNode(@Nullable SourceSection callSite);
@@ -28,4 +30,10 @@ public interface Method {
   SourceSection getHeaderSection();
 
   String getQualifiedName();
+
+  void ensureInitialized(VmObjectLike owner);
+
+  int getTypeParameterCount();
+
+  CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner);
 }
