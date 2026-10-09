@@ -116,7 +116,7 @@ public final class VmUtils {
 
   @TruffleBoundary
   public static MaterializedFrame createEmptyMaterializedFrame() {
-    return Truffle.getRuntime().createMaterializedFrame(new @Nullable Object[] {null, null});
+    return Truffle.getRuntime().createMaterializedFrame(new @Nullable Object[] {null, null, null});
   }
 
   public static Context createContext(Runnable initializer) {
@@ -165,6 +165,18 @@ public final class VmUtils {
 
   public static VmTyped getTypedObjectReceiver(Frame frame) {
     return (VmTyped) getReceiver(frame);
+  }
+
+  /** Returns the type arguments of the currently executing code. */
+  public static VmTypeArgument @Nullable [] getTypeArgumentsOrNull(Frame frame) {
+    return (VmTypeArgument[]) frame.getArguments()[2];
+  }
+
+  public static VmTypeArgument @Nullable [] getTypeArgumentsOrNull(Frame frame, int levelsUp) {
+    if (levelsUp == 0) {
+      return getTypeArgumentsOrNull(frame);
+    }
+    return getTypeArgumentsOrNull(getEnclosingFrame(getOwner(frame), levelsUp));
   }
 
   /** Returns the owner of the currently executing code. */
@@ -231,7 +243,7 @@ public final class VmUtils {
 
   /** Returns a `ObjectMember`'s key while executing the corresponding `MemberNode`. */
   public static Object getMemberKey(Frame frame) {
-    return frame.getArguments()[2];
+    return frame.getArguments()[3];
   }
 
   public static ModuleInfo getModuleInfo(VmObjectLike composite) {
@@ -406,13 +418,15 @@ public final class VmUtils {
           var callTarget = property.getTypeNode().getCallTarget();
           try {
             if (checkType) {
-              result = callNode.call(callTarget, receiver, property.getOwner(), constantValue);
+              result =
+                  callNode.call(callTarget, receiver, property.getOwner(), null, constantValue);
             } else {
               result =
                   callNode.call(
                       callTarget,
                       receiver,
                       property.getOwner(),
+                      null,
                       constantValue,
                       VmUtils.SKIP_TYPECHECK_MARKER);
             }
@@ -436,9 +450,11 @@ public final class VmUtils {
     var callTarget = member.getCallTarget();
     Object result;
     if (checkType) {
-      result = callNode.call(callTarget, receiver, owner, memberKey);
+      result = callNode.call(callTarget, receiver, owner, null, memberKey);
     } else {
-      result = callNode.call(callTarget, receiver, owner, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
+      result =
+          callNode.call(
+              callTarget, receiver, owner, null, memberKey, VmUtils.SKIP_TYPECHECK_MARKER);
     }
     receiver.setCachedValue(memberKey, result);
     return result;
@@ -1071,7 +1087,7 @@ public final class VmUtils {
             exprNode);
     var callNode = Truffle.getRuntime().createIndirectCallNode();
     try {
-      return callNode.call(rootNode.getCallTarget(), module, module);
+      return callNode.call(rootNode.getCallTarget(), module, module, null);
     } catch (VmException e) {
       e.setForExpressionInput(true);
       throw e;
@@ -1098,8 +1114,8 @@ public final class VmUtils {
    * skip constraints check
    */
   public static boolean shouldRunTypeCheck(VirtualFrame frame) {
-    return frame.getArguments().length != 4
-        || frame.getArguments()[3] != VmUtils.SKIP_TYPECHECK_MARKER;
+    return frame.getArguments().length != 5
+        || frame.getArguments()[4] != VmUtils.SKIP_TYPECHECK_MARKER;
   }
 
   @TruffleBoundary

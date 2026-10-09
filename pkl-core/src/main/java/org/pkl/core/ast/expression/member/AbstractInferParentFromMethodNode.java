@@ -32,7 +32,7 @@ public abstract class AbstractInferParentFromMethodNode extends AbstractInferPar
 
   protected abstract Method getMethod(VirtualFrame frame);
 
-  protected abstract @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method);
+  protected abstract @Nullable TypeNode getTypeNode(Method method);
 
   @Idempotent
   protected boolean isFinalType(Method method, @Nullable TypeNode typeNode) {

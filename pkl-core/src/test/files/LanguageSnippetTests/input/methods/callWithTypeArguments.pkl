@@ -1,0 +1,157 @@
+open module callWithTypeArguments
+
+import "pkl:test"
+
+directCall {
+  pair = Pair::<List<String>, Set<String>>(List("foo"), Set("bar"))
+  pairSelf = Pair::<module, module>(new module {}, new module {}).first.getClass().toString()
+  pairErr = test.catch(() -> Pair::<List<String>, Set<String>>(List(0), Set("bar")))
+  pairSelfErr = test.catch(() -> Pair::<module, module>(List(), new module {}))
+  listMap = List("hi", "foo", "a").map::<Int>((it) -> it.length)
+  listMapErr = test.catch(() -> List("hi", "foo", "a").map::<String>((it) -> it.length))
+  wrongTypeArgCount = test.catch(() -> Pair::<String, Int, Boolean> ("foo", 10))
+  nonGenericMethod = test.catch(() -> Regex::<String> ("foo"))
+}
+
+open class A {
+  function doIt<T>(arg: List): Boolean = arg.first is T
+}
+
+class B extends A {
+  function doIt<T>(arg: List): Boolean = super.doIt::<T>(arg) || super.doIt::<List<T>>(arg)
+}
+
+superCall {
+  local function doIt(a: A, arg: List): Boolean =
+    a.doIt::<String>(arg)
+
+// should be true:
+  doIt(new A {}, List(""))
+  doIt(new A {}, List(""))
+  doIt(new B {}, List(""))
+  doIt(new B {}, List(List("")))
+// should be false:
+  doIt(new A {}, List(0))
+  doIt(new A {}, List(List(0)))
+  doIt(new B {}, List(List(0)))
+}
+
+local num = 5
+
+objectMethod {
+  local function foo<T>(): T = "hi"
+  res = test.catch(() -> foo::<String(length > num)>())
+}
+
+function lazy1<T>(it): Listing<T> = new Listing { it }
+local function lazy2<T>(it): Listing<T> = new Listing { it }
+lazyTypeCheck {
+  local function lazy3<T>(it): Listing<T> = new Listing { it }
+  res1 = test.catch(() -> lazy1::<String>(5).toString())
+  res2 = test.catch(() -> lazy2::<String>(5).toString())
+  res3 = test.catch(() -> lazy3::<String>(5).toString())
+}
+
+class Person {
+  name: String
+
+  function greet<A, B>() = "hi \(name)"
+}
+
+typeDefaults {
+  local function makeNamed<T>(val: String): T = new { name = val }
+  local function makeNamedListing<T>(val: String): Listing<T> = new {
+    new { name = val }
+  }
+  local function makeFromParam<T>(val: T): Listing<T> = new { val }
+  res1 = makeNamed::<Person>("bob")
+  res1a = res1.getClass().toString()
+  res2 = makeNamedListing::<Person>("bob")
+  res2a = res2.first.getClass().toString()
+  res3 = makeFromParam::<Person>(new { name = "bob" })
+  res3a = res3.first.getClass().toString()
+}
+
+class Bird {
+  name: String
+
+  function greet<A>() = "hi \(name)"
+}
+
+polymorphism {
+  // test that method type parameters are considered non-final
+  local function make<T>(): T = new T { name = "fred" }
+  res1 = make::<Person>()
+  res2 = make::<Bird>()
+
+  local function call(obj: Bird | Person) = obj.greet::<Int, String>()
+  res3 = call(new Person { name = "fred" })
+  res4 = test.catch(() -> call(new Bird { name = "pigeon" }))
+  res5 = call(new Person { name = "bob" })
+}
+
+lexical {
+  local function f<T>(): Dynamic = new { res = 5 as T }
+  res1 = test.catch(() -> f::<String>().res)
+
+  local function g<T>(): Dynamic = new {
+    local myProp: T = 5
+    res = myProp
+  }
+  res2 = test.catch(() -> g::<String>().res)
+
+  local function outr<T>() = new Dynamic {
+    local function inner<U>(x: Listing<T>, y: U) = x
+    local function inner2<U>(x: T, y: U) = x
+    res1 = inner::<Int>(new { new { name = "x" } }, 1)
+    res2 = inner2::<Int>(new { name = "x" }, 1)
+    res3 = inner(new { new { name = "x" } }, 1)
+    res4 = inner2(new { name = "x" }, 1)
+  }
+  nestedInMethodParam = outr::<Person>()
+
+  inEagerScope {
+    local function k1<T>() = new {
+      [let (elem = "key" as T) elem] = "value"
+    }
+    test.catch(() -> k1::<Int>())
+
+    local function k2<T>() = new {
+      for (i in List(1, 2, 3)) {
+        [let (elem = "key".repeat(i) as T) elem as T] = "value"
+      }
+    }
+    k2::<String(length < 10)>()
+  } 
+}
+
+typeCast {
+  local function cast<U>(l: Listing<Any>): Listing<U> = l
+
+  res1 = cast::<String(startsWith("Bob"))>(new Listing { "Bobbert" })
+
+  res2 = test.catch(() -> cast::<String(length > 10)>(res1).toString())
+}
+
+nestedWithIndexOffset {
+  local function make<T>(): Listing<T> = new Listing<T> { 1; 2 }
+  local function amend<T, U>(l: Listing<Any>): Listing<U> = (l) { 3 } as Listing<U>
+
+  local parent = make::<Int>()
+  local child = amend::<String, Int>(parent)
+  res = child[0]
+}
+
+constraintReadsFrameSlot {
+  local function id<T>(x) = x is T
+  local function f(n: Int) = id::<String(length > n)>("hi")
+
+  res1 = f(1)
+  res2 = let (n = 1) id::<String(length > n)>("hi")
+  res3 = ((n) -> id::<String(length > n)>("hi")).apply(1)
+  res4 = new Listing {
+    for (n in List(1)) {
+      id::<String(length > n)>("hi")
+    }
+  }
+}

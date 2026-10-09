@@ -21,7 +21,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import java.util.*;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.TypeParameter;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
@@ -38,6 +38,7 @@ import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.runtime.VmUtils;
@@ -57,15 +58,6 @@ public final class SymbolTable {
 
   public Scope getCurrentScope() {
     return currentScope;
-  }
-
-  public @Nullable TypeParameter findTypeParameter(String name) {
-    TypeParameter result;
-    for (var scope = currentScope; scope != null; scope = scope.getParent()) {
-      result = scope.getTypeParameter(name);
-      if (result != null) return result;
-    }
-    return null;
   }
 
   public ObjectMember enterClass(
@@ -509,7 +501,8 @@ public final class SymbolTable {
     }
 
     public final VariableResolution resolveVariable(String name) {
-      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveProperty(name, levelUp));
+      var resolved =
+          resolveLexical((scope, levelUp) -> scope.doResolveProperty(name, levelUp), null);
       if (resolved != null) {
         return resolved;
       }
@@ -522,7 +515,7 @@ public final class SymbolTable {
     }
 
     public final MethodResolution resolveMethod(String name) {
-      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveMethod(name, levelUp));
+      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveMethod(name, levelUp), null);
       if (resolved != null) {
         return resolved;
       }
@@ -534,13 +527,25 @@ public final class SymbolTable {
       return new ImplicitThisMethod();
     }
 
+    public @Nullable TypeParameterResolution resolveTypeParameter(String name) {
+      return resolveLexical(
+          (scope, levelUp) -> ((Scope) scope).doResolveTypeParameter(name, levelUp),
+          (scope, levelUp) -> scope.doResolveTypeParameter(name, levelUp));
+    }
+
+    protected @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      return null;
+    }
+
     @FunctionalInterface
-    private interface ResolutionFunction<T> {
-      @Nullable T apply(LexicalScope scope, int levelUp);
+    private interface ResolutionFunction<Scope, T> {
+      @Nullable T apply(Scope scope, int levelUp);
     }
 
     @SuppressWarnings("unchecked")
-    private @Nullable <R> R resolveLexical(ResolutionFunction<R> fun) {
+    private @Nullable <R> R resolveLexical(
+        ResolutionFunction<LexicalScope, R> fun,
+        @Nullable ResolutionFunction<TypeAliasScope, R> aliasFun) {
       var levelsUp = 0;
       var shouldSkip = false;
       var skippedObjectScope = false;
@@ -554,7 +559,11 @@ public final class SymbolTable {
         if (scope instanceof AnnotationScope && scope.getParent() instanceof ClassScope) {
           levelsUp--;
         }
-        if (scope instanceof LexicalScope lex) {
+        if (aliasFun != null && scope instanceof TypeAliasScope typeAliasScope) {
+          // when resolving type params, also visit TypeAliasScopes with aliasFun
+          var result = aliasFun.apply(typeAliasScope, levelsUp);
+          if (result != null) return result;
+        } else if (scope instanceof LexicalScope lex) {
           if (shouldSkip && !(scope instanceof ForGeneratorScope)) {
             if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
               // skipping the object scope should now see the object body params, because the params
@@ -582,7 +591,8 @@ public final class SymbolTable {
             }
             return result;
           }
-          if (scope instanceof MethodScope
+          // when resolving type params, MethodScope _does_ level up
+          if ((scope instanceof MethodScope && aliasFun == null)
               || scope instanceof ForGeneratorScope
               || scope instanceof LetExpressionScope) {
             // fors, methods, and let exprs don't level up
@@ -701,7 +711,7 @@ public final class SymbolTable {
     @Override
     public @Nullable TypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
-        if (name.equals(param.getName())) return param;
+        if (name.equals(param.name())) return param;
       }
       return null;
     }
@@ -780,6 +790,16 @@ public final class SymbolTable {
     @Override
     public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
       return null;
+    }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      if (result.variance() != org.pkl.core.TypeParameter.Variance.INVARIANT) {
+        throw new PklBugException(
+            "found type parameter variance modifier found on a method declaration");
+      }
+      return new TypeParameterResolution(result, levelsUp, TypeParameter.OwnerType.METHOD);
     }
   }
 
@@ -1049,6 +1069,12 @@ public final class SymbolTable {
       if (member == null) return null;
       return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);
     }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      return new TypeParameterResolution(result, -1, TypeParameter.OwnerType.CLASS);
+    }
   }
 
   public static final class TypeAliasScope extends TypeParameterizableScope {
@@ -1067,6 +1093,12 @@ public final class SymbolTable {
           typeParameters,
           parent.forGeneratorSlots,
           parent.parameterSlots);
+    }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      return new TypeParameterResolution(result, -1, TypeParameter.OwnerType.TYPEALIAS);
     }
   }
 

@@ -16,7 +16,6 @@
 package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.source.SourceSection;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.type.TypeNode;
@@ -209,11 +208,11 @@ public final class MirrorFactories {
         .addTypedProperty("type", Pair::getSecond);
 
     typeParameterFactory
-        .addStringProperty("name", TypeParameter::getName)
+        .addStringProperty("name", TypeParameter::name)
         .addProperty(
             "variance",
             typeParameter ->
-                switch (typeParameter.getVariance()) {
+                switch (typeParameter.variance()) {
                   case COVARIANT -> "out";
                   case CONTRAVARIANT -> "in";
                   default -> VmNull.withoutDefault();

@@ -22,7 +22,6 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
 import org.pkl.core.PklBugException;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
@@ -499,21 +498,29 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   public static final class TypeVariable extends UnresolvedTypeNode {
     private final TypeParameter typeParameter;
+    private final int levelsUp;
+    private final TypeParameter.OwnerType ownerType;
 
-    public TypeVariable(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariable(
+        SourceSection sourceSection,
+        TypeParameter typeParameter,
+        int levelsUp,
+        TypeParameter.OwnerType ownerType) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.levelsUp = levelsUp;
+      this.ownerType = ownerType;
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public TypeParameter getTypeParameter() {
+      return typeParameter;
     }
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new TypeVariableNode(sourceSection, typeParameter);
+      return new TypeVariableNode(sourceSection, typeParameter, levelsUp, ownerType);
     }
   }
 

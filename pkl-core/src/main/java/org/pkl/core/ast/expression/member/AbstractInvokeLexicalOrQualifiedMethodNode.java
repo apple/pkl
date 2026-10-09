@@ -23,6 +23,7 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmObjectLike;
 
@@ -34,9 +35,7 @@ import org.pkl.core.runtime.VmObjectLike;
  * InvokeLexicalObjectMethodNode}), or off of an explicit receiver expression ({@link
  * InvokeQualifiedClassMethodNode}, {@link InvokeQualifiedObjectMethodNode}).
  */
-public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
-    extends AbstractInvokeMethodNode
-    permits AbstractInvokeQualifiedMethodNode, AbstractInvokeLexicalMethodNode {
+public abstract class AbstractInvokeLexicalOrQualifiedMethodNode extends AbstractInvokeMethodNode {
 
   protected final Identifier methodName;
   private final boolean needsConst;
@@ -46,10 +45,12 @@ public abstract sealed class AbstractInvokeLexicalOrQualifiedMethodNode
   protected AbstractInvokeLexicalOrQualifiedMethodNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       boolean needsConst,
-      int methodSlot) {
-    super(sourceSection, argumentNodes, methodSlot);
+      int methodSlot,
+      String qualifiedName) {
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
     this.methodName = methodName;
     this.needsConst = needsConst;
     this.isConstChecked = false;

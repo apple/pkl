@@ -1,0 +1,30 @@
+–– Pkl Error ––
+oops
+
+x | res = baz::<String(throw("oops"))>(List("a"))
+                       ^^^^^^^^^^^^^
+at callWithTypeArgumentsStacktrace#res.<typearg#1> (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace.pkl)
+
+x | function baz<T>(qux) = foo::<List<T>>(qux)
+                                      ^
+at callWithTypeArgumentsStacktrace#baz.<typearg#1> (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace.pkl)
+
+x | function foo<T>(bar) = bar as T
+                                  ^
+at callWithTypeArgumentsStacktrace#foo (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace.pkl)
+
+x | function baz<T>(qux) = foo::<List<T>>(qux)
+                           ^^^^^^^^^^^^^^^^^^^
+at callWithTypeArgumentsStacktrace#baz (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace.pkl)
+
+x | res = baz::<String(throw("oops"))>(List("a"))
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at callWithTypeArgumentsStacktrace#res (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

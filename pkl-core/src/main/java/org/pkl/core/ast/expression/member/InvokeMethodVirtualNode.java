@@ -28,10 +28,12 @@ import com.oracle.truffle.api.instrumentation.ProbeNode;
 import com.oracle.truffle.api.nodes.DirectCallNode;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
+import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.internal.GetClassNode;
 import org.pkl.core.ast.member.ClassMethod;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmFunction;
@@ -50,11 +52,13 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
       boolean needsConst,
-      int methodSlot) {
-    super(sourceSection, argumentNodes, methodSlot);
+      int methodSlot,
+      String qualifiedName) {
+    super(sourceSection, unresolvedTypeArgumentNodes, argumentNodes, methodSlot, qualifiedName);
     this.methodName = methodName;
     this.lookupMode = lookupMode;
     this.needsConst = needsConst;
@@ -63,10 +67,20 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   protected InvokeMethodVirtualNode(
       SourceSection sourceSection,
       Identifier methodName,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       MemberLookupMode lookupMode,
-      int methodSlot) {
-    this(sourceSection, methodName, argumentNodes, lookupMode, false, methodSlot);
+      int methodSlot,
+      String qualifiedName) {
+    this(
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        lookupMode,
+        false,
+        methodSlot,
+        qualifiedName);
   }
 
   /**
@@ -146,7 +160,16 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
   @Override
   public WrapperNode createWrapper(ProbeNode probe) {
     return new InvokeMethodVirtualNodeWrapper(
-        sourceSection, methodName, argumentNodes, lookupMode, needsConst, methodSlot, this, probe);
+        sourceSection,
+        methodName,
+        unresolvedTypeArgumentNodes,
+        argumentNodes,
+        lookupMode,
+        needsConst,
+        methodSlot,
+        qualifiedName,
+        this,
+        probe);
   }
 
   private void checkConst(ClassMethod method) {

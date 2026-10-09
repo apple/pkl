@@ -64,7 +64,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
       @Cached("getOwner(frame)") VmObjectLike initialOwner,
       @Cached("getOwnerAndMember(initialOwner, key)")
           @Nullable Pair<VmObjectLike, ObjectMember> ownerAndMember,
-      @Cached("doEval(key, receiver, ownerAndMember)") Object result) {
+      @Cached("doEval(frame, key, receiver, ownerAndMember)") Object result) {
     return result;
   }
 
@@ -73,7 +73,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
     var receiver = VmUtils.getObjectReceiver(frame);
     var initialOwner = VmUtils.getOwner(frame);
     var ownerAndMember = getOwnerAndMember(initialOwner, key);
-    return doEval(key, receiver, ownerAndMember);
+    return doEval(frame, key, receiver, ownerAndMember);
   }
 
   @TruffleBoundary
@@ -82,6 +82,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
   }
 
   protected final Object doEval(
+      VirtualFrame frame,
       Object key,
       VmObjectLike receiver,
       @Nullable Pair<VmObjectLike, ObjectMember> ownerAndMember) {
@@ -102,6 +103,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
         // TODO: should the marker only turn off constraint checking, not overall type checking?
         receiver,
         owner,
+        VmUtils.getTypeArgumentsOrNull(frame),
         key,
         VmUtils.SKIP_TYPECHECK_MARKER);
   }

@@ -8,6 +8,10 @@ facts {
     true
     true
   }
+  ["run microbenchmark (in generic method)"] {
+    true
+    true
+  }
   ["run output benchmark (in verbose mode)"] {
     true
     true
@@ -29,6 +33,7 @@ facts {
   }
   ["evaluate entire benchmark module"] {
     true
+    false
     true
     true
   }

@@ -1,8 +1,8 @@
 import "pkl:ref"
 
-class D extends ref.Domain {
+class D extends ref.AbstractDomain {
   function renderReference(reference: ref.Reference<this, Any>): String = throw("not supported")
 }
 local d: D = new {}
 
-test = ref.Reference(d, Dynamic, "").default
+test = ref.Reference::<D, Dynamic>(d, "").default

@@ -25,6 +25,7 @@ import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
 import org.pkl.core.runtime.VmDynamic;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmTypeArgument;
 import org.pkl.core.runtime.VmUtils;
 
 public abstract class AbstractInferParentNode extends ExpressionNode {
@@ -41,11 +42,23 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
       String qualifiedName) {
+    return getDefaultValue(frame, typeNode, headerSection, qualifiedName, false, null);
+  }
+
+  protected Object getDefaultValue(
+      VirtualFrame frame,
+      @Nullable TypeNode typeNode,
+      SourceSection headerSection,
+      String qualifiedName,
+      boolean isPreCall,
+      VmTypeArgument @Nullable [] typeArgumentOverrides) {
     if (typeNode == null || typeNode instanceof UnknownTypeNode) {
       return VmDynamic.empty();
     }
 
-    var defaultValue = typeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+    var defaultValue =
+        typeNode.createDefaultValue(
+            frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     if (defaultValue != null) {
       return defaultValue;
     }

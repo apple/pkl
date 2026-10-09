@@ -21,9 +21,11 @@ import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.expression.member.AbstractInvokeMethodNode.MethodCall;
 import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmTypeArgument;
 
 public abstract class InferParentWithinMethodArgumentNode
     extends AbstractInferParentFromMethodNode {
@@ -39,9 +41,14 @@ public abstract class InferParentWithinMethodArgumentNode
 
   @Override
   protected Method getMethod(VirtualFrame frame) {
-    var method = (Method) frame.getObject(methodSlot);
+    var methodCall = (MethodCall) frame.getObject(methodSlot);
+    if (methodCall == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+
+    var method = methodCall.method();
     if (method == null) {
-      // used in FunctionN.apply()
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("cannotInferParent").build();
     }
@@ -49,9 +56,18 @@ public abstract class InferParentWithinMethodArgumentNode
     return method;
   }
 
+  protected VmTypeArgument @Nullable [] getTypeArgumentOverrides(VirtualFrame frame) {
+    var methodCall = (MethodCall) frame.getObject(methodSlot);
+    if (methodCall == null) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder().evalError("cannotInferParent").build();
+    }
+    return methodCall.typeArguments();
+  }
+
   @Override
-  protected @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method) {
-    return method.getParameterTypeNode(frame, argIndex);
+  protected @Nullable TypeNode getTypeNode(Method method) {
+    return method.getFunctionNode().getParameterTypeNode(argIndex);
   }
 
   // keep specializations in sync with other AbstractInferParentFromMethodNode subclasses
@@ -61,9 +77,9 @@ public abstract class InferParentWithinMethodArgumentNode
   protected final Object evalCached(
       @SuppressWarnings("unused") VirtualFrame frame,
       @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
-      @Cached("getTypeNode(frame, cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached("getTypeNode(cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
       @Cached(
-              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName())")
+              "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName(), true, getTypeArgumentOverrides(frame))")
           Object defaultValue) {
     return defaultValue;
   }
@@ -71,21 +87,30 @@ public abstract class InferParentWithinMethodArgumentNode
   @Specialization(replaces = "evalCached")
   protected final Object eval(VirtualFrame frame) {
     var method = getMethod(frame);
-    var typeNode = getTypeNode(frame, method);
-    return getDefaultValue(frame, typeNode, method.getHeaderSection(), method.getQualifiedName());
+    var typeNode = getTypeNode(method);
+    return getDefaultValue(
+        frame,
+        typeNode,
+        method.getHeaderSection(),
+        method.getQualifiedName(),
+        true,
+        getTypeArgumentOverrides(frame));
   }
 
   @Override
-  protected Object getDefaultValue(
+  protected final Object getDefaultValue(
       VirtualFrame frame,
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
-      String qualifiedName) {
+      String qualifiedName,
+      boolean isPreCall,
+      VmTypeArgument @Nullable [] typeArgumentOverrides) {
     if (typeNode != null && typeNode.isSelfType()) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("cannotInferParent").build();
     }
 
-    return super.getDefaultValue(frame, typeNode, headerSection, qualifiedName);
+    return super.getDefaultValue(
+        frame, typeNode, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
   }
 }

@@ -69,6 +69,7 @@ public final class UnresolvedFunctionNode extends PklNode {
         parameterTypeNodes,
         returnTypeNode,
         true,
+        0,
         bodyNode);
   }
 }
