@@ -97,12 +97,23 @@ public final class ClassMethod extends ClassMember implements Method {
     return functionNode.getCallTarget();
   }
 
+  @Override
+  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
+    return getCallTarget(callSite);
+  }
+
   public int getParameterCount() {
     return functionNode.getParameterCount();
   }
 
+  @Override
   public int getTypeParameterCount() {
     return functionNode.getTypeParameterCount();
+  }
+
+  @Override
+  public void ensureInitialized(VmObjectLike owner) {
+    // do nothing; class methods are always initialized
   }
 
   @Override

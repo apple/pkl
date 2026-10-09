@@ -27,6 +27,7 @@ import org.pkl.core.ast.member.Method;
 import org.pkl.core.ast.type.TypeArgumentTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmTypeArgument;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
@@ -89,7 +90,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
     var rootNodes = getTypeArgumentRootNodes(frame);
     if (rootNodes == null) return null;
 
-    var typeParameterCount = method == null ? 0 : method.getFunctionNode().getTypeParameterCount();
+    var typeParameterCount = method == null ? 0 : method.getTypeParameterCount();
     if (rootNodes.length != typeParameterCount) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -108,10 +109,13 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
   @ExplodeLoop
   protected Object[] evalArgs(
-      VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
-    var typeArgs = getTypeArguments(frame, method);
+      VirtualFrame frame, @Nullable Method method, VmObjectLike owner, @Nullable Object receiver) {
     Object prevMethod = null;
+    var typeArgs = getTypeArguments(frame, method);
     if (methodSlot > -1) {
+      if (method != null) {
+        method.ensureInitialized(owner);
+      }
       prevMethod = frame.getObject(methodSlot);
       frame.setObject(methodSlot, new MethodCall(method, typeArgs));
     }
