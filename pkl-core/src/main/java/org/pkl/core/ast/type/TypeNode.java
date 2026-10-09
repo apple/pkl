@@ -164,6 +164,7 @@ public abstract class TypeNode extends PklNode {
       SourceSection headerSection,
       // qualified name of the property or method that carries the type annotation
       String qualifiedName,
+      boolean isPreCall,
       VmTypeArgument @Nullable [] typeArgumentOverrides) {
     return null;
   }
@@ -176,7 +177,7 @@ public abstract class TypeNode extends PklNode {
       SourceSection headerSection,
       // qualified name of the property or method that carries the type annotation
       String qualifiedName) {
-    return createDefaultValue(frame, language, headerSection, qualifiedName, null);
+    return createDefaultValue(frame, language, headerSection, qualifiedName, false, null);
   }
 
   @Idempotent
@@ -489,6 +490,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return TypeNode.createDefaultValue(clazz);
     }
@@ -560,6 +562,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
       return TypeNode.createDefaultValue(clazz);
@@ -602,6 +605,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return literal;
     }
@@ -657,6 +661,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmDynamic.empty();
     }
@@ -705,6 +710,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       return TypeNode.createDefaultValue(clazz);
@@ -770,6 +776,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return TypeNode.createDefaultValue(clazz);
     }
@@ -812,10 +819,11 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmNull.withDefault(
           elementTypeNode.createDefaultValue(
-              frame, language, headerSection, qualifiedName, typeArgumentOverrides));
+              frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides));
     }
 
     @Override
@@ -886,12 +894,13 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       return defaultIndex == -1
           ? null
           : elementTypeNodes[defaultIndex].createDefaultValue(
-              frame, language, headerSection, qualifiedName, typeArgumentOverrides);
+              frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     }
 
     /**
@@ -1228,6 +1237,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       if (defaultIndex == -1) {
         return null;
@@ -1286,6 +1296,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmList.EMPTY;
     }
@@ -1370,6 +1381,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmList.EMPTY;
     }
@@ -1442,6 +1454,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmSet.EMPTY;
     }
@@ -1523,6 +1536,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       return VmMap.EMPTY;
@@ -1820,6 +1834,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       if (valueTypeNode instanceof UnknownTypeNode) {
@@ -1828,7 +1843,7 @@ public abstract class TypeNode extends PklNode {
 
       var defaultMemberValue =
           valueTypeNode.createDefaultValue(
-              frame, language, headerSection, qualifiedName, typeArgumentOverrides);
+              frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
 
       var defaultMember = createDefaultMember(headerSection, qualifiedName, defaultMemberValue);
 
@@ -2177,6 +2192,7 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
@@ -2256,20 +2272,19 @@ public abstract class TypeNode extends PklNode {
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
-    
-        private @Nullable VmTypeArgument getTypeArgumentForDefaultValue(
-        VirtualFrame frame, VmTypeArgument @Nullable [] typeArgumentOverrides) {
-            if (levelsUp == 0 && typeArgumentOverrides != null) {
-                return typeArgumentOverrides[typeParameter.index()];
-              }
-            var effectiveLevelsUp =
-                  (typeArgumentOverrides != null && levelsUp > 0) ? levelsUp - 1 : levelsUp;
-            var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, effectiveLevelsUp);
-            if (methodTypeArgs != null) {
-                return methodTypeArgs[typeParameter.index()];
-              }
-            return null;
-          }
+
+    private @Nullable VmTypeArgument getTypeArgumentForDefaultValue(
+        VirtualFrame frame, boolean isPreCall, VmTypeArgument @Nullable [] typeArgumentOverrides) {
+      if (levelsUp == 0 && typeArgumentOverrides != null) {
+        return typeArgumentOverrides[typeParameter.index()];
+      }
+      var effectiveLevelsUp = (isPreCall && levelsUp > 0) ? levelsUp - 1 : levelsUp;
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, effectiveLevelsUp);
+      if (methodTypeArgs != null) {
+        return methodTypeArgs[typeParameter.index()];
+      }
+      return null;
+    }
 
     @Override
     public @Nullable Object createDefaultValue(
@@ -2277,10 +2292,11 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       if (ownerType != OwnerType.METHOD) return null;
-      
-      var typeArg = getTypeArgumentForDefaultValue(frame, typeArgumentOverrides);
+
+      var typeArg = getTypeArgumentForDefaultValue(frame, isPreCall, typeArgumentOverrides);
       if (typeArg != null) {
         return typeArg.createDefaultValue(language, headerSection, qualifiedName);
       }
@@ -2590,13 +2606,14 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       if (typeAlias == BaseModule.getMixinTypeAlias()) {
         return newMixin(language, qualifiedName);
       }
 
       return aliasedTypeNode.createDefaultValue(
-          frame, language, headerSection, qualifiedName, typeArgumentOverrides);
+          frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     }
 
     @Override
@@ -2684,9 +2701,10 @@ public abstract class TypeNode extends PklNode {
         VmLanguage language,
         SourceSection headerSection,
         String qualifiedName,
+        boolean isPreCall,
         VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return childNode.createDefaultValue(
-          frame, language, headerSection, qualifiedName, typeArgumentOverrides);
+          frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     }
 
     public SourceSection getBaseTypeSection() {
