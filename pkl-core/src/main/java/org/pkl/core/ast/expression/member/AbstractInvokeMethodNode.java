@@ -28,7 +28,6 @@ import org.pkl.core.ast.type.TypeArgumentTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.VmLanguage;
 import org.pkl.core.runtime.VmTypeArgument;
-import org.pkl.core.util.ArrayUtils;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
@@ -36,7 +35,6 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
   protected final int methodSlot;
   protected final String qualifiedName;
 
-  protected final int[] slotsToCopy;
   @Children protected UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes;
 
   @CompilationFinal(dimensions = 1)
@@ -49,14 +47,11 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
       UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
       ExpressionNode[] argumentNodes,
       int methodSlot,
-      int[] parameterSlots,
-      int[] forGeneratorSlots,
       String qualifiedName) {
     super(sourceSection);
     this.unresolvedTypeArgumentNodes = unresolvedTypeArgumentNodes;
     this.argumentNodes = argumentNodes;
     this.methodSlot = methodSlot;
-    this.slotsToCopy = ArrayUtils.concat(parameterSlots, forGeneratorSlots);
     this.qualifiedName = qualifiedName;
   }
 
@@ -76,8 +71,7 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
                   frameDescriptor,
                   sourceSection,
                   qualifiedName + ".<typearg#" + (i + 1) + ">",
-                  typeNode,
-                  slotsToCopy);
+                  typeNode);
           typeArgumentsNeedMaterializedFrame =
               typeArgumentsNeedMaterializedFrame || typeNode.getTypeArgumentRequiresFrame();
         }
