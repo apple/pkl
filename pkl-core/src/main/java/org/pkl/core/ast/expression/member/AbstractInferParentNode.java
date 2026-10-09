@@ -42,7 +42,7 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
       String qualifiedName) {
-    return getDefaultValue(frame, typeNode, headerSection, qualifiedName, null);
+    return getDefaultValue(frame, typeNode, headerSection, qualifiedName, false, null);
   }
 
   protected Object getDefaultValue(
@@ -50,6 +50,7 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
       String qualifiedName,
+      boolean isPreCall,
       VmTypeArgument @Nullable [] typeArgumentOverrides) {
     if (typeNode == null || typeNode instanceof UnknownTypeNode) {
       return VmDynamic.empty();
@@ -57,7 +58,7 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
 
     var defaultValue =
         typeNode.createDefaultValue(
-            frame, language, headerSection, qualifiedName, typeArgumentOverrides);
+            frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     if (defaultValue != null) {
       return defaultValue;
     }

@@ -66,6 +66,14 @@ lexical {
     res2 {
       name = "x"
     }
+    res3 {
+      new {
+        name = "x"
+      }
+    }
+    res4 {
+      name = "x"
+    }
   }
   inEagerScope {
     "Expected value of type `Int`, but got type `String`. Value: \"key\""

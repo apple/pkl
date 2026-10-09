@@ -105,6 +105,8 @@ lexical {
     local function inner2<U>(x: T, y: U) = x
     res1 = inner::<Int>(new { new { name = "x" } }, 1)
     res2 = inner2::<Int>(new { name = "x" }, 1)
+    res3 = inner(new { new { name = "x" } }, 1)
+    res4 = inner2(new { name = "x" }, 1)
   }
   nestedInMethodParam = outr::<Person>()
 
