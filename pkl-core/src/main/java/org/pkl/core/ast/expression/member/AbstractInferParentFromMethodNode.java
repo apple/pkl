@@ -20,7 +20,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.Method;
-import org.pkl.core.ast.member.ObjectMethodNode.ObjectMethod;
+import org.pkl.core.ast.member.ObjectMethodNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.VmLanguage;
 
@@ -32,10 +32,10 @@ public abstract class AbstractInferParentFromMethodNode extends AbstractInferPar
 
   protected abstract Method getMethod(VirtualFrame frame);
 
-  protected abstract @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method);
+  protected abstract @Nullable TypeNode getTypeNode(Method method);
 
   @Idempotent
   protected boolean isFinalType(Method method, @Nullable TypeNode typeNode) {
-    return method instanceof ObjectMethod || (typeNode != null && typeNode.isFinalType());
+    return method instanceof ObjectMethodNode || (typeNode != null && typeNode.isFinalType());
   }
 }

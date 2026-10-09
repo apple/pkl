@@ -60,7 +60,7 @@ public abstract class AbstractInvokeLexicalOrQualifiedMethodNode extends Abstrac
     checkConst(owner);
     var method = getMethod(owner);
     var args = evalArgs(frame, method, owner, receiver);
-    return getCallNode(method).call(args);
+    return getCallNode(method, owner).call(args);
   }
 
   private void checkConst(VmObjectLike owner) {
@@ -76,10 +76,10 @@ public abstract class AbstractInvokeLexicalOrQualifiedMethodNode extends Abstrac
 
   protected abstract void doCheckConst(VmObjectLike owner);
 
-  protected DirectCallNode getCallNode(Method method) {
+  protected DirectCallNode getCallNode(Method method, VmObjectLike owner) {
     if (callNode == null) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
-      callNode = DirectCallNode.create(method.getFunctionNode(getSourceSection()).getCallTarget());
+      callNode = DirectCallNode.create(method.getCallTarget(getSourceSection(), owner));
       insert(callNode);
     }
     assert callNode != null;

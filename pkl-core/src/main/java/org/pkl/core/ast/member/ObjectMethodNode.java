@@ -18,7 +18,6 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
-import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -28,7 +27,7 @@ import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 
-public final class ObjectMethodNode extends RegularMemberNode {
+public final class ObjectMethodNode extends RegularMemberNode implements Method {
   private final VmLanguage language;
   private final int parameterCount;
   private final List<TypeParameter> typeParameters;
@@ -55,54 +54,42 @@ public final class ObjectMethodNode extends RegularMemberNode {
     this.unresolvedReturnTypeNode = unresolvedReturnTypeNode;
   }
 
-  public ObjectMethod reify(VmObjectLike owner) {
-    var newFrame =
-        Truffle.getRuntime().createVirtualFrame(new Object[] {owner, owner}, getFrameDescriptor());
-    return new ObjectMethod(
-        getFunctionNode(newFrame, true), getSourceSection(), getQualifiedName());
-  }
-
-  public static class ObjectMethod implements Method {
-    private final FunctionNode functionNode;
-    private final SourceSection headerSection;
-    private final String qualifiedName;
-
-    private ObjectMethod(
-        FunctionNode functionNode, SourceSection headerSection, String qualifiedName) {
-      this.functionNode = functionNode;
-      this.headerSection = headerSection;
-      this.qualifiedName = qualifiedName;
-    }
-
-    @Override
-    public FunctionNode getFunctionNode(@Nullable SourceSection callSite) {
-      return functionNode;
-    }
-
-    @Override
-    public SourceSection getHeaderSection() {
-      return headerSection;
-    }
-
-    @Override
-    public String getQualifiedName() {
-      return qualifiedName;
-    }
+  @Override
+  public FunctionNode getFunctionNode(@Nullable SourceSection callSite) {
+    assert isInitialized() : "getFunctionNode() called when not initialized";
+    return functionNode;
   }
 
   @Override
   protected CallTarget executeImpl(VirtualFrame frame) {
-    return getFunctionNode(frame, false).getCallTarget();
+    return getFunctionNode(frame).getCallTarget();
   }
 
-  private FunctionNode getFunctionNode(VirtualFrame frame, boolean isPreInit) {
+  @Override
+  public void ensureInitialized(VmObjectLike owner) {
+    if (!isInitialized()) {
+      getCallTarget().call(owner, owner);
+    }
+  }
+
+  public boolean isInitialized() {
+    return functionNode != null;
+  }
+
+  @Override
+  public CallTarget getCallTarget(SourceSection callSite, VmObjectLike owner) {
+    return (CallTarget) getCallTarget().call(owner, owner);
+  }
+
+  @Override
+  public int getTypeParameterCount() {
+    return typeParameters.size();
+  }
+
+  public FunctionNode getFunctionNode(VirtualFrame frame) {
     if (functionNode != null) return functionNode;
     CompilerDirectives.transferToInterpreterAndInvalidate();
 
-    if (isPreInit) {
-      // TODO: with VmType/CreateDefaultValueNode this may be removable
-      adoptChildren();
-    }
     var parameterTypeNodes =
         VmUtils.resolveParameterTypes(frame, getFrameDescriptor(), unresolvedParameterTypeNodes);
 

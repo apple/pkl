@@ -66,7 +66,7 @@ public abstract class InferParentWithinMethodArgumentNode
   }
 
   @Override
-  protected @Nullable TypeNode getTypeNode(VirtualFrame frame, Method method) {
+  protected @Nullable TypeNode getTypeNode(Method method) {
     return method.getFunctionNode().getParameterTypeNode(argIndex);
   }
 
@@ -77,7 +77,7 @@ public abstract class InferParentWithinMethodArgumentNode
   protected final Object evalCached(
       @SuppressWarnings("unused") VirtualFrame frame,
       @Cached("getMethod(frame)") @SuppressWarnings("unused") Method cachedMethod,
-      @Cached("getTypeNode(frame, cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
+      @Cached("getTypeNode(cachedMethod)") @SuppressWarnings("unused") TypeNode typeNode,
       @Cached(
               "getDefaultValue(frame, typeNode, cachedMethod.getHeaderSection(), cachedMethod.getQualifiedName(), true, getTypeArgumentOverrides(frame))")
           Object defaultValue) {
@@ -87,7 +87,7 @@ public abstract class InferParentWithinMethodArgumentNode
   @Specialization(replaces = "evalCached")
   protected final Object eval(VirtualFrame frame) {
     var method = getMethod(frame);
-    var typeNode = getTypeNode(frame, method);
+    var typeNode = getTypeNode(method);
     return getDefaultValue(
         frame,
         typeNode,
