@@ -57,7 +57,11 @@ public final class TypeArgumentTypeNode extends PklRootNode {
   @Override
   protected Object executeImpl(VirtualFrame frame) {
     var enclosingFrame = (MaterializedFrame) frame.getArguments()[3];
-    var effectiveFrame = enclosingFrame == null ? frame : enclosingFrame;
-    return typeNode.execute(effectiveFrame, frame.getArguments()[4]);
+    var value = frame.getArguments()[4];
+    //noinspection ReplaceNullCheck
+    if (enclosingFrame == null) {
+      return typeNode.execute(frame, value);
+    }
+    return typeNode.execute(enclosingFrame, value);
   }
 }

@@ -97,7 +97,7 @@ public abstract class InferParentWithinMethodArgumentNode
   }
 
   @Override
-  protected Object getDefaultValue(
+  protected final Object getDefaultValue(
       VirtualFrame frame,
       @Nullable TypeNode typeNode,
       SourceSection headerSection,
