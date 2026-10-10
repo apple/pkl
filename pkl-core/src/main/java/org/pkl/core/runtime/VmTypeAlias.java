@@ -19,6 +19,7 @@ import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import java.util.ArrayList;
@@ -30,6 +31,7 @@ import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
@@ -200,25 +202,31 @@ public final class VmTypeAlias extends VmValue {
 
     var clone = (TypeNode) typeNode.deepCopy();
     clone.accept(
-        node -> {
-          if (node instanceof TypeVariableNode typeVarNode) {
-            var index = typeVarNode.getTypeParameterIndex();
-            node.replace(
-                typeArgumentNodes.length == 0
-                    ? new UnknownTypeNode(sourceSection)
-                    : deepCopy(typeArgumentNodes[index]));
-          } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
-            // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
-            // are still unresolved at instantiation time. Replace them with a resolved
-            // unresolved type node that returns the concrete type argument.
-            var index = unresolvedTypeVar.getTypeParameterIndex();
-            node.replace(
-                typeArgumentNodes.length == 0
-                    ? new UnresolvedTypeNode.Unknown(sourceSection)
-                    : new UnresolvedTypeNode.Resolved(
-                        sourceSection, deepCopy(typeArgumentNodes[index])));
+        new NodeVisitor() {
+          @Override
+          public boolean visit(com.oracle.truffle.api.nodes.Node node) {
+            if (node instanceof TypeVariableNode typeVarNode) {
+              var index = typeVarNode.getTypeParameterIndex();
+              node.replace(
+                  typeArgumentNodes.length == 0
+                      ? new UnknownTypeNode(sourceSection)
+                      : deepCopy(typeArgumentNodes[index]));
+            } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
+              // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
+              // are still unresolved at instantiation time. Replace them with a resolved
+              // unresolved type node that returns the concrete type argument.
+              var index = unresolvedTypeVar.getTypeParameterIndex();
+              node.replace(
+                  typeArgumentNodes.length == 0
+                      ? new UnresolvedTypeNode.Unknown(sourceSection)
+                      : new UnresolvedTypeNode.Resolved(
+                          sourceSection, deepCopy(typeArgumentNodes[index])));
+            } else if (node instanceof ExecuteCustomThisWithRootNode rootNode) {
+              // A constraint with frame slots runs in a separate root, outside this tree.
+              rootNode.getExpressionNode().accept(this);
+            }
+            return true;
           }
-          return true;
         });
 
     return clone;
