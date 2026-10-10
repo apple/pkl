@@ -18,6 +18,7 @@ package org.pkl.core.ast.expression.primary;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.DirectCallNode;
+import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.SimpleRootNode;
@@ -43,6 +44,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
   // shouldn't be marked `@Child` because this node is actually the child of the SimpleRootNode
   // created in the constructor.
   private final ExpressionNode expressionNode;
+  private final FrameDescriptor frameDescriptor;
+  private final String qualifiedName;
+  private final int[] forGeneratorSlots;
+  private final int[] parameterSlots;
 
   public ExecuteCustomThisWithRootNode(
       SourceSection sourceSection,
@@ -53,6 +58,10 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
       int[] parameterSlots) {
     super(sourceSection);
     this.expressionNode = expressionNode;
+    this.frameDescriptor = frameDescriptor;
+    this.qualifiedName = qualifiedName;
+    this.forGeneratorSlots = forGeneratorSlots;
+    this.parameterSlots = parameterSlots;
     frameDescriptor.findOrAddAuxiliarySlot(VmUtils.CUSTOM_THIS_FRAME_SLOT_ID);
     var rootNode =
         new SimpleRootNode(
@@ -66,6 +75,18 @@ public final class ExecuteCustomThisWithRootNode extends ExpressionNode {
 
   public ExpressionNode getExpressionNode() {
     return expressionNode;
+  }
+
+  @Override
+  public Node deepCopy() {
+    // The expression belongs to a separate root and is not copied as a child of this node.
+    return new ExecuteCustomThisWithRootNode(
+        sourceSection,
+        (ExpressionNode) expressionNode.deepCopy(),
+        frameDescriptor,
+        qualifiedName,
+        forGeneratorSlots,
+        parameterSlots);
   }
 
   @Override
