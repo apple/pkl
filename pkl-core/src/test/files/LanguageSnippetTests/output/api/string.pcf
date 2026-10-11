@@ -144,6 +144,7 @@ examples {
     6
     9
     "String does not contain a match for regex pattern. String : \"abxabyabz\" Pattern: Regex(\"b*c\")"
+    3
   }
   ["lastIndexOfOrNull()"] {
     6
@@ -184,6 +185,7 @@ examples {
     "aabb.xaabbcc"
     "aabb..aabbcx"
     "Error replacing matches for regex `cc` with `$4; no such group`: `No group 4`"
+    "abx-yabz"
   }
   ["replaceAllMapped()"] {
     ">>aa<<bbcc>>aa<<bbcc"

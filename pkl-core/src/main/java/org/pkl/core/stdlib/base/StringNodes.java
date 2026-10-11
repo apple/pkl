@@ -1107,7 +1107,7 @@ public final class StringNodes {
     } while (m.find());
 
     // Reset `m` to the last match before returning (should always be `true` at this point)
-    return m.region(r.start(), r.end()).lookingAt();
+    return m.find(r.start());
   }
 
   /**
