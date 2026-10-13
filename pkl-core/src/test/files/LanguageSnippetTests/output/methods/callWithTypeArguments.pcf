@@ -83,6 +83,9 @@ lexical {
       ["keykeykey"] = "value"
     }
   }
+  reify {
+    res = "<ref>"
+  }
 }
 typeCast {
   res1 {

@@ -799,7 +799,7 @@ public final class SymbolTable {
         throw new PklBugException(
             "found type parameter variance modifier found on a method declaration");
       }
-      return new TypeParameterResolution(result, levelsUp, TypeParameter.OwnerType.METHOD);
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.METHOD, levelsUp);
     }
   }
 
@@ -1073,7 +1073,7 @@ public final class SymbolTable {
     public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
       var result = getTypeParameter(name);
       if (result == null) return null;
-      return new TypeParameterResolution(result, -1, TypeParameter.OwnerType.CLASS);
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.CLASS, -1);
     }
   }
 
@@ -1098,7 +1098,7 @@ public final class SymbolTable {
     public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
       var result = getTypeParameter(name);
       if (result == null) return null;
-      return new TypeParameterResolution(result, -1, TypeParameter.OwnerType.TYPEALIAS);
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.TYPEALIAS, -1);
     }
   }
 

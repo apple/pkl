@@ -52,7 +52,7 @@ public final class FunctionNode extends RegularMemberNode {
   private final int totalParamCount;
 
   @Children private final TypeNode[] parameterTypeNodes;
-  @Child private @Nullable TypeNode checkedReturnTypeNode;
+  private @Nullable TypeNode checkedReturnTypeNode;
   @Child private @Nullable TypeNode returnTypeNode;
 
   @TruffleBoundary
@@ -136,6 +136,17 @@ public final class FunctionNode extends RegularMemberNode {
     if (checkedReturnTypeNode != null) {
       return checkedReturnTypeNode.execute(frame, result);
     } else if (returnTypeNode != null && VmUtils.getTypeArgumentsOrNull(frame) != null) {
+      // Return types are not typically checked for stdlib methods (isReturnTypeChecked == false)
+      // but for generic stdlib methods (e.g. `List.map()`) when they are called with type args,
+      // this behavior needs to be overridden so the type arg check on return type still runs.
+      // otherwise, this code would succeed instead of failing:
+      // ```
+      // res = List("foo", "hello", "a").map::<String>((it) -> it.length)
+      // ```
+      // Assumption: this does not need to account for type args in enclosing frames because
+      // no type parameters exist in the stdlib that would require this.
+      // Assumption-breaking pattern example: snippet `callWithTypeArguments.pkl` property
+      // `lexical.nestedInMethodParam`.
       return returnTypeNode.execute(frame, result);
     }
 
