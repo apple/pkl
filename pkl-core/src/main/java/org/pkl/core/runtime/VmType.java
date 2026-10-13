@@ -801,10 +801,13 @@ public abstract sealed class VmType {
   public static final class TypeVariableType extends VmType {
     private final TypeParameter typeParameter;
     private final TypeParameter.OwnerType ownerType;
+    private final int levelsUp;
 
-    public TypeVariableType(TypeParameter typeParameter, TypeParameter.OwnerType ownerType) {
+    public TypeVariableType(
+        TypeParameter typeParameter, TypeParameter.OwnerType ownerType, int levelsUp) {
       this.typeParameter = typeParameter;
       this.ownerType = ownerType;
+      this.levelsUp = levelsUp;
     }
 
     public TypeParameter getTypeParameter() {
@@ -838,8 +841,10 @@ public abstract sealed class VmType {
 
     @Override
     public VmType reify(VirtualFrame frame) {
-      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame);
-      if (ownerType == TypeParameter.OwnerType.METHOD && methodTypeArgs != null) {
+      if (ownerType != TypeParameter.OwnerType.METHOD) return this;
+
+      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
+      if (methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
         return typeArg.reify();
       }

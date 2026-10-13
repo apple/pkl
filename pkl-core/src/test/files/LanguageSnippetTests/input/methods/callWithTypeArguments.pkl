@@ -1,6 +1,11 @@
 open module callWithTypeArguments
 
 import "pkl:test"
+import "pkl:ref"
+
+class Domain extends ref.AbstractDomain {
+  function renderReference(reference: ref.Reference) = "<ref>"
+}
 
 directCall {
   pair = Pair::<List<String>, Set<String>>(List("foo"), Set("bar"))
@@ -122,7 +127,15 @@ lexical {
       }
     }
     k2::<String(length < 10)>()
-  } 
+  }
+
+  reify {
+    local function makeMyObj<T>() = new {
+      res = ref.Reference::<Domain, T>(new {}, null)
+    }
+
+    res = makeMyObj::<Person>().res.name
+  }
 }
 
 typeCast {
@@ -152,6 +165,14 @@ constraintReadsFrameSlot {
   res4 = new Listing {
     for (n in List(1)) {
       id::<String(length > n)>("hi")
+    }
+  }
+}
+
+output {
+  renderer {
+    converters {
+      [ref.Reference] = (it) -> it.toString()
     }
   }
 }
