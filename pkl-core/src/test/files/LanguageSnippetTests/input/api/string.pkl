@@ -179,6 +179,7 @@ examples {
     str3.lastIndexOf(Regex("ab"))
     str3.lastIndexOf(Regex(""))
     module.catch(() -> str3.lastIndexOf(Regex("b*c")))
+    str3.lastIndexOf(Regex("ab(?=y)"))
   }
 
   ["lastIndexOfOrNull()"] {
@@ -230,6 +231,7 @@ examples {
     str6.replaceLast(".", "x")
     str6.replaceLast(Regex("."), "x")
     module.catch(() -> str4.replaceLast(Regex("cc"), "$4; no such group"))
+    str3.replaceLast(Regex("(?<=x)ab"), "-")
   }
 
   ["replaceAllMapped()"] {
