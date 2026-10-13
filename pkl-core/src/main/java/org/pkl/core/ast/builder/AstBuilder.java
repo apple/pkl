@@ -493,8 +493,8 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
           return new UnresolvedTypeNode.TypeVariable(
               createSourceSection(type),
               typeParameterResolution.typeParameter(),
-              typeParameterResolution.levelsUp(),
-              typeParameterResolution.ownerType());
+              typeParameterResolution.ownerType(),
+              typeParameterResolution.levelsUp());
         }
       }
 

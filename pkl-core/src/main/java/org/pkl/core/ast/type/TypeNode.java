@@ -2062,10 +2062,6 @@ public abstract class TypeNode extends PklNode {
       this.getModuleNode = new GetModuleNode(sourceSection);
     }
 
-    public TypeNode getReferentTypeNode() {
-      return referentTypeNode;
-    }
-
     @Override
     protected VmType doGetType() {
       return new VmType.ClassType(
@@ -2222,18 +2218,18 @@ public abstract class TypeNode extends PklNode {
     public TypeVariableNode(
         SourceSection sourceSection,
         TypeParameter typeParameter,
-        int levelsUp,
-        TypeParameter.OwnerType ownerType) {
+        TypeParameter.OwnerType ownerType,
+        int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
-      this.levelsUp = levelsUp;
       this.ownerType = ownerType;
+      this.levelsUp = levelsUp;
       callTypeArgumentNode = CallTypeArgumentNodeGen.create(sourceSection);
     }
 
     @Override
     protected VmType doGetType() {
-      return new VmType.TypeVariableType(typeParameter, ownerType);
+      return new VmType.TypeVariableType(typeParameter, ownerType, levelsUp);
     }
 
     public TypeParameter getTypeParameter() {
@@ -2263,8 +2259,6 @@ public abstract class TypeNode extends PklNode {
         var typeArg = methodTypeArgs[typeParameter.index()];
         return callTypeArgumentNode.execute(frame, typeArg, value);
       }
-
-      // do nothing
       return value;
     }
 
@@ -2275,10 +2269,21 @@ public abstract class TypeNode extends PklNode {
 
     private @Nullable VmTypeArgument getTypeArgumentForDefaultValue(
         VirtualFrame frame, boolean isPreCall, VmTypeArgument @Nullable [] typeArgumentOverrides) {
-      if (levelsUp == 0 && typeArgumentOverrides != null) {
-        return typeArgumentOverrides[typeParameter.index()];
+      // when creating default value for a method argument, the type node is 1 level _lower_ than
+      // what was resolved lexically.
+      //
+      // edge case: if `levelsUp == 0`, we need to resolve the type argument from
+      // `typeArgumentOverrides` rather than the frame.
+      //
+      // e.g.
+      // ```
+      // function foo<T>(arg: T)
+      // res = foo::<Person>(new {}) // `Person` is passed in via `typeArgumentOverrides`
+      // ```
+      if (levelsUp == 0 && isPreCall) {
+        return typeArgumentOverrides == null ? null : typeArgumentOverrides[typeParameter.index()];
       }
-      var effectiveLevelsUp = (isPreCall && levelsUp > 0) ? levelsUp - 1 : levelsUp;
+      var effectiveLevelsUp = isPreCall ? levelsUp - 1 : levelsUp;
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, effectiveLevelsUp);
       if (methodTypeArgs != null) {
         return methodTypeArgs[typeParameter.index()];

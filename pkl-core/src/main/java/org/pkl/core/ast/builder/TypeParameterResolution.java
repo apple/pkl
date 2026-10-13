@@ -18,4 +18,4 @@ package org.pkl.core.ast.builder;
 import org.pkl.core.runtime.TypeParameter;
 
 public record TypeParameterResolution(
-    TypeParameter typeParameter, int levelsUp, TypeParameter.OwnerType ownerType) {}
+    TypeParameter typeParameter, TypeParameter.OwnerType ownerType, int levelsUp) {}
