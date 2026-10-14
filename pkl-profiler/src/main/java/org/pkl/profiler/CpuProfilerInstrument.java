@@ -20,24 +20,20 @@ import com.oracle.truffle.api.instrumentation.TruffleInstrument.Registration;
 import com.oracle.truffle.tools.profiler.CPUSampler;
 import com.oracle.truffle.tools.profiler.impl.CPUSamplerInstrument;
 import com.oracle.truffle.tools.profiler.impl.ProfilerToolFactory;
-import org.graalvm.options.OptionDescriptors;
+import org.jspecify.annotations.Nullable;
 import org.pkl.profiler.impl.CpuProfilerImpl;
 
 /**
  * A profiler for Pkl that samples the CPU and generates pprof output.
  *
- * <p>Note that this intentionally doesn't use the {@link OptionDescriptors} and {@link
- * Env#getOptions()} mechanism to fetch profiling options right now. This is because:
+ * <p>This instrument doesn't take any engine options. Pkl's polyglot engine is a singleton (stdlib
+ * modules are singletons, so using different engines results in errors like "Invalid sharing of AST
+ * Nodes"), and Truffle instruments are associated with engine instances, so there's no way to
+ * configure the profiler per run via engine options.
  *
- * <ul>
- *   <li>Pkl's polyglot engine needs to be a singleton because it treats stdlib modules as
- *       singletons; using different engines would result in errors like "Invalid sharing of AST
- *       Nodes".
- *   <li>Truffle instruments are associated with engine instances.
- * </ul>
- *
- * So, configuring this profiler via the engine options isn't meaningful, and just leads to more
- * roundabout code.
+ * <p>Instead, the instrument exposes a {@link CpuProfiler} service. Look it up from the engine's
+ * instrument and call {@link CpuProfiler#start} and {@link CpuProfiler#stop} to profile a section
+ * of code.
  */
 @Registration(
     id = CpuProfilerInstrument.ID,
@@ -48,6 +44,8 @@ public final class CpuProfilerInstrument extends TruffleInstrument {
   public static final String ID = "pkl-cpu-profiler";
 
   private static final ProfilerToolFactory<CPUSampler> cpuSamplerFactory = getCpuSamplerFactory();
+
+  private @Nullable CpuProfilerImpl profiler;
 
   /**
    * Returns the factory for {@link CPUSampler}.
@@ -69,6 +67,14 @@ public final class CpuProfilerInstrument extends TruffleInstrument {
   @Override
   protected void onCreate(Env env) {
     var cpuSampler = cpuSamplerFactory.create(env);
+    profiler = new CpuProfilerImpl(cpuSampler);
     env.registerService(new CpuProfilerImpl(cpuSampler));
+  }
+
+  @Override
+  protected void onDispose(Env env) {
+    if (profiler != null) {
+      profiler.close();
+    }
   }
 }

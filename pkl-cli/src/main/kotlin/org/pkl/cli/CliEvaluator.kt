@@ -42,8 +42,6 @@ import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
-import org.pkl.profiler.CpuProfiler
-import org.pkl.profiler.CpuProfilerInstrument
 
 private data class OutputFile(val pathSpec: String, val moduleUri: URI)
 
@@ -101,24 +99,15 @@ constructor(
    */
   override fun doRun() {
     val builder = evaluatorBuilder()
-    val cpuOptions = options.profilerOptions.cpu
-    val cpuProfiler =
-      when {
-        cpuOptions.isEnabled ->
-          VmUtils.getEngine()
-            .instruments[CpuProfilerInstrument.ID]!!
-            .lookup(CpuProfiler::class.java)
-        else -> null
-      }
     try {
-      cpuProfiler?.start(cpuOptions)
-      if (options.multipleFileOutputPath != null) {
-        writeMultipleFileOutput(builder)
-      } else {
-        writeOutput(builder)
+      withCpuProfiler(options.profilerOptions) {
+        if (options.multipleFileOutputPath != null) {
+          writeMultipleFileOutput(builder)
+        } else {
+          writeOutput(builder)
+        }
       }
     } finally {
-      cpuProfiler?.stop()
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
       if (TruffleOptions.AOT) {

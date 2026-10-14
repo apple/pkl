@@ -16,120 +16,184 @@
 package org.pkl.cli
 
 import com.google.perftools.profiles.ProfileProto.Profile
+import java.io.ByteArrayOutputStream
+import java.io.StringWriter
+import java.net.URI
 import java.nio.file.Path
 import java.util.zip.GZIPInputStream
-import kotlin.io.path.absolutePathString
+import kotlin.io.path.exists
 import kotlin.io.path.inputStream
 import kotlin.io.path.writeText
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
+import org.pkl.commons.cli.CliBaseOptions
+import org.pkl.commons.cli.CliTestOptions
+import org.pkl.core.ProfilerOptions
 
 /**
- * Exercises the CPU profiler end-to-end by running the packaged executable jar (or native
- * executable) as a subprocess.
+ * Exercises the CPU profiler by calling into the CLI classes in-process.
  *
- * This must run out-of-process: enabling the profiler flips global JVM state (system properties
- * read by a singleton polyglot engine, see `VmUtils`), so it can't share a JVM with the rest of the
- * test suite without corrupting it.
- *
- * Run this test using `./gradlew pkl-cli:testProfilerOutput` (executable jar) or `./gradlew
- * pkl-cli:testNativeProfilerOutput` (native executable).
- *
- * To use an IntelliJ JUnit run configuration, configure the VM options and add
- * `-Dorg.pkl.cli.testJar=<path>` (or `-Dorg.pkl.cli.testExecutable=<path>`).
+ * See [SubprocessProfilerOutputTest] for tests that run the packaged executables.
  */
 class ProfilerOutputTest {
-  /**
-   * The command that launches Pkl: the native executable if `org.pkl.cli.testExecutable` is set,
-   * otherwise the executable jar given by `org.pkl.cli.testJar`.
-   */
-  private fun launcher(): Array<String> {
-    System.getProperty("org.pkl.cli.testExecutable")?.let {
-      return arrayOf(it)
-    }
-    val jar =
-      checkNotNull(System.getProperty("org.pkl.cli.testJar")) {
-        "neither system property `org.pkl.cli.testExecutable` nor `org.pkl.cli.testJar` is set"
+  private fun profilerOptions(outputFile: Path) =
+    ProfilerOptions(ProfilerOptions.Cpu(outputFile, 1))
+
+  private fun fib(name: String) =
+    "function $name(n) = if (n < 2) n else $name(n - 1) + $name(n - 2)"
+
+  private fun evalCode(name: String) =
+    """
+    ${fib(name)}
+    x = $name(30)
+    """
+      .trimIndent()
+
+  private fun testCode(name: String) =
+    """
+    amends "pkl:test"
+
+    local ${fib(name)}
+
+    facts {
+      ["fib"] {
+        $name(30) > 0
       }
-    val javaBin = ProcessHandle.current().info().command().orElseThrow()
-    return arrayOf(javaBin, "-jar", jar)
+    }
+    """
+      .trimIndent()
+
+  private fun runCode(name: String) =
+    """
+    amends "pkl:Command"
+
+    command {
+      name = "do-run"
+    }
+
+    local ${fib(name)}
+
+    output {
+      text = $name(30).toString()
+    }
+    """
+      .trimIndent()
+
+  private fun baseOptions(source: Path) =
+    CliBaseOptions(sourceModules = listOf(source.toUri()), settings = URI("pkl:settings"))
+
+  private fun eval(tempDir: Path, name: String, outputFile: Path) {
+    val source = tempDir.resolve("$name.pkl").also { it.writeText(evalCode(name)) }
+    val options =
+      CliEvaluatorOptions(baseOptions(source), profilerOptions = profilerOptions(outputFile))
+    CliEvaluator(options, outputStream = ByteArrayOutputStream()).run()
   }
 
-  private fun runTest(tempDir: Path, pklCode: String, command: Array<String>) {
-    val sourceFile = tempDir.resolve("profiled.pkl").also { it.writeText(pklCode) }
-    val outputFile = tempDir.resolve("profile.pb.gz")
+  private fun test(tempDir: Path, name: String, outputFile: Path) {
+    val source = tempDir.resolve("$name.pkl").also { it.writeText(testCode(name)) }
+    CliTestRunner(
+        baseOptions(source),
+        CliTestOptions(),
+        consoleWriter = StringWriter(),
+        errWriter = StringWriter(),
+        profilerOptions = profilerOptions(outputFile),
+      )
+      .run()
+  }
 
-    val process =
-      ProcessBuilder(
-          *launcher(),
-          *command,
-          "--profile-cpu-output",
-          outputFile.absolutePathString(),
-          "--profile-cpu-sample-period",
-          "1",
-          sourceFile.absolutePathString(),
-        )
-        .redirectErrorStream(true)
-        .start()
+  private fun run(tempDir: Path, name: String, outputFile: Path) {
+    val source = tempDir.resolve("$name.pkl").also { it.writeText(runCode(name)) }
+    CliCommandRunner(
+        baseOptions(source),
+        emptySet(),
+        emptySet(),
+        emptyList(),
+        outputStream = ByteArrayOutputStream(),
+        errStream = ByteArrayOutputStream(),
+        profilerOptions = profilerOptions(outputFile),
+      )
+      .run()
+  }
 
-    val output = process.inputStream.bufferedReader().readText()
-    val exitCode = process.waitFor()
-    assertThat(exitCode).withFailMessage { "process failed with output:\n$output" }.isZero()
+  private fun readProfile(outputFile: Path): Profile =
+    GZIPInputStream(outputFile.inputStream()).use { Profile.parseFrom(it) }
 
-    // smoke test only
-    val profile = GZIPInputStream(outputFile.inputStream()).use { Profile.parseFrom(it) }
+  private fun Profile.functionNames() = functionList.map { stringTableList[it.name.toInt()] }
+
+  /** Smoke test of the profile's structure, and that it contains samples of [fibName]. */
+  private fun assertValidProfile(outputFile: Path, fibName: String) {
+    val profile = readProfile(outputFile)
     assertThat(profile.stringTableList.first()).isEmpty() // string_table[0] must be ""
     assertThat(profile.sampleTypeList).isNotEmpty
     assertThat(profile.functionList).isNotEmpty
+    assertThat(profile.functionNames()).anyMatch { it.contains(fibName) }
   }
 
   @Test
   fun `pkl eval`(@TempDir tempDir: Path) {
-    val pklCode =
-      """
-      function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
-      x = fib(30)
-      """
-        .trimIndent()
-    runTest(tempDir, pklCode, arrayOf("eval"))
+    val outputFile = tempDir.resolve("profile.pb.gz")
+    eval(tempDir, "evalFib", outputFile)
+    assertValidProfile(outputFile, "evalFib")
   }
 
   @Test
   fun `pkl test`(@TempDir tempDir: Path) {
-    val pklCode =
-      """
-      amends "pkl:test"
-
-      local function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
-
-      facts {
-        ["fib"] {
-          fib(30) > 0
-        }
-      }
-      """
-        .trimIndent()
-    runTest(tempDir, pklCode, arrayOf("eval"))
+    val outputFile = tempDir.resolve("profile.pb.gz")
+    test(tempDir, "testFib", outputFile)
+    assertValidProfile(outputFile, "testFib")
   }
 
   @Test
   fun `pkl run`(@TempDir tempDir: Path) {
-    val pklCode =
-      """
-      amends "pkl:Command"
+    val outputFile = tempDir.resolve("profile.pb.gz")
+    run(tempDir, "runFib", outputFile)
+    assertValidProfile(outputFile, "runFib")
+  }
 
-      command {
-        name = "do-run"
-      }
+  @Test
+  fun `profiler can be restarted, and runs don't share samples`(@TempDir tempDir: Path) {
+    val firstOutput = tempDir.resolve("first.pb.gz")
+    val secondOutput = tempDir.resolve("second.pb.gz")
+    val thirdOutput = tempDir.resolve("third.pb.gz")
 
-      local function fib(n) = if (n < 2) n else fib(n - 1) + fib(n - 2)
+    eval(tempDir, "firstFib", firstOutput)
+    test(tempDir, "secondFib", secondOutput)
+    run(tempDir, "thirdFib", thirdOutput)
 
-      output {
-        text = fib(30).toString()
-      }
-      """
-        .trimIndent()
-    runTest(tempDir, pklCode, arrayOf("run"))
+    assertValidProfile(firstOutput, "firstFib")
+    assertValidProfile(secondOutput, "secondFib")
+    assertValidProfile(thirdOutput, "thirdFib")
+
+    // samples from earlier runs must not leak into later ones
+    assertThat(readProfile(secondOutput).functionNames()).noneMatch { it.contains("firstFib") }
+    assertThat(readProfile(thirdOutput).functionNames()).noneMatch {
+      it.contains("firstFib") || it.contains("secondFib")
+    }
+  }
+
+  @Test
+  fun `profiler restarts after a failed evaluation`(@TempDir tempDir: Path) {
+    val failingSource = tempDir.resolve("failing.pkl").also { it.writeText("x = throw(\"boom\")") }
+    val failingOutput = tempDir.resolve("failing.pb.gz")
+    val options =
+      CliEvaluatorOptions(
+        baseOptions(failingSource),
+        profilerOptions = profilerOptions(failingOutput),
+      )
+    runCatching { CliEvaluator(options, outputStream = ByteArrayOutputStream()).run() }
+      .also { assertThat(it.isFailure).isTrue() }
+
+    val outputFile = tempDir.resolve("profile.pb.gz")
+    eval(tempDir, "afterFailureFib", outputFile)
+    assertValidProfile(outputFile, "afterFailureFib")
+  }
+
+  @Test
+  fun `no output is written if profiling is not enabled`(@TempDir tempDir: Path) {
+    val source = tempDir.resolve("noProfile.pkl").also { it.writeText(evalCode("noProfileFib")) }
+    CliEvaluator(CliEvaluatorOptions(baseOptions(source)), outputStream = ByteArrayOutputStream())
+      .run()
+    assertThat(tempDir.resolve("profile.pb.gz").exists()).isFalse()
   }
 }

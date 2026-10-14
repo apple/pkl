@@ -44,8 +44,6 @@ import org.pkl.core.PklException
 import org.pkl.core.ProfilerOptions
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
-import org.pkl.profiler.CpuProfiler
-import org.pkl.profiler.CpuProfilerInstrument
 
 class CliCommandRunner
 @JvmOverloads
@@ -60,19 +58,9 @@ constructor(
 ) : CliCommand(options) {
   override fun doRun() {
     val builder = evaluatorBuilder()
-    val cpuProfiler =
-      when {
-        profilerOptions.cpu.isEnabled ->
-          VmUtils.getEngine()
-            .instruments[CpuProfilerInstrument.ID]!!
-            .lookup(CpuProfiler::class.java)
-        else -> null
-      }
     try {
-      cpuProfiler?.start(profilerOptions.cpu)
-      evalCmd(builder)
+      withCpuProfiler(profilerOptions) { evalCmd(builder) }
     } finally {
-      cpuProfiler?.stop()
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
       if (TruffleOptions.AOT) {

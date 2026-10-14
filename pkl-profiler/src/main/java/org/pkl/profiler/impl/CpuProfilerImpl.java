@@ -26,10 +26,10 @@ import org.pkl.profiler.CpuProfiler;
 
 public class CpuProfilerImpl implements CpuProfiler {
   private final CPUSampler cpuSampler;
-  private @Nullable LocalDateTime startTime;
+  private volatile @Nullable LocalDateTime startTime;
   private final AtomicBoolean started = new AtomicBoolean(false);
   private final AtomicBoolean isFlushed = new AtomicBoolean(false);
-  private @Nullable Cpu cpuOptions;
+  private volatile @Nullable Cpu cpuOptions;
 
   public CpuProfilerImpl(CPUSampler cpuSampler) {
     this.cpuSampler = cpuSampler;
@@ -37,29 +37,37 @@ public class CpuProfilerImpl implements CpuProfiler {
 
   @Override
   public void start(Cpu cpuOptions) {
-    this.cpuOptions = cpuOptions;
     if (!cpuOptions.isEnabled()) {
       return;
     }
-    if (started.getAndSet(true)) {
-      throw new IllegalStateException("CPUProfiler has already been started");
+    if (this.cpuOptions != null) {
+      throw new IllegalStateException("CPU profiler is already running");
     }
     cpuSampler.setPeriod(cpuOptions.samplePeriod());
     cpuSampler.setFilter(SourceSectionFilter.newBuilder().mimeTypeIs(VmLanguage.MIME_TYPE).build());
     cpuSampler.setCollecting(true);
     startTime = LocalDateTime.now();
+    this.cpuOptions = cpuOptions;
   }
 
   @Override
   public void stop() {
-    if (cpuOptions == null || !cpuOptions.isEnabled()) return;
-    if (isFlushed.getAndSet(true)) return;
-    var outputFile = cpuOptions.outputFile();
+    var options = this.cpuOptions;
+    var startTime = this.startTime;
+    if (options == null || startTime == null) return;
+    this.cpuOptions = null;
+    this.startTime = null;
+    cpuSampler.setCollecting(false);
+    var outputFile = options.outputFile();
     assert outputFile != null;
-    assert startTime != null;
-    // must read data before closing; `close()` clears it (see `CPUSampler#clearData()`).
+    // must read data before `clearData()` is called
     var data = new PklProfilerData(startTime, cpuSampler.getPeriod(), cpuSampler.getDataList());
-    cpuSampler.close();
+    cpuSampler.clearData();
     new PProfOutput(data, outputFile).write();
+  }
+
+  @Override
+  public void close() {
+    cpuSampler.close();
   }
 }

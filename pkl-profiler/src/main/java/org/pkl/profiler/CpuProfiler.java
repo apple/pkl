@@ -15,9 +15,10 @@
  */
 package org.pkl.profiler;
 
+import java.io.Closeable;
 import org.pkl.core.ProfilerOptions;
 
-public interface CpuProfiler {
+public interface CpuProfiler extends Closeable {
   /** Begin sampling. Throws if already started. */
   void start(ProfilerOptions.Cpu options);
 
