@@ -445,7 +445,8 @@ class VmTypeTest {
   fun `type variable - treated like unknown, supertype and subtype to all`() {
     VmType.TypeVariableType(
         TypeParameter(org.pkl.core.TypeParameter.Variance.INVARIANT, "Foo", 0),
-        org.pkl.core.runtime.TypeParameter.OwnerType.METHOD,
+        TypeParameter.OwnerType.METHOD,
+        0,
       )
       .bidi(stringClass)
   }
