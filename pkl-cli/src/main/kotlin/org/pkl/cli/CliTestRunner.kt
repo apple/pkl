@@ -30,6 +30,8 @@ import org.pkl.core.stdlib.test.report.JUnitReporter
 import org.pkl.core.stdlib.test.report.MinimalReporter
 import org.pkl.core.stdlib.test.report.SpecReporter
 import org.pkl.core.util.ErrorMessages
+import org.pkl.profiler.CpuProfiler
+import org.pkl.profiler.CpuProfilerInstrument
 
 class CliTestRunner
 @JvmOverloads
@@ -38,17 +40,23 @@ constructor(
   private val testOptions: CliTestOptions,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
-  profilerOptions: ProfilerOptions = ProfilerOptions.DEFAULT,
+  private val profilerOptions: ProfilerOptions = ProfilerOptions.DEFAULT,
 ) : CliCommand(options) {
-  init {
-    profilerOptions.configureSystemProperties()
-  }
-
   override fun doRun() {
     val builder = evaluatorBuilder()
+    val cpuProfiler =
+      when {
+        profilerOptions.cpu.isEnabled ->
+          VmUtils.getEngine()
+            .instruments[CpuProfilerInstrument.ID]!!
+            .lookup(CpuProfiler::class.java)
+        else -> null
+      }
     try {
+      cpuProfiler?.start(profilerOptions.cpu)
       evalTest(builder)
     } finally {
+      cpuProfiler?.stop()
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
       if (TruffleOptions.AOT) {

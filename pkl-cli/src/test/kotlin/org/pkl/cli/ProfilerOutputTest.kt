@@ -26,32 +26,43 @@ import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.io.TempDir
 
 /**
- * Exercises the CPU profiler end-to-end by running the packaged executable jar as a subprocess.
+ * Exercises the CPU profiler end-to-end by running the packaged executable jar (or native
+ * executable) as a subprocess.
  *
  * This must run out-of-process: enabling the profiler flips global JVM state (system properties
  * read by a singleton polyglot engine, see `VmUtils`), so it can't share a JVM with the rest of the
  * test suite without corrupting it.
  *
- * Run this test using `./gradlew pkl-cli:testProfilerOutput`.
+ * Run this test using `./gradlew pkl-cli:testProfilerOutput` (executable jar) or `./gradlew
+ * pkl-cli:testNativeProfilerOutput` (native executable).
  *
  * To use an IntelliJ JUnit run configuration, configure the VM options and add
- * `-Dorg.pkl.cli.testJar=<path>`.
+ * `-Dorg.pkl.cli.testJar=<path>` (or `-Dorg.pkl.cli.testExecutable=<path>`).
  */
 class ProfilerOutputTest {
-  private fun runTest(tempDir: Path, pklCode: String, command: Array<String>) {
+  /**
+   * The command that launches Pkl: the native executable if `org.pkl.cli.testExecutable` is set,
+   * otherwise the executable jar given by `org.pkl.cli.testJar`.
+   */
+  private fun launcher(): Array<String> {
+    System.getProperty("org.pkl.cli.testExecutable")?.let {
+      return arrayOf(it)
+    }
     val jar =
       checkNotNull(System.getProperty("org.pkl.cli.testJar")) {
-        "system property `org.pkl.cli.testJar` is not set"
+        "neither system property `org.pkl.cli.testExecutable` nor `org.pkl.cli.testJar` is set"
       }
+    val javaBin = ProcessHandle.current().info().command().orElseThrow()
+    return arrayOf(javaBin, "-jar", jar)
+  }
+
+  private fun runTest(tempDir: Path, pklCode: String, command: Array<String>) {
     val sourceFile = tempDir.resolve("profiled.pkl").also { it.writeText(pklCode) }
     val outputFile = tempDir.resolve("profile.pb.gz")
 
-    val javaBin = ProcessHandle.current().info().command().orElseThrow()
     val process =
       ProcessBuilder(
-          javaBin,
-          "-jar",
-          jar,
+          *launcher(),
           *command,
           "--profile-cpu-output",
           outputFile.absolutePathString(),

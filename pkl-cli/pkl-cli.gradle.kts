@@ -87,7 +87,7 @@ tasks.jar {
 
 tasks.javadoc { enabled = false }
 
-// has its own dedicated task; see `testProfilerOutput` below
+// has its own dedicated task; see `testProfilerOutput` and `testNativeProfilerOutput` below
 tasks.test { exclude("**/ProfilerOutputTest.class") }
 
 tasks.shadowJar {
@@ -112,7 +112,7 @@ val testJavaExecutable =
         // executable;
         // to verify that, we don't want to include them here)
         (configurations.testRuntimeClasspath.get() - configurations.runtimeClasspath.get())
-    // has its own dedicated task; see `testProfilerOutput` below
+    // has its own dedicated task; see `testProfilerOutput` and `testNativeProfilerOutput` below
     exclude("**/ProfilerOutputTest.class")
   }
 
@@ -230,6 +230,19 @@ val testProfilerOutput =
     )
   }
 
+val testNativeProfilerOutput =
+  tasks.register<Test>("testNativeProfilerOutput") {
+    group = "verification"
+    dependsOn(tasks.assembleNative)
+    testClassesDirs = sourceSets.test.get().output.classesDirs
+    classpath = sourceSets.test.get().runtimeClasspath
+    include("**/ProfilerOutputTest.class")
+    systemProperty(
+      "org.pkl.cli.testExecutable",
+      tasks.assembleNative.get().outputs.files.singleFile.absolutePath,
+    )
+  }
+
 tasks.withType<NativeImageBuild>().configureEach {
   dependsOn(generateReachabilityMetadata)
   classpath.from(layout.buildDirectory.dir("generated-reachability-metadata"))
@@ -248,6 +261,7 @@ tasks.check {
 tasks.checkNative {
   dependsOn(":pkl-core:checkNative")
   dependsOn(":pkl-server:checkNative")
+  dependsOn(testNativeProfilerOutput)
 }
 
 executable {

@@ -42,6 +42,8 @@ import org.pkl.core.runtime.ModuleResolver
 import org.pkl.core.runtime.VmException
 import org.pkl.core.runtime.VmUtils
 import org.pkl.core.util.IoUtils
+import org.pkl.profiler.CpuProfiler
+import org.pkl.profiler.CpuProfilerInstrument
 
 private data class OutputFile(val pathSpec: String, val moduleUri: URI)
 
@@ -55,10 +57,6 @@ constructor(
   private val inputStream: InputStream = System.`in`,
   private val outputStream: OutputStream = System.out,
 ) : CliCommand(options.base) {
-  init {
-    options.profilerOptions.configureSystemProperties()
-  }
-
   /**
    * Output files for the modules to be evaluated. Returns `null` if `options.outputPath` is `null`
    * or if `options.multipleFileOutputPath` is not `null`. Multiple modules may be mapped to the
@@ -103,13 +101,24 @@ constructor(
    */
   override fun doRun() {
     val builder = evaluatorBuilder()
+    val cpuOptions = options.profilerOptions.cpu
+    val cpuProfiler =
+      when {
+        cpuOptions.isEnabled ->
+          VmUtils.getEngine()
+            .instruments[CpuProfilerInstrument.ID]!!
+            .lookup(CpuProfiler::class.java)
+        else -> null
+      }
     try {
+      cpuProfiler?.start(cpuOptions)
       if (options.multipleFileOutputPath != null) {
         writeMultipleFileOutput(builder)
       } else {
         writeOutput(builder)
       }
     } finally {
+      cpuProfiler?.stop()
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
       if (TruffleOptions.AOT) {

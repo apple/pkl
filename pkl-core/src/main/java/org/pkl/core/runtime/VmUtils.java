@@ -44,7 +44,6 @@ import org.organicdesign.fp.collections.ImMap;
 import org.pkl.core.FileOutput;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
-import org.pkl.core.ProfilerOptions;
 import org.pkl.core.SecurityManager;
 import org.pkl.core.SecurityManagerException;
 import org.pkl.core.StackFrame;
@@ -113,13 +112,12 @@ public final class VmUtils {
 
   private VmUtils() {}
 
+  public static Engine getEngine() {
+    return PKL_ENGINE;
+  }
+
   private static Engine makePklEngine() {
-    var builder = Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false");
-    var profilerOptions = ProfilerOptions.fromSystemProperties();
-    if (profilerOptions.cpu().isEnabled()) {
-      builder.option("pkl-cpu-profiler", "true");
-    }
-    return builder.build();
+    return Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
   }
 
   public static void closeEngine() {
