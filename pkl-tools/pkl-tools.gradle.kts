@@ -48,9 +48,14 @@ dependencies {
   firstPartySourcesJars(project(":pkl-cli", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-codegen-java", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-codegen-kotlin", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-commons-cli", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-config-java", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
   firstPartySourcesJars(project(":pkl-doc", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-formatter", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-server", "sourcesJar"))
 }
 
 // TODO: need to figure out how to properly generate javadoc here.

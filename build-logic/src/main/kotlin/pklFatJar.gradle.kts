@@ -24,16 +24,13 @@ plugins {
   `java-library`
   `maven-publish`
   id("com.gradleup.shadow")
+  id("pklJvmSourceBundle")
 }
 
 // make fat Jar available to other subprojects
 val fatJarConfiguration: Configuration = configurations.create("fatJar")
 
 val fatJarPublication: MavenPublication = publishing.publications.create<MavenPublication>("fatJar")
-
-// ideally we'd configure this automatically based on project dependencies
-val firstPartySourcesJarsConfiguration: Configuration =
-  configurations.create("firstPartySourcesJars")
 
 val relocations =
   mapOf(
@@ -182,17 +179,13 @@ val validateFatJar =
 
 tasks.check { dependsOn(validateFatJar) }
 
-val resolveSourcesJars =
-  tasks.register<ResolveSourcesJars>("resolveSourcesJars") {
-    configuration.set(configurations.runtimeClasspath)
-    outputDir.set(layout.buildDirectory.dir("resolveSourcesJars"))
-  }
-
 val fatSourcesJar =
   tasks.register<MergeSourcesJars>("fatSourcesJar") {
     plugins.withId("pklJavaLibrary") { inputJars.from(tasks.named("sourcesJar")) }
-    inputJars.from(firstPartySourcesJarsConfiguration)
-    inputJars.from(resolveSourcesJars.map { fileTree(it.outputDir) })
+    inputJars.from(configurations.named("firstPartySourcesJars"))
+    inputJars.from(
+      tasks.named<ResolveSourcesJars>("resolveSourcesJars").map { fileTree(it.outputDir) }
+    )
 
     mergedBinaryJars.from(tasks.shadowJar)
     relocatedPackages.set(relocations)

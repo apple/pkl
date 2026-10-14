@@ -87,7 +87,9 @@ dependencies {
 
   testImplementation(libs.javaxInject)
 
+  //  firstPartySourcesJars(project(":pkl-formatter", "sourcesJar")) // TODO when syntax merges
   firstPartySourcesJars(project(":pkl-core", "sourcesJar"))
+  firstPartySourcesJars(project(":pkl-parser", "sourcesJar"))
 
   pklCodegenJava(projects.pklCodegenJava)
 }
