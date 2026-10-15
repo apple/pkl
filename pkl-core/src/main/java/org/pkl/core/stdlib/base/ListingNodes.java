@@ -16,6 +16,7 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
@@ -264,11 +265,16 @@ public final class ListingNodes {
       for (var cursor = self.elements(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var value = readCursorValueNode.execute(frame, cursor);
         // TODO replace with EqualNode
-        if (value.equals(element)) {
+        if (equals(value, element)) {
           return true;
         }
       }
       return false;
+    }
+
+    @TruffleBoundary
+    private boolean equals(Object a, Object b) {
+      return a.equals(b);
     }
   }
 
