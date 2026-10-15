@@ -58,10 +58,12 @@ public final class TypeArgumentTypeNode extends PklRootNode {
   protected Object executeImpl(VirtualFrame frame) {
     var enclosingFrame = (MaterializedFrame) frame.getArguments()[3];
     var value = frame.getArguments()[4];
-    //noinspection ReplaceNullCheck
+    var lazy = (boolean) frame.getArguments()[5];
     if (enclosingFrame == null) {
-      return typeNode.execute(frame, value);
+      return lazy ? typeNode.executeLazily(frame, value) : typeNode.executeEagerly(frame, value);
     }
-    return typeNode.execute(enclosingFrame, value);
+    return lazy
+        ? typeNode.executeLazily(enclosingFrame, value)
+        : typeNode.executeEagerly(enclosingFrame, value);
   }
 }

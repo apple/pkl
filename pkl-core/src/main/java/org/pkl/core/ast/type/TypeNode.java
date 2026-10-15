@@ -219,6 +219,7 @@ public abstract class TypeNode extends PklNode {
         typeNode -> {
           if (typeNode instanceof ConstrainedTypeNode
               || typeNode instanceof NonFinalSelfTypeNode
+              || typeNode instanceof ListingOrMappingTypeNode // lazy checks need captured frame
               || (typeNode instanceof TypeVariableNode typeVar
                   && typeVar.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(true);
@@ -2251,13 +2252,32 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      return doExecute(frame, value, false);
+    }
+
+    @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
+      return doExecute(frame, value, true);
+    }
+
+    private Object doExecute(VirtualFrame frame, Object value, boolean lazy) {
       if (ownerType != OwnerType.METHOD) return value;
 
       var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
       if (methodTypeArgs != null) {
         var typeArg = methodTypeArgs[typeParameter.index()];
-        return callTypeArgumentNode.execute(frame, typeArg, value);
+        try {
+          return callTypeArgumentNode.execute(frame, typeArg, value, lazy);
+        } catch (VmTypeMismatchException e) {
+          if (!VmUtils.sourceSectionContains(sourceSection, e.sourceSection)) {
+            var rootNode = getRootNode();
+            e.putInsertedStackFrame(
+                rootNode.getCallTarget(),
+                VmUtils.createStackFrame(sourceSection, rootNode.getName()));
+          }
+          throw e;
+        }
       }
       return value;
     }

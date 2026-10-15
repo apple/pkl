@@ -31,30 +31,35 @@ public abstract class CallTypeArgumentNode extends PklNode {
     super(sourceSection);
   }
 
-  public abstract Object execute(VirtualFrame frame, VmTypeArgument typeArgument, Object value);
+  public abstract Object execute(
+      VirtualFrame frame, VmTypeArgument typeArgument, Object value, boolean lazy);
 
   @Specialization(guards = {"typeArgument.getCallTarget() == cachedCallTarget"})
   protected Object evalDirect(
       @SuppressWarnings("unused") VmTypeArgument typeArgument,
       Object value,
+      boolean lazy,
       @Cached("typeArgument.getCallTarget()") @SuppressWarnings("unused")
           CallTarget cachedCallTarget,
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
     var enclosingFrame = typeArgument.getEnclosingFrame();
     if (enclosingFrame == null) {
-      return callNode.call(null, null, null, null, value);
+      return callNode.call(null, null, null, null, value, lazy);
     }
 
     var arguments = enclosingFrame.getArguments();
-    return callNode.call(arguments[0], arguments[1], arguments[2], enclosingFrame, value);
+    return callNode.call(arguments[0], arguments[1], arguments[2], enclosingFrame, value, lazy);
   }
 
   @Specialization(replaces = "evalDirect")
   protected Object eval(
-      VmTypeArgument typeArgument, Object value, @Cached("create()") IndirectCallNode callNode) {
+      VmTypeArgument typeArgument,
+      Object value,
+      boolean lazy,
+      @Cached("create()") IndirectCallNode callNode) {
     var enclosingFrame = typeArgument.getEnclosingFrame();
     if (enclosingFrame == null) {
-      return callNode.call(typeArgument.getCallTarget(), null, null, null, null, value);
+      return callNode.call(typeArgument.getCallTarget(), null, null, null, null, value, lazy);
     }
 
     var arguments = enclosingFrame.getArguments();
@@ -64,6 +69,7 @@ public abstract class CallTypeArgumentNode extends PklNode {
         arguments[1],
         arguments[2],
         enclosingFrame,
-        value);
+        value,
+        lazy);
   }
 }
