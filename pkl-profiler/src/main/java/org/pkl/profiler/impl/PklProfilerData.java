@@ -16,8 +16,7 @@
 package org.pkl.profiler.impl;
 
 import com.oracle.truffle.tools.profiler.CPUSamplerData;
-import java.time.LocalDateTime;
 import java.util.List;
 
 public record PklProfilerData(
-    LocalDateTime startTime, long samplePeriodMs, List<CPUSamplerData> dataList) {}
+    long startTimeNanos, long samplePeriodMs, List<CPUSamplerData> dataList) {}

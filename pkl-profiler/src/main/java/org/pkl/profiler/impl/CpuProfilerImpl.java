@@ -17,8 +17,8 @@ package org.pkl.profiler.impl;
 
 import com.oracle.truffle.api.instrumentation.SourceSectionFilter;
 import com.oracle.truffle.tools.profiler.CPUSampler;
-import java.time.LocalDateTime;
-import java.util.concurrent.atomic.AtomicBoolean;
+import java.time.Instant;
+import java.time.temporal.ChronoUnit;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ProfilerOptions.Cpu;
 import org.pkl.core.runtime.VmLanguage;
@@ -26,9 +26,7 @@ import org.pkl.profiler.CpuProfiler;
 
 public class CpuProfilerImpl implements CpuProfiler {
   private final CPUSampler cpuSampler;
-  private volatile @Nullable LocalDateTime startTime;
-  private final AtomicBoolean started = new AtomicBoolean(false);
-  private final AtomicBoolean isFlushed = new AtomicBoolean(false);
+  private volatile long startTimeNanos = -1;
   private volatile @Nullable Cpu cpuOptions;
 
   public CpuProfilerImpl(CPUSampler cpuSampler) {
@@ -46,17 +44,17 @@ public class CpuProfilerImpl implements CpuProfiler {
     cpuSampler.setPeriod(cpuOptions.samplePeriod());
     cpuSampler.setFilter(SourceSectionFilter.newBuilder().mimeTypeIs(VmLanguage.MIME_TYPE).build());
     cpuSampler.setCollecting(true);
-    startTime = LocalDateTime.now();
+    startTimeNanos = ChronoUnit.NANOS.between(Instant.EPOCH, Instant.now());
     this.cpuOptions = cpuOptions;
   }
 
   @Override
   public void stop() {
     var options = this.cpuOptions;
-    var startTime = this.startTime;
-    if (options == null || startTime == null) return;
+    var startTime = this.startTimeNanos;
+    if (options == null || startTime == -1) return;
     this.cpuOptions = null;
-    this.startTime = null;
+    this.startTimeNanos = -1;
     cpuSampler.setCollecting(false);
     var outputFile = options.outputFile();
     assert outputFile != null;

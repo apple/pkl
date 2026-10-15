@@ -65,7 +65,7 @@ public final class PProfOutput extends ProfilerOutput {
             .setUnit(internString("milliseconds"))
             .build());
     profileBuilder.setPeriod(profilerData.samplePeriodMs());
-    profileBuilder.setTimeNanos(profilerData.startTime().getNano());
+    profileBuilder.setTimeNanos(profilerData.startTimeNanos());
 
     for (var data : profilerData.dataList()) {
       for (var entry : data.getThreadData().entrySet()) {
