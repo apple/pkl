@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import com.oracle.truffle.api.TruffleOptions
 import java.io.StringWriter
 import java.io.Writer
 import org.pkl.commons.cli.*
@@ -22,7 +23,9 @@ import org.pkl.core.Closeables
 import org.pkl.core.EvaluatorBuilder
 import org.pkl.core.ModuleSource.uri
 import org.pkl.core.PklException
+import org.pkl.core.ProfilerOptions
 import org.pkl.core.TestResults
+import org.pkl.core.runtime.VmUtils
 import org.pkl.core.stdlib.test.report.JUnitReporter
 import org.pkl.core.stdlib.test.report.MinimalReporter
 import org.pkl.core.stdlib.test.report.SpecReporter
@@ -35,15 +38,18 @@ constructor(
   private val testOptions: CliTestOptions,
   private val consoleWriter: Writer = System.out.writer(),
   private val errWriter: Writer = System.err.writer(),
+  private val profilerOptions: ProfilerOptions = ProfilerOptions.DEFAULT,
 ) : CliCommand(options) {
-
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      evalTest(builder)
+      withCpuProfiler(profilerOptions) { evalTest(builder) }
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
+      if (TruffleOptions.AOT) {
+        VmUtils.closeEngine()
+      }
     }
   }
 

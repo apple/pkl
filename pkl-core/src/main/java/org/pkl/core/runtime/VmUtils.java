@@ -20,6 +20,7 @@ import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.Truffle;
 import com.oracle.truffle.api.TruffleLanguage;
+import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.TruffleStackTrace;
 import com.oracle.truffle.api.dsl.Idempotent;
 import com.oracle.truffle.api.frame.*;
@@ -86,8 +87,9 @@ public final class VmUtils {
 
   public static final int REGEX_FLAGS = Pattern.UNICODE_CHARACTER_CLASS | Pattern.UNICODE_CASE;
 
-  private static final Engine PKL_ENGINE =
-      Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
+  // must be a singleton because stdlib modules are singletons; otherwise we get "invalid sharing of
+  // AST Nodes"
+  private static final Engine PKL_ENGINE = makePklEngine();
 
   @SuppressWarnings("MagicConstant")
   private static final Pattern DOC_COMMENT_LINE_START =
@@ -109,6 +111,18 @@ public final class VmUtils {
   private static final Parser parser = new Parser();
 
   private VmUtils() {}
+
+  public static Engine getEngine() {
+    return PKL_ENGINE;
+  }
+
+  private static Engine makePklEngine() {
+    return Engine.newBuilder("pkl").option("engine.WarnInterpreterOnly", "false").build();
+  }
+
+  public static void closeEngine() {
+    PKL_ENGINE.close(true);
+  }
 
   static VmTyped createEmptyModule() {
     return new VmTyped(createEmptyMaterializedFrame(), null, EconomicMaps.create());
@@ -680,17 +694,18 @@ public final class VmUtils {
   }
 
   public static List<VmTyped> evaluateAnnotations(
-      VirtualFrame frame, ExpressionNode[] annotationNodes) {
+      VirtualFrame frame, Node node, ExpressionNode[] annotationNodes) {
     var result = new ArrayList<VmTyped>(annotationNodes.length);
-    evaluateAnnotations(frame, annotationNodes, result);
+    evaluateAnnotations(frame, node, annotationNodes, result);
     return result;
   }
 
   @ExplodeLoop
   public static void evaluateAnnotations(
-      VirtualFrame frame, ExpressionNode[] annotationNodes, List<VmTyped> result) {
+      VirtualFrame frame, Node node, ExpressionNode[] annotationNodes, List<VmTyped> result) {
 
     for (var annotationNode : annotationNodes) {
+      TruffleSafepoint.poll(node);
       var annotation = (VmTyped) annotationNode.executeGeneric(frame);
       // do not force annotations here because running other code
       // during class resolution will likely cause evaluation cycles

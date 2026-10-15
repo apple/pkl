@@ -15,6 +15,7 @@
  */
 package org.pkl.cli
 
+import com.oracle.truffle.api.TruffleOptions
 import java.io.File
 import java.io.InputStream
 import java.io.OutputStream
@@ -99,14 +100,19 @@ constructor(
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      if (options.multipleFileOutputPath != null) {
-        writeMultipleFileOutput(builder)
-      } else {
-        writeOutput(builder)
+      withCpuProfiler(options.profilerOptions) {
+        if (options.multipleFileOutputPath != null) {
+          writeMultipleFileOutput(builder)
+        } else {
+          writeOutput(builder)
+        }
       }
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
+      if (TruffleOptions.AOT) {
+        VmUtils.closeEngine()
+      }
     }
   }
 
