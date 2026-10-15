@@ -24,6 +24,12 @@ lazyTypeCheck {
   res1 = "Expected value of type `String`, but got type `Int`. Value: 5"
   res2 = "Expected value of type `String`, but got type `Int`. Value: 5"
   res3 = "Expected value of type `String`, but got type `Int`. Value: 5"
+  eager {
+    res = false
+  }
+  closure {
+    res = "Expected value of type `Duration`, but got type `String`. Value: \"Hello, world!\""
+  }
 }
 typeDefaults {
   res1 {

@@ -55,6 +55,24 @@ lazyTypeCheck {
   res1 = test.catch(() -> lazy1::<String>(5).toString())
   res2 = test.catch(() -> lazy2::<String>(5).toString())
   res3 = test.catch(() -> lazy3::<String>(5).toString())
+
+  eager {
+    local myListing: Listing<String> = new { "Hello, world!" }
+    local function myFunc<T>() = new {
+      result = myListing is T
+    }
+    // should be false:
+    res = myFunc::<Listing<Duration>>().result
+  }
+
+  closure {
+    local myListing: Listing<String> = new { "Hello, world!" }
+    local function myFunc<T>() = new {
+      result = myListing as T
+    }
+    // should be false:
+    res = test.catch(() -> myFunc::<Listing<Duration>>().toString())
+  }
 }
 
 class Person {
