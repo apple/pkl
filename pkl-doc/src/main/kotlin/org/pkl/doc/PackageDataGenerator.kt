@@ -461,7 +461,7 @@ private fun findTypesUsedBy(
             enclosingPackage.uri,
             enclosingPackage.version,
             enclosingType.moduleName
-              .substring(enclosingPackage.moduleNamePrefix.length)
+              .removePrefix(enclosingPackage.moduleNamePrefix)
               .replace('.', '/'),
             PClassInfo.MODULE_CLASS_NAME,
           )

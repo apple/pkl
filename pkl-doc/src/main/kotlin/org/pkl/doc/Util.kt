@@ -115,7 +115,7 @@ internal val String.uriEncoded
   get(): String = replace(Regex("([^;/?:@&=+$,#]+)")) { it.value.uriEncodedComponent }
 
 fun getModulePath(moduleName: String, packagePrefix: String): String =
-  moduleName.substring(packagePrefix.length).replace('.', '/')
+  moduleName.removePrefix(packagePrefix).replace('.', '/')
 
 /**
  * Turns `"foo.bar.baz-biz"` into ``"foo.bar.`baz-biz`"``.

@@ -344,7 +344,7 @@ internal class DocModule(
     get() = schema.moduleName
 
   val path: String by lazy {
-    name.pathEncoded.substring(parent.docPackageInfo.moduleNamePrefix.length).replace('.', '/')
+    name.removePrefix(parent.docPackageInfo.moduleNamePrefix).pathEncoded.replace('.', '/')
   }
 
   val overview: String?
