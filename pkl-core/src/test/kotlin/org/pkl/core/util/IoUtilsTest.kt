@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -398,6 +398,13 @@ class IoUtilsTest {
       IoUtils.readString(URI("https://example.com").toURL())
     }
     assertThrows<IllegalArgumentException> { IoUtils.readString(URI("http://example.com").toURL()) }
+  }
+
+  @Test
+  fun `toUrl() throws UnsupportedOperationException for file URIs with remote hostnames`() {
+    val uri = URI("file://example.com/bar/baz.pkl")
+    val exception = assertThrows<URISyntaxException> { IoUtils.validateFileUri(uri) }
+    assertThat(exception.message).contains("File URIs may not include an authority.")
   }
 
   @Test

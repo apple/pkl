@@ -892,6 +892,9 @@ public final class IoUtils {
     if (!uri.getSchemeSpecificPart().startsWith("/")) {
       throw new URISyntaxException(uri.toString(), ErrorMessages.create("invalidOpaqueFileUri"));
     }
+    if (uri.getRawAuthority() != null) {
+      throw new URISyntaxException(uri.toString(), ErrorMessages.create("invalidRemoteFileUri"));
+    }
   }
 
   public static void validateRewriteRule(URI rewrite) {
