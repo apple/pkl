@@ -19,10 +19,10 @@ import java.nio.file.Path;
 import org.jspecify.annotations.Nullable;
 
 public record ProfilerOptions(Cpu cpu) {
-  public static ProfilerOptions DEFAULT = new ProfilerOptions(Cpu.DEFAULT);
+  public static final ProfilerOptions DEFAULT = new ProfilerOptions(Cpu.DEFAULT);
 
   public record Cpu(@Nullable Path outputFile, long samplePeriod) {
-    public static Cpu DEFAULT = new Cpu(null, 10);
+    public static final Cpu DEFAULT = new Cpu(null, 10);
 
     public boolean isEnabled() {
       return outputFile != null;

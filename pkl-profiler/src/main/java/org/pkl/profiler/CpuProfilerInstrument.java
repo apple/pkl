@@ -68,7 +68,7 @@ public final class CpuProfilerInstrument extends TruffleInstrument {
   protected void onCreate(Env env) {
     var cpuSampler = cpuSamplerFactory.create(env);
     profiler = new CpuProfilerImpl(cpuSampler);
-    env.registerService(new CpuProfilerImpl(cpuSampler));
+    env.registerService(profiler);
   }
 
   @Override
