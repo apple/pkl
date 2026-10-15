@@ -304,7 +304,15 @@ open class BuildInfo(private val project: Project) {
           classpath = template.classpath
           testClassesDirs = template.testClassesDirs
           jvmArgs.addAll(template.jvmArgs)
-          jvmArgumentProviders.addAll(template.jvmArgumentProviders)
+          jvmArgumentProviders.addAll(
+            template.jvmArgumentProviders.map { provider ->
+              // Gradle injects this arg, which is not compatible across JDK versions
+              // other JDK versions (see https://github.com/gradle/gradle/issues/39442)
+              CommandLineArgumentProvider {
+                provider.asArguments().filter { !it.startsWith("--sun-misc-unsafe-memory-access") }
+              }
+            }
+          )
           forkEvery = template.forkEvery
           maxParallelForks = template.maxParallelForks
           minHeapSize = template.minHeapSize
