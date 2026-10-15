@@ -18,6 +18,7 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
@@ -82,6 +83,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
   }
 
   @Override
+  @TruffleBoundary
   public int getTypeParameterCount() {
     return typeParameters.size();
   }

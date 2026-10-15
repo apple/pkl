@@ -2270,6 +2270,7 @@ public abstract class TypeNode extends PklNode {
         try {
           return callTypeArgumentNode.execute(frame, typeArg, value, lazy);
         } catch (VmTypeMismatchException e) {
+          CompilerDirectives.transferToInterpreter();
           if (!VmUtils.sourceSectionContains(sourceSection, e.sourceSection)) {
             var rootNode = getRootNode();
             e.putInsertedStackFrame(
