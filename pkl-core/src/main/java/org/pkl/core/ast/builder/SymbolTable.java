@@ -591,8 +591,10 @@ public final class SymbolTable {
             }
             return result;
           }
-          // when resolving type params, MethodScope _does_ level up
-          if ((scope instanceof MethodScope && aliasFun == null)
+          // when resolving type params, MethodScope _does_ level up?
+//          if (scope instanceof MethodScope
+          if ((scope instanceof MethodScope methodScope && aliasFun == null)
+//          if ((scope instanceof MethodScope methodScope && (aliasFun == null || methodScope.getTypeParameterCount() == 0))
               || scope instanceof ForGeneratorScope
               || scope instanceof LetExpressionScope) {
             // fors, methods, and let exprs don't level up
@@ -686,7 +688,7 @@ public final class SymbolTable {
   }
 
   public abstract static class TypeParameterizableScope extends Scope {
-    private final List<TypeParameter> typeParameters;
+    final List<TypeParameter> typeParameters;
 
     public TypeParameterizableScope(
         Scope parent,
@@ -706,6 +708,10 @@ public final class SymbolTable {
           forGeneratorSlots,
           parameterSlots);
       this.typeParameters = typeParameters;
+    }
+    
+    public int getTypeParameterCount() {
+      return typeParameters.size();
     }
 
     @Override
