@@ -1,0 +1,218 @@
+examples {
+  ["basic conversion"] {
+    new {
+      name = "Pigeon"
+      age = 42
+    }
+  }
+  ["empty Dynamic"] {
+    new {
+      existing = "value"
+    }
+  }
+  ["with elements"] {
+    new {
+      "base"
+      "element1"
+      "element2"
+    }
+  }
+  ["with entries"] {
+    new {
+      ["baseKey"] = "baseValue"
+      ["key1"] = "value1"
+      ["key2"] = "value2"
+    }
+  }
+  ["with mixed members"] {
+    new {
+      baseProp = "base"
+      prop = "property"
+      ["entry"] = "entryValue"
+      "element"
+    }
+  }
+  ["applying to Typed object"] {
+    new {
+      name = "Modified"
+      age = 100
+    }
+  }
+  ["chaining mixins"] {
+    new {
+      base = "start"
+      extra = "value"
+      another = "field"
+    }
+  }
+  ["reusable mixin"] {
+    new {
+      first {
+        id = 1
+        shared = "config"
+      }
+      second {
+        id = 2
+        shared = "config"
+      }
+    }
+  }
+  ["overriding properties"] {
+    new {
+      name = "Override"
+      value = 999
+      other = "keep"
+    }
+  }
+  ["replacement vs merge for nested objects"] {
+    new {
+      a1 {
+        b2 = 2
+      }
+      a2 {
+        b1 = 2
+        b2 = 2
+      }
+    }
+  }
+  ["integer entry keys vs elements"] {
+    new {
+      [99] = "base entry at 99"
+      "base0"
+      "base1"
+      [5] = "entry at 5"
+      [10] = "entry at 10"
+      "element0"
+      "element1"
+    }
+  }
+  ["class hierarchy"] {
+    new {
+      name = "Buddy"
+      age = 5
+      breed = "Labrador"
+    }
+  }
+  ["constraints are preserved"] {
+    new {
+      port = 8080
+    }
+  }
+  ["local members are not exposed"] {
+    new {
+      base = "value"
+      visible = "should appear"
+    }
+  }
+  ["nested amendment semantics"] {
+    new {
+      outerVal {
+        inner {
+          deep = "value"
+        }
+        sibling = "data"
+      }
+    }
+  }
+  ["typed object to mixin"] {
+    new {
+      existing = "field"
+      host = "localhost"
+      port = 8080
+    }
+  }
+  ["mixin from typed class with defaults"] {
+    new {
+      custom = "value"
+      enabled = false
+      timeout = 30
+    }
+  }
+  ["element index offset with gaps"] {
+    new {
+      "base0"
+      "base1"
+      "base2"
+      "mixinElement0"
+      "mixinElement1"
+    }
+  }
+  ["empty parent with mixin elements"] {
+    new {
+      prop = "value"
+      "elem0"
+      "elem1"
+    }
+  }
+  ["mixin self application"] {
+    new {
+      count = 1
+    }
+  }
+  ["applying elements-only mixin to Listing"] {
+    new {
+      "base1"
+      "base2"
+      "new1"
+      "new2"
+    }
+  }
+  ["applying properties mixin to Listing"] {
+    new {
+      "item1"
+      "item2"
+      customProp = "properties work on Listings"
+    }
+  }
+  ["applying entries mixin to Listing"] {
+    new {
+      "item1"
+      "item2"
+      ["key"] = "entries work on Listings"
+    }
+  }
+  ["applying Listing mixin to Listing"] {
+    new {
+      "base1"
+      "fromListing1"
+      "fromListing2"
+    }
+  }
+  ["applying Mapping mixin to Mapping"] {
+    new {
+      ["item1"] = "value override"
+      ["item2"] = "value 2"
+      ["item3"] = "value 3"
+    }
+  }
+  ["applying mixin to itself"] {
+    new {
+      name = "Override"
+      value = 999
+    }
+  }
+  ["amended dynamic mixin"] {
+    new {
+      a = 1
+      b = 2
+    }
+  }
+  ["amended class mixin"] {
+    new {
+      host = "replace"
+    }
+  }
+  ["undefined property as mixin"] {
+    new {
+      host = "value"
+      port = 123
+    }
+  }
+  ["default property values as mixin"] {
+    new {
+      enabled = true
+      timeout = 30
+      color = "blue"
+    }
+  }
+}
