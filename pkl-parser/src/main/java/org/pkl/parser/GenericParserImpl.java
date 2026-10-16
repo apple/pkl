@@ -17,6 +17,7 @@ package org.pkl.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Operator;
@@ -37,10 +38,14 @@ class GenericParserImpl {
 
   GenericParserImpl(String source) {
     this.lexer = new Lexer(source);
-    while (true) {
-      var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.getNewLinesBetween());
-      tokens.add(ft);
-      if (ft.token == Token.EOF) break;
+    try {
+      while (true) {
+        var ft = new FullToken(lexer.next(), lexer.fullSpan(), lexer.getNewLinesBetween());
+        tokens.add(ft);
+        if (ft.token == Token.EOF) break;
+      }
+    } catch (ParserError e) {
+      throw parserError(Objects.requireNonNull(e.getMessage()), lexer.fullSpan());
     }
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -102,6 +107,16 @@ class GenericParserImpl {
     return new Node(NodeType.MODULE, nodes);
   }
 
+  Node parseExpressionInput() {
+    ff();
+    var expr = parseExpr();
+    ff();
+    if (lookahead != Token.EOF) {
+      throw parserError("unexpectedToken", _lookahead.text(lexer), "end of file");
+    }
+    return expr;
+  }
+
   private Node parseModuleDecl(List<Node> preChildren) {
     var headerParts = getHeaderParts(preChildren);
     var children = new ArrayList<>(headerParts.preffixes);
@@ -139,7 +154,7 @@ class GenericParserImpl {
     children.add(parseIdentifier());
     while (lookahead() == Token.DOT) {
       ff(children);
-      children.add(new Node(NodeType.TERMINAL, next().span));
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseIdentifier());
     }
@@ -222,13 +237,13 @@ class GenericParserImpl {
     headers.add(makeTerminal(next()));
     ff(headers);
     headers.add(parseIdentifier());
-    ff(headers);
-    if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList());
+    if (lookahead() == Token.LT) {
       ff(headers);
+      headers.add(parseTypeParameterList());
     }
-    expect(Token.ASSIGN, headers, "unexpectedToken", "=");
     children.add(new Node(NodeType.TYPEALIAS_HEADER, headers));
+    ff(children);
+    expect(Token.ASSIGN, children, "unexpectedToken", "=");
     var body = new ArrayList<Node>();
     ff(body);
     body.add(parseType());
@@ -343,7 +358,7 @@ class GenericParserImpl {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
+    children.add(new Node(NodeType.METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
       children.add(parseTypeParameterList());
@@ -360,7 +375,7 @@ class GenericParserImpl {
       var body = new ArrayList<Node>();
       ff(body);
       body.add(parseExpr());
-      children.add(new Node(NodeType.CLASS_METHOD_BODY, body));
+      children.add(new Node(NodeType.METHOD_BODY, body));
     }
     return new Node(NodeType.CLASS_METHOD, children);
   }
@@ -391,7 +406,7 @@ class GenericParserImpl {
       ff(members);
     }
     if (!members.isEmpty()) {
-      children.add(new Node(NodeType.OBJECT_MEMBER_LIST, members));
+      children.add(new Node(NodeType.OBJECT_MEMBER_ELEMENTS, members));
     }
     children.add(makeTerminal(next())); // RBRACE
     return new Node(NodeType.OBJECT_BODY, children);
@@ -515,7 +530,7 @@ class GenericParserImpl {
     expect(Token.FUNCTION, headers, "unexpectedToken", "function");
     ff(headers);
     headers.add(parseIdentifier());
-    children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
+    children.add(new Node(NodeType.METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
       children.add(parseTypeParameterList());
@@ -531,7 +546,7 @@ class GenericParserImpl {
     var body = new ArrayList<Node>();
     ff(body);
     body.add(parseExpr());
-    children.add(new Node(NodeType.CLASS_METHOD_BODY, body));
+    children.add(new Node(NodeType.METHOD_BODY, body));
     return new Node(NodeType.OBJECT_METHOD, children);
   }
 
@@ -569,16 +584,14 @@ class GenericParserImpl {
     ff(header);
     header.add(parseExpr());
     expect(Token.RBRACK, header, "unexpectedToken", "]");
-    if (lookahead() == Token.ASSIGN) {
-      ff(header);
-      header.add(makeTerminal(next()));
-      children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
+    children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
+    ff(children);
+    if (lookahead == Token.ASSIGN) {
+      children.add(makeTerminal(next()));
       ff(children);
       children.add(parseExpr());
       return new Node(NodeType.OBJECT_ENTRY, children);
     }
-    children.add(new Node(NodeType.OBJECT_ENTRY_HEADER, header));
-    ff(children);
     children.addAll(parseBodyList());
     return new Node(NodeType.OBJECT_ENTRY, children);
   }
@@ -937,7 +950,9 @@ class GenericParserImpl {
       var token = next().token;
       ff();
       if (token == Token.RPAREN) {
-        return lookahead == Token.ARROW;
+        // `()` is only valid as an empty parameter list
+        // let `parseFunctionLiteral` report the missing `->`
+        return true;
       }
       if (token == Token.UNDERSCORE) {
         return true;
@@ -1072,16 +1087,9 @@ class GenericParserImpl {
   private Node parseParenthesizedExpr() {
     var children = new ArrayList<Node>();
     expect(Token.LPAREN, children, "unexpectedToken", "(");
-    if (lookahead() == Token.RPAREN) {
-      ff(children);
-      children.add(makeTerminal(next()));
-      return new Node(NodeType.PARENTHESIZED_EXPR, children);
-    }
-    var elements = new ArrayList<Node>();
-    ff(elements);
-    elements.add(parseExpr(")"));
-    ff(elements);
-    children.add(new Node(NodeType.PARENTHESIZED_EXPR_ELEMENTS, elements));
+    ff(children);
+    children.add(parseExpr(")"));
+    ff(children);
     expect(Token.RPAREN, children, "unexpectedToken", ")");
     return new Node(NodeType.PARENTHESIZED_EXPR, children);
   }
@@ -1211,7 +1219,7 @@ class GenericParserImpl {
             yield new Node(NodeType.DECLARED_TYPE, children);
           }
           case STRING_START ->
-              new Node(NodeType.STRING_CONSTANT_TYPE, List.of(parseStringConstant()));
+              new Node(NodeType.STRING_LITERAL_TYPE, List.of(parseStringConstant()));
           default -> {
             var text = _lookahead.text(lexer);
             if (expectation != null) {
@@ -1381,14 +1389,14 @@ class GenericParserImpl {
     children.add(makeTerminal(startTk));
     while (lookahead != Token.STRING_END) {
       switch (lookahead) {
-        case STRING_PART,
-            STRING_ESCAPE_NEWLINE,
+        case STRING_PART -> children.add(make(NodeType.STRING_CHARS, next().span));
+        case STRING_ESCAPE_NEWLINE,
             STRING_ESCAPE_TAB,
             STRING_ESCAPE_QUOTE,
             STRING_ESCAPE_BACKSLASH,
             STRING_ESCAPE_RETURN,
             STRING_ESCAPE_UNICODE ->
-            children.add(makeTerminal(next()));
+            children.add(make(NodeType.STRING_ESCAPE, next().span));
         case EOF -> {
           var delimiter = new StringBuilder(startTk.text(lexer)).reverse().toString();
           throw parserError("missingDelimiter", delimiter);
@@ -1399,7 +1407,7 @@ class GenericParserImpl {
       }
     }
     children.add(makeTerminal(next())); // string end
-    return new Node(NodeType.STRING_CHARS, children);
+    return new Node(NodeType.STRING_CONSTANT, children);
   }
 
   private FullToken expect(Token type, String errorKey, Object... messageArgs) {
@@ -1542,7 +1550,64 @@ class GenericParserImpl {
   }
 
   private Node makeTerminal(FullToken tk) {
-    return new Node(NodeType.TERMINAL, tk.span);
+    var nodeType =
+        switch (tk.token) {
+          // keywords
+          case AMENDS -> NodeType.AMENDS_KEYWORD;
+          case AS -> NodeType.AS_KEYWORD;
+          case CLASS -> NodeType.CLASS_KEYWORD;
+          case ELSE -> NodeType.ELSE_KEYWORD;
+          case EXTENDS -> NodeType.EXTENDS_KEYWORD;
+          case FOR -> NodeType.FOR_KEYWORD;
+          case FUNCTION -> NodeType.FUNCTION_KEYWORD;
+          case IF -> NodeType.IF_KEYWORD;
+          case IMPORT -> NodeType.IMPORT_KEYWORD;
+          case IMPORT_STAR -> NodeType.IMPORT_STAR_KEYWORD;
+          case IN -> NodeType.IN_KEYWORD;
+          case LET -> NodeType.LET_KEYWORD;
+          case MODULE -> NodeType.MODULE_KEYWORD;
+          case NEW -> NodeType.NEW_KEYWORD;
+          case OUT -> NodeType.OUT_KEYWORD;
+          case READ -> NodeType.READ_KEYWORD;
+          case READ_QUESTION -> NodeType.READ_QUESTION_KEYWORD;
+          case READ_STAR -> NodeType.READ_STAR_KEYWORD;
+          case SUPER -> NodeType.SUPER_KEYWORD;
+          case THROW -> NodeType.THROW_KEYWORD;
+          case TRACE -> NodeType.TRACE_KEYWORD;
+          case TYPE_ALIAS -> NodeType.TYPEALIAS_KEYWORD;
+          case WHEN -> NodeType.WHEN_KEYWORD;
+          // punctuation
+          case ARROW -> NodeType.ARROW;
+          case ASSIGN -> NodeType.ASSIGN;
+          case AT -> NodeType.AT;
+          case COLON -> NodeType.COLON;
+          case COMMA -> NodeType.COMMA;
+          case DOT -> NodeType.DOT;
+          case GT -> NodeType.GT;
+          case LBRACE -> NodeType.LBRACE;
+          case LBRACK -> NodeType.LBRACK;
+          case LPAREN -> NodeType.LPAREN;
+          case LPRED -> NodeType.LPRED;
+          case LT -> NodeType.LT;
+          case MINUS -> NodeType.MINUS;
+          case NOT -> NodeType.NOT;
+          case QSPREAD -> NodeType.QSPREAD;
+          case QUESTION -> NodeType.QUESTION;
+          case RBRACE -> NodeType.RBRACE;
+          case RBRACK -> NodeType.RBRACK;
+          case RPAREN -> NodeType.RPAREN;
+          case SPREAD -> NodeType.SPREAD;
+          case STAR -> NodeType.STAR;
+          case UNDERSCORE -> NodeType.UNDERSCORE;
+          case UNION -> NodeType.UNION;
+          // string delimiters
+          case INTERPOLATION_START -> NodeType.INTERPOLATION_START;
+          case STRING_START -> NodeType.STRING_START;
+          case STRING_MULTI_START -> NodeType.STRING_MULTI_START;
+          case STRING_END -> NodeType.STRING_END;
+          default -> throw new RuntimeException("Unreacheable code");
+        };
+    return new Node(nodeType, tk.span);
   }
 
   // fast-forward over affix tokens

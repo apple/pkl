@@ -1,0 +1,101 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local function mod(source: String): syntax.GenericNode = new syntax.Parser {}.parseModule(source)
+
+local sample: syntax.GenericNode =
+  mod(
+    """
+    import "foo.pkl"
+    import "bar.pkl" as baz
+
+    class Point {
+      x: Int
+      y: Int
+    }
+
+    origin = if (useOrigin) new Point { x = 0; y = 0 } else null
+
+    scaled = origin.x * 2
+    """,
+  )
+
+facts {
+  ["fold counts nodes by predicate"] {
+    sample.fold(0, (acc, n) -> if (n.type == "import") acc + 1 else acc) == 2
+
+    sample.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc) == 1
+
+    sample.fold(0, (acc, n) -> if (n.type == "when_generator") acc + 1 else acc) == 0
+  }
+
+  ["fold accumulates into a collection"] {
+    sample.fold(List(), (acc, n) -> if (n.type == "identifier") acc.add(n.text) else acc)
+      == List(
+        "baz",
+        "Point",
+        "x",
+        "Int",
+        "y",
+        "Int",
+        "origin",
+        "useOrigin",
+        "Point",
+        "x",
+        "y",
+        "scaled",
+        "origin",
+        "x",
+      )
+  }
+
+  ["fold visits a node before its children (pre-order)"] {
+    // the module node is visited first
+    sample.fold(List(), (acc, n) -> acc.add(n.type)).first == "module"
+  }
+
+  ["terminals have no children"] {
+    sample.fold(true, (acc, n) -> if (n.isTerminal) acc && n.children.isEmpty else acc)
+  }
+
+  ["a parsed module is a branch"] {
+    !sample.isTerminal
+  }
+
+  ["identifiers are terminals"] {
+    sample.fold(true, (acc, n) -> if (n.type == "identifier") acc && n.isTerminal else acc)
+  }
+
+  ["terminals carry text"] {
+    sample.fold(true, (acc, n) -> if (n.isTerminal) acc && n.text != null else acc)
+  }
+
+  ["branches carry the text of their entire subtree"] {
+    sample.fold(true, (acc, n) -> acc && n.text != null)
+
+    // the module node spans the whole source
+    sample.text == """
+      import "foo.pkl"
+      import "bar.pkl" as baz
+
+      class Point {
+        x: Int
+        y: Int
+      }
+
+      origin = if (useOrigin) new Point { x = 0; y = 0 } else null
+
+      scaled = origin.x * 2
+      """
+
+    // a branch's text includes the whitespace and comments between its children
+    sample.fold(List(), (acc, n) -> if (n.type == "class_body") acc.add(n.text) else acc)
+      == List("""
+        {
+          x: Int
+          y: Int
+        }
+        """)
+  }
+}

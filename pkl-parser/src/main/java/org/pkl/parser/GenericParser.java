@@ -21,4 +21,8 @@ public final class GenericParser {
   public Node parseModule(String source) {
     return new GenericParserImpl(source).parseModule();
   }
+
+  public Node parseExpressionInput(String source) {
+    return new GenericParserImpl(source).parseExpressionInput();
+  }
 }
