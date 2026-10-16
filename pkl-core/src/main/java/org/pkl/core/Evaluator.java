@@ -27,7 +27,8 @@ import org.pkl.core.runtime.VmEvalException;
  * <p>Evaluated modules, and modules imported by them, are cached based on their origin. This is
  * important to guarantee consistent evaluation results, for example when the same module is used by
  * multiple other modules. To reset the cache, {@link #close()} the current instance and create a
- * new one.
+ * new one. Overloads accepting an {@link EvaluationContext} use fresh caches per call without
+ * changing the evaluator's existing caches.
  *
  * <p>Construct an evaluator through {@link EvaluatorBuilder}.
  */
@@ -48,12 +49,44 @@ public interface Evaluator extends AutoCloseable {
   PModule evaluate(ModuleSource moduleSource);
 
   /**
+   * Evaluates the module with the given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   * @since 0.32.0
+   */
+  default PModule evaluate(ModuleSource moduleSource, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
+
+  /**
    * Evaluates a module's {@code output.text} property.
    *
    * @throws PklException if an error occurs during evaluation
    * @throws IllegalStateException if this evaluator has already been closed
    */
   String evaluateOutputText(ModuleSource moduleSource);
+
+  /**
+   * Evaluates a module's {@code output.text} property with the given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   * @since 0.32.0
+   */
+  default String evaluateOutputText(ModuleSource moduleSource, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
 
   /**
    * Evaluates a module's {@code output.bytes} property.
@@ -65,12 +98,44 @@ public interface Evaluator extends AutoCloseable {
   byte[] evaluateOutputBytes(ModuleSource moduleSource);
 
   /**
+   * Evaluates a module's {@code output.bytes} property with the given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   * @since 0.32.0
+   */
+  default byte[] evaluateOutputBytes(ModuleSource moduleSource, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
+
+  /**
    * Evaluates a module's {@code output.value} property.
    *
    * @throws PklException if an error occurs during evaluation
    * @throws IllegalStateException if this evaluator has already been closed
    */
   Object evaluateOutputValue(ModuleSource moduleSource);
+
+  /**
+   * Evaluates a module's {@code output.value} property with the given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   * @since 0.32.0
+   */
+  default Object evaluateOutputValue(ModuleSource moduleSource, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
 
   /**
    * Evaluates a module's {@code output.files} property.
@@ -173,6 +238,24 @@ public interface Evaluator extends AutoCloseable {
    * @throws IllegalStateException if this evaluator has already been closed
    */
   Object evaluateExpression(ModuleSource moduleSource, String expression);
+
+  /**
+   * Evaluates the Pkl expression represented as {@code expression} with the given evaluation
+   * context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @throws PklException if an error occurs during evaluation
+   * @throws IllegalStateException if this evaluator has already been closed
+   * @since 0.32.0
+   */
+  default Object evaluateExpression(
+      ModuleSource moduleSource, String expression, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
 
   /**
    * Evaluates the Pkl expression represented as {@code expression}, returning a byte array of the
