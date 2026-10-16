@@ -114,6 +114,7 @@ class DocSnippetTestsEngine : HierarchicalTestEngine<DocSnippetTestsEngine.Execu
         StackFrameTransformers.defaultTransformer,
         false,
         TraceMode.COMPACT,
+        emptyMap(),
       )
     return ExecutionContext(replServer)
   }

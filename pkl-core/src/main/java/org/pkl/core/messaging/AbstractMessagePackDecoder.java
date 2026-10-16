@@ -166,8 +166,8 @@ public abstract class AbstractMessagePackDecoder implements MessageDecoder {
     return value.asArrayValue().list().stream().map((it) -> it.asStringValue().asString()).toList();
   }
 
-  protected static @Nullable Map<String, String> unpackStringMapOrNull(
-      Map<Value, Value> map, String key) {
+  protected static <T> @Nullable Map<String, T> unpackMapOrNull(
+      Map<Value, Value> map, String key, Function<Value, T> mapper) {
     var value = getNullable(map, key);
     if (value == null) {
       return null;
@@ -176,8 +176,7 @@ public abstract class AbstractMessagePackDecoder implements MessageDecoder {
     return value.asMapValue().entrySet().stream()
         .collect(
             Collectors.toMap(
-                (e) -> e.getKey().asStringValue().asString(),
-                (e) -> e.getValue().asStringValue().asString()));
+                (e) -> e.getKey().asStringValue().asString(), (e) -> mapper.apply(e.getValue())));
   }
 
   protected static <T> @Nullable List<T> unpackStringListOrNull(
@@ -202,19 +201,5 @@ public abstract class AbstractMessagePackDecoder implements MessageDecoder {
       result.add(mapper.apply(value));
     }
     return result;
-  }
-
-  protected static <T> @Nullable Map<String, T> unpackStringMapOrNull(
-      Map<Value, Value> map, String key, Function<Map<Value, Value>, T> mapper) {
-    var value = getNullable(map, key);
-    if (value == null) {
-      return null;
-    }
-
-    return value.asMapValue().entrySet().stream()
-        .collect(
-            Collectors.toMap(
-                (e) -> e.getKey().asStringValue().asString(),
-                (e) -> mapper.apply(e.getValue().asMapValue().map())));
   }
 }
