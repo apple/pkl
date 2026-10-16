@@ -1,0 +1,6 @@
+wrongType = false
+matchingType = true
+wrongTypeAgain = false
+letWrongType = false
+letMatchingType = true
+castWrongType = "Type constraint `isOk(new { bar = 1 }) && this is X` violated. Value: 3"
