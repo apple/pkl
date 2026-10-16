@@ -16,7 +16,9 @@
 package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.PklConverter;
@@ -27,9 +29,10 @@ public final class PcfRendererNodes {
   public abstract static class renderDocument extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderDocument(value);
+      createRenderer(self, builder, callNode).renderDocument(value);
       return builder.toString();
     }
   }
@@ -37,22 +40,25 @@ public final class PcfRendererNodes {
   public abstract static class renderValue extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected String eval(VmTyped self, Object value) {
+    protected String eval(
+        VmTyped self, Object value, @Cached("create()") IndirectCallNode callNode) {
       var builder = new StringBuilder();
-      createRenderer(self, builder).renderValue(value);
+      createRenderer(self, builder, callNode).renderValue(value);
       return builder.toString();
     }
   }
 
-  private static PcfRenderer createRenderer(VmTyped self, StringBuilder builder) {
-    var indent = (String) VmUtils.readMember(self, Identifier.INDENT);
-    var omitNullProperties = (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES);
+  private static PcfRenderer createRenderer(
+      VmTyped self, StringBuilder builder, IndirectCallNode callNode) {
+    var indent = (String) VmUtils.readMember(self, Identifier.INDENT, callNode);
+    var omitNullProperties =
+        (boolean) VmUtils.readMember(self, Identifier.OMIT_NULL_PROPERTIES, callNode);
     var useCustomStringDelimiters =
-        (boolean) VmUtils.readMember(self, Identifier.USE_CUSTOM_STRING_DELIMITERS);
+        (boolean) VmUtils.readMember(self, Identifier.USE_CUSTOM_STRING_DELIMITERS, callNode);
     return new PcfRenderer(
         builder,
         indent,
-        PklConverter.fromRenderer(self),
+        PklConverter.fromRenderer(self, callNode),
         omitNullProperties,
         useCustomStringDelimiters);
   }

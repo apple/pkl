@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.instrumentation.InstrumentableNode.WrapperNode;
+import java.util.EnumSet;
 import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
@@ -28,6 +29,9 @@ import org.pkl.core.PObject;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.unary.ImportNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
+import org.pkl.core.runtime.VmTypedCursors.PropertyCursor;
 import org.pkl.core.util.EconomicMaps;
 
 public final class VmTyped extends VmObject {
@@ -165,7 +169,7 @@ public final class VmTyped extends VmObject {
   @Override
   @TruffleBoundary
   public Composite export() {
-    assert forced : "Value was not forced prior to export";
+    assert isDeepForced() : "Value was not forced prior to export";
     assert clazz != null;
     if (!isModuleObject()) {
       return new PObject(clazz.getPClassInfo(), exportMembers());
@@ -187,6 +191,63 @@ public final class VmTyped extends VmObject {
   @Override
   public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
     return converter.convertTyped(this, path);
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return new PropertyCursor(this, true);
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    // don't force module objects to avoid forcing types (too conservative?)
+    if (option == CursorOption.ALL_VALUES && !isModuleObject()) {
+      force(false, false);
+    }
+    return new PropertyCursor(this, true);
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return new PropertyCursor(this, false);
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    if (option == CursorOption.ANY_ORDER) {
+      force(false, false);
+    }
+    return new PropertyCursor(this, false);
   }
 
   @Override

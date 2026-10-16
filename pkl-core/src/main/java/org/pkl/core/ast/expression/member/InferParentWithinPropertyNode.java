@@ -16,9 +16,11 @@
 package org.pkl.core.ast.expression.member;
 
 import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.runtime.*;
@@ -36,13 +38,14 @@ public abstract class InferParentWithinPropertyNode extends ExpressionNode {
   }
 
   @Specialization(guards = "!owner.isPrototype()")
-  protected Object evalTypedObject(VirtualFrame frame, VmTyped owner) {
+  protected Object evalTypedObject(
+      VirtualFrame frame, VmTyped owner, @Cached("create()") IndirectCallNode callNode) {
     if (isLocalProperty) {
       return getLocalPropertyDefaultValue(frame, owner);
     }
 
     try {
-      var result = VmUtils.readMemberOrNull(owner.getPrototype(), ownPropertyName, false);
+      var result = VmUtils.readMemberOrNull(owner.getPrototype(), ownPropertyName, false, callNode);
       assert result != null : "every property has a default";
       return result;
     } catch (VmUndefinedValueException e) {

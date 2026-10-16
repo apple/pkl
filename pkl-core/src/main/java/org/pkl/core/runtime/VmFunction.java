@@ -18,11 +18,14 @@ package org.pkl.core.runtime;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.RootCallTarget;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import java.util.EnumSet;
 import java.util.function.BiFunction;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
 import org.pkl.core.util.EconomicMaps;
 
 public final class VmFunction extends VmObjectLike {
@@ -140,23 +143,58 @@ public final class VmFunction extends VmObjectLike {
   }
 
   @Override
-  public boolean iterateMemberValues(MemberValueConsumer consumer) {
-    return true;
-  }
-
-  @Override
-  public boolean forceAndIterateMemberValues(ForcedMemberValueConsumer consumer) {
-    return true;
-  }
-
-  @Override
-  public boolean iterateAlreadyForcedMemberValues(ForcedMemberValueConsumer consumer) {
-    return true;
-  }
-
-  @Override
   public boolean iterateMembers(BiFunction<Object, ObjectMember, Boolean> consumer) {
     return true;
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    return EmptyCursor.INSTANCE;
   }
 
   @Override

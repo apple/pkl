@@ -16,23 +16,27 @@
 package org.pkl.core.runtime;
 
 import com.google.errorprone.annotations.concurrent.GuardedBy;
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.MaterializedFrame;
-import java.util.HashSet;
+import com.oracle.truffle.api.nodes.IndirectCallNode;
+import java.util.EnumSet;
 import java.util.Map;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
+import org.pkl.core.runtime.VmMappingCursors.CachedEntryCursor;
+import org.pkl.core.runtime.VmMappingCursors.EntryCursor;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
+import org.pkl.core.runtime.VmObjectCursor.EmptyCursor;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
-import org.pkl.core.util.MutableLong;
 
 public final class VmMapping extends VmListingOrMapping {
-  private long cachedLength = -1;
-
-  @GuardedBy("this")
-  private @Nullable VmSet __allKeys;
+  private static final EnumSet<CursorOption> isEmptyComputationCursor =
+      EnumSet.of(CursorOption.ANY_ORDER, CursorOption.LAZY_REQUIRED);
 
   private static final class EmptyHolder {
     private static final VmMapping EMPTY =
@@ -41,6 +45,13 @@ public final class VmMapping extends VmListingOrMapping {
             BaseModule.getMappingClass().getPrototype(),
             EconomicMaps.create());
   }
+
+  @CompilationFinal private long cachedLength = -1;
+  @CompilationFinal private boolean isEmptyComputed;
+  @CompilationFinal private boolean isEmpty;
+
+  @GuardedBy("this")
+  private @Nullable VmSet __allKeys;
 
   public static VmMapping empty() {
     return EmptyHolder.EMPTY;
@@ -61,10 +72,6 @@ public final class VmMapping extends VmListingOrMapping {
       Object typeCheckReceiver,
       VmObjectLike typeCheckOwner) {
     super(enclosingFrame, parent, members, typeCastNode, typeCheckReceiver, typeCheckOwner);
-  }
-
-  public static boolean isDefaultProperty(Object propertyKey) {
-    return propertyKey == Identifier.DEFAULT;
   }
 
   @Override
@@ -91,21 +98,22 @@ public final class VmMapping extends VmListingOrMapping {
   }
 
   @Override
-  @TruffleBoundary
   public Map<Object, Object> export() {
-    assert forced : "Value was not forced prior to export";
+    assert isDeepForced() : "Value was not forced prior to export";
 
-    var properties = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    var entries = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    for (var cursor = entries(); cursor.advance(); ) {
+      entries.put(VmValue.export(cursor.key()), VmValue.export(cursor.cachedValue()));
+    }
+    return entries;
+  }
 
-    iterateAlreadyForcedMemberValues(
-        (key, prop, value) -> {
-          if (isDefaultProperty(key)) return true;
-
-          properties.put(VmValue.export(key), VmValue.export(value));
-          return true;
-        });
-
-    return properties;
+  public Map<Object, Object> toMap(IndirectCallNode callNode) {
+    var entries = CollectionUtils.newLinkedHashMap(EconomicMaps.size(cachedValues));
+    for (var cursor = entries(); cursor.advance(); ) {
+      entries.put(cursor.key(), cursor.value(callNode));
+    }
+    return entries;
   }
 
   @Override
@@ -116,6 +124,73 @@ public final class VmMapping extends VmListingOrMapping {
   @Override
   public <T> T accept(VmValueConverter<T> converter, Iterable<Object> path) {
     return converter.convertMapping(this, path);
+  }
+
+  @Override
+  public VmObjectCursor properties() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor properties(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements() {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(CursorOption option) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  @Override
+  public VmObjectCursor elements(EnumSet<CursorOption> options) {
+    return EmptyCursor.INSTANCE;
+  }
+
+  public VmObjectCursor entries() {
+    return new EntryCursor(this);
+  }
+
+  public VmObjectCursor entries(CursorOption option) {
+    if (option == CursorOption.ANY_ORDER) {
+      return isShallowForced() ? new CachedEntryCursor(this) : new EntryCursor(this);
+    }
+    if (option == CursorOption.ALL_VALUES) {
+      force(false, false);
+      return new EntryCursor(this);
+    }
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor entries(EnumSet<CursorOption> options) {
+    var anyOrder = CollectionUtils.contains(options, CursorOption.ANY_ORDER);
+    var allValues = CollectionUtils.contains(options, CursorOption.ALL_VALUES);
+    var lazyRequired = CollectionUtils.contains(options, CursorOption.LAZY_REQUIRED);
+    if (anyOrder) {
+      if (isShallowForced()) {
+        return new CachedEntryCursor(this);
+      }
+      if (allValues && !lazyRequired) {
+        force(false, false);
+        return new CachedEntryCursor(this);
+      }
+    }
+    return new EntryCursor(this);
+  }
+
+  @Override
+  public VmObjectCursor members() {
+    return entries();
+  }
+
+  @Override
+  public VmObjectCursor members(CursorOption option) {
+    return entries(option);
   }
 
   @Override
@@ -167,25 +242,23 @@ public final class VmMapping extends VmListingOrMapping {
     return result;
   }
 
-  @TruffleBoundary
   public long getLength() {
     if (cachedLength != -1) return cachedLength;
-    var count = new MutableLong(0);
-    var visited = new HashSet<>();
-    iterateMembers(
-        (key, member) -> {
-          var alreadyVisited = !visited.add(key);
-          // important to record hidden member as visited before skipping it
-          // because any overriding member won't carry a `hidden` identifier
-          if (alreadyVisited || member.isLocalOrExternalOrHidden()) return true;
-          count.getAndIncrement();
-          return true;
-        });
-    cachedLength = count.get();
+    CompilerDirectives.transferToInterpreterAndInvalidate();
+    var count = 0;
+    for (var cursor = entries(CursorOption.LAZY_REQUIRED); cursor.advance(); ) {
+      count++;
+    }
+    cachedLength = count;
     return cachedLength;
   }
 
   public boolean isEmpty() {
-    return getLength() == 0;
+    if (!isEmptyComputed) {
+      CompilerDirectives.transferToInterpreterAndInvalidate();
+      isEmptyComputed = true;
+      isEmpty = !entries(isEmptyComputationCursor).advance();
+    }
+    return isEmpty;
   }
 }

@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.NodeChild;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
@@ -33,6 +34,9 @@ public abstract class EqualNode extends ExpressionNode {
   protected EqualNode(SourceSection sourceSection) {
     super(sourceSection);
   }
+
+  /** When using this method, pass {@code null} in for {@code leftNode} and {@code rightNode}. */
+  public abstract boolean executeWith(VirtualFrame frame, Object left, Object right);
 
   @Specialization
   protected boolean eval(String left, String right) {

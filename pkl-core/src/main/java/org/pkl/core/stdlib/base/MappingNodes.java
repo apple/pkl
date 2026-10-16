@@ -15,20 +15,23 @@
  */
 package org.pkl.core.stdlib.base;
 
+import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2NodeGen;
 import org.pkl.core.ast.lambda.ApplyVmFunction3Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction3NodeGen;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 import org.pkl.core.stdlib.ExternalMethod0Node;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.ExternalPropertyNode;
-import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.MutableReference;
 
 public final class MappingNodes {
   private MappingNodes() {}
@@ -66,7 +69,7 @@ public final class MappingNodes {
     protected boolean eval(VmMapping self, Object key) {
       if (self.hasCachedValue(key)) return true;
 
-      for (VmObjectLike curr = self; curr != null; curr = curr.getParent()) {
+      for (VmObject curr = self; curr != null; curr = curr.getParent()) {
         if (curr.hasMember(key)) return true;
       }
 
@@ -76,17 +79,29 @@ public final class MappingNodes {
 
   public abstract static class containsValue extends ExternalMethod1Node {
     @Specialization
-    protected boolean eval(VmMapping self, Object value) {
-      var foundValue = new MutableBoolean(false);
-      self.iterateMemberValues(
-          (key, member, memberValue) -> {
-            if (memberValue == null) {
-              memberValue = VmUtils.readMember(self, key);
-            }
-            foundValue.set(value.equals(memberValue));
-            return !foundValue.get();
-          });
-      return foundValue.get();
+    protected boolean eval(
+        VirtualFrame frame,
+        VmMapping self,
+        Object value,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
+      for (var cursor = self.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
+        var cursorValue = readCursorValueNode.execute(frame, cursor);
+        // TODO replace with EqualNode
+        if (equals(value, cursorValue)) {
+          return true;
+        }
+      }
+      return false;
+    }
+
+    @TruffleBoundary
+    private boolean equals(Object a, Object b) {
+      return a.equals(b);
+    }
+
+    @Override
+    public boolean isInstrumentable() {
+      return false;
     }
   }
 
@@ -119,14 +134,19 @@ public final class MappingNodes {
     @Child private ApplyVmFunction3Node applyLambdaNode = ApplyVmFunction3NodeGen.create();
 
     @Specialization
-    protected Object eval(VmMapping self, Object initial, VmFunction function) {
-      var result = new MutableReference<>(initial);
-      self.forceAndIterateMemberValues(
-          (key, def, value) -> {
-            result.set(applyLambdaNode.execute(function, result.get(), key, value));
-            return true;
-          });
-      return result.get();
+    protected Object eval(
+        VirtualFrame frame,
+        VmMapping self,
+        Object initial,
+        VmFunction function,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
+      var result = initial;
+      for (var cursor = self.entries(); cursor.advance(); ) {
+        result =
+            applyLambdaNode.execute(
+                function, result, cursor.key(), readCursorValueNode.execute(frame, cursor));
+      }
+      return result;
     }
   }
 
@@ -134,17 +154,16 @@ public final class MappingNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected boolean eval(VmMapping self, VmFunction function) {
-      var result = new MutableBoolean(true);
-      self.iterateMemberValues(
-          (key, member, value) -> {
-            if (value == null) {
-              value = VmUtils.readMember(self, key);
-            }
-            result.set(applyLambdaNode.executeBoolean(function, key, value));
-            return result.get();
-          });
-      return result.get();
+    protected boolean eval(
+        VirtualFrame frame,
+        VmMapping self,
+        VmFunction function,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
+      for (var cursor = self.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
+        if (!applyLambdaNode.executeBoolean(
+            function, cursor.key(), readCursorValueNode.execute(frame, cursor))) return false;
+      }
+      return true;
     }
   }
 
@@ -152,29 +171,31 @@ public final class MappingNodes {
     @Child private ApplyVmFunction2Node applyLambdaNode = ApplyVmFunction2NodeGen.create();
 
     @Specialization
-    protected boolean eval(VmMapping self, VmFunction function) {
-      var result = new MutableBoolean(false);
-      self.iterateMemberValues(
-          (key, member, value) -> {
-            if (value == null) {
-              value = VmUtils.readMember(self, key);
-            }
-            result.set(applyLambdaNode.executeBoolean(function, key, value));
-            return !result.get();
-          });
-      return result.get();
+    protected boolean eval(
+        VirtualFrame frame,
+        VmMapping self,
+        VmFunction function,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
+      for (var cursor = self.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
+        if (applyLambdaNode.executeBoolean(
+            function, cursor.key(), readCursorValueNode.execute(frame, cursor))) {
+          return true;
+        }
+      }
+      return false;
     }
   }
 
   public abstract static class toMap extends ExternalMethod0Node {
     @Specialization
-    protected VmMap eval(VmMapping self) {
+    protected VmMap eval(
+        VirtualFrame frame,
+        VmMapping self,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       var builder = VmMap.builder();
-      self.forceAndIterateMemberValues(
-          (key, def, value) -> {
-            builder.add(key, value);
-            return true;
-          });
+      for (var cursor = self.entries(); cursor.advance(); ) {
+        builder.add(cursor.key(), readCursorValueNode.execute(frame, cursor));
+      }
       return builder.build();
     }
   }

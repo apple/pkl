@@ -10,6 +10,10 @@ x | undefinedValue
     ^^^^^^^^^^^^^^
 at traceThenIterateUndefinedMember#items[#1] (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
 
+xx | for (item in items) {
+     ^^^^^^^^^^^^^^^^^^^^^
+at traceThenIterateUndefinedMember#result (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)
+
 xx | let (_ = trace(items))
      ^^^^^^^^^^^^^^^^^^^^^^
 at traceThenIterateUndefinedMember#result.<let expr> (file:///$snippetsDir/input/errors/traceThenIterateUndefinedMember.pkl)

@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.yaml;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.dsl.Cached;
+import com.oracle.truffle.api.dsl.Cached.Shared;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
 import com.oracle.truffle.api.source.Source;
@@ -50,22 +51,23 @@ public final class ParserNodes {
   public abstract static class parse extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected Object eval(VmTyped self, String text) {
+    protected Object eval(
+        VmTyped self, String text, @Shared @Cached("create()") IndirectCallNode callNode) {
       var uri = "input_string";
-      return doParse(self, text, uri);
+      return doParse(self, text, uri, callNode);
     }
 
     @Specialization
     @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
+        VmTyped self, VmTyped resource, @Shared @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
       var uri = (String) VmUtils.readMember(resource, Identifier.URI, callNode);
-      return doParse(self, text, uri);
+      return doParse(self, text, uri, callNode);
     }
 
-    private Object doParse(VmTyped self, String text, String uri) {
-      var converter = PklConverter.fromParser(self);
+    private Object doParse(VmTyped self, String text, String uri, IndirectCallNode callNode) {
+      var converter = PklConverter.fromParser(self, callNode);
       var load = createLoad(self, text, uri, converter);
 
       try {
@@ -86,22 +88,23 @@ public final class ParserNodes {
   public abstract static class parseAll extends ExternalMethod1Node {
     @Specialization
     @TruffleBoundary
-    protected VmList eval(VmTyped self, String text) {
+    protected VmList eval(
+        VmTyped self, String text, @Shared @Cached("create()") IndirectCallNode callNode) {
       var uri = "input_string";
-      return doParseAll(self, text, uri);
+      return doParseAll(self, text, uri, callNode);
     }
 
     @Specialization
     @TruffleBoundary
     protected Object eval(
-        VmTyped self, VmTyped resource, @Cached("create()") IndirectCallNode callNode) {
+        VmTyped self, VmTyped resource, @Shared @Cached("create()") IndirectCallNode callNode) {
       var text = (String) VmUtils.readMember(resource, Identifier.TEXT, callNode);
       var uri = (String) VmUtils.readMember(resource, Identifier.URI, callNode);
-      return doParseAll(self, text, uri);
+      return doParseAll(self, text, uri, callNode);
     }
 
-    private VmList doParseAll(VmTyped self, String text, String uri) {
-      var converter = PklConverter.fromParser(self);
+    private VmList doParseAll(VmTyped self, String text, String uri, IndirectCallNode callNode) {
+      var converter = PklConverter.fromParser(self, callNode);
       var load = createLoad(self, text, uri, converter);
       var builder = VmList.EMPTY.builder();
 

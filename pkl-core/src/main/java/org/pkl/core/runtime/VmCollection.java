@@ -17,8 +17,11 @@ package org.pkl.core.runtime;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.frame.VirtualFrame;
 import java.util.Iterator;
 import org.organicdesign.fp.xform.Xform;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
+import org.pkl.core.runtime.VmObjectCursor.CursorOption;
 
 public abstract class VmCollection extends VmValue implements Iterable<Object> {
   public interface Builder<T extends VmCollection> {
@@ -126,18 +129,15 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
     return VmList.create(result);
   }
 
-  @TruffleBoundary
-  public final VmCollection flatten() {
+  public final VmCollection flatten(VirtualFrame frame, ReadCursorValueNode readCursorValueNode) {
     var builder = builder();
     for (var elem : this) {
       if (elem instanceof Iterable<?> iterable) {
         builder.addAll(iterable);
       } else if (elem instanceof VmListing listing) {
-        listing.forceAndIterateMemberValues(
-            (key, member, value) -> {
-              builder.add(value);
-              return true;
-            });
+        for (var cursor = listing.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
+          builder.add(readCursorValueNode.execute(frame, cursor));
+        }
       } else {
         CompilerDirectives.transferToInterpreter();
         throw new VmExceptionBuilder()

@@ -17,6 +17,7 @@ package org.pkl.core.stdlib.base;
 
 import com.oracle.truffle.api.CompilerDirectives;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.LoopNode;
@@ -25,6 +26,7 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.expression.binary.*;
 import org.pkl.core.ast.internal.IsInstanceOfNode;
 import org.pkl.core.ast.internal.IsInstanceOfNodeGen;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.ast.internal.ToStringNode;
 import org.pkl.core.ast.internal.ToStringNodeGen;
 import org.pkl.core.ast.lambda.*;
@@ -651,8 +653,11 @@ public final class ListNodes {
 
   public abstract static class flatten extends ExternalMethod0Node {
     @Specialization
-    protected VmList eval(VmList self) {
-      return (VmList) self.flatten();
+    protected VmList eval(
+        VirtualFrame frame,
+        VmList self,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode) {
+      return (VmList) self.flatten(frame, readCursorValueNode);
     }
   }
 
@@ -1285,8 +1290,8 @@ public final class ListNodes {
       var iter = self.iterator();
       var builder = VmUtils.createBuilder();
       VmUtils.appendToBuilder(builder, toStringNode.executeWith(frame, iter.next()));
-
-      while (loopConditionProfile.profile(iter.hasNext())) {
+      loopConditionProfile.profileCounted(self.getLength());
+      while (loopConditionProfile.inject(iter.hasNext())) {
         VmUtils.appendToBuilder(builder, separator);
         VmUtils.appendToBuilder(builder, toStringNode.executeWith(frame, iter.next()));
       }
