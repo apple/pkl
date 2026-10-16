@@ -70,6 +70,9 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   /** The (closest) {@link SourceSection} of the value being visited, for better error messages. */
   protected @Nullable SourceSection currSourceSection = null;
 
+  /** Whether we are visiting an entry key or not. */
+  private boolean isVisitingEntryKey;
+
   protected AbstractRenderer(
       String name, PklConverter converter, boolean skipNullProperties, boolean skipNullEntries) {
     this.name = name;
@@ -119,9 +122,9 @@ public abstract class AbstractRenderer implements VmValueVisitor {
     try {
       VmValueVisitor.super.visit(value);
     } catch (VmUndefinedValueException e) {
-      // Only fill in the path if rendering the leaf member that threw the error. We know we are
-      // at a leaf if the error's receiver is the same as `value`.
-      if (e.getReceiver() == value) {
+      // Only fill in a hint if we are not visiting an entry key; when visiting an entry key,
+      // `currPath` is not tracked from the actual root value (see `visitEntryKeyValue`).
+      if (e.getReceiver() == value && !isVisitingEntryKey) {
         throw e.fillInHint(currPath, topLevelValue);
       }
       throw e;
@@ -377,7 +380,12 @@ public abstract class AbstractRenderer implements VmValueVisitor {
   protected void visitEntryKeyValue(
       Object key, boolean isFirst, Deque<Object> valuePath, Object value) {
     currPath = new ArrayDeque<>();
-    visitEntryKey(key, isFirst);
+    isVisitingEntryKey = true;
+    try {
+      visitEntryKey(key, isFirst);
+    } finally {
+      isVisitingEntryKey = false;
+    }
     currPath = valuePath;
     visitEntryValue(value);
   }

@@ -20,8 +20,6 @@ import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.IndirectCallNode;
-import org.pkl.core.ast.expression.binary.EqualNode;
-import org.pkl.core.ast.expression.binary.EqualNodeGen;
 import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.ast.lambda.ApplyVmFunction1Node;
 import org.pkl.core.ast.lambda.ApplyVmFunction2Node;
