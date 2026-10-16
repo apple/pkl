@@ -5,11 +5,11 @@ examples {
     "Expected value of type `Int`, but got type `String`. Value: \"one\""
   }
   ["listing"] {
-    true
+    false
     "Expected value of type `String`, but got type `Int`. Value: 1"
   }
   ["mapping"] {
-    true
+    false
     "Expected value of type `String`, but got type `Int`. Value: 1"
     "Expected value of type `String`, but got type `Int`. Value: 2"
     "Expected value of type `Int`, but got type `String`. Value: \"hi\""

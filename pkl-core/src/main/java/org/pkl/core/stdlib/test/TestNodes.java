@@ -39,7 +39,7 @@ public final class TestNodes {
     @Specialization
     protected String eval(@SuppressWarnings("unused") VmTyped self, VmFunction function) {
       try {
-        applyLambdaNode.execute(function);
+        VmValue.force(applyLambdaNode.execute(function), false);
       } catch (VmException e) {
         return render(e);
       }
@@ -54,7 +54,7 @@ public final class TestNodes {
     @Specialization
     protected Object eval(@SuppressWarnings("unused") VmTyped self, VmFunction function) {
       try {
-        applyLambdaNode.execute(function);
+        VmValue.force(applyLambdaNode.execute(function), false);
       } catch (VmException e) {
         return render(e);
       }

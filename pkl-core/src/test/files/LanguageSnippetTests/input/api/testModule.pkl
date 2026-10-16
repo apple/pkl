@@ -1,0 +1,19 @@
+amends "../snippetTest.pkl"
+
+import "pkl:test"
+
+examples {
+  ["catch"] {
+    test.catch(() -> throw("ouch"))
+    // the returned value is fully evaluated, so these are caught too
+    test.catch(() -> new Listing { 1 } as Listing<String>)
+    test.catch(() -> new Dynamic { foo { bar = throw("nested") } })
+  }
+  ["catchOrNull"] {
+    test.catchOrNull(() -> 42)
+    test.catchOrNull(() -> throw("ouch"))
+    // the returned value is fully evaluated, so these are caught too
+    test.catchOrNull(() -> new Listing { 1 } as Listing<String>)
+    test.catchOrNull(() -> new Dynamic { foo { bar = throw("nested") } })
+  }
+}
