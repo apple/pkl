@@ -1,0 +1,41 @@
+facts {
+  ["read-only transform leaves the tree unchanged"] {
+    true
+    true
+  }
+  ["rename identifiers everywhere"] {
+    true
+  }
+  ["replace a leaf via a typed node"] {
+    true
+  }
+  ["replace a leaf with a constructed generic node"] {
+    true
+  }
+  ["splice in a parsed subtree"] {
+    true
+  }
+  ["rebuilds ancestors of a changed node"] {
+    true
+  }
+  ["descend reprocesses emitted nodes"] {
+    true
+  }
+  ["descend = false leaves the emitted subtree untouched"] {
+    true
+  }
+  ["build super access from scratch"] {
+    true
+    true
+  }
+  ["build super subscript from scratch"] {
+    true
+  }
+  ["an identifier name is quoted as needed"] {
+    true
+    true
+    true
+    true
+    true
+  }
+}

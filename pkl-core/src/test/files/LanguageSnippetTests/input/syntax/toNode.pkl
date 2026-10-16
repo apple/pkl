@@ -1,0 +1,55 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local function nodesOfType(node: syntax.GenericNode, type: syntax.NodeType) =
+  node.fold(List(), (acc: List<syntax.GenericNode>, n) -> if (n.type == type) acc.add(n) else acc)
+
+facts {
+  ["a parsed module converts to a ModuleNode"] {
+    local mod = parser.parseModule("x = 1").toNode()
+    mod is syntax.ModuleNode
+    (mod as syntax.ModuleNode).properties["x"] != null
+  }
+
+  ["a parsed expression converts to its ExprNode subclass"] {
+    parser.parseExpression("1 + 2").toNode() is syntax.AdditionExprNode
+    parser.parseExpression("foo.bar").toNode() is syntax.QualifiedAccessExprNode
+    parser.parseExpression(#""hi""#).toNode() is syntax.SingleLineStringLiteralExprNode
+  }
+
+  ["any node in the tree converts, not just the root"] {
+    local mod = parser.parseModule("class Point { x: Int }")
+
+    nodesOfType(mod, "identifier").first.toNode() is syntax.IdentifierNode
+    nodesOfType(mod, "class").first.toNode() is syntax.ClassNode
+    nodesOfType(mod, "class_body").first.toNode() is syntax.ClassBodyNode
+    nodesOfType(mod, "declared_type").first.toNode() is syntax.DeclaredTypeNode
+  }
+
+  ["a node built from scratch converts"] {
+    // such a node carries no parse-time state, so it is converted on the fly
+    local intLiteral = new syntax.GenericNode {
+      type = "int_literal_expr"
+      text = "42"
+    }
+    intLiteral.toNode() is syntax.IntLiteralExprNode
+    (intLiteral.toNode() as syntax.IntLiteralExprNode).value == "42"
+  }
+
+  ["a transformed tree converts"] {
+    local mod =
+      parser.parseModule("x = 1").transform((n) ->
+        if (n.type == "int_literal_expr") Pair((n) { text = "2" }, false) else null
+      )
+    local property = (mod.toNode() as syntax.ModuleNode).properties["x"]!!
+    (property.value as syntax.IntLiteralExprNode).value == "2"
+  }
+
+  ["conversion round-trips through builtNode"] {
+    local node = parser.parseModule("x = 1")
+    node.toNode().builtNode == node
+  }
+}

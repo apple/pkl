@@ -1,0 +1,314 @@
+amends "../snippetTest.pkl"
+
+import "pkl:syntax"
+
+local parser = new syntax.Parser {}
+
+local function parse(source: String): syntax.ModuleNode = parser.parseModule(source).toNode()
+
+facts {
+  ["module declaration"] {
+    local mod = parse("module my.app")
+    mod.declaration != null
+    mod.declaration!!.name!!.value == "my.app"
+    mod.declaration!!.docComment == null
+    mod.declaration!!.annotations.length == 0
+    mod.declaration!!.modifiers.isEmpty
+    mod.declaration!!.extendsOrAmendsClause == null
+  }
+
+  ["module with modifiers and doc comment"] {
+    local mod =
+      parse(
+        """
+        /// This is my module.
+        @Deprecated { message = "use other" }
+        open module my.mod
+        """,
+      )
+    mod.declaration != null
+    mod.declaration!!.docComment != null
+    mod.declaration!!.docComment!!.value == "This is my module."
+
+    mod.declaration!!.annotations.length == 1
+    mod.declaration!!.annotations.first.type is syntax.DeclaredTypeNode
+
+    mod.declaration!!.modifiers != null
+    mod.declaration!!.modifiers == new Listing { "open" }
+  }
+
+  ["amends clause"] {
+    local mod = parse(#"amends "base.pkl""#)
+    mod.declaration != null
+    mod.declaration!!.extendsOrAmendsClause != null
+    mod.declaration!!.extendsOrAmendsClause!!.keyword == "amends"
+    mod.declaration!!.extendsOrAmendsClause!!.uri == "base.pkl"
+  }
+
+  ["extends clause"] {
+    local mod = parse(#"extends "base.pkl""#)
+    mod.declaration != null
+    mod.declaration!!.extendsOrAmendsClause != null
+    mod.declaration!!.extendsOrAmendsClause!!.keyword == "extends"
+    mod.declaration!!.extendsOrAmendsClause!!.uri == "base.pkl"
+  }
+
+  ["imports"] {
+    local mod =
+      parse(
+        """
+        import "foo.pkl"
+        import "bar.pkl" as myBar
+        import* "*.pkl"
+        """,
+      )
+    mod.imports.length == 3
+
+    mod.imports[0].uri == "foo.pkl"
+    mod.imports[0].keyword == "import"
+    mod.imports[0].alias == null
+
+    mod.imports[1].uri == "bar.pkl"
+    mod.imports[1].alias!!.name == "myBar"
+
+    mod.imports[2].uri == "*.pkl"
+    mod.imports[2].keyword == "import*"
+  }
+
+  ["class declaration"] {
+    local mod =
+      parse(
+        """
+        /// A bird class.
+        abstract class Bird {
+          name: String
+          function fly(speed: Int): Boolean = true
+        }
+        """,
+      )
+    mod.classes.length == 1
+    local cls = mod.classes["Bird"]
+
+    cls.docComment != null
+    cls.docComment!!.value == "A bird class."
+
+    cls.modifiers != null
+    cls.modifiers == new Listing { "abstract" }
+
+    cls.identifier.name == "Bird"
+
+    cls.typeParameters.isEmpty
+    cls.superType == null
+
+    cls.body != null
+    cls.body!!.properties.length == 1
+    cls.body!!.properties["name"].identifier.name == "name"
+    cls.body!!.properties["name"].typeAnnotation != null
+    cls.body!!.properties["name"].typeAnnotation is syntax.DeclaredTypeNode
+    cls.body!!.properties["name"].value == null
+
+    cls.body!!.methods.length == 1
+    cls.body!!.methods["fly"].identifier.name == "fly"
+    cls.body!!.methods["fly"].parameters.length == 1
+    cls.body!!.methods["fly"].parameters.first.identifier!!.name == "speed"
+    cls.body!!.methods["fly"].returnType != null
+    cls.body!!.methods["fly"].body != null
+    cls.body!!.methods["fly"].body is syntax.BooleanLiteralExprNode
+  }
+
+  ["class with extends and type parameters"] {
+    local mod =
+      parse(
+        """
+        class Container<T> extends Base {
+          item: T
+        }
+        """,
+      )
+    local cls = mod.classes["Container"]
+
+    cls.identifier.name == "Container"
+    cls.typeParameters != null
+    cls.typeParameters.length == 1
+    cls.typeParameters.first.identifier.name == "T"
+    cls.typeParameters.first.modifiers.isEmpty
+
+    cls.superType != null
+    cls.superType is syntax.DeclaredTypeNode
+  }
+
+  ["typealias"] {
+    local mod = parse("typealias Positive = Int(this > 0)")
+    mod.typeAliases.length == 1
+    local ta = mod.typeAliases["Positive"]
+    ta.identifier.name == "Positive"
+    ta.typeParameters.isEmpty
+    ta.type is syntax.ConstrainedTypeNode
+  }
+
+  ["top-level properties and methods"] {
+    local mod =
+      parse(
+        """
+        hidden name: String = "pkl"
+        local count: Int = 42
+        function greet(who: String): String = "hi"
+        """,
+      )
+
+    mod.properties.length == 2
+    mod.properties["name"].identifier.name == "name"
+    mod.properties["name"].modifiers != null
+    mod.properties["name"].modifiers == new Listing { "hidden" }
+    mod.properties["name"].value is syntax.SingleLineStringLiteralExprNode
+
+    mod.properties["count"].identifier.name == "count"
+    mod.properties["count"].modifiers != null
+    mod.properties["count"].modifiers == new Listing { "local" }
+
+    mod.methods.length == 1
+    mod.methods["greet"].identifier.name == "greet"
+    mod.methods["greet"].parameters.length == 1
+    mod.methods["greet"].returnType != null
+    mod.methods["greet"].body is syntax.SingleLineStringLiteralExprNode
+  }
+
+  ["parameter variations"] {
+    local mod = parse("function f(x: Int, _, y): Boolean = true")
+    local params = mod.methods["f"].parameters
+
+    params.length == 3
+
+    params[0].identifier!!.name == "x"
+    params[0].typeAnnotation != null
+    params[0].isBlankIdentifier == false
+
+    params[1].identifier == null
+    params[1].isBlankIdentifier == true
+    params[1].typeAnnotation == null
+
+    params[2].identifier!!.name == "y"
+    params[2].typeAnnotation == null
+    params[2].isBlankIdentifier == false
+  }
+
+  // `value` carries the identifier verbatim, so quoted identifiers keep their backticks
+  ["quoted identifiers"] {
+    local mod =
+      parse(
+        """
+        module `my mod`.`sub pkg`
+
+        import "foo.pkl" as `my alias`
+
+        class `My Class` {
+          `a prop`: String
+          function `do it`(`the arg`: Int) = `the arg`
+        }
+
+        typealias `My Alias` = `My Class`
+
+        const `my prop` = 0
+        """,
+      )
+
+    mod.declaration!!.name!!.value == "`my mod`.`sub pkg`"
+    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.text)
+      == List("`my mod`", "`sub pkg`")
+    mod.declaration!!.name!!.identifiers.toList().map((i) -> i.name)
+      == List("my mod", "sub pkg")
+
+    mod.imports.first.alias!!.text == "`my alias`"
+    mod.imports.first.alias!!.name == "my alias"
+
+    local cls = mod.classes["My Class"]
+    cls.identifier.text == "`My Class`"
+    cls.identifier.name == "My Class"
+    cls.body!!.properties["a prop"].identifier.name == "a prop"
+    cls.body!!.methods["do it"].identifier.name == "do it"
+    cls.body!!.methods["do it"].parameters.first.identifier!!.name == "the arg"
+
+    local ta = mod.typeAliases["My Alias"]
+    ta.identifier.name == "My Alias"
+    (ta.type as syntax.DeclaredTypeNode).name.value == "`My Class`"
+
+    mod.properties["my prop"].identifier.name == "my prop"
+    mod.properties["my prop"].modifiers == new Listing { "const" }
+  }
+
+  ["quoted identifiers in object bodies and accesses"] {
+    local mod = parse("x { `inner prop` = `some`.`path` }")
+    local prop = mod.properties["x"].objectBodies.first.properties.first
+    prop.identifier.text == "`inner prop`"
+    prop.identifier.name == "inner prop"
+
+    local access = prop.value as syntax.QualifiedAccessExprNode
+    access.identifier.name == "path"
+    (access.receiver as syntax.UnqualifiedAccessExprNode).identifier.name == "some"
+  }
+
+  ["parser error"] {
+    local result = new syntax.Parser {}.parseModuleOrNull("x = {{{")
+    result == null
+  }
+
+  ["members keep source order"] {
+    local mod =
+      parse(
+        """
+        a = 1
+        typealias A = Int
+        function f() = 0
+        class C {
+          z: Int
+        }
+        b = 2
+        """,
+      )
+
+    mod.members.length == 5
+    mod.members[0] is syntax.ClassPropertyNode
+    mod.members[1] is syntax.TypeAliasNode
+    mod.members[2] is syntax.ClassMethodNode
+    mod.members[3] is syntax.ClassNode
+    mod.members[4] is syntax.ClassPropertyNode
+
+    // the specific-member views index `members` by name
+    mod.properties.keys == Set("a", "b")
+    mod.typeAliases.keys == Set("A")
+    mod.methods.keys == Set("f")
+    mod.classes.keys == Set("C")
+    mod.classes["C"] == mod.members[3]
+  }
+
+  ["building a module keeps member order"] {
+    local mod =
+      parse(
+        """
+        a = 1
+        typealias A = Int
+        function f() = 0
+        b = 2
+        """,
+      )
+
+    new syntax.Renderer {}.render(mod.builtNode)
+      == """
+      a = 1
+      typealias A = Int
+      function f() = 0
+      b = 2
+
+      """
+  }
+
+  ["empty module"] {
+    local result = parse("")
+    result.declaration == null
+    result.imports.length == 0
+    result.classes.length == 0
+    result.typeAliases.length == 0
+    result.properties.length == 0
+    result.methods.length == 0
+  }
+}
