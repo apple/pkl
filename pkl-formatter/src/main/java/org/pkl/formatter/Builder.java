@@ -1467,7 +1467,10 @@ final class Builder {
     if (endsInLineComment(prev)) {
       return linesBetween(prev, next) > 1 ? TWO_NEWLINES : mustForceLine();
     }
-    if (hasTrailingAffix(prev, next)) return Space.INSTANCE;
+    if (hasTrailingAffix(prev, next)) {
+      if (isTerminal(prev, "(") && startsWithBlockComment(next)) return line();
+      return Space.INSTANCE;
+    }
     if (prev.type == NodeType.DOC_COMMENT) return mustForceLine();
     if (prev.type == NodeType.ANNOTATION) return forceLine();
     if (FORCE_LINE_AFFIXES.contains(prev.type) || next.type.isAffix()) {
@@ -1528,10 +1531,24 @@ final class Builder {
     return noNewlines ? ifNotWrap : new IfWrap(id, ifWrap, ifNotWrap);
   }
 
+  private static boolean startsWithBlockComment(Node node) {
+    var n = node;
+    while (n != null) {
+      if (n.type == NodeType.BLOCK_COMMENT) return true;
+      n = n.children.isEmpty() ? null : n.children.get(0);
+    }
+    return false;
+  }
+
   private static boolean hasTrailingAffix(Node node, Node next) {
     var n = next;
     while (n != null) {
-      if (n.type.isAffix() && node.span.lineEnd() == n.span.lineBegin()) return true;
+      // semicolons are dropped when formatting, so they never produce a trailing affix.
+      if (n.type.isAffix()
+          && n.type != NodeType.SEMICOLON
+          && node.span.lineEnd() == n.span.lineBegin()) {
+        return true;
+      }
       n = n.children.isEmpty() ? null : n.children.get(0);
     }
     return false;
