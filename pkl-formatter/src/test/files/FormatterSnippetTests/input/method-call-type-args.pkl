@@ -1,0 +1,14 @@
+res1 = foo::<Bar>(baz)
+res1a = foo::<Bar, Baz, ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType>(baz, baz, reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg)
+
+res2 = qux.foo::<Bar, Bar2,>(baz, baz2)
+res2a = qux.foo::<Bar, Baz, ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType>(baz, baz, reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg)
+res2b = qux.quux::<Corge>().foo::<Bar, Bar2,>(baz, baz2)
+res2c = qux.quux::<Corge>().foo::<Bar, Baz, ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType>(baz, baz, reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg)
+res2d = qux::<Corge>().foo::<Bar, Bar2,>(baz, baz2)
+res2e = qux::<Corge>().foo::<Bar, Baz, ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType>(baz, baz, reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg)
+res2f = grault.qux.quux::<Corge>().foo::<Bar, Bar2,>(baz, baz2)
+res2g = grault.qux.quux::<Corge>().foo::<Bar, Baz, ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType>(baz, baz, reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg)
+
+res3 = super.foo::<Bar, Bar2,>(baz, baz2)
+res3a = super.foo::<Bar, Baz, ReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongType>(baz, baz, reallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyReallyLongArg)

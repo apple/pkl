@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -31,8 +31,7 @@ public final class SimpleRootNode extends PklRootNode {
       SourceSection sourceSection,
       String qualifiedName,
       ExpressionNode bodyNode) {
-
-    super(language, descriptor);
+    super(language, descriptor, false);
     this.sourceSection = sourceSection;
     this.qualifiedName = qualifiedName;
     this.bodyNode = bodyNode;

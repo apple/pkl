@@ -18,14 +18,11 @@ package org.pkl.core.ast.member;
 import com.oracle.truffle.api.CallTarget;
 import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
-import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClass;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
 
@@ -68,6 +65,14 @@ public final class ClassMethod extends ClassMember implements Method {
     this.functionNode = functionNode;
   }
 
+  @Override
+  public FunctionNode getFunctionNode(@Nullable SourceSection callSite) {
+    if (callSite != null && deprecation != null) {
+      reportDeprecation(callSite);
+    }
+    return functionNode;
+  }
+
   public CallTarget getCallTarget() {
     return functionNode.getCallTarget();
   }
@@ -101,13 +106,14 @@ public final class ClassMethod extends ClassMember implements Method {
     return functionNode.getParameterCount();
   }
 
-  public @Nullable TypeNode getReturnTypeNode() {
-    return functionNode.getReturnTypeNode();
+  @Override
+  public int getTypeParameterCount() {
+    return functionNode.getTypeParameterCount();
   }
 
   @Override
-  public @Nullable TypeNode getReturnTypeNode(VirtualFrame frame) {
-    return functionNode.getReturnTypeNode();
+  public void ensureInitialized(VmObjectLike owner) {
+    // do nothing; class methods are always initialized
   }
 
   @Override
@@ -140,10 +146,7 @@ public final class ClassMethod extends ClassMember implements Method {
   }
 
   public PClass.Method export(PClass owner) {
-    return functionNode.export(owner, docComment, annotations, modifiers, typeParameters);
-  }
-
-  public @Nullable TypeNode getParameterTypeNode(VirtualFrame frame, int idx) {
-    return functionNode.getParameterTypeNode(idx);
+    return functionNode.export(
+        owner, docComment, annotations, modifiers, TypeParameter.export(typeParameters));
   }
 }

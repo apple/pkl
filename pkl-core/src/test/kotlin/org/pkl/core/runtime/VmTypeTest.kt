@@ -25,7 +25,6 @@ import org.junit.jupiter.api.io.TempDir
 import org.pkl.core.Loggers
 import org.pkl.core.SecurityManagers
 import org.pkl.core.StackFrameTransformers
-import org.pkl.core.TypeParameter
 import org.pkl.core.evaluatorSettings.TraceMode
 import org.pkl.core.http.HttpClient
 import org.pkl.core.module.ModuleKey
@@ -444,7 +443,11 @@ class VmTypeTest {
 
   @Test
   fun `type variable - treated like unknown, supertype and subtype to all`() {
-    VmType.TypeVariableType(TypeParameter(TypeParameter.Variance.INVARIANT, "Foo", 0))
+    VmType.TypeVariableType(
+        TypeParameter(org.pkl.core.TypeParameter.Variance.INVARIANT, "Foo", 0),
+        TypeParameter.OwnerType.METHOD,
+        0,
+      )
       .bidi(stringClass)
   }
 }

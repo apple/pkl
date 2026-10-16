@@ -1,0 +1,16 @@
+–– Pkl Error ––
+Cannot tell which parent to amend.
+
+xxx | res2 = inner2::<Int>(new { name = "x" }, 1)
+                           ^^^
+at callWithTypeArguments#nested.res2 (file:///$snippetsDir/input/methods/callWithTypeArguments.pkl)
+
+Please specify a parent explicitly, for example `new Person { ... }` instead of `new { ... }`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

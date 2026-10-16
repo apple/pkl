@@ -35,6 +35,12 @@ public final class GetModuleNode extends ExpressionNode {
   public Object executeGeneric(VirtualFrame frame) {
     CompilerDirectives.transferToInterpreter();
 
+    var levelsUp = getLevelsUp(frame);
+    return replace(levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp))
+        .executeGeneric(frame);
+  }
+
+  public static int getLevelsUp(VirtualFrame frame) {
     var levelsUp = -1;
     for (var current = VmUtils.getOwner(frame);
         current != null;
@@ -43,8 +49,6 @@ public final class GetModuleNode extends ExpressionNode {
         levelsUp += 1;
       }
     }
-
-    return replace(levelsUp == 0 ? new GetReceiverNode() : new GetEnclosingReceiverNode(levelsUp))
-        .executeGeneric(frame);
+    return levelsUp;
   }
 }

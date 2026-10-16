@@ -224,7 +224,7 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     ff(headers);
     if (lookahead == Token.LT) {
-      headers.add(parseTypeParameterList());
+      headers.add(parseTypeParameterList(true));
       ff(headers);
     }
     expect(Token.ASSIGN, headers, "unexpectedToken", "=");
@@ -249,7 +249,7 @@ class GenericParserImpl {
     headers.add(parseIdentifier());
     if (lookahead() == Token.LT) {
       ff(headers);
-      headers.add(parseTypeParameterList());
+      headers.add(parseTypeParameterList(true));
     }
     if (lookahead() == Token.EXTENDS) {
       var extend = new ArrayList<Node>();
@@ -346,7 +346,7 @@ class GenericParserImpl {
     children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
+      children.add(parseTypeParameterList(false));
       ff(children);
     }
     children.add(parseParameterList());
@@ -518,7 +518,7 @@ class GenericParserImpl {
     children.add(new Node(NodeType.CLASS_METHOD_HEADER, headers));
     ff(children);
     if (lookahead == Token.LT) {
-      children.add(parseTypeParameterList());
+      children.add(parseTypeParameterList(false));
       ff(children);
     }
     children.add(parseParameterList());
@@ -723,12 +723,30 @@ class GenericParserImpl {
 
   private Node parseUnqualifiedAccessExpr() {
     var children = new ArrayList<Node>();
+    parseAccess(children);
+    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
+  }
+
+  private void parseAccess(List<Node> children) {
     children.add(parseIdentifier());
-    if (lookahead() == Token.LPAREN && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+    if (lookahead() == Token.DCOLON && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
+      children.add(makeTerminal(next()));
+      ff(children);
+      children.add(parseTypeArgumentList());
+      if (lookahead() == Token.LPAREN
+          && noSemicolonInbetween()
+          && _lookahead.newLinesBetween == 0) {
+        ff(children);
+        children.add(parseArgumentList());
+      } else {
+        throw parserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
+      }
+    } else if (lookahead() == Token.LPAREN
+        && noSemicolonInbetween()
+        && _lookahead.newLinesBetween == 0) {
       ff(children);
       children.add(parseArgumentList());
     }
-    return new Node(NodeType.UNQUALIFIED_ACCESS_EXPR, children);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -828,11 +846,7 @@ class GenericParserImpl {
             if (lookahead == Token.DOT) {
               children.add(makeTerminal(next()));
               ff(children);
-              children.add(parseIdentifier());
-              if (lookahead() == Token.LPAREN) {
-                ff(children);
-                children.add(parseArgumentList());
-              }
+              parseAccess(children);
               yield new Node(NodeType.SUPER_ACCESS_EXPR, children);
             } else {
               expect(Token.LBRACK, children, "unexpectedToken", "[");
@@ -1307,12 +1321,12 @@ class GenericParserImpl {
     return bodies;
   }
 
-  private Node parseTypeParameterList() {
+  private Node parseTypeParameterList(boolean allowVarianceModifiers) {
     var children = new ArrayList<Node>();
     expect(Token.LT, children, "unexpectedToken", "<");
     ff(children);
     var elements = new ArrayList<Node>();
-    parseListOf(Token.GT, elements, this::parseTypeParameter);
+    parseListOf(Token.GT, elements, () -> parseTypeParameter(allowVarianceModifiers));
     children.add(new Node(NodeType.TYPE_PARAMETER_LIST_ELEMENTS, elements));
     expect(Token.GT, children, "unexpectedToken2", ",", ">");
     return new Node(NodeType.TYPE_PARAMETER_LIST, children);
@@ -1346,11 +1360,17 @@ class GenericParserImpl {
     return new Node(NodeType.ARGUMENT_LIST, children);
   }
 
-  private Node parseTypeParameter() {
+  private Node parseTypeParameter(boolean allowVarianceModifier) {
     var children = new ArrayList<Node>();
     if (lookahead == Token.IN) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
+      }
       children.add(makeTerminal(next()));
     } else if (lookahead == Token.OUT) {
+      if (!allowVarianceModifier) {
+        throw parserError("typeParameterVarianceNotAllowed");
+      }
       children.add(makeTerminal(next()));
     }
     children.add(parseIdentifier());

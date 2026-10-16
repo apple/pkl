@@ -93,14 +93,12 @@ public abstract class SubscriptNode extends BinaryExpressionNode {
   @Specialization
   protected Object eval(
       VmMapping mapping, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
-
     return readMember(mapping, key, callNode);
   }
 
   @Specialization
   protected Object eval(
       VmDynamic dynamic, Object key, @Exclusive @Cached("create()") IndirectCallNode callNode) {
-
     return readMember(dynamic, key, callNode);
   }
 

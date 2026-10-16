@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Variance modifiers may only be applied to type parameters on classes.
+
+x | function foo<in T>() = null
+                 ^^
+at invalidVarianceModifierClassMethod (file:///$snippetsDir/input/errors/invalidVarianceModifierClassMethod.pkl)

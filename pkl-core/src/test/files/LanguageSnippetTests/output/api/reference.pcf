@@ -60,5 +60,7 @@ aValuesJoined = """
   ${b.outputs.nonString}
   """
 typeArgs = "${null.prop}"
-badThisRef = "Expected value of type `pkl.ref#Reference<reference#D, this>`, but got type `pkl.ref#Reference<reference#D, reference#A>`. Value: Reference(new reference#D {}, reference#A, new reference#BadResource { name =..."
+typeArgs2 = "${null}"
+badThisRef = "Expected value of type `pkl.ref#Reference<reference#D, reference#BadResource>`, but got type `pkl.ref#Reference<reference#D, reference#A>`. Value: Reference(new reference#D {}, reference#A, new reference#BadResource { name =..."
 bareFunctionType = "Expected value of type `pkl.ref#Reference<reference#D, String>`, but got type `pkl.ref#Reference<reference#D, Function4>`. Value: Reference(new reference#D {}, Function4, null)"
+constraintInConstructor = "${null}"

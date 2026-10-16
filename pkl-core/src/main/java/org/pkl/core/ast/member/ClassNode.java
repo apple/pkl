@@ -25,7 +25,6 @@ import java.util.List;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
