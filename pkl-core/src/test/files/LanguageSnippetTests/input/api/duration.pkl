@@ -74,6 +74,9 @@ examples {
     100.d.isoString
     (-10.001).s.isoString
     (-3.1.h).isoString
+    1.001.s.isoString
+    1001.ms.isoString
+    59.9999999999.s.isoString
     math.maxFiniteFloat.s.isoString
     module.catch(() -> (0/0).s.isoString)
     module.catch(() -> (1/0).s.isoString)
