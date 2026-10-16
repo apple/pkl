@@ -16,16 +16,20 @@
 package org.pkl.core.http
 
 import java.io.ByteArrayInputStream
+import java.io.IOException
 import java.io.InputStream
 import java.net.URI
 import java.net.http.HttpClient as JdkHttpClient
 import java.net.http.HttpRequest
 import java.net.http.HttpRequest.BodyPublishers
+import java.net.http.HttpResponse
 import java.net.http.HttpResponse.BodyHandlers
+import java.net.http.HttpTimeoutException
 import java.time.Duration
 import java.util.Locale
 import org.assertj.core.api.Assertions.assertThat
 import org.assertj.core.api.Assertions.assertThatList
+import org.assertj.core.api.Assertions.assertThatThrownBy
 import org.junit.jupiter.api.Test
 import org.pkl.commons.test.FakeHttpResponse
 import org.pkl.core.util.GlobResolver
@@ -466,6 +470,112 @@ class RequestRewritingClientTest {
     assertThat(intermediateBody.closed)
       .`as`("intermediate 3xx response body must be closed to release its connection")
       .isTrue
+  }
+
+  @Test
+  fun `reports redirects and rewrites when the final request fails`() {
+    val requestedUris = mutableListOf<URI>()
+    val delegate =
+      object : HttpClient {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : Any> send(
+          request: HttpRequest,
+          responseBodyHandler: HttpResponse.BodyHandler<T>,
+          httpRequestChecker: HttpClient.HttpRequestChecker,
+        ): HttpResponse<T> {
+          requestedUris += request.uri()
+          if (requestedUris.size == 1) {
+            return FakeHttpResponse<InputStream>().apply {
+              statusCode = 302
+              headers =
+                httpHeaders("Location", "https://cdn.example/signed-token?access_token=secret")
+              body = ByteArrayInputStream(ByteArray(0))
+            } as HttpResponse<T>
+          }
+          throw IOException("certificate validation failed")
+        }
+
+        override fun close() {}
+      }
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        delegate,
+        mapOf(
+          URI("https://packages.example/") to URI("https://mirror.example/"),
+          URI("https://cdn.example/") to URI("https://internal.example/"),
+        ),
+        mapOf(),
+      )
+    val request = HttpRequest.newBuilder(URI("https://packages.example/module.pkl")).build()
+
+    assertThatThrownBy { client.send(request, BodyHandlers.ofInputStream(), NoopChecker) }
+      .isInstanceOf(IOException::class.java)
+      .hasMessageContaining(
+        "request was rewritten: https://packages.example/module.pkl -> https://mirror.example/module.pkl"
+      )
+      .hasMessageContaining("request was redirected: https://mirror.example -> https://cdn.example")
+      .hasMessageContaining(
+        "request was rewritten: https://cdn.example -> https://internal.example"
+      )
+      .hasMessageNotContaining("signed-token")
+      .hasMessageNotContaining("access_token")
+      .hasMessageNotContaining("secret")
+    assertThat(requestedUris)
+      .containsExactly(
+        URI("https://mirror.example/module.pkl"),
+        URI("https://internal.example/signed-token?access_token=secret"),
+      )
+  }
+
+  @Test
+  fun `reports a rewritten redirect without changing the timeout exception type`() {
+    val timeout = HttpTimeoutException("request timed out")
+    var requests = 0
+    val delegate =
+      object : HttpClient {
+        @Suppress("UNCHECKED_CAST")
+        override fun <T : Any> send(
+          request: HttpRequest,
+          responseBodyHandler: HttpResponse.BodyHandler<T>,
+          httpRequestChecker: HttpClient.HttpRequestChecker,
+        ): HttpResponse<T> {
+          requests++
+          if (requests == 1) {
+            return FakeHttpResponse<InputStream>().apply {
+              statusCode = 302
+              headers = httpHeaders("Location", "https://cdn.example/module.pkl")
+              body = ByteArrayInputStream(ByteArray(0))
+            } as HttpResponse<T>
+          }
+          throw timeout
+        }
+
+        override fun close() {}
+      }
+    val client =
+      RequestRewritingClient(
+        "Pkl",
+        Duration.ofSeconds(42),
+        -1,
+        delegate,
+        mapOf(URI("https://cdn.example/") to URI("https://internal.example/")),
+        mapOf(),
+      )
+    val request = HttpRequest.newBuilder(URI("https://packages.example/module.pkl")).build()
+
+    assertThatThrownBy { client.send(request, BodyHandlers.ofInputStream(), NoopChecker) }
+      .isInstanceOf(HttpTimeoutException::class.java)
+      .hasMessageContaining(
+        "request was redirected: https://packages.example -> https://cdn.example"
+      )
+      .hasMessageContaining(
+        "request was rewritten: https://cdn.example -> https://internal.example"
+      )
+      .hasCause(timeout)
+    assertThat(requests).isEqualTo(2)
   }
 
   /** @ByteArrayInputStream that records whether it was closed. */
