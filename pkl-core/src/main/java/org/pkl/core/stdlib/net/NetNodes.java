@@ -16,10 +16,16 @@
 package org.pkl.core.stdlib.net;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
+import com.oracle.truffle.api.dsl.Cached;
 import com.oracle.truffle.api.dsl.Specialization;
+import com.oracle.truffle.api.frame.VirtualFrame;
+import com.oracle.truffle.api.nodes.LoopNode;
+import com.oracle.truffle.api.profiles.LoopConditionProfile;
+import org.pkl.core.ast.internal.ReadCursorValueNode;
 import org.pkl.core.runtime.VmListing;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmTyped;
+import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.util.url.PercentEncoder;
 import org.pkl.core.util.url.UrlFactory;
@@ -55,25 +61,37 @@ public final class NetNodes {
 
   public abstract static class buildQuery extends ExternalMethod1Node {
     @Specialization
-    @TruffleBoundary
-    protected String eval(@SuppressWarnings("unused") VmTyped self, VmMapping parameters) {
-      var out = new StringBuilder();
-      parameters.forceAndIterateMemberValues(
-          (name, def, values) -> {
-            ((VmListing) values)
-                .forceAndIterateMemberValues(
-                    (index, valueDef, value) -> {
-                      if (!out.isEmpty()) {
-                        out.append('&');
-                      }
-                      PercentEncoder.encodeForm(out, (String) name);
-                      out.append('=');
-                      PercentEncoder.encodeForm(out, (String) value);
-                      return true;
-                    });
-            return true;
-          });
-      return out.toString();
+    protected String eval(
+        VirtualFrame frame,
+        @SuppressWarnings("unused") VmTyped self,
+        VmMapping parameters,
+        @Cached("create()") ReadCursorValueNode readCursorValueNode,
+        @Cached("create()") LoopConditionProfile outerLoopProfile,
+        @Cached("create()") LoopConditionProfile innerLoopProfile) {
+      var out = VmUtils.createBuilder();
+      var count = 0;
+      var isFirst = true;
+      // don't use `inject()` for outer loop because mapping length can possibly transfer to
+      // interpreter.
+      for (var cursor = parameters.members(); outerLoopProfile.profile(cursor.advance()); ) {
+        var values = (VmListing) readCursorValueNode.execute(frame, cursor);
+        innerLoopProfile.profileCounted(values.getLength());
+        for (var listingCursor = values.members();
+            innerLoopProfile.inject(listingCursor.advance()); ) {
+          count++;
+          if (isFirst) {
+            isFirst = false;
+          } else {
+            VmUtils.appendToBuilder(out, '&');
+          }
+          PercentEncoder.encodeForm(out, cursor.keyToString());
+          VmUtils.appendToBuilder(out, '=');
+          var value = (String) readCursorValueNode.execute(frame, listingCursor);
+          PercentEncoder.encodeForm(out, value);
+        }
+      }
+      LoopNode.reportLoopCount(this, count);
+      return VmUtils.builderToString(out);
     }
   }
 
