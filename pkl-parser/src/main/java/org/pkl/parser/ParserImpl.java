@@ -60,6 +60,8 @@ import org.pkl.parser.syntax.Expr.UnqualifiedAccessExpr;
 import org.pkl.parser.syntax.ExtendsOrAmendsClause;
 import org.pkl.parser.syntax.Identifier;
 import org.pkl.parser.syntax.ImportClause;
+import org.pkl.parser.syntax.ImportDeconstruction;
+import org.pkl.parser.syntax.ImportDeconstructionList;
 import org.pkl.parser.syntax.Keyword;
 import org.pkl.parser.syntax.Modifier;
 import org.pkl.parser.syntax.Module;
@@ -275,12 +277,50 @@ final class ParserImpl {
     var str = parseStringConstant();
     var end = str.span();
     Identifier alias = null;
+    ImportDeconstructionList deconstructions = null;
+    if (lookahead == Token.AS) {
+      next();
+      if (isGlob) {
+        alias = parseIdentifier();
+        end = alias.span();
+      } else if (lookahead == Token.IDENTIFIER) {
+        alias = parseIdentifier();
+        if (lookahead == Token.COMMA) { // alias with deconstruction(s)
+          next();
+          deconstructions = parseImportDeconstructionList(null);
+          end = deconstructions.span();
+        } else { // just an alias
+          end = alias.span();
+        }
+      } else { // just deconstruction(s)
+        deconstructions = parseImportDeconstructionList("identifier");
+        end = deconstructions.span();
+      }
+    }
+    return new ImportClause(str, isGlob, alias, deconstructions, start.endWith(end));
+  }
+
+  private ImportDeconstructionList parseImportDeconstructionList(
+      @Nullable String additonalExpectation) {
+    var start =
+        additonalExpectation != null
+            ? expect(Token.LBRACE, "unexpectedToken2", additonalExpectation, "{").span
+            : expect(Token.LBRACE, "unexpectedToken", "{").span;
+    var deconstructions = parseListOf(Token.COMMA, Token.RBRACE, this::parseImportDeconstruction);
+    var end = expect(Token.RBRACE, "unexpectedToken2", ",", "}").span;
+    return new ImportDeconstructionList(deconstructions, start.endWith(end));
+  }
+
+  private ImportDeconstruction parseImportDeconstruction() {
+    var name = parseIdentifier();
+    var span = name.span();
+    Identifier alias = null;
     if (lookahead == Token.AS) {
       next();
       alias = parseIdentifier();
-      end = alias.span();
+      span = span.endWith(alias.span());
     }
-    return new ImportClause(str, isGlob, alias, start.endWith(end));
+    return new ImportDeconstruction(name, alias, span);
   }
 
   private MemberHeader parseMemberHeader() {

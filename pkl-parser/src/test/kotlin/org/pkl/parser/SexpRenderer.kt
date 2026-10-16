@@ -113,6 +113,46 @@ class SexpRenderer {
       buf.append(tab)
       buf.append("(identifier)")
     }
+    imp.deconstructions?.let {
+      buf.append('\n')
+      renderImportDeconstructionList(it)
+    }
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderImportDeconstructionList(deconstructions: ImportDeconstructionList) {
+    buf.append(tab)
+    buf.append("(importDeconstructionList")
+    val oldTab = increaseTab()
+    buf.append('\n')
+    buf.append(tab)
+    buf.append("(importDeconstructionListElements")
+    increaseTab()
+    for (deconstruction in deconstructions.deconstructions) {
+      buf.append('\n')
+      renderImportDeconstruction(deconstruction)
+    }
+    buf.append(')')
+    buf.append(')')
+    tab = oldTab
+  }
+
+  fun renderImportDeconstruction(deconstruction: ImportDeconstruction) {
+    buf.append(tab)
+    buf.append("(importDeconstruction")
+    val oldTab = increaseTab()
+
+    buf.append('\n')
+    buf.append(tab)
+    buf.append("(identifier)")
+
+    deconstruction.alias?.let {
+      buf.append('\n')
+      buf.append(tab)
+      buf.append("(identifier)")
+    }
+
     buf.append(')')
     tab = oldTab
   }
