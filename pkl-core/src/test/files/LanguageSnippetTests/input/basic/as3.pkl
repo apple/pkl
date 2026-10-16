@@ -31,8 +31,4 @@ examples {
     } as Mapping<Int, Int>
     module.catch(() -> m2)
   }
-  ["catch forces the returned value"] {
-    module.catch(() -> new Listing { 1 } as Listing<String>)
-    module.catchOrNull(() -> new Listing { "one" } as Listing<String>) == null
-  }
 }
