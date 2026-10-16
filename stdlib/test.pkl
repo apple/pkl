@@ -88,10 +88,14 @@ examples: Mapping<String, Listing<unknown>>?
 
 /// Applies [fun] and returns the error thrown.
 ///
+/// The value returned by [fun] is forced, so errors in its (nested) members are caught too.
+///
 /// Throws if [fun] did not throw an error.
 external const function catch(fun: () -> Any): String
 
 /// Applies [fun] and returns the error thrown.
+///
+/// The value returned by [fun] is forced, so errors in its (nested) members are caught too.
 ///
 /// Returns [null] if [fun] did not throw an error.
 external const function catchOrNull(fun: () -> Any): String?
