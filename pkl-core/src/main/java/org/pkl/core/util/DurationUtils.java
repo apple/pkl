@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -43,9 +43,11 @@ public final class DurationUtils {
     var nanos =
         (long) (absoluteSeconds * 1_000_000_000 - Math.floor(absoluteSeconds) * 1_000_000_000);
 
+    // also true for a nonzero duration below nanosecond precision, e.g. `0.4.ns`
+    var isZero = hours == 0 && minutes == 0 && seconds == 0 && nanos == 0;
     var builder = new StringBuilder();
 
-    if (totalSeconds < 0.0) {
+    if (totalSeconds < 0.0 && !isZero) {
       builder.append('-');
     }
 
@@ -61,7 +63,7 @@ public final class DurationUtils {
       builder.append('M');
     }
 
-    if (seconds != 0 || nanos != 0 || totalSeconds == 0) {
+    if (seconds != 0 || nanos != 0 || isZero) {
       builder.append(seconds);
       if (nanos != 0) {
         builder.append('.');
