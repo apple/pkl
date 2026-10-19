@@ -221,9 +221,9 @@ public final class VmTypeAlias extends VmValue {
                       ? new UnresolvedTypeNode.Unknown(sourceSection)
                       : new UnresolvedTypeNode.Resolved(
                           sourceSection, deepCopy(typeArgumentNodes[index])));
-            } else if (node instanceof ExecuteCustomThisWithRootNode rootNode) {
+            } else if (node instanceof ExecuteCustomThisWithRootNode customThisNode) {
               // A constraint with frame slots runs in a separate root, outside this tree.
-              rootNode.getExpressionNode().accept(this);
+              customThisNode.getExpressionNode().accept(this);
             }
             return true;
           }
