@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Cannot instantiate, or amend an instance of, external class `String`.
+
+xx | name {
+     ^^^^^^
+at cannotInstantiateExternalClass#result.name (file:///$snippetsDir/input/errors/cannotInstantiateExternalClass.pkl)
+
+To create an instance of an external class, use its literal syntax or constructor method.
+Examples:
+* `123` uses literal syntax to create an instance of class `Int`.
+* `Pair(1, 2)` uses the `Pair()` constructor method to create an instance of class `Pair`.
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

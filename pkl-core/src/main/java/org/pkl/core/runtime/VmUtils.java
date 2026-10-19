@@ -903,7 +903,7 @@ public final class VmUtils {
     return resolvedNodes;
   }
 
-  public static void checkIsInstantiable(VmClass parentClass, @Nullable Node parentNode) {
+  public static void checkIsInstantiable(VmClass parentClass, Node parentNode, Node callerNode) {
     if (parentClass.isInstantiable()) return;
 
     CompilerDirectives.transferToInterpreter();
@@ -911,14 +911,15 @@ public final class VmUtils {
     if (parentClass.isAbstract()) {
       throw new VmExceptionBuilder()
           .evalError("cannotInstantiateAbstractClass", parentClass)
-          .withOptionalLocation(parentNode)
+          .withOptionalLocation(
+              parentNode.getSourceSection().isAvailable() ? parentNode : callerNode)
           .build();
     }
 
     assert parentClass.isExternal();
     throw new VmExceptionBuilder()
         .evalError("cannotInstantiateExternalClass", parentClass)
-        .withOptionalLocation(parentNode)
+        .withOptionalLocation(parentNode.getSourceSection().isAvailable() ? parentNode : callerNode)
         .build();
   }
 

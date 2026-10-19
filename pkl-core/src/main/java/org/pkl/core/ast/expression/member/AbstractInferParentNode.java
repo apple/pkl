@@ -59,7 +59,7 @@ public abstract class AbstractInferParentNode extends ExpressionNode {
     // try to produce a more specific error message than "cannotInstantiateType"
     var clazz = typeNode.getType().getVmClass();
     if (clazz != null) {
-      VmUtils.checkIsInstantiable(clazz, typeNode);
+      VmUtils.checkIsInstantiable(clazz, typeNode, this);
     }
 
     throw exceptionBuilder()
