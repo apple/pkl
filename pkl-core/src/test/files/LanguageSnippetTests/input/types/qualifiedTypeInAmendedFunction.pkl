@@ -1,0 +1,12 @@
+import "pkl:semver"
+
+local foo = () -> new Dynamic {}
+
+// The `when` predicate is evaluated with the amended function (an invisible scope) as its owner.
+local bar = (foo) {
+  when (new semver.Version {} is semver.Version) {
+    x = 1
+  }
+}
+
+res = bar.apply()

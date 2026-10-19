@@ -32,15 +32,21 @@ public final class GetModuleOwnerNode extends ExpressionNode {
     CompilerDirectives.transferToInterpreter();
 
     var levelsUp = -1;
+    var skippedInvisibleScopes = false;
     for (var current = VmUtils.getOwner(frame);
         current != null;
         current = current.getEnclosingOwner()) {
-      if (!current.isParseTimeInvisibleScope()) {
+      if (current.isParseTimeInvisibleScope()) {
+        skippedInvisibleScopes = true;
+      } else {
         levelsUp += 1;
       }
     }
 
-    return replace(levelsUp == 0 ? new GetOwnerNode() : new GetEnclosingOwnerNode(levelsUp))
+    return replace(
+            levelsUp == 0 && !skippedInvisibleScopes
+                ? new GetOwnerNode()
+                : new GetEnclosingOwnerNode(levelsUp))
         .executeGeneric(frame);
   }
 }
