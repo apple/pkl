@@ -24,8 +24,6 @@ public final class GetEnclosingOwnerNode extends ExpressionNode {
 
   public GetEnclosingOwnerNode(int levelsUp) {
     this.levelsUp = levelsUp;
-
-    assert levelsUp > 0 : "shouldn't be using GetEnclosingOwnerNode for levelsUp == 0";
   }
 
   public Object executeGeneric(VirtualFrame frame) {
