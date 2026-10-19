@@ -6,6 +6,10 @@ x | typealias Ref<T> = ref.Reference<D, T>
                        ^^^^^^^^^^^^^^^^^^^
 at reference2#test (file:///$snippetsDir/input/errors/reference2.pkl)
 
+x | test = ref.Reference(d, String, "") as Ref<Boolean | Int>
+                                           ^^^^^^^^^^^^^^^^^^
+at reference2#test (file:///$snippetsDir/input/errors/reference2.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

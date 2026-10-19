@@ -2458,7 +2458,15 @@ public abstract class TypeNode extends PklNode {
     }
 
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      return aliasedTypeNode.executeLazily(frame, value);
+      try {
+        return aliasedTypeNode.executeLazily(frame, value);
+      } catch (VmTypeMismatchException e) {
+        // include this typealias in the error message
+        e.putInsertedStackFrame(
+            getRootNode().getCallTarget(),
+            VmUtils.createStackFrame(sourceSection, getRootNode().getName()));
+        throw e;
+      }
     }
 
     /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
