@@ -23,11 +23,12 @@ import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClass;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.util.LateInit;
 
 public final class ClassMethod extends ClassMember implements Method {
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameterNode[] typeParameters;
 
   // null = not deprecated, "" = no/empty message in the @Deprecated body
   private final @Nullable String deprecation;
@@ -43,7 +44,7 @@ public final class ClassMethod extends ClassMember implements Method {
       SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       VmTyped owner,
-      List<TypeParameter> typeParameters,
+      TypeParameterNode[] typeParameters,
       @Nullable String deprecation) {
 
     super(
@@ -147,6 +148,6 @@ public final class ClassMethod extends ClassMember implements Method {
 
   public PClass.Method export(PClass owner) {
     return functionNode.export(
-        owner, docComment, annotations, modifiers, TypeParameter.export(typeParameters));
+        owner, docComment, annotations, modifiers, TypeParameterNode.export(typeParameters));
   }
 }

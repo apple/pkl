@@ -28,9 +28,9 @@ public class RefNodes {
     @Specialization
     protected VmReference eval(
         VirtualFrame frame, @SuppressWarnings("unused") VmTyped self, VmTyped domain, Object data) {
-      var typeArguments = VmUtils.getTypeArgumentsOrNull(frame);
+      var referentTypeArg = VmUtils.getTypeArgumentOrNull(frame, 3);
       var referentType =
-          typeArguments == null ? VmType.UnknownType.INSTANCE : typeArguments[1].reify();
+          referentTypeArg == null ? VmType.UnknownType.INSTANCE : referentTypeArg.reify();
       return new VmReference(domain, referentType, data);
     }
   }

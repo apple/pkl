@@ -441,7 +441,7 @@ public final class VmReference extends VmValue {
     var toStringMethod = getVmClass().getDeclaredMethod(Identifier.TO_STRING);
     assert toStringMethod != null;
     var callNode = DirectCallNode.create(toStringMethod.getCallTarget());
-    return (String) callNode.call(this, getVmClass().getPrototype(), null);
+    return (String) callNode.call(this, getVmClass().getPrototype());
   }
 
   public enum VmReferenceAccessErrorType {

@@ -31,7 +31,6 @@ public abstract class VmListingOrMapping extends VmObject {
   private final @Nullable ListingOrMappingTypeCastNode typeCastNode;
   private final @Nullable Object typeCheckReceiver;
   private final @Nullable VmObjectLike typeCheckOwner;
-  private final VmTypeArgument @Nullable [] typeCheckTypeArguments;
 
   public VmListingOrMapping(
       MaterializedFrame enclosingFrame,
@@ -41,7 +40,6 @@ public abstract class VmListingOrMapping extends VmObject {
     typeCastNode = null;
     typeCheckReceiver = null;
     typeCheckOwner = null;
-    typeCheckTypeArguments = null;
   }
 
   protected VmListingOrMapping(
@@ -50,13 +48,11 @@ public abstract class VmListingOrMapping extends VmObject {
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,
       Object typeCheckReceiver,
-      VmObjectLike typeCheckOwner,
-      VmTypeArgument @Nullable [] typeCheckTypeArguments) {
+      VmObjectLike typeCheckOwner) {
     super(enclosingFrame, parent, members);
     this.typeCastNode = typeCastNode;
     this.typeCheckReceiver = typeCheckReceiver;
     this.typeCheckOwner = typeCheckOwner;
-    this.typeCheckTypeArguments = typeCheckTypeArguments;
   }
 
   // Executes type casts for every parent between `owner` and `this` and returns the resulting
@@ -78,9 +74,9 @@ public abstract class VmListingOrMapping extends VmObject {
           result =
               callNode.call(
                   callTarget,
-                  obj.typeCheckReceiver,
-                  obj.typeCheckOwner,
-                  obj.typeCheckTypeArguments,
+                  VmUtils.getReceiver(enclosingFrame),
+                  VmUtils.getOwner(enclosingFrame),
+                  obj.enclosingFrame,
                   result);
           prevTypeCastNode = obj.typeCastNode;
         } catch (VmException e) {
@@ -120,8 +116,7 @@ public abstract class VmListingOrMapping extends VmObject {
       var callTarget = typeCastNode.getCallTarget();
       try {
         result =
-            callNode.call(
-                callTarget, typeCheckReceiver, typeCheckOwner, typeCheckTypeArguments, result);
+            callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, enclosingFrame, result);
       } catch (VmException e) {
         var member = VmUtils.findMember(parent, key);
         assert member != null; // already found the member's cached value

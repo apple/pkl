@@ -63,7 +63,7 @@ public final class PropertyTypeNode extends PklRootNode {
 
   @Override
   protected Object executeImpl(VirtualFrame frame) {
-    return typeNode.execute(frame, frame.getArguments()[3]);
+    return typeNode.execute(frame, frame.getArguments()[2]);
   }
 
   public @Nullable Object getDefaultValue(VirtualFrame frame) {

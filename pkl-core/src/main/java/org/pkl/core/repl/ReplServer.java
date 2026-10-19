@@ -33,6 +33,7 @@ import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
@@ -309,7 +310,7 @@ public class ReplServer implements AutoCloseable {
 
     var property =
         (org.pkl.core.ast.member.ClassProperty)
-            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module, null);
+            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
 
     replState.module.getVmClass().addProperty(property);
     return property.getInitializer();
@@ -330,7 +331,7 @@ public class ReplServer implements AutoCloseable {
 
     var method =
         (ClassMethod)
-            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module, null);
+            callNode.call(resolveNode.getCallTarget(), replState.module, replState.module);
 
     replState.module.getVmClass().addMethod(method);
   }
@@ -342,7 +343,7 @@ public class ReplServer implements AutoCloseable {
         new SimpleRootNode(
             language, new FrameDescriptor(), exprNode.getSourceSection(), "", exprNode);
 
-    var result = callNode.call(rootNode.getCallTarget(), replState.module, replState.module, null);
+    var result = callNode.call(rootNode.getCallTarget(), replState.module, replState.module);
 
     if (forceResults) VmValue.force(result, false);
     results.add(result);
@@ -354,7 +355,7 @@ public class ReplServer implements AutoCloseable {
     var result =
         memberDef.getConstantValue() != null
             ? memberDef.getConstantValue()
-            : callNode.call(memberDef.getCallTarget(), replState.module, replState.module, null);
+            : callNode.call(memberDef.getCallTarget(), replState.module, replState.module);
 
     if (forceResults) VmValue.force(result, false);
     results.add(result);
@@ -478,7 +479,7 @@ public class ReplServer implements AutoCloseable {
             List.of(),
             VmModifier.NONE,
             classInfo,
-            List.of(),
+            new TypeParameterNode[0],
             module);
     if (parent != null) {
       var superclass = parent.getVmClass();

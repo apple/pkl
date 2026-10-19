@@ -21,6 +21,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 
@@ -69,7 +70,7 @@ public final class UnresolvedFunctionNode extends PklNode {
         parameterTypeNodes,
         returnTypeNode,
         true,
-        0,
+        new TypeParameterNode[0],
         bodyNode);
   }
 }

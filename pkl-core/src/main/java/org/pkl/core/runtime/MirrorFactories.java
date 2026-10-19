@@ -20,6 +20,7 @@ import org.pkl.core.ast.member.ClassMethod;
 import org.pkl.core.ast.member.ClassProperty;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.*;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.stdlib.VmObjectFactory.Property;
 import org.pkl.core.util.Pair;
@@ -45,7 +46,7 @@ public final class MirrorFactories {
   public static final VmObjectFactory<Pair<String, VmTyped>> methodParameterFactory =
       new VmObjectFactory<>(ReflectModule::getMethodParameterClass);
 
-  public static final VmObjectFactory<TypeParameter> typeParameterFactory =
+  public static final VmObjectFactory<TypeParameterNode> typeParameterFactory =
       new VmObjectFactory<>(ReflectModule::getTypeParameterClass);
 
   public static final VmObjectFactory<TypeNode> classTypeFactory =
@@ -208,11 +209,11 @@ public final class MirrorFactories {
         .addTypedProperty("type", Pair::getSecond);
 
     typeParameterFactory
-        .addStringProperty("name", TypeParameter::name)
+        .addStringProperty("name", TypeParameterNode::getName)
         .addProperty(
             "variance",
             typeParameter ->
-                switch (typeParameter.variance()) {
+                switch (typeParameter.getVariance()) {
                   case COVARIANT -> "out";
                   case CONTRAVARIANT -> "in";
                   default -> VmNull.withoutDefault();

@@ -22,16 +22,17 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.FrameDescriptor;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
 
 public final class ObjectMethodNode extends RegularMemberNode implements Method {
   private final VmLanguage language;
   private final int parameterCount;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameterNode[]
+      typeParameters; // not @Children, owned by resulting FunctionNode
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
 
@@ -43,7 +44,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
       ObjectMember member,
       ExpressionNode bodyNode,
       int parameterCount,
-      List<TypeParameter> typeParameters,
+      TypeParameterNode[] typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode) {
     super(language, descriptor, member, bodyNode);
@@ -85,7 +86,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
   @Override
   @TruffleBoundary
   public int getTypeParameterCount() {
-    return typeParameters.size();
+    return typeParameters.length;
   }
 
   public FunctionNode getFunctionNode(VirtualFrame frame) {
@@ -107,7 +108,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
             parameterTypeNodes,
             returnTypeNode,
             true,
-            typeParameters.size(),
+            typeParameters,
             bodyNode);
     return functionNode;
   }

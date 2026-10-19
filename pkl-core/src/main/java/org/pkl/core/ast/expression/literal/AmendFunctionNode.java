@@ -31,6 +31,7 @@ import org.pkl.core.ast.frame.ReadExactFrameSlotNodeGen;
 import org.pkl.core.ast.member.FunctionNode;
 import org.pkl.core.ast.member.Lambda;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.*;
 
 public final class AmendFunctionNode extends PklNode {
@@ -87,7 +88,7 @@ public final class AmendFunctionNode extends PklNode {
               parameterTypeNodes,
               null,
               true,
-              0,
+              new TypeParameterNode[0],
               new AmendFunctionBodyNode(
                   sourceSection,
                   hostNode.copy(

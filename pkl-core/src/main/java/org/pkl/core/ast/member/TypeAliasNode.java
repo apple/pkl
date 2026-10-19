@@ -21,13 +21,12 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
-import java.util.List;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
-import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -39,7 +38,7 @@ public final class TypeAliasNode extends ExpressionNode {
   private final int modifiers;
   private final String simpleName;
   private final String qualifiedName;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameterNode[] typeParameters; // not @Children, never eval'd
   private @Child UnresolvedTypeNode typeAnnotationNode;
 
   // use same caching scheme as ClassNode
@@ -53,7 +52,7 @@ public final class TypeAliasNode extends ExpressionNode {
       int modifiers,
       String simpleName,
       String qualifiedName,
-      List<TypeParameter> typeParameters,
+      TypeParameterNode[] typeParameters,
       UnresolvedTypeNode typeAnnotationNode) {
     super(sourceSection);
     this.headerSection = headerSection;

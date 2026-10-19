@@ -63,16 +63,8 @@ public final class VmListing extends VmListingOrMapping {
       int length,
       ListingOrMappingTypeCastNode typeCastNode,
       Object typeCheckReceiver,
-      VmObjectLike typeCheckOwner,
-      VmTypeArgument @Nullable [] typeCheckTypeArguments) {
-    super(
-        enclosingFrame,
-        parent,
-        members,
-        typeCastNode,
-        typeCheckReceiver,
-        typeCheckOwner,
-        typeCheckTypeArguments);
+      VmObjectLike typeCheckOwner) {
+    super(enclosingFrame, parent, members, typeCastNode, typeCheckReceiver, typeCheckOwner);
     this.length = length;
   }
 

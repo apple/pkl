@@ -77,7 +77,7 @@ public abstract class ToStringNode extends UnaryExpressionNode {
       VmReference value,
       @Cached(value = "createReferenceCallNode(value)", neverDefault = true)
           DirectCallNode callNode) {
-    return (String) callNode.call(value, value.getVmClass().getPrototype(), null);
+    return (String) callNode.call(value, value.getVmClass().getPrototype());
   }
 
   @Specialization(guards = {"!value.isTyped()", "!value.isReference()"})

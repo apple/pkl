@@ -1,0 +1,8 @@
+
+
+local function make<T>(): Listing<T> = new Listing<T> { 1; 2 }
+local function amend<T, U>(l: Listing<Any>): Listing<U> = (l) { 3 } as Listing<U>
+
+local parent = make::<Int>()
+local child = amend::<String, Int>(parent)
+res = child[0]
