@@ -52,8 +52,8 @@ import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
+import org.pkl.core.ast.type.TypeParameterNode.OwnerType;
 import org.pkl.core.runtime.*;
-import org.pkl.core.runtime.TypeParameter.OwnerType;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
@@ -189,7 +189,7 @@ public abstract class TypeNode extends PklNode {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
           if (typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVariable
-                  && typeVariable.ownerType == TypeParameter.OwnerType.METHOD)) {
+                  && typeVariable.ownerType == TypeParameterNode.OwnerType.METHOD)) {
             ret.set(false);
             return false;
           }
@@ -221,7 +221,7 @@ public abstract class TypeNode extends PklNode {
               || typeNode instanceof NonFinalSelfTypeNode
               || typeNode instanceof ListingOrMappingTypeNode // lazy checks need captured frame
               || (typeNode instanceof TypeVariableNode typeVar
-                  && typeVar.ownerType == TypeParameter.OwnerType.METHOD)) {
+                  && typeVar.ownerType == TypeParameterNode.OwnerType.METHOD)) {
             ret.set(true);
             return false;
           }
@@ -1611,14 +1611,13 @@ public abstract class TypeNode extends PklNode {
         return vmListing;
       }
       return new VmListing(
-          vmListing.getEnclosingFrame(),
+          frame.materialize(),
           vmListing,
           EconomicMaps.emptyMap(),
           vmListing.getLength(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
-          VmUtils.getOwner(frame),
-          VmUtils.getTypeArgumentsOrNull(frame));
+          VmUtils.getOwner(frame));
     }
 
     @Override
@@ -1671,13 +1670,12 @@ public abstract class TypeNode extends PklNode {
         return vmMapping;
       }
       return new VmMapping(
-          vmMapping.getEnclosingFrame(),
+          frame.materialize(),
           vmMapping,
           EconomicMaps.emptyMap(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
           VmUtils.getReceiver(frame),
-          VmUtils.getOwner(frame),
-          VmUtils.getTypeArgumentsOrNull(frame));
+          VmUtils.getOwner(frame));
     }
 
     @Override
@@ -1895,9 +1893,7 @@ public abstract class TypeNode extends PklNode {
               memberValue = member.getConstantValue();
               if (memberValue == null) {
                 var callTarget = member.getCallTarget();
-                memberValue =
-                    callTarget.call(
-                        object, owner, VmUtils.getTypeArgumentsOrNull(frame), memberKey);
+                memberValue = callTarget.call(object, owner, memberKey);
               }
               object.setCachedValue(memberKey, memberValue);
             }
@@ -2211,15 +2207,15 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
-    private final TypeParameter typeParameter;
+    private final TypeParameterNode typeParameter;
     private final int levelsUp;
-    private final TypeParameter.OwnerType ownerType;
+    private final TypeParameterNode.OwnerType ownerType;
     @Child private CallTypeArgumentNode callTypeArgumentNode;
 
     public TypeVariableNode(
         SourceSection sourceSection,
-        TypeParameter typeParameter,
-        TypeParameter.OwnerType ownerType,
+        TypeParameterNode typeParameter,
+        TypeParameterNode.OwnerType ownerType,
         int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
@@ -2233,13 +2229,13 @@ public abstract class TypeNode extends PklNode {
       return new VmType.TypeVariableType(typeParameter, ownerType, levelsUp);
     }
 
-    public TypeParameter getTypeParameter() {
+    public TypeParameterNode getTypeParameter() {
       return typeParameter;
     }
 
     @Override
     public boolean isNoopTypeCheck() {
-      return levelsUp < 0 || ownerType != TypeParameter.OwnerType.METHOD;
+      return levelsUp < 0 || ownerType != TypeParameterNode.OwnerType.METHOD;
     }
 
     @Override
@@ -2264,23 +2260,21 @@ public abstract class TypeNode extends PklNode {
     private Object doExecute(VirtualFrame frame, Object value, boolean lazy) {
       if (ownerType != OwnerType.METHOD) return value;
 
-      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, levelsUp);
-      if (methodTypeArgs != null) {
-        var typeArg = methodTypeArgs[typeParameter.index()];
-        try {
-          return callTypeArgumentNode.execute(frame, typeArg, value, lazy);
-        } catch (VmTypeMismatchException e) {
-          CompilerDirectives.transferToInterpreter();
-          if (!VmUtils.sourceSectionContains(sourceSection, e.sourceSection)) {
-            var rootNode = getRootNode();
-            e.putInsertedStackFrame(
-                rootNode.getCallTarget(),
-                VmUtils.createStackFrame(sourceSection, rootNode.getName()));
-          }
-          throw e;
+      var typeArg = VmUtils.getTypeArgumentOrNull(frame, typeParameter.getSlot(), levelsUp);
+      if (typeArg == null) return value;
+
+      try {
+        return callTypeArgumentNode.execute(frame, typeArg, value, lazy);
+      } catch (VmTypeMismatchException e) {
+        CompilerDirectives.transferToInterpreter();
+        if (!VmUtils.sourceSectionContains(sourceSection, e.sourceSection)) {
+          var rootNode = getRootNode();
+          e.putInsertedStackFrame(
+              rootNode.getCallTarget(),
+              VmUtils.createStackFrame(sourceSection, rootNode.getName()));
         }
+        throw e;
       }
-      return value;
     }
 
     @Override
@@ -2302,14 +2296,11 @@ public abstract class TypeNode extends PklNode {
       // res = foo::<Person>(new {}) // `Person` is passed in via `typeArgumentOverrides`
       // ```
       if (levelsUp == 0 && isPreCall) {
-        return typeArgumentOverrides == null ? null : typeArgumentOverrides[typeParameter.index()];
+        return typeArgumentOverrides == null
+            ? null
+            : typeArgumentOverrides[typeParameter.getIndex()];
       }
-      var effectiveLevelsUp = isPreCall ? levelsUp - 1 : levelsUp;
-      var methodTypeArgs = VmUtils.getTypeArgumentsOrNull(frame, effectiveLevelsUp);
-      if (methodTypeArgs != null) {
-        return methodTypeArgs[typeParameter.index()];
-      }
-      return null;
+      return VmUtils.getTypeArgumentOrNull(frame, typeParameter.getSlot(), levelsUp);
     }
 
     @Override

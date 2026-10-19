@@ -16,6 +16,7 @@
 package org.pkl.core.ast.member;
 
 import com.oracle.truffle.api.frame.FrameDescriptor;
+import com.oracle.truffle.api.frame.MaterializedFrame;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.pkl.core.ast.PklRootNode;
@@ -51,6 +52,7 @@ public final class ListingOrMappingTypeCastNode extends PklRootNode {
 
   @Override
   protected Object executeImpl(VirtualFrame frame) {
-    return typeNode.execute(frame, frame.getArguments()[3]);
+    var enclosingFrame = (MaterializedFrame) frame.getArguments()[2];
+    return typeNode.execute(enclosingFrame, frame.getArguments()[3]);
   }
 }

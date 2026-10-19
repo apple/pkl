@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Variance modifiers may only be applied to type parameters on classes.
+Variance modifiers may only be applied to type parameters on classes or typealiases.
 
 x | local function foo<in T>() = null
                        ^^

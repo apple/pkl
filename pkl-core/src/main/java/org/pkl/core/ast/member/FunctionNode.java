@@ -30,6 +30,7 @@ import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.util.CollectionUtils;
@@ -37,19 +38,15 @@ import org.pkl.core.util.Pair;
 
 public final class FunctionNode extends RegularMemberNode {
   // Every function (and property) call passes three implicit arguments at positions
-  // frame.getArguments()[0], [1], and [2]:
+  // frame.getArguments()[0], [1]:
   // - the receiver (target) of the call, of type Object (see VmUtils.getReceiver())
   // - the owner (lexically enclosing object) of the function/property definition, of type VmTyped
   // (see VmUtils.getOwner())
-  // - an array of VmTypeArgument instances (null if the call contains no explicit type args)
-  // For VmObject receivers, the owner is the same as or an ancestor of the receiver.
-  // For other receivers, the owner is the prototype of the receiver's class.
-  // The chain of enclosing owners forms a function/property's lexical scope.
-  private static final int IMPLICIT_PARAM_COUNT = 3;
+  private static final int IMPLICIT_PARAM_COUNT = 2;
 
   private final int paramCount;
-  private final int typeParamCount;
   private final int totalParamCount;
+  @Children private TypeParameterNode[] typeParameters;
 
   @Children private final TypeNode[] parameterTypeNodes;
   private @Nullable TypeNode checkedReturnTypeNode;
@@ -64,7 +61,7 @@ public final class FunctionNode extends RegularMemberNode {
       TypeNode[] parameterTypeNodes,
       @Nullable TypeNode returnTypeNode,
       boolean isReturnTypeChecked,
-      int typeParamCount,
+      TypeParameterNode[] typeParameters,
       ExpressionNode bodyNode) {
 
     super(language, descriptor, member, bodyNode);
@@ -74,7 +71,7 @@ public final class FunctionNode extends RegularMemberNode {
         || member instanceof Lambda;
 
     this.paramCount = paramCount;
-    this.typeParamCount = typeParamCount;
+    this.typeParameters = typeParameters;
     this.parameterTypeNodes = parameterTypeNodes;
     this.checkedReturnTypeNode = isReturnTypeChecked ? returnTypeNode : null;
     this.returnTypeNode = returnTypeNode;
@@ -87,7 +84,7 @@ public final class FunctionNode extends RegularMemberNode {
   }
 
   public int getTypeParameterCount() {
-    return typeParamCount;
+    return typeParameters.length;
   }
 
   public @Nullable TypeNode getParameterTypeNode(int idx) {
@@ -120,14 +117,20 @@ public final class FunctionNode extends RegularMemberNode {
   @Override
   @ExplodeLoop
   protected Object executeImpl(VirtualFrame frame) {
-    var totalArgCount = frame.getArguments().length;
-    if (totalArgCount != totalParamCount) {
+    var args = frame.getArguments();
+    var totalArgCount = args.length;
+    if (totalArgCount != totalParamCount + typeParameters.length) {
       CompilerDirectives.transferToInterpreter();
-      throw wrongArgumentCount(totalArgCount - IMPLICIT_PARAM_COUNT);
+      throw wrongArgumentCount(totalArgCount - typeParameters.length - IMPLICIT_PARAM_COUNT);
+    }
+
+    for (var i = 0; i < typeParameters.length; i++) {
+      var typeArg = args[IMPLICIT_PARAM_COUNT + i];
+      typeParameters[i].executeAndSet(frame, typeArg);
     }
 
     for (var i = 0; i < parameterTypeNodes.length; i++) {
-      var argument = frame.getArguments()[IMPLICIT_PARAM_COUNT + i];
+      var argument = args[IMPLICIT_PARAM_COUNT + typeParameters.length + i];
       parameterTypeNodes[i].executeAndSet(frame, argument);
     }
 
@@ -135,7 +138,7 @@ public final class FunctionNode extends RegularMemberNode {
 
     if (checkedReturnTypeNode != null) {
       return checkedReturnTypeNode.execute(frame, result);
-    } else if (returnTypeNode != null && VmUtils.getTypeArgumentsOrNull(frame) != null) {
+    } else if (returnTypeNode != null && args[totalArgCount - 1] != null) {
       // Return types are not typically checked for stdlib methods (isReturnTypeChecked == false)
       // but for generic stdlib methods (e.g. `List.map()`) when they are called with type args,
       // this behavior needs to be overridden so the type arg check on return type still runs.

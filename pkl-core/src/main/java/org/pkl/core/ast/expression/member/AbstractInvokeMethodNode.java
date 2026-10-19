@@ -120,15 +120,19 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
       frame.setObject(methodSlot, new MethodCall(method, typeArgs));
     }
 
-    var args = new Object[3 + argumentNodes.length];
+    var typeParameterCount = method != null ? method.getTypeParameterCount() : 0;
+    var args = new Object[2 + argumentNodes.length + typeParameterCount];
     args[0] = receiver;
     args[1] = owner;
-    args[2] = typeArgs;
+
+    if (typeArgs != null) {
+      System.arraycopy(typeArgs, 0, args, 2, typeParameterCount);
+    }
 
     try {
       for (var i = 0; i < argumentNodes.length; i++) {
         TruffleSafepoint.poll(this);
-        args[3 + i] = argumentNodes[i].executeGeneric(frame);
+        args[2 + typeParameterCount + i] = argumentNodes[i].executeGeneric(frame);
       }
     } finally {
       if (methodSlot > -1) {

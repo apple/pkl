@@ -35,6 +35,7 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 
 public final class VmTypeAlias extends VmValue {
@@ -46,7 +47,7 @@ public final class VmTypeAlias extends VmValue {
   private final String simpleName;
   private final VmTyped module;
   private final String qualifiedName;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameterNode[] typeParameters;
   private final MaterializedFrame enclosingFrame;
 
   private @Nullable TypeNode typeNode;
@@ -70,7 +71,7 @@ public final class VmTypeAlias extends VmValue {
       String simpleName,
       VmTyped module,
       String qualifiedName,
-      List<TypeParameter> typeParameters,
+      TypeParameterNode[] typeParameters,
       MaterializedFrame enclosingFrame) {
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
@@ -169,7 +170,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public int getTypeParameterCount() {
-    return typeParameters.size();
+    return typeParameters.length;
   }
 
   public TypeNode getTypeNode() {
@@ -189,14 +190,14 @@ public final class VmTypeAlias extends VmValue {
     // * Fewer root nodes to call
     // * ControlFlowException used to implement union types doesn't escape root node
 
-    if (typeParameters.isEmpty()) return deepCopy(typeNode);
+    if (typeParameters.length == 0) return deepCopy(typeNode);
 
     // handle if alias root is itself a type variable (https://github.com/apple/pkl/issues/1711)
     if (typeNode instanceof TypeVariableNode typeVarNode) {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameter().index()];
+          : typeArgumentNodes[typeVarNode.getTypeParameter().getIndex()];
     }
 
     var clone = (TypeNode) typeNode.deepCopy();
@@ -257,7 +258,7 @@ public final class VmTypeAlias extends VmValue {
                 simpleName,
                 getModuleName(),
                 qualifiedName,
-                TypeParameter.export(typeParameters),
+                TypeParameterNode.export(typeParameters),
                 module.getVmClass().export());
 
         for (var parameter : __pTypeAlias.getTypeParameters()) {

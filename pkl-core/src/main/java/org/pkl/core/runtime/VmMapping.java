@@ -70,16 +70,8 @@ public final class VmMapping extends VmListingOrMapping {
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       ListingOrMappingTypeCastNode typeCastNode,
       Object typeCheckReceiver,
-      VmObjectLike typeCheckOwner,
-      VmTypeArgument @Nullable [] typeCheckTypeArguments) {
-    super(
-        enclosingFrame,
-        parent,
-        members,
-        typeCastNode,
-        typeCheckReceiver,
-        typeCheckOwner,
-        typeCheckTypeArguments);
+      VmObjectLike typeCheckOwner) {
+    super(enclosingFrame, parent, members, typeCastNode, typeCheckReceiver, typeCheckOwner);
   }
 
   @Override

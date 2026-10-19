@@ -44,11 +44,11 @@ public abstract class CallTypeArgumentNode extends PklNode {
       @Cached("create(cachedCallTarget)") DirectCallNode callNode) {
     var enclosingFrame = typeArgument.getEnclosingFrame();
     if (enclosingFrame == null) {
-      return callNode.call(null, null, null, null, value, lazy);
+      return callNode.call(null, null, null, value, lazy);
     }
 
     var arguments = enclosingFrame.getArguments();
-    return callNode.call(arguments[0], arguments[1], arguments[2], enclosingFrame, value, lazy);
+    return callNode.call(arguments[0], arguments[1], enclosingFrame, value, lazy);
   }
 
   @Specialization(replaces = "evalDirect")
@@ -59,17 +59,11 @@ public abstract class CallTypeArgumentNode extends PklNode {
       @Cached("create()") IndirectCallNode callNode) {
     var enclosingFrame = typeArgument.getEnclosingFrame();
     if (enclosingFrame == null) {
-      return callNode.call(typeArgument.getCallTarget(), null, null, null, null, value, lazy);
+      return callNode.call(typeArgument.getCallTarget(), null, null, null, value, lazy);
     }
 
     var arguments = enclosingFrame.getArguments();
     return callNode.call(
-        typeArgument.getCallTarget(),
-        arguments[0],
-        arguments[1],
-        arguments[2],
-        enclosingFrame,
-        value,
-        lazy);
+        typeArgument.getCallTarget(), arguments[0], arguments[1], enclosingFrame, value, lazy);
   }
 }
