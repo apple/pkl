@@ -10,6 +10,10 @@ xxxx | typealias Uri = String(isValidUrl)
                               ^^^^^^^^^^
 at pkl.analyze#importGraph (pkl:base)
 
+xx | external function importGraph(moduleUris: Set<Uri>): ImportGraph
+                                                   ^^^
+at pkl.analyze#importGraph (pkl:analyze)
+
 x | result = analyze.importGraph(Set("foo <>"))
              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at analyzeInvalidModuleUri#result (file:///$snippetsDir/input/errors/analyzeInvalidModuleUri.pkl)

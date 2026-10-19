@@ -2461,23 +2461,36 @@ public abstract class TypeNode extends PklNode {
       try {
         return aliasedTypeNode.executeLazily(frame, value);
       } catch (VmTypeMismatchException e) {
-        // include this typealias in the error message
-        e.putInsertedStackFrame(
-            getRootNode().getCallTarget(),
-            VmUtils.createStackFrame(sourceSection, getRootNode().getName()));
-        throw e;
+        throw withInsertedStackFrame(e);
       }
     }
 
     /** See docstring on {@link TypeAliasTypeNode#executeLazily}. */
     @Override
     public Object executeEagerly(VirtualFrame frame, Object value) {
-      return aliasedTypeNode.executeEagerly(frame, value);
+      try {
+        return aliasedTypeNode.executeEagerly(frame, value);
+      } catch (VmTypeMismatchException e) {
+        throw withInsertedStackFrame(e);
+      }
     }
 
     @Override
     public Object executeAndSet(VirtualFrame frame, Object value) {
-      return aliasedTypeNode.executeAndSet(frame, value);
+      try {
+        return aliasedTypeNode.executeAndSet(frame, value);
+      } catch (VmTypeMismatchException e) {
+        throw withInsertedStackFrame(e);
+      }
+    }
+
+    @TruffleBoundary
+    private VmTypeMismatchException withInsertedStackFrame(VmTypeMismatchException e) {
+      // include the typealias usage site in the call stack
+      e.putInsertedStackFrame(
+          getRootNode().getCallTarget(),
+          VmUtils.createStackFrame(sourceSection, getRootNode().getName()));
+      return e;
     }
 
     @TruffleBoundary
