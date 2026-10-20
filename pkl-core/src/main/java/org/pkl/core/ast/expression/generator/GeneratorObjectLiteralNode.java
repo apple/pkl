@@ -98,7 +98,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
 
   @Specialization(guards = "checkObjectCannotHaveParameters()")
   protected VmTyped evalTyped(VirtualFrame frame, VmTyped parent) {
-    VmUtils.checkIsInstantiable(parent.getVmClass(), getParentNode());
+    VmUtils.checkIsInstantiable(parent.getVmClass(), getParentNode(), this);
     var data = executeChildren(frame, parent, 0);
     if (data.hasNoMembers()) {
       return parent;
@@ -207,7 +207,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
 
   @Specialization(guards = {"isTypedObjectClass(parent)", "checkObjectCannotHaveParameters()"})
   protected VmTyped evalTypedObjectClass(VirtualFrame frame, VmClass parent) {
-    VmUtils.checkIsInstantiable(parent, getParentNode());
+    VmUtils.checkIsInstantiable(parent, getParentNode(), this);
     var data = executeChildren(frame, parent, 0);
     if (data.hasNoMembers()) {
       return parent.getPrototype();
@@ -225,7 +225,9 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       value = getNullDefaultValue(vmNull);
     }
     VmUtils.checkIsInstantiable(
-        value instanceof VmClass vmClass ? vmClass : VmUtils.getClass(value), getParentNode());
+        value instanceof VmClass vmClass ? vmClass : VmUtils.getClass(value),
+        getParentNode(),
+        this);
 
     throw exceptionBuilder().unreachableCode().build();
   }
