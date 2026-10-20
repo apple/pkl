@@ -52,8 +52,8 @@ import org.pkl.core.ast.member.DefaultPropertyBodyNode;
 import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
-import org.pkl.core.ast.type.TypeParameterNode.OwnerType;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter.OwnerType;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
@@ -189,7 +189,7 @@ public abstract class TypeNode extends PklNode {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
           if (typeNode instanceof NonFinalSelfTypeNode
               || (typeNode instanceof TypeVariableNode typeVariable
-                  && typeVariable.ownerType == TypeParameterNode.OwnerType.METHOD)) {
+                  && typeVariable.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(false);
             return false;
           }
@@ -221,7 +221,7 @@ public abstract class TypeNode extends PklNode {
               || typeNode instanceof NonFinalSelfTypeNode
               || typeNode instanceof ListingOrMappingTypeNode // lazy checks need captured frame
               || (typeNode instanceof TypeVariableNode typeVar
-                  && typeVar.ownerType == TypeParameterNode.OwnerType.METHOD)) {
+                  && typeVar.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(true);
             return false;
           }
@@ -2207,15 +2207,15 @@ public abstract class TypeNode extends PklNode {
   }
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
-    private final TypeParameterNode typeParameter;
+    private final TypeParameter typeParameter;
     private final int levelsUp;
-    private final TypeParameterNode.OwnerType ownerType;
+    private final TypeParameter.OwnerType ownerType;
     @Child private CallTypeArgumentNode callTypeArgumentNode;
 
     public TypeVariableNode(
         SourceSection sourceSection,
-        TypeParameterNode typeParameter,
-        TypeParameterNode.OwnerType ownerType,
+        TypeParameter typeParameter,
+        TypeParameter.OwnerType ownerType,
         int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
@@ -2229,13 +2229,13 @@ public abstract class TypeNode extends PklNode {
       return new VmType.TypeVariableType(typeParameter, ownerType, levelsUp);
     }
 
-    public TypeParameterNode getTypeParameter() {
+    public TypeParameter getTypeParameter() {
       return typeParameter;
     }
 
     @Override
     public boolean isNoopTypeCheck() {
-      return levelsUp < 0 || ownerType != TypeParameterNode.OwnerType.METHOD;
+      return levelsUp < 0 || ownerType != TypeParameter.OwnerType.METHOD;
     }
 
     @Override
@@ -2260,7 +2260,7 @@ public abstract class TypeNode extends PklNode {
     private Object doExecute(VirtualFrame frame, Object value, boolean lazy) {
       if (ownerType != OwnerType.METHOD) return value;
 
-      var typeArg = VmUtils.getTypeArgumentOrNull(frame, typeParameter.getSlot(), levelsUp);
+      var typeArg = VmUtils.getTypeArgumentOrNull(frame, typeParameter.slot(), levelsUp);
       if (typeArg == null) return value;
 
       try {
@@ -2296,11 +2296,9 @@ public abstract class TypeNode extends PklNode {
       // res = foo::<Person>(new {}) // `Person` is passed in via `typeArgumentOverrides`
       // ```
       if (levelsUp == 0 && isPreCall) {
-        return typeArgumentOverrides == null
-            ? null
-            : typeArgumentOverrides[typeParameter.getIndex()];
+        return typeArgumentOverrides == null ? null : typeArgumentOverrides[typeParameter.index()];
       }
-      return VmUtils.getTypeArgumentOrNull(frame, typeParameter.getSlot(), levelsUp);
+      return VmUtils.getTypeArgumentOrNull(frame, typeParameter.slot(), levelsUp);
     }
 
     @Override

@@ -32,7 +32,6 @@ import org.pkl.core.PObject;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.VmExceptionBuilder.MultilineValue;
 import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.EconomicMaps;
@@ -51,7 +50,7 @@ public final class VmClass extends VmValue {
   private final List<VmTyped> annotations;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final TypeParameterNode[] typeParameters;
+  private final TypeParameter[] typeParameters;
   private final VmTyped prototype;
 
   private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMaps.create();
@@ -127,7 +126,7 @@ public final class VmClass extends VmValue {
       List<VmTyped> annotations,
       int modifiers,
       PClassInfo<?> classInfo,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       VmTyped prototype) {
 
     this.sourceSection = sourceSection;
@@ -285,7 +284,7 @@ public final class VmClass extends VmValue {
     return typeParameters.length;
   }
 
-  public TypeParameterNode[] getTypeParameters() {
+  public TypeParameter[] getTypeParameters() {
     return typeParameters;
   }
 
@@ -759,7 +758,7 @@ public final class VmClass extends VmValue {
               VmModifier.export(modifiers, true),
               exportedAnnotations,
               classInfo,
-              TypeParameterNode.export(typeParameters),
+              TypeParameter.export(typeParameters),
               properties,
               methods,
               moduleClass);

@@ -25,8 +25,8 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.expression.primary.GetTypeAliasModuleNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmTypeAlias;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
@@ -38,7 +38,7 @@ public final class TypeAliasNode extends ExpressionNode {
   private final int modifiers;
   private final String simpleName;
   private final String qualifiedName;
-  private final TypeParameterNode[] typeParameters; // not @Children, never eval'd
+  private final TypeParameter[] typeParameters;
   private @Child UnresolvedTypeNode typeAnnotationNode;
 
   // use same caching scheme as ClassNode
@@ -52,7 +52,7 @@ public final class TypeAliasNode extends ExpressionNode {
       int modifiers,
       String simpleName,
       String qualifiedName,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       UnresolvedTypeNode typeAnnotationNode) {
     super(sourceSection);
     this.headerSection = headerSection;

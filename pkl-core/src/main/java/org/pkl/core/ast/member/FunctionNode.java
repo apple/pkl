@@ -26,7 +26,6 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PType;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
@@ -37,16 +36,22 @@ import org.pkl.core.util.CollectionUtils;
 import org.pkl.core.util.Pair;
 
 public final class FunctionNode extends RegularMemberNode {
-  // Every function (and property) call passes three implicit arguments at positions
+  // Every function (and property) call passes two implicit arguments at positions
   // frame.getArguments()[0], [1]:
   // - the receiver (target) of the call, of type Object (see VmUtils.getReceiver())
   // - the owner (lexically enclosing object) of the function/property definition, of type VmTyped
   // (see VmUtils.getOwner())
+  //
+  // After the implicit args, the method's type args are passed, in order.
+  // If the call does not contain type arguments, these args are null.
+  //
+  // Finally, the method's arguments are passed, in order.
   private static final int IMPLICIT_PARAM_COUNT = 2;
 
   private final int paramCount;
+  private final int typeParamCount;
   private final int totalParamCount;
-  @Children private TypeParameterNode[] typeParameters;
+  @Children private TypeParameterNode[] typeParameterNodes;
 
   @Children private final TypeNode[] parameterTypeNodes;
   private @Nullable TypeNode checkedReturnTypeNode;
@@ -61,7 +66,7 @@ public final class FunctionNode extends RegularMemberNode {
       TypeNode[] parameterTypeNodes,
       @Nullable TypeNode returnTypeNode,
       boolean isReturnTypeChecked,
-      TypeParameterNode[] typeParameters,
+      TypeParameterNode[] typeParameterNodes,
       ExpressionNode bodyNode) {
 
     super(language, descriptor, member, bodyNode);
@@ -71,12 +76,14 @@ public final class FunctionNode extends RegularMemberNode {
         || member instanceof Lambda;
 
     this.paramCount = paramCount;
-    this.typeParameters = typeParameters;
     this.parameterTypeNodes = parameterTypeNodes;
     this.checkedReturnTypeNode = isReturnTypeChecked ? returnTypeNode : null;
     this.returnTypeNode = returnTypeNode;
+    this.typeParameterNodes = typeParameterNodes;
 
-    totalParamCount = Math.addExact(IMPLICIT_PARAM_COUNT, paramCount);
+    typeParamCount = typeParameterNodes.length;
+    totalParamCount =
+        Math.addExact(IMPLICIT_PARAM_COUNT, Math.addExact(paramCount, typeParamCount));
   }
 
   public int getParameterCount() {
@@ -84,7 +91,7 @@ public final class FunctionNode extends RegularMemberNode {
   }
 
   public int getTypeParameterCount() {
-    return typeParameters.length;
+    return typeParameterNodes.length;
   }
 
   public @Nullable TypeNode getParameterTypeNode(int idx) {
@@ -119,18 +126,18 @@ public final class FunctionNode extends RegularMemberNode {
   protected Object executeImpl(VirtualFrame frame) {
     var args = frame.getArguments();
     var totalArgCount = args.length;
-    if (totalArgCount != totalParamCount + typeParameters.length) {
+    if (totalArgCount != totalParamCount) {
       CompilerDirectives.transferToInterpreter();
-      throw wrongArgumentCount(totalArgCount - typeParameters.length - IMPLICIT_PARAM_COUNT);
+      throw wrongArgumentCount(totalArgCount - typeParamCount - IMPLICIT_PARAM_COUNT);
     }
 
-    for (var i = 0; i < typeParameters.length; i++) {
+    for (var i = 0; i < typeParamCount; i++) {
       var typeArg = args[IMPLICIT_PARAM_COUNT + i];
-      typeParameters[i].executeAndSet(frame, typeArg);
+      typeParameterNodes[i].executeAndSet(frame, typeArg);
     }
 
     for (var i = 0; i < parameterTypeNodes.length; i++) {
-      var argument = args[IMPLICIT_PARAM_COUNT + typeParameters.length + i];
+      var argument = args[IMPLICIT_PARAM_COUNT + typeParamCount + i];
       parameterTypeNodes[i].executeAndSet(frame, argument);
     }
 
@@ -138,7 +145,7 @@ public final class FunctionNode extends RegularMemberNode {
 
     if (checkedReturnTypeNode != null) {
       return checkedReturnTypeNode.execute(frame, result);
-    } else if (returnTypeNode != null && args[totalArgCount - 1] != null) {
+    } else if (returnTypeNode != null && typeParamCount > 0 && args[IMPLICIT_PARAM_COUNT] != null) {
       // Return types are not typically checked for stdlib methods (isReturnTypeChecked == false)
       // but for generic stdlib methods (e.g. `List.map()`) when they are called with type args,
       // this behavior needs to be overridden so the type arg check on return type still runs.
@@ -177,7 +184,7 @@ public final class FunctionNode extends RegularMemberNode {
       SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       int modifiers,
-      List<TypeParameter> typeParameters) {
+      List<org.pkl.core.TypeParameter> typeParameters) {
 
     var parameters = CollectionUtils.<String, PType>newLinkedHashMap(paramCount);
     for (var i = 0; i < paramCount; i++) {

@@ -22,14 +22,13 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 
 public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
   private final int parameterCount;
-  private final TypeParameterNode[]
-      typeParameters; // not @Children, owned by resulting FunctionNode
+  private final TypeParameter[] typeParameters;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
   private final boolean isReturnTypeChecked;
@@ -46,7 +45,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
       Identifier name,
       String qualifiedName,
       int parameterCount,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode,
       boolean isReturnTypeChecked,
@@ -92,6 +91,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
         VmUtils.resolveParameterTypes(frame, descriptor, unresolvedParameterTypeNodes);
     var returnTypeNode =
         unresolvedReturnTypeNode != null ? unresolvedReturnTypeNode.execute(frame) : null;
+    var typeParameterNodes = VmUtils.resolveTypeParameters(typeParameters);
 
     String deprecation = null;
     for (var annotation : annotations) {
@@ -124,7 +124,7 @@ public final class UnresolvedMethodNode extends UnresolvedClassMemberNode {
             parameterTypeNodes,
             returnTypeNode,
             isReturnTypeChecked,
-            typeParameters,
+            typeParameterNodes,
             bodyNode);
 
     method.initFunctionNode(functionNode);

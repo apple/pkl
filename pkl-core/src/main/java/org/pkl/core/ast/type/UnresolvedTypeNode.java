@@ -497,14 +497,14 @@ public abstract class UnresolvedTypeNode extends PklNode {
   }
 
   public static final class TypeVariable extends UnresolvedTypeNode {
-    private final TypeParameterNode typeParameter;
+    private final TypeParameter typeParameter;
     private final int levelsUp;
-    private final TypeParameterNode.OwnerType ownerType;
+    private final TypeParameter.OwnerType ownerType;
 
     public TypeVariable(
         SourceSection sourceSection,
-        TypeParameterNode typeParameter,
-        TypeParameterNode.OwnerType ownerType,
+        TypeParameter typeParameter,
+        TypeParameter.OwnerType ownerType,
         int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
@@ -512,7 +512,7 @@ public abstract class UnresolvedTypeNode extends PklNode {
       this.levelsUp = levelsUp;
     }
 
-    public TypeParameterNode getTypeParameter() {
+    public TypeParameter getTypeParameter() {
       return typeParameter;
     }
 
