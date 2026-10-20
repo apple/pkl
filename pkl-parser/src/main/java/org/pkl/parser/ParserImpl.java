@@ -1837,6 +1837,10 @@ final class ParserImpl {
     return res;
   }
 
+  ParserError tooDeeplyNested() {
+    return parserError("tooDeeplyNested");
+  }
+
   private ParserError parserError(String messageKey, Object... args) {
     return new ParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }

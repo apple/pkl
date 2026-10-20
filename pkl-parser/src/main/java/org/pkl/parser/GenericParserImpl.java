@@ -1492,6 +1492,10 @@ class GenericParserImpl {
     }
   }
 
+  GenericParserError tooDeeplyNested() {
+    return parserError("tooDeeplyNested");
+  }
+
   private GenericParserError parserError(String messageKey, Object... args) {
     return new GenericParserError(ErrorMessages.create(messageKey, args), spanLookahead);
   }
