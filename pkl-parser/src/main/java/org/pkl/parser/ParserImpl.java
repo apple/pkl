@@ -98,6 +98,8 @@ final class ParserImpl {
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
 
+  private int depth = 0;
+
   ParserImpl(String source) {
     this.lexer = new Lexer(source);
     _lookahead = forceNext();
@@ -530,6 +532,25 @@ final class ParserImpl {
   }
 
   private ObjectBody parseObjectBody() {
+    var savedDepth = deepen(ParserLimits.NESTING_COST);
+    var body = doParseObjectBody();
+    depth = savedDepth;
+    return body;
+  }
+
+  /**
+   * Increases the depth of the tree path being built by {@code cost}. Returns the previous depth.
+   */
+  private int deepen(int cost) {
+    var saved = depth;
+    depth += cost;
+    if (depth > ParserLimits.MAX_DEPTH) {
+      throw parserError("tooDeeplyNested");
+    }
+    return saved;
+  }
+
+  private ObjectBody doParseObjectBody() {
     var start = expect(Token.LBRACE, "unexpectedToken", "{").span;
     var nodes = new ArrayList<Node>();
     var membersOffset = -1;
@@ -811,6 +832,13 @@ final class ParserImpl {
   }
 
   private Expr parseExpr(@Nullable String expectation, int minPrecedence) {
+    var savedDepth = deepen(ParserLimits.NESTING_COST);
+    var expr = doParseExpr(expectation, minPrecedence);
+    depth = savedDepth;
+    return expr;
+  }
+
+  private Expr doParseExpr(@Nullable String expectation, int minPrecedence) {
     var expr = parseExprAtom(expectation);
     var op = getOperator();
     while (op != null) {
@@ -819,6 +847,7 @@ final class ParserImpl {
       if (op == Operator.MINUS && (precededBySemicolon || _lookahead.newLinesBetween > 0)) break;
 
       next(); // operator
+      deepen(ParserLimits.CHAIN_LINK_COST);
       switch (op) {
         case IS -> {
           var type = parseType();
@@ -941,14 +970,18 @@ final class ParserImpl {
             var start = next().span;
             // calling `parseExprAtom` here and not `parseExpr` because
             // unary minus has higher precendence than binary operators
+            var savedDepth = deepen(ParserLimits.NESTING_COST);
             var exp = parseExprAtom(expectation);
+            depth = savedDepth;
             yield new UnaryMinusExpr(exp, start.endWith(exp.span()));
           }
           case NOT -> {
             var start = next().span;
             // calling `parseExprAtom` here and not `parseExpr` because
             // logical not has higher precendence than binary operators
+            var savedDepth = deepen(ParserLimits.NESTING_COST);
             var exp = parseExprAtom(expectation);
+            depth = savedDepth;
             yield new LogicalNotExpr(exp, start.endWith(exp.span()));
           }
           case LPAREN -> {
@@ -1052,44 +1085,63 @@ final class ParserImpl {
 
   @SuppressWarnings("DuplicatedCode")
   private Expr parseExprRest(Expr expr) {
-    // non-null
-    if (lookahead == Token.NON_NULL) {
-      var end = next().span;
-      var res = new NonNullExpr(expr, expr.span().endWith(end));
-      return parseExprRest(res);
-    }
-    // amends
-    if (lookahead == Token.LBRACE) {
-      if (expr instanceof ParenthesizedExpr
-          || expr instanceof AmendsExpr
-          || expr instanceof NewExpr) {
-        var body = parseObjectBody();
-        return parseExprRest(new AmendsExpr(expr, body, expr.span().endWith(body.span())));
+    while (true) {
+      // non-null
+      if (lookahead == Token.NON_NULL) {
+        deepen(ParserLimits.CHAIN_LINK_COST);
+        var end = next().span;
+        expr = new NonNullExpr(expr, expr.span().endWith(end));
       }
-      throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
-    }
-    // qualified access
-    if (lookahead == Token.DOT || lookahead == Token.QDOT) {
-      var isNullable = next().token == Token.QDOT;
-      var identifier = parseIdentifier();
-      ArgumentList argumentList = null;
-      if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-        argumentList = parseArgumentList();
+      // amends
+      else if (lookahead == Token.LBRACE) {
+        if (expr instanceof ParenthesizedExpr
+            || expr instanceof AmendsExpr
+            || expr instanceof NewExpr) {
+          deepen(ParserLimits.CHAIN_LINK_COST);
+          var body = parseObjectBody();
+          expr = new AmendsExpr(expr, body, expr.span().endWith(body.span()));
+        } else {
+          throw parserError(
+              "unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
+        }
       }
-      var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
-      var res =
-          new QualifiedAccessExpr(
-              expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan));
-      return parseExprRest(res);
+      // qualified access
+      else if (lookahead == Token.DOT || lookahead == Token.QDOT) {
+        deepen(ParserLimits.CHAIN_LINK_COST);
+        var isNullable = next().token == Token.QDOT;
+        var identifier = parseIdentifier();
+        ArgumentList argumentList = null;
+        if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+          argumentList = parseArgumentList();
+        }
+        var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
+        expr =
+            new QualifiedAccessExpr(
+                expr, identifier, isNullable, argumentList, expr.span().endWith(lastSpan));
+      }
+      // subscript (needs to be in the same line as the expression)
+      else if (lookahead == Token.LBRACK
+          && !precededBySemicolon
+          && _lookahead.newLinesBetween == 0) {
+        deepen(ParserLimits.CHAIN_LINK_COST);
+        next();
+        var exp = parseExpr("]");
+        var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
+        expr = new SubscriptExpr(expr, exp, expr.span().endWith(end));
+      } else {
+        return expr;
+      }
     }
-    // subscript (needs to be in the same line as the expression)
-    if (lookahead == Token.LBRACK && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-      next();
-      var exp = parseExpr("]");
-      var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
-      var res = new SubscriptExpr(expr, exp, expr.span().endWith(end));
-      return parseExprRest(res);
-    }
+  }
+
+  /**
+   * Parses the expression of a string interpolation. Nested interpolations use more stack per level
+   * than other nesting, so they are charged double.
+   */
+  private Expr parseInterpolatedExpr() {
+    var savedDepth = deepen(ParserLimits.NESTING_COST);
+    var expr = parseExpr(")");
+    depth = savedDepth;
     return expr;
   }
 
@@ -1139,7 +1191,7 @@ final class ParserImpl {
             parts.add(new StringChars(builder.toString(), startSpan.endWith(end)));
             builder = new StringBuilder();
           }
-          var exp = parseExpr(")");
+          var exp = parseInterpolatedExpr();
           end = expect(Token.RPAREN, "unexpectedToken", ")").span;
           parts.add(new StringPart.StringInterpolation(exp, istart.endWith(end)));
           startSpan = spanLookahead;
@@ -1174,7 +1226,7 @@ final class ParserImpl {
             stringTokens.add(new TempNode(next(), null));
         case INTERPOLATION_START -> {
           var istart = next();
-          var exp = parseExpr(")");
+          var exp = parseInterpolatedExpr();
           var end = expect(Token.RPAREN, "unexpectedToken", ")").span;
           var interpolation = new StringPart.StringInterpolation(exp, istart.span.endWith(end));
           stringTokens.add(new TempNode(null, interpolation));
@@ -1346,6 +1398,13 @@ final class ParserImpl {
   }
 
   private Type parseType(@Nullable String expectation) {
+    var savedDepth = deepen(ParserLimits.NESTING_COST);
+    var type = doParseType(expectation);
+    depth = savedDepth;
+    return type;
+  }
+
+  private Type doParseType(@Nullable String expectation) {
     var defaultIndex = -1;
     Span start = null;
     if (lookahead == Token.STAR) {
@@ -1443,25 +1502,30 @@ final class ParserImpl {
   }
 
   private Type parseTypeEnd(Type type) {
-    // nullable types
-    if (lookahead == Token.QUESTION) {
-      var end = spanLookahead;
-      next();
-      var res = new Type.NullableType(type, type.span().endWith(end));
-      return parseTypeEnd(res);
+    while (true) {
+      // nullable types
+      if (lookahead == Token.QUESTION) {
+        deepen(ParserLimits.CHAIN_LINK_COST);
+        var end = spanLookahead;
+        next();
+        type = new Type.NullableType(type, type.span().endWith(end));
+      }
+      // constrained types: have to start in the same line as the type
+      else if (lookahead == Token.LPAREN
+          && !precededBySemicolon
+          && _lookahead.newLinesBetween == 0) {
+        deepen(ParserLimits.CHAIN_LINK_COST);
+        next();
+        var constraints = parseListOf(Token.COMMA, Token.RPAREN, () -> parseExpr(")"));
+        var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
+        var children = new ArrayList<Node>(constraints.size() + 1);
+        children.add(type);
+        children.addAll(constraints);
+        type = new Type.ConstrainedType(children, type.span().endWith(end));
+      } else {
+        return type;
+      }
     }
-    // constrained types: have to start in the same line as the type
-    if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-      next();
-      var constraints = parseListOf(Token.COMMA, Token.RPAREN, () -> parseExpr(")"));
-      var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
-      var children = new ArrayList<Node>(constraints.size() + 1);
-      children.add(type);
-      children.addAll(constraints);
-      var res = new Type.ConstrainedType(children, type.span().endWith(end));
-      return parseTypeEnd(res);
-    }
-    return type;
   }
 
   private Annotation parseAnnotation() {
