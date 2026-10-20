@@ -745,24 +745,45 @@ class GenericParserImpl {
 
   private void parseAccess(List<Node> children) {
     children.add(parseIdentifier());
-    if (lookahead() == Token.DCOLON && noSemicolonInbetween() && _lookahead.newLinesBetween == 0) {
-      children.add(makeTerminal(next()));
+    var typeArgs = tryParseTypeArgumentList();
+    if (typeArgs != null) {
+      // `tryParseTypeArgumentList` guarantees that an argument list follows
+      children.add(typeArgs);
       ff(children);
-      children.add(parseTypeArgumentList());
-      if (lookahead() == Token.LPAREN
-          && noSemicolonInbetween()
-          && _lookahead.newLinesBetween == 0) {
-        ff(children);
-        children.add(parseArgumentList());
-      } else {
-        throw parserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-      }
+      children.add(parseArgumentList());
     } else if (lookahead() == Token.LPAREN
         && noSemicolonInbetween()
         && _lookahead.newLinesBetween == 0) {
       ff(children);
       children.add(parseArgumentList());
     }
+  }
+
+  /**
+   * Speculatively parses a method call's type argument list, e.g. the `<Int>` in `foo<Int>(5)`.
+   *
+   * <p>A `<` that follows an identifier is ambiguous with the less-than operator. We prefer to
+   * parse it as a type argument list, which is only accepted if it is well-formed and directly
+   * followed by `(`. Otherwise, the parser state is restored and `null` is returned, so that the
+   * `<` gets parsed as a binary operator (for example, `foo<qux + 5>(5)`).
+   */
+  private @Nullable Node tryParseTypeArgumentList() {
+    if (lookahead() != Token.LT || !noSemicolonInbetween() || _lookahead.newLinesBetween != 0) {
+      return null;
+    }
+    var savedCursor = cursor;
+    try {
+      var typeArgs = parseTypeArgumentList();
+      if (lookahead() == Token.LPAREN
+          && noSemicolonInbetween()
+          && _lookahead.newLinesBetween == 0) {
+        return typeArgs;
+      }
+    } catch (GenericParserError ignored) {
+      // not a type argument list
+    }
+    backtrackTo(savedCursor);
+    return null;
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -1526,6 +1547,7 @@ class GenericParserImpl {
   private void backtrackTo(int point) {
     cursor = point;
     var tmp = tokens.get(cursor);
+    _lookahead = tmp;
     lookahead = tmp.token;
     spanLookahead = tmp.span;
   }

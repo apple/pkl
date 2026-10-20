@@ -2,8 +2,8 @@
 Expected value of type `Duration`, but got type `Int`.
 Value: 5
 
-x | res = bar::<Duration>()
-                ^^^^^^^^
+x | res = bar<Duration>()
+              ^^^^^^^^
 at callWithTypeArgumentsStacktrace2#bar.prop (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace2.pkl)
 
 x | prop = foo as T

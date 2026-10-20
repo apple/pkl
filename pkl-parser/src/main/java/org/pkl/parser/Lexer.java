@@ -85,6 +85,49 @@ public final class Lexer {
     return new String(source, offset, size);
   }
 
+  /** Captures the lexer's current state so that it can later be rewound via {@link #restore}. */
+  public Snapshot snapshot() {
+    var scopes = new ArrayDeque<InterpolationScope>();
+    // `ArrayDeque.push` adds to the front, so iterate in reverse to preserve order.
+    var it = interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      scopes.push(it.next().copy());
+    }
+    return new Snapshot(
+        cursor,
+        sCursor,
+        line,
+        sLine,
+        col,
+        sCol,
+        lookahead,
+        state,
+        scopes,
+        stringEnded,
+        isEscape,
+        newLinesBetween);
+  }
+
+  public void restore(Snapshot snapshot) {
+    cursor = snapshot.cursor;
+    sCursor = snapshot.sCursor;
+    line = snapshot.line;
+    sLine = snapshot.sLine;
+    col = snapshot.col;
+    sCol = snapshot.sCol;
+    lookahead = snapshot.lookahead;
+    state = snapshot.state;
+    interpolationStack.clear();
+    // copy again so that the snapshot can be restored more than once
+    var it = snapshot.interpolationStack.descendingIterator();
+    while (it.hasNext()) {
+      interpolationStack.push(it.next().copy());
+    }
+    stringEnded = snapshot.stringEnded;
+    isEscape = snapshot.isEscape;
+    newLinesBetween = snapshot.newLinesBetween;
+  }
+
   public Token next() {
     sCursor = cursor;
     sLine = line;
@@ -863,6 +906,54 @@ public final class Lexer {
     protected InterpolationScope(int quotes, int pounds) {
       this.quotes = quotes;
       this.pounds = pounds;
+    }
+
+    InterpolationScope copy() {
+      var res = new InterpolationScope(quotes, pounds);
+      res.parens = parens;
+      return res;
+    }
+  }
+
+  public static final class Snapshot {
+    private final int cursor;
+    private final int sCursor;
+    private final int line;
+    private final int sLine;
+    private final int col;
+    private final int sCol;
+    private final int lookahead;
+    private final State state;
+    private final Deque<InterpolationScope> interpolationStack;
+    private final boolean stringEnded;
+    private final boolean isEscape;
+    private final int newLinesBetween;
+
+    private Snapshot(
+        int cursor,
+        int sCursor,
+        int line,
+        int sLine,
+        int col,
+        int sCol,
+        int lookahead,
+        State state,
+        Deque<InterpolationScope> interpolationStack,
+        boolean stringEnded,
+        boolean isEscape,
+        int newLinesBetween) {
+      this.cursor = cursor;
+      this.sCursor = sCursor;
+      this.line = line;
+      this.sLine = sLine;
+      this.col = col;
+      this.sCol = sCol;
+      this.lookahead = lookahead;
+      this.state = state;
+      this.interpolationStack = interpolationStack;
+      this.stringEnded = stringEnded;
+      this.isEscape = isEscape;
+      this.newLinesBetween = newLinesBetween;
     }
   }
 

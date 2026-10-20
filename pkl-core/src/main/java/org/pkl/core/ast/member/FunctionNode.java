@@ -151,7 +151,7 @@ public final class FunctionNode extends RegularMemberNode {
       // this behavior needs to be overridden so the type arg check on return type still runs.
       // otherwise, this code would succeed instead of failing:
       // ```
-      // res = List("foo", "hello", "a").map::<String>((it) -> it.length)
+      // res = List("foo", "hello", "a").map<String>((it) -> it.length)
       // ```
       // Assumption: this does not need to account for type args in enclosing frames because
       // no type parameters exist in the stdlib that would require this.

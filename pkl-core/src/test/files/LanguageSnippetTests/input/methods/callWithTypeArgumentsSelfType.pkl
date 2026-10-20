@@ -1,18 +1,18 @@
 open class A {
   function foo<T, U, V>(val): List<Boolean> = List(val is T, val is U, val is V)
-  function a<T, U>(val): List<Boolean> = this.foo::<T, U, this>(val) 
+  function a<T, U>(val): List<Boolean> = this.foo<T, U, this>(val) 
 }
 
 open class B extends A {
-  function b1<T>(val): List<Boolean> = this.a::<T, this>(val)
-  function b2<T>(val): List<Boolean> = super.a::<T, this>(val)
+  function b1<T>(val): List<Boolean> = this.a<T, this>(val)
+  function b2<T>(val): List<Boolean> = super.a<T, this>(val)
 }
 
 class C extends B {
-  function c1(val): List<Boolean> = this.b1::<this>(val)
-  function c2(val): List<Boolean> = super.b1::<this>(val)
-  function c3(val): List<Boolean> = this.b2::<this>(val)
-  function c4(val): List<Boolean> = super.b2::<this>(val)
+  function c1(val): List<Boolean> = this.b1<this>(val)
+  function c2(val): List<Boolean> = super.b1<this>(val)
+  function c3(val): List<Boolean> = this.b2<this>(val)
+  function c4(val): List<Boolean> = super.b2<this>(val)
 }
 
 resAaA = new A {}.a(new A {})

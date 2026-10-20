@@ -6,8 +6,8 @@ x | typealias Ref<T> = ref.Reference<D, T>
                        ^^^^^^^^^^^^^^^^^^^
 at reference2#test (file:///$snippetsDir/input/errors/reference2.pkl)
 
-x | test = ref.Reference::<D, String>(d, "") as Ref<Boolean | Int>
-                                                ^^^^^^^^^^^^^^^^^^
+x | test = ref.Reference<D, String>(d, "") as Ref<Boolean | Int>
+                                              ^^^^^^^^^^^^^^^^^^
 at reference2#test (file:///$snippetsDir/input/errors/reference2.pkl)
 
 xxx | renderer.renderDocument(value)

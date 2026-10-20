@@ -6022,7 +6022,7 @@ class Domain extends ref.AbstractDomain { // <1>
 
 typealias Ref<T> = ref.Reference<Domain, T> // <2>
 
-const function Ref<T>(data: Any): Ref<T> = ref.Reference::<Domain, T>(new Domain {}, data) // <3>
+const function Ref<T>(data: Any): Ref<T> = ref.Reference<Domain, T>(new Domain {}, data) // <3>
 
 abstract class Task { // <4>
   name: String
@@ -6032,7 +6032,7 @@ class TaskA extends Task {
   input1: String | Ref<String> // <5>
   input2: Int | Ref<Int>
 
-  hidden fixed outputs: Ref<TaskAOutputs> = Ref::<TaskAOutputs>(this) // <6>
+  hidden fixed outputs: Ref<TaskAOutputs> = Ref<TaskAOutputs>(this) // <6>
 }
 
 abstract class TaskAOutputs { // <7>
@@ -6113,7 +6113,7 @@ tasks {
 Methods may be declared as "generic", with types that are themselves parameters.
 Method type parameters may be used within the method anywhere else a type may be used: in a parameter's type, in the return type, or within the method body (e.g. <<defining-objects,object instantiation>>, <<type-tests,type tests>>, <<type-casts,type casts>>).
 
-When calling a generic method, a caller may manually specify type arguments by writing `methodName::<TypeArg1, TypeArg2>(arg1, arg2)`.
+When calling a generic method, a caller may manually specify type arguments by writing `methodName<TypeArg1, TypeArg2>(arg1, arg2)`.
 When no type arguments are provided, type checks of parameter types behave like <<unknown-type,`unknown`>> and always succeed.
 
 [source,pkl]
@@ -6132,11 +6132,11 @@ function makeFlock<Bird>(names: Listing<String>): Listing<Bird> = new {
   }
 }
 
-pigeonFlock = makeFlock::<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // <1>
-hawkFlock = makeFlock::<Hawk>(new { "Florence"; "Holly"; "Jim" }) // <2>
+pigeonFlock = makeFlock<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // <1>
+hawkFlock = makeFlock<Hawk>(new { "Florence"; "Holly"; "Jim" }) // <2>
 ----
 <1> Result: a `Listing` where every element is a `Pigeon`.
 <2> Result: a `Listing` where every element is a `Hawk`.
 
-NOTE: The `::<>` syntax is colloquially known as the "turbofish", after https://doc.rust-lang.org/reference/glossary.html#turbofish[the same syntax in Rust].
-Pkl requires this syntax for the same reason as Rust: to avoid parser ambiguity.
+NOTE: A `<` following an identifier is parsed as the start of a type argument list when it is well-formed and directly followed by `(`.
+Otherwise, it is parsed as the less-than operator; for example, `foo<bar>(baz)` is a method call with type arguments, whereas `foo<bar + 5>(baz)` is a comparison.

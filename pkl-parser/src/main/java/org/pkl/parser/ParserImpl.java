@@ -831,21 +831,12 @@ final class ParserImpl {
         case DOT, QDOT -> {
           var rhs = parseIdentifier();
           var isNullable = op == Operator.QDOT;
-          TypeArgumentList typeArgumentList = null;
-          if (lookahead == Token.DCOLON
-              && !precededBySemicolon
-              && _lookahead.newLinesBetween == 0) {
-            next();
-            typeArgumentList = parseTypeArgumentList();
-          }
+          var typeArgumentList = tryParseTypeArgumentList();
           ArgumentList argumentList = null;
           if (lookahead == Token.LPAREN
               && !precededBySemicolon
               && _lookahead.newLinesBetween == 0) {
             argumentList = parseArgumentList();
-          } else if (typeArgumentList != null) {
-            // type args but no args
-            throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
           }
           var lastSpan = argumentList != null ? argumentList.span() : rhs.span();
           expr =
@@ -992,25 +983,14 @@ final class ParserImpl {
             if (lookahead == Token.DOT) {
               next();
               var identifier = parseIdentifier();
-              TypeArgumentList typeArgs = null;
-              if (lookahead == Token.DCOLON
-                  && !precededBySemicolon
-                  && _lookahead.newLinesBetween == 0) {
-                next();
-                typeArgs = parseTypeArgumentList();
-              }
+              var typeArgs = tryParseTypeArgumentList();
               if (lookahead == Token.LPAREN
                   && !precededBySemicolon
                   && _lookahead.newLinesBetween == 0) {
                 var args = parseArgumentList();
                 yield new SuperAccessExpr(identifier, typeArgs, args, start.endWith(args.span()));
               }
-              if (typeArgs != null) {
-                // type args but no args
-                throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-              } else {
-                yield new SuperAccessExpr(identifier, null, null, start.endWith(identifier.span()));
-              }
+              yield new SuperAccessExpr(identifier, null, null, start.endWith(identifier.span()));
             } else {
               expect(Token.LBRACK, "unexpectedToken", "[");
               var exp = parseExpr("]");
@@ -1052,13 +1032,7 @@ final class ParserImpl {
           case STRING_MULTI_START -> parseMultiLineStringLiteralExpr();
           case IDENTIFIER -> {
             var identifier = parseIdentifier();
-            TypeArgumentList typeArgs = null;
-            if (lookahead == Token.DCOLON
-                && !precededBySemicolon
-                && _lookahead.newLinesBetween == 0) {
-              next();
-              typeArgs = parseTypeArgumentList();
-            }
+            var typeArgs = tryParseTypeArgumentList();
             if (lookahead == Token.LPAREN
                 && !precededBySemicolon
                 && _lookahead.newLinesBetween == 0) {
@@ -1066,12 +1040,7 @@ final class ParserImpl {
               yield new UnqualifiedAccessExpr(
                   identifier, typeArgs, args, identifier.span().endWith(args.span()));
             }
-            if (typeArgs != null) {
-              // type args but no args
-              throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-            } else {
-              yield new UnqualifiedAccessExpr(identifier, null, null, identifier.span());
-            }
+            yield new UnqualifiedAccessExpr(identifier, null, null, identifier.span());
           }
           case EOF ->
               throw new ParserError(
@@ -1111,11 +1080,7 @@ final class ParserImpl {
       else if (lookahead == Token.DOT || lookahead == Token.QDOT) {
         var isNullable = next().token == Token.QDOT;
         var identifier = parseIdentifier();
-        TypeArgumentList typeArgumentList = null;
-        if (lookahead == Token.DCOLON && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-          next();
-          typeArgumentList = parseTypeArgumentList();
-        }
+        var typeArgumentList = tryParseTypeArgumentList();
         ArgumentList argumentList = null;
         if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
           argumentList = parseArgumentList();
@@ -1601,6 +1566,43 @@ final class ParserImpl {
     var pars = parseListOf(Token.COMMA, Token.GT, this::parseType);
     var end = expect(Token.GT, "unexpectedToken2", ",", ">").span;
     return new TypeArgumentList(pars, start.endWith(end));
+  }
+
+  /**
+   * Speculatively parses a method call's type argument list, e.g. the `<Int>` in `foo<Int>(5)`.
+   *
+   * <p>A `<` that follows an identifier is ambiguous with the less-than operator. We prefer to
+   * parse it as a type argument list, which is only accepted if it is well-formed and directly
+   * followed by `(`. Otherwise, the parser state is restored and `null` is returned, so that the
+   * `<` gets parsed as a binary operator (for example, `foo<qux + 5>(5)`).
+   */
+  private @Nullable TypeArgumentList tryParseTypeArgumentList() {
+    if (lookahead != Token.LT || precededBySemicolon || _lookahead.newLinesBetween != 0) {
+      return null;
+    }
+    var lexerSnapshot = lexer.snapshot();
+    var savedLookahead = lookahead;
+    var savedSpanLookahead = spanLookahead;
+    var savedBacktracking = backtracking;
+    var savedPrev = prev;
+    var savedFullLookahead = _lookahead;
+    var savedPrecededBySemicolon = precededBySemicolon;
+    try {
+      var typeArgs = parseTypeArgumentList();
+      if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+        return typeArgs;
+      }
+    } catch (ParserError ignored) {
+      // not a type argument list
+    }
+    lexer.restore(lexerSnapshot);
+    lookahead = savedLookahead;
+    spanLookahead = savedSpanLookahead;
+    backtracking = savedBacktracking;
+    prev = savedPrev;
+    _lookahead = savedFullLookahead;
+    precededBySemicolon = savedPrecededBySemicolon;
+    return null;
   }
 
   private ArgumentList parseArgumentList() {
