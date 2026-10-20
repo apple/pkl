@@ -118,6 +118,15 @@ public final class VmObjectFactory<E> {
     return result;
   }
 
+  @TruffleBoundary
+  public VmTyped create(@Nullable E extraStorage, VmTyped parent) {
+    var clazz = classSupplier.get();
+    assert parent.getVmClass() == clazz;
+    var result = new VmTyped(VmUtils.createEmptyMaterializedFrame(), parent, clazz, members);
+    result.setExtraStorage(extraStorage);
+    return result;
+  }
+
   @FunctionalInterface
   public interface IntProperty<E> {
     long evaluate(E extraStorage);

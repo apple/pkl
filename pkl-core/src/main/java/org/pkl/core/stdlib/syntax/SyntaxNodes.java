@@ -157,27 +157,25 @@ public final class SyntaxNodes {
    */
   record Rebuild(VmTyped basis, Object[] children) {}
 
-  /** Extra storage backing a Pkl {@code GenericNode} rebuilt from {@link #basis}. */
+  /**
+   * Extra storage backing a Pkl {@code GenericNode} rebuilt from {@link #build(VmTyped, Object[],
+   * VmTyped)}.
+   */
   private static final class BuiltNodeData {
-    private final VmTyped basis;
     private final @Nullable VmTyped parentVm;
 
     // set right after the node is created, so that the children can be parented at it
     private VmList children = VmList.EMPTY;
 
-    private BuiltNodeData(VmTyped basis, @Nullable VmTyped parentVm) {
-      this.basis = basis;
+    private BuiltNodeData(@Nullable VmTyped parentVm) {
       this.parentVm = parentVm;
     }
   }
 
   private static final VmObjectFactory<BuiltNodeData> builtNodeFactory =
       new VmObjectFactory<BuiltNodeData>(SyntaxModule::getGenericNodeClass)
-          .addStringProperty("type", bd -> (String) VmUtils.readMember(bd.basis, Identifier.TYPE))
           .addListProperty("children", bd -> bd.children)
-          .addProperty("parent", bd -> VmNull.lift(bd.parentVm))
-          .addProperty("text", bd -> VmUtils.readMember(bd.basis, Identifier.TEXT))
-          .addProperty("span", bd -> VmUtils.readMember(bd.basis, Identifier.SPAN));
+          .addProperty("parent", bd -> VmNull.lift(bd.parentVm));
 
   /**
    * Build the tree rooted at {@code root}, with its children replaced by {@code children} if not
@@ -192,21 +190,22 @@ public final class SyntaxNodes {
   }
 
   private static VmTyped build(VmTyped basis, Object[] children, @Nullable VmTyped parent) {
-    var data = new BuiltNodeData(basis, parent);
-    var result = builtNodeFactory.create(data);
-    var builtChildren = new Object[children.length];
-    for (var i = 0; i < children.length; i++) {
-      builtChildren[i] =
-          children[i] instanceof Rebuild rebuild
+    var data = new BuiltNodeData(parent);
+    var result = builtNodeFactory.create(data, basis);
+    var listBuilder = VmList.EMPTY.builder();
+    for (var child : children) {
+      var newChild =
+          child instanceof Rebuild rebuild
               ? build(rebuild.basis(), rebuild.children(), result)
-              : reparent((VmTyped) children[i], result);
+              : reparent((VmTyped) child, result);
+      listBuilder.add(newChild);
     }
     // A node and its children point at each other, so neither can be complete before the other is
     // created. This node is therefore created first, without children, so its children can be built
     // with it as their parent, and only then are they set here.
     // This is safe because factory properties are evaluated lazily, on first read, and no Pkl code
     // can see this node before `build` returns, so `children` can't be read before it's set.
-    data.children = VmList.create(builtChildren);
+    data.children = listBuilder.build();
     return result;
   }
 
