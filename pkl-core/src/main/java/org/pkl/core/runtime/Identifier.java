@@ -181,7 +181,7 @@ public final class Identifier implements Comparable<Identifier> {
   // common in lambdas etc
   public static final Identifier IT = get("it");
 
-  // members of pkl.syntax#GenericNode, pkl.syntax#Span and pkl.syntax#SourceLocation
+  // members of pkl.syntax#Node, pkl.syntax#Span and pkl.syntax#SourceLocation
   public static final Identifier TYPE = get("type");
   public static final Identifier CHILDREN = get("children");
   public static final Identifier SPAN = get("span");

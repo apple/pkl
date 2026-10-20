@@ -7,15 +7,15 @@ local renderer = new syntax.FormattingRenderer {}
 
 local function roundTrip(source: String) = renderer.render(parseNode(source))
 
-local function parseNode(source: String): syntax.GenericNode =
+local function parseNode(source: String): syntax.Node =
   new syntax.Parser {}.parseModule(source)
 
 local function replaceLeaf(
-  node: syntax.GenericNode,
+  node: syntax.Node,
   targetType: syntax.NodeType,
   oldText: String,
   newText: String,
-): syntax.GenericNode =
+): syntax.Node =
   if (node.type == targetType && node.text == oldText)
     (node) { text = newText }
   else
@@ -24,10 +24,10 @@ local function replaceLeaf(
     }
 
 local function transformFirst(
-  node: syntax.GenericNode,
+  node: syntax.Node,
   targetType: syntax.NodeType,
-  transform: (syntax.GenericNode) -> syntax.GenericNode,
-): syntax.GenericNode =
+  transform: (syntax.Node) -> syntax.Node,
+): syntax.Node =
   if (node.type == targetType)
     transform.apply(node)
   else
@@ -375,7 +375,7 @@ facts {
 
   ["add new modifier"] {
     local root = parseNode("local x = 1")
-    local constModifier = new syntax.GenericNode {
+    local constModifier = new syntax.Node {
       type = "modifier"
       text = "const"
     }
@@ -403,7 +403,7 @@ facts {
   }
 
   ["a malformed tree is reported as such"] {
-    local malformed = new syntax.GenericNode {
+    local malformed = new syntax.Node {
       type = "object_element"
       children = List()
     }

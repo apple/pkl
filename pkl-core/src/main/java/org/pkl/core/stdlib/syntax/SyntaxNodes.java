@@ -93,7 +93,7 @@ public final class SyntaxNodes {
         VmContext.get(null).getFrameTransformer());
   }
 
-  /** Extra storage backing a Pkl {@code GenericNode} parsed from source. */
+  /** Extra storage backing a Pkl {@code Node} parsed from source. */
   static final class GenericNodeData {
     final Node node;
     // the source {@link #node} was parsed from
@@ -136,14 +136,14 @@ public final class SyntaxNodes {
   }
 
   static final VmObjectFactory<GenericNodeData> genericNodeFactory =
-      new VmObjectFactory<GenericNodeData>(SyntaxModule::getGenericNodeClass)
+      new VmObjectFactory<GenericNodeData>(SyntaxModule::getNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
           .addListProperty("children", GenericNodeData::children)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
           .addProperty("text", GenericNodeData::text)
           .addProperty("span", GenericNodeData::span);
 
-  /** Create the Pkl {@code GenericNode} backed by {@code data}. */
+  /** Create the Pkl {@code Node} backed by {@code data}. */
   static VmTyped createNode(GenericNodeData data) {
     var result = genericNodeFactory.create(data);
     data.selfVm = result;
@@ -158,7 +158,7 @@ public final class SyntaxNodes {
   record Rebuild(VmTyped basis, Object[] children) {}
 
   /**
-   * Extra storage backing a Pkl {@code GenericNode} rebuilt from {@link #build(VmTyped, Object[],
+   * Extra storage backing a Pkl {@code Node} rebuilt from {@link #build(VmTyped, Object[],
    * VmTyped)}.
    */
   private static final class BuiltNodeData {
@@ -173,7 +173,7 @@ public final class SyntaxNodes {
   }
 
   private static final VmObjectFactory<BuiltNodeData> builtNodeFactory =
-      new VmObjectFactory<BuiltNodeData>(SyntaxModule::getGenericNodeClass)
+      new VmObjectFactory<BuiltNodeData>(SyntaxModule::getNodeClass)
           .addListProperty("children", bd -> bd.children)
           .addProperty("parent", bd -> VmNull.lift(bd.parentVm));
 
@@ -221,8 +221,7 @@ public final class SyntaxNodes {
   }
 
   /**
-   * Convert a Pkl {@code GenericNode} to a generic {@link Node}, reusing the parse-time node when
-   * present.
+   * Convert a Pkl {@code Node} to a generic {@link Node}, reusing the parse-time node when present.
    *
    * <p>{@code fallbackSpan} is used for constructed nodes (and their descendants) that carry no
    * meaningful span of their own, so that a subtree spliced into reused siblings lines up with

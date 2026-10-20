@@ -14,9 +14,9 @@ local stringModule = parser.parseModule("""
 
 local resourceModule = parser.parseModule(read(".../input-helper/syntax/spans/sample.pkl"))
 
-local function nestedProperty(mod: syntax.GenericNode): syntax.GenericNode =
+local function nestedProperty(mod: syntax.Node): syntax.Node =
   mod
-    .fold(List(), (acc: List<syntax.GenericNode>, n) -> if (n.type == "object_property") acc.add(n) else acc)
+    .fold(List(), (acc: List<syntax.Node>, n) -> if (n.type == "object_property") acc.add(n) else acc)
     .last
 
 examples {
@@ -59,12 +59,12 @@ facts {
   }
 
   ["nodes constructed from scratch have no span"] {
-    new syntax.GenericNode { type = "int_literal_expr"; text = "42" }.span == null
+    new syntax.Node { type = "int_literal_expr"; text = "42" }.span == null
   }
 
   ["a spanless constructed node still renders"] {
     new syntax.FormattingRenderer {}
-      .render(new syntax.GenericNode { type = "int_literal_expr"; text = "42" })
+      .render(new syntax.Node { type = "int_literal_expr"; text = "42" })
       .trim() == "42"
   }
 

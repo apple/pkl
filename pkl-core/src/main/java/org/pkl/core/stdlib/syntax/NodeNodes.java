@@ -38,9 +38,9 @@ import org.pkl.core.stdlib.ExternalMethod1Node;
 import org.pkl.core.stdlib.ExternalMethod2Node;
 import org.pkl.core.stdlib.syntax.SyntaxNodes.Rebuild;
 
-/** Backs the methods of {@code pkl.syntax#GenericNode}. */
-public final class GenericNodeNodes {
-  private GenericNodeNodes() {}
+/** Backs the methods of {@code pkl.syntax#Node}. */
+public final class NodeNodes {
+  private NodeNodes() {}
 
   public abstract static class fold extends ExternalMethod2Node {
     @Child private ApplyVmFunction2Node applyAccumulate = ApplyVmFunction2NodeGen.create();
@@ -342,7 +342,7 @@ public final class GenericNodeNodes {
     return SyntaxNodes.rebuild(self, search.replaceBelow(self));
   }
 
-  /** Finds and replaces the matches of a {@code GenericNode.replaceChild*} call. */
+  /** Finds and replaces the matches of a {@code Node.replaceChild*} call. */
   private static final class ReplaceSearch {
     private final NodeMatcher matcher;
     private final boolean firstOnly;

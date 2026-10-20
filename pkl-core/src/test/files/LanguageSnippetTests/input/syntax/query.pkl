@@ -7,20 +7,20 @@ local parser = new syntax.Parser {}
 
 local renderer = new syntax.FormattingRenderer {}
 
-local function mod(source: String): syntax.GenericNode = parser.parseModule(source)
+local function mod(source: String): syntax.Node = parser.parseModule(source)
 
-local function intLiteral(value: Int): syntax.GenericNode = new syntax.GenericNode {
+local function intLiteral(value: Int): syntax.Node = new syntax.Node {
   type = "int_literal_expr"
   text = value.toString()
 }
 
 // a node built from scratch, whose children have no parent of their own
-local constructedAccess = new syntax.GenericNode {
+local constructedAccess = new syntax.Node {
   type = "unqualified_access_expr"
-  children = List(new syntax.GenericNode { type = "identifier"; text = "foo" })
+  children = List(new syntax.Node { type = "identifier"; text = "foo" })
 }
 
-local sample: syntax.GenericNode =
+local sample: syntax.Node =
   mod(
     """
     class Point {
@@ -215,7 +215,7 @@ facts {
 
   ["a replacer sees this tree, not the one being built"] {
     // both literals see their unreplaced sibling
-    local sumOfSiblings = (n: syntax.GenericNode) ->
+    local sumOfSiblings = (n: syntax.Node) ->
       intLiteral(
         n.parent!!
           .findChildrenOfType("int_literal_expr")
@@ -241,7 +241,7 @@ facts {
   }
 
   ["a match is not searched for further matches"] {
-    local predicate = (n: syntax.GenericNode) ->
+    local predicate = (n: syntax.Node) ->
       if (n.type == "int_literal_expr")
         throw("searched inside a match")
       else

@@ -1457,7 +1457,7 @@ final class Builder {
       return linesBetween(prev, next) > 1 ? TWO_NEWLINES : mustForceLine();
     }
     if (hasTrailingAffix(prev, next)) {
-      if (isTerminal(prev, "(") && startsWithBlockComment(next)) return line();
+      if (prev.type == NodeType.LPAREN && startsWithBlockComment(next)) return line();
       return Space.INSTANCE;
     }
     if (prev.type == NodeType.DOC_COMMENT) return mustForceLine();
