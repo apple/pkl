@@ -35,7 +35,6 @@ import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
 import org.pkl.core.ast.type.TypeNode.UnknownTypeNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 
 public final class VmTypeAlias extends VmValue {
@@ -47,7 +46,7 @@ public final class VmTypeAlias extends VmValue {
   private final String simpleName;
   private final VmTyped module;
   private final String qualifiedName;
-  private final TypeParameterNode[] typeParameters;
+  private final TypeParameter[] typeParameters;
   private final MaterializedFrame enclosingFrame;
 
   private @Nullable TypeNode typeNode;
@@ -71,7 +70,7 @@ public final class VmTypeAlias extends VmValue {
       String simpleName,
       VmTyped module,
       String qualifiedName,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       MaterializedFrame enclosingFrame) {
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
@@ -197,7 +196,7 @@ public final class VmTypeAlias extends VmValue {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameter().getIndex()];
+          : typeArgumentNodes[typeVarNode.getTypeParameter().index()];
     }
 
     var clone = (TypeNode) typeNode.deepCopy();
@@ -206,7 +205,7 @@ public final class VmTypeAlias extends VmValue {
           @Override
           public boolean visit(com.oracle.truffle.api.nodes.Node node) {
             if (node instanceof TypeVariableNode typeVarNode) {
-              var index = typeVarNode.getTypeParameter().getIndex();
+              var index = typeVarNode.getTypeParameter().index();
               node.replace(
                   typeArgumentNodes.length == 0
                       ? new UnknownTypeNode(sourceSection)
@@ -215,7 +214,7 @@ public final class VmTypeAlias extends VmValue {
               // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
               // are still unresolved at instantiation time. Replace them with a resolved
               // unresolved type node that returns the concrete type argument.
-              var index = unresolvedTypeVar.getTypeParameter().getIndex();
+              var index = unresolvedTypeVar.getTypeParameter().index();
               node.replace(
                   typeArgumentNodes.length == 0
                       ? new UnresolvedTypeNode.Unknown(sourceSection)
@@ -258,7 +257,7 @@ public final class VmTypeAlias extends VmValue {
                 simpleName,
                 getModuleName(),
                 qualifiedName,
-                TypeParameterNode.export(typeParameters),
+                TypeParameter.export(typeParameters),
                 module.getVmClass().export());
 
         for (var parameter : __pTypeAlias.getTypeParameters()) {

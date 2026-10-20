@@ -24,15 +24,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 
 public final class ObjectMethodNode extends RegularMemberNode implements Method {
   private final VmLanguage language;
   private final int parameterCount;
-  private final TypeParameterNode[]
-      typeParameters; // not @Children, owned by resulting FunctionNode
+  private final TypeParameter[] typeParameters;
   @Children private final @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes;
   @Child private @Nullable UnresolvedTypeNode unresolvedReturnTypeNode;
 
@@ -44,7 +43,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
       ObjectMember member,
       ExpressionNode bodyNode,
       int parameterCount,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       @Nullable UnresolvedTypeNode[] unresolvedParameterTypeNodes,
       @Nullable UnresolvedTypeNode unresolvedReturnTypeNode) {
     super(language, descriptor, member, bodyNode);
@@ -95,9 +94,9 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
 
     var parameterTypeNodes =
         VmUtils.resolveParameterTypes(frame, getFrameDescriptor(), unresolvedParameterTypeNodes);
-
     var returnTypeNode =
         unresolvedReturnTypeNode != null ? unresolvedReturnTypeNode.execute(frame) : null;
+    var typeParamterNodes = VmUtils.resolveTypeParameters(typeParameters);
 
     functionNode =
         new FunctionNode(
@@ -108,7 +107,7 @@ public final class ObjectMethodNode extends RegularMemberNode implements Method 
             parameterTypeNodes,
             returnTypeNode,
             true,
-            typeParameters,
+            typeParamterNodes,
             bodyNode);
     return functionNode;
   }

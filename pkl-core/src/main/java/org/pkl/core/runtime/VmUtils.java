@@ -57,6 +57,7 @@ import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
@@ -916,6 +917,14 @@ public final class VmUtils {
     }
 
     return resolvedNodes;
+  }
+
+  public static TypeParameterNode[] resolveTypeParameters(TypeParameter[] typeParameters) {
+    var typeParameterNodes = new TypeParameterNode[typeParameters.length];
+    for (var i = 0; i < typeParameters.length; i++) {
+      typeParameterNodes[i] = new TypeParameterNode(typeParameters[i]);
+    }
+    return typeParameterNodes;
   }
 
   public static void checkIsInstantiable(VmClass parentClass, Node parentNode, Node callerNode) {

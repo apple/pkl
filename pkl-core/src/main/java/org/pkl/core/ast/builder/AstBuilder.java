@@ -175,7 +175,6 @@ import org.pkl.core.ast.type.TypeCastNode;
 import org.pkl.core.ast.type.TypeConstraintNode;
 import org.pkl.core.ast.type.TypeConstraintNodeGen;
 import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.TypeTestNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode.Constrained;
@@ -189,6 +188,7 @@ import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.ModuleInfo;
 import org.pkl.core.runtime.ModuleResolver;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmBytes;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmContext;
@@ -1738,7 +1738,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
               modifiers,
               PClassInfo.forModuleClass(
                   moduleInfo.getModuleName(), moduleInfo.getModuleKey().getUri()),
-              new TypeParameterNode[0],
+              new TypeParameter[0],
               moduleInfo,
               supertypeNode,
               moduleProperties,
@@ -2334,13 +2334,13 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
     return (ExpressionNode) expr.accept(this);
   }
 
-  public TypeParameterNode[] visitTypeParameterList(
+  public TypeParameter[] visitTypeParameterList(
       @Nullable TypeParameterList ctx, FrameSlotVariable @Nullable [] typeBindings) {
-    if (ctx == null) return new TypeParameterNode[0];
+    if (ctx == null) return new TypeParameter[0];
 
     var params = ctx.getParameters();
     var size = params.size();
-    var result = new TypeParameterNode[size];
+    var result = new TypeParameter[size];
 
     for (var i = 0; i < size; i++) {
       var paramCtx = params.get(i);
@@ -2357,7 +2357,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
       }
       var parameterName = paramCtx.getIdentifier().getValue();
       for (var j = 0; j < i; j++) {
-        if (result[j].getName().equals(parameterName)) {
+        if (result[j].name().equals(parameterName)) {
           throw exceptionBuilder()
               .evalError("duplicateTypeParameter", parameterName)
               .withSourceSection(createSourceSection(paramCtx))
@@ -2365,7 +2365,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
         }
       }
       result[i] =
-          new TypeParameterNode(
+          new TypeParameter(
               createSourceSection(paramCtx),
               typeBindings != null ? typeBindings[i].slot() : -1,
               i,

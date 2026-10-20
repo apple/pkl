@@ -33,12 +33,12 @@ import org.pkl.core.ast.builder.VariableResolution.ImplicitBaseProperty;
 import org.pkl.core.ast.builder.VariableResolution.LexicalProperty;
 import org.pkl.core.ast.builder.VariableResolution.Parameter;
 import org.pkl.core.ast.member.ObjectMember;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.BaseModuleMembers;
 import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.runtime.VmUtils;
@@ -63,7 +63,7 @@ public final class SymbolTable {
   public ObjectMember enterClass(
       Identifier name,
       int modifiers,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
         new ClassScope(
@@ -78,7 +78,7 @@ public final class SymbolTable {
 
   public ObjectMember enterTypeAlias(
       Identifier name,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
     try {
       this.isInTypeAliasScope = true;
@@ -100,7 +100,7 @@ public final class SymbolTable {
       ConstLevel constLevel,
       FrameSlotVariable[] bindings,
       FrameDescriptorBuilder frameDescriptorBuilder,
-      TypeParameterNode[] typeParameters,
+      TypeParameter[] typeParameters,
       Function<MethodScope, T> nodeFactory) {
     return doEnter(
         new MethodScope(
@@ -326,7 +326,7 @@ public final class SymbolTable {
       return frameDescriptorBuilder.build();
     }
 
-    public @Nullable TypeParameterNode getTypeParameter(String name) {
+    public @Nullable TypeParameter getTypeParameter(String name) {
       return null;
     }
 
@@ -693,7 +693,7 @@ public final class SymbolTable {
   }
 
   public abstract static class TypeParameterizableScope extends Scope {
-    final TypeParameterNode[] typeParameters;
+    private final TypeParameter[] typeParameters;
 
     public TypeParameterizableScope(
         Scope parent,
@@ -701,7 +701,7 @@ public final class SymbolTable {
         String qualifiedName,
         ConstLevel constLevel,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        TypeParameterNode[] typeParameters,
+        TypeParameter[] typeParameters,
         int[] forGeneratorSlots,
         int[] parameterSlots) {
       super(
@@ -716,10 +716,10 @@ public final class SymbolTable {
       this.typeParameters = typeParameters;
     }
 
-    private static Set<String> extendTypeParams(Set<String> base, TypeParameterNode[] typeParams) {
+    private static Set<String> extendTypeParams(Set<String> base, TypeParameter[] typeParams) {
       var res = new HashSet<>(base);
       for (var typeParam : typeParams) {
-        res.add(typeParam.getName());
+        res.add(typeParam.name());
       }
       return res;
     }
@@ -729,9 +729,9 @@ public final class SymbolTable {
     }
 
     @Override
-    public @Nullable TypeParameterNode getTypeParameter(String name) {
+    public @Nullable TypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
-        if (name.equals(param.getName())) return param;
+        if (name.equals(param.name())) return param;
       }
       return null;
     }
@@ -790,7 +790,7 @@ public final class SymbolTable {
         ConstLevel constLevel,
         FrameSlotVariable[] bindings,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        TypeParameterNode[] typeParameters) {
+        TypeParameter[] typeParameters) {
       super(
           parent,
           name,
@@ -816,11 +816,11 @@ public final class SymbolTable {
     public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
       var result = getTypeParameter(name);
       if (result == null) return null;
-      if (result.getVariance() != org.pkl.core.TypeParameter.Variance.INVARIANT) {
+      if (result.variance() != org.pkl.core.TypeParameter.Variance.INVARIANT) {
         throw new PklBugException(
             "found type parameter variance modifier found on a method declaration");
       }
-      return new TypeParameterResolution(result, TypeParameterNode.OwnerType.METHOD, levelsUp);
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.METHOD, levelsUp);
     }
   }
 
@@ -1070,7 +1070,7 @@ public final class SymbolTable {
         String qualifiedName,
         int modifiers,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        TypeParameterNode[] typeParameters) {
+        TypeParameter[] typeParameters) {
       super(
           parent,
           name,
@@ -1100,7 +1100,7 @@ public final class SymbolTable {
     public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
       var result = getTypeParameter(name);
       if (result == null) return null;
-      return new TypeParameterResolution(result, TypeParameterNode.OwnerType.CLASS, -1);
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.CLASS, -1);
     }
   }
 
@@ -1110,7 +1110,7 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        TypeParameterNode[] typeParameters) {
+        TypeParameter[] typeParameters) {
       super(
           parent,
           name,
@@ -1125,7 +1125,7 @@ public final class SymbolTable {
     public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
       var result = getTypeParameter(name);
       if (result == null) return null;
-      return new TypeParameterResolution(result, TypeParameterNode.OwnerType.TYPEALIAS, -1);
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.TYPEALIAS, -1);
     }
   }
 

@@ -33,7 +33,6 @@ import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.repl.ResolveClassMemberNode;
 import org.pkl.core.ast.type.TypeNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.evaluatorSettings.TraceMode;
 import org.pkl.core.http.HttpClient;
 import org.pkl.core.module.*;
@@ -47,6 +46,7 @@ import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
@@ -479,7 +479,7 @@ public class ReplServer implements AutoCloseable {
             List.of(),
             VmModifier.NONE,
             classInfo,
-            new TypeParameterNode[0],
+            new TypeParameter[0],
             module);
     if (parent != null) {
       var superclass = parent.getVmClass();

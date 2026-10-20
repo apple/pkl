@@ -28,7 +28,6 @@ import org.pkl.core.PType.TypeVariable;
 import org.pkl.core.PType.Union;
 import org.pkl.core.ValueFormatter;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
-import org.pkl.core.ast.type.TypeParameterNode;
 
 public abstract sealed class VmType {
 
@@ -291,7 +290,7 @@ public abstract sealed class VmType {
         var newState = cSupertype.typeArguments.clone();
         for (var i = 0; i < newState.length; i++) {
           if (!(newState[i] instanceof TypeVariableType tvt)) continue;
-          newState[i] = state[tvt.typeParameter.getIndex()];
+          newState[i] = state[tvt.typeParameter.index()];
         }
         state = newState;
       }
@@ -300,7 +299,7 @@ public abstract sealed class VmType {
       assert goalState.length == state.length;
       var params = clazz.getTypeParameters();
       for (var i = 0; i < goalState.length; i++) {
-        if (!switch (params[i].getVariance()) {
+        if (!switch (params[i].variance()) {
           case INVARIANT -> state[i].equals(goalState[i]);
           case COVARIANT -> state[i].isSubtypeOf(goalState[i]);
           case CONTRAVARIANT -> state[i].isSupertypeOf(goalState[i]);
@@ -800,18 +799,18 @@ public abstract sealed class VmType {
   }
 
   public static final class TypeVariableType extends VmType {
-    private final TypeParameterNode typeParameter;
-    private final TypeParameterNode.OwnerType ownerType;
+    private final TypeParameter typeParameter;
+    private final TypeParameter.OwnerType ownerType;
     private final int levelsUp;
 
     public TypeVariableType(
-        TypeParameterNode typeParameter, TypeParameterNode.OwnerType ownerType, int levelsUp) {
+        TypeParameter typeParameter, TypeParameter.OwnerType ownerType, int levelsUp) {
       this.typeParameter = typeParameter;
       this.ownerType = ownerType;
       this.levelsUp = levelsUp;
     }
 
-    public TypeParameterNode getTypeParameter() {
+    public TypeParameter getTypeParameter() {
       return typeParameter;
     }
 
@@ -832,7 +831,7 @@ public abstract sealed class VmType {
 
     @Override
     public String toString() {
-      return typeParameter.getName();
+      return typeParameter.name();
     }
 
     @Override
@@ -842,9 +841,9 @@ public abstract sealed class VmType {
 
     @Override
     public VmType reify(VirtualFrame frame) {
-      if (ownerType != TypeParameterNode.OwnerType.METHOD) return this;
+      if (ownerType != TypeParameter.OwnerType.METHOD) return this;
 
-      var typeArg = VmUtils.getTypeArgumentOrNull(frame, typeParameter.getSlot(), levelsUp);
+      var typeArg = VmUtils.getTypeArgumentOrNull(frame, typeParameter.slot(), levelsUp);
       if (typeArg != null) {
         return typeArg.reify();
       }

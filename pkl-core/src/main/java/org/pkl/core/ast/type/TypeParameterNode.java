@@ -16,60 +16,19 @@
 package org.pkl.core.ast.type;
 
 import com.oracle.truffle.api.frame.VirtualFrame;
-import com.oracle.truffle.api.source.SourceSection;
-import java.util.Arrays;
-import java.util.List;
-import org.pkl.core.TypeParameter.Variance;
 import org.pkl.core.ast.PklNode;
+import org.pkl.core.runtime.TypeParameter;
 
 public final class TypeParameterNode extends PklNode {
 
-  private final Variance variance;
-  private final String name;
-  private final int index;
-  private final int slot;
+  private final TypeParameter typeParameter;
 
-  public TypeParameterNode(
-      SourceSection sourceSection, int slot, int index, String name, Variance variance) {
-    super(sourceSection);
-    this.slot = slot;
-    this.index = index;
-    this.name = name;
-    this.variance = variance;
-  }
-
-  public Variance getVariance() {
-    return variance;
-  }
-
-  public String getName() {
-    return name;
-  }
-
-  public int getIndex() {
-    return index;
-  }
-
-  public int getSlot() {
-    return slot;
-  }
-
-  public org.pkl.core.TypeParameter export() {
-    return new org.pkl.core.TypeParameter(variance, name, index);
-  }
-
-  public static List<org.pkl.core.TypeParameter> export(TypeParameterNode[] typeParameters) {
-    return Arrays.stream(typeParameters).map(TypeParameterNode::export).toList();
+  public TypeParameterNode(TypeParameter typeParameter) {
+    super(typeParameter.sourceSection());
+    this.typeParameter = typeParameter;
   }
 
   public void executeAndSet(VirtualFrame frame, Object arg) {
-    // TODO future: add type bounds checking here
-    frame.setObject(slot, arg);
-  }
-
-  public enum OwnerType {
-    CLASS,
-    METHOD,
-    TYPEALIAS
+    frame.setObject(typeParameter.slot(), arg);
   }
 }
