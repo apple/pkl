@@ -62,21 +62,13 @@ public final class VmObjectBuilder {
 
   public VmListing toListing() {
     var ret =
-        new VmListing(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getListingClass().getPrototype(),
-            members,
-            elementCount);
+        new VmListing(null, BaseModule.getListingClass().getPrototype(), members, elementCount);
     setCachedValues(ret);
     return ret;
   }
 
   public VmMapping toMapping() {
-    var ret =
-        new VmMapping(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getMappingClass().getPrototype(),
-            members);
+    var ret = new VmMapping(null, BaseModule.getMappingClass().getPrototype(), members);
     setCachedValues(ret);
     return ret;
   }
@@ -89,18 +81,13 @@ public final class VmObjectBuilder {
 
   public VmDynamic toDynamic() {
     var ret =
-        new VmDynamic(
-            VmUtils.createEmptyMaterializedFrame(),
-            BaseModule.getDynamicClass().getPrototype(),
-            members,
-            elementCount);
+        new VmDynamic(null, BaseModule.getDynamicClass().getPrototype(), members, elementCount);
     setCachedValues(ret);
     return ret;
   }
 
   public VmTyped toTyped(VmClass clazz) {
-    var ret =
-        new VmTyped(VmUtils.createEmptyMaterializedFrame(), clazz.getPrototype(), clazz, members);
+    var ret = new VmTyped(null, clazz.getPrototype(), clazz, members);
     setCachedValues(ret);
     return ret;
   }

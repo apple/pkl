@@ -1,0 +1,11 @@
+local func = () -> new Listing {}
+
+local elems = List(1, 2, 3, 4)
+
+local amended = (func) {
+  for (x in elems) {
+    x + 1
+  }
+}
+
+res = amended.apply()

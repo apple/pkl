@@ -44,7 +44,7 @@ public abstract class VmObject extends VmObjectLike {
   private final int depth;
 
   public VmObject(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members,
       EconomicMap<Object, Object> cachedValues) {
@@ -58,7 +58,7 @@ public abstract class VmObject extends VmObjectLike {
   }
 
   public VmObject(
-      MaterializedFrame enclosingFrame,
+      @Nullable MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
     this(enclosingFrame, parent, members, EconomicMaps.create());

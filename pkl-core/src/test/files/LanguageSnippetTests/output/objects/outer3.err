@@ -1,0 +1,14 @@
+–– Pkl Error ––
+Top-level scope does not have an outer scope.
+
+x | foo = outer
+          ^^^^^
+at outer3#foo (file:///$snippetsDir/input/objects/outer3.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

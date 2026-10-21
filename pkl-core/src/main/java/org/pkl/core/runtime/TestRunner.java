@@ -327,7 +327,7 @@ public final class TestRunner {
   private void writeExampleOutputs(Path outputFile, VmMapping examples) {
     var outputFileContent =
         new VmDynamic(
-            VmUtils.createEmptyMaterializedFrame(),
+            null,
             BaseModule.getDynamicClass().getPrototype(),
             EconomicMaps.of(
                 Identifier.EXAMPLES,

@@ -47,6 +47,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
@@ -56,6 +57,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes);
     this.members = members;

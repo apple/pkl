@@ -45,6 +45,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       GeneratorMemberNode[] memberNodes) {
@@ -54,6 +55,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes);
     this.memberNodes = memberNodes;
@@ -66,6 +68,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         null, // copied node no longer has parameters
         new UnresolvedTypeNode[0], // ditto
         memberNodes,
@@ -78,7 +81,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     if (data.hasNoMembers()) {
       return parent;
     }
-    var result = new VmDynamic(frame.materialize(), parent, data.members(), data.length());
+    var result = new VmDynamic(materializedFrame(frame), parent, data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
 
@@ -92,7 +95,8 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     if (data.hasNoMembers()) {
       return parentDynamic;
     }
-    var result = new VmDynamic(frame.materialize(), parentDynamic, data.members(), data.length());
+    var result =
+        new VmDynamic(materializedFrame(frame), parentDynamic, data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
 
@@ -104,7 +108,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       return parent;
     }
     assert data.hasNoGeneratorFrames();
-    return new VmTyped(frame.materialize(), parent, parent.getVmClass(), data.members());
+    return new VmTyped(materializedFrame(frame), parent, parent.getVmClass(), data.members());
   }
 
   @SuppressWarnings("unused")
@@ -121,7 +125,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     if (data.hasNoMembers()) {
       return parent;
     }
-    var result = new VmListing(frame.materialize(), parent, data.members(), data.length());
+    var result = new VmListing(materializedFrame(frame), parent, data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
 
@@ -139,7 +143,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     if (data.hasNoMembers()) {
       return parent;
     }
-    var result = new VmMapping(frame.materialize(), parent, data.members());
+    var result = new VmMapping(materializedFrame(frame), parent, data.members());
     return data.storeGeneratorFrames(result);
   }
 
@@ -157,8 +161,25 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       VmFunction parent,
       @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
           AmendFunctionNode amendFunctionNode) {
-
-    return amendFunctionNode.execute(frame, parent);
+    // capture analysis in AstBuilder is not reliable here. AstBuilder thinks this doesn't need a
+    // capture, which is normally correct;
+    //
+    // ```
+    // list = List(1, 2)
+    //
+    // foo {
+    //   for (i in list) {
+    //     i + 2
+    //   }
+    // }
+    // ```
+    //
+    // Normally, the for-generator runs before the object is created, so `for (i in list)` isn't
+    // dependent on a closure.
+    //
+    // However, in the case of function amends, the for-generator runs _inside_ the function body.
+    // AstBuilder doesn't know whether `foo` is a function or not, and assumes that it is not.
+    return amendFunctionNode.execute(frame, parent, true);
   }
 
   @SuppressWarnings("unused")
@@ -180,7 +201,8 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       return VmDynamic.empty();
     }
     var result =
-        new VmDynamic(frame.materialize(), parent.getPrototype(), data.members(), data.length());
+        new VmDynamic(
+            materializedFrame(frame), parent.getPrototype(), data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
 
@@ -190,7 +212,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
     if (data.hasNoMembers()) {
       return VmMapping.empty();
     }
-    var result = new VmMapping(frame.materialize(), parent.getPrototype(), data.members());
+    var result = new VmMapping(materializedFrame(frame), parent.getPrototype(), data.members());
     return data.storeGeneratorFrames(result);
   }
 
@@ -201,7 +223,8 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       return VmListing.empty();
     }
     var result =
-        new VmListing(frame.materialize(), parent.getPrototype(), data.members(), data.length());
+        new VmListing(
+            materializedFrame(frame), parent.getPrototype(), data.members(), data.length());
     return data.storeGeneratorFrames(result);
   }
 
@@ -213,7 +236,7 @@ public abstract class GeneratorObjectLiteralNode extends ObjectLiteralNode {
       return parent.getPrototype();
     }
     assert data.hasNoGeneratorFrames();
-    return new VmTyped(frame.materialize(), parent.getPrototype(), parent, data.members());
+    return new VmTyped(materializedFrame(frame), parent.getPrototype(), parent, data.members());
   }
 
   @Fallback

@@ -40,6 +40,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
@@ -49,6 +50,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes,
         members);
@@ -62,6 +64,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         null, // copied node no longer has parameters
         new UnresolvedTypeNode[0], // ditto
         members,
@@ -70,7 +73,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
 
   @Specialization(guards = "checkIsValidMappingAmendment()")
   protected VmMapping evalMapping(VirtualFrame frame, VmMapping parent) {
-    return new VmMapping(frame.materialize(), parent, members);
+    return new VmMapping(materializedFrame(frame), parent, members);
   }
 
   @SuppressWarnings("unused")
@@ -83,7 +86,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
 
   @Specialization
   protected VmDynamic evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(frame.materialize(), parent, members, parent.getLength());
+    return new VmDynamic(materializedFrame(frame), parent, members, parent.getLength());
   }
 
   @SuppressWarnings("unused")
@@ -96,7 +99,7 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected VmListing evalListing(VirtualFrame frame, VmListing parent) {
     checkMaxListingMemberIndex(parent.getLength());
-    return new VmListing(frame.materialize(), parent, members, parent.getLength());
+    return new VmListing(materializedFrame(frame), parent, members, parent.getLength());
   }
 
   @SuppressWarnings("unused")
@@ -113,8 +116,9 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
       VmFunction parent,
       @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
           AmendFunctionNode amendFunctionNode) {
-
-    return amendFunctionNode.execute(frame, parent);
+    // unlike the other entry literal nodes, we can trust the capture analysis done in AstBuilder,
+    // because every entry key is a literal.
+    return amendFunctionNode.execute(frame, parent, needsCapture);
   }
 
   @SuppressWarnings("unused")
@@ -132,14 +136,15 @@ public abstract class ConstantEntriesLiteralNode extends SpecializedObjectLitera
   @Specialization(guards = {"parent == getMappingClass()", "checkIsValidMappingAmendment()"})
   protected VmMapping evalMappingClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
-    return new VmMapping(frame.materialize(), BaseModule.getMappingClass().getPrototype(), members);
+    return new VmMapping(
+        materializedFrame(frame), BaseModule.getMappingClass().getPrototype(), members);
   }
 
   @Specialization(guards = "parent == getDynamicClass()")
   protected VmDynamic evalDynamicClass(
       VirtualFrame frame, @SuppressWarnings("unused") VmClass parent) {
     return new VmDynamic(
-        frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, 0);
+        materializedFrame(frame), BaseModule.getDynamicClass().getPrototype(), members, 0);
   }
 
   @Specialization(

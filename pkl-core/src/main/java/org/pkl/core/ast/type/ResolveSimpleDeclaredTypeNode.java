@@ -23,18 +23,13 @@ import org.pkl.core.runtime.*;
 
 public final class ResolveSimpleDeclaredTypeNode extends ResolveDeclaredTypeNode {
   private final Identifier typeName;
-  private final boolean isBaseModule;
   @Child private ExpressionNode getModuleNode;
 
   public ResolveSimpleDeclaredTypeNode(
-      SourceSection sourceSection,
-      Identifier typeName,
-      boolean isBaseModule,
-      ExpressionNode getModuleNode) {
+      SourceSection sourceSection, Identifier typeName, ExpressionNode getModuleNode) {
 
     super(sourceSection);
     this.typeName = typeName;
-    this.isBaseModule = isBaseModule;
     this.getModuleNode = getModuleNode;
   }
 
@@ -46,21 +41,18 @@ public final class ResolveSimpleDeclaredTypeNode extends ResolveDeclaredTypeNode
     var enclosingModule = (VmTyped) getModuleNode.executeGeneric(frame);
 
     // search enclosing module for local class/type alias or module import
-    var result = getType(enclosingModule, localTypeName, sourceSection);
-    if (result != null) return result;
+    var result = getTypeOrNull(enclosingModule, localTypeName, sourceSection);
+    if (result != null) {
+      return result;
+    }
 
     // search module hierarchy
     var currModule = enclosingModule;
     do {
-      result = getType(currModule, typeName, sourceSection);
-      if (result != null) return result;
-
-      // search base module (after enclosing module, before parent modules)
-      if (!isBaseModule && currModule == enclosingModule) {
-        result = getType(BaseModule.getModule(), typeName, sourceSection);
-        if (result != null) return result;
+      result = getTypeOrNull(currModule, typeName, sourceSection);
+      if (result != null) {
+        return result;
       }
-
       currModule = currModule.getParent();
     } while (currModule != null);
 

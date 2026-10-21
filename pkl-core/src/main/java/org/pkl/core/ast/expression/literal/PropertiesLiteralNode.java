@@ -40,6 +40,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       VmLanguage language,
       String qualifiedScopeName,
       boolean isCustomThisScope,
+      boolean needsCapture,
       @Nullable FrameDescriptor parametersDescriptor,
       UnresolvedTypeNode[] parameterTypes,
       UnmodifiableEconomicMap<Object, ObjectMember> properties) {
@@ -49,6 +50,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         parametersDescriptor,
         parameterTypes,
         properties);
@@ -62,6 +64,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
         language,
         qualifiedScopeName,
         isCustomThisScope,
+        needsCapture,
         null, // copied node no longer has parameters
         new UnresolvedTypeNode[0], // ditto
         members,
@@ -75,14 +78,14 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
 
     assert isTypedObjectClass(parentClass);
 
-    return new VmTyped(frame.materialize(), parent, parentClass, members);
+    return new VmTyped(materializedFrame(frame), parent, parentClass, members);
   }
 
   @Specialization(guards = {"checkIsValidTypedAmendment(parent)"})
   protected Object evalTypedObjectUncached(VirtualFrame frame, VmTyped parent) {
     assert isTypedObjectClass(parent.getVmClass());
 
-    return new VmTyped(frame.materialize(), parent, parent.getVmClass(), members);
+    return new VmTyped(materializedFrame(frame), parent, parent.getVmClass(), members);
   }
 
   @SuppressWarnings("unused")
@@ -98,7 +101,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @Bind("getNullDefaultValue(parent)") Object defaultValue,
       @Cached("getClass(defaultValue)") VmClass parentClass) {
     var parentTyped = (VmTyped) defaultValue;
-    return new VmTyped(frame.materialize(), parentTyped, parentTyped.getVmClass(), members);
+    return new VmTyped(materializedFrame(frame), parentTyped, parentTyped.getVmClass(), members);
   }
 
   @SuppressWarnings("unused")
@@ -112,12 +115,12 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       VmNull parent,
       @Bind(value = "getNullDefaultValue(parent)") Object defaultValue) {
     var parentTyped = (VmTyped) defaultValue;
-    return new VmTyped(frame.materialize(), parentTyped, parentTyped.getVmClass(), members);
+    return new VmTyped(materializedFrame(frame), parentTyped, parentTyped.getVmClass(), members);
   }
 
   @Specialization
   protected Object evalDynamic(VirtualFrame frame, VmDynamic parent) {
-    return new VmDynamic(frame.materialize(), parent, members, parent.getLength());
+    return new VmDynamic(materializedFrame(frame), parent, members, parent.getLength());
   }
 
   @SuppressWarnings("unused")
@@ -129,7 +132,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
 
   @Specialization(guards = "checkIsValidListingAmendment()")
   protected Object evalListing(VirtualFrame frame, VmListing parent) {
-    return new VmListing(frame.materialize(), parent, members, parent.getLength());
+    return new VmListing(materializedFrame(frame), parent, members, parent.getLength());
   }
 
   @SuppressWarnings("unused")
@@ -145,7 +148,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
   @ExplodeLoop
   @Specialization(guards = "checkIsValidMappingAmendment()")
   protected Object evalMapping(VirtualFrame frame, VmMapping parent) {
-    return new VmMapping(frame.materialize(), parent, members);
+    return new VmMapping(materializedFrame(frame), parent, members);
   }
 
   @SuppressWarnings("unused")
@@ -172,7 +175,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @Cached(value = "createAmendFunctionNode(frame)", neverDefault = true)
           AmendFunctionNode amendFunctionNode) {
 
-    return amendFunctionNode.execute(frame, parent);
+    return amendFunctionNode.execute(frame, parent, needsCapture);
   }
 
   @SuppressWarnings("unused")
@@ -197,7 +200,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       VirtualFrame frame,
       VmClass parent,
       @Cached("parent") @SuppressWarnings("unused") VmClass cachedParent) {
-    return new VmTyped(frame.materialize(), parent.getPrototype(), parent, members);
+    return new VmTyped(materializedFrame(frame), parent.getPrototype(), parent, members);
   }
 
   @Specialization(
@@ -212,7 +215,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @Cached("parent") @SuppressWarnings("unused") VmClass cachedParent) {
 
     return new VmListing(
-        frame.materialize(), BaseModule.getListingClass().getPrototype(), members, 0);
+        materializedFrame(frame), BaseModule.getListingClass().getPrototype(), members, 0);
   }
 
   @Specialization(
@@ -226,7 +229,8 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @SuppressWarnings("unused") VmClass parent,
       @Cached("parent") @SuppressWarnings("unused") VmClass cachedParent) {
 
-    return new VmMapping(frame.materialize(), BaseModule.getMappingClass().getPrototype(), members);
+    return new VmMapping(
+        materializedFrame(frame), BaseModule.getMappingClass().getPrototype(), members);
   }
 
   @Specialization(guards = {"parent == cachedParent", "cachedParent.isDynamicClass()"})
@@ -236,7 +240,7 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
       @Cached("parent") @SuppressWarnings("unused") VmClass cachedParent) {
 
     return new VmDynamic(
-        frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, 0);
+        materializedFrame(frame), BaseModule.getDynamicClass().getPrototype(), members, 0);
   }
 
   // slow but very unlikely to occur in practice
@@ -255,11 +259,11 @@ public abstract class PropertiesLiteralNode extends SpecializedObjectLiteralNode
 
     if (parent.isDynamicClass()) {
       return new VmDynamic(
-          frame.materialize(), BaseModule.getDynamicClass().getPrototype(), members, 0);
+          materializedFrame(frame), BaseModule.getDynamicClass().getPrototype(), members, 0);
     }
 
     checkIsValidTypedAmendment(parent);
-    return new VmTyped(frame.materialize(), parent.getPrototype(), parent, members);
+    return new VmTyped(materializedFrame(frame), parent.getPrototype(), parent, members);
   }
 
   @Specialization

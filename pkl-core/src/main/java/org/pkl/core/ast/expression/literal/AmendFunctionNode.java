@@ -100,13 +100,13 @@ public final class AmendFunctionNode extends PklNode {
     }
   }
 
-  public VmFunction execute(VirtualFrame frame, VmFunction functionToAmend) {
+  public VmFunction execute(VirtualFrame frame, VmFunction functionToAmend, boolean needsCapture) {
     if (isCustomThisScope && customThisSlot == -1) {
       CompilerDirectives.transferToInterpreterAndInvalidate();
       customThisSlot = VmUtils.findCustomThisSlot(frame);
     }
     return new VmFunction(
-        frame.materialize(),
+        needsCapture ? frame.materialize() : null,
         isCustomThisScope ? frame.getAuxiliarySlot(customThisSlot) : VmUtils.getReceiver(frame),
         functionToAmend.getParameterCount(),
         initialFunctionRootNode,
