@@ -6,11 +6,11 @@ include::ROOT:partial$component-attributes.adoc[]
 
 === Security Fixes [small]#🔒#
 
-* Update fallback CA certificate trust and remove trust for the issuer of compromised intermediate CAs (pr:https://github.com/apple/pkl/pull/1923).
+* Update fallback CA certificate trust and remove trust for the issuer of compromised intermediate CAs (https://github.com/apple/pkl/pull/1923[#1923]).
 
 === Fixes
 
-* Fix rendering of stack traces for evaluated multi-line expressions (pr:https://github.com/apple/pkl/pull/1793).
+* Fix rendering of stack traces for evaluated multi-line expressions (https://github.com/apple/pkl/pull/1793[#1793]).
 
 === Contributors ❤️
 
