@@ -3,14 +3,12 @@ res1 {
     x = 2
   }
   size = 1
-  eq = true
 }
 res2 {
   first {
     x = 2
   }
   size = 1
-  eq = true
 }
 res3 = 1
 res4 = 1
