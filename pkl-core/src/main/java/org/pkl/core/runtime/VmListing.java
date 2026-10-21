@@ -212,18 +212,10 @@ public final class VmListing extends VmListingOrMapping {
 
     force(false);
     var result = 0;
-    var cursor = cachedValues.getEntries();
-
-    while (cursor.advance()) {
-      var key = cursor.getKey();
-      if (key instanceof Identifier) continue;
-
-      var value = cursor.getValue();
-      //noinspection ConstantValue
-      assert value != null;
+    for (var cursor = elements(); cursor.advance(); ) {
+      var value = cursor.cachedValue();
       result = 31 * result + value.hashCode();
     }
-
     cachedHash = result;
     return result;
   }
