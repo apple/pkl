@@ -1252,7 +1252,27 @@ jobs:
         ORG_GRADLE_PROJECT_sonatypeUsername: ${{ secrets.ORG_GRADLE_PROJECT_SONATYPEUSERNAME }}
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -DreleaseBuild=true publishToSonatype closeAndReleaseSonatypeStagingRepository
   github-release:
-    needs: deploy-release
+    needs:
+    - gradle-check
+    - gradle-check-windows
+    - bench
+    - gradle-compatibility
+    - java-executables-release
+    - pkl-cli-linux-amd64-release
+    - pkl-cli-linux-aarch64-release
+    - pkl-cli-macOS-aarch64-release
+    - pkl-cli-alpine-linux-amd64-release
+    - pkl-cli-windows-amd64-release
+    - pkl-doc-linux-amd64-release
+    - pkl-doc-linux-aarch64-release
+    - pkl-doc-macOS-aarch64-release
+    - pkl-doc-alpine-linux-amd64-release
+    - pkl-doc-windows-amd64-release
+    - libpkl-linux-amd64-release
+    - libpkl-linux-aarch64-release
+    - libpkl-macOS-aarch64-release
+    - libpkl-alpine-linux-amd64-release
+    - libpkl-windows-amd64-release
     permissions:
       contents: write
     runs-on: ubuntu-latest
