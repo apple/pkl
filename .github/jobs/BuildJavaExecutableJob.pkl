@@ -16,7 +16,6 @@ local command =
   }.join(" ")
 
 steps {
-  catalog.`actions/checkout@v6`
   new {
     name = "gradle build java executables"
     shell = "bash"
