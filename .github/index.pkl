@@ -227,7 +227,7 @@ release {
         needs = releaseJobs.keys.toListing()
       }
       ["github-release"] = new GithubRelease {
-        needs = "deploy-release"
+        needs = releaseJobs.keys.toListing()
       }
     } |> toWorkflowJobs
 }
