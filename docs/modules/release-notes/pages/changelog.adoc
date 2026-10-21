@@ -1,6 +1,24 @@
 = Changelog
 include::ROOT:partial$component-attributes.adoc[]
 
+[[release-0.32.2]]
+== 0.32.2 (2026-10-21)
+
+=== Security Fixes [small]#🔒#
+
+* Update fallback CA certificate trust and remove trust for the issuer of compromised intermediate CAs (pr:https://github.com/apple/pkl/pull/1923).
+
+=== Fixes
+
+* Fix rendering of stack traces for evaluated multi-line expressions (pr:https://github.com/apple/pkl/pull/1793).
+
+=== Contributors ❤️
+
+Thank you to all the contributors for this release!
+
+* https://github.com/HT154[@HT154]
+* https://github.com/protobufel2[@protobufel2]
+
 [[release-0.32.1]]
 == 0.32.1 (2026-07-23)
 
