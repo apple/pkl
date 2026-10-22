@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -121,5 +121,10 @@ class DataSizeTest {
 
     assertThat(size3.hashCode()).isNotEqualTo(size1.hashCode())
     assertThat(size2.hashCode()).isNotEqualTo(size3.hashCode())
+
+    // -0.0 == 0.0, so equal sizes must have equal hash codes
+    assertThat(DataSize(0.0, BYTES)).isEqualTo(DataSize(-0.0, BYTES))
+    assertThat(DataSize(0.0, BYTES).hashCode()).isEqualTo(DataSize(-0.0, BYTES).hashCode())
+    assertThat(DataSize(0.0, BYTES).hashCode()).isEqualTo(DataSize(-0.0, PEBIBYTES).hashCode())
   }
 }
