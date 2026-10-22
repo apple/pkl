@@ -135,11 +135,10 @@ class DataSizeTest {
     assertThat(DataSize(1e18, BYTES).toString()).isEqualTo("1000000000000000000.b")
     // -2^63 still fits into a `long`
     assertThat(DataSize(-9.223372036854776E18, BYTES).toString())
-        .isEqualTo("-9223372036854775808.b")
+      .isEqualTo("-9223372036854775808.b")
     // values too large to fit into a `long` are printed in their `double` form,
     // instead of saturating to 9223372036854775807
-    assertThat(DataSize(9.223372036854776E18, BYTES).toString())
-        .isEqualTo("9.223372036854776E18.b")
+    assertThat(DataSize(9.223372036854776E18, BYTES).toString()).isEqualTo("9.223372036854776E18.b")
     assertThat(DataSize(1e300, PETABYTES).toString()).isEqualTo("1.0E300.pb")
   }
 }

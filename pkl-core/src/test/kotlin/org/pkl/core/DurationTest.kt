@@ -298,12 +298,10 @@ class DurationTest {
     assertThat(Duration(1.5, DAYS).toString()).isEqualTo("1.5.d")
     assertThat(Duration(1e18, DAYS).toString()).isEqualTo("1000000000000000000.d")
     // -2^63 still fits into a `long`
-    assertThat(Duration(-9.223372036854776E18, DAYS).toString())
-        .isEqualTo("-9223372036854775808.d")
+    assertThat(Duration(-9.223372036854776E18, DAYS).toString()).isEqualTo("-9223372036854775808.d")
     // values too large to fit into a `long` are printed in their `double` form,
     // instead of saturating to 9223372036854775807
-    assertThat(Duration(9.223372036854776E18, DAYS).toString())
-        .isEqualTo("9.223372036854776E18.d")
+    assertThat(Duration(9.223372036854776E18, DAYS).toString()).isEqualTo("9.223372036854776E18.d")
     assertThat(Duration(1e300, DAYS).toString()).isEqualTo("1.0E300.d")
     assertThat(Duration(-1e300, DAYS).toString()).isEqualTo("-1.0E300.d")
   }
