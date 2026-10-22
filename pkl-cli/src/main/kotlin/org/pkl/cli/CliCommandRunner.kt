@@ -59,7 +59,7 @@ constructor(
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      withCpuProfiler(profilerOptions) { evalCmd(builder) }
+      withCpuProfiler(profilerOptions) { startProfiling -> evalCmd(builder, startProfiling) }
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
@@ -69,8 +69,9 @@ constructor(
     }
   }
 
-  private fun evalCmd(builder: EvaluatorBuilder) {
+  private fun evalCmd(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val evaluator = builder.build()
+    startProfiling()
     evaluator.use {
       evaluator.evaluateCommand(
         uri(options.normalizedSourceModules.first()),

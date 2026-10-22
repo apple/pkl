@@ -23,15 +23,24 @@ import org.pkl.profiler.CpuProfilerInstrument
 /**
  * Runs [body], sampling it with the CPU profiler if [options] enables CPU profiling.
  *
- * Profiler output is written when [body] finishes, whether normally or exceptionally.
+ * Sampling does not begin until [body] calls the `startProfiling` function it is passed. Call it
+ * after the evaluator has been built: starting Truffle's sampling thread while the main thread is
+ * still creating the engine context can race inside Truffle's thread-local handshake setup.
+ *
+ * Profiler output is written when [body] finishes, whether normally or exceptionally. If
+ * `startProfiling` was never called, no output is written.
  */
-internal inline fun <T> withCpuProfiler(options: ProfilerOptions, body: () -> T): T {
-  if (!options.cpu.isEnabled) return body()
+internal inline fun <T> withCpuProfiler(
+  options: ProfilerOptions,
+  body: (startProfiling: () -> Unit) -> T,
+): T {
+  if (!options.cpu().isEnabled) {
+    return body {}
+  }
   val profiler =
     VmUtils.getEngine().instruments[CpuProfilerInstrument.ID]?.lookup(CpuProfiler::class.java)!!
-  profiler.start(options.cpu)
   try {
-    return body()
+    return body { profiler.start(options.cpu) }
   } finally {
     profiler.stop()
   }
