@@ -43,7 +43,7 @@ constructor(
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      withCpuProfiler(profilerOptions) { evalTest(builder) }
+      withCpuProfiler(profilerOptions) { startProfiling -> evalTest(builder, startProfiling) }
     } finally {
       Closeables.closeQuietly(builder.moduleKeyFactories)
       Closeables.closeQuietly(builder.resourceReaders)
@@ -53,7 +53,7 @@ constructor(
     }
   }
 
-  private fun evalTest(builder: EvaluatorBuilder) {
+  private fun evalTest(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val sources =
       options.normalizedSourceModules.ifEmpty { project?.tests?.map { it.toUri() } }
         ?:
@@ -68,6 +68,7 @@ constructor(
         )
 
     val evaluator = builder.build()
+    startProfiling()
     evaluator.use {
       var failed = false
       var isExampleWrittenFailure = true
