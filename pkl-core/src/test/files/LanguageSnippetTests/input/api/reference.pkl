@@ -125,6 +125,8 @@ aValuesJoined = k.aValues.join("\n")
 typeArgs = ref.Reference(d, TypeHolder, null).prop as Ref<Listing<Number | Boolean | String>>
 class TypeHolder {
   prop: Listing<String | Boolean | Number>
+  mappingAnyKey: Mapping<Any, Int>
+  mappingTypeArgKey: Mapping<Listing<Int>, Int>
 }
 
 class BadResource extends Resource {
@@ -136,6 +138,12 @@ badThisRef = test.catch(() -> new BadResource { name = "bad" }.$.toString())
 
 // test that a bare function type toStrings/exports okay
 bareFunctionType = test.catch(() -> ref.Reference(d, Function4, null) as Ref<String>)
+
+mappingAnyKey = ref.Reference(d, TypeHolder, null).mappingAnyKey["foo"]
+
+// this one should be an editor error but can't be caught in the runtime
+// because VmListing/VmMapping don't track their type args
+mappingTypeArgKey = ref.Reference(d, TypeHolder, null).mappingTypeArgKey[new Listing<String> { "foo" }]
 
 output {
   renderer {
