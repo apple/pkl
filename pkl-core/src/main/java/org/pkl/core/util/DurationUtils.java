@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -15,6 +15,8 @@
  */
 package org.pkl.core.util;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
 import org.pkl.core.DurationUnit;
 
 public final class DurationUtils {
@@ -37,15 +39,31 @@ public final class DurationUtils {
     }
 
     var absoluteSeconds = Math.abs(totalSeconds);
-    var hours = (long) (absoluteSeconds / 3600);
-    var minutes = (long) (absoluteSeconds / 60) % 60;
-    var seconds = (long) (absoluteSeconds % 60);
-    var nanos =
-        (long) (absoluteSeconds * 1_000_000_000 - Math.floor(absoluteSeconds) * 1_000_000_000);
+    // computed in decimal, as ISO 8601 puts no limit on the precision of the seconds
+    var exactSeconds =
+        BigDecimal.valueOf(Math.abs(value))
+            .multiply(BigDecimal.valueOf(unit.getNanos()))
+            .movePointLeft(9);
+    var wholeSeconds = exactSeconds.setScale(0, RoundingMode.DOWN);
+    var fraction = exactSeconds.subtract(wholeSeconds);
+    long hours;
+    long minutes;
+    long seconds;
+    if (wholeSeconds.compareTo(BigDecimal.valueOf(Long.MAX_VALUE)) <= 0) {
+      var longSeconds = wholeSeconds.longValueExact();
+      hours = longSeconds / 3600;
+      minutes = longSeconds / 60 % 60;
+      seconds = longSeconds % 60;
+    } else {
+      hours = (long) (absoluteSeconds / 3600);
+      minutes = (long) (absoluteSeconds / 60) % 60;
+      seconds = (long) (absoluteSeconds % 60);
+    }
 
+    var isZero = hours == 0 && minutes == 0 && seconds == 0 && fraction.signum() == 0;
     var builder = new StringBuilder();
 
-    if (totalSeconds < 0.0) {
+    if (value < 0.0) {
       builder.append('-');
     }
 
@@ -61,19 +79,11 @@ public final class DurationUtils {
       builder.append('M');
     }
 
-    if (seconds != 0 || nanos != 0 || totalSeconds == 0) {
+    if (seconds != 0 || fraction.signum() != 0 || isZero) {
       builder.append(seconds);
-      if (nanos != 0) {
-        builder.append('.');
-        var nanosString = String.valueOf(nanos);
-        builder.append("0".repeat(9 - nanosString.length()));
-        for (int i = nanosString.length(); i >= 0; i--) {
-          if (nanosString.charAt(i - 1) != '0') {
-            nanosString = nanosString.substring(0, i);
-            break;
-          }
-        }
-        builder.append(nanosString);
+      if (fraction.signum() != 0) {
+        // drop the leading "0" of "0.<digits>"
+        builder.append(fraction.stripTrailingZeros().toPlainString().substring(1));
       }
       builder.append('S');
     }

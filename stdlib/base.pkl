@@ -1817,6 +1817,8 @@ external class Duration extends Any {
   /// -1.5.h.isoString == "-PT1H30M"
   /// 1.23.s.isoString == "PT1.23S"
   /// 0.ms.isoString == "PT0S"
+  /// (-0.4).ns.isoString == "-PT0.0000000004S"
+  /// 0.9.ns.isoString == "PT0.0000000009S"
   /// ```
   external isoString: String(matches(Regex(#"-?PT(\d+H)?(\d+M)?(\d+([.]\d+)?S)?"#)))
 
