@@ -1,0 +1,6 @@
+–– Pkl Error ––
+Duplicate definition of member `_Widget`.
+
+x | class _Widget {}
+    ^^^^^^^^^^^^^
+at import5 (file:///$snippetsDir/input/basic/import5.pkl)

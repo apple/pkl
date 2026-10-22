@@ -1,5 +1,5 @@
 –– Pkl Error ––
-Module `my.library` cannot be extended or used as type because it amends another module.
+Module `my.library` cannot be extended or used as type because it amends another module or class.
 
 x | extends "amendModule1.pkl"
     ^^^^^^^^^^^^^^^^^^^^^^^^^^
