@@ -99,10 +99,10 @@ class DurationTest {
     // savings transition,
     // when added to "now" (at the time of evaluation).
     assertThat(Duration(100.0, DAYS).toIsoString()).isEqualTo("PT2400H")
-    // below nanosecond precision, there is nothing left to render but zero
-    assertThat(Duration(0.4, NANOS).toIsoString()).isEqualTo("PT0S")
-    assertThat(Duration(-0.4, NANOS).toIsoString()).isEqualTo("PT0S")
-    assertThat(Duration(4e-10, SECONDS).toIsoString()).isEqualTo("PT0S")
+    // ISO 8601 doesn't limit the precision of the seconds
+    assertThat(Duration(0.4, NANOS).toIsoString()).isEqualTo("PT0.0000000004S")
+    assertThat(Duration(-0.4, NANOS).toIsoString()).isEqualTo("-PT0.0000000004S")
+    assertThat(Duration(4e-10, SECONDS).toIsoString()).isEqualTo("PT0.0000000004S")
   }
 
   @Test
