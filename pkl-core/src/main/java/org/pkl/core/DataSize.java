@@ -253,6 +253,8 @@ public final class DataSize implements Value {
 
   @Override
   public String toString() {
-    return MathUtils.isMathematicalInteger(value) ? (long) value + "." + unit : value + "." + unit;
+    return MathUtils.isMathematicalIntegerFittingLong(value)
+        ? (long) value + "." + unit
+        : value + "." + unit;
   }
 }

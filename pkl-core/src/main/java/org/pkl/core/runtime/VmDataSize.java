@@ -157,7 +157,9 @@ public final class VmDataSize extends VmValue implements Comparable<VmDataSize> 
 
   @Override
   public String toPklString() {
-    return MathUtils.isMathematicalInteger(value) ? (long) value + "." + unit : value + "." + unit;
+    return MathUtils.isMathematicalIntegerFittingLong(value)
+        ? (long) value + "." + unit
+        : value + "." + unit;
   }
 
   private double convertValueTo(DataSizeUnit other) {
