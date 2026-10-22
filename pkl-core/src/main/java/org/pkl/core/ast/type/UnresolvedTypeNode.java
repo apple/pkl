@@ -25,7 +25,7 @@ import org.pkl.core.PklBugException;
 import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
-import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetModuleOwnerNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
@@ -91,18 +91,18 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   /** The `module` type. */
   public static final class Module extends UnresolvedTypeNode {
-    @Child private ExpressionNode getModuleNode;
+    @Child private ExpressionNode getModuleOwnerNode;
 
     public Module(SourceSection sourceSection) {
       super(sourceSection);
-      getModuleNode = new GetModuleNode(sourceSection);
+      getModuleOwnerNode = new GetModuleOwnerNode(sourceSection);
     }
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      var module = (VmTyped) getModuleOwnerNode.executeGeneric(frame);
       var moduleClass = module.getVmClass();
       return moduleClass.isClosed()
           ? FinalSelfTypeNode.moduleType(sourceSection, moduleClass)
