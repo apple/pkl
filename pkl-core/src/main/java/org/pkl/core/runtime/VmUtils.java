@@ -57,6 +57,7 @@ import org.pkl.core.ast.expression.primary.CustomThisNode;
 import org.pkl.core.ast.expression.primary.ThisNode;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeys;
@@ -180,6 +181,21 @@ public final class VmUtils {
 
   public static VmTyped getTypedObjectReceiver(Frame frame) {
     return (VmTyped) getReceiver(frame);
+  }
+
+  /** Returns the type arguments of the currently executing code. */
+  public static @Nullable VmTypeArgument getTypeArgumentOrNull(Frame frame, int slot) {
+    if (slot < 0) return null;
+    return (VmTypeArgument) frame.getObject(slot);
+  }
+
+  public static @Nullable VmTypeArgument getTypeArgumentOrNull(
+      Frame frame, int slot, int levelsUp) {
+    if (slot < 0) return null;
+    if (levelsUp == 0) {
+      return getTypeArgumentOrNull(frame, slot);
+    }
+    return getTypeArgumentOrNull(getEnclosingFrame(getOwner(frame), levelsUp), slot);
   }
 
   /** Returns the owner of the currently executing code. */
@@ -901,6 +917,14 @@ public final class VmUtils {
     }
 
     return resolvedNodes;
+  }
+
+  public static TypeParameterNode[] resolveTypeParameters(TypeParameter[] typeParameters) {
+    var typeParameterNodes = new TypeParameterNode[typeParameters.length];
+    for (var i = 0; i < typeParameters.length; i++) {
+      typeParameterNodes[i] = new TypeParameterNode(typeParameters[i]);
+    }
+    return typeParameterNodes;
   }
 
   public static void checkIsInstantiable(VmClass parentClass, Node parentNode, Node callerNode) {

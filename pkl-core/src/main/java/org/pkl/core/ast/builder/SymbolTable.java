@@ -21,7 +21,7 @@ import com.oracle.truffle.api.frame.FrameDescriptor;
 import java.util.*;
 import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
-import org.pkl.core.TypeParameter;
+import org.pkl.core.PklBugException;
 import org.pkl.core.ast.ConstantNode;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
@@ -38,6 +38,7 @@ import org.pkl.core.runtime.FrameDescriptorBuilder;
 import org.pkl.core.runtime.FrameSlotVariable;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.ModuleInfo;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.runtime.VmDataSize;
 import org.pkl.core.runtime.VmDuration;
 import org.pkl.core.runtime.VmUtils;
@@ -59,19 +60,10 @@ public final class SymbolTable {
     return currentScope;
   }
 
-  public @Nullable TypeParameter findTypeParameter(String name) {
-    TypeParameter result;
-    for (var scope = currentScope; scope != null; scope = scope.getParent()) {
-      result = scope.getTypeParameter(name);
-      if (result != null) return result;
-    }
-    return null;
-  }
-
   public ObjectMember enterClass(
       Identifier name,
       int modifiers,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       Function<ClassScope, ObjectMember> nodeFactory) {
     return doEnter(
         new ClassScope(
@@ -86,7 +78,7 @@ public final class SymbolTable {
 
   public ObjectMember enterTypeAlias(
       Identifier name,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       Function<TypeAliasScope, ObjectMember> nodeFactory) {
     try {
       this.isInTypeAliasScope = true;
@@ -108,7 +100,7 @@ public final class SymbolTable {
       ConstLevel constLevel,
       FrameSlotVariable[] bindings,
       FrameDescriptorBuilder frameDescriptorBuilder,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       Function<MethodScope, T> nodeFactory) {
     return doEnter(
         new MethodScope(
@@ -256,6 +248,7 @@ public final class SymbolTable {
     protected final Map<String, Member> properties = new HashMap<>();
     // The methods defined on this (lexical) scope
     protected final Map<String, Member> methods = new HashMap<>();
+    protected final Set<String> knownTypeParameterNames;
 
     static int[] getSlots(FrameSlotVariable[] bindings) {
       if (bindings.length == 0) {
@@ -275,7 +268,8 @@ public final class SymbolTable {
         ConstLevel constLevel,
         FrameDescriptorBuilder frameDescriptorBuilder,
         int[] forGeneratorSlots,
-        int[] parameterSlots) {
+        int[] parameterSlots,
+        Set<String> knownTypeParameterNames) {
       this.parent = parent;
       this.name = name;
       this.qualifiedName = qualifiedName;
@@ -290,6 +284,7 @@ public final class SymbolTable {
               : constLevel;
       this.forGeneratorSlots = forGeneratorSlots;
       this.parameterSlots = parameterSlots;
+      this.knownTypeParameterNames = knownTypeParameterNames;
     }
 
     public final @Nullable Scope getParent() {
@@ -509,7 +504,8 @@ public final class SymbolTable {
     }
 
     public final VariableResolution resolveVariable(String name) {
-      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveProperty(name, levelUp));
+      var resolved =
+          resolveLexical((scope, levelUp) -> scope.doResolveProperty(name, levelUp), null);
       if (resolved != null) {
         return resolved;
       }
@@ -522,7 +518,7 @@ public final class SymbolTable {
     }
 
     public final MethodResolution resolveMethod(String name) {
-      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveMethod(name, levelUp));
+      var resolved = resolveLexical((scope, levelUp) -> scope.doResolveMethod(name, levelUp), null);
       if (resolved != null) {
         return resolved;
       }
@@ -534,13 +530,29 @@ public final class SymbolTable {
       return new ImplicitThisMethod();
     }
 
+    public @Nullable TypeParameterResolution resolveTypeParameter(String name) {
+      if (!knownTypeParameterNames.contains(name)) {
+        return null;
+      }
+
+      return resolveLexical(
+          (scope, levelUp) -> ((Scope) scope).doResolveTypeParameter(name, levelUp),
+          (scope, levelUp) -> scope.doResolveTypeParameter(name, levelUp));
+    }
+
+    protected @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      return null;
+    }
+
     @FunctionalInterface
-    private interface ResolutionFunction<T> {
-      @Nullable T apply(LexicalScope scope, int levelUp);
+    private interface ResolutionFunction<Scope, T> {
+      @Nullable T apply(Scope scope, int levelUp);
     }
 
     @SuppressWarnings("unchecked")
-    private @Nullable <R> R resolveLexical(ResolutionFunction<R> fun) {
+    private @Nullable <R> R resolveLexical(
+        ResolutionFunction<LexicalScope, R> fun,
+        @Nullable ResolutionFunction<TypeAliasScope, R> aliasFun) {
       var levelsUp = 0;
       var shouldSkip = false;
       var skippedObjectScope = false;
@@ -554,7 +566,11 @@ public final class SymbolTable {
         if (scope instanceof AnnotationScope && scope.getParent() instanceof ClassScope) {
           levelsUp--;
         }
-        if (scope instanceof LexicalScope lex) {
+        if (aliasFun != null && scope instanceof TypeAliasScope typeAliasScope) {
+          // when resolving type params, also visit TypeAliasScopes with aliasFun
+          var result = aliasFun.apply(typeAliasScope, levelsUp);
+          if (result != null) return result;
+        } else if (scope instanceof LexicalScope lex) {
           if (shouldSkip && !(scope instanceof ForGeneratorScope)) {
             if (scope instanceof ObjectScope objectScope && objectScope.hasParams()) {
               // skipping the object scope should now see the object body params, because the params
@@ -638,7 +654,8 @@ public final class SymbolTable {
           ConstLevel.NONE,
           frameDescriptorBuilder,
           parent.forGeneratorSlots,
-          EMPTY_INT_ARRAY);
+          EMPTY_INT_ARRAY,
+          parent.knownTypeParameterNames);
       this.bindings = bindings;
     }
 
@@ -676,7 +693,7 @@ public final class SymbolTable {
   }
 
   public abstract static class TypeParameterizableScope extends Scope {
-    private final List<TypeParameter> typeParameters;
+    private final TypeParameter[] typeParameters;
 
     public TypeParameterizableScope(
         Scope parent,
@@ -684,7 +701,7 @@ public final class SymbolTable {
         String qualifiedName,
         ConstLevel constLevel,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters,
+        TypeParameter[] typeParameters,
         int[] forGeneratorSlots,
         int[] parameterSlots) {
       super(
@@ -694,14 +711,27 @@ public final class SymbolTable {
           constLevel,
           frameDescriptorBuilder,
           forGeneratorSlots,
-          parameterSlots);
+          parameterSlots,
+          extendTypeParams(parent.knownTypeParameterNames, typeParameters));
       this.typeParameters = typeParameters;
+    }
+
+    private static Set<String> extendTypeParams(Set<String> base, TypeParameter[] typeParams) {
+      var res = new HashSet<>(base);
+      for (var typeParam : typeParams) {
+        res.add(typeParam.name());
+      }
+      return res;
+    }
+
+    public int getTypeParameterCount() {
+      return typeParameters.length;
     }
 
     @Override
     public @Nullable TypeParameter getTypeParameter(String name) {
       for (var param : typeParameters) {
-        if (name.equals(param.getName())) return param;
+        if (name.equals(param.name())) return param;
       }
       return null;
     }
@@ -721,7 +751,8 @@ public final class SymbolTable {
           ConstLevel.NONE,
           new FrameDescriptorBuilder(),
           EMPTY_INT_ARRAY,
-          EMPTY_INT_ARRAY);
+          EMPTY_INT_ARRAY,
+          Set.of());
       this.isBaseModule = isBaseModule;
       this.moduleInfo = moduleInfo;
       this.isAmend = moduleInfo.isAmend();
@@ -759,7 +790,7 @@ public final class SymbolTable {
         ConstLevel constLevel,
         FrameSlotVariable[] bindings,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        TypeParameter[] typeParameters) {
       super(
           parent,
           name,
@@ -781,6 +812,16 @@ public final class SymbolTable {
     public @Nullable MethodResolution doResolveMethod(String name, int levelsUp) {
       return null;
     }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      if (result.variance() != org.pkl.core.TypeParameter.Variance.INVARIANT) {
+        throw new PklBugException(
+            "found type parameter variance modifier found on a method declaration");
+      }
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.METHOD, levelsUp);
+    }
   }
 
   public static final class LambdaScope extends Scope implements LexicalScope {
@@ -798,7 +839,8 @@ public final class SymbolTable {
           parent.getConstLevel(),
           frameDescriptorBuilder,
           EMPTY_INT_ARRAY,
-          getSlots(bindings));
+          getSlots(bindings),
+          parent.knownTypeParameterNames);
       this.bindings = bindings;
     }
 
@@ -841,7 +883,8 @@ public final class SymbolTable {
           parent.getConstLevel(),
           parent.frameDescriptorBuilder,
           parent.forGeneratorSlots,
-          getMyParameterSlots(parent, binding));
+          getMyParameterSlots(parent, binding),
+          parent.knownTypeParameterNames);
       this.binding = binding;
     }
 
@@ -893,7 +936,8 @@ public final class SymbolTable {
           ConstLevel.NONE,
           getFrameDescriptorBuilder(parent),
           getForGeneratorSlots(parent),
-          getParameterSlots(parent));
+          getParameterSlots(parent),
+          parent.knownTypeParameterNames);
     }
   }
 
@@ -951,7 +995,8 @@ public final class SymbolTable {
           ConstLevel.NONE,
           frameDescriptorBuilder,
           getMyForGeneratorSlots(parent, keyBinding, valueBinding),
-          getMyParameterSlots(parent));
+          getMyParameterSlots(parent),
+          parent.knownTypeParameterNames);
       this.keyBinding = keyBinding;
       this.valueBinding = valueBinding;
     }
@@ -996,7 +1041,8 @@ public final class SymbolTable {
           // object members inherit the for-generator slots of the parent for-generator, if it
           // exists.
           parent instanceof ForGeneratorScope ? parent.forGeneratorSlots : EMPTY_INT_ARRAY,
-          parent.parameterSlots);
+          parent.parameterSlots,
+          parent.knownTypeParameterNames);
     }
   }
 
@@ -1010,7 +1056,8 @@ public final class SymbolTable {
           ConstLevel.NONE,
           frameDescriptorBuilder,
           parent instanceof ForGeneratorScope ? parent.forGeneratorSlots : EMPTY_INT_ARRAY,
-          parent.parameterSlots);
+          parent.parameterSlots,
+          parent.knownTypeParameterNames);
     }
   }
 
@@ -1023,7 +1070,7 @@ public final class SymbolTable {
         String qualifiedName,
         int modifiers,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        TypeParameter[] typeParameters) {
       super(
           parent,
           name,
@@ -1049,6 +1096,12 @@ public final class SymbolTable {
       if (member == null) return null;
       return new LexicalMethod(false, isClosed, false, member.modifiers, levelsUp);
     }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.CLASS, -1);
+    }
   }
 
   public static final class TypeAliasScope extends TypeParameterizableScope {
@@ -1057,7 +1110,7 @@ public final class SymbolTable {
         Identifier name,
         String qualifiedName,
         FrameDescriptorBuilder frameDescriptorBuilder,
-        List<TypeParameter> typeParameters) {
+        TypeParameter[] typeParameters) {
       super(
           parent,
           name,
@@ -1067,6 +1120,12 @@ public final class SymbolTable {
           typeParameters,
           parent.forGeneratorSlots,
           parent.parameterSlots);
+    }
+
+    public @Nullable TypeParameterResolution doResolveTypeParameter(String name, int levelsUp) {
+      var result = getTypeParameter(name);
+      if (result == null) return null;
+      return new TypeParameterResolution(result, TypeParameter.OwnerType.TYPEALIAS, -1);
     }
   }
 
@@ -1086,7 +1145,8 @@ public final class SymbolTable {
           ConstLevel.NONE,
           frameDescriptorBuilder,
           parent.forGeneratorSlots,
-          parent.parameterSlots);
+          parent.parameterSlots,
+          parent.knownTypeParameterNames);
     }
   }
 
@@ -1100,7 +1160,8 @@ public final class SymbolTable {
           ConstLevel.MODULE,
           frameDescriptorBuilder,
           EMPTY_INT_ARRAY,
-          EMPTY_INT_ARRAY);
+          EMPTY_INT_ARRAY,
+          parent.knownTypeParameterNames);
     }
   }
 

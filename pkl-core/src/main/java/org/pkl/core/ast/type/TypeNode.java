@@ -30,10 +30,8 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
 import com.oracle.truffle.api.nodes.LoopNode;
 import com.oracle.truffle.api.nodes.Node;
-import com.oracle.truffle.api.nodes.NodeUtil;
 import com.oracle.truffle.api.profiles.LoopConditionProfile;
 import com.oracle.truffle.api.source.SourceSection;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -43,8 +41,6 @@ import java.util.function.Function;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PType;
 import org.pkl.core.PklBugException;
-import org.pkl.core.StackFrame;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.expression.primary.GetModuleNode;
 import org.pkl.core.ast.expression.primary.GetReceiverClassNode;
@@ -57,12 +53,12 @@ import org.pkl.core.ast.member.ListingOrMappingTypeCastNode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.member.UntypedObjectMemberNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter.OwnerType;
 import org.pkl.core.stdlib.VmObjectFactory;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.EconomicSets;
 import org.pkl.core.util.LateInit;
 import org.pkl.core.util.MutableBoolean;
-import org.pkl.core.util.MutableReference;
 
 public abstract class TypeNode extends PklNode {
   @CompilationFinal private @Nullable VmType type;
@@ -167,8 +163,21 @@ public abstract class TypeNode extends PklNode {
       // header section of the property or method that carries the type annotation
       SourceSection headerSection,
       // qualified name of the property or method that carries the type annotation
-      String qualifiedName) {
+      String qualifiedName,
+      boolean isPreCall,
+      VmTypeArgument @Nullable [] typeArgumentOverrides) {
     return null;
+  }
+
+  // method arguments are used when default value contains a root node
+  public final @Nullable Object createDefaultValue(
+      VirtualFrame frame,
+      VmLanguage language,
+      // header section of the property or method that carries the type annotation
+      SourceSection headerSection,
+      // qualified name of the property or method that carries the type annotation
+      String qualifiedName) {
+    return createDefaultValue(frame, language, headerSection, qualifiedName, false, null);
   }
 
   @Idempotent
@@ -178,7 +187,9 @@ public abstract class TypeNode extends PklNode {
         true,
         typeNode -> {
           // assumption: don't need to worry about `NonFinalClassTypeNode`
-          if (typeNode instanceof NonFinalSelfTypeNode) {
+          if (typeNode instanceof NonFinalSelfTypeNode
+              || (typeNode instanceof TypeVariableNode typeVariable
+                  && typeVariable.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(false);
             return false;
           }
@@ -193,6 +204,24 @@ public abstract class TypeNode extends PklNode {
         true,
         typeNode -> {
           if (typeNode instanceof NonFinalSelfTypeNode || typeNode instanceof FinalSelfTypeNode) {
+            ret.set(true);
+            return false;
+          }
+          return true;
+        });
+    return ret.get();
+  }
+
+  public final boolean getTypeArgumentRequiresFrame() {
+    var ret = new MutableBoolean(false);
+    acceptTypeNode(
+        true,
+        typeNode -> {
+          if (typeNode instanceof ConstrainedTypeNode
+              || typeNode instanceof NonFinalSelfTypeNode
+              || typeNode instanceof ListingOrMappingTypeNode // lazy checks need captured frame
+              || (typeNode instanceof TypeVariableNode typeVar
+                  && typeVar.ownerType == TypeParameter.OwnerType.METHOD)) {
             ret.set(true);
             return false;
           }
@@ -451,6 +480,7 @@ public abstract class TypeNode extends PklNode {
       return mirrorFactory.create(null);
     }
 
+    @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
     }
@@ -460,7 +490,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return TypeNode.createDefaultValue(clazz);
     }
   }
@@ -530,7 +562,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       var clazz = ((VmObjectLike) getTargetNode.executeGeneric(frame)).getVmClass();
       return TypeNode.createDefaultValue(clazz);
     }
@@ -571,7 +605,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return literal;
     }
 
@@ -625,7 +661,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmDynamic.empty();
     }
 
@@ -672,7 +710,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       return TypeNode.createDefaultValue(clazz);
     }
@@ -736,7 +776,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return TypeNode.createDefaultValue(clazz);
     }
 
@@ -777,9 +819,12 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmNull.withDefault(
-          elementTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName));
+          elementTypeNode.createDefaultValue(
+              frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides));
     }
 
     @Override
@@ -849,12 +894,14 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       return defaultIndex == -1
           ? null
           : elementTypeNodes[defaultIndex].createDefaultValue(
-              frame, language, headerSection, qualifiedName);
+              frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     }
 
     /**
@@ -1190,7 +1237,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       if (defaultIndex == -1) {
         return null;
       }
@@ -1247,7 +1296,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmList.EMPTY;
     }
 
@@ -1330,7 +1381,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmList.EMPTY;
     }
 
@@ -1401,7 +1454,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       return VmSet.EMPTY;
     }
 
@@ -1481,7 +1536,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       return VmMap.EMPTY;
     }
@@ -1554,7 +1611,7 @@ public abstract class TypeNode extends PklNode {
         return vmListing;
       }
       return new VmListing(
-          vmListing.getEnclosingFrame(),
+          frame.materialize(),
           vmListing,
           EconomicMaps.emptyMap(),
           vmListing.getLength(),
@@ -1613,7 +1670,7 @@ public abstract class TypeNode extends PklNode {
         return vmMapping;
       }
       return new VmMapping(
-          vmMapping.getEnclosingFrame(),
+          frame.materialize(),
           vmMapping,
           EconomicMaps.emptyMap(),
           getValueTypeCastNode(frame.getFrameDescriptor()),
@@ -1775,14 +1832,17 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
 
       if (valueTypeNode instanceof UnknownTypeNode) {
         return newEmptyListingOrMapping();
       }
 
       var defaultMemberValue =
-          valueTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+          valueTypeNode.createDefaultValue(
+              frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
 
       var defaultMember = createDefaultMember(headerSection, qualifiedName, defaultMemberValue);
 
@@ -1984,7 +2044,7 @@ public abstract class TypeNode extends PklNode {
     }
   }
 
-  public abstract static class ReferenceTypeNode extends ValidatingObjectSlotTypeNode {
+  public abstract static class ReferenceTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode domainTypeNode;
     @Child private TypeNode referentTypeNode;
     @Child private ExpressionNode getReceiverClassNode;
@@ -1997,7 +2057,6 @@ public abstract class TypeNode extends PklNode {
       this.referentTypeNode = referentTypeNode;
       this.getReceiverClassNode = new GetReceiverClassNode(sourceSection);
       this.getModuleNode = new GetModuleNode(sourceSection);
-      validate();
     }
 
     @Override
@@ -2006,55 +2065,29 @@ public abstract class TypeNode extends PklNode {
           RefModule.getReferenceClass(), domainTypeNode.getType(), referentTypeNode.getType());
     }
 
-    @Override
-    public final String getValidationErrorKey() {
-      return "invalidReferenceTypeAnnotationWithConstraint";
-    }
-
-    @Override
-    protected final @Nullable Node getViolatingNode() {
-      // constraints may not be used in Reference type annotation referents
-      // walk the type and throw if any part of the referent is constrained
-      var violation = new MutableReference<Node>(null);
-      referentTypeNode.acceptTypeNode(
-          true,
-          (typeNode) -> {
-            if (typeNode instanceof ConstrainedTypeNode) {
-              violation.set(typeNode);
-              return false;
-            }
-            return true;
-          });
-      return violation.getOrNull();
-    }
-
-    @Override
-    protected final boolean isIncludedInTrace(Node node) {
-      return node instanceof ReferenceTypeNode || node instanceof ConstrainedTypeNode;
-    }
-
     @Specialization
     protected Object eval(VirtualFrame frame, VmReference value) {
       if (domainTypeNode.isNoopTypeCheck() && referentTypeNode.isNoopTypeCheck()) {
         return value;
       }
 
+      var realType = (VmType.ClassType) getType().reify(frame);
       try {
         domainTypeNode.execute(frame, value.getDomain());
       } catch (VmTypeMismatchException e) {
         CompilerDirectives.transferToInterpreter();
-        throw typeMismatch(value, getType());
+        throw typeMismatch(value, realType);
       }
 
       var module = (VmTyped) getModuleNode.executeGeneric(frame);
       if (value.referentTypeIsSubtypeOf(
-          referentTypeNode.getType(),
+          realType.getTypeArguments()[1],
           (VmClass) getReceiverClassNode.executeGeneric(frame),
           module.getVmClass())) {
         return value;
       }
 
-      throw typeMismatch(value, getType());
+      throw typeMismatch(value, realType);
     }
 
     @Fallback
@@ -2151,7 +2184,9 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder()
           .evalError("internalStdLibClass", "VarArgs")
@@ -2173,24 +2208,34 @@ public abstract class TypeNode extends PklNode {
 
   public static final class TypeVariableNode extends WriteFrameSlotTypeNode {
     private final TypeParameter typeParameter;
+    private final int levelsUp;
+    private final TypeParameter.OwnerType ownerType;
+    @Child private CallTypeArgumentNode callTypeArgumentNode;
 
-    public TypeVariableNode(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariableNode(
+        SourceSection sourceSection,
+        TypeParameter typeParameter,
+        TypeParameter.OwnerType ownerType,
+        int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.ownerType = ownerType;
+      this.levelsUp = levelsUp;
+      callTypeArgumentNode = CallTypeArgumentNodeGen.create(sourceSection);
     }
 
     @Override
     protected VmType doGetType() {
-      return new VmType.TypeVariableType(typeParameter);
+      return new VmType.TypeVariableType(typeParameter, ownerType, levelsUp);
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public TypeParameter getTypeParameter() {
+      return typeParameter;
     }
 
     @Override
     public boolean isNoopTypeCheck() {
-      return true;
+      return levelsUp < 0 || ownerType != TypeParameter.OwnerType.METHOD;
     }
 
     @Override
@@ -2203,14 +2248,75 @@ public abstract class TypeNode extends PklNode {
     }
 
     @Override
+    public Object executeEagerly(VirtualFrame frame, Object value) {
+      return doExecute(frame, value, false);
+    }
+
+    @Override
     protected Object executeLazily(VirtualFrame frame, Object value) {
-      // do nothing
-      return value;
+      return doExecute(frame, value, true);
+    }
+
+    private Object doExecute(VirtualFrame frame, Object value, boolean lazy) {
+      if (ownerType != OwnerType.METHOD) return value;
+
+      var typeArg = VmUtils.getTypeArgumentOrNull(frame, typeParameter.slot(), levelsUp);
+      if (typeArg == null) return value;
+
+      try {
+        return callTypeArgumentNode.execute(frame, typeArg, value, lazy);
+      } catch (VmTypeMismatchException e) {
+        CompilerDirectives.transferToInterpreter();
+        if (!VmUtils.sourceSectionContains(sourceSection, e.sourceSection)) {
+          var rootNode = getRootNode();
+          e.putInsertedStackFrame(
+              rootNode.getCallTarget(),
+              VmUtils.createStackFrame(sourceSection, rootNode.getName()));
+        }
+        throw e;
+      }
     }
 
     @Override
     protected boolean acceptTypeNode(boolean visitTypeArguments, TypeNodeConsumer consumer) {
       return consumer.accept(this);
+    }
+
+    private @Nullable VmTypeArgument getTypeArgumentForDefaultValue(
+        VirtualFrame frame, boolean isPreCall, VmTypeArgument @Nullable [] typeArgumentOverrides) {
+      // when creating default value for a method argument, the type node is 1 level _lower_ than
+      // what was resolved lexically.
+      //
+      // edge case: if `levelsUp == 0`, we need to resolve the type argument from
+      // `typeArgumentOverrides` rather than the frame.
+      //
+      // e.g.
+      // ```
+      // function foo<T>(arg: T)
+      // res = foo::<Person>(new {}) // `Person` is passed in via `typeArgumentOverrides`
+      // ```
+      if (levelsUp == 0 && isPreCall) {
+        return typeArgumentOverrides == null ? null : typeArgumentOverrides[typeParameter.index()];
+      }
+      return VmUtils.getTypeArgumentOrNull(frame, typeParameter.slot(), levelsUp);
+    }
+
+    @Override
+    public @Nullable Object createDefaultValue(
+        VirtualFrame frame,
+        VmLanguage language,
+        SourceSection headerSection,
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
+      if (ownerType != OwnerType.METHOD) return null;
+
+      var typeArg = getTypeArgumentForDefaultValue(frame, isPreCall, typeArgumentOverrides);
+      if (typeArg != null) {
+        return typeArg.createDefaultValue(language, headerSection, qualifiedName);
+      }
+
+      return null;
     }
   }
 
@@ -2418,13 +2524,6 @@ public abstract class TypeNode extends PklNode {
       this.typeAlias = typeAlias;
       this.typeArgumentNodes = typeArgumentNodes;
       aliasedTypeNode = typeAlias.instantiate(typeArgumentNodes);
-      aliasedTypeNode.accept(
-          node -> {
-            if (node instanceof ValidatingObjectSlotTypeNode typeNode) {
-              typeNode.validate(this);
-            }
-            return true;
-          });
     }
 
     @Override
@@ -2521,12 +2620,15 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
       if (typeAlias == BaseModule.getMixinTypeAlias()) {
         return newMixin(language, qualifiedName);
       }
 
-      return aliasedTypeNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+      return aliasedTypeNode.createDefaultValue(
+          frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     }
 
     @Override
@@ -2613,9 +2715,11 @@ public abstract class TypeNode extends PklNode {
         VirtualFrame frame,
         VmLanguage language,
         SourceSection headerSection,
-        String qualifiedName) {
-
-      return childNode.createDefaultValue(frame, language, headerSection, qualifiedName);
+        String qualifiedName,
+        boolean isPreCall,
+        VmTypeArgument @Nullable [] typeArgumentOverrides) {
+      return childNode.createDefaultValue(
+          frame, language, headerSection, qualifiedName, isPreCall, typeArgumentOverrides);
     }
 
     public SourceSection getBaseTypeSection() {
@@ -2911,78 +3015,6 @@ public abstract class TypeNode extends PklNode {
     @Override
     public VmList getTypeArgumentMirrors() {
       return VmList.of(typeNode.getMirror());
-    }
-  }
-
-  public abstract static class ValidatingObjectSlotTypeNode extends ObjectSlotTypeNode {
-
-    protected ValidatingObjectSlotTypeNode(SourceSection sourceSection) {
-      super(sourceSection);
-    }
-
-    protected abstract String getValidationErrorKey();
-
-    protected abstract @Nullable Node getViolatingNode();
-
-    protected final void validate() {
-      var violation = getViolatingNode();
-      if (violation == null) return;
-      throw exceptionBuilder()
-          .evalError(getValidationErrorKey())
-          .withLeadingStackFrames(buildLeadingFrames(violation, getSourceSection(), null))
-          .build();
-    }
-
-    public final void validate(TypeAliasTypeNode outermostAliasNode) {
-      var violation = getViolatingNode();
-      if (violation == null) return;
-
-      throw exceptionBuilder()
-          .withLocation(outermostAliasNode)
-          .evalError(getValidationErrorKey())
-          .withLeadingStackFrames(
-              buildLeadingFrames(
-                  violation,
-                  outermostAliasNode.getSourceSection(),
-                  outermostAliasNode.getTypeAlias()))
-          .build();
-    }
-
-    protected abstract boolean isIncludedInTrace(Node node);
-
-    private List<StackFrame> buildLeadingFrames(
-        Node violatingNode, SourceSection usageSection, @Nullable VmTypeAlias outermostAlias) {
-      var frames = new ArrayList<StackFrame>();
-      for (var node = violatingNode; node != null; node = node.getParent()) {
-        if (!(node instanceof TypeAliasTypeNode || isIncludedInTrace(node))) continue;
-        var section = node.getSourceSection();
-        if (section == null || !section.isAvailable() || isWithin(usageSection, section)) {
-          continue;
-        }
-        var owner = ownerAlias(node, outermostAlias);
-        if (owner != null) {
-          frames.add(VmUtils.createStackFrame(section, owner.getQualifiedName()));
-        }
-      }
-      return frames;
-    }
-
-    /**
-     * The type alias whose body contains {@code node}: the nearest enclosing alias, else the
-     * outermost alias being instantiated (which is {@code null} when no alias is used).
-     */
-    @SuppressWarnings("DataFlowIssue")
-    private static @Nullable VmTypeAlias ownerAlias(
-        Node node, @Nullable VmTypeAlias outermostAlias) {
-      var parent = NodeUtil.findParent(node, TypeAliasTypeNode.class);
-      //noinspection ConstantValue
-      return parent != null ? parent.getTypeAlias() : outermostAlias;
-    }
-
-    private static boolean isWithin(SourceSection outer, SourceSection inner) {
-      return inner.getSource().equals(outer.getSource())
-          && inner.getCharIndex() >= outer.getCharIndex()
-          && inner.getCharEndIndex() <= outer.getCharEndIndex();
     }
   }
 

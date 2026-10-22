@@ -11,7 +11,7 @@ facts {
       isVerbose = false
     }
     local result = benchmark.run()
-    
+
     result.iterations == 3
     result.repetitions >= 1
     result.samples == null
@@ -19,6 +19,19 @@ facts {
     result.max >= result.min
     result.mean >= result.min
     result.mean <= result.max
+  }
+  
+  ["run microbenchmark (in generic method)"] {
+    local function run<T>() =
+      new Benchmark.Microbenchmark {
+        expression = 123 is T
+        iterations = 3
+        iterationTime = 1.ms
+        isVerbose = false
+      }.run()
+
+    run::<Int>().iterations == 3
+    run::<String>().iterations == 3
   }
   
   ["run output benchmark (in verbose mode)"] {
@@ -84,6 +97,7 @@ facts {
 
     local text = benchmark.output.text
     text.contains("[\"micro\"]")
+    text.contains("[\"generic method\"]")
     text.contains("[\"output\"]")
     text.contains("[\"parser\"]")
   }
