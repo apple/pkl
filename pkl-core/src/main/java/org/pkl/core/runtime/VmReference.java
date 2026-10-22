@@ -297,7 +297,8 @@ public final class VmReference extends VmValue {
       var keyTypes = normalizeTypes(typeArgs[0], clazz, clazz.getModuleClass());
       for (var kt : iterateTypes(keyTypes)) {
         if (kt == UnknownType.INSTANCE
-            || (kt instanceof VmType.ClassType klazz && klazz.getVmClass() == VmUtils.getClass(key))
+            || (kt instanceof VmType.ClassType klazz
+                && klazz.getVmClass().isSuperclassOf(VmUtils.getClass(key)))
             || (kt instanceof VmType.StringLiteralType stringLiteral
                 && stringLiteral.getLiteral().equals(key))) {
           normalizeTypes(typeArgs[1], clazz, clazz.getModuleClass(), result);
