@@ -87,6 +87,7 @@ public final class IoUtils {
 
   private static final Pattern DOT_SEGMENT = Pattern.compile("(\\.|%2[eE])");
   private static final Pattern DOT_DOT_SEGMENT = Pattern.compile("(\\.|%2[eE]){2}");
+  private static final Pattern PATH_SEPARATOR = Pattern.compile("/|%2[fF]");
 
   private IoUtils() {}
 
@@ -455,10 +456,10 @@ public final class IoUtils {
    * @see ReaderBase#hasFragmentPaths()
    */
   public static URI normalizeUri(URI uri, boolean hasHierarchicalUris, boolean hasFragmentPaths) {
-    if (hasHierarchicalUris && "jar".equalsIgnoreCase(uri.getScheme())) {
+    if ("jar".equalsIgnoreCase(uri.getScheme())) {
       return normalizeJarUri(uri);
     }
-    if (!hasHierarchicalUris || uri.isOpaque() || uri.getScheme() == null) {
+    if (!"file".equalsIgnoreCase(uri.getScheme()) || uri.isOpaque()) {
       return uri;
     }
     // Use string builder instead of component-wise accessors/constructors because component-wise
@@ -523,10 +524,13 @@ public final class IoUtils {
    * <p>Segments written as {@code %2e} are treated as dots, because readers decode the path before
    * using it. All other segments are kept verbatim. A {@code ..} that cannot be resolved is kept,
    * so the result does not match patterns it shouldn't.
+   *
+   * <p>Treats either {@code /} or {@code %2F} as the path separator.
    */
   private static String normalizeRawPath(String rawPath) {
     var isAbsolute = rawPath.startsWith("/");
-    var segments = (isAbsolute ? rawPath.substring(1) : rawPath).split("/", -1);
+    var rawSegments = (isAbsolute ? rawPath.substring(1) : rawPath);
+    var segments = PATH_SEPARATOR.split(rawSegments, -1);
     var result = new ArrayList<String>(segments.length);
     for (var i = 0; i < segments.length; i++) {
       var segment = segments[i];
