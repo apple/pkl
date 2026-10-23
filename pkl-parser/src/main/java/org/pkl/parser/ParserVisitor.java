@@ -84,7 +84,7 @@ public interface ParserVisitor<Result> {
 
   Result visitThisType(Type.ThisType type);
 
-  Result visitStringConstantType(Type.StringConstantType type);
+  Result visitStringLiteralType(Type.StringLiteralType type);
 
   Result visitDeclaredType(Type.DeclaredType type);
 
