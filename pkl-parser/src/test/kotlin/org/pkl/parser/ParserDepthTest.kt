@@ -27,9 +27,6 @@ import org.junit.jupiter.api.TestFactory
 class ParserDepthTest {
   companion object {
     private const val STACK_SIZE = 512L * 1024
-    private const val NESTING_OK = 15
-    private const val CHAIN_OK = 100
-    private const val TOO_DEEP = 200
     private const val HUGE = 100_000
 
     private val nesting: Map<String, (Int) -> String> =
@@ -76,33 +73,26 @@ class ParserDepthTest {
   }
 
   @TestFactory
-  fun `input within limits parses`(): List<DynamicTest> =
-    shapes(nesting, NESTING_OK) + shapes(chains, CHAIN_OK)
+  fun `deep nesting fails with a parse error`(): List<DynamicTest> =
+    nesting.flatMap { (shape, gen) ->
+      parsers().map { (parser, parse) ->
+        dynamicTest("$parser: $shape x $HUGE") {
+          val thrown = runOnSmallStack { parse(gen(HUGE)) }
+          assertThat(thrown).isNotNull
+          assertThat(thrown).isNotInstanceOf(StackOverflowError::class.java)
+          assertThat(thrown).hasMessageContaining("nested too deeply")
+        }
+      }
+    }
 
   @TestFactory
-  fun `input beyond limits fails with a parse error`(): List<DynamicTest> =
-    listOf(TOO_DEEP, HUGE).flatMap { n ->
-      (nesting + chains).flatMap { (shape, gen) ->
-        parsers().map { (parser, parse) ->
-          dynamicTest("$parser: $shape x $n") {
-            val thrown = runOnSmallStack { parse(gen(n)) }
-            assertThat(thrown).isNotNull
-            assertThat(thrown).isNotInstanceOf(StackOverflowError::class.java)
-            assertThat(thrown).hasMessageContaining("nested too deeply")
-          }
-        }
+  fun `long chains are parsed iteratively`(): List<DynamicTest> = chains.flatMap { (shape, gen) ->
+    parsers().map { (parser, parse) ->
+      dynamicTest("$parser: $shape x $HUGE") {
+        assertThat(runOnSmallStack { parse(gen(HUGE)) }).isNull()
       }
     }
-
-  private fun shapes(shapes: Map<String, (Int) -> String>, n: Int): List<DynamicTest> =
-    shapes.flatMap { (shape, gen) ->
-      parsers().map { (parser, parse) ->
-        dynamicTest("$parser: $shape x $n") {
-          val thrown = runOnSmallStack { parse(gen(n)) }
-          assertThat(thrown).isNull()
-        }
-      }
-    }
+  }
 
   @TestFactory
   fun `flat repetition is unaffected`(): List<DynamicTest> =

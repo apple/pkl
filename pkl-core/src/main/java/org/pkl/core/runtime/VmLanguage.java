@@ -23,6 +23,7 @@ import com.oracle.truffle.api.instrumentation.ProvidedTags;
 import com.oracle.truffle.api.nodes.Node;
 import com.oracle.truffle.api.source.Source;
 import org.jspecify.annotations.Nullable;
+import org.pkl.core.ast.PklRootNode;
 import org.pkl.core.ast.builder.AstBuilder;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ResolvedModuleKey;
@@ -107,10 +108,21 @@ public final class VmLanguage extends TruffleLanguage<VmContext> {
       throw VmUtils.toVmException(e, source, moduleName);
     }
 
+    PklRootNode moduleNode;
     var builder =
         AstBuilder.create(
             source, this, moduleContext, moduleKey, resolvedModuleKey, moduleResolver);
-    var moduleNode = builder.visitModule(moduleContext);
+    try {
+      moduleNode = builder.visitModule(moduleContext);
+    } catch (StackOverflowError e) {
+      // the syntax tree is too deep for the AST builder
+      var section = builder.getLastVisitedSection();
+      throw new VmExceptionBuilder()
+          .evalError("moduleTooDeeplyNested")
+          .withSourceSection(section != null ? section : source.createSection(1))
+          .withMemberName(IoUtils.inferModuleName(moduleKey))
+          .build();
+    }
     moduleNode.getCallTarget().call(emptyModule, emptyModule);
     MinPklVersionChecker.check(emptyModule, importNode);
   }

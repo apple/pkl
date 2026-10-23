@@ -27,19 +27,22 @@ import org.pkl.core.PklException
 class EvaluatorDepthTest {
   companion object {
     private const val STACK_SIZE = 512L * 1024
-    private const val NESTING_MAX = 48
-    private const val CHAIN_MAX = 115
+    private const val HUGE = 100_000
 
-    private val shapes: Map<String, Pair<Int, (Int) -> String>> =
+    private val nesting: Map<String, (Int) -> String> =
       mapOf(
-        "parens" to (NESTING_MAX to { n -> "x = " + "(".repeat(n) + "1" + ")".repeat(n) }),
-        "if" to (NESTING_MAX to { n -> "x = " + "if (true) 1 else ".repeat(n) + "2" }),
-        "objects" to (NESTING_MAX to { n -> "x " + "{ y ".repeat(n) + "{}" + " }".repeat(n) }),
-        "binary operator" to (CHAIN_MAX to { n -> "x = " + "1 + ".repeat(n) + "1" }),
-        "qualified access" to (CHAIN_MAX to { n -> "x = new Listing {}" + ".toList()".repeat(n) }),
-        "subscript" to (CHAIN_MAX to { n -> "x = a" + "[1]".repeat(n) }),
-        "non-null" to (CHAIN_MAX to { n -> "x = a" + "!!".repeat(n) }),
-        "constrained type" to (CHAIN_MAX to { n -> "x: Int" + "(isPositive)".repeat(n) + " = 1" }),
+        "parens" to { n -> "x = " + "(".repeat(n) + "1" + ")".repeat(n) },
+        "if" to { n -> "x = " + "if (true) 1 else ".repeat(n) + "2" },
+        "objects" to { n -> "x " + "{ y ".repeat(n) + "{}" + " }".repeat(n) },
+      )
+
+    private val chains: Map<String, (Int) -> String> =
+      mapOf(
+        "binary operator" to { n -> "x = " + "1 + ".repeat(n) + "1" },
+        "qualified access" to { n -> "x = new Listing {}" + ".toList()".repeat(n) },
+        "subscript" to { n -> "x = a" + "[1]".repeat(n) },
+        "non-null" to { n -> "x = a" + "!!".repeat(n) },
+        "constrained type" to { n -> "x: Int" + "(isPositive)".repeat(n) + " = 1" },
       )
 
     private fun runOnSmallStack(action: () -> Unit): Throwable? {
@@ -57,22 +60,20 @@ class EvaluatorDepthTest {
   }
 
   @TestFactory
-  fun `deepest accepted input does not overflow the stack`(): List<DynamicTest> =
-    shapes.map { (shape, spec) ->
-      dynamicTest(shape) {
-        val (n, gen) = spec
-        assertThat(runOnSmallStack { evaluate(gen(n)) } is StackOverflowError).isFalse
-      }
+  fun `deep nesting fails with a PklException`(): List<DynamicTest> = nesting.map { (shape, gen) ->
+    dynamicTest(shape) {
+      val thrown = runOnSmallStack { evaluate(gen(HUGE)) }
+      assertThat(thrown).isInstanceOf(PklException::class.java)
+      assertThat(thrown).hasMessageContaining("nested too deeply")
     }
+  }
 
   @TestFactory
-  fun `input beyond limits fails with a PklException`(): List<DynamicTest> =
-    shapes.map { (shape, spec) ->
-      dynamicTest(shape) {
-        val (_, gen) = spec
-        val thrown = runOnSmallStack { evaluate(gen(100_000)) }
-        assertThat(thrown).isInstanceOf(PklException::class.java)
-        assertThat(thrown).hasMessageContaining("nested too deeply")
-      }
+  fun `long chains do not overflow the stack`(): List<DynamicTest> = chains.map { (shape, gen) ->
+    dynamicTest(shape) {
+      val thrown = runOnSmallStack { evaluate(gen(HUGE)) }
+      assertThat(thrown).isInstanceOf(PklException::class.java)
+      assertThat(thrown).hasMessageContaining("nested too deeply")
     }
+  }
 }

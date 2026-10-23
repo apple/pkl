@@ -21,22 +21,25 @@ import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
 import org.pkl.parser.GenericParserError
 
-/** The deepest input accepted by the parser must be formattable on a small thread stack. */
+/** Maliciously deep input must not make the formatter throw a [StackOverflowError]. */
 class FormatterDepthTest {
   companion object {
     private const val STACK_SIZE = 512L * 1024
-    private const val NESTING_MAX = 48
-    private const val CHAIN_MAX = 115
+    private const val HUGE = 100_000
 
-    private val shapes: Map<String, Pair<Int, (Int) -> String>> =
+    private val nesting: Map<String, (Int) -> String> =
       mapOf(
-        "parens" to (NESTING_MAX to { n -> "x = " + "(".repeat(n) + "1" + ")".repeat(n) }),
-        "types" to (NESTING_MAX to { n -> "x: " + "List<".repeat(n) + "Int" + ">".repeat(n) }),
-        "objects" to (NESTING_MAX to { n -> "x " + "{ y ".repeat(n) + "{}" + " }".repeat(n) }),
-        "binary operator" to (CHAIN_MAX to { n -> "x = " + "1 + ".repeat(n) + "1" }),
-        "qualified access" to (CHAIN_MAX to { n -> "x = a" + ".b".repeat(n) }),
-        "subscript" to (CHAIN_MAX to { n -> "x = a" + "[1]".repeat(n) }),
-        "constrained type" to (CHAIN_MAX to { n -> "x: Int" + "(isPositive)".repeat(n) }),
+        "parens" to { n -> "x = " + "(".repeat(n) + "1" + ")".repeat(n) },
+        "types" to { n -> "x: " + "List<".repeat(n) + "Int" + ">".repeat(n) },
+        "objects" to { n -> "x " + "{ y ".repeat(n) + "{}" + " }".repeat(n) },
+      )
+
+    private val chains: Map<String, (Int) -> String> =
+      mapOf(
+        "binary operator" to { n -> "x = " + "1 + ".repeat(n) + "1" },
+        "qualified access" to { n -> "x = a" + ".b".repeat(n) },
+        "subscript" to { n -> "x = a" + "[1]".repeat(n) },
+        "constrained type" to { n -> "x: Int" + "(isPositive)".repeat(n) },
       )
 
     private fun runOnSmallStack(action: () -> Unit): Throwable? {
@@ -50,21 +53,20 @@ class FormatterDepthTest {
   }
 
   @TestFactory
-  fun `deepest accepted input formats`(): List<DynamicTest> = shapes.map { (shape, spec) ->
+  fun `deep nesting fails with a parse error`(): List<DynamicTest> = nesting.map { (shape, gen) ->
     dynamicTest(shape) {
-      val (n, gen) = spec
-      assertThat(runOnSmallStack { Formatter().format(gen(n)) }).isNull()
+      val thrown = runOnSmallStack { Formatter().format(gen(HUGE)) }
+      assertThat(thrown).isInstanceOf(GenericParserError::class.java)
+      assertThat(thrown).hasMessageContaining("nested too deeply")
     }
   }
 
   @TestFactory
-  fun `input beyond limits fails with a parse error`(): List<DynamicTest> =
-    shapes.map { (shape, spec) ->
-      dynamicTest(shape) {
-        val (_, gen) = spec
-        val thrown = runOnSmallStack { Formatter().format(gen(100_000)) }
-        assertThat(thrown).isInstanceOf(GenericParserError::class.java)
-        assertThat(thrown).hasMessageContaining("nested too deeply")
-      }
+  fun `long chains do not overflow the stack`(): List<DynamicTest> = chains.map { (shape, gen) ->
+    dynamicTest(shape) {
+      val thrown = runOnSmallStack { Formatter().format(gen(HUGE)) }
+      assertThat(thrown).isInstanceOf(GenericParserError::class.java)
+      assertThat(thrown).hasMessageContaining("nested too deeply")
     }
+  }
 }

@@ -21,6 +21,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import org.pkl.parser.GenericParser;
+import org.pkl.parser.GenericParserError;
+import org.pkl.parser.util.ErrorMessages;
 
 /**
  * A formatter for Pkl files that applies canonical formatting rules.
@@ -113,9 +115,13 @@ public class Formatter {
 
   private void format(String input, Appendable output) {
     var ast = new GenericParser().parseModule(input);
-    var formatAst = new Builder(input, grammarVersion).format(ast);
-    // force a line at the end of the file
-    var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
-    new Generator(output).generate(nodes);
+    try {
+      var formatAst = new Builder(input, grammarVersion).format(ast);
+      // force a line at the end of the file
+      var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
+      new Generator(output).generate(nodes);
+    } catch (StackOverflowError e) {
+      throw new GenericParserError(ErrorMessages.create("tooDeeplyNested"), ast.span);
+    }
   }
 }

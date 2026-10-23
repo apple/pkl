@@ -33,8 +33,6 @@ class GenericParserImpl {
   private FullSpan spanLookahead;
   private FullToken _lookahead;
   private int cursor = 0;
-
-  private int depth = 0;
   private final List<FullToken> tokens = new ArrayList<>();
 
   GenericParserImpl(String source) {
@@ -368,25 +366,6 @@ class GenericParserImpl {
   }
 
   private Node parseObjectBody() {
-    var savedDepth = deepen(ParserLimits.NESTING_COST);
-    var body = doParseObjectBody();
-    depth = savedDepth;
-    return body;
-  }
-
-  /**
-   * Increases the depth of the tree path being built by {@code cost}. Returns the previous depth.
-   */
-  private int deepen(int cost) {
-    var saved = depth;
-    depth += cost;
-    if (depth > ParserLimits.MAX_DEPTH) {
-      throw parserError("tooDeeplyNested");
-    }
-    return saved;
-  }
-
-  private Node doParseObjectBody() {
     var children = new ArrayList<Node>();
     expect(Token.LBRACE, children, "unexpectedToken", "{");
     if (lookahead() == Token.RBRACE) {
@@ -674,13 +653,6 @@ class GenericParserImpl {
   }
 
   private Node parseExpr(@Nullable String expectation, int minPrecedence) {
-    var savedDepth = deepen(ParserLimits.NESTING_COST);
-    var expr = doParseExpr(expectation, minPrecedence);
-    depth = savedDepth;
-    return expr;
-  }
-
-  private Node doParseExpr(@Nullable String expectation, int minPrecedence) {
     var expr = parseExprAtom(expectation);
     var fullOpToken = fullLookahead();
     var operator = getOperator(fullOpToken.tk);
@@ -693,7 +665,6 @@ class GenericParserImpl {
       children.add(expr);
       ff(children);
       var op = next();
-      deepen(ParserLimits.CHAIN_LINK_COST);
       children.add(make(NodeType.OPERATOR, op.span));
       ff(children);
       var nodeType = NodeType.BINARY_OP_EXPR;
@@ -950,7 +921,6 @@ class GenericParserImpl {
       if (expr.type == NodeType.PARENTHESIZED_EXPR
           || expr.type == NodeType.AMENDS_EXPR
           || expr.type == NodeType.NEW_EXPR) {
-        deepen(ParserLimits.CHAIN_LINK_COST);
         children.add(parseObjectBody());
         expr = new Node(NodeType.AMENDS_EXPR, children);
         continue;
@@ -990,17 +960,6 @@ class GenericParserImpl {
     }
   }
 
-  /**
-   * Parses the expression of a string interpolation. Nested interpolations use more stack per level
-   * than other nesting, so they are charged double.
-   */
-  private Node parseInterpolatedExpr() {
-    var savedDepth = deepen(ParserLimits.NESTING_COST);
-    var expr = parseExpr(")");
-    depth = savedDepth;
-    return expr;
-  }
-
   private Node parseSingleLineStringLiteralExpr() {
     var children = new ArrayList<Node>();
     var start = next();
@@ -1025,7 +984,7 @@ class GenericParserImpl {
         case INTERPOLATION_START -> {
           children.add(makeTerminal(next()));
           ff(children);
-          children.add(parseInterpolatedExpr());
+          children.add(parseExpr(")"));
           ff(children);
           expect(Token.RPAREN, children, "unexpectedToken", ")");
         }
@@ -1067,7 +1026,7 @@ class GenericParserImpl {
         case INTERPOLATION_START -> {
           children.add(makeTerminal(next()));
           ff(children);
-          children.add(parseInterpolatedExpr());
+          children.add(parseExpr(")"));
           ff(children);
           expect(Token.RPAREN, children, "unexpectedToken", ")");
         }
@@ -1157,13 +1116,6 @@ class GenericParserImpl {
   }
 
   private Node parseType(@Nullable String expectation) {
-    var savedDepth = deepen(ParserLimits.NESTING_COST);
-    var type = doParseType(expectation);
-    depth = savedDepth;
-    return type;
-  }
-
-  private Node doParseType(@Nullable String expectation) {
     var children = new ArrayList<Node>();
     var hasDefault = false;
     FullSpan start = null;
@@ -1280,7 +1232,6 @@ class GenericParserImpl {
       children.add(type);
       // nullable types
       if (lookahead() == Token.QUESTION) {
-        deepen(ParserLimits.CHAIN_LINK_COST);
         ff(children);
         children.add(makeTerminal(next()));
         type = new Node(NodeType.NULLABLE_TYPE, children);
@@ -1289,7 +1240,6 @@ class GenericParserImpl {
       // constrained types: have to start in the same line as the type
       var fla = fullLookahead();
       if (fla.tk.token == Token.LPAREN && noSemicolonInbetween() && fla.tk.newLinesBetween == 0) {
-        deepen(ParserLimits.CHAIN_LINK_COST);
         ff(children);
         var constraint = new ArrayList<Node>();
         constraint.add(makeTerminal(next()));

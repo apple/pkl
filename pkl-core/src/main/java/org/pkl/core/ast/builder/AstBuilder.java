@@ -298,6 +298,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   private final ExternalMemberRegistry externalMemberRegistry;
   private final SymbolTable symbolTable;
   private final boolean isMethodReturnTypeChecked;
+  private @Nullable Node lastVisited;
 
   public AstBuilder(
       Source source, VmLanguage language, ModuleInfo moduleInfo, ModuleResolver moduleResolver) {
@@ -2267,11 +2268,18 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
   }
 
   public UnresolvedTypeNode visitType(Type type) {
+    lastVisited = type;
     return (UnresolvedTypeNode) type.accept(this);
   }
 
   public ExpressionNode visitExpr(Expr expr) {
+    lastVisited = expr;
     return (ExpressionNode) expr.accept(this);
+  }
+
+  /** Returns the source section of the last type or expression that was entered. */
+  public @Nullable SourceSection getLastVisitedSection() {
+    return lastVisited == null ? null : createSourceSection(lastVisited);
   }
 
   @Override
