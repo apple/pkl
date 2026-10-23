@@ -368,7 +368,7 @@ public final class NodeNodes {
     @TruffleBoundary
     private Object @Nullable [] replaceBelow(VmTyped node) {
       var children = (VmList) VmUtils.readMember(node, Identifier.CHILDREN, callNode);
-      Object[] result = null;
+      Object @Nullable [] result = null;
       for (var i = 0; i < children.getLength() && !done; i++) {
         var child = (VmTyped) children.get(i);
         Object replacement;

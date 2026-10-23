@@ -250,6 +250,7 @@ typealias NodeType =
     | "object_property_header_begin"
     | "object_property_body"
     | "object_entry_header"
+    | "member_predicate_header"
     | "when_generator_header"
     | "for_generator_header"
     | "for_generator_header_definition"

@@ -322,13 +322,13 @@ class GenericParserImpl {
     }
     headerBegin.add(parseIdentifier());
     header.add(new Node(NodeType.CLASS_PROPERTY_HEADER_BEGIN, headerBegin));
+    children.add(new Node(NodeType.CLASS_PROPERTY_HEADER, header));
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
-      ff(header);
-      header.add(parseTypeAnnotation());
+      ff(children);
+      children.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
-    children.add(new Node(NodeType.CLASS_PROPERTY_HEADER, header));
     if (lookahead() == Token.ASSIGN) {
       ff(children);
       children.add(makeTerminal(next()));
@@ -499,13 +499,13 @@ class GenericParserImpl {
     }
     headerBegin.add(parseIdentifier());
     header.add(new Node(NodeType.OBJECT_PROPERTY_HEADER_BEGIN, headerBegin));
+    children.add(new Node(NodeType.OBJECT_PROPERTY_HEADER, header));
     var hasTypeAnnotation = false;
     if (lookahead() == Token.COLON) {
-      ff(header);
-      header.add(parseTypeAnnotation());
+      ff(children);
+      children.add(parseTypeAnnotation());
       hasTypeAnnotation = true;
     }
-    children.add(new Node(NodeType.OBJECT_PROPERTY_HEADER, header));
     if (hasTypeAnnotation || lookahead() == Token.ASSIGN) {
       ff(children);
       expect(Token.ASSIGN, children, "unexpectedToken", "=");
@@ -552,14 +552,16 @@ class GenericParserImpl {
 
   private Node parseMemberPredicate() {
     var children = new ArrayList<Node>();
-    children.add(makeTerminal(next()));
-    ff(children);
-    children.add(parseExpr());
-    ff(children);
+    var header = new ArrayList<Node>();
+    header.add(makeTerminal(next()));
+    ff(header);
+    header.add(parseExpr());
+    ff(header);
     var firstBrack = expect(Token.RBRACK, "unexpectedToken", "]]");
-    children.add(makeTerminal(firstBrack));
+    header.add(makeTerminal(firstBrack));
     var secondbrack = expect(Token.RBRACK, "unexpectedToken", "]]");
-    children.add(makeTerminal(secondbrack));
+    header.add(makeTerminal(secondbrack));
+    children.add(new Node(NodeType.MEMBER_PREDICATE_HEADER, header));
     if (firstBrack.span.charIndex() != secondbrack.span.charIndex() - 1) {
       // There shouldn't be any whitespace between the first and second ']'.
       var span = firstBrack.span.endWith(secondbrack.span);

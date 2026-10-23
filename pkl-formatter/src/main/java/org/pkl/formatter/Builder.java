@@ -120,7 +120,7 @@ final class Builder {
       case METHOD_BODY -> formatClassMethodBody(node);
       case OBJECT_BODY -> formatObjectBody(node);
       case OBJECT_ELEMENT -> format(node.children.get(0)); // has a single element
-      case OBJECT_ENTRY_HEADER -> formatObjectEntryHeader(node);
+      case OBJECT_ENTRY_HEADER, MEMBER_PREDICATE_HEADER -> formatObjectEntryHeader(node);
       case FOR_GENERATOR -> formatForGenerator(node);
       case FOR_GENERATOR_HEADER -> formatForGeneratorHeader(node);
       case FOR_GENERATOR_HEADER_DEFINITION -> formatForGeneratorHeaderDefinition(node);
