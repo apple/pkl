@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -16,6 +16,7 @@
 package org.pkl.config.java;
 
 import org.pkl.config.java.mapper.ValueMapper;
+import org.pkl.core.EvaluationContext;
 import org.pkl.core.ModuleSource;
 
 /**
@@ -41,11 +42,56 @@ public interface ConfigEvaluator extends AutoCloseable {
   /** Evaluates the given module source into a {@link Config} tree. */
   Config evaluate(ModuleSource moduleSource);
 
+  /**
+   * Evaluates the given module source into a {@link Config} tree with the given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @since 0.32.0
+   */
+  default Config evaluate(ModuleSource moduleSource, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
+
   /** Evaluates the given module's {@code output.value} property into a {@link Config} tree. */
   Config evaluateOutputValue(ModuleSource moduleSource);
 
+  /**
+   * Evaluates the given module's {@code output.value} property into a {@link Config} tree with the
+   * given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @since 0.32.0
+   */
+  default Config evaluateOutputValue(ModuleSource moduleSource, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
+
   /** Evaluates the Pkl expression represented as {@code expression} into a {@link Config} tree. */
   Config evaluateExpression(ModuleSource moduleSource, String expression);
+
+  /**
+   * Evaluates the Pkl expression represented as {@code expression} into a {@link Config} tree with
+   * the given evaluation context.
+   *
+   * <p>The context overrides configured external properties and environment variables for this
+   * evaluation only. Module and resource caches are fresh for each call, and shared by all reads
+   * and imports within that call. See {@link EvaluationContext}.
+   *
+   * @since 0.32.0
+   */
+  default Config evaluateExpression(
+      ModuleSource moduleSource, String expression, EvaluationContext context) {
+    throw new UnsupportedOperationException(
+        "Per-evaluation contexts are not supported by this evaluator.");
+  }
 
   /**
    * Releases all resources held by this evaluator. If an {@code evaluate} method is currently
