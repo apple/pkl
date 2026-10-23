@@ -362,6 +362,142 @@ class EvaluatorTest {
       )
   }
 
+  private fun evaluatorAllowingOnly(allowedDir: Path): Evaluator {
+    val allowedUri = allowedDir.toUri().toString()
+    val allowed = Pattern.compile(Pattern.quote(allowedUri))
+    val allowedJar = Pattern.compile(Pattern.quote("jar:$allowedUri"))
+    return with(EvaluatorBuilder.preconfigured()) {
+      setAllowedModules(
+        listOf(Pattern.compile("pkl:"), Pattern.compile("repl:"), allowed, allowedJar)
+      )
+      setAllowedResources(listOf(allowed, allowedJar))
+      build()
+    }
+  }
+
+  /** Creates `allowed/` and `secret/` directories inside [tempDir], and returns `allowed/`. */
+  private fun setUpAllowedAndSecretDirs(tempDir: Path): Path {
+    // resolve symlinks (e.g. `/var` -> `/private/var` on macOS) so that module URIs match
+    val allowedDir = tempDir.toRealPath().resolve("allowed")
+    allowedDir.resolve("ok.pkl").createParentDirectories().writeText("x = 1")
+    allowedDir.resolve("ok.txt").writeText("ok")
+    val secretDir = allowedDir.resolveSibling("secret")
+    secretDir.resolve("secret.pkl").createParentDirectories().writeText("x = 2")
+    secretDir.resolve("secret.txt").writeText("secret")
+    return allowedDir
+  }
+
+  @Test
+  fun `allowed modules - baseline - can import module inside allowed dir`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val module = allowedDir.resolve("test.pkl").writeString("res = import(\"${allowedUri}ok.pkl\")")
+    val result = evaluatorAllowingOnly(allowedDir).evaluateExpression(path(module), "res.x")
+    assertThat(result).isEqualTo(1L)
+  }
+
+  @Test
+  fun `allowed modules - cannot import module using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("..", "%2e%2e", "%2e.", ".%2e")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = import(\"${allowedUri}$traversal/secret/secret.pkl\")")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("module allowlist (`--allowed-modules`)")
+    }
+  }
+
+  @Test
+  fun `allowed modules - cannot import module glob using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("..", "%2e%2e")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = import*(\"${allowedUri}$traversal/secret/*.pkl\")")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("module allowlist (`--allowed-modules`)")
+    }
+  }
+
+  @Test
+  fun `allowed modules - cannot import module from jar using path traversal`(
+    @TempDir tempDir: Path
+  ) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    createModulesZip(allowedDir.resolveSibling("secret"))
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("..", "%2e%2e")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString(
+            "res = import(\"jar:${allowedUri}$traversal/secret/modules.zip!/foo/baz/module2.pkl\")"
+          )
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/modules.zip")
+        .hasMessageContaining("module allowlist (`--allowed-modules`)")
+    }
+  }
+
+  @Test
+  fun `allowed resources - baseline - can read resource inside allowed dir`(
+    @TempDir tempDir: Path
+  ) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val module =
+      allowedDir.resolve("test.pkl").writeString("res = read(\"${allowedUri}ok.txt\").text")
+    val result = evaluatorAllowingOnly(allowedDir).evaluateExpression(path(module), "res")
+    assertThat(result).isEqualTo("ok")
+  }
+
+  @Test
+  fun `allowed resources - cannot read resource using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("..", "%2e%2e", "%2e.", ".%2e")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = read(\"${allowedUri}$traversal/secret/secret.txt\").text")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("resource allowlist (`--allowed-resources`)")
+    }
+  }
+
+  @Test
+  fun `allowed resources - cannot read resource glob using path traversal`(@TempDir tempDir: Path) {
+    val allowedDir = setUpAllowedAndSecretDirs(tempDir)
+    val allowedUri = allowedDir.toUri()
+    val evaluator = evaluatorAllowingOnly(allowedDir)
+    for (traversal in listOf("..", "%2e%2e")) {
+      val module =
+        allowedDir
+          .resolve("test.pkl")
+          .writeString("res = read*(\"${allowedUri}$traversal/secret/*.txt\")")
+      val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
+      assertThat(e)
+        .hasMessageContaining("/secret/")
+        .hasMessageContaining("resource allowlist (`--allowed-resources`)")
+    }
+  }
+
   @Test
   fun `multiple-file output`() {
     val evaluator = Evaluator.preconfigured()
@@ -560,17 +696,16 @@ class EvaluatorTest {
         build()
       }
 
-    val exc =
-      assertThrows<PklException> {
-        evaluator.evaluate(
-          text(
-            """
-            foo: String(chars.first == "a") = "boo"
-            """
-              .trimIndent()
-          )
+    assertThrows<PklException> {
+      evaluator.evaluate(
+        text(
+          """
+          foo: String(chars.first == "a") = "boo"
+          """
+            .trimIndent()
         )
-      }
+      )
+    }
 
     assertThat((evaluator as EvaluatorImpl).isInstrumentationEverUsed()).isTrue
   }

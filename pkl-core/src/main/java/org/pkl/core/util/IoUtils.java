@@ -85,6 +85,9 @@ public final class IoUtils {
   // keep in sync with stdlib `EvaluatorSettings.reservedHttpHeaderPrefix`
   private static final String[] reservedHeaderPrefixes = {"proxy-", "sec-"};
 
+  private static final Pattern DOT_SEGMENT = Pattern.compile("(\\.|%2[eE])");
+  private static final Pattern DOT_DOT_SEGMENT = Pattern.compile("(\\.|%2[eE]){2}");
+
   private IoUtils() {}
 
   public static URL toUrl(URI uri) throws IOException {
@@ -436,6 +439,113 @@ public final class IoUtils {
       return dependency.getPackageUri().toPackageAssetUri(path).getUri();
     }
     throw new PackageLoadError("cannotFindDependencyInProject", name);
+  }
+
+  /**
+   * Normalizes {@code uri} for the purpose of security checks.
+   *
+   * <p>Removes {@code .} and {@code ..} segments (including percent-encoded ones) from the path,
+   * and from the fragment if {@code hasFragmentPaths} is true. Returns {@code uri} unchanged if it
+   * is not hierarchical.
+   *
+   * <p>For {@code jar:} URIs, only the URI of the archive is normalized. The path within the
+   * archive is left as is, because zip file systems treat {@code ..} as a verbatim name.
+   *
+   * @see ReaderBase#hasHierarchicalUris()
+   * @see ReaderBase#hasFragmentPaths()
+   */
+  public static URI normalizeUri(URI uri, boolean hasHierarchicalUris, boolean hasFragmentPaths) {
+    if (hasHierarchicalUris && "jar".equalsIgnoreCase(uri.getScheme())) {
+      return normalizeJarUri(uri);
+    }
+    if (!hasHierarchicalUris || uri.isOpaque() || uri.getScheme() == null) {
+      return uri;
+    }
+    // Use string builder instead of component-wise accessors/constructors because component-wise
+    // will re-encode (e.g. turn %2F into `/`), and can fail for unusual authorities.
+    var uriString = uri.toString();
+    var rawPath = uri.getRawPath();
+    var rawFragment = hasFragmentPaths ? uri.getRawFragment() : null;
+    var normalizedFragment =
+        rawFragment != null && rawFragment.startsWith("/")
+            ? normalizeRawPath(rawFragment)
+            : rawFragment;
+    var pathStart = uriString.indexOf(':') + 1;
+    var hasAuthority = uriString.startsWith("//", pathStart);
+    if (hasAuthority) {
+      var rawAuthority = uri.getRawAuthority();
+      pathStart += 2 + (rawAuthority == null ? 0 : rawAuthority.length());
+    }
+    assert uriString.startsWith(rawPath, pathStart);
+    var normalizedPath = normalizeRawPath(rawPath);
+    if (normalizedPath.equals(rawPath) && Objects.equals(normalizedFragment, rawFragment)) {
+      return uri;
+    }
+    var sb = new StringBuilder(uriString.substring(0, pathStart));
+    if (!hasAuthority && normalizedPath.startsWith("//")) {
+      // avoid the path being misinterpreted as an authority
+      sb.append("/.");
+    }
+    sb.append(normalizedPath);
+    var pathEnd = pathStart + rawPath.length();
+    if (rawFragment != null) {
+      var fragmentStart = uriString.length() - rawFragment.length();
+      sb.append(uriString, pathEnd, fragmentStart).append(normalizedFragment);
+    } else {
+      sb.append(uriString, pathEnd, uriString.length());
+    }
+    try {
+      return new URI(sb.toString());
+    } catch (URISyntaxException e) {
+      // cannot happen; we only removed segments from a valid URI
+      throw PklBugException.unreachableCode();
+    }
+  }
+
+  /** Normalizes the URI of the archive of {@code jar:<archive-uri>!/<path-in-archive>}. */
+  private static URI normalizeJarUri(URI uri) {
+    var uriString = uri.toString();
+    var index = uriString.indexOf('!');
+    if (index == -1) {
+      return uri;
+    }
+    var archiveUri = URI.create(uriString.substring(uri.getScheme().length() + 1, index));
+    var normalizedArchiveUri = normalizeUri(archiveUri, true, false);
+    if (normalizedArchiveUri.equals(archiveUri)) {
+      return uri;
+    }
+    return URI.create(uri.getScheme() + ":" + normalizedArchiveUri + uriString.substring(index));
+  }
+
+  /**
+   * Removes {@code .} and {@code ..} segments from a raw (percent-encoded) path.
+   *
+   * <p>Segments written as {@code %2e} are treated as dots, because readers decode the path before
+   * using it. All other segments are kept verbatim. A {@code ..} that cannot be resolved is kept,
+   * so the result does not match patterns it shouldn't.
+   */
+  private static String normalizeRawPath(String rawPath) {
+    var isAbsolute = rawPath.startsWith("/");
+    var segments = (isAbsolute ? rawPath.substring(1) : rawPath).split("/", -1);
+    var result = new ArrayList<String>(segments.length);
+    for (var i = 0; i < segments.length; i++) {
+      var segment = segments[i];
+      var isLast = i == segments.length - 1;
+      if (DOT_SEGMENT.matcher(segment).matches()) {
+        if (isLast) result.add("");
+      } else if (DOT_DOT_SEGMENT.matcher(segment).matches()) {
+        if (!result.isEmpty()
+            && !DOT_DOT_SEGMENT.matcher(result.get(result.size() - 1)).matches()) {
+          result.remove(result.size() - 1);
+        } else {
+          result.add(segment);
+        }
+        if (isLast) result.add("");
+      } else {
+        result.add(segment);
+      }
+    }
+    return (isAbsolute ? "/" : "") + String.join("/", result);
   }
 
   /**

@@ -416,4 +416,110 @@ class IoUtilsTest {
     assertThat(IoUtils.encodePath("3a)")).isEqualTo("3a)")
     assertThat(IoUtils.encodePath("foo/bar/baz")).isEqualTo("foo/bar/baz")
   }
+
+  @Test
+  fun `normalizeUri removes dot segments from hierarchical URIs`() {
+    assertThat(IoUtils.normalizeUri(URI("file:///foo/../baz.pkl"), true, false))
+      .isEqualTo(URI("file:///baz.pkl"))
+    assertThat(IoUtils.normalizeUri(URI("file:///foo/%2e./baz.pkl"), true, false))
+      .isEqualTo(URI("file:///baz.pkl"))
+    assertThat(IoUtils.normalizeUri(URI("file:///foo/%2e%2e/baz.pkl"), true, false))
+      .isEqualTo(URI("file:///baz.pkl"))
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/a/../b?q=1"), true, false))
+      .isEqualTo(URI("https://example.com/b?q=1"))
+  }
+
+  @Test
+  fun `normalizeUri leaves non-hierarchical URIs unchanged`() {
+    val uri = URI("foo:bar/../baz")
+    assertThat(IoUtils.normalizeUri(uri, false, false)).isSameAs(uri)
+    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+  }
+
+  @Test
+  fun `normalizeUri only normalizes fragment if URI has fragment paths`() {
+    val uri = URI("package://example.com/foo@1.0.0#/bar/../baz.pkl")
+    assertThat(IoUtils.normalizeUri(uri, true, true))
+      .isEqualTo(URI("package://example.com/foo@1.0.0#/baz.pkl"))
+    assertThat(IoUtils.normalizeUri(uri, true, false)).isEqualTo(uri)
+  }
+
+  @Test
+  fun `normalizeUri does not add a fragment`() {
+    val uri = URI("https://example.com/foo.pkl")
+    assertThat(IoUtils.normalizeUri(uri, true, true)).isEqualTo(uri)
+    assertThat(IoUtils.normalizeUri(uri, true, true).toString()).doesNotContain("#")
+  }
+
+  @Test
+  fun `normalizeUri returns the same URI if already normalized`() {
+    val uri = URI("file:///foo/b%C3%A9/baz%20qux.pkl")
+    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+  }
+
+  @Test
+  fun `normalizeUri only normalizes the archive URI of jar URIs`() {
+    assertThat(IoUtils.normalizeUri(URI("jar:file:///foo/../bar.zip!/a/../b.pkl"), true, false))
+      .isEqualTo(URI("jar:file:///bar.zip!/a/../b.pkl"))
+    assertThat(IoUtils.normalizeUri(URI("jar:file:///foo/%2e%2e/bar.zip!/a/b.pkl"), true, false))
+      .isEqualTo(URI("jar:file:///bar.zip!/a/b.pkl"))
+    assertThat(IoUtils.normalizeUri(URI("JAR:file:///foo/../bar.zip!/b.pkl"), true, false))
+      .isEqualTo(URI("JAR:file:///bar.zip!/b.pkl"))
+    val uri = URI("jar:file:///foo/bar.zip!/a/../b.pkl")
+    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+  }
+
+  @Test
+  fun `normalizeUri preserves encoding of everything except dot segments`() {
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/a%2Fb/./c"), true, false))
+      .isEqualTo(URI("https://example.com/a%2Fb/c"))
+    assertThat(IoUtils.normalizeUri(URI("file:///b%C3%A9/./x%20y"), true, false))
+      .isEqualTo(URI("file:///b%C3%A9/x%20y"))
+    assertThat(IoUtils.normalizeUri(URI("https://h/a/../b?x=%2e%2e#frag"), true, false))
+      .isEqualTo(URI("https://h/b?x=%2e%2e#frag"))
+  }
+
+  @Test
+  fun `normalizeUri handles unusual authorities`() {
+    assertThat(
+        IoUtils.normalizeUri(URI("https://user:p%40ss@example.com:8080/a/../b"), true, false)
+      )
+      .isEqualTo(URI("https://user:p%40ss@example.com:8080/b"))
+    assertThat(IoUtils.normalizeUri(URI("https://[::1]:8080/a/../b"), true, false))
+      .isEqualTo(URI("https://[::1]:8080/b"))
+  }
+
+  @Test
+  fun `normalizeUri does not turn a path into an authority`() {
+    assertThat(IoUtils.normalizeUri(URI("file:////etc/../x"), true, false))
+      .isEqualTo(URI("file:////x"))
+    assertThat(IoUtils.normalizeUri(URI("file:/a/..//b"), true, false)).isEqualTo(URI("file:/.//b"))
+  }
+
+  @Test
+  fun `normalizeUri handles trailing dot segments and unresolvable dot-dot segments`() {
+    assertThat(IoUtils.normalizeUri(URI("file:///a/b/.."), true, false))
+      .isEqualTo(URI("file:///a/"))
+    assertThat(IoUtils.normalizeUri(URI("file:///a/."), true, false)).isEqualTo(URI("file:///a/"))
+    assertThat(IoUtils.normalizeUri(URI("file:///a/../.."), true, false))
+      .isEqualTo(URI("file:///../"))
+    val uri = URI("file:///../x")
+    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+  }
+
+  @Test
+  fun `normalizeUri is idempotent`() {
+    for (str in
+      listOf(
+        "file:///a/../b/./c/%2e%2e/d",
+        "file:/a/..//b",
+        "file:////etc/../x",
+        "https://example.com/a%2Fb/../c?q#f",
+        "package://example.com/foo@1.0.0#/a/%2e%2e/../b.pkl",
+        "jar:file:///a/../b.zip!/c/../d",
+      )) {
+      val once = IoUtils.normalizeUri(URI(str), true, true)
+      assertThat(IoUtils.normalizeUri(once, true, true)).isEqualTo(once)
+    }
+  }
 }
