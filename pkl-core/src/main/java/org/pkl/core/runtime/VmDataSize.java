@@ -152,7 +152,8 @@ public final class VmDataSize extends VmValue implements Comparable<VmDataSize> 
 
   @Override
   public int hashCode() {
-    return Double.hashCode(convertValueTo(DataSizeUnit.BYTES));
+    // adding 0.0 normalizes -0.0 to 0.0, because -0.0 == 0.0 but their hash codes differ
+    return Double.hashCode(convertValueTo(DataSizeUnit.BYTES) + 0.0);
   }
 
   @Override

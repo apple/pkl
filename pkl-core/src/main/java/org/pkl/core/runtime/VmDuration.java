@@ -149,7 +149,8 @@ public final class VmDuration extends VmValue implements Comparable<VmDuration> 
 
   @Override
   public int hashCode() {
-    return Double.hashCode(getValue(DurationUnit.NANOS));
+    // adding 0.0 normalizes -0.0 to 0.0, because -0.0 == 0.0 but their hash codes differ
+    return Double.hashCode(getValue(DurationUnit.NANOS) + 0.0);
   }
 
   @Override

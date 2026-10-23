@@ -1,0 +1,14 @@
+res1 {
+  first {
+    x = 2
+  }
+  size = 1
+}
+res2 {
+  first {
+    x = 2
+  }
+  size = 1
+}
+res3 = 1
+res4 = 1
