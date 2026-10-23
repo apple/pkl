@@ -357,6 +357,7 @@ typealias TerminalNodeType =
     | "unknown_type"
     | "nothing_type"
     | "module_type"
+    | "this_type"
 
 /// The [NodeType]s that describe an expression.
 typealias ExprNodeType =
@@ -394,6 +395,7 @@ typealias TypeNodeType =
   "unknown_type"
     | "nothing_type"
     | "module_type"
+    | "this_type"
     | "union_type"
     | "function_type"
     | "parenthesized_type"

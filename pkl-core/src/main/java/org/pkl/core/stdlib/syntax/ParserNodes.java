@@ -26,7 +26,7 @@ import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 import org.pkl.core.stdlib.ExternalMethod1Node;
-import org.pkl.core.stdlib.syntax.SyntaxNodes.GenericNodeData;
+import org.pkl.core.stdlib.syntax.SyntaxNodes.NodeData;
 import org.pkl.parser.GenericParser;
 import org.pkl.parser.GenericParserError;
 
@@ -135,12 +135,12 @@ public final class ParserNodes {
   @TruffleBoundary
   private static VmTyped parseModuleNode(String src, @Nullable String sourceUri) {
     var root = parser.parseModule(src);
-    return SyntaxNodes.createNode(new GenericNodeData(root, src.toCharArray(), sourceUri, null));
+    return SyntaxNodes.createNode(new NodeData(root, src.toCharArray(), sourceUri, null));
   }
 
   @TruffleBoundary
   private static VmTyped parseExpressionNode(String src, @Nullable String sourceUri) {
     var root = parser.parseExpressionInput(src);
-    return SyntaxNodes.createNode(new GenericNodeData(root, src.toCharArray(), sourceUri, null));
+    return SyntaxNodes.createNode(new NodeData(root, src.toCharArray(), sourceUri, null));
   }
 }

@@ -94,7 +94,7 @@ public final class SyntaxNodes {
   }
 
   /** Extra storage backing a Pkl {@code Node} parsed from source. */
-  static final class GenericNodeData {
+  static final class NodeData {
     final Node node;
     // the source {@link #node} was parsed from
     final char[] source;
@@ -105,8 +105,7 @@ public final class SyntaxNodes {
     // the object this storage backs, so that lazily created children can be parented at it
     private @Nullable VmTyped selfVm;
 
-    GenericNodeData(
-        Node node, char[] source, @Nullable String sourceUri, @Nullable VmTyped parentVm) {
+    NodeData(Node node, char[] source, @Nullable String sourceUri, @Nullable VmTyped parentVm) {
       this.node = node;
       this.source = source;
       this.sourceUri = sourceUri;
@@ -125,7 +124,7 @@ public final class SyntaxNodes {
       }
       var builder = VmList.EMPTY.builder();
       for (var childNode : childNodes) {
-        builder.add(createNode(new GenericNodeData(childNode, source, sourceUri, selfVm)));
+        builder.add(createNode(new NodeData(childNode, source, sourceUri, selfVm)));
       }
       return builder.build();
     }
@@ -135,16 +134,16 @@ public final class SyntaxNodes {
     }
   }
 
-  static final VmObjectFactory<GenericNodeData> genericNodeFactory =
-      new VmObjectFactory<GenericNodeData>(SyntaxModule::getNodeClass)
+  static final VmObjectFactory<NodeData> genericNodeFactory =
+      new VmObjectFactory<NodeData>(SyntaxModule::getNodeClass)
           .addStringProperty("type", nd -> nd.node.type.name().toLowerCase(Locale.ROOT))
-          .addListProperty("children", GenericNodeData::children)
+          .addListProperty("children", NodeData::children)
           .addProperty("parent", nd -> VmNull.lift(nd.parentVm))
-          .addProperty("text", GenericNodeData::text)
-          .addProperty("span", GenericNodeData::span);
+          .addProperty("text", NodeData::text)
+          .addProperty("span", NodeData::span);
 
   /** Create the Pkl {@code Node} backed by {@code data}. */
-  static VmTyped createNode(GenericNodeData data) {
+  static VmTyped createNode(NodeData data) {
     var result = genericNodeFactory.create(data);
     data.selfVm = result;
     return result;
@@ -213,8 +212,8 @@ public final class SyntaxNodes {
   private static VmTyped reparent(VmTyped node, @Nullable VmTyped parent) {
     // a parsed node's subtree is created lazily from its parse-time node, so only the node is
     // copied
-    if (node.hasExtraStorage() && node.getExtraStorage() instanceof GenericNodeData data) {
-      return createNode(new GenericNodeData(data.node, data.source, data.sourceUri, parent));
+    if (node.hasExtraStorage() && node.getExtraStorage() instanceof NodeData data) {
+      return createNode(new NodeData(data.node, data.source, data.sourceUri, parent));
     }
     var children = (VmList) VmUtils.readMember(node, Identifier.CHILDREN);
     return build(node, children.toArray(), parent);
@@ -232,7 +231,7 @@ public final class SyntaxNodes {
     if (nodeVm.hasExtraStorage()) {
       var storage = nodeVm.getExtraStorage();
       // a node still carrying its parse-time storage is verbatim from `parse`: reuse it wholesale
-      if (storage instanceof GenericNodeData data) {
+      if (storage instanceof NodeData data) {
         materializeText(data.node, data.source);
         return data.node;
       }
