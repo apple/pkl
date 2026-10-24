@@ -56,6 +56,15 @@ public final class MathUtils {
   }
 
   /**
+   * Returns {@code true} if {@code x} is a mathematical integer that can be represented exactly as
+   * a {@code long}.
+   */
+  @TruffleBoundary
+  public static boolean isMathematicalIntegerFittingLong(double x) {
+    return isMathematicalInteger(x) && MIN_LONG_AS_DOUBLE <= x && x < MAX_LONG_AS_DOUBLE_PLUS_ONE;
+  }
+
+  /**
    * Returns {@code true} if {@code x} represents a power of two.
    *
    * <p>
