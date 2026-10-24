@@ -339,16 +339,17 @@ public final class GlobResolver {
     if (listElementCallCount.getAndIncrement() > maxListElements()) {
       throw new InvalidGlobPatternException(ErrorMessages.create("invalidGlobTooComplex"));
     }
-    var elements = reader.listElements(securityManager, baseUri);
+    var normalizedBaseUri = normalizeUri(reader, baseUri);
+    var elements = reader.listElements(securityManager, normalizedBaseUri);
     for (var element : sorted(elements)) {
       var elementPath = resolvePath(expandedGlobSoFar, element.getName(), hasAbsoluteGlob);
       if (globPartPattern.matcher(element.getName()).matches()) {
         var name = element.isDirectory() ? element.getName() + "/" : element.getName();
-        var elementUri = IoUtils.resolve(reader, baseUri, name);
+        var elementUri = IoUtils.resolve(reader, normalizedBaseUri, name);
         result.add(new ResolvedGlobElement(elementPath, elementUri, element.isDirectory()));
       }
       if (element.isDirectory() && isGlobStar) {
-        var elementUri = IoUtils.resolve(reader, baseUri, element.getName() + "/");
+        var elementUri = IoUtils.resolve(reader, normalizedBaseUri, element.getName() + "/");
         var newExpandedGlobPattern =
             resolvePath(expandedGlobSoFar, element.getName(), hasAbsoluteGlob);
         doExpandHierarchicalGlobPart(
@@ -363,6 +364,15 @@ public final class GlobResolver {
             result);
       }
     }
+  }
+
+  /**
+   * Normalizes URIs before they are handed to the reader, so that security checks and I/O both see
+   * the same URI.
+   */
+  private static URI normalizeUri(ReaderBase reader, URI uri)
+      throws IOException, ExternalReaderProcessException {
+    return IoUtils.normalizeUri(uri, reader.hasHierarchicalUris());
   }
 
   private static void resolveHierarchicalGlob(
@@ -384,7 +394,7 @@ public final class GlobResolver {
     if (isRegularPathPart(patternPart)) {
       var newPath = resolvePath(expandedGlobPatternSoFar, patternPart, hasAbsoluteGlob);
       if (isLeaf) {
-        var newBaseUri = IoUtils.resolve(reader, baseUri, patternPart);
+        var newBaseUri = normalizeUri(reader, IoUtils.resolve(reader, baseUri, patternPart));
         if (reader.hasElement(securityManager, newBaseUri)) {
           // Note: isDirectory is not meaningful here. Setting it to false is a way to skip setting
           // it.
@@ -501,9 +511,11 @@ public final class GlobResolver {
       // short-circuit for glob pattern with no wildcards (can only match 0 or 1 element)
       if (globParts.length == 0) {
         var resolvedUri =
-            enclosingUri == null
-                ? URI.create(globPattern)
-                : IoUtils.resolve(reader, enclosingUri, globPattern);
+            normalizeUri(
+                reader,
+                enclosingUri == null
+                    ? URI.create(globPattern)
+                    : IoUtils.resolve(reader, enclosingUri, globPattern));
         if (reader.hasElement(securityManager, resolvedUri)) {
           result.put(globPattern, new ResolvedGlobElement(globPattern, resolvedUri, true));
         }

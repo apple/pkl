@@ -85,6 +85,11 @@ public final class IoUtils {
   // keep in sync with stdlib `EvaluatorSettings.reservedHttpHeaderPrefix`
   private static final String[] reservedHeaderPrefixes = {"proxy-", "sec-"};
 
+  private static final Pattern DOT_SEGMENT = Pattern.compile("\\.|%2[eE]");
+  private static final Pattern DOT_DOT_SEGMENT = Pattern.compile("(?:\\.|%2[eE]){2}");
+  private static final Pattern PATH_SEPARATOR = Pattern.compile("/|%2[fF]");
+  private static final Pattern WINDOWS_PATH_SEPARATOR = Pattern.compile("/|%2[fF]|%5[cC]");
+
   private IoUtils() {}
 
   public static URL toUrl(URI uri) throws IOException {
@@ -436,6 +441,143 @@ public final class IoUtils {
       return dependency.getPackageUri().toPackageAssetUri(path).getUri();
     }
     throw new PackageLoadError("cannotFindDependencyInProject", name);
+  }
+
+  /**
+   * Normalizes {@code uri} for the purpose of security checks.
+   *
+   * <p>In hierarchical URIs of any scheme, removes {@code .} and {@code ..} path segments, and
+   * treats {@code %2E} as equivalent to {@code .}. {@code .} is an unreserved character, so a
+   * percent-encoded {@code .} is equivalent to a literal one (RFC 3986, section 6.2.2.2). All other
+   * parts of the URI are left as is. In particular, {@code %2F} is not treated as a path separator,
+   * because it might be distinct from {@code /} (for example, in HTTP).
+   *
+   * <p>For {@code file:} URIs, also treats {@code %2F} as equivalent to {@code /}, because file
+   * systems do.
+   *
+   * <p>For {@code package:} and {@code projectpackage:} URIs, also normalizes the path of the asset
+   * in the fragment, treating {@code %2E} and {@code %2F} the same way as for {@code file:} URIs.
+   *
+   * <p>For {@code jar:} URIs, only the URI of the archive is normalized. The path within the
+   * archive is left as is, because zip file systems treat {@code ..} as a verbatim name.
+   */
+  public static URI normalizeUri(URI uri, boolean hasHierarchicalUris) {
+    var scheme = uri.getScheme();
+    if ("jar".equalsIgnoreCase(scheme)) {
+      return normalizeJarUri(uri);
+    }
+    if ("file".equalsIgnoreCase(scheme)) {
+      return normalizeUriPath(uri, true);
+    }
+    if ("package".equalsIgnoreCase(scheme) || "projectpackage".equalsIgnoreCase(scheme)) {
+      return normalizePackageUri(uri);
+    }
+    if (hasHierarchicalUris) {
+      return normalizeUriPath(uri, false);
+    }
+    return uri;
+  }
+
+  private static URI normalizePackageUri(URI uri) {
+    var assetPath = uri.getRawFragment();
+    if (assetPath == null || !assetPath.startsWith("/")) {
+      return uri;
+    }
+    var normalizedPath = normalizeRawPath(assetPath, true, isWindows());
+    if (normalizedPath.equals(uri.getRawFragment())) {
+      return uri;
+    }
+    var uriString = uri.toString();
+    var hashIndex = uriString.indexOf('#');
+    return URI.create(uriString.substring(0, hashIndex) + "#" + normalizedPath);
+  }
+
+  /**
+   * Normalizes the path of {@code uri}.
+   *
+   * @param decodeSlash whether to treat {@code %2F} as a path separator
+   */
+  private static URI normalizeUriPath(URI uri, boolean decodeSlash) {
+    if (uri.isOpaque() || uri.getScheme() == null) {
+      return uri;
+    }
+    // Use string builder instead of component-wise accessors/constructors because component-wise
+    // will re-encode (e.g. turn %2F into `/`), and can fail for unusual authorities.
+    var uriString = uri.toString();
+    var rawPath = uri.getRawPath();
+    var pathStart = uriString.indexOf(':') + 1;
+    var hasAuthority = uriString.startsWith("//", pathStart);
+    if (hasAuthority) {
+      var rawAuthority = uri.getRawAuthority();
+      pathStart += 2 + (rawAuthority == null ? 0 : rawAuthority.length());
+    }
+    assert uriString.startsWith(rawPath, pathStart);
+    var normalizedPath = normalizeRawPath(rawPath, decodeSlash, isWindows());
+    if (normalizedPath.equals(rawPath)) {
+      return uri;
+    }
+    var sb = new StringBuilder(uriString.substring(0, pathStart));
+    if (!hasAuthority && normalizedPath.startsWith("//")) {
+      // avoid the path being misinterpreted as an authority
+      sb.append("/.");
+    }
+    sb.append(normalizedPath);
+    var pathEnd = pathStart + rawPath.length();
+    sb.append(uriString, pathEnd, uriString.length());
+    return URI.create(sb.toString());
+  }
+
+  /** Normalizes the URI of the archive of {@code jar:<archive-uri>!/<path-in-archive>}. */
+  private static URI normalizeJarUri(URI uri) {
+    var uriString = uri.toString();
+    var index = uriString.indexOf('!');
+    if (index == -1) {
+      return uri;
+    }
+    var archiveUri = URI.create(uriString.substring(uri.getScheme().length() + 1, index));
+    var normalizedArchiveUri = normalizeUri(archiveUri, true);
+    if (normalizedArchiveUri.equals(archiveUri)) {
+      return uri;
+    }
+    return URI.create(uri.getScheme() + ":" + normalizedArchiveUri + uriString.substring(index));
+  }
+
+  /**
+   * Removes {@code .} and {@code ..} segments from a raw (percent-encoded) path.
+   *
+   * <p>Segments written as {@code %2e} are treated as dots, because readers decode the path before
+   * using it. All other segments are kept verbatim. A {@code ..} that cannot be resolved is kept,
+   * so the result does not match patterns it shouldn't.
+   *
+   * <p>If {@code decodeSlash} is true, treats either {@code /} or {@code %2F} as the path
+   * separator, and replaces {@code %2F} with {@code /}. Otherwise, {@code %2F} is kept as is.
+   *
+   * <p>If {@code isWindows}, then {@code %5c} is also treated as a slash.
+   */
+  static String normalizeRawPath(String rawPath, boolean decodeSlash, boolean isWindows) {
+    var isAbsolute = rawPath.startsWith("/");
+    var rawSegments = (isAbsolute ? rawPath.substring(1) : rawPath);
+    var separator = isWindows ? WINDOWS_PATH_SEPARATOR : PATH_SEPARATOR;
+    var segments = decodeSlash ? separator.split(rawSegments, -1) : rawSegments.split("/", -1);
+    var result = new ArrayList<String>(segments.length);
+    for (var i = 0; i < segments.length; i++) {
+      var segment = segments[i];
+      var isLast = i == segments.length - 1;
+      if (DOT_SEGMENT.matcher(segment).matches()) {
+        if (isLast) result.add("");
+      } else if (DOT_DOT_SEGMENT.matcher(segment).matches()) {
+        if (!result.isEmpty()
+            && !DOT_DOT_SEGMENT.matcher(result.get(result.size() - 1)).matches()) {
+          result.remove(result.size() - 1);
+        } else {
+          result.add(segment);
+        }
+        if (isLast) result.add("");
+      } else {
+        result.add(segment);
+      }
+    }
+    return (isAbsolute ? "/" : "") + String.join("/", result);
   }
 
   /**

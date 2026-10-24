@@ -27,6 +27,7 @@ import org.pkl.core.externalreader.ExternalReaderProcessException;
 import org.pkl.core.module.ModuleKey;
 import org.pkl.core.module.ModuleKeyFactory;
 import org.pkl.core.module.ModuleKeys;
+import org.pkl.core.util.IoUtils;
 
 public final class ModuleResolver {
   private final Collection<ModuleKeyFactory> factories;
@@ -78,6 +79,9 @@ public final class ModuleResolver {
       Optional<ModuleKey> key;
       try {
         key = factory.create(normalized);
+        if (key.isPresent()) {
+          key = Optional.of(renormalize(factory, normalized, key.get()));
+        }
       } catch (URISyntaxException e) {
         throw new VmExceptionBuilder()
             .withOptionalLocation(importNode)
@@ -104,5 +108,21 @@ public final class ModuleResolver {
         .evalError("noModuleLoaderRegistered", moduleUri)
         .withOptionalLocation(importNode)
         .build();
+  }
+
+  /**
+   * Ensures that the URI of the module key is normalized according to the key's own URI semantics
+   * (which {@link URI#normalize()} knows nothing about), so that security checks and loading
+   * observe the same URI.
+   *
+   * <p>Module keys are immutable, so a new one is created if {@code uri} changes.
+   */
+  private ModuleKey renormalize(ModuleKeyFactory factory, URI uri, ModuleKey key)
+      throws URISyntaxException, IOException, ExternalReaderProcessException {
+    var renormalized = IoUtils.normalizeUri(uri, key.hasHierarchicalUris());
+    if (renormalized.equals(uri)) return key;
+    return factory
+        .create(renormalized)
+        .orElseThrow(() -> new IllegalStateException("failed to renormalize a module URI"));
   }
 }
