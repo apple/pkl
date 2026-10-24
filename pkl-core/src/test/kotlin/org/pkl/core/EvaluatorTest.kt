@@ -401,11 +401,11 @@ class EvaluatorTest {
     val allowedDir = setUpAllowedAndSecretDirs(tempDir)
     val allowedUri = allowedDir.toUri()
     val evaluator = evaluatorAllowingOnly(allowedDir)
-    for (traversal in listOf("..", "%2e%2e", "%2e.", ".%2e")) {
+    for (traversal in listOf("../", "%2e%2e/", "%2e./", ".%2e/", "..%2f", "%2e%2e%2f", ".%2E%2F")) {
       val module =
         allowedDir
           .resolve("test.pkl")
-          .writeString("res = import(\"${allowedUri}$traversal/secret/secret.pkl\")")
+          .writeString("res = import(\"${allowedUri}${traversal}secret/secret.pkl\")")
       val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
       assertThat(e)
         .hasMessageContaining("/secret/")
@@ -418,11 +418,11 @@ class EvaluatorTest {
     val allowedDir = setUpAllowedAndSecretDirs(tempDir)
     val allowedUri = allowedDir.toUri()
     val evaluator = evaluatorAllowingOnly(allowedDir)
-    for (traversal in listOf("..", "%2e%2e")) {
+    for (traversal in listOf("../", "%2e%2e/", "..%2f", "%2e%2e%2f")) {
       val module =
         allowedDir
           .resolve("test.pkl")
-          .writeString("res = import*(\"${allowedUri}$traversal/secret/*.pkl\")")
+          .writeString("res = import*(\"${allowedUri}${traversal}secret/*.pkl\")")
       val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
       assertThat(e)
         .hasMessageContaining("/secret/")
@@ -438,12 +438,12 @@ class EvaluatorTest {
     val allowedUri = allowedDir.toUri()
     createModulesZip(allowedDir.resolveSibling("secret"))
     val evaluator = evaluatorAllowingOnly(allowedDir)
-    for (traversal in listOf("..", "%2e%2e")) {
+    for (traversal in listOf("../", "%2e%2e/", "..%2f", "%2e%2e%2f")) {
       val module =
         allowedDir
           .resolve("test.pkl")
           .writeString(
-            "res = import(\"jar:${allowedUri}$traversal/secret/modules.zip!/foo/baz/module2.pkl\")"
+            "res = import(\"jar:${allowedUri}${traversal}secret/modules.zip!/foo/baz/module2.pkl\")"
           )
       val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
       assertThat(e)
@@ -469,11 +469,11 @@ class EvaluatorTest {
     val allowedDir = setUpAllowedAndSecretDirs(tempDir)
     val allowedUri = allowedDir.toUri()
     val evaluator = evaluatorAllowingOnly(allowedDir)
-    for (traversal in listOf("..", "%2e%2e", "%2e.", ".%2e")) {
+    for (traversal in listOf("../", "%2e%2e/", "%2e./", ".%2e/", "..%2f", "%2e%2e%2f", ".%2E%2F")) {
       val module =
         allowedDir
           .resolve("test.pkl")
-          .writeString("res = read(\"${allowedUri}$traversal/secret/secret.txt\").text")
+          .writeString("res = read(\"${allowedUri}${traversal}secret/secret.txt\").text")
       val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
       assertThat(e)
         .hasMessageContaining("/secret/")
@@ -486,11 +486,11 @@ class EvaluatorTest {
     val allowedDir = setUpAllowedAndSecretDirs(tempDir)
     val allowedUri = allowedDir.toUri()
     val evaluator = evaluatorAllowingOnly(allowedDir)
-    for (traversal in listOf("..", "%2e%2e")) {
+    for (traversal in listOf("../", "%2e%2e/", "..%2f", "%2e%2e%2f")) {
       val module =
         allowedDir
           .resolve("test.pkl")
-          .writeString("res = read*(\"${allowedUri}$traversal/secret/*.txt\")")
+          .writeString("res = read*(\"${allowedUri}${traversal}secret/*.txt\")")
       val e = assertThrows<PklException> { evaluator.evaluate(path(module)) }
       assertThat(e)
         .hasMessageContaining("/secret/")

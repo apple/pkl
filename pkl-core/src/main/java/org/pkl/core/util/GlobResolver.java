@@ -372,7 +372,7 @@ public final class GlobResolver {
    */
   private static URI normalizeUri(ReaderBase reader, URI uri)
       throws IOException, ExternalReaderProcessException {
-    return IoUtils.normalizeUri(uri, reader.hasHierarchicalUris(), reader.hasFragmentPaths());
+    return IoUtils.normalizeUri(uri, reader.hasHierarchicalUris());
   }
 
   private static void resolveHierarchicalGlob(

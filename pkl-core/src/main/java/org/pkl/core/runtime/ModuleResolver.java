@@ -119,7 +119,7 @@ public final class ModuleResolver {
    */
   private ModuleKey renormalize(ModuleKeyFactory factory, URI uri, ModuleKey key)
       throws URISyntaxException, IOException, ExternalReaderProcessException {
-    var renormalized = IoUtils.normalizeUri(uri, key.hasHierarchicalUris(), key.hasFragmentPaths());
+    var renormalized = IoUtils.normalizeUri(uri, key.hasHierarchicalUris());
     if (renormalized.equals(uri)) return key;
     return factory
         .create(renormalized)

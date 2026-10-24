@@ -419,92 +419,125 @@ class IoUtilsTest {
 
   @Test
   fun `normalizeUri removes dot segments from hierarchical URIs`() {
-    assertThat(IoUtils.normalizeUri(URI("file:///foo/../baz.pkl"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("file:///foo/../baz.pkl"), true))
       .isEqualTo(URI("file:///baz.pkl"))
-    assertThat(IoUtils.normalizeUri(URI("file:///foo/%2e./baz.pkl"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("file:///foo/%2e./baz.pkl"), true))
       .isEqualTo(URI("file:///baz.pkl"))
-    assertThat(IoUtils.normalizeUri(URI("file:///foo/%2e%2e/baz.pkl"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("file:///foo/%2e%2e/baz.pkl"), true))
       .isEqualTo(URI("file:///baz.pkl"))
-    assertThat(IoUtils.normalizeUri(URI("https://example.com/a/../b?q=1"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/a/../b?q=1"), true))
       .isEqualTo(URI("https://example.com/b?q=1"))
   }
 
   @Test
-  fun `normalizeUri leaves non-hierarchical URIs unchanged`() {
-    val uri = URI("foo:bar/../baz")
-    assertThat(IoUtils.normalizeUri(uri, false, false)).isSameAs(uri)
-    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+  fun `normalizeUri decodes 2e but not 2f for schemes other than file, jar and package`() {
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/a/%2e%2e/b"), true))
+      .isEqualTo(URI("https://example.com/b"))
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/a/%2E./b"), true))
+      .isEqualTo(URI("https://example.com/b"))
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/a/../b"), true))
+      .isEqualTo(URI("https://example.com/b"))
+    // `%2F` is distinct from `/`, and so is preserved
+    assertThat(IoUtils.normalizeUri(URI("https://example.com/foo%2fbar/./baz"), true))
+      .isEqualTo(URI("https://example.com/foo%2fbar/baz"))
+    val uri = URI("https://example.com/a%2f..%2fb")
+    assertThat(IoUtils.normalizeUri(uri, true)).isSameAs(uri)
   }
 
   @Test
-  fun `normalizeUri only normalizes fragment if URI has fragment paths`() {
-    val uri = URI("package://example.com/foo@1.0.0#/bar/../baz.pkl")
-    assertThat(IoUtils.normalizeUri(uri, true, true))
+  fun `normalizeUri decodes both 2e and 2f for file URIs`() {
+    assertThat(IoUtils.normalizeUri(URI("file:///allowed/..%2fsecret/x"), true))
+      .isEqualTo(URI("file:///secret/x"))
+    assertThat(IoUtils.normalizeUri(URI("file:///allowed/%2E%2e%2Fsecret/x"), true))
+      .isEqualTo(URI("file:///secret/x"))
+  }
+
+  @Test
+  fun `normalizeUri decodes both 2e and 2f in package asset paths`() {
+    assertThat(IoUtils.normalizeUri(URI("package://example.com/foo@1.0.0#/a%2f..%2fb.pkl"), true))
+      .isEqualTo(URI("package://example.com/foo@1.0.0#/b.pkl"))
+    assertThat(
+        IoUtils.normalizeUri(URI("projectpackage://example.com/foo@1.0.0#/a/%2e%2e/b.pkl"), true)
+      )
+      .isEqualTo(URI("projectpackage://example.com/foo@1.0.0#/b.pkl"))
+  }
+
+  @Test
+  fun `normalizeUri decodes 2f in the archive URI of jar file URIs`() {
+    assertThat(IoUtils.normalizeUri(URI("jar:file:///allowed/..%2fsecret/x.zip!/a%2f..%2fb"), true))
+      .isEqualTo(URI("jar:file:///secret/x.zip!/a%2f..%2fb"))
+  }
+
+  @Test
+  fun `normalizeUri leaves non-hierarchical URIs unchanged`() {
+    val uri = URI("foo:/bar/../baz")
+    assertThat(IoUtils.normalizeUri(uri, false)).isSameAs(uri)
+  }
+
+  @Test
+  fun `normalizeUri only normalizes fragment if URI is a package`() {
+    assertThat(IoUtils.normalizeUri(URI("package://example.com/foo@1.0.0#/bar/../baz.pkl"), true))
       .isEqualTo(URI("package://example.com/foo@1.0.0#/baz.pkl"))
-    assertThat(IoUtils.normalizeUri(uri, true, false)).isEqualTo(uri)
+    assertThat(IoUtils.normalizeUri(URI("foo://example.com/bar#/bar/../baz.pkl"), true))
+      .isEqualTo(URI("foo://example.com/bar#/bar/../baz.pkl"))
   }
 
   @Test
   fun `normalizeUri does not add a fragment`() {
     val uri = URI("https://example.com/foo.pkl")
-    assertThat(IoUtils.normalizeUri(uri, true, true)).isEqualTo(uri)
-    assertThat(IoUtils.normalizeUri(uri, true, true).toString()).doesNotContain("#")
+    assertThat(IoUtils.normalizeUri(uri, true)).isEqualTo(uri)
+    assertThat(IoUtils.normalizeUri(uri, true).toString()).doesNotContain("#")
   }
 
   @Test
   fun `normalizeUri returns the same URI if already normalized`() {
     val uri = URI("file:///foo/b%C3%A9/baz%20qux.pkl")
-    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+    assertThat(IoUtils.normalizeUri(uri, true)).isSameAs(uri)
   }
 
   @Test
   fun `normalizeUri only normalizes the archive URI of jar URIs`() {
-    assertThat(IoUtils.normalizeUri(URI("jar:file:///foo/../bar.zip!/a/../b.pkl"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("jar:file:///foo/../bar.zip!/a/../b.pkl"), true))
       .isEqualTo(URI("jar:file:///bar.zip!/a/../b.pkl"))
-    assertThat(IoUtils.normalizeUri(URI("jar:file:///foo/%2e%2e/bar.zip!/a/b.pkl"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("jar:file:///foo/%2e%2e/bar.zip!/a/b.pkl"), true))
       .isEqualTo(URI("jar:file:///bar.zip!/a/b.pkl"))
-    assertThat(IoUtils.normalizeUri(URI("JAR:file:///foo/../bar.zip!/b.pkl"), true, false))
+    assertThat(IoUtils.normalizeUri(URI("JAR:file:///foo/../bar.zip!/b.pkl"), true))
       .isEqualTo(URI("JAR:file:///bar.zip!/b.pkl"))
     val uri = URI("jar:file:///foo/bar.zip!/a/../b.pkl")
-    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+    assertThat(IoUtils.normalizeUri(uri, true)).isSameAs(uri)
   }
 
   @Test
-  fun `normalizeUri preserves encoding of everything except dot segments`() {
-    assertThat(IoUtils.normalizeUri(URI("https://example.com/a%2Fb/./c"), true, false))
-      .isEqualTo(URI("https://example.com/a%2Fb/c"))
-    assertThat(IoUtils.normalizeUri(URI("file:///b%C3%A9/./x%20y"), true, false))
+  fun `normalizeUri preserves encoding of everything except dot and slash segments`() {
+    assertThat(IoUtils.normalizeUri(URI("file://example.com/a%2Fb/./c"), true))
+      .isEqualTo(URI("file://example.com/a/b/c"))
+    assertThat(IoUtils.normalizeUri(URI("file:///b%C3%A9/./x%20y"), true))
       .isEqualTo(URI("file:///b%C3%A9/x%20y"))
-    assertThat(IoUtils.normalizeUri(URI("https://h/a/../b?x=%2e%2e#frag"), true, false))
-      .isEqualTo(URI("https://h/b?x=%2e%2e#frag"))
+    assertThat(IoUtils.normalizeUri(URI("file://h/a/../b?x=%2e%2e#frag"), true))
+      .isEqualTo(URI("file://h/b?x=%2e%2e#frag"))
   }
 
   @Test
   fun `normalizeUri handles unusual authorities`() {
-    assertThat(
-        IoUtils.normalizeUri(URI("https://user:p%40ss@example.com:8080/a/../b"), true, false)
-      )
-      .isEqualTo(URI("https://user:p%40ss@example.com:8080/b"))
-    assertThat(IoUtils.normalizeUri(URI("https://[::1]:8080/a/../b"), true, false))
-      .isEqualTo(URI("https://[::1]:8080/b"))
+    assertThat(IoUtils.normalizeUri(URI("file://user:p%40ss@example.com:8080/a/../b"), true))
+      .isEqualTo(URI("file://user:p%40ss@example.com:8080/b"))
+    assertThat(IoUtils.normalizeUri(URI("file://[::1]:8080/a/../b"), true))
+      .isEqualTo(URI("file://[::1]:8080/b"))
   }
 
   @Test
   fun `normalizeUri does not turn a path into an authority`() {
-    assertThat(IoUtils.normalizeUri(URI("file:////etc/../x"), true, false))
-      .isEqualTo(URI("file:////x"))
-    assertThat(IoUtils.normalizeUri(URI("file:/a/..//b"), true, false)).isEqualTo(URI("file:/.//b"))
+    assertThat(IoUtils.normalizeUri(URI("file:////etc/../x"), true)).isEqualTo(URI("file:////x"))
+    assertThat(IoUtils.normalizeUri(URI("file:/a/..//b"), true)).isEqualTo(URI("file:/.//b"))
   }
 
   @Test
   fun `normalizeUri handles trailing dot segments and unresolvable dot-dot segments`() {
-    assertThat(IoUtils.normalizeUri(URI("file:///a/b/.."), true, false))
-      .isEqualTo(URI("file:///a/"))
-    assertThat(IoUtils.normalizeUri(URI("file:///a/."), true, false)).isEqualTo(URI("file:///a/"))
-    assertThat(IoUtils.normalizeUri(URI("file:///a/../.."), true, false))
-      .isEqualTo(URI("file:///../"))
+    assertThat(IoUtils.normalizeUri(URI("file:///a/b/.."), true)).isEqualTo(URI("file:///a/"))
+    assertThat(IoUtils.normalizeUri(URI("file:///a/."), true)).isEqualTo(URI("file:///a/"))
+    assertThat(IoUtils.normalizeUri(URI("file:///a/../.."), true)).isEqualTo(URI("file:///../"))
     val uri = URI("file:///../x")
-    assertThat(IoUtils.normalizeUri(uri, true, false)).isSameAs(uri)
+    assertThat(IoUtils.normalizeUri(uri, true)).isSameAs(uri)
   }
 
   @Test
@@ -518,8 +551,92 @@ class IoUtilsTest {
         "package://example.com/foo@1.0.0#/a/%2e%2e/../b.pkl",
         "jar:file:///a/../b.zip!/c/../d",
       )) {
-      val once = IoUtils.normalizeUri(URI(str), true, true)
-      assertThat(IoUtils.normalizeUri(once, true, true)).isEqualTo(once)
+      val once = IoUtils.normalizeUri(URI(str), true)
+      assertThat(IoUtils.normalizeUri(once, true)).isEqualTo(once)
     }
+  }
+
+  @Test
+  fun `normalizeRawPath removes dot segments`() {
+    for (isWindows in listOf(false, true)) {
+      for (decodeSlash in listOf(false, true)) {
+        fun normalize(path: String) = IoUtils.normalizeRawPath(path, decodeSlash, isWindows)
+        assertThat(normalize("/a/b/../c")).isEqualTo("/a/c")
+        assertThat(normalize("/a/%2e%2E/b")).isEqualTo("/b")
+        assertThat(normalize("/a/./b/.")).isEqualTo("/a/b/")
+        assertThat(normalize("/a/b/..")).isEqualTo("/a/")
+        assertThat(normalize("/../x")).isEqualTo("/../x")
+        assertThat(normalize("/a/../..")).isEqualTo("/../")
+        assertThat(normalize("//etc/../x")).isEqualTo("//x")
+        assertThat(normalize("")).isEqualTo("")
+        assertThat(normalize("/")).isEqualTo("/")
+      }
+    }
+  }
+
+  @Test
+  fun `normalizeRawPath treats 2f as a path separator only if decodeSlash`() {
+    for (isWindows in listOf(false, true)) {
+      assertThat(IoUtils.normalizeRawPath("/a%2f..%2fb", true, isWindows)).isEqualTo("/b")
+      assertThat(IoUtils.normalizeRawPath("/a%2F..%2Fb", true, isWindows)).isEqualTo("/b")
+      assertThat(IoUtils.normalizeRawPath("/a%2fb", true, isWindows)).isEqualTo("/a/b")
+      assertThat(IoUtils.normalizeRawPath("/a/.%2f./b", true, isWindows)).isEqualTo("/a/b")
+      assertThat(IoUtils.normalizeRawPath("/%2f..%2fx", true, isWindows)).isEqualTo("/x")
+      // `%2F` is distinct from `/` if not decodeSlash
+      assertThat(IoUtils.normalizeRawPath("/a%2f..%2fb", false, isWindows)).isEqualTo("/a%2f..%2fb")
+      assertThat(IoUtils.normalizeRawPath("/a%2fb/./c", false, isWindows)).isEqualTo("/a%2fb/c")
+    }
+  }
+
+  @Test
+  fun `normalizeRawPath does not decode 2f twice`() {
+    assertThat(IoUtils.normalizeRawPath("/a%252f..%2fb", true, false)).isEqualTo("/a%252f../b")
+    assertThat(IoUtils.normalizeRawPath("/a%255c..%5cb", true, true)).isEqualTo("/a%255c../b")
+  }
+
+  @Test
+  fun `normalizeRawPath treats 5c as a path separator only on Windows`() {
+    // on Windows, `\` is a path separator
+    assertThat(IoUtils.normalizeRawPath("/a%5c..%5cb", true, true)).isEqualTo("/b")
+    assertThat(IoUtils.normalizeRawPath("/a%5C..%5Cb", true, true)).isEqualTo("/b")
+    assertThat(IoUtils.normalizeRawPath("/a%5cb", true, true)).isEqualTo("/a/b")
+    assertThat(IoUtils.normalizeRawPath("/a/..%5c..%5cb", true, true)).isEqualTo("/../b")
+    assertThat(IoUtils.normalizeRawPath("/a%5c.%2f..%2fb", true, true)).isEqualTo("/b")
+    // on other platforms, `\` is a regular file name character
+    assertThat(IoUtils.normalizeRawPath("/a%5c..%5cb", true, false)).isEqualTo("/a%5c..%5cb")
+    assertThat(IoUtils.normalizeRawPath("/a%5C..%5Cb/./c", true, false)).isEqualTo("/a%5C..%5Cb/c")
+  }
+
+  @Test
+  fun `normalizeRawPath does not treat 5c as a path separator if not decodeSlash`() {
+    for (isWindows in listOf(false, true)) {
+      assertThat(IoUtils.normalizeRawPath("/a%5c..%5cb", false, isWindows)).isEqualTo("/a%5c..%5cb")
+    }
+  }
+
+  @Test
+  fun `normalizeRawPath is idempotent`() {
+    for (isWindows in listOf(false, true)) {
+      for (decodeSlash in listOf(false, true)) {
+        for (path in
+          listOf("/a/../b", "/a%2f..%2fb", "/a%5c..%5cb", "/a/.%5c./b", "//x/../y", "/../../a")) {
+          val once = IoUtils.normalizeRawPath(path, decodeSlash, isWindows)
+          assertThat(IoUtils.normalizeRawPath(once, decodeSlash, isWindows)).isEqualTo(once)
+        }
+      }
+    }
+  }
+
+  @Test
+  fun `normalizeUri does not treat 5c as a path separator in other schemes`() {
+    val uri = URI("https://example.com/allowed/..%5csecret/x")
+    assertThat(IoUtils.normalizeUri(uri, true)).isSameAs(uri)
+  }
+
+  @Test
+  fun `normalizeUri replaces the whole asset path of a package URI if it changed`() {
+    // the normalized asset path must not be compared to the path of the package
+    assertThat(IoUtils.normalizeUri(URI("package://example.com/x@1.0.0#/a/../x@1.0.0"), true))
+      .isEqualTo(URI("package://example.com/x@1.0.0#/x@1.0.0"))
   }
 }

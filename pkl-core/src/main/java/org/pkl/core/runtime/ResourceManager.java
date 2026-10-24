@@ -101,10 +101,7 @@ public final class ResourceManager {
     URI normalizedUri;
     try {
       normalizedUri =
-          IoUtils.normalizeUri(
-              resourceUri,
-              reader != null && reader.hasHierarchicalUris(),
-              reader != null && reader.hasFragmentPaths());
+          IoUtils.normalizeUri(resourceUri, reader != null && reader.hasHierarchicalUris());
     } catch (ExternalReaderProcessException | IOException e) {
       throw new VmExceptionBuilder().withCause(e).withOptionalLocation(readNode).build();
     }
