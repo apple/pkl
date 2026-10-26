@@ -52,6 +52,7 @@ public enum NodeType {
   ASSIGN(NodeKind.TERMINAL),
   AT(NodeKind.TERMINAL),
   COLON(NodeKind.TERMINAL),
+  DCOLON(NodeKind.TERMINAL),
   COMMA(NodeKind.TERMINAL),
   DOT(NodeKind.TERMINAL),
   GT(NodeKind.TERMINAL),

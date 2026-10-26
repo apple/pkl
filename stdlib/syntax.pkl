@@ -305,6 +305,7 @@ typealias TerminalNodeType =
     | "assign"
     | "at"
     | "colon"
+    | "dcolon"
     | "comma"
     | "dot"
     | "gt"

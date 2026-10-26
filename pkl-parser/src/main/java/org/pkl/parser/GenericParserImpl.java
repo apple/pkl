@@ -1604,6 +1604,7 @@ class GenericParserImpl {
           case ASSIGN -> NodeType.ASSIGN;
           case AT -> NodeType.AT;
           case COLON -> NodeType.COLON;
+          case DCOLON -> NodeType.DCOLON;
           case COMMA -> NodeType.COMMA;
           case DOT -> NodeType.DOT;
           case GT -> NodeType.GT;

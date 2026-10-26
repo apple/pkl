@@ -368,7 +368,7 @@ final class Builder {
     var argListIdx = -1;
     for (var i = 0; i < lastNode.children.size(); i++) {
       var node = lastNode.children.get(i);
-      if (node.type == NodeType.TERMINAL && node.text(source).equals("::")) {
+      if (node.type == NodeType.DCOLON) {
         typeArgListIdx = i;
         continue;
       }
