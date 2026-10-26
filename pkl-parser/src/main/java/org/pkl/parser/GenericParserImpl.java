@@ -15,7 +15,10 @@
  */
 package org.pkl.parser;
 
+import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
+
 import java.util.ArrayList;
+import java.util.BitSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Supplier;
@@ -35,6 +38,11 @@ class GenericParserImpl {
   private FullToken _lookahead;
   private int cursor = 0;
   private final List<FullToken> tokens = new ArrayList<>();
+  private int speculativeTokenCount = 0;
+  private boolean isSpeculativeParse = false;
+  private final BitSet failedTypeArgAttempts = new BitSet();
+  // char indices of `<` that might start a type argument list; computed lazily
+  private @Nullable BitSet typeArgCandidates;
 
   GenericParserImpl(String source) {
     this.lexer = new Lexer(source);
@@ -759,19 +767,18 @@ class GenericParserImpl {
     }
   }
 
-  /**
-   * Speculatively parses a method call's type argument list, e.g. the `<Int>` in `foo<Int>(5)`.
-   *
-   * <p>A `<` that follows an identifier is ambiguous with the less-than operator. We prefer to
-   * parse it as a type argument list, which is only accepted if it is well-formed and directly
-   * followed by `(`. Otherwise, the parser state is restored and `null` is returned, so that the
-   * `<` gets parsed as a binary operator (for example, `foo<qux + 5>(5)`).
-   */
   private @Nullable Node tryParseTypeArgumentList() {
-    if (lookahead() != Token.LT || !noSemicolonInbetween() || _lookahead.newLinesBetween != 0) {
+    if (lookahead() != Token.LT
+        || !noSemicolonInbetween()
+        || _lookahead.newLinesBetween != 0
+        || failedTypeArgAttempts.get(spanLookahead.charIndex())
+        || !isTypeArgCandidate(spanLookahead.charIndex())) {
       return null;
     }
     var savedCursor = cursor;
+    var savedCharIndex = spanLookahead.charIndex();
+    var savedIsSpeculativeParse = isSpeculativeParse;
+    isSpeculativeParse = true;
     try {
       var typeArgs = parseTypeArgumentList();
       if (lookahead() == Token.LPAREN
@@ -781,9 +788,23 @@ class GenericParserImpl {
       }
     } catch (GenericParserError ignored) {
       // not a type argument list
+    } finally {
+      isSpeculativeParse = savedIsSpeculativeParse;
     }
+    failedTypeArgAttempts.set(savedCharIndex);
     backtrackTo(savedCursor);
     return null;
+  }
+
+  private boolean isTypeArgCandidate(int charIndex) {
+    if (typeArgCandidates == null) {
+      var scanner = new TypeArgumentCandidates();
+      for (var tk : tokens) {
+        scanner.accept(tk.token, tk.span.charIndex());
+      }
+      typeArgCandidates = scanner.candidates();
+    }
+    return typeArgCandidates.get(charIndex);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {
@@ -1527,6 +1548,12 @@ class GenericParserImpl {
   }
 
   private FullToken next() {
+    if (isSpeculativeParse) {
+      if (speculativeTokenCount > MAX_SPECULATIVE_TOKEN_COUNT) {
+        throw new MaxBacktrackCountError(spanLookahead);
+      }
+      speculativeTokenCount++;
+    }
     var tmp = tokens.get(cursor++);
     _lookahead = tokens.get(cursor);
     lookahead = _lookahead.token;
@@ -1536,12 +1563,6 @@ class GenericParserImpl {
 
   private boolean noSemicolonInbetween() {
     return tokens.get(cursor - 1).token != Token.SEMICOLON;
-  }
-
-  private void backtrack() {
-    var tmp = tokens.get(--cursor);
-    lookahead = tmp.token;
-    spanLookahead = tmp.span;
   }
 
   private void backtrackTo(int point) {

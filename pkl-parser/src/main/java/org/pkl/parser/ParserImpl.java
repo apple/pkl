@@ -15,8 +15,11 @@
  */
 package org.pkl.parser;
 
+import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
+
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.BitSet;
 import java.util.Collections;
 import java.util.List;
 import java.util.function.Supplier;
@@ -89,7 +92,6 @@ import org.pkl.parser.util.ErrorMessages;
 
 @SuppressWarnings("DuplicatedCode")
 final class ParserImpl {
-
   private final Lexer lexer;
   private Token lookahead;
   private Span spanLookahead;
@@ -97,8 +99,15 @@ final class ParserImpl {
   private FullToken prev = new FullToken(Token.SOF, new Span(0, 0), 0);
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
+  private int speculativeTokenCount = 0;
+  private final BitSet failedTypeArgAttempts = new BitSet();
+  private boolean isSpeculativeParse = false;
+  private final String source;
+  // char indices of `<` that might start a type argument list
+  private @Nullable BitSet typeArgCandidates;
 
   ParserImpl(String source) {
+    this.source = source;
     this.lexer = new Lexer(source);
     _lookahead = forceNext();
     lookahead = _lookahead.token;
@@ -1568,16 +1577,12 @@ final class ParserImpl {
     return new TypeArgumentList(pars, start.endWith(end));
   }
 
-  /**
-   * Speculatively parses a method call's type argument list, e.g. the `<Int>` in `foo<Int>(5)`.
-   *
-   * <p>A `<` that follows an identifier is ambiguous with the less-than operator. We prefer to
-   * parse it as a type argument list, which is only accepted if it is well-formed and directly
-   * followed by `(`. Otherwise, the parser state is restored and `null` is returned, so that the
-   * `<` gets parsed as a binary operator (for example, `foo<qux + 5>(5)`).
-   */
   private @Nullable TypeArgumentList tryParseTypeArgumentList() {
-    if (lookahead != Token.LT || precededBySemicolon || _lookahead.newLinesBetween != 0) {
+    if (lookahead != Token.LT
+        || precededBySemicolon
+        || _lookahead.newLinesBetween != 0
+        || failedTypeArgAttempts.get(spanLookahead.charIndex())
+        || !isTypeArgCandidate(spanLookahead.charIndex())) {
       return null;
     }
     var lexerSnapshot = lexer.snapshot();
@@ -1587,6 +1592,8 @@ final class ParserImpl {
     var savedPrev = prev;
     var savedFullLookahead = _lookahead;
     var savedPrecededBySemicolon = precededBySemicolon;
+    var savedIsSpeculativeParse = isSpeculativeParse;
+    isSpeculativeParse = true;
     try {
       var typeArgs = parseTypeArgumentList();
       if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
@@ -1594,7 +1601,10 @@ final class ParserImpl {
       }
     } catch (ParserError ignored) {
       // not a type argument list
+    } finally {
+      isSpeculativeParse = savedIsSpeculativeParse;
     }
+    failedTypeArgAttempts.set(savedSpanLookahead.charIndex());
     lexer.restore(lexerSnapshot);
     lookahead = savedLookahead;
     spanLookahead = savedSpanLookahead;
@@ -1603,6 +1613,13 @@ final class ParserImpl {
     _lookahead = savedFullLookahead;
     precededBySemicolon = savedPrecededBySemicolon;
     return null;
+  }
+
+  private boolean isTypeArgCandidate(int charIndex) {
+    if (typeArgCandidates == null) {
+      typeArgCandidates = TypeArgumentCandidates.scan(new Lexer(source));
+    }
+    return typeArgCandidates.get(charIndex);
   }
 
   private ArgumentList parseArgumentList() {
@@ -1879,6 +1896,12 @@ final class ParserImpl {
   }
 
   private FullToken next() {
+    if (isSpeculativeParse) {
+      if (speculativeTokenCount > MAX_SPECULATIVE_TOKEN_COUNT) {
+        throw new MaxBacktrackCountError(spanLookahead);
+      }
+      speculativeTokenCount++;
+    }
     if (backtracking) {
       backtracking = false;
       lookahead = _lookahead.token;
