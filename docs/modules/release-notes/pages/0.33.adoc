@@ -101,6 +101,7 @@ https://github.com/apple/pkl/pull/1812
 === CPU Profiler
 
 https://github.com/apple/pkl/pull/1823
+https://github.com/apple/pkl/pull/1931
 
 
 == Noteworthy [small]#🎶#
@@ -333,6 +334,12 @@ As a consequence, an invalid URI is now reported as a type constraint violation 
 * Use module cache directory configured via the CLI or Gradle while evaluating `PklProject` and `settings.pkl` files (pr:https://github.com/apple/pkl/pull/1900[]).
 * Typed values are rendered with more helpful type names in error messages and `Any.toString()` (pr:https://github.com/apple/pkl/pull/1412[]).
 * Add support for customizing spring boot `@ConfigurationProperties` in generated Java/Kotlin code (pr:https://github.com/apple/pkl/pull/1897[]).
+* Improve error message for module and resource `file:` URIs with authorities (pr:https://github.com/apple/pkl/pull/629[]). 
+* Improve error message when typealias type checks fail (pr:https://github.com/apple/pkl/pull/1914[]).
+* Improve error message when attempting to instantiate/amend non-instantiable types (pr:https://github.com/apple/pkl/pull/1916[]).
+* Add javadocs that were missing for some public APIs (pr:https://github.com/apple/pkl/pull/1813[]).
+* Force the returned value in `test.catch()` and `test.catchOrNull()` (pr:https://github.com/apple/pkl/pull/1910[]).
+* Add summaries and groups to Gradle tasks (pr:https://github.com/apple/pkl/pull/190[]).
 * Improve performance of reading `const` members (pr:https://github.com/apple/pkl/pull/1835[]).
 * Improve performance of `Listing` and `Mapping` type casts (pr:https://github.com/apple/pkl/pull/1837[]).
 * Improve performance of lexical frame resolution (pr:https://github.com/apple/pkl/pull/1842[]).
@@ -361,20 +368,42 @@ As a consequence, an invalid URI is now reported as a type constraint violation 
 * Fix invalid prefix when generating spring boot config (pr:https://github.com/apple/pkl/pull/1862[]).
 * Fix `pkl run` behaviors where (sub)commands amend `pkl:Command` without extending it (pr:https://github.com/apple/pkl/pull/1882[]).
 * Fix `String.endsWith()` for overlapping regex matches (pr:https://github.com/apple/pkl/pull/1880[], pr:https://github.com/apple/pkl/pull/1884[]).
+* Fix behavior of `String.last*()` methods for `Regex` patterns with lookarounds (pr:https://github.com/apple/pkl/pull/1908[]).
 * Fix leak of external reader processes in the language binding server (pr:https://github.com/apple/pkl/pull/1885[]).
 * Fix decoding of `Regex` values from pkl-binary data (pr:https://github.com/apple/pkl/pull/1895[]).
+* Fix incorrect truncation of module names in generated documentation (pr:https://github.com/apple/pkl/pull/1909[]].
+* Fix a formatting instability (pr:https://github.com/apple/pkl/pull/1911[]).
+* Fix qualified type resolution in invisible scopes (pr:https://github.com/apple/pkl/pull/1915[]).
+* Fix parameterized type checks inside certain constraints in typealias bodies (pr:https://github.com/apple/pkl/pull/1906[]).
+* Fix hash computation for `Listing`, `DataSize`, and `Duration` Pkl values (pr:https://github.com/apple/pkl/pull/1922[]).
+* Fix inconsistent `equals()` and `hashCode()` behavior for `Duration` and `DataSize` values in the Java API (pr:https://github.com/apple/pkl/pull/1932[]).
+* Fix overly strict type check of subscript keys in `pkl.ref#Reference` values with referent of type `Map | Mapping` (pr:https://github.com/apple/pkl/pull/1933[]).
+* Fix resolution of `module` types evaluated in the body of a parent member (pr:https://github.com/apple/pkl/pull/1936[]).
+
+== Security Fixes [small]#🔒#
+
+The following security vulnerabilities were fixed:
+
+* Cleanly handle deep recursion in parser and formatter (pr:https://github.com/apple/pkl/pull/1918[]).
+* Improve normalization of URIs so that encoded characters cannot bypassed allowed modules/resources (pr:https://github.com/apple/pkl/pull/1937[]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
+* https://github.com/AAGAM17[@AAGAM17]
+* https://github.com/aashish254[@aashish254]
 * https://github.com/bioball[@bioball]
+* https://github.com/Carpe-Wang[@Carpe-Wang]
 * https://github.com/dylanpulver[@dylanpulver]
+* https://github.com/goutamadwant[@goutamadwant]
 * https://github.com/henriquejsza[@henriquejsza]
 * https://github.com/HT154[@HT154]
 * https://github.com/kwy404[@kwy404]
+* https://github.com/mayc7n[@mayc7n]
 * https://github.com/protobufel2[@protobufel2]
 * https://github.com/RushikeshGandhmal[@RushikeshGandhmal]
 * https://github.com/sergiosalvi[@sergiosalvi]
+* https://github.com/sgammon[@sgammon]
 * https://github.com/stackoverflow[@stackoverflow]
 * https://github.com/vinayakj592[@vinayakj592]
