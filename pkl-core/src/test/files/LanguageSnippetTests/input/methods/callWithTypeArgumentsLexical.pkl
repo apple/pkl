@@ -1,0 +1,96 @@
+open module callWithTypeArguments
+
+import "pkl:test"
+import "pkl:ref"
+
+class Domain extends ref.AbstractDomain {
+  function renderReference(reference: ref.Reference) = "<ref>"
+}
+
+class Person {
+  name: String
+
+  function greet<A, B>() = "hi \(name)"
+}
+
+lexical {
+  local function f<T>(): Dynamic = new { res = 5 as T }
+  res1 = test.catch(() -> f::<String>().res)
+
+  local function g<T>(): Dynamic = new {
+    local myProp: T = 5
+    res = myProp
+  }
+  res2 = test.catch(() -> g::<String>().res)
+
+  local function nested<T>() = new Dynamic {
+    local function inner<U>(x: Listing<T>, y: U) = x
+    local function inner2<U>(x: T, y: U) = x
+    local function inner3(x: T) = x
+    local function inner4<U>() = new Dynamic {
+      local function innest1<V>(x: T, y: U, z: V) = x
+      local function innest2(x: T) = x
+      res1 = innest1::<String>(new { name = "x" }, 1, "hi")
+      res2 = innest1(new { name = "x" }, 1, "hi")
+      res3 = test.catch(() -> innest2(1))
+    }
+
+    res1 = inner::<Int>(new { new { name = "x" } }, 1)
+    res2 = inner2::<Int>(new { name = "x" }, 1)
+    res3 = inner(new { new { name = "x" } }, 1)
+    res4 = inner2(new { name = "x" }, 1)
+    res5 = test.catch(() -> inner3(1))
+    nested = inner4::<Int>()
+  }
+  nested = nested::<Person>()
+
+  inEagerScope {
+    local function k1<T>() = new {
+      [let (elem = "key" as T) elem] = "value"
+    }
+    test.catch(() -> k1::<Int>())
+
+    local function k2<T>() = new {
+      for (i in List(1, 2, 3)) {
+        [let (elem = "key".repeat(i) as T) elem as T] = "value"
+      }
+    }
+    k2::<String(length < 10)>()
+  }
+
+  reify {
+    local function makeMyObj<T>() = new {
+      res = ref.Reference::<Domain, T>(new {}, null)
+    }
+
+    res = makeMyObj::<Person>().res.name
+  }
+}
+
+local function nested<T>(foo) = new Dynamic {
+  local function inner<U>(x: Listing<T>, y: U) = x
+  local function inner2<U>(x: T, y: U) = x
+  local function inner3(x: T) = x
+  local function inner4<U>() = new Dynamic {
+    local function innest1<V>(x: T, y: U, z: V) = x
+    local function innest2(x: T) = x
+    res1 = innest1::<String>(new { name = "x" }, 1, "hi")
+    res2 = innest1(new { name = "x" }, 1, "hi")
+    res3 = test.catch(() -> innest2(1))
+  }
+  res1 = inner::<Int>(new { new { name = "x" } }, foo)
+  res2 = inner2::<Int>(new { name = "x" }, 1)
+  res3 = inner(new { new { name = "x" } }, 1)
+  res4 = inner2(new { name = "x" }, 1)
+  res5 = test.catch(() -> inner3(1))
+  nested = inner4::<Int>()
+}
+nested = nested::<Person>(1)
+
+output {
+  renderer {
+    converters {
+      [ref.Reference] = (it) -> it.toString()
+    }
+  }
+}

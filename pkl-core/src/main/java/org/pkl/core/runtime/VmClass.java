@@ -29,7 +29,6 @@ import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.*;
 import org.pkl.core.ast.member.*;
 import org.pkl.core.ast.type.TypeNode;
@@ -51,7 +50,7 @@ public final class VmClass extends VmValue {
   private final List<VmTyped> annotations;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private final VmTyped prototype;
 
   private final EconomicMap<Identifier, ClassProperty> declaredProperties = EconomicMaps.create();
@@ -127,7 +126,7 @@ public final class VmClass extends VmValue {
       List<VmTyped> annotations,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       VmTyped prototype) {
 
     this.sourceSection = sourceSection;
@@ -191,6 +190,41 @@ public final class VmClass extends VmValue {
   }
 
   @TruffleBoundary
+  private void checkMethodOverrides() {
+    var methodCursor = declaredMethods.getEntries();
+    while (methodCursor.advance()) {
+      var method = methodCursor.getValue();
+      if (method.isLocal()) continue;
+      var name = methodCursor.getKey();
+      ClassMethod parent = null;
+      for (var clazz = superclass; clazz != null; clazz = clazz.superclass) {
+        parent = clazz.getDeclaredMethod(name);
+        if (parent != null) break;
+      }
+      if (parent == null) continue;
+
+      checkMethodOverride(method, parent);
+    }
+  }
+
+  private void checkMethodOverride(ClassMethod method, ClassMethod parent) {
+    var typeParamCount = method.getTypeParameterCount();
+    var parentTypeParamCount = parent.getTypeParameterCount();
+
+    if (typeParamCount != parentTypeParamCount) {
+      throw new VmExceptionBuilder()
+          .evalError(
+              "methodTypeParameterCountMismatch",
+              method.getQualifiedName(),
+              parent.getQualifiedName(),
+              parentTypeParamCount,
+              typeParamCount)
+          .withSourceSection(method.getHeaderSection())
+          .build();
+    }
+  }
+
+  @TruffleBoundary
   public void addProperty(ClassProperty property) {
     prototype.addProperty(property.getInitializer());
     EconomicMaps.put(declaredProperties, property.getName(), property);
@@ -242,14 +276,15 @@ public final class VmClass extends VmValue {
   /** Called when the entire class hierarchy is completely initialized, including superclasses. */
   public void onFullyInitialized() {
     checkAbstractMethods();
+    checkMethodOverrides();
   }
 
   @TruffleBoundary
   public int getTypeParameterCount() {
-    return typeParameters.size();
+    return typeParameters.length;
   }
 
-  public List<TypeParameter> getTypeParameters() {
+  public TypeParameter[] getTypeParameters() {
     return typeParameters;
   }
 
@@ -723,12 +758,12 @@ public final class VmClass extends VmValue {
               VmModifier.export(modifiers, true),
               exportedAnnotations,
               classInfo,
-              typeParameters,
+              TypeParameter.export(typeParameters),
               properties,
               methods,
               moduleClass);
 
-      for (var parameter : typeParameters) {
+      for (var parameter : __pClass.getTypeParameters()) {
         parameter.initOwner(__pClass);
       }
 

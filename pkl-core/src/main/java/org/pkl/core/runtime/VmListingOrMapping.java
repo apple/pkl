@@ -71,7 +71,13 @@ public abstract class VmListingOrMapping extends VmObject {
       if (obj.typeCastNode != null && obj.typeCastNode != prevTypeCastNode) {
         var callTarget = obj.typeCastNode.getCallTarget();
         try {
-          result = callNode.call(callTarget, obj.typeCheckReceiver, obj.typeCheckOwner, result);
+          result =
+              callNode.call(
+                  callTarget,
+                  VmUtils.getReceiver(enclosingFrame),
+                  VmUtils.getOwner(enclosingFrame),
+                  obj.enclosingFrame,
+                  result);
           prevTypeCastNode = obj.typeCastNode;
         } catch (VmException e) {
           CompilerDirectives.transferToInterpreter();
@@ -109,7 +115,8 @@ public abstract class VmListingOrMapping extends VmObject {
       var callNode = IndirectCallNode.getUncached();
       var callTarget = typeCastNode.getCallTarget();
       try {
-        result = callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, result);
+        result =
+            callNode.call(callTarget, typeCheckReceiver, typeCheckOwner, enclosingFrame, result);
       } catch (VmException e) {
         var member = VmUtils.findMember(parent, key);
         assert member != null; // already found the member's cached value
@@ -133,6 +140,9 @@ public abstract class VmListingOrMapping extends VmObject {
     if (typeCastNode == null) {
       return false;
     }
-    return typeCastNode.getTypeNode().getType().equals(typeNode.getType());
+    var castTypeNode = typeCastNode.getTypeNode();
+    // if cast type is not final, we can't know if typeNode is a subtype
+    if (!castTypeNode.isFinalType()) return false;
+    return castTypeNode.getType().equals(typeNode.getType());
   }
 }

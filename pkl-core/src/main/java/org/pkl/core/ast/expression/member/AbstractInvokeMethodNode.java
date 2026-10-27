@@ -15,6 +15,8 @@
  */
 package org.pkl.core.ast.expression.member;
 
+import com.oracle.truffle.api.CompilerDirectives;
+import com.oracle.truffle.api.CompilerDirectives.CompilationFinal;
 import com.oracle.truffle.api.TruffleSafepoint;
 import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.ExplodeLoop;
@@ -22,36 +24,115 @@ import com.oracle.truffle.api.source.SourceSection;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.member.Method;
+import org.pkl.core.ast.type.TypeArgumentTypeNode;
+import org.pkl.core.ast.type.UnresolvedTypeNode;
+import org.pkl.core.runtime.VmLanguage;
+import org.pkl.core.runtime.VmObjectLike;
+import org.pkl.core.runtime.VmTypeArgument;
 
 public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
   @Children protected final ExpressionNode[] argumentNodes;
   protected final int methodSlot;
+  protected final String qualifiedName;
 
-  public AbstractInvokeMethodNode(
-      SourceSection sourceSection, ExpressionNode[] argumentNodes, int methodSlot) {
+  @Children protected UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes;
+
+  @CompilationFinal(dimensions = 1)
+  protected TypeArgumentTypeNode @Nullable [] typeArgumentRootNodes;
+
+  @CompilationFinal boolean typeArgumentsNeedMaterializedFrame = false;
+
+  protected AbstractInvokeMethodNode(
+      SourceSection sourceSection,
+      UnresolvedTypeNode @Nullable [] unresolvedTypeArgumentNodes,
+      ExpressionNode[] argumentNodes,
+      int methodSlot,
+      String qualifiedName) {
     super(sourceSection);
+    this.unresolvedTypeArgumentNodes = unresolvedTypeArgumentNodes;
     this.argumentNodes = argumentNodes;
     this.methodSlot = methodSlot;
+    this.qualifiedName = qualifiedName;
+  }
+
+  protected TypeArgumentTypeNode @Nullable [] getTypeArgumentRootNodes(VirtualFrame frame) {
+    if (typeArgumentRootNodes == null) {
+      if (unresolvedTypeArgumentNodes != null) {
+        var language = VmLanguage.get(this);
+        var frameDescriptor = frame.getFrameDescriptor();
+        CompilerDirectives.transferToInterpreterAndInvalidate();
+
+        var rootNodes = new TypeArgumentTypeNode[unresolvedTypeArgumentNodes.length];
+        for (var i = 0; i < rootNodes.length; i++) {
+          var typeNode = unresolvedTypeArgumentNodes[i].execute(frame);
+          rootNodes[i] =
+              new TypeArgumentTypeNode(
+                  language,
+                  frameDescriptor,
+                  sourceSection,
+                  qualifiedName + ".<typearg#" + (i + 1) + ">",
+                  typeNode);
+          typeArgumentsNeedMaterializedFrame =
+              typeArgumentsNeedMaterializedFrame || typeNode.getTypeArgumentRequiresFrame();
+        }
+        typeArgumentRootNodes = rootNodes;
+        unresolvedTypeArgumentNodes = null;
+      } else {
+        return null;
+      }
+    }
+    return typeArgumentRootNodes;
+  }
+
+  protected VmTypeArgument @Nullable [] getTypeArguments(
+      VirtualFrame frame, @Nullable Method method) {
+    var rootNodes = getTypeArgumentRootNodes(frame);
+    if (rootNodes == null) return null;
+
+    var typeParameterCount = method == null ? 0 : method.getTypeParameterCount();
+    if (rootNodes.length != typeParameterCount) {
+      CompilerDirectives.transferToInterpreter();
+      throw exceptionBuilder()
+          .evalError("wrongTypeArgumentCount", typeParameterCount, rootNodes.length)
+          .build();
+    }
+
+    var argFrame = typeArgumentsNeedMaterializedFrame ? frame.materialize() : null;
+    var typeArgs = new VmTypeArgument[rootNodes.length];
+    for (var i = 0; i < typeArgs.length; i++) {
+      var rootNode = rootNodes[i];
+      typeArgs[i] = new VmTypeArgument(rootNode, argFrame);
+    }
+    return typeArgs;
   }
 
   @ExplodeLoop
   protected Object[] evalArgs(
-      VirtualFrame frame, @Nullable Method method, Object owner, @Nullable Object receiver) {
+      VirtualFrame frame, @Nullable Method method, VmObjectLike owner, @Nullable Object receiver) {
     Object prevMethod = null;
+    var typeArgs = getTypeArguments(frame, method);
     if (methodSlot > -1) {
+      if (method != null) {
+        method.ensureInitialized(owner);
+      }
       prevMethod = frame.getObject(methodSlot);
-      frame.setObject(methodSlot, method);
+      frame.setObject(methodSlot, new MethodCall(method, typeArgs));
     }
 
-    var args = new Object[2 + argumentNodes.length];
+    var typeParameterCount = method != null ? method.getTypeParameterCount() : 0;
+    var args = new Object[2 + argumentNodes.length + typeParameterCount];
     args[0] = receiver;
     args[1] = owner;
+
+    if (typeArgs != null) {
+      System.arraycopy(typeArgs, 0, args, 2, typeParameterCount);
+    }
 
     try {
       for (var i = 0; i < argumentNodes.length; i++) {
         TruffleSafepoint.poll(this);
-        args[2 + i] = argumentNodes[i].executeGeneric(frame);
+        args[2 + typeParameterCount + i] = argumentNodes[i].executeGeneric(frame);
       }
     } finally {
       if (methodSlot > -1) {
@@ -61,4 +142,6 @@ public abstract class AbstractInvokeMethodNode extends ExpressionNode {
 
     return args;
   }
+
+  public record MethodCall(@Nullable Method method, VmTypeArgument @Nullable [] typeArguments) {}
 }

@@ -1,3 +1,0 @@
-class DoIt {
-  function doit<A>(a: A): A = a
-}

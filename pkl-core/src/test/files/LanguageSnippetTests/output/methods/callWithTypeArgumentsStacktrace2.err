@@ -1,0 +1,19 @@
+–– Pkl Error ––
+Expected value of type `Duration`, but got type `Int`.
+Value: 5
+
+x | res = bar::<Duration>()
+                ^^^^^^^^
+at callWithTypeArgumentsStacktrace2#bar.prop (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace2.pkl)
+
+x | prop = foo as T
+                  ^
+at callWithTypeArgumentsStacktrace2#bar.prop (file:///$snippetsDir/input/methods/callWithTypeArgumentsStacktrace2.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
