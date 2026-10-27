@@ -318,6 +318,14 @@ This affects every standard library member typed as `Uri`, among them link:{uri-
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
+=== `test.catch()` and `test.catchOrNull()` force their result
+
+The `catch()` and `catchOrNull()` methods in `pkl:test` now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
+
+Previously, an error nested inside the returned value was not caught.
+It surfaced later, when the value was used.
+Now, it is caught, and `catch()` returns its message.
+
 == Miscellaneous [small]#🐸#
 
 * The `abstract` modifier is now a no-op for properties. (pr:https://github.com/apple/pkl/pull/1781[]).
@@ -333,6 +341,12 @@ As a consequence, an invalid URI is now reported as a type constraint violation 
 * Use module cache directory configured via the CLI or Gradle while evaluating `PklProject` and `settings.pkl` files (pr:https://github.com/apple/pkl/pull/1900[]).
 * Typed values are rendered with more helpful type names in error messages and `Any.toString()` (pr:https://github.com/apple/pkl/pull/1412[]).
 * Add support for customizing spring boot `@ConfigurationProperties` in generated Java/Kotlin code (pr:https://github.com/apple/pkl/pull/1897[]).
+* Improve error message when instantiating a class that cannot be instantiated (https://github.com/apple/pkl/pull/1916[#1916]).
+* Improve error messages when a type alias fails to type check (https://github.com/apple/pkl/pull/1914[#1914]).
+* Add descriptions and groups to the tasks created by the pkl-gradle plugin (https://github.com/apple/pkl/pull/190[#190]).
+* Pkldoc no longer truncates the names of modules that do not start with the package's module name prefix (https://github.com/apple/pkl/pull/1909[#1909]).
+* Reject `file:` URIs that include an authority (https://github.com/apple/pkl/pull/629[#629]).
+* Upgrade to GraalVM 25.2.4 (https://github.com/apple/pkl/pull/1804[#1804]).
 * Improve performance of reading `const` members (pr:https://github.com/apple/pkl/pull/1835[]).
 * Improve performance of `Listing` and `Mapping` type casts (pr:https://github.com/apple/pkl/pull/1837[]).
 * Improve performance of lexical frame resolution (pr:https://github.com/apple/pkl/pull/1842[]).
@@ -363,6 +377,13 @@ As a consequence, an invalid URI is now reported as a type constraint violation 
 * Fix `String.endsWith()` for overlapping regex matches (pr:https://github.com/apple/pkl/pull/1880[], pr:https://github.com/apple/pkl/pull/1884[]).
 * Fix leak of external reader processes in the language binding server (pr:https://github.com/apple/pkl/pull/1885[]).
 * Fix decoding of `Regex` values from pkl-binary data (pr:https://github.com/apple/pkl/pull/1895[]).
+* Fix type check of the `module` type when it is defined in a parent member body (https://github.com/apple/pkl/pull/1936[#1936]).
+* Fix type check of subscript key types for `Map` and `Mapping` references (https://github.com/apple/pkl/pull/1933[#1933]).
+* Fix `hashCode()` and `==` inconsistency for negative zero in `Duration` and `DataSize` (https://github.com/apple/pkl/pull/1932[#1932]).
+* Fix parameterized type checks in type alias constraints (https://github.com/apple/pkl/pull/1906[#1906]).
+* Fix resolution of qualified type names (https://github.com/apple/pkl/pull/1915[#1915]).
+* Fix lookaround regexes in `String.lastIndexOf()` and `String.replaceLast()` (https://github.com/apple/pkl/pull/1908[#1908]).
+* Fix formatter instability (https://github.com/apple/pkl/pull/1911[#1911]).
 
 == Contributors [small]#🙏#
 
