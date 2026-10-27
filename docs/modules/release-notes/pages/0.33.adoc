@@ -11,8 +11,26 @@ include::partial$intro.adoc[]
 
 === Generic Methods
 
-https://github.com/apple/pkl/pull/1849
-https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0032-generic-methods.adoc
+Methods can now declare type parameters, and callers can provide type arguments explicitly with the `::<>` syntax (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0032-generic-methods.adoc[SPICE-0032]).
+
+[source,pkl]
+----
+class Pigeon {
+  name: String
+}
+
+function makeFlock<Bird>(names: Listing<String>): Listing<Bird> = new {
+  for (n in names) {
+    new { name = n }
+  }
+}
+
+pigeonFlock = makeFlock::<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // a Listing of Pigeons
+----
+
+Both class methods and `local` object methods can be generic.
+
+To read more about generic methods, consult the xref:language-reference:index.adoc#generic-methods[language reference].
 
 === New standard library module: `pkl:net`
 
@@ -266,7 +284,12 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 [[this-adoption]]
 * pkldoc:Any.getClass()[] now returns `Class<this>`
 * pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) -> Result`
-* pkldoc:Domain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
+* pkldoc:AbstractDomain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
+
+==== `pkl:ref`
+
+* Renamed class: `Domain` is now `AbstractDomain` (<<reference-changes,breaking change>>)
+* Changed method: `Reference()` now takes type arguments instead of a `Class` parameter (<<reference-changes,breaking change>>)
 
 ==== `pkl:protobuf`
 
@@ -367,6 +390,31 @@ bad2: Uri = "https://example.com/some path" // throws: space must be percent-enc
 This affects every standard library member typed as `Uri`, among them link:{uri-stdlib-Resource}#uri[`Resource.uri`], link:{uri-stdlib-analyzeModule}#importGraph()[`analyze.importGraph()`], and the URI-valued properties of `pkl:Project`, `pkl:EvaluatorSettings` and `pkl:DocPackageInfo`.
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
+
+[[reference-changes]]
+=== Changes to `Reference` construction
+
+As part of the introduction of generic methods, the `Reference()` constructor method in `pkl:ref` takes the domain and referent types as type arguments instead of taking a `Class` parameter (https://github.com/apple/pkl/pull/1849[#1849]).
+This also makes it possible to construct references to non-class types, such as `Listing<String>` or `String | Int`.
+
+The `ref.Domain` class has been renamed to `ref.AbstractDomain`.
+
+[source,pkl]
+----
+import "pkl:ref"
+
+class MyDomain extends ref.AbstractDomain { // <1>
+  function renderReference(reference: ref.Reference<MyDomain, Any>): String = "..."
+}
+
+// before
+myRef = ref.Reference(new MyDomain {}, MyReferent, myData)
+
+// after
+myRef = ref.Reference::<MyDomain, MyReferent>(new MyDomain {}, myData) // <2>
+----
+<1> Previously `extends ref.Domain`.
+<2> Constraints in the referent type of a `Reference` type annotation are no longer an error, they are ignored.
 
 === `test.catch()` and `test.catchOrNull()` force their result
 
