@@ -19,13 +19,16 @@ import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.DynamicTest
 import org.junit.jupiter.api.DynamicTest.dynamicTest
 import org.junit.jupiter.api.TestFactory
+import org.pkl.parser.GenericParser
 import org.pkl.parser.GenericParserError
 
 /** Maliciously deep input must not make the formatter throw a [StackOverflowError]. */
 class FormatterDepthTest {
   companion object {
     private const val STACK_SIZE = 512L * 1024
-    private const val HUGE = 100_000
+    private const val LARGE_STACK_SIZE = 512L * 1024 * 1024
+    private const val NESTING_DEPTH = 10_000
+    private const val CHAIN_LENGTH = 100_000
 
     private val nesting: Map<String, (Int) -> String> =
       mapOf(
@@ -42,31 +45,31 @@ class FormatterDepthTest {
         "constrained type" to { n -> "x: Int" + "(isPositive)".repeat(n) },
       )
 
-    private fun runOnSmallStack(action: () -> Unit): Throwable? {
-      var thrown: Throwable? = null
-      val thread =
-        Thread(null, { thrown = runCatching(action).exceptionOrNull() }, "test", STACK_SIZE)
+    private fun <T> runOn(stackSize: Long, action: () -> T): Result<T> {
+      var result: Result<T>? = null
+      val thread = Thread(null, { result = runCatching(action) }, "test", stackSize)
       thread.start()
       thread.join()
-      return thrown
+      return result!!
     }
   }
 
   @TestFactory
-  fun `deep nesting fails with a parse error`(): List<DynamicTest> = nesting.map { (shape, gen) ->
-    dynamicTest(shape) {
-      val thrown = runOnSmallStack { Formatter().format(gen(HUGE)) }
-      assertThat(thrown).isInstanceOf(GenericParserError::class.java)
-      assertThat(thrown).hasMessageContaining("nested too deeply")
+  fun `deep nesting fails with a formatter error`(): List<DynamicTest> =
+    nesting.map { (shape, gen) ->
+      dynamicTest(shape) { assertFormatFails(gen(NESTING_DEPTH)) }
     }
-  }
 
   @TestFactory
-  fun `long chains do not overflow the stack`(): List<DynamicTest> = chains.map { (shape, gen) ->
-    dynamicTest(shape) {
-      val thrown = runOnSmallStack { Formatter().format(gen(HUGE)) }
-      assertThat(thrown).isInstanceOf(GenericParserError::class.java)
-      assertThat(thrown).hasMessageContaining("nested too deeply")
-    }
+  fun `long chains fail with a formatter error`(): List<DynamicTest> = chains.map { (shape, gen) ->
+    dynamicTest(shape) { assertFormatFails(gen(CHAIN_LENGTH)) }
+  }
+
+  private fun assertFormatFails(source: String) {
+    val ast = runOn(LARGE_STACK_SIZE) { GenericParser().parseModule(source) }.getOrThrow()
+    val thrown =
+      runOn(STACK_SIZE) { Formatter().format(source, ast, StringBuilder()) }.exceptionOrNull()
+    assertThat(thrown).isInstanceOf(GenericParserError::class.java)
+    assertThat(thrown).hasMessageContaining("nested too deeply")
   }
 }

@@ -22,6 +22,7 @@ import java.nio.file.Path;
 import java.util.List;
 import org.pkl.parser.GenericParser;
 import org.pkl.parser.GenericParserError;
+import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.util.ErrorMessages;
 
 /**
@@ -114,7 +115,10 @@ public class Formatter {
   }
 
   private void format(String input, Appendable output) {
-    var ast = new GenericParser().parseModule(input);
+    format(input, new GenericParser().parseModule(input), output);
+  }
+
+  void format(String input, Node ast, Appendable output) {
     try {
       var formatAst = new Builder(input, grammarVersion).format(ast);
       // force a line at the end of the file
