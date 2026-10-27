@@ -180,12 +180,7 @@ public final class Lexer {
       case '}' -> Token.RBRACE;
       case ',' -> Token.COMMA;
       case '@' -> Token.AT;
-      case ':' -> {
-        if (lookahead == ':') {
-          nextChar();
-          yield Token.DCOLON;
-        } else yield Token.COLON;
-      }
+      case ':' -> Token.COLON;
       case '+' -> Token.PLUS;
       case '%' -> Token.MOD;
       case '[' -> {

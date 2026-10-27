@@ -30,8 +30,9 @@ public final class GenericParser {
   }
 
   public Node parseExpressionInput(String source) {
+    var parser = new GenericParserImpl(source);
     try {
-      return new GenericParserImpl(source).parseExpressionInput();
+      return parser.parseExpressionInput();
     } catch (MaxBacktrackCountError err) {
       throw err.toGenericParserError();
     } catch (StackOverflowError err) {

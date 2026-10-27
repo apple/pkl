@@ -144,11 +144,11 @@ bareFunctionType = test.catch(() -> ref.Reference<D, Function4>(d, null) as Ref<
 // test for allowing constraints during reference construction
 constraintInConstructor = Ref<String(length > 5)>(null)
 
-mappingAnyKey = Ref::<TypeHolder>(null).mappingAnyKey["foo"]
+mappingAnyKey = Ref<TypeHolder>(null).mappingAnyKey["foo"]
 
 // this one should be an editor error but can't be caught in the runtime
 // because VmListing/VmMapping don't track their type args
-mappingTypeArgKey = Ref ::<TypeHolder>(null).mappingTypeArgKey[new Listing<String> { "foo" }]
+mappingTypeArgKey = Ref<TypeHolder>(null).mappingTypeArgKey[new Listing<String> { "foo" }]
 
 output {
   renderer {
