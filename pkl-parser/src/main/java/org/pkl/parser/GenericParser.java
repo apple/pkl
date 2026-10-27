@@ -19,7 +19,12 @@ import org.pkl.parser.syntax.generic.Node;
 
 public final class GenericParser {
   public Node parseModule(String source) {
-    return new GenericParserImpl(source).parseModule();
+    var parser = new GenericParserImpl(source);
+    try {
+      return parser.parseModule();
+    } catch (StackOverflowError e) {
+      throw parser.tooDeeplyNested();
+    }
   }
 
   public Node parseExpressionInput(String source) {

@@ -944,7 +944,7 @@ class GenericParserImpl {
   @SuppressWarnings("DuplicatedCode")
   private Node parseExprRest(Node expr) {
     // amends
-    if (lookahead() == Token.LBRACE) {
+    while (lookahead() == Token.LBRACE) {
       var children = new ArrayList<Node>();
       children.add(expr);
       ff(children);
@@ -952,7 +952,8 @@ class GenericParserImpl {
           || expr.type == NodeType.AMENDS_EXPR
           || expr.type == NodeType.NEW_EXPR) {
         children.add(parseObjectBody());
-        return parseExprRest(new Node(NodeType.AMENDS_EXPR, children));
+        expr = new Node(NodeType.AMENDS_EXPR, children);
+        continue;
       }
       throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
     }
@@ -1251,31 +1252,33 @@ class GenericParserImpl {
   }
 
   private Node parseTypeEnd(Node type) {
-    var children = new ArrayList<Node>();
-    children.add(type);
-    // nullable types
-    if (lookahead() == Token.QUESTION) {
-      ff(children);
-      children.add(makeTerminal(next()));
-      var res = new Node(NodeType.NULLABLE_TYPE, children);
-      return parseTypeEnd(res);
+    while (true) {
+      var children = new ArrayList<Node>();
+      children.add(type);
+      // nullable types
+      if (lookahead() == Token.QUESTION) {
+        ff(children);
+        children.add(makeTerminal(next()));
+        type = new Node(NodeType.NULLABLE_TYPE, children);
+        continue;
+      }
+      // constrained types: have to start in the same line as the type
+      var fla = fullLookahead();
+      if (fla.tk.token == Token.LPAREN && noSemicolonInbetween() && fla.tk.newLinesBetween == 0) {
+        ff(children);
+        var constraint = new ArrayList<Node>();
+        constraint.add(makeTerminal(next()));
+        var elements = new ArrayList<Node>();
+        ff(elements);
+        parseListOf(Token.RPAREN, elements, () -> parseExpr(")"));
+        constraint.add(new Node(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
+        expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
+        children.add(new Node(NodeType.CONSTRAINED_TYPE_CONSTRAINT, constraint));
+        type = new Node(NodeType.CONSTRAINED_TYPE, children);
+        continue;
+      }
+      return type;
     }
-    // constrained types: have to start in the same line as the type
-    var fla = fullLookahead();
-    if (fla.tk.token == Token.LPAREN && noSemicolonInbetween() && fla.tk.newLinesBetween == 0) {
-      ff(children);
-      var constraint = new ArrayList<Node>();
-      constraint.add(makeTerminal(next()));
-      var elements = new ArrayList<Node>();
-      ff(elements);
-      parseListOf(Token.RPAREN, elements, () -> parseExpr(")"));
-      constraint.add(new Node(NodeType.CONSTRAINED_TYPE_ELEMENTS, elements));
-      expect(Token.RPAREN, constraint, "unexpectedToken2", ",", ")");
-      children.add(new Node(NodeType.CONSTRAINED_TYPE_CONSTRAINT, constraint));
-      var res = new Node(NodeType.CONSTRAINED_TYPE, children);
-      return parseTypeEnd(res);
-    }
-    return type;
   }
 
   private Node parseAnnotation() {
@@ -1468,6 +1471,10 @@ class GenericParserImpl {
       children.add(parser.get());
       ff(children);
     }
+  }
+
+  GenericParserError tooDeeplyNested() {
+    return parserError("tooDeeplyNested");
   }
 
   private GenericParserError parserError(String messageKey, Object... args) {

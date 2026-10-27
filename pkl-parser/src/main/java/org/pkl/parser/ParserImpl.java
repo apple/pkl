@@ -1089,58 +1089,62 @@ final class ParserImpl {
 
   @SuppressWarnings("DuplicatedCode")
   private Expr parseExprRest(Expr expr) {
-    // non-null
-    if (lookahead == Token.NON_NULL) {
-      var end = next().span;
-      var res = new NonNullExpr(expr, expr.span().endWith(end));
-      return parseExprRest(res);
-    }
-    // amends
-    if (lookahead == Token.LBRACE) {
-      if (expr instanceof ParenthesizedExpr
-          || expr instanceof AmendsExpr
-          || expr instanceof NewExpr) {
-        var body = parseObjectBody();
-        return parseExprRest(new AmendsExpr(expr, body, expr.span().endWith(body.span())));
+    while (true) {
+      // non-null
+      if (lookahead == Token.NON_NULL) {
+        var end = next().span;
+        expr = new NonNullExpr(expr, expr.span().endWith(end));
       }
-      throw parserError("unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
-    }
-    // qualified access
-    if (lookahead == Token.DOT || lookahead == Token.QDOT) {
-      var isNullable = next().token == Token.QDOT;
-      var identifier = parseIdentifier();
-      TypeArgumentList typeArgumentList = null;
-      if (lookahead == Token.DCOLON && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+      // amends
+      else if (lookahead == Token.LBRACE) {
+        if (expr instanceof ParenthesizedExpr
+            || expr instanceof AmendsExpr
+            || expr instanceof NewExpr) {
+          var body = parseObjectBody();
+          expr = new AmendsExpr(expr, body, expr.span().endWith(body.span()));
+        } else {
+          throw parserError(
+              "unexpectedCurlyProbablyAmendsExpression", expr.text(lexer.getSource()));
+        }
+      }
+      // qualified access
+      else if (lookahead == Token.DOT || lookahead == Token.QDOT) {
+        var isNullable = next().token == Token.QDOT;
+        var identifier = parseIdentifier();
+        TypeArgumentList typeArgumentList = null;
+        if (lookahead == Token.DCOLON && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+          next();
+          typeArgumentList = parseTypeArgumentList();
+        }
+        ArgumentList argumentList = null;
+        if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
+          argumentList = parseArgumentList();
+        } else if (typeArgumentList != null) {
+          // type args but no args
+          throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
+        }
+        var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
+        expr =
+            new QualifiedAccessExpr(
+                expr,
+                identifier,
+                isNullable,
+                typeArgumentList,
+                argumentList,
+                expr.span().endWith(lastSpan));
+      }
+      // subscript (needs to be in the same line as the expression)
+      else if (lookahead == Token.LBRACK
+          && !precededBySemicolon
+          && _lookahead.newLinesBetween == 0) {
         next();
-        typeArgumentList = parseTypeArgumentList();
+        var exp = parseExpr("]");
+        var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
+        expr = new SubscriptExpr(expr, exp, expr.span().endWith(end));
+      } else {
+        return expr;
       }
-      ArgumentList argumentList = null;
-      if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-        argumentList = parseArgumentList();
-      } else if (typeArgumentList != null) {
-        // type args but no args
-        throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
-      }
-      var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
-      var res =
-          new QualifiedAccessExpr(
-              expr,
-              identifier,
-              isNullable,
-              typeArgumentList,
-              argumentList,
-              expr.span().endWith(lastSpan));
-      return parseExprRest(res);
     }
-    // subscript (needs to be in the same line as the expression)
-    if (lookahead == Token.LBRACK && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-      next();
-      var exp = parseExpr("]");
-      var end = expect(Token.RBRACK, "unexpectedToken", "]").span;
-      var res = new SubscriptExpr(expr, exp, expr.span().endWith(end));
-      return parseExprRest(res);
-    }
-    return expr;
   }
 
   private Expr parseSingleLineStringLiteralExpr() {
@@ -1493,25 +1497,28 @@ final class ParserImpl {
   }
 
   private Type parseTypeEnd(Type type) {
-    // nullable types
-    if (lookahead == Token.QUESTION) {
-      var end = spanLookahead;
-      next();
-      var res = new Type.NullableType(type, type.span().endWith(end));
-      return parseTypeEnd(res);
+    while (true) {
+      // nullable types
+      if (lookahead == Token.QUESTION) {
+        var end = spanLookahead;
+        next();
+        type = new Type.NullableType(type, type.span().endWith(end));
+      }
+      // constrained types: have to start in the same line as the type
+      else if (lookahead == Token.LPAREN
+          && !precededBySemicolon
+          && _lookahead.newLinesBetween == 0) {
+        next();
+        var constraints = parseListOf(Token.COMMA, Token.RPAREN, () -> parseExpr(")"));
+        var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
+        var children = new ArrayList<Node>(constraints.size() + 1);
+        children.add(type);
+        children.addAll(constraints);
+        type = new Type.ConstrainedType(children, type.span().endWith(end));
+      } else {
+        return type;
+      }
     }
-    // constrained types: have to start in the same line as the type
-    if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
-      next();
-      var constraints = parseListOf(Token.COMMA, Token.RPAREN, () -> parseExpr(")"));
-      var end = expect(Token.RPAREN, "unexpectedToken2", ",", ")").span;
-      var children = new ArrayList<Node>(constraints.size() + 1);
-      children.add(type);
-      children.addAll(constraints);
-      var res = new Type.ConstrainedType(children, type.span().endWith(end));
-      return parseTypeEnd(res);
-    }
-    return type;
   }
 
   private Annotation parseAnnotation() {
@@ -1827,6 +1834,10 @@ final class ParserImpl {
       res.add(parseParameter());
     }
     return res;
+  }
+
+  ParserError tooDeeplyNested() {
+    return parserError("tooDeeplyNested");
   }
 
   private ParserError parserError(String messageKey, Object... args) {
