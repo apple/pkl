@@ -46,6 +46,7 @@ import org.pkl.core.repl.ReplResponse.EvalSuccess;
 import org.pkl.core.repl.ReplResponse.InvalidRequest;
 import org.pkl.core.resource.ResourceReader;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.util.AnsiStringBuilder;
 import org.pkl.core.util.EconomicMaps;
 import org.pkl.core.util.IoUtils;
@@ -478,7 +479,7 @@ public class ReplServer implements AutoCloseable {
             List.of(),
             VmModifier.NONE,
             classInfo,
-            List.of(),
+            new TypeParameter[0],
             module);
     if (parent != null) {
       var superclass = parent.getVmClass();

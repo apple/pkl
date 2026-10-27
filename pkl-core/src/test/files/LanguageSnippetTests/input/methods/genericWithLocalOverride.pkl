@@ -1,0 +1,16 @@
+// when no function override (parent or child are local) then varying number of type params is okay
+
+open class P {
+  function f<T>(x) = x
+  local function g<T>(x) = x
+  a = f(1)
+  b = g(2)
+}
+class C extends P {
+  local function f(x) = x
+  function g(x) = x
+  c = f(2)
+  d = g(3)
+}
+
+ok = true

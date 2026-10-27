@@ -1777,7 +1777,7 @@ result = someLib.x
     PackageServer.populateCacheDir(tempDir)
     val projectPath =
       FileTestUtils.rootProjectDir.resolve(
-        "pkl-commons-cli/src/main/resources/org/pkl/commons/cli/project1/"
+        "pkl-commons-cli/src/test/resources/org/pkl/commons/cli/project1/"
       )
     val options =
       CliEvaluatorOptions(

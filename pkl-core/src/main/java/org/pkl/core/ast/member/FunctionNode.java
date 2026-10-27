@@ -26,10 +26,10 @@ import org.jspecify.annotations.Nullable;
 import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClass;
 import org.pkl.core.PType;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.VmModifier;
 import org.pkl.core.ast.type.TypeNode;
+import org.pkl.core.ast.type.TypeParameterNode;
 import org.pkl.core.runtime.*;
 import org.pkl.core.runtime.VmType.UnknownType;
 import org.pkl.core.util.CollectionUtils;
@@ -37,21 +37,25 @@ import org.pkl.core.util.Pair;
 
 public final class FunctionNode extends RegularMemberNode {
   // Every function (and property) call passes two implicit arguments at positions
-  // frame.getArguments()[0] and [1]:
+  // frame.getArguments()[0], [1]:
   // - the receiver (target) of the call, of type Object (see VmUtils.getReceiver())
   // - the owner (lexically enclosing object) of the function/property definition, of type VmTyped
   // (see VmUtils.getOwner())
-  // For VmObject receivers, the owner is the same as or an ancestor of the receiver.
-  // For other receivers, the owner is the prototype of the receiver's class.
-  // The chain of enclosing owners forms a function/property's lexical scope.
+  //
+  // After the implicit args, the method's type args are passed, in order.
+  // If the call does not contain type arguments, these args are null.
+  //
+  // Finally, the method's arguments are passed, in order.
   private static final int IMPLICIT_PARAM_COUNT = 2;
 
   private final int paramCount;
+  private final int typeParamCount;
   private final int totalParamCount;
+  @Children private TypeParameterNode[] typeParameterNodes;
 
   @Children private final TypeNode[] parameterTypeNodes;
-  @Child private @Nullable TypeNode checkedReturnTypeNode;
-  private @Nullable TypeNode returnTypeNode;
+  private @Nullable TypeNode checkedReturnTypeNode;
+  @Child private @Nullable TypeNode returnTypeNode;
 
   @TruffleBoundary
   public FunctionNode(
@@ -62,6 +66,7 @@ public final class FunctionNode extends RegularMemberNode {
       TypeNode[] parameterTypeNodes,
       @Nullable TypeNode returnTypeNode,
       boolean isReturnTypeChecked,
+      TypeParameterNode[] typeParameterNodes,
       ExpressionNode bodyNode) {
 
     super(language, descriptor, member, bodyNode);
@@ -74,12 +79,19 @@ public final class FunctionNode extends RegularMemberNode {
     this.parameterTypeNodes = parameterTypeNodes;
     this.checkedReturnTypeNode = isReturnTypeChecked ? returnTypeNode : null;
     this.returnTypeNode = returnTypeNode;
+    this.typeParameterNodes = typeParameterNodes;
 
-    totalParamCount = Math.addExact(IMPLICIT_PARAM_COUNT, paramCount);
+    typeParamCount = typeParameterNodes.length;
+    totalParamCount =
+        Math.addExact(IMPLICIT_PARAM_COUNT, Math.addExact(paramCount, typeParamCount));
   }
 
   public int getParameterCount() {
     return paramCount;
+  }
+
+  public int getTypeParameterCount() {
+    return typeParameterNodes.length;
   }
 
   public @Nullable TypeNode getParameterTypeNode(int idx) {
@@ -112,14 +124,20 @@ public final class FunctionNode extends RegularMemberNode {
   @Override
   @ExplodeLoop
   protected Object executeImpl(VirtualFrame frame) {
-    var totalArgCount = frame.getArguments().length;
+    var args = frame.getArguments();
+    var totalArgCount = args.length;
     if (totalArgCount != totalParamCount) {
       CompilerDirectives.transferToInterpreter();
-      throw wrongArgumentCount(totalArgCount - IMPLICIT_PARAM_COUNT);
+      throw wrongArgumentCount(totalArgCount - typeParamCount - IMPLICIT_PARAM_COUNT);
+    }
+
+    for (var i = 0; i < typeParamCount; i++) {
+      var typeArg = args[IMPLICIT_PARAM_COUNT + i];
+      typeParameterNodes[i].executeAndSet(frame, typeArg);
     }
 
     for (var i = 0; i < parameterTypeNodes.length; i++) {
-      var argument = frame.getArguments()[IMPLICIT_PARAM_COUNT + i];
+      var argument = args[IMPLICIT_PARAM_COUNT + typeParamCount + i];
       parameterTypeNodes[i].executeAndSet(frame, argument);
     }
 
@@ -127,6 +145,19 @@ public final class FunctionNode extends RegularMemberNode {
 
     if (checkedReturnTypeNode != null) {
       return checkedReturnTypeNode.execute(frame, result);
+    } else if (returnTypeNode != null && typeParamCount > 0 && args[IMPLICIT_PARAM_COUNT] != null) {
+      // Return types are not typically checked for stdlib methods (isReturnTypeChecked == false)
+      // but for generic stdlib methods (e.g. `List.map()`) when they are called with type args,
+      // this behavior needs to be overridden so the type arg check on return type still runs.
+      // otherwise, this code would succeed instead of failing:
+      // ```
+      // res = List("foo", "hello", "a").map::<String>((it) -> it.length)
+      // ```
+      // Assumption: this does not need to account for type args in enclosing frames because
+      // no type parameters exist in the stdlib that would require this.
+      // Assumption-breaking pattern example: snippet `callWithTypeArguments.pkl` property
+      // `lexical.nestedInMethodParam`.
+      return returnTypeNode.execute(frame, result);
     }
 
     return result;
@@ -153,7 +184,7 @@ public final class FunctionNode extends RegularMemberNode {
       SourceSection @Nullable [] docComment,
       List<VmTyped> annotations,
       int modifiers,
-      List<TypeParameter> typeParameters) {
+      List<org.pkl.core.TypeParameter> typeParameters) {
 
     var parameters = CollectionUtils.<String, PType>newLinkedHashMap(paramCount);
     for (var i = 0; i < paramCount; i++) {

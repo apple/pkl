@@ -26,4 +26,8 @@ public final class GenericParser {
       throw parser.tooDeeplyNested();
     }
   }
+
+  public Node parseExpressionInput(String source) {
+    return new GenericParserImpl(source).parseExpressionInput();
+  }
 }

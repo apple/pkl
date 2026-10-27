@@ -10,7 +10,7 @@ fixed job {
   permissions {
     contents = "write"
   }
-  needs = "deploy-release"
+  needs = module.needs
   steps {
     (catalog.`actions/download-artifact@v6`) {
       with {

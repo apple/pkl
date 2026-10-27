@@ -52,7 +52,7 @@ public abstract class EmptyObjectLiteralNode extends ExpressionNode {
       return VmDynamic.empty();
     }
 
-    VmUtils.checkIsInstantiable(parent, getParentNode());
+    VmUtils.checkIsInstantiable(parent, getParentNode(), this);
     return parent.getPrototype();
   }
 
@@ -70,7 +70,7 @@ public abstract class EmptyObjectLiteralNode extends ExpressionNode {
   @TruffleBoundary
   protected void fallback(Object parent) {
     assert !(parent instanceof VmClass);
-    VmUtils.checkIsInstantiable(VmUtils.getClass(parent), getParentNode());
+    VmUtils.checkIsInstantiable(VmUtils.getClass(parent), getParentNode(), this);
     throw exceptionBuilder().unreachableCode().build();
   }
 

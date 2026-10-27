@@ -100,11 +100,11 @@ constructor(
   override fun doRun() {
     val builder = evaluatorBuilder()
     try {
-      withCpuProfiler(options.profilerOptions) {
+      withCpuProfiler(options.profilerOptions) { startProfiling ->
         if (options.multipleFileOutputPath != null) {
-          writeMultipleFileOutput(builder)
+          writeMultipleFileOutput(builder, startProfiling)
         } else {
-          writeOutput(builder)
+          writeOutput(builder, startProfiling)
         }
       }
     } finally {
@@ -157,8 +157,9 @@ constructor(
   }
 
   /** Renders each module's `output.bytes`, writing it to the specified output file. */
-  private fun writeOutput(builder: EvaluatorBuilder) {
+  private fun writeOutput(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val evaluator = builder.setOutputFormat(options.outputFormat).build()
+    startProfiling()
     evaluator.use { ev ->
       val outputFiles = fileOutputPaths
       if (outputFiles != null) {
@@ -232,10 +233,11 @@ constructor(
    * Renders each module's `output.files`, writing each entry as a file into the specified output
    * directory.
    */
-  private fun writeMultipleFileOutput(builder: EvaluatorBuilder) {
+  private fun writeMultipleFileOutput(builder: EvaluatorBuilder, startProfiling: () -> Unit) {
     val outputDirs = directoryOutputPaths!!
     val writtenFiles = mutableMapOf<Path, OutputFile>()
     builder.setOutputFormat(options.outputFormat).build().use { evaluator ->
+      startProfiling()
       for ((moduleUri, outputDir) in outputDirs) {
         if (outputDir.exists() && !outputDir.isDirectory()) {
           throw CliException("Output path `$outputDir` exists and is not a directory.")

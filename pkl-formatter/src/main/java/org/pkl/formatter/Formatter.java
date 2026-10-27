@@ -114,18 +114,52 @@ public class Formatter {
     format(sb.toString(), output);
   }
 
+  /**
+   * Format the given Pkl AST as text.
+   *
+   * <p>The AST terminal nodes should have their text property set before calling format, as this
+   * method does not have access to the original source.
+   *
+   * @param ast the Pkl module node to format
+   * @return the formatted Pkl source code
+   */
+  public String format(Node ast) {
+    var output = new StringBuilder();
+    format(ast, output);
+    return output.toString();
+  }
+
+  /**
+   * Formats the given Pkl AST as text.
+   *
+   * <p>The AST terminal nodes should have their text property set before calling format, as this
+   * method does not have access to the original source.
+   *
+   * <p>It is the caller's responsibility to close {@code output}, if applicable.
+   *
+   * @param ast the Pkl module node to format
+   * @param output the formatted Pkl source code
+   * @throws java.io.UncheckedIOException if an I/O error occurs during writing
+   */
+  public void format(Node ast, Appendable output) {
+    generate(new Builder("", grammarVersion).format(ast), output);
+  }
+
   private void format(String input, Appendable output) {
     format(input, new GenericParser().parseModule(input), output);
   }
 
   void format(String input, Node ast, Appendable output) {
     try {
-      var formatAst = new Builder(input, grammarVersion).format(ast);
-      // force a line at the end of the file
-      var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
-      new Generator(output).generate(nodes);
+      generate(new Builder(input, grammarVersion).format(ast), output);
     } catch (StackOverflowError e) {
       throw new GenericParserError(ErrorMessages.create("tooDeeplyNested"), ast.span);
     }
+  }
+
+  private static void generate(FormatNode formatAst, Appendable output) {
+    // force a line at the end of the file
+    var nodes = new Nodes(List.of(formatAst, ForceLine.INSTANCE));
+    new Generator(output).generate(nodes);
   }
 }

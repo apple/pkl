@@ -222,7 +222,8 @@ public final class Duration implements Value {
 
   @Override
   public int hashCode() {
-    return Double.hashCode(convertValueTo(DurationUnit.NANOS));
+    // adding 0.0 normalizes -0.0 to 0.0, because -0.0 == 0.0 but their hash codes differ
+    return Double.hashCode(convertValueTo(DurationUnit.NANOS) + 0.0);
   }
 
   @Override

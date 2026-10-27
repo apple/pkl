@@ -84,7 +84,7 @@ public abstract sealed class ObjectMember extends AbstractNode {
     }
   }
 
-  public static final class ObjectMethod extends ObjectMember {
+  public static final class ObjectMethod extends ObjectMember implements Method {
     private final int identifierOffset;
 
     public ObjectMethod(List<@Nullable Node> nodes, int identifierOffset, Span span) {

@@ -19,6 +19,7 @@ import com.google.errorprone.annotations.concurrent.GuardedBy;
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import com.oracle.truffle.api.frame.Frame;
 import com.oracle.truffle.api.frame.MaterializedFrame;
+import com.oracle.truffle.api.nodes.NodeVisitor;
 import com.oracle.truffle.api.source.SourceSection;
 import java.net.URI;
 import java.util.ArrayList;
@@ -28,8 +29,8 @@ import org.pkl.core.Member.SourceLocation;
 import org.pkl.core.PClassInfo;
 import org.pkl.core.PObject;
 import org.pkl.core.TypeAlias;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.VmModifier;
+import org.pkl.core.ast.expression.primary.ExecuteCustomThisWithRootNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.TypeNode.ConstrainedTypeNode;
 import org.pkl.core.ast.type.TypeNode.TypeVariableNode;
@@ -45,7 +46,7 @@ public final class VmTypeAlias extends VmValue {
   private final String simpleName;
   private final VmTyped module;
   private final String qualifiedName;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private final MaterializedFrame enclosingFrame;
 
   private @Nullable TypeNode typeNode;
@@ -69,7 +70,7 @@ public final class VmTypeAlias extends VmValue {
       String simpleName,
       VmTyped module,
       String qualifiedName,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       MaterializedFrame enclosingFrame) {
     this.sourceSection = sourceSection;
     this.headerSection = headerSection;
@@ -168,7 +169,7 @@ public final class VmTypeAlias extends VmValue {
   }
 
   public int getTypeParameterCount() {
-    return typeParameters.size();
+    return typeParameters.length;
   }
 
   public TypeNode getTypeNode() {
@@ -188,37 +189,43 @@ public final class VmTypeAlias extends VmValue {
     // * Fewer root nodes to call
     // * ControlFlowException used to implement union types doesn't escape root node
 
-    if (typeParameters.isEmpty()) return deepCopy(typeNode);
+    if (typeParameters.length == 0) return deepCopy(typeNode);
 
     // handle if alias root is itself a type variable (https://github.com/apple/pkl/issues/1711)
     if (typeNode instanceof TypeVariableNode typeVarNode) {
       // no need to run validation since the arg itself has already been checked
       return typeArgumentNodes.length == 0
           ? new UnknownTypeNode(sourceSection)
-          : typeArgumentNodes[typeVarNode.getTypeParameterIndex()];
+          : typeArgumentNodes[typeVarNode.getTypeParameter().index()];
     }
 
     var clone = (TypeNode) typeNode.deepCopy();
     clone.accept(
-        node -> {
-          if (node instanceof TypeVariableNode typeVarNode) {
-            var index = typeVarNode.getTypeParameterIndex();
-            node.replace(
-                typeArgumentNodes.length == 0
-                    ? new UnknownTypeNode(sourceSection)
-                    : deepCopy(typeArgumentNodes[index]));
-          } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
-            // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
-            // are still unresolved at instantiation time. Replace them with a resolved
-            // unresolved type node that returns the concrete type argument.
-            var index = unresolvedTypeVar.getTypeParameterIndex();
-            node.replace(
-                typeArgumentNodes.length == 0
-                    ? new UnresolvedTypeNode.Unknown(sourceSection)
-                    : new UnresolvedTypeNode.Resolved(
-                        sourceSection, deepCopy(typeArgumentNodes[index])));
+        new NodeVisitor() {
+          @Override
+          public boolean visit(com.oracle.truffle.api.nodes.Node node) {
+            if (node instanceof TypeVariableNode typeVarNode) {
+              var index = typeVarNode.getTypeParameter().index();
+              node.replace(
+                  typeArgumentNodes.length == 0
+                      ? new UnknownTypeNode(sourceSection)
+                      : deepCopy(typeArgumentNodes[index]));
+            } else if (node instanceof UnresolvedTypeNode.TypeVariable unresolvedTypeVar) {
+              // Type variables inside constraint expressions (e.g. `every((it) -> it is T)`)
+              // are still unresolved at instantiation time. Replace them with a resolved
+              // unresolved type node that returns the concrete type argument.
+              var index = unresolvedTypeVar.getTypeParameter().index();
+              node.replace(
+                  typeArgumentNodes.length == 0
+                      ? new UnresolvedTypeNode.Unknown(sourceSection)
+                      : new UnresolvedTypeNode.Resolved(
+                          sourceSection, deepCopy(typeArgumentNodes[index])));
+            } else if (node instanceof ExecuteCustomThisWithRootNode customThisNode) {
+              // A constraint with frame slots runs in a separate root, outside this tree.
+              customThisNode.getExpressionNode().accept(this);
+            }
+            return true;
           }
-          return true;
         });
 
     return clone;
@@ -250,10 +257,10 @@ public final class VmTypeAlias extends VmValue {
                 simpleName,
                 getModuleName(),
                 qualifiedName,
-                typeParameters,
+                TypeParameter.export(typeParameters),
                 module.getVmClass().export());
 
-        for (var parameter : typeParameters) {
+        for (var parameter : __pTypeAlias.getTypeParameters()) {
           parameter.initOwner(__pTypeAlias);
         }
 

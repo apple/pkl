@@ -25,7 +25,9 @@ import org.junit.jupiter.api.assertThrows
 import org.pkl.commons.readString
 import org.pkl.commons.test.FileTestUtils
 import org.pkl.commons.test.failWithDiff
+import org.pkl.parser.GenericParser
 import org.pkl.parser.GenericParserError
+import org.pkl.parser.syntax.generic.Node
 
 class FormatterTest {
 
@@ -126,6 +128,23 @@ class FormatterTest {
     val input = "  x  =  42".reader()
     val output = StringBuilder()
     Formatter().format(input, output)
+    assertThat(output.toString()).isEqualTo("x = 42\n")
+  }
+
+  @Test
+  fun `format AST into Appendable`() {
+    val source = "  x  =  42"
+    val ast = GenericParser().parseModule(source)
+    fun setText(node: Node) {
+      if (node.children.isEmpty()) {
+        node.text(source.toCharArray())
+      } else {
+        node.children.forEach(::setText)
+      }
+    }
+    setText(ast)
+    val output = StringBuilder()
+    Formatter().format(ast, output)
     assertThat(output.toString()).isEqualTo("x = 42\n")
   }
 }

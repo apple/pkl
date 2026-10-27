@@ -21,15 +21,14 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.nodes.NodeInfo;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
-import java.util.List;
 import org.graalvm.collections.EconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.PClassInfo;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.type.TypeNode;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
+import org.pkl.core.runtime.TypeParameter;
 import org.pkl.core.util.LateInit;
 
 @NodeInfo(shortName = "class")
@@ -39,7 +38,7 @@ public final class ClassNode extends ExpressionNode {
   @Children private final ExpressionNode[] annotationNodes;
   private final int modifiers;
   private final PClassInfo<?> classInfo;
-  private final List<TypeParameter> typeParameters;
+  private final TypeParameter[] typeParameters;
   private final @Nullable ModuleInfo moduleInfo;
   // null iff this class is pkl.base#Any
   @Child private @Nullable UnresolvedTypeNode unresolvedSupertypeNode;
@@ -57,7 +56,7 @@ public final class ClassNode extends ExpressionNode {
       ExpressionNode[] annotationNodes,
       int modifiers,
       PClassInfo<?> classInfo,
-      List<TypeParameter> typeParameters,
+      TypeParameter[] typeParameters,
       @Nullable ModuleInfo moduleInfo,
       @Nullable UnresolvedTypeNode unresolvedSupertypeNode,
       EconomicMap<Object, ObjectMember> prototypeMembers,

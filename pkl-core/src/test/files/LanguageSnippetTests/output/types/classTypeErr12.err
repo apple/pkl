@@ -7,6 +7,10 @@ at classTypeErr12#res22 (file:///$snippetsDir/input/types/classType.pkl)
 
 A `Class` type check can only succeed when its type argument is an un-parameterized class, `unknown`, `module`, `this`, or an alias to one of those types.
 
+x | res22 = List(A, C) as G<A | B>
+                          ^^^^^^^^
+at classTypeErr12#res22 (file:///$snippetsDir/input/types/classTypeErr12.pkl)
+
 xxx | renderer.renderDocument(value)
       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 at pkl.base#Module.output.text (pkl:base)

@@ -1,6 +1,6 @@
 import "pkl:ref"
 
-class D extends ref.Domain {
+class D extends ref.AbstractDomain {
   function renderReference(_): String = throw("not implemented")
 }
 
@@ -8,10 +8,6 @@ class Bird {
   name: String
 }
 
-class Holder {
-  $: Bird | Int
-}
-
-myRef: ref.Reference<D, Bird | Int> = ref.Reference(new D {}, Holder, null).$
+myRef: ref.Reference<D, Bird | Int> = ref.Reference::<D, Bird | Int>(new D {}, null)
 
 res = myRef.name

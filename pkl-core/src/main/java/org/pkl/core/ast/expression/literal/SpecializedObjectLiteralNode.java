@@ -72,7 +72,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
   @Idempotent
   protected boolean checkIsValidTypedAmendment(Object parent) {
     var parentClass = parent instanceof VmClass vmClass ? vmClass : VmUtils.getClass(parent);
-    VmUtils.checkIsInstantiable(parentClass, getParentNode());
+    VmUtils.checkIsInstantiable(parentClass, getParentNode(), this);
 
     for (var member : EconomicMaps.getValues(members)) {
       if (member.isLocal()) continue;
@@ -290,7 +290,7 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
       Object parent, @Nullable ObjectMember firstElemOrEntry, boolean isElementsOnly) {
     var parentIsClass = parent instanceof VmClass;
     var parentClass = parentIsClass ? (VmClass) parent : VmUtils.getClass(parent);
-    VmUtils.checkIsInstantiable(parentClass, getParentNode());
+    VmUtils.checkIsInstantiable(parentClass, getParentNode(), this);
 
     var property = findFirstNonDefaultProperty(members);
     if (property != null

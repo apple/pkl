@@ -22,10 +22,9 @@ import com.oracle.truffle.api.source.SourceSection;
 import java.util.ArrayList;
 import java.util.List;
 import org.pkl.core.PklBugException;
-import org.pkl.core.TypeParameter;
 import org.pkl.core.ast.ExpressionNode;
 import org.pkl.core.ast.PklNode;
-import org.pkl.core.ast.expression.primary.GetModuleNode;
+import org.pkl.core.ast.expression.primary.GetModuleOwnerNode;
 import org.pkl.core.ast.type.TypeNode.*;
 import org.pkl.core.ast.type.TypeNodeFactory.*;
 import org.pkl.core.runtime.*;
@@ -91,18 +90,18 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   /** The `module` type. */
   public static final class Module extends UnresolvedTypeNode {
-    @Child private ExpressionNode getModuleNode;
+    @Child private ExpressionNode getModuleOwnerNode;
 
     public Module(SourceSection sourceSection) {
       super(sourceSection);
-      getModuleNode = new GetModuleNode(sourceSection);
+      getModuleOwnerNode = new GetModuleOwnerNode(sourceSection);
     }
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      var module = (VmTyped) getModuleNode.executeGeneric(frame);
+      var module = (VmTyped) getModuleOwnerNode.executeGeneric(frame);
       var moduleClass = module.getVmClass();
       return moduleClass.isClosed()
           ? FinalSelfTypeNode.moduleType(sourceSection, moduleClass)
@@ -499,21 +498,29 @@ public abstract class UnresolvedTypeNode extends PklNode {
 
   public static final class TypeVariable extends UnresolvedTypeNode {
     private final TypeParameter typeParameter;
+    private final int levelsUp;
+    private final TypeParameter.OwnerType ownerType;
 
-    public TypeVariable(SourceSection sourceSection, TypeParameter typeParameter) {
+    public TypeVariable(
+        SourceSection sourceSection,
+        TypeParameter typeParameter,
+        TypeParameter.OwnerType ownerType,
+        int levelsUp) {
       super(sourceSection);
       this.typeParameter = typeParameter;
+      this.ownerType = ownerType;
+      this.levelsUp = levelsUp;
     }
 
-    public int getTypeParameterIndex() {
-      return typeParameter.getIndex();
+    public TypeParameter getTypeParameter() {
+      return typeParameter;
     }
 
     @Override
     public TypeNode execute(VirtualFrame frame) {
       CompilerDirectives.transferToInterpreter();
 
-      return new TypeVariableNode(sourceSection, typeParameter);
+      return new TypeVariableNode(sourceSection, typeParameter, ownerType, levelsUp);
     }
   }
 

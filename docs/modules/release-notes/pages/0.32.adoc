@@ -1,6 +1,6 @@
 = Pkl 0.32 Release Notes
 :version: 0.32
-:version-minor: 0.32.1
+:version-minor: 0.32.2
 :release-date: July 8th, 2026
 :version-next: 0.33
 :version-next-date: October 2026
@@ -62,7 +62,7 @@ Library authors describe types as `ref.Reference<D, T>`, where `D` is the _domai
 ----
 import "pkl:ref"
 
-class MyDomain extends ref.Domain { // <1>
+class MyDomain extends ref.AbstractDomain { // <1>
   function renderReference(ref: ref.Reference<MyDomain, Any>): String =
     "${ " + ref.getData() + "." + ref.getPath().join(".") + " }"
 }

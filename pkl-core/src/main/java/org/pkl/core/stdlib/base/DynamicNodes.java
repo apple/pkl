@@ -108,7 +108,7 @@ public final class DynamicNodes {
         throw exceptionBuilder().evalError("notASubclassOfTyped", clazz).build();
       }
 
-      VmUtils.checkIsInstantiable(clazz, this);
+      VmUtils.checkIsInstantiable(clazz, this, this);
 
       var result =
           new VmTyped(
