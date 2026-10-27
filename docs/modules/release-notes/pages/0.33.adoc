@@ -100,17 +100,67 @@ https://github.com/apple/pkl/pull/1812
 
 === CPU Profiler
 
-https://github.com/apple/pkl/pull/1823
+The Pkl CLI can now profile where an evaluation spends its CPU time (https://github.com/apple/pkl/pull/1823[#1823], https://github.com/apple/pkl/pull/1931[#1931]).
 
+Profiling is enabled by passing `--profile-cpu-output`, which sets the file to write the profile to.
+The profile is written in https://github.com/google/pprof[pprof] format, so it can be explored with any tool that reads it, such as `go tool pprof`.
+
+[source,shell]
+----
+$ pkl eval --profile-cpu-output profile.pb.gz myConfig.pkl
+$ go tool pprof -http=:8080 profile.pb.gz
+----
+
+Profiling is only exposed through the CLI.
+For more details, consult xref:pkl-cli:index.adoc#profile-cpu-output[the CLI documentation].
 
 == Noteworthy [small]#🎶#
 
 === New type: `this`
 
-https://github.com/apple/pkl/pull/1708
-https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0029-self-type.adoc
+This release introduces the `this` type, a self type for use within modules and classes (https://github.com/apple/pkl/pull/1708[#1708], https://github.com/apple/pkl-evolution/pull/32[SPICE-0029]).
 
-The `this` type has also been <<this-adoption,adopted in the standard library>>. 
+`this` refers to the type of the enclosing object.
+When a class is extended, `this` in an inherited member refers to the subclass, not to the class that declares the member.
+This makes it possible to express that a member relates to the _same_ type as the object it is on:
+
+[source,pkl]
+----
+open class Node {
+  parent: this?
+  children: List<this>
+}
+
+class SpecialNode extends Node {
+  special: Boolean
+}
+
+node: SpecialNode = new {
+  special = true
+  parent = new SpecialNode { special = false; children = List() } // <1>
+  children = List(new SpecialNode { special = true; children = List() })
+}
+
+bad: SpecialNode = new {
+  special = true
+  parent = new Node {} // <2>
+}
+----
+<1> `parent` has type `SpecialNode?`.
+<2> Error: `Node` is not a `SpecialNode`.
+
+The `this` type can be used in properties, method parameters and return types, function types, and type arguments.
+It cannot be used in a type alias body.
+When used in a module, `this` is the type of the module that is being evaluated.
+
+The `this` type has also been <<this-adoption,adopted in the standard library>>.
+
+==== Deprecation of the `module` type in const scopes
+
+The `module` type may behave incorrectly or in undefined ways when it is used in a _const_ scope.
+Using the `module` type in these locations now emits a deprecation warning, and will become an error in a future release.
+
+To migrate, replace the `module` type with `this`, or import the current module and use the resulting module type.
 
 === Implicitly typed `new {}` can be inferred in more locations
 
