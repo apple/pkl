@@ -1,0 +1,9 @@
+abstract class Base {
+  prop = 10
+}
+
+class Child extends Base {
+  result = super.prop < foo > (1)
+}
+
+result = new Child {}.result

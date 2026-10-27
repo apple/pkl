@@ -41,7 +41,7 @@ class GenericParserImpl {
   private int speculativeTokenCount = 0;
   private boolean isSpeculativeParse = false;
   private final BitSet failedTypeArgAttempts = new BitSet();
-  // char indices of `<` that might start a type argument list; computed lazily
+  // char indices of `<` that might start a type argument list
   private @Nullable BitSet typeArgCandidates;
 
   GenericParserImpl(String source) {

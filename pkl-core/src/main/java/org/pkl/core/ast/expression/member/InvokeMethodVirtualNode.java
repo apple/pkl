@@ -37,6 +37,7 @@ import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.Identifier;
 import org.pkl.core.runtime.VmClass;
 import org.pkl.core.runtime.VmFunction;
+import org.pkl.core.runtime.VmUtils;
 
 /** A virtual method call. */
 @SuppressWarnings("DuplicatedCode")
@@ -89,6 +90,8 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
    */
   public abstract Object executeWith(VirtualFrame frame, Object value, VmClass clazz);
 
+  protected abstract ExpressionNode getReceiverNode();
+
   /** Intrinsifies `FunctionN.apply()` calls. */
   @Specialization(guards = {"methodName == APPLY", "receiver.getCallTarget() == cachedCallTarget"})
   protected Object evalFunctionCached(
@@ -119,7 +122,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       Object receiver,
       @SuppressWarnings("unused") VmClass receiverClass,
       @Cached("receiverClass") @SuppressWarnings("unused") VmClass cachedReceiverClass,
-      @Cached("resolveMethod(receiverClass)") ClassMethod method,
+      @Cached("resolveMethod(frame, receiverClass)") ClassMethod method,
       @Cached("create(method.getCallTarget(sourceSection))") DirectCallNode callNode) {
     var args = evalArgs(frame, method, method.getOwner(), receiver);
     return callNode.call(args);
@@ -131,7 +134,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
       Object receiver,
       VmClass receiverClass,
       @Exclusive @Cached("create()") IndirectCallNode callNode) {
-    var method = resolveMethod(receiverClass);
+    var method = resolveMethod(frame, receiverClass);
     var args = evalArgs(frame, method, method.getOwner(), receiver);
 
     // Deprecation should not report here (getCallTarget(sourceSection)), as this happens for each
@@ -139,7 +142,7 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
     return callNode.call(method.getCallTarget(), args);
   }
 
-  protected ClassMethod resolveMethod(VmClass receiverClass) {
+  protected ClassMethod resolveMethod(VirtualFrame frame, VmClass receiverClass) {
     var method = receiverClass.getMethod(methodName);
     if (method != null) {
       checkConst(method);
@@ -151,9 +154,12 @@ public abstract class InvokeMethodVirtualNode extends AbstractInvokeMethodNode {
     throw exceptionBuilder()
         .cannotFindMethod(
             receiverClass.getPrototype(),
+            VmUtils.getOwner(frame),
             methodName,
             argumentNodes.length,
-            lookupMode != MemberLookupMode.EXPLICIT_RECEIVER)
+            lookupMode,
+            unresolvedTypeArgumentNodes != null,
+            getReceiverNode())
         .build();
   }
 

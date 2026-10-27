@@ -1,0 +1,10 @@
+// `fooz` and `fool` both fit the string similarity threshold,
+// but `fooz` is an exact match. So, still show the specialized error
+// message about comparisons instead of generic method call
+fooz = true
+
+fool = false
+
+res {
+  fooz < bar > (fool)
+}

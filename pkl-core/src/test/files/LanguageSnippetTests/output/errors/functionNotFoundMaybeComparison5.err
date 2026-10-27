@@ -1,0 +1,23 @@
+–– Pkl Error ––
+Cannot find method `qux`.
+
+xx | new Foo {
+     ^^^^^^^^^
+at functionNotFoundMaybeComparison5#res[#1] (file:///$snippetsDir/input/errors/functionNotFoundMaybeComparison5.pkl)
+
+This code is interpreted as a method call with type arguments.
+If you meant to write a comparison expression instead, wrap the left-hand side with parentheses:
+
+(new Foo {
+    prop1 = 1
+    prop2 = 2
+    prop3 = 3
+  }.qux) < ...
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)

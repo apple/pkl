@@ -1093,9 +1093,6 @@ final class ParserImpl {
         ArgumentList argumentList = null;
         if (lookahead == Token.LPAREN && !precededBySemicolon && _lookahead.newLinesBetween == 0) {
           argumentList = parseArgumentList();
-        } else if (typeArgumentList != null) {
-          // type args but no args
-          throw new ParserError(ErrorMessages.create("unexpectedToken", "("), spanLookahead);
         }
         var lastSpan = argumentList != null ? argumentList.span() : identifier.span();
         expr =

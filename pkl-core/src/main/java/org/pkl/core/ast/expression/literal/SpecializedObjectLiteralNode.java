@@ -29,6 +29,7 @@ import org.graalvm.collections.EconomicMap;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.jspecify.annotations.Nullable;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.ast.MemberLookupMode;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.ast.type.UnresolvedTypeNode;
 import org.pkl.core.runtime.*;
@@ -80,7 +81,13 @@ public abstract class SpecializedObjectLiteralNode extends ObjectLiteralNode {
       var memberName = member.getName();
       if (!parentClass.hasProperty(memberName)) {
         throw exceptionBuilder()
-            .cannotFindProperty(parentClass.getPrototype(), memberName, false, false)
+            .cannotFindProperty(
+                parentClass.getPrototype(),
+                parentClass.getPrototype(),
+                memberName,
+                false,
+                MemberLookupMode.EXPLICIT_RECEIVER,
+                null)
             .withSourceSection(member.getHeaderSection())
             .build();
       }
