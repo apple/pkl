@@ -3,7 +3,7 @@
   "resolvedDependencies": {
     "package://localhost:0/fruit@1": {
       "type": "remote",
-      "uri": "projectpackage://localhost:0/fruit@1.1.0",
+      "uri": "projectpackage://localhost:0/fruit@1.2.0",
       "checksums": {
         "sha256": "$skipChecksumVerification"
       }
