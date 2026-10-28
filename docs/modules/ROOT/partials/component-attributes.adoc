@@ -76,6 +76,10 @@ endif::[]
 :uri-stdlib-mathModule: {uri-pkl-stdlib-docs}/math
 :uri-stdlib-netModule: {uri-pkl-stdlib-docs}/net
 :uri-stdlib-net-Url: {uri-stdlib-netModule}/Url
+:uri-stdlib-syntaxModule: {uri-pkl-stdlib-docs}/syntax
+:uri-stdlib-syntax-Parser: {uri-stdlib-syntaxModule}/Parser
+:uri-stdlib-syntax-Node: {uri-stdlib-syntaxModule}/Node
+:uri-stdlib-syntax-FormattingRenderer: {uri-stdlib-syntaxModule}/FormattingRenderer
 :uri-stdlib-xmlModule: {uri-pkl-stdlib-docs}/xml
 :uri-stdlib-protobufModule: {uri-pkl-stdlib-docs}/protobuf
 :uri-stdlib-pklbinaryModule: {uri-pkl-stdlib-docs}/pklbinary

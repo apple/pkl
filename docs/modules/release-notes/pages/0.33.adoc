@@ -11,7 +11,7 @@ include::partial$intro.adoc[]
 
 === Generic Methods
 
-Methods can now declare type parameters, and callers can provide type arguments explicitly with the `::<>` syntax (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl-evolution/blob/main/spices/SPICE-0032-generic-methods.adoc[SPICE-0032]).
+Methods can now declare type parameters, and callers can provide type arguments explicitly with the `::<>` syntax (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl-evolution/pull/35[SPICE-0032]).
 
 [source,pkl]
 ----
@@ -106,7 +106,31 @@ The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,br
 
 === New standard library module: `pkl:syntax`
 
-https://github.com/apple/pkl/pull/1821
+This release introduces a new standard library module, link:{uri-stdlib-syntaxModule}[`pkl:syntax`], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
+
+It has three parts:
+
+* link:{uri-stdlib-syntax-Parser}[`Parser`] parses a string or resource into a syntax tree, as either a module or an expression.
+* link:{uri-stdlib-syntax-Node}[`Node`] is a node of that tree.
+It has a `type`, `children`, the verbatim source `text`, and the source `span`.
+Nodes can be searched, folded, and replaced with the `find*`, `fold`, and `replace*` methods.
+* link:{uri-stdlib-syntax-FormattingRenderer}[`FormattingRenderer`] renders a tree back to Pkl source code, using the canonical Pkl formatter.
+
+[source,pkl]
+----
+import "pkl:syntax"
+
+local myModule = new syntax.Parser {}.parseModule("""
+  class Point {
+    x: Int
+    y: Int
+  }
+  """)
+
+className = myModule.findChild((n) -> n.type == "class").findChildOfType("identifier").text // "Point"
+
+ifCount = myModule.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc) // 0
+----
 
 === libpkl
 
@@ -182,13 +206,27 @@ To migrate, replace the `module` type with `this`, or import the current module 
 
 === Implicitly typed `new {}` can be inferred in more locations
 
-https://github.com/apple/pkl/pull/1768
-https://github.com/apple/pkl/pull/1845
-https://github.com/apple/pkl/pull/1847
-https://github.com/apple/pkl/pull/1857
+The type of an implicitly typed `new {}` expression can now be inferred from the parameter type of a method being called (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]), and from the type annotation of a `let` binding (https://github.com/apple/pkl/pull/1824[#1824]).
 
-https://github.com/apple/pkl/pull/1824
+[source,pkl]
+----
+class Person {
+  name: String
+}
 
+function greet(person: Person): String = "Hello, \(person.name)"
+
+greeting1 = greet(new { name = "Pigeon" }) // <1>
+
+greeting2 =
+  let (person: Person = new { name = "Parrot" }) // <2>
+    greet(person)
+----
+<1> The argument is inferred to be a `Person`.
+<2> The `let` binding is inferred to be a `Person`.
+
+Inference is not available where the parameter type is not known ahead of time: for constructor methods like `List()`, generic methods like `Pair()`, and `Function.apply()`.
+It is an error for the parameter type to be `this`.
 
 === Support for `.netrc` HTTP authentication
 
