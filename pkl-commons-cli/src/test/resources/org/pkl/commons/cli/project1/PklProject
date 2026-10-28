@@ -1,5 +1,5 @@
 amends "pkl:Project"
 
 dependencies {
-  ["fruit"] { uri = "package://localhost:0/fruit@1.1.0" }
+  ["fruit"] { uri = "package://localhost:0/fruit@1.2.0" }
 }

@@ -123,18 +123,23 @@ constructor(
 
     return options.base.normalizedSourceModules.associateWith { uri ->
       val moduleDir: String? =
-        IoUtils.toPath(uri)?.let {
-          IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
-        }
-      val moduleKey =
-        try {
-          moduleResolver.resolve(uri)
-        } catch (e: VmException) {
-          throw e.toPklException(stackFrameTransformer, options.base.color?.hasColor() ?: false)
-        }
+        if (!uri.isAbsolute && uri.schemeSpecificPart.startsWith("@")) null
+        else
+          IoUtils.toPath(uri)?.let {
+            IoUtils.relativize(it.parent, workingDir).toString().ifEmpty { "." }
+          }
+      val moduleName =
+        if (!uri.isAbsolute && uri.schemeSpecificPart.startsWith("@"))
+          IoUtils.getNameWithoutExtension(uri.path)
+        else
+          try {
+            IoUtils.inferModuleName(moduleResolver.resolve(uri))
+          } catch (e: VmException) {
+            throw e.toPklException(stackFrameTransformer, options.base.color?.hasColor() ?: false)
+          }
       val substituted =
         pathStr
-          .replace("%{moduleName}", IoUtils.inferModuleName(moduleKey))
+          .replace("%{moduleName}", moduleName)
           .replace("%{outputFormat}", options.outputFormat ?: "%{outputFormat}")
           .replace("%{moduleDir}", moduleDir ?: "%{moduleDir}")
       if (substituted.contains("%{moduleDir}")) {

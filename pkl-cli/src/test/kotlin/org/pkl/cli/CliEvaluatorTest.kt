@@ -1798,6 +1798,31 @@ result = someLib.x
       )
   }
 
+  @Test
+  fun `eval dependency notation source with multiple file output`(
+    @TempDir tempDir: Path,
+    @TempDir cacheDir: Path,
+  ) {
+    PackageServer.populateCacheDir(cacheDir)
+    val projectPath =
+      FileTestUtils.rootProjectDir.resolve(
+        "pkl-commons-cli/src/test/resources/org/pkl/commons/cli/project1/"
+      )
+    val options =
+      CliEvaluatorOptions(
+        CliBaseOptions(
+          sourceModules = listOf(URI("@fruit/catalog/basket.pkl")),
+          projectDir = projectPath,
+          moduleCacheDir = cacheDir,
+          workingDir = tempDir,
+        ),
+        multipleFileOutputPath = "output",
+      )
+    val output = evalToConsole(options)
+    assertThat(output.split('\n')).hasSize(3)
+    assertThat(tempDir.resolve("output").listDirectoryEntries()).hasSize(2)
+  }
+
   private fun evalModuleThatImportsPackage(certsFile: Path?, testPort: Int = -1) {
     val moduleUri =
       writePklFile(
