@@ -1,0 +1,68 @@
+res0 = true
+res1 = true
+res2 = true
+res3 = true
+res4 = true
+res5 = true
+lists {
+  reverse = true
+  contains = true
+  indices = true
+  absent = true
+  prefix = true
+  distinct = true
+  distinctBy = true
+  distinctness = true
+}
+sets {
+  contains = true
+  deduplication = true
+  slices = true
+  drops = true
+  split = true
+  convert = true
+}
+maps {
+  keys = true
+  lookup = true
+  containsValue = true
+  overwrite = true
+  remove = true
+  keySet = true
+}
+mappings {
+  constantKey = true
+  variableKey = true
+  generatedKey = true
+  containsKey = true
+  containsValue = true
+  keys = true
+  amended = true
+}
+nested {
+  dynamic = true
+  typed = true
+  pair = true
+  containers = true
+  hashList = true
+  hashListing = true
+  hashMapping = true
+  hashMap = true
+  hashSet = true
+  hashDynamic = true
+  hashTyped = true
+  hashPair = true
+}
+numbers {
+  zero = true
+  nan = true
+  infinity = true
+  fractional = true
+  precise = true
+  rounded = true
+  maximum = true
+  minimum = true
+  negativeRange = true
+  transitivity = true
+  type = true
+}

@@ -421,7 +421,7 @@ public final class VmReference extends VmValue {
     }
 
     return domain.equals(that.domain)
-        && data.equals(that.data)
+        && VmValueEquivalence.INSTANCE.equals(data, that.data)
         && path.equals(that.path)
         && referentType.equals(that.referentType);
   }
@@ -429,7 +429,7 @@ public final class VmReference extends VmValue {
   @Override
   public int hashCode() {
     int result = domain.hashCode();
-    result = 31 * result + data.hashCode();
+    result = 31 * result + VmValueEquivalence.INSTANCE.hashCode(data);
     result = 31 * result + path.hashCode();
     result = 31 * result + referentType.hashCode();
     return result;

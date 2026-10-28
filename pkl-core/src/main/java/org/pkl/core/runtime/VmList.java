@@ -279,31 +279,41 @@ public final class VmList extends VmCollection {
   }
 
   @TruffleBoundary
-  @SuppressWarnings("deprecation")
   public boolean contains(Object element) {
-    return rrbt.contains(element);
+    return indexOf(element) != -1;
   }
 
   @TruffleBoundary
   public long indexOf(Object elem) {
-    return rrbt.indexOf(elem);
+    var index = 0L;
+    for (var value : rrbt) {
+      if (VmValueEquivalence.INSTANCE.equals(value, elem)) return index;
+      index++;
+    }
+    return -1;
   }
 
   @TruffleBoundary
   public Object indexOfOrNull(Object elem) {
-    long result = rrbt.indexOf(elem);
+    long result = indexOf(elem);
     if (result == -1) return VmNull.withoutDefault();
     return result;
   }
 
   @TruffleBoundary
   public long lastIndexOf(Object elem) {
-    return rrbt.lastIndexOf(elem);
+    var index = (long) rrbt.size() - 1;
+    var iterator = reverseIterator();
+    while (iterator.hasNext()) {
+      if (VmValueEquivalence.INSTANCE.equals(iterator.next(), elem)) return index;
+      index--;
+    }
+    return -1;
   }
 
   @TruffleBoundary
   public Object lastIndexOfOrNull(Object elem) {
-    long result = rrbt.lastIndexOf(elem);
+    long result = lastIndexOf(elem);
     if (result == -1) return VmNull.withoutDefault();
     return result;
   }
@@ -449,13 +459,17 @@ public final class VmList extends VmCollection {
     if (this == other) return true;
     //noinspection SimplifiableIfStatement
     if (!(other instanceof VmList list)) return false;
-    return rrbt.equals(list.rrbt);
+    return getLength() == list.getLength() && startsWith(list);
   }
 
   @Override
   @TruffleBoundary
   public int hashCode() {
-    return rrbt.hashCode();
+    var result = 1;
+    for (var value : rrbt) {
+      result = 31 * result + VmValueEquivalence.INSTANCE.hashCode(value);
+    }
+    return result;
   }
 
   private static final class Builder implements VmCollection.Builder<VmList> {

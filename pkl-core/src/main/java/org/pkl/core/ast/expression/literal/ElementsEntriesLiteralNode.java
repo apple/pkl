@@ -181,6 +181,7 @@ public abstract class ElementsEntriesLiteralNode extends SpecializedObjectLitera
       VirtualFrame frame, int parentLength) {
     var result =
         EconomicMaps.<Object, ObjectMember>create(
+            VmValueEquivalence.INSTANCE,
             EconomicMaps.size(members) + keyNodes.length + elements.length);
 
     EconomicMaps.putAll(result, members);

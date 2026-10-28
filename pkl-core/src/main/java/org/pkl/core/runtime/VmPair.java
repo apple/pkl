@@ -103,12 +103,14 @@ public final class VmPair extends VmValue implements Iterable<Object> {
   public boolean equals(@Nullable Object obj) {
     if (this == obj) return true;
     if (!(obj instanceof VmPair other)) return false;
-    return first.equals(other.first) && second.equals(other.second);
+    return VmValueEquivalence.INSTANCE.equals(first, other.first)
+        && VmValueEquivalence.INSTANCE.equals(second, other.second);
   }
 
   @Override
   public int hashCode() {
-    return first.hashCode() * 31 + second.hashCode();
+    return VmValueEquivalence.INSTANCE.hashCode(first) * 31
+        + VmValueEquivalence.INSTANCE.hashCode(second);
   }
 
   @Override

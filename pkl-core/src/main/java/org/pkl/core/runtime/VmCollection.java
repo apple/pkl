@@ -85,7 +85,7 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
 
     //noinspection WhileLoopReplaceableByForEach
     while (otherIter.hasNext()) {
-      if (!iter.next().equals(otherIter.next())) return false;
+      if (!VmValueEquivalence.INSTANCE.equals(iter.next(), otherIter.next())) return false;
     }
 
     return true;
@@ -99,7 +99,7 @@ public abstract class VmCollection extends VmValue implements Iterable<Object> {
     var otherIter = other.reverseIterator();
 
     while (otherIter.hasNext()) {
-      if (!iter.next().equals(otherIter.next())) return false;
+      if (!VmValueEquivalence.INSTANCE.equals(iter.next(), otherIter.next())) return false;
     }
 
     return true;

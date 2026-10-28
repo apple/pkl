@@ -203,6 +203,7 @@ import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmSet;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.runtime.VmValueEquivalence;
 import org.pkl.core.stdlib.LanguageAwareNode;
 import org.pkl.core.stdlib.registry.ExternalMemberRegistry;
 import org.pkl.core.stdlib.registry.MemberRegistryFactory;
@@ -2511,7 +2512,7 @@ public class AstBuilder extends AbstractAstBuilder<Object> {
                   ? null
                   : parametersFrameDescriptorBuilder.build();
 
-          var members = EconomicMaps.<Object, ObjectMember>create();
+          var members = EconomicMaps.<Object, ObjectMember>create(VmValueEquivalence.INSTANCE);
           var elements = new ArrayList<ObjectMember>();
           var keyNodes = new ArrayList<ExpressionNode>();
           var values = new ArrayList<ObjectMember>();

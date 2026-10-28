@@ -61,7 +61,7 @@ public abstract class VmObject extends VmObjectLike {
       MaterializedFrame enclosingFrame,
       @Nullable VmObject parent,
       UnmodifiableEconomicMap<Object, ObjectMember> members) {
-    this(enclosingFrame, parent, members, EconomicMaps.create());
+    this(enclosingFrame, parent, members, EconomicMaps.create(VmValueEquivalence.INSTANCE));
   }
 
   public final void lateInitParent(VmObject parent) {

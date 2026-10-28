@@ -19,6 +19,7 @@ import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import java.util.Objects;
 import java.util.function.BiFunction;
 import org.graalvm.collections.EconomicMap;
+import org.graalvm.collections.Equivalence;
 import org.graalvm.collections.MapCursor;
 import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.graalvm.collections.UnmodifiableMapCursor;
@@ -44,6 +45,16 @@ public final class EconomicMaps {
   public static <K, V> EconomicMap<K, V> create(int initialSize) {
     // for economic maps, size == capacity
     return EconomicMap.create(initialSize);
+  }
+
+  @TruffleBoundary
+  public static <K, V> EconomicMap<K, V> create(Equivalence equivalence) {
+    return EconomicMap.create(equivalence);
+  }
+
+  @TruffleBoundary
+  public static <K, V> EconomicMap<K, V> create(Equivalence equivalence, int initialSize) {
+    return EconomicMap.create(equivalence, initialSize);
   }
 
   @TruffleBoundary

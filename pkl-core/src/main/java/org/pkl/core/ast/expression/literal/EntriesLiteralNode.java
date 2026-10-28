@@ -193,7 +193,8 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   @ExplodeLoop
   protected EconomicMap<Object, ObjectMember> createMapMembers(VirtualFrame frame) {
     var result =
-        EconomicMaps.<Object, ObjectMember>create(EconomicMaps.size(members) + keyNodes.length);
+        EconomicMaps.<Object, ObjectMember>create(
+            VmValueEquivalence.INSTANCE, EconomicMaps.size(members) + keyNodes.length);
     EconomicMaps.putAll(result, members);
 
     for (var i = 0; i < keyNodes.length; i++) {
@@ -216,7 +217,8 @@ public abstract class EntriesLiteralNode extends SpecializedObjectLiteralNode {
   protected UnmodifiableEconomicMap<Object, ObjectMember> createListMembers(
       VirtualFrame frame, int parentLength) {
     var result =
-        EconomicMaps.<Object, ObjectMember>create(EconomicMaps.size(members) + keyNodes.length);
+        EconomicMaps.<Object, ObjectMember>create(
+            VmValueEquivalence.INSTANCE, EconomicMaps.size(members) + keyNodes.length);
     EconomicMaps.putAll(result, members);
     addListEntries(frame, parentLength, result, keyNodes, values);
     return result;

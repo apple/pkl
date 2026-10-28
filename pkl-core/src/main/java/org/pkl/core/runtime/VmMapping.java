@@ -213,7 +213,7 @@ public final class VmMapping extends VmListingOrMapping {
       //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
-      if (!value.equals(otherValue)) return false;
+      if (!VmValueEquivalence.INSTANCE.equals(value, otherValue)) return false;
     }
 
     return true;
@@ -235,7 +235,8 @@ public final class VmMapping extends VmListingOrMapping {
       var value = cursor.getValue();
       //noinspection ConstantValue
       assert value != null;
-      result += key.hashCode() ^ value.hashCode();
+      result +=
+          VmValueEquivalence.INSTANCE.hashCode(key) ^ VmValueEquivalence.INSTANCE.hashCode(value);
     }
 
     cachedHash = result;
