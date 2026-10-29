@@ -19,9 +19,10 @@ import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.BitSet;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 import java.util.function.Supplier;
 import org.jspecify.annotations.Nullable;
 import org.pkl.parser.syntax.Annotation;
@@ -89,6 +90,7 @@ import org.pkl.parser.syntax.TypeArgumentList;
 import org.pkl.parser.syntax.TypeParameter;
 import org.pkl.parser.syntax.TypeParameterList;
 import org.pkl.parser.util.ErrorMessages;
+import org.pkl.parser.util.SortedIntArray;
 
 @SuppressWarnings("DuplicatedCode")
 final class ParserImpl {
@@ -100,11 +102,11 @@ final class ParserImpl {
   private FullToken _lookahead;
   private boolean precededBySemicolon = false;
   private int speculativeTokenCount = 0;
-  private final BitSet failedTypeArgAttempts = new BitSet();
+  private final Set<Integer> failedTypeArgAttempts = new HashSet<>();
   private boolean isSpeculativeParse = false;
   private final String source;
   // char indices of `<` that might start a type argument list
-  private @Nullable BitSet typeArgCandidates;
+  private @Nullable SortedIntArray typeArgCandidates;
 
   ParserImpl(String source) {
     this.source = source;
@@ -1578,7 +1580,7 @@ final class ParserImpl {
     if (lookahead != Token.LT
         || precededBySemicolon
         || _lookahead.newLinesBetween != 0
-        || failedTypeArgAttempts.get(spanLookahead.charIndex())
+        || failedTypeArgAttempts.contains(spanLookahead.charIndex())
         || !isTypeArgCandidate(spanLookahead.charIndex())) {
       return null;
     }
@@ -1601,7 +1603,7 @@ final class ParserImpl {
     } finally {
       isSpeculativeParse = savedIsSpeculativeParse;
     }
-    failedTypeArgAttempts.set(savedSpanLookahead.charIndex());
+    failedTypeArgAttempts.add(savedSpanLookahead.charIndex());
     lexer.restore(lexerSnapshot);
     lookahead = savedLookahead;
     spanLookahead = savedSpanLookahead;
@@ -1616,7 +1618,7 @@ final class ParserImpl {
     if (typeArgCandidates == null) {
       typeArgCandidates = TypeArgumentCandidates.scan(new Lexer(source));
     }
-    return typeArgCandidates.get(charIndex);
+    return typeArgCandidates.contains(charIndex);
   }
 
   private ArgumentList parseArgumentList() {

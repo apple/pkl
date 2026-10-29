@@ -39,9 +39,7 @@ class ParserComparisonTest {
         .forEach { (path, snippet) ->
           try {
             compare(snippet, path, softly)
-          } catch (e: GenericParserError) {
-            softly.fail("path: $path. Message: ${e.message}", e)
-          } catch (e: ParserError) {
+          } catch (e: Error) {
             softly.fail("path: $path. Message: ${e.message}", e)
           }
         }

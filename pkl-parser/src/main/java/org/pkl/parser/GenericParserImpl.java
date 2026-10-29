@@ -28,6 +28,7 @@ import org.pkl.parser.syntax.generic.FullSpan;
 import org.pkl.parser.syntax.generic.Node;
 import org.pkl.parser.syntax.generic.NodeType;
 import org.pkl.parser.util.ErrorMessages;
+import org.pkl.parser.util.SortedIntArray;
 
 @SuppressWarnings("DuplicatedCode")
 class GenericParserImpl {
@@ -42,7 +43,7 @@ class GenericParserImpl {
   private boolean isSpeculativeParse = false;
   private final BitSet failedTypeArgAttempts = new BitSet();
   // char indices of `<` that might start a type argument list
-  private @Nullable BitSet typeArgCandidates;
+  private @Nullable SortedIntArray typeArgCandidates;
 
   GenericParserImpl(String source) {
     this.lexer = new Lexer(source);
@@ -804,7 +805,7 @@ class GenericParserImpl {
       }
       typeArgCandidates = scanner.candidates();
     }
-    return typeArgCandidates.get(charIndex);
+    return typeArgCandidates.contains(charIndex);
   }
 
   private Node parseExprAtom(@Nullable String expectation) {

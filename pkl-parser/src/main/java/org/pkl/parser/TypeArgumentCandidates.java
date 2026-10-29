@@ -15,8 +15,8 @@
  */
 package org.pkl.parser;
 
-import java.util.Arrays;
-import java.util.BitSet;
+import org.pkl.parser.util.IntArray;
+import org.pkl.parser.util.SortedIntArray;
 
 /**
  * Finds all {@code <} tokens might be the start of a method call's type argument list, e.g. the
@@ -32,15 +32,16 @@ import java.util.BitSet;
  */
 final class TypeArgumentCandidates {
   // marks a `(`, `[`, `{` or string interpolation on the stack; `<` is stored as its char index
-  private static final int BRACKET = -1;
+  private static final int BRACKET = -100;
 
-  private final BitSet candidates = new BitSet();
-  private int[] stack = new int[16];
-  private int size = 0;
+  // char index of every candidate, in the order they were discovered
+  private final IntArray found = new IntArray();
+  // `<` that are still open, and the brackets that enclose them
+  private final IntArray pending = new IntArray();
   // char index of the `<` matching the most recent `>`, if we haven't seen the next token yet
-  private int pending = -1;
+  private int currentPending = -1;
 
-  static BitSet scan(Lexer lexer) {
+  static SortedIntArray scan(Lexer lexer) {
     var scanner = new TypeArgumentCandidates();
     try {
       while (true) {
@@ -52,47 +53,41 @@ final class TypeArgumentCandidates {
       // Lexing error. The parser will report it when it gets there; `<` that are still open at
       // this point are simply not candidates.
     }
-    return scanner.candidates;
+    return scanner.candidates();
   }
 
-  BitSet candidates() {
-    return candidates;
+  /**
+   * The indices of the {@code <} tokens that might be type arg calls.
+   *
+   * <p>Must only call this after feeding all tokens.
+   */
+  SortedIntArray candidates() {
+    return new SortedIntArray(found);
   }
 
   /** Feeds the next token. Call in source order, for every token including affixes. */
   void accept(Token token, int charIndex) {
     if (token.isAffix()) return;
-    if (pending >= 0) {
+    if (currentPending >= 0) {
       if (token == Token.LPAREN) {
-        candidates.set(pending);
+        found.push(currentPending);
       }
-      pending = -1;
+      currentPending = -1;
     }
     switch (token) {
-      case LT -> push(charIndex);
+      case LT -> pending.push(charIndex);
       case GT -> {
         // a `>` without a matching `<` at the same level is a comparison operator
-        if (size > 0 && stack[size - 1] != BRACKET) {
-          size--;
-          pending = stack[size];
+        if (pending.isNotEmpty() && pending.get(pending.size() - 1) != BRACKET) {
+          currentPending = pending.pop();
         }
       }
-      case LPAREN, LBRACK, LBRACE, INTERPOLATION_START -> push(BRACKET);
+      case LPAREN, LBRACK, LBRACE, INTERPOLATION_START -> pending.push(BRACKET);
       case RPAREN, RBRACK, RBRACE -> {
         // discard unmatched `<` (comparison operators) down to the enclosing bracket
-        while (size > 0) {
-          size--;
-          if (stack[size] == BRACKET) break;
-        }
+        while (pending.isNotEmpty() && pending.pop() != BRACKET) {}
       }
       default -> {}
     }
-  }
-
-  private void push(int value) {
-    if (size == stack.length) {
-      stack = Arrays.copyOf(stack, size * 2);
-    }
-    stack[size++] = value;
   }
 }
