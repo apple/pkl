@@ -44,7 +44,6 @@ import org.pkl.core.runtime.VmMap;
 import org.pkl.core.runtime.VmMapping;
 import org.pkl.core.runtime.VmNull;
 import org.pkl.core.runtime.VmObject;
-import org.pkl.core.runtime.VmObjectCursor;
 import org.pkl.core.runtime.VmTyped;
 import org.pkl.core.runtime.VmUtils;
 
@@ -199,8 +198,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   protected void doEvalDynamic(VirtualFrame frame, ObjectData data, VmObject iterable) {
     var cursor = iterable.members();
-    var counted = isCounted(cursor);
-    while (advance(cursor, counted)) {
+    while (loopConditionProfile.profile(cursor.advance())) {
       var member = cursor.member();
       var value = readCursorValueNode.execute(frame, cursor);
       if (member.isElement()) {
@@ -213,8 +211,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   private void doEvalMapping(VirtualFrame frame, ObjectData data, VmObject iterable) {
     var cursor = iterable.members();
-    var counted = isCounted(cursor);
-    while (advance(cursor, counted)) {
+    while (loopConditionProfile.profile(cursor.advance())) {
       var member = cursor.member();
       if (member.isElement() || member.isProp()) {
         cannotHaveMember(BaseModule.getMappingClass(), member);
@@ -229,8 +226,8 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   private void doEvalListing(VirtualFrame frame, ObjectData data, VmObject iterable) {
     var cursor = iterable.members();
-    var counted = isCounted(cursor);
-    while (advance(cursor, counted)) {
+    loopConditionProfile.profileCounted(cursor.getLength());
+    while (loopConditionProfile.inject(cursor.advance())) {
       var member = cursor.member();
       if (member.isEntry() || member.isProp()) {
         cannotHaveMember(getListingClass(), member);
@@ -242,8 +239,7 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
 
   private void doEvalTyped(VirtualFrame frame, VmClass clazz, ObjectData data, VmObject iterable) {
     var cursor = iterable.members();
-    var counted = isCounted(cursor);
-    while (advance(cursor, counted)) {
+    while (loopConditionProfile.profile(cursor.advance())) {
       var member = cursor.member();
       if (member.isElement() || member.isEntry()) {
         cannotHaveMember(clazz, member);
@@ -252,19 +248,6 @@ public abstract class GeneratorSpreadNode extends GeneratorMemberNode {
       data.addProperty(
           frame, createMember(member, readCursorValueNode.execute(frame, cursor)), this);
     }
-  }
-
-  private boolean isCounted(VmObjectCursor cursor) {
-    var length = cursor.getLength();
-    if (length == -1) return false;
-    loopConditionProfile.profileCounted(length);
-    return true;
-  }
-
-  private boolean advance(VmObjectCursor cursor, boolean counted) {
-    return counted
-        ? loopConditionProfile.inject(cursor.advance())
-        : loopConditionProfile.profile(cursor.advance());
   }
 
   // handles both `List` and `Set`

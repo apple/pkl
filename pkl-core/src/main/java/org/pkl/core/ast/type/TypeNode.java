@@ -1257,6 +1257,8 @@ public abstract class TypeNode extends PklNode {
 
   public static final class CollectionTypeNode extends ObjectSlotTypeNode {
     @Child private TypeNode elementTypeNode;
+    private final LoopConditionProfile listLoopProfile = LoopConditionProfile.create();
+    private final LoopConditionProfile setLoopProfile = LoopConditionProfile.create();
 
     public CollectionTypeNode(SourceSection sourceSection, TypeNode elementTypeNode) {
       super(sourceSection);
@@ -1316,13 +1318,14 @@ public abstract class TypeNode extends PklNode {
     }
 
     @SuppressWarnings("DuplicatedCode")
-    @ExplodeLoop
     private Object evalList(VirtualFrame frame, VmList value) {
       var ret = value;
       var idx = 0;
+      listLoopProfile.profileCounted(value.getLength());
 
-      for (var elem : value) {
+      for (var i = 0; listLoopProfile.inject(i < value.getLength()); i++) {
         TruffleSafepoint.poll(this);
+        var elem = value.get(i);
         var result = elementTypeNode.executeLazily(frame, elem);
         if (result != elem) {
           ret = ret.replace(idx, result);
@@ -1330,27 +1333,31 @@ public abstract class TypeNode extends PklNode {
         idx++;
       }
 
-      LoopNode.reportLoopCount(this, idx);
+      LoopNode.reportLoopCount(this, value.getLength());
       return ret;
     }
 
     private Object evalListEagerly(VirtualFrame frame, VmList value) {
-      for (var elem : value) {
+      var length = value.getLength();
+      listLoopProfile.profileCounted(length);
+      for (var i = 0; listLoopProfile.inject(i < length); i++) {
         TruffleSafepoint.poll(this);
-        elementTypeNode.executeEagerly(frame, elem);
+        elementTypeNode.executeEagerly(frame, value.get(i));
       }
 
-      LoopNode.reportLoopCount(this, value.getLength());
+      LoopNode.reportLoopCount(this, length);
       return value;
     }
 
     private Object evalSet(VirtualFrame frame, VmSet value) {
-      for (var elem : value) {
+      var iterator = value.iterator();
+      var count = 0;
+      while (setLoopProfile.inject(iterator.hasNext())) {
         TruffleSafepoint.poll(this);
-        elementTypeNode.executeEagerly(frame, elem);
+        elementTypeNode.executeEagerly(frame, iterator.next());
+        count++;
       }
-
-      LoopNode.reportLoopCount(this, value.getLength());
+      LoopNode.reportLoopCount(this, count);
       return value;
     }
   }

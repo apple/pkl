@@ -79,6 +79,8 @@ public abstract class VmObject extends VmObjectLike {
     return EconomicMaps.containsKey(members, key);
   }
 
+  // deeply recursive calls are bad for PE, which can happen for deeply nested objects.
+  @TruffleBoundary
   public final @Nullable ObjectMember getRootFirstMember(Object key) {
     if (parent != null) {
       var parentMember = parent.getRootFirstMember(key);
