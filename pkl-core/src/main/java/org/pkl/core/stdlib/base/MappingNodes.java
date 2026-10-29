@@ -86,7 +86,6 @@ public final class MappingNodes {
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       for (var cursor = self.entries(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var cursorValue = readCursorValueNode.execute(frame, cursor);
-        // TODO replace with EqualNode
         if (equals(value, cursorValue)) {
           return true;
         }
@@ -96,7 +95,7 @@ public final class MappingNodes {
 
     @TruffleBoundary
     private boolean equals(Object a, Object b) {
-      return a.equals(b);
+      return VmValueEquivalence.INSTANCE.equals(a, b);
     }
 
     @Override

@@ -81,7 +81,7 @@ public abstract class GeneratorPredicateMemberNode extends GeneratorMemberNode {
     initThisSlot(frame);
 
     var previousValue = frame.getAuxiliarySlot(customThisSlot);
-    var visitedKeys = EconomicSets.create();
+    var visitedKeys = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
     // do our own traversal instead of relying on `VmAbstractObject.force/iterateMemberValues`
     // (more efficient and we don't want to execute `predicateNode` behind Truffle boundary)

@@ -32,7 +32,8 @@ import org.pkl.core.util.paguro.RrbTree.ImRrbt;
 import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 public final class VmSet extends VmCollection {
-  public static final VmSet EMPTY = new VmSet(PersistentHashSet.empty(), RrbTree.empty());
+  public static final VmSet EMPTY =
+      new VmSet(PersistentHashSet.empty(VmValueEquivalence.INSTANCE), RrbTree.empty());
 
   private final ImSet<Object> set;
   private final ImRrbt<Object> elementOrder;
@@ -49,7 +50,7 @@ public final class VmSet extends VmCollection {
   @TruffleBoundary
   public static VmSet of(Object value) {
     return new VmSet(
-        PersistentHashSet.emptyMutable().put(value).immutable(),
+        PersistentHashSet.emptyMutable(VmValueEquivalence.INSTANCE).put(value).immutable(),
         RrbTree.emptyMutable().append(value).immutable());
   }
 
@@ -205,9 +206,7 @@ public final class VmSet extends VmCollection {
   @TruffleBoundary
   public VmPair split(long index) {
     var tuple = elementOrder.split((int) index);
-    return new VmPair(
-        VmSet.create(tuple._1().toImSet(), tuple._1()),
-        VmSet.create(tuple._2().toImSet(), tuple._2()));
+    return new VmPair(VmSet.create(tuple._1()), VmSet.create(tuple._2()));
   }
 
   @TruffleBoundary
@@ -225,7 +224,7 @@ public final class VmSet extends VmCollection {
 
     checkPositive(n);
     var keepAndRemove = elementOrder.split(VmSafeMath.toInt32(n));
-    return VmSet.create(keepAndRemove._1().toImSet(), keepAndRemove._1());
+    return VmSet.create(keepAndRemove._1());
   }
 
   @TruffleBoundary
@@ -235,7 +234,7 @@ public final class VmSet extends VmCollection {
 
     checkPositive(n);
     var removeAndKeep = elementOrder.split(elementOrder.size() - VmSafeMath.toInt32(n));
-    return VmSet.create(removeAndKeep._2().toImSet(), removeAndKeep._2());
+    return VmSet.create(removeAndKeep._2());
   }
 
   @TruffleBoundary
@@ -245,7 +244,7 @@ public final class VmSet extends VmCollection {
 
     checkPositive(n);
     var removeAndKeep = elementOrder.split(VmSafeMath.toInt32(n));
-    return VmSet.create(removeAndKeep._2().toImSet(), removeAndKeep._2());
+    return VmSet.create(removeAndKeep._2());
   }
 
   @TruffleBoundary
@@ -255,7 +254,7 @@ public final class VmSet extends VmCollection {
 
     checkPositive(n);
     var keepAndRemove = elementOrder.split(elementOrder.size() - VmSafeMath.toInt32(n));
-    return VmSet.create(keepAndRemove._1().toImSet(), keepAndRemove._1());
+    return VmSet.create(keepAndRemove._1());
   }
 
   @TruffleBoundary
@@ -339,13 +338,21 @@ public final class VmSet extends VmCollection {
     if (this == other) return true;
     //noinspection SimplifiableIfStatement
     if (!(other instanceof VmSet vmSet)) return false;
-    return set.equals(vmSet.set);
+    if (getLength() != vmSet.getLength()) return false;
+    for (var value : elementOrder) {
+      if (!vmSet.contains(value)) return false;
+    }
+    return true;
   }
 
   @Override
   @TruffleBoundary
   public int hashCode() {
-    return set.hashCode();
+    var result = 0;
+    for (var value : elementOrder) {
+      result += VmValueEquivalence.INSTANCE.hashCode(value);
+    }
+    return result;
   }
 
   private static final class Builder implements VmCollection.Builder<VmSet> {
@@ -354,7 +361,7 @@ public final class VmSet extends VmCollection {
 
     @TruffleBoundary
     private Builder() {
-      setBuilder = PersistentHashSet.emptyMutable();
+      setBuilder = PersistentHashSet.emptyMutable(VmValueEquivalence.INSTANCE);
       elementOrderBuilder = RrbTree.emptyMutable();
     }
 

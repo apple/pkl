@@ -498,7 +498,7 @@ public final class ListNodes {
   public abstract static class isDistinct extends ExternalPropertyNode {
     @Specialization
     protected boolean eval(VmList self) {
-      var visited = EconomicSets.create();
+      var visited = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
       for (var elem : self) {
         if (!EconomicSets.add(visited, elem)) return false;
@@ -514,7 +514,7 @@ public final class ListNodes {
 
     @Specialization
     protected boolean eval(VmList self, VmFunction function) {
-      var visited = EconomicSets.create();
+      var visited = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
       for (var elem : self) {
         if (!EconomicSets.add(visited, applyLambdaNode.execute(function, elem))) return false;
@@ -529,7 +529,7 @@ public final class ListNodes {
     @Specialization
     protected VmList eval(VmList self) {
       var builder = self.builder();
-      var visited = EconomicSets.create();
+      var visited = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
       for (var elem : self) {
         if (EconomicSets.add(visited, elem)) builder.add(elem);
@@ -546,7 +546,7 @@ public final class ListNodes {
     @Specialization
     protected VmList eval(VmList self, VmFunction function) {
       var builder = self.builder();
-      var visited = EconomicSets.create();
+      var visited = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
       for (var elem : self) {
         if (EconomicSets.add(visited, applyLambdaNode.execute(function, elem))) builder.add(elem);

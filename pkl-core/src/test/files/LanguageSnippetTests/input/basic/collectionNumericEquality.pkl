@@ -1,0 +1,86 @@
+res0 = 0 == 0.0
+res1 = new Listing { 0 } == new Listing { 0.0 }
+res2 = List(0) == List(0.0)
+res3 = new Mapping { ["the key"] = 0 } == new Mapping { ["the key"] = 0.0 }
+res4 = Set(0) == Set(0.0)
+res5 = Map("the key", 0) == Map("the key", 0.0)
+
+local padding = IntSeq(1, 200).toList()
+local class Box {
+  value: Number
+}
+local function identity(value) = value
+
+lists {
+  reverse = List(0.0) == List(0)
+  contains = List(0).contains(0.0)
+  indices = List(0, 1, 0).indexOf(0.0) == 0 && List(0, 1, 0).lastIndexOf(0.0) == 2
+  absent = List(1).indexOfOrNull(0.0) == null && List(1).lastIndexOfOrNull(0.0) == null
+  prefix = List(0, 1).startsWith(List(0.0)) && List(1, 0).endsWith(List(0.0))
+  distinct = (padding + List(0, 0.0)).distinct.length == 201
+  distinctBy = (padding + List(0, 0.0)).distinctBy((it) -> it).length == 201
+  distinctness = !(padding + List(0, 0.0)).isDistinct
+}
+
+sets {
+  contains = Set(0).contains(0.0)
+  deduplication = (padding + List(0, 0.0)).toSet().length == 201
+  slices = Set(0, 1).take(1).contains(0.0) && Set(1, 0).takeLast(1).contains(0.0)
+  drops = Set(1, 0).drop(1).contains(0.0) && Set(0, 1).dropLast(1).contains(0.0)
+  split = Set(0, 1).split(1).first.contains(0.0)
+  convert = Set(0).toList().toSet().contains(0.0)
+}
+
+maps {
+  keys = Map(0, "value") == Map(0.0, "value")
+  lookup = Map(0, "value")[0.0] == "value"
+  containsValue = Map("key", 0).containsValue(0.0)
+  overwrite = Map(0, "old", 0.0, "new").length == 1 && Map(0, "old", 0.0, "new")[0] == "new"
+  remove = Map(0, "value").remove(0.0).isEmpty
+  keySet = Map(0, "value").keys.contains(0.0)
+}
+
+mappings {
+  constantKey = new Mapping { [0] = "value" }[0.0] == "value"
+  variableKey = new Mapping { [identity(0)] = "value" }[0.0] == "value"
+  generatedKey = new Mapping { for (i in List(0)) { [i] = i + 1 } }[0.0] == 1
+  containsKey = new Mapping { [0] = "value" }.containsKey(0.0)
+  containsValue = new Mapping { ["key"] = 0 }.containsValue(0.0)
+  keys = new Mapping { [0] = "value" } == new Mapping { [0.0] = "value" }
+  local parent = new Mapping { [0] = "old" }
+  amended =
+    (parent) { [0.0] = super[0.0] + "new" }.length == 1 && (parent) { [0.0] = "new" }[0] == "new"
+}
+
+nested {
+  dynamic = new Dynamic { value = 0 } == new Dynamic { value = 0.0 }
+  typed = new Box { value = 0 } == new Box { value = 0.0 }
+  pair = Pair(0, 1) == Pair(0.0, 1.0)
+  containers =
+    List(Set(Map("key", new Listing { 0 }))) == List(Set(Map("key", new Listing { 0.0 })))
+  hashList = (padding + List(List(0), List(0.0))).toSet().length == 201
+  hashListing = (padding + List(new Listing { 0 }, new Listing { 0.0 })).toSet().length == 201
+  hashMapping =
+    (padding + List(new Mapping { ["key"] = 0 }, new Mapping { ["key"] = 0.0 })).toSet().length
+      == 201
+  hashMap = (padding + List(Map("key", 0), Map("key", 0.0))).toSet().length == 201
+  hashSet = (padding + List(Set(0), Set(0.0))).toSet().length == 201
+  hashDynamic =
+    (padding + List(new Dynamic { value = 0 }, new Dynamic { value = 0.0 })).toSet().length == 201
+  hashTyped = (padding + List(new Box { value = 0 }, new Box { value = 0.0 })).toSet().length == 201
+  hashPair = (padding + List(Pair(0, 1), Pair(0.0, 1.0))).toSet().length == 201
+}
+
+numbers {
+  zero = List(0.0) == List(-0.0) && Set(0, -0.0, 0.0).length == 1
+  nan = List(NaN) == List(NaN) && Set(NaN, NaN).length == 1
+  infinity = List(Infinity) == List(Infinity) && List(Infinity) != List(-Infinity)
+  fractional = List(1) != List(1.5)
+  precise = List(9007199254740992) == List(9007199254740992.0)
+  rounded = List(9007199254740993) != List(9007199254740992.0)
+  maximum = List(9223372036854775807) != List(9223372036854775808.0)
+  minimum = List(-9223372036854775808) == List(-9223372036854775808.0)
+  negativeRange = List(-9223372036854775808) != List(-9223372036854777856.0)
+  transitivity = Set(9007199254740992, 9007199254740992.0, 9007199254740993).length == 2
+  type = List(0) != Set(0.0) && List(0) != List("0")
+}

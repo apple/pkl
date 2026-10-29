@@ -1,0 +1,61 @@
+import "pkl:ref"
+import "pkl:test"
+
+local class D extends ref.AbstractDomain {
+  function renderReference(reference: ref.Reference<this, Any>): String =
+    reference.getData().toString()
+}
+
+local const domain: D = new {}
+local integerRef = ref.Reference::<D, Number>(domain, 0)
+local floatingRef = ref.Reference::<D, Number>(domain, 0.0)
+local function identity(value) = value
+local padding = IntSeq(1, 200).toList()
+
+references {
+  equality = integerRef == floatingRef
+  hash = (padding + List(integerRef, floatingRef)).toSet().length == 201
+}
+
+listings {
+  local values = new Listing {
+    for (i in padding) { i }
+    0
+    0.0
+  }
+  contains = new Listing { 0 }.contains(0.0)
+  distinct = values.distinct.length == 201
+  distinctBy = values.distinctBy((it) -> it).length == 201
+  isDistinct = !values.isDistinct
+  isDistinctBy = !values.isDistinctBy((it) -> it)
+  local ints: Listing<Int> = new { 0 }
+  local delegated: Listing<Any> = ints
+  delegatedEquality = delegated == new Listing { 0.0 }
+  delegatedHash = (padding + List(delegated, new Listing { 0.0 })).toSet().length == 201
+}
+
+objects {
+  elements = (new Dynamic { "value" })[0.0] == "value"
+  local original = new Dynamic { [0] = "old"; [1] = "keep" }
+  local amended = (original) { [0.0] = "new" }
+  lookup = amended[0] == "new" && amended[0.0] == "new"
+  map = amended.toMap().length == 2 && amended.toMap()[0] == "new"
+  entries = amended.toMap().keys == Set(0, 1)
+}
+
+keys {
+  nested = Map(List(0), "value")[List(0.0)] == "value"
+  nonemptyRemove = Map(0.0, "zero", 1, "one").remove(0) == Map(1, "one")
+  concatenate = (Map(0, "old") + Map(0.0, "new")).length == 1
+  duplicate =
+    test
+      .catch(() -> new Mapping { [identity(0)] = 1; [identity(0.0)] = 2 })
+      .contains("Duplicate definition")
+  nan = Map(NaN, "value").containsKey(NaN)
+  negativeZero = Map(-0.0, "value")[0] == "value"
+}
+
+scalarCompatibility {
+  rounded = 9007199254740992.0 == 9007199254740993
+  nan = !(NaN == NaN)
+}

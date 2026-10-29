@@ -199,7 +199,7 @@ public final class VmDynamic extends VmObject {
       //noinspection ConstantValue
       assert value != null;
       var otherValue = other.getCachedValue(key);
-      if (!value.equals(otherValue)) return false;
+      if (!VmValueEquivalence.INSTANCE.equals(value, otherValue)) return false;
     }
 
     return true;
@@ -221,7 +221,8 @@ public final class VmDynamic extends VmObject {
       var value = cursor.getValue();
       //noinspection ConstantValue
       assert value != null;
-      result += key.hashCode() ^ value.hashCode();
+      result +=
+          VmValueEquivalence.INSTANCE.hashCode(key) ^ VmValueEquivalence.INSTANCE.hashCode(value);
     }
 
     cachedHash = result;

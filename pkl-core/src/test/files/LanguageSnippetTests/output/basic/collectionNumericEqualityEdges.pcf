@@ -1,0 +1,31 @@
+references {
+  equality = true
+  hash = true
+}
+listings {
+  contains = true
+  distinct = true
+  distinctBy = true
+  isDistinct = true
+  isDistinctBy = true
+  delegatedEquality = true
+  delegatedHash = true
+}
+objects {
+  elements = true
+  lookup = true
+  map = true
+  entries = true
+}
+keys {
+  nested = true
+  nonemptyRemove = true
+  concatenate = true
+  duplicate = true
+  nan = true
+  negativeZero = true
+}
+scalarCompatibility {
+  rounded = true
+  nan = true
+}

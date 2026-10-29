@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024-2025 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -23,6 +23,7 @@ import org.graalvm.collections.UnmodifiableEconomicMap;
 import org.pkl.core.ast.member.ObjectMember;
 import org.pkl.core.runtime.VmObject;
 import org.pkl.core.runtime.VmUtils;
+import org.pkl.core.runtime.VmValueEquivalence;
 import org.pkl.core.util.EconomicMaps;
 
 /** Data collected by {@link GeneratorObjectLiteralNode} to generate a `VmObject`. */
@@ -42,8 +43,8 @@ public final class ObjectData {
 
   ObjectData(int parentLength) {
     // optimize for memory usage by not estimating minimum size
-    members = EconomicMaps.create();
-    generatorFrames = EconomicMaps.create();
+    members = EconomicMaps.create(VmValueEquivalence.INSTANCE);
+    generatorFrames = EconomicMaps.create(VmValueEquivalence.INSTANCE);
     length = parentLength;
   }
 

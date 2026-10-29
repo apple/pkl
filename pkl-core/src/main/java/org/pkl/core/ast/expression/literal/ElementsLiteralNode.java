@@ -197,7 +197,8 @@ public abstract class ElementsLiteralNode extends SpecializedObjectLiteralNode {
   // offset element keys according to parentLength
   protected UnmodifiableEconomicMap<Object, ObjectMember> createMembers(int parentLength) {
     var result =
-        EconomicMaps.<Object, ObjectMember>create(EconomicMaps.size(members) + elements.length);
+        EconomicMaps.<Object, ObjectMember>create(
+            VmValueEquivalence.INSTANCE, EconomicMaps.size(members) + elements.length);
     EconomicMaps.putAll(result, members);
     for (var i = 0; i < elements.length; i++) {
       EconomicMaps.put(result, (long) (parentLength + i), elements[i]);

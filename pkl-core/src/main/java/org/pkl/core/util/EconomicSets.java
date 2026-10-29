@@ -1,5 +1,5 @@
 /*
- * Copyright © 2024 Apple Inc. and the Pkl project authors. All rights reserved.
+ * Copyright © 2024-2026 Apple Inc. and the Pkl project authors. All rights reserved.
  *
  * Licensed under the Apache License, Version 2.0 (the "License");
  * you may not use this file except in compliance with the License.
@@ -17,6 +17,7 @@ package org.pkl.core.util;
 
 import com.oracle.truffle.api.CompilerDirectives.TruffleBoundary;
 import org.graalvm.collections.EconomicSet;
+import org.graalvm.collections.Equivalence;
 
 public final class EconomicSets {
   private EconomicSets() {}
@@ -24,6 +25,11 @@ public final class EconomicSets {
   @TruffleBoundary
   public static <E> EconomicSet<E> create() {
     return EconomicSet.create();
+  }
+
+  @TruffleBoundary
+  public static <E> EconomicSet<E> create(Equivalence equivalence) {
+    return EconomicSet.create(equivalence);
   }
 
   @TruffleBoundary

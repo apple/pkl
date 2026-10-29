@@ -28,11 +28,11 @@ public final class VmObjectBuilder {
   private int elementCount = 0;
 
   public VmObjectBuilder() {
-    members = EconomicMaps.create();
+    members = EconomicMaps.create(VmValueEquivalence.INSTANCE);
   }
 
   public VmObjectBuilder(int initialSize) {
-    members = EconomicMaps.create(initialSize);
+    members = EconomicMaps.create(VmValueEquivalence.INSTANCE, initialSize);
   }
 
   public VmObjectBuilder addProperty(Identifier name, Object value) {

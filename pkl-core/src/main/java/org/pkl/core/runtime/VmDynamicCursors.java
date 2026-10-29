@@ -223,7 +223,7 @@ final class VmDynamicCursors {
     private final UnmodifiableMapCursor<Object, ObjectMember>[] allMembers;
     private @LateInit UnmodifiableMapCursor<Object, ObjectMember> currentMembers;
     private int allMembersIndex;
-    private final EconomicSet<Object> seenKeys = EconomicSets.create();
+    private final EconomicSet<Object> seenKeys = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
     public AbstractMemberCursor(VmDynamic iteratee) {
       super(iteratee);
@@ -270,7 +270,7 @@ final class VmDynamicCursors {
     protected final VmDynamic iteratee;
     private VmObject currentObject;
     private UnmodifiableMapCursor<Object, ObjectMember> currentMember;
-    private final EconomicSet<Object> seenKeys = EconomicSets.create();
+    private final EconomicSet<Object> seenKeys = EconomicSets.create(VmValueEquivalence.INSTANCE);
 
     public AbstractUnorderedMemberCursor(VmDynamic iteratee) {
       this.iteratee = iteratee;

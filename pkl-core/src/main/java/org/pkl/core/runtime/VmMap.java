@@ -31,7 +31,8 @@ import org.pkl.core.util.paguro.RrbTree.ImRrbt;
 import org.pkl.core.util.paguro.RrbTree.MutRrbt;
 
 public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, Object>> {
-  public static final VmMap EMPTY = new VmMap(PersistentHashMap.empty(), RrbTree.empty());
+  public static final VmMap EMPTY =
+      new VmMap(PersistentHashMap.empty(VmValueEquivalence.INSTANCE), RrbTree.empty());
 
   private final ImMap<Object, Object> map;
   private final ImRrbt<Object> keyOrder;
@@ -41,7 +42,7 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   @TruffleBoundary
   private VmMap(ImMap<Object, Object> map, ImRrbt<Object> keyOrder) {
     assert map.size() == keyOrder.size();
-    assert map.keySet().equals(keyOrder.toImSet());
+    assert keyOrder.stream().allMatch(map::containsKey);
     this.map = map;
     this.keyOrder = keyOrder;
   }
@@ -165,7 +166,10 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
 
   @TruffleBoundary
   public boolean containsValue(Object value) {
-    return map.containsValue(value);
+    for (var key : keyOrder) {
+      if (VmValueEquivalence.INSTANCE.equals(map.get(key), value)) return true;
+    }
+    return false;
   }
 
   @TruffleBoundary
@@ -178,12 +182,12 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
   public VmMap remove(Object key) {
     if (!map.containsKey(key)) return this;
     return new VmMap(
-        map.without(key), keyOrder.without(keyOrder.indexOf(key))); // `indexOf` is in O(n)
+        map.without(key), keyOrder.without((int) VmList.create(keyOrder).indexOf(key)));
   }
 
   @TruffleBoundary
   public VmSet keys() {
-    return VmSet.create(map.keySet(), keyOrder);
+    return VmSet.create(keyOrder);
   }
 
   @TruffleBoundary
@@ -276,13 +280,23 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
     if (this == other) return true;
     //noinspection SimplifiableIfStatement
     if (!(other instanceof VmMap vmMap)) return false;
-    return map.equals(vmMap.map);
+    if (getLength() != vmMap.getLength()) return false;
+    for (var key : keyOrder) {
+      if (!VmValueEquivalence.INSTANCE.equals(map.get(key), vmMap.map.get(key))) return false;
+    }
+    return true;
   }
 
   @Override
   @TruffleBoundary
   public int hashCode() {
-    return map.hashCode();
+    var result = 0;
+    for (var key : keyOrder) {
+      result +=
+          VmValueEquivalence.INSTANCE.hashCode(key)
+              ^ VmValueEquivalence.INSTANCE.hashCode(map.get(key));
+    }
+    return result;
   }
 
   @TruffleBoundary
@@ -303,7 +317,7 @@ public final class VmMap extends VmValue implements Iterable<Map.Entry<Object, O
 
     @TruffleBoundary
     private Builder() {
-      mapBuilder = PersistentHashMap.emptyMutable();
+      mapBuilder = PersistentHashMap.emptyMutable(VmValueEquivalence.INSTANCE);
       keyOrderBuilder = RrbTree.emptyMutable();
     }
 

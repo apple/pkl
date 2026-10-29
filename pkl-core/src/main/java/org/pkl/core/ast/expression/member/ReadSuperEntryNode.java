@@ -78,7 +78,7 @@ public abstract class ReadSuperEntryNode extends ExpressionNode {
 
   @TruffleBoundary
   protected final boolean equals(Object obj1, Object obj2) {
-    return obj1.equals(obj2);
+    return VmValueEquivalence.INSTANCE.equals(obj1, obj2);
   }
 
   protected final Object doEval(

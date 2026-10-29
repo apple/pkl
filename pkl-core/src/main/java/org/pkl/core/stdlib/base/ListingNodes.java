@@ -97,7 +97,7 @@ public final class ListingNodes {
         VirtualFrame frame,
         VmListing self,
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
-      var seenValues = EconomicSets.create();
+      var seenValues = EconomicSets.create(VmValueEquivalence.INSTANCE);
       for (var cursor = self.elements(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var value = readCursorValueNode.execute(frame, cursor);
         if (!EconomicSets.add(seenValues, value)) {
@@ -117,7 +117,7 @@ public final class ListingNodes {
         VmListing self,
         VmFunction selector,
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
-      var seenValues = EconomicSets.create();
+      var seenValues = EconomicSets.create(VmValueEquivalence.INSTANCE);
       for (var cursor = self.elements(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var cursorValue = readCursorValueNode.execute(frame, cursor);
         var value = applyNode.execute(selector, cursorValue);
@@ -133,7 +133,7 @@ public final class ListingNodes {
         VirtualFrame frame,
         VmListing self,
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
-      var seenValues = EconomicSets.create();
+      var seenValues = EconomicSets.create(VmValueEquivalence.INSTANCE);
       var builder = new VmObjectBuilder();
       for (var cursor = self.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
         var value = readCursorValueNode.execute(frame, cursor);
@@ -208,7 +208,7 @@ public final class ListingNodes {
         VmListing self,
         VmFunction selector,
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
-      var seenValues = EconomicSets.create();
+      var seenValues = EconomicSets.create(VmValueEquivalence.INSTANCE);
       var builder = new VmObjectBuilder();
       for (var cursor = self.elements(CursorOption.ALL_VALUES); cursor.advance(); ) {
         var value = readCursorValueNode.execute(frame, cursor);
@@ -264,7 +264,6 @@ public final class ListingNodes {
         @Cached("create()") ReadCursorValueNode readCursorValueNode) {
       for (var cursor = self.elements(CursorOption.ANY_ORDER); cursor.advance(); ) {
         var value = readCursorValueNode.execute(frame, cursor);
-        // TODO replace with EqualNode
         if (equals(value, element)) {
           return true;
         }
@@ -274,7 +273,7 @@ public final class ListingNodes {
 
     @TruffleBoundary
     private boolean equals(Object a, Object b) {
-      return a.equals(b);
+      return VmValueEquivalence.INSTANCE.equals(a, b);
     }
   }
 

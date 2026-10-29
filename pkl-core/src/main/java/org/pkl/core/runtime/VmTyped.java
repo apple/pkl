@@ -266,7 +266,7 @@ public final class VmTyped extends VmObject {
       var value = getCachedValue(key);
       assert value != null;
       var otherValue = other.getCachedValue(key);
-      if (!value.equals(otherValue)) return false;
+      if (!VmValueEquivalence.INSTANCE.equals(value, otherValue)) return false;
     }
 
     return true;
@@ -284,7 +284,7 @@ public final class VmTyped extends VmObject {
     for (var key : clazz.getAllRegularPropertyNames()) {
       var value = getCachedValue(key);
       assert value != null;
-      result = 31 * result + value.hashCode();
+      result = 31 * result + VmValueEquivalence.INSTANCE.hashCode(value);
     }
 
     cachedHash = result;

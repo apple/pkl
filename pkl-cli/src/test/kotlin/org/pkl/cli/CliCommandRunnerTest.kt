@@ -459,7 +459,7 @@ class CliCommandRunnerTest {
         list = List(1, 0, 0.0, 1)
         `list-nullable` = null
         `list-default` = List(1, 2, 300.0)
-        set = Set(1, 0, 0.0)
+        set = Set(1, 0)
         `set-nullable` = null
         `set-default` = Set(1, 2, 300.0)
         `enum-list` = List("a", "a", "b")
@@ -512,7 +512,7 @@ class CliCommandRunnerTest {
     assertThat(output2)
       .isEqualTo(
         """
-        set = Set(1, 0, 0.0)
+        set = Set(1, 0)
 
         """
           .trimIndent()
