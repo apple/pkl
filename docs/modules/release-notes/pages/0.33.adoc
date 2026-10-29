@@ -134,11 +134,16 @@ ifCount = myModule.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc
 
 === libpkl
 
-https://github.com/apple/pkl/pull/1238
-https://github.com/apple/pkl/pull/1799
-https://github.com/apple/pkl/pull/1801
-https://github.com/apple/pkl/pull/1805
-https://github.com/apple/pkl/pull/1812
+Pkl now ships libpkl, a C library for driving Pkl evaluation (https://github.com/apple/pkl/pull/1238[#1238], https://github.com/apple/pkl/pull/1799[#1799], https://github.com/apple/pkl/pull/1801[#1801], https://github.com/apple/pkl/pull/1805[#1805], https://github.com/apple/pkl/pull/1812[#1812]).
+
+libpkl exposes the xref:bindings-specification:message-passing-api.adoc[message passing API] through a small C interface (`pkl.h`).
+It is meant to be used by language binding libraries written in languages other than Java, so that they do not have to launch and manage a separate `pkl server` process.
+
+Archives containing the header, both static and dynamic (shared) libraries, and `pkg-config` files are published for each supported OS and architecture, as part of the GitHub release.
+
+To read more about libpkl, consult the xref:libpkl:index.adoc[libpkl documentation].
+
+Thank you to https://github.com/KushalP[@KushalP] for their contributions to this feature!
 
 === CPU Profiler
 
@@ -245,6 +250,8 @@ http {
 ----
 
 It follows standard `curl` parsing rules, supporting comments, quoted values, and escaped characters.
+
+Thank you to https://github.com/ayashjorden[@ayashjorden] for their contributions to this feature!
 
 === CLI Changes
 
@@ -492,7 +499,7 @@ Now, it is caught, and `catch()` returns its message.
 * Improve performance of parent property and subscript access (https://github.com/apple/pkl/pull/1853[#1853]).
 * Improve performance of typechecking (https://github.com/apple/pkl/pull/1871[#1871]).
 * Improve performance of string literal union types in more cases (https://github.com/apple/pkl/pull/1875[#1875]).
-* Improve performance of iterating object members (https://github.com/apple/pkl/pull/1879[#1879]).
+* Improve performance of iterating object members (https://github.com/apple/pkl/pull/1879[#1879]). Thank you to https://github.com/odenix[@odenix] for their contributions to this feature!
 * Improve performance of capturing closures in objects and functions (https://github.com/apple/pkl/pull/1869[#1869])
 
 == Bug Fixes [small]#🐜#
