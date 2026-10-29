@@ -520,6 +520,8 @@ Now, it is caught, and `catch()` returns its message.
 * Fix `String.endsWith()` for overlapping regex matches (https://github.com/apple/pkl/pull/1880[#1880], https://github.com/apple/pkl/pull/1884[#1884]).
 * Fix leak of external reader processes in the language binding server (https://github.com/apple/pkl/pull/1885[#1885]).
 * Fix decoding of `Regex` values from pkl-binary data (https://github.com/apple/pkl/pull/1895[#1895]).
+* Fix `pkl eval` of dependency notation source modules when using multiple file output (https://github.com/apple/pkl/pull/1942[#1942]).
+* Report an error, instead of overflowing the stack, when parsing or formatting code that is nested too deeply (https://github.com/apple/pkl/pull/1918[#1918]).
 * Fix type check of the `module` type when it is defined in a parent member body (https://github.com/apple/pkl/pull/1936[#1936]).
 * Fix type check of subscript key types for `Map` and `Mapping` references (https://github.com/apple/pkl/pull/1933[#1933]).
 * Fix `hashCode()` and `==` inconsistency for negative zero in `Duration` and `DataSize` (https://github.com/apple/pkl/pull/1932[#1932]).
