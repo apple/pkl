@@ -910,47 +910,19 @@ public final class Lexer {
     }
   }
 
-  public static final class Snapshot {
-    private final int cursor;
-    private final int sCursor;
-    private final int line;
-    private final int sLine;
-    private final int col;
-    private final int sCol;
-    private final int lookahead;
-    private final State state;
-    private final Deque<InterpolationScope> interpolationStack;
-    private final boolean stringEnded;
-    private final boolean isEscape;
-    private final int newLinesBetween;
-
-    private Snapshot(
-        int cursor,
-        int sCursor,
-        int line,
-        int sLine,
-        int col,
-        int sCol,
-        int lookahead,
-        State state,
-        Deque<InterpolationScope> interpolationStack,
-        boolean stringEnded,
-        boolean isEscape,
-        int newLinesBetween) {
-      this.cursor = cursor;
-      this.sCursor = sCursor;
-      this.line = line;
-      this.sLine = sLine;
-      this.col = col;
-      this.sCol = sCol;
-      this.lookahead = lookahead;
-      this.state = state;
-      this.interpolationStack = interpolationStack;
-      this.stringEnded = stringEnded;
-      this.isEscape = isEscape;
-      this.newLinesBetween = newLinesBetween;
-    }
-  }
+  public record Snapshot(
+      int cursor,
+      int sCursor,
+      int line,
+      int sLine,
+      int col,
+      int sCol,
+      int lookahead,
+      State state,
+      Deque<InterpolationScope> interpolationStack,
+      boolean stringEnded,
+      boolean isEscape,
+      int newLinesBetween) {}
 
   private enum State {
     DEFAULT,
