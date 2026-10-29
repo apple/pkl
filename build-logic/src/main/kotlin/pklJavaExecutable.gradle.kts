@@ -19,13 +19,15 @@ import org.gradle.kotlin.dsl.support.serviceOf
 
 plugins {
   id("pklJavaLibrary")
-  //  id("pklPublishLibrary")
+  id("pklPublishLibrary")
   id("com.gradleup.shadow")
   id("pklJvmSourceBundle")
 }
 
 val executableSpec = project.extensions.create("executable", ExecutableSpec::class.java)
 val buildInfo = project.extensions.getByType<BuildInfo>()
+
+tasks.shadowJar { doFirst { manifest.attributes["Main-Class"] = executableSpec.mainClass.get() } }
 
 val javaExecutable =
   tasks.register<ExecutableJar>("javaExecutable") {
@@ -99,34 +101,38 @@ tasks.check {
   dependsOn(testStartJavaExecutableOnOtherJdks)
 }
 
-// publishing {
-//  publications {
-//    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
-//    project.afterEvaluate {
-//      register<MavenPublication>("javaExecutable") {
-//        artifactId = executableSpec.javaPublicationName.get()
-//
-//        artifact(javaExecutable.map { it.outputs.files.singleFile }) {
-//          classifier = null
-//          extension = "bin"
-//          builtBy(javaExecutable)
-//        }
-//
-//        pom {
-//          url = executableSpec.website
-//          description =
-//            executableSpec.documentationName.map { name ->
-//              """
-//            $name executable for Java.
-//            Can be executed directly, or with `java -jar <path/to/jpkl>`.
-//            Requires Java 17 or higher.
-//            """
-//                .trimIndent()
-//            }
-//        }
-//      }
-//    }
-//  }
-// }
+publishing {
+  publications {
+    // need to put in `afterEvaluate` because `artifactId` cannot be set lazily.
+    project.afterEvaluate {
+      register<MavenPublication>("javaExecutable") {
+        artifactId = executableSpec.javaPublicationName.get()
 
-// signing { project.afterEvaluate { sign(publishing.publications["javaExecutable"]) } }
+        // Publish the plain fat JAR. `javaExecutable` prepends a shell script so the
+        // file can be run directly, and that preamble cannot be signed as a JAR
+        // ("No Archiver found for the stream signature"). JBang needs the plain JAR.
+        artifact(tasks.shadowJar.flatMap { it.archiveFile }) {
+          classifier = null
+          extension = "jar"
+          builtBy(tasks.shadowJar)
+        }
+
+        pom {
+          name.set(executableSpec.javaPublicationName)
+          url = executableSpec.website
+          description =
+            executableSpec.documentationName.map { name ->
+              """
+              $name executable for Java.
+              Can be executed with `java -jar <path/to/jar>`.
+              Requires Java 17 or higher.
+              """
+                .trimIndent()
+            }
+        }
+      }
+    }
+  }
+}
+
+signing { project.afterEvaluate { sign(publishing.publications["javaExecutable"]) } }
