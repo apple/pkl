@@ -1,0 +1,5 @@
+const function a() = b()
+
+function b() = 3
+
+res = a()
