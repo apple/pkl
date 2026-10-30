@@ -1,0 +1,22 @@
+–– Pkl Error ––
+Cannot call method `b` from here because it is not `const`.
+
+x | const function a() = b()
+                         ^^^
+at constMethod5#a (file:///$snippetsDir/input/errors/const/constMethod5.pkl)
+
+To fix, do either of:
+1. Add modifier `const` to method `b`
+2. Self-import this module, and reference this method from the import.
+
+x | res = a()
+          ^^^
+at constMethod5#res (file:///$snippetsDir/input/errors/const/constMethod5.pkl)
+
+xxx | renderer.renderDocument(value)
+      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+at pkl.base#Module.output.text (pkl:base)
+
+xxx | if (renderer is BytesRenderer) renderer.renderDocument(value) else text.encodeToBytes("UTF-8")
+                                                                         ^^^^
+at pkl.base#Module.output.bytes (pkl:base)
