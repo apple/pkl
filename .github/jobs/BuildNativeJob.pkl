@@ -51,6 +51,16 @@ steps {
     }
   }
   new {
+    name = "Print debug info"
+    shell = "bash"
+    run = """
+      xcrun --show-sdk-version
+      xcrun --show-sdk-path
+      clang --version
+      cc --version
+      """
+  }
+  new {
     name = "gradle buildNative"
     shell = "bash"
     run = "./gradlew \(module.gradleArgs) \(project):buildNative"

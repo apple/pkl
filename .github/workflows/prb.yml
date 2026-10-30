@@ -120,6 +120,13 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -177,6 +184,13 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -232,6 +246,13 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -345,6 +366,13 @@ jobs:
         fi
 
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-cli:buildNative
@@ -397,6 +425,13 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-cli:buildNative
@@ -452,6 +487,13 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -509,6 +551,13 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -564,6 +613,13 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -677,6 +733,13 @@ jobs:
         fi
 
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true pkl-doc:buildNative
@@ -729,6 +792,13 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true pkl-doc:buildNative
@@ -784,6 +854,13 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
@@ -841,6 +918,13 @@ jobs:
         fi
     - name: Fix git ownership
       run: git status || git config --system --add safe.directory "$GITHUB_WORKSPACE"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
@@ -896,6 +980,13 @@ jobs:
         if [[ "$RUNNER_DEBUG" -eq 1 ]]; then
           echo "DEBUG_ARGS=--info --stacktrace" >> $GITHUB_ENV
         fi
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
@@ -1009,6 +1100,13 @@ jobs:
         fi
 
         echo "${HOME}/staticdeps/bin" >> "$GITHUB_PATH"
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true -Dpkl.musl=true libpkl:buildNative
@@ -1063,6 +1161,13 @@ jobs:
         fi
     - name: Set up MSVC
       uses: ilammy/msvc-dev-cmd@0b201ec74fa43914dc39ae48a89fd1d8cb592756 # v1
+    - name: Print debug info
+      shell: bash
+      run: |-
+        xcrun --show-sdk-version
+        xcrun --show-sdk-path
+        clang --version
+        cc --version
     - name: gradle buildNative
       shell: bash
       run: ./gradlew $DEBUG_ARGS --no-daemon -DpklMultiJdkTesting=true libpkl:buildNative
