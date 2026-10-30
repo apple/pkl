@@ -18,7 +18,6 @@ package org.pkl.parser;
 import static org.pkl.parser.Constants.MAX_SPECULATIVE_TOKEN_COUNT;
 
 import java.util.ArrayList;
-import java.util.BitSet;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Objects;

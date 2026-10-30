@@ -21,14 +21,10 @@ import kotlin.io.path.extension
 import kotlin.io.path.pathString
 import kotlin.io.path.readText
 import org.assertj.core.api.Assertions.assertThat
-import org.assertj.core.api.SoftAssertions
 import org.junit.jupiter.api.DynamicTest
-import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.TestFactory
 import org.junit.jupiter.api.parallel.Execution
 import org.junit.jupiter.api.parallel.ExecutionMode
-import org.junit.jupiter.params.ParameterizedTest
-import org.junit.jupiter.params.provider.MethodSource
 import org.pkl.commons.walk
 
 @Execution(ExecutionMode.CONCURRENT)
