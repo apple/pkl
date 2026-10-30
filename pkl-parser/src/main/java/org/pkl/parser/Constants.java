@@ -21,7 +21,7 @@ final class Constants {
   /**
    * Max number of tokens consumed during speculative parsing before failure.
    *
-   * <p>5 million token budget takeks about 300ms before reaching the error case (tested on a
+   * <p>5 million token budget takes about 300ms before reaching the error case (tested on a
    * MacBook Pro M4 Max).
    */
   static final int MAX_SPECULATIVE_TOKEN_COUNT = 5_000_000;
