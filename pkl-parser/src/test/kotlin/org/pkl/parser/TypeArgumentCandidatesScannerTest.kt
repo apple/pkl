@@ -18,9 +18,9 @@ package org.pkl.parser
 import org.assertj.core.api.Assertions.assertThat
 import org.junit.jupiter.api.Test
 
-class TypeArgumentCandidatesTest {
+class TypeArgumentCandidatesScannerTest {
   private fun candidates(source: String): IntArray =
-    TypeArgumentCandidates.scan(Lexer(source)).toArray()
+    TypeArgumentCandidatesScanner.scan(Lexer(source)).toArray()
 
   @Test
   fun `empty input`() {

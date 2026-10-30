@@ -1616,7 +1616,9 @@ final class ParserImpl {
 
   private boolean isTypeArgCandidate(int charIndex) {
     if (typeArgCandidates == null) {
-      typeArgCandidates = TypeArgumentCandidates.scan(new Lexer(source));
+      var snapshot = lexer.snapshot();
+      typeArgCandidates = TypeArgumentCandidatesScanner.scanFromPending(lexer);
+      lexer.restore(snapshot);
     }
     return typeArgCandidates.contains(charIndex);
   }

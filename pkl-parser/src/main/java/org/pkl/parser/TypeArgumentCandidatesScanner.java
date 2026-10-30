@@ -30,7 +30,7 @@ import org.pkl.parser.util.SortedIntArray;
  * <p>However, this class doesn't know what a type is; this is meant to be a quick scan of the whole
  * file to help minimize speculative parsing in the underlying parser.
  */
-final class TypeArgumentCandidates {
+final class TypeArgumentCandidatesScanner {
   // marks a `(`, `[`, `{` or string interpolation on the stack; `<` is stored as its char index
   private static final int BRACKET = -100;
 
@@ -42,7 +42,23 @@ final class TypeArgumentCandidates {
   private int currentPending = -1;
 
   static SortedIntArray scan(Lexer lexer) {
-    var scanner = new TypeArgumentCandidates();
+    var scanner = new TypeArgumentCandidatesScanner();
+    try {
+      while (true) {
+        var token = lexer.next();
+        if (token == Token.EOF) break;
+        scanner.accept(token, lexer.getStartCursor());
+      }
+    } catch (ParserError ignored) {
+      // Lexing error. The parser will report it when it gets there; `<` that are still open at
+      // this point are simply not candidates.
+    }
+    return scanner.candidates();
+  }
+
+  static SortedIntArray scanFromPending(Lexer lexer) {
+    var scanner = new TypeArgumentCandidatesScanner();
+    scanner.pending.push(lexer.getStartCursor());
     try {
       while (true) {
         var token = lexer.next();

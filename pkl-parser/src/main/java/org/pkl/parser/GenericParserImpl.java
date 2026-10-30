@@ -753,8 +753,9 @@ class GenericParserImpl {
   }
 
   private void parseAccess(List<Node> children) {
+    var startCursor = cursor;
     children.add(parseIdentifier());
-    var typeArgs = tryParseTypeArgumentList();
+    var typeArgs = tryParseTypeArgumentList(startCursor);
     if (typeArgs != null) {
       // `tryParseTypeArgumentList` guarantees that an argument list follows
       children.add(typeArgs);
@@ -768,12 +769,12 @@ class GenericParserImpl {
     }
   }
 
-  private @Nullable Node tryParseTypeArgumentList() {
+  private @Nullable Node tryParseTypeArgumentList(int startCursor) {
     if (lookahead() != Token.LT
         || !noSemicolonInbetween()
         || _lookahead.newLinesBetween != 0
         || failedTypeArgAttempts.get(spanLookahead.charIndex())
-        || !isTypeArgCandidate(spanLookahead.charIndex())) {
+        || !isTypeArgCandidate(spanLookahead.charIndex(), startCursor)) {
       return null;
     }
     var savedCursor = cursor;
@@ -797,10 +798,11 @@ class GenericParserImpl {
     return null;
   }
 
-  private boolean isTypeArgCandidate(int charIndex) {
+  private boolean isTypeArgCandidate(int charIndex, int startCursor) {
     if (typeArgCandidates == null) {
-      var scanner = new TypeArgumentCandidates();
-      for (var tk : tokens) {
+      var scanner = new TypeArgumentCandidatesScanner();
+      for (var i = startCursor; i < tokens.size(); i++) {
+        var tk = tokens.get(i);
         scanner.accept(tk.token, tk.span.charIndex());
       }
       typeArgCandidates = scanner.candidates();
