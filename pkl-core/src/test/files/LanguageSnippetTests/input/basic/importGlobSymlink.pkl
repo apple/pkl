@@ -1,0 +1,19 @@
+amends ".../snippetTest.pkl"
+
+examples {
+  ["symlink to file is included"] {
+    import*("../../input-helper/globtest-symlink/*.pkl").keys.toListing()
+  }
+
+  ["symlink target content is read through symlink"] {
+    import*("../../input-helper/globtest-symlink/*.pkl")
+      .toMap()
+      .values
+      .map((it) -> it.name)
+      .toListing()
+  }
+
+  ["directory symlink is followed"] {
+    import*("../../input-helper/globtest-symlink/**.pkl").keys.toListing()
+  }
+}
