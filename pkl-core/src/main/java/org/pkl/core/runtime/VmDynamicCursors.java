@@ -102,7 +102,7 @@ final class VmDynamicCursors {
 
     @Override
     protected boolean shouldVisit(Object key) {
-      return key instanceof Long l && l < iteratee.getLength();
+      return key instanceof Long l && l >= 0 && l < iteratee.getLength();
     }
 
     @Override
@@ -121,7 +121,7 @@ final class VmDynamicCursors {
       if (member.isProp()) {
         return false;
       }
-      return !(key() instanceof Long l) || l >= iteratee.getLength();
+      return !(key() instanceof Long l) || l < 0 || l >= iteratee.getLength();
     }
 
     @Override
@@ -140,7 +140,7 @@ final class VmDynamicCursors {
       if (member.isProp()) {
         return false;
       }
-      return !(key() instanceof Long l) || l >= iteratee.getLength();
+      return !(key() instanceof Long l) || l < 0 || l >= iteratee.getLength();
     }
 
     @Override
@@ -157,7 +157,7 @@ final class VmDynamicCursors {
     @Override
     protected boolean shouldVisit(Object key) {
       if (key instanceof Identifier) return false;
-      if (key instanceof Long l) return l >= iteratee.getLength();
+      if (key instanceof Long l) return l < 0 || l >= iteratee.getLength();
       return true;
     }
 
@@ -184,7 +184,7 @@ final class VmDynamicCursors {
 
     @Override
     public boolean isElement() {
-      return key() instanceof Long l && l < iteratee.getLength();
+      return key() instanceof Long l && l >= 0 && l < iteratee.getLength();
     }
 
     @Override
@@ -210,7 +210,7 @@ final class VmDynamicCursors {
 
     @Override
     public boolean isElement() {
-      return key() instanceof Long l && l < iteratee.getLength();
+      return key() instanceof Long l && l >= 0 && l < iteratee.getLength();
     }
 
     @Override
