@@ -9,6 +9,29 @@ include::partial$intro.adoc[]
 
 == Highlights [small]#💖#
 
+=== Generic Methods
+
+Methods can now declare type parameters, and callers can provide type arguments explicitly with the `::<>` syntax (https://github.com/apple/pkl/pull/1849[#1849], https://github.com/apple/pkl-evolution/pull/35[SPICE-0032]).
+
+[source,pkl]
+----
+class Pigeon {
+  name: String
+}
+
+function makeFlock<Bird>(names: Listing<String>): Listing<Bird> = new {
+  for (n in names) {
+    new { name = n }
+  }
+}
+
+pigeonFlock = makeFlock::<Pigeon>(new { "Alice"; "Bill"; "Ruth" }) // a Listing of Pigeons
+----
+
+Both class methods and `local` object methods can be generic.
+
+To read more about generic methods, consult the xref:language-reference:index.adoc#generic-methods[language reference].
+
 === New standard library module: `pkl:net`
 
 This release introduces a new standard library module, link:{uri-stdlib-netModule}[`pkl:net`], which brings native URL support to Pkl (https://github.com/apple/pkl/pull/1834[#1834]).
@@ -81,9 +104,164 @@ Alongside this module, `pkl:base` gains link:{uri-stdlib-String}#isValidUrl[`Str
 It is stricter than `net.Url()`, which also parses a relative reference, and which percent-encodes whatever cannot appear literally in a URL component.
 The `Uri` typealias is now defined in terms of it, which is a <<uri-validates,breaking change>>.
 
+=== New standard library module: `pkl:syntax`
+
+This release introduces a new standard library module, link:{uri-stdlib-syntaxModule}[`pkl:syntax`], for working with Pkl source code (https://github.com/apple/pkl/pull/1821[#1821]).
+
+It has three parts:
+
+* link:{uri-stdlib-syntax-Parser}[`Parser`] parses a string or resource into a syntax tree, as either a module or an expression.
+* link:{uri-stdlib-syntax-Node}[`Node`] is a node of that tree.
+It has a `type`, `children`, the verbatim source `text`, and the source `span`.
+Nodes can be searched, folded, and replaced with the `find*`, `fold`, and `replace*` methods.
+* link:{uri-stdlib-syntax-FormattingRenderer}[`FormattingRenderer`] renders a tree back to Pkl source code, using the canonical Pkl formatter.
+
+[source,pkl]
+----
+import "pkl:syntax"
+
+local myModule = new syntax.Parser {}.parseModule("""
+  class Point {
+    x: Int
+    y: Int
+  }
+  """)
+
+className = myModule.findChild((n) -> n.type == "class").findChildOfType("identifier").text // "Point"
+
+ifCount = myModule.fold(0, (acc, n) -> if (n.type == "if_expr") acc + 1 else acc) // 0
+----
+
+=== libpkl
+
+Pkl now ships libpkl, a C library for driving Pkl evaluation (https://github.com/apple/pkl/pull/1238[#1238], https://github.com/apple/pkl/pull/1799[#1799], https://github.com/apple/pkl/pull/1801[#1801], https://github.com/apple/pkl/pull/1805[#1805], https://github.com/apple/pkl/pull/1812[#1812]).
+
+libpkl exposes the xref:bindings-specification:message-passing-api.adoc[message passing API] through a small C interface (`pkl.h`).
+It is meant to be used by language binding libraries written in languages other than Java, so that they do not have to launch and manage a separate `pkl server` process.
+
+Archives containing the header, both static and dynamic (shared) libraries, and `pkg-config` files are published for each supported OS and architecture, as part of the GitHub release.
+
+To read more about libpkl, consult the xref:libpkl:index.adoc[libpkl documentation].
+
+Thank you to https://github.com/KushalP[@KushalP] for their contributions to this feature!
+
+=== CPU Profiler
+
+The Pkl CLI can now profile where an evaluation spends its CPU time (https://github.com/apple/pkl/pull/1823[#1823], https://github.com/apple/pkl/pull/1931[#1931]).
+
+Profiling is enabled by passing `--profile-cpu-output`, which sets the file to write the profile to.
+The profile is written in https://github.com/google/pprof[pprof] format, so it can be explored with any tool that reads it, such as `go tool pprof`.
+
+[source,shell]
+----
+$ pkl eval --profile-cpu-output profile.pb.gz myConfig.pkl
+$ go tool pprof -http=:8080 profile.pb.gz
+----
+
+Profiling is only exposed through the CLI.
+For more details, consult xref:pkl-cli:index.adoc#profile-cpu-output[the CLI documentation].
+
 == Noteworthy [small]#🎶#
 
+=== New type: `this`
+
+This release introduces the `this` type, a self type for use within modules and classes (https://github.com/apple/pkl/pull/1708[#1708], https://github.com/apple/pkl-evolution/pull/32[SPICE-0029]).
+
+`this` refers to the type of the enclosing object.
+When a class is extended, `this` in an inherited member refers to the subclass, not to the class that declares the member.
+This makes it possible to express that a member relates to the _same_ type as the object it is on:
+
+[source,pkl]
+----
+open class Node {
+  parent: this?
+  children: List<this>
+}
+
+class SpecialNode extends Node {
+  special: Boolean
+}
+
+node: SpecialNode = new {
+  special = true
+  parent = new SpecialNode { special = false; children = List() } // <1>
+  children = List(new SpecialNode { special = true; children = List() })
+}
+
+bad: SpecialNode = new {
+  special = true
+  parent = new Node {} // <2>
+}
+----
+<1> `parent` has type `SpecialNode?`.
+<2> Error: `Node` is not a `SpecialNode`.
+
+The `this` type can be used in properties, method parameters and return types, function types, and type arguments.
+It cannot be used in a type alias body.
+When used in a module, `this` is the type of the module that is being evaluated.
+
+The `this` type has also been <<this-adoption,adopted in the standard library>>.
+
+==== Deprecation of the `module` type in const scopes
+
+The `module` type may behave incorrectly or in undefined ways when it is used in a _const_ scope.
+Using the `module` type in these locations now emits a deprecation warning, and will become an error in a future release.
+
+To migrate, replace the `module` type with `this`, or import the current module and use the resulting module type.
+
+=== Implicitly typed `new {}` can be inferred in more locations
+
+The type of an implicitly typed `new {}` expression can now be inferred from the parameter type of a method being called (https://github.com/apple/pkl/pull/1768[#1768], https://github.com/apple/pkl/pull/1845[#1845], https://github.com/apple/pkl/pull/1847[#1847], https://github.com/apple/pkl/pull/1857[#1857]), and from the type annotation of a `let` binding (https://github.com/apple/pkl/pull/1824[#1824]).
+
+[source,pkl]
+----
+class Person {
+  name: String
+}
+
+function greet(person: Person): String = "Hello, \(person.name)"
+
+greeting1 = greet(new { name = "Pigeon" }) // <1>
+
+greeting2 =
+  let (person: Person = new { name = "Parrot" }) // <2>
+    greet(person)
+----
+<1> The argument is inferred to be a `Person`.
+<2> The `let` binding is inferred to be a `Person`.
+
+Inference is not available where the parameter type is not known ahead of time: for constructor methods like `List()`, generic methods like `Pair()`, and `Function.apply()`.
+It is an error for the parameter type to be `this` or `module`.
+
+=== Support for `.netrc` HTTP authentication
+
+Pkl now supports parsing `.netrc` files to configure HTTP Basic authentication headers (https://github.com/apple/pkl/pull/1817[#1817], https://github.com/apple/pkl/pull/1854[#1854]).
+
+Through the new `netRcHeaders` method on `pkl.EvaluatorSettings#Http`, credentials can be read directly from a local `.netrc` file and mapped to `Authorization` headers:
+
+.~/.config/pkl/settings.pkl
+[source,pkl]
+----
+amends "pkl:settings"
+
+http {
+  headers = netRcHeaders(read?("file:\(read("env:HOME"))/.netrc"))
+}
+----
+
+It follows standard `curl` parsing rules, supporting comments, quoted values, and escaped characters.
+
+Thank you to https://github.com/ayashjorden[@ayashjorden] for their contributions to this feature!
+
 === CLI Changes
+
+==== Package installation to the local cache
+
+The `pkl project package` command has gained a new `--install` command that triggers installation of the built package(s) into the module cache (https://github.com/apple/pkl/pull/1795[#1795]).
+
+Local cache installation is useful for local end-to-end testing of dependency trees.
+This functionality is also available via pkl-gradle.
+
 
 ==== Default file locations
 
@@ -140,10 +318,27 @@ Two conversions are added to `org.pkl.config.java.mapper.Conversions`, both part
 
 * New module introduced.
 
+==== `pkl:syntax`
+
+* New module introduced.
+
 ==== `pkl:base`
 
 * New property: link:{uri-stdlib-String}#isValidUrl[`String.isValidUrl`]
 * Changed typealias: link:{uri-stdlib-Uri}[`Uri`] is now `String(isValidUrl)` (<<uri-validates,breaking change>>)
+[[this-adoption]]
+* pkldoc:Any.getClass()[] now returns `Class<this>`
+* pkldoc:Any.ifNonNull()[] now accepts an argument of type `(this) -> Result`
+* pkldoc:AbstractDomain.renderReference()[pkl:ref] now accepts a `Reference<this, Any>`
+
+==== `pkl:ref`
+
+* Renamed class: `Domain` is now `AbstractDomain` (<<reference-changes,breaking change>>)
+* Changed method: `Reference()` now takes type arguments instead of a `Class` parameter (<<reference-changes,breaking change>>)
+
+==== `pkl:protobuf`
+
+* Module deprecated for removal in Pkl 0.34 (<<upcoming-breaking-changes,upcoming breaking change>>, https://github.com/apple/pkl/pull/1778[#1778]).
 
 == Breaking Changes [small]#💔#
 
@@ -159,7 +354,7 @@ In prior versions of Pkl, type arguments to the `Class` type were erased.
 Any `Class` value would typecheck against `Class<T>` for any value of `T`.
 
 In Pkl 0.33, this erasure has been removed.
-A `Class` value typechecked against `Class<T>` must be a subclass of `T`.
+A `Class` value typechecked against `Class<T>` must be a subclass of `T` (https://github.com/apple/pkl/pull/1698[#1698]).
 
 If `T` does not resolve to a class type (i.e. it is a union type, nullable type, string literal type, parameterized type, or `nothing`), the type check will always fail.
 
@@ -167,6 +362,7 @@ If `T` does not resolve to a class type (i.e. it is a union type, nullable type,
 
 Previously, module properties in `pkl:math` and `pkl:release` could be overriden by amending the module.
 Doing this makes little sense—these value are constants and overriding them by amending their module would be odd.
+These properties are now marked `const` (https://github.com/apple/pkl/pull/1864[#1864]).
 
 This is a breaking change for code that looks like this:
 [source,pkl]
@@ -240,12 +436,127 @@ This affects every standard library member typed as `Uri`, among them link:{uri-
 
 As a consequence, an invalid URI is now reported as a type constraint violation at the point where it is set, rather than as an error raised later by whatever consumes it.
 
+[[reference-changes]]
+=== Changes to `Reference` construction
+
+As part of the introduction of generic methods, the `Reference()` constructor method in `pkl:ref` takes the domain and referent types as type arguments instead of taking a `Class` parameter (https://github.com/apple/pkl/pull/1849[#1849]).
+This also makes it possible to construct references to non-class types, such as `Listing<String>` or `String | Int`.
+
+The `ref.Domain` class has been renamed to `ref.AbstractDomain`.
+
+[source,pkl]
+----
+import "pkl:ref"
+
+class MyDomain extends ref.AbstractDomain { // <1>
+  function renderReference(reference: ref.Reference<MyDomain, Any>): String = "..."
+}
+
+// before
+myRef = ref.Reference(new MyDomain {}, MyReferent, myData)
+
+// after
+myRef = ref.Reference::<MyDomain, MyReferent>(new MyDomain {}, myData) // <2>
+----
+<1> Previously `extends ref.Domain`.
+<2> Constraints in the referent type of a `Reference` type annotation are no longer an error, they are ignored.
+
+=== `test.catch()` and `test.catchOrNull()` force their result
+
+The `catch()` and `catchOrNull()` methods in `pkl:test` now fully evaluate the value returned by the function they are given (https://github.com/apple/pkl/pull/1910[#1910]).
+
+Previously, an error nested inside the returned value was not caught.
+It surfaced later, when the value was used.
+Now, it is caught, and `catch()` returns its message.
+
+[[upcoming-breaking-changes]]
+=== Upcoming breaking changes
+
+The `pkl:protobuf` module is deprecated and will be removed in Pkl 0.34 (https://github.com/apple/pkl/pull/1778[#1778]).
+
+== Miscellaneous [small]#🐸#
+
+* The `abstract` modifier is now a no-op for properties. (https://github.com/apple/pkl/pull/1781[#1781]).
+* Absract method in non-abstract classes and modules are now rejected (https://github.com/apple/pkl/pull/1647[#1647], https://github.com/apple/pkl/pull/1780[#1780]).
+* Enforce that non-abstract classes implement all abstract methods from superclasses (https://github.com/apple/pkl/pull/1785[#1785]).
+* Introduce a new internal representation for type metadata (https://github.com/apple/pkl/pull/1838[#1838]).
+* Improve error message when amending a property with no value set (https://github.com/apple/pkl/pull/1867[#1867]).
+* Use `EnumSet` for token categories (https://github.com/apple/pkl/pull/1803[#1803]).
+* `String.toInt()` now supports all hexadecimal, octal, and binary formats (https://github.com/apple/pkl/pull/1808[#1808]).
+* Handle conditional pluralization in error message (https://github.com/apple/pkl/pull/1848[#1848]).
+* Avoid using Java `Object.toString()` to present language-facing string representations (https://github.com/apple/pkl/pull/1850[#1850]).
+* Unify internal construction of objects (https://github.com/apple/pkl/pull/1873[#1873]). 
+* Use module cache directory configured via the CLI or Gradle while evaluating `PklProject` and `settings.pkl` files (https://github.com/apple/pkl/pull/1900[#1900]).
+* Typed values are rendered with more helpful type names in error messages and `Any.toString()` (https://github.com/apple/pkl/pull/1412[#1412]).
+* Add support for customizing spring boot `@ConfigurationProperties` in generated Java/Kotlin code (https://github.com/apple/pkl/pull/1897[#1897]).
+* Improve error message when instantiating a class that cannot be instantiated (https://github.com/apple/pkl/pull/1916[#1916]).
+* Improve error messages when a type alias fails to type check (https://github.com/apple/pkl/pull/1914[#1914]).
+* Add descriptions and groups to the tasks created by the pkl-gradle plugin (https://github.com/apple/pkl/pull/190[#190]).
+* Pkldoc no longer truncates the names of modules that do not start with the package's module name prefix (https://github.com/apple/pkl/pull/1909[#1909]).
+* Reject `file:` URIs that include an authority (https://github.com/apple/pkl/pull/629[#629]).
+* Upgrade to GraalVM 25.2.4 (https://github.com/apple/pkl/pull/1804[#1804]).
+* Improve performance of reading `const` members (https://github.com/apple/pkl/pull/1835[#1835]).
+* Improve performance of `Listing` and `Mapping` type casts (https://github.com/apple/pkl/pull/1837[#1837]).
+* Improve performance of lexical frame resolution (https://github.com/apple/pkl/pull/1842[#1842]).
+* Improve performance of amending `null` parents (https://github.com/apple/pkl/pull/1836[#1836]).
+* Improve performance of annotations without object bodies (https://github.com/apple/pkl/pull/1843[#1843]).
+* Improve performance of `for` and `when` generators (https://github.com/apple/pkl/pull/1844[#1844]).
+* Improve performance of parent property and subscript access (https://github.com/apple/pkl/pull/1853[#1853]).
+* Improve performance of typechecking (https://github.com/apple/pkl/pull/1871[#1871]).
+* Improve performance of string literal union types in more cases (https://github.com/apple/pkl/pull/1875[#1875]).
+* Improve performance of iterating object members (https://github.com/apple/pkl/pull/1879[#1879]). Thank you to https://github.com/odenix[@odenix] for their contributions to this feature!
+* Improve performance of capturing closures in objects and functions (https://github.com/apple/pkl/pull/1869[#1869])
+
 == Bug Fixes [small]#🐜#
 
-* XXX
+* Fix error when rendering error messages for multi-line expressions (https://github.com/apple/pkl/pull/1793[#1793]).
+* Fix incorrect behavior when objects are partially forced (https://github.com/apple/pkl/pull/1790[#1790]).
+* Fix issues publishing pkl-gradle (https://github.com/apple/pkl/pull/1777[#1777], https://github.com/apple/pkl/pull/1807[#1807]).
+* Fix resolution of the `module` type in typealias bodies (https://github.com/apple/pkl/pull/1796[#1796]).
+* Don't fail when loading known-malformed CA certs (https://github.com/apple/pkl/pull/1806[#1806]).
+* Fix resolution of type names in typealias constraints (https://github.com/apple/pkl/pull/1826[#1826]).
+* Fix parsing of block comments at the end of a file (https://github.com/apple/pkl/pull/1828[#1828]).
+* Sanitize block comment endings in generated Kotlin doc comments (https://github.com/apple/pkl/pull/1830[#1830]).
+* Enforce max collection size when decoding pkl-binary data (https://github.com/apple/pkl/pull/1831[#1831]).
+* Correctly omit glob imports from reflected imports (https://github.com/apple/pkl/pull/1816[#1816]).
+* Escape characters that cannot appear literally in rendered YAML (https://github.com/apple/pkl/pull/1846[#1846]).
+* Fix invalid prefix when generating spring boot config (https://github.com/apple/pkl/pull/1862[#1862]).
+* Fix `pkl run` behaviors where (sub)commands amend `pkl:Command` without extending it (https://github.com/apple/pkl/pull/1882[#1882]).
+* Fix `String.endsWith()` for overlapping regex matches (https://github.com/apple/pkl/pull/1880[#1880], https://github.com/apple/pkl/pull/1884[#1884]).
+* Fix leak of external reader processes in the language binding server (https://github.com/apple/pkl/pull/1885[#1885]).
+* Fix decoding of `Regex` values from pkl-binary data (https://github.com/apple/pkl/pull/1895[#1895]).
+* Fix `pkl eval` of dependency notation source modules when using multiple file output (https://github.com/apple/pkl/pull/1942[#1942]).
+* Report an error, instead of overflowing the stack, when parsing or formatting code that is nested too deeply (https://github.com/apple/pkl/pull/1918[#1918]).
+* Fix type check of the `module` type when it is defined in a parent member body (https://github.com/apple/pkl/pull/1936[#1936]).
+* Fix type check of subscript key types for `Map` and `Mapping` references (https://github.com/apple/pkl/pull/1933[#1933]).
+* Fix `hashCode()` and `==` inconsistency for negative zero in `Duration` and `DataSize` (https://github.com/apple/pkl/pull/1932[#1932]).
+* Fix parameterized type checks in type alias constraints (https://github.com/apple/pkl/pull/1906[#1906]).
+* Fix resolution of qualified type names (https://github.com/apple/pkl/pull/1915[#1915]).
+* Fix lookaround regexes in `String.lastIndexOf()` and `String.replaceLast()` (https://github.com/apple/pkl/pull/1908[#1908]).
+* Fix formatter instability (https://github.com/apple/pkl/pull/1911[#1911]).
 
 == Contributors [small]#🙏#
 
 We would like to thank the contributors to this release (in alphabetical order):
 
-* XXX
+* https://github.com/aashish254[@aashish254]
+* https://github.com/AAGAM17[@AAGAM17]
+* https://github.com/ayashjorden[@ayashjorden]
+* https://github.com/bioball[@bioball]
+* https://github.com/Carpe-Wang[@Carpe-Wang]
+* https://github.com/dylanpulver[@dylanpulver]
+* https://github.com/florinungur[@florinungur]
+* https://github.com/goutamadwant[@goutamadwant]
+* https://github.com/henriquejsza[@henriquejsza]
+* https://github.com/HT154[@HT154]
+* https://github.com/KushalP[@KushalP]
+* https://github.com/kwy404[@kwy404]
+* https://github.com/mayc7n[@mayc7n]
+* https://github.com/netvl[@netvl]
+* https://github.com/odenix[@odenix]
+* https://github.com/protobufel2[@protobufel2]
+* https://github.com/RushikeshGandhmal[@RushikeshGandhmal]
+* https://github.com/sergiosalvi[@sergiosalvi]
+* https://github.com/sgammon[@sgammon]
+* https://github.com/stackoverflow[@stackoverflow]
+* https://github.com/vinayakj592[@vinayakj592]
