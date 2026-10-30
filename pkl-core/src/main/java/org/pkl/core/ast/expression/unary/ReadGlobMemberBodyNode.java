@@ -20,6 +20,7 @@ import com.oracle.truffle.api.frame.VirtualFrame;
 import com.oracle.truffle.api.source.SourceSection;
 import java.util.Map;
 import org.pkl.core.ast.ExpressionNode;
+import org.pkl.core.module.ModuleKey;
 import org.pkl.core.runtime.VmContext;
 import org.pkl.core.runtime.VmObjectLike;
 import org.pkl.core.runtime.VmUtils;
@@ -27,8 +28,11 @@ import org.pkl.core.util.GlobResolver.ResolvedGlobElement;
 
 /** Used by {@link ReadGlobNode}. */
 public class ReadGlobMemberBodyNode extends ExpressionNode {
-  public ReadGlobMemberBodyNode(SourceSection sourceSection) {
+  private final ModuleKey currentModule;
+
+  public ReadGlobMemberBodyNode(SourceSection sourceSection, ModuleKey currentModule) {
     super(sourceSection);
+    this.currentModule = currentModule;
   }
 
   @Override
@@ -44,7 +48,11 @@ public class ReadGlobMemberBodyNode extends ExpressionNode {
     var globElement = VmUtils.getMapValue(globElements, path);
     assert globElement != null;
     var resourceUri = globElement.uri();
-    var resource = VmContext.get(this).getResourceManager().read(resourceUri, this).orElse(null);
+    var resource =
+        VmContext.get(this)
+            .getResourceManager()
+            .read(currentModule.getUri(), resourceUri, this)
+            .orElse(null);
     if (resource == null) {
       CompilerDirectives.transferToInterpreter();
       throw exceptionBuilder().evalError("cannotFindResource", resourceUri).build();

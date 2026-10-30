@@ -38,7 +38,7 @@ class IoUtilsTest {
 
     override fun checkImportModule(importingModule: URI, importedModule: URI) {}
 
-    override fun checkReadResource(resource: URI) {}
+    override fun checkReadResource(readingModule: URI, resource: URI) {}
 
     override fun checkResolveResource(resource: URI) {}
   }
