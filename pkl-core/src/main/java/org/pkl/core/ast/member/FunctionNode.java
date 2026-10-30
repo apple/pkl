@@ -54,7 +54,8 @@ public final class FunctionNode extends RegularMemberNode {
   @Children private TypeParameterNode[] typeParameterNodes;
 
   @Children private final TypeNode[] parameterTypeNodes;
-  private @Nullable TypeNode checkedReturnTypeNode;
+  // not marked `@Child` because it's the same as `returnTypeNode`.
+  private final @Nullable TypeNode checkedReturnTypeNode;
   @Child private @Nullable TypeNode returnTypeNode;
 
   @TruffleBoundary
