@@ -115,6 +115,12 @@ examples {
     map1.toDynamic()
   }
 
+  ["toDynamic() round-trip"] {
+    Map(-1, 2).toDynamic().toMap()
+    Map(0, 2).toDynamic().toMap()
+    Map(1, 2).toDynamic().toMap()
+  }
+
   ["toMapping()"] {
     Map().toMapping()
     map1.toMapping()
